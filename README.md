@@ -1,5 +1,5 @@
 # Bili23-Downloader
-![](https://img.shields.io/badge/Latest_Version-1.12-green.svg) ![](https://img.shields.io/badge/Python-3.8.10-green.svg) ![](https://img.shields.io/badge/wxPython-4.1.1-green.svg)  
+![](https://img.shields.io/badge/Latest_Version-1.13-green.svg) ![](https://img.shields.io/badge/Python-3.8.10-green.svg) ![](https://img.shields.io/badge/wxPython-4.1.1-green.svg)  
   
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 ## 声明
@@ -17,8 +17,8 @@
 > - 显示视频相关信息（封面，播放数，三连数等）
 - **支持下载弹幕和字幕**  
 > - 弹幕目前仅支持下载 xml 格式，后续会支持 ass，proto 等格式
-> - 字幕可保存为 srt 格式
-> - 可自动合成字幕
+> - 字幕可保存为 srt 格式 (测试中，1.14版本正式支持)
+> - 可自动合成字幕 (测试中，1.14版本正式支持)
 - **支持自定义清晰度下载**  
 > - 可自定义清晰度（取决于视频所支持的清晰度）  
 > - 免登录下载 `1080P` 视频  
@@ -36,3 +36,12 @@ pip install -r requirements.txt
 - **适用于需要使用大会员 Cookie 才能下载的情况**
 > - 浏览器登录B站，按下 `F12` 键打开开发者模式--> application --> cookie，找到 SESSDATA 字段，在设置中粘贴即可
 > - **注：Cookie 有效期为一个月，请定期更换。**
+## 开发日志
+- **[最新] 版本 1.13 (2022-3-12)**
+> - 番组现已支持 番剧/电影/纪录片/综艺/国创/电视剧 类型的下载
+> - 现在合集视频能够显示完整列表
+> - 修正了电影不能下载的bug
+> - 优化了部分细节效果
+- **版本 1.12 (2022-2-20)**
+> - 程序初始版本发布
+> - 可下载B站的视频和番剧，方便离线观看
