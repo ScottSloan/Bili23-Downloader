@@ -114,7 +114,7 @@ class MainWindow(wx.Frame):
         self.address_tc.Bind(wx.EVT_TEXT_ENTER, self.get_url_EVT)
         self.get_button.Bind(wx.EVT_BUTTON, self.get_url_EVT)
 
-        self.quality_cb.Bind(wx.EVT_COMBOBOX, self.select_quality)
+        self.quality_cb.Bind(wx.EVT_CHOICE, self.select_quality)
         self.info_btn.Bind(wx.EVT_BUTTON, self.Load_info_window_EVT)
         self.set_btn.Bind(wx.EVT_BUTTON, self.Load_setting_window_EVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.download_EVT)
@@ -291,6 +291,7 @@ class MainWindow(wx.Frame):
             self.list_lc.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
     def get_all_checked_item(self):
+        vip = False
         for i in self.all_list_items:
             text = self.list_lc.GetItemText(i, 0)
             state = bool(self.list_lc.GetCheckedState(i))
@@ -308,9 +309,16 @@ class MainWindow(wx.Frame):
                 else:
                     index = [i for i, v in enumerate(BangumiInfo.sections[parenttext]) if v["share_copy"] == itemtitle][0]
                     BangumiInfo.down_episodes.append(BangumiInfo.sections[parenttext][index])
+                    if BangumiInfo.sections[parenttext][index]["badge"] == "会员":
+                        vip = True
         
         if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
             self.on_error(401)
+        
+        elif vip:
+            dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未添加 Cookie 的情况下将跳过下载。\n确认继续吗？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
+            if dialog.ShowModal() == wx.ID_YES:
+                pass
 
     def on_error(self, code):
         wx.CallAfter(self.processing_window.Hide)
@@ -331,6 +339,10 @@ class MainWindow(wx.Frame):
             self.infobar.ShowMessage("需要大会员 Cookie：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
             raise ProcessError("Cookie required to continue")
 
+        elif code == 404:
+            self.infobar.ShowMessage("错误：获取视频信息失败", flags = wx.ICON_ERROR)
+            raise ProcessError("Failed to download the video")
+
     def on_download_start(self, size: str, index: list, file_name: str, title: str):
         self.download_window.SetTitle("当前第 {} 个，共 {} 个".format(index[0], index[1]))
 
@@ -346,6 +358,11 @@ class MainWindow(wx.Frame):
 
     def on_download_complete(self):
         wx.CallAfter(self.download_window.Hide)
+
+        if Config.show_notification:
+            msg = wx.adv.NotificationMessage("下载完成", "所选视频已全部下载完成", flags = wx.ICON_INFORMATION)
+            msg.Show(timeout = 5)
+            return
 
         dlg = wx.MessageDialog(self, "下载完成\n\n所选视频已全部下载完成", "提示", wx.ICON_INFORMATION | wx.YES_NO)
         dlg.SetYesNoLabels("打开所在位置", "确定")
@@ -376,6 +393,8 @@ class MainWindow(wx.Frame):
         elif self.update_info[0]:
             self.infobar.ShowMessage("有新版本更新可用", wx.ICON_INFORMATION)
 
+    def on_notification_action(self, event):
+        id = event.GetId()
 if __name__ == "__main__":
     app = wx.App()
 
