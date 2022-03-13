@@ -10,7 +10,6 @@ div {
 }
 .info .cover {
     position: relative;
-    display: block;
     float: left;
     width: 30%;
     height: 30%;
@@ -26,7 +25,7 @@ div {
 }
 .info .right {
     position: relative;
-    padding-left: 260px;
+    padding-left: 33%;
     height: 100%;
     z-index: 1;
 }
@@ -62,6 +61,8 @@ div {
     color: #212121;
     min-height: 18px;
     line-height: 18px;
+    padding-top: 2%;
+    padding-bottom: 10%;
     word-wrap: break-word;
     word-break: break-all;
     white-space: normal;
@@ -76,4 +77,5 @@ div {
 .review {
     padding: 16px 0;
     border-top: 1px solid #e5e9ef;
+    z-index: -1;
 }

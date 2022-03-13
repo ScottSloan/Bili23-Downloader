@@ -37,7 +37,7 @@ class Downloader:
         with open(self.file_path, "rb+") as f:
             f.seek(chunk_list[0])
 
-            for chunk in req.iter_content(chunk_size = 512 * 1024):
+            for chunk in req.iter_content(chunk_size = 32 * 1024):
                 if chunk:
                     f.write(chunk)
                     f.flush()
@@ -50,10 +50,14 @@ class Downloader:
 
             time.sleep(1)
 
+            if not self._flag: return
+            
             speed = self.format_speed((self.complete_size - temp_size) / 1024)
             progress = int(self.complete_size / self.total_size * 100)
 
             wx.CallAfter(self.on_download, progress, speed)
+
+        self.temp_size = 0
 
     def get_total_size(self, url: str, referer_url: str) -> int:
         req = self.session.head(url, headers = get_header(referer_url))

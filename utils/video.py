@@ -1,13 +1,14 @@
 import re
-import wx
 import os
+import wx
 import json
 import parsel
 import requests
 from utils.config import Config
 
-from utils.tools import combine_video_audio, format_data, get_header
+from utils.tools import merge_video_audio, format_data, get_header, get_danmaku
 from utils.download import Downloader
+from utils.error import ProcessError
 
 class VideoInfo:
     url = bvid = cid = ""
@@ -16,9 +17,9 @@ class VideoInfo:
 
     view = like = coin = danmaku = favorite = reply = quality = 0
 
-    pages = down_pages = quality_id = quality_desc =  []
+    pages = episodes = down_pages = quality_id = quality_desc =  []
 
-    multiple = False
+    multiple = collection = False
 
 class VideoParser:
     def aid_api(self, aid: str) -> str:
@@ -36,7 +37,7 @@ class VideoParser:
         aid_json = json.loads(aid_request.text)
 
         if aid_json["code"] != 0:
-            wx.CallAfter(self.on_error, 400)
+            self.on_error(400)
 
         bvid = aid_json["data"]["bvid"]
         self.set_bvid(bvid)
@@ -53,17 +54,27 @@ class VideoParser:
         info_json = json.loads(info_request.text)
 
         if info_json["code"] != 0:
-            wx.CallAfter(self.on_error, 400)
+            self.on_error(400)
 
         info_data = info_json["data"]
-        if info_data["tname"] == "连载动画":
-            #main_window.get_thread(info_data["redirect_url"])
-            return
+
+        if "redirect_url" in info_data:
+            self.on_redirect(info_data["redirect_url"])
+            raise ProcessError("Bangumi type detect")
         
         VideoInfo.title = info_data["title"]
         VideoInfo.desc = info_data["desc"] if info_data["desc"] != "-" else "暂无简介"
         VideoInfo.cover = info_data["pic"]
         VideoInfo.pages = info_data["pages"]
+
+        if "ugc_season" in info_data:
+            VideoInfo.collection = True
+
+            info_ugc_season = info_data["ugc_season"]
+            VideoInfo.title = info_ugc_season["title"]
+
+            VideoInfo.episodes = info_ugc_season["sections"][0]["episodes"]
+
         VideoInfo.cid = info_data["cid"]
 
         info_stat = info_data["stat"]
@@ -73,13 +84,9 @@ class VideoParser:
         VideoInfo.danmaku = format_data(info_stat["danmaku"])
         VideoInfo.favorite = format_data(info_stat["favorite"])
         VideoInfo.reply = format_data(info_stat["reply"])
-
-        from utils.html import save_video_info
-
-        save_video_info()
         
     def get_video_quality(self):
-        video_request = requests.get(VideoInfo.url, headers = get_header())
+        video_request = requests.get(VideoInfo.url, headers = get_header(cookie = Config.cookie_sessdata))
         selector = parsel.Selector(video_request.text)
 
         video_json = json.loads(selector.css("head > script:nth-child(33) ::text").extract_first()[20:])
@@ -88,9 +95,13 @@ class VideoParser:
         VideoInfo.quality_id = json_data["accept_quality"]
         VideoInfo.quality_desc = json_data["accept_description"]
 
+        from utils.html import save_video_info
+
+        save_video_info()
+        
     def get_video_durl(self, kwargs):
         self.downloader = Downloader(kwargs["on_start"], kwargs["on_download"])
-        on_complete, self.on_combine = kwargs["on_complete"], kwargs["on_combine"]
+        on_complete, self.on_merge = kwargs["on_complete"], kwargs["on_merge"]
 
         if VideoInfo.multiple:
             for index, value in enumerate(VideoInfo.down_pages):
@@ -99,21 +110,33 @@ class VideoParser:
                 cid = value["cid"]
 
                 self.process_video_durl(VideoInfo.url + "?p=%d" % page, name, index)
-                self.get_video_danmaku(name, cid)
+                get_danmaku(name, cid)
+
+        elif VideoInfo.collection:
+            for index, value in enumerate(VideoInfo.down_pages):
+                name = value["title"]
+                url = self.get_full_url(value["bvid"])
+                cid = value["cid"]
+
+                self.process_video_durl(url, name, index)
+                get_danmaku(name, cid)
+
         else:
             self.process_video_durl(VideoInfo.url, VideoInfo.title, 0)
-            self.get_video_danmaku(VideoInfo.title, VideoInfo.cid)
+            get_danmaku(VideoInfo.title, VideoInfo.cid)
 
-        wx.CallAfter(on_complete, "视频下载完成")
+        wx.CallAfter(on_complete)
         
     def process_video_durl(self, referer_url: str, title: str, index):
-        video_request = requests.get(referer_url, headers = get_header())
+        video_request = requests.get(referer_url, headers = get_header(cookie = Config.cookie_sessdata))
         selector = parsel.Selector(video_request.text)
 
         video_json = json.loads(selector.css("head > script:nth-child(33) ::text").extract_first()[20:])
         json_dash = video_json["data"]["dash"]
+        
+        quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < VideoInfo.quality else VideoInfo.quality
 
-        video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == VideoInfo.quality][0]
+        video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == quality][0]
         audio_durl = json_dash["audio"][0]["baseUrl"]
 
         index = [index + 1, len(VideoInfo.down_pages)]
@@ -121,24 +144,18 @@ class VideoParser:
         self.downloader.add_url(video_durl, referer_url, "video.mp4", index, title)
         self.downloader.add_url(audio_durl, referer_url, "audio.mp3", index, title)
 
-        wx.CallAfter(combine_video_audio, title, self.on_combine)
-        
-    def get_video_danmaku(self, name: str, cid: str):
-        if not Config.save_danmaku:
-            return
+        merge_video_audio(title, self.on_merge)
 
-        req = requests.get(self.danmaku_url(cid), headers = get_header())
-
-        with open(os.path.join(Config.download_path, "{}.xml".format(name)), "w", encoding = "utf-8") as f:
-            f.write(req.text)
-
-    def parse_url(self, url: str, on_error):
-        self.on_error = on_error
+    def parse_url(self, url: str, on_redirect, on_error):
+        self.on_redirect, self.on_error = on_redirect, on_error
 
         if "av" in url:
             self.get_aid(url)
         elif "BV" in url:
             self.get_bvid(url)
         
-        wx.CallAfter(self.get_video_info)
-        wx.CallAfter(self.get_video_quality)
+        self.get_video_info()
+        self.get_video_quality()
+
+    def get_full_url(self, bvid: str):
+        return "https://www.bilibili.com/video/" + bvid

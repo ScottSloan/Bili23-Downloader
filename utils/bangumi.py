@@ -1,12 +1,12 @@
 import re
-import wx
 import os
+import wx
 import json
 import parsel
 import requests
 
 from utils.config import Config
-from utils.tools import combine_video_audio, format_data, get_header
+from utils.tools import merge_video_audio, format_data, get_header, get_danmaku
 from utils.download import Downloader
 
 class BangumiInfo:
@@ -30,9 +30,6 @@ class BangumiParser:
     def info_api(self):
         return "https://api.bilibili.com/pgc/view/web/season?ep_id=" + BangumiInfo.epid
 
-    def danmaku_url(self, cid: str):
-        return "https://comment.bilibili.com/{}.xml".format(cid)
-
     def get_epid(self, url: str):
         epid = re.findall(r"ep[0-9]*", url)[0][2:]
         self.set_epid(epid)
@@ -43,7 +40,7 @@ class BangumiParser:
         season_json = json.loads(season_request.text)
 
         if season_json["code"] != 0:
-            wx.CallAfter(self.on_error, 400)
+            self.on_error(400)
 
         epid = str(season_json["result"]["main_section"]["episodes"][0]["id"])
         self.set_epid(epid)
@@ -54,7 +51,7 @@ class BangumiParser:
         media_json = json.loads(media_request.text)
 
         if media_json["code"] != 0:
-            wx.CallAfter(self.on_error, 400)
+            self.on_error(400)
 
         season_id = media_json["result"]["media"]["season_id"]
         self.get_season_id("ss" + str(season_id))
@@ -67,7 +64,7 @@ class BangumiParser:
         info_json = json.loads(info_request.text)
 
         if info_json["code"] != 0:
-            wx.CallAfter(self.on_error, 400)
+            self.on_error(400)
         
         info_result = info_json["result"]
         BangumiInfo.url = info_result["episodes"][0]["link"]
@@ -75,7 +72,6 @@ class BangumiParser:
         BangumiInfo.cover = info_result["cover"]
         BangumiInfo.desc = info_result["evaluate"]
         BangumiInfo.newep = info_result["new_ep"]["desc"]
-        BangumiInfo.theme = info_result["up_info"]["uname"][4:]
 
         if "rating" in info_result:
             BangumiInfo.count = str(info_result["rating"]["count"])
@@ -104,29 +100,30 @@ class BangumiParser:
         BangumiInfo.coin = format_data(info_stat["coins"])
         BangumiInfo.danmaku = format_data(info_stat["danmakus"])
         BangumiInfo.favorite = format_data(info_stat["favorites"])
-        
-        from utils.html import save_bangumi_info
-
-        save_bangumi_info()
 
     def get_bangumi_quality(self):
         bangumi_request = requests.get(BangumiInfo.url, headers = get_header(cookie = Config.cookie_sessdata))
         selector = parsel.Selector(bangumi_request.text)
 
         try:
-            nth_child = 6 if BangumiInfo.theme != "纪录片" else 7
-            bangumi_json = json.loads(selector.css("body > script:nth-child({}) ::text".format(nth_child)).extract_first()[20:])
-            json_data = bangumi_json["data"]
-            
+            bangumi_json = json.loads(selector.css("body > script:nth-child(6) ::text").extract_first()[20:])
         except:
-            wx.CallAfter(self.on_error)
+            bangumi_json = json.loads(selector.css("body > script:nth-child(7) ::text").extract_first()[20:])
+
+        json_data = bangumi_json["data"]
 
         BangumiInfo.quality_id = json_data["accept_quality"]
         BangumiInfo.quality_desc = json_data["accept_description"]
 
+        BangumiInfo.theme = selector.css("#media_module > div > div.pub-wrapper > a.home-link ::text").extract_first()
+
+        from utils.html import save_bangumi_info
+
+        save_bangumi_info()
+        
     def get_bangumi_durl(self, kwargs):
         self.downloader = Downloader(kwargs["on_start"], kwargs["on_download"])
-        on_complete, self.on_combine = kwargs["on_complete"], kwargs["on_combine"]
+        on_complete, self.on_merge = kwargs["on_complete"], kwargs["on_merge"]
 
         for index, value in enumerate(BangumiInfo.down_episodes):
             url = value["link"]
@@ -137,10 +134,9 @@ class BangumiParser:
                 continue
 
             self.process_bangumi_durl(url, name, index)
-            self.get_bangumi_danmaku(name, str(cid))
+            get_danmaku(name, cid)
 
-
-        wx.CallAfter(on_complete, "番剧下载完成")
+        wx.CallAfter(on_complete)
 
     def process_bangumi_durl(self, referer_url: str, title: str, index):
         bangumi_request = requests.get(referer_url, headers = get_header(cookie = Config.cookie_sessdata))
@@ -149,7 +145,9 @@ class BangumiParser:
         bangumi_json = json.loads(selector.css("body > script:nth-child(6) ::text").extract_first()[20:])
         json_dash = bangumi_json["data"]["dash"]
 
-        video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == BangumiInfo.quality][0]
+        quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < BangumiInfo.quality else BangumiInfo.quality
+
+        video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == quality][0]
         audio_durl = json_dash["audio"][0]["baseUrl"]
 
         index = [index + 1, len(BangumiInfo.down_episodes)]
@@ -157,16 +155,7 @@ class BangumiParser:
         self.downloader.add_url(video_durl, referer_url, "video.mp4", index, title)
         self.downloader.add_url(audio_durl, referer_url, "audio.mp3", index, title)
         
-        wx.CallAfter(combine_video_audio, title, self.on_combine)
-
-    def get_bangumi_danmaku(self, name: str, cid: str):
-        if not Config.save_danmaku:
-            return
-
-        req = requests.get(self.danmaku_url(cid), headers = get_header())
-        
-        with open(os.path.join(os.getcwd(), "{}.xml".format(name)), "w", encoding = "utf-8") as f:
-            f.write(req.text)
+        merge_video_audio(title, self.on_merge)
 
     def parse_url(self, url: str, on_error):
         self.on_error = on_error
@@ -178,5 +167,5 @@ class BangumiParser:
         elif "md" in url:
             self.get_media_id(url)
         
-        wx.CallAfter(self.get_bangumi_info)
-        wx.CallAfter(self.get_bangumi_quality)
+        self.get_bangumi_info()
+        self.get_bangumi_quality()

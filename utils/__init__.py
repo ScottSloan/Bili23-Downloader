@@ -1,13 +1,18 @@
 import wx
 import os
 import sys
+import ctypes
 import platform
 import subprocess
 
 def set_env():
-    if platform.platform().startswith("Windows"):
-        Path = os.getenv("Path")
-        os.environ["Path"] = Path + ";" + os.path.join(os.getcwd())
+    machine_platform = platform.platform()
+    if machine_platform.startswith("Windows"):
+        os.environ["Path"] = os.getenv("Path") + ";" + os.path.join(os.getcwd())
+        os.environ["PYTHON_VLC_MODULE_PATH"] = os.path.join(os.getcwd(), "vlc")
+
+    if machine_platform.startswith("Windows-10") or machine_platform.startswith("Windows-11"):
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 def show_error_msg():
     err_app = wx.App()
@@ -21,7 +26,7 @@ def check_path():
 
 try:
     set_env()
-    subprocess.check_call("ffmpeg -version", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    subprocess.check_call("ffmpeg -version", shell = True, stdout = subprocess.PIPE)
     check_path()
 
 except:

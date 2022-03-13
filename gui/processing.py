@@ -8,6 +8,8 @@ class ProcessingWindow(Dialog):
 
         self.EnableCloseButton(False)
         self.init_controls()
+        
+        self.Update()
     def init_controls(self):
         self.processing_label = wx.StaticText(self.panel, -1, "正在处理中，请稍候")
 
