@@ -89,7 +89,11 @@ class VideoParser:
         video_request = requests.get(VideoInfo.url, headers = get_header(cookie = Config.cookie_sessdata))
         selector = parsel.Selector(video_request.text)
 
-        video_json = json.loads(selector.css("head > script:nth-child(33) ::text").extract_first()[20:])
+        try:
+            video_json = json.loads(selector.css("head > script:nth-child(33) ::text").extract_first()[20:])
+        except:
+            self.on_error(404)
+
         json_data = video_json["data"]
 
         VideoInfo.quality_id = json_data["accept_quality"]

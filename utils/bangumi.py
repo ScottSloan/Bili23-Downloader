@@ -108,7 +108,7 @@ class BangumiParser:
         try:
             bangumi_json = json.loads(selector.css("body > script:nth-child(6) ::text").extract_first()[20:])
         except:
-            bangumi_json = json.loads(selector.css("body > script:nth-child(7) ::text").extract_first()[20:])
+            self.on_error(404)
 
         json_data = bangumi_json["data"]
 
