@@ -30,11 +30,11 @@ pip install -r requirements.txt
 ```
 ## 运行截图
 > - 主界面
-> > - ![主界面](https://github.com/ScottSloan/Bili23-Downloader/blob/main/assets/main.png)
+> > - ![主界面](https://link.jscdn.cn/sharepoint/aHR0cHM6Ly9oYW5sb3RoY24tbXkuc2hhcmVwb2ludC5jb20vOmk6L2cvcGVyc29uYWwvYWRtaW5faGFubG90aGNuX29ubWljcm9zb2Z0X2NvbS9FZnJQUHpXeHM3MURuYnNiVEhDV0laRUJtT2VPcVItQlc2cGpMZTljeEJ2eVF3P2U9Nm1NYkN2.png)
 > - 查看番剧信息
-> > - ![查看番剧信息](https://github.com/ScottSloan/Bili23-Downloader/blob/main/assets/info.png)
+> > - ![查看番剧信息](https://link.jscdn.cn/sharepoint/aHR0cHM6Ly9oYW5sb3RoY24tbXkuc2hhcmVwb2ludC5jb20vOmk6L2cvcGVyc29uYWwvYWRtaW5faGFubG90aGNuX29ubWljcm9zb2Z0X2NvbS9FWDVpM01VcUxBQkxnajJPR3hEellqRUItWkxEMHd1OW9EclZwWGdyNnh6aUNRP2U9VnBSZVJy.png)
 > - 下载完成
-> > - ![下载完成](https://github.com/ScottSloan/Bili23-Downloader/blob/main/assets/play.png)
+> > - ![下载完成](https://link.jscdn.cn/sharepoint/aHR0cHM6Ly9oYW5sb3RoY24tbXkuc2hhcmVwb2ludC5jb20vOmk6L2cvcGVyc29uYWwvYWRtaW5faGFubG90aGNuX29ubWljcm9zb2Z0X2NvbS9FWDdQTkRHZEg0SkJwV250bTAzR3lQQUJLRXBNZ3F6R2kzWlp4RmNYTTNfZ3RBP2U9S2NDcnJY.png)
 ## 使用 Cookie
 - **适用于需要使用大会员 Cookie 才能下载的情况**
 > - 浏览器登录B站，按下 `F12` 键打开开发者模式--> application --> cookie，找到 SESSDATA 字段，在设置中粘贴即可
