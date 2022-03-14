@@ -262,7 +262,8 @@ class MainWindow(wx.Frame):
         self.theme.quality = self.theme.quality_id[event.GetSelection()]
 
     def download_EVT(self, event):
-        self.get_all_checked_item()
+        if not self.get_all_checked_item():
+            return
 
         self.download_window = DownloadWindow(self)
 
@@ -315,11 +316,11 @@ class MainWindow(wx.Frame):
         if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
             self.on_error(401)
         
-        elif vip:
+        elif vip and Config.cookie_sessdata == "":
             dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未添加 Cookie 的情况下将跳过下载。\n确认继续吗？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
-            if dialog.ShowModal() == wx.ID_YES:
-                pass
-
+            if dialog.ShowModal() == wx.ID_NO:
+                return False
+        return True
     def on_error(self, code):
         wx.CallAfter(self.processing_window.Hide)
 
