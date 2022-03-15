@@ -7,7 +7,7 @@ class Config:
     download_path = os.path.join(os.getcwd(), "download")
     max_thread = 4
 
-    cookie_sessdata = "8283a5f6%2C1661136066%2C5f6e2%2A21"
+    cookie_sessdata = ""
 
     default_quality = 80
 
