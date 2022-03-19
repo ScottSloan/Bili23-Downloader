@@ -1,12 +1,11 @@
 import re
-import os
 import wx
 import json
 import parsel
 import requests
 
 from utils.config import Config
-from utils.tools import merge_video_audio, format_data, get_header, get_danmaku
+from utils.tools import merge_video_audio, format_data, get_header, get_danmaku_subtitle
 from utils.download import Downloader
 
 class BangumiInfo:
@@ -134,7 +133,7 @@ class BangumiParser:
                 continue
 
             self.process_bangumi_durl(url, name, index)
-            get_danmaku(name, cid)
+            get_danmaku_subtitle(name, cid)
 
         wx.CallAfter(on_complete)
 

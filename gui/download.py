@@ -32,4 +32,25 @@ class DownloadWindow(Dialog):
         vbox.Add(hbox1, 0, wx.EXPAND)
         vbox.Add(hbox2, 1, wx.EXPAND)
 
-        self.panel.SetSizer(vbox)   
+        self.panel.SetSizer(vbox)
+
+    def on_download_start(self, size: str, index: list, file_name: str, title: str):
+        self.SetTitle("当前第 {} 个，共 {} 个".format(index[0], index[1]))
+
+        down_type = "视频" if file_name.endswith("mp4") else "音频"
+        self.lb.SetLabel("正在下载{}：{}".format(down_type, title))
+        self.size_lb.SetLabel("大小：{}".format(size))
+
+    def on_downloading(self, progress: int, speed: str):
+        self.gauge.SetValue(progress)
+        self.progress_lb.SetLabel("{}%".format(progress))
+
+        self.speed_lb.SetLabel("速度：{}".format(speed))
+
+    def on_merge(self):
+        self.gauge.Pulse()
+        self.lb.SetLabel("正在合成视频......")
+
+        self.progress_lb.SetLabel("--%")
+        self.speed_lb.SetLabel("速度：-")
+        self.size_lb.SetLabel("大小：-")

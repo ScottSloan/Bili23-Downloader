@@ -2,22 +2,20 @@ import wx
 import os
 import wx.adv
 import wx.html2
-import subprocess
 import wx.dataview
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.config import Config
-from utils.tools import format_duration, remove_file, process_shortlink, check_update
-from utils.error import ProcessError
+from utils.tools import process_shortlink, check_update
 
 from gui.info import InfoWindow
 from gui.download import DownloadWindow
 from gui.settings import SettingWindow
 from gui.about import AboutWindow
 from gui.processing import ProcessingWindow
-from gui.template import InfoBar
+from gui.template import InfoBar, TreeListCtrl
 
 class MainWindow(wx.Frame):
     def __init__(self, parent):
@@ -29,7 +27,6 @@ class MainWindow(wx.Frame):
         self.panel = wx.Panel(self, -1)
 
         self.init_controls()
-        self.init_list_lc()
         self.Bind_EVT()
 
         Main_ThreadPool.submit(self.check_app_update)
@@ -56,18 +53,16 @@ class MainWindow(wx.Frame):
         hbox2.Add(self.quality_lb, 0, wx.CENTER | wx.RIGHT, 10)
         hbox2.Add(self.quality_cb, 0, wx.RIGHT, 10)
 
-        self.list_lc = wx.dataview.TreeListCtrl(self.panel, -1, style = wx.dataview.TL_3STATE)
+        self.list_lc = TreeListCtrl(self.panel)
 
         self.info_btn = wx.Button(self.panel, -1, "视频信息", size = self.FromDIP((90, 30)))
         self.info_btn.Enable(False)
-        self.set_btn = wx.Button(self.panel, -1, "设置", size = self.FromDIP((80, 30)))
         self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((90, 30)))
         self.download_btn.Enable(False)
 
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
         hbox3.Add(self.info_btn, 0, wx.BOTTOM | wx.LEFT, 10)
         hbox3.AddStretchSpacer(1)
-        hbox3.Add(self.set_btn, 0, wx.BOTTOM, 10)
         hbox3.Add(self.download_btn, 0, wx.ALL & (~wx.TOP), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -81,68 +76,67 @@ class MainWindow(wx.Frame):
 
         self.init_menu_bar()
 
-    def init_list_lc(self):
-        self.list_lc.ClearColumns()
-        self.list_lc.DeleteAllItems()
-        self.list_lc.AppendColumn("序号", width = self.FromDIP(100))
-        self.list_lc.AppendColumn("标题", width = self.FromDIP(400))
-        self.list_lc.AppendColumn("备注", width = self.FromDIP(50))
-        self.list_lc.AppendColumn("长度", width = self.FromDIP(75))
-
     def init_menu_bar(self):
-        self.menu_bar = wx.MenuBar()
+        menu_bar = wx.MenuBar()
         self.about_menu = wx.Menu()
         self.tool_menu = wx.Menu()
 
-        self.check_menuitem = wx.MenuItem(self.about_menu, 110, "检查更新(&U)")
-        self.help_menuitem = wx.MenuItem(self.about_menu, 120, "使用帮助(&C)")
-        self.about_menuitem = wx.MenuItem(self.about_menu, 130, "关于(&A)")
+        check_menuitem = wx.MenuItem(self.about_menu, 110, "检查更新(&U)")
+        help_menuitem = wx.MenuItem(self.about_menu, 120, "使用帮助(&C)")
+        about_menuitem = wx.MenuItem(self.about_menu, 130, "关于(&A)")
 
-        self.menu_bar.Append(self.about_menu,"帮助(&H)")
+        option_menuitem = wx.MenuItem(self.tool_menu, 140, "设置(&S)")
 
-        self.about_menu.Append(self.check_menuitem)
+        menu_bar.Append(self.tool_menu, "工具(&T)")
+        menu_bar.Append(self.about_menu, "帮助(&H)")
+
+        self.tool_menu.Append(option_menuitem)
+        self.about_menu.Append(check_menuitem)
         self.about_menu.AppendSeparator()
-        self.about_menu.Append(self.help_menuitem)
-        self.about_menu.Append(self.about_menuitem)
+        self.about_menu.Append(help_menuitem)
+        self.about_menu.Append(about_menuitem)
 
-        self.SetMenuBar(self.menu_bar)
+        self.SetMenuBar(menu_bar)
 
     def Bind_EVT(self):
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.about_menu.Bind(wx.EVT_MENU, self.menu_EVT)
+        self.tool_menu.Bind(wx.EVT_MENU, self.menu_EVT)
 
         self.address_tc.Bind(wx.EVT_TEXT_ENTER, self.get_url_EVT)
         self.get_button.Bind(wx.EVT_BUTTON, self.get_url_EVT)
 
         self.quality_cb.Bind(wx.EVT_CHOICE, self.select_quality)
         self.info_btn.Bind(wx.EVT_BUTTON, self.Load_info_window_EVT)
-        self.set_btn.Bind(wx.EVT_BUTTON, self.Load_setting_window_EVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.download_EVT)
-
-        self.list_lc.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.check_item_EVT)
 
     def menu_EVT(self, event):
         menuid = event.GetId()
 
         if menuid == 110:
-            info = self.update_info
-            dialog = wx.MessageDialog(self, "有新的更新可用\n\n{}\n\n更新说明：{}\n\n版本：{}".format(info[1], info[2], info[4]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
-            dialog.SetYesNoLabels("马上更新", "稍后更新")
-            if dialog.ShowModal() == wx.ID_YES:
-                import webbrowser
-                webbrowser.open(Config._website)
+            info = check_update()
+
+            if info == None:
+                wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "警告", wx.ICON_WARNING).ShowModal()
+                
+            elif info[0]:
+                dialog = wx.MessageDialog(self, "有新的更新可用\n\n{}\n\n更新说明：{}\n\n版本：{}".format(info[1], info[2], info[4]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
+                dialog.SetYesNoLabels("马上更新", "稍后更新")
+                if dialog.ShowModal() == wx.ID_YES:
+                    import webbrowser
+                    webbrowser.open(Config._website)
+            
+            else:
+                wx.MessageDialog(self, "当前没有可用更新", "提示", wx.ICON_INFORMATION).ShowModal()
 
         elif menuid == 120:
             wx.MessageDialog(self, "使用帮助\n\nhelp", "使用帮助", wx.ICON_INFORMATION).ShowModal()
 
         elif menuid == 130:
-            about_window = AboutWindow(self)
+            AboutWindow(self)
 
-    def OnClose(self, event):
-        subprocess.Popen("cd {} && {} cover.*".format(Config._info_base_path, Config._del_cmd), shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        remove_file(Config._info_html)
-
-        event.Skip()
+        elif menuid == 140:
+            setting_window = SettingWindow(self)
+            setting_window.ShowModal()
 
     def get_url_EVT(self, event):
         url = self.address_tc.GetValue()
@@ -161,7 +155,7 @@ class MainWindow(wx.Frame):
         self.processing_window.ShowWindowModal()
         
     def get_url_thread(self, url: str):
-        wx.CallAfter(self.init_list_lc)
+        wx.CallAfter(self.list_lc.init_list_lc)
 
         if "b23.tv" in url:
             url = process_shortlink(url)
@@ -188,66 +182,25 @@ class MainWindow(wx.Frame):
     def get_url_finish(self):
         self.download_btn.Enable(True)
         self.info_btn.Enable(True)
+
         self.processing_window.Hide()
 
         self.list_lc.SetFocus()
 
-        if Config.cookie_sessdata == "":
-            self.infobar.ShowMessage("注意：尚未添加大会员 Cookie ，部分视频可能无法下载", flags = wx.ICON_WARNING)
+        if Config.cookie_sessdata == "" and self.theme == BangumiInfo:
+            self.infobar.ShowMessage("注意：尚未添加大会员 Cookie，部分视频可能无法下载", flags = wx.ICON_WARNING)
 
     def set_video_list(self):
         videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
 
-        VideoInfo.multiple = True if len(VideoInfo.pages) > 1 else False
-
-        self.rootitems, self.all_list_items, items_content = ["视频"], [], {}
-        
-        if VideoInfo.collection:
-            items_content["视频"] = [[str(index + 1), value["title"], "", format_duration(value["arc"]["duration"])] for index, value in enumerate(VideoInfo.episodes)]
-        else:
-            items_content["视频"] = [[str(i["page"]), i["part"] if VideoInfo.multiple else VideoInfo.title, "", format_duration(i["duration"])] for i in VideoInfo.pages]
-
-        self.append_list(items_content)
+        wx.CallAfter(self.list_lc.set_video_list)
         self.list_lb.SetLabel("视频 (共 %d 个)" % videos)
 
     def set_bangumi_list(self):
         bangumis = len(BangumiInfo.episodes)
 
-        self.rootitems, self.all_list_items, items_content = [], [], {}
-
-        for key, value in BangumiInfo.sections.items():
-            if not Config.show_sections and key != "正片":
-                continue
-
-            items_content[key] = [[str(i["title"]), i["share_copy"] if i["title"] != "正片" else BangumiInfo.title, i["badge"], format_duration(i["duration"])] for i in value]
-
-            self.rootitems.append(key)
-
-        self.append_list(items_content)
-
+        wx.CallAfter(self.list_lc.set_bangumi_list)
         self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.theme, bangumis))
-
-    def append_list(self, items_content):
-        root = self.list_lc.GetRootItem()
-
-        for i in items_content:
-            rootitem = self.list_lc.AppendItem(root, i)
-
-            if self.theme == VideoInfo and (len(VideoInfo.pages) > 1 or len(VideoInfo.episodes) > 1):
-                self.list_lc.SetItemText(rootitem, 1, VideoInfo.title)
-            
-            self.all_list_items.append(rootitem)
-
-            for n in items_content[i]:
-                childitem = self.list_lc.AppendItem(rootitem, n[0])
-                self.list_lc.CheckItem(childitem, state = wx.CHK_CHECKED)
-                self.all_list_items.append(childitem)
-
-                for i in [1, 2, 3]:
-                    self.list_lc.SetItemText(childitem, i, n[i])
-
-            self.list_lc.CheckItem(rootitem, state = wx.CHK_CHECKED)
-            self.list_lc.Expand(rootitem)
 
     def set_quality(self, type):
         self.quality_cb.Set(type.quality_desc)
@@ -262,7 +215,7 @@ class MainWindow(wx.Frame):
         self.theme.quality = self.theme.quality_id[event.GetSelection()]
 
     def download_EVT(self, event):
-        if not self.get_all_checked_item():
+        if self.list_lc.get_all_checked_item(self.theme, self.on_error):
             return
 
         self.download_window = DownloadWindow(self)
@@ -272,7 +225,7 @@ class MainWindow(wx.Frame):
         self.download_window.ShowWindowModal()
 
     def download_thread(self):
-        kwargs = {"on_start":self.on_download_start, "on_download":self.on_downloading, "on_complete":self.on_download_complete, "on_merge":self.on_merge}
+        kwargs = {"on_start":self.download_window.on_download_start, "on_download":self.download_window.on_downloading, "on_complete":self.on_download_complete, "on_merge":self.download_window.on_merge}
 
         video_parser.get_video_durl(kwargs) if self.theme == VideoInfo else bangumi_parser.get_bangumi_durl(kwargs)
 
@@ -280,103 +233,27 @@ class MainWindow(wx.Frame):
         self.info_window = InfoWindow(self, VideoInfo.title if self.theme == VideoInfo else BangumiInfo.title)
         self.info_window.Show()
 
-    def Load_setting_window_EVT(self, event):
-        setting_window = SettingWindow(self)
-        setting_window.ShowWindowModal()
-
-    def check_item_EVT(self, event):
-        item = event.GetItem()
-        self.list_lc.UpdateItemParentStateRecursively(item)
-
-        if self.list_lc.GetItemText(item, 0) in self.rootitems:
-            self.list_lc.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
-
-    def get_all_checked_item(self):
-        vip = False
-        for i in self.all_list_items:
-            text = self.list_lc.GetItemText(i, 0)
-            state = bool(self.list_lc.GetCheckedState(i))
-
-            if text not in self.rootitems and state:
-                itemtitle = self.list_lc.GetItemText(i, 1)
-                parenttext = self.list_lc.GetItemText(self.list_lc.GetItemParent(i), 0)
-                
-                if self.theme == VideoInfo:
-                    index = int(self.list_lc.GetItemText(i, 0))
-                    if VideoInfo.collection:
-                        VideoInfo.down_pages.append(VideoInfo.episodes[index - 1])
-                    else:
-                        VideoInfo.down_pages.append(VideoInfo.pages[index - 1])
-                else:
-                    index = [i for i, v in enumerate(BangumiInfo.sections[parenttext]) if v["share_copy"] == itemtitle][0]
-                    BangumiInfo.down_episodes.append(BangumiInfo.sections[parenttext][index])
-                    if BangumiInfo.sections[parenttext][index]["badge"] == "会员":
-                        vip = True
-        
-        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
-            self.on_error(401)
-        
-        elif vip and Config.cookie_sessdata == "":
-            dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未添加 Cookie 的情况下将跳过下载。\n确认继续吗？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
-            if dialog.ShowModal() == wx.ID_NO:
-                return False
-        return True
-    def on_error(self, code):
+    def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)
 
-        if code == 400:
-            self.infobar.ShowMessage("请求失败：请检查地址是否有误", flags = wx.ICON_ERROR)
-            raise ValueError("Invalid URL")
-            
-        elif code == 401:
-            self.infobar.ShowMessage("未选择下载项目：请选择要下载的项目", flags = wx.ICON_ERROR)
-            raise ProcessError("None items selected to download")
-        
-        elif code == 402:
-            self.infobar.ShowMessage("无法获取视频清晰度\n\n需要大会员 Cookie 才能继续", flags = wx.ICON_WARNING)
-            raise ProcessError("Cookie required to continue")
-
-        elif code == 403:
-            self.infobar.ShowMessage("需要大会员 Cookie：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
-            raise ProcessError("Cookie required to continue")
-
-        elif code == 404:
-            self.infobar.ShowMessage("错误：获取视频信息失败", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to download the video")
-
-    def on_download_start(self, size: str, index: list, file_name: str, title: str):
-        self.download_window.SetTitle("当前第 {} 个，共 {} 个".format(index[0], index[1]))
-
-        down_type = "视频" if file_name.endswith("mp4") else "音频"
-        self.download_window.lb.SetLabel("正在下载{}：{}".format(down_type, title))
-        self.download_window.size_lb.SetLabel("大小：{}".format(size))
-
-    def on_downloading(self, progress: int, speed: str):
-        self.download_window.gauge.SetValue(progress)
-        self.download_window.progress_lb.SetLabel("{}%".format(progress))
-
-        self.download_window.speed_lb.SetLabel("速度：{}".format(speed))
+        self.infobar.show_error_info(code)
 
     def on_download_complete(self):
         wx.CallAfter(self.download_window.Hide)
 
         if Config.show_notification:
-            msg = wx.adv.NotificationMessage("下载完成", "所选视频已全部下载完成", flags = wx.ICON_INFORMATION)
+            msg = wx.adv.NotificationMessage("下载完成", "所选视频已全部下载完成", self, wx.ICON_INFORMATION)
             msg.Show(timeout = 5)
             return
 
         dlg = wx.MessageDialog(self, "下载完成\n\n所选视频已全部下载完成", "提示", wx.ICON_INFORMATION | wx.YES_NO)
         dlg.SetYesNoLabels("打开所在位置", "确定")
+
         if dlg.ShowModal() == wx.ID_YES:
-            os.startfile(Config.download_path)
-
-    def on_merge(self):
-        self.download_window.gauge.Pulse()
-        self.download_window.lb.SetLabel("正在合成视频......")
-
-        self.download_window.progress_lb.SetLabel("--%")
-        self.download_window.speed_lb.SetLabel("速度：-")
-        self.download_window.size_lb.SetLabel("大小：-")
+            if Config._platform.startswith("Windows"):
+                os.startfile(Config.download_path)
+            else:
+                os.system('xdg-open "{}"'.format(Config.download_path))
 
     def on_redirect(self, url: str):
         Main_ThreadPool = ThreadPoolExecutor(max_workers = 2)
@@ -389,13 +266,11 @@ class MainWindow(wx.Frame):
         self.update_info = check_update()
 
         if self.update_info == None:
-            self.infobar.ShowMessage("检查更新失败", wx.ICON_ERROR)
+            self.infobar.ShowMessage("检查更新失败", wx.ICON_WARNING)
 
         elif self.update_info[0]:
             self.infobar.ShowMessage("有新版本更新可用", wx.ICON_INFORMATION)
 
-    def on_notification_action(self, event):
-        id = event.GetId()
 if __name__ == "__main__":
     app = wx.App()
 

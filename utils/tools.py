@@ -2,6 +2,7 @@ import re
 import os
 import wx
 import json
+import math
 import requests
 import subprocess
 
@@ -12,11 +13,20 @@ quality_wrap = {"超高清 8K":127, "真彩 HDR":125, "超清 4K":120, "高清 1
 def merge_video_audio(out_name: str, on_merge):
     wx.CallAfter(on_merge)
 
-    cmd = 'cd {} && ffmpeg -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy "{}".mp4 && {} video.mp4 audio.mp3'.format(Config.download_path, get_legal_name(out_name), Config._del_cmd)
+    name = get_legal_name(out_name)
+
+    cmd = '''cd {} && {} -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy "{}".mp4 && {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, name, Config._del_cmd)
     
     process = subprocess.Popen(cmd, shell = True)
     process.wait()
     
+def merge_subtitle(out_name):
+    srt_path = os.path.join(Config.download_path, "{}.srt".format(out_name))
+    merge_subtitle_cmd = '''cd {2} && {3} -threads 2 -i "{0}.mp4" -vf "subtitles='{0}.srt'" "{0}_sub.mp4" && {1} "{0}.mp4" "{0}.srt"'''.format(out_name, Config._del_cmd, Config.download_path, Config._ffmpeg_path) if Config.auto_merge_subtitle and os.path.exists(srt_path) else ""
+
+    process = subprocess.Popen(merge_subtitle_cmd, shell = True)
+    process.wait()
+
 def process_shortlink(url: str):
     return requests.get(url, headers = get_header()).url
 
@@ -37,16 +47,31 @@ def get_header(referer_url = None, cookie = None, chunk_list = None) -> str:
 
     return header
 
-def get_danmaku(name:str, cid: int):
-    if not Config.save_danmaku:
-        return
-
-    danmaku_url = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
-    req = requests.get(danmaku_url, headers = get_header())
+def get_file_from_url(url: str, filename: str, issubtitle: bool):
+    req = requests.get(url, headers = get_header())
     req.encoding = "utf-8"
+    
+    with open(os.path.join(Config.download_path, filename), "w", encoding = "utf-8") as f:
+        f.write(convert_json_to_srt(req.text) if issubtitle else req.text)
 
-    with open(os.path.join(Config.download_path, "{}.xml".format(name)), "w", encoding = "utf-8") as f:
-        f.write(req.text)
+def get_danmaku_subtitle(name: str, cid: int, bvid: str):
+    if Config.save_danmaku:
+        danmaku_url = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
+        get_file_from_url(danmaku_url, "{}.xml".format(name), False)
+
+    if Config.save_subtitle:
+        subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(cid, bvid)
+        req = requests.get(subtitle_url, headers = get_header())
+
+        subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', req.text)[0]
+        subtitle_json = json.loads(subtitle_raw)["subtitles"]
+
+        if len(subtitle_json) == 0:
+            return
+            
+        down_url = "https:{}".format(subtitle_json[0]["subtitle_url"])
+        
+        get_file_from_url(down_url, "{}.srt".format(name), True)
 
 def remove_file(path: str):
     if os.path.exists(path):
@@ -61,18 +86,14 @@ def format_data(data: int) -> str:
         return str(data)
 
 def format_duration(duration: int) -> str:
-    if str(duration).endswith("000"):
+    if duration > 1000000:
         duration = duration / 1000
 
     hours = int(duration // 3600)
     mins = int((duration - hours * 3600) // 60)
     secs = int(duration - hours * 3600 - mins * 60)
-
-    hours_ = str(hours) if hours > 9 else "0" + str(hours)
-    mins_ = str(mins) if mins > 9 else "0" + str(mins)
-    secss_ = str(secs) if secs > 9 else "0" + str(secs)
-
-    return(hours_ + ":" + mins_ + ":" + secss_ if hours != 0 else mins_ + ":" + secss_)
+    
+    return(str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2))
 
 def check_update() -> list:
     url = "https://auth.hanloth.cn/?type=update&pid=39&token=Mjp81YXdxcUk95ad"
@@ -91,3 +112,28 @@ def check_update() -> list:
 
     new = True if float(Config._version) < version else False
     return [new, name, description, d_url, version]
+
+def convert_json_to_srt(data: str) -> str:
+    json_data = json.loads(data)
+
+    file = ""
+    for index, value in enumerate(json_data["body"]):
+        file += "{}\n".format(index)
+        start = value["from"]
+        end = value["to"]
+        file += process_duration(start, False) + " --> " + process_duration(end, True) + "\n"
+        file += value["content"] + "\n\n"
+    
+    return file
+
+def process_duration(duration: int, isend: bool) -> str:
+    hours = math.floor(duration) // 3600
+    mins = (math.floor(duration) - hours * 3600) // 60
+    secs = math.floor(duration) - hours * 3600 - mins * 60
+
+    if not isend:
+        msecs = int(math.modf(duration)[0] * 100)
+    else:
+        msecs = abs(int(math.modf(duration)[0] * 100 -1))
+
+    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) + "," + str(msecs).zfill(2)

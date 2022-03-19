@@ -12,25 +12,27 @@ conf.read(os.path.join(os.getcwd(), "config.conf"))
 
 class SettingWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "设置", (370, 450))
+        Dialog.__init__(self, parent, "设置", (370, 460))
 
         self.init_controls()
         self.Bind_EVT()
 
-    def init_controls(self):
-        self.infobar = InfoBar(self.panel)
+        self.FitInside()
 
+    def init_controls(self):
         self.note = wx.Notebook(self.panel, -1)
 
         tab1 = Tab1(self.note)
         tab2 = Tab2(self.note)
         tab3 = Tab3(self.note)
-        #tab4 = Tab4(self.note)
+        tab4 = Tab4(self.note)
+        tab5 = Tab5(self.note)
 
         self.note.AddPage(tab1, "下载")
         self.note.AddPage(tab2, "Cookie")
-        self.note.AddPage(tab3, "其他")
-        #self.note.AddPage(tab4, "代理")
+        self.note.AddPage(tab3, "弹幕和字幕")
+        self.note.AddPage(tab4, "其他")
+        self.note.AddPage(tab5, "代理")
 
         self.ok_btn = wx.Button(self.panel, -1, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self.panel, -1, "取消", size = self.FromDIP((80, 30)))
@@ -41,7 +43,6 @@ class SettingWindow(Dialog):
         hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.infobar)
         vbox.Add(self.note, 1, wx.EXPAND | wx.ALL, 10)
         vbox.Add(hbox, 0, wx.EXPAND)
 
@@ -55,8 +56,8 @@ class SettingWindow(Dialog):
         self.Destroy()
     
     def save_settings(self, event):
-        page = self.note.GetCurrentPage()
-        page.save_conf()
+        for i in range(5):
+            self.note.GetPage(i).save_conf()
 
         with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
             conf.write(f)
@@ -82,7 +83,7 @@ class Tab1(wx.Panel):
         self.thread_sl.Bind(wx.EVT_SLIDER, self.on_slide)
 
     def load_conf(self):
-        self.path_tc.SetLabel(Config.download_path)
+        self.path_tc.SetValue(Config.download_path)
         
         self.thread_lb.SetLabel("多线程数：{}".format(Config.max_thread))
         self.thread_sl.SetValue(Config.max_thread)
@@ -193,8 +194,98 @@ class Tab3(wx.Panel):
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.Set_Display()
         self.Set_danmaku()
+        self.Set_subtitle()
+
+        self.SetSizer(self.vbox)
+
+        self.Bind_EVT()
+        self.load_conf()
+
+    def Bind_EVT(self):
+        self.save_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.save_danmaku_EVT)
+        self.save_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.save_subtitle_EVT)
+
+    def load_conf(self):
+        if not Config.save_danmaku:
+            self.danmaku_type_cb.Enable(False)
+        
+        if not Config.save_subtitle:
+            self.auto_merge_chk.Enable(False)
+
+        self.save_danmaku_chk.SetValue(Config.save_danmaku)
+        self.save_subtitle_chk.SetValue(Config.save_subtitle)
+        self.auto_merge_chk.SetValue(Config.auto_merge_subtitle)
+
+    def save_conf(self):
+        Config.save_danmaku = self.save_danmaku_chk.GetValue()
+        Config.save_subtitle = self.save_subtitle_chk.GetValue()
+        Config.auto_merge_subtitle = self.auto_merge_chk.GetValue()
+
+        conf.set("options", "save_danmaku", str(int(Config.save_danmaku)))
+        conf.set("options", "save_subtitle", str(int(Config.save_subtitle)))
+        conf.set("options", "auto_merge_subtitle", str(int(Config.auto_merge_subtitle)))
+
+    def Set_danmaku(self):
+        danmaku_box = wx.StaticBox(self, -1, "弹幕下载设置")
+
+        self.save_danmaku_chk = wx.CheckBox(danmaku_box, -1, "下载弹幕文件")
+        danmaku_type_lb = wx.StaticText(danmaku_box, -1, "弹幕文件格式")
+        self.danmaku_type_cb = wx.Choice(danmaku_box, -1, choices = ["xml"])
+        self.danmaku_type_cb.SetSelection(0)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(danmaku_type_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        hbox.Add(self.danmaku_type_cb, 0, wx.ALL & (~wx.TOP), 10)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.save_danmaku_chk, 0, wx.ALL, 10)
+        vbox.Add(hbox)
+
+        danmaku_sbox = wx.StaticBoxSizer(danmaku_box)
+        danmaku_sbox.Add(vbox)
+
+        self.vbox.Add(danmaku_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
+    def Set_subtitle(self):
+        subtitle_box = wx.StaticBox(self, -1, "字幕下载设置")
+
+        self.save_subtitle_chk = wx.CheckBox(subtitle_box, -1, "下载字幕文件")
+        self.auto_merge_chk = wx.CheckBox(subtitle_box, -1, "自动添加字幕")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.save_subtitle_chk, 0, wx.ALL, 10)
+        vbox.Add(self.auto_merge_chk, 0, wx.ALL & (~wx.TOP), 10)
+
+        subtitle_sbox = wx.StaticBoxSizer(subtitle_box)
+        subtitle_sbox.Add(vbox)
+
+        self.vbox.Add(subtitle_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
+    def save_danmaku_EVT(self, event):
+        state = event.IsChecked()
+
+        if state:
+            self.danmaku_type_cb.Enable(True)
+        else:
+            self.danmaku_type_cb.Enable(False)
+    
+    def save_subtitle_EVT(self, event):
+        state = event.IsChecked()
+
+        if state:
+            self.auto_merge_chk.Enable(True)
+        else:
+            self.auto_merge_chk.Enable(False)
+            self.auto_merge_chk.SetValue(False)
+
+class Tab4(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.Set_Display()
         self.Set_Update()
 
         self.SetSizer(self.vbox)
@@ -203,16 +294,13 @@ class Tab3(wx.Panel):
 
     def load_conf(self):
         self.show_sections_chk.SetValue(Config.show_sections)
-        self.save_danmaku_chk.SetValue(Config.save_danmaku)
         self.auto_check_chk.SetValue(Config.auto_check_update)
 
     def save_conf(self):
         Config.show_sections = self.show_sections_chk.GetValue()
-        Config.save_danmaku = self.save_danmaku_chk.GetValue()
         Config.auto_check_update = self.auto_check_chk.GetValue()
 
         conf.set("options", "show_sections", str(int(Config.show_sections)))
-        conf.set("options", "save_danmaku", str(int(Config.save_danmaku)))
         conf.set("options", "auto_check_update", str(int(Config.auto_check_update)))
         
     def Set_Display(self):
@@ -227,27 +315,6 @@ class Tab3(wx.Panel):
         display_sbox.Add(vbox, 1, wx.EXPAND)
 
         self.vbox.Add(display_sbox, 0, wx.ALL | wx.EXPAND, 10)
-    
-    def Set_danmaku(self):
-        danmaku_box = wx.StaticBox(self, -1, "弹幕下载设置")
-
-        self.save_danmaku_chk = wx.CheckBox(danmaku_box, -1, "下载弹幕文件")
-        danmaku_type_lb = wx.StaticText(danmaku_box, -1, "弹幕文件格式")
-        danmaku_type_cb = wx.ComboBox(danmaku_box, -1, choices = ["xml"], style = wx.CB_READONLY)
-        danmaku_type_cb.SetSelection(0)
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(danmaku_type_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        hbox.Add(danmaku_type_cb, 0, wx.ALL & (~wx.TOP), 10)
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.save_danmaku_chk, 0, wx.ALL, 10)
-        vbox.Add(hbox)
-
-        danmaku_sbox = wx.StaticBoxSizer(danmaku_box)
-        danmaku_sbox.Add(vbox)
-
-        self.vbox.Add(danmaku_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
     def Set_Update(self):
         update_box = wx.StaticBox(self, -1, "检查更新设置")
@@ -262,22 +329,55 @@ class Tab3(wx.Panel):
 
         self.vbox.Add(update_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
-class Tab4(wx.Panel):
+class Tab5(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.Set_Cookie()
+        self.Set_Proxy()
 
         self.SetSizer(self.vbox)
 
+        self.Bind_EVT()
+        self.load_conf()
+    
+    def Bind_EVT(self):
+        self.enable_proxy_chk.Bind(wx.EVT_CHECKBOX, self.enable_chk_EVT)
+
     def load_conf(self):
-        self.addresss_tc.SetValue()
-        
-    def Set_Cookie(self):
+        if not Config.enable_proxy:
+            self.addresss_tc.Enable(False)
+            self.port_tc.Enable(False)
+
+        self.enable_proxy_chk.SetValue(Config.enable_proxy)
+        self.addresss_tc.SetValue(Config.proxy_address)
+        self.port_tc.SetValue(Config.proxy_port)
+    
+    def save_conf(self):
+        if not Config.enable_proxy:
+            return
+            
+        if self.addresss_tc.GetValue() == "":
+            wx.MessageDialog(self, "地址不能为空！", "警告", wx.ICON_WARNING).ShowModal()
+            raise ValueError("Invalid Value")
+
+        elif self.port_tc.GetValue() == "":
+            wx.MessageDialog(self, "端口不能为空！", "警告", wx.ICON_WARNING).ShowModal()
+            raise ValueError("Invalid Value")
+
+        Config.enable_proxy = self.enable_proxy_chk.GetValue()
+        Config.proxy_address = self.addresss_tc.GetValue()
+        Config.proxy_port = self.port_tc.GetValue()
+
+        conf.set("proxy", "enable_proxy", str(int(Config.enable_proxy)))
+        conf.set("proxy", "ip_address", Config.proxy_address)
+        conf.set("proxy", "port", Config.proxy_port)
+
+    def Set_Proxy(self):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
 
+        self.enable_proxy_chk =wx.CheckBox(proxy_box, -1, "启用代理")
         address_lb = wx.StaticText(proxy_box, -1, "地址")
         self.addresss_tc = wx.TextCtrl(proxy_box, -1)
 
@@ -286,17 +386,28 @@ class Tab4(wx.Panel):
 
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(address_lb, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        hbox1.Add(self.addresss_tc, 1, wx.EXPAND | wx.ALL & (~wx.LEFT), 10)
+        hbox1.Add(self.addresss_tc, 1, wx.ALL & (~wx.LEFT), 10)
 
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2.Add(port_lb, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        hbox2.Add(self.port_tc, 1, wx.EXPAND | wx.ALL & (~wx.LEFT), 10)
+        hbox2.Add(port_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        hbox2.Add(self.port_tc, 1, wx.ALL & (~wx.LEFT) & (~wx.TOP), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(hbox1, 1, wx.EXPAND)
-        vbox.Add(hbox2, 1, wx.EXPAND)
+        vbox.Add(self.enable_proxy_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(hbox1)
+        vbox.Add(hbox2)
 
         cookie_sbox = wx.StaticBoxSizer(proxy_box)
         cookie_sbox.Add(vbox)
 
         self.vbox.Add(cookie_sbox, 0, wx.ALL | wx.EXPAND, 10)
+    
+    def enable_chk_EVT(self, event):
+        state = event.IsChecked()
+
+        if state:
+            self.addresss_tc.Enable(True)
+            self.port_tc.Enable(True)
+        else:
+            self.addresss_tc.Enable(False)
+            self.port_tc.Enable(False)
