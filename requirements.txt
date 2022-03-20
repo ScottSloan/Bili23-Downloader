@@ -1,0 +1,3 @@
+parsel==1.6.0
+requests==2.25.1
+wxPython==4.1.1
