@@ -17,8 +17,8 @@
 > - 显示视频相关信息（封面，播放数，三连数等）
 - **支持下载弹幕和字幕**  
 > - 弹幕目前仅支持下载 xml 格式，后续会支持 ass，proto 等格式
-> - 字幕可保存为 srt 格式 (测试中)
-> - 可自动合成字幕 (测试中)
+> - 下载 srt 格式字幕
+> - 自动添加字幕
 - **支持自定义清晰度下载**  
 > - 可自定义清晰度（取决于视频所支持的清晰度）  
 > - 免登录下载 `1080P` 视频  
@@ -32,7 +32,7 @@ git clone https://github.com/ScottSloan/Bili23-Downloader.git
 ```
 pip install -r requirements.txt
 ```
-- **请注意，ffmpeg 需手动下载安装，可将本体放置到程序运行目录下或者创建环境变量。**
+- **请注意，ffmpeg 需手动下载安装，请将 ffmpeg.exe 放置到程序运行目录下 (GUI.py 同级目录)**
 ## 运行截图
 > - 主界面
 > > - ![main.png](https://s2.loli.net/2022/03/13/mbf4WduIlViO19q.png)
@@ -40,9 +40,9 @@ pip install -r requirements.txt
 > > - ![info.png](https://s2.loli.net/2022/03/13/9Vpaol6DZzmwn54.png)
 > - 下载完成
 > > - ![play.png](https://s2.loli.net/2022/03/13/C4zOUAiX3aWnYMv.png)
-## 使用 Cookie
+## 添加 Cookie
 - **适用于需要使用大会员 Cookie 才能下载的情况**
-> - 浏览器登录B站，按下 `F12` 键打开开发者模式--> application --> cookie，找到 SESSDATA 字段，在设置中粘贴即可
+> - 添加方法：浏览器登录B站，按下 F12 键打开开发者工具，选择 应用(application) 选项卡 -> cookie，找到 SESSDATA 字段，复制粘贴即可。
 > - **注：Cookie 有效期为一个月，请定期更换。**
 ## TO-DO
 - [X] **视频类**
@@ -62,12 +62,14 @@ pip install -r requirements.txt
     - [X] xml 格式
     - [ ] ass 格式
     - [ ] proto 格式
-  - [ ] 下载字幕
+  - [X] 下载字幕
   - [X] 检查更新
 ## 开发日志
 - **正在考虑重写下载功能(多任务下载)**
-- **目前还不支持设置代理，预计下个版本将会支持**
-- **[最新] 版本 1.13 (2022-3-13)**
+- **[最新] 版本 1.14 alpha (2022-3-20)**
+> - 支持字幕文件下载和自动添加字幕功能
+> - 修复了部分视频不能下载的问题
+- **版本 1.13 (2022-3-13)**
 > - 番组现已支持 番剧/电影/纪录片/综艺/国创/电视剧 类型的下载
 > - 现在合集视频能够显示完整列表
 > - 添加了"设置"功能
