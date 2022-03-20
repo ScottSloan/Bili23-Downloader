@@ -19,21 +19,21 @@ class Config:
     
     enable_proxy = False
     proxy_address = ""
-    proxy_port = 0
+    proxy_port = ""
 
     _version = "1.14"
-    _date = "2022-3-19"
+    _date = "2022-3-20"
     _website = "https://github.com/ScottSloan/Bili23-downloader"
     _logo = os.path.join(os.getcwd(), "pic", "logo.ico")
     _platform = platform.platform()
-    _ffmpeg_path = os.path.join(os.getcwd(), "ffmpeg.exe")
+    _ffmpeg_path = os.path.join(os.getcwd(), "ffmpeg.exe") if _platform.startswith("Windows") else "ffmpeg"
     _del_cmd = "del" if _platform.startswith("Windows") else "rm"
+    _rename_cmd = "ren" if _platform.startswith("Windows") else "mv"
 
     _info_base_path = os.path.join(os.getcwd(), "preview_info")
     _info_video_path = os.path.join(_info_base_path, "video_info.html")
     _info_bangumi_path = os.path.join(_info_base_path, "bangumi_info.html")
     _info_html = os.path.join(_info_base_path, "info.html")
-    _info_cover = "cover"
 
 class Load_Config:
     conf = configparser.RawConfigParser()

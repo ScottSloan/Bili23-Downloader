@@ -4,7 +4,6 @@ import wx
 import json
 import math
 import requests
-import subprocess
 
 from utils.config import Config
 
@@ -13,19 +12,21 @@ quality_wrap = {"超高清 8K":127, "真彩 HDR":125, "超清 4K":120, "高清 1
 def merge_video_audio(out_name: str, on_merge):
     wx.CallAfter(on_merge)
 
-    name = get_legal_name(out_name)
+    cmd = '''cd {} && {} -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy video_merged.mp4 && {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, Config._del_cmd)
+    os.system(cmd)
 
-    cmd = '''cd {} && {} -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy "{}".mp4 && {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, name, Config._del_cmd)
-    
-    process = subprocess.Popen(cmd, shell = True)
-    process.wait()
-    
-def merge_subtitle(out_name):
-    srt_path = os.path.join(Config.download_path, "{}.srt".format(out_name))
-    merge_subtitle_cmd = '''cd {2} && {3} -threads 2 -i "{0}.mp4" -vf "subtitles='{0}.srt'" "{0}_sub.mp4" && {1} "{0}.mp4" "{0}.srt"'''.format(out_name, Config._del_cmd, Config.download_path, Config._ffmpeg_path) if Config.auto_merge_subtitle and os.path.exists(srt_path) else ""
+    merge_subtitle(out_name)
 
-    process = subprocess.Popen(merge_subtitle_cmd, shell = True)
-    process.wait()
+    cmd2 = '''cd {} && {} video_merged.mp4 "{}.mp4"'''.format(Config.download_path, Config._rename_cmd, get_legal_name(out_name))
+    os.system(cmd2)
+    
+def merge_subtitle(out_name: str):
+    if not (Config.auto_merge_subtitle and os.path.exists(os.path.join(Config.download_path, "{}.srt".format(out_name)))):
+        return
+
+    cmd = '''cd {} && {} -i video_merged.mp4 -vf "subtitles='{}.srt'" video_sub.mp4 && {} video_merged.mp4 "{}.srt" && {} video_sub.mp4 video_merged.mp4'''.format(Config.download_path, Config._ffmpeg_path, get_legal_name(out_name), Config._del_cmd, get_legal_name(out_name), Config._rename_cmd)
+
+    os.system(cmd)
 
 def process_shortlink(url: str):
     return requests.get(url, headers = get_header()).url
