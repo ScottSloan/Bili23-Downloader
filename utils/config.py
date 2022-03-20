@@ -6,30 +6,34 @@ class Config:
     default_path = os.path.join(os.getcwd(), "download")
     download_path = os.path.join(os.getcwd(), "download")
     max_thread = 4
+    default_quality = 80
+    show_notification = False
 
     cookie_sessdata = ""
 
-    default_quality = 80
-
     show_sections = False
-
     save_danmaku = False
-
-    show_notification = False
-
+    save_subtitle = False
+    auto_merge_subtitle = False
     auto_check_update = False
+    
+    enable_proxy = False
+    proxy_address = ""
+    proxy_port = ""
 
-    _version = "1.13"
-    _date = "2022-3-13"
+    _version = "1.14"
+    _date = "2022-3-20"
     _website = "https://github.com/ScottSloan/Bili23-downloader"
     _logo = os.path.join(os.getcwd(), "pic", "logo.ico")
-    _del_cmd = "del" if platform.platform().startswith("Windows") else "rm"
+    _platform = platform.platform()
+    _ffmpeg_path = os.path.join(os.getcwd(), "ffmpeg.exe") if _platform.startswith("Windows") else "ffmpeg"
+    _del_cmd = "del" if _platform.startswith("Windows") else "rm"
+    _rename_cmd = "ren" if _platform.startswith("Windows") else "mv"
 
     _info_base_path = os.path.join(os.getcwd(), "preview_info")
     _info_video_path = os.path.join(_info_base_path, "video_info.html")
     _info_bangumi_path = os.path.join(_info_base_path, "bangumi_info.html")
     _info_html = os.path.join(_info_base_path, "info.html")
-    _info_cover = "cover"
 
 class Load_Config:
     conf = configparser.RawConfigParser()
@@ -46,6 +50,12 @@ class Load_Config:
 
     Config.show_sections = conf.getboolean("options", "show_sections")
     Config.save_danmaku = conf.getboolean("options", "save_danmaku")
+    Config.save_subtitle = conf.getboolean("options", "save_subtitle")
+    Config.auto_merge_subtitle = conf.getboolean("options", "auto_merge_subtitle")
     Config.auto_check_update = conf.getboolean("options", "auto_check_update")
+
+    Config.enable_proxy = conf.getboolean("proxy", "enable_proxy")
+    Config.proxy_address = conf.get("proxy", "ip_address")
+    Config.proxy_port = conf.get("proxy", "port")
 
 Load_Config()

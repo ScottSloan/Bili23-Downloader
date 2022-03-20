@@ -1,12 +1,11 @@
 import re
-import os
 import wx
 import json
 import parsel
 import requests
 from utils.config import Config
 
-from utils.tools import merge_video_audio, format_data, get_header, get_danmaku
+from utils.tools import merge_video_audio, format_data, get_header, get_danmaku_subtitle, get_legal_name
 from utils.download import Downloader
 from utils.error import ProcessError
 
@@ -17,7 +16,7 @@ class VideoInfo:
 
     view = like = coin = danmaku = favorite = reply = quality = 0
 
-    pages = episodes = down_pages = quality_id = quality_desc =  []
+    pages = episodes = down_pages = quality_id = quality_desc = []
 
     multiple = collection = False
 
@@ -27,9 +26,6 @@ class VideoParser:
 
     def info_api(self) -> str:
         return "https://api.bilibili.com/x/web-interface/view?bvid=" + VideoInfo.bvid
-
-    def danmaku_url(self, cid: str):
-        return "https://comment.bilibili.com/{}.xml".format(cid)
 
     def get_aid(self, url: str):
         aid = re.findall(r"av[0-9]*", url)[0][2:]
@@ -113,21 +109,22 @@ class VideoParser:
                 page = value["page"]
                 cid = value["cid"]
 
-                self.process_video_durl(VideoInfo.url + "?p=%d" % page, name, index)
-                get_danmaku(name, cid)
+                get_danmaku_subtitle(name, cid, VideoInfo.bvid)
+                self.process_video_durl(VideoInfo.url + "?p={}".format(page), name, index)
 
         elif VideoInfo.collection:
             for index, value in enumerate(VideoInfo.down_pages):
                 name = value["title"]
-                url = self.get_full_url(value["bvid"])
+                bvid = value["bvid"]
+                url = self.get_full_url(bvid)
                 cid = value["cid"]
 
+                get_danmaku_subtitle(name, cid, bvid)
                 self.process_video_durl(url, name, index)
-                get_danmaku(name, cid)
 
         else:
+            get_danmaku_subtitle(VideoInfo.title, VideoInfo.cid, VideoInfo.bvid)
             self.process_video_durl(VideoInfo.url, VideoInfo.title, 0)
-            get_danmaku(VideoInfo.title, VideoInfo.cid)
 
         wx.CallAfter(on_complete)
         
@@ -136,19 +133,26 @@ class VideoParser:
         selector = parsel.Selector(video_request.text)
 
         video_json = json.loads(selector.css("head > script:nth-child(33) ::text").extract_first()[20:])
-        json_dash = video_json["data"]["dash"]
-        
-        quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < VideoInfo.quality else VideoInfo.quality
-
-        video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == quality][0]
-        audio_durl = json_dash["audio"][0]["baseUrl"]
 
         index = [index + 1, len(VideoInfo.down_pages)]
 
-        self.downloader.add_url(video_durl, referer_url, "video.mp4", index, title)
-        self.downloader.add_url(audio_durl, referer_url, "audio.mp3", index, title)
+        if "dash" in video_json["data"]:
+            json_dash = video_json["data"]["dash"]
 
-        merge_video_audio(title, self.on_merge)
+            quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < VideoInfo.quality else VideoInfo.quality
+
+            video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == quality][0]
+            audio_durl = json_dash["audio"][0]["baseUrl"]
+
+            self.downloader.add_url(video_durl, referer_url, "video.mp4", index, title)
+            self.downloader.add_url(audio_durl, referer_url, "audio.mp3", index, title)
+
+            merge_video_audio(title, self.on_merge)
+
+        else:
+            video_durl = video_json["data"]["durl"][0]["url"]
+
+            self.downloader.add_url(video_durl, referer_url, "{}.mp4".format(get_legal_name(title)), index, title)
 
     def parse_url(self, url: str, on_redirect, on_error):
         self.on_redirect, self.on_error = on_redirect, on_error

@@ -10,6 +10,7 @@ class InfoWindow(Frame):
         Frame.__init__(self, parent, title, (800, 500))
 
         self.init_controls()
+        
         self.browser.LoadURL("file://{}".format(Config._info_html))
 
     def init_controls(self):
