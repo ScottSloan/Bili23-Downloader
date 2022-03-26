@@ -26,12 +26,17 @@ jobs:
           pip install -r requirements.txt
           del requirements.txt
 
-      - name: Debug build
+      - name: Build
         run: |
           pyinstaller -F --clean -y --dist ./ GUI.py
+          
+      - name: Clean Files
+        run: |
           del build -recurse
+          del gui -recurse
+          del utils -recurse
           del GUI.spec
-      
+          
       - name: Store generated file
         uses: actions/upload-artifact@v2
         with:
