@@ -28,12 +28,12 @@ jobs:
 
       - name: Debug build
         run: |
-          pyinstaller -F --clean -y GUI.py
-          ls
+          pyinstaller -F --clean -y --dist ./ GUI.py
+          del build -recurse
           del GUI.spec
       
       - name: Store generated file
         uses: actions/upload-artifact@v2
         with:
-          name: Bili23-Downloader.zip
+          name: Bili23-Downloader
           path: ./
