@@ -29,4 +29,4 @@ jobs:
       - name: Build Application
         run: |
           pyinstaller -F --clean -y GUI.py
-          zip -r $GITHUB_WORKSPACE/GUI.zip $GITHUB_WORKSPACE/
+          Compress-Archive -Path $GITHUB_WORKSPACE/ -DestinationPath $GITHUB_WORKSPACE/GUI.zip
