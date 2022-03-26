@@ -32,10 +32,14 @@ jobs:
           
       - name: Clean Files
         run: |
+          del .git -recurse
+          del .github -recurse
+          del __pycache__ -recurse
           del build -recurse
           del gui -recurse
           del utils -recurse
           del GUI.spec
+          del GUI.py
           
       - name: Store generated file
         uses: actions/upload-artifact@v2
