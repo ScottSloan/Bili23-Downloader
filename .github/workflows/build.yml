@@ -32,8 +32,6 @@ jobs:
           
       - name: Clean Files
         run: |
-          del .git -recurse
-          del .github -recurse
           del __pycache__ -recurse
           del build -recurse
           del gui -recurse
