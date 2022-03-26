@@ -1,11 +1,9 @@
-name: Windows Build
+name: Build
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    
-  workflow_dispatch:
 
 jobs:
   build:
@@ -13,7 +11,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Clone repository
+        uses: actions/checkout@v2
       
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
@@ -25,7 +24,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
+          del requirements.txt
 
-      - name: Build Application
+      - name: Debug build
         run: |
           pyinstaller -F --clean -y --dist ./ GUI.py
+          del __pycache__ -recurse
+          del build -recurse
+          del GUI.spec
+      
+      - name: Store generated file
+        uses: actions/upload-artifact@v2
+        with:
+          name: Bili23-Downloader
+          path: ./
