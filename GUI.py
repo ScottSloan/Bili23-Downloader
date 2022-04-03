@@ -188,20 +188,21 @@ class MainWindow(wx.Frame):
     def get_url_finish(self):
         if self.theme == LiveInfo:
             self.quality_cb.Enable(False)
+            self.info_btn.Enable(False)
             self.download_btn.SetLabel("播放")
         else:
             self.quality_cb.Enable(True)
+            self.info_btn.Enable(True)
             self.download_btn.SetLabel("下载视频")
 
         self.download_btn.Enable(True)
-        self.info_btn.Enable(True)
 
         self.processing_window.Hide()
 
         self.list_lc.SetFocus()
 
         if Config.cookie_sessdata == "" and self.theme == BangumiInfo:
-            self.infobar.ShowMessage("注意：尚未添加大会员 Cookie，部分视频可能无法下载", flags = wx.ICON_WARNING)
+            self.infobar.show_message_info(200)
 
     def set_video_list(self):
         videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
@@ -225,9 +226,9 @@ class MainWindow(wx.Frame):
         self.quality_cb.Select(type.quality_id.index(type.quality))
 
     def select_quality(self, event):
-        if self.theme.quality_id[event.GetSelection()] in [120, 116, 112] and Config.cookie_sessdata == "":
+        if self.theme.quality_id[event.GetSelection()] in [127, 125, 120, 116, 112] and Config.cookie_sessdata == "":
             self.quality_cb.Select(self.theme.quality_id.index(80))
-            wx.CallAfter(self.on_error, 403)
+            wx.CallAfter(self.on_error, 404)
 
         self.theme.quality = self.theme.quality_id[event.GetSelection()]
 
@@ -242,7 +243,7 @@ class MainWindow(wx.Frame):
                 return
 
             else:
-                os.system("{} {}".format(Config.player_path, LiveInfo.playurl))
+                os.system('{} "{}"'.format(Config.player_path, LiveInfo.playurl))
         else:
             if self.list_lc.get_all_checked_item(self.theme, self.on_error):
                 return
@@ -259,13 +260,14 @@ class MainWindow(wx.Frame):
         video_parser.get_video_durl(kwargs) if self.theme == VideoInfo else bangumi_parser.get_bangumi_durl(kwargs)
 
     def Load_info_window_EVT(self, event):
-        self.info_window = InfoWindow(self, VideoInfo.title if self.theme == VideoInfo else BangumiInfo.title)
+        self.info_window = InfoWindow(self, VideoInfo.title if self.theme == VideoInfo else BangumiInfo.title, self.theme)
         self.info_window.Show()
 
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)
+        wx.CallAfter(self.download_window.Hide)
 
-        self.infobar.show_error_info(code)
+        self.infobar.show_message_info(code)
 
     def on_download_complete(self):
         wx.CallAfter(self.download_window.Hide)
@@ -295,10 +297,10 @@ class MainWindow(wx.Frame):
         self.update_info = check_update()
 
         if self.update_info == None:
-            self.infobar.ShowMessage("检查更新失败", wx.ICON_WARNING)
+            self.infobar.show_message_info(405)
 
         elif self.update_info[0]:
-            self.infobar.ShowMessage("有新版本更新可用", wx.ICON_INFORMATION)
+            self.infobar.show_message_info(100)
 
 if __name__ == "__main__":
     app = wx.App()

@@ -12,7 +12,7 @@ quality_wrap = {"超高清 8K":127, "真彩 HDR":125, "超清 4K":120, "高清 1
 def merge_video_audio(out_name: str, on_merge):
     wx.CallAfter(on_merge)
 
-    cmd = '''cd {} && {} -v -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy video_merged.mp4&& {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, Config._del_cmd)
+    cmd = '''cd {} && {} -v quiet -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy video_merged.mp4&& {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, Config._del_cmd)
     os.system(cmd)
 
     merge_subtitle(out_name)
@@ -24,7 +24,7 @@ def merge_subtitle(out_name: str):
     if not (Config.auto_merge_subtitle and os.path.exists(os.path.join(Config.download_path, "{}.srt".format(out_name)))):
         return
 
-    cmd = '''cd {} && {} -v -i video_merged.mp4 -vf "subtitles='{}.srt'" video_sub.mp4 && {} video_merged.mp4 "{}.srt" && {} video_sub.mp4 video_merged.mp4'''.format(Config.download_path, Config._ffmpeg_path, get_legal_name(out_name), Config._del_cmd, get_legal_name(out_name), Config._rename_cmd)
+    cmd = '''cd {} && {} -v quiet -i video_merged.mp4 -vf "subtitles='{}.srt'" video_sub.mp4 && {} video_merged.mp4 "{}.srt" && {} video_sub.mp4 video_merged.mp4'''.format(Config.download_path, Config._ffmpeg_path, get_legal_name(out_name), Config._del_cmd, get_legal_name(out_name), Config._rename_cmd)
     os.system(cmd)
 
 def process_shortlink(url: str):

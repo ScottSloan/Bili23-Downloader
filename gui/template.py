@@ -46,26 +46,36 @@ class InfoBar(wx.InfoBar):
         super().Dismiss()
         return super().ShowMessage(msg, flags)
     
-    def show_error_info(self, code: int):
+    def show_message_info(self, code: int):
         if code == 400:
-            super().ShowMessage("请求失败：请检查地址是否有误", flags = wx.ICON_ERROR)
+            super().ShowMessage("错误：请求失败，请检查地址是否有误", flags = wx.ICON_ERROR)
             raise ValueError("Invalid URL")
             
         elif code == 401:
-            super().ShowMessage("未选择下载项目：请选择要下载的项目", flags = wx.ICON_ERROR)
+            super().ShowMessage("警告：请选择要下载的视频", flags = wx.ICON_ERROR)
             raise ProcessError("None items selected to download")
         
         elif code == 402:
-            super().ShowMessage("无法获取视频清晰度\n\n需要大会员 Cookie 才能继续", flags = wx.ICON_WARNING)
+            super().ShowMessage("错误：获取视频信息失败：", flags = wx.ICON_WARNING)
             raise ProcessError("Cookie required to continue")
 
         elif code == 403:
-            super().ShowMessage("需要大会员 Cookie：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
-            raise ProcessError("Cookie required to continue")
+            super().ShowMessage("错误：无法获取视频下载地址", flags = wx.ICON_ERROR)
+            raise ProcessError("Failed to download the video")
 
         elif code == 404:
-            super().ShowMessage("错误：获取视频信息失败", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to download the video")
+            super().ShowMessage("警告：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
+            raise ProcessError("Cookie required to continue")
+
+        elif code == 405:
+            super().ShowMessage("错误：检查更新失败", flags = wx.ICON_ERROR)
+            raise ProcessError("Failed to check update")
+
+        if code == 100:
+            super().ShowMessage("提示：有新版本更新可用", flags = wx.ICON_INFORMATION)
+
+        if code == 200:
+            super().ShowMessage("注意：尚未添加大会员 Cookie，部分视频可能无法下载", flags = wx.ICON_WARNING)
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent):

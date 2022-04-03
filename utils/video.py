@@ -87,15 +87,14 @@ class VideoParser:
         video_request = requests.get(self.durl_api(VideoInfo.cid), headers = get_header(VideoInfo.url, Config.cookie_sessdata), proxies = get_proxy())
         video_json = json.loads(video_request.text)
 
+        if video_json["code"] != 0:
+            self.on_error(402)
+
         json_data = video_json["data"]
 
         VideoInfo.quality_id = json_data["accept_quality"]
         VideoInfo.quality_desc = json_data["accept_description"]
 
-        from utils.html import save_video_info
-
-        save_video_info()
-        
     def get_video_durl(self, kwargs):
         self.downloader = Downloader(kwargs["on_start"], kwargs["on_download"])
         on_complete, self.on_merge = kwargs["on_complete"], kwargs["on_merge"]
@@ -128,6 +127,9 @@ class VideoParser:
     def process_video_durl(self, cid: int, referer_url: str, title: str, index: int):
         video_request = requests.get(self.durl_api(cid), headers = get_header(referer_url, Config.cookie_sessdata), proxies = get_proxy())
         video_json = json.loads(video_request.text)
+
+        if video_json["code"] != 0:
+            self.on_error(403)
 
         index = [index + 1, len(VideoInfo.down_pages)]
 

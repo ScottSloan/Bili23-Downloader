@@ -121,15 +121,14 @@ class BangumiParser:
     def get_bangumi_quality(self):
         bangumi_request = requests.get(self.durl_api(BangumiInfo.bvid, BangumiInfo.cid), headers = get_header(BangumiInfo.url, cookie = Config.cookie_sessdata), proxies = get_proxy())
         bangumi_json = json.loads(bangumi_request.text)
+        
+        if bangumi_json["code"] != 0:
+            self.on_error(402)
 
         json_data = bangumi_json["data"]
 
         BangumiInfo.quality_id = json_data["accept_quality"]
         BangumiInfo.quality_desc = json_data["accept_description"]
-
-        from utils.html import save_bangumi_info
-
-        save_bangumi_info()
         
     def get_bangumi_durl(self, kwargs):
         self.downloader = Downloader(kwargs["on_start"], kwargs["on_download"])
@@ -152,6 +151,9 @@ class BangumiParser:
     def process_bangumi_durl(self, bvid: str, cid: int, referer_url: str, title: str, index):
         bangumi_request = requests.get(self.durl_api(bvid, cid), headers = get_header(cookie = Config.cookie_sessdata), proxies = get_proxy())
         bangumi_json = json.loads(bangumi_request.text)
+        
+        if bangumi_json["code"] != 0:
+            self.on_error(403)
 
         index = [index + 1, len(BangumiInfo.down_episodes)]
 
