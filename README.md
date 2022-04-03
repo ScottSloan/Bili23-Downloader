@@ -1,5 +1,6 @@
 # Bili23-Downloader
 ![](https://img.shields.io/badge/Latest_Version-1.13-green.svg) ![](https://img.shields.io/badge/Python-3.8.10-green.svg) ![](https://img.shields.io/badge/wxPython-4.1.1-green.svg)  
+[![Build](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml/badge.svg)](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml)  
   
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 ## 声明
@@ -35,11 +36,11 @@ pip install -r requirements.txt
 - **请注意，ffmpeg 需手动下载安装，请将 ffmpeg.exe 放置到程序运行目录下 (GUI.py 同级目录)**
 ## 运行截图
 > - 主界面
-> > - ![main.png](https://s2.loli.net/2022/03/13/mbf4WduIlViO19q.png)
+> > - ![main.png](https://s2.loli.net/2022/04/03/iEWLIeFhHUx25OV.png)
 > - 查看番剧信息
-> > - ![info.png](https://s2.loli.net/2022/03/13/9Vpaol6DZzmwn54.png)
+> > - ![info.png](https://s2.loli.net/2022/04/03/3wWUTkDbZHinq5j.png)
 > - 下载完成
-> > - ![play.png](https://s2.loli.net/2022/03/13/C4zOUAiX3aWnYMv.png)
+> > - ![play.png](https://s2.loli.net/2022/04/03/lpKTSjQUgzcJW1B.png)
 ## 添加 Cookie
 - **适用于需要使用大会员 Cookie 才能下载的情况**
 > - 添加方法：浏览器登录B站，按下 F12 键打开开发者工具，选择 应用(application) 选项卡 -> cookie，找到 SESSDATA 字段，复制粘贴即可。
