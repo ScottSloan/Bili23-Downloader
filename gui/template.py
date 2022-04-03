@@ -3,6 +3,7 @@ import wx.dataview
 
 from utils.config import Config
 from utils.error import ProcessError
+from utils.live import LiveInfo
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.tools import format_duration
@@ -75,7 +76,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.__check_item_EVT)
 
     def init_list_lc(self):
-        self.rootitems, self.all_list_items = [], []
+        self.rootitems = self.all_list_items = []
 
         self.ClearColumns()
         self.DeleteAllItems()
@@ -105,14 +106,24 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if not Config.show_sections and key != "正片":
                 continue
 
-            items_content[key] = [[str(i["title"]), i["share_copy"] if i["title"] != "正片" else BangumiInfo.title, i["badge"], format_duration(i["duration"])] for i in value]
+            items_content[key] = [[str(i["title"]) if i["title"] != "正片" else "1", i["share_copy"] if i["title"] != "正片" else BangumiInfo.title, i["badge"], format_duration(i["duration"])] for i in value]
 
             self.rootitems.append(key)
 
         self.__append_list(items_content, False)
 
+    def set_live_list(self):
+        items_content = {}
+
+        items_content["直播"] = [["1", LiveInfo.title, "", ""]]
+
+        self.rootitems.append("直播")
+
+        self.__append_list(items_content, False)
+        
     def __append_list(self, items_content: dict, ismultiple: bool):
         root = self.GetRootItem()
+        self.all_list_items = []
 
         for i in items_content:
             rootitem = self.AppendItem(root, i)
@@ -135,9 +146,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
     def __check_item_EVT(self, event):
         item = event.GetItem()
+        itemtext = self.GetItemText(item, 0)
         self.UpdateItemParentStateRecursively(item)
 
-        if self.GetItemText(item, 0) in self.rootitems:
+        if itemtext in self.rootitems:
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
     def get_all_checked_item(self, theme, on_error) -> bool:

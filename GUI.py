@@ -7,8 +7,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
+from utils.live import LiveInfo, LiveParser
 from utils.config import Config
-from utils.tools import process_shortlink, check_update
+from utils.tools import *
 
 from gui.info import InfoWindow
 from gui.download import DownloadWindow
@@ -139,7 +140,7 @@ class MainWindow(wx.Frame):
             setting_window.ShowModal()
 
     def get_url_EVT(self, event):
-        url = self.address_tc.GetValue()
+        url = str(self.address_tc.GetValue())
 
         self.quality_cb.Clear()
         self.list_lb.SetLabel("视频")
@@ -159,8 +160,14 @@ class MainWindow(wx.Frame):
 
         if "b23.tv" in url:
             url = process_shortlink(url)
+        
+        if "live" in url:
+            self.theme = LiveInfo
+            live_parser.parse_url(url)
 
-        if "BV" in url or "av" in url:
+            self.set_live_list()
+
+        elif "BV" in url or "av" in url:
             self.theme = VideoInfo
             video_parser.parse_url(url, self.on_redirect, self.on_error)
 
@@ -173,13 +180,19 @@ class MainWindow(wx.Frame):
 
             self.set_bangumi_list()
             self.set_quality(BangumiInfo)
-        
         else:
             self.on_error(400)
 
         wx.CallAfter(self.get_url_finish)
         
     def get_url_finish(self):
+        if self.theme == LiveInfo:
+            self.quality_cb.Enable(False)
+            self.download_btn.SetLabel("播放")
+        else:
+            self.quality_cb.Enable(True)
+            self.download_btn.SetLabel("下载视频")
+
         self.download_btn.Enable(True)
         self.info_btn.Enable(True)
 
@@ -202,6 +215,10 @@ class MainWindow(wx.Frame):
         wx.CallAfter(self.list_lc.set_bangumi_list)
         self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.theme, bangumis))
 
+    def set_live_list(self):
+        wx.CallAfter(self.list_lc.set_live_list)
+        self.list_lb.SetLabel("直播")
+
     def set_quality(self, type):
         self.quality_cb.Set(type.quality_desc)
         type.quality = Config.default_quality if Config.default_quality in type.quality_id else type.quality_id[0]
@@ -215,14 +232,26 @@ class MainWindow(wx.Frame):
         self.theme.quality = self.theme.quality_id[event.GetSelection()]
 
     def download_EVT(self, event):
-        if self.list_lc.get_all_checked_item(self.theme, self.on_error):
-            return
+        if self.theme == LiveInfo:
+            if Config.player_path == "":
+                wx.MessageDialog(self, "未指定播放器路径\n\n尚未指定播放器路径，请添加路径后再试", "警告", wx.ICON_WARNING).ShowModal()
+                return
 
-        self.download_window = DownloadWindow(self)
+            elif LiveInfo.live_status == 0:
+                wx.MessageDialog(self, "当前直播未开播\n\n当前直播尚未开播，请稍候再试", "警告", wx.ICON_WARNING).ShowModal()
+                return
 
-        Main_ThreadPool.submit(self.download_thread)
+            else:
+                os.system("{} {}".format(Config.player_path, LiveInfo.playurl))
+        else:
+            if self.list_lc.get_all_checked_item(self.theme, self.on_error):
+                return
 
-        self.download_window.ShowWindowModal()
+            self.download_window = DownloadWindow(self)
+
+            Main_ThreadPool.submit(self.download_thread)
+
+            self.download_window.ShowWindowModal()
 
     def download_thread(self):
         kwargs = {"on_start":self.download_window.on_download_start, "on_download":self.download_window.on_downloading, "on_complete":self.on_download_complete, "on_merge":self.download_window.on_merge}
@@ -278,6 +307,7 @@ if __name__ == "__main__":
     
     video_parser = VideoParser()
     bangumi_parser = BangumiParser()
+    live_parser = LiveParser()
 
     main_window = MainWindow(None)
     main_window.Show()

@@ -3,10 +3,11 @@ import requests
 
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
+from utils.tools import *
 from utils.config import Config
 
 def save_cover(url: str):
-    cover_request = requests.get(url)
+    cover_request = requests.get(url, headers = get_header(), proxies = get_proxy())
     Config._info_cover = "cover.png" if url.endswith("png") else "cover.jpg"
 
     with open(os.path.join(Config._info_base_path, Config._info_cover), "wb") as f:

@@ -3,7 +3,7 @@ import os
 import wx
 import json
 import math
-import requests
+import requests 
 
 from utils.config import Config
 
@@ -12,29 +12,28 @@ quality_wrap = {"超高清 8K":127, "真彩 HDR":125, "超清 4K":120, "高清 1
 def merge_video_audio(out_name: str, on_merge):
     wx.CallAfter(on_merge)
 
-    cmd = '''cd {} && {} -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy video_merged.mp4 && {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, Config._del_cmd)
+    cmd = '''cd {} && {} -v -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy video_merged.mp4&& {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, Config._del_cmd)
     os.system(cmd)
 
     merge_subtitle(out_name)
-
+    
     cmd2 = '''cd {} && {} video_merged.mp4 "{}.mp4"'''.format(Config.download_path, Config._rename_cmd, get_legal_name(out_name))
     os.system(cmd2)
-    
+
 def merge_subtitle(out_name: str):
     if not (Config.auto_merge_subtitle and os.path.exists(os.path.join(Config.download_path, "{}.srt".format(out_name)))):
         return
 
-    cmd = '''cd {} && {} -i video_merged.mp4 -vf "subtitles='{}.srt'" video_sub.mp4 && {} video_merged.mp4 "{}.srt" && {} video_sub.mp4 video_merged.mp4'''.format(Config.download_path, Config._ffmpeg_path, get_legal_name(out_name), Config._del_cmd, get_legal_name(out_name), Config._rename_cmd)
-
+    cmd = '''cd {} && {} -v -i video_merged.mp4 -vf "subtitles='{}.srt'" video_sub.mp4 && {} video_merged.mp4 "{}.srt" && {} video_sub.mp4 video_merged.mp4'''.format(Config.download_path, Config._ffmpeg_path, get_legal_name(out_name), Config._del_cmd, get_legal_name(out_name), Config._rename_cmd)
     os.system(cmd)
 
 def process_shortlink(url: str):
-    return requests.get(url, headers = get_header()).url
+    return requests.get(url, headers = get_header(), proxies = get_proxy()).url
 
 def get_legal_name(name: str):
     return re.sub('[/\:*?"<>|]', "", name)
 
-def get_header(referer_url = None, cookie = None, chunk_list = None) -> str:
+def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
     header = {"User-Agent":"Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"}
     
     if referer_url != None:
@@ -43,40 +42,55 @@ def get_header(referer_url = None, cookie = None, chunk_list = None) -> str:
     if chunk_list != None:
         header["Range"] = "bytes={}-{}".format(chunk_list[0], chunk_list[1])
 
-    if cookie != None:
+    if cookie != None and cookie != "":
         header["Cookie"] = "SESSDATA=" + cookie
 
     return header
 
+def get_proxy() -> dict:
+    proxy = {}
+
+    if Config.enable_proxy:
+        proxy["https"] = "{}:{}".format(Config.proxy_address, Config.proxy_port)
+
+    return proxy
+
 def get_file_from_url(url: str, filename: str, issubtitle: bool):
-    req = requests.get(url, headers = get_header())
+    req = requests.get(url, headers = get_header(), proxies = get_proxy())
     req.encoding = "utf-8"
     
-    with open(os.path.join(Config.download_path, filename), "w", encoding = "utf-8") as f:
+    with open(os.path.join(Config.download_path, get_legal_name(filename)), "w", encoding = "utf-8") as f:
         f.write(convert_json_to_srt(req.text) if issubtitle else req.text)
 
 def get_danmaku_subtitle(name: str, cid: int, bvid: str):
     if Config.save_danmaku:
         danmaku_url = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
+
         get_file_from_url(danmaku_url, "{}.xml".format(name), False)
 
     if Config.save_subtitle:
         subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(cid, bvid)
-        req = requests.get(subtitle_url, headers = get_header())
+        req = requests.get(subtitle_url, headers = get_header(), proxies = get_proxy())
 
         subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', req.text)[0]
         subtitle_json = json.loads(subtitle_raw)["subtitles"]
 
-        if len(subtitle_json) == 0:
-            return
-            
-        down_url = "https:{}".format(subtitle_json[0]["subtitle_url"])
-        
-        get_file_from_url(down_url, "{}.srt".format(name), True)
+        subtitle_num = len(subtitle_json)
 
-def remove_file(path: str):
-    if os.path.exists(path):
-        os.remove(path)
+        if subtitle_num == 0:
+            return
+
+        elif subtitle_num == 1:
+            down_url = "https:{}".format(subtitle_json[0]["subtitle_url"])
+        
+            get_file_from_url(down_url, "{}.srt".format(name), True)
+
+        else:
+            for i in range(subtitle_num):
+                lan_name = subtitle_json[i]["lan_doc"]
+                down_url = "https:{}".format(subtitle_json[i]["subtitle_url"])
+            
+                get_file_from_url(down_url, "({}) {}.srt".format(lan_name, name), True)
 
 def format_data(data: int) -> str:
     if data >= 100000000:
@@ -87,20 +101,20 @@ def format_data(data: int) -> str:
         return str(data)
 
 def format_duration(duration: int) -> str:
-    if duration > 1000000:
+    if duration > 10000:
         duration = duration / 1000
 
     hours = int(duration // 3600)
     mins = int((duration - hours * 3600) // 60)
     secs = int(duration - hours * 3600 - mins * 60)
     
-    return(str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2))
+    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
 
 def check_update() -> list:
     url = "https://auth.hanloth.cn/?type=update&pid=39&token=Mjp81YXdxcUk95ad"
 
     try:
-        ver_req = requests.get(url, headers = get_header(), timeout = 2)
+        ver_req = requests.get(url, headers = get_header(), proxies = get_proxy(), timeout = 2)
     except:
         return None
 

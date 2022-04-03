@@ -2,7 +2,7 @@ import wx
 import os
 import configparser
 
-from gui.template import Dialog, InfoBar
+from gui.template import Dialog
 
 from utils.config import Config
 from utils.tools import quality_wrap
@@ -87,18 +87,21 @@ class Tab1(wx.Panel):
         
         self.thread_lb.SetLabel("多线程数：{}".format(Config.max_thread))
         self.thread_sl.SetValue(Config.max_thread)
-        self.quality_cb.Select(list(quality_wrap.values()).index(Config.default_quality))
+        self.quality_cb.SetSelection(list(quality_wrap.values()).index(Config.default_quality))
+        self.codec_cb.SetSelection(Config.codec)
         self.show_toast_chk.SetValue(Config.show_notification)
 
     def save_conf(self):
         Config.download_path = self.path_tc.GetValue()
         Config.max_thread = self.thread_sl.GetValue()
         Config.default_quality = list(quality_wrap.values())[self.quality_cb.GetSelection()]
+        Config.codec = self.codec_cb.GetSelection()
         Config.show_notification = self.show_toast_chk.GetValue()
 
         conf.set("download", "path", Config.download_path if Config.download_path != Config.default_path else "default")
         conf.set("download", "max_thread", str(Config.max_thread))
         conf.set("download", "default_quality", str(Config.default_quality))
+        conf.set("download", "codec", str(Config.codec))
         conf.set("download", "show_notification", str(int(Config.show_notification)))
 
     def Set_Download(self):
@@ -121,6 +124,18 @@ class Tab1(wx.Panel):
         self.quality_cb = wx.Choice(download_box, -1, choices = list(quality_wrap.keys()))
         self.quality_cb.SetToolTip("设置默认下载的清晰度，如果视频没有所选的清晰度，则自动选择可用的最高清晰度")
 
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1.Add(quality_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        hbox1.Add(self.quality_cb, 0, wx.ALL & (~wx.TOP), 10)
+
+        codec_lb = wx.StaticText(download_box, -1, "视频编码格式   ")
+        self.codec_cb = wx.Choice(download_box, -1, choices = ["AVC/H.264", "HEVC/H.265"])
+        self.codec_cb.SetToolTip("设置默认视频编码格式")
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox2.Add(codec_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        hbox2.Add(self.codec_cb, 0, wx.ALL & (~wx.TOP), 10)
+
         self.show_toast_chk = wx.CheckBox(download_box, -1, "下载完成后显示通知")
         self.show_toast_chk.SetToolTip("下载完成后显示通知，而不是对话框")
 
@@ -129,8 +144,8 @@ class Tab1(wx.Panel):
         vbox.Add(hbox, 0, wx.EXPAND)
         vbox.Add(self.thread_lb, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.thread_sl, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
-        vbox.Add(quality_lb, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.quality_cb, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(hbox1)
+        vbox.Add(hbox2)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
         download_sbox = wx.StaticBoxSizer(download_box)
@@ -208,35 +223,42 @@ class Tab3(wx.Panel):
 
     def load_conf(self):
         if not Config.save_danmaku:
-            self.danmaku_type_cb.Enable(False)
+            self.danmaku_format_cb.Enable(False)
         
         if not Config.save_subtitle:
             self.auto_merge_chk.Enable(False)
 
         self.save_danmaku_chk.SetValue(Config.save_danmaku)
+        self.danmaku_format_cb.SetSelection(Config.danmaku_format)
+
         self.save_subtitle_chk.SetValue(Config.save_subtitle)
         self.auto_merge_chk.SetValue(Config.auto_merge_subtitle)
 
     def save_conf(self):
         Config.save_danmaku = self.save_danmaku_chk.GetValue()
+        Config.danmaku_format = self.danmaku_format_cb.GetSelection()
+
         Config.save_subtitle = self.save_subtitle_chk.GetValue()
         Config.auto_merge_subtitle = self.auto_merge_chk.GetValue()
 
-        conf.set("options", "save_danmaku", str(int(Config.save_danmaku)))
-        conf.set("options", "save_subtitle", str(int(Config.save_subtitle)))
-        conf.set("options", "auto_merge_subtitle", str(int(Config.auto_merge_subtitle)))
+        conf.set("danmaku", "save_danmaku", str(int(Config.save_danmaku)))
+        conf.set("danmaku", "format", str(int(Config.danmaku_format)))
+
+        conf.set("subtitle", "save_subtitle", str(int(Config.save_subtitle)))
+        conf.set("subtitle", "auto_merge_subtitle", str(int(Config.auto_merge_subtitle)))
 
     def Set_danmaku(self):
         danmaku_box = wx.StaticBox(self, -1, "弹幕下载设置")
 
         self.save_danmaku_chk = wx.CheckBox(danmaku_box, -1, "下载弹幕文件")
-        danmaku_type_lb = wx.StaticText(danmaku_box, -1, "弹幕文件格式")
-        self.danmaku_type_cb = wx.Choice(danmaku_box, -1, choices = ["xml"])
-        self.danmaku_type_cb.SetSelection(0)
+        self.save_danmaku_chk.SetToolTip("同时下载弹幕文件")
+        danmaku_format_lb = wx.StaticText(danmaku_box, -1, "弹幕文件格式")
+        self.danmaku_format_cb = wx.Choice(danmaku_box, -1, choices = ["xml", "ass", "proto"])
+        self.danmaku_format_cb.SetToolTip("设置弹幕文件格式")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(danmaku_type_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        hbox.Add(self.danmaku_type_cb, 0, wx.ALL & (~wx.TOP), 10)
+        hbox.Add(danmaku_format_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        hbox.Add(self.danmaku_format_cb, 0, wx.ALL & (~wx.TOP), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_danmaku_chk, 0, wx.ALL, 10)
@@ -251,7 +273,9 @@ class Tab3(wx.Panel):
         subtitle_box = wx.StaticBox(self, -1, "字幕下载设置")
 
         self.save_subtitle_chk = wx.CheckBox(subtitle_box, -1, "下载字幕文件")
+        self.save_subtitle_chk.SetToolTip("同时下载字幕文件 (srt格式)\n\n如果有多个字幕将全部下载")
         self.auto_merge_chk = wx.CheckBox(subtitle_box, -1, "自动添加字幕")
+        self.auto_merge_chk.SetToolTip("自动将字幕添加到视频中 (速度慢)")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_subtitle_chk, 0, wx.ALL, 10)
@@ -266,9 +290,9 @@ class Tab3(wx.Panel):
         state = event.IsChecked()
 
         if state:
-            self.danmaku_type_cb.Enable(True)
+            self.danmaku_format_cb.Enable(True)
         else:
-            self.danmaku_type_cb.Enable(False)
+            self.danmaku_format_cb.Enable(False)
     
     def save_subtitle_EVT(self, event):
         state = event.IsChecked()
@@ -286,23 +310,31 @@ class Tab4(wx.Panel):
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
         self.Set_Display()
+        self.Set_Player()
         self.Set_Update()
 
         self.SetSizer(self.vbox)
+        self.Bind_EVT()
 
         self.load_conf()
 
+    def Bind_EVT(self):
+        self.browse_btn.Bind(wx.EVT_BUTTON, self.browse_file)
+
     def load_conf(self):
         self.show_sections_chk.SetValue(Config.show_sections)
+        self.path_tc.SetValue(Config.player_path)
         self.auto_check_chk.SetValue(Config.auto_check_update)
 
     def save_conf(self):
         Config.show_sections = self.show_sections_chk.GetValue()
+        Config.player_path = self.path_tc.GetValue()
         Config.auto_check_update = self.auto_check_chk.GetValue()
 
-        conf.set("options", "show_sections", str(int(Config.show_sections)))
-        conf.set("options", "auto_check_update", str(int(Config.auto_check_update)))
-        
+        conf.set("other", "show_sections", str(int(Config.show_sections)))
+        conf.set("other", "player_path", Config.player_path)
+        conf.set("other", "auto_check_update", str(int(Config.auto_check_update)))
+    
     def Set_Display(self):
         display_box = wx.StaticBox(self, -1, "剧集列表显示设置")
 
@@ -316,6 +348,27 @@ class Tab4(wx.Panel):
 
         self.vbox.Add(display_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
+    def Set_Player(self):
+        player_box = wx.StaticBox(self, -1, "播放器设置")
+
+        path_lb = wx.StaticText(player_box, -1, "播放器路径")
+        self.path_tc = wx.TextCtrl(player_box, -1)
+        self.browse_btn = wx.Button(player_box, -1, "选择路径")
+        self.browse_btn.SetToolTip("选择播放器路径")
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(self.path_tc, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(path_lb, 0, wx.ALL, 10)
+        vbox.Add(hbox, 1, wx.EXPAND)
+
+        player_sbox = wx.StaticBoxSizer(player_box)
+        player_sbox.Add(vbox, 1, wx.EXPAND)
+
+        self.vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
     def Set_Update(self):
         update_box = wx.StaticBox(self, -1, "检查更新设置")
 
@@ -328,6 +381,12 @@ class Tab4(wx.Panel):
         update_sbox.Add(vbox, 1, wx.EXPAND)
 
         self.vbox.Add(update_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
+    def browse_file(self, event):
+        wildcard = "可执行文件(*.exe)|*.exe"
+        dialog = wx.FileDialog(self, "选择播放器路径", os.getcwd(), wildcard = wildcard, style = wx.FD_OPEN)
+        if dialog.ShowModal() == wx.ID_OK:
+            self.path_tc.SetValue(dialog.GetPath())
 
 class Tab5(wx.Panel):
     def __init__(self, parent):

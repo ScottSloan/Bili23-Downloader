@@ -6,7 +6,7 @@ from threading import Thread
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 from utils.config import Config
-from utils.tools import get_header
+from utils.tools import *
 
 class Downloader:
     def __init__(self, on_start, on_download):
@@ -32,7 +32,7 @@ class Downloader:
         self._flag = False
 
     def range_download(self, url: str, referer_url: str, chunk_list: list):
-        req = self.session.get(url, headers = get_header(referer_url, "", chunk_list), stream = True)
+        req = self.session.get(url, headers = get_header(referer_url, "", chunk_list), stream = True, proxies = get_proxy())
 
         with open(self.file_path, "rb+") as f:
             f.seek(chunk_list[0])
