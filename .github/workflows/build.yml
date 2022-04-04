@@ -1,7 +1,9 @@
 name: Build
 on:
   release:
-    types: [released, edited]
+    types: [released]
+  schedule:
+    - cron: 0 8 * * 1
 
 jobs:
   build:
