@@ -1,7 +1,7 @@
 name: Build
 on:
-  pull_request:
-    branches: [ main ]
+  release:
+    types: [released, edited]
 
 jobs:
   build:
