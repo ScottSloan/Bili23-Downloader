@@ -1,7 +1,6 @@
 # Bili23-Downloader
-![](https://img.shields.io/badge/Latest_Version-1.13-green.svg) ![](https://img.shields.io/badge/Python-3.8.10-green.svg) ![](https://img.shields.io/badge/wxPython-4.1.1-green.svg)  
-[![Build](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml/badge.svg)](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml)  
-  
+![](https://img.shields.io/badge/Latest_Version-1.14-green.svg) ![](https://img.shields.io/badge/Python-3.8.10-green.svg) ![Build](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml/badge.svg)
+ 
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 ## 声明
 #### 本程序仅供学习交流使用，请勿用于商业用途。  
@@ -19,13 +18,13 @@
 > - 显示剧集列表，可勾选需要下载的部分
 > - 显示视频相关信息（封面，播放数，三连数等）
 - **支持下载弹幕和字幕**  
-> - 弹幕目前仅支持下载 xml 格式，后续会支持 ass，proto 等格式
-> - 下载 srt 格式字幕
+> - 弹幕目前仅支持下载`xml`格式，后续会支持`ass`，`proto`等格式
+> - 下载`srt`格式字幕
 > - 自动添加字幕
 - **支持自定义清晰度下载**  
 > - 可自定义清晰度（取决于视频所支持的清晰度）  
 > - 免登录下载 `1080P` 视频  
-> - **注：`1080P+` 及以上清晰度需要使用大会员 Cookie 才能下载。**
+> - **注：`1080P+` 及以上清晰度需要使用`大会员 Cookie `才能下载。**
 ## 安装
 - **克隆仓库**
 ```
@@ -35,11 +34,12 @@ git clone https://github.com/ScottSloan/Bili23-Downloader.git
 ```
 pip install -r requirements.txt
 ```
-- **请注意，ffmpeg 需手动下载安装，请将 ffmpeg.exe 放置到程序运行目录下 (GUI.py 同级目录)**
+- **本项目每周自动构建一次，如需下载打包后的版本，请到 [Github Actions](https://github.com/ScottSloan/Bili23-Downloader/actions) 中下载**
+- **注：`ffmpeg`需手动下载安装，请将`ffmpeg.exe`放置到程序运行目录下 ([下载地址](http://www.ffmpeg.org/download.html))**
 ## 运行截图
 > - 主界面
 > > - ![main.png](https://s2.loli.net/2022/04/03/iEWLIeFhHUx25OV.png)
-> - 查看番剧信息
+> - 查看视频信息
 > > - ![info.png](https://s2.loli.net/2022/04/03/3wWUTkDbZHinq5j.png)
 > - 下载完成
 > > - ![play.png](https://s2.loli.net/2022/04/03/lpKTSjQUgzcJW1B.png)
