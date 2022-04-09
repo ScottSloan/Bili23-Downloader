@@ -1,6 +1,5 @@
 import re
 import os
-import wx
 import json
 import math
 import requests 
@@ -9,24 +8,6 @@ from utils.config import Config
 
 quality_wrap = {"超高清 8K":127, "真彩 HDR":125, "超清 4K":120, "高清 1080P60":116, "高清 1080P+":112, "高清 1080P":80, "高清 720P":64, "清晰 480P":32, "流畅 360P":16}
 
-def merge_video_audio(out_name: str, on_merge):
-    wx.CallAfter(on_merge)
-
-    cmd = '''cd {} && {} -v quiet -i audio.mp3 -i video.mp4 -acodec copy -vcodec copy video_merged.mp4&& {} video.mp4 audio.mp3'''.format(Config.download_path, Config._ffmpeg_path, Config._del_cmd)
-    os.system(cmd)
-
-    merge_subtitle(out_name)
-    
-    cmd2 = '''cd {} && {} video_merged.mp4 "{}.mp4"'''.format(Config.download_path, Config._rename_cmd, get_legal_name(out_name))
-    os.system(cmd2)
-
-def merge_subtitle(out_name: str):
-    if not (Config.auto_merge_subtitle and os.path.exists(os.path.join(Config.download_path, "{}.srt".format(out_name)))):
-        return
-
-    cmd = '''cd {} && {} -v quiet -i video_merged.mp4 -vf "subtitles='{}.srt'" video_sub.mp4 && {} video_merged.mp4 "{}.srt" && {} video_sub.mp4 video_merged.mp4'''.format(Config.download_path, Config._ffmpeg_path, get_legal_name(out_name), Config._del_cmd, get_legal_name(out_name), Config._rename_cmd)
-    os.system(cmd)
-
 def process_shortlink(url: str):
     return requests.get(url, headers = get_header(), proxies = get_proxy()).url
 
@@ -34,8 +15,9 @@ def get_legal_name(name: str):
     return re.sub('[/\:*?"<>|]', "", name)
 
 def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
-    header = {"User-Agent":"Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"}
-    
+    header = {"User-Agent":"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36"}
+    header["Cookie"] = "CURRENT_FNVAL=4048"
+
     if referer_url != None:
         header["Referer"] = referer_url
 
@@ -43,8 +25,8 @@ def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
         header["Range"] = "bytes={}-{}".format(chunk_list[0], chunk_list[1])
 
     if cookie != None and cookie != "":
-        header["Cookie"] = "SESSDATA=" + cookie
-
+        header["Cookie"] = header["Cookie"] + ";SESSDATA=" + cookie
+    
     return header
 
 def get_proxy() -> dict:
@@ -92,6 +74,14 @@ def get_danmaku_subtitle(name: str, cid: int, bvid: str):
             
                 get_file_from_url(down_url, "({}) {}.srt".format(lan_name, name), True)
 
+def format_size(size: int) -> str:
+    if size > 1048576:
+        return "{:.1f} GB".format(size / 1024 / 1024)
+    elif size > 1024:
+        return "{:.1f} MB".format(size / 1024)
+    else:
+        return "{:.1f} KB".format(size)
+
 def format_data(data: int) -> str:
     if data >= 100000000:
         return "{:.1f}亿".format(data / 100000000)
@@ -125,7 +115,7 @@ def check_update() -> list:
     d_url = ver_json["url"]
     version = ver_json["version"]
 
-    new = True if float(Config._version) < version else False
+    new = True if float(Config.VERSION) < version else False
     return [new, name, description, d_url, version]
 
 def convert_json_to_srt(data: str) -> str:

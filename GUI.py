@@ -1,7 +1,4 @@
 import wx
-import os
-import wx.adv
-import wx.html2
 import wx.dataview
 from concurrent.futures import ThreadPoolExecutor
 
@@ -16,13 +13,13 @@ from gui.download import DownloadWindow
 from gui.settings import SettingWindow
 from gui.about import AboutWindow
 from gui.processing import ProcessingWindow
-from gui.template import InfoBar, TreeListCtrl
+from gui.templates import *
 
 class MainWindow(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, -1, "Bili23 Downloader")
 
-        self.SetIcon(wx.Icon(Config._logo))
+        self.SetIcon(wx.Icon(Config.res_logo))
         self.SetSize(self.FromDIP((800, 480)))
         self.Center()
         self.panel = wx.Panel(self, -1)
@@ -31,6 +28,8 @@ class MainWindow(wx.Frame):
         self.Bind_EVT()
 
         Main_ThreadPool.submit(self.check_app_update)
+
+        self.show_download_window = False
 
     def init_controls(self):
         self.infobar = InfoBar(self.panel)
@@ -58,12 +57,14 @@ class MainWindow(wx.Frame):
 
         self.info_btn = wx.Button(self.panel, -1, "视频信息", size = self.FromDIP((90, 30)))
         self.info_btn.Enable(False)
+        self.download_manager_btn = wx.Button(self.panel, -1, "下载管理", size = self.FromDIP((90, 30)))
         self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((90, 30)))
         self.download_btn.Enable(False)
 
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
         hbox3.Add(self.info_btn, 0, wx.BOTTOM | wx.LEFT, 10)
         hbox3.AddStretchSpacer(1)
+        hbox3.Add(self.download_manager_btn)
         hbox3.Add(self.download_btn, 0, wx.ALL & (~wx.TOP), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -108,6 +109,7 @@ class MainWindow(wx.Frame):
 
         self.quality_cb.Bind(wx.EVT_CHOICE, self.select_quality)
         self.info_btn.Bind(wx.EVT_BUTTON, self.Load_info_window_EVT)
+        self.download_manager_btn.Bind(wx.EVT_BUTTON, self.Load_download_window_EVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.download_EVT)
 
     def menu_EVT(self, event):
@@ -117,24 +119,18 @@ class MainWindow(wx.Frame):
             info = check_update()
 
             if info == None:
-                wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "警告", wx.ICON_WARNING).ShowModal()
-                
+                Message.Show_Message(self, 200)
             elif info[0]:
-                dialog = wx.MessageDialog(self, "有新的更新可用\n\n{}\n\n更新说明：{}\n\n版本：{}".format(info[1], info[2], info[4]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
-                dialog.SetYesNoLabels("马上更新", "稍后更新")
-                if dialog.ShowModal() == wx.ID_YES:
-                    import webbrowser
-                    webbrowser.open(Config._website)
-            
+                Message.Show_Message_Update(self, info)
             else:
-                wx.MessageDialog(self, "当前没有可用更新", "提示", wx.ICON_INFORMATION).ShowModal()
+                Message.Show_Message(self, 201)
 
         elif menuid == 120:
-            wx.MessageDialog(self, "使用帮助\n\nhelp", "使用帮助", wx.ICON_INFORMATION).ShowModal()
+            Message.Show_Message(self, 203)
 
         elif menuid == 130:
             AboutWindow(self)
-
+            
         elif menuid == 140:
             setting_window = SettingWindow(self)
             setting_window.ShowModal()
@@ -234,65 +230,38 @@ class MainWindow(wx.Frame):
 
     def download_EVT(self, event):
         if self.theme == LiveInfo:
-            if Config.player_path == "":
-                wx.MessageDialog(self, "未指定播放器路径\n\n尚未指定播放器路径，请添加路径后再试", "警告", wx.ICON_WARNING).ShowModal()
-                return
-
-            elif LiveInfo.live_status == 0:
-                wx.MessageDialog(self, "当前直播未开播\n\n当前直播尚未开播，请稍候再试", "警告", wx.ICON_WARNING).ShowModal()
-                return
-
-            else:
-                os.system('{} "{}"'.format(Config.player_path, LiveInfo.playurl))
+            live_parser.open_player()
         else:
-            if self.list_lc.get_all_checked_item(self.theme, self.on_error):
-                return
+            if self.list_lc.get_all_checked_item(self.theme, self.on_error): return
 
-            self.download_window = DownloadWindow(self)
+            self.Load_download_window_EVT(0)
 
-            Main_ThreadPool.submit(self.download_thread)
-
-            self.download_window.ShowWindowModal()
-
-    def download_thread(self):
-        kwargs = {"on_start":self.download_window.on_download_start, "on_download":self.download_window.on_downloading, "on_complete":self.on_download_complete, "on_merge":self.download_window.on_merge}
-
-        video_parser.get_video_durl(kwargs) if self.theme == VideoInfo else bangumi_parser.get_bangumi_durl(kwargs)
+            quality_desc = self.quality_cb.GetStringSelection()
+            self.download_window.add_download_task(self.theme, quality_desc, quality_wrap[quality_desc])
 
     def Load_info_window_EVT(self, event):
         self.info_window = InfoWindow(self, VideoInfo.title if self.theme == VideoInfo else BangumiInfo.title, self.theme)
         self.info_window.Show()
+    
+    def Load_download_window_EVT(self, event):
+        if self.show_download_window:
+            self.download_window.Show()
+        else:
+            self.download_window = DownloadWindow(self)
+            self.download_window.Show()
+            self.show_download_window = True
 
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)
-        wx.CallAfter(self.download_window.Hide)
 
         self.infobar.show_message_info(code)
 
-    def on_download_complete(self):
-        wx.CallAfter(self.download_window.Hide)
-
-        if Config.show_notification:
-            msg = wx.adv.NotificationMessage("下载完成", "所选视频已全部下载完成", self, wx.ICON_INFORMATION)
-            msg.Show(timeout = 5)
-            return
-
-        dlg = wx.MessageDialog(self, "下载完成\n\n所选视频已全部下载完成", "提示", wx.ICON_INFORMATION | wx.YES_NO)
-        dlg.SetYesNoLabels("打开所在位置", "确定")
-
-        if dlg.ShowModal() == wx.ID_YES:
-            if Config._platform.startswith("Windows"):
-                os.startfile(Config.download_path)
-            else:
-                os.system('xdg-open "{}"'.format(Config.download_path))
-
     def on_redirect(self, url: str):
-        Main_ThreadPool = ThreadPoolExecutor(max_workers = 2)
+        Main_ThreadPool = ThreadPoolExecutor()
         Main_ThreadPool.submit(self.get_url_thread, url)
 
     def check_app_update(self):
-        if not Config.auto_check_update:
-            return
+        if not Config.auto_check_update: return
             
         self.update_info = check_update()
 
@@ -305,7 +274,7 @@ class MainWindow(wx.Frame):
 if __name__ == "__main__":
     app = wx.App()
 
-    Main_ThreadPool = ThreadPoolExecutor(max_workers = 2)
+    Main_ThreadPool = ThreadPoolExecutor()
     
     video_parser = VideoParser()
     bangumi_parser = BangumiParser()

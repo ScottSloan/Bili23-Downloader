@@ -1,11 +1,9 @@
 import re
-import wx
 import json
 import requests
 
 from utils.config import Config
 from utils.tools import *
-from utils.download import Downloader
 
 class BangumiInfo:
     url = epid = bvid = ""
@@ -28,8 +26,8 @@ class BangumiParser:
     def info_api(self):
         return "https://api.bilibili.com/pgc/view/web/season?ep_id=" + BangumiInfo.epid
 
-    def durl_api(self, bvid: str, cid: int) -> str:
-        return "https://api.bilibili.com/x/player/playurl?bvid={}&fnval=16&cid={}&otype=json".format(bvid, cid)
+    def quality_api(self, bvid: str, cid: int) -> str:
+        return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(bvid, cid)
 
     def get_epid(self, url: str):
         epid = re.findall(r"ep[0-9]*", url)[0][2:]
@@ -119,58 +117,16 @@ class BangumiParser:
             BangumiInfo.theme = "综艺"
 
     def get_bangumi_quality(self):
-        bangumi_request = requests.get(self.durl_api(BangumiInfo.bvid, BangumiInfo.cid), headers = get_header(BangumiInfo.url, cookie = Config.cookie_sessdata), proxies = get_proxy())
+        bangumi_request = requests.get(self.quality_api(BangumiInfo.bvid, BangumiInfo.cid), headers = get_header(BangumiInfo.url, cookie = Config.cookie_sessdata), proxies = get_proxy())
         bangumi_json = json.loads(bangumi_request.text)
         
         if bangumi_json["code"] != 0:
             self.on_error(402)
 
-        json_data = bangumi_json["data"]
+        json_data = bangumi_json["result"]
 
         BangumiInfo.quality_id = json_data["accept_quality"]
         BangumiInfo.quality_desc = json_data["accept_description"]
-        
-    def get_bangumi_durl(self, kwargs):
-        self.downloader = Downloader(kwargs["on_start"], kwargs["on_download"])
-        on_complete, self.on_merge = kwargs["on_complete"], kwargs["on_merge"]
-
-        for index, value in enumerate(BangumiInfo.down_episodes):
-            bvid = value["bvid"]
-            url = value["link"]
-            name = value["share_copy"]
-            cid = value["cid"]
-
-            if value["badge"] == "会员" and Config.cookie_sessdata == "":
-                continue
-            
-            get_danmaku_subtitle(name, cid, bvid)
-            self.process_bangumi_durl(bvid, cid, url, name, index)
-
-        wx.CallAfter(on_complete)
-
-    def process_bangumi_durl(self, bvid: str, cid: int, referer_url: str, title: str, index):
-        bangumi_request = requests.get(self.durl_api(bvid, cid), headers = get_header(cookie = Config.cookie_sessdata), proxies = get_proxy())
-        bangumi_json = json.loads(bangumi_request.text)
-        
-        if bangumi_json["code"] != 0:
-            self.on_error(403)
-
-        index = [index + 1, len(BangumiInfo.down_episodes)]
-
-        json_dash = bangumi_json["data"]["dash"]
-
-        quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < BangumiInfo.quality else BangumiInfo.quality
-
-        temp_video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == quality]
-        video_durl = temp_video_durl[Config.codec] if len(temp_video_durl) > 1 else temp_video_durl[0]
-
-        temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
-        audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == quality or (i["id"] - 30200) < quality][0]["baseUrl"]
-
-        self.downloader.add_url(video_durl, referer_url, "video.mp4", index, title)
-        self.downloader.add_url(audio_durl, referer_url, "audio.mp3", index, title)
-        
-        merge_video_audio(title, self.on_merge)
 
     def parse_url(self, url: str, on_error):
         self.on_error = on_error

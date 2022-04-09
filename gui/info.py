@@ -5,7 +5,7 @@ import wx.html2
 from utils.config import Config
 from utils.video import VideoInfo
 
-from gui.template import Frame
+from gui.templates import Frame
 
 class InfoWindow(Frame):
     def __init__(self, parent, title, theme):
@@ -15,7 +15,7 @@ class InfoWindow(Frame):
         self.init_controls()
         self.Bind_EVT()
 
-        self.browser.LoadURL("file://{}".format(Config._info_html))
+        self.browser.LoadURL("file://{}".format(Config.res_info))
 
     def init_controls(self):
         self.browser = wx.html2.WebView.New(self.panel, -1)
@@ -29,12 +29,14 @@ class InfoWindow(Frame):
         self.Bind(wx.EVT_SHOW, self.on_show)
 
     def on_show(self, event):
+        from utils.html import HTMLUtils
+
+        html = HTMLUtils()
+
         if self.theme == VideoInfo:
-            from utils.html import save_video_info
-            save_video_info()
+            html.save_video_info()
 
         else:
-            from utils.html import save_bangumi_info
-            save_bangumi_info()
+            html.save_bangumi_info()
 
         event.Skip()

@@ -1,6 +1,7 @@
 import re
 import json
 import requests
+import subprocess
 
 from utils.config import Config
 from utils.tools import *
@@ -9,7 +10,7 @@ class LiveInfo:
     id = room_id = live_status = 0
 
     title = playurl = ""
-    
+
 class LiveParser:
     def info_api(self):
         return "https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids={}&req_biz=web_room_componet".format(LiveInfo.id)
@@ -35,6 +36,15 @@ class LiveParser:
         live_json = json.loads(live_req.text)
 
         LiveInfo.playurl = live_json["data"]["durl"][0]["url"]
+
+    def open_player(self):
+        if Config.player_path == "":
+            from gui.templates import Message
+            
+            Message.Show_Message(self, 204)
+        else:
+            cmd = '{} "{}"'.format(Config.player_path, LiveInfo.playurl)
+            subprocess.Popen(cmd, shell = True)
 
     def parse_url(self, url: str):
         self.get_id(url)

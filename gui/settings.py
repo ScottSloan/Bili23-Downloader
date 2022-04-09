@@ -1,18 +1,20 @@
 import wx
 import os
+import time
+import requests
 import configparser
 
-from gui.template import Dialog
+from gui.templates import Dialog
 
 from utils.config import Config
-from utils.tools import quality_wrap
+from utils.tools import quality_wrap, get_header
 
 conf = configparser.RawConfigParser()
 conf.read(os.path.join(os.getcwd(), "config.conf"))
 
 class SettingWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "设置", (370, 460))
+        Dialog.__init__(self, parent, "设置", (400, 500))
 
         self.init_controls()
         self.Bind_EVT()
@@ -80,13 +82,16 @@ class Tab1(wx.Panel):
     def Bind_EVT(self):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.browse_folder)
 
-        self.thread_sl.Bind(wx.EVT_SLIDER, self.on_slide)
+        self.thread_sl.Bind(wx.EVT_SLIDER, self.on_thread_slide)
+        self.task_sl.Bind(wx.EVT_SLIDER, self.on_task_slide)
 
     def load_conf(self):
         self.path_tc.SetValue(Config.download_path)
         
         self.thread_lb.SetLabel("多线程数：{}".format(Config.max_thread))
         self.thread_sl.SetValue(Config.max_thread)
+        self.task_lb.SetLabel("并行任务数：{}".format(Config.max_task))
+        self.task_sl.SetValue(Config.max_task)
         self.quality_cb.SetSelection(list(quality_wrap.values()).index(Config.default_quality))
         self.codec_cb.SetSelection(Config.codec)
         self.show_toast_chk.SetValue(Config.show_notification)
@@ -94,12 +99,14 @@ class Tab1(wx.Panel):
     def save_conf(self):
         Config.download_path = self.path_tc.GetValue()
         Config.max_thread = self.thread_sl.GetValue()
+        Config.max_task = self.task_sl.GetValue()
         Config.default_quality = list(quality_wrap.values())[self.quality_cb.GetSelection()]
         Config.codec = self.codec_cb.GetSelection()
         Config.show_notification = self.show_toast_chk.GetValue()
 
         conf.set("download", "path", Config.download_path if Config.download_path != Config.default_path else "default")
         conf.set("download", "max_thread", str(Config.max_thread))
+        conf.set("download", "max_task", str(Config.max_task))
         conf.set("download", "default_quality", str(Config.default_quality))
         conf.set("download", "codec", str(Config.codec))
         conf.set("download", "show_notification", str(int(Config.show_notification)))
@@ -117,33 +124,39 @@ class Tab1(wx.Panel):
         hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         self.thread_lb = wx.StaticText(download_box, -1, "多线程数：0")
-        self.thread_sl = wx.Slider(download_box, -1, 0, 1, 12)
-        self.thread_sl.SetToolTip("设置下载视频的多线程数，范围 1-12\n\n下载速度最终取决于B站服务器的速度，设置太高可能会没有效果")
+        self.thread_sl = wx.Slider(download_box, -1, 1, 1, 8)
+        self.thread_sl.SetToolTip("设置下载视频的多线程数，范围 1-8")
+
+        self.task_lb = wx.StaticText(download_box, -1, "并行任务数：0")
+        self.task_sl = wx.Slider(download_box, -1, 1, 1, 5)
+        self.task_sl.SetToolTip("设置并行下载视频的任务数，范围 1-5")
 
         quality_lb = wx.StaticText(download_box, -1, "默认下载清晰度")
         self.quality_cb = wx.Choice(download_box, -1, choices = list(quality_wrap.keys()))
-        self.quality_cb.SetToolTip("设置默认下载的清晰度，如果视频没有所选的清晰度，则自动选择可用的最高清晰度")
+        self.quality_cb.SetToolTip("设置默认下载的清晰度\n如果视频没有所选的清晰度，则自动选择可用的最高清晰度")
 
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(quality_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         hbox1.Add(self.quality_cb, 0, wx.ALL & (~wx.TOP), 10)
 
         codec_lb = wx.StaticText(download_box, -1, "视频编码格式   ")
-        self.codec_cb = wx.Choice(download_box, -1, choices = ["AVC/H.264", "HEVC/H.265"])
-        self.codec_cb.SetToolTip("设置默认视频编码格式")
+        self.codec_cb = wx.Choice(download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
+        self.codec_cb.SetToolTip("设置默认下载的视频编码格式\n注意 HEVC/H.265 和 AV1 编码需设备支持才能正常播放")
 
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2.Add(codec_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        hbox2.Add(self.codec_cb, 0, wx.ALL & (~wx.TOP), 10)
+        hbox2.Add(codec_lb, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        hbox2.Add(self.codec_cb, 0, wx.ALL, 10)
 
-        self.show_toast_chk = wx.CheckBox(download_box, -1, "下载完成后显示通知")
-        self.show_toast_chk.SetToolTip("下载完成后显示通知，而不是对话框")
+        self.show_toast_chk = wx.CheckBox(download_box, -1, "下载完成后弹出通知")
+        self.show_toast_chk.SetToolTip("下载完成后弹出 Toast 通知")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(path_lb, 0, wx.ALL, 10)
         vbox.Add(hbox, 0, wx.EXPAND)
         vbox.Add(self.thread_lb, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.thread_sl, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.task_lb, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.task_sl, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
         vbox.Add(hbox1)
         vbox.Add(hbox2)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
@@ -160,9 +173,12 @@ class Tab1(wx.Panel):
             self.path_tc.SetLabel(save_path)
         dlg.Destroy()
 
-    def on_slide(self, event):
+    def on_thread_slide(self, event):
         self.thread_lb.SetLabel("多线程数：{}".format(self.thread_sl.GetValue()))
 
+    def on_task_slide(self, event):
+        self.task_lb.SetLabel("并行任务数：{}".format(self.task_sl.GetValue()))
+ 
 class Tab2(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -224,28 +240,22 @@ class Tab3(wx.Panel):
     def load_conf(self):
         if not Config.save_danmaku:
             self.danmaku_format_cb.Enable(False)
-        
-        if not Config.save_subtitle:
-            self.auto_merge_chk.Enable(False)
 
         self.save_danmaku_chk.SetValue(Config.save_danmaku)
         self.danmaku_format_cb.SetSelection(Config.danmaku_format)
 
         self.save_subtitle_chk.SetValue(Config.save_subtitle)
-        self.auto_merge_chk.SetValue(Config.auto_merge_subtitle)
 
     def save_conf(self):
         Config.save_danmaku = self.save_danmaku_chk.GetValue()
         Config.danmaku_format = self.danmaku_format_cb.GetSelection()
 
         Config.save_subtitle = self.save_subtitle_chk.GetValue()
-        Config.auto_merge_subtitle = self.auto_merge_chk.GetValue()
 
         conf.set("danmaku", "save_danmaku", str(int(Config.save_danmaku)))
         conf.set("danmaku", "format", str(int(Config.danmaku_format)))
 
         conf.set("subtitle", "save_subtitle", str(int(Config.save_subtitle)))
-        conf.set("subtitle", "auto_merge_subtitle", str(int(Config.auto_merge_subtitle)))
 
     def Set_danmaku(self):
         danmaku_box = wx.StaticBox(self, -1, "弹幕下载设置")
@@ -274,12 +284,9 @@ class Tab3(wx.Panel):
 
         self.save_subtitle_chk = wx.CheckBox(subtitle_box, -1, "下载字幕文件")
         self.save_subtitle_chk.SetToolTip("同时下载字幕文件 (srt格式)\n\n如果有多个字幕将全部下载")
-        self.auto_merge_chk = wx.CheckBox(subtitle_box, -1, "自动添加字幕")
-        self.auto_merge_chk.SetToolTip("自动将字幕添加到视频中 (速度慢)")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_subtitle_chk, 0, wx.ALL, 10)
-        vbox.Add(self.auto_merge_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         subtitle_sbox = wx.StaticBoxSizer(subtitle_box)
         subtitle_sbox.Add(vbox)
@@ -311,7 +318,7 @@ class Tab4(wx.Panel):
 
         self.Set_Display()
         self.Set_Player()
-        self.Set_Update()
+        self.Set_Misc()
 
         self.SetSizer(self.vbox)
         self.Bind_EVT()
@@ -369,18 +376,20 @@ class Tab4(wx.Panel):
 
         self.vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
-    def Set_Update(self):
-        update_box = wx.StaticBox(self, -1, "检查更新设置")
+    def Set_Misc(self):
+        misc_box = wx.StaticBox(self, -1, "杂项")
 
-        self.auto_check_chk = wx.CheckBox(update_box, -1, "自动检查更新")
+        self.show_icon_chk = wx.CheckBox(misc_box, -1, "显示托盘图标")
+        self.auto_check_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.auto_check_chk, 0, wx.ALL, 10)
+        vbox.Add(self.show_icon_chk, 0, wx.ALL, 10)
+        vbox.Add(self.auto_check_chk, 0, wx.ALL & (~wx.TOP), 10)
         
-        update_sbox = wx.StaticBoxSizer(update_box)
-        update_sbox.Add(vbox, 1, wx.EXPAND)
+        misc_sbox = wx.StaticBoxSizer(misc_box)
+        misc_sbox.Add(vbox, 1, wx.EXPAND)
 
-        self.vbox.Add(update_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        self.vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
     def browse_file(self, event):
         wildcard = "可执行文件(*.exe)|*.exe"
@@ -403,6 +412,7 @@ class Tab5(wx.Panel):
     
     def Bind_EVT(self):
         self.enable_proxy_chk.Bind(wx.EVT_CHECKBOX, self.enable_chk_EVT)
+        self.test_btn.Bind(wx.EVT_BUTTON, self.test_EVT)
 
     def load_conf(self):
         if not Config.enable_proxy:
@@ -443,6 +453,8 @@ class Tab5(wx.Panel):
         port_lb = wx.StaticText(proxy_box, -1, "端口")
         self.port_tc = wx.TextCtrl(proxy_box, -1)
 
+        self.test_btn = wx.Button(proxy_box, -1, "测试", size = self.FromDIP((80, 30)))
+
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(address_lb, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         hbox1.Add(self.addresss_tc, 1, wx.ALL & (~wx.LEFT), 10)
@@ -455,12 +467,13 @@ class Tab5(wx.Panel):
         vbox.Add(self.enable_proxy_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(hbox1)
         vbox.Add(hbox2)
+        vbox.Add(self.test_btn, 0, wx.ALL & (~wx.TOP), 10)
 
         cookie_sbox = wx.StaticBoxSizer(proxy_box)
         cookie_sbox.Add(vbox)
 
         self.vbox.Add(cookie_sbox, 0, wx.ALL | wx.EXPAND, 10)
-    
+
     def enable_chk_EVT(self, event):
         state = event.IsChecked()
 
@@ -470,3 +483,15 @@ class Tab5(wx.Panel):
         else:
             self.addresss_tc.Enable(False)
             self.port_tc.Enable(False)
+    
+    def test_EVT(self, event):
+        test_url = "https://www.bilibili.com"
+
+        try:
+            start_t = time.time()
+            req = requests.get(test_url, get_header(), timeout = 3)
+            end_t = time.time()
+
+            wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), "提示", wx.ICON_INFORMATION).ShowModal()
+        except:
+            wx.MessageDialog(self, "测试失败\n\n状态码：{}".format(req.status_code), "提示", wx.ICON_WARNING).ShowModal()
