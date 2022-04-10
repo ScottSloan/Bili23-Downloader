@@ -3,7 +3,7 @@ on:
   release:
     types: [released]
   schedule:
-    - cron: 0 8 * * 1
+    - cron: 0 0 * * 1
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
 
       - name: Build
         run: |
-          pyinstaller -F --clean -y --dist ./ GUI.py
+          pyinstaller -F --clean -y --dist ./ GUI.py --add-data "info;info" --add-data "pic;pic"
           
       - name: Clean Files
         run: |
@@ -36,11 +36,13 @@ jobs:
           del build -recurse
           del gui -recurse
           del utils -recurse
+          del pic -recurse
+          del info -recurse
           del GUI.spec
           del GUI.py
           
       - name: Store generated file
         uses: actions/upload-artifact@v2
         with:
-          name: Bili23-Downloader
+          name: Bili23-Downloader-Build
           path: ./
