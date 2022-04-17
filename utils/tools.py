@@ -73,10 +73,10 @@ def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str):
                 down_url = "https:{}".format(subtitle_json[i]["subtitle_url"])
             
                 get_file_from_url(down_url, "({}) {}.srt".format(lan_name, name), True)
-
-    if Config.save_lyric:
-        from utils.audio import AudioInfo 
-        
+                
+    from utils.audio import AudioInfo 
+    
+    if Config.save_lyric and AudioInfo.lyric != "":
         get_file_from_url(AudioInfo.lyric, "{}.lrc".format(name), False)
 
 def format_size(size: int) -> str:
