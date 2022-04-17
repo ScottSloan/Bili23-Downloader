@@ -1,9 +1,12 @@
 # 常见问题
 ### Q：不能获取视频信息？
 #### A：请在设置中添加大会员 Cookie，如果依然报错，请提交 issue，附上视频链接
-- **添加 Cookie 方法**
+**添加 Cookie 方法**  
 ![cookie.png](https://s2.loli.net/2022/04/09/caH5VFbSzRM6mwK.png)  
-浏览器登录B站，按下 F12 键打开开发者工具，选择 `应用` 选项卡 -> Cookie，找到 `SESSDATA` 字段，在程序设置中添加即可 
+浏览器登录B站，按下 F12 键打开开发者工具，选择 `应用` 选项卡 -> Cookie，找到 `SESSDATA` 字段，在程序设置中添加即可  
+
+![login.png](https://s2.loli.net/2022/04/17/ngkDbtFdAxevpHa.png)  
+你也可以点击 `扫码登录` 按钮，自动获取 Cookie 并填入
 > Cookie 有效期为一个月，请定期更换
 
 #
