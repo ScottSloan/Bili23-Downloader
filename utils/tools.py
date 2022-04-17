@@ -2,7 +2,7 @@ import re
 import os
 import json
 import math
-import requests 
+import requests
 
 from utils.config import Config
 
@@ -44,7 +44,7 @@ def get_file_from_url(url: str, filename: str, issubtitle: bool):
     with open(os.path.join(Config.download_path, get_legal_name(filename)), "w", encoding = "utf-8") as f:
         f.write(convert_json_to_srt(req.text) if issubtitle else req.text)
 
-def get_danmaku_subtitle(name: str, cid: int, bvid: str):
+def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str):
     if Config.save_danmaku:
         danmaku_url = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
 
@@ -73,6 +73,11 @@ def get_danmaku_subtitle(name: str, cid: int, bvid: str):
                 down_url = "https:{}".format(subtitle_json[i]["subtitle_url"])
             
                 get_file_from_url(down_url, "({}) {}.srt".format(lan_name, name), True)
+
+    if Config.save_lyric:
+        from utils.audio import AudioInfo 
+        
+        get_file_from_url(AudioInfo.lyric, "{}.lrc".format(name), False)
 
 def format_size(size: int) -> str:
     if size > 1048576:

@@ -71,6 +71,9 @@ class VideoParser:
             VideoInfo.title = info_ugc_season["title"]
 
             VideoInfo.episodes = info_ugc_season["sections"][0]["episodes"]
+        else:
+            VideoInfo.collection = False
+            VideoInfo.episodes = []
 
         VideoInfo.cid = info_data["cid"]
 

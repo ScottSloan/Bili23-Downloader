@@ -15,10 +15,10 @@ class Config:
 
     cookie_sessdata = ""
 
-    save_danmaku = save_subtitle = False
+    save_danmaku = save_subtitle =  save_lyric = False
     danmaku_format = 0
 
-    show_sections = auto_check_update = False
+    show_sections = auto_check_update = show_icon = False
     player_path = ""
     
     enable_proxy = False
@@ -56,9 +56,11 @@ class Load_Config:
         Config.danmaku_format = conf.getint("danmaku", "format")
 
         Config.save_subtitle = conf.getboolean("subtitle", "save_subtitle")
+        Config.save_lyric = conf.getboolean("lyric", "save_lyric")
 
         Config.show_sections = conf.getboolean("other", "show_sections")
         Config.player_path = conf.get("other", "player_path")
+        Config.show_icon = conf.getboolean("other", "show_icon")
         Config.auto_check_update = conf.getboolean("other", "auto_check_update")
 
         Config.enable_proxy = conf.getboolean("proxy", "enable_proxy")

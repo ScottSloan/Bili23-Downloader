@@ -12,10 +12,10 @@ class LiveInfo:
     title = playurl = ""
 
 class LiveParser:
-    def info_api(self):
+    def info_api(self) -> str:
         return "https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids={}&req_biz=web_room_componet".format(LiveInfo.id)
 
-    def playurl_api(self):
+    def playurl_api(self) -> str:
         return "https://api.live.bilibili.com/xlive/web-room/v1/playUrl/playUrl?cid={}&platform=h5&otype=json&quality=1".format(LiveInfo.room_id)
     
     def get_id(self, url: str):

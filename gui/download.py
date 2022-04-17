@@ -5,11 +5,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
+from utils.audio import AudioInfo
 from utils.download import Downloader
 from utils.tools import *
 from utils.config import Config
 
 from gui.templates import Frame, Message
+
 
 ThreadPool = ThreadPoolExecutor()
 
@@ -25,6 +27,9 @@ class DownloadWindow(Frame):
         self.SetBackgroundColour("white")
      
         self.list_panel = ListPanel(self)
+
+        a = Message()
+        a.Show_Notification_Message()
 
         self.Bind_EVT()
 
@@ -49,9 +54,12 @@ class DownloadWindow(Frame):
             else:
                 self.list_panel.download_list_panel.add_panel(DownloadList.download_count, VideoInfo.title, VideoInfo.bvid, VideoInfo.cid, VideoInfo.duration, quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
-        else:
+        elif theme == BangumiInfo:
             for i in BangumiInfo.down_episodes:
                 self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["share_copy"], i["bvid"], i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+
+        else:
+            self.list_panel.download_list_panel.add_panel(DownloadList.download_count, AudioInfo.title, None, None, AudioInfo.duration, None, None ,theme, self.on_finish, self.on_merge)
 
         self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadList.download_list)))
 
@@ -73,7 +81,7 @@ class DownloadWindow(Frame):
             self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadList.download_list)))
         else:
             if Config.show_notification:
-                Message.Show_Notification_Message(self)
+                Message.Show_Notification_Message()
 
             self.list_panel.task_lb.SetLabel("下载管理")
 
@@ -145,7 +153,7 @@ class DownloadListPanel(wx.lib.scrolledpanel.ScrolledPanel):
 
         self.SetSizer(self.main_sizer)
     
-    def add_panel(self, pid: int, title: str, bvid: str, cid: int, duration: int, quality_desc: str, quality_id: int, theme, on_finish, on_merge):
+    def add_panel(self, pid, title, bvid, cid, duration, quality_desc, quality_id, theme, on_finish, on_merge):
         download_info = {}
 
         download_info["pid"] = pid
@@ -184,7 +192,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.title_lb = wx.StaticText(self, -1, self.download_info["title"], style = wx.ST_ELLIPSIZE_END)
 
-        self.quality_lb = wx.StaticText(self, -1, self.download_info["quality_desc"])
+        self.quality_lb = wx.StaticText(self, -1, self.download_info["quality_desc"] if self.download_info["theme"] != AudioInfo else "")
         self.quality_lb.SetForegroundColour(wx.Colour(108, 108, 108))
         self.size_lb = wx.StaticText(self, -1, "-")
         self.size_lb.SetForegroundColour(wx.Colour(108, 108, 108))
@@ -243,7 +251,10 @@ class DownloadItemPanel(wx.Panel):
 
         self.download_info["status"] = "downloading"
 
-        get_danmaku_subtitle(self.download_info["title"], self.download_info["cid"], self.download_info["bvid"])
+        if self.download_info["theme"] != AudioInfo:
+            get_danmaku_subtitle_lyric(self.download_info["title"], self.download_info["cid"], self.download_info["bvid"])
+        else:
+            get_danmaku_subtitle_lyric(self.download_info["title"], None, None)
         
         self.download_utils.start_download()
 
@@ -291,6 +302,9 @@ class DownloadItemUtils:
     def bangumi_durl_api(self) -> str:
         return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(self.download_info["bvid"], self.download_info["cid"])
 
+    def audio_durl_api(self) -> str:
+        return "https://www.bilibili.com/audio/music-service-c/web/url?sid={}".format(AudioInfo.sid)
+
     def get_full_url(self) -> str:
         return "https://www.bilibili.com/video/" + self.download_info["bvid"]
 
@@ -315,6 +329,14 @@ class DownloadItemUtils:
         temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
         self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == quality or (i["id"] - 30200) < quality][0]["baseUrl"]
 
+    def get_audio_durl(self):
+        self.referer_url = "https://www.bilibili.com/audio/au{}".format(AudioInfo.sid)
+
+        audio_request = requests.get(self.audio_durl_api(), headers = get_header(), proxies = get_proxy())
+        audio_json = json.loads(audio_request.text)
+
+        self.audio_durl = audio_json["data"]["cdns"][0]
+
     def merge_video_audio(self, out_name: str, pid: str):
         cmd = '''cd {0} && {1} -v quiet -i audio_{2}.mp3 -i video_{2}.mp4 -acodec copy -vcodec copy "{4}.mp4"&& {3} video_{2}.mp4 audio_{2}.mp3'''.format(Config.download_path, Config.ffmpeg_path, pid, Config.del_cmd, out_name)
         
@@ -322,16 +344,23 @@ class DownloadItemUtils:
         self.merge_process.wait()
 
     def start_download(self):
-        self.get_durl()
+        if self.download_info["theme"] != AudioInfo:
+            self.get_durl()
 
-        self.downloader.add_url(self.video_durl, self.referer_url, "video_{}.mp4".format(self.pid))
-        self.downloader.add_url(self.audio_durl, self.referer_url, "audio_{}.mp3".format(self.pid))
+            self.downloader.add_url(self.video_durl, self.referer_url, "video_{}.mp4".format(self.pid))
+            self.downloader.add_url(self.audio_durl, self.referer_url, "audio_{}.mp3".format(self.pid))
 
-        if self.download_info["status"] == "cancelled": return
+            if self.download_info["status"] == "cancelled": return
 
-        self.on_merge()
-        self.merge_video_audio(self.download_info["title"], self.pid)
-        self.on_finish()
+            self.on_merge()
+            self.merge_video_audio(self.download_info["title"], self.pid)
+            self.on_finish()
+        else:
+            self.get_audio_durl()
+
+            self.downloader.add_url(self.audio_durl, self.referer_url, "{}.mp3".format(self.download_info["title"]))
+
+            self.on_finish()
 
     def on_start(self, size: str):
         self.download_info["total_size"] += size
@@ -364,6 +393,7 @@ class DownloadItemUtils:
 
     def on_finish(self):
         del DownloadList.download_list[self.download_info["pid"]]
+        self.panel.size_lb.SetLabel(format_size(self.download_info["total_size"]))
         self.download_info["status"] = "completed"
         self.download_info["on_finish"]()
 

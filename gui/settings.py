@@ -5,6 +5,7 @@ import requests
 import configparser
 
 from gui.templates import Dialog
+from gui.login import LoginWindow
 
 from utils.config import Config
 from utils.tools import quality_wrap, get_header
@@ -14,6 +15,7 @@ conf.read(os.path.join(os.getcwd(), "config.conf"))
 
 class SettingWindow(Dialog):
     def __init__(self, parent):
+        self.parent = parent
         Dialog.__init__(self, parent, "设置", (400, 500))
 
         self.init_controls()
@@ -25,14 +27,14 @@ class SettingWindow(Dialog):
         self.note = wx.Notebook(self.panel, -1)
 
         tab1 = Tab1(self.note)
-        tab2 = Tab2(self.note)
+        tab2 = Tab2(self.note, self.parent)
         tab3 = Tab3(self.note)
         tab4 = Tab4(self.note)
         tab5 = Tab5(self.note)
 
         self.note.AddPage(tab1, "下载")
         self.note.AddPage(tab2, "Cookie")
-        self.note.AddPage(tab3, "弹幕和字幕")
+        self.note.AddPage(tab3, "弹幕&&字幕&&歌词")
         self.note.AddPage(tab4, "其他")
         self.note.AddPage(tab5, "代理")
 
@@ -180,7 +182,9 @@ class Tab1(wx.Panel):
         self.task_lb.SetLabel("并行任务数：{}".format(self.task_sl.GetValue()))
  
 class Tab2(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, parent_w):
+        self.parent = parent_w
+
         wx.Panel.__init__(self, parent, -1)
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
@@ -189,7 +193,12 @@ class Tab2(wx.Panel):
 
         self.SetSizer(self.vbox)
 
+        self.Bind_EVT()
+
         self.load_conf()
+
+    def Bind_EVT(self):
+        self.login_btn.Bind(wx.EVT_BUTTON, self.Login_EVT)
 
     def load_conf(self):
         self.sessdata_tc.SetValue(Config.cookie_sessdata)
@@ -204,7 +213,10 @@ class Tab2(wx.Panel):
         sessdata_lb = wx.StaticText(cookie_box, -1, "SESSDATA")
         self.sessdata_tc = wx.TextCtrl(cookie_box, -1)
         self.sessdata_tc.SetToolTip("Cookie SESSDATA 字段")
-        desp = wx.StaticText(cookie_box, -1, "说明：Cookie 用于下载大会员相关的视频\n\n添加方法：浏览器登录B站，按下 F12 键打开开发者工具，选择 应用(application) 选项卡 -> cookie，找到 SESSDATA 字段，复制粘贴即可。\n\n注：Cookie 有效期为一个月，请定期更换。")
+
+        self.login_btn = wx.Button(cookie_box, -1, "扫码登录", size = self.FromDIP((90, 30)))
+
+        desp = wx.StaticText(cookie_box, -1, """说明：Cookie 用于下载大会员相关的视频\n\n点击“扫码登录”按钮，可自动获取 Cookie 并填入\n\n注：Cookie 有效期为一个月，请定期更换""")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(sessdata_lb, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -212,12 +224,17 @@ class Tab2(wx.Panel):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.Add(self.login_btn, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(desp, 1, wx.ALL, 10)
 
         cookie_sbox = wx.StaticBoxSizer(cookie_box)
         cookie_sbox.Add(vbox, 1, wx.EXPAND)
         
         self.vbox.Add(cookie_sbox, 1, wx.ALL | wx.EXPAND, 10)
+
+    def Login_EVT(self, event):
+        login_window = LoginWindow(self)
+        login_window.ShowWindowModal()
 
 class Tab3(wx.Panel):
     def __init__(self, parent):
@@ -227,6 +244,7 @@ class Tab3(wx.Panel):
 
         self.Set_danmaku()
         self.Set_subtitle()
+        self.Set_lyric()
 
         self.SetSizer(self.vbox)
 
@@ -235,7 +253,6 @@ class Tab3(wx.Panel):
 
     def Bind_EVT(self):
         self.save_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.save_danmaku_EVT)
-        self.save_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.save_subtitle_EVT)
 
     def load_conf(self):
         if not Config.save_danmaku:
@@ -245,17 +262,20 @@ class Tab3(wx.Panel):
         self.danmaku_format_cb.SetSelection(Config.danmaku_format)
 
         self.save_subtitle_chk.SetValue(Config.save_subtitle)
+        self.save_lyric_chk.SetValue(Config.save_lyric)
 
     def save_conf(self):
         Config.save_danmaku = self.save_danmaku_chk.GetValue()
         Config.danmaku_format = self.danmaku_format_cb.GetSelection()
 
         Config.save_subtitle = self.save_subtitle_chk.GetValue()
+        Config.save_lyric = self.save_lyric_chk.GetValue()
 
         conf.set("danmaku", "save_danmaku", str(int(Config.save_danmaku)))
         conf.set("danmaku", "format", str(int(Config.danmaku_format)))
 
         conf.set("subtitle", "save_subtitle", str(int(Config.save_subtitle)))
+        conf.set("lyric", "save_lyric", str(int(Config.save_lyric)))
 
     def Set_danmaku(self):
         danmaku_box = wx.StaticBox(self, -1, "弹幕下载设置")
@@ -283,7 +303,7 @@ class Tab3(wx.Panel):
         subtitle_box = wx.StaticBox(self, -1, "字幕下载设置")
 
         self.save_subtitle_chk = wx.CheckBox(subtitle_box, -1, "下载字幕文件")
-        self.save_subtitle_chk.SetToolTip("同时下载字幕文件 (srt格式)\n\n如果有多个字幕将全部下载")
+        self.save_subtitle_chk.SetToolTip("下载字幕文件 (srt格式)\n如果有多个字幕将全部下载")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_subtitle_chk, 0, wx.ALL, 10)
@@ -293,6 +313,20 @@ class Tab3(wx.Panel):
 
         self.vbox.Add(subtitle_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
+    def Set_lyric(self):
+        lyric_box = wx.StaticBox(self, -1, "歌词下载设置")
+
+        self.save_lyric_chk = wx.CheckBox(lyric_box, -1, "下载歌词文件")
+        self.save_lyric_chk.SetToolTip("下载歌词文件 (lrc格式)")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.save_lyric_chk, 0, wx.ALL, 10)
+
+        lyric_sbox = wx.StaticBoxSizer(lyric_box)
+        lyric_sbox.Add(vbox)
+
+        self.vbox.Add(lyric_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
     def save_danmaku_EVT(self, event):
         state = event.IsChecked()
 
@@ -300,15 +334,6 @@ class Tab3(wx.Panel):
             self.danmaku_format_cb.Enable(True)
         else:
             self.danmaku_format_cb.Enable(False)
-    
-    def save_subtitle_EVT(self, event):
-        state = event.IsChecked()
-
-        if state:
-            self.auto_merge_chk.Enable(True)
-        else:
-            self.auto_merge_chk.Enable(False)
-            self.auto_merge_chk.SetValue(False)
 
 class Tab4(wx.Panel):
     def __init__(self, parent):
@@ -331,15 +356,18 @@ class Tab4(wx.Panel):
     def load_conf(self):
         self.show_sections_chk.SetValue(Config.show_sections)
         self.path_tc.SetValue(Config.player_path)
+        self.show_icon_chk.SetValue(Config.show_icon)
         self.auto_check_chk.SetValue(Config.auto_check_update)
 
     def save_conf(self):
         Config.show_sections = self.show_sections_chk.GetValue()
         Config.player_path = self.path_tc.GetValue()
+        Config.show_icon = self.show_icon_chk.GetValue()
         Config.auto_check_update = self.auto_check_chk.GetValue()
 
         conf.set("other", "show_sections", str(int(Config.show_sections)))
         conf.set("other", "player_path", Config.player_path)
+        conf.set("other", "show_icon", str(int(Config.show_icon)))
         conf.set("other", "auto_check_update", str(int(Config.auto_check_update)))
     
     def Set_Display(self):
