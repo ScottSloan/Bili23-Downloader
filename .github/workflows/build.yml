@@ -1,5 +1,8 @@
 name: Build
 on:
+  push:
+    branches:
+      - main
   release:
     types: [released]
   schedule:
@@ -32,7 +35,6 @@ jobs:
           
       - name: Clean Files
         run: |
-          del __pycache__ -recurse
           del build -recurse
           del gui -recurse
           del utils -recurse
