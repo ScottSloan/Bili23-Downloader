@@ -1,16 +1,16 @@
 # Bili23-Downloader
-![](https://img.shields.io/badge/Latest_Version-1.20-green.svg) ![](https://img.shields.io/badge/Python-3.8.10-green.svg) ![Build](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml/badge.svg)
+ ​![​GitHub Release​](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square)
+ [![GitHub License](https://img.shields.io/github/license/ScottSloan/Bili23-Downloader?style=flat-square)](https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/LICENSE)
+![Build](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml/badge.svg)
  
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 
 + [下载地址](https://github.com/ScottSloan/Bili23-Downloader/releases)
 + [使用说明](#使用说明)
-+ [常见问题]()
++ [常见问题](#常见问题)
 + [安装](#安装)
-+ [TODO](#to-do)
-+ [开发日志](#开发日志)
-# 声明
-#### **本程序仅供学习交流使用，请勿用于商业用途。**  
++ [TODO](#todo)
++ [开发日志](#开发日志) 
 # 使用说明
 ### **主界面**
 ![main.PNG](https://s2.loli.net/2022/04/09/pdlOtZ28yf5F4nU.png)  
@@ -68,7 +68,7 @@ pyinstaller -F -w GUI.py --dist ./ --add-data "pic;pic" --add-data "info;info"
 
 # TODO
 - [X] **视频类**
-  - [X] 用户投稿视频 (分P,合集)
+  - [X] 用户投稿视频 (含分P, 合集视频)
 - [X] **番组类**
   - [X] 番剧
   - [X] 电影
@@ -89,7 +89,7 @@ pyinstaller -F -w GUI.py --dist ./ --add-data "pic;pic" --add-data "info;info"
   - [X] 下载字幕
   - [X] 检查更新
 # 开发日志
-#### **[最新] 版本 1.20 dev (2022-4-17)**
+#### **[最新] 版本 1.20 (2022-4-22)**
 - 重写下载功能相关代码，并加入下载管理窗口
 - 新增支持下载 AV1 编码的视频
 - 支持解析音乐链接，可下载歌词
