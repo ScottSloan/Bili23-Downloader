@@ -1,8 +1,5 @@
 name: Build
 on:
-  push:
-    branches:
-      - main
   release:
     types: [released]
   schedule:
