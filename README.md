@@ -1,7 +1,4 @@
-# Bili23-Downloader
- ​![​GitHub Release​](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square)
- [![GitHub License](https://img.shields.io/github/license/ScottSloan/Bili23-Downloader?style=flat-square)](https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/LICENSE)
-![Build](https://github.com/ScottSloan/Bili23-Downloader/actions/workflows/build.yml/badge.svg)
+# Bili23-Downloader ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square) ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ScottSloan/Bili23-Downloader/Build?style=flat-square)
  
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 
@@ -13,7 +10,7 @@
 
 # 使用说明
 ### **安装**
-```
+```bash
 # 克隆仓库
 git clone https://github.com/ScottSloan/Bili23-Downloader.git
 
