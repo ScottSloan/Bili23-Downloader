@@ -80,7 +80,7 @@ class InfoBar(wx.InfoBar):
             super().ShowMessage("注意：尚未添加大会员 Cookie，部分视频可能无法下载", flags = wx.ICON_WARNING)
 
 class Message:
-    def Show_Message(self, parent, code: int):
+    def Show_Message(parent, code: int):
         if code == 200:
             wx.MessageDialog(parent, "检查更新失败\n\n当前无法检查更新，请稍候再试", "警告", wx.ICON_WARNING).ShowModal()
 
@@ -93,14 +93,14 @@ class Message:
         if code == 204:
             wx.MessageDialog(parent, "未指定播放器路径\n\n尚未指定播放器路径，请添加路径后再试", "警告", wx.ICON_WARNING).ShowModal()
         
-    def Show_Message_Update(self, parent, info: list):
+    def Show_Message_Update(parent, info: list):
         dialog = wx.MessageDialog(parent, "有新的更新可用\n\n{}\n\n更新说明：{}\n\n版本：{}".format(info[1], info[2], info[4]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
         dialog.SetYesNoLabels("马上更新", "稍后更新")
         if dialog.ShowModal() == wx.ID_YES:
             import webbrowser
             webbrowser.open(Config.WEBSITE)
 
-    def Show_Notification_Message(self):
+    def Show_Notification_Message():
         msg = wx.adv.NotificationMessage("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
         msg.MSWUseToasts()
         msg.SetIcon(wx.Icon(Config.res_logo))

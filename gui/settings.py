@@ -522,4 +522,4 @@ class Tab5(wx.Panel):
 
             wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), "提示", wx.ICON_INFORMATION).ShowModal()
         except:
-            wx.MessageDialog(self, "测试失败\n\n状态码：{}".format(req.status_code), "提示", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n", "提示", wx.ICON_WARNING).ShowModal()

@@ -120,7 +120,7 @@ def check_update() -> list:
     d_url = ver_json["url"]
     version = ver_json["version"]
 
-    new = True if float(Config.VERSION) < version else False
+    new = True if Config.VERSION_CODE < int(version) else False
     return [new, name, description, d_url, version]
 
 def convert_json_to_srt(data: str) -> str:

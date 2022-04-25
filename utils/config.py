@@ -25,7 +25,7 @@ class Config:
     proxy_address = proxy_port = ""
 
     VERSION = "1.20"
-    VERSION_CODE = "120"
+    VERSION_CODE = 120
     RELEASE_DATE = "2022-4-9"
     WEBSITE = "https://github.com/ScottSloan/Bili23-downloader"
 
