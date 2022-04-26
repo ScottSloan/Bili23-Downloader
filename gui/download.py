@@ -28,9 +28,6 @@ class DownloadWindow(Frame):
      
         self.list_panel = ListPanel(self)
 
-        a = Message()
-        a.Show_Notification_Message()
-
         self.Bind_EVT()
 
         #self.list_panel.download_list_panel.add_panel(0, "Test", "", 0, 689, "1080P", 0, VideoInfo, self.on_finish, self.on_merge)
@@ -45,21 +42,21 @@ class DownloadWindow(Frame):
         if theme == VideoInfo:
             if VideoInfo.multiple:
                 for i in VideoInfo.down_pages:
-                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["part"], VideoInfo.bvid, i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["part"], VideoInfo.bvid, i["cid"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
             elif VideoInfo.collection:
                 for i in VideoInfo.down_pages:
-                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["title"], i["bvid"], i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["title"], i["bvid"], i["cid"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
             else:
-                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, VideoInfo.title, VideoInfo.bvid, VideoInfo.cid, VideoInfo.duration, quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, VideoInfo.title, VideoInfo.bvid, VideoInfo.cid, quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
         elif theme == BangumiInfo:
             for i in BangumiInfo.down_episodes:
-                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["share_copy"], i["bvid"], i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["share_copy"], i["bvid"], i["cid"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
         else:
-            self.list_panel.download_list_panel.add_panel(DownloadList.download_count, AudioInfo.title, None, None, AudioInfo.duration, None, None ,theme, self.on_finish, self.on_merge)
+            self.list_panel.download_list_panel.add_panel(DownloadList.download_count, AudioInfo.title, None, None, None, None ,theme, self.on_finish, self.on_merge)
 
         self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadList.download_list)))
 
@@ -153,14 +150,13 @@ class DownloadListPanel(wx.lib.scrolledpanel.ScrolledPanel):
 
         self.SetSizer(self.main_sizer)
     
-    def add_panel(self, pid, title, bvid, cid, duration, quality_desc, quality_id, theme, on_finish, on_merge):
+    def add_panel(self, pid, title, bvid, cid, quality_desc, quality_id, theme, on_finish, on_merge):
         download_info = {}
 
         download_info["pid"] = pid
         download_info["title"] = get_legal_name(title)
         download_info["bvid"] = bvid
         download_info["cid"] = cid
-        download_info["duration"] = duration
         download_info["quality_desc"] = quality_desc
         download_info["quality_id"] = quality_id
         download_info["theme"] = theme
