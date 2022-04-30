@@ -6,7 +6,7 @@ from utils.config import Config
 from utils.tools import *
 
 class BangumiInfo:
-    url = epid = bvid = ""
+    url = epid = ssid = mdid = bvid = ""
     
     title = desc = cover = newep = theme = ""
 
@@ -17,14 +17,11 @@ class BangumiInfo:
     sections = {}
 
 class BangumiParser:
-    def media_api(self, media_id: str):
-        return "https://api.bilibili.com/pgc/review/user?media_id=" + media_id
-
-    def season_api(self, season_id: str):
-        return "https://api.bilibili.com/pgc/web/season/section?season_id=" + season_id
+    def media_api(self, mdid: str):
+        return "https://api.bilibili.com/pgc/review/user?media_id={}".format(mdid)
 
     def info_api(self):
-        return "https://api.bilibili.com/pgc/view/web/season?ep_id=" + BangumiInfo.epid
+        return "https://api.bilibili.com/pgc/view/web/season?{}={}".format(self.argument, self.value)
 
     def quality_api(self, bvid: str, cid: int) -> str:
         return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(bvid, cid)
@@ -34,29 +31,29 @@ class BangumiParser:
         self.set_epid(epid)
 
     def get_season_id(self, url: str):
-        season_id = re.findall(r"ss[0-9]*", url)[0][2:]
-        season_request = requests.get(self.season_api(season_id), headers = get_header(), proxies = get_proxy())
-        season_json = json.loads(season_request.text)
-
-        if season_json["code"] != 0:
-            self.on_error(400)
-
-        epid = str(season_json["result"]["main_section"]["episodes"][0]["id"])
-        self.set_epid(epid)
+        ssid = re.findall(r"ss[0-9]*", url)[0][2:]
+        self.set_ssid(ssid)
 
     def get_media_id(self, url: str):
-        media_id = re.findall(r"md[0-9]*", url)[0][2:]
-        media_request = requests.get(self.media_api(media_id), headers = get_header(), proxies = get_proxy())
-        media_json = json.loads(media_request.text)
+        mdid = re.findall(r"md[0-9]*", url)[0][2:]
+
+        media_req = requests.get(self.media_api(mdid), headers = get_header(), proxies = get_proxy())
+        media_json = json.loads(media_req.text)
 
         if media_json["code"] != 0:
             self.on_error(400)
 
-        season_id = media_json["result"]["media"]["season_id"]
-        self.get_season_id("ss" + str(season_id))
+        ssid = media_json["result"]["media"]["season_id"]
+
+        self.set_ssid(ssid)
 
     def set_epid(self, epid: str):
-        BangumiInfo.epid, BangumiInfo.url = epid, "https://www.bilibili.com/bangumi/play/ep" + epid
+        BangumiInfo.epid, BangumiInfo.url = epid, "https://www.bilibili.com/bangumi/play/ep{}".format(epid)
+        self.argument, self.value = "ep_id", epid
+
+    def set_ssid(self, ssid: str):
+        BangumiInfo.ssid, BangumiInfo.url = ssid, "https://www.bilibili.com/bangumi/play/ss{}".format(ssid)
+        self.argument, self.value = "season_id", ssid
 
     def get_bangumi_info(self):
         info_request = requests.get(self.info_api(), headers = get_header(), proxies = get_proxy())

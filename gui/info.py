@@ -29,9 +29,9 @@ class InfoWindow(Frame):
         self.Bind(wx.EVT_SHOW, self.on_show)
 
     def on_show(self, event):
-        from utils.html import HTMLUtils
+        from utils.info import InfoUtils
 
-        html = HTMLUtils()
+        html = InfoUtils()
 
         if self.theme == VideoInfo:
             html.save_video_info()

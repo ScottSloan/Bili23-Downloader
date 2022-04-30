@@ -54,11 +54,11 @@ class Main(MainWindow):
             info = CheckUtils.CheckUpdate()
 
             if info == None:
-                Message.ShowMessage(self, 200)
+                Message.show_message(self, 200)
             elif info[0]:
                 CheckUtils.ShowMessageUpdate(self, info)
             else:
-                Message.ShowMessage(self, 201)
+                Message.show_message(self, 201)
 
         elif menuid == 120:
             import webbrowser
@@ -88,7 +88,7 @@ class Main(MainWindow):
         self.processing_window.ShowWindowModal()
         
     def get_url_thread(self, url: str):
-        wx.CallAfter(self.list_lc.InitList)
+        wx.CallAfter(self.list_lc.init_list)
 
         if "b23.tv" in url:
             url = process_shortlink(url)
@@ -144,26 +144,26 @@ class Main(MainWindow):
         self.list_lc.SetFocus()
 
         if Config.cookie_sessdata == "" and self.theme == BangumiInfo:
-            self.infobar.ShowMessageInfo(200)
+            self.infobar.show_message_info(200)
 
     def set_video_list(self):
         videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
 
-        wx.CallAfter(self.list_lc.SetVideoList)
+        wx.CallAfter(self.list_lc.set_video_list)
         self.list_lb.SetLabel("视频 (共 %d 个)" % videos)
 
     def set_bangumi_list(self):
         bangumis = len(BangumiInfo.episodes)
 
-        wx.CallAfter(self.list_lc.SetBangumiList)
+        wx.CallAfter(self.list_lc.set_bangumi_list)
         self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.theme, bangumis))
 
     def set_live_list(self):
-        wx.CallAfter(self.list_lc.SetLiveList)
+        wx.CallAfter(self.list_lc.set_live_list)
         self.list_lb.SetLabel("直播")
 
     def set_audio_list(self):
-        wx.CallAfter(self.list_lc.SetAudioList)
+        wx.CallAfter(self.list_lc.set_audio_list)
         self.list_lb.SetLabel("音乐")
 
     def set_quality(self, type):
@@ -182,7 +182,7 @@ class Main(MainWindow):
         if self.theme == LiveInfo:
             live_parser.open_player()
         else:
-            if self.list_lc.GetAllCheckedItem(self.theme, self.on_error): return
+            if self.list_lc.get_allcheckeditem(self.theme, self.on_error): return
 
             self.Load_download_window_EVT(0)
 
@@ -208,7 +208,7 @@ class Main(MainWindow):
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)
 
-        self.infobar.ShowMessageInfo(code)
+        self.infobar.show_message_info(code)
 
     def on_redirect(self, url: str):
         Main_ThreadPool = ThreadPoolExecutor()
@@ -220,10 +220,10 @@ class Main(MainWindow):
         self.update_info = CheckUtils.CheckUpdate()
 
         if self.update_info == None:
-            self.infobar.ShowMessageInfo(405)
+            self.infobar.show_message_info(405)
 
         elif self.update_info[0]:
-            self.infobar.ShowMessageInfo(100)
+            self.infobar.show_message_info(100)
 
 if __name__ == "__main__":
     app = wx.App()

@@ -73,12 +73,17 @@ class DownloadWindow(Frame):
         if len(DownloadList.download_list) != 0:
             wx.CallAfter(self.start_download)
 
-    def on_finish(self):
-        if len(DownloadList.download_list) != 0:
-            self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadList.download_list)))
+    def on_finish(self, iserror = False, video_name = None):
+        count = len(DownloadList.download_list)
+
+        if count != 0:
+            self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(count))
         else:
             if Config.show_notification:
-                Message.ShowNotification()
+                if not iserror:
+                    Message.show_notification_finish()
+                else:
+                    Message.show_notification_error(video_name)
 
             self.list_panel.task_lb.SetLabel("下载管理")
 
@@ -276,12 +281,14 @@ class DownloadItemPanel(wx.Panel):
             os.system('xdg-open "{}"'.format(Config.download_path))
 
     def cancel_EVT(self, event):
-        stauts = self.download_info["status"]
-        if stauts == "downloading" or stauts == "waiting":
-            stauts = "cancelled"
+        status = self.download_info["status"]
+        if status == "downloading" or status == "waiting":
+            status = "cancelled"
             self.download_utils.on_cancel()
-            
-        self.download_info["on_finish"]()
+        
+        if status != "error":
+            self.download_info["on_finish"]()
+
         self.Destroy()
         self.parent.main_sizer.Layout()
         self.parent.SetupScrolling(scroll_x = False)
@@ -309,14 +316,17 @@ class DownloadItemUtils:
         self.referer_url = self.get_full_url()
         self.pid = self.download_info["pid"]
 
-        if self.download_info["theme"] == VideoInfo:
-            request = requests.get(self.video_durl_api(), headers = get_header(self.referer_url, Config.cookie_sessdata), proxies = get_proxy())
-            request_json = json.loads(request.text)
-            json_dash = request_json["data"]["dash"]
-        else:
-            request = requests.get(self.bangumi_durl_api(), headers = get_header(self.referer_url, Config.cookie_sessdata), proxies = get_proxy())
-            request_json = json.loads(request.text)
-            json_dash = request_json["result"]["dash"]
+        try:
+            if self.download_info["theme"] == VideoInfo:
+                request = requests.get(self.video_durl_api(), headers = get_header(self.referer_url, Config.cookie_sessdata), proxies = get_proxy())
+                request_json = json.loads(request.text)
+                json_dash = request_json["data"]["dash"]
+            else:
+                request = requests.get(self.bangumi_durl_api(), headers = get_header(self.referer_url, Config.cookie_sessdata), proxies = get_proxy())
+                request_json = json.loads(request.text)
+                json_dash = request_json["result"]["dash"]
+        except:
+            self.on_error()
 
         quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < self.download_info["quality_id"] else self.download_info["quality_id"]
 
@@ -382,6 +392,18 @@ class DownloadItemUtils:
         del DownloadList.download_list[self.download_info["pid"]]
         self.downloader.on_cancel()
 
+    def on_error(self):
+        del DownloadList.download_list[self.download_info["pid"]]
+
+        self.panel.speed_lb.SetLabel("下载失败")
+        self.panel.speed_lb.SetForegroundColour("red")
+        self.panel.pause_btn.Enable(False)
+        self.panel.open_btn.Enable(False)
+        self.panel.cancel_btn.SetToolTip("清除记录")
+
+        self.download_info["status"] = "error"
+        self.download_info["on_finish"]("True", self.download_info["title"])
+
     def on_merge(self):
         self.panel.speed_lb.SetLabel("正在合成...")
         self.panel.size_lb.SetLabel(format_size(self.download_info["total_size"]))
@@ -390,6 +412,7 @@ class DownloadItemUtils:
 
     def on_finish(self):
         del DownloadList.download_list[self.download_info["pid"]]
+
         self.panel.size_lb.SetLabel(format_size(self.download_info["total_size"]))
         self.download_info["status"] = "completed"
         self.download_info["on_finish"]()
