@@ -114,7 +114,7 @@ class BangumiParser:
             BangumiInfo.theme = "综艺"
 
     def get_bangumi_quality(self):
-        bangumi_request = requests.get(self.quality_api(BangumiInfo.bvid, BangumiInfo.cid), headers = get_header(BangumiInfo.url, cookie = Config.cookie_sessdata), proxies = get_proxy())
+        bangumi_request = requests.get(self.quality_api(BangumiInfo.bvid, BangumiInfo.cid), headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
         bangumi_json = json.loads(bangumi_request.text)
         
         if bangumi_json["code"] != 0:

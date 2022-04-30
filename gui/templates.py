@@ -11,34 +11,25 @@ from utils.audio import AudioInfo
 from utils.tools import format_duration
 
 class Frame(wx.Frame):
-    def __init__(self, parent, title, size, defalut_panel = True):
+    def __init__(self, parent, title, size, default_panel = True):
         wx.Frame.__init__(self, parent, -1, title)
-        self.SetIcon(wx.Icon(Config.res_logo))
 
         self.SetSize(self.FromDIP((size)))
+        self.SetIcon(wx.Icon(Config.res_logo))
 
-        if defalut_panel: self.panel = wx.Panel(self, -1)
-        self.__center(parent)
+        if default_panel: self.panel = wx.Panel(self, -1)
 
-    def __center(self, parent):
-        parent_size, parent_pos, self_size = parent.GetSize(), parent.GetPosition(), self.GetSize()
-        p_sx, p_sy, p_px, p_py, s_sx, s_sy = parent_size[0], parent_size[1], parent_pos[0], parent_pos[1], self_size[0], self_size[1]
-
-        self.SetPosition((int((p_sx - s_sx) / 2) + p_px, int((p_sy - s_sy) / 2) + p_py))
+        self.CenterOnParent()
 
 class Dialog(wx.Dialog):
-    def __init__(self, parent, title, size):
+    def __init__(self, parent, title, size, default_panel = True):
         wx.Dialog.__init__(self, parent, -1, title)
+
         self.SetSize(self.FromDIP((size)))
 
         self.panel = wx.Panel(self, -1)
-        self.__center(parent)
-        
-    def __center(self, parent):
-        parent_size, parent_pos, self_size = parent.GetSize(), parent.GetPosition(), self.GetSize()
-        p_sx, p_sy, p_px, p_py, s_sx, s_sy = parent_size[0], parent_size[1], parent_pos[0], parent_pos[1], self_size[0], self_size[1]
 
-        self.SetPosition((int((p_sx - s_sx) / 2) + p_px, int((p_sy - s_sy) / 2) + p_py))
+        self.CenterOnParent()
 
 class InfoBar(wx.InfoBar):
     def __init__(self, parent):
@@ -116,7 +107,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("序号", width = self.FromDIP(100))
         self.AppendColumn("标题", width = self.FromDIP(400))
         self.AppendColumn("备注", width = self.FromDIP(50))
-        self.AppendColumn("长度", width = self.FromDIP(75))
+        self.AppendColumn("时长", width = self.FromDIP(75))
 
     def set_video_list(self):
         VideoInfo.multiple = True if len(VideoInfo.pages) > 1 else False
@@ -223,7 +214,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
             on_error(401)
         
-        elif vip and Config.cookie_sessdata == "":
+        elif vip and Config.user_sessdata == "":
             dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未登录的情况下将跳过下载\n确认继续吗？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
             if dialog.ShowModal() == wx.ID_NO:
                 return True

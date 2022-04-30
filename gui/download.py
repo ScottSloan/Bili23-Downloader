@@ -12,9 +12,6 @@ from utils.config import Config
 
 from gui.templates import Frame, Message
 
-
-ThreadPool = ThreadPoolExecutor()
-
 class DownloadList:
     download_count = 0
     download_list = {}
@@ -23,14 +20,15 @@ class DownloadList:
 
 class DownloadWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "下载管理", (640, 400), False)
+        Frame.__init__(self, parent, "下载管理", (680, 420), False)
+
         self.SetBackgroundColour("white")
      
         self.list_panel = ListPanel(self)
 
         self.Bind_EVT()
 
-        #self.list_panel.download_list_panel.add_panel(0, "Test", "", 0, 689, "1080P", 0, VideoInfo, self.on_finish, self.on_merge)
+        self.list_panel.download_list_panel.add_panel(0, "Video Title", "BVxxxxxx", 0, "1080P", 0, VideoInfo, self.on_finish, self.on_merge)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.On_Close)
@@ -42,21 +40,21 @@ class DownloadWindow(Frame):
         if theme == VideoInfo:
             if VideoInfo.multiple:
                 for i in VideoInfo.down_pages:
-                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["part"], VideoInfo.bvid, i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["part"], VideoInfo.bvid, i["cid"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
             elif VideoInfo.collection:
                 for i in VideoInfo.down_pages:
-                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["title"], i["bvid"], i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                    self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["title"], i["bvid"], i["cid"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
             else:
-                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, VideoInfo.title, VideoInfo.bvid, VideoInfo.cid, VideoInfo.duration, quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, VideoInfo.title, VideoInfo.bvid, VideoInfo.cid, quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
         elif theme == BangumiInfo:
             for i in BangumiInfo.down_episodes:
-                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["share_copy"], i["bvid"], i["cid"], i["duration"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
+                self.list_panel.download_list_panel.add_panel(DownloadList.download_count, i["share_copy"], i["bvid"], i["cid"], quality_desc, quality_id, theme, self.on_finish, self.on_merge)
 
         else:
-            self.list_panel.download_list_panel.add_panel(DownloadList.download_count, AudioInfo.title, None, None, AudioInfo.duration, None, None ,theme, self.on_finish, self.on_merge)
+            self.list_panel.download_list_panel.add_panel(DownloadList.download_count, AudioInfo.title, None, None, None, None ,theme, self.on_finish, self.on_merge)
 
         self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadList.download_list)))
 
@@ -86,6 +84,7 @@ class DownloadWindow(Frame):
                     Message.show_notification_error(video_name)
 
             self.list_panel.task_lb.SetLabel("下载管理")
+            self.RequestUserAttention(flags = wx.USER_ATTENTION_INFO)
 
 class ListPanel(wx.Panel):
     def __init__(self, parent):
@@ -155,14 +154,13 @@ class DownloadListPanel(wx.lib.scrolledpanel.ScrolledPanel):
 
         self.SetSizer(self.main_sizer)
     
-    def add_panel(self, pid, title, bvid, cid, duration, quality_desc, quality_id, theme, on_finish, on_merge):
+    def add_panel(self, pid, title, bvid, cid, quality_desc, quality_id, theme, on_finish, on_merge):
         download_info = {}
 
         download_info["pid"] = pid
         download_info["title"] = get_legal_name(title)
         download_info["bvid"] = bvid
         download_info["cid"] = cid
-        download_info["duration"] = duration
         download_info["quality_desc"] = quality_desc
         download_info["quality_id"] = quality_id
         download_info["theme"] = theme
@@ -192,7 +190,7 @@ class DownloadItemPanel(wx.Panel):
         self.download_utils = DownloadItemUtils(pid)
         self.download_info = DownloadList.download_list[pid][0]
 
-        self.title_lb = wx.StaticText(self, -1, self.download_info["title"], style = wx.ST_ELLIPSIZE_END)
+        self.title_lb = wx.StaticText(self, -1, self.download_info["title"], style = wx.ST_ELLIPSIZE_END | wx.ST_NO_AUTORESIZE)
 
         self.quality_lb = wx.StaticText(self, -1, self.download_info["quality_desc"] if self.download_info["theme"] != AudioInfo else "")
         self.quality_lb.SetForegroundColour(wx.Colour(108, 108, 108))
@@ -205,7 +203,7 @@ class DownloadItemPanel(wx.Panel):
         hbox1.Add(self.size_lb, 0, wx.ALL & (~wx.TOP), 10)
 
         vbox1 = wx.BoxSizer(wx.VERTICAL)
-        vbox1.Add(self.title_lb, 1, wx.ALL | wx.EXPAND, 10)
+        vbox1.Add(self.title_lb, 1, wx.ALL, 10)
         vbox1.Add(hbox1, 0, wx.EXPAND)
 
         self.gauge = wx.Gauge(self, -1, 100)
@@ -318,11 +316,11 @@ class DownloadItemUtils:
 
         try:
             if self.download_info["theme"] == VideoInfo:
-                request = requests.get(self.video_durl_api(), headers = get_header(self.referer_url, Config.cookie_sessdata), proxies = get_proxy())
+                request = requests.get(self.video_durl_api(), headers = get_header(self.referer_url, Config.user_sessdata), proxies = get_proxy())
                 request_json = json.loads(request.text)
                 json_dash = request_json["data"]["dash"]
             else:
-                request = requests.get(self.bangumi_durl_api(), headers = get_header(self.referer_url, Config.cookie_sessdata), proxies = get_proxy())
+                request = requests.get(self.bangumi_durl_api(), headers = get_header(self.referer_url, Config.user_sessdata), proxies = get_proxy())
                 request_json = json.loads(request.text)
                 json_dash = request_json["result"]["dash"]
         except:
@@ -420,3 +418,5 @@ class DownloadItemUtils:
         self.panel.speed_lb.SetLabel("下载完成")
         self.panel.cancel_btn.SetToolTip("清除记录")
         self.panel.gauge.SetValue(100)
+
+ThreadPool = ThreadPoolExecutor()

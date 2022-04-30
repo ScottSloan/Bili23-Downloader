@@ -5,38 +5,30 @@ import requests
 import configparser
 
 from gui.templates import Dialog
-from gui.login import LoginWindow
 
 from utils.config import Config
 from utils.tools import quality_wrap, get_header
 
-conf = configparser.RawConfigParser()
-conf.read(os.path.join(os.getcwd(), "config.conf"))
-
 class SettingWindow(Dialog):
     def __init__(self, parent):
-        self.parent = parent
         Dialog.__init__(self, parent, "设置", (400, 500))
+
 
         self.init_controls()
         self.Bind_EVT()
-
-        self.FitInside()
 
     def init_controls(self):
         self.note = wx.Notebook(self.panel, -1)
 
         tab1 = Tab1(self.note)
-        tab2 = Tab2(self.note, self.parent)
+        tab2 = Tab2(self.note)
         tab3 = Tab3(self.note)
         tab4 = Tab4(self.note)
-        tab5 = Tab5(self.note)
 
         self.note.AddPage(tab1, "下载")
-        self.note.AddPage(tab2, "Cookie")
-        self.note.AddPage(tab3, "弹幕&&字幕&&歌词")
-        self.note.AddPage(tab4, "其他")
-        self.note.AddPage(tab5, "代理")
+        self.note.AddPage(tab2, "弹幕&&字幕&&歌词")
+        self.note.AddPage(tab3, "其他")
+        self.note.AddPage(tab4, "代理")
 
         self.ok_btn = wx.Button(self.panel, -1, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self.panel, -1, "取消", size = self.FromDIP((80, 30)))
@@ -60,7 +52,7 @@ class SettingWindow(Dialog):
         self.Destroy()
     
     def save_settings(self, event):
-        for i in range(5):
+        for i in range(4):
             self.note.GetPage(i).save_conf()
 
         with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
@@ -180,63 +172,8 @@ class Tab1(wx.Panel):
 
     def on_task_slide(self, event):
         self.task_lb.SetLabel("并行任务数：{}".format(self.task_sl.GetValue()))
- 
+
 class Tab2(wx.Panel):
-    def __init__(self, parent, parent_w):
-        self.parent = parent_w
-
-        wx.Panel.__init__(self, parent, -1)
-
-        self.vbox = wx.BoxSizer(wx.VERTICAL)
-
-        self.Set_Cookie()
-
-        self.SetSizer(self.vbox)
-
-        self.Bind_EVT()
-
-        self.load_conf()
-
-    def Bind_EVT(self):
-        self.login_btn.Bind(wx.EVT_BUTTON, self.Login_EVT)
-
-    def load_conf(self):
-        self.sessdata_tc.SetValue(Config.cookie_sessdata)
-
-    def save_conf(self):
-        Config.cookie_sessdata = self.sessdata_tc.GetValue()
-        conf.set("cookie", "sessdata", Config.cookie_sessdata)
-
-    def Set_Cookie(self):
-        cookie_box = wx.StaticBox(self, -1, "Cookie 设置")
-
-        sessdata_lb = wx.StaticText(cookie_box, -1, "SESSDATA")
-        self.sessdata_tc = wx.TextCtrl(cookie_box, -1)
-        self.sessdata_tc.SetToolTip("Cookie SESSDATA 字段")
-
-        self.login_btn = wx.Button(cookie_box, -1, "扫码登录", size = self.FromDIP((90, 30)))
-
-        desp = wx.StaticText(cookie_box, -1, """说明：Cookie 用于下载大会员相关的视频\n\n点击“扫码登录”按钮，可自动获取 Cookie 并填入\n\n注：Cookie 有效期为一个月，请定期更换""")
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(sessdata_lb, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        hbox.Add(self.sessdata_tc, 1, wx.ALL & (~wx.LEFT), 10)
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(hbox, 0, wx.EXPAND)
-        vbox.Add(self.login_btn, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(desp, 1, wx.ALL, 10)
-
-        cookie_sbox = wx.StaticBoxSizer(cookie_box)
-        cookie_sbox.Add(vbox, 1, wx.EXPAND)
-        
-        self.vbox.Add(cookie_sbox, 1, wx.ALL | wx.EXPAND, 10)
-
-    def Login_EVT(self, event):
-        login_window = LoginWindow(self)
-        login_window.ShowWindowModal()
-
-class Tab3(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
@@ -335,7 +272,7 @@ class Tab3(wx.Panel):
         else:
             self.danmaku_format_cb.Enable(False)
 
-class Tab4(wx.Panel):
+class Tab3(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
@@ -425,7 +362,7 @@ class Tab4(wx.Panel):
         if dialog.ShowModal() == wx.ID_OK:
             self.path_tc.SetValue(dialog.GetPath())
 
-class Tab5(wx.Panel):
+class Tab4(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
@@ -511,4 +448,7 @@ class Tab5(wx.Panel):
 
             wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), "提示", wx.ICON_INFORMATION).ShowModal()
         except:
-            wx.MessageDialog(self, "测试失败\n\n状态码：{}".format(req.status_code), "提示", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n", "提示", wx.ICON_WARNING).ShowModal()
+
+conf = configparser.RawConfigParser()
+conf.read(os.path.join(os.getcwd(), "config.conf"))

@@ -1,7 +1,7 @@
 import os
 import sys
 import platform
-import configparser
+from configparser import RawConfigParser
 
 class Config:
     default_path = os.path.join(os.getcwd(), "download")
@@ -12,8 +12,8 @@ class Config:
     default_quality = 80
     codec = 0
     show_notification = False
-
-    cookie_sessdata = ""
+    
+    user_uuid = user_uname = user_face = user_expire = user_sessdata = ""
 
     save_danmaku = save_subtitle =  save_lyric = False
     danmaku_format = 0
@@ -38,7 +38,7 @@ class Config:
 
 class Load_Config:
     def __init__(self):
-        conf = configparser.RawConfigParser()
+        conf = RawConfigParser()
         conf.read(os.path.join(os.getcwd(), "config.conf"))
         
         path = conf.get("download", "path")
@@ -50,7 +50,11 @@ class Load_Config:
         Config.codec = conf.getint("download", "codec")
         Config.show_notification = conf.getboolean("download", "show_notification")
 
-        Config.cookie_sessdata = conf.get("cookie", "sessdata")
+        Config.user_uuid = conf.get("user", "uuid")
+        Config.user_uname = conf.get("user", "uname")
+        Config.user_face = conf.get("user", "face")
+        Config.user_expire = conf.get("user", "expire")
+        Config.user_sessdata = conf.get("user", "sessdata")
 
         Config.save_danmaku = conf.getboolean("danmaku", "save_danmaku")
         Config.danmaku_format = conf.getint("danmaku", "format")

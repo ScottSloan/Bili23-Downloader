@@ -16,7 +16,7 @@ class AboutWindow(wx.Frame):
 
         info.SetWebSite(Config.WEBSITE, "Github")
 
-        info.Description = "下载 Bilibili 视频/番剧/电影/纪录片 等资源\n\n发布日期：{}\n\n本程序仅供学习交流使用，请勿用于商业用途。".format(Config.RELEASE_DATE)
+        info.Description = "下载 Bilibili 视频/番剧/电影/纪录片 等资源\n\n发布日期：{}\n".format(Config.RELEASE_DATE)
         info.Icon = wx.Icon(Config.res_logo)
 
         wx.adv.AboutBox(info)

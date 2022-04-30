@@ -1,5 +1,4 @@
 import wx
-import os
 import wx.html2
 
 from utils.config import Config

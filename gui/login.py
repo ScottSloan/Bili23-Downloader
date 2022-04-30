@@ -1,7 +1,9 @@
 import wx
 import os
 import time
+import datetime
 from threading import Thread
+from configparser import RawConfigParser
 
 from utils.login import Login
 from utils.config import Config
@@ -13,8 +15,6 @@ class LoginWindow(Dialog):
         self.parent = parent
 
         Dialog.__init__(self, parent, "登录", (250, 330))
-
-        self.Center()
 
         self.login = Login()
         
@@ -30,7 +30,7 @@ class LoginWindow(Dialog):
         scan_lab = wx.StaticText(self.panel, -1, "扫描二维码登录")
         scan_lab.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, faceName = "微软雅黑"))
 
-        qrcode_bitmap = wx.Image("qrcode.png", type = wx.BITMAP_TYPE_PNG).Scale(200, 200)
+        qrcode_bitmap = wx.Image("qrcode.png").Scale(200, 200)
 
         self.qrcode = wx.StaticBitmap(self.panel, -1, wx.Bitmap(qrcode_bitmap, wx.BITMAP_SCREEN_DEPTH))
 
@@ -47,8 +47,6 @@ class LoginWindow(Dialog):
         self.Bind(wx.EVT_CLOSE, self.On_close)
     
     def On_close(self, event):
-        os.remove("qrcode.png")
-
         self.isexit = True
         self.Hide()
 
@@ -66,17 +64,32 @@ class LoginWindow(Dialog):
                 self.panel.Layout()
 
             time.sleep(1)
+        
+        if status[0]:
+            user_info = self.login.get_user_info()
+            
+            self.save_user_info(user_info)
 
         self.Hide()
+        os.remove("qrcode.png")
+        
+    def save_user_info(self, user_info: dict):
+        time = datetime.datetime.now() + datetime.timedelta(days = 30)
 
-        if status[0]:
-            self.set_cookie(status[2]["SESSDATA"])
+        conf = RawConfigParser()
+        conf.read(os.path.join(os.getcwd(), "config.conf"))
 
-            wx.MessageDialog(self, "登录成功\n\n扫码登录成功，Cookie 已填入。", "提示", wx.ICON_INFORMATION).ShowModal()
-    
-    def set_cookie(self, sessdata: str):
-        Config.cookie_sessdata = sessdata
+        Config.user_uuid = user_info["uuid"]
+        Config.user_uname = user_info["uname"]
+        Config.user_face = user_info["face"]
+        Config.user_expire = datetime.datetime.strftime(time, "%Y-%m-%d %H:%M:%S")
+        Config.user_sessdata = user_info["sessdata"]
 
-        self.parent.sessdata_tc.SetValue(sessdata)
+        conf.set("user", "uuid", Config.user_uuid)
+        conf.set("user", "uname", Config.user_uname)
+        conf.set("user", "face", Config.user_face)
+        conf.set("user", "expire", Config.user_expire)
+        conf.set("user", "sessdata", Config.user_sessdata)
 
-        self.parent.save_conf()
+        with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
+            conf.write(f)
