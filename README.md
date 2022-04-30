@@ -87,6 +87,7 @@ pip install -r requirements.txt
 
 # 开发日志
 #### **[最新] Version 1.21 dev (2022-4-30)**
+- 优化了登录功能
 - 优化部分细节效果
 - 修复视频信息预览页面显示问题
 
