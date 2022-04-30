@@ -29,7 +29,7 @@ class Config:
     RELEASE_DATE = "2022-4-30"
     WEBSITE = "https://github.com/ScottSloan/Bili23-downloader"
 
-    res_logo = res_pause = res_resume = res_delete = res_open = res_info = res_info_video = res_info_bangumi = res_info_cover = ""
+    res_logo = res_pause = res_resume = res_delete = res_open = res_info = res_info_video = res_info_bangumi = ""
 
     platform = platform.platform()
     ffmpeg_path = os.path.join(os.getcwd(), "ffmpeg.exe") if platform.startswith("Windows") else "ffmpeg"

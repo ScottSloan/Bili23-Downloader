@@ -11,8 +11,8 @@ div {
 .info .cover {
     position: relative;
     float: left;
-    width: 30%;
-    height: 30%;
+    width: 280px;
+    height: 180px;
     z-index: 2;
     border-radius: 2px;
     overflow: hidden;
@@ -25,7 +25,7 @@ div {
 }
 .info .right {
     position: relative;
-    padding-left: 33%;
+    padding-left: 5%;
     height: 100%;
     z-index: 1;
 }
