@@ -105,24 +105,6 @@ def format_duration(duration: int) -> str:
     
     return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
 
-def check_update() -> list:
-    url = "https://auth.hanloth.cn/?type=update&pid=39&token=Mjp81YXdxcUk95ad"
-
-    try:
-        ver_req = requests.get(url, headers = get_header(), proxies = get_proxy(), timeout = 2)
-    except:
-        return None
-
-    ver_json = json.loads(ver_req.text)
-
-    name  = ver_json["name"]
-    description = ver_json["description"]
-    d_url = ver_json["url"]
-    version = ver_json["version"]
-
-    new = True if Config.VERSION_CODE < int(version) else False
-    return [new, name, description, d_url, version]
-
 def convert_json_to_srt(data: str) -> str:
     json_data = json.loads(data)
 

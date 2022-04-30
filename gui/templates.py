@@ -48,7 +48,7 @@ class InfoBar(wx.InfoBar):
         super().Dismiss()
         return super().ShowMessage(msg, flags)
     
-    def show_message_info(self, code: int):
+    def ShowMessageInfo(self, code: int):
         if code == 400:
             super().ShowMessage("错误：请求失败，请检查地址是否有误", flags = wx.ICON_ERROR)
             raise ValueError("Invalid URL")
@@ -80,7 +80,7 @@ class InfoBar(wx.InfoBar):
             super().ShowMessage("注意：尚未添加大会员 Cookie，部分视频可能无法下载", flags = wx.ICON_WARNING)
 
 class Message:
-    def Show_Message(parent, code: int):
+    def ShowMessage(parent, code: int):
         if code == 200:
             wx.MessageDialog(parent, "检查更新失败\n\n当前无法检查更新，请稍候再试", "警告", wx.ICON_WARNING).ShowModal()
 
@@ -93,14 +93,7 @@ class Message:
         if code == 204:
             wx.MessageDialog(parent, "未指定播放器路径\n\n尚未指定播放器路径，请添加路径后再试", "警告", wx.ICON_WARNING).ShowModal()
         
-    def Show_Message_Update(parent, info: list):
-        dialog = wx.MessageDialog(parent, "有新的更新可用\n\n{}\n\n更新说明：{}\n\n版本：{}".format(info[1], info[2], info[4]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
-        dialog.SetYesNoLabels("马上更新", "稍后更新")
-        if dialog.ShowModal() == wx.ID_YES:
-            import webbrowser
-            webbrowser.open(Config.WEBSITE)
-
-    def Show_Notification_Message():
+    def ShowNotification():
         msg = wx.adv.NotificationMessage("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
         msg.MSWUseToasts()
         msg.SetIcon(wx.Icon(Config.res_logo))
@@ -110,11 +103,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent):
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
-        self.init_list_lc()
+        self.InitList()
 
-        self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.__check_item_EVT)
+        self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
 
-    def init_list_lc(self):
+    def InitList(self):
         self.rootitems = self.all_list_items = []
 
         self.ClearColumns()
@@ -124,7 +117,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("备注", width = self.FromDIP(50))
         self.AppendColumn("长度", width = self.FromDIP(75))
 
-    def set_video_list(self):
+    def SetVideoList(self):
         VideoInfo.multiple = True if len(VideoInfo.pages) > 1 else False
 
         self.rootitems.append("视频")
@@ -136,9 +129,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             items_content["视频"] = [[str(i["page"]), i["part"] if VideoInfo.multiple else VideoInfo.title, "", format_duration(i["duration"])] for i in VideoInfo.pages]
 
         ismultiple = True if len(VideoInfo.pages) > 1 or len(VideoInfo.episodes) > 1 else False
-        self.__append_list(items_content, ismultiple)
+        self.AppendList(items_content, ismultiple)
 
-    def set_bangumi_list(self):
+    def SetBangumiList(self):
         items_content = {}
 
         for key, value in BangumiInfo.sections.items():
@@ -149,27 +142,27 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             self.rootitems.append(key)
 
-        self.__append_list(items_content, False)
+        self.AppendList(items_content, False)
 
-    def set_live_list(self):
+    def SetLiveList(self):
         items_content = {}
 
         items_content["直播"] = [["1", LiveInfo.title, "", ""]]
 
         self.rootitems.append("直播")
 
-        self.__append_list(items_content, False)
+        self.AppendList(items_content, False)
     
-    def set_audio_list(self):
+    def SetAudioList(self):
         items_content = {}
 
         items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
 
         self.rootitems.append("音乐")
 
-        self.__append_list(items_content, False)
+        self.AppendList(items_content, False)
 
-    def __append_list(self, items_content: dict, ismultiple: bool):
+    def AppendList(self, items_content: dict, ismultiple: bool):
         root = self.GetRootItem()
         self.all_list_items = []
 
@@ -192,7 +185,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.CheckItem(rootitem, state = wx.CHK_CHECKED)
             self.Expand(rootitem)
 
-    def __check_item_EVT(self, event):
+    def onCheckItem(self, event):
         item = event.GetItem()
         itemtext = self.GetItemText(item, 0)
         self.UpdateItemParentStateRecursively(item)
@@ -200,7 +193,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if itemtext in self.rootitems:
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-    def get_all_checked_item(self, theme, on_error) -> bool:
+    def GetAllCheckedItem(self, theme, on_error) -> bool:
         vip = False
         VideoInfo.down_pages.clear()
         BangumiInfo.down_episodes.clear()

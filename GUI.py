@@ -9,6 +9,7 @@ from utils.live import LiveInfo, LiveParser
 from utils.audio import AudioInfo, AudioParser
 from utils.config import Config
 from utils.tools import *
+from utils.check import CheckUtils
 
 from gui.info import InfoWindow
 from gui.download import DownloadWindow
@@ -24,10 +25,11 @@ class Main(MainWindow):
         
         self.Bind_EVT()
 
-        Main_ThreadPool.submit(self.check_app_update)
+        Main_ThreadPool.submit(self.onShow)
 
         self.show_download_window = False
-
+        CheckUtils.CheckFFmpeg(self)
+        
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.On_Close)
 
@@ -49,17 +51,18 @@ class Main(MainWindow):
         menuid = event.GetId()
 
         if menuid == 110:
-            info = check_update()
+            info = CheckUtils.CheckUpdate()
 
             if info == None:
-                Message.Show_Message(self, 200)
+                Message.ShowMessage(self, 200)
             elif info[0]:
-                Message.Show_Message_Update(self, info)
+                CheckUtils.ShowMessageUpdate(self, info)
             else:
-                Message.Show_Message(self, 201)
+                Message.ShowMessage(self, 201)
 
         elif menuid == 120:
-            Message.Show_Message(self, 203)
+            import webbrowser
+            webbrowser.open("https://scott.hanloth.cn/index.php/archives/12/")
 
         elif menuid == 130:
             AboutWindow(self)
@@ -85,7 +88,7 @@ class Main(MainWindow):
         self.processing_window.ShowWindowModal()
         
     def get_url_thread(self, url: str):
-        wx.CallAfter(self.list_lc.init_list_lc)
+        wx.CallAfter(self.list_lc.InitList)
 
         if "b23.tv" in url:
             url = process_shortlink(url)
@@ -141,26 +144,26 @@ class Main(MainWindow):
         self.list_lc.SetFocus()
 
         if Config.cookie_sessdata == "" and self.theme == BangumiInfo:
-            self.infobar.show_message_info(200)
+            self.infobar.ShowMessageInfo(200)
 
     def set_video_list(self):
         videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
 
-        wx.CallAfter(self.list_lc.set_video_list)
+        wx.CallAfter(self.list_lc.SetVideoList)
         self.list_lb.SetLabel("视频 (共 %d 个)" % videos)
 
     def set_bangumi_list(self):
         bangumis = len(BangumiInfo.episodes)
 
-        wx.CallAfter(self.list_lc.set_bangumi_list)
+        wx.CallAfter(self.list_lc.SetBangumiList)
         self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.theme, bangumis))
 
     def set_live_list(self):
-        wx.CallAfter(self.list_lc.set_live_list)
+        wx.CallAfter(self.list_lc.SetLiveList)
         self.list_lb.SetLabel("直播")
 
     def set_audio_list(self):
-        wx.CallAfter(self.list_lc.set_audio_list)
+        wx.CallAfter(self.list_lc.SetAudioList)
         self.list_lb.SetLabel("音乐")
 
     def set_quality(self, type):
@@ -179,7 +182,7 @@ class Main(MainWindow):
         if self.theme == LiveInfo:
             live_parser.open_player()
         else:
-            if self.list_lc.get_all_checked_item(self.theme, self.on_error): return
+            if self.list_lc.GetAllCheckedItem(self.theme, self.on_error): return
 
             self.Load_download_window_EVT(0)
 
@@ -205,22 +208,22 @@ class Main(MainWindow):
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)
 
-        self.infobar.show_message_info(code)
+        self.infobar.ShowMessageInfo(code)
 
     def on_redirect(self, url: str):
         Main_ThreadPool = ThreadPoolExecutor()
         Main_ThreadPool.submit(self.get_url_thread, url)
 
-    def check_app_update(self):
+    def onShow(self):
         if not Config.auto_check_update: return
             
-        self.update_info = check_update()
+        self.update_info = CheckUtils.CheckUpdate()
 
         if self.update_info == None:
-            self.infobar.show_message_info(405)
+            self.infobar.ShowMessageInfo(405)
 
         elif self.update_info[0]:
-            self.infobar.show_message_info(100)
+            self.infobar.ShowMessageInfo(100)
 
 if __name__ == "__main__":
     app = wx.App()

@@ -452,17 +452,6 @@ class Tab5(wx.Panel):
         self.port_tc.SetValue(Config.proxy_port)
     
     def save_conf(self):
-        if not Config.enable_proxy:
-            return
-            
-        if self.addresss_tc.GetValue() == "":
-            wx.MessageDialog(self, "地址不能为空！", "警告", wx.ICON_WARNING).ShowModal()
-            raise ValueError("Invalid Value")
-
-        elif self.port_tc.GetValue() == "":
-            wx.MessageDialog(self, "端口不能为空！", "警告", wx.ICON_WARNING).ShowModal()
-            raise ValueError("Invalid Value")
-
         Config.enable_proxy = self.enable_proxy_chk.GetValue()
         Config.proxy_address = self.addresss_tc.GetValue()
         Config.proxy_port = self.port_tc.GetValue()
@@ -522,4 +511,4 @@ class Tab5(wx.Panel):
 
             wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), "提示", wx.ICON_INFORMATION).ShowModal()
         except:
-            wx.MessageDialog(self, "测试失败\n\n", "提示", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n状态码：{}".format(req.status_code), "提示", wx.ICON_WARNING).ShowModal()

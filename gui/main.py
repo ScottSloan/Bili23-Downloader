@@ -14,9 +14,9 @@ class MainWindow(wx.Frame):
         self.Center()
         self.panel = wx.Panel(self, -1)
 
-        self.init_controls()
+        self.InitUI()
 
-    def init_controls(self):
+    def InitUI(self):
         self.infobar = InfoBar(self.panel)
 
         self.address_lb = wx.StaticText(self.panel, -1, "地址")
@@ -61,10 +61,10 @@ class MainWindow(wx.Frame):
 
         self.panel.SetSizer(vbox)
 
-        self.init_menu_bar()
-        self.init_taskbar()
+        self.InitMenuBar()
+        self.InitTaskBar()
 
-    def init_menu_bar(self):
+    def InitMenuBar(self):
         menu_bar = wx.MenuBar()
         self.about_menu = wx.Menu()
         self.tool_menu = wx.Menu()
@@ -86,7 +86,7 @@ class MainWindow(wx.Frame):
 
         self.SetMenuBar(menu_bar)
     
-    def init_taskbar(self):
+    def InitTaskBar(self):
         if not Config.show_icon: return
 
         TaskBarIcon()

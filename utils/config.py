@@ -24,9 +24,9 @@ class Config:
     enable_proxy = False
     proxy_address = proxy_port = ""
 
-    VERSION = "1.20"
-    VERSION_CODE = 120
-    RELEASE_DATE = "2022-4-9"
+    VERSION = "1.21"
+    VERSION_CODE = 121
+    RELEASE_DATE = "2022-4-30"
     WEBSITE = "https://github.com/ScottSloan/Bili23-downloader"
 
     res_logo = res_pause = res_resume = res_delete = res_open = res_info = res_info_video = res_info_bangumi = res_info_cover = ""

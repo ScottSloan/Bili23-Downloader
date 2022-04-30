@@ -12,7 +12,9 @@ class AboutWindow(wx.Frame):
         info.Version = Config.VERSION
         info.Copyright = "Copyright (C) 2022 Scott Sloan"
         info.Developers = ["Scott Sloan"]
-        info.SetWebSite(Config.WEBSITE, "项目地址")
+        info.Licence = "MIT License"
+
+        info.SetWebSite(Config.WEBSITE, "Github")
 
         info.Description = "下载 Bilibili 视频/番剧/电影/纪录片 等资源\n\n发布日期：{}\n\n本程序仅供学习交流使用，请勿用于商业用途。".format(Config.RELEASE_DATE)
         info.Icon = wx.Icon(Config.res_logo)
