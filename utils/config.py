@@ -82,9 +82,9 @@ class Load_Config:
         Config.res_info_video = self.get_resource_path(os.path.join("info", "video_info.html"))
         Config.res_info_bangumi = self.get_resource_path(os.path.join("info", "bangumi_info.html"))
 
-    def get_resource_path(self, relative_path: str):
-        if hasattr(sys, '_MEIPASS'):
+    def get_resource_path(self, relative_path: str) -> str:
+        if hasattr(sys, "_MEIPASS"):
             return os.path.join(sys._MEIPASS, relative_path)
-        return os.path.join(os.getcwd(), relative_path)
-
+        else:
+            return os.path.join(os.getcwd(), relative_path)
 Load_Config()

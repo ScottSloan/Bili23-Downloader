@@ -37,7 +37,7 @@ class TaskBarProgress:
 
     def __init__(self):
         from comtypes import client
-        client.GetModule(os.path.join(os.getcwd(), "gui", "taskbar.tlb"))
+        client.GetModule(os.path.join(os.getcwd(), "taskbar.tlb"))
 
         import comtypes.gen.TaskbarLib as tbl
         self.taskbar = client.CreateObject("{56FDF344-FD6D-11d0-958A-006097C9A090}", interface = tbl.ITaskbarList3)
