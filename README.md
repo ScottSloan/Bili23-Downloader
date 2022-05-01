@@ -26,7 +26,7 @@ pip install -r requirements.txt
 - **[Github Actions](https://github.com/ScottSloan/Bili23-Downloader/actions) 中提供已经打包完成的程序，可直接运行 (不包含 ffmpeg)**
 
 ### **主界面**
-![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)
+![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)  
 将视频链接粘贴到地址栏中，点击 `Get` 按钮解析视频链接  
 选择要下载的视频，点击 `下载视频` 按钮开始下载 
 
@@ -92,7 +92,7 @@ pip install -r requirements.txt
 - 现在任务栏上能显示当前下载状态
 - 优化部分细节效果
 - 修复视频信息预览页面显示问题
-- 修复其他问题
+- 修复 `utf-8` 编码问题
 
 <details>
 <summary>Version 1.20</summary>
