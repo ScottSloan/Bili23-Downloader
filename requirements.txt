@@ -1,3 +1,4 @@
 requests==2.27.1
 wxPython==4.1.1
 qrcode==7.3.1
+comtypes==1.1.11
