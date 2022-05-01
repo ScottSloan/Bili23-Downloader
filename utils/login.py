@@ -13,7 +13,6 @@ class Login:
         self.session = requests.session()
 
         self.init_qrcode()
-        self.get_qrcode_pic()
 
     @property
     def get_qrcode_url(self):
@@ -38,7 +37,9 @@ class Login:
         pic = BytesIO()
 
         img = qrcode.make(LoginInfo.url)
-        img.save("qrcode.png")
+        img.save(pic)
+
+        return pic.getvalue()
     
     def check_isscan(self) -> bool:
         data = {'oauthKey':LoginInfo.oauthKey, "gourl":"https://passport.bilibili.com/account/security"}

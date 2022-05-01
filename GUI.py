@@ -11,5 +11,7 @@ if __name__ == "__main__":
 
     main_window = Main(None)
     main_window.Show()
+    
+    main_window.list_lc.SetFocus()
 
     app.MainLoop()

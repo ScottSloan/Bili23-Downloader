@@ -1,7 +1,6 @@
 import wx
 import sys
-
-from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
 
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
@@ -18,6 +17,7 @@ from gui.about import AboutWindow
 from gui.processing import ProcessingWindow
 from gui.taskbar import TaskBarIcon
 from gui.user import UserWindow
+from gui.login import LoginWindow
 from gui.templates import *
 
 class MainWindow(wx.Frame):
@@ -34,11 +34,10 @@ class MainWindow(wx.Frame):
         
         self.Bind_EVT()
 
-        Main_ThreadPool.submit(self.onShow)
+        onshow_thread = Thread(target = self.onShow)
+        onshow_thread.start()
 
         self.show_download_window = False
-
-        CheckUtils.CheckFFmpeg(self)
 
     def InitUI(self):
         self.infobar = InfoBar(self.panel)
@@ -46,11 +45,14 @@ class MainWindow(wx.Frame):
         self.address_lb = wx.StaticText(self.panel, -1, "地址")
         self.address_tc = wx.TextCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
         self.get_button = wx.Button(self.panel, -1, "Get")
+        self.help_button = wx.BitmapButton(self.panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = (16, 16)), style = wx.BORDER_NONE)
+        self.help_button.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(self.address_lb, 0, wx.ALL | wx.CENTER, 10)
         hbox1.Add(self.address_tc, 1, wx.EXPAND | wx.TOP | wx.BOTTOM, 10)
         hbox1.Add(self.get_button, 0, wx.ALL, 10)
+        hbox1.Add(self.help_button, 0, wx.ALL & (~wx.LEFT), 10)
 
         self.list_lb = wx.StaticText(self.panel, -1, "视频")
         self.quality_lb = wx.StaticText(self.panel, -1, "清晰度")
@@ -97,7 +99,7 @@ class MainWindow(wx.Frame):
         help_menuitem = wx.MenuItem(self.about_menu, 120, "使用帮助(&C)")
         about_menuitem = wx.MenuItem(self.about_menu, 130, "关于(&A)")
 
-        user_menuitem = wx.MenuItem(self.tool_menu, 150, "用户(&E)")
+        user_menuitem = wx.MenuItem(self.tool_menu, 150, "用户中心(&E)")
         option_menuitem = wx.MenuItem(self.tool_menu, 140, "设置(&S)")
 
         menu_bar.Append(self.tool_menu, "工具(&T)")
@@ -126,7 +128,11 @@ class MainWindow(wx.Frame):
         self.tool_menu.Bind(wx.EVT_MENU, self.menu_EVT)
 
         self.address_tc.Bind(wx.EVT_TEXT_ENTER, self.get_url_EVT)
+        self.address_tc.Bind(wx.EVT_SET_FOCUS, self.On_GetFocus)
+        self.address_tc.Bind(wx.EVT_KILL_FOCUS, self.On_KillFocus)
+
         self.get_button.Bind(wx.EVT_BUTTON, self.get_url_EVT)
+        self.help_button.Bind(wx.EVT_BUTTON, self.show_help_info_EVT)
 
         self.quality_cb.Bind(wx.EVT_CHOICE, self.select_quality)
         self.info_btn.Bind(wx.EVT_BUTTON, self.Load_info_window_EVT)
@@ -135,6 +141,20 @@ class MainWindow(wx.Frame):
 
     def On_Close(self, event):
         sys.exit(0)
+
+    def On_GetFocus(self, event):
+        if self.address_tc.GetValue() == "请输入 URL 链接":
+            self.address_tc.Clear()
+            self.address_tc.SetForegroundColour("black")
+
+        event.Skip()
+
+    def On_KillFocus(self, event):
+        if self.address_tc.GetValue() == "":
+            self.address_tc.SetValue("请输入 URL 链接")
+            self.address_tc.SetForegroundColour(wx.Colour(117, 117, 117))
+
+        event.Skip()
 
     def menu_EVT(self, event):
         menuid = event.GetId()
@@ -161,8 +181,13 @@ class MainWindow(wx.Frame):
             setting_window.ShowModal()
         
         elif menuid == 150:
-            user_window = UserWindow(self)
-            user_window.ShowWindowModal()
+            if Config.user_uname == "":
+                login_window = LoginWindow(self)
+                login_window.ShowWindowModal()
+            
+            if Config.user_uname != "":
+                user_window = UserWindow(self)
+                user_window.ShowWindowModal()
             
     def get_url_EVT(self, event):
         url = str(self.address_tc.GetValue())
@@ -178,7 +203,8 @@ class MainWindow(wx.Frame):
 
         self.processing_window = ProcessingWindow(self)
 
-        Main_ThreadPool.submit(self.get_url_thread, url)
+        work_thread = Thread(target = self.get_url_thread, args = (url,))
+        work_thread.start()
 
         self.processing_window.ShowWindowModal()
         
@@ -300,14 +326,17 @@ class MainWindow(wx.Frame):
             self.download_window.Show()
             self.show_download_window = True
 
+    def show_help_info_EVT(self, event):
+        wx.MessageDialog(self, "支持输入的 URL 链接\n\n用户投稿类型视频链接\n剧集（番剧，电影，纪录片等）链接\n活动页链接\n直播链接\n音乐链接\nb23.tv 短链接", "提示", wx.ICON_INFORMATION).ShowModal()
+
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)
 
         self.infobar.show_message_info(code)
 
     def on_redirect(self, url: str):
-        Main_ThreadPool = ThreadPoolExecutor()
-        Main_ThreadPool.submit(self.get_url_thread, url)
+        work_thread = Thread(target = self.get_url_thread, args = (url,))
+        work_thread.start()
 
     def onShow(self):
         if not Config.auto_check_update: return
@@ -319,8 +348,6 @@ class MainWindow(wx.Frame):
 
         elif self.update_info[0]:
             self.infobar.show_message_info(100)
-
-Main_ThreadPool = ThreadPoolExecutor()
     
 video_parser = VideoParser()
 bangumi_parser = BangumiParser()

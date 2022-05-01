@@ -2,6 +2,7 @@ import wx
 import os
 import time
 import datetime
+from io import BytesIO
 from threading import Thread
 from configparser import RawConfigParser
 
@@ -30,7 +31,7 @@ class LoginWindow(Dialog):
         scan_lab = wx.StaticText(self.panel, -1, "扫描二维码登录")
         scan_lab.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, faceName = "微软雅黑"))
 
-        qrcode_bitmap = wx.Image("qrcode.png").Scale(200, 200)
+        qrcode_bitmap = wx.Image(BytesIO(self.login.get_qrcode_pic())).Scale(200, 200)
 
         self.qrcode = wx.StaticBitmap(self.panel, -1, wx.Bitmap(qrcode_bitmap, wx.BITMAP_SCREEN_DEPTH))
 
@@ -71,7 +72,6 @@ class LoginWindow(Dialog):
             self.save_user_info(user_info)
 
         self.Hide()
-        os.remove("qrcode.png")
         
     def save_user_info(self, user_info: dict):
         time = datetime.datetime.now() + datetime.timedelta(days = 30)

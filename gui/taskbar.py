@@ -1,4 +1,5 @@
 import wx
+import os
 import wx.adv
 
 from utils.config import Config
@@ -27,5 +28,27 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         wx.Exit()
 
 class TaskBarProgress:
-    def __init__(self, parent):
-        pass
+
+    TBPF_NOPROGRESS = 0
+    TBPF_INDETERMINATE = 0x1
+    TBPF_NORMAL = 0x2
+    TBPF_ERROR = 0x4
+    TBPF_PAUSED = 0x8
+
+    def __init__(self):
+        from comtypes import client
+        client.GetModule(os.path.join(os.getcwd(), "gui", "taskbar.tlb"))
+
+        import comtypes.gen.TaskbarLib as tbl
+        self.taskbar = client.CreateObject("{56FDF344-FD6D-11d0-958A-006097C9A090}", interface = tbl.ITaskbarList3)
+
+        self.taskbar.HrInit()
+    
+    def Bind(self, hwnd):
+        self.hwnd = hwnd
+    
+    def SetProgressState(self, state):
+        self.taskbar.SetProgressState(self.hwnd, state)
+
+    def SetProgressValue(self, value):
+        self.taskbar.SetProgressValue(self.hwnd, value, 100)

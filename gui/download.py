@@ -11,6 +11,7 @@ from utils.tools import *
 from utils.config import Config
 
 from gui.templates import Frame, Message
+from gui.taskbar import TaskBarProgress
 
 class DownloadList:
     download_count = 0
@@ -28,7 +29,9 @@ class DownloadWindow(Frame):
 
         self.Bind_EVT()
 
-        self.list_panel.download_list_panel.add_panel(0, "Video Title", "BVxxxxxx", 0, "1080P", 0, VideoInfo, self.on_finish, self.on_merge)
+        taskbar.Bind(self.GetHandle())
+
+        #self.list_panel.download_list_panel.add_panel(0, "Video Title", "BVxxxxxx", 0, "1080P", 0, VideoInfo, self.on_finish, self.on_merge)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.On_Close)
@@ -71,20 +74,24 @@ class DownloadWindow(Frame):
         if len(DownloadList.download_list) != 0:
             wx.CallAfter(self.start_download)
 
-    def on_finish(self, iserror = False, video_name = None):
-        count = len(DownloadList.download_list)
+    def on_finish(self, iserror = False, video_name = None, update_title_only = False):
+        self.update_title(len(DownloadList.download_list))
 
+        if update_title_only: return
+
+        if Config.show_notification:
+            if not iserror:
+                Message.show_notification_finish()
+                self.RequestUserAttention(flags = wx.USER_ATTENTION_INFO)
+            else:
+                Message.show_notification_error(video_name)
+                self.RequestUserAttention(flags = wx.USER_ATTENTION_ERROR)
+
+    def update_title(self, count: int):
         if count != 0:
             self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(count))
         else:
-            if Config.show_notification:
-                if not iserror:
-                    Message.show_notification_finish()
-                else:
-                    Message.show_notification_error(video_name)
-
             self.list_panel.task_lb.SetLabel("下载管理")
-            self.RequestUserAttention(flags = wx.USER_ATTENTION_INFO)
 
 class ListPanel(wx.Panel):
     def __init__(self, parent):
@@ -265,12 +272,17 @@ class DownloadItemPanel(wx.Panel):
             self.pause_btn.SetToolTip("继续下载")
 
             self.download_utils.on_pause()
+
+            taskbar.SetProgressState(TaskBarProgress.TBPF_PAUSED)
+
         else:
             self.download_info["status"] = "downloading"
             self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
             self.pause_btn.SetToolTip("暂停下载")
 
             self.download_utils.on_resume()
+
+            taskbar.SetProgressState(TaskBarProgress.TBPF_NORMAL)
 
     def open_EVT(self, event):
         if Config.platform.startswith("Windows"):
@@ -285,7 +297,7 @@ class DownloadItemPanel(wx.Panel):
             self.download_utils.on_cancel()
         
         if status != "error":
-            self.download_info["on_finish"]()
+            self.download_info["on_finish"](update_title_only = True)
 
         self.Destroy()
         self.parent.main_sizer.Layout()
@@ -370,10 +382,14 @@ class DownloadItemUtils:
     def on_start(self, size: str):
         self.download_info["total_size"] += size
 
+        taskbar.SetProgressState(TaskBarProgress.TBPF_NORMAL)
+
     def on_download(self, progress: int, speed: str, size: str):
         self.panel.gauge.SetValue(progress)
         self.panel.speed_lb.SetLabel(speed)
         self.panel.size_lb.SetLabel(size)
+
+        taskbar.SetProgressValue(progress)
 
     def on_pause(self):
         self.downloader.on_pause()
@@ -419,4 +435,7 @@ class DownloadItemUtils:
         self.panel.cancel_btn.SetToolTip("清除记录")
         self.panel.gauge.SetValue(100)
 
+        taskbar.SetProgressState(TaskBarProgress.TBPF_NOPROGRESS)
+
 ThreadPool = ThreadPoolExecutor()
+taskbar = TaskBarProgress()

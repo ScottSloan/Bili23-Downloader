@@ -8,7 +8,6 @@ class Config:
     download_path = os.path.join(os.getcwd(), "download")
 
     max_thread = 4
-    max_task = 2
     default_quality = 80
     codec = 0
     show_notification = False
@@ -26,7 +25,7 @@ class Config:
 
     VERSION = "1.21"
     VERSION_CODE = 121
-    RELEASE_DATE = "2022-4-30"
+    RELEASE_DATE = "2022-5-1"
     WEBSITE = "https://github.com/ScottSloan/Bili23-downloader"
 
     res_logo = res_pause = res_resume = res_delete = res_open = res_info = res_info_video = res_info_bangumi = ""
@@ -45,7 +44,6 @@ class Load_Config:
 
         Config.download_path = path if path != "default" else Config.default_path
         Config.max_thread = conf.getint("download", "max_thread")
-        Config.max_task = conf.getint("download", "max_task")
         Config.default_quality = conf.getint("download", "default_quality")
         Config.codec = conf.getint("download", "codec")
         Config.show_notification = conf.getboolean("download", "show_notification")

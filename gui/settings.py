@@ -77,15 +77,12 @@ class Tab1(wx.Panel):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.browse_folder)
 
         self.thread_sl.Bind(wx.EVT_SLIDER, self.on_thread_slide)
-        self.task_sl.Bind(wx.EVT_SLIDER, self.on_task_slide)
 
     def load_conf(self):
         self.path_tc.SetValue(Config.download_path)
         
         self.thread_lb.SetLabel("多线程数：{}".format(Config.max_thread))
         self.thread_sl.SetValue(Config.max_thread)
-        self.task_lb.SetLabel("并行任务数：{}".format(Config.max_task))
-        self.task_sl.SetValue(Config.max_task)
         self.quality_cb.SetSelection(list(quality_wrap.values()).index(Config.default_quality))
         self.codec_cb.SetSelection(Config.codec)
         self.show_toast_chk.SetValue(Config.show_notification)
@@ -93,14 +90,12 @@ class Tab1(wx.Panel):
     def save_conf(self):
         Config.download_path = self.path_tc.GetValue()
         Config.max_thread = self.thread_sl.GetValue()
-        Config.max_task = self.task_sl.GetValue()
         Config.default_quality = list(quality_wrap.values())[self.quality_cb.GetSelection()]
         Config.codec = self.codec_cb.GetSelection()
         Config.show_notification = self.show_toast_chk.GetValue()
 
         conf.set("download", "path", Config.download_path if Config.download_path != Config.default_path else "default")
         conf.set("download", "max_thread", str(Config.max_thread))
-        conf.set("download", "max_task", str(Config.max_task))
         conf.set("download", "default_quality", str(Config.default_quality))
         conf.set("download", "codec", str(Config.codec))
         conf.set("download", "show_notification", str(int(Config.show_notification)))
@@ -120,10 +115,6 @@ class Tab1(wx.Panel):
         self.thread_lb = wx.StaticText(download_box, -1, "多线程数：0")
         self.thread_sl = wx.Slider(download_box, -1, 1, 1, 8)
         self.thread_sl.SetToolTip("设置下载视频的多线程数，范围 1-8")
-
-        self.task_lb = wx.StaticText(download_box, -1, "并行任务数：0")
-        self.task_sl = wx.Slider(download_box, -1, 1, 1, 5)
-        self.task_sl.SetToolTip("设置并行下载视频的任务数，范围 1-5")
 
         quality_lb = wx.StaticText(download_box, -1, "默认下载清晰度")
         self.quality_cb = wx.Choice(download_box, -1, choices = list(quality_wrap.keys()))
@@ -149,8 +140,6 @@ class Tab1(wx.Panel):
         vbox.Add(hbox, 0, wx.EXPAND)
         vbox.Add(self.thread_lb, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.thread_sl, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.task_lb, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.task_sl, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
         vbox.Add(hbox1)
         vbox.Add(hbox2)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
@@ -169,9 +158,6 @@ class Tab1(wx.Panel):
 
     def on_thread_slide(self, event):
         self.thread_lb.SetLabel("多线程数：{}".format(self.thread_sl.GetValue()))
-
-    def on_task_slide(self, event):
-        self.task_lb.SetLabel("并行任务数：{}".format(self.task_sl.GetValue()))
 
 class Tab2(wx.Panel):
     def __init__(self, parent):

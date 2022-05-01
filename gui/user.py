@@ -11,18 +11,11 @@ from utils.config import Config
 
 class UserWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "用户", (250, 190))
+        Dialog.__init__(self, parent, "用户中心", (250, 190))
         
         self.init_ui()
         
         self.Bind_EVT()
-
-
-        if Config.user_uname == "":
-            from gui.login import LoginWindow
-
-            login_window = LoginWindow(self)
-            login_window.ShowWindowModal()
             
         self.load_conf()
 
