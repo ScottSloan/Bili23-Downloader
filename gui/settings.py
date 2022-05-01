@@ -437,4 +437,4 @@ class Tab4(wx.Panel):
             wx.MessageDialog(self, "测试失败\n\n", "提示", wx.ICON_WARNING).ShowModal()
 
 conf = configparser.RawConfigParser()
-conf.read(os.path.join(os.getcwd(), "config.conf"))
+conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")

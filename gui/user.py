@@ -73,7 +73,7 @@ class UserWindow(Dialog):
     
     def logout_EVT(self, event):
         conf = RawConfigParser()
-        conf.read(os.path.join(os.getcwd(), "config.conf"))
+        conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
 
         Config.user_uuid = Config.user_uname = Config.user_face = Config.user_expire = Config.user_sessdata = ""
 

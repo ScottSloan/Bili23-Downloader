@@ -77,7 +77,7 @@ class LoginWindow(Dialog):
         time = datetime.datetime.now() + datetime.timedelta(days = 30)
 
         conf = RawConfigParser()
-        conf.read(os.path.join(os.getcwd(), "config.conf"))
+        conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
 
         Config.user_uuid = user_info["uuid"]
         Config.user_uname = user_info["uname"]

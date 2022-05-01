@@ -38,7 +38,7 @@ class Config:
 class Load_Config:
     def __init__(self):
         conf = RawConfigParser()
-        conf.read(os.path.join(os.getcwd(), "config.conf"))
+        conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
         
         path = conf.get("download", "path")
 
