@@ -13,7 +13,7 @@ class Main(MainWindow):
 def onExit():
     from gui.download import downloader
 
-    downloader.shutdown()
+    downloader.force_shutdown()
 
     if os.path.exists(Config.res_info):
         os.remove(Config.res_info)

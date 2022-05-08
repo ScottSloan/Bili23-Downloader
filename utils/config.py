@@ -32,7 +32,7 @@ class Config:
 
     PLATFORM = platform.platform()
     FFMPEG_PATH = os.path.join(os.getcwd(), "ffmpeg.exe") if PLATFORM.startswith("Windows") else "ffmpeg"
-    ARIA2C_PATH = "{} --quiet --enable-rpc=true".format(os.path.join(os.getcwd(), "aria2c.exe" if PLATFORM.startswith("Windows") else "aria2c"))
+    ARIA2C_PATH = "{} --quiet --enable-rpc=true --continue=true".format(os.path.join(os.getcwd(), "aria2c.exe" if PLATFORM.startswith("Windows") else "aria2c"))
     del_cmd = "del" if PLATFORM.startswith("Windows") else "rm"
     rename_cmd = "ren" if PLATFORM.startswith("Windows") else "mv"
 

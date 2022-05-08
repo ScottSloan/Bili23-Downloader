@@ -4,7 +4,6 @@ from aria2p import Client, Stats
 from threading import Thread
 
 from utils.config import Config
-from utils.tools import *
 
 class Downloader(Client):
     pause_ = False
@@ -15,14 +14,15 @@ class Downloader(Client):
         super().__init__()
     
     def download(self, url: str, referer: str, file_name: str) -> str:
-        options = {"out": file_name, "referer": referer, "dir": Config.download_path, "x": Config.max_thread}
+        options = {"out": file_name, "referer": referer, "dir": Config.download_path, "max-connection-per-server": Config.max_thread}
 
         return self.add_uri([url], options = options)
     
-    def start_listening(self, on_download, on_complete, on_error):
+    def start_listening(self, on_start, on_download, on_complete, on_error):
         self.on_download, self.on_completd, self.loop = on_download, on_complete, True
 
         kwargs = {
+            "on_download_start": on_start,
             "on_download_complete": self.__on_completd,
             "on_download_error": on_error,
             "handle_signals": False

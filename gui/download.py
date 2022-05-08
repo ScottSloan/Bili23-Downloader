@@ -1,5 +1,6 @@
 import wx
 import os
+import time
 import subprocess
 import wx.lib.scrolledpanel
 from concurrent.futures import ThreadPoolExecutor
@@ -173,6 +174,7 @@ class DownloadWindow:
     class DownloadItemPanel(wx.Panel):
 
         pid = title = bvid = cid = quality_desc = quality_id = type = status = None
+        video_path = audio_path = 0
         gid = []
 
         onComplete_ = onMerge_ = None
@@ -368,8 +370,13 @@ class DownloadWindow:
 
             self.status = "downloading"
 
+            downloader.start_listening(self.onStart, self.onDownload, self.onDownloadCompleted, self.OnError)
+
             if self.type != AudioInfo:
                 self.get_video_durl()
+
+                self.video_path = os.path.join(Config.download_path, "video_{}.mp4".format(self.pid))
+                self.audio_path = os.path.join(Config.download_path, "audio_{}.mp3".format(self.pid))
 
                 self.gid.append(downloader.download(self.video_durl, self.referer_url, "video_{}.mp4".format(self.pid)))
                 self.gid.append(downloader.download(self.audio_durl, self.referer_url, "audio_{}.mp3".format(self.pid)))
@@ -377,9 +384,22 @@ class DownloadWindow:
             else:
                 self.get_audio_durl()
 
+                self.audio_path = os.path.join(Config.download_path, "{}.mp3".format(self.title))
+
                 self.gid.append(downloader.download(self.audio_durl, self.referer_url, "{}.mp3".format(self.title)))
 
-            downloader.start_listening(self.onDownload, self.onDownloadCompleted, self.OnError)
+        def onStart(self, gid: str):
+            time.sleep(1)
+
+            video_size = audio_size = 0
+
+            if os.path.exists(self.video_path):
+                video_size = os.path.getsize(self.video_path)
+
+            if os.path.exists(self.audio_path):
+                audio_size = os.path.getsize(self.audio_path)
+            
+            self.size_lab.SetLabel(format_size((video_size + audio_size) / 1024))
 
         def onDownload(self, progress: int, speed: str):
             self.gauge.SetValue(progress)
@@ -408,7 +428,7 @@ class DownloadWindow:
 
             for i in self.gid:
                 try:
-                    downloader.remove(i)
+                    downloader.force_remove(i)
                 except:
                     pass
             
@@ -428,7 +448,7 @@ class DownloadWindow:
             self.onComplete_(iserror = True)
 
         def onMerge(self):
-            self.speed_lab.SetLabel("正在合成...")
+            self.speed_lab.SetLabel("正在合成视频...")
             self.onMerge_()
             self.pause_btn.Enable(False)
 
