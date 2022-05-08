@@ -35,12 +35,13 @@ pip install -r requirements.txt
 - 剧集（番剧，电影，纪录片等）链接
 - 活动页链接
 - 直播链接
-- 音乐链接
+- 音乐、歌单链接
 - b23.tv 短链接
 
 #### **部分视频可直接输入编号**
 - 视频 av、BV 号
 - 剧集 epid、md、ss 号
+- 音乐 au 号、歌单 am 号
 
 ### **下载管理界面**
 ![download.PNG](https://s2.loli.net/2022/04/09/Z2p9cEJsuwqCoAI.png)  
@@ -88,7 +89,10 @@ pip install -r requirements.txt
   - [X] 检查更新
 
 # 开发日志
-#### **[最新] Version 1.21 (2022-5-8)**
+#### **[最新] Version 1.22 dev (2022-5-8)**
+* 支持解析歌单链接
+
+#### **Version 1.21 (2022-5-8)**
 * 使用 `aria2` 实现下载功能
 * 现在任务栏上能显示当前下载状态
 * 优化部分细节效果
