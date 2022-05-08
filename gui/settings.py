@@ -13,7 +13,6 @@ class SettingWindow(Dialog):
     def __init__(self, parent):
         Dialog.__init__(self, parent, "设置", (400, 500))
 
-
         self.init_controls()
         self.Bind_EVT()
 
@@ -435,9 +434,9 @@ class Tab4(wx.Panel):
             req = requests.get(test_url, headers = get_header(), proxies = {"http":"{}:{}".format(self.addresss_tc.GetValue(), self.port_tc.GetValue())}, timeout = 3)
             end_t = time.time()
 
-            wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), "提示", wx.ICON_INFORMATION).ShowModal()
+            wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), Config.APPNAME, wx.ICON_INFORMATION).ShowModal()
         except requests.RequestException as e:
-            wx.MessageDialog(self, "测试失败\n\n{}".format(e), "提示", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n{}".format(e), Config.APPNAME, wx.ICON_WARNING).ShowModal()
 
 conf = configparser.RawConfigParser()
 conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")

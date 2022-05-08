@@ -217,6 +217,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             on_error(407)
         
         elif vip and Config.user_sessdata == "":
-            dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未登录的情况下将跳过下载\n确认继续吗？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
+            dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未登录的情况下将跳过下载\n确认继续吗？", Config.APPNAME, wx.ICON_INFORMATION | wx.YES_NO)
             if dialog.ShowModal() == wx.ID_NO:
                 return True

@@ -336,7 +336,7 @@ class MainWindow(wx.Frame):
             self.show_download_window = True
 
     def show_help_info_EVT(self, event):
-        wx.MessageDialog(self, "支持输入的 URL 链接\n\n用户投稿类型视频链接\n剧集（番剧，电影，纪录片等）链接\n活动页链接\n直播链接\n音乐链接\nb23.tv 短链接", Config.APPNAME, wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "支持输入的 URL 链接\n\n用户投稿类型视频链接\n剧集（番剧，电影，纪录片等）链接\n活动页链接\n直播链接\n音乐、歌单链接\nb23.tv 短链接", Config.APPNAME, wx.ICON_INFORMATION).ShowModal()
 
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)

@@ -38,7 +38,7 @@ pip install -r requirements.txt
 - 音乐、歌单链接
 - b23.tv 短链接
 
-#### **部分视频可直接输入编号**
+#### **部分类型可直接输入编号**
 - 视频 av、BV 号
 - 剧集 epid、md、ss 号
 - 音乐 au 号、歌单 am 号
@@ -75,6 +75,9 @@ pip install -r requirements.txt
   - [X] 国创
   - [X] 综艺
   - [X] 电视剧
+- [X] **音乐类**
+  - [X] 音乐
+  - [X] 歌单
 - [X] **直播**
 - [ ] **课程**
 - [ ] **漫画**
