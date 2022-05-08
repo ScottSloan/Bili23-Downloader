@@ -26,7 +26,7 @@ pip install -r requirements.txt
 - **[Github Actions](https://github.com/ScottSloan/Bili23-Downloader/actions) 中提供已经打包完成的程序，可直接运行 (不包含 ffmpeg)**
 
 ### **主界面**
-![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)
+![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)  
 将视频链接粘贴到地址栏中，点击 `Get` 按钮解析视频链接  
 选择要下载的视频，点击 `下载视频` 按钮开始下载 
 
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 > 目前暂不支持断点续传功能
 
 ### **用户中心界面**
-![user.png](https://s2.loli.net/2022/05/01/k6hAztIUqny4M8s.png)
+![user.png](https://s2.loli.net/2022/05/01/k6hAztIUqny4M8s.png)  
 
 目前可通过客户端扫描二维码登录，登录后可下载大会员视频  
 > **每次登录有效期为一个月，过期后需重新登录**
@@ -88,7 +88,7 @@ pip install -r requirements.txt
   - [X] 检查更新
 
 # 开发日志
-#### **[最新] Version 1.21 dev (2022-5-8)**
+#### **[最新] Version 1.21 (2022-5-8)**
 * 使用 `aria2` 实现下载功能
 * 现在任务栏上能显示当前下载状态
 * 优化部分细节效果
@@ -142,6 +142,11 @@ pip install -r requirements.txt
 
 </details>
 
-## 联系方式
+# 致谢
+* [aria2](https://github.com/aria2/aria2)  
+* [ffmpeg](https://ffmpeg.org/)
+
+
+# 联系方式
 - Email: World1019@sina.com
 - Blog: https://scott.hanloth.cn
