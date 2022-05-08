@@ -8,7 +8,7 @@ from utils.tools import *
 class BangumiInfo:
     url = epid = ssid = mdid = bvid = ""
     
-    title = desc = cover = newep = theme = ""
+    title = desc = cover = newep = type = ""
 
     view = coin = danmaku = favorite = score = count = quality = cid = 0
 
@@ -42,6 +42,7 @@ class BangumiParser:
 
         if media_json["code"] != 0:
             self.on_error(400)
+            return
 
         ssid = media_json["result"]["media"]["season_id"]
 
@@ -61,6 +62,7 @@ class BangumiParser:
 
         if info_json["code"] != 0:
             self.on_error(400)
+            return
         
         info_result = info_json["result"]
         BangumiInfo.url = info_result["episodes"][0]["link"]
@@ -101,17 +103,17 @@ class BangumiParser:
         type_id = info_result["type"]
 
         if type_id == 1:
-            BangumiInfo.theme = "番剧"
+            BangumiInfo.type = "番剧"
         elif type_id == 2:
-            BangumiInfo.theme = "电影"
+            BangumiInfo.type = "电影"
         elif type_id == 3:
-            BangumiInfo.theme = "纪录片"
+            BangumiInfo.type = "纪录片"
         elif type_id == 4:
-            BangumiInfo.theme = "国创"
+            BangumiInfo.type = "国创"
         elif type_id == 5:
-            BangumiInfo.theme = "电视剧"
+            BangumiInfo.type = "电视剧"
         elif type_id == 7:
-            BangumiInfo.theme = "综艺"
+            BangumiInfo.type = "综艺"
 
     def get_bangumi_quality(self):
         bangumi_request = requests.get(self.quality_api(BangumiInfo.bvid, BangumiInfo.cid), headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
@@ -119,6 +121,7 @@ class BangumiParser:
         
         if bangumi_json["code"] != 0:
             self.on_error(402)
+            return
 
         json_data = bangumi_json["result"]
 

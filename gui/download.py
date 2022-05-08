@@ -44,21 +44,25 @@ class DownloadWindow:
             if type == VideoInfo:
                 if VideoInfo.multiple:
                     for i in VideoInfo.down_pages:
-                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["part"], bvid = VideoInfo.bvid, cid = i["cid"], quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["part"], bvid = VideoInfo.bvid, cid = i["cid"], sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
                 elif VideoInfo.collection:
                     for i in VideoInfo.down_pages:
-                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = i["bvid"], cid = i["cid"], quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = i["bvid"], cid = i["cid"], sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
                 else:
-                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = VideoInfo.title, bvid = VideoInfo.bvid, cid = VideoInfo.cid, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = VideoInfo.title, bvid = VideoInfo.bvid, cid = VideoInfo.cid, sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             elif type == BangumiInfo:
                 for i in BangumiInfo.down_episodes:
-                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["share_copy"], bvid = i["bvid"], cid = i["cid"], quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["share_copy"], bvid = i["bvid"], cid = i["cid"], sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+
+            elif type == AudioInfo and AudioInfo.isplaylist:
+                for i in AudioInfo.down_list:
+                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = None, cid = None, sid = i["id"], quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             else:
-                self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = AudioInfo.title, bvid = None, cid = None, quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = AudioInfo.title, bvid = None, cid = None, sid = AudioInfo.sid, quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadWindow.download_list)))
 
@@ -173,7 +177,7 @@ class DownloadWindow:
 
     class DownloadItemPanel(wx.Panel):
 
-        pid = title = bvid = cid = quality_desc = quality_id = type = status = None
+        pid = title = bvid = cid = sid = quality_desc = quality_id = type = status = None
         video_path = audio_path = 0
         gid = []
 
@@ -186,6 +190,7 @@ class DownloadWindow:
             self.title = kwargs["title"]
             self.bvid = kwargs["bvid"]
             self.cid = kwargs["cid"]
+            self.sid = kwargs["sid"]
             self.quality_desc = kwargs["quality_desc"]
             self.quality_id = kwargs["quality_id"]
             self.type = kwargs["type"]
@@ -312,28 +317,33 @@ class DownloadWindow:
             self.parent.main_sizer.Layout()
             self.parent.SetupScrolling(scroll_x = False)
 
+        @property
         def video_durl_api(self) -> str:
             return "https://api.bilibili.com/x/player/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(self.bvid, self.cid)
 
+        @property
         def bangumi_durl_api(self) -> str:
             return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(self.bvid, self.cid)
 
+        @property
         def audio_durl_api(self) -> str:
-            return "https://www.bilibili.com/audio/music-service-c/web/url?sid={}".format(AudioInfo.sid)
+            return "https://www.bilibili.com/audio/music-service-c/web/url?sid={}".format(self.sid)
 
+        @property
         def get_full_url(self) -> str:
-            return "https://www.bilibili.com/video/{}".format(self.bvid)
+            if self.type == AudioInfo:
+                return "https://www.bilibili.com/audio/au{}".format(self.sid)
+            else:
+                return "https://www.bilibili.com/video/{}".format(self.bvid)
 
         def get_video_durl(self):
-            self.referer_url = self.get_full_url()
-
             try:
                 if self.type == VideoInfo:
-                    request = requests.get(self.video_durl_api(), headers = get_header(self.referer_url, Config.user_sessdata), proxies = get_proxy())
+                    request = requests.get(self.video_durl_api, headers = get_header(self.get_full_url, Config.user_sessdata), proxies = get_proxy())
                     request_json = json.loads(request.text)
                     json_dash = request_json["data"]["dash"]
                 else:
-                    request = requests.get(self.bangumi_durl_api(), headers = get_header(self.referer_url, Config.user_sessdata), proxies = get_proxy())
+                    request = requests.get(self.bangumi_durl_api, headers = get_header(self.get_full_url, Config.user_sessdata), proxies = get_proxy())
                     request_json = json.loads(request.text)
                     json_dash = request_json["result"]["dash"]
             except:
@@ -349,9 +359,7 @@ class DownloadWindow:
             self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == quality or (i["id"] - 30200) < quality][0]["baseUrl"]
 
         def get_audio_durl(self):
-            self.referer_url = "https://www.bilibili.com/audio/au{}".format(AudioInfo.sid)
-
-            audio_request = requests.get(self.audio_durl_api(), headers = get_header(), proxies = get_proxy())
+            audio_request = requests.get(self.audio_durl_api, headers = get_header(), proxies = get_proxy())
             audio_json = json.loads(audio_request.text)
 
             self.audio_durl = audio_json["data"]["cdns"][0]
@@ -378,15 +386,15 @@ class DownloadWindow:
                 self.video_path = os.path.join(Config.download_path, "video_{}.mp4".format(self.pid))
                 self.audio_path = os.path.join(Config.download_path, "audio_{}.mp3".format(self.pid))
 
-                self.gid.append(downloader.download(self.video_durl, self.referer_url, "video_{}.mp4".format(self.pid)))
-                self.gid.append(downloader.download(self.audio_durl, self.referer_url, "audio_{}.mp3".format(self.pid)))
+                self.gid.append(downloader.download(self.video_durl, self.get_full_url, "video_{}.mp4".format(self.pid)))
+                self.gid.append(downloader.download(self.audio_durl, self.get_full_url, "audio_{}.mp3".format(self.pid)))
 
             else:
                 self.get_audio_durl()
 
                 self.audio_path = os.path.join(Config.download_path, "{}.mp3".format(self.title))
 
-                self.gid.append(downloader.download(self.audio_durl, self.referer_url, "{}.mp3".format(self.title)))
+                self.gid.append(downloader.download(self.audio_durl, self.get_full_url, "{}.mp3".format(self.title)))
 
         def onStart(self, gid: str):
             time.sleep(1)
@@ -436,6 +444,8 @@ class DownloadWindow:
             DownloadWindow.downloading = False
 
         def OnError(self):
+            DownloadWindow.downloading = False
+
             del DownloadWindow.download_list[self.pid]
 
             self.speed_lab.SetLabel("下载失败")
@@ -456,7 +466,9 @@ class DownloadWindow:
             DownloadWindow.downloading = False
 
             self.onMerge()
-            self.merge_video_audio(self.title, self.pid)
+            if self.type != AudioInfo:
+                self.merge_video_audio(self.title, self.pid)
+                
             self.onMergeCompleted()
 
         def onMergeCompleted(self):

@@ -210,26 +210,26 @@ class MainWindow(wx.Frame):
             url = process_shortlink(url)
         
         if "live" in url:
-            self.theme = LiveInfo
-            live_parser.parse_url(url)
+            self.type = LiveInfo
+            live_parser.parse_url(url, self.on_error)
 
             self.set_live_list()
 
-        elif "audio" in url:
-            self.theme = AudioInfo
-            audio_parser.parse_url(url)
+        elif "au" in url:
+            self.type = AudioInfo
+            audio_parser.parse_url(url, self.on_error)
 
             self.set_audio_list()
 
         elif "BV" in url or "av" in url:
-            self.theme = VideoInfo
+            self.type = VideoInfo
             video_parser.parse_url(url, self.on_redirect, self.on_error)
 
             self.set_video_list()
             self.set_quality(VideoInfo)
 
         elif "ep" in url or "ss" in url or "md" in url:
-            self.theme = BangumiInfo
+            self.type = BangumiInfo
             bangumi_parser.parse_url(url, self.on_error)
 
             self.set_bangumi_list()
@@ -240,17 +240,27 @@ class MainWindow(wx.Frame):
         wx.CallAfter(self.get_url_finish)
         
     def get_url_finish(self):
-        if self.theme == LiveInfo:
+        if self.type == LiveInfo:
             self.quality_cb.Enable(False)
             self.info_btn.Enable(False)
             self.download_btn.SetLabel("播放")
-        elif self.theme == AudioInfo:
+
+        elif self.type == AudioInfo:
             self.quality_cb.Enable(False)
-            self.info_btn.Enable(False)
-            self.download_btn.SetLabel("下载音频")
+            self.info_btn.Enable(True)
+
+            if AudioInfo.isplaylist:
+                self.info_btn.SetLabel("歌单信息")
+                self.download_btn.SetLabel("下载歌单")
+            else:
+                self.info_btn.SetLabel("音乐信息")
+                self.download_btn.SetLabel("下载音乐")
+
         else:
             self.quality_cb.Enable(True)
             self.info_btn.Enable(True)
+
+            self.info_btn.SetLabel("视频信息")
             self.download_btn.SetLabel("下载视频")
 
         self.download_btn.Enable(True)
@@ -259,20 +269,20 @@ class MainWindow(wx.Frame):
 
         self.list_lc.SetFocus()
 
-        if Config.user_sessdata == "" and self.theme == BangumiInfo:
+        if Config.user_sessdata == "" and self.type == BangumiInfo:
             self.infobar.show_message_info(200)
 
     def set_video_list(self):
-        videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
+        count = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
 
         wx.CallAfter(self.list_lc.set_video_list)
-        self.list_lb.SetLabel("视频 (共 %d 个)" % videos)
+        self.list_lb.SetLabel("视频 (共 {} 个)".format(count))
 
     def set_bangumi_list(self):
-        bangumis = len(BangumiInfo.episodes)
+        count = len(BangumiInfo.episodes)
 
         wx.CallAfter(self.list_lc.set_bangumi_list)
-        self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.theme, bangumis))
+        self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, count))
 
     def set_live_list(self):
         wx.CallAfter(self.list_lc.set_live_list)
@@ -280,7 +290,11 @@ class MainWindow(wx.Frame):
 
     def set_audio_list(self):
         wx.CallAfter(self.list_lc.set_audio_list)
-        self.list_lb.SetLabel("音乐")
+
+        if AudioInfo.isplaylist:
+            self.list_lb.SetLabel("歌单 (共 {} 首)".format(AudioInfo.count))
+        else:
+            self.list_lb.SetLabel("音乐 (共 1 首)")
 
     def set_quality(self, type):
         self.quality_cb.Set(type.quality_desc)
@@ -288,29 +302,29 @@ class MainWindow(wx.Frame):
         self.quality_cb.Select(type.quality_id.index(type.quality))
 
     def select_quality(self, event):
-        if self.theme.quality_id[event.GetSelection()] in [127, 125, 120, 116, 112] and Config.user_sessdata == "":
-            self.quality_cb.Select(self.theme.quality_id.index(80))
+        if self.type.quality_id[event.GetSelection()] in [127, 125, 120, 116, 112] and Config.user_sessdata == "":
+            self.quality_cb.Select(self.type.quality_id.index(80))
             wx.CallAfter(self.on_error, 404)
 
-        self.theme.quality = self.theme.quality_id[event.GetSelection()]
+        self.type.quality = self.type.quality_id[event.GetSelection()]
 
     def download_EVT(self, event):
-        if self.theme == LiveInfo:
+        if self.type == LiveInfo:
             live_parser.open_player()
         else:
-            if self.list_lc.get_allcheckeditem(self.theme, self.on_error): return
+            if self.list_lc.get_allcheckeditem(self.type, self.on_error): return
 
             self.Load_download_window_EVT(0)
 
             quality_desc = self.quality_cb.GetStringSelection()
 
-            if self.theme != AudioInfo:
-                self.download_window.add_download_task(self.theme, quality_desc, quality_wrap[quality_desc])
+            if self.type != AudioInfo:
+                self.download_window.add_download_task(self.type, quality_desc, quality_wrap[quality_desc])
             else:
-                self.download_window.add_download_task(self.theme, None, None)
+                self.download_window.add_download_task(self.type, None, None)
 
     def Load_info_window_EVT(self, event):
-        self.info_window = InfoWindow(self, VideoInfo.title if self.theme == VideoInfo else BangumiInfo.title, self.theme)
+        self.info_window = InfoWindow(self, VideoInfo.title if self.type == VideoInfo else BangumiInfo.title, self.type)
         self.info_window.Show()
     
     def Load_download_window_EVT(self, event):
@@ -322,7 +336,7 @@ class MainWindow(wx.Frame):
             self.show_download_window = True
 
     def show_help_info_EVT(self, event):
-        wx.MessageDialog(self, "支持输入的 URL 链接\n\n用户投稿类型视频链接\n剧集（番剧，电影，纪录片等）链接\n活动页链接\n直播链接\n音乐链接\nb23.tv 短链接", "提示", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "支持输入的 URL 链接\n\n用户投稿类型视频链接\n剧集（番剧，电影，纪录片等）链接\n活动页链接\n直播链接\n音乐链接\nb23.tv 短链接", Config.APPNAME, wx.ICON_INFORMATION).ShowModal()
 
     def on_error(self, code: int):
         wx.CallAfter(self.processing_window.Hide)

@@ -21,7 +21,7 @@ class InfoUtils:
         page = self.read_file(Config.res_info_bangumi)
 
         oldstr = ["{ title }", "{ cover }", "{ desc }", "{ theme }", "{ view }", "{ coin }", "{ danmaku }", "{ favorite }", "{ newep }", "{ bvid }", "{ score }", "{ count }"]
-        newstr = [BangumiInfo.title, BangumiInfo.cover, BangumiInfo.desc, BangumiInfo.theme, BangumiInfo.view, BangumiInfo.coin, BangumiInfo.danmaku, BangumiInfo.favorite, BangumiInfo.newep, BangumiInfo.bvid, BangumiInfo.score, BangumiInfo.count]
+        newstr = [BangumiInfo.title, BangumiInfo.cover, BangumiInfo.desc, BangumiInfo.type, BangumiInfo.view, BangumiInfo.coin, BangumiInfo.danmaku, BangumiInfo.favorite, BangumiInfo.newep, BangumiInfo.bvid, BangumiInfo.score, BangumiInfo.count]
         page = self.replace_template(page, oldstr, newstr)
 
         self.save_to_file(Config.res_info, page)

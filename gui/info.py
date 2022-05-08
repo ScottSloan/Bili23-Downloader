@@ -7,8 +7,8 @@ from utils.video import VideoInfo
 from gui.templates import Frame
 
 class InfoWindow(Frame):
-    def __init__(self, parent, title, theme):
-        self.theme = theme
+    def __init__(self, parent, title, type):
+        self.type = type
         Frame.__init__(self, parent, title, (800, 500))
 
         self.init_controls()
@@ -32,7 +32,7 @@ class InfoWindow(Frame):
 
         html = InfoUtils()
 
-        if self.theme == VideoInfo:
+        if self.type == VideoInfo:
             html.save_video_info()
 
         else:

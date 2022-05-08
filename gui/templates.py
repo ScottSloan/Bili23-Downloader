@@ -46,7 +46,7 @@ class InfoBar(wx.InfoBar):
             
         elif code == 401:
             super().ShowMessage("警告：请选择要下载的视频", flags = wx.ICON_ERROR)
-            raise ProcessError("None items selected to download")
+            raise ProcessError("None videos selected to download")
         
         elif code == 402:
             super().ShowMessage("错误：获取视频信息失败", flags = wx.ICON_WARNING)
@@ -63,6 +63,14 @@ class InfoBar(wx.InfoBar):
         elif code == 405:
             super().ShowMessage("错误：检查更新失败", flags = wx.ICON_ERROR)
             raise ProcessError("Failed to check update")
+
+        elif code == 406:
+            super().ShowMessage("错误：无法获取直播源", flags = wx.ICON_ERROR)
+            raise ProcessError("Failed to get live address")
+
+        elif code == 407:
+            super().ShowMessage("警告：请选择要下载的音乐", flags = wx.ICON_ERROR)
+            raise ProcessError("None audios selected to download")
 
         if code == 100:
             super().ShowMessage("提示：有新版本更新可用", flags = wx.ICON_INFORMATION)
@@ -124,9 +132,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def set_audio_list(self):
         items_content = {}
 
-        items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
+        if AudioInfo.isplaylist:
+            items_content["歌单"] = [["{}".format(index + 1), value["title"], "", format_duration(value["duration"])] for index, value in enumerate(AudioInfo.playlist)]
 
-        self.rootitems.append("音乐")
+            self.rootitems.append("歌单")
+        else:
+            items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
+
+            self.rootitems.append("音乐")
 
         self.append_list(items_content, False)
 
@@ -161,7 +174,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if itemtext in self.rootitems:
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-    def get_allcheckeditem(self, theme, on_error) -> bool:
+    def get_allcheckeditem(self, type, on_error) -> bool:
         vip = False
         VideoInfo.down_pages.clear()
         BangumiInfo.down_episodes.clear()
@@ -174,21 +187,34 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 itemtitle = self.GetItemText(i, 1)
                 parenttext = self.GetItemText(self.GetItemParent(i), 0)
                 
-                if theme == VideoInfo:
+                if type == VideoInfo:
                     index = int(self.GetItemText(i, 0))
+
                     if VideoInfo.collection:
                         VideoInfo.down_pages.append(VideoInfo.episodes[index - 1])
                     else:
                         VideoInfo.down_pages.append(VideoInfo.pages[index - 1])
-                elif theme == BangumiInfo:
+
+                elif type == BangumiInfo:
                     index = [i for i, v in enumerate(BangumiInfo.sections[parenttext]) if v["share_copy"] == itemtitle][0]
+
                     BangumiInfo.down_episodes.append(BangumiInfo.sections[parenttext][index])
+
                     if BangumiInfo.sections[parenttext][index]["badge"] == "会员":
                         vip = True
+
+                elif type == AudioInfo and AudioInfo.isplaylist:
+                    index = [i for i, v in enumerate(AudioInfo.playlist) if v["title"] == itemtitle][0]
+
+                    AudioInfo.down_list.append(AudioInfo.playlist[index])
+
                 else: return
         
-        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
+        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0 and type != AudioInfo:
             on_error(401)
+
+        elif len(AudioInfo.down_list) == 0 and AudioInfo.isplaylist and type == AudioInfo:
+            on_error(407)
         
         elif vip and Config.user_sessdata == "":
             dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未登录的情况下将跳过下载\n确认继续吗？", "提示", wx.ICON_INFORMATION | wx.YES_NO)

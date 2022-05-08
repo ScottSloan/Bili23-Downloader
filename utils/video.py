@@ -34,6 +34,7 @@ class VideoParser:
 
         if aid_json["code"] != 0:
             self.on_error(400)
+            return
 
         bvid = aid_json["data"]["bvid"]
         self.set_bvid(bvid)
@@ -51,6 +52,7 @@ class VideoParser:
 
         if info_json["code"] != 0:
             self.on_error(400)
+            return
 
         info_data = info_json["data"]
 
@@ -91,6 +93,7 @@ class VideoParser:
 
         if video_json["code"] != 0:
             self.on_error(402)
+            return
 
         json_data = video_json["data"]
 
