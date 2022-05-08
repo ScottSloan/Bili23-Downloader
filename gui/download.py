@@ -173,6 +173,7 @@ class DownloadWindow:
     class DownloadItemPanel(wx.Panel):
 
         pid = title = bvid = cid = quality_desc = quality_id = type = status = None
+        gid = []
 
         onComplete_ = onMerge_ = None
 
@@ -292,13 +293,18 @@ class DownloadWindow:
                 os.system('xdg-open "{}"'.format(Config.download_path))
 
         def cancel_EVT(self, event):
-            if self.status == "downloading" or self.status == "waiting":
-                self.status = "cancelled"
+            ThreadPool.submit(self.cancel_EVT_thread)
+
+        def cancel_EVT_thread(self):
+            if self.status == "downloading":
                 self.onCancel()
             
             if self.status != "error":
                 self.onComplete_(update_title_only = True)
 
+            wx.CallAfter(self.update_panel)
+
+        def update_panel(self):
             self.Destroy()
 
             self.parent.main_sizer.Layout()
@@ -357,18 +363,21 @@ class DownloadWindow:
         def start_download(self):
             self.started_download = True
             DownloadWindow.downloading = True
+
+            self.speed_lab.SetLabel("正在开始下载...")
+
             self.status = "downloading"
 
             if self.type != AudioInfo:
                 self.get_video_durl()
 
-                downloader.download(self.video_durl, self.referer_url, "video_{}.mp4".format(self.pid))
-                downloader.download(self.audio_durl, self.referer_url, "audio_{}.mp3".format(self.pid))
+                self.gid.append(downloader.download(self.video_durl, self.referer_url, "video_{}.mp4".format(self.pid)))
+                self.gid.append(downloader.download(self.audio_durl, self.referer_url, "audio_{}.mp3".format(self.pid)))
 
             else:
                 self.get_audio_durl()
 
-                downloader.download(self.audio_durl, self.referer_url, "{}.mp3".format(self.title))
+                self.gid.append(downloader.download(self.audio_durl, self.referer_url, "{}.mp3".format(self.title)))
 
             downloader.start_listening(self.onDownload, self.onDownloadCompleted, self.OnError)
 
@@ -393,7 +402,18 @@ class DownloadWindow:
 
         def onCancel(self):
             del DownloadWindow.download_list[self.pid]
-            self.onCancel()
+
+            downloader.stop_listen()
+            self.speed_lab.SetLabel("正在取消下载...")
+
+            for i in self.gid:
+                try:
+                    downloader.remove(i)
+                except:
+                    pass
+            
+            taskbar.SetProgressState(TaskBarProgress.TBPF_NOPROGRESS)
+            DownloadWindow.downloading = False
 
         def OnError(self):
             del DownloadWindow.download_list[self.pid]

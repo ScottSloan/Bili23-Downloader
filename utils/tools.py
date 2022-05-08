@@ -33,7 +33,7 @@ def get_proxy() -> dict:
     proxy = {}
 
     if Config.enable_proxy:
-        proxy["https"] = "{}:{}".format(Config.proxy_address, Config.proxy_port)
+        proxy["http"] = "{}:{}".format(Config.proxy_address, Config.proxy_port)
 
     return proxy
 

@@ -369,6 +369,7 @@ class Tab4(wx.Panel):
         if not Config.enable_proxy:
             self.addresss_tc.Enable(False)
             self.port_tc.Enable(False)
+            self.test_btn.Enable(False)
 
         self.enable_proxy_chk.SetValue(Config.enable_proxy)
         self.addresss_tc.SetValue(Config.proxy_address)
@@ -420,21 +421,23 @@ class Tab4(wx.Panel):
         if state:
             self.addresss_tc.Enable(True)
             self.port_tc.Enable(True)
+            self.test_btn.Enable(True)
         else:
             self.addresss_tc.Enable(False)
             self.port_tc.Enable(False)
+            self.test_btn.Enable(False)
     
     def test_EVT(self, event):
         test_url = "https://www.bilibili.com"
 
         try:
             start_t = time.time()
-            req = requests.get(test_url, get_header(), timeout = 3)
+            req = requests.get(test_url, headers = get_header(), proxies = {"http":"{}:{}".format(self.addresss_tc.GetValue(), self.port_tc.GetValue())}, timeout = 3)
             end_t = time.time()
 
             wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_t - start_t), "提示", wx.ICON_INFORMATION).ShowModal()
-        except:
-            wx.MessageDialog(self, "测试失败\n\n", "提示", wx.ICON_WARNING).ShowModal()
+        except requests.RequestException as e:
+            wx.MessageDialog(self, "测试失败\n\n{}".format(e), "提示", wx.ICON_WARNING).ShowModal()
 
 conf = configparser.RawConfigParser()
 conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")

@@ -14,10 +14,10 @@ class Downloader(Client):
 
         super().__init__()
     
-    def download(self, url: str, referer: str, file_name: str):
+    def download(self, url: str, referer: str, file_name: str) -> str:
         options = {"out": file_name, "referer": referer, "dir": Config.download_path, "x": Config.max_thread}
 
-        self.add_uri([url], options = options)
+        return self.add_uri([url], options = options)
     
     def start_listening(self, on_download, on_complete, on_error):
         self.on_download, self.on_completd, self.loop = on_download, on_complete, True
@@ -30,6 +30,10 @@ class Downloader(Client):
 
         Thread(target = self.listen_to_notifications, kwargs = kwargs, name = "Notifications_Listener").start()
         Thread(target = self.on_listen, name = "Status_Listener").start()
+
+    def stop_listen(self):
+        self.loop = False
+        self.stop_listening()
 
     def on_listen(self):
         while self.loop:
@@ -44,6 +48,7 @@ class Downloader(Client):
                 downloadSpeed += int(task['downloadSpeed'])
 
             if not totalLength or self.pause_: continue
+            if not self.loop: return
 
             progress = int((completedLength / totalLength) * 100)
             speed = self.format_speed(downloadSpeed / 1024)
@@ -63,8 +68,7 @@ class Downloader(Client):
         stat = Stats(self.get_global_stat())
 
         if stat.num_active + stat.num_waiting == 0:
-            self.loop = False
-            self.stop_listening()
+            self.stop_listen()
 
             Thread(target = self.on_completd, name = "merge_thread").start()
 

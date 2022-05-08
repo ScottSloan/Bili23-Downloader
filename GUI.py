@@ -22,6 +22,7 @@ if __name__ == "__main__":
     process = subprocess.Popen(Config.ARIA2C_PATH, shell = True)
 
     app = wx.App()
+    app.SetAppName("Bili23 Downloader")
 
     main_window = Main(None)
     main_window.Show()
