@@ -26,7 +26,7 @@ pip install -r requirements.txt
 - **[Github Actions](https://github.com/ScottSloan/Bili23-Downloader/actions) 中提供已经打包完成的程序，可直接运行 (不包含 ffmpeg)**
 
 ### **主界面**
-![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)  
+![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)
 将视频链接粘贴到地址栏中，点击 `Get` 按钮解析视频链接  
 选择要下载的视频，点击 `下载视频` 按钮开始下载 
 
@@ -88,11 +88,12 @@ pip install -r requirements.txt
   - [X] 检查更新
 
 # 开发日志
-#### **[最新] Version 1.21 dev (2022-5-1)**
-- 现在任务栏上能显示当前下载状态
-- 优化部分细节效果
-- 修复视频信息预览页面显示问题
-- 修复 `utf-8` 编码问题
+#### **[最新] Version 1.21 dev (2022-5-8)**
+* 使用 `aria2` 实现下载功能
+* 现在任务栏上能显示当前下载状态
+* 优化部分细节效果
+* 修复视频信息预览页面显示问题
+* 修复其他问题
 
 <details>
 <summary>Version 1.20</summary>
@@ -111,12 +112,12 @@ pip install -r requirements.txt
 <summary>Version 1.14</summary>
 
 #### **Version 1.14 (2022-4-3)**
-- 支持字幕文件下载和自动添加字幕功能
-- 支持下载 AVC/H.264 和 HEVC/H.265 编码的视频
-- 支持活动页链接解析
-- 支持直播链接解析，可使用播放器播放
-- 支持使用代理下载视频
-- 彻底修复了视频不能下载的问题
+* 支持字幕文件下载和自动添加字幕功能
+* 支持下载 AVC/H.264 和 HEVC/H.265 编码的视频
+* 支持活动页链接解析
+* 支持直播链接解析，可使用播放器播放
+* 支持使用代理下载视频
+* 彻底修复了视频不能下载的问题
 
 </details>
 
@@ -124,11 +125,11 @@ pip install -r requirements.txt
 <summary>Version 1.13</summary>
 
 #### **Version 1.13 (2022-3-13)**
-- 番组现已支持 番剧/电影/纪录片/综艺/国创/电视剧 类型的下载
-- 现在合集视频能够显示完整列表
-- 添加了"设置"功能
-- 优化了部分细节效果
-- 修正了部分已知问题
+* 番组现已支持 番剧/电影/纪录片/综艺/国创/电视剧 类型的下载
+* 现在合集视频能够显示完整列表
+* 添加了"设置"功能
+* 优化了部分细节效果
+* 修正了部分已知问题
 
 </details>
 
@@ -136,8 +137,8 @@ pip install -r requirements.txt
 <summary>Version 1.12</summary>
 
 #### **Version 1.12 (2022-2-20)**
-- 程序初始版本发布
-- 可下载B站的视频和番剧，方便离线观看
+* 程序初始版本发布
+* 可下载B站的视频和番剧，方便离线观看
 
 </details>
 
