@@ -39,9 +39,9 @@ class LiveParser:
 
     def open_player(self):
         if Config.player_path == "":
-            from gui.templates import Message
+            from gui.notification import Notification
             
-            Message.show_message(self, 204)
+            Notification.show_dialog(self, 204)
         else:
             cmd = '{} "{}"'.format(Config.player_path, LiveInfo.playurl)
             subprocess.Popen(cmd, shell = True)

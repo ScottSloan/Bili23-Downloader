@@ -1,5 +1,4 @@
 import wx
-import sys
 from threading import Thread
 
 from utils.video import VideoInfo, VideoParser
@@ -18,6 +17,7 @@ from gui.processing import ProcessingWindow
 from gui.taskbar import TaskBarIcon
 from gui.user import UserWindow
 from gui.login import LoginWindow
+from gui.notification import Notification
 from gui.templates import *
 
 class MainWindow(wx.Frame):
@@ -122,8 +122,6 @@ class MainWindow(wx.Frame):
         TaskBarIcon()
     
     def Bind_EVT(self):
-        self.Bind(wx.EVT_CLOSE, self.On_Close)
-
         self.about_menu.Bind(wx.EVT_MENU, self.menu_EVT)
         self.tool_menu.Bind(wx.EVT_MENU, self.menu_EVT)
 
@@ -138,9 +136,6 @@ class MainWindow(wx.Frame):
         self.info_btn.Bind(wx.EVT_BUTTON, self.Load_info_window_EVT)
         self.download_manager_btn.Bind(wx.EVT_BUTTON, self.Load_download_window_EVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.download_EVT)
-
-    def On_Close(self, event):
-        sys.exit(0)
 
     def On_GetFocus(self, event):
         if self.address_tc.GetValue() == "请输入 URL 链接":
@@ -163,11 +158,11 @@ class MainWindow(wx.Frame):
             info = CheckUtils.CheckUpdate()
 
             if info == None:
-                Message.show_message(self, 200)
+                Notification.show_dialog(self, 200)
             elif info[0]:
                 CheckUtils.ShowMessageUpdate(self, info)
             else:
-                Message.show_message(self, 201)
+                Notification.show_dialog(self, 201)
 
         elif menuid == 120:
             import webbrowser
@@ -322,7 +317,7 @@ class MainWindow(wx.Frame):
         if self.show_download_window:
             self.download_window.Show()
         else:
-            self.download_window = DownloadWindow(self)
+            self.download_window = DownloadWindow.Window(self)
             self.download_window.Show()
             self.show_download_window = True
 

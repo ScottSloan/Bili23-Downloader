@@ -26,7 +26,7 @@ class CheckUtils:
         return [new, name, description, version]
     
     def CheckFFmpeg():
-        if not os.path.exists(Config.ffmpeg_path):
+        if not os.path.exists(Config.FFMPEG_PATH):
             dialog = wx.MessageDialog(None, "未安装 FFmpeg\n\n尚未安装 FFmpeg，可能无法正常下载视频，请问是否安装 FFmpeg？", "提示",  style = wx.ICON_INFORMATION | wx.YES_NO)
             dialog.SetYesNoLabels("安装", "取消")
 

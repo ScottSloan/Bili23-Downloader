@@ -25,15 +25,16 @@ class Config:
 
     VERSION = "1.21"
     VERSION_CODE = 121
-    RELEASE_DATE = "2022-5-1"
+    RELEASE_DATE = "2022-5-8"
     WEBSITE = "https://github.com/ScottSloan/Bili23-downloader"
 
     res_logo = res_pause = res_resume = res_delete = res_open = res_info = res_info_video = res_info_bangumi = ""
 
-    platform = platform.platform()
-    ffmpeg_path = os.path.join(os.getcwd(), "ffmpeg.exe") if platform.startswith("Windows") else "ffmpeg"
-    del_cmd = "del" if platform.startswith("Windows") else "rm"
-    rename_cmd = "ren" if platform.startswith("Windows") else "mv"
+    PLATFORM = platform.platform()
+    FFMPEG_PATH = os.path.join(os.getcwd(), "ffmpeg.exe") if PLATFORM.startswith("Windows") else "ffmpeg"
+    ARIA2C_PATH = "{} --quiet --enable-rpc=true".format(os.path.join(os.getcwd(), "aria2c.exe" if PLATFORM.startswith("Windows") else "aria2c"))
+    del_cmd = "del" if PLATFORM.startswith("Windows") else "rm"
+    rename_cmd = "ren" if PLATFORM.startswith("Windows") else "mv"
 
 class Load_Config:
     def __init__(self):

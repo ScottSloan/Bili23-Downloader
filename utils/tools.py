@@ -80,7 +80,7 @@ def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str):
         get_file_from_url(AudioInfo.lyric, "{}.lrc".format(name), False)
 
 def format_size(size: int) -> str:
-    if size > 1048576:
+    if size > 1024 * 1024:
         return "{:.1f} GB".format(size / 1024 / 1024)
     elif size > 1024:
         return "{:.1f} MB".format(size / 1024)

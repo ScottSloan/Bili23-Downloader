@@ -1,114 +1,72 @@
-import os
 import wx
 import time
-import requests
+from aria2p import Client, Stats
 from threading import Thread
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 from utils.config import Config
 from utils.tools import *
 
-class Downloader:
-    def __init__(self, on_start, on_download):
-        self.on_start, self.on_download = on_start, on_download
+class Downloader(Client):
+    pause_ = False
 
-        self.session = requests.session()
-        self.Thread_Pool = ThreadPoolExecutor(max_workers = Config.max_thread)
+    def __init__(self):
+        self.loop = False
 
-        self.status = "waiting"
-        self.started_download = False
+        super().__init__()
+    
+    def download(self, url: str, referer: str, file_name: str):
+        options = {"out": file_name, "referer": referer, "dir": Config.download_path, "x": Config.max_thread}
 
-    def add_url(self, url: str, referer_url: str, file_name: str):
-        if self.status == "cancelled": return
+        self.add_uri([url], options = options)
+    
+    def start_listening(self, on_download, on_complete, on_error):
+        self.on_download, self.on_completd, self.loop = on_download, on_complete, True
 
-        self.complete_size, self._flag, task = 0, True, []
-        self.file_path = os.path.join(Config.download_path, file_name)
+        kwargs = {
+            "on_download_complete": self.__on_completd,
+            "on_download_error": on_error,
+            "handle_signals": False
+        }
 
-        self.total_size = self.get_total_size(url, referer_url)
-
-        self.status = "downloading"
-
-        for chunk_list in self.calc_chunk(self.total_size, Config.max_thread):
-            task.append(self.Thread_Pool.submit(self.range_download, url, referer_url, chunk_list))
-
-        Thread(target = self.on_listen, name = "Listen_Thread").start()
-        wx.CallAfter(self.on_start, self.total_size / 1024)
-        self.started_download = True
-
-        wait(task, return_when = ALL_COMPLETED)
-        self._flag = False
-
-    def range_download(self, url: str, referer_url: str, chunk_list: list):
-        req = self.session.get(url, headers = get_header(referer_url, "", chunk_list), stream = True, proxies = get_proxy())
-
-        with open(self.file_path, "rb+") as f:
-            f.seek(chunk_list[0])
-
-            for chunk in req.iter_content(chunk_size = 32 * 1024):
-                while self.status == "pause":
-                    time.sleep(1)
-                    continue
-
-                if self.status == "cancelled": break
-                
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
-
-                    self.complete_size += len(chunk)
+        Thread(target = self.listen_to_notifications, kwargs = kwargs, name = "Notifications_Listener").start()
+        Thread(target = self.on_listen, name = "Status_Listener").start()
 
     def on_listen(self):
-        while self._flag:
-            if self.status == "pause":
-                time.sleep(1)
-                continue
+        while self.loop:
+            keys = ['gid', 'totalLength', 'completedLength', 'downloadSpeed']
+            info = self.tell_active(keys = keys)
 
-            temp_size = self.complete_size
+            totalLength = completedLength = downloadSpeed = 0
 
-            time.sleep(1)
+            for task in info:
+                totalLength += int(task['totalLength'])
+                completedLength += int(task['completedLength'])
+                downloadSpeed += int(task['downloadSpeed'])
+
+            if not totalLength or self.pause_: continue
+
+            progress = int((completedLength / totalLength) * 100)
+            speed = self.format_speed(downloadSpeed / 1024)
             
-            if not self._flag: return
-            if self.status == "pause": continue
-
-            speed = self.format_speed((self.complete_size - temp_size) / 1024)
-            progress = int(self.complete_size / self.total_size * 100)
-            size = "{}/{}".format(format_size(self.complete_size / 1024), format_size(self.total_size / 1024))
-
-            wx.CallAfter(self.on_download, progress, speed, size)
-
-        self.temp_size = 0
-
+            wx.CallAfter(self.on_download, progress, speed)
+            time.sleep(1)
+    
     def on_pause(self):
-        self.status = "pause"
+        self.pause_ = True
+        self.pause_all()
 
-    def on_resume(self):
-        self.status = "downloading"
+    def on_unpause(self):
+        self.pause_ = False
+        self.unpause_all()
+    
+    def __on_completd(self, gid):
+        stat = Stats(self.get_global_stat())
 
-    def on_cancel(self):
-        self._flag = False
-        self.status = "cancelled"
-        self.Thread_Pool.shutdown(wait = False)
+        if stat.num_active + stat.num_waiting == 0:
+            self.loop = False
+            self.stop_listening()
 
-    def get_total_size(self, url: str, referer_url: str) -> int:
-        req = self.session.head(url, headers = get_header(referer_url))
-
-        total_size = int(req.headers["Content-Length"])
-        
-        with open(self.file_path, "wb") as f:
-            f.truncate(total_size)
-            return total_size
-
-    def calc_chunk(self, total_size: int, chunk: int) -> list:
-        base_size = int(total_size / chunk)
-        chunk_list = []
-
-        for i in range(chunk):
-            start = i * base_size + 1 if i != 0 else 0 
-            end = (i + 1) * base_size if i != chunk - 1 else total_size
-
-            chunk_list.append([start, end])
-
-        return chunk_list
+            Thread(target = self.on_completd, name = "merge_thread").start()
 
     def format_speed(self, speed: int) -> str:
         return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else ""
