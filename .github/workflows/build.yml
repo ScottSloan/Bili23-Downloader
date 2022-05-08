@@ -39,6 +39,8 @@ jobs:
           del info -recurse
           del GUI.spec
           del GUI.py
+          del README.md
+          del issues.md
           
       - name: Store generated file
         uses: actions/upload-artifact@v2
