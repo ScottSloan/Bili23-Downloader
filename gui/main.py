@@ -45,14 +45,14 @@ class MainWindow(wx.Frame):
         self.address_lb = wx.StaticText(self.panel, -1, "地址")
         self.address_tc = wx.TextCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
         self.get_button = wx.Button(self.panel, -1, "Get")
-        self.help_button = wx.BitmapButton(self.panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = (16, 16)), style = wx.BORDER_NONE)
+        self.help_button = wx.BitmapButton(self.panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))), style = wx.BORDER_NONE)
         self.help_button.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(self.address_lb, 0, wx.ALL | wx.CENTER, 10)
         hbox1.Add(self.address_tc, 1, wx.EXPAND | wx.TOP | wx.BOTTOM, 10)
         hbox1.Add(self.get_button, 0, wx.ALL, 10)
-        hbox1.Add(self.help_button, 0, wx.ALL & (~wx.LEFT), 10)
+        hbox1.Add(self.help_button, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.list_lb = wx.StaticText(self.panel, -1, "视频")
         self.quality_lb = wx.StaticText(self.panel, -1, "清晰度")

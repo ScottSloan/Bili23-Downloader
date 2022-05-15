@@ -44,7 +44,7 @@ def get_file_from_url(url: str, filename: str, issubtitle: bool):
     with open(os.path.join(Config.download_path, get_legal_name(filename)), "w", encoding = "utf-8") as f:
         f.write(convert_json_to_srt(req.text) if issubtitle else req.text)
 
-def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str):
+def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str, lyric: str):
     if Config.save_danmaku:
         danmaku_url = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
 
@@ -76,8 +76,8 @@ def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str):
                 
     from utils.audio import AudioInfo 
     
-    if Config.save_lyric and AudioInfo.lyric != "":
-        get_file_from_url(AudioInfo.lyric, "{}.lrc".format(name), False)
+    if Config.save_lyric and lyric != "":
+        get_file_from_url(lyric, "{}.lrc".format(name), False)
 
 def format_size(size: int) -> str:
     if size > 1024 * 1024:

@@ -36,6 +36,8 @@ class TaskBarProgress:
     TBPF_PAUSED = 0x8
 
     def __init__(self):
+        if not Config.PLATFORM.startswith("Windows"): return
+
         from comtypes import client
         client.GetModule(os.path.join(os.getcwd(), "taskbar.tlb"))
 

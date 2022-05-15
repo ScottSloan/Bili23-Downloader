@@ -44,25 +44,25 @@ class DownloadWindow:
             if type == VideoInfo:
                 if VideoInfo.multiple:
                     for i in VideoInfo.down_pages:
-                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["part"], bvid = VideoInfo.bvid, cid = i["cid"], sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["part"], bvid = VideoInfo.bvid, cid = i["cid"], sid = None, lyric = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
                 elif VideoInfo.collection:
                     for i in VideoInfo.down_pages:
-                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = i["bvid"], cid = i["cid"], sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                        self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = i["bvid"], cid = i["cid"], sid = None, lyric = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
                 else:
-                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = VideoInfo.title, bvid = VideoInfo.bvid, cid = VideoInfo.cid, sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = VideoInfo.title, bvid = VideoInfo.bvid, cid = VideoInfo.cid, sid = None, lyric = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             elif type == BangumiInfo:
                 for i in BangumiInfo.down_episodes:
-                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["share_copy"], bvid = i["bvid"], cid = i["cid"], sid = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["share_copy"], bvid = i["bvid"], cid = i["cid"], sid = None, lyric = None, quality_desc = quality_desc, quality_id = quality_id, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             elif type == AudioInfo and AudioInfo.isplaylist:
                 for i in AudioInfo.down_list:
-                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = None, cid = None, sid = i["id"], quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                    self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = i["title"], bvid = None, cid = None, sid = i["id"], lyric = i["lyric"], quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             else:
-                self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = AudioInfo.title, bvid = None, cid = None, sid = AudioInfo.sid, quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
+                self.list_panel.download_list_panel.add_panel(pid = DownloadWindow.download_count, title = AudioInfo.title, bvid = None, cid = None, sid = AudioInfo.sid, lyric = AudioInfo.lyric, quality_desc = None, quality_id = None, type = type, onComplete = self.onComplete, onMerge = self.onMerge)
 
             self.list_panel.task_lb.SetLabel("{} 个任务正在下载".format(len(DownloadWindow.download_list)))
 
@@ -191,6 +191,7 @@ class DownloadWindow:
             self.bvid = kwargs["bvid"]
             self.cid = kwargs["cid"]
             self.sid = kwargs["sid"]
+            self.lyric = kwargs["lyric"]
             self.quality_desc = kwargs["quality_desc"]
             self.quality_id = kwargs["quality_id"]
             self.type = kwargs["type"]
@@ -265,9 +266,9 @@ class DownloadWindow:
             self.status = "downloading"
 
             if self.type != AudioInfo:
-                get_danmaku_subtitle_lyric(self.title, self.cid, self.bvid)
+                get_danmaku_subtitle_lyric(self.title, self.cid, self.bvid, None)
             else:
-                get_danmaku_subtitle_lyric(self.title, None, None)
+                get_danmaku_subtitle_lyric(self.title, None, None, self.lyric)
             
             self.start_download()
 
