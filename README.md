@@ -92,6 +92,7 @@ pip install -r requirements.txt
   - [X] 检查更新
 
 # 开发日志
+## 目前项目正在进行重构 (2022-10-18)
 #### **[最新] Version 1.22 dev (2022-5-8)**
 * 支持解析歌单链接
 
@@ -155,5 +156,5 @@ pip install -r requirements.txt
 
 
 # 联系方式
-- Email: World1019@sina.com
-- Blog: https://scott.hanloth.cn
+- Email: scottsloan@petalmail.com
+- Blog: http://scott.o5g.top
