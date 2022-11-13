@@ -1,5 +1,6 @@
-# Bili23-Downloader ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square) ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ScottSloan/Bili23-Downloader/Build?style=flat-square)
- 
+# Bili23-Downloader
+![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square) ![Python](https://img.shields.io/badge/Python-3.9.12-green?style=flat-square) ![wxPython](https://img.shields.io/badge/wxPython-4.2.0-green?style=flat-square) ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 
 + [下载地址](https://github.com/ScottSloan/Bili23-Downloader/releases)
@@ -7,6 +8,10 @@
 + [常见问题](https://github.com/ScottSloan/Bili23-Downloader/blob/main/issues.md)
 + [开发日志](#开发日志) 
 + [联系方式](#联系方式)
+
+### Bili23 Downloader 系列
+* GUI 桌面端版本
+* [CLI 命令行版本](https://github.com/ScottSloan/Bili23-Downloader-CLI)
 
 # 使用说明
 ### **安装**
@@ -103,58 +108,6 @@ pip install -r requirements.txt
 * 修复视频信息预览页面显示问题
 * 修复其他问题
 
-<details>
-<summary>Version 1.20</summary>
-
-#### **Version 1.20 (2022-4-22)**
-
-* 重写下载功能相关代码，并加入下载管理窗口
-* 新增支持下载 AV1 编码的视频
-* 支持解析音乐链接，可下载歌词
-* 支持扫码登录，一键获取 Cookie
-* 修复部分已知问题
-
-</details>
-
-<details>
-<summary>Version 1.14</summary>
-
-#### **Version 1.14 (2022-4-3)**
-* 支持字幕文件下载和自动添加字幕功能
-* 支持下载 AVC/H.264 和 HEVC/H.265 编码的视频
-* 支持活动页链接解析
-* 支持直播链接解析，可使用播放器播放
-* 支持使用代理下载视频
-* 彻底修复了视频不能下载的问题
-
-</details>
-
-<details>
-<summary>Version 1.13</summary>
-
-#### **Version 1.13 (2022-3-13)**
-* 番组现已支持 番剧/电影/纪录片/综艺/国创/电视剧 类型的下载
-* 现在合集视频能够显示完整列表
-* 添加了"设置"功能
-* 优化了部分细节效果
-* 修正了部分已知问题
-
-</details>
-
-<details>
-<summary>Version 1.12</summary>
-
-#### **Version 1.12 (2022-2-20)**
-* 程序初始版本发布
-* 可下载B站的视频和番剧，方便离线观看
-
-</details>
-
-# 致谢
-* [aria2](https://github.com/aria2/aria2)  
-* [ffmpeg](https://ffmpeg.org/)
-
-
 # 联系方式
 - Email: scottsloan@petalmail.com
-- Blog: http://scott.o5g.top
+- Blog: https://scott.o5g.top
