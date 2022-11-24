@@ -1,18 +1,24 @@
 import re
 import os
 import json
-import math
 import requests
 
-from utils.config import Config
+from .config import Config
 
 quality_wrap = {"超高清 8K":127, "杜比视界":126, "真彩 HDR":125, "超清 4K":120, "高清 1080P60":116, "高清 1080P+":112, "高清 1080P":80, "高清 720P":64, "清晰 480P":32, "流畅 360P":16}
+codec_wrap = {"AVC": 0, "HEVC": 1, "AV1": 2}
+
 
 def process_shortlink(url: str):
+    if not url.startswith("https"):
+        url = "https://" + url
+
     return requests.get(url, headers = get_header(), proxies = get_proxy()).url
+
 
 def get_legal_name(name: str):
     return re.sub('[/\:*?"<>|]', "", name)
+
 
 def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
     header = {"User-Agent":"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36"}
@@ -25,77 +31,73 @@ def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
         header["Range"] = "bytes={}-{}".format(chunk_list[0], chunk_list[1])
 
     if cookie != None and cookie != "":
-        header["Cookie"] = header["Cookie"] + ";SESSDATA=" + cookie
+        header["Cookie"] += ";SESSDATA=" + cookie
     
     return header
 
-def get_proxy() -> dict:
+
+def get_proxy():
     proxy = {}
 
     if Config.enable_proxy:
-        proxy["http"] = "{}:{}".format(Config.proxy_address, Config.proxy_port)
+        proxy["http"] = "{}:{}".format(Config.proxy_ip, Config.proxy_port)
 
     return proxy
 
-def get_file_from_url(url: str, filename: str, issubtitle: bool):
-    req = requests.get(url, headers = get_header(), proxies = get_proxy())
-    req.encoding = "utf-8"
-    
-    with open(os.path.join(Config.download_path, get_legal_name(filename)), "w", encoding = "utf-8") as f:
-        f.write(convert_json_to_srt(req.text) if issubtitle else req.text)
 
-def get_danmaku_subtitle_lyric(name: str, cid: int, bvid: str, lyric: str):
-    if Config.save_danmaku:
-        danmaku_url = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
+def remove_files(path: str, name: list):
+    for i in name:
+        os.remove(os.path.join(path, i))
 
-        get_file_from_url(danmaku_url, "{}.xml".format(name), False)
-
-    if Config.save_subtitle:
-        subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(cid, bvid)
-        req = requests.get(subtitle_url, headers = get_header(), proxies = get_proxy())
-
-        subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', req.text)[0]
-        subtitle_json = json.loads(subtitle_raw)["subtitles"]
-
-        subtitle_num = len(subtitle_json)
-
-        if subtitle_num == 0:
-            return
-
-        elif subtitle_num == 1:
-            down_url = "https:{}".format(subtitle_json[0]["subtitle_url"])
-        
-            get_file_from_url(down_url, "{}.srt".format(name), True)
-
-        else:
-            for i in range(subtitle_num):
-                lan_name = subtitle_json[i]["lan_doc"]
-                down_url = "https:{}".format(subtitle_json[i]["subtitle_url"])
-            
-                get_file_from_url(down_url, "({}) {}.srt".format(lan_name, name), True)
-                
-    from utils.audio import AudioInfo 
-    
-    if Config.save_lyric and lyric != "":
-        get_file_from_url(lyric, "{}.lrc".format(name), False)
 
 def format_size(size: int) -> str:
-    if size > 1024 * 1024:
+    if size > 1048576:
         return "{:.1f} GB".format(size / 1024 / 1024)
     elif size > 1024:
         return "{:.1f} MB".format(size / 1024)
     else:
         return "{:.1f} KB".format(size)
 
-def format_data(data: int) -> str:
-    if data >= 100000000:
-        return "{:.1f}亿".format(data / 100000000)
-    elif data >= 10000:
-        return "{:.1f}万".format(data / 10000)
-    else:
-        return str(data)
 
-def format_duration(duration: int) -> str:
+def save_pic(contents, path: str):
+    with open(path, "wb") as f:
+        f.write(contents)
+
+
+def get_face_pic(url: str):
+    face_path = os.path.join(os.getcwd(), "res", "face.jpg")
+    
+    
+    if not os.path.exists(face_path):
+        save_pic(requests.get(url).content, face_path)
+
+    return face_path
+
+
+def get_level_pic(level: int):
+    web_url = "https://scottsloan.github.io/Bili23-Downloader/level/level{}.png".format(level)
+    level_path = os.path.join(os.getcwd(), "res", "level.png")
+    
+    
+    if not os.path.exists(level_path):
+        save_pic(requests.get(web_url).content, level_path)
+    
+    return level_path
+    
+
+def check_update():
+    update_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/update.json")
+    update_json = json.loads(update_request.text)
+
+    return update_json
+
+
+def find_str(pattern: str, string: str):
+    if len(re.findall(pattern, string)) != 0: return True
+    else: return False
+
+
+def format_duration(duration: int):
     if duration > 10000:
         duration = duration / 1000
 
@@ -104,28 +106,3 @@ def format_duration(duration: int) -> str:
     secs = int(duration - hours * 3600 - mins * 60)
     
     return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
-
-def convert_json_to_srt(data: str) -> str:
-    json_data = json.loads(data)
-
-    file = ""
-    for index, value in enumerate(json_data["body"]):
-        file += "{}\n".format(index)
-        start = value["from"]
-        end = value["to"]
-        file += process_duration(start, False) + " --> " + process_duration(end, True) + "\n"
-        file += value["content"] + "\n\n"
-    
-    return file
-
-def process_duration(duration: int, isend: bool) -> str:
-    hours = math.floor(duration) // 3600
-    mins = (math.floor(duration) - hours * 3600) // 60
-    secs = math.floor(duration) - hours * 3600 - mins * 60
-
-    if not isend:
-        msecs = int(math.modf(duration)[0] * 100)
-    else:
-        msecs = abs(int(math.modf(duration)[0] * 100 -1))
-
-    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) + "," + str(msecs).zfill(2)

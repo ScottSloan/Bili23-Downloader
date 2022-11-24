@@ -1,104 +1,62 @@
 import wx
-import wx.adv
 import wx.dataview
 
 from utils.config import Config
-from utils.error import ProcessError
-from utils.live import LiveInfo
+from utils.tools import format_duration
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
-from utils.audio import AudioInfo
-from utils.tools import format_duration
 
 class Frame(wx.Frame):
-    def __init__(self, parent, title, size, default_panel = True):
+    def __init__(self, parent, title, has_panel = True):
         wx.Frame.__init__(self, parent, -1, title)
 
-        self.SetSize(self.FromDIP((size)))
-        self.SetIcon(wx.Icon(Config.res_logo))
+        self.SetIcon(wx.Icon(Config.res_icon))
 
-        if default_panel: self.panel = wx.Panel(self, -1)
+        if has_panel: self.panel = wx.Panel(self, -1)
 
-        self.CenterOnParent()
-
+    def dlgbox(self, message, caption, style):
+        wx.MessageDialog(self, message, caption, style).ShowModal()
+        
 class Dialog(wx.Dialog):
-    def __init__(self, parent, title, size, default_panel = True):
+    def __init__(self, parent, title, size):
         wx.Dialog.__init__(self, parent, -1, title)
-
-        self.SetSize(self.FromDIP((size)))
 
         self.panel = wx.Panel(self, -1)
 
-        self.CenterOnParent()
+    def dlgbox(self, message, caption, style):
+        wx.MessageDialog(self, message, caption, style).ShowModal()
 
-class InfoBar(wx.InfoBar):
-    def __init__(self, parent):
-        wx.InfoBar.__init__(self, parent, -1)
-    
-    def ShowMessage(self, msg, flags=...):
-        super().Dismiss()
-        return super().ShowMessage(msg, flags)
-    
-    def show_message_info(self, code: int):
-        if code == 400:
-            super().ShowMessage("错误：请求失败，请检查地址是否有误", flags = wx.ICON_ERROR)
-            raise ValueError("Invalid URL")
-            
-        elif code == 401:
-            super().ShowMessage("警告：请选择要下载的视频", flags = wx.ICON_ERROR)
-            raise ProcessError("None videos selected to download")
-        
-        elif code == 402:
-            super().ShowMessage("错误：获取视频信息失败", flags = wx.ICON_WARNING)
-            raise ProcessError("Failed to get the video info")
-
-        elif code == 403:
-            super().ShowMessage("错误：无法获取视频下载地址", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to download the video")
-
-        elif code == 404:
-            super().ShowMessage("警告：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
-            raise ProcessError("Cookie required to continue")
-
-        elif code == 405:
-            super().ShowMessage("错误：检查更新失败", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to check update")
-
-        elif code == 406:
-            super().ShowMessage("错误：无法获取直播源", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to get live address")
-
-        elif code == 407:
-            super().ShowMessage("警告：请选择要下载的音乐", flags = wx.ICON_ERROR)
-            raise ProcessError("None audios selected to download")
-
-        if code == 100:
-            super().ShowMessage("提示：有新版本更新可用", flags = wx.ICON_INFORMATION)
+class ProcessError(Exception):
+    pass
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
-    def __init__(self, parent):
+    def __init__(self, parent, onError):
+        self.onError = onError
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
         self.init_list()
 
-        self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.on_checkitem)
+        self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
 
     def init_list(self):
+        # 初始化视频列表
         self.rootitems = self.all_list_items = []
 
         self.ClearColumns()
         self.DeleteAllItems()
-        self.AppendColumn("序号", width = self.FromDIP(100))
-        self.AppendColumn("标题", width = self.FromDIP(400))
+        self.AppendColumn("序号", width = self.FromDIP(75))
+        self.AppendColumn("标题", width = self.FromDIP(375))
         self.AppendColumn("备注", width = self.FromDIP(50))
         self.AppendColumn("时长", width = self.FromDIP(75))
-
+    
     def set_video_list(self):
+        # 显示视频列表
         VideoInfo.multiple = True if len(VideoInfo.pages) > 1 else False
 
         self.rootitems.append("视频")
         items_content = {}
         
+        # 判断视频是否为合集视频
         if VideoInfo.collection:
             items_content["视频"] = [[str(index + 1), value["title"], "", format_duration(value["arc"]["duration"])] for index, value in enumerate(VideoInfo.episodes)]
         else:
@@ -108,6 +66,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.append_list(items_content, ismultiple)
 
     def set_bangumi_list(self):
+        # 显示番组列表
         items_content = {}
 
         for key, value in BangumiInfo.sections.items():
@@ -120,37 +79,35 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.append_list(items_content, False)
 
-    def set_live_list(self):
-        items_content = {}
+    # def set_live_list(self):
+    #     items_content = {}
 
-        items_content["直播"] = [["1", LiveInfo.title, "", ""]]
+    #     items_content["直播"] = [["1", LiveInfo.title, "", ""]]
 
-        self.rootitems.append("直播")
+    #     self.rootitems.append("直播")
 
-        self.append_list(items_content, False)
+    #     self.append_list(items_content, False)
     
-    def set_audio_list(self):
-        items_content = {}
+    # def set_audio_list(self):
+    #     items_content = {}
 
-        if AudioInfo.isplaylist:
-            items_content["歌单"] = [["{}".format(index + 1), value["title"], "", format_duration(value["duration"])] for index, value in enumerate(AudioInfo.playlist)]
+    #     items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
 
-            self.rootitems.append("歌单")
-        else:
-            items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
+    #     self.rootitems.append("音乐")
 
-            self.rootitems.append("音乐")
+    #     self.append_list(items_content, False)
 
-        self.append_list(items_content, False)
-
-    def append_list(self, items_content: dict, ismultiple: bool):
+    def append_list(self, items_content: dict, multiple: bool):
+        # 显示列表
         root = self.GetRootItem()
         self.all_list_items = []
 
+        # 遍历 items_content
         for i in items_content:
             rootitem = self.AppendItem(root, i)
-
-            if ismultiple:
+            
+            # 如果视频为分p或合集，则显示大标题
+            if multiple:
                 self.SetItemText(rootitem, 1, VideoInfo.title)
             
             self.all_list_items.append(rootitem)
@@ -166,27 +123,33 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.CheckItem(rootitem, state = wx.CHK_CHECKED)
             self.Expand(rootitem)
 
-    def on_checkitem(self, event):
+    def onCheckItem(self, event):
+        # 勾选项目事件
         item = event.GetItem()
-        itemtext = self.GetItemText(item, 0)
+
+        # 同步更改父项勾选状态
+        item_text = self.GetItemText(item, 0)
         self.UpdateItemParentStateRecursively(item)
 
-        if itemtext in self.rootitems:
+        if item_text in self.rootitems:
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-    def get_allcheckeditem(self, type, on_error) -> bool:
-        vip = False
+    def get_allcheckeditem(self, type):
+        # 获取所有选中的项目
         VideoInfo.down_pages.clear()
         BangumiInfo.down_episodes.clear()
 
+        # 遍历 all_list_items
         for i in self.all_list_items:
             text = self.GetItemText(i, 0)
             state = bool(self.GetCheckedState(i))
 
+            # 忽略父项，仅获取子项
             if text not in self.rootitems and state:
-                itemtitle = self.GetItemText(i, 1)
-                parenttext = self.GetItemText(self.GetItemParent(i), 0)
+                item_title = self.GetItemText(i, 1)
+                parent_text = self.GetItemText(self.GetItemParent(i), 0)
                 
+                # 分类
                 if type == VideoInfo:
                     index = int(self.GetItemText(i, 0))
 
@@ -196,27 +159,53 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                         VideoInfo.down_pages.append(VideoInfo.pages[index - 1])
 
                 elif type == BangumiInfo:
-                    index = [i for i, v in enumerate(BangumiInfo.sections[parenttext]) if v["share_copy"] == itemtitle][0]
-
-                    BangumiInfo.down_episodes.append(BangumiInfo.sections[parenttext][index])
-
-                    if BangumiInfo.sections[parenttext][index]["badge"] == "会员":
-                        vip = True
-
-                elif type == AudioInfo and AudioInfo.isplaylist:
-                    index = [i for i, v in enumerate(AudioInfo.playlist) if v["title"] == itemtitle][0]
-
-                    AudioInfo.down_list.append(AudioInfo.playlist[index])
-
-                else: return
+                    index = [i for i, v in enumerate(BangumiInfo.sections[parent_text]) if v["share_copy"] == item_title][0]
+                    BangumiInfo.down_episodes.append(BangumiInfo.sections[parent_text][index])
         
-        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0 and type != AudioInfo:
-            on_error(401)
+        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
+            self.onError(401)
+            return False
+        else: 
+            return True
 
-        elif len(AudioInfo.down_list) == 0 and AudioInfo.isplaylist and type == AudioInfo:
-            on_error(407)
-        
-        elif vip and Config.user_sessdata == "":
-            dialog = wx.MessageDialog(self, "确认下载\n\n所选视频中包含大会员视频，在未登录的情况下将跳过下载\n确认继续吗？", Config.APPNAME, wx.ICON_INFORMATION | wx.YES_NO)
-            if dialog.ShowModal() == wx.ID_NO:
-                return True
+class InfoBar(wx.InfoBar):
+    def __init__(self, parent):
+        wx.InfoBar.__init__(self, parent, -1)
+    
+    def ShowMessage(self, msg, flags=...):
+        # 在每次弹出消息前先隐藏之前的消息
+        super().Dismiss()
+        return super().ShowMessage(msg, flags)
+    
+    def _show_message(self, msg: str, flags, flag_code):
+        flag_wrap = {0: "错误", 1: "警告", 2: "提示"}
+
+        super().ShowMessage("{}：{}".format(flag_wrap[flag_code], msg), flags)
+        raise ProcessError(msg)
+
+    def ShowMessageInfo(self, code: int):
+
+        if code == 400:
+            msg = "请求失败，请检查地址是否有误"
+
+            self._show_message(msg, wx.ICON_ERROR, 0)
+
+        elif code == 401:
+            msg = "请选择要下载的视频"
+            
+            self._show_message(msg, wx.ICON_WARNING, 1)
+
+        elif code == 403:
+            super().ShowMessage("错误：无法获取视频下载地址", flags = wx.ICON_ERROR)
+            raise ProcessError("Failed to download the video")
+
+        elif code == 404:
+            super().ShowMessage("警告：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
+            raise ProcessError("Cookie required to continue")
+
+        elif code == 405:
+            super().ShowMessage("错误：检查更新失败", flags = wx.ICON_ERROR)
+            raise ProcessError("Failed to check update")
+
+        if code == 100:
+            super().ShowMessage("提示：有新版本更新可用", flags = wx.ICON_INFORMATION)

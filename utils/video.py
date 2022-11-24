@@ -1,71 +1,91 @@
 import re
-import json
 import requests
-from utils.config import Config
+import json
 
-from utils.tools import *
-from utils.error import ProcessError
+from .tools import get_header, get_proxy
+from .config import Config
 
 class VideoInfo:
-    url = bvid = cid = ""
+    
 
-    title = desc = cover = ""
+    url = bvid = ""
+    
+    aid = cid = 0
 
-    view = like = coin = danmaku = favorite = reply = quality = duration = 0
+    title = ""
+    
+    quality = duration = 0
 
-    pages = episodes = down_pages = quality_id = quality_desc = []
+    pages = down_pages = episodes = []
 
-    multiple = collection = False
+    quality_id = quality_desc = []
+
+    multiple = collection = ""
+
+class ProcessError(Exception):
+    pass
 
 class VideoParser:
-    def aid_api(self, aid: str) -> str:
-        return "https://api.bilibili.com/x/web-interface/archive/stat?aid={}".format(aid)
+    def __init__(self, onError, onRedirect):
+        self.onError = onError
+        self.onRedirect = onRedirect
 
-    def info_api(self) -> str:
-        return "https://api.bilibili.com/x/web-interface/view?bvid={}".format(VideoInfo.bvid)
+    @property
+    def aid_api(self):
+        
+        return "https://api.bilibili.com/x/web-interface/archive/stat?aid=" + VideoInfo.aid
+    
+    @property
+    def info_api(self):
+        
+        return "https://api.bilibili.com/x/web-interface/view?bvid=" + VideoInfo.bvid
 
-    def quality_api(self, cid: int) -> str:
-        return "https://api.bilibili.com/x/player/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(VideoInfo.bvid, cid)
-
+    @property
+    def quality_api(self):
+        
+        return "https://api.bilibili.com/x/player/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(VideoInfo.bvid, VideoInfo.cid)
+    
     def get_aid(self, url: str):
-        aid = re.findall(r"av[0-9]*", url)[0][2:]
-        aid_request = requests.get(self.aid_api(aid), headers = get_header(), proxies = get_proxy())
+        
+        VideoInfo.aid = re.findall(r"av[0-9]*", url)[0][2:]
+        
+        aid_request = requests.get(self.aid_api, headers = get_header(), proxies = get_proxy())
         aid_json = json.loads(aid_request.text)
 
-        if aid_json["code"] != 0:
-            self.on_error(400)
-            return
+        self.check_json(aid_json)
 
         bvid = aid_json["data"]["bvid"]
         self.set_bvid(bvid)
 
     def get_bvid(self, url: str):
+        
         bvid = re.findall(r"BV\w*", url)[0]
         self.set_bvid(bvid)
 
     def set_bvid(self, bvid: str):
+        
         VideoInfo.bvid, VideoInfo.url = bvid, "https://www.bilibili.com/video/" + bvid
 
     def get_video_info(self):
-        info_request = requests.get(self.info_api(), headers = get_header(VideoInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
+        
+        info_request = requests.get(self.info_api, headers = get_header(VideoInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
         info_json = json.loads(info_request.text)
 
-        if info_json["code"] != 0:
-            self.on_error(400)
-            return
+        self.check_json(info_json)
 
         info_data = info_json["data"]
 
+        
         if "redirect_url" in info_data:
-            self.on_redirect(info_data["redirect_url"])
+            self.onRedirect(info_data["redirect_url"])
             raise ProcessError("Bangumi type detect")
         
         VideoInfo.title = info_data["title"]
-        VideoInfo.desc = info_data["desc"] if info_data["desc"] != "-" else "暂无简介"
-        VideoInfo.cover = info_data["pic"]
         VideoInfo.duration = info_data["duration"]
+        VideoInfo.cid = info_data["cid"]
         VideoInfo.pages = info_data["pages"]
 
+        
         if "ugc_season" in info_data:
             VideoInfo.collection = True
 
@@ -77,39 +97,30 @@ class VideoParser:
             VideoInfo.collection = False
             VideoInfo.episodes = []
 
-        VideoInfo.cid = info_data["cid"]
-
-        info_stat = info_data["stat"]
-        VideoInfo.view = format_data(info_stat["view"])
-        VideoInfo.like = format_data(info_stat["like"])
-        VideoInfo.coin = format_data(info_stat["coin"])
-        VideoInfo.danmaku = format_data(info_stat["danmaku"])
-        VideoInfo.favorite = format_data(info_stat["favorite"])
-        VideoInfo.reply = format_data(info_stat["reply"])
-        
     def get_video_quality(self):
-        video_request = requests.get(self.quality_api(VideoInfo.cid), headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy())
+        
+        video_request = requests.get(self.quality_api, headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy())
         video_json = json.loads(video_request.text)
 
-        if video_json["code"] != 0:
-            self.on_error(402)
-            return
+        self.check_json(video_json)
 
         json_data = video_json["data"]
 
         VideoInfo.quality_id = json_data["accept_quality"]
         VideoInfo.quality_desc = json_data["accept_description"]
 
-    def parse_url(self, url: str, on_redirect, on_error):
-        self.on_redirect, self.on_error = on_redirect, on_error
-
+    def parse_url(self, url: str):
+        
+        
         if "av" in url:
             self.get_aid(url)
-        elif "BV" in url:
+        else:
             self.get_bvid(url)
         
         self.get_video_info()
         self.get_video_quality()
-
-    def get_full_url(self, bvid: str):
-        return "https://www.bilibili.com/video/" + bvid
+    
+    def check_json(self, json):
+        
+        if json["code"] != 0:
+            self.onError(400)

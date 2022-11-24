@@ -1,364 +1,421 @@
 import wx
+import os
+import datetime
 from threading import Thread
 
+from .templates import Frame, TreeListCtrl, InfoBar
+from .about import AboutWindow
+from .processing import ProcessingWindow
+from .login import LoginWindow
+from .user import UserWindow
+from .settings import SettingWindow
+from .download import DownloadWindow
+from .debug import DebugWindow
+
+from utils.config import Config
+from utils.tools import process_shortlink, find_str, check_update, get_face_pic, quality_wrap
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
-from utils.live import LiveInfo, LiveParser
-from utils.audio import AudioInfo, AudioParser
-from utils.config import Config
-from utils.tools import *
-from utils.check import CheckUtils
 
-from gui.info import InfoWindow
-from gui.download import DownloadWindow
-from gui.settings import SettingWindow
-from gui.about import AboutWindow
-from gui.processing import ProcessingWindow
-from gui.taskbar import TaskBarIcon
-from gui.user import UserWindow
-from gui.login import LoginWindow
-from gui.notification import Notification
-from gui.templates import *
 
-class MainWindow(wx.Frame):
+class MainWindow(Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, "Bili23 Downloader")
+        Frame.__init__(self, parent, Config.app_name)
 
-        self.SetIcon(wx.Icon(Config.res_logo))
-        self.SetSize(self.FromDIP((800, 480)))
-        self.Center()
+        self.init_UI()
 
-        self.panel = wx.Panel(self, -1)
-
-        self.InitUI()
-        
         self.Bind_EVT()
 
-        onshow_thread = Thread(target = self.onShow)
-        onshow_thread.start()
+        self.CenterOnParent()
+
+        self.init_parser()
+
+        wx.CallAfter(self.init_userinfo)
+
+        self.check_ffmpeg()
+
+        self.check_login()
+
+    def init_parser(self):
+        # 初始化 VideoParser 和 BangumiParser
+        self.video_parser = VideoParser(self.onError, self.onRedirect)
+        self.bangumi_parser = BangumiParser(self.onError)
+
+        # 设置焦点
+        wx.CallAfter(self.treelist.SetFocus)
 
         self.show_download_window = False
+        
+    def init_userinfo(self):
+        # 显示用户信息
+        # 判断是否登录
+        if Config.user_name != "":
+            # 获取头像
+            face = wx.Image(get_face_pic(Config.user_face)).Scale(36, 36)
 
-    def InitUI(self):
+            self.face.Show()
+            self.face.SetBitmap(wx.Bitmap(face, wx.BITMAP_SCREEN_DEPTH))
+
+            # 显示用户名
+            self.uname_lab.SetLabel(Config.user_name)
+        else:
+            self.face.Hide()
+
+            self.uname_lab.SetLabel("未登录")
+        
+        self.userinfo_hbox.Layout()
+
+        self.vbox.Layout()
+    
+    def init_UI(self):
+        # 信息提示栏
         self.infobar = InfoBar(self.panel)
 
-        self.address_lb = wx.StaticText(self.panel, -1, "地址")
-        self.address_tc = wx.TextCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
-        self.get_button = wx.Button(self.panel, -1, "Get")
-        self.help_button = wx.BitmapButton(self.panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))), style = wx.BORDER_NONE)
-        self.help_button.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        # 地址栏
+        url_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1.Add(self.address_lb, 0, wx.ALL | wx.CENTER, 10)
-        hbox1.Add(self.address_tc, 1, wx.EXPAND | wx.TOP | wx.BOTTOM, 10)
-        hbox1.Add(self.get_button, 0, wx.ALL, 10)
-        hbox1.Add(self.help_button, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        url_lab = wx.StaticText(self.panel, -1, "地址")
+        self.url_box = wx.TextCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
+        self.get_btn = wx.Button(self.panel, -1, "Get")
 
-        self.list_lb = wx.StaticText(self.panel, -1, "视频")
-        self.quality_lb = wx.StaticText(self.panel, -1, "清晰度")
-        self.quality_cb = wx.Choice(self.panel, -1)
+        url_hbox.Add(url_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        url_hbox.Add(self.url_box, 1, wx.EXPAND | wx.ALL & ~(wx.LEFT), 10)
+        url_hbox.Add(self.get_btn, 0, wx.ALL & ~(wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2.Add(self.list_lb, 0, wx.LEFT | wx.CENTER, 10)
-        hbox2.AddStretchSpacer(1)
-        hbox2.Add(self.quality_lb, 0, wx.CENTER | wx.RIGHT, 10)
-        hbox2.Add(self.quality_cb, 0, wx.RIGHT, 10)
+        # 清晰度栏
+        quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.list_lc = TreeListCtrl(self.panel)
+        self.type_lab = wx.StaticText(self.panel, -1, "视频")
+        quality_lab = wx.StaticText(self.panel, -1, "清晰度")
+        self.quality_choice = wx.Choice(self.panel, -1)
 
-        self.info_btn = wx.Button(self.panel, -1, "视频信息", size = self.FromDIP((90, 30)))
-        self.info_btn.Enable(False)
-        self.download_manager_btn = wx.Button(self.panel, -1, "下载管理", size = self.FromDIP((90, 30)))
+        quality_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        quality_hbox.AddStretchSpacer()
+        quality_hbox.Add(quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        quality_hbox.Add(self.quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+
+        # 视频列表
+        self.treelist = TreeListCtrl(self.panel, self.onError)
+        self.treelist.SetSize(self.FromDIP((800, 260)))
+
+        # 底栏
+        bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.FromDIP((90, 30)))
         self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((90, 30)))
         self.download_btn.Enable(False)
+        
+        # 用户信息
+        self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox3.Add(self.info_btn, 0, wx.BOTTOM | wx.LEFT, 10)
-        hbox3.AddStretchSpacer(1)
-        hbox3.Add(self.download_manager_btn)
-        hbox3.Add(self.download_btn, 0, wx.ALL & (~wx.TOP), 10)
+        self.face = wx.StaticBitmap(self.panel, -1)
+        self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
+        self.uname_lab = wx.StaticText(self.panel, -1, "用户名")
+        self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.infobar, 0, wx.EXPAND)
-        vbox.Add(hbox1, 0, wx.EXPAND)
-        vbox.Add(hbox2, 0, wx.EXPAND)
-        vbox.Add(self.list_lc, 1, wx.EXPAND | wx.ALL, 10)
-        vbox.Add(hbox3, 0, wx.EXPAND)
+        self.userinfo_hbox.Add(self.face, 0, wx.ALL & ~(wx.TOP) & ~(wx.RIGHT), 10)
+        self.userinfo_hbox.Add(self.uname_lab, 0, wx.ALL & ~(wx.TOP) | wx.ALIGN_CENTER, 10)
 
-        self.panel.SetSizer(vbox)
+        bottom_hbox.Add(self.userinfo_hbox, 0, wx.EXPAND)
+        bottom_hbox.AddStretchSpacer()
+        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL & ~(wx.TOP), 10)
+        bottom_hbox.Add(self.download_btn, 0, wx.ALL & ~(wx.TOP) & ~(wx.LEFT), 10)
 
-        self.InitMenuBar()
-        self.InitTaskBar()
+        # 窗口 Sizer
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
 
-    def InitMenuBar(self):
+        self.vbox.Add(self.infobar, 1, wx.EXPAND)
+        self.vbox.Add(url_hbox, 0, wx.EXPAND)
+        self.vbox.Add(quality_hbox, 0, wx.EXPAND)
+        self.vbox.Add(self.treelist, 1, wx.ALL | wx.EXPAND, 10)
+        self.vbox.Add(bottom_hbox, 0, wx.EXPAND)
+
+        self.panel.SetSizer(self.vbox)
+        self.init_menubar()
+
+        # 适应窗口大小
+        self.vbox.Fit(self)
+
+    def init_menubar(self):
         menu_bar = wx.MenuBar()
-        self.about_menu = wx.Menu()
+        self.help_menu = wx.Menu()
         self.tool_menu = wx.Menu()
 
-        check_menuitem = wx.MenuItem(self.about_menu, 110, "检查更新(&U)")
-        help_menuitem = wx.MenuItem(self.about_menu, 120, "使用帮助(&C)")
-        about_menuitem = wx.MenuItem(self.about_menu, 130, "关于(&A)")
+        check_menuitem = wx.MenuItem(self.help_menu, 100, "检查更新(&U)")
+        log_menuitem = wx.MenuItem(self.help_menu, 110, "更新日志(&L)")
+        help_menuitem = wx.MenuItem(self.help_menu, 120, "使用帮助(&C)")
+        about_menuitem = wx.MenuItem(self.help_menu, 130, "关于(&A)")
 
-        user_menuitem = wx.MenuItem(self.tool_menu, 150, "用户中心(&E)")
-        option_menuitem = wx.MenuItem(self.tool_menu, 140, "设置(&S)")
-
+        user_menuitem = wx.MenuItem(self.tool_menu, 200, "用户中心(&E)")
+        option_menuitem = wx.MenuItem(self.tool_menu, 210, "设置(&S)")
+        debug_menuitem = wx.MenuItem(self.tool_menu, 220, "调试(&D)")
+        
         menu_bar.Append(self.tool_menu, "工具(&T)")
-        menu_bar.Append(self.about_menu, "帮助(&H)")
+        menu_bar.Append(self.help_menu, "帮助(&H)")
 
         self.tool_menu.Append(user_menuitem)
         self.tool_menu.AppendSeparator()
         self.tool_menu.Append(option_menuitem)
+        self.tool_menu.Append(debug_menuitem)
 
-        self.about_menu.Append(check_menuitem)
-        self.about_menu.AppendSeparator()
-        self.about_menu.Append(help_menuitem)
-        self.about_menu.Append(about_menuitem)
+        self.help_menu.Append(check_menuitem)
+        self.help_menu.Append(log_menuitem)
+        self.help_menu.AppendSeparator()
+        self.help_menu.Append(help_menuitem)
+        self.help_menu.Append(about_menuitem)
 
         self.SetMenuBar(menu_bar)
     
-    def InitTaskBar(self):
-        if not Config.show_icon: return
-
-        TaskBarIcon()
-    
     def Bind_EVT(self):
-        self.about_menu.Bind(wx.EVT_MENU, self.menu_EVT)
-        self.tool_menu.Bind(wx.EVT_MENU, self.menu_EVT)
+        # 绑定事件
+        self.Bind(wx.EVT_MENU, self.menu_EVT)
 
-        self.address_tc.Bind(wx.EVT_TEXT_ENTER, self.get_url_EVT)
-        self.address_tc.Bind(wx.EVT_SET_FOCUS, self.On_GetFocus)
-        self.address_tc.Bind(wx.EVT_KILL_FOCUS, self.On_KillFocus)
+        self.url_box.Bind(wx.EVT_TEXT_ENTER, self.get_btn_EVT)
+        
+        self.url_box.Bind(wx.EVT_SET_FOCUS, self.onSetFoucus)
+        self.url_box.Bind(wx.EVT_KILL_FOCUS, self.onKillFocus)
 
-        self.get_button.Bind(wx.EVT_BUTTON, self.get_url_EVT)
-        self.help_button.Bind(wx.EVT_BUTTON, self.show_help_info_EVT)
+        self.get_btn.Bind(wx.EVT_BUTTON, self.get_btn_EVT)
+        
+        self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.userinfo_EVT)
+        self.face.Bind(wx.EVT_LEFT_DOWN, self.userinfo_EVT)
 
-        self.quality_cb.Bind(wx.EVT_CHOICE, self.select_quality)
-        self.info_btn.Bind(wx.EVT_BUTTON, self.Load_info_window_EVT)
-        self.download_manager_btn.Bind(wx.EVT_BUTTON, self.Load_download_window_EVT)
-        self.download_btn.Bind(wx.EVT_BUTTON, self.download_EVT)
-
-    def On_GetFocus(self, event):
-        if self.address_tc.GetValue() == "请输入 URL 链接":
-            self.address_tc.Clear()
-            self.address_tc.SetForegroundColour("black")
-
-        event.Skip()
-
-    def On_KillFocus(self, event):
-        if self.address_tc.GetValue() == "":
-            self.address_tc.SetValue("请输入 URL 链接")
-            self.address_tc.SetForegroundColour(wx.Colour(117, 117, 117))
-
-        event.Skip()
+        self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.download_mgr_btn_EVT)
+        self.download_btn.Bind(wx.EVT_BUTTON, self.download_btn_EVT)
 
     def menu_EVT(self, event):
-        menuid = event.GetId()
+        evt_id = event.GetId()
 
-        if menuid == 110:
-            info = CheckUtils.CheckUpdate()
+        # 检查更新
+        if evt_id == 100:
+            wx.CallAfter(self.check_update)
 
-            if info == None:
-                Notification.show_dialog(self, 200)
-            elif info[0]:
-                CheckUtils.ShowMessageUpdate(self, info)
-            else:
-                Notification.show_dialog(self, 201)
+        # 更新日志
+        elif evt_id == 110:
+            self.dlgbox(open(os.path.join(os.getcwd(), "CHANGELOG"), "r", encoding = "utf-8").read(), "更新日志", wx.ICON_INFORMATION)
 
-        elif menuid == 120:
-            import webbrowser
-            webbrowser.open("https://scott.hanloth.cn/index.php/archives/12/")
-
-        elif menuid == 130:
+        # 关于
+        elif evt_id == 130:
             AboutWindow(self)
+
+        # 用户中心
+        elif evt_id == 200:
+            # 判断是否登录
+            if Config.user_name == "":
+                LoginWindow(self).ShowWindowModal()
+            else:
+                UserWindow(self).ShowWindowModal()
+
+        # 设置
+        elif evt_id == 210:
+            SettingWindow(self).ShowWindowModal()
+
+        # 调试
+        elif evt_id == 220:
+            DebugWindow(self).Show()
             
-        elif menuid == 140:
-            setting_window = SettingWindow(self)
-            setting_window.ShowModal()
-        
-        elif menuid == 150:
-            if Config.user_uname == "":
-                login_window = LoginWindow(self)
-                login_window.ShowWindowModal()
-            
-            if Config.user_uname != "":
-                user_window = UserWindow(self)
-                user_window.ShowWindowModal()
-            
-    def get_url_EVT(self, event):
-        url = str(self.address_tc.GetValue())
+    def get_btn_EVT(self, event):
+        # 识别链接
+        url = self.url_box.GetValue()
 
         if url == "": return
 
-        self.quality_cb.Clear()
-        self.list_lb.SetLabel("视频")
-        self.info_btn.Enable(False)
-        self.download_btn.Enable(False)
-
-        VideoInfo.down_pages = BangumiInfo.down_episodes = []
+        self.reset()
 
         self.processing_window = ProcessingWindow(self)
 
-        work_thread = Thread(target = self.get_url_thread, args = (url,))
-        work_thread.start()
+        # 开启线程
+        Thread(target = self.get_thread, args = (url,)).start()
 
         self.processing_window.ShowWindowModal()
-        
-    def get_url_thread(self, url: str):
-        wx.CallAfter(self.list_lc.init_list)
 
-        if "b23.tv" in url:
+    def get_thread(self, url: str):
+        wx.CallAfter(self.treelist.init_list)
+
+        # 短链接
+        if find_str("b23.tv", url):
             url = process_shortlink(url)
         
-        if "live" in url:
-            self.type = LiveInfo
-            live_parser.parse_url(url, self.on_error)
+        # if "live" in url:
+        #     self.theme = LiveInfo
+        #     live_parser.parse_url(url)
 
-            self.set_live_list()
+        #     self.set_live_list()
 
-        elif "au" in url:
-            self.type = AudioInfo
-            audio_parser.parse_url(url, self.on_error)
+        # elif "audio" in url:
+        #     self.theme = AudioInfo
+        #     audio_parser.parse_url(url)
 
-            self.set_audio_list()
-
-        elif "BV" in url or "av" in url:
+        #     self.set_audio_list()
+        # 视频链接
+        if find_str("BV|av", url):
             self.type = VideoInfo
-            video_parser.parse_url(url, self.on_redirect, self.on_error)
+            self.video_parser.parse_url(url)
 
             self.set_video_list()
             self.set_quality(VideoInfo)
 
-        elif "ep" in url or "ss" in url or "md" in url:
+        # 番组链接
+        elif find_str("ep|ss|md", url):
             self.type = BangumiInfo
-            bangumi_parser.parse_url(url, self.on_error)
+            self.bangumi_parser.parse_url(url)
 
             self.set_bangumi_list()
             self.set_quality(BangumiInfo)
+
+        # 无法识别的链接，抛出异常
         else:
-            self.on_error(400)
+            self.onError(400)
 
-        wx.CallAfter(self.get_url_finish)
-        
-    def get_url_finish(self):
-        if self.type == LiveInfo:
-            self.quality_cb.Enable(False)
-            self.info_btn.Enable(False)
-            self.download_btn.SetLabel("播放")
+        wx.CallAfter(self.get_finished)
 
-        elif self.type == AudioInfo:
-            self.quality_cb.Enable(False)
-            self.info_btn.Enable(True)
+    def reset(self):
+        # 重置相关变量和控件
+        self.quality_choice.Clear()
+        self.type_lab.SetLabel("视频")
+        self.download_btn.Enable(False)
 
-            if AudioInfo.isplaylist:
-                self.info_btn.SetLabel("歌单信息")
-                self.download_btn.SetLabel("下载歌单")
-            else:
-                self.info_btn.SetLabel("音乐信息")
-                self.download_btn.SetLabel("下载音乐")
+        VideoInfo.down_pages.clear()
+        BangumiInfo.down_episodes.clear()
 
-        else:
-            self.quality_cb.Enable(True)
-            self.info_btn.Enable(True)
+    def get_finished(self):
+        # 解析链接完成
+        # if self.theme == LiveInfo:
+        #     self.quality_cb.Enable(False)
+        #     self.download_btn.SetLabel("播放")
 
-            self.info_btn.SetLabel("视频信息")
-            self.download_btn.SetLabel("下载视频")
+        # elif self.theme == AudioInfo:
+        #     self.quality_choice.Enable(False)
+        #     self.download_btn.SetLabel("下载音频")
+
+        # else:
+        #     self.quality_choice.Enable(True)
+        #     self.download_btn.SetLabel("下载视频")
 
         self.download_btn.Enable(True)
 
         self.processing_window.Hide()
 
-        self.list_lc.SetFocus()
+        self.treelist.SetFocus()
 
         if Config.user_sessdata == "" and self.type == BangumiInfo:
-            self.infobar.show_message_info(200)
+            self.infobar.ShowMessageInfo(200)
 
     def set_video_list(self):
-        count = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
+        # 显示视频列表
+        videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
 
-        wx.CallAfter(self.list_lc.set_video_list)
-        self.list_lb.SetLabel("视频 (共 {} 个)".format(count))
+        wx.CallAfter(self.treelist.set_video_list)
+        self.type_lab.SetLabel("视频 (共 %d 个)" % videos)
 
     def set_bangumi_list(self):
-        count = len(BangumiInfo.episodes)
+        # 显示番组列表
+        bangumis = len(BangumiInfo.episodes)
 
-        wx.CallAfter(self.list_lc.set_bangumi_list)
-        self.list_lb.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, count))
-
-    def set_live_list(self):
-        wx.CallAfter(self.list_lc.set_live_list)
-        self.list_lb.SetLabel("直播")
-
-    def set_audio_list(self):
-        wx.CallAfter(self.list_lc.set_audio_list)
-
-        if AudioInfo.isplaylist:
-            self.list_lb.SetLabel("歌单 (共 {} 首)".format(AudioInfo.count))
-        else:
-            self.list_lb.SetLabel("音乐 (共 1 首)")
+        wx.CallAfter(self.treelist.set_bangumi_list)
+        self.type_lab.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, bangumis))
 
     def set_quality(self, type):
-        self.quality_cb.Set(type.quality_desc)
+        # 显示清晰度列表
+        self.quality_choice.Set(type.quality_desc)
+        
+        # 选择默认清晰度
         type.quality = Config.default_quality if Config.default_quality in type.quality_id else type.quality_id[0]
-        self.quality_cb.Select(type.quality_id.index(type.quality))
-
-    def select_quality(self, event):
-        if self.type.quality_id[event.GetSelection()] in [127, 125, 120, 116, 112] and Config.user_sessdata == "":
-            self.quality_cb.Select(self.type.quality_id.index(80))
-            wx.CallAfter(self.on_error, 404)
-
-        self.type.quality = self.type.quality_id[event.GetSelection()]
-
-    def download_EVT(self, event):
-        if self.type == LiveInfo:
-            live_parser.open_player()
-        else:
-            if self.list_lc.get_allcheckeditem(self.type, self.on_error): return
-
-            self.Load_download_window_EVT(0)
-
-            quality_desc = self.quality_cb.GetStringSelection()
-
-            if self.type != AudioInfo:
-                self.download_window.add_download_task(self.type, quality_desc, quality_wrap[quality_desc])
-            else:
-                self.download_window.add_download_task(self.type, None, None)
-
-    def Load_info_window_EVT(self, event):
-        self.info_window = InfoWindow(self, VideoInfo.title if self.type == VideoInfo else BangumiInfo.title, self.type)
-        self.info_window.Show()
+        self.quality_choice.Select(type.quality_id.index(type.quality))
     
-    def Load_download_window_EVT(self, event):
+    def download_btn_EVT(self, event):
+        if not self.treelist.get_allcheckeditem(self.type): return
+
+        self.download_mgr_btn_EVT(0)
+
+        self.download_window.add_download_task(self.type, quality_wrap[self.quality_choice.GetStringSelection()])
+
+    def download_mgr_btn_EVT(self, event):
+        # 下载管理按钮事件
         if self.show_download_window:
+            # 如果下载管理窗口已经打开，则切换到该窗口
             self.download_window.Show()
+
         else:
-            self.download_window = DownloadWindow.Window(self)
+            # 初始化下载管理窗口
+            self.download_window = DownloadWindow(self)
             self.download_window.Show()
+
+            # 设置下载管理窗口打开状态
             self.show_download_window = True
 
-    def show_help_info_EVT(self, event):
-        wx.MessageDialog(self, "支持输入的 URL 链接\n\n用户投稿类型视频链接\n剧集（番剧，电影，纪录片等）链接\n活动页链接\n直播链接\n音乐、歌单链接\nb23.tv 短链接", Config.APPNAME, wx.ICON_INFORMATION).ShowModal()
+    def userinfo_EVT(self, event):
+        # 用户信息事件
+        # 判断登录状态
+        if Config.user_name != "":
+            UserWindow(self).ShowWindowModal()
+        else:
+            LoginWindow(self).ShowWindowModal()
 
-    def on_error(self, code: int):
+    def check_update(self):
+        # 检查更新
+        json = check_update()
+
+        # 如果有新版本，则弹出对话框
+        if int(json["version_code"]) > Config.app_version_code:
+            dlg = wx.MessageDialog(self, "有新的更新可用\n\nVersion {} 已于 {} 发布，详细更新日志请访问项目主页".format(json["version"], json["date"]), "检查更新", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg.SetYesNoLabels("查看", "忽略")
+
+            # 打开浏览器，进入 release 页面
+            if dlg.ShowModal() == wx.ID_YES:
+                import webbrowser
+
+                webbrowser.open(json["url"])
+            
+        else:
+            self.dlgbox("当前没有可用的更新", "检查更新", wx.ICON_INFORMATION)
+    
+    def check_ffmpeg(self):
+        if not Config.ffmpeg_available:
+            dlg = wx.MessageDialog(self, "未安装 ffmpeg\n\n检测到您尚未安装 ffmpeg，无法正常合成视频，是否现在安装？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
+
+            if dlg.ShowModal() == wx.ID_YES:
+                import webbrowser
+
+                webbrowser.open("https://scott.o5g.top/index.php/archives/120/")
+
+    def check_login(self):
+        import locale
+
+        #locale.setlocale(locale.LC_ALL, "English_United-Status")
+        expire = expire = datetime.datetime.strptime(Config.user_expire, "%Y-%m-%d %H:%M:%S")
+        
+        if expire == "":
+            return
+
+        now = datetime.datetime.now()
+
+        if (expire - now).days <= 0:
+            wx.MessageDialog(self, "登录过期\n\n登录状态过期，请重新扫码登录。", "提示", wx.ICON_INFORMATION).ShowModal()
+
+    def onSetFoucus(self, event):
+        # 地址栏得到焦点事件
+        if self.url_box.GetValue() == "请输入 URL 链接":
+            self.url_box.Clear()
+            self.url_box.SetForegroundColour("black")
+
+        event.Skip()
+    
+    def onKillFocus(self, event):
+        # 地址栏失去焦点事件
+        if self.url_box.GetValue() == "":
+            self.url_box.SetValue("请输入 URL 链接")
+            self.url_box.SetForegroundColour(wx.Colour(117, 117, 117))
+        
+        event.Skip()
+
+    def onError(self, code: int):
+        # 抛出异常回调函数
         wx.CallAfter(self.processing_window.Hide)
 
-        self.infobar.show_message_info(code)
+        self.infobar.ShowMessageInfo(code)
 
-    def on_redirect(self, url: str):
-        work_thread = Thread(target = self.get_url_thread, args = (url,))
-        work_thread.start()
-
-    def onShow(self):
-        if not Config.auto_check_update: return
-            
-        self.update_info = CheckUtils.CheckUpdate()
-
-        if self.update_info == None:
-            self.infobar.show_message_info(405)
-
-        elif self.update_info[0]:
-            self.infobar.show_message_info(100)
-    
-video_parser = VideoParser()
-bangumi_parser = BangumiParser()
-live_parser = LiveParser()
-audio_parser = AudioParser()
+    def onRedirect(self, url: str):
+        # 检测到番组时重定向
+        Thread(target = self.get_thread, args = (url,)).start()
+        

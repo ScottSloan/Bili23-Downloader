@@ -3,7 +3,8 @@ import qrcode
 import requests
 from io import BytesIO 
 
-from utils.tools import get_header, get_proxy
+from .tools import get_header, get_proxy
+from .config import Config
 
 class LoginInfo:
     url = oauthKey = ""
@@ -15,50 +16,68 @@ class Login:
         self.init_qrcode()
 
     @property
-    def get_qrcode_url(self):
+    def qrcode_url(self):
+        
         return "https://passport.bilibili.com/qrcode/getLoginUrl"
 
     @property
-    def get_login_info_url(self):
+    def login_info_url(self):
+        
         return "https://passport.bilibili.com/qrcode/getLoginInfo"
 
     @property
-    def get_user_info_url(self):
+    def user_info_url(self):
+        
         return "https://api.live.bilibili.com/User/getUserInfo"
 
+    @property
+    def user_detail_info_url(self):
+        
+        return "https://api.bilibili.com/x/space/acc/info?mid=" + Config.user_uid
+
     def init_qrcode(self):
-        req = self.session.get(self.get_qrcode_url, headers = get_header(), proxies = get_proxy())
+        
+        req = self.session.get(self.qrcode_url, headers = get_header(), proxies = get_proxy())
         login_json = json.loads(req.text)
 
         LoginInfo.url = login_json["data"]["url"]
         LoginInfo.oauthKey = login_json["data"]["oauthKey"]
     
     def get_qrcode_pic(self):
+        
         pic = BytesIO()
 
-        img = qrcode.make(LoginInfo.url)
-        img.save(pic)
+        qrcode.make(LoginInfo.url).save(pic)
 
         return pic.getvalue()
     
-    def check_isscan(self) -> bool:
+    def check_scan(self):
+        
         data = {'oauthKey':LoginInfo.oauthKey, "gourl":"https://passport.bilibili.com/account/security"}
 
-        req = self.session.post(self.get_login_info_url, data = data, headers = get_header(), proxies = get_proxy())
+        req = self.session.post(self.login_info_url, data = data, headers = get_header(), proxies = get_proxy())
         req_json = json.loads(req.text)
 
-        return [req_json["status"], req_json["data"] if not req_json["status"] else 0]
+        return {
+            "status": req_json["status"],
+            "code": req_json["data"] if not req_json["status"] else 0}
     
     def get_user_info(self) -> dict:
-        req = self.session.get(self.get_user_info_url, proxies = get_proxy())
-        req_json = json.loads(req.text)
+        
+        info_requests = self.session.get(self.user_info_url, proxies = get_proxy())
+        info_json = json.loads(info_requests.text)["data"]
+                
+        Config.user_uid = str(info_json["uid"])
 
-        data_json = req_json["data"]
-
-        uuid = data_json["uid"]
-        uname = data_json["uname"]
-        face = data_json["face"]
-
-        vip = True if data_json["vip"] != 0 and data_json["svip"] != 0 else False
-
-        return {"uuid":uuid, "uname":uname, "face":face, "vip":vip, "sessdata":self.session.cookies["SESSDATA"]}
+        
+        detail_request = self.session.get(self.user_detail_info_url, headers = get_header(), proxies = get_proxy())
+        detail_json = json.loads(detail_request.text)["data"]
+        
+        
+        return {
+            "uid": info_json["uid"],
+            "uname": info_json["uname"],
+            "face": info_json["face"],
+            "level": detail_json["level"],
+            "sessdata": self.session.cookies["SESSDATA"]
+        }
