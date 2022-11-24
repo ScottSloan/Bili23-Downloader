@@ -1,6 +1,7 @@
 import wx
 import os
 import datetime
+import subprocess
 from threading import Thread
 
 from .templates import Frame, TreeListCtrl, InfoBar
@@ -16,7 +17,7 @@ from utils.config import Config
 from utils.tools import process_shortlink, find_str, check_update, get_face_pic, quality_wrap
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
-
+from utils.live import LiveInfo, LiveParser
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -28,24 +29,22 @@ class MainWindow(Frame):
 
         self.CenterOnParent()
 
-        self.init_parser()
+        self.init_utils()
 
+    def init_utils(self):
         wx.CallAfter(self.init_userinfo)
 
         self.check_ffmpeg()
-
         self.check_login()
 
-    def init_parser(self):
-        # 初始化 VideoParser 和 BangumiParser
         self.video_parser = VideoParser(self.onError, self.onRedirect)
         self.bangumi_parser = BangumiParser(self.onError)
-
-        # 设置焦点
+        self.live_parser = LiveParser(self.onError)
+        
         wx.CallAfter(self.treelist.SetFocus)
 
         self.show_download_window = False
-        
+
     def init_userinfo(self):
         # 显示用户信息
         # 判断是否登录
@@ -232,22 +231,15 @@ class MainWindow(Frame):
     def get_thread(self, url: str):
         wx.CallAfter(self.treelist.init_list)
 
-        # 短链接
         if find_str("b23.tv", url):
             url = process_shortlink(url)
-        
-        # if "live" in url:
-        #     self.theme = LiveInfo
-        #     live_parser.parse_url(url)
-
-        #     self.set_live_list()
 
         # elif "audio" in url:
         #     self.theme = AudioInfo
         #     audio_parser.parse_url(url)
 
         #     self.set_audio_list()
-        # 视频链接
+
         if find_str("BV|av", url):
             self.type = VideoInfo
             self.video_parser.parse_url(url)
@@ -255,7 +247,6 @@ class MainWindow(Frame):
             self.set_video_list()
             self.set_quality(VideoInfo)
 
-        # 番组链接
         elif find_str("ep|ss|md", url):
             self.type = BangumiInfo
             self.bangumi_parser.parse_url(url)
@@ -263,7 +254,12 @@ class MainWindow(Frame):
             self.set_bangumi_list()
             self.set_quality(BangumiInfo)
 
-        # 无法识别的链接，抛出异常
+        if find_str("live", url):
+            self.type = LiveInfo
+            self.live_parser.parse_url(url)
+
+            self.set_live_list()
+
         else:
             self.onError(400)
 
@@ -279,10 +275,9 @@ class MainWindow(Frame):
         BangumiInfo.down_episodes.clear()
 
     def get_finished(self):
-        # 解析链接完成
-        # if self.theme == LiveInfo:
-        #     self.quality_cb.Enable(False)
-        #     self.download_btn.SetLabel("播放")
+        if self.type == LiveInfo:
+            self.quality_choice.Enable(False)
+            self.download_btn.SetLabel("播放")
 
         # elif self.theme == AudioInfo:
         #     self.quality_choice.Enable(False)
@@ -298,9 +293,6 @@ class MainWindow(Frame):
 
         self.treelist.SetFocus()
 
-        if Config.user_sessdata == "" and self.type == BangumiInfo:
-            self.infobar.ShowMessageInfo(200)
-
     def set_video_list(self):
         # 显示视频列表
         videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
@@ -315,6 +307,10 @@ class MainWindow(Frame):
         wx.CallAfter(self.treelist.set_bangumi_list)
         self.type_lab.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, bangumis))
 
+    def set_live_list(self):
+        wx.CallAfter(self.treelist.set_live_list)
+        self.type_lab.SetLabel("直播")
+
     def set_quality(self, type):
         # 显示清晰度列表
         self.quality_choice.Set(type.quality_desc)
@@ -324,6 +320,10 @@ class MainWindow(Frame):
         self.quality_choice.Select(type.quality_id.index(type.quality))
     
     def download_btn_EVT(self, event):
+        if self.type == LiveInfo:
+            self.open_player()
+            return
+
         if not self.treelist.get_allcheckeditem(self.type): return
 
         self.download_mgr_btn_EVT(0)
@@ -351,6 +351,14 @@ class MainWindow(Frame):
             UserWindow(self).ShowWindowModal()
         else:
             LoginWindow(self).ShowWindowModal()
+
+    def open_player(self):
+        if Config.player_path == "":
+            wx.MessageDialog(self, "未找到播放器\n\n无法找到播放器，请设置播放器路径后再试", "错误", wx.ICON_WARNING).ShowModal()
+        
+        else:
+            cmd = '{} "{}"'.format(Config.player_path, LiveInfo.playurl)
+            subprocess.Popen(cmd, shell = True)
 
     def check_update(self):
         # 检查更新
@@ -380,14 +388,11 @@ class MainWindow(Frame):
                 webbrowser.open("https://scott.o5g.top/index.php/archives/120/")
 
     def check_login(self):
-        import locale
-
-        #locale.setlocale(locale.LC_ALL, "English_United-Status")
-        expire = expire = datetime.datetime.strptime(Config.user_expire, "%Y-%m-%d %H:%M:%S")
-        
-        if expire == "":
+        if Config.user_expire == "":
             return
 
+        expire = datetime.datetime.strptime(Config.user_expire, "%Y-%m-%d %H:%M:%S")
+        
         now = datetime.datetime.now()
 
         if (expire - now).days <= 0:

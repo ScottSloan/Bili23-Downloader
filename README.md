@@ -1,7 +1,5 @@
 # Bili23-Downloader
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Windows](https://img.shields.io/badge/Windows-blue?logo=windows&style=flat) ![Linux](https://img.shields.io/badge/Linux-white?logo=linux&style=flat)
-
-![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.9.12-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.0-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
+![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.9.12-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.0-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
 
 
 Bili23 Downloader GUI 桌面端版本
@@ -21,7 +19,7 @@ Bili23 Downloader GUI 桌面端版本
 # 使用说明
 ### **安装主程序**
 
-请前往[Release](https://github.com/ScottSloan/Bili23-Downloader/releases)页面，下载最新版本。
+请前往 [Release] (https://github.com/ScottSloan/Bili23-Downloader/releases)页面，下载最新版本。
 
 ### **安装 ffmpeg**
 由于 `dash` 格式视频依赖 `ffmpeg` 进行合成，需事先安装
@@ -104,8 +102,8 @@ sudo apt install ffmpeg
   - [X] 下载字幕
   - [X] 下载歌词
 
-# 开发日志
-### **Version 1.30 即将发布**
+# 更新日志
+### **Version 1.30 b0 (2022-11-24)**
 时隔 6 个月，Bili23 Downloader 迎来 Version 1.30 更新！
 
 本次更新内容如下：
@@ -129,6 +127,14 @@ ffmpeg 安装更加简便，现已提供高速下载链接，以及简明的安�
 另外，本项目的开发并未停止，它将继续进行下去。
 
 感谢大家的支持！
+
+### Version 1.30 b1 (2022-11-24)
+本次更新内容如下：
+* 修复本地化问题
+* 修复登录有效期判断问题
+* 修复剧集列表显示问题
+* 修复无法保存设置的问题
+* 其它细节优化
 
 # 联系方式
 - Email: scottsloan@petalmail.com

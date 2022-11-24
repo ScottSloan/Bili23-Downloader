@@ -2,9 +2,10 @@ import wx
 import wx.dataview
 
 from utils.config import Config
-from utils.tools import format_duration
+from utils.tools import *
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
+from utils.live import LiveInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, has_panel = True):
@@ -73,20 +74,20 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if not Config.show_sections and key != "正片":
                 continue
 
-            items_content[key] = [[str(i["title"]) if i["title"] != "正片" else "1", i["share_copy"] if i["title"] != "正片" else BangumiInfo.title, i["badge"], format_duration(i["duration"])] for i in value]
+            items_content[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode["duration"])] for index, episode in enumerate(value)]
 
             self.rootitems.append(key)
 
         self.append_list(items_content, False)
 
-    # def set_live_list(self):
-    #     items_content = {}
+    def set_live_list(self):
+        items_content = {}
 
-    #     items_content["直播"] = [["1", LiveInfo.title, "", ""]]
+        items_content["直播"] = [["1", LiveInfo.title, "", ""]]
 
-    #     self.rootitems.append("直播")
+        self.rootitems.append("直播")
 
-    #     self.append_list(items_content, False)
+        self.append_list(items_content, False)
     
     # def set_audio_list(self):
     #     items_content = {}
@@ -184,7 +185,6 @@ class InfoBar(wx.InfoBar):
         raise ProcessError(msg)
 
     def ShowMessageInfo(self, code: int):
-
         if code == 400:
             msg = "请求失败，请检查地址是否有误"
 

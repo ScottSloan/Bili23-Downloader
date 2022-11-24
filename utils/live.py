@@ -3,8 +3,8 @@ import json
 import requests
 import subprocess
 
-from utils.config import Config
-from utils.tools import *
+from .config import Config
+from .tools import *
 
 class LiveInfo:
     id = room_id = live_status = 0
@@ -12,25 +12,29 @@ class LiveInfo:
     title = playurl = ""
 
 class LiveParser:
-    def info_api(self) -> str:
+    def __init__(self, onError):
+        self.onError = onError
+    
+    @property
+    def info_api(self):
         return "https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids={}&req_biz=web_room_componet".format(LiveInfo.id)
 
-    def playurl_api(self) -> str:
+    @property
+    def playurl_api(self):
         return "https://api.live.bilibili.com/xlive/web-room/v1/playUrl/playUrl?cid={}&platform=h5&otype=json&quality=1".format(LiveInfo.room_id)
     
     def get_id(self, url: str):
         try:
             LiveInfo.id = re.findall(r"com/[0-9]*", url)[0][4:]
         except:
-            self.on_error(400)
+            self.onError(400)
 
     def get_live_info(self):
-        live_req = requests.get(self.info_api(), headers = get_header(), proxies = get_proxy())
+        live_req = requests.get(self.info_api, headers = get_header(), proxies = get_proxy())
         live_json = json.loads(live_req.text)
 
         if live_json["code"] != 0:
-            self.on_error(400)
-            return
+            self.onError(400)
 
         live_data = live_json["data"]["by_room_ids"]
 
@@ -39,27 +43,15 @@ class LiveParser:
         LiveInfo.live_status = live_data[str(LiveInfo.room_id)]["live_status"]
 
     def get_live_playurl(self):
-        live_req = requests.get(self.playurl_api(), headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
+        live_req = requests.get(self.playurl_api, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
         live_json = json.loads(live_req.text)
 
         if live_json["code"] != 0:
-            self.on_error(406)
-            return
+            self.onError(406)
 
         LiveInfo.playurl = live_json["data"]["durl"][0]["url"]
 
-    def open_player(self):
-        if Config.player_path == "":
-            from gui.notification import Notification
-            
-            Notification.show_dialog(self, 202)
-        else:
-            cmd = '{} "{}"'.format(Config.player_path, LiveInfo.playurl)
-            subprocess.Popen(cmd, shell = True)
-
-    def parse_url(self, url: str, on_error):
-        self.on_error = on_error
-
+    def parse_url(self, url: str):
         self.get_id(url)
 
         self.get_live_info()

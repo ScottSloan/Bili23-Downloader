@@ -26,31 +26,25 @@ class BangumiParser:
     
     @property
     def media_api(self):
-        
         return "https://api.bilibili.com/pgc/review/user?media_id=" + BangumiInfo.mid
 
     @property
     def info_api(self):
-        
         return "https://api.bilibili.com/pgc/view/web/season?{}={}".format(self.argument, self.value)
 
     @property
     def quality_api(self):
-        
         return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(BangumiInfo.bvid, BangumiInfo.cid)
     
     def get_epid(self, url: str):
-        
         BangumiInfo.epid = re.findall(r"ep[0-9]*", url)[0][2:]
         self.argument, self.value = "ep_id", BangumiInfo.epid
 
     def get_season_id(self, url: str):
-        
         BangumiInfo.ssid = re.findall(r"ss[0-9]*", url)[0][2:]
         self.argument, self.value = "season_id", BangumiInfo.ssid
 
     def get_media_id(self, url: str):
-        
         BangumiInfo.mid = re.findall(r"md[0-9]*", url)[0][2:]
 
         media_request = requests.get(self.media_api, headers = get_header(), proxies = get_proxy())
@@ -62,7 +56,6 @@ class BangumiParser:
         self.argument, self.value = "season_id", BangumiInfo.ssid
     
     def get_bangumi_info(self):
-        
         info_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy())
         info_json = json.loads(info_request.text)
 
@@ -75,7 +68,6 @@ class BangumiParser:
         BangumiInfo.episodes = info_result["episodes"]
         BangumiInfo.sections["正片"] = BangumiInfo.episodes
 
-        
         if "section" in info_result and Config.show_sections:
             info_section = info_result["section"]
 
@@ -95,7 +87,6 @@ class BangumiParser:
         self.get_bangumi_type(info_result["type"])
 
     def get_bangumi_type(self, type_id):
-        
         if type_id == 1:
             BangumiInfo.type = "番剧"
         elif type_id == 2:
@@ -110,7 +101,6 @@ class BangumiParser:
             BangumiInfo.type = "综艺"
 
     def get_bangumi_quality(self):
-        
         bangumi_request = requests.get(self.quality_api, headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
         bangumi_json = json.loads(bangumi_request.text)
         
@@ -122,7 +112,6 @@ class BangumiParser:
         BangumiInfo.quality_desc = json_data["accept_description"]
 
     def parse_url(self, url: str):
-        
         if "ep" in url:
             self.get_epid(url)
         elif "ss" in url:
@@ -133,7 +122,6 @@ class BangumiParser:
         self.get_bangumi_info()
         self.get_bangumi_quality()
         
-    def check_json(self, json):
-        
+    def check_json(self, json):  
         if json["code"] != 0:
             self.onError(400)
