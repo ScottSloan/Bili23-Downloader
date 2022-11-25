@@ -79,7 +79,7 @@ class DownloadTab(wx.Panel):
         self.thread_slider.Bind(wx.EVT_SLIDER, self.onThreadSlide)
 
     def load_conf(self):
-        self.path_box.SetValue(Config.download_path)
+        self.path_box.SetValue(Config.download_path if Config.download_path != "" else os.path.join(os.getcwd(), "download"))
         
         self.thread_lab.SetLabel("多线程数：{}".format(Config.max_thread))
         self.thread_slider.SetValue(Config.max_thread)
@@ -89,10 +89,12 @@ class DownloadTab(wx.Panel):
         self.show_toast_chk.SetValue(Config.show_notification)
 
     def save_conf(self):
-        Config.download_path = self.path_box.GetValue()
+        codec_dict = dict(map(reversed, codec_wrap.items()))
+
+        Config.download_path = self.path_box.GetValue() if self.path_box.GetValue() != os.path.join(os.getcwd(), "download") else ""
         Config.max_thread = self.thread_slider.GetValue()
         Config.default_quality = list(quality_wrap.values())[self.quality_cb.GetSelection()]
-        Config.codec = self.codec_choice.GetSelection()
+        Config.codec = codec_dict[self.codec_choice.GetSelection()]
         Config.show_notification = self.show_toast_chk.GetValue()
 
         conf.set("download", "path", Config.download_path)
@@ -107,7 +109,7 @@ class DownloadTab(wx.Panel):
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         path_lab = wx.StaticText(download_box, -1, "下载目录")
-        self.path_box = wx.TextCtrl(download_box, -1)
+        self.path_box = wx.TextCtrl(download_box, -1, size = self.FromDIP((200, 24)))
         self.browse_btn = wx.Button(download_box, -1, "选择目录", size = self.FromDIP((70, 24)))
         self.browse_btn.SetToolTip("选择下载目录")
 
@@ -179,11 +181,7 @@ class SaveTab(wx.Panel):
 
         self.SetSizer(self.vbox)
 
-        self.Bind_EVT()
         self.load_conf()
-
-    def Bind_EVT(self):
-        self.save_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.save_danmaku_EVT)
 
     def load_conf(self):
         self.save_danmaku_chk.SetValue(Config.save_danmaku)
@@ -204,7 +202,7 @@ class SaveTab(wx.Panel):
         danmaku_box = wx.StaticBox(self, -1, "弹幕下载设置")
 
         self.save_danmaku_chk = wx.CheckBox(danmaku_box, -1, "下载弹幕文件")
-        self.save_danmaku_chk.SetToolTip("同时下载弹幕文件")
+        self.save_danmaku_chk.SetToolTip("下载弹幕文件，保存为 xml 格式")
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_danmaku_chk, 0, wx.ALL, 10)
@@ -218,7 +216,7 @@ class SaveTab(wx.Panel):
         subtitle_box = wx.StaticBox(self, -1, "字幕下载设置")
 
         self.save_subtitle_chk = wx.CheckBox(subtitle_box, -1, "下载字幕文件")
-        self.save_subtitle_chk.SetToolTip("下载字幕文件 (srt格式)\n如果有多个字幕将全部下载")
+        self.save_subtitle_chk.SetToolTip("下载字幕文件，保存为 srt 格式\n如果有多个将全部下载")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_subtitle_chk, 0, wx.ALL, 10)
@@ -232,7 +230,7 @@ class SaveTab(wx.Panel):
         lyric_box = wx.StaticBox(self, -1, "歌词下载设置")
 
         self.save_lyric_chk = wx.CheckBox(lyric_box, -1, "下载歌词文件")
-        self.save_lyric_chk.SetToolTip("下载歌词文件 (lrc格式)")
+        self.save_lyric_chk.SetToolTip("下载歌词文件，保存为 lrc 格式")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.save_lyric_chk, 0, wx.ALL, 10)
@@ -241,12 +239,6 @@ class SaveTab(wx.Panel):
         lyric_sbox.Add(vbox)
 
         self.vbox.Add(lyric_sbox, 0, wx.ALL | wx.EXPAND, 10)
-
-    def save_danmaku_EVT(self, event):
-        if event.IsChecked():
-            self.danmaku_format_cb.Enable(True)
-        else:
-            self.danmaku_format_cb.Enable(False)
 
 class MiscTab(wx.Panel):
     def __init__(self, parent):

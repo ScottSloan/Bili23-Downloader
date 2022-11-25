@@ -53,7 +53,6 @@ class DebugWindow(Frame):
     def init_download_UI(self):
         download_box = wx.StaticBox(self.panel, -1, "下载")
 
-        
         title_lab = wx.StaticText(self.panel, -1, "标题")
         self.title_box= wx.TextCtrl(self.panel, -1)
 
@@ -62,7 +61,6 @@ class DebugWindow(Frame):
         title_hbox.Add(title_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         title_hbox.Add(self.title_box, 1, wx.ALL & ~(wx.LEFT), 10)
 
-        
         bv_lab = wx.StaticText(self.panel, -1, "BV")
         self.bv_box= wx.TextCtrl(self.panel, -1, "BV84520")
 
@@ -71,7 +69,6 @@ class DebugWindow(Frame):
         bv_hbox.Add(bv_lab, 0, wx.ALL & ~(wx.TOP) | wx.ALIGN_CENTER, 10)
         bv_hbox.Add(self.bv_box, 1, wx.ALL & ~(wx.LEFT) & ~(wx.TOP), 10)
 
-        
         cid_lab = wx.StaticText(self.panel, -1, "cid")
         self.cid_box= wx.TextCtrl(self.panel, -1, "84520")
 
@@ -155,3 +152,4 @@ class DebugWindow(Frame):
         self.info_sbox.Layout()
         
         self.vbox.Fit(self)
+        

@@ -125,3 +125,4 @@ class BangumiParser:
     def check_json(self, json):  
         if json["code"] != 0:
             self.onError(400)
+            

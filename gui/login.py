@@ -21,17 +21,12 @@ class LoginWindow(Dialog):
         self.CenterOnParent()
 
     def init_login(self):
-        
         self.login = Login()
 
-        
         self.timer = wx.Timer(self, -1)
-
-        
         self.timer.Start(1000)
 
     def init_UI(self):
-        
         self.panel.SetBackgroundColour("white")
 
         scan_lab = wx.StaticText(self.panel, -1, "扫描二维码登录")
@@ -50,29 +45,22 @@ class LoginWindow(Dialog):
 
         self.panel.SetSizer(self.vbox)
 
-        
         self.vbox.Fit(self)
         
     def Bind_EVT(self):
-        
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
     
     def onClose(self, event):
-        
         self.timer.Stop()
 
         event.Skip()
 
     def onTimer(self, event):
-        
         json = self.login.check_scan()
 
-        
         if json["status"]:  
-            
             self.save_user_info(self.login.get_user_info())
 
             self.Hide()
@@ -80,11 +68,9 @@ class LoginWindow(Dialog):
             wx.CallAfter(self.Parent.init_userinfo)
 
         elif not json["status"] and json["code"] == -2:
-            
             wx.CallAfter(self.refresh_qrcode)
     
     def refresh_qrcode(self):
-        
         self.login = Login()
 
         qrcode = wx.Image(BytesIO(self.login.get_qrcode_pic())).Scale(200, 200)
@@ -92,7 +78,6 @@ class LoginWindow(Dialog):
         self.qrcode.SetBitmap(wx.Bitmap(qrcode, wx.BITMAP_SCREEN_DEPTH))
 
     def save_user_info(self, user_info: dict):
-        
         time = datetime.datetime.now() + datetime.timedelta(days = 30)
 
         conf = RawConfigParser()
@@ -105,7 +90,6 @@ class LoginWindow(Dialog):
         Config.user_expire = datetime.datetime.strftime(time, "%Y-%m-%d %H:%M:%S")
         Config.user_sessdata = user_info["sessdata"]
 
-        
         conf.set("user", "uid", Config.user_uid)
         conf.set("user", "uname", Config.user_name)
         conf.set("user", "face", Config.user_face)
@@ -115,3 +99,4 @@ class LoginWindow(Dialog):
 
         with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
             conf.write(f)
+            

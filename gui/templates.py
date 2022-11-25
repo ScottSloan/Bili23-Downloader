@@ -6,6 +6,7 @@ from utils.tools import *
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.live import LiveInfo
+from utils.audio import AudioInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, has_panel = True):
@@ -40,7 +41,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
 
     def init_list(self):
-        # 初始化视频列表
         self.rootitems = self.all_list_items = []
 
         self.ClearColumns()
@@ -51,13 +51,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("时长", width = self.FromDIP(75))
     
     def set_video_list(self):
-        # 显示视频列表
         VideoInfo.multiple = True if len(VideoInfo.pages) > 1 else False
 
         self.rootitems.append("视频")
         items_content = {}
         
-        # 判断视频是否为合集视频
         if VideoInfo.collection:
             items_content["视频"] = [[str(index + 1), value["title"], "", format_duration(value["arc"]["duration"])] for index, value in enumerate(VideoInfo.episodes)]
         else:
@@ -67,7 +65,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.append_list(items_content, ismultiple)
 
     def set_bangumi_list(self):
-        # 显示番组列表
         items_content = {}
 
         for key, value in BangumiInfo.sections.items():
@@ -89,25 +86,28 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.append_list(items_content, False)
     
-    # def set_audio_list(self):
-    #     items_content = {}
+    def set_audio_list(self):
+        items_content = {}
 
-    #     items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
+        if AudioInfo.isplaylist:
+            items_content["歌单"] = [[str(index + 1), value["title"], "", format_duration(value["duration"])] for index, value in enumerate(AudioInfo.playlist)]
 
-    #     self.rootitems.append("音乐")
+            self.rootitems.append("歌单")
 
-    #     self.append_list(items_content, False)
+        else:
+            items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
+
+            self.rootitems.append("音乐")
+
+        self.append_list(items_content, False)
 
     def append_list(self, items_content: dict, multiple: bool):
-        # 显示列表
         root = self.GetRootItem()
         self.all_list_items = []
 
-        # 遍历 items_content
         for i in items_content:
             rootitem = self.AppendItem(root, i)
             
-            # 如果视频为分p或合集，则显示大标题
             if multiple:
                 self.SetItemText(rootitem, 1, VideoInfo.title)
             
@@ -125,10 +125,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.Expand(rootitem)
 
     def onCheckItem(self, event):
-        # 勾选项目事件
         item = event.GetItem()
 
-        # 同步更改父项勾选状态
         item_text = self.GetItemText(item, 0)
         self.UpdateItemParentStateRecursively(item)
 
@@ -136,21 +134,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
     def get_allcheckeditem(self, type):
-        # 获取所有选中的项目
         VideoInfo.down_pages.clear()
         BangumiInfo.down_episodes.clear()
+        AudioInfo.down_list.clear()
 
-        # 遍历 all_list_items
         for i in self.all_list_items:
             text = self.GetItemText(i, 0)
             state = bool(self.GetCheckedState(i))
-
-            # 忽略父项，仅获取子项
+            
             if text not in self.rootitems and state:
                 item_title = self.GetItemText(i, 1)
                 parent_text = self.GetItemText(self.GetItemParent(i), 0)
                 
-                # 分类
                 if type == VideoInfo:
                     index = int(self.GetItemText(i, 0))
 
@@ -162,8 +157,16 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 elif type == BangumiInfo:
                     index = [i for i, v in enumerate(BangumiInfo.sections[parent_text]) if v["share_copy"] == item_title][0]
                     BangumiInfo.down_episodes.append(BangumiInfo.sections[parent_text][index])
-        
-        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0:
+
+                elif type == AudioInfo:
+                    index = int(self.GetItemText(i, 0))
+                    
+                    if AudioInfo.isplaylist:
+                        AudioInfo.down_list.append(AudioInfo.playlist[index - 1])
+                    else:
+                        AudioInfo.down_list.append({"id": AudioInfo.sid, "title": AudioInfo.title})
+
+        if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0 and len(AudioInfo.down_list) == 0:
             self.onError(401)
             return False
         else: 
@@ -174,7 +177,6 @@ class InfoBar(wx.InfoBar):
         wx.InfoBar.__init__(self, parent, -1)
     
     def ShowMessage(self, msg, flags=...):
-        # 在每次弹出消息前先隐藏之前的消息
         super().Dismiss()
         return super().ShowMessage(msg, flags)
     
@@ -200,8 +202,9 @@ class InfoBar(wx.InfoBar):
             raise ProcessError("Failed to download the video")
 
         elif code == 404:
-            super().ShowMessage("警告：该清晰度需要大会员 Cookie 才能下载，请添加后再试", flags = wx.ICON_WARNING)
-            raise ProcessError("Cookie required to continue")
+            msg = "无法获取直播源"
+
+            self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 405:
             super().ShowMessage("错误：检查更新失败", flags = wx.ICON_ERROR)

@@ -1,7 +1,6 @@
 import re
 import json
 import requests
-import subprocess
 
 from .config import Config
 from .tools import *
@@ -47,7 +46,7 @@ class LiveParser:
         live_json = json.loads(live_req.text)
 
         if live_json["code"] != 0:
-            self.onError(406)
+            self.onError(404)
 
         LiveInfo.playurl = live_json["data"]["durl"][0]["url"]
 
@@ -56,3 +55,4 @@ class LiveParser:
 
         self.get_live_info()
         self.get_live_playurl()
+        

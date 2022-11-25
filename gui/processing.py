@@ -20,5 +20,5 @@ class ProcessingWindow(Dialog):
 
         self.panel.SetSizer(hbox)
 
-        
         hbox.Fit(self)
+        

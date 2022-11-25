@@ -2,75 +2,76 @@ import re
 import json
 import requests
 
-from utils.tools import get_header, get_proxy
+from .tools import *
 
 class AudioInfo:
-    sid = uid = amid = duration = count = 0
+    sid = amid = duration = count = 0
 
-    title = intro = author = lyric = ""
-    
+    url = title = lyric = ""
+
     playlist = down_list = []
 
     isplaylist = False
 
 class AudioParser:
+    def __init__(self, onError):
+        self.onError = onError
+
     @property
-    def info_api(self) -> str:
+    def info_api(self):
         return "https://www.bilibili.com/audio/music-service-c/web/song/info?sid={}".format(AudioInfo.sid)
 
     @property
-    def playlist_api(self) -> str:
+    def playlist_api(self):
         return "https://www.bilibili.com/audio/music-service-c/web/song/of-menu?sid={}&pn=1&ps=100".format(AudioInfo.amid)
 
-    def get_sid(self, url: str):
+    def get_sid(self, url):
         result = re.findall(r"au[0-9]*", url)
-        AudioInfo.sid = result[len(result) - 1][2:]
+        AudioInfo.sid =  result[len(result) - 1][2:]
 
-    def get_amid(self, url: str):
-        AudioInfo.amid =  re.findall(r"am[0-9]*", url)[0][2:]
+        AudioInfo.url = "https://www.bilibili.com/audio/au{}".format(AudioInfo.sid)
+
+    def get_amid(self, url):
+        AudioInfo.amid = re.findall(r"am[0-9]*", url)[0][2:]
+
+        AudioInfo.url = "https://www.bilibili.com/audio/am{}".format(AudioInfo.amid)
 
     def get_audio_info(self):
         audio_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy())
         audio_json = json.loads(audio_request.text)
 
-        if audio_json["code"] != 0:
-            self.on_error(400)
-            return
+        self.check_json(audio_json)
 
-        audio_data = audio_json["data"]
-
-        AudioInfo.uid = audio_data["uid"]
-        AudioInfo.title = audio_data["title"]
-        AudioInfo.intro = audio_data["intro"]
-        AudioInfo.duration = audio_data["duration"]
-        AudioInfo.lyric = audio_data["lyric"]
-
+        AudioInfo.title = audio_json["data"]["title"]
+        AudioInfo.duration = audio_json["data"]["duration"]
+        AudioInfo.lyric = audio_json["data"]["lyric"]
+        
+        AudioInfo.count = 1
         AudioInfo.isplaylist = False
-        AudioInfo.playlist = []
-
-    def get_audio_playlist(self):
+        AudioInfo.down_list = AudioInfo.playlist = []
+    
+    def get_playlist_info(self):
         audio_request = requests.get(self.playlist_api, headers = get_header(), proxies = get_proxy())
         audio_json = json.loads(audio_request.text)
 
-        if audio_json["code"] != 0:
-            self.on_error(400)
-            return
-        
-        audio_data = audio_json["data"]
+        self.check_json(audio_json)
 
-        AudioInfo.count = audio_data["totalSize"]
-        AudioInfo.playlist = audio_data["data"]
+        AudioInfo.count = audio_json["data"]["totalSize"]
+        AudioInfo.playlist = audio_json["data"]["data"]
 
         AudioInfo.isplaylist = True
 
-    def parse_url(self, url: str, on_error):
-        self.on_error = on_error
-
+    def parse_url(self, url):
         if "am" in url:
             self.get_amid(url)
 
-            self.get_audio_playlist()
+            self.get_playlist_info()
         else:
             self.get_sid(url)
 
             self.get_audio_info()
+    
+    def check_json(self, json):  
+        if json["code"] != 0 or json["data"] == None:
+            self.onError(400)
+            

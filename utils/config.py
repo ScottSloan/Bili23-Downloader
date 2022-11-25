@@ -52,16 +52,32 @@ class LoadConfig:
         conf = RawConfigParser()
         conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
 
-        download_path = conf.get("user", "uid")
+        download_path = conf.get("download", "path")
 
         Config.download_path = download_path if download_path != "" else os.path.join(os.getcwd(), "download")
+        Config.max_thread = conf.getint("download", "thread")
+        Config.codec = conf.get("download", "codec")
+        Config.default_quality = conf.getint("download", "quality")
+        Config.show_notification = conf.getboolean("download", "notification")
+        
+        Config.save_danmaku = conf.getboolean("save", "danmaku")
+        Config.save_subtitle = conf.getboolean("save", "subtitle")
+        Config.save_lyric = conf.getboolean("save", "lyric")
+        
+        Config.show_sections = conf.getboolean("misc", "sections")
+        Config.player_path = conf.get("misc", "player_path")
+        Config.check_update = conf.getboolean("misc", "update")
+        Config.debug = conf.getboolean("misc", "debug")
+        
+        Config.enable_proxy = conf.getboolean("proxy", "enable")
+        Config.proxy_ip = conf.get("proxy", "address")
+        Config.proxy_port = conf.get("proxy", "port")
+
         Config.user_uid = conf.get("user", "uid")
         Config.user_name = conf.get("user", "uname")
         Config.user_face = conf.get("user", "face")
         Config.user_level = conf.get("user", "level")
         Config.user_expire = conf.get("user", "expire")
         Config.user_sessdata = conf.get("user", "sessdata")
-
-changelog = ""
 
 LoadConfig()

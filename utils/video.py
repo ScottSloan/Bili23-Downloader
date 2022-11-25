@@ -2,12 +2,10 @@ import re
 import requests
 import json
 
-from .tools import get_header, get_proxy
+from .tools import *
 from .config import Config
 
 class VideoInfo:
-    
-
     url = bvid = ""
     
     aid = cid = 0
@@ -32,21 +30,17 @@ class VideoParser:
 
     @property
     def aid_api(self):
-        
         return "https://api.bilibili.com/x/web-interface/archive/stat?aid=" + VideoInfo.aid
     
     @property
     def info_api(self):
-        
         return "https://api.bilibili.com/x/web-interface/view?bvid=" + VideoInfo.bvid
 
     @property
     def quality_api(self):
-        
         return "https://api.bilibili.com/x/player/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(VideoInfo.bvid, VideoInfo.cid)
     
     def get_aid(self, url: str):
-        
         VideoInfo.aid = re.findall(r"av[0-9]*", url)[0][2:]
         
         aid_request = requests.get(self.aid_api, headers = get_header(), proxies = get_proxy())
@@ -58,16 +52,13 @@ class VideoParser:
         self.set_bvid(bvid)
 
     def get_bvid(self, url: str):
-        
         bvid = re.findall(r"BV\w*", url)[0]
         self.set_bvid(bvid)
 
     def set_bvid(self, bvid: str):
-        
         VideoInfo.bvid, VideoInfo.url = bvid, "https://www.bilibili.com/video/" + bvid
 
     def get_video_info(self):
-        
         info_request = requests.get(self.info_api, headers = get_header(VideoInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
         info_json = json.loads(info_request.text)
 
@@ -75,7 +66,6 @@ class VideoParser:
 
         info_data = info_json["data"]
 
-        
         if "redirect_url" in info_data:
             self.onRedirect(info_data["redirect_url"])
             raise ProcessError("Bangumi type detect")
@@ -85,7 +75,6 @@ class VideoParser:
         VideoInfo.cid = info_data["cid"]
         VideoInfo.pages = info_data["pages"]
 
-        
         if "ugc_season" in info_data:
             VideoInfo.collection = True
 
@@ -98,7 +87,6 @@ class VideoParser:
             VideoInfo.episodes = []
 
     def get_video_quality(self):
-        
         video_request = requests.get(self.quality_api, headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy())
         video_json = json.loads(video_request.text)
 
@@ -110,8 +98,6 @@ class VideoParser:
         VideoInfo.quality_desc = json_data["accept_description"]
 
     def parse_url(self, url: str):
-        
-        
         if "av" in url:
             self.get_aid(url)
         else:
@@ -121,6 +107,5 @@ class VideoParser:
         self.get_video_quality()
     
     def check_json(self, json):
-        
         if json["code"] != 0:
             self.onError(400)
