@@ -145,8 +145,10 @@ class MainWindow(Frame):
         self.tool_menu.Append(user_menuitem)
         self.tool_menu.AppendSeparator()
         self.tool_menu.Append(option_menuitem)
-        self.tool_menu.Append(debug_menuitem)
 
+        if Config.debug:
+            self.tool_menu.Append(debug_menuitem)
+            
         self.help_menu.Append(check_menuitem)
         self.help_menu.Append(log_menuitem)
         self.help_menu.AppendSeparator()

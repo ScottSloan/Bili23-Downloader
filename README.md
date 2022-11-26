@@ -1,4 +1,4 @@
-# Bili23-Downloader
+# Bili23-Downloader-GUI
 ![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.9.12-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.0-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
 
 
@@ -6,6 +6,7 @@ Bili23 Downloader GUI 桌面端版本
 
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
 
+### **导航**
 + [下载地址](https://github.com/ScottSloan/Bili23-Downloader/releases)
 + [使用说明](#使用说明)
 + [TODO](#todo)
@@ -14,31 +15,23 @@ Bili23 Downloader GUI 桌面端版本
 
 ### **Bili23 Downloader 系列**
 * GUI 桌面端版本 (本项目)
-* [CLI 命令行版本](https://github.com/ScottSloan/Bili23-Downloader-CLI)
+* [CLI 命令行版本](https://github.com/ScottSloan/Bili23-Downloader-CLI) (现已上线，欢迎体验)
 
 # 使用说明
 ### **安装主程序**
 
 请前往 [Release](https://github.com/ScottSloan/Bili23-Downloader/releases) 页面，下载最新版本。
 
-### **安装 ffmpeg**
-由于 `dash` 格式视频依赖 `ffmpeg` 进行合成，需事先安装
-
-### **Windows 用户请按照下面的步骤安装** 
-ffmpeg 下载地址：[蓝奏云](https://wwf.lanzout.com/iTYX00ft3u4h)  密码:h9ge  
-
-解压压缩包，记录 `ffmpeg` 所在文件夹的路径，按照以下步骤创建环境变量：
-
-> 此电脑 -> 右键 -> 属性 -> 高级系统设置 -> 环境变量 -> 系统变量 -> Path -> 编辑 -> 新建 -> ffmpeg 所在文件夹的路径
-
-详细步骤请看[这里](https://scott.o5g.top/index.php/archives/120/)
+### **关于 ffmpeg**
+### **Windows 版本已经集成 ffmpeg，无需安装** 
+ffmpeg 版本：5.1.2  
+来源：[www.gyan.dev](www.gyan.dev)
 
 ### **Linux 用户请执行以下命令安装**
 
 ```
 sudo apt install ffmpeg
 ```
-
 
 ### **主界面**
 ![main.png](https://s2.loli.net/2022/05/01/AMiCgvUKlzbpjY3.png)  
@@ -68,7 +61,10 @@ sudo apt install ffmpeg
 ### **用户中心**
 ![user.png](https://s2.loli.net/2022/05/01/k6hAztIUqny4M8s.png)  
 
-目前可通过客户端扫描二维码登录，登录后可下载大会员视频  
+目前可通过客户端扫描二维码登录，登录后可正常下载 1080P 及大会员视频  
+
+此功能仅获取账号的 Cookie 中的 SESSDATA 字段，并保存在本地，不会泄露您的账号信息，您可以随时注销账户清除本地数据。
+
 > 每次登录有效期为一个月，过期后需重新登录
 
 ### **其他功能**
@@ -119,11 +115,9 @@ sudo apt install ffmpeg
 * 移除视频信息查看功能
 * 其它未列出的诸多优化
 
-ffmpeg 安装更加简便，现已提供高速下载链接，以及简明的安装教程。
-同时提供编译版的程序，无需安装相关依赖，独立运行，点开即用。
+为方便安装，现已提供编译版程序，可独立运行，无需安装相关依赖，同时集成了 ffmpeg (仅 Windows 版本，其它平台请运行安装命令)，不需要手动安装。
 
-从 V1.30 开始，Bili23 Downloader 将分为 CLI 命令行版本和 GUI 桌面端版本
-两个项目并行开发，继续延续简便易用的设计理念，为用户带来最佳的体验。
+从 V1.30 开始，Bili23 Downloader 将分为 CLI 命令行版本和 GUI 桌面端版本两个项目并行开发，继续延续简便易用的设计理念，为用户带来最佳的体验。
 
 另外，本项目的开发并未停止，它将继续进行下去，未来将上线更多实用功能。
 
@@ -146,6 +140,17 @@ ffmpeg 安装更加简便，现已提供高速下载链接，以及简明的安�
 * 修复下载路径问题
 * 修正说明文档中的错误
 * 其它细节优化
+
+### **Version 1.30 b3 (2022-11-26)**
+本次更新内容如下：
+* 重新加入弹幕，字幕，歌词下载功能
+* 新增网页解析方式
+* 更新请求头
+* 修复合集视频无法下载的问题
+
+说明：由于 Bilibili API 接口变动，原有接口在不登录的情况下只能获取到 480P 的视频，故新增网页解析方式，此方式仍可免登录下载部分 1080P 视频。
+
+因此我们强烈推荐您登录账号使用，以避免出现 1080P 视频无法下载的情况。
 
 # 联系方式
 - Email: scottsloan@petalmail.com

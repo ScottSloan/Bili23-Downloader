@@ -52,7 +52,8 @@ class SettingWindow(Dialog):
     
     def ok_btn_EVT(self, event):
         for i in range(4):
-            self.note.GetPage(i).save_conf()
+            if self.note.GetPage(i).save_conf():
+                return
 
         with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
             conf.write(f)
@@ -78,66 +79,88 @@ class DownloadTab(wx.Panel):
 
         self.thread_slider.Bind(wx.EVT_SLIDER, self.onThreadSlide)
 
+        self.mode_choice.Bind(wx.EVT_CHOICE, self.onChangeMode)
+
     def load_conf(self):
+        self.onChangeMode(0)
+
         self.path_box.SetValue(Config.download_path if Config.download_path != "" else os.path.join(os.getcwd(), "download"))
         
         self.thread_lab.SetLabel("多线程数：{}".format(Config.max_thread))
         self.thread_slider.SetValue(Config.max_thread)
         
-        self.quality_cb.SetSelection(list(quality_wrap.values()).index(Config.default_quality))
+        self.mode_choice.SetSelection(mode_wrap[Config.mode])
+        self.quality_choice.SetSelection(list(quality_wrap.values()).index(Config.default_quality))
         self.codec_choice.SetSelection(codec_wrap[Config.codec])
         self.show_toast_chk.SetValue(Config.show_notification)
 
     def save_conf(self):
+        if self.codec_choice.GetSelection() == wx.NOT_FOUND:
+            wx.MessageDialog(self, "操作无效\n\n未选择视频编码", "错误", wx.ICON_WARNING).ShowModal()
+            return True
+
+        mode_dict = dict(map(reversed, mode_wrap.items()))
         codec_dict = dict(map(reversed, codec_wrap.items()))
 
-        Config.download_path = self.path_box.GetValue() if self.path_box.GetValue() != os.path.join(os.getcwd(), "download") else ""
+        Config.download_path = self.path_box.GetValue()
         Config.max_thread = self.thread_slider.GetValue()
-        Config.default_quality = list(quality_wrap.values())[self.quality_cb.GetSelection()]
+        Config.mode = mode_dict[self.mode_choice.GetSelection()]
+        Config.default_quality = list(quality_wrap.values())[self.quality_choice.GetSelection()]
         Config.codec = codec_dict[self.codec_choice.GetSelection()]
         Config.show_notification = self.show_toast_chk.GetValue()
 
         conf.set("download", "path", Config.download_path)
         conf.set("download", "thread", str(Config.max_thread))
+        conf.set("download", "mode", str(Config.mode))
         conf.set("download", "quality", str(Config.default_quality))
         conf.set("download", "codec", str(Config.codec))
         conf.set("download", "notification", str(int(Config.show_notification)))
 
     def init_UI(self):
-        download_box = wx.StaticBox(self, -1, "下载设置")
+        self.download_box = wx.StaticBox(self, -1, "下载设置")
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        path_lab = wx.StaticText(download_box, -1, "下载目录")
-        self.path_box = wx.TextCtrl(download_box, -1, size = self.FromDIP((200, 24)))
-        self.browse_btn = wx.Button(download_box, -1, "选择目录", size = self.FromDIP((70, 24)))
+        path_lab = wx.StaticText(self.download_box, -1, "下载目录")
+        self.path_box = wx.TextCtrl(self.download_box, -1, size = self.FromDIP((200, 24)))
+        self.browse_btn = wx.Button(self.download_box, -1, "选择目录", size = self.FromDIP((70, 24)))
         self.browse_btn.SetToolTip("选择下载目录")
 
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         
-        self.thread_lab = wx.StaticText(download_box, -1, "多线程数：0")
-        self.thread_slider = wx.Slider(download_box, -1, 1, 1, 16)
+        self.thread_lab = wx.StaticText(self.download_box, -1, "多线程数：0")
+        self.thread_slider = wx.Slider(self.download_box, -1, 1, 1, 16)
         self.thread_slider.SetToolTip("设置下载视频的多线程数，范围 1-16")
+
+        mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        mode_lab = wx.StaticText(self.download_box, -1, "视频解析方式")
+        self.mode_choice = wx.Choice(self.download_box, -1, choices = ["API 接口", "网页"])
+        self.mode_choice.SetToolTip("设置视频解析方式")
+        self.mode_tip = wx.StaticText(self.download_box, -1, "说明")
+
+        mode_hbox.Add(mode_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        mode_hbox.Add(self.mode_choice, 0, wx.ALL & (~wx.TOP), 10)
 
         quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        quality_lb = wx.StaticText(download_box, -1, "默认下载清晰度")
-        self.quality_cb = wx.Choice(download_box, -1, choices = list(quality_wrap.keys()))
-        self.quality_cb.SetToolTip("设置默认下载的清晰度\n如果视频没有所选的清晰度，则自动选择可用的最高清晰度")
+        lab = wx.StaticText(self.download_box, -1, "默认下载清晰度")
+        self.quality_choice = wx.Choice(self.download_box, -1, choices = list(quality_wrap.keys()))
+        self.quality_choice.SetToolTip("设置默认下载的清晰度\n如果视频没有所选的清晰度，则自动选择可用的最高清晰度")
 
-        quality_hbox.Add(quality_lb, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        quality_hbox.Add(self.quality_cb, 0, wx.ALL & (~wx.TOP), 10)
+        quality_hbox.Add(lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        quality_hbox.Add(self.quality_choice, 0, wx.ALL, 10)
 
-        codec_lab = wx.StaticText(download_box, -1, "视频编码格式   ")
-        self.codec_choice = wx.Choice(download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
+        codec_lab = wx.StaticText(self.download_box, -1, "视频编码格式   ")
+        self.codec_choice = wx.Choice(self.download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
         self.codec_choice.SetToolTip("设置默认下载的视频编码格式\n注意 HEVC/H.265 和 AV1 编码需设备支持才能正常播放")
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
 
-        self.show_toast_chk = wx.CheckBox(download_box, -1, "下载完成后弹出通知")
+        self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知")
         self.show_toast_chk.SetToolTip("下载完成后弹出 Toast 通知")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -145,11 +168,14 @@ class DownloadTab(wx.Panel):
         vbox.Add(path_hbox, 0, wx.EXPAND)
         vbox.Add(self.thread_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
+        vbox.Add(mode_hbox)
+        vbox.Add(self.mode_tip, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.AddSpacer(self.FromDIP(10))
         vbox.Add(quality_hbox)
         vbox.Add(codec_hbox)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
-        download_sbox = wx.StaticBoxSizer(download_box)
+        download_sbox = wx.StaticBoxSizer(self.download_box)
         download_sbox.Add(vbox, 1, wx.EXPAND)
 
         self.vbox.Add(download_sbox, 0, wx.ALL | wx.EXPAND, 10)
@@ -168,6 +194,14 @@ class DownloadTab(wx.Panel):
 
     def onThreadSlide(self, event):
         self.thread_lab.SetLabel("多线程数：{}".format(self.thread_slider.GetValue()))
+
+    def onChangeMode(self, event):
+        if self.mode_choice.GetSelection() == 0:
+            self.mode_tip.SetLabel("说明：API 接口方式解析需登录才能正常使用\n否则只能下载 480P 视频")
+        else:
+            self.mode_tip.SetLabel("说明：网页方式解析可免登录下载部分 1080P 视频")
+
+        self.mode_tip.Wrap(self.download_box.Size[0])
 
 class SaveTab(wx.Panel):
     def __init__(self, parent):

@@ -164,7 +164,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if AudioInfo.isplaylist:
                         AudioInfo.down_list.append(AudioInfo.playlist[index - 1])
                     else:
-                        AudioInfo.down_list.append({"id": AudioInfo.sid, "title": AudioInfo.title})
+                        AudioInfo.down_list.append({"id": AudioInfo.sid, "title": AudioInfo.title, "lyric": AudioInfo.lyric})
 
         if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0 and len(AudioInfo.down_list) == 0:
             self.onError(401)

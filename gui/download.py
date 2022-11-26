@@ -44,7 +44,7 @@ class DownloadWindow(Frame):
     def onClose(self, event):
         self.Hide()
 
-    def add_download_task(self, type, quality_id: int):
+    def add_download_task(self, type, quality_id):
         if type == VideoInfo:
             self.list_panel.download_list_panel.add_panel(self.get_video_download_list(quality_id))
 
@@ -58,7 +58,7 @@ class DownloadWindow(Frame):
 
         Thread(target = self.start_download).start()
     
-    def get_download_info(self, url, title, type, bvid = None, cid = None, sid = None, quality_id = None):
+    def get_download_info(self, url, title, type, bvid = None, cid = None, sid = None, lyric = None, quality_id = None):
         DownloadInfo.download_count += 1
 
         return {
@@ -68,6 +68,7 @@ class DownloadWindow(Frame):
             "bvid": bvid,
             "cid": cid,
             "sid": sid,
+            "lyric": lyric,
             "quality_id": quality_id,
             "onMerge": self.onMerge, 
             "onComplete": self.onComplete,
@@ -75,7 +76,7 @@ class DownloadWindow(Frame):
             "type": type
         }
 
-    def get_video_download_list(self, quality_id: int) -> list:
+    def get_video_download_list(self, quality_id):
         download_list = []
 
         if VideoInfo.multiple:
@@ -86,7 +87,7 @@ class DownloadWindow(Frame):
 
         elif VideoInfo.collection:
             for i in VideoInfo.down_pages:
-                info = self.get_download_info(VideoInfo.url, i["part"], "video", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
+                info = self.get_download_info(VideoInfo.url, i["title"], "video", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
 
                 download_list.append(info)
         else:
@@ -110,7 +111,7 @@ class DownloadWindow(Frame):
         download_list = []
 
         for i in AudioInfo.down_list:
-            info = self.get_download_info(AudioInfo.url, i["title"], "audio", sid = i["id"])
+            info = self.get_download_info(AudioInfo.url, i["title"], "audio", sid = i["id"], lyric = i["lyric"])
         
             download_list.append(info)
 
@@ -125,10 +126,6 @@ class DownloadWindow(Frame):
             value.start_download()
 
             break
-
-    def get_download_status(self):
-        for key, value in DownloadInfo.download_list.items():
-            print(key, value.info["title"], value.status)
 
     def onMerge(self):
         if len(DownloadInfo.download_list) != 0:
@@ -324,7 +321,8 @@ class DownloadItemPanel(wx.Panel):
 
         del DownloadInfo.download_list[self.info["id"]]
 
-        DownloadInfo.download_task -= 1
+        if self.status != "completed":
+            DownloadInfo.download_task -= 1
 
         self.Destroy()
 
@@ -429,22 +427,15 @@ class DownloadUtils:
     def audio_durl_api(self):
         return "https://www.bilibili.com/audio/music-service-c/web/url?sid={}".format(self.info["sid"])
 
+    @property
+    def get_full_url(self):
+        return "https://www.bilibili.com/video/" + self.info["bvid"]
+
     def get_video_durl(self):
-        type = self.info["type"]
-
-        try:
-            if type == "video":
-                request = requests.get(self.video_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
-                request_json = json.loads(request.text)
-                json_dash = request_json["data"]["dash"]
-
-            elif type == "bangumi":
-                request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
-                request_json = json.loads(request.text)
-                json_dash = request_json["result"]["dash"]
-
-        except:
-            wx.CallAfter(self.onError)
+        if Config.mode == "api":
+            json_dash = self.get_video_durl_via_api()
+        elif Config.mode == "html":
+            json_dash = self.get_video_durl_via_html()
 
         self.quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < self.info["quality_id"] else self.info["quality_id"]
 
@@ -453,6 +444,32 @@ class DownloadUtils:
         
         temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
         self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.quality or (i["id"] - 30200) < self.quality][0]["baseUrl"]
+
+    def get_video_durl_via_api(self):
+        type = self.info["type"]
+
+        try:
+            if type == "video":
+                request = requests.get(self.video_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
+            elif type == "bangumi":
+                request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
+        
+            request_json = json.loads(request.text)
+            json_dash = request_json["result"]["dash"]
+
+        except:
+            wx.CallAfter(self.onError)
+
+        return json_dash
+
+    def get_video_durl_via_html(self):
+        re_pattern = r"window.__playinfo__=(.*?)</script>"
+        
+        request = requests.get(self.get_full_url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
+
+        json_raw = re.findall(re_pattern, request.text, re.S)[0]
+
+        return json.loads(json_raw)["data"]["dash"]
 
     def get_audio_durl(self):
         audio_request = requests.get(self.audio_durl_api, headers = get_header(self.info["url"]), proxies = get_proxy())
@@ -473,6 +490,9 @@ class DownloadUtils:
             "file_name": "audio_{}.mp3".format(self.info["id"])
         }
 
+        self.get_danmaku()
+        self.get_subtitle()
+
         self.downloader.start_download([video_info, audio_info])
 
     def add_audio_durl_to_downloader(self):
@@ -482,12 +502,13 @@ class DownloadUtils:
             "file_name": "{}.mp3".format(get_legal_name(self.info["title"]))
         }
 
+        self.get_lyric()
+
         self.downloader.start_download([audio_info])
 
     def merge_video(self, onMergeComplete):
         if self.info["type"] == "audio":
             wx.CallAfter(onMergeComplete)
-
             return
             
         id = self.info["id"]
@@ -501,3 +522,44 @@ class DownloadUtils:
         remove_files(Config.download_path, [f"video_{id}.mp4", f"audio_{id}.mp3"])
         
         wx.CallAfter(onMergeComplete)
+    
+    def get_danmaku(self):
+        if not Config.save_danmaku:
+            return
+        
+        durl = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(self.info["cid"])
+
+        get_file_from_url(durl, "{}.xml".format(self.info["title"]))
+
+    def get_subtitle(self):
+        if not Config.save_subtitle:
+            return
+
+        subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(self.info["cid"], self.info["bvid"])
+        req = requests.get(subtitle_url, headers = get_header(), proxies = get_proxy())
+
+        subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', req.text)[0]
+        subtitle_json = json.loads(subtitle_raw)["subtitles"]
+
+        subtitle_num = len(subtitle_json)
+
+        if subtitle_num == 0:
+            return
+
+        elif subtitle_num == 1:
+            durl = "https:{}".format(subtitle_json[0]["subtitle_url"])
+        
+            get_file_from_url(durl, "{}.srt".format(self.info["title"]), True)
+
+        else:
+            for i in range(subtitle_num):
+                lan_name = subtitle_json[i]["lan_doc"]
+                durl = "https:{}".format(subtitle_json[i]["subtitle_url"])
+            
+                get_file_from_url(durl, "({}) {}.srt".format(lan_name, self.info["title"]), True)
+
+    def get_lyric(self):         
+        if not Config.save_lyric and self.info["lyric"] == "":
+            return
+    
+        get_file_from_url(self.info["lyric"], "{}.lrc".format(self.info["title"]))

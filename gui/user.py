@@ -118,12 +118,13 @@ class UserWindow(Dialog):
         conf = RawConfigParser()
         conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
 
-        Config.user_uid = Config.user_name = Config.user_face = Config.user_expire = Config.user_sessdata = ""
+        Config.user_uid = Config.user_name = Config.user_face = Config.user_expire = Config.user_level = Config.user_sessdata = ""
 
         conf.set("user", "uid", Config.user_uid)
         conf.set("user", "uname", Config.user_name)
         conf.set("user", "face", Config.user_face)
         conf.set("user", "expire", Config.user_expire)
+        conf.set("user", "level", Config.user_level)
         conf.set("user", "sessdata", Config.user_sessdata)
 
         remove_files(Config._res_path, ["face.jpg", "level.png"])
