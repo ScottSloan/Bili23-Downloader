@@ -530,7 +530,7 @@ class DownloadUtils:
         id = self.info["id"]
         title = get_legal_name(self.info["title"])
 
-        cmd = f'''cd "{Config.download_path}" && ffmpeg -v quiet -i audio_{id}.mp3 -i video_{id}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
+        cmd = f'''cd "{Config.download_path}" && {Config.ffmpeg_path} -v quiet -i audio_{id}.mp3 -i video_{id}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
             
         self.merge_process = subprocess.Popen(cmd, shell = True)
         self.merge_process.wait()

@@ -27,6 +27,8 @@ class MainWindow(Frame):
 
         self.Bind_EVT()
 
+        self.SetSize(self.FromDIP((750, 450)))
+
         self.CenterOnParent()
 
         self.init_utils()
