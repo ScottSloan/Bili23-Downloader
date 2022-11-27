@@ -1,5 +1,8 @@
 import wx
 import os
+import re
+import json
+import requests
 import subprocess
 import wx.lib.scrolledpanel
 from threading import Thread
@@ -12,6 +15,7 @@ from utils.config import Config
 from utils.tools import *
 
 from .templates import Frame
+from .notification import Notification
 
 class DownloadInfo:
     download_list = {}
@@ -138,11 +142,17 @@ class DownloadWindow(Frame):
 
         self.update_title()
 
-    def update_title(self):
+    def update_title(self, error = False):
         if DownloadInfo.download_task != 0:
             self.list_panel.task_lab.SetLabel("{} 个任务正在下载".format(DownloadInfo.download_task))
         else:
             self.list_panel.task_lab.SetLabel("下载管理")
+            
+            if Config.show_notification and not error:
+                Notification.show_notification_download_finish()
+
+        if error and Config.show_notification:
+            Notification.show_notification_download_error()
 
 class WindowPanel(wx.Panel):
     def __init__(self, parent):
@@ -191,7 +201,7 @@ class WindowPanel(wx.Panel):
             os.system('xdg-open "{}"'.format(Config.download_path))
 
     def clear_btn_EVT(self, event):
-        keys = [key for key, value in DownloadInfo.download_list.items() if value.status == "completed"]
+        keys = [key for key, value in DownloadInfo.download_list.items() if value.status == "completed" or value.status == "error"]
         
         for i in keys:
             value = DownloadInfo.download_list[i]
@@ -305,10 +315,10 @@ class DownloadItemPanel(wx.Panel):
 
             wx.CallAfter(self.onPause)
         else:
-            if self.started_download:
-                self.status = "downloading"            
-            else:
-                self.status = "waiting"
+            if not self.started_download:
+                wx.CallAfter(self.start_download)
+
+            self.status = "downloading"
 
             self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
             self.pause_btn.SetToolTip("暂停下载")
@@ -321,7 +331,7 @@ class DownloadItemPanel(wx.Panel):
 
         del DownloadInfo.download_list[self.info["id"]]
 
-        if self.status != "completed":
+        if self.status != "completed" and self.status != "error":
             DownloadInfo.download_task -= 1
 
         self.Destroy()
@@ -388,6 +398,9 @@ class DownloadItemPanel(wx.Panel):
         self.cancel_btn.SetToolTip("清除记录")
 
         self.status = "error"
+        DownloadInfo.download_task -= 1
+        
+        self.info["update_title"](error = True)
 
         raise ProcessError("下载失败：无法获取下载链接")
 
@@ -467,9 +480,12 @@ class DownloadUtils:
         
         request = requests.get(self.get_full_url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
 
-        json_raw = re.findall(re_pattern, request.text, re.S)[0]
-
-        return json.loads(json_raw)["data"]["dash"]
+        try:
+            json_raw = re.findall(re_pattern, request.text, re.S)[0]
+            return json.loads(json_raw)["data"]["dash"]
+        
+        except:
+            wx.CallAfter(self.onError)
 
     def get_audio_durl(self):
         audio_request = requests.get(self.audio_durl_api, headers = get_header(self.info["url"]), proxies = get_proxy())

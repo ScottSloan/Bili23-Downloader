@@ -39,7 +39,7 @@ class Config:
     user_sessdata = ""
     user_expire = ""
 
-    app_name = "Bili23 Downloader"
+    app_name = "Bili23 Downloader GUI"
     app_version = "1.30"
     app_version_code = 1301
     app_date = "2022-11-24"

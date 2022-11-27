@@ -99,12 +99,23 @@ def convert_json_to_srt(data):
     
     return file
 
-def check_update():
+def check_update_json():
     update_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/update.json")
     update_json = json.loads(update_request.text)
+    
+    changelog_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/CHANGELOG")
+    changelog_request.encoding = "utf-8"
 
+    update_json["changelog"] = changelog_request.text
+    
     return update_json
 
+def get_changelog():
+    changelog_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/CHANGELOG")
+    changelog_request.encoding = "utf-8"
+
+    return changelog_request.text
+    
 def find_str(pattern, string):
     return True if len(re.findall(pattern, string)) !=  0 else False
 

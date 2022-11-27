@@ -1,5 +1,4 @@
 import wx
-import os
 import datetime
 import subprocess
 from threading import Thread
@@ -14,7 +13,7 @@ from .download import DownloadWindow
 from .debug import DebugWindow
 
 from utils.config import Config
-from utils.tools import process_shortlink, find_str, check_update, get_face_pic, quality_wrap
+from utils.tools import *
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.live import LiveInfo, LiveParser
@@ -177,10 +176,10 @@ class MainWindow(Frame):
         evt_id = event.GetId()
 
         if evt_id == 100:
-            wx.CallAfter(self.check_update)
+            wx.CallAfter(self.check_update, True)
 
         elif evt_id == 110:
-            self.dlgbox(open(os.path.join(os.getcwd(), "CHANGELOG"), "r", encoding = "utf-8").read(), "更新日志", wx.ICON_INFORMATION)
+            self.dlgbox(get_changelog(), "更新日志", wx.ICON_INFORMATION)
 
         elif evt_id == 130:
             AboutWindow(self)
@@ -338,19 +337,23 @@ class MainWindow(Frame):
             cmd = '{} "{}"'.format(Config.player_path, LiveInfo.playurl)
             subprocess.Popen(cmd, shell = True)
 
-    def check_update(self):
-        json = check_update()
+    def check_update(self, menu = False):
+        json = check_update_json()
 
         if int(json["version_code"]) > Config.app_version_code:
-            dlg = wx.MessageDialog(self, "有新的更新可用\n\nVersion {} 已于 {} 发布，详细更新日志请访问项目主页".format(json["version"], json["date"]), "检查更新", wx.ICON_INFORMATION | wx.YES_NO)
-            dlg.SetYesNoLabels("查看", "忽略")
+            if menu:
+                dlg = wx.MessageDialog(self, "有新的更新可用\n\n{}".format(json["changelog"]), "检查更新", wx.ICON_INFORMATION | wx.YES_NO)
+                dlg.SetYesNoLabels("查看", "忽略")
 
-            if dlg.ShowModal() == wx.ID_YES:
-                import webbrowser
+                if dlg.ShowModal() == wx.ID_YES:
+                    import webbrowser
 
-                webbrowser.open(json["url"])
+                    webbrowser.open(json["url"])
+            else:
+                self.infobar.ShowMessageInfo(100)
         else:
-            self.dlgbox("当前没有可用的更新", "检查更新", wx.ICON_INFORMATION)
+            if menu:
+                self.dlgbox("当前没有可用的更新", "检查更新", wx.ICON_INFORMATION)
     
     def check_ffmpeg(self):
         if not Config.ffmpeg_available:

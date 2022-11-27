@@ -184,31 +184,31 @@ class InfoBar(wx.InfoBar):
         flag_wrap = {0: "错误", 1: "警告", 2: "提示"}
 
         super().ShowMessage("{}：{}".format(flag_wrap[flag_code], msg), flags)
-        raise ProcessError(msg)
+        
+        if flag_code != 2:
+            raise ProcessError(msg)
 
     def ShowMessageInfo(self, code: int):
         if code == 400:
             msg = "请求失败，请检查地址是否有误"
-
             self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 401:
             msg = "请选择要下载的视频"
-            
             self._show_message(msg, wx.ICON_WARNING, 1)
 
-        elif code == 403:
-            super().ShowMessage("错误：无法获取视频下载地址", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to download the video")
+        elif code == 402:
+            msg = "无法获取视频下载地址"
+            self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 404:
             msg = "无法获取直播源"
-
             self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 405:
-            super().ShowMessage("错误：检查更新失败", flags = wx.ICON_ERROR)
-            raise ProcessError("Failed to check update")
+            msg = "检查更新失败"
+            self._show_message(msg, wx.ICON_ERROR, 0)
 
         if code == 100:
-            super().ShowMessage("提示：有新版本更新可用", flags = wx.ICON_INFORMATION)
+            msg = "有新版本更新可用"
+            self._show_message(msg, wx.ICON_INFORMATION, 2)
