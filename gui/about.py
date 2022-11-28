@@ -15,8 +15,8 @@ class AboutWindow(wx.Frame):
         info.Licence = "MIT License"
 
         info.SetWebSite(Config.app_website, "项目主页")
-
-        info.Description = "下载 Bilibili 视频/番剧/电影/纪录片 等资源\n\n发布日期：{}\n".format(Config.app_date)
+        info.Description = "\nBili23 Downloader GUI 桌面端版本\n\n下载 Bilibili 视频/番剧/电影/纪录片 等资源\n\n发布日期：{}\n".format(Config.app_date)
+        
         info.Icon = wx.Icon(Config.res_icon)
 
         wx.adv.AboutBox(info)

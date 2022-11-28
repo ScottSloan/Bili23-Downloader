@@ -6,7 +6,7 @@ from threading import Thread
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 from .config import Config
-from .tools import get_header, get_proxy
+from .tools import *
 
 class Downloader:
     def __init__(self, onStart, onDownload, onComplete):
@@ -88,10 +88,12 @@ class Downloader:
                 continue
         
             speed = self.format_speed((self.complete_size - temp_size) / 1024)
-        
+
+            size = "{}/{}".format(format_size(self.complete_size / 1024), format_size(self.total_size / 1024))
+            
             progress = int(self.complete_size / self.total_size * 100)
             
-            wx.CallAfter(self.onDownload, progress, speed)
+            wx.CallAfter(self.onDownload, progress, speed, size)
 
     def onPause(self):
         self.status = "pause"

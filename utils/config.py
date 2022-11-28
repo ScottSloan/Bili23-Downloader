@@ -40,9 +40,9 @@ class Config:
     user_expire = ""
 
     app_name = "Bili23 Downloader GUI"
-    app_version = "1.30"
-    app_version_code = 1301
-    app_date = "2022-11-24"
+    app_version = "1.31"
+    app_version_code = 1310
+    app_date = "2022-11-28"
     app_website = "https://github.com/ScottSloan/Bili23-Downloader"
 
     platform = platform.platform()
@@ -83,20 +83,25 @@ class LoadConfig:
         Config.user_level = conf.get("user", "level")
         Config.user_expire = conf.get("user", "expire")
         Config.user_sessdata = conf.get("user", "sessdata")
+        
+        self.check_download_path_available()
+        self.check_ffmpeg_available()
+        
+    def check_download_path_available(self):
+        if not os.path.exists(Config.download_path):
+            os.makedirs(Config.download_path)
 
-def check_ffmpeg_available():
-    local_path = os.path.join(os.getcwd(), "ffmpeg.exe")
+    def check_ffmpeg_available(self):
+        local_path = os.path.join(os.getcwd(), "ffmpeg.exe")
 
-    if subprocess.call(args = "ffmpeg -version", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE) == 0:
-        Config.ffmpeg_path = "ffmpeg"
-        Config.ffmpeg_available = True
+        if subprocess.call(args = "ffmpeg -version", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE) == 0:
+            Config.ffmpeg_path = "ffmpeg"
+            Config.ffmpeg_available = True
 
-    elif os.path.exists(local_path):
-        Config.ffmpeg_path = local_path
-        Config.ffmpeg_available = True
-    else:
-        Config.ffmpeg_available = False
-
-check_ffmpeg_available()
+        elif os.path.exists(local_path):
+            Config.ffmpeg_path = local_path
+            Config.ffmpeg_available = True
+        else:
+            Config.ffmpeg_available = False
 
 LoadConfig()

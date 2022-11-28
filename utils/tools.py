@@ -103,10 +103,11 @@ def check_update_json():
     update_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/update.json")
     update_json = json.loads(update_request.text)
     
-    changelog_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/CHANGELOG")
-    changelog_request.encoding = "utf-8"
+    if update_json["version_code"] > Config.app_version_code:
+        changelog_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/CHANGELOG")
+        changelog_request.encoding = "utf-8"
 
-    update_json["changelog"] = changelog_request.text
+        update_json["changelog"] = changelog_request.text
     
     return update_json
 

@@ -24,6 +24,8 @@ class DownloadInfo:
 
     download_task = 0
 
+    downloading = False
+
 class ProcessError(Exception):
     pass
 
@@ -122,12 +124,17 @@ class DownloadWindow(Frame):
         return download_list
 
     def start_download(self):
+        if DownloadInfo.downloading:
+            return
+
         keys = [key for key, value in DownloadInfo.download_list.items() if value.status == "waiting"]
         
         for i in keys:
             value = DownloadInfo.download_list[i]
                             
             value.start_download()
+
+            DownloadInfo.downloading = True
 
             break
 
@@ -142,17 +149,23 @@ class DownloadWindow(Frame):
 
         self.update_title()
 
-    def update_title(self, error = False):
+    def update_title(self, error = False, show_notification = True):
         if DownloadInfo.download_task != 0:
             self.list_panel.task_lab.SetLabel("{} 个任务正在下载".format(DownloadInfo.download_task))
         else:
             self.list_panel.task_lab.SetLabel("下载管理")
-            
-            if Config.show_notification and not error:
-                Notification.show_notification_download_finish()
 
-        if error and Config.show_notification:
-            Notification.show_notification_download_error()
+            if show_notification:
+                self.RequestUserAttention(wx.USER_ATTENTION_INFO)
+            
+                if Config.show_notification and not error:
+                    Notification.show_notification_download_finish()
+
+        if error:
+            self.RequestUserAttention(wx.USER_ATTENTION_INFO)
+
+            if Config.show_notification:
+                Notification.show_notification_download_error()
 
 class WindowPanel(wx.Panel):
     def __init__(self, parent):
@@ -266,12 +279,13 @@ class DownloadItemPanel(wx.Panel):
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        quality_hbox.Add(self.quality_lab, 0, wx.ALL & (~wx.TOP), 10)
-        quality_hbox.AddSpacer(self.FromDIP(75))
-        quality_hbox.Add(self.size_lab, 0, wx.ALL & (~wx.TOP), 10)
+        quality_hbox.Add(self.quality_lab, 2, wx.ALL & (~wx.TOP), 10)
+        quality_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.TOP), 10)
+        quality_hbox.AddStretchSpacer(1)
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
-        info_vbox.Add(self.title_lab, 0, wx.ALL, 10)
+        info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
+        info_vbox.AddSpacer(self.FromDIP(5))
         info_vbox.Add(quality_hbox, 0, wx.EXPAND)
 
         self.gauge = wx.Gauge(self, -1, 100)
@@ -337,23 +351,27 @@ class DownloadItemPanel(wx.Panel):
         self.Destroy()
 
         self.info["layout_sizer"]()
-        self.info["update_title"]()
+        self.info["update_title"](show_notification = False)
 
-    def show_video_quality(self):
-        quality_desc = [key for key, value in quality_wrap.items() if value == self.utils.quality][0]
-
-        self.quality_lab.SetLabel(quality_desc)
+    def show_video_info(self):
+        quality_dict = dict(map(reversed, quality_wrap.items()))
+        codec_dict = {0: "AVC/H.264", 1: "HEVC/H.265", 2: "AVC"}
+        
+        self.quality_lab.SetLabel("{}   {}".format(quality_dict[self.utils.quality], codec_dict[self.utils.codec]))
 
     def show_audio_info(self):
         self.quality_lab.SetLabel("音乐")
 
     def onStart(self):
-        self.speed_lab.SetLabel("")
-        self.size_lab.SetLabel(format_size(self.downloader.total_size / 1024))
+        self.total_size = format_size(self.downloader.total_size / 1024)
 
-    def onDownload(self, progress: int, speed: str):
+        self.speed_lab.SetLabel("")
+        self.size_lab.SetLabel("0 MB/{}".format(self.total_size))
+
+    def onDownload(self, progress, speed, size):
         self.gauge.SetValue(progress)
         self.speed_lab.SetLabel(speed)
+        self.size_lab.SetLabel(size)
 
     def onPause(self):
         if self.started_download:
@@ -369,7 +387,11 @@ class DownloadItemPanel(wx.Panel):
             self.speed_lab.SetLabel("等待下载...")
 
     def onDownloadComplete(self):
-        self.onMerge()
+        self.size_lab.SetLabel(self.total_size)
+
+        DownloadInfo.downloading = False
+
+        wx.CallAfter(self.onMerge)
 
     def onMergeComplete(self):
         self.status = "completed"
@@ -384,12 +406,13 @@ class DownloadItemPanel(wx.Panel):
 
     def onMerge(self):
         self.speed_lab.SetLabel("正在合成视频...")
-        self.utils.merge_video(self.onMergeComplete)
         self.pause_btn.Enable(False)
 
         self.status = "merging"
 
         wx.CallAfter(self.info["onMerge"])
+
+        self.utils.merge_video(self.onMergeComplete)
 
     def onError(self):
         self.speed_lab.SetLabel("下载失败")
@@ -398,6 +421,7 @@ class DownloadItemPanel(wx.Panel):
         self.cancel_btn.SetToolTip("清除记录")
 
         self.status = "error"
+        DownloadInfo.downloading = False
         DownloadInfo.download_task -= 1
         
         self.info["update_title"](error = True)
@@ -414,7 +438,7 @@ class DownloadItemPanel(wx.Panel):
         if self.info["type"] != "audio":
             self.utils.get_video_durl()
 
-            self.show_video_quality()
+            self.show_video_info()
 
             self.utils.add_video_durl_to_downloader()
         else:
@@ -453,7 +477,17 @@ class DownloadUtils:
         self.quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < self.info["quality_id"] else self.info["quality_id"]
 
         temp_video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == self.quality]
-        self.video_durl = temp_video_durl[codec_wrap[Config.codec]] if len(temp_video_durl) > 1 else temp_video_durl[0]
+
+        if len(temp_video_durl) == 1:
+            self.codec = 0
+
+        elif len(temp_video_durl) == 2 and codec_wrap[Config.codec] == 2:
+            self.codec = 1
+        
+        else:
+            self.codec = codec_wrap[Config.codec]
+            
+        self.video_durl = temp_video_durl[self.codec]
         
         temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
         self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.quality or (i["id"] - 30200) < self.quality][0]["baseUrl"]

@@ -183,6 +183,11 @@ class MainWindow(Frame):
         elif evt_id == 110:
             self.dlgbox(get_changelog(), "更新日志", wx.ICON_INFORMATION)
 
+        elif evt_id == 120:
+            import webbrowser
+
+            webbrowser.open(Config.app_website)
+            
         elif evt_id == 130:
             AboutWindow(self)
 
