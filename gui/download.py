@@ -52,13 +52,15 @@ class DownloadWindow(Frame):
 
     def add_download_task(self, type, quality_id):
         if type == VideoInfo:
-            self.list_panel.download_list_panel.add_panel(self.get_video_download_list(quality_id))
+            download_list = self.get_video_download_list(quality_id)
 
         elif type == BangumiInfo:
-            self.list_panel.download_list_panel.add_panel(self.get_bangumi_download_list(quality_id))
+            download_list = self.get_bangumi_download_list(quality_id)
 
         elif type == AudioInfo:
-            self.list_panel.download_list_panel.add_panel(self.get_audio_download_list())
+            download_list = self.get_audio_download_list()
+
+        self.list_panel.download_list_panel.add_panel(download_list)
 
         self.list_panel.task_lab.SetLabel("{} 个任务正在下载".format(len(DownloadInfo.download_list)))
 
@@ -131,10 +133,10 @@ class DownloadWindow(Frame):
         
         for i in keys:
             value = DownloadInfo.download_list[i]
-                            
-            value.start_download()
 
             DownloadInfo.downloading = True
+           
+            value.start_download()
 
             break
 
@@ -234,8 +236,6 @@ class DownloadListPanel(wx.lib.scrolledpanel.ScrolledPanel):
 
         self.init_UI()
 
-        self.empty = False
-
     def init_UI(self):
         self.SetBackgroundColour('white')
 
@@ -243,8 +243,18 @@ class DownloadListPanel(wx.lib.scrolledpanel.ScrolledPanel):
 
         self.SetSizer(self.main_sizer)
 
+    def check_download_list(self, task):
+        for i in DownloadInfo.download_list.values():
+            if i.info["title"] == task["title"]:
+                return True
+        
+        return False
+
     def add_panel(self, info: list):
         for item in info:
+            if self.check_download_list(item):
+                continue
+
             item["layout_sizer"] = self.Parent.layout_sizer
 
             panel = DownloadItemPanel(self, item)
@@ -271,6 +281,7 @@ class DownloadItemPanel(wx.Panel):
 
     def init_UI(self):
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_END)
+        self.title_lab.SetToolTip(self.info["title"])
 
         self.quality_lab = wx.StaticText(self, -1)
         self.quality_lab.SetForegroundColour(wx.Colour(108, 108, 108))
@@ -297,13 +308,14 @@ class DownloadItemPanel(wx.Panel):
         gauge_vbox.Add(self.gauge, 0, wx.ALL | wx.EXPAND, 10)
         gauge_vbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP), 10)
 
-        self.pause_btn = wx.BitmapButton(self, -1, wx.Bitmap(Config.res_pause), size = self.FromDIP((16, 16)))
-        self.pause_btn.SetToolTip("暂停下载")
+        self.pause_btn = wx.BitmapButton(self, -1, wx.Bitmap(Config.res_continue), size = self.FromDIP((16, 16)))
+        self.pause_btn.SetToolTip("开始下载")
         self.cancel_btn = wx.BitmapButton(self, -1, wx.Bitmap(Config.res_delete), size = self.FromDIP((16, 16)))
         self.cancel_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        panel_hbox.Add(info_vbox, 1, wx.EXPAND)
+        panel_hbox.Add(info_vbox, 0, wx.EXPAND)
+        panel_hbox.AddStretchSpacer()
         panel_hbox.Add(gauge_vbox, 0, wx.EXPAND)
         panel_hbox.AddSpacer(self.FromDIP(10))
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
@@ -322,16 +334,22 @@ class DownloadItemPanel(wx.Panel):
         self.cancel_btn.Bind(wx.EVT_BUTTON, self.cancel_btn_EVT)
 
     def pause_btn_EVT(self, event):
-        if self.status == "waiting" or self.status == "downloading":
+        if self.status == "downloading":
             self.status = "pause"
             self.pause_btn.SetBitmap(wx.Bitmap(Config.res_continue))
             self.pause_btn.SetToolTip("继续下载")
 
             wx.CallAfter(self.onPause)
-        else:
-            if not self.started_download:
-                wx.CallAfter(self.start_download)
+        
+        elif self.status == "waiting":
+            self.status = "downloading"
 
+            self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
+            self.pause_btn.SetToolTip("暂停下载")
+
+            Thread(target = self.start_download).start()
+
+        else:
             self.status = "downloading"
 
             self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
@@ -387,11 +405,9 @@ class DownloadItemPanel(wx.Panel):
             self.speed_lab.SetLabel("等待下载...")
 
     def onDownloadComplete(self):
-        self.size_lab.SetLabel(self.total_size)
-
         DownloadInfo.downloading = False
 
-        wx.CallAfter(self.onMerge)
+        Thread(target = self.onMerge).start()
 
     def onMergeComplete(self):
         self.status = "completed"
@@ -405,6 +421,7 @@ class DownloadItemPanel(wx.Panel):
         wx.CallAfter(self.info["onComplete"])
 
     def onMerge(self):
+        self.size_lab.SetLabel(self.total_size)
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
 
@@ -429,6 +446,9 @@ class DownloadItemPanel(wx.Panel):
         raise ProcessError("下载失败：无法获取下载链接")
 
     def start_download(self):
+        self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
+        self.pause_btn.SetToolTip("暂停下载")
+
         self.started_download = True
         self.status = "downloading"
 
