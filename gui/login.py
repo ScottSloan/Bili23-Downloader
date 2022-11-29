@@ -60,14 +60,18 @@ class LoginWindow(Dialog):
     def onTimer(self, event):
         json = self.login.check_scan()
 
-        if json["status"]:  
+        if json["code"] == 0:  
             self.save_user_info(self.login.get_user_info())
 
             self.Hide()
 
             wx.CallAfter(self.Parent.init_userinfo)
 
-        elif not json["status"] and json["code"] == -2:
+        elif json["code"] == 86090:
+            self.lab.SetLabel("请在设备侧确认登录")
+            self.vbox.Layout()
+
+        elif json["code"] == 86038:
             wx.CallAfter(self.refresh_qrcode)
     
     def refresh_qrcode(self):

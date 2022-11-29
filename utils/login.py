@@ -3,11 +3,11 @@ import qrcode
 import requests
 from io import BytesIO 
 
-from .tools import get_header, get_proxy
+from .tools import *
 from .config import Config
 
 class LoginInfo:
-    url = oauthKey = ""
+    url = qrcode_key = ""
 
 class Login:
     def __init__(self):
@@ -16,12 +16,12 @@ class Login:
         self.init_qrcode()
 
     @property
-    def qrcode_url(self):
-        return "https://passport.bilibili.com/qrcode/getLoginUrl"
+    def get_qrcode_url(self):
+        return "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
 
     @property
-    def login_info_url(self):
-        return "https://passport.bilibili.com/qrcode/getLoginInfo"
+    def scan_qrcode_url(self):
+        return "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
 
     @property
     def user_info_url(self):
@@ -32,11 +32,11 @@ class Login:
         return "https://api.bilibili.com/x/space/acc/info?mid=" + Config.user_uid
 
     def init_qrcode(self):
-        req = self.session.get(self.qrcode_url, headers = get_header(), proxies = get_proxy())
+        req = self.session.get(self.get_qrcode_url, headers = get_header(), proxies = get_proxy())
         login_json = json.loads(req.text)
 
         LoginInfo.url = login_json["data"]["url"]
-        LoginInfo.oauthKey = login_json["data"]["oauthKey"]
+        LoginInfo.qrcode_key = login_json["data"]["qrcode_key"]
     
     def get_qrcode_pic(self):
         pic = BytesIO()
@@ -46,14 +46,14 @@ class Login:
         return pic.getvalue()
     
     def check_scan(self):
-        data = {'oauthKey':LoginInfo.oauthKey, "gourl":"https://passport.bilibili.com/account/security"}
+        url = self.scan_qrcode_url + "?qrcode_key=" + LoginInfo.qrcode_key
 
-        req = self.session.post(self.login_info_url, data = data, headers = get_header(), proxies = get_proxy())
+        req = self.session.get(url, headers = get_header(), proxies = get_proxy())
         req_json = json.loads(req.text)
 
         return {
-            "status": req_json["status"],
-            "code": req_json["data"] if not req_json["status"] else 0}
+            "message": req_json["data"]["message"],
+            "code": req_json["data"]["code"]}
     
     def get_user_info(self) -> dict:
         info_requests = self.session.get(self.user_info_url, proxies = get_proxy())
