@@ -3,7 +3,7 @@ import datetime
 import subprocess
 from threading import Thread
 
-from .templates import Frame, TreeListCtrl, InfoBar
+from .templates import *
 from .about import AboutWindow
 from .processing import ProcessingWindow
 from .login import LoginWindow
@@ -53,8 +53,8 @@ class MainWindow(Frame):
             face = wx.Image(get_face_pic(Config.user_face)).Scale(36, 36)
 
             self.face.Show()
-            self.face.SetBitmap(wx.Bitmap(face, wx.BITMAP_SCREEN_DEPTH))
 
+            self.face.SetBitmap(wx.Bitmap(face, wx.BITMAP_SCREEN_DEPTH))
             self.uname_lab.SetLabel(Config.user_name)
         else:
             self.face.Hide()
@@ -101,6 +101,7 @@ class MainWindow(Frame):
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.face = wx.StaticBitmap(self.panel, -1)
+        
         self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
         self.uname_lab = wx.StaticText(self.panel, -1, "用户名")
         self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
@@ -330,7 +331,7 @@ class MainWindow(Frame):
             self.download_window.Show()
 
             self.show_download_window = True
-
+    
     def userinfo_EVT(self, event):
         if Config.user_name != "":
             UserWindow(self).ShowWindowModal()

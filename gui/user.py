@@ -27,6 +27,7 @@ class UserWindow(Dialog):
         uname_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.uname_lab = wx.StaticText(self.panel, -1, "用户名")
+        self.uname_lab.SetFont(wx.Font(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, faceName = "微软雅黑")))
         self.level = wx.StaticBitmap(self.panel, -1)
         self.vip_badge = wx.StaticBitmap(self.panel, -1, )
 
@@ -80,7 +81,7 @@ class UserWindow(Dialog):
         level = wx.Image(get_level_pic(Config.user_level)).Scale(40, 20)
         self.level.SetBitmap(wx.Bitmap(level, wx.BITMAP_SCREEN_DEPTH))
 
-        badge = wx.Image(get_vip_badge_pic(Config.user_vip_badge)).Scale(72, 30)
+        badge = wx.Image(get_vip_badge_pic(Config.user_vip_badge)).Scale(60, 25)
         self.vip_badge.SetBitmap(wx.Bitmap(badge, wx.BITMAP_SCREEN_DEPTH))
 
         self.expire_lab.SetLabel("登录有效期至：{}".format(Config.user_expire))
@@ -112,7 +113,10 @@ class UserWindow(Dialog):
 
     def refresh_btn_EVT(self, event):
         self.Cursor = wx.Cursor(wx.CURSOR_WAIT)
+        
         Thread(target = self.get_user_info).start()
+
+        self.panel.Layout()
 
     def logout_btn_EVT(self, event):
         dlg = wx.MessageDialog(self, "注销登录\n\n是否注销登录并清除本地用户信息？", "注销", wx.ICON_INFORMATION | wx.YES_NO)

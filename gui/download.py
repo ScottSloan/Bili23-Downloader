@@ -50,6 +50,46 @@ class DownloadWindow(Frame):
     def onClose(self, event):
         self.Hide()
 
+    def check_file_existance(self, name):
+        return True if os.path.exists(os.path.join(Config.download_path, "{}.mp4".format(get_legal_name(name)))) else False
+    
+    def confirm_file_replacement(self, download_list):
+        replace_list = []
+
+        for i in download_list:
+            if self.check_file_existance(i["title"]):
+                replace_list.append("{}.mp4".format(get_legal_name(i["title"])))
+        
+        flag = False
+        if len(replace_list) != 0:
+            while len(replace_list) != 0:
+                dlg = wx.RichMessageDialog(self, '重新下载\n\n文件 "{}" 已存在，是否重新下载？'.format(replace_list[0]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
+            
+                if len(replace_list) > 1:
+                    dlg.ShowCheckBox("为其余 {} 个文件执行相同的操作".format(len(replace_list) - 1))
+                    dlg.ShowDetailedText("已存在的文件：\n\n" + "\n".join(replace_list))
+
+                if dlg.ShowModal() == wx.ID_YES:
+                    if dlg.IsCheckBoxChecked():
+                        remove_files(replace_list)
+                        flag = False
+                        break
+                    
+                    del replace_list[0]
+                    remove_files(Config.download_path, [replace_list[0]])             
+                    flag =  False
+
+                else:
+                    if dlg.IsCheckBoxChecked():
+                        replace_list.clear()
+                        flag = True
+                        break
+
+                    del replace_list[0]
+                    flag = True
+
+        return flag
+
     def add_download_task(self, type, quality_id):
         if type == VideoInfo:
             download_list = self.get_video_download_list(quality_id)
@@ -59,6 +99,9 @@ class DownloadWindow(Frame):
 
         elif type == AudioInfo:
             download_list = self.get_audio_download_list()
+
+        if self.confirm_file_replacement(download_list):
+            return
 
         self.list_panel.download_list_panel.add_panel(download_list)
 
