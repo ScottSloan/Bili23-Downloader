@@ -110,7 +110,7 @@ class UserWindow(Dialog):
         Thread(target = self.get_user_detail_info).start()
 
     def logout_btn_EVT(self, event):
-        dlg = wx.MessageDialog(self, "是否注销登录\n\n这将会清除本地保存的用户信息", "确认注销登录", wx.ICON_INFORMATION | wx.YES_NO)
+        dlg = wx.MessageDialog(self, "注销登录\n\n是否注销登录并清除本地用户信息？", "注销", wx.ICON_INFORMATION | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_NO:
             return
