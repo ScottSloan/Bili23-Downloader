@@ -1,8 +1,6 @@
 import wx
-import os
 import datetime
 from io import BytesIO
-from configparser import RawConfigParser
 
 from utils.login import Login
 from utils.config import Config
@@ -84,23 +82,13 @@ class LoginWindow(Dialog):
     def save_user_info(self, user_info: dict):
         time = datetime.datetime.now() + datetime.timedelta(days = 30)
 
-        conf = RawConfigParser()
-        conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
-
         Config.user_uid = user_info["uid"]
         Config.user_name = user_info["uname"]
         Config.user_face = user_info["face"]
         Config.user_level = user_info["level"]
         Config.user_expire = datetime.datetime.strftime(time, "%Y-%m-%d %H:%M:%S")
+        Config.user_vip_status = bool(user_info["vip_status"])
+        Config.user_vip_badge = user_info["vip_badge"]
         Config.user_sessdata = user_info["sessdata"]
 
-        conf.set("user", "uid", Config.user_uid)
-        conf.set("user", "uname", Config.user_name)
-        conf.set("user", "face", Config.user_face)
-        conf.set("user", "level", Config.user_level)
-        conf.set("user", "expire", Config.user_expire)
-        conf.set("user", "sessdata", Config.user_sessdata)
-
-        with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
-            conf.write(f)
-            
+        Config.set_user_info()

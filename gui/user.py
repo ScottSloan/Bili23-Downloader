@@ -1,14 +1,12 @@
 import wx
-import os
 import json
 import requests
 from threading import Thread
-from configparser import RawConfigParser
 
 from .templates import Dialog
 
 from utils.config import Config
-from utils.tools import get_face_pic, get_level_pic, get_header, get_proxy, remove_files
+from utils.tools import *
 
 class UserWindow(Dialog):
     def __init__(self, parent):
@@ -21,18 +19,24 @@ class UserWindow(Dialog):
 
         self.load_info()
 
+    @property
+    def user_info_url(self):
+        return "https://api.bilibili.com/x/web-interface/nav"
+
     def init_UI(self):
         uname_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.uname_lab = wx.StaticText(self.panel, -1, "用户名")
         self.level = wx.StaticBitmap(self.panel, -1)
+        self.vip_badge = wx.StaticBitmap(self.panel, -1, )
 
-        uname_hbox.Add(self.uname_lab, 0, wx.ALL, 10)
-        uname_hbox.Add(self.level, 0, wx.ALL & ~(wx.LEFT), 10)
+        uname_hbox.Add(self.uname_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        uname_hbox.Add(self.level, 0, wx.ALL & ~(wx.LEFT) | wx.ALIGN_CENTER, 10)
+        uname_hbox.Add(self.vip_badge, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         uname_vbox = wx.BoxSizer(wx.VERTICAL)
 
-        self.uid_lab = wx.StaticText(self.panel, -1, "uid: ")
+        self.uid_lab = wx.StaticText(self.panel, -1, "UID：")
 
         uname_vbox.Add(uname_hbox)
         uname_vbox.Add(self.uid_lab, 0, wx.ALL & (~wx.TOP), 10)
@@ -68,13 +72,16 @@ class UserWindow(Dialog):
         
     def load_info(self):
         self.uname_lab.SetLabel(Config.user_name)
-        self.uid_lab.SetLabel("uid: {}".format(Config.user_uid))
+        self.uid_lab.SetLabel("UID：{}".format(Config.user_uid))
 
         face = wx.Image(get_face_pic(Config.user_face)).Scale(64, 64)
         self.face.SetBitmap(wx.Bitmap(face, wx.BITMAP_SCREEN_DEPTH))
 
-        level = wx.Image(get_level_pic(Config.user_level)).Scale(32, 16)
+        level = wx.Image(get_level_pic(Config.user_level)).Scale(40, 20)
         self.level.SetBitmap(wx.Bitmap(level, wx.BITMAP_SCREEN_DEPTH))
+
+        badge = wx.Image(get_vip_badge_pic(Config.user_vip_badge)).Scale(72, 30)
+        self.vip_badge.SetBitmap(wx.Bitmap(badge, wx.BITMAP_SCREEN_DEPTH))
 
         self.expire_lab.SetLabel("登录有效期至：{}".format(Config.user_expire))
 
@@ -86,19 +93,17 @@ class UserWindow(Dialog):
         self.logout_btn.Bind(wx.EVT_BUTTON, self.logout_btn_EVT)
         self.refresh_btn.Bind(wx.EVT_BUTTON, self.refresh_btn_EVT)
 
-    @property
-    def user_detail_info_url(self):
-        return "https://api.bilibili.com/x/space/acc/info?mid=" + Config.user_uid
-
-    def get_user_detail_info(self):
-        info_request = requests.get(self.user_detail_info_url, headers = get_header(), proxies = get_proxy())
+    def get_user_info(self):
+        info_request = requests.get(self.user_info_url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
         info_json = json.loads(info_request.text)["data"]
 
-        Config.user_name = info_json["name"]
+        Config.user_name = info_json["uname"]
         Config.user_face = info_json["face"]
-        Config.user_level = info_json["level"]
+        Config.user_level = info_json["level_info"]["current_level"]
+        Config.user_vip_status = info_json["vipStatus"],
+        Config.user_vip_badge = info_json["vip_label"]["img_label_uri_hans_static"]
 
-        remove_files(Config._res_path, ["face.jpg", "level.png"])
+        remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
 
         wx.CallAfter(self.load_info)
         wx.CallAfter(self.Parent.init_userinfo)
@@ -107,7 +112,7 @@ class UserWindow(Dialog):
 
     def refresh_btn_EVT(self, event):
         self.Cursor = wx.Cursor(wx.CURSOR_WAIT)
-        Thread(target = self.get_user_detail_info).start()
+        Thread(target = self.get_user_info).start()
 
     def logout_btn_EVT(self, event):
         dlg = wx.MessageDialog(self, "注销登录\n\n是否注销登录并清除本地用户信息？", "注销", wx.ICON_INFORMATION | wx.YES_NO)
@@ -115,22 +120,12 @@ class UserWindow(Dialog):
         if dlg.ShowModal() == wx.ID_NO:
             return
 
-        conf = RawConfigParser()
-        conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
+        Config.user_uid = Config.user_name = Config.user_face = Config.user_expire = Config.user_level = Config.user_sessdata = Config.user_vip_badge = ""
+        Config.user_vip_status = False
 
-        Config.user_uid = Config.user_name = Config.user_face = Config.user_expire = Config.user_level = Config.user_sessdata = ""
-
-        conf.set("user", "uid", Config.user_uid)
-        conf.set("user", "uname", Config.user_name)
-        conf.set("user", "face", Config.user_face)
-        conf.set("user", "expire", Config.user_expire)
-        conf.set("user", "level", Config.user_level)
-        conf.set("user", "sessdata", Config.user_sessdata)
-
-        remove_files(Config._res_path, ["face.jpg", "level.png"])
-
-        with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
-            conf.write(f)
+        Config.set_user_info()
+        
+        remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
         
         self.Hide()
 

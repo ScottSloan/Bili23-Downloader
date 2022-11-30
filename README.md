@@ -99,14 +99,12 @@ sudo apt install ffmpeg
   - [X] 下载歌词
 
 # 更新日志
-### **Version 1.31 (2022-11-29)**
+### **Version 1.32 (2022-11-30)**
 本次更新内容如下：
-* 下载页新增视频编码信息显示
-* 新增文件覆盖提示
-* 更新扫码登录接口
-* 优化下载功能
-* 修复部分已知问题
+* 更新用户信息查询接口
+* 优化用户中心显示效果
 
 # 联系方式
+- QQ: 2592111619
 - Email: scottsloan@petalmail.com
 - Blog: https://scott.o5g.top

@@ -4,7 +4,6 @@ import requests
 from io import BytesIO 
 
 from .tools import *
-from .config import Config
 
 class LoginInfo:
     url = qrcode_key = ""
@@ -25,11 +24,7 @@ class Login:
 
     @property
     def user_info_url(self):
-        return "https://api.live.bilibili.com/User/getUserInfo"
-
-    @property
-    def user_detail_info_url(self):
-        return "https://api.bilibili.com/x/space/acc/info?mid=" + Config.user_uid
+        return "https://api.bilibili.com/x/web-interface/nav"
 
     def init_qrcode(self):
         req = self.session.get(self.get_qrcode_url, headers = get_header(), proxies = get_proxy())
@@ -55,20 +50,17 @@ class Login:
             "message": req_json["data"]["message"],
             "code": req_json["data"]["code"]}
     
-    def get_user_info(self) -> dict:
+    def get_user_info(self):
         info_requests = self.session.get(self.user_info_url, proxies = get_proxy())
         info_json = json.loads(info_requests.text)["data"]
                 
-        Config.user_uid = str(info_json["uid"])
-
-        detail_request = self.session.get(self.user_detail_info_url, headers = get_header(), proxies = get_proxy())
-        detail_json = json.loads(detail_request.text)["data"]
-        
         return {
-            "uid": info_json["uid"],
+            "uid": info_json["mid"],
             "uname": info_json["uname"],
             "face": info_json["face"],
-            "level": detail_json["level"],
+            "level": info_json["level_info"]["current_level"],
+            "vip_status": info_json["vipStatus"],
+            "vip_badge": info_json["vip_label"]["img_label_uri_hans_static"],
             "sessdata": self.session.cookies["SESSDATA"]
         }
         

@@ -58,22 +58,25 @@ def save_pic(contents, path):
     with open(path, "wb") as f:
         f.write(contents)
 
-def get_face_pic(url):
-    face_path = os.path.join(os.getcwd(), "res", "face.jpg")
-    
-    if not os.path.exists(face_path):
-        save_pic(requests.get(url).content, face_path)
+def get_face_pic(url):    
+    if not os.path.exists(Config.res_face):
+        save_pic(requests.get(url).content, Config.res_face)
 
-    return face_path
+    return Config.res_face
 
 def get_level_pic(level):
     web_url = "https://scottsloan.github.io/Bili23-Downloader/level/level{}.png".format(level)
-    level_path = os.path.join(os.getcwd(), "res", "level.png")
     
-    if not os.path.exists(level_path):
-        save_pic(requests.get(web_url).content, level_path)
+    if not os.path.exists(Config.res_level):
+        save_pic(requests.get(web_url).content, Config.res_level)
     
-    return level_path
+    return Config.res_level
+
+def get_vip_badge_pic(url):    
+    if not os.path.exists(Config.res_badge):
+        save_pic(requests.get(url).content, Config.res_badge)
+
+    return Config.res_badge
 
 def get_file_from_url(url, name, subtitle = False):
     request = requests.get(url, headers = get_header(), proxies = get_proxy())

@@ -10,7 +10,10 @@ class Config:
     res_pause = os.path.join(_res_path, "pause.png")
     res_continue = os.path.join(_res_path, "continue.png")
     res_delete = os.path.join(_res_path, "delete.png")
-
+    res_face = os.path.join(_res_path, "face.jpg")
+    res_level = os.path.join(_res_path, "level.png")
+    res_badge = os.path.join(_res_path, "badge.png")
+    
     download_path = ""
 
     max_thread = 4
@@ -37,18 +40,36 @@ class Config:
     user_face = ""
     user_level = 0
     user_sessdata = ""
+    user_vip_status = ""
+    user_vip_badge = ""
     user_expire = ""
 
     app_name = "Bili23 Downloader GUI"
-    app_version = "1.31"
-    app_version_code = 1310
-    app_date = "2022-11-28"
+    app_version = "1.32"
+    app_version_code = 1321
+    app_date = "2022-11-30"
     app_website = "https://github.com/ScottSloan/Bili23-Downloader"
 
     platform = platform.platform()
 
     ffmpeg_available = False
     ffmpeg_path = ""
+
+    def set_user_info():
+        conf = RawConfigParser()
+        conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")
+
+        conf.set("user", "uid", Config.user_uid)
+        conf.set("user", "uname", Config.user_name)
+        conf.set("user", "face", Config.user_face)
+        conf.set("user", "expire", Config.user_expire)
+        conf.set("user", "level", Config.user_level)
+        conf.set("user", "vip_status", str(int(Config.user_vip_status)))
+        conf.set("user", "vip_badge", Config.user_vip_badge)
+        conf.set("user", "sessdata", Config.user_sessdata)
+
+        with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
+            conf.write(f)
 
 class LoadConfig:
     def __init__(self):
@@ -82,6 +103,8 @@ class LoadConfig:
         Config.user_face = conf.get("user", "face")
         Config.user_level = conf.get("user", "level")
         Config.user_expire = conf.get("user", "expire")
+        Config.user_vip_status = conf.getboolean("user", "vip_status")
+        Config.user_vip_badge = conf.get("user", "vip_badge")
         Config.user_sessdata = conf.get("user", "sessdata")
         
         self.check_download_path_available()
