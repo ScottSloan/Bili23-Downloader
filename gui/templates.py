@@ -173,9 +173,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             return True
 
 class InfoBar(wx.InfoBar):
-    def __init__(self, parent):
+    def __init__(self, parent, onOpenBrowser):
+        self.OnOpenBrowser = onOpenBrowser
+        
         wx.InfoBar.__init__(self, parent, -1)
-    
+
     def ShowMessage(self, msg, flags=...):
         super().Dismiss()
         return super().ShowMessage(msg, flags)
@@ -189,6 +191,11 @@ class InfoBar(wx.InfoBar):
             raise ProcessError(msg)
 
     def ShowMessageInfo(self, code: int):
+        if code != 100:
+            if self.HasButtonId(200):
+                self.RemoveButton(200)
+                self.RemoveButton(201)
+
         if code == 400:
             msg = "请求失败，请检查地址是否有误"
             self._show_message(msg, wx.ICON_ERROR, 0)
@@ -211,4 +218,19 @@ class InfoBar(wx.InfoBar):
 
         if code == 100:
             msg = "有新版本更新可用"
+
+            self.AddButton(200, "查看")
+            self.Bind(wx.EVT_BUTTON, self.OnOpenBrowser, id = 200)
+
+            self.AddButton(201, "忽略")
+
             self._show_message(msg, wx.ICON_INFORMATION, 2)
+
+        elif code == 101:
+            msg = "登录成功"
+            self._show_message(msg, wx.ICON_INFORMATION, 2)
+        
+        elif code == 102:
+            msg = "您已注销登录"
+            self._show_message(msg, wx.ICON_INFORMATION, 2)
+

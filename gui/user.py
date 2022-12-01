@@ -125,7 +125,7 @@ class UserWindow(Dialog):
             return
 
         Config.user_uid = Config.user_name = Config.user_face = Config.user_expire = Config.user_level = Config.user_sessdata = Config.user_vip_badge = ""
-        Config.user_vip_status = False
+        Config.user_vip_status = Config.user_login = False
 
         Config.set_user_info()
         
@@ -133,5 +133,6 @@ class UserWindow(Dialog):
         
         self.Hide()
 
+        self.Parent.infobar.ShowMessageInfo(102)
         self.Parent.init_userinfo()
         

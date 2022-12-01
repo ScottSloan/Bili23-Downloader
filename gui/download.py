@@ -63,10 +63,10 @@ class DownloadWindow(Frame):
         flag = False
         if len(replace_list) != 0:
             while len(replace_list) != 0:
-                dlg = wx.RichMessageDialog(self, '重新下载\n\n文件 "{}" 已存在，是否重新下载？'.format(replace_list[0]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
+                dlg = wx.RichMessageDialog(self, '文件已存在\n\n文件 "{}" 已存在，是否重新下载？'.format(replace_list[0]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
             
                 if len(replace_list) > 1:
-                    dlg.ShowCheckBox("为其余 {} 个文件执行相同的操作".format(len(replace_list) - 1))
+                    dlg.ShowCheckBox("为剩余 {} 个文件执行相同的操作".format(len(replace_list) - 1))
                     dlg.ShowDetailedText("已存在的文件：\n\n" + "\n".join(replace_list))
 
                 if dlg.ShowModal() == wx.ID_YES:
@@ -575,7 +575,7 @@ class DownloadUtils:
     def get_video_durl_via_html(self):
         re_pattern = r"window.__playinfo__=(.*?)</script>"
         
-        request = requests.get(self.get_full_url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
+        request = requests.get(self.get_full_url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
 
         try:
             json_raw = re.findall(re_pattern, request.text, re.S)[0]

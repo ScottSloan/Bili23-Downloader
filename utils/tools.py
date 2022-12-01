@@ -16,6 +16,16 @@ def process_shortlink(url):
 
     return requests.get(url, headers = get_header(), proxies = get_proxy()).url
 
+def process_activity_url(url):
+    re_pattern = r"\"videoID\":\"(.*?)\""
+        
+    request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
+    
+    try:
+        return "ep" + re.findall(re_pattern, request.text.replace("\\", ""), re.S)[0]
+    except:
+        return ""
+        
 def get_legal_name(name):
     return re.sub('[/\:*?"<>|]', "", name)
 
@@ -44,7 +54,10 @@ def get_proxy():
 
 def remove_files(path, name):
     for i in name:
-        os.remove(os.path.join(path, i))
+        dir_path = os.path.join(path, i)
+        
+        if os.path.exists(dir_path):
+            os.remove(dir_path)
 
 def format_size(size):
     if size > 1048576:

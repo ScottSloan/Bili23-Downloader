@@ -43,11 +43,12 @@ class Config:
     user_vip_status = ""
     user_vip_badge = ""
     user_expire = ""
+    user_login = False
 
     app_name = "Bili23 Downloader GUI"
     app_version = "1.32"
     app_version_code = 1321
-    app_date = "2022-11-30"
+    app_date = "2022-12-1"
     app_website = "https://github.com/ScottSloan/Bili23-Downloader"
 
     platform = platform.platform()
@@ -107,6 +108,9 @@ class LoadConfig:
         Config.user_vip_badge = conf.get("user", "vip_badge")
         Config.user_sessdata = conf.get("user", "sessdata")
         
+        if Config.user_name != "":
+            Config.user_login = True
+            
         self.check_download_path_available()
         self.check_ffmpeg_available()
         

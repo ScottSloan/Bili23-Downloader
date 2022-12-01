@@ -27,7 +27,7 @@ class MainWindow(Frame):
 
         self.Bind_EVT()
 
-        self.SetSize(self.FromDIP((750, 450)))
+        self.SetSize(self.FromDIP((750, 420)))
 
         self.CenterOnParent()
 
@@ -38,6 +38,7 @@ class MainWindow(Frame):
 
         self.check_ffmpeg()
         self.check_login()
+        Thread(target = self.check_update).start()
 
         self.video_parser = VideoParser(self.onError, self.onRedirect)
         self.bangumi_parser = BangumiParser(self.onError)
@@ -49,24 +50,29 @@ class MainWindow(Frame):
         self.show_download_window = False
 
     def init_userinfo(self):
-        if Config.user_name != "":
+        if Config.user_login:
             face = wx.Image(get_face_pic(Config.user_face)).Scale(36, 36)
 
             self.face.Show()
 
             self.face.SetBitmap(wx.Bitmap(face, wx.BITMAP_SCREEN_DEPTH))
             self.uname_lab.SetLabel(Config.user_name)
+
+            self.user_menuitem.SetItemLabel("用户中心(&E)")
         else:
             self.face.Hide()
 
             self.uname_lab.SetLabel("未登录")
+
+            self.user_menuitem.SetItemLabel("登录(&L)")
+
         
         self.userinfo_hbox.Layout()
 
         self.vbox.Layout()
     
     def init_UI(self):
-        self.infobar = InfoBar(self.panel)
+        self.infobar = InfoBar(self.panel, self.OnOpenBrowser)
 
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -133,18 +139,20 @@ class MainWindow(Frame):
         self.tool_menu = wx.Menu()
 
         check_menuitem = wx.MenuItem(self.help_menu, 100, "检查更新(&U)")
-        log_menuitem = wx.MenuItem(self.help_menu, 110, "更新日志(&L)")
+        log_menuitem = wx.MenuItem(self.help_menu, 110, "更新日志(&P)")
         help_menuitem = wx.MenuItem(self.help_menu, 120, "使用帮助(&C)")
         about_menuitem = wx.MenuItem(self.help_menu, 130, "关于(&A)")
 
-        user_menuitem = wx.MenuItem(self.tool_menu, 200, "用户中心(&E)")
+        title = "用户中心(&E)" if Config.user_login else "登录(&L)"
+
+        self.user_menuitem = wx.MenuItem(self.tool_menu, 200, title)
         option_menuitem = wx.MenuItem(self.tool_menu, 210, "设置(&S)")
         debug_menuitem = wx.MenuItem(self.tool_menu, 220, "调试(&D)")
         
         menu_bar.Append(self.tool_menu, "工具(&T)")
         menu_bar.Append(self.help_menu, "帮助(&H)")
 
-        self.tool_menu.Append(user_menuitem)
+        self.tool_menu.Append(self.user_menuitem)
         self.tool_menu.AppendSeparator()
         self.tool_menu.Append(option_menuitem)
 
@@ -223,6 +231,9 @@ class MainWindow(Frame):
         if find_str("b23.tv", url):
             url = process_shortlink(url)
 
+        elif find_str("blackboard", url):
+            url = process_activity_url(url)
+
         if find_str("BV|av", url):
             self.type = VideoInfo
             self.video_parser.parse_url(url)
@@ -248,6 +259,7 @@ class MainWindow(Frame):
             self.audio_parser.parse_url(url)
 
             self.set_audio_list()
+        
         else:
             self.onError(400)
 
@@ -325,7 +337,10 @@ class MainWindow(Frame):
     def download_mgr_btn_EVT(self, event):
         if self.show_download_window:
             self.download_window.Show()
+            self.download_window.SetFocus()
 
+            if self.download_window.IsIconized():
+                self.download_window.Iconize(False)
         else:
             self.download_window = DownloadWindow(self)
             self.download_window.Show()
@@ -345,10 +360,20 @@ class MainWindow(Frame):
             cmd = '{} "{}"'.format(Config.player_path, LiveInfo.playurl)
             subprocess.Popen(cmd, shell = True)
 
+    def OnOpenBrowser(self, event):
+        import webbrowser
+
+        webbrowser.open(self.update_url)
+
+        self.infobar.Dismiss()
+
+        event.Skip()
+
     def check_update(self, menu = False):
         json = check_update_json()
 
         if int(json["version_code"]) > Config.app_version_code:
+            self.update_url = json["url"]
             if menu:
                 dlg = wx.MessageDialog(self, "有新的更新可用\n\n{}".format(json["changelog"]), "检查更新", wx.ICON_INFORMATION | wx.YES_NO)
                 dlg.SetYesNoLabels("查看", "忽略")
@@ -356,9 +381,9 @@ class MainWindow(Frame):
                 if dlg.ShowModal() == wx.ID_YES:
                     import webbrowser
 
-                    webbrowser.open(json["url"])
+                    webbrowser.open(self.update_url)
             else:
-                self.infobar.ShowMessageInfo(100)
+                wx.CallAfter(self.infobar.ShowMessageInfo, 100)
         else:
             if menu:
                 self.dlgbox("当前没有可用的更新", "检查更新", wx.ICON_INFORMATION)

@@ -1,9 +1,13 @@
 import wx
+import json
+import wx.adv
+import requests
 import datetime
 from io import BytesIO
 
 from utils.login import Login
 from utils.config import Config
+from utils.tools import *
 
 from .templates import Dialog
 
@@ -17,6 +21,10 @@ class LoginWindow(Dialog):
         self.Bind_EVT()
 
         self.CenterOnParent()
+
+    @property
+    def user_info_url(self):
+        return "https://api.bilibili.com/x/web-interface/nav"
 
     def init_login(self):
         self.login = Login()
@@ -35,11 +43,15 @@ class LoginWindow(Dialog):
         self.qrcode = wx.StaticBitmap(self.panel, -1, wx.Bitmap(qrcode, wx.BITMAP_SCREEN_DEPTH))
 
         self.lab = wx.StaticText(self.panel, -1, "请使用哔哩哔哩客户端扫码登录")
+        self.lab.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, faceName = "微软雅黑"))
+
+        self.cookie_link = wx.adv.HyperlinkCtrl(self.panel, -1, "使用 Cookie 登录", "使用 Cookie 登录")
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         self.vbox.Add(self.qrcode, 0, wx.EXPAND)
         self.vbox.Add(self.lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        self.vbox.Add(self.cookie_link, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         self.panel.SetSizer(self.vbox)
 
@@ -49,7 +61,9 @@ class LoginWindow(Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
-    
+
+        self.cookie_link.Bind(wx.adv.EVT_HYPERLINK, self.hyperlink_EVT)
+
     def onClose(self, event):
         self.timer.Stop()
 
@@ -63,7 +77,9 @@ class LoginWindow(Dialog):
 
             self.Hide()
 
-            wx.CallAfter(self.Parent.init_userinfo)
+            Config.user_login = True
+            
+            wx.CallAfter(self.init_userinfo)
 
         elif json["code"] == 86090:
             self.lab.SetLabel("请在设备侧确认登录")
@@ -72,12 +88,53 @@ class LoginWindow(Dialog):
         elif json["code"] == 86038:
             wx.CallAfter(self.refresh_qrcode)
     
+    def init_userinfo(self):
+        self.Parent.infobar.ShowMessageInfo(101)
+        self.Parent.init_userinfo()
+
     def refresh_qrcode(self):
         self.login = Login()
 
         qrcode = wx.Image(BytesIO(self.login.get_qrcode_pic())).Scale(200, 200)
 
         self.qrcode.SetBitmap(wx.Bitmap(qrcode, wx.BITMAP_SCREEN_DEPTH))
+
+    def hyperlink_EVT(self, event):
+        dlg = wx.TextEntryDialog(self.panel, "请将 Cookie SESSDATA 字段粘贴至此", "Cookie 登录")
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.cookie = dlg.GetValue()
+
+            if self.cookie != "":
+                try:
+                    user_info = self.get_user_info()
+
+                    self.save_user_info(user_info)
+
+                    wx.CallAfter(self.init_userinfo)
+                    
+                    self.timer.Stop()
+                    self.Destroy()
+                except:
+                    wx.MessageDialog(self, "登录失败\n\n登录失败，请检查 Cookie 是否有效", "错误", wx.ICON_WARNING).ShowModal()
+    
+    def get_user_info(self):
+        info_request = requests.get(self.user_info_url, headers = get_header(cookie = self.cookie), proxies = get_proxy())
+        info_json = json.loads(info_request.text)["data"]
+
+        Config.user_login = True
+
+        remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
+
+        return {
+            "uid": info_json["mid"],
+            "uname": info_json["uname"],
+            "face": info_json["face"],
+            "level": info_json["level_info"]["current_level"],
+            "vip_status": info_json["vipStatus"],
+            "vip_badge": info_json["vip_label"]["img_label_uri_hans_static"],
+            "sessdata": self.cookie
+        }
 
     def save_user_info(self, user_info: dict):
         time = datetime.datetime.now() + datetime.timedelta(days = 30)
