@@ -38,7 +38,9 @@ class MainWindow(Frame):
 
         self.check_ffmpeg()
         self.check_login()
-        Thread(target = self.check_update).start()
+
+        if Config.check_update:
+            Thread(target = self.check_update).start()
 
         self.video_parser = VideoParser(self.onError, self.onRedirect)
         self.bangumi_parser = BangumiParser(self.onError)
@@ -304,6 +306,8 @@ class MainWindow(Frame):
         wx.CallAfter(self.treelist.set_bangumi_list)
         self.type_lab.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, bangumis))
 
+        self.check_bangumi()
+        
     def set_live_list(self):
         wx.CallAfter(self.treelist.set_live_list)
         self.type_lab.SetLabel("直播")
@@ -369,25 +373,40 @@ class MainWindow(Frame):
 
         event.Skip()
 
+    def check_bangumi(self):
+        if BangumiInfo.payment:
+            if not Config.user_login:
+                self.infobar.ShowMessageInfo(300)
+            elif Config.user_vip_status == 0:
+                self.infobar.ShowMessageInfo(301)
+
     def check_update(self, menu = False):
-        json = check_update_json()
+        json = get_update_json()
 
-        if int(json["version_code"]) > Config.app_version_code:
-            self.update_url = json["url"]
+        if json["error"]:
             if menu:
-                dlg = wx.MessageDialog(self, "有新的更新可用\n\n{}".format(json["changelog"]), "检查更新", wx.ICON_INFORMATION | wx.YES_NO)
-                dlg.SetYesNoLabels("查看", "忽略")
-
-                if dlg.ShowModal() == wx.ID_YES:
-                    import webbrowser
-
-                    webbrowser.open(self.update_url)
+                self.dlgbox("检查更新失败\n\n目前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR)
             else:
-                wx.CallAfter(self.infobar.ShowMessageInfo, 100)
-        else:
-            if menu:
-                self.dlgbox("当前没有可用的更新", "检查更新", wx.ICON_INFORMATION)
+                self.infobar.ShowMessageInfo(405)
+            return
     
+        else:
+            if int(json["version_code"]) > Config.app_version_code:
+                self.update_url = json["url"]
+                if menu:
+                    dlg = wx.MessageDialog(self, "有新的更新可用\n\n{}".format(json["changelog"]), "检查更新", wx.ICON_INFORMATION | wx.YES_NO)
+                    dlg.SetYesNoLabels("查看", "忽略")
+
+                    if dlg.ShowModal() == wx.ID_YES:
+                        import webbrowser
+
+                        webbrowser.open(self.update_url)
+                else:
+                    wx.CallAfter(self.infobar.ShowMessageInfo, 100)
+            else:
+                if menu:
+                    self.dlgbox("当前没有可用的更新", "检查更新", wx.ICON_INFORMATION)
+        
     def check_ffmpeg(self):
         if not Config.ffmpeg_available:
             dlg = wx.MessageDialog(self, "未安装 ffmpeg\n\n检测到您尚未安装 ffmpeg，无法正常合成视频，是否现在安装？", "提示", wx.ICON_INFORMATION | wx.YES_NO)
@@ -406,7 +425,7 @@ class MainWindow(Frame):
         now = datetime.datetime.now()
 
         if (expire - now).days <= 0:
-            wx.MessageDialog(self, "登录过期\n\n登录状态过期，请重新扫码登录。", "提示", wx.ICON_INFORMATION).ShowModal()
+            wx.MessageDialog(self, "登录过期\n\n登录状态过期，请重新登录。", "提示", wx.ICON_INFORMATION).ShowModal()
 
     def onSetFoucus(self, event):
         if self.url_box.GetValue() == "请输入 URL 链接":

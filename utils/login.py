@@ -9,6 +9,9 @@ class QRLoginInfo:
     url = qrcode_key = ""
 
 class QRLogin:
+    def __init__(self):
+        self.session = requests.session()
+
     @property
     def get_qrcode_url(self):
         return "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
@@ -22,8 +25,6 @@ class QRLogin:
         return "https://api.bilibili.com/x/web-interface/nav"
 
     def init_qrcode(self):
-        self.session = requests.session()
-
         req = self.session.get(self.get_qrcode_url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         login_json = json.loads(req.text)
 
@@ -67,3 +68,4 @@ class QRLogin:
         user_info["sessdata"] = self.session.cookies["SESSDATA"] if session else cookie
 
         return user_info
+        

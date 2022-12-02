@@ -20,6 +20,8 @@ class BangumiInfo:
 
     sections = {}
 
+    payment = False
+
 class BangumiParser:
     def __init__(self, onError):
         self.onError = onError
@@ -65,6 +67,8 @@ class BangumiParser:
         BangumiInfo.url = info_result["episodes"][0]["link"]
         BangumiInfo.title = info_result["title"]
 
+        BangumiInfo.payment = True if "payment" in info_result else False
+        
         BangumiInfo.episodes = info_result["episodes"]
         BangumiInfo.sections["正片"] = BangumiInfo.episodes
 

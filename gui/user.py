@@ -99,7 +99,7 @@ class UserWindow(Dialog):
         self.logout_btn.Bind(wx.EVT_BUTTON, self.logout_btn_EVT)
         self.refresh_btn.Bind(wx.EVT_BUTTON, self.refresh_btn_EVT)
 
-    def get_user_info(self):
+    def refresh_user_info(self):
         from utils.login import QRLogin
         
         login = QRLogin()
@@ -120,12 +120,12 @@ class UserWindow(Dialog):
 
         self.Cursor = wx.Cursor(wx.CURSOR_ARROW)
         
+        self.panel.Layout()
+
     def refresh_btn_EVT(self, event):
         self.Cursor = wx.Cursor(wx.CURSOR_WAIT)
         
-        Thread(target = self.get_user_info).start()
-
-        self.panel.Layout()
+        Thread(target = self.refresh_user_info).start()
 
     def logout_btn_EVT(self, event):
         dlg = wx.MessageDialog(self, "注销登录\n\n是否注销登录并清除本地用户信息？", "注销", wx.ICON_INFORMATION | wx.YES_NO)

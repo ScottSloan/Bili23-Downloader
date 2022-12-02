@@ -315,7 +315,7 @@ class MiscTab(wx.Panel):
     def init_sections_UI(self):
         sections_box = wx.StaticBox(self, -1, "剧集列表显示设置")
 
-        self.show_sections_chk = wx.CheckBox(sections_box, -1, "显示完整剧集列表 (如 PV、OP、ED 等)")
+        self.show_sections_chk = wx.CheckBox(sections_box, -1, "显示非正片剧集 (如花絮、PV、OP、ED 等)")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.show_sections_chk, 0, wx.ALL, 10)
@@ -517,10 +517,10 @@ class ProxyTab(wx.Panel):
             
             end_time = time.time()
 
-            wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_time - start_time), "提示", wx.ICON_INFORMATION).ShowModal()
+            wx.MessageDialog(self, "测试成功\n\n请求站点：{}\n状态码：{}\n耗时：{:.1f}s".format(Config.app_bilibili_website, req.status_code, end_time - start_time), "提示", wx.ICON_INFORMATION).ShowModal()
 
         except requests.RequestException as e:
-            wx.MessageDialog(self, "测试失败\n\n请求站点：{}\n错误信息：\n\n{}".format(Config.app_bilibili_website, e), "提示", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n请求站点：{}\n错误信息：\n\n{}".format(Config.app_bilibili_website, e), "测试代理", wx.ICON_WARNING).ShowModal()
 
 conf = RawConfigParser()
 conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")

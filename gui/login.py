@@ -1,7 +1,5 @@
 import wx
-import json
 import wx.adv
-import requests
 import datetime
 from io import BytesIO
 
@@ -74,7 +72,7 @@ class LoginWindow(Dialog):
         json = self.login.check_scan()
 
         if json["code"] == 0:
-            user_info = self.login.get_user_info(True)
+            user_info = self.login.get_user_info(session = True)
             self.save_user_info(user_info)
 
             self.Hide()
@@ -120,10 +118,10 @@ class LoginWindow(Dialog):
                     self.timer.Stop()
                     self.Destroy()
                 except:
-                    wx.MessageDialog(self, "登录失败\n\n登录失败，请检查 Cookie 是否有效", "错误", wx.ICON_WARNING).ShowModal()
+                    wx.MessageDialog(self, "登录失败\n\n使用 Cookie 登录失败，可能的原因：\n\n1. Cookie 错误\n2. Cookie 过期", "错误", wx.ICON_WARNING).ShowModal()
 
     def save_user_info(self, user_info: dict):
-        time = datetime.datetime.now() + datetime.timedelta(days = 30)
+        time = datetime.datetime.now() + datetime.timedelta(days = 180)
 
         remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
         

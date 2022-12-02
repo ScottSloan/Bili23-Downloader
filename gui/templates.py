@@ -201,11 +201,19 @@ class InfoBar(wx.InfoBar):
             self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 401:
-            msg = "请选择要下载的视频"
+            msg = "请选择要下载的资源"
             self._show_message(msg, wx.ICON_WARNING, 1)
 
         elif code == 402:
             msg = "无法获取视频下载地址"
+            self._show_message(msg, wx.ICON_ERROR, 0)
+
+        elif code == 403:
+            msg = "未登录，无法下载大会员专享资源"
+            self._show_message(msg, wx.ICON_ERROR, 0)
+
+        elif code == 406:
+            msg = "大会员鉴权失败，请检查大会员是否过期"
             self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 404:
@@ -234,3 +242,11 @@ class InfoBar(wx.InfoBar):
             msg = "您已注销登录"
             self._show_message(msg, wx.ICON_INFORMATION, 2)
 
+        if code == 300:
+            msg = "当前未登录，无法下载大会员专享视频"
+            self._show_message(msg, wx.ICON_WARNING, 2)
+        
+        elif code == 301:
+            msg = "大会员鉴权失败，此部分视频无法下载"
+            self._show_message(msg, wx.ICON_WARNING, 2)
+        

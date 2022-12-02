@@ -75,31 +75,27 @@ def format_size(size):
     else:
         return "{:.1f} KB".format(size)
 
-def save_pic(contents, path):
+def save_pic(url, path):
     if os.path.exists(path):
         return
 
-    with open(path, "wb") as f:
-        f.write(contents)
+    request = requests.get(url = url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
 
-def get_face_pic(url):
-    request =  requests.get(url = url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    
-    save_pic(request.content, Config.res_face)
+    with open(path, "wb") as f:
+        f.write(request.content)
+
+def get_face_pic(url):    
+    save_pic(url, Config.res_face)
 
     return Config.res_face
 
-def get_level_pic(level):
-    request = requests.get(url = Config.app_level.format(level), headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    
-    save_pic(request.content, Config.res_level)
+def get_level_pic(level):    
+    save_pic(Config.app_level.format(level), Config.res_level)
     
     return Config.res_level
 
 def get_vip_badge_pic(url): 
-    request = requests.get(url = url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-
-    save_pic(request.content, Config.res_badge)
+    save_pic(url, Config.res_badge)
 
     return Config.res_badge
 
@@ -127,17 +123,21 @@ def convert_json_to_srt(data):
     
     return file
 
-def check_update_json():
+def get_update_json():
     update_request = requests.get(url = Config.app_update_json, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    update_json = json.loads(update_request.text)
     
-    if update_json["version_code"] > Config.app_version_code:
-        changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-        changelog_request.encoding = "utf-8"
+    try:
+        update_json = json.loads(update_request.text)
 
-        update_json["changelog"] = changelog_request.text
-    
-    return update_json
+        if update_json["version_code"] > Config.app_version_code:
+            changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+            changelog_request.encoding = "utf-8"
+
+            update_json["changelog"] = changelog_request.text
+        
+        return update_json
+    except:
+        return {"error": True}
 
 def get_changelog():
     changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
@@ -152,7 +152,7 @@ def format_bangumi_title(episode):
     from .bangumi import BangumiInfo
 
     if BangumiInfo.type == "电影":
-        return BangumiInfo.title + episode["title"]
+        return "{} - {}".format(BangumiInfo.title, episode["title"])
     else:
         return episode["share_copy"]
 
