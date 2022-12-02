@@ -81,7 +81,12 @@ class UserWindow(Dialog):
         level = wx.Image(get_level_pic(Config.user_level)).Scale(40, 20)
         self.level.SetBitmap(wx.Bitmap(level, wx.BITMAP_SCREEN_DEPTH))
 
-        badge = wx.Image(get_vip_badge_pic(Config.user_vip_badge)).Scale(60, 25)
+        if Config.user_vip_status == 0:
+            w, h = 60, 25
+        else:
+            w, h = 69, 20
+        
+        badge = wx.Image(get_vip_badge_pic(Config.user_vip_badge)).Scale(w, h)
         self.vip_badge.SetBitmap(wx.Bitmap(badge, wx.BITMAP_SCREEN_DEPTH))
 
         self.expire_lab.SetLabel("登录有效期至：{}".format(Config.user_expire))
@@ -95,22 +100,26 @@ class UserWindow(Dialog):
         self.refresh_btn.Bind(wx.EVT_BUTTON, self.refresh_btn_EVT)
 
     def get_user_info(self):
-        info_request = requests.get(self.user_info_url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
-        info_json = json.loads(info_request.text)["data"]
+        from utils.login import QRLogin
+        
+        login = QRLogin()
+        user_info = login.get_user_info(cookie = Config.user_sessdata)
 
-        Config.user_name = info_json["uname"]
-        Config.user_face = info_json["face"]
-        Config.user_level = info_json["level_info"]["current_level"]
-        Config.user_vip_status = info_json["vipStatus"],
-        Config.user_vip_badge = info_json["vip_label"]["img_label_uri_hans_static"]
+        Config.user_name = user_info["uname"]
+        Config.user_face = user_info["face"]
+        Config.user_level = user_info["level"]
+        Config.user_vip_status = user_info["vip_status"]
+        Config.user_vip_badge = user_info["vip_badge"]
 
         remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
 
-        wx.CallAfter(self.load_info)
-        wx.CallAfter(self.Parent.init_userinfo)
+        self.load_info()
+        self.Parent.init_userinfo()
+        
+        Config.set_user_info()
 
         self.Cursor = wx.Cursor(wx.CURSOR_ARROW)
-
+        
     def refresh_btn_EVT(self, event):
         self.Cursor = wx.Cursor(wx.CURSOR_WAIT)
         
@@ -124,8 +133,7 @@ class UserWindow(Dialog):
         if dlg.ShowModal() == wx.ID_NO:
             return
 
-        Config.user_uid = Config.user_name = Config.user_face = Config.user_expire = Config.user_level = Config.user_sessdata = Config.user_vip_badge = ""
-        Config.user_vip_status = Config.user_login = False
+        Config.reset_user_info()
 
         Config.set_user_info()
         

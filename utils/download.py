@@ -52,7 +52,7 @@ class Downloader:
         self.Thread_Pool.shutdown(False)
 
     def range_download(self, url: str, referer_url: str, path: str, chunk_list: list):
-        req = self.session.get(url, headers = get_header(referer_url, None, chunk_list), stream = True, proxies = get_proxy())
+        req = self.session.get(url, headers = get_header(referer_url, None, chunk_list), stream = True, proxies = get_proxy(), auth = get_auth())
         
         with open(path, "rb+") as f:
             f.seek(chunk_list[0])

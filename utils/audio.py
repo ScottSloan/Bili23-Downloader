@@ -37,7 +37,7 @@ class AudioParser:
         AudioInfo.url = "https://www.bilibili.com/audio/am{}".format(AudioInfo.amid)
 
     def get_audio_info(self):
-        audio_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy())
+        audio_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
         self.check_json(audio_json)
@@ -51,7 +51,7 @@ class AudioParser:
         AudioInfo.down_list = AudioInfo.playlist = []
     
     def get_playlist_info(self):
-        audio_request = requests.get(self.playlist_api, headers = get_header(), proxies = get_proxy())
+        audio_request = requests.get(self.playlist_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
         self.check_json(audio_json)

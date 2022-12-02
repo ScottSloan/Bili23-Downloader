@@ -560,9 +560,9 @@ class DownloadUtils:
 
         try:
             if type == "video":
-                request = requests.get(self.video_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
+                request = requests.get(self.video_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
             elif type == "bangumi":
-                request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy())
+                request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         
             request_json = json.loads(request.text)
             json_dash = request_json["result"]["dash"]
@@ -575,7 +575,7 @@ class DownloadUtils:
     def get_video_durl_via_html(self):
         re_pattern = r"window.__playinfo__=(.*?)</script>"
         
-        request = requests.get(self.get_full_url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
+        request = requests.get(self.get_full_url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
 
         try:
             json_raw = re.findall(re_pattern, request.text, re.S)[0]
@@ -585,7 +585,7 @@ class DownloadUtils:
             wx.CallAfter(self.onError)
 
     def get_audio_durl(self):
-        audio_request = requests.get(self.audio_durl_api, headers = get_header(self.info["url"]), proxies = get_proxy())
+        audio_request = requests.get(self.audio_durl_api, headers = get_header(self.info["url"]), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
         self.audio_durl = audio_json["data"]["cdns"][0]
@@ -649,7 +649,7 @@ class DownloadUtils:
             return
 
         subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(self.info["cid"], self.info["bvid"])
-        req = requests.get(subtitle_url, headers = get_header(), proxies = get_proxy())
+        req = requests.get(subtitle_url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
 
         subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', req.text)[0]
         subtitle_json = json.loads(subtitle_raw)["subtitles"]

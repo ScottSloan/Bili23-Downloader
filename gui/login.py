@@ -5,7 +5,7 @@ import requests
 import datetime
 from io import BytesIO
 
-from utils.login import Login
+from utils.login import QRLogin
 from utils.config import Config
 from utils.tools import *
 
@@ -27,7 +27,8 @@ class LoginWindow(Dialog):
         return "https://api.bilibili.com/x/web-interface/nav"
 
     def init_login(self):
-        self.login = Login()
+        self.login = QRLogin()
+        self.login.init_qrcode()
 
         self.timer = wx.Timer(self, -1)
         self.timer.Start(1000)
@@ -72,8 +73,9 @@ class LoginWindow(Dialog):
     def onTimer(self, event):
         json = self.login.check_scan()
 
-        if json["code"] == 0:  
-            self.save_user_info(self.login.get_user_info())
+        if json["code"] == 0:
+            user_info = self.login.get_user_info(True)
+            self.save_user_info(user_info)
 
             self.Hide()
 
@@ -93,11 +95,13 @@ class LoginWindow(Dialog):
         self.Parent.init_userinfo()
 
     def refresh_qrcode(self):
-        self.login = Login()
+        self.login = QRLogin()
 
         qrcode = wx.Image(BytesIO(self.login.get_qrcode_pic())).Scale(200, 200)
 
         self.qrcode.SetBitmap(wx.Bitmap(qrcode, wx.BITMAP_SCREEN_DEPTH))
+
+        self.panel.Layout()
 
     def hyperlink_EVT(self, event):
         dlg = wx.TextEntryDialog(self.panel, "请将 Cookie SESSDATA 字段粘贴至此", "Cookie 登录")
@@ -107,7 +111,7 @@ class LoginWindow(Dialog):
 
             if self.cookie != "":
                 try:
-                    user_info = self.get_user_info()
+                    user_info = self.login.get_user_info(cookie = self.cookie)
 
                     self.save_user_info(user_info)
 
@@ -117,34 +121,19 @@ class LoginWindow(Dialog):
                     self.Destroy()
                 except:
                     wx.MessageDialog(self, "登录失败\n\n登录失败，请检查 Cookie 是否有效", "错误", wx.ICON_WARNING).ShowModal()
-    
-    def get_user_info(self):
-        info_request = requests.get(self.user_info_url, headers = get_header(cookie = self.cookie), proxies = get_proxy())
-        info_json = json.loads(info_request.text)["data"]
-
-        Config.user_login = True
-
-        remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
-
-        return {
-            "uid": info_json["mid"],
-            "uname": info_json["uname"],
-            "face": info_json["face"],
-            "level": info_json["level_info"]["current_level"],
-            "vip_status": info_json["vipStatus"],
-            "vip_badge": info_json["vip_label"]["img_label_uri_hans_static"],
-            "sessdata": self.cookie
-        }
 
     def save_user_info(self, user_info: dict):
         time = datetime.datetime.now() + datetime.timedelta(days = 30)
 
+        remove_files(Config._res_path, ["face.jpg", "level.png", "badge.png"])
+        
+        Config.user_login = True
         Config.user_uid = user_info["uid"]
         Config.user_name = user_info["uname"]
         Config.user_face = user_info["face"]
         Config.user_level = user_info["level"]
         Config.user_expire = datetime.datetime.strftime(time, "%Y-%m-%d %H:%M:%S")
-        Config.user_vip_status = bool(user_info["vip_status"])
+        Config.user_vip_status = user_info["vip_status"]
         Config.user_vip_badge = user_info["vip_badge"]
         Config.user_sessdata = user_info["sessdata"]
 

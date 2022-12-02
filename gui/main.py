@@ -201,10 +201,10 @@ class MainWindow(Frame):
             AboutWindow(self)
 
         elif evt_id == 200:
-            if Config.user_name == "":
-                LoginWindow(self).ShowWindowModal()
-            else:
+            if Config.user_login:
                 UserWindow(self).ShowWindowModal()
+            else:
+                LoginWindow(self).ShowWindowModal()
 
         elif evt_id == 210:
             SettingWindow(self).ShowWindowModal()
@@ -348,7 +348,7 @@ class MainWindow(Frame):
             self.show_download_window = True
     
     def userinfo_EVT(self, event):
-        if Config.user_name != "":
+        if Config.user_login:
             UserWindow(self).ShowWindowModal()
         else:
             LoginWindow(self).ShowWindowModal()

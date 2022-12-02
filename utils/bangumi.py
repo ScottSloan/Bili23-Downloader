@@ -2,7 +2,7 @@ import re
 import requests
 import json
 
-from .tools import get_header, get_proxy
+from .tools import *
 from .config import Config
 
 class BangumiInfo:
@@ -47,7 +47,7 @@ class BangumiParser:
     def get_media_id(self, url: str):
         BangumiInfo.mid = re.findall(r"md[0-9]*", url)[0][2:]
 
-        media_request = requests.get(self.media_api, headers = get_header(), proxies = get_proxy())
+        media_request = requests.get(self.media_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         media_json = json.loads(media_request.text)
 
         self.check_json(media_json)
@@ -56,7 +56,7 @@ class BangumiParser:
         self.argument, self.value = "season_id", BangumiInfo.ssid
     
     def get_bangumi_info(self):
-        info_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy())
+        info_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
         self.check_json(info_json)
@@ -101,7 +101,7 @@ class BangumiParser:
             BangumiInfo.type = "综艺"
 
     def get_bangumi_quality(self):
-        bangumi_request = requests.get(self.quality_api, headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
+        bangumi_request = requests.get(self.quality_api, headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         bangumi_json = json.loads(bangumi_request.text)
         
         self.check_json(bangumi_json)

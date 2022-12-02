@@ -2,6 +2,8 @@ import wx
 import os
 import time
 import requests
+from threading import Thread
+from requests.auth import HTTPProxyAuth
 from configparser import RawConfigParser
 
 from .templates import Dialog
@@ -23,8 +25,8 @@ class SettingWindow(Dialog):
 
         self.note.AddPage(DownloadTab(self.note), "下载")
         self.note.AddPage(SaveTab(self.note), "弹幕&&字幕&&歌词")
-        self.note.AddPage(MiscTab(self.note), "其他")
         self.note.AddPage(ProxyTab(self.note), "代理")
+        self.note.AddPage(MiscTab(self.note), "其他")
 
         botton_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -387,78 +389,138 @@ class ProxyTab(wx.Panel):
     
     def Bind_EVT(self):
         self.enable_chk.Bind(wx.EVT_CHECKBOX, self.enable_chk_EVT)
+        self.auth_chk.Bind(wx.EVT_CHECKBOX, self.auth_chk_EVT)
+        
         self.test_btn.Bind(wx.EVT_BUTTON, self.test_btn_EVT)
 
     def load_conf(self):
         if not Config.enable_proxy:
-            self.ip_box.Enable(False)
-            self.port_box.Enable(False)
-            self.test_btn.Enable(False)
+            self.set_proxy_enable(False)
+
+        if not Config.enable_auth:
+            self.set_auth_enable(False)
 
         self.enable_chk.SetValue(Config.enable_proxy)
         self.ip_box.SetValue(Config.proxy_ip)
         self.port_box.SetValue(Config.proxy_port)
     
+        self.auth_chk.SetValue(Config.enable_proxy)
+        self.uname_box.SetValue(Config.proxy_ip)
+        self.pwd_box.SetValue(Config.proxy_port)
+
     def save_conf(self):
         Config.enable_proxy = self.enable_chk.GetValue()
         Config.proxy_ip = self.ip_box.GetValue()
         Config.proxy_port = self.port_box.GetValue()
 
+        Config.enable_auth = self.enable_chk.GetValue()
+        Config.auth_uname = self.ip_box.GetValue()
+        Config.auth_pwd = self.port_box.GetValue()
+
         conf.set("proxy", "enable", str(int(Config.enable_proxy)))
         conf.set("proxy", "address", Config.proxy_ip)
         conf.set("proxy", "port", Config.proxy_port)
 
+        conf.set("auth", "auth", str(int(Config.enable_auth)))
+        conf.set("auth", "uname", Config.auth_uname)
+        conf.set("auth", "pwd", Config.auth_pwd)
+
     def init_proxy_UI(self):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
-
-        ip_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        
         self.enable_chk = wx.CheckBox(proxy_box, -1, "启用代理")
+        
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
         self.ip_box = wx.TextCtrl(proxy_box, -1)
 
-        self.test_btn = wx.Button(proxy_box, -1, "测试", size = self.FromDIP((80, 30)))
-
-        ip_hbox.Add(ip_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        ip_hbox.Add(self.ip_box, 1, wx.ALL & (~wx.LEFT), 10)
-
-        port_hbox = wx.BoxSizer(wx.HORIZONTAL)
         port_lab = wx.StaticText(proxy_box, -1, "端口")
         self.port_box = wx.TextCtrl(proxy_box, -1)
 
-        port_hbox.Add(port_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        port_hbox.Add(self.port_box, 1, wx.ALL & (~wx.LEFT) & (~wx.TOP), 10)
+        self.auth_chk = wx.CheckBox(proxy_box, -1, "启用代理身份验证")
+        
+        uname_lab = wx.StaticText(proxy_box, -1, "用户名")
+        self.uname_box = wx.TextCtrl(proxy_box, -1)
+
+        pwd_lab = wx.StaticText(proxy_box, -1, "密码")
+        self.pwd_box = wx.TextCtrl(proxy_box, -1)
+
+        self.test_btn = wx.Button(proxy_box, -1, "测试", size = self.FromDIP((80, 30)))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.enable_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
-        vbox.Add(ip_hbox)
-        vbox.Add(port_hbox)
-        vbox.Add(self.test_btn, 0, wx.ALL & (~wx.TOP), 10)
+        bag_box = wx.GridBagSizer(5, 4)
+
+        bag_box.Add(ip_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.ip_box, pos = (0, 1), span = (1, 3), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = 10)
+        bag_box.Add(port_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.port_box, pos = (1, 1), span = (1, 2), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = 10)
+
+        bag_box.Add(self.auth_chk, pos = (2, 0), span = (1, 2), flag = wx.ALL | wx.EXPAND, border = 10)
+
+        bag_box.Add(uname_lab, pos = (3, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.uname_box, pos = (3, 1), span = (1, 3), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = 10)
+        bag_box.Add(pwd_lab, pos = (4, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.pwd_box, pos = (4, 1), span = (1, 3), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = 10)
+
+        vbox.Add(self.enable_chk, 0, wx.ALL, 10)
+        vbox.Add(bag_box)
+        vbox.Add(self.test_btn, 0, wx.ALL, 10)
 
         proxy_sbox = wx.StaticBoxSizer(proxy_box)
         proxy_sbox.Add(vbox)
 
         self.vbox.Add(proxy_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
+    def set_proxy_enable(self, enable):
+        self.ip_box.Enable(enable)
+        self.port_box.Enable(enable)
+
+    def set_auth_enable(self, enable):
+        self.uname_box.Enable(enable)
+        self.pwd_box.Enable(enable)
+
     def enable_chk_EVT(self, event):
         if event.IsChecked():
-            self.ip_box.Enable(True)
-            self.port_box.Enable(True)
-            self.test_btn.Enable(True)
+            self.set_proxy_enable(True)
         else:
-            self.ip_box.Enable(False)
-            self.port_box.Enable(False)
-            self.test_btn.Enable(False)
-    
+            self.set_proxy_enable(False)
+
+    def auth_chk_EVT(self, event):
+        if event.IsChecked():
+            self.set_auth_enable(True)
+        else:
+            self.set_auth_enable(False)
+ 
     def test_btn_EVT(self, event):
+        if self.enable_chk.GetValue():
+            proxy = {
+                "http": "{}:{}".format(self.ip_box.GetValue(), self.port_box.GetValue()),
+                "https": "{}:{}".format(self.ip_box.GetValue(), self.port_box.GetValue())
+            }
+        else:
+            proxy = {}
+
+        if self.auth_chk.GetValue():
+            auth = HTTPProxyAuth(
+                self.uname_box.GetValue(),
+                self.pwd_box.GetValue()
+            )
+        else:
+            auth = HTTPProxyAuth(None, None)
+
+        Thread(target = self.test_website, args = (proxy, auth, )).start()
+
+    def test_website(self, proxy, auth):
         try:
             start_time = time.time()
-            req = requests.get("https://www.bilibili.com", headers = get_header(), proxies = {"http":"{}:{}".format(self.ip_box.GetValue(), self.port_box.GetValue())}, timeout = 3)
+
+            req = requests.get(url = Config.app_bilibili_website, headers = get_header(), proxies = proxy, auth = auth, timeout = 3)
+            
             end_time = time.time()
 
             wx.MessageDialog(self, "测试成功\n\n状态码：{}\n耗时：{:.1f}s".format(req.status_code, end_time - start_time), "提示", wx.ICON_INFORMATION).ShowModal()
 
         except requests.RequestException as e:
-            wx.MessageDialog(self, "测试失败\n\n{}".format(e), "提示", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n请求站点：{}\n错误信息：\n\n{}".format(Config.app_bilibili_website, e), "提示", wx.ICON_WARNING).ShowModal()
 
 conf = RawConfigParser()
 conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")

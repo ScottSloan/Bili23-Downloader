@@ -43,7 +43,7 @@ class VideoParser:
     def get_aid(self, url: str):
         VideoInfo.aid = re.findall(r"av[0-9]*", url)[0][2:]
         
-        aid_request = requests.get(self.aid_api, headers = get_header(), proxies = get_proxy())
+        aid_request = requests.get(self.aid_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         aid_json = json.loads(aid_request.text)
 
         self.check_json(aid_json)
@@ -59,7 +59,7 @@ class VideoParser:
         VideoInfo.bvid, VideoInfo.url = bvid, "https://www.bilibili.com/video/" + bvid
 
     def get_video_info(self):
-        info_request = requests.get(self.info_api, headers = get_header(VideoInfo.url, cookie = Config.user_sessdata), proxies = get_proxy())
+        info_request = requests.get(self.info_api, headers = get_header(VideoInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
         self.check_json(info_json)
@@ -87,7 +87,7 @@ class VideoParser:
             VideoInfo.episodes = []
 
     def get_video_quality(self):
-        video_request = requests.get(self.quality_api, headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy())
+        video_request = requests.get(self.quality_api, headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         video_json = json.loads(video_request.text)
 
         self.check_json(video_json)

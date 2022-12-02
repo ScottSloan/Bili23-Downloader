@@ -29,7 +29,7 @@ class LiveParser:
             self.onError(400)
 
     def get_live_info(self):
-        live_req = requests.get(self.info_api, headers = get_header(), proxies = get_proxy())
+        live_req = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         live_json = json.loads(live_req.text)
 
         if live_json["code"] != 0:
@@ -42,7 +42,7 @@ class LiveParser:
         LiveInfo.live_status = live_data[str(LiveInfo.room_id)]["live_status"]
 
     def get_live_playurl(self):
-        live_req = requests.get(self.playurl_api, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
+        live_req = requests.get(self.playurl_api, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         live_json = json.loads(live_req.text)
 
         if live_json["code"] != 0:

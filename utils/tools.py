@@ -3,6 +3,7 @@ import os
 import json
 import math
 import requests
+from requests.auth import HTTPProxyAuth
 
 from .config import Config
 
@@ -14,12 +15,12 @@ def process_shortlink(url):
     if not url.startswith("https"):
         url = "https://" + url
 
-    return requests.get(url, headers = get_header(), proxies = get_proxy()).url
+    return requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth()).url
 
 def process_activity_url(url):
     re_pattern = r"\"videoID\":\"(.*?)\""
         
-    request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy())
+    request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
     
     try:
         return "ep" + re.findall(re_pattern, request.text.replace("\\", ""), re.S)[0]
@@ -45,12 +46,19 @@ def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
     return header
 
 def get_proxy():
-    proxy = {}
-
     if Config.enable_proxy:
-        proxy["http"] = "{}:{}".format(Config.proxy_ip, Config.proxy_port)
+        return {
+            "http": "{}:{}".format(Config.proxy_ip, Config.proxy_port),
+            "https": "{}:{}".format(Config.proxy_ip, Config.proxy_port)
+        }
+    else:
+        return {}
 
-    return proxy
+def get_auth():
+    if Config.enable_auth:
+        return HTTPProxyAuth(Config.auth_uname, Config.auth_pwd)
+    else:
+        return HTTPProxyAuth(None, None)
 
 def remove_files(path, name):
     for i in name:
@@ -68,31 +76,35 @@ def format_size(size):
         return "{:.1f} KB".format(size)
 
 def save_pic(contents, path):
+    if os.path.exists(path):
+        return
+
     with open(path, "wb") as f:
         f.write(contents)
 
-def get_face_pic(url):    
-    if not os.path.exists(Config.res_face):
-        save_pic(requests.get(url).content, Config.res_face)
+def get_face_pic(url):
+    request =  requests.get(url = url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+    
+    save_pic(request.content, Config.res_face)
 
     return Config.res_face
 
 def get_level_pic(level):
-    web_url = "https://scottsloan.github.io/Bili23-Downloader/level/level{}.png".format(level)
+    request = requests.get(url = Config.app_level.format(level), headers = get_header(), proxies = get_proxy(), auth = get_auth())
     
-    if not os.path.exists(Config.res_level):
-        save_pic(requests.get(web_url).content, Config.res_level)
+    save_pic(request.content, Config.res_level)
     
     return Config.res_level
 
-def get_vip_badge_pic(url):    
-    if not os.path.exists(Config.res_badge):
-        save_pic(requests.get(url).content, Config.res_badge)
+def get_vip_badge_pic(url): 
+    request = requests.get(url = url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+
+    save_pic(request.content, Config.res_badge)
 
     return Config.res_badge
 
 def get_file_from_url(url, name, subtitle = False):
-    request = requests.get(url, headers = get_header(), proxies = get_proxy())
+    request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
     request.encoding = "utf-8"
     
     with open(os.path.join(Config.download_path, get_legal_name(name)), "w", encoding = "utf-8") as f:
@@ -116,11 +128,11 @@ def convert_json_to_srt(data):
     return file
 
 def check_update_json():
-    update_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/update.json")
+    update_request = requests.get(url = Config.app_update_json, headers = get_header(), proxies = get_proxy(), auth = get_auth())
     update_json = json.loads(update_request.text)
     
     if update_json["version_code"] > Config.app_version_code:
-        changelog_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/CHANGELOG")
+        changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         changelog_request.encoding = "utf-8"
 
         update_json["changelog"] = changelog_request.text
@@ -128,7 +140,7 @@ def check_update_json():
     return update_json
 
 def get_changelog():
-    changelog_request = requests.get("https://scottsloan.github.io/Bili23-Downloader/CHANGELOG")
+    changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
     changelog_request.encoding = "utf-8"
 
     return changelog_request.text

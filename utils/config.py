@@ -25,6 +25,9 @@ class Config:
     enable_proxy = False
     proxy_ip = ""
     proxy_port = ""
+    enable_auth = False
+    auth_uname = ""
+    auth_pwd = ""
 
     show_sections = False
     save_danmaku = False
@@ -46,11 +49,15 @@ class Config:
     user_login = False
 
     app_name = "Bili23 Downloader GUI"
-    app_version = "1.32"
-    app_version_code = 1321
+    app_version = "1.33"
+    app_version_code = 1331
     app_date = "2022-12-1"
     app_website = "https://github.com/ScottSloan/Bili23-Downloader"
-
+    app_changelog = "https://scottsloan.github.io/Bili23-Downloader/CHANGELOG"
+    app_update_json = "https://scottsloan.github.io/Bili23-Downloader/update.json"
+    app_level = "https://scottsloan.github.io/Bili23-Downloader/level/level{}.png"
+    app_bilibili_website = "https://www.bilibili.com"
+    
     platform = platform.platform()
 
     ffmpeg_available = False
@@ -65,12 +72,17 @@ class Config:
         conf.set("user", "face", Config.user_face)
         conf.set("user", "expire", Config.user_expire)
         conf.set("user", "level", Config.user_level)
-        conf.set("user", "vip_status", str(int(Config.user_vip_status)))
+        conf.set("user", "vip_status", str(Config.user_vip_status))
         conf.set("user", "vip_badge", Config.user_vip_badge)
         conf.set("user", "sessdata", Config.user_sessdata)
 
         with open(os.path.join(os.getcwd(), "config.conf"), "w", encoding = "utf-8") as f:
             conf.write(f)
+
+    def reset_user_info():
+        Config.user_name = Config.user_uid = Config.user_face = Config.user_expire = Config.user_sessdata = Config.user_level = Config.user_vip_badge = ""
+        Config.user_login = False
+        Config.user_vip_status = 0
 
 class LoadConfig:
     def __init__(self):
@@ -99,12 +111,16 @@ class LoadConfig:
         Config.proxy_ip = conf.get("proxy", "address")
         Config.proxy_port = conf.get("proxy", "port")
 
+        Config.enable_auth = conf.getboolean("auth", "auth")
+        Config.auth_uname = conf.get("auth", "uname")
+        Config.auth_pwd = conf.get("auth", "pwd")
+
         Config.user_uid = conf.get("user", "uid")
         Config.user_name = conf.get("user", "uname")
         Config.user_face = conf.get("user", "face")
         Config.user_level = conf.get("user", "level")
         Config.user_expire = conf.get("user", "expire")
-        Config.user_vip_status = conf.getboolean("user", "vip_status")
+        Config.user_vip_status = conf.getint("user", "vip_status")
         Config.user_vip_badge = conf.get("user", "vip_badge")
         Config.user_sessdata = conf.get("user", "sessdata")
         
