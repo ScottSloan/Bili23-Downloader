@@ -45,8 +45,7 @@ class LiveParser:
         live_req = requests.get(self.playurl_api, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         live_json = json.loads(live_req.text)
 
-        if live_json["code"] != 0:
-            self.onError(404)
+        self.check_json(live_json)
 
         LiveInfo.playurl = live_json["data"]["durl"][0]["url"]
 
@@ -55,4 +54,7 @@ class LiveParser:
 
         self.get_live_info()
         self.get_live_playurl()
-        
+    
+    def  check_json(self, json):
+        if json["code"] != 0:
+            self.onError(404)

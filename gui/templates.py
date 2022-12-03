@@ -208,14 +208,6 @@ class InfoBar(wx.InfoBar):
             msg = "无法获取视频下载地址"
             self._show_message(msg, wx.ICON_ERROR, 0)
 
-        elif code == 403:
-            msg = "未登录，无法下载大会员专享资源"
-            self._show_message(msg, wx.ICON_ERROR, 0)
-
-        elif code == 406:
-            msg = "大会员鉴权失败，请检查大会员是否过期"
-            self._show_message(msg, wx.ICON_ERROR, 0)
-
         elif code == 404:
             msg = "无法获取直播源"
             self._show_message(msg, wx.ICON_ERROR, 0)

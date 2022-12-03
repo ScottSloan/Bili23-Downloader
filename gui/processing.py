@@ -1,6 +1,6 @@
 import wx
 
-from gui.templates import Dialog
+from .templates import Dialog
 
 class ProcessingWindow(Dialog):
     def __init__(self, parent):

@@ -486,7 +486,10 @@ class DownloadItemPanel(wx.Panel):
         
         self.info["update_title"](error = True)
 
-        raise ProcessError("下载失败：无法获取下载链接")
+        if not Config.user_login:
+            raise ProcessError("当前未登录，无法获取下载大会员专享视频")
+        elif Config.user_vip_status == 0:
+            raise ProcessError("大会员鉴权失败，无法下载此视频")
 
     def start_download(self):
         self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
