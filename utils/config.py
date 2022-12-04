@@ -18,7 +18,6 @@ class Config:
 
     max_thread = 4
     codec = "HEVC"
-    mode = "html"
     default_quality = 80
     show_notification = False
 
@@ -93,7 +92,6 @@ class LoadConfig:
 
         Config.download_path = download_path if download_path != "" else os.path.join(os.getcwd(), "download")
         Config.max_thread = conf.getint("download", "thread")
-        Config.mode = conf.get("download", "mode")
         Config.codec = conf.get("download", "codec")
         Config.default_quality = conf.getint("download", "quality")
         Config.show_notification = conf.getboolean("download", "notification")

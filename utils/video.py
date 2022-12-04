@@ -71,7 +71,7 @@ class VideoParser:
         VideoInfo.cid = info_data["cid"]
         VideoInfo.pages = info_data["pages"]
 
-        VideoInfo.type = "page" if len(VideoInfo.pages) > 1 else "video"
+        VideoInfo.type = "pages" if len(VideoInfo.pages) > 1 else "video"
         
         if "ugc_season" in info_data:
             VideoInfo.type = "collection"
