@@ -18,6 +18,7 @@ from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.live import LiveInfo, LiveParser
 from utils.audio import AudioInfo, AudioParser
+from utils.cheese import CheeseInfo, CheeseParser
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -46,6 +47,7 @@ class MainWindow(Frame):
         self.bangumi_parser = BangumiParser(self.onError)
         self.live_parser = LiveParser(self.onError)
         self.audio_parser = AudioParser(self.onError)
+        self.cheese_parser = CheeseParser(self.onError)
 
         wx.CallAfter(self.treelist.SetFocus)
 
@@ -246,12 +248,19 @@ class MainWindow(Frame):
             self.set_video_list()
             self.set_quality(VideoInfo)
 
-        elif find_str("ep|ss|md", url):
+        elif find_str("ep|ss|md", url) and "cheese" not in url:
             self.type = BangumiInfo
             self.bangumi_parser.parse_url(url)
 
             self.set_bangumi_list()
             self.set_quality(BangumiInfo)
+
+        elif find_str("ep|ss", url) and "cheese" in url:
+            self.type = CheeseInfo
+            self.cheese_parser.parse_url(url)
+
+            self.set_cheese_list()
+            self.set_quality(CheeseInfo)
 
         elif find_str("live", url):
             self.type = LiveInfo
@@ -321,6 +330,12 @@ class MainWindow(Frame):
     def set_audio_list(self):
         wx.CallAfter(self.treelist.set_audio_list)
         self.type_lab.SetLabel("音乐 (共 {} 首)".format(AudioInfo.count))
+    
+    def set_cheese_list(self):
+        count = len(CheeseInfo.episodes)
+
+        wx.CallAfter(self.treelist.set_cheese_list)
+        self.type_lab.SetLabel("课程 (共 {} 节)".format(count))
 
     def set_quality(self, type):
         self.quality_choice.Set(type.quality_desc)

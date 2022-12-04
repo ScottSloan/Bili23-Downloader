@@ -7,6 +7,7 @@ from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.live import LiveInfo
 from utils.audio import AudioInfo
+from utils.cheese import CheeseInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, has_panel = True):
@@ -74,7 +75,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if not Config.show_sections and key != "正片":
                 continue
 
-            items_content[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode["duration"])] for index, episode in enumerate(value)]
+            items_content[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode["duration"], bangumi = True)] for index, episode in enumerate(value)]
 
             self.rootitems.append(key)
 
@@ -101,6 +102,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             items_content["音乐"] = [["1", AudioInfo.title, "", format_duration(AudioInfo.duration)]]
 
             self.rootitems.append("音乐")
+
+        self.append_list(items_content)
+
+    def set_cheese_list(self):
+        items_content = {}
+
+        self.rootitems.append("课程")
+        items_content["课程"] = [[str(i["index"]), i["title"], "", format_duration(i["duration"])] for i in CheeseInfo.episodes]
 
         self.append_list(items_content)
 
@@ -137,6 +146,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         VideoInfo.down_pages.clear()
         BangumiInfo.down_episodes.clear()
         AudioInfo.down_list.clear()
+        CheeseInfo.down_episodes.clear()
 
         for i in self.all_list_items:
             text = self.GetItemText(i, 0)
@@ -171,6 +181,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                         AudioInfo.down_list.append(AudioInfo.playlist[index - 1])
                     else:
                         AudioInfo.down_list.append({"id": AudioInfo.sid, "title": AudioInfo.title, "lyric": AudioInfo.lyric})
+
+                elif type == CheeseInfo:
+                    index = int(self.GetItemText(i, 0))
+
+                    CheeseInfo.down_episodes.append(CheeseInfo.episodes[index - 1])
 
         if len(VideoInfo.down_pages) == 0 and len(BangumiInfo.down_episodes) == 0 and len(AudioInfo.down_list) == 0:
             self.onError(401)
@@ -212,6 +227,10 @@ class InfoBar(wx.InfoBar):
 
         elif code == 402:
             msg = "无法获取视频下载地址"
+            self._show_message(msg, wx.ICON_ERROR, 0)
+
+        elif code == 403:
+            msg = "无法解析未购买的课程"
             self._show_message(msg, wx.ICON_ERROR, 0)
 
         elif code == 404:

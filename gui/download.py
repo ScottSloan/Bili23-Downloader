@@ -10,6 +10,7 @@ from threading import Thread
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.audio import AudioInfo
+from utils.cheese import CheeseInfo
 from utils.download import Downloader
 from utils.config import Config
 from utils.tools import *
@@ -109,15 +110,17 @@ class DownloadWindow(Frame):
 
         Thread(target = self.start_download).start()
     
-    def get_download_info(self, url, title, type, bvid = None, cid = None, sid = None, lyric = None, quality_id = None):
+    def get_download_info(self, url, title, type, avid = None, bvid = None, cid = None, epid = None, sid = None, lyric = None, quality_id = None):
         DownloadInfo.download_count += 1
 
         return {
             "id": DownloadInfo.download_count,
             "url": url,
             "title": title,
+            "avid": avid,
             "bvid": bvid,
             "cid": cid,
+            "epid": epid,
             "sid": sid,
             "lyric": lyric,
             "quality_id": quality_id,
@@ -148,11 +151,11 @@ class DownloadWindow(Frame):
 
         return download_list
 
-    def get_bangumi_download_list(self, quality_id: int) -> list:
+    def get_bangumi_download_list(self, quality_id):
         download_list = []
 
         for i in BangumiInfo.down_episodes:
-            info = self.get_download_info(BangumiInfo.url, format_bangumi_title(i), "video", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
+            info = self.get_download_info(BangumiInfo.url, format_bangumi_title(i), "bangumi", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
 
             download_list.append(info)
 
@@ -164,6 +167,16 @@ class DownloadWindow(Frame):
         for i in AudioInfo.down_list:
             info = self.get_download_info(AudioInfo.url, i["title"], "audio", sid = i["id"], lyric = i["lyric"])
         
+            download_list.append(info)
+
+        return download_list
+
+    def get_cheese_download_list(self, quality_id):
+        download_list = []
+
+        for i in CheeseInfo.down_episodes:
+            info = self.get_download_info(CheeseInfo.url, i["title"], "video", avid = i["aid"], cid = i["cid"], epid = i["epid"], quality_id = quality_id)
+
             download_list.append(info)
 
         return download_list
@@ -531,6 +544,10 @@ class DownloadUtils:
         return "https://www.bilibili.com/audio/music-service-c/web/url?sid={}".format(self.info["sid"])
 
     @property
+    def cheese_durl_api(self):
+        return "https://api.bilibili.com/pugv/player/web/playurl?avid={}&ep_id={}&cid={}".format(self.info["avid"], self.info["epid"], self.info["cid"])
+
+    @property
     def get_full_url(self):
         return "https://www.bilibili.com/video/" + self.info["bvid"]
 
@@ -566,13 +583,12 @@ class DownloadUtils:
                 request = requests.get(self.video_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
             elif type == "bangumi":
                 request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-        
+            elif type == "cheese":
+                request = requests.get(self.cheese_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+
             request_json = json.loads(request.text)
 
-            if "result" in request_json:
-                json_dash = request_json["data"]["result"]["dash"]
-            else:
-                json_dash = request_json["data"]["dash"]
+            json_dash = request_json["data"]["dash"]
         except:
             wx.CallAfter(self.onError)
 
@@ -651,7 +667,7 @@ class DownloadUtils:
         get_file_from_url(durl, "{}.xml".format(self.info["title"]))
 
     def get_subtitle(self):
-        if not Config.save_subtitle:
+        if not Config.save_subtitle or self.info["type"] == "cheese":
             return
 
         subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(self.info["cid"], self.info["bvid"])

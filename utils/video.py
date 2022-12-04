@@ -6,7 +6,7 @@ from .tools import *
 from .config import Config
 
 class VideoInfo:
-    url = bvid = title = ""
+    url = bvid = title = type = ""
 
     aid = cid = quality = duration = 0
 
@@ -15,8 +15,6 @@ class VideoInfo:
     sections = {}
 
     quality_id = quality_desc = []
-
-    multiple = collection = type = ""
 
 class ProcessError(Exception):
     pass

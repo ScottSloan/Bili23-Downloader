@@ -168,7 +168,10 @@ def format_bangumi_title(episode):
     else:
         return episode["share_copy"]
 
-def format_duration(duration):
+def format_duration(duration, bangumi = False):
+    if bangumi:
+        duration = duration / 1000
+
     hours = int(duration // 3600)
     mins = int((duration - hours * 3600) // 60)
     secs = int(duration - hours * 3600 - mins * 60)

@@ -38,15 +38,15 @@ class BangumiParser:
     def quality_api(self):
         return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(BangumiInfo.bvid, BangumiInfo.cid)
     
-    def get_epid(self, url: str):
+    def get_epid(self, url):
         BangumiInfo.epid = re.findall(r"ep[0-9]*", url)[0][2:]
         self.argument, self.value = "ep_id", BangumiInfo.epid
 
-    def get_season_id(self, url: str):
+    def get_season_id(self, url):
         BangumiInfo.ssid = re.findall(r"ss[0-9]*", url)[0][2:]
         self.argument, self.value = "season_id", BangumiInfo.ssid
 
-    def get_media_id(self, url: str):
+    def get_media_id(self, url):
         BangumiInfo.mid = re.findall(r"md[0-9]*", url)[0][2:]
 
         media_request = requests.get(self.media_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
@@ -115,7 +115,7 @@ class BangumiParser:
         BangumiInfo.quality_id = json_data["accept_quality"]
         BangumiInfo.quality_desc = json_data["accept_description"]
 
-    def parse_url(self, url: str):
+    def parse_url(self, url):
         if "ep" in url:
             self.get_epid(url)
         elif "ss" in url:
