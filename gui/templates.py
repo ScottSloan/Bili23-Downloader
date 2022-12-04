@@ -51,18 +51,21 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("时长", width = self.FromDIP(75))
     
     def set_video_list(self):
-        VideoInfo.multiple = True if len(VideoInfo.pages) > 1 else False
-
-        self.rootitems.append("视频")
         items_content = {}
         
-        if VideoInfo.collection:
-            items_content["视频"] = [[str(index + 1), value["title"], "", format_duration(value["arc"]["duration"])] for index, value in enumerate(VideoInfo.episodes)]
-        else:
-            items_content["视频"] = [[str(i["page"]), i["part"] if VideoInfo.multiple else VideoInfo.title, "", format_duration(i["duration"])] for i in VideoInfo.pages]
+        if VideoInfo.type == "collection":
+            for key, value in VideoInfo.sections.items():
+                if not Config.show_sections and key != "正片":
+                    continue
+                
+                items_content[key] = [[str(index + 1), episode["arc"]["title"], "", format_duration(episode["arc"]["duration"])] for index, episode in enumerate(value)]
 
-        ismultiple = True if len(VideoInfo.pages) > 1 or len(VideoInfo.episodes) > 1 else False
-        self.append_list(items_content, ismultiple)
+                self.rootitems.append(key)
+        else:
+            self.rootitems.append("视频")
+            items_content["视频"] = [[str(i["page"]), i["part"] if VideoInfo.type == "pages" else VideoInfo.title, "", format_duration(i["duration"])] for i in VideoInfo.pages]
+
+        self.append_list(items_content)
 
     def set_bangumi_list(self):
         items_content = {}
@@ -75,7 +78,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             self.rootitems.append(key)
 
-        self.append_list(items_content, False)
+        self.append_list(items_content)
 
     def set_live_list(self):
         items_content = {}
@@ -84,7 +87,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.rootitems.append("直播")
 
-        self.append_list(items_content, False)
+        self.append_list(items_content)
     
     def set_audio_list(self):
         items_content = {}
@@ -99,17 +102,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             self.rootitems.append("音乐")
 
-        self.append_list(items_content, False)
+        self.append_list(items_content)
 
-    def append_list(self, items_content: dict, multiple: bool):
+    def append_list(self, items_content):
         root = self.GetRootItem()
         self.all_list_items = []
 
         for i in items_content:
             rootitem = self.AppendItem(root, i)
-            
-            if multiple:
-                self.SetItemText(rootitem, 1, VideoInfo.title)
             
             self.all_list_items.append(rootitem)
 
@@ -147,15 +147,21 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 parent_text = self.GetItemText(self.GetItemParent(i), 0)
                 
                 if type == VideoInfo:
-                    index = int(self.GetItemText(i, 0))
+                    if VideoInfo.type == "collection":
+                        index = [i for i, v in enumerate(VideoInfo.sections[parent_text]) if v["arc"]["title"] == item_title][0]
 
-                    if VideoInfo.collection:
-                        VideoInfo.down_pages.append(VideoInfo.episodes[index - 1])
+                        VideoInfo.down_pages.append(VideoInfo.sections[parent_text][index])
                     else:
+                        index = int(self.GetItemText(i, 0))
+
                         VideoInfo.down_pages.append(VideoInfo.pages[index - 1])
 
                 elif type == BangumiInfo:
-                    index = [i for i, v in enumerate(BangumiInfo.sections[parent_text]) if v["share_copy"] == item_title][0]
+                    if BangumiInfo.type != "电影":
+                        index = [i for i, v in enumerate(BangumiInfo.sections[parent_text]) if v["share_copy"] == item_title][0]
+                    else:
+                        index = [i for i, v in enumerate(BangumiInfo.sections[parent_text]) if format_bangumi_title(v) == item_title][0]
+
                     BangumiInfo.down_episodes.append(BangumiInfo.sections[parent_text][index])
 
                 elif type == AudioInfo:

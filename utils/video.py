@@ -6,19 +6,17 @@ from .tools import *
 from .config import Config
 
 class VideoInfo:
-    url = bvid = ""
-    
-    aid = cid = 0
+    url = bvid = title = ""
 
-    title = ""
-    
-    quality = duration = 0
+    aid = cid = quality = duration = 0
 
     pages = down_pages = episodes = []
+    
+    sections = {}
 
     quality_id = quality_desc = []
 
-    multiple = collection = ""
+    multiple = collection = type = ""
 
 class ProcessError(Exception):
     pass
@@ -75,16 +73,28 @@ class VideoParser:
         VideoInfo.cid = info_data["cid"]
         VideoInfo.pages = info_data["pages"]
 
+        VideoInfo.type = "page" if len(VideoInfo.pages) > 1 else "video"
+        
         if "ugc_season" in info_data:
-            VideoInfo.collection = True
+            VideoInfo.type = "collection"
 
             info_ugc_season = info_data["ugc_season"]
+            info_section = info_ugc_season["sections"]
+            
             VideoInfo.title = info_ugc_season["title"]
 
-            VideoInfo.episodes = info_ugc_season["sections"][0]["episodes"]
-        else:
-            VideoInfo.collection = False
-            VideoInfo.episodes = []
+            VideoInfo.episodes = info_section[0]["episodes"]
+            VideoInfo.sections["正片"] = VideoInfo.episodes
+            
+            if Config.show_sections:
+                for section in info_section:
+                    section_title = section["title"]
+                    section_episodes = section["episodes"]
+
+                    for index, value in enumerate(section_episodes):
+                        value["title"] = str(index + 1)
+
+                        VideoInfo.sections[section_title] = section_episodes
 
     def get_video_quality(self):
         video_request = requests.get(self.quality_api, headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy(), auth = get_auth())

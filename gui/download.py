@@ -130,15 +130,15 @@ class DownloadWindow(Frame):
     def get_video_download_list(self, quality_id):
         download_list = []
 
-        if VideoInfo.multiple:
+        if VideoInfo.type == "pages":
             for i in VideoInfo.down_pages:
                 info = self.get_download_info(VideoInfo.url, i["part"], "video", bvid = VideoInfo.bvid, cid = i["cid"], quality_id = quality_id)
 
                 download_list.append(info)
 
-        elif VideoInfo.collection:
+        elif VideoInfo.type == "collection":
             for i in VideoInfo.down_pages:
-                info = self.get_download_info(VideoInfo.url, i["title"], "video", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
+                info = self.get_download_info(VideoInfo.url, i["arc"]["title"], "video", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
 
                 download_list.append(info)
         else:
@@ -568,8 +568,11 @@ class DownloadUtils:
                 request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         
             request_json = json.loads(request.text)
-            json_dash = request_json["result"]["dash"]
 
+            if "result" in request_json:
+                json_dash = request_json["data"]["result"]["dash"]
+            else:
+                json_dash = request_json["data"]["dash"]
         except:
             wx.CallAfter(self.onError)
 
@@ -585,7 +588,7 @@ class DownloadUtils:
             return json.loads(json_raw)["data"]["dash"]
         
         except:
-            wx.CallAfter(self.onError)
+            return self.get_video_durl_via_api()
 
     def get_audio_durl(self):
         audio_request = requests.get(self.audio_durl_api, headers = get_header(self.info["url"]), proxies = get_proxy(), auth = get_auth())

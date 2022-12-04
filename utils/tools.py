@@ -21,12 +21,24 @@ def process_activity_url(url):
     re_pattern = r"\"videoID\":\"(.*?)\""
         
     request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-    
+
     try:
         return "ep" + re.findall(re_pattern, request.text.replace("\\", ""), re.S)[0]
     except:
         return ""
-        
+    
+def process_festival_url(url):
+    re_pattern = r"window.__INITIAL_STATE__=(.*?);\(function"
+    
+    request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+    
+    try:
+        festival_json = json.loads(re.findall(re_pattern, request.text.replace("\\", ""), re.S)[0])
+
+        return festival_json["videoInfo"]["bvid"]
+    except:
+        return ""
+
 def get_legal_name(name):
     return re.sub('[/\:*?"<>|]', "", name)
 
@@ -157,9 +169,6 @@ def format_bangumi_title(episode):
         return episode["share_copy"]
 
 def format_duration(duration):
-    if duration > 10000:
-        duration = duration / 1000
-
     hours = int(duration // 3600)
     mins = int((duration - hours * 3600) // 60)
     secs = int(duration - hours * 3600 - mins * 60)

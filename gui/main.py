@@ -233,8 +233,11 @@ class MainWindow(Frame):
         if find_str("b23.tv", url):
             url = process_shortlink(url)
 
-        elif find_str("blackboard", url):
+        elif find_str("activity", url):
             url = process_activity_url(url)
+
+        elif find_str("festival", url):
+            url = process_festival_url(url)
 
         if find_str("BV|av", url):
             self.type = VideoInfo
@@ -295,16 +298,19 @@ class MainWindow(Frame):
         self.treelist.SetFocus()
 
     def set_video_list(self):
-        videos = len(VideoInfo.episodes) if VideoInfo.collection else len(VideoInfo.pages)
+        if VideoInfo.type == "collection":
+            count = len(VideoInfo.episodes) 
+        else:
+            count = len(VideoInfo.pages)
 
         wx.CallAfter(self.treelist.set_video_list)
-        self.type_lab.SetLabel("视频 (共 %d 个)" % videos)
+        self.type_lab.SetLabel("视频 (共 %d 个)" % count)
 
     def set_bangumi_list(self):
-        bangumis = len(BangumiInfo.episodes)
+        count = len(BangumiInfo.episodes)
 
         wx.CallAfter(self.treelist.set_bangumi_list)
-        self.type_lab.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, bangumis))
+        self.type_lab.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, count))
 
         self.check_bangumi()
         
