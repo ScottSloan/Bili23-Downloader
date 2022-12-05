@@ -48,9 +48,9 @@ class Config:
     user_login = False
 
     app_name = "Bili23 Downloader GUI"
-    app_version = "1.34"
-    app_version_code = 1342
-    app_date = "2022-12-4"
+    app_version = "1.35"
+    app_version_code = 1351
+    app_date = "2022-12-5"
     app_website = "https://github.com/ScottSloan/Bili23-Downloader"
     app_changelog = "https://scottsloan.github.io/Bili23-Downloader/CHANGELOG"
     app_update_json = "https://scottsloan.github.io/Bili23-Downloader/update.json"

@@ -140,7 +140,8 @@ def get_update_json():
     
     try:
         update_json = json.loads(update_request.text)
-
+        update_json["error"] = False
+        
         if update_json["version_code"] > Config.app_version_code:
             changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
             changelog_request.encoding = "utf-8"
@@ -189,3 +190,15 @@ def format_subtitle_timetag(timetag, end):
         msecs = abs(int(math.modf(timetag)[0] * 100 -1))
 
     return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) + "," + str(msecs).zfill(2)
+
+def copy_text(text):
+    import wx
+
+    obj = wx.TextDataObject(text)
+    borad = wx.Clipboard()
+    
+    if borad.Open():
+        borad.SetData(obj)
+        borad.Flush()
+
+        borad.Close()
