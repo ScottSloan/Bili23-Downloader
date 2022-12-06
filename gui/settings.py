@@ -10,6 +10,7 @@ from .templates import Dialog
 
 from utils.config import Config
 from utils.tools import *
+from utils.api import API
 
 class SettingWindow(Dialog):
     def __init__(self, parent):
@@ -480,14 +481,15 @@ class ProxyTab(wx.Panel):
         try:
             start_time = time.time()
 
-            req = requests.get(url = Config.app_bilibili_website, headers = get_header(), proxies = proxy, auth = auth, timeout = 3)
+            url = API.URL.base_url_api()
+            req = requests.get(url, headers = get_header(), proxies = proxy, auth = auth, timeout = 3)
             
             end_time = time.time()
 
-            wx.MessageDialog(self, "测试成功\n\n请求站点：{}\n状态码：{}\n耗时：{:.1f}s".format(Config.app_bilibili_website, req.status_code, end_time - start_time), "提示", wx.ICON_INFORMATION).ShowModal()
+            wx.MessageDialog(self, "测试成功\n\n请求站点：{}\n状态码：{}\n耗时：{:.1f}s".format(API.URL.base_url_api(), req.status_code, end_time - start_time), "提示", wx.ICON_INFORMATION).ShowModal()
 
         except requests.RequestException as e:
-            wx.MessageDialog(self, "测试失败\n\n请求站点：{}\n错误信息：\n\n{}".format(Config.app_bilibili_website, e), "测试代理", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "测试失败\n\n请求站点：{}\n错误信息：\n\n{}".format(API.URL.base_url_api(), e), "测试代理", wx.ICON_WARNING).ShowModal()
 
 conf = RawConfigParser()
 conf.read(os.path.join(os.getcwd(), "config.conf"), encoding = "utf-8")

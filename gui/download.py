@@ -14,6 +14,7 @@ from utils.cheese import CheeseInfo
 from utils.download import Downloader
 from utils.config import Config
 from utils.tools import *
+from utils.api import API
 
 from .templates import Frame
 from .notification import Notification
@@ -531,26 +532,6 @@ class DownloadUtils:
     def __init__(self, info, downloader, onError):
         self.info, self.downloader, self.onError = info, downloader, onError
 
-    @property
-    def video_durl_api(self):
-        return "https://api.bilibili.com/x/player/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(self.info["bvid"], self.info["cid"])
-
-    @property
-    def bangumi_durl_api(self):
-        return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(self.info["bvid"], self.info["cid"])
-
-    @property
-    def audio_durl_api(self):
-        return "https://www.bilibili.com/audio/music-service-c/web/url?sid={}".format(self.info["sid"])
-
-    @property
-    def cheese_durl_api(self):
-        return "https://api.bilibili.com/pugv/player/web/playurl?avid={}&ep_id={}&cid={}".format(self.info["avid"], self.info["epid"], self.info["cid"])
-
-    @property
-    def get_full_url(self):
-        return "https://www.bilibili.com/video/" + self.info["bvid"]
-
     def get_video_durl(self):
         json_dash = self.get_video_durl_via_api()
 
@@ -577,19 +558,25 @@ class DownloadUtils:
 
         try:
             if type == "video":
-                request = requests.get(self.video_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+                url = API.Video.download_api(self.info["bvid"], self.info["cid"])
+
+                request = requests.get(url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
                 request_json = json.loads(request.text)
  
                 json_dash = request_json["data"]["dash"]
 
             elif type == "bangumi":
-                request = requests.get(self.bangumi_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+                url = API.Bangumi.download_api(self.info["bvid"], self.info["cid"])
+
+                request = requests.get(url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
                 request_json = json.loads(request.text)
 
                 json_dash = request_json["result"]["dash"]
 
             elif type == "cheese":
-                request = requests.get(self.cheese_durl_api, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+                url = API.Cheese.download_api(self.info["avid"], self.info["epid"], self.info["cid"])
+
+                request = requests.get(url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
                 request_json = json.loads(request.text)
 
                 json_dash = request_json["data"]["dash"]
@@ -600,7 +587,9 @@ class DownloadUtils:
         return json_dash
 
     def get_audio_durl(self):
-        audio_request = requests.get(self.audio_durl_api, headers = get_header(self.info["url"]), proxies = get_proxy(), auth = get_auth())
+        url = API.Audio.download_api(self.info["sid"])
+
+        audio_request = requests.get(url, headers = get_header(self.info["url"]), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
         self.audio_durl = audio_json["data"]["cdns"][0]
@@ -655,32 +644,33 @@ class DownloadUtils:
         if not Config.save_danmaku:
             return
         
-        durl = "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(self.info["cid"])
+        url = API.URL.danmaku_api(self.info["cid"])
 
-        get_file_from_url(durl, "{}.xml".format(self.info["title"]))
+        get_file_from_url(url, "{}.xml".format(self.info["title"]))
 
     def get_subtitle(self):
         if not Config.save_subtitle or self.info["type"] == "cheese":
             return
 
-        subtitle_url = "https://api.bilibili.com/x/player.so?id=cid:{}&bvid={}".format(self.info["cid"], self.info["bvid"])
-        req = requests.get(subtitle_url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.URL.subtitle_api(self.info["cid"], self.info["bvid"])
+        
+        request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
 
-        subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', req.text)[0]
+        subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', request.text)[0]
         subtitle_json = json.loads(subtitle_raw)["subtitles"]
 
-        subtitle_num = len(subtitle_json)
+        count = len(subtitle_json)
 
-        if subtitle_num == 0:
+        if count == 0:
             return
 
-        elif subtitle_num == 1:
+        elif count == 1:
             durl = "https:{}".format(subtitle_json[0]["subtitle_url"])
         
             get_file_from_url(durl, "{}.srt".format(self.info["title"]), True)
 
         else:
-            for i in range(subtitle_num):
+            for i in range(count):
                 lan_name = subtitle_json[i]["lan_doc"]
                 durl = "https:{}".format(subtitle_json[i]["subtitle_url"])
             

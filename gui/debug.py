@@ -183,14 +183,15 @@ class DebugWindow(Frame):
     def copy_url_bvid_EVT(self, event):
         bvid = self.info_list.GetTextValue(self.index, 2)
 
-        copy_text(API.URL.get_url_bvid(bvid))
+        copy_text(API.URL.bvid_url_api(bvid))
     
     def copy_url_epid_EVT(self, event):
         epid = self.info_list.GetTextValue(self.index, 4)
 
-        copy_text(API.URL.get_url_epid(epid))
+        copy_text(API.URL.epid_url_api(epid))
     
     def copy_short_link_EVT(self, event):
         link = self.info_list.GetTextValue(self.index, 7)
 
         copy_text(link)
+        

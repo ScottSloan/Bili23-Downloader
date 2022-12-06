@@ -2,6 +2,7 @@ import wx
 import wx.adv
 
 from utils.config import Config
+from utils.api import API
 
 class AboutWindow(wx.Frame):
     def __init__(self, parent):
@@ -14,7 +15,7 @@ class AboutWindow(wx.Frame):
         info.Developers = ["Scott Sloan"]
         info.Licence = "MIT License"
 
-        info.SetWebSite(Config.app_website, "项目主页")
+        info.SetWebSite(API.App.website_api(), "项目主页")
         info.Description = "\nBili23 Downloader GUI 桌面端版本\n\n下载 Bilibili 视频/番剧/电影/纪录片 等资源\n\n发布日期：{}\n".format(Config.app_date)
         
         info.Icon = wx.Icon(Config.res_icon)

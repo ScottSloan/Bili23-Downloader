@@ -19,6 +19,7 @@ from utils.bangumi import BangumiInfo, BangumiParser
 from utils.live import LiveInfo, LiveParser
 from utils.audio import AudioInfo, AudioParser
 from utils.cheese import CheeseInfo, CheeseParser
+from utils.api import API
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -199,7 +200,7 @@ class MainWindow(Frame):
         elif evt_id == 120:
             import webbrowser
 
-            webbrowser.open(Config.app_website)
+            webbrowser.open(API.App.website_api())
             
         elif evt_id == 130:
             AboutWindow(self)

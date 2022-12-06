@@ -7,6 +7,7 @@ from .templates import Dialog
 
 from utils.config import Config
 from utils.tools import *
+from utils.api import API
 
 class UserWindow(Dialog):
     def __init__(self, parent):
@@ -18,10 +19,6 @@ class UserWindow(Dialog):
         self.CenterOnParent()
 
         self.load_info()
-
-    @property
-    def user_info_url(self):
-        return "https://api.bilibili.com/x/web-interface/nav"
 
     def init_UI(self):
         uname_hbox = wx.BoxSizer(wx.HORIZONTAL)
