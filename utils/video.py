@@ -7,7 +7,7 @@ from .config import Config
 from .api import API
 
 class VideoInfo:
-    url = bvid = title = type = ""
+    url = bvid = title = cover = type = ""
 
     aid = cid = quality = duration = 0
 
@@ -28,7 +28,7 @@ class VideoParser:
     def get_aid(self):
         VideoInfo.aid = re.findall(r"av[0-9]*", url)[0][2:]
         
-        url = API.Video.bvid_url_api(VideoInfo.aid)
+        url = API.Video.aid_url_api(VideoInfo.aid)
 
         aid_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         aid_json = json.loads(aid_request.text)
@@ -60,7 +60,9 @@ class VideoParser:
             raise ProcessError("Bangumi type detect")
         
         VideoInfo.title = info_data["title"]
+        VideoInfo.cover = info_data["pic"]
         VideoInfo.duration = info_data["duration"]
+        VideoInfo.aid = info_data["aid"]
         VideoInfo.cid = info_data["cid"]
         VideoInfo.pages = info_data["pages"]
 
@@ -89,8 +91,8 @@ class VideoParser:
 
     def get_video_quality(self):
         url = API.Video.download_api(VideoInfo.bvid, VideoInfo.cid)
-
-        video_request = requests.get(url, headers = get_header(VideoInfo.url, Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+                
+        video_request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         video_json = json.loads(video_request.text)
 
         self.check_json(video_json)

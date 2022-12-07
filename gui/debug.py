@@ -1,8 +1,10 @@
 import wx
+import wx.py
 import wx.dataview
 
 from .templates import Frame
 
+from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.tools import *
 from utils.api import API
@@ -17,7 +19,7 @@ class DebugWindow(Frame):
 
         self.CenterOnParent()
 
-        self.init_video_info()
+        self.init_episodes_info()
 
     def init_UI(self):
         info_box = wx.StaticBox(self.panel, -1, "视频信息")
@@ -87,6 +89,7 @@ class DebugWindow(Frame):
 
     def init_menu_EVT(self):
         self.Bind(wx.EVT_MENU, self.copy_title_EVT, id = self.copy_title_id)
+        self.Bind(wx.EVT_MENU, self.copy_cover_EVT, id = self.copy_cover_id)
         
         self.Bind(wx.EVT_MENU, self.copy_bvid_EVT, id = self.copy_bvid_id)
         self.Bind(wx.EVT_MENU, self.copy_avid_EVT, id = self.copy_avid_id)
@@ -96,34 +99,81 @@ class DebugWindow(Frame):
         self.Bind(wx.EVT_MENU, self.copy_url_bvid_EVT, id = self.copy_url_bvid_id)
         self.Bind(wx.EVT_MENU, self.copy_url_epid_EVT, id = self.copy_url_epid_id)
         self.Bind(wx.EVT_MENU, self.copy_short_link_EVT, id = self.copy_short_link_id)
+        
+        self.Bind(wx.EVT_MENU, self.copy_durl_api_EVT, id = self.copy_durl_api_id)
 
     def init_info_list(self):
         self.type = None if not hasattr(self.Parent, "type") else self.Parent.type
+        
+        self.info_list.ClearColumns()
+        self.info_list.DeleteAllItems()
 
         self.info_list.AppendTextColumn("序号", width = self.FromDIP(40))
         self.info_list.AppendTextColumn("标题", width = self.FromDIP(250))
         self.info_list.AppendTextColumn("bvid", width = self.FromDIP(125))
         self.info_list.AppendTextColumn("avid", width = self.FromDIP(100))
-        self.info_list.AppendTextColumn("epid", width = self.FromDIP(100))
+
+        epid_col_width = 0 if self.type == VideoInfo else 100
+        self.info_list.AppendTextColumn("epid", width = self.FromDIP(epid_col_width))
         self.info_list.AppendTextColumn("cid", width = self.FromDIP(100))
         
         self.info_list.AppendTextColumn("封面", width = 0)
+        self.info_list.AppendTextColumn("link", width = 0)
 
-    def init_video_info(self):
+    def init_episodes_info(self):
         self.init_info_list()
 
         if self.type == None:
             return
+        
+        if self.type == VideoInfo:
+            self.init_video_info()
 
         elif self.type == BangumiInfo:
             self.init_bangumi_info()
     
+    def init_video_info(self):
+        if VideoInfo.type == "collection":
+            index = 0
+
+            for episodes_list in VideoInfo.sections.values():
+                for episode in episodes_list:
+                    index_s = str(index + 1)
+                    title = episode["arc"]["title"]
+                    bvid = episode["bvid"]
+                    avid = str(episode["arc"]["aid"])
+                    cid = str(episode["cid"])
+
+                    cover = episode["arc"]["pic"]
+
+                    item =[index_s, title, bvid, avid, "", cid, cover, ""]
+
+                    self.info_list.AppendItem(item)
+                    
+                    index += 1
+
+        else:
+            for index, episode in enumerate(VideoInfo.pages):
+                index_s = str(index + 1)
+                title = episode["part"]
+                bvid = VideoInfo.bvid
+                avid = VideoInfo.aid
+                cid = episode["cid"]
+
+                if "first_frame" in episode:
+                    cover = episode["first_frame"]
+                else:
+                    cover = VideoInfo.cover
+                
+                item =[index_s, title, bvid, avid, "", cid, cover, ""]
+
+                self.info_list.AppendItem(item) 
+
     def init_bangumi_info(self):
         index = 0
 
         for episodes_list in BangumiInfo.sections.values():
             for index, episode in enumerate(episodes_list):
-
                 index_s = str(index + 1)
                 title = format_bangumi_title(episode)
                 bvid = episode["bvid"]
@@ -149,7 +199,7 @@ class DebugWindow(Frame):
         self.init_video_info()
 
         self.panel.Layout()
-    
+
     def copy_title_EVT(self, event):
         title = self.info_list.GetTextValue(self.index, 1)
 
@@ -183,7 +233,12 @@ class DebugWindow(Frame):
     def copy_url_bvid_EVT(self, event):
         bvid = self.info_list.GetTextValue(self.index, 2)
 
-        copy_text(API.URL.bvid_url_api(bvid))
+        if self.type == VideoInfo and VideoInfo.type == "pages":
+            url = API.URL.bvid_url_api(bvid, str(self.index + 1))
+        else:
+            url = API.URL.bvid_url_api(bvid)
+
+        copy_text(url)
     
     def copy_url_epid_EVT(self, event):
         epid = self.info_list.GetTextValue(self.index, 4)
@@ -194,4 +249,14 @@ class DebugWindow(Frame):
         link = self.info_list.GetTextValue(self.index, 7)
 
         copy_text(link)
+    
+    def copy_durl_api_EVT(self, event):
+        bvid = self.info_list.GetTextValue(self.index, 2)
+        cid = self.info_list.GetTextValue(self.index, 5)
+
+        if self.type == VideoInfo:
+            durl_api = API.Video.download_api(bvid, cid)
+        elif self.type == BangumiInfo:
+            durl_api = API.Bangumi.download_api(bvid, cid)
         
+        copy_text(durl_api)

@@ -50,7 +50,7 @@ class Config:
     app_name = "Bili23 Downloader GUI"
     app_version = "1.35"
     app_version_code = 1351
-    app_date = "2022-12-6"
+    app_date = "2022-12-7"
     
     platform = platform.platform()
 

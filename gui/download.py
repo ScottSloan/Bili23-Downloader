@@ -560,7 +560,7 @@ class DownloadUtils:
             if type == "video":
                 url = API.Video.download_api(self.info["bvid"], self.info["cid"])
 
-                request = requests.get(url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+                request = requests.get(url, headers = get_header(Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
                 request_json = json.loads(request.text)
  
                 json_dash = request_json["data"]["dash"]

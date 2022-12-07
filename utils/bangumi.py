@@ -38,7 +38,7 @@ class BangumiParser:
     def get_media_id(self, url):
         BangumiInfo.mid = re.findall(r"md[0-9]*", url)[0][2:]
 
-        url = API.Bangumi.season_id_api(BangumiInfo.mid)
+        url = API.Bangumi.mid_api(BangumiInfo.mid)
 
         media_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         media_json = json.loads(media_request.text)

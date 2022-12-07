@@ -64,7 +64,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 self.rootitems.append(key)
         else:
             self.rootitems.append("视频")
-            items_content["视频"] = [[str(i["page"]), i["part"] if VideoInfo.type == "pages" else VideoInfo.title, "", format_duration(i["duration"])] for i in VideoInfo.pages]
+            items_content["视频"] = [[str(episode["page"]), episode["part"] if VideoInfo.type == "pages" else VideoInfo.title, "", format_duration(episode["duration"])] for episode in VideoInfo.pages]
 
         self.append_list(items_content)
 

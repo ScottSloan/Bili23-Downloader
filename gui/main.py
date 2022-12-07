@@ -1,4 +1,5 @@
 import wx
+import wx.py
 import datetime
 import subprocess
 from threading import Thread
@@ -142,33 +143,40 @@ class MainWindow(Frame):
         menu_bar = wx.MenuBar()
         self.help_menu = wx.Menu()
         self.tool_menu = wx.Menu()
-
-        check_menuitem = wx.MenuItem(self.help_menu, 100, "检查更新(&U)")
-        log_menuitem = wx.MenuItem(self.help_menu, 110, "更新日志(&P)")
-        help_menuitem = wx.MenuItem(self.help_menu, 120, "使用帮助(&C)")
-        about_menuitem = wx.MenuItem(self.help_menu, 130, "关于(&A)")
-
-        title = "用户中心(&E)" if Config.user_login else "登录(&L)"
-
-        self.user_menuitem = wx.MenuItem(self.tool_menu, 200, title)
-        option_menuitem = wx.MenuItem(self.tool_menu, 210, "设置(&S)")
-        debug_menuitem = wx.MenuItem(self.tool_menu, 220, "调试(&D)")
         
         menu_bar.Append(self.tool_menu, "工具(&T)")
         menu_bar.Append(self.help_menu, "帮助(&H)")
 
+        self.user_id = wx.NewIdRef()
+        user_title = "用户中心(&E)" if Config.user_login else "登录(&L)"
+        self.user_menuitem = wx.MenuItem(self.tool_menu, self.user_id, user_title)
         self.tool_menu.Append(self.user_menuitem)
-        self.tool_menu.AppendSeparator()
-        self.tool_menu.Append(option_menuitem)
+        
+        self.console_id = wx.NewIdRef()
+        self.tool_menu.Append(self.console_id, "控制台(&O)")
 
+        self.tool_menu.AppendSeparator()
+        
+        self.settings_id = wx.NewIdRef()
+        self.tool_menu.Append(self.settings_id, "设置(&S)")
+
+        self.debug_id = wx.NewIdRef()
         if Config.debug:
-            self.tool_menu.Append(debug_menuitem)
-            
-        self.help_menu.Append(check_menuitem)
-        self.help_menu.Append(log_menuitem)
+            self.tool_menu.Append(self.debug_id, "调试(&D)")
+
+        self.check_update_id = wx.NewIdRef()
+        self.help_menu.Append(self.check_update_id, "检查更新(&U)")
+        
+        self.change_log_id = wx.NewIdRef()
+        self.help_menu.Append(self.change_log_id, "更新日志(&P)")
+
         self.help_menu.AppendSeparator()
-        self.help_menu.Append(help_menuitem)
-        self.help_menu.Append(about_menuitem)
+
+        self.help_id = wx.NewIdRef()
+        self.help_menu.Append(self.help_id, "使用帮助(&C)")
+        
+        self.about_id = wx.NewIdRef()
+        self.help_menu.Append(self.about_id, "关于(&A)")
 
         self.SetMenuBar(menu_bar)
     
@@ -191,30 +199,36 @@ class MainWindow(Frame):
     def menu_EVT(self, event):
         evt_id = event.GetId()
 
-        if evt_id == 100:
+        if evt_id == self.check_update_id:
             wx.CallAfter(self.check_update, True)
 
-        elif evt_id == 110:
+        elif evt_id == self.change_log_id:
             self.dlgbox(get_changelog(), "更新日志", wx.ICON_INFORMATION)
 
-        elif evt_id == 120:
+        elif evt_id == self.help_id:
             import webbrowser
 
             webbrowser.open(API.App.website_api())
             
-        elif evt_id == 130:
+        elif evt_id == self.about_id:
             AboutWindow(self)
 
-        elif evt_id == 200:
+        elif evt_id == self.user_id:
             if Config.user_login:
                 UserWindow(self).ShowWindowModal()
             else:
                 LoginWindow(self).ShowWindowModal()
 
-        elif evt_id == 210:
+        elif evt_id == self.console_id:
+            shell = wx.py.shell.ShellFrame(self, -1, "控制台")
+        
+            shell.CenterOnParent()
+            shell.Show()
+
+        elif evt_id == self.settings_id:
             SettingWindow(self).ShowWindowModal()
 
-        elif evt_id == 220:
+        elif evt_id == self.debug_id:
             DebugWindow(self).Show()
             
     def get_btn_EVT(self, event):

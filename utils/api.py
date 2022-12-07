@@ -19,15 +19,16 @@ class API:
     class URL:
         @staticmethod
         def base_url_api():
-            return "https://bilibili.com/"
+            return "https://bilibili.com"
 
         @staticmethod
-        def bvid_url_api(bvid):
-            return "{}/video/{}".format(API.URL.base_url_api(), bvid)
+        def bvid_url_api(bvid, p = None):
+            p_argument = "?p=" + p if p != None else ""
+            return "{}/video/{}{}".format(API.URL.base_url_api(), bvid, p_argument)
         
         @staticmethod
         def epid_url_api(epid):
-            return "{}/bangumi/play/{}".format(API.URL.base_url_api(), epid)
+            return "{}/bangumi/play/ep{}".format(API.URL.base_url_api(), epid)
 
         @staticmethod
         def danmaku_api(cid):
@@ -39,7 +40,7 @@ class API:
 
     class Video:
         @staticmethod
-        def bvid_url_api(aid):
+        def aid_url_api(aid):
             return "https://api.bilibili.com/x/web-interface/archive/stat?aid={}".format(aid)
 
         @staticmethod
@@ -52,7 +53,7 @@ class API:
 
     class Bangumi:
         @staticmethod
-        def season_id_api(mid):
+        def mid_api(mid):
             return "https://api.bilibili.com/pgc/review/user?media_id={}".format(mid)
 
         @staticmethod
