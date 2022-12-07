@@ -31,6 +31,10 @@ class API:
             return "{}/bangumi/play/ep{}".format(API.URL.base_url_api(), epid)
 
         @staticmethod
+        def bvid_short_link_api(bvid):
+            return "https://b23.tv/{}".format(bvid)
+
+        @staticmethod
         def danmaku_api(cid):
             return "https://api.bilibili.com/x/v1/dm/list.so?oid={}".format(cid)
 

@@ -1,5 +1,7 @@
 import wx
+import os
 import wx.py
+import requests
 import wx.dataview
 
 from .templates import Frame
@@ -26,12 +28,18 @@ class DebugWindow(Frame):
 
         self.info_list = wx.dataview.DataViewListCtrl(self.panel, -1, size = self.FromDIP((500, 220)))
 
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+
         self.refresh_btn = wx.Button(self.panel, -1, "刷新", size = self.FromDIP((90, 30)))
+        self.info_json_btn = wx.Button(self.panel, -1, "保存视频信息 (json)", size = self.FromDIP((125, 30)))
+        
+        btn_hbox.Add(self.refresh_btn, 0, wx.ALL & (~wx.TOP), 10)
+        btn_hbox.Add(self.info_json_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         self.info_sbox = wx.StaticBoxSizer(info_box, wx.VERTICAL)
 
         self.info_sbox.Add(self.info_list, 1, wx.ALL | wx.EXPAND, 10)
-        self.info_sbox.Add(self.refresh_btn, 0, wx.ALL & ~(wx.TOP), 10)
+        self.info_sbox.Add(btn_hbox, 0, wx.EXPAND)
 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.info_sbox, 0, wx.ALL | wx.EXPAND, 10)
@@ -39,12 +47,11 @@ class DebugWindow(Frame):
         self.panel.SetSizer(self.vbox)
         self.vbox.Fit(self)
 
-        self.init_menu()
-
     def Bind_EVT(self):
         self.info_list.Bind(wx.dataview.EVT_DATAVIEW_ITEM_CONTEXT_MENU, self.show_menu_EVT)
 
         self.refresh_btn.Bind(wx.EVT_BUTTON, self.refresh_btn_EVT)
+        self.info_json_btn.Bind(wx.EVT_BUTTON, self.info_json_btn_EVT)
 
     def init_menu(self):
         self.menu = wx.Menu()
@@ -64,7 +71,12 @@ class DebugWindow(Frame):
         self.menu.Append(self.copy_avid_id, "复制 avid")
 
         self.copy_epid_id = wx.NewIdRef()
-        self.menu.Append(self.copy_epid_id, "复制 epid")
+        copy_epid_menu = wx.MenuItem(self.menu, self.copy_epid_id, "复制 epid")
+        
+        if self.type == VideoInfo:
+            copy_epid_menu.Enable(False)
+
+        self.menu.Append(copy_epid_menu)
 
         self.copy_cid_id = wx.NewIdRef()
         self.menu.Append(self.copy_cid_id, "复制 cid")
@@ -75,7 +87,12 @@ class DebugWindow(Frame):
         self.menu.Append(self.copy_url_bvid_id, "复制视频链接 (bvid)")
 
         self.copy_url_epid_id = wx.NewIdRef()
-        self.menu.Append(self.copy_url_epid_id, "复制视频链接 (epid)")
+        copy_url_epid_menu = wx.MenuItem(self.menu, self.copy_url_epid_id, "复制视频链接 (epid)")
+        
+        if self.type == VideoInfo:
+            copy_url_epid_menu.Enable(False)
+
+        self.menu.Append(copy_url_epid_menu)
          
         self.copy_short_link_id = wx.NewIdRef()
         self.menu.Append(self.copy_short_link_id, "复制视频短链接 (b23.tv)")
@@ -145,8 +162,9 @@ class DebugWindow(Frame):
                     cid = str(episode["cid"])
 
                     cover = episode["arc"]["pic"]
+                    link = API.URL.bvid_short_link_api(bvid)
 
-                    item =[index_s, title, bvid, avid, "", cid, cover, ""]
+                    item =[index_s, title, bvid, avid, "", cid, cover, link]
 
                     self.info_list.AppendItem(item)
                     
@@ -157,15 +175,17 @@ class DebugWindow(Frame):
                 index_s = str(index + 1)
                 title = episode["part"]
                 bvid = VideoInfo.bvid
-                avid = VideoInfo.aid
-                cid = episode["cid"]
+                avid = str(VideoInfo.aid)
+                cid = str(episode["cid"])
 
                 if "first_frame" in episode:
                     cover = episode["first_frame"]
                 else:
                     cover = VideoInfo.cover
                 
-                item =[index_s, title, bvid, avid, "", cid, cover, ""]
+                link = API.URL.bvid_short_link_api(VideoInfo.bvid)
+
+                item =[index_s, title, bvid, avid, "", cid, cover, link]
 
                 self.info_list.AppendItem(item) 
 
@@ -193,6 +213,7 @@ class DebugWindow(Frame):
     def show_menu_EVT(self, event):
         self.index = self.info_list.GetSelectedRow()
 
+        self.init_menu()
         self.PopupMenu(self.menu)
 
     def refresh_btn_EVT(self, event):
@@ -200,6 +221,26 @@ class DebugWindow(Frame):
 
         self.panel.Layout()
 
+    def info_json_btn_EVT(self, event):
+        if self.type == None:
+            return
+
+        wildcard = "JSON文件(*.json)|*.json"
+        dlg = wx.FileDialog(self, "保存JSON文件", os.getcwd(), "info.json", wildcard = wildcard, style = wx.FD_SAVE)
+
+        if dlg.ShowModal() == wx.ID_CANCEL:
+            return
+
+        if self.type == VideoInfo:
+            url = API.Video.info_api(VideoInfo.bvid)
+        else:
+            url = API.Bangumi.info_api("ep_id", BangumiInfo.epid)
+
+        info_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        
+        with open(dlg.GetPath(), "w", encoding = "utf-8") as f:
+            f.write(info_request.text)
+    
     def copy_title_EVT(self, event):
         title = self.info_list.GetTextValue(self.index, 1)
 

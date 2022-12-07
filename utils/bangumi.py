@@ -80,7 +80,8 @@ class BangumiParser:
         BangumiInfo.url = BangumiInfo.episodes[0]["link"]
         BangumiInfo.bvid = BangumiInfo.episodes[0]["bvid"]
         BangumiInfo.cid = BangumiInfo.episodes[0]["cid"]
-
+        BangumiInfo.epid = BangumiInfo.episodes[0]["id"]
+        
         self.get_bangumi_type(info_result["type"])
 
     def get_bangumi_type(self, type_id):
