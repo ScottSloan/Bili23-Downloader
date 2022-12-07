@@ -6,6 +6,7 @@ import requests
 from requests.auth import HTTPProxyAuth
 
 from .config import Config
+from .api import API
 
 quality_wrap = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
 mode_wrap = {"api": 0, "html": 1}
@@ -101,8 +102,10 @@ def get_face_pic(url):
 
     return Config.res_face
 
-def get_level_pic(level):    
-    save_pic(Config.app_level.format(level), Config.res_level)
+def get_level_pic(level): 
+    url = API.App.level_api(level)   
+
+    save_pic(url, Config.res_level)
     
     return Config.res_level
 
@@ -136,14 +139,18 @@ def convert_json_to_srt(data):
     return file
 
 def get_update_json():
-    update_request = requests.get(url = Config.app_update_json, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+    url = API.App.update_api()
+
+    update_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
     
     try:
         update_json = json.loads(update_request.text)
         update_json["error"] = False
         
         if update_json["version_code"] > Config.app_version_code:
-            changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+            url = API.App.changelog_api()
+
+            changelog_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
             changelog_request.encoding = "utf-8"
 
             update_json["changelog"] = changelog_request.text
@@ -153,7 +160,9 @@ def get_update_json():
         return {"error": True}
 
 def get_changelog():
-    changelog_request = requests.get(url = Config.app_changelog, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+    url = API.App.changelog_api()
+
+    changelog_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
     changelog_request.encoding = "utf-8"
 
     return changelog_request.text
@@ -202,3 +211,4 @@ def copy_text(text):
         borad.Flush()
 
         borad.Close()
+        

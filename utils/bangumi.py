@@ -1,9 +1,10 @@
 import re
-import requests
 import json
+import requests
 
 from .tools import *
 from .config import Config
+from .api import API
 
 class BangumiInfo:
     url = bvid = ""
@@ -26,18 +27,6 @@ class BangumiParser:
     def __init__(self, onError):
         self.onError = onError
     
-    @property
-    def media_api(self):
-        return "https://api.bilibili.com/pgc/review/user?media_id=" + BangumiInfo.mid
-
-    @property
-    def info_api(self):
-        return "https://api.bilibili.com/pgc/view/web/season?{}={}".format(self.argument, self.value)
-
-    @property
-    def quality_api(self):
-        return "https://api.bilibili.com/pgc/player/web/playurl?bvid={}&cid={}&qn=0&fnver=0&fnval=4048&fourk=1".format(BangumiInfo.bvid, BangumiInfo.cid)
-    
     def get_epid(self, url):
         BangumiInfo.epid = re.findall(r"ep[0-9]*", url)[0][2:]
         self.argument, self.value = "ep_id", BangumiInfo.epid
@@ -49,7 +38,9 @@ class BangumiParser:
     def get_media_id(self, url):
         BangumiInfo.mid = re.findall(r"md[0-9]*", url)[0][2:]
 
-        media_request = requests.get(self.media_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.Bangumi.season_id_api(BangumiInfo.mid)
+
+        media_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         media_json = json.loads(media_request.text)
 
         self.check_json(media_json)
@@ -58,7 +49,9 @@ class BangumiParser:
         self.argument, self.value = "season_id", BangumiInfo.ssid
     
     def get_bangumi_info(self):
-        info_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.Bangumi.info_api(self.argument, self.value)
+
+        info_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
         self.check_json(info_json)
@@ -105,7 +98,9 @@ class BangumiParser:
             BangumiInfo.type = "综艺"
 
     def get_bangumi_quality(self):
-        bangumi_request = requests.get(self.quality_api, headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+        url = API.Bangumi.download_api(BangumiInfo.bvid, BangumiInfo.cid)
+
+        bangumi_request = requests.get(url, headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         bangumi_json = json.loads(bangumi_request.text)
         
         self.check_json(bangumi_json)

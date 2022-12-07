@@ -4,6 +4,7 @@ import requests
 
 from .config import Config
 from .tools import *
+from .api import API
 
 class LiveInfo:
     id = room_id = live_status = 0
@@ -14,14 +15,6 @@ class LiveParser:
     def __init__(self, onError):
         self.onError = onError
     
-    @property
-    def info_api(self):
-        return "https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids={}&req_biz=web_room_componet".format(LiveInfo.id)
-
-    @property
-    def playurl_api(self):
-        return "https://api.live.bilibili.com/xlive/web-room/v1/playUrl/playUrl?cid={}&platform=h5&otype=json&quality=1".format(LiveInfo.room_id)
-    
     def get_id(self, url: str):
         try:
             LiveInfo.id = re.findall(r"com/[0-9]*", url)[0][4:]
@@ -29,7 +22,9 @@ class LiveParser:
             self.onError(400)
 
     def get_live_info(self):
-        live_req = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.Live.info_api(LiveInfo.id)
+
+        live_req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         live_json = json.loads(live_req.text)
 
         if live_json["code"] != 0:
@@ -42,7 +37,9 @@ class LiveParser:
         LiveInfo.live_status = live_data[str(LiveInfo.room_id)]["live_status"]
 
     def get_live_playurl(self):
-        live_req = requests.get(self.playurl_api, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+        url = API.Live.playurl_api(LiveInfo.room_id)
+
+        live_req = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         live_json = json.loads(live_req.text)
 
         self.check_json(live_json)

@@ -3,6 +3,7 @@ import json
 import requests
 
 from .tools import *
+from .api import API
 
 class AudioInfo:
     sid = amid = duration = count = 0
@@ -17,27 +18,21 @@ class AudioParser:
     def __init__(self, onError):
         self.onError = onError
 
-    @property
-    def info_api(self):
-        return "https://www.bilibili.com/audio/music-service-c/web/song/info?sid={}".format(AudioInfo.sid)
-
-    @property
-    def playlist_api(self):
-        return "https://www.bilibili.com/audio/music-service-c/web/song/of-menu?sid={}&pn=1&ps=100".format(AudioInfo.amid)
-
     def get_sid(self, url):
         result = re.findall(r"au[0-9]*", url)
         AudioInfo.sid =  result[len(result) - 1][2:]
 
-        AudioInfo.url = "https://www.bilibili.com/audio/au{}".format(AudioInfo.sid)
+        AudioInfo.url = API.Audio.sid_url_api(AudioInfo.sid)
 
     def get_amid(self, url):
         AudioInfo.amid = re.findall(r"am[0-9]*", url)[0][2:]
 
-        AudioInfo.url = "https://www.bilibili.com/audio/am{}".format(AudioInfo.amid)
+        AudioInfo.url = API.Audio.amid_url_api(AudioInfo.amid)
 
     def get_audio_info(self):
-        audio_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.Audio.music_info_api(AudioInfo.sid)
+
+        audio_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
         self.check_json(audio_json)
@@ -51,7 +46,9 @@ class AudioParser:
         AudioInfo.down_list = AudioInfo.playlist = []
     
     def get_playlist_info(self):
-        audio_request = requests.get(self.playlist_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.Audio.playlist_info_api(AudioInfo.amid)
+
+        audio_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
         self.check_json(audio_json)

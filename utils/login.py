@@ -4,6 +4,7 @@ import requests
 from io import BytesIO 
 
 from .tools import *
+from utils.api import API
 
 class QRLoginInfo:
     url = qrcode_key = ""
@@ -12,21 +13,11 @@ class QRLogin:
     def __init__(self):
         self.session = requests.session()
 
-    @property
-    def get_qrcode_url(self):
-        return "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
-
-    @property
-    def scan_qrcode_url(self):
-        return "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
-
-    @property
-    def user_info_url(self):
-        return "https://api.bilibili.com/x/web-interface/nav"
-
     def init_qrcode(self):
-        req = self.session.get(self.get_qrcode_url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-        login_json = json.loads(req.text)
+        url = API.QRLogin.qrcode_url_api()
+
+        request = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        login_json = json.loads(request.text)
 
         QRLoginInfo.url = login_json["data"]["url"]
         QRLoginInfo.qrcode_key = login_json["data"]["qrcode_key"]
@@ -39,7 +30,7 @@ class QRLogin:
         return pic.getvalue()
     
     def check_scan(self):
-        url = self.scan_qrcode_url + "?qrcode_key=" + QRLoginInfo.qrcode_key
+        url = API.QRLogin.qrcode_status_api(QRLoginInfo.qrcode_key)
 
         req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         req_json = json.loads(req.text)
@@ -49,10 +40,12 @@ class QRLogin:
             "code": req_json["data"]["code"]}
     
     def get_user_info(self, session = False, cookie = None):
+        url = API.QRLogin.user_info_api()
+
         if session:
-            info_requests = self.session.get(self.user_info_url, proxies = get_proxy(), auth = get_auth())
+            info_requests = self.session.get(url, proxies = get_proxy(), auth = get_auth())
         else:
-            info_requests = requests.get(self.user_info_url, headers = get_header(cookie = cookie), proxies = get_proxy(), auth = get_auth())
+            info_requests = requests.get(url, headers = get_header(cookie = cookie), proxies = get_proxy(), auth = get_auth())
 
         info_json = json.loads(info_requests.text)["data"]
                 

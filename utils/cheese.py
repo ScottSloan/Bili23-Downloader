@@ -3,6 +3,7 @@ import json
 import requests
 
 from .tools import *
+from .api import API
 
 class CheeseInfo:
     epid = ssid = avid = cid = 0
@@ -17,14 +18,6 @@ class CheeseParser:
     def __init__(self, onError):
         self.onError = onError
     
-    @property
-    def info_api(self):
-        return "https://api.bilibili.com/pugv/view/web/season?{}={}".format(self.argument, self.value)
-    
-    @property
-    def quality_api(self):
-        return "https://api.bilibili.com/pugv/player/web/playurl?avid={}&ep_id={}&cid={}".format(CheeseInfo.avid, CheeseInfo.epid, CheeseInfo.cid)
-
     def get_epid(self, url):
         CheeseInfo.epid = re.findall(r"ep[0-9]*", url)[0][2:]
         self.argument, self.value = "ep_id", CheeseInfo.epid
@@ -34,7 +27,9 @@ class CheeseParser:
         self.argument, self.value = "season_id", CheeseInfo.ssid
 
     def get_cheese_info(self):
-        info_request = requests.get(self.info_api, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        url = API.Cheese.info_api(self.argument, self.value)
+
+        info_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
         self.check_json(info_json)
@@ -50,7 +45,9 @@ class CheeseParser:
         CheeseInfo.cid = info_episode["cid"]
 
     def get_cheese_quality(self):
-        cheese_request = requests.get(self.quality_api, headers = get_header(CheeseInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
+        url = API.Cheese.download_api(CheeseInfo.avid, CheeseInfo.epid, CheeseInfo.cid)
+        
+        cheese_request = requests.get(url, headers = get_header(CheeseInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         cheese_json = json.loads(cheese_request.text)
         
         self.check_json(cheese_json)

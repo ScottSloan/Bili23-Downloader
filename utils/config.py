@@ -50,12 +50,7 @@ class Config:
     app_name = "Bili23 Downloader GUI"
     app_version = "1.35"
     app_version_code = 1351
-    app_date = "2022-12-5"
-    app_website = "https://github.com/ScottSloan/Bili23-Downloader"
-    app_changelog = "https://scottsloan.github.io/Bili23-Downloader/CHANGELOG"
-    app_update_json = "https://scottsloan.github.io/Bili23-Downloader/update.json"
-    app_level = "https://scottsloan.github.io/Bili23-Downloader/level/level{}.png"
-    app_bilibili_website = "https://www.bilibili.com"
+    app_date = "2022-12-6"
     
     platform = platform.platform()
 
