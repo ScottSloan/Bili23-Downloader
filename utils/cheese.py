@@ -10,20 +10,28 @@ class CheeseInfo:
     
     url = title = ""
 
-    down_episodes = episodes = []
-
-    quality_id = quality_desc = []
+    down_episodes = episodes = quality_id = quality_desc = []
 
 class CheeseParser:
     def __init__(self, onError):
         self.onError = onError
     
     def get_epid(self, url):
-        CheeseInfo.epid = re.findall(r"ep[0-9]*", url)[0][2:]
+        try:
+            CheeseInfo.epid = re.findall(r"ep([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
+
         self.argument, self.value = "ep_id", CheeseInfo.epid
 
     def get_season_id(self, url):
-        CheeseInfo.ssid = re.findall(r"ss[0-9]*", url)[0][2:]
+        try:
+            CheeseInfo.ssid = re.findall(r"ss([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
+
         self.argument, self.value = "season_id", CheeseInfo.ssid
 
     def get_cheese_info(self):
@@ -32,7 +40,7 @@ class CheeseParser:
         info_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
-        self.check_json(info_json)
+        if self.check_json(info_json): return
 
         info_data = info_json["data"]
         CheeseInfo.title = info_data["title"]
@@ -50,7 +58,7 @@ class CheeseParser:
         cheese_request = requests.get(url, headers = get_header(CheeseInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         cheese_json = json.loads(cheese_request.text)
         
-        self.check_json(cheese_json)
+        if self.check_json(cheese_json): return
 
         json_data = cheese_json["data"]
         CheeseInfo.quality_id = json_data["accept_quality"]
@@ -71,3 +79,5 @@ class CheeseParser:
                 self.onError(403)
             else:
                 self.onError(400)
+        
+        return True

@@ -11,14 +11,9 @@ class VideoInfo:
 
     aid = cid = quality = duration = 0
 
-    pages = down_pages = episodes = []
+    pages = down_pages = episodes = quality_id = quality_desc = []
     
     sections = {}
-
-    quality_id = quality_desc = []
-
-class ProcessError(Exception):
-    pass
 
 class VideoParser:
     def __init__(self, onError, onRedirect):
@@ -26,14 +21,18 @@ class VideoParser:
         self.onRedirect = onRedirect
 
     def get_aid(self):
-        VideoInfo.aid = re.findall(r"av[0-9]*", url)[0][2:]
+        try:
+            VideoInfo.aid = re.findall(r"av([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
         
         url = API.Video.aid_url_api(VideoInfo.aid)
 
         aid_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         aid_json = json.loads(aid_request.text)
 
-        self.check_json(aid_json)
+        if self.check_json(aid_json): return
 
         bvid = aid_json["data"]["bvid"]
         self.set_bvid(bvid)
@@ -51,13 +50,13 @@ class VideoParser:
         info_request = requests.get(url, headers = get_header(VideoInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
-        self.check_json(info_json)
+        if self.check_json(info_json): return
 
         info_data = info_json["data"]
 
         if "redirect_url" in info_data:
             self.onRedirect(info_data["redirect_url"])
-            raise ProcessError("Bangumi type detect")
+            return
         
         VideoInfo.title = info_data["title"]
         VideoInfo.cover = info_data["pic"]
@@ -95,7 +94,7 @@ class VideoParser:
         video_request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         video_json = json.loads(video_request.text)
 
-        self.check_json(video_json)
+        if self.check_json(video_json): return
 
         json_data = video_json["data"]
 
@@ -114,3 +113,4 @@ class VideoParser:
     def check_json(self, json):
         if json["code"] != 0:
             self.onError(400)
+            return True

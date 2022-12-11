@@ -7,17 +7,11 @@ from .config import Config
 from .api import API
 
 class BangumiInfo:
-    url = bvid = ""
+    url = bvid = title = type = ""
 
-    epid = ssid = mid = cid = 0
+    epid = ssid = mid = cid = quality = 0
 
-    title = type = ""
-    
-    quality = 0
-
-    episodes = down_episodes = []
-
-    quality_id = quality_desc = []
+    episodes = down_episodes = quality_id = quality_desc = []
 
     sections = {}
 
@@ -28,22 +22,36 @@ class BangumiParser:
         self.onError = onError
     
     def get_epid(self, url):
-        BangumiInfo.epid = re.findall(r"ep[0-9]*", url)[0][2:]
+        try:
+            BangumiInfo.epid = re.findall(r"ep([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
+
         self.argument, self.value = "ep_id", BangumiInfo.epid
 
     def get_season_id(self, url):
-        BangumiInfo.ssid = re.findall(r"ss[0-9]*", url)[0][2:]
+        try:
+            BangumiInfo.ssid = re.findall(r"ss([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
+
         self.argument, self.value = "season_id", BangumiInfo.ssid
 
     def get_media_id(self, url):
-        BangumiInfo.mid = re.findall(r"md[0-9]*", url)[0][2:]
+        try:
+            BangumiInfo.mid = re.findall(r"md([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
 
         url = API.Bangumi.mid_api(BangumiInfo.mid)
 
         media_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         media_json = json.loads(media_request.text)
 
-        self.check_json(media_json)
+        if self.check_json(media_json): return
 
         BangumiInfo.ssid = media_json["result"]["media"]["season_id"]
         self.argument, self.value = "season_id", BangumiInfo.ssid
@@ -54,7 +62,7 @@ class BangumiParser:
         info_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         info_json = json.loads(info_request.text)
 
-        self.check_json(info_json)
+        if self.check_json(info_json): return
         
         info_result = info_json["result"]
         BangumiInfo.url = info_result["episodes"][0]["link"]
@@ -104,7 +112,7 @@ class BangumiParser:
         bangumi_request = requests.get(url, headers = get_header(BangumiInfo.url, cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
         bangumi_json = json.loads(bangumi_request.text)
         
-        self.check_json(bangumi_json)
+        if self.check_json(bangumi_json): return
 
         json_data = bangumi_json["result"]
 
@@ -125,4 +133,5 @@ class BangumiParser:
     def check_json(self, json):  
         if json["code"] != 0:
             self.onError(400)
+            return True
             

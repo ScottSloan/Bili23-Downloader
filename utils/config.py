@@ -48,9 +48,9 @@ class Config:
     user_login = False
 
     app_name = "Bili23 Downloader GUI"
-    app_version = "1.35"
-    app_version_code = 1351
-    app_date = "2022-12-7"
+    app_version = "1.36"
+    app_version_code = 1361
+    app_date = "2022-12-11"
     
     platform = platform.platform()
 

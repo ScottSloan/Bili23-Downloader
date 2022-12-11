@@ -19,13 +19,20 @@ class AudioParser:
         self.onError = onError
 
     def get_sid(self, url):
-        result = re.findall(r"au[0-9]*", url)
-        AudioInfo.sid =  result[len(result) - 1][2:]
+        try:
+            AudioInfo.sid = re.findall(r"au([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
 
         AudioInfo.url = API.Audio.sid_url_api(AudioInfo.sid)
 
     def get_amid(self, url):
-        AudioInfo.amid = re.findall(r"am[0-9]*", url)[0][2:]
+        try:
+            AudioInfo.amid = re.findall(r"am([0-9]*)", url)[0]
+        except:
+            self.onError(400)
+            return
 
         AudioInfo.url = API.Audio.amid_url_api(AudioInfo.amid)
 
@@ -35,7 +42,7 @@ class AudioParser:
         audio_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
-        self.check_json(audio_json)
+        if self.check_json(audio_json): return
 
         AudioInfo.title = audio_json["data"]["title"]
         AudioInfo.duration = audio_json["data"]["duration"]
@@ -51,7 +58,7 @@ class AudioParser:
         audio_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         audio_json = json.loads(audio_request.text)
 
-        self.check_json(audio_json)
+        if self.check_json(audio_json): return
 
         AudioInfo.count = audio_json["data"]["totalSize"]
         AudioInfo.playlist = audio_json["data"]["data"]
@@ -71,4 +78,5 @@ class AudioParser:
     def check_json(self, json):  
         if json["code"] != 0 or json["data"] == None:
             self.onError(400)
+            return True
             
