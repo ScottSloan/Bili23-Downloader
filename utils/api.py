@@ -114,7 +114,7 @@ class API:
 
         @staticmethod
         def qrcode_status_api(qrcode_key):
-            return "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key=".format(qrcode_key)
+            return "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={}".format(qrcode_key)
 
         @staticmethod
         def user_info_api():

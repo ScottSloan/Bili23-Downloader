@@ -20,7 +20,7 @@ class VideoParser:
         self.onError = onError
         self.onRedirect = onRedirect
 
-    def get_aid(self):
+    def get_aid(self, url):
         try:
             VideoInfo.aid = re.findall(r"av([0-9]*)", url)[0]
         except:

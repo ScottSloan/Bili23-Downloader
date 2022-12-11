@@ -21,7 +21,7 @@ class QRLogin:
 
         QRLoginInfo.url = login_json["data"]["url"]
         QRLoginInfo.qrcode_key = login_json["data"]["qrcode_key"]
-    
+        
     def get_qrcode_pic(self):
         pic = BytesIO()
 

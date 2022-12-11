@@ -70,7 +70,7 @@ class LoginWindow(Dialog):
 
     def onTimer(self, event):
         json = self.login.check_scan()
-
+        
         if json["code"] == 0:
             user_info = self.login.get_user_info(session = True)
             self.save_user_info(user_info)
