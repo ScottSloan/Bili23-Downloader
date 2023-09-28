@@ -1,245 +1,152 @@
+import io
 import wx
-import os
-import re
 import json
 import requests
 import subprocess
-import wx.lib.scrolledpanel
-from threading import Thread
+from typing import List
 
-from utils.video import VideoInfo
-from utils.bangumi import BangumiInfo
-from utils.audio import AudioInfo
-from utils.cheese import CheeseInfo
+from .templates import Frame, ScrolledPanel
+
+from utils.icons import *
+from utils.config import Config, Download, conf
+from utils.thread import Thread
 from utils.download import Downloader
-from utils.config import Config
 from utils.tools import *
-from utils.api import API
-
-from .templates import Frame
-from .notification import Notification
 
 class DownloadInfo:
     download_list = {}
 
-    download_count = 0
+class DownloadUtils:
+    def __init__(self, info: dict, onError: object):
+        self.info, self.onError = info, onError
 
-    download_task = 0
+    def get_video_durl(self):
+        json_dash = self.get_video_durl_json()
 
-    downloading = False
+        self.resolution = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < self.info["resolution"] else self.info["resolution"]
 
-class ProcessError(Exception):
-    pass
+        temp_video_durl = [i for i in json_dash["video"] if i["id"] == self.resolution]
+
+        self.codec_id = codec_id_map[Config.Download.codec]
+
+        resp = self.has_codec(temp_video_durl, self.codec_id)
+
+        if resp["result"]:
+            self.video_durl = temp_video_durl[resp['index']]["backupUrl"][0]
+        else:
+            self.video_durl = temp_video_durl[0]["backupUrl"][0]
+            self.codec_id = 7
+        
+        temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
+        self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.resolution or (i["id"] - 30200) < self.resolution][0]["backupUrl"][0]
+    
+    def get_video_durl_json(self):
+        try:
+            match self.info["type"]:
+                case Config.Type.VIDEO:
+                    url = f"https://api.bilibili.com/x/player/playurl?bvid={self.info['bvid']}&cid={self.info['cid']}&qn=0&fnver=0&fnval=4048&fourk=1"
+
+                    req = requests.get(url, headers = get_header(self.info["url"], Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+                    resp = json.loads(req.text)
+                        
+                    json_dash = resp["data"]["dash"]
+                case Config.Type.BANGUMI:
+                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.info['bvid']}&cid={self.info['cid']}&qn=0&fnver=0&fnval=4048&fourk=1"
+                    
+                    req = requests.get(url, headers = get_header(self.info["url"], Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+                    resp = json.loads(req.text)
+                        
+                    json_dash = resp["result"]["dash"]
+        except:
+            self.onError()
+
+        return json_dash
+
+    def get_download_info(self) -> list:
+        self.get_video_durl()
+
+        video_info = {
+            "id": self.info["id"],
+            "type": "video",
+            "url": self.video_durl,
+            "referer_url": self.info["url"],
+            "file_name": "video_{}.mp4".format(self.info["id"]),
+            "chunk_list": []
+        }
+
+        audio_info = {
+            "id": self.info["id"],
+            "type": "audio",
+            "url": self.audio_durl,
+            "referer_url": self.info["url"],
+            "file_name": "audio_{}.mp3".format(self.info["id"]),
+            "chunk_list": []
+        }
+
+        return [video_info, audio_info]
+    
+    def merge_video(self):
+        title = get_legal_name(self.info["title"])
+
+        cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -i audio_{self.info['id']}.mp3 -i video_{self.info['id']}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
+                
+        self.merge_process = subprocess.Popen(cmd, shell = True)
+        self.merge_process.wait()
+
+        remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
+
+    def has_codec(self, video_durl: List[dict], codec_id: int):
+        for index, entry in enumerate(video_durl):
+            if entry["codecid"] == codec_id:
+                return {
+                    "result": True,
+                    "index": index
+                }
+        
+        return {
+            "result": False,
+            "index": None
+        }
 
 class DownloadWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "下载管理", False)
+        Frame.__init__(self, parent, "下载管理", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
 
         self.init_UI()
 
-        self.Bind_EVT()
-
-        self.CenterOnParent()
-
-    def init_UI(self):
-        self.SetBackgroundColour("white")
-    
-        self.list_panel = WindowPanel(self)
-
-    def Bind_EVT(self):
-        self.Bind(wx.EVT_CLOSE, self.onClose)
-
-    def onClose(self, event):
-        self.Hide()
-
-    def check_file_existance(self, name):
-        return True if os.path.exists(os.path.join(Config.download_path, "{}.mp4".format(get_legal_name(name)))) else False
-    
-    def confirm_file_replacement(self, download_list):
-        replace_list = []
-
-        for i in download_list:
-            if self.check_file_existance(i["title"]):
-                replace_list.append("{}.mp4".format(get_legal_name(i["title"])))
-        
-        flag = False
-        if len(replace_list) != 0:
-            while len(replace_list) != 0:
-                dlg = wx.RichMessageDialog(self, '文件已存在\n\n文件 "{}" 已存在，是否重新下载？'.format(replace_list[0]), "提示", wx.ICON_INFORMATION | wx.YES_NO)
-            
-                if len(replace_list) > 1:
-                    dlg.ShowCheckBox("为剩余 {} 个文件执行相同的操作".format(len(replace_list) - 1))
-                    dlg.ShowDetailedText("已存在的文件：\n\n" + "\n".join(replace_list))
-
-                if dlg.ShowModal() == wx.ID_YES:
-                    if dlg.IsCheckBoxChecked():
-                        remove_files(replace_list)
-                        flag = False
-                        break
-                    
-                    del replace_list[0]
-                    remove_files(Config.download_path, [replace_list[0]])             
-                    flag =  False
-
-                else:
-                    if dlg.IsCheckBoxChecked():
-                        replace_list.clear()
-                        flag = True
-                        break
-
-                    del replace_list[0]
-                    flag = True
-
-        return flag
-
-    def add_download_task(self, type, quality_id):
-        if type == VideoInfo:
-            download_list = self.get_video_download_list(quality_id)
-
-        elif type == BangumiInfo:
-            download_list = self.get_bangumi_download_list(quality_id)
-
-        elif type == AudioInfo:
-            download_list = self.get_audio_download_list()
-
-        if self.confirm_file_replacement(download_list):
-            return
-
-        self.list_panel.download_list_panel.add_panel(download_list)
-
-        self.list_panel.task_lab.SetLabel("{} 个任务正在下载".format(len(DownloadInfo.download_list)))
-
-        Thread(target = self.start_download).start()
-    
-    def get_download_info(self, url, title, type, avid = None, bvid = None, cid = None, epid = None, sid = None, lyric = None, quality_id = None):
-        DownloadInfo.download_count += 1
-
-        return {
-            "id": DownloadInfo.download_count,
-            "url": url,
-            "title": title,
-            "avid": avid,
-            "bvid": bvid,
-            "cid": cid,
-            "epid": epid,
-            "sid": sid,
-            "lyric": lyric,
-            "quality_id": quality_id,
-            "onMerge": self.onMerge, 
-            "onComplete": self.onComplete,
-            "update_title": self.update_title,
-            "type": type
-        }
-
-    def get_video_download_list(self, quality_id):
-        download_list = []
-
-        if VideoInfo.type == "pages":
-            for i in VideoInfo.down_pages:
-                info = self.get_download_info(VideoInfo.url, i["part"], "video", bvid = VideoInfo.bvid, cid = i["cid"], quality_id = quality_id)
-
-                download_list.append(info)
-
-        elif VideoInfo.type == "collection":
-            for i in VideoInfo.down_pages:
-                info = self.get_download_info(VideoInfo.url, i["arc"]["title"], "video", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
-
-                download_list.append(info)
-        else:
-            info = self.get_download_info(VideoInfo.url, VideoInfo.title, "video", bvid = VideoInfo.bvid, cid = VideoInfo.cid, quality_id = quality_id)
-
-            download_list.append(info)
-
-        return download_list
-
-    def get_bangumi_download_list(self, quality_id):
-        download_list = []
-
-        for i in BangumiInfo.down_episodes:
-            info = self.get_download_info(BangumiInfo.url, format_bangumi_title(i), "bangumi", bvid = i["bvid"], cid = i["cid"], quality_id = quality_id)
-
-            download_list.append(info)
-
-        return download_list
-
-    def get_audio_download_list(self):
-        download_list = []
-
-        for i in AudioInfo.down_list:
-            info = self.get_download_info(AudioInfo.url, i["title"], "audio", sid = i["id"], lyric = i["lyric"])
-        
-            download_list.append(info)
-
-        return download_list
-
-    def get_cheese_download_list(self, quality_id):
-        download_list = []
-
-        for i in CheeseInfo.down_episodes:
-            info = self.get_download_info(CheeseInfo.url, i["title"], "video", avid = i["aid"], cid = i["cid"], epid = i["epid"], quality_id = quality_id)
-
-            download_list.append(info)
-
-        return download_list
-
-    def start_download(self):
-        if DownloadInfo.downloading:
-            return
-
-        keys = [key for key, value in DownloadInfo.download_list.items() if value.status == "waiting"]
-        
-        for i in keys:
-            value = DownloadInfo.download_list[i]
-
-            DownloadInfo.downloading = True
-           
-            value.start_download()
-
-            break
-
-    def onMerge(self):
-        if len(DownloadInfo.download_list) != 0:
-            Thread(target = self.start_download).start()
-
-    def onComplete(self):
-        if DownloadInfo.download_task == 0:
-            if Config.show_notification:
-                self.RequestUserAttention(flags = wx.USER_ATTENTION_INFO)
-
-        self.update_title()
-
-    def update_title(self, error = False, show_notification = True):
-        if DownloadInfo.download_task != 0:
-            self.list_panel.task_lab.SetLabel("{} 个任务正在下载".format(DownloadInfo.download_task))
-        else:
-            self.list_panel.task_lab.SetLabel("下载管理")
-
-            if show_notification:
-                self.RequestUserAttention(wx.USER_ATTENTION_INFO)
-            
-                if Config.show_notification and not error:
-                    Notification.show_notification_download_finish()
-
-        if error:
-            self.RequestUserAttention(wx.USER_ATTENTION_INFO)
-
-            if Config.show_notification:
-                Notification.show_notification_download_error()
-
-class WindowPanel(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
-        
-        self.init_UI()
+        self.SetSize(self.FromDIP((750, 500)))
 
         self.Bind_EVT()
 
+        self.init_utils()
+    
     def init_UI(self):
+        font: wx.Font = self.GetFont()
+        font.SetPointSize(14)
+
         self.task_lab = wx.StaticText(self, -1, "下载管理")
-        self.task_lab.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, faceName = "微软雅黑"))
+        self.task_lab.SetFont(font)
+
+        max_download_lab = wx.StaticText(self, -1, "并行下载数：")
+        self.max_download_choice = wx.Choice(self, -1, choices = ["1 个", "2 个", "3 个", "4 个"])
+
+        self.start_all_btn = wx.Button(self, -1, "全部开始")
+        self.pause_all_btn = wx.Button(self, -1, "全部暂停")
+        self.stop_all_btn = wx.Button(self, -1, "全部取消")
+
+        action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        action_hbox.Add(max_download_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        action_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), 10)
+        action_hbox.AddStretchSpacer()
+        action_hbox.Add(self.start_all_btn, 0, wx.ALL & (~wx.TOP), 10)
+        action_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        action_hbox.Add(self.stop_all_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         top_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
-        self.download_list_panel = DownloadListPanel(self, size = self.FromDIP((650, 250)))
+
+        self.download_list_panel = ScrolledPanel(self, size = self.FromDIP((720, 280)))
+        self.download_list_panel.SetBackgroundColour("white")
+
         bottom_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
         botton_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -253,76 +160,131 @@ class WindowPanel(wx.Panel):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.task_lab, 0, wx.ALL, 10)
+        vbox.Add(action_hbox, 0, wx.EXPAND)
         vbox.Add(top_border, 0, wx.EXPAND)
         vbox.Add(self.download_list_panel, 1, wx.EXPAND)
         vbox.Add(bottom_border, 0, wx.EXPAND)
         vbox.Add(botton_hbox, 0, wx.EXPAND)
 
-        self.SetSizer(vbox)
+        self.SetSizerAndFit(vbox)
 
-        vbox.Fit(self.Parent)
+        self.SetBackgroundColour("white")
 
     def Bind_EVT(self):
-        self.open_btn.Bind(wx.EVT_BUTTON, self.open_btn_EVT)
-        self.clear_btn.Bind(wx.EVT_BUTTON, self.clear_btn_EVT)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
 
-    def open_btn_EVT(self, event):
-        if Config.platform.startswith("Windows"):
-            os.startfile(Config.download_path)
-        else:
-            os.system('xdg-open "{}"'.format(Config.download_path))
+        self.clear_btn.Bind(wx.EVT_BUTTON, self.onClear)
+        self.open_btn.Bind(wx.EVT_BUTTON, self.onOpenDir)
 
-    def clear_btn_EVT(self, event):
-        keys = [key for key, value in DownloadInfo.download_list.items() if value.status == "completed" or value.status == "error"]
+        self.max_download_choice.Bind(wx.EVT_CHOICE, self.onMaxDownloadChoice)
+        self.stop_all_btn.Bind(wx.EVT_BUTTON, self.onStopAll)
+        self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAll)
+        self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAll)
+
+    def init_utils(self):
+        max_download = Config.Download.max_download
+
+        match max_download:
+            case max_download if max_download < 1:
+                index = 0
+            case 1 | 2 | 3 | 4:
+                index = max_download - 1
+            case max_download if max_download > 4:
+                index = 3
+
+        self.max_download_choice.SetSelection(index)
+ 
+    def OnClose(self, event):
+        self.Hide()
+
+    def onClear(self, event):
+        callback_list = [value["stop_callback"]for key, value in DownloadInfo.download_list.items() if value["status"] == "completed"]
+
+        self.run_callback_list(callback_list)
+
+    def onOpenDir(self, event):
+        os.startfile(Config.Download.path)
+
+    def onMaxDownloadChoice(self, event):
+        index = self.max_download_choice.GetSelection()
+
+        Config.Download.max_download = index + 1
+
+        conf.config.set("download", "max_download", str(Config.Download.max_download))
+        conf.save()
+
+        self.start_download()
+
+    def onStartAll(self, event):
+        callback_list = [value["resume_callback"] for key, value in DownloadInfo.download_list.items() if value["status"] == "pause"]
+
+        self.run_callback_list(callback_list)
+
+    def onPauseAll(self, event):
+        callback_list = [value["pause_callback"] for key, value in DownloadInfo.download_list.items() if value["status"] == "downloading"]
+
+        self.run_callback_list(callback_list)
+
+    def onStopAll(self, event):
+        callback_list = [value["stop_callback"] for key, value in DownloadInfo.download_list.items() if value["status"] == "wait" or value["status"] == "downloading" or value["status"] == "pause"]
+
+        self.run_callback_list(callback_list)
+
+    def run_callback_list(self, callback_list):
+        for callback in callback_list:
+            callback(0)
+
+        self.download_list_panel.Layout()
+        self.update_task_lab()
+
+    def add_download_item(self):
+        for entry in Download.download_list:
+            item = DownloadItemPanel(self.download_list_panel, entry)
+
+            self.download_list_panel.sizer.Add(item, 0, wx.EXPAND)
+
+            entry["start_callback"] = item.start
+            entry["pause_callback"] = item.onPauseCallback
+            entry["resume_callback"] = item.onResumeCallback
+            entry["stop_callback"] = item.onStop
+
+            DownloadInfo.download_list[entry["id"]] = entry
+
+            self.download_list_panel.SetupScrolling(scroll_x = False)
         
-        for i in keys:
-            value = DownloadInfo.download_list[i]
-            value.Destroy()
+        self.layout_sizer()
 
-            self.layout_sizer()
-
-            del DownloadInfo.download_list[i]
+        self.start_download()
 
     def layout_sizer(self):
-        self.download_list_panel.main_sizer.Layout()
-        self.download_list_panel.SetupScrolling(scroll_x = False)
+        self.update_task_lab()
 
-class DownloadListPanel(wx.lib.scrolledpanel.ScrolledPanel):
-    def __init__(self, parent, size):
-        wx.lib.scrolledpanel.ScrolledPanel.__init__(self, parent, -1, size = size)
+        self.download_list_panel.Layout()
+        self.download_list_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+    
+    def update_task_lab(self):
+        count = 0
 
-        self.init_UI()
+        for key, value in DownloadInfo.download_list.items():
+            if value["status"] == "wait" or value["status"] == "downloading" or value["status"] == "pause":
+                count += 1
 
-    def init_UI(self):
-        self.SetBackgroundColour('white')
+        self.task_lab.SetLabel(f"{count} 个任务正在下载" if count else "下载管理")
 
-        self.main_sizer = wx.BoxSizer(wx.VERTICAL)
+    def start_download(self):
+        for key, value in DownloadInfo.download_list.items():
+            if value["status"] == "wait" and self.get_downloading_count() < Config.Download.max_download:
+                value["start_callback"]()
+    
+    def get_downloading_count(self):
+        count = 0
 
-        self.SetSizer(self.main_sizer)
+        for key, value in DownloadInfo.download_list.items():
+            if value["status"] == "downloading":
+                count += 1
 
-    def check_download_list(self, task):
-        for i in DownloadInfo.download_list.values():
-            if i.info["title"] == task["title"]:
-                return True
+        return count
         
-        return False
-
-    def add_panel(self, info: list):
-        for item in info:
-            if self.check_download_list(item):
-                continue
-
-            item["layout_sizer"] = self.Parent.layout_sizer
-
-            panel = DownloadItemPanel(self, item)
-
-            self.main_sizer.Add(panel, 0, wx.EXPAND)
-
-            DownloadInfo.download_task += 1
-            DownloadInfo.download_list[item["id"]] = panel
-
-        self.SetupScrolling(scroll_x = False)
-
 class DownloadItemPanel(wx.Panel):
     def __init__(self, parent, info: dict):
         self.info = info
@@ -333,28 +295,40 @@ class DownloadItemPanel(wx.Panel):
 
         self.Bind_EVT()
 
-        self.status = "waiting"
-        self.started_download = False
+        self.init_utils()
+
+        self.CentreOnParent()
+
+    def init_utils(self):
+        self.downloader = Downloader(self.onStart, self.onDownload, self.onMerge)
+        self.utils = DownloadUtils(self.info, self.onError)
+
+        Thread(target = self.get_preview_pic).start()
 
     def init_UI(self):
-        self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_END)
+        self.preview_pic = wx.StaticBitmap(self, -1, size = (160, 75))
+
+        self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)))
         self.title_lab.SetToolTip(self.info["title"])
 
-        self.quality_lab = wx.StaticText(self, -1)
-        self.quality_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+        self.resolution_lab = wx.StaticText(self, -1)
+        self.resolution_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
-        self.size_lab = wx.StaticText(self, -1, "-")
+        self.size_lab = wx.StaticText(self, -1, "")
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        quality_hbox.Add(self.quality_lab, 2, wx.ALL & (~wx.TOP), 10)
-        quality_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.TOP), 10)
-        quality_hbox.AddStretchSpacer(1)
+        resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        resolution_hbox.Add(self.resolution_lab, 0, wx.ALL & (~wx.TOP), 10)
+        resolution_hbox.AddStretchSpacer()
+        resolution_hbox.Add(self.size_lab, 0, wx.ALL & (~wx.TOP), 10)
+        resolution_hbox.AddStretchSpacer()
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
+        info_vbox.AddSpacer(5)
         info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
-        info_vbox.AddSpacer(self.FromDIP(5))
-        info_vbox.Add(quality_hbox, 0, wx.EXPAND)
+        info_vbox.AddStretchSpacer()
+        info_vbox.Add(resolution_hbox, 0, wx.EXPAND)
+        info_vbox.AddSpacer(5)
 
         self.gauge = wx.Gauge(self, -1, 100)
 
@@ -362,80 +336,79 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         gauge_vbox = wx.BoxSizer(wx.VERTICAL)
+        gauge_vbox.AddSpacer(5)
         gauge_vbox.Add(self.gauge, 0, wx.ALL | wx.EXPAND, 10)
+        gauge_vbox.AddStretchSpacer()
         gauge_vbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP), 10)
+        gauge_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, wx.Bitmap(Config.res_continue), size = self.FromDIP((16, 16)))
+        self.pause_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_resume_icon())).Scale(24, 24).ConvertToBitmap())
         self.pause_btn.SetToolTip("开始下载")
-        self.cancel_btn = wx.BitmapButton(self, -1, wx.Bitmap(Config.res_delete), size = self.FromDIP((16, 16)))
-        self.cancel_btn.SetToolTip("取消下载")
+        self.stop_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_delete_icon())).Scale(24, 24).ConvertToBitmap())
+        self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        panel_hbox.Add(self.preview_pic, 0, wx.ALL, 10)
         panel_hbox.Add(info_vbox, 0, wx.EXPAND)
-        panel_hbox.AddStretchSpacer()
         panel_hbox.Add(gauge_vbox, 0, wx.EXPAND)
-        panel_hbox.AddSpacer(self.FromDIP(10))
+        panel_hbox.AddStretchSpacer()
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
-        panel_hbox.Add(self.cancel_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        panel_hbox.AddSpacer(10)
 
         border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
-        panel_vbox = wx.BoxSizer(wx.VERTICAL)
-        panel_vbox.Add(panel_hbox, 1, wx.EXPAND)
-        panel_vbox.Add(border, 0, wx.EXPAND)
+        self.panel_vbox = wx.BoxSizer(wx.VERTICAL)
+        self.panel_vbox.Add(panel_hbox, 1, wx.EXPAND)
+        self.panel_vbox.Add(border, 0, wx.EXPAND)
 
-        self.SetSizer(panel_vbox)
-
+        self.SetSizer(self.panel_vbox)
+    
     def Bind_EVT(self):
-        self.pause_btn.Bind(wx.EVT_BUTTON, self.pause_btn_EVT)
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self.cancel_btn_EVT)
+        self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseBtn_EVT)
+        self.stop_btn.Bind(wx.EVT_BUTTON, self.onStop)
 
-    def pause_btn_EVT(self, event):
-        if self.status == "downloading":
-            self.status = "pause"
-            self.pause_btn.SetBitmap(wx.Bitmap(Config.res_continue))
-            self.pause_btn.SetToolTip("继续下载")
+    def get_preview_pic(self):
+        req = requests.get(self.info["pic"])
 
-            wx.CallAfter(self.onPause)
+        wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
+
+        image = wx.Image(io.BytesIO(req.content)).Scale(160, 75)
         
-        elif self.status == "waiting":
-            self.status = "downloading"
+        self.preview_pic.SetBitmap(image.ConvertToBitmap())
 
-            self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
-            self.pause_btn.SetToolTip("暂停下载")
+        self.panel_vbox.Layout()
 
-            Thread(target = self.start_download).start()
+    def start(self):
+        self.start_thread = Thread(target = self.thread_start_download)
+        self.start_thread.setDaemon(True)
+        self.start_thread.start()
+    
+    def thread_start_download(self):
+        self.set_status("downloading")
 
-        else:
-            self.status = "downloading"
+        info_list = self.utils.get_download_info()
+        self.downloader.start(info_list)
 
-            self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
-            self.pause_btn.SetToolTip("暂停下载")
+    def onPauseBtn_EVT(self, event):
+        match self.info["status"]:
+            case "wait":
+                self.start()
+                self.set_status("downloading")
+            
+            case "downloading":
+                self.onPause()
+                self.set_status("pause")
 
-            wx.CallAfter(self.onContinue)
-
-    def cancel_btn_EVT(self, event):
-        if self.started_download:
-            self.downloader.onCancel()
-
-        del DownloadInfo.download_list[self.info["id"]]
-
-        if self.status != "completed" and self.status != "error":
-            DownloadInfo.download_task -= 1
-
-        self.Destroy()
-
-        self.info["layout_sizer"]()
-        self.info["update_title"](show_notification = False)
-
-    def show_video_info(self):
-        quality_dict = dict(map(reversed, quality_wrap.items()))
-        codec_dict = {0: "AVC/H.264", 1: "HEVC/H.265", 2: "AVC"}
+            case "pause":
+                self.onResume()
+                self.set_status("downloading")
+            
+            case "completed":
+                self.onOpenFolder()
+                return
         
-        self.quality_lab.SetLabel("{}   {}".format(quality_dict[self.utils.quality], codec_dict[self.utils.codec]))
-
-    def show_audio_info(self):
-        self.quality_lab.SetLabel("音乐")
+        self.update_pause_btn(self.info["status"])
 
     def onStart(self):
         self.total_size = format_size(self.downloader.total_size / 1024)
@@ -443,238 +416,113 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.SetLabel("")
         self.size_lab.SetLabel("0 MB/{}".format(self.total_size))
 
-    def onDownload(self, progress, speed, size):
-        self.gauge.SetValue(progress)
-        self.speed_lab.SetLabel(speed)
-        self.size_lab.SetLabel(size)
+        quality_dict = dict(map(reversed, resolution_map.items()))
+        codec_dict = {7: "AVC/H.264", 12: "HEVC/H.265", 13: "AVC"}
+        
+        self.resolution_lab.SetLabel("{}   {}".format(quality_dict[self.utils.resolution], codec_dict[self.utils.codec_id]))
+
+        self.update_pause_btn("downloading")
+
+        self.Layout()
+
+    def onDownload(self, info: dict):
+        self.gauge.SetValue(info["progress"])
+        self.speed_lab.SetLabel(info["speed"])
+        self.size_lab.SetLabel(info["size"])
+
+        self.Layout()
 
     def onPause(self):
-        if self.started_download:
-            self.downloader.onPause()  
+        self.downloader.onPause()
+
+        self.speed_lab.SetLabel("暂停中")
+
+    def onPauseCallback(self, event):
+        self.onPause()
+        self.set_status("pause")
+
+        self.update_pause_btn("pause")
+
+    def onResume(self):
+        self.downloader.onResume()
+
+        self.speed_lab.SetLabel("")
+
+    def onResumeCallback(self, event):
+        self.onResume()
+        self.set_status("downloading")
+
+        self.update_pause_btn("downloading")
+
+    def onStop(self, event):
+        self.downloader.onStop()
+
+        self.Hide()
+
+        DownloadInfo.download_list.pop(self.info["id"])
+
+        self.GetParent().GetParent().layout_sizer()
+
+        self.Destroy()
     
-        self.speed_lab.SetLabel("暂停中...")
-
-    def onContinue(self):
-        if self.started_download:
-            self.speed_lab.SetLabel("")
-            self.downloader.onContinue()
-        else:
-            self.speed_lab.SetLabel("等待下载...")
-
-    def onDownloadComplete(self):
-        DownloadInfo.downloading = False
-
-        Thread(target = self.onMerge).start()
-
-    def onMergeComplete(self):
-        self.status = "completed"
-
-        self.speed_lab.SetLabel("下载完成")
-        self.cancel_btn.SetToolTip("清除记录")
-        self.gauge.SetValue(100)
-
-        DownloadInfo.download_task -= 1
-
-        wx.CallAfter(self.info["onComplete"])
-
     def onMerge(self):
         self.size_lab.SetLabel(self.total_size)
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
 
-        self.status = "merging"
+        self.set_status("merging")
 
-        wx.CallAfter(self.info["onMerge"])
+        parent = self.GetParent().GetParent()
 
-        self.utils.merge_video(self.onMergeComplete)
+        parent.update_task_lab()
+        parent.start_download()
+
+        self.utils.merge_video()
+
+        self.onMergeComplete()
+    
+    def onMergeComplete(self):
+        self.set_status("completed")
+
+        self.speed_lab.SetLabel("下载完成")
+        self.stop_btn.SetToolTip("清除记录")
+
+        self.pause_btn.Enable(True)
+        self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_folder_icon())).ConvertToBitmap())
+        self.pause_btn.SetToolTip("打开所在位置")
+
+        self.gauge.SetValue(100)
+
+        self.Layout()
 
     def onError(self):
+        self.set_status("error")
+
         self.speed_lab.SetLabel("下载失败")
         self.speed_lab.SetForegroundColour("red")
+        self.stop_btn.SetToolTip("清除记录")
+
         self.pause_btn.Enable(False)
-        self.cancel_btn.SetToolTip("清除记录")
 
-        self.status = "error"
-        DownloadInfo.downloading = False
-        DownloadInfo.download_task -= 1
-        
-        self.info["update_title"](error = True)
+        self.Layout()
 
-        raise ValueError("视频下载失败")
+        self.GetParent().GetParent().update_task_lab()
 
-    def start_download(self):
-        self.pause_btn.SetBitmap(wx.Bitmap(Config.res_pause))
-        self.pause_btn.SetToolTip("暂停下载")
-
-        self.started_download = True
-        self.status = "downloading"
-
-        self.downloader = Downloader(self.onStart, self.onDownload, self.onDownloadComplete)
-        self.utils = DownloadUtils(self.info, self.downloader, self.onError)
-        
-        if self.info["type"] != "audio":
-            self.utils.get_video_durl()
-
-            self.show_video_info()
-
-            self.utils.add_video_durl_to_downloader()
-        else:
-            self.utils.get_audio_durl()
-
-            self.show_audio_info()
-
-            self.utils.add_audio_durl_to_downloader()
-
-class DownloadUtils:
-    def __init__(self, info, downloader, onError):
-        self.info, self.downloader, self.onError = info, downloader, onError
-
-    def get_video_durl(self):
-        json_dash = self.get_video_durl_via_api()
-
-        self.quality = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < self.info["quality_id"] else self.info["quality_id"]
-
-        temp_video_durl = [i["baseUrl"] for i in json_dash["video"] if i["id"] == self.quality]
-
-        if len(temp_video_durl) == 1:
-            self.codec = 0
-
-        elif len(temp_video_durl) == 2 and codec_wrap[Config.codec] == 2:
-            self.codec = 1
-        
-        else:
-            self.codec = codec_wrap[Config.codec]
-            
-        self.video_durl = temp_video_durl[self.codec]
-        
-        temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
-        self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.quality or (i["id"] - 30200) < self.quality][0]["baseUrl"]
-
-    def get_video_durl_via_api(self):
-        type = self.info["type"]
-
-        try:
-            if type == "video":
-                url = API.Video.download_api(self.info["bvid"], self.info["cid"])
-
-                request = requests.get(url, headers = get_header(Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-                request_json = json.loads(request.text)
- 
-                json_dash = request_json["data"]["dash"]
-
-            elif type == "bangumi":
-                url = API.Bangumi.download_api(self.info["bvid"], self.info["cid"])
-
-                request = requests.get(url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-                request_json = json.loads(request.text)
-
-                json_dash = request_json["result"]["dash"]
-
-            elif type == "cheese":
-                url = API.Cheese.download_api(self.info["avid"], self.info["epid"], self.info["cid"])
-
-                request = requests.get(url, headers = get_header(self.info["url"], Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-                request_json = json.loads(request.text)
-
-                json_dash = request_json["data"]["dash"]
-
-        except:
-            wx.CallAfter(self.onError)
-
-        return json_dash
-
-    def get_audio_durl(self):
-        url = API.Audio.download_api(self.info["sid"])
-
-        audio_request = requests.get(url, headers = get_header(self.info["url"]), proxies = get_proxy(), auth = get_auth())
-        audio_json = json.loads(audio_request.text)
-
-        self.audio_durl = audio_json["data"]["cdns"][0]
-        
-    def add_video_durl_to_downloader(self):
-        video_info = {
-            "url": self.video_durl,
-            "referer_url": self.info["url"],
-            "file_name": "video_{}.mp4".format(self.info["id"])
-        }
-
-        audio_info = {
-            "url": self.audio_durl,
-            "referer_url": self.info["url"],
-            "file_name": "audio_{}.mp3".format(self.info["id"])
-        }
-
-        self.get_danmaku()
-        self.get_subtitle()
-
-        self.downloader.start_download([video_info, audio_info])
-
-    def add_audio_durl_to_downloader(self):
-        audio_info = {
-            "url": self.audio_durl,
-            "referer_url": self.info["url"],
-            "file_name": "{}.mp3".format(get_legal_name(self.info["title"]))
-        }
-
-        self.get_lyric()
-
-        self.downloader.start_download([audio_info])
-
-    def merge_video(self, onMergeComplete):
-        if self.info["type"] == "audio":
-            wx.CallAfter(onMergeComplete)
-            return
-            
-        id = self.info["id"]
-        title = get_legal_name(self.info["title"])
-
-        cmd = f'''cd "{Config.download_path}" && {Config.ffmpeg_path} -v quiet -i audio_{id}.mp3 -i video_{id}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
-            
-        self.merge_process = subprocess.Popen(cmd, shell = True)
-        self.merge_process.wait()
-
-        remove_files(Config.download_path, [f"video_{id}.mp4", f"audio_{id}.mp3"])
-        
-        wx.CallAfter(onMergeComplete)
+        self.start_thread.stop()
     
-    def get_danmaku(self):
-        if not Config.save_danmaku:
-            return
-        
-        url = API.URL.danmaku_api(self.info["cid"])
+    def onOpenFolder(self):
+        subprocess.Popen(f"explorer /select,{Config.Download.path}\\{self.info['title']}.mp4", shell = True)
 
-        get_file_from_url(url, "{}.xml".format(self.info["title"]))
+    def update_pause_btn(self, status: str):
+        match status:
+            case "downloading":
+                self.pause_btn.SetToolTip("暂停下载")
+                self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_pause_icon())).ConvertToBitmap())
 
-    def get_subtitle(self):
-        if not Config.save_subtitle or self.info["type"] == "cheese":
-            return
+            case "pause":
+                self.pause_btn.SetToolTip("继续下载")
+                self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_resume_icon())).ConvertToBitmap())
 
-        url = API.URL.subtitle_api(self.info["cid"], self.info["bvid"])
-        
-        request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-
-        subtitle_raw = re.findall(r'<subtitle>(.*?)</subtitle>', request.text)[0]
-        subtitle_json = json.loads(subtitle_raw)["subtitles"]
-
-        count = len(subtitle_json)
-
-        if count == 0:
-            return
-
-        elif count == 1:
-            durl = "https:{}".format(subtitle_json[0]["subtitle_url"])
-        
-            get_file_from_url(durl, "{}.srt".format(self.info["title"]), True)
-
-        else:
-            for i in range(count):
-                lan_name = subtitle_json[i]["lan_doc"]
-                durl = "https:{}".format(subtitle_json[i]["subtitle_url"])
-            
-                get_file_from_url(durl, "({}) {}.srt".format(lan_name, self.info["title"]), True)
-
-    def get_lyric(self):         
-        if not Config.save_lyric and self.info["lyric"] == "":
-            return
-    
-        get_file_from_url(self.info["lyric"], "{}.lrc".format(self.info["title"]))
+    def set_status(self, status: str):
+        self.info["status"] = status
+        DownloadInfo.download_list[self.info["id"]]  = self.info

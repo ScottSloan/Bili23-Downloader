@@ -1,84 +1,75 @@
 import re
 import os
 import json
-import math
+import random
 import requests
 from requests.auth import HTTPProxyAuth
 
 from .config import Config
-from .api import API
 
-quality_wrap = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
-mode_wrap = {"api": 0, "html": 1}
-codec_wrap = {"AVC": 0, "HEVC": 1, "AV1": 2}
-
-def process_shortlink(url):
-    if not url.startswith("https"):
-        url = "https://" + url
-
-    return requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth()).url
-
-def process_activity_url(url):
-    re_pattern = r"\"videoID\":\"(.*?)\""
-        
-    request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-
-    try:
-        return "ep" + re.findall(re_pattern, request.text.replace("\\", ""), re.S)[0]
-    except:
-        return ""
-    
-def process_festival_url(url):
-    re_pattern = r"window.__INITIAL_STATE__=(.*?);\(function"
-    
-    request = requests.get(url, headers = get_header(cookie = Config.user_sessdata), proxies = get_proxy(), auth = get_auth())
-    
-    try:
-        festival_json = json.loads(re.findall(re_pattern, request.text.replace("\\", ""), re.S)[0])
-
-        return festival_json["videoInfo"]["bvid"]
-    except:
-        return ""
-
-def get_legal_name(name):
-    return re.sub('[/\:*?"<>|]', "", name)
+resolution_map = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
+codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
 
 def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
-    header = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.56"}
-    header["Cookie"] = "CURRENT_FNVAL=4048;"
-
-    if referer_url != None:
+    header = {
+        "Cookie": "CURRENT_FNVAL=4048;",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.36",
+    }
+    
+    if referer_url:
         header["Referer"] = referer_url
 
-    if chunk_list != None:
+    if chunk_list:
         header["Range"] = "bytes={}-{}".format(chunk_list[0], chunk_list[1])
 
-    if cookie != None and cookie != "":
+    if cookie:
         header["Cookie"] += "SESSDATA=" + cookie
     
     return header
 
 def get_proxy():
-    if Config.enable_proxy:
+    if Config.Proxy.proxy:
         return {
-            "http": "{}:{}".format(Config.proxy_ip, Config.proxy_port),
-            "https": "{}:{}".format(Config.proxy_ip, Config.proxy_port)
+            "http": f"{Config.Proxy.ip}:{Config.Proxy.port}",
+            "https": f"{Config.Proxy.ip}:{Config.Proxy.port}"
         }
     else:
         return {}
 
 def get_auth():
-    if Config.enable_auth:
-        return HTTPProxyAuth(Config.auth_uname, Config.auth_pwd)
+    if Config.Proxy.auth:
+        return HTTPProxyAuth(Config.Proxy.uname, Config.Proxy.passwd)
     else:
         return HTTPProxyAuth(None, None)
+    
+def convert_to_bvid(aid):
+    table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
+    map = {}
 
-def remove_files(path, name):
-    for i in name:
-        dir_path = os.path.join(path, i)
-        
-        if os.path.exists(dir_path):
-            os.remove(dir_path)
+    s = [11, 10, 3, 8, 4, 6]
+    xor = 177451812
+    add = 8728348608
+
+    for i in range(58):
+        map[table[i]] = i
+
+    aid = (aid ^ xor) + add
+    r = list("BV1  4 1 7  ")
+
+    for i in range(6):
+        r[s[i]] = table[aid // 58 ** i % 58]
+
+    return "".join(r)
+
+def format_duration(duration, bangumi = False):
+    if bangumi:
+        duration /= 1000
+
+    hours = int(duration // 3600)
+    mins = int((duration - hours * 3600) // 60)
+    secs = int(duration - hours * 3600 - mins * 60)
+    
+    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
 
 def format_size(size):
     if size > 1048576:
@@ -88,88 +79,6 @@ def format_size(size):
     else:
         return "{:.1f} KB".format(size)
 
-def save_pic(url, path):
-    if os.path.exists(path):
-        return
-
-    request = requests.get(url = url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-
-    with open(path, "wb") as f:
-        f.write(request.content)
-
-def get_face_pic(url):    
-    save_pic(url, Config.res_face)
-
-    return Config.res_face
-
-def get_level_pic(level): 
-    url = API.App.level_api(level)   
-
-    save_pic(url, Config.res_level)
-    
-    return Config.res_level
-
-def get_vip_badge_pic(url): 
-    save_pic(url, Config.res_badge)
-
-    return Config.res_badge
-
-def get_file_from_url(url, name, subtitle = False):
-    request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    request.encoding = "utf-8"
-    
-    with open(os.path.join(Config.download_path, get_legal_name(name)), "w", encoding = "utf-8") as f:
-        if subtitle:
-            f.write(convert_json_to_srt(request.text))
-        else:
-            f.write(request.text)
-
-def convert_json_to_srt(data):
-    json_data = json.loads(data)
-
-    file = ""
-
-    for index, value in enumerate(json_data["body"]):
-        file += "{}\n".format(index)
-        start = value["from"]
-        end = value["to"]
-        file += format_subtitle_timetag(start, False) + " --> " + format_subtitle_timetag(end, True) + "\n"
-        file += value["content"] + "\n\n"
-    
-    return file
-
-def get_update_json():
-    url = API.App.update_api()
-
-    update_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    
-    try:
-        update_json = json.loads(update_request.text)
-        update_json["error"] = False
-        
-        if update_json["version_code"] > Config.app_version_code:
-            url = API.App.changelog_api()
-
-            changelog_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-            changelog_request.encoding = "utf-8"
-
-            update_json["changelog"] = changelog_request.text
-        
-        return update_json
-    except:
-        return {"error": True}
-
-def get_changelog():
-    url = API.App.changelog_api()
-
-    changelog_request = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    changelog_request.encoding = "utf-8"
-
-    return changelog_request.text
-    
-def find_str(pattern, string):
-    return True if len(re.findall(pattern, string)) !=  0 else False
-
 def format_bangumi_title(episode):
     from .bangumi import BangumiInfo
 
@@ -177,38 +86,55 @@ def format_bangumi_title(episode):
         return "{} - {}".format(BangumiInfo.title, episode["title"])
     else:
         return episode["share_copy"]
-
-def format_duration(duration, bangumi = False):
-    if bangumi:
-        duration = duration / 1000
-
-    hours = int(duration // 3600)
-    mins = int((duration - hours * 3600) // 60)
-    secs = int(duration - hours * 3600 - mins * 60)
     
-    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
+def get_legal_name(name):
+    return re.sub('[/\:*?"<>|]', "", name)
 
-def format_subtitle_timetag(timetag, end):
-    hours = math.floor(timetag) // 3600
-    mins = (math.floor(timetag) - hours * 3600) // 60
-    secs = math.floor(timetag) - hours * 3600 - mins * 60
+def get_user_face(url):
+    req = requests.get(url, proxies = get_proxy(), auth = get_auth())
 
-    if not end:
-        msecs = int(math.modf(timetag)[0] * 100)
-    else:
-        msecs = abs(int(math.modf(timetag)[0] * 100 -1))
+    return req.content
 
-    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) + "," + str(msecs).zfill(2)
-
-def copy_text(text):
-    import wx
-
-    obj = wx.TextDataObject(text)
-    borad = wx.Clipboard()
-    
-    if borad.Open():
-        borad.SetData(obj)
-        borad.Flush()
-
-        borad.Close()
+def remove_files(path, name):
+    for i in name:
+        dir_path = os.path.join(path, i)
         
+        if os.path.exists(dir_path):
+            os.remove(dir_path)
+
+def get_update_json():
+    url = "https://scottsloan.github.io/Bili23-Downloader/update/update.json"
+
+    try:
+        req = requests.get(url, headers = get_header())
+        req.encoding = "utf-8"
+
+        update_json = json.loads(req.text)
+        update_json["error"] = False
+        
+        if update_json["version_code"] > Config.APP.version_code:
+            update_json["changelog"] = get_changelog(update_json["version_code"])
+            update_json["error"] = False
+
+        return update_json
+    except:
+        return {"error": True}
+
+def get_changelog(version_code: int):
+    url = f"https://scottsloan.github.io/Bili23-Downloader/update/CHANGELOG_{version_code}"
+
+    req = requests.get(url, headers = get_header())
+    req.encoding = "utf-8"
+
+    return req.text
+    
+def get_new_id():
+    return random.randint(1000, 9999)
+
+def find_str(pattern, string):
+    find = re.findall(pattern, string)
+    
+    if find:
+        return find[0]
+    else:
+        return None

@@ -1,14 +1,12 @@
 import wx
-import locale
+import ctypes
 
 from gui.main import MainWindow
 
 if __name__ == "__main__":
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    
     app = wx.App()
-
-    locale.setlocale(locale.LC_ALL, '')
-
-    app.locale = wx.Locale("Chinese Simplified", "zh_cn", "zh_cn")
 
     main_window = MainWindow(None)
     main_window.Show()
