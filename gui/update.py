@@ -24,7 +24,7 @@ class UpdateWindow(wx.Dialog):
         title_hbox.Add(self.icon, 0, wx.ALL, 10)
         title_hbox.Add(self.title_lab, 0, wx.ALL | wx.CENTER, 10)
 
-        self.changelog_box = wx.TextCtrl(self, -1, self.json["changelog"], size = self.FromDIP((500, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.changelog_box = wx.TextCtrl(self, -1, self.json["changelog"], size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
         self.update_btn = wx.Button(self, -1, "更新", size = self.FromDIP((80, 25)))
         self.update_btn.Show(False)

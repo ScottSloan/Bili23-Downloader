@@ -32,7 +32,7 @@ class LicenseWindow(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        license_box = wx.TextCtrl(self, -1, license, size = self.FromDIP((400, 180)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        license_box = wx.TextCtrl(self, -1, license, size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭")
 

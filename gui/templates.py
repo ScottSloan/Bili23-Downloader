@@ -129,7 +129,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         else:
             info_entry = VideoInfo.pages[index - 1]
 
-            title = info_entry["part"]
+            title = info_entry["part"] if VideoInfo.type == 2 else VideoInfo.title
             pic = info_entry["first_frame"] if "first_frame" in info_entry else VideoInfo.cover
             bvid = VideoInfo.bvid
             cid = info_entry["cid"]

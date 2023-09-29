@@ -42,6 +42,10 @@ Bili23 Downloader GUI
 > 登录有效期为半年，过期后需重新登录。
 
 # 更新日志
+### **Version 1.40 Beta2 (2023/9/29)**
+本次更新内容如下：
+* 修复部分已知问题
+
 ### **Version 1.40 Beta1 (2023/9/28)**
 Bili23 Downloader 1.40 Beta1 版本发布
 

@@ -1,6 +1,7 @@
 import io
 import wx
 import json
+import wx.adv
 import requests
 import subprocess
 from typing import List
@@ -88,7 +89,7 @@ class DownloadUtils:
     def merge_video(self):
         title = get_legal_name(self.info["title"])
 
-        cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -i audio_{self.info['id']}.mp3 -i video_{self.info['id']}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
+        cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -y -i audio_{self.info['id']}.mp3 -i video_{self.info['id']}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
                 
         self.merge_process = subprocess.Popen(cmd, shell = True)
         self.merge_process.wait()
@@ -195,6 +196,8 @@ class DownloadWindow(Frame):
         self.max_download_choice.SetSelection(index)
  
     def OnClose(self, event):
+        Config.Temp.download_window_pos = self.GetPosition()
+
         self.Hide()
 
     def onClear(self, event):
@@ -239,6 +242,9 @@ class DownloadWindow(Frame):
 
     def add_download_item(self):
         for entry in Download.download_list:
+            if self.is_already_in_list(entry["title"], entry["cid"]):
+                continue
+
             item = DownloadItemPanel(self.download_list_panel, entry)
 
             self.download_list_panel.sizer.Add(item, 0, wx.EXPAND)
@@ -269,7 +275,11 @@ class DownloadWindow(Frame):
             if value["status"] == "wait" or value["status"] == "downloading" or value["status"] == "pause":
                 count += 1
 
-        self.task_lab.SetLabel(f"{count} 个任务正在下载" if count else "下载管理")
+        if count:
+            self.task_lab.SetLabel(f"{count} 个任务正在下载")
+        else:
+            self.task_lab.SetLabel("下载管理")
+            self.ShowNotificationToast()
 
     def start_download(self):
         for key, value in DownloadInfo.download_list.items():
@@ -284,7 +294,22 @@ class DownloadWindow(Frame):
                 count += 1
 
         return count
-        
+    
+    def ShowNotificationToast(self):
+        if Config.Download.show_notification and not self.IsShown():
+            self.GetParent().RequestUserAttention(wx.USER_ATTENTION_ERROR) # 任务栏闪烁，需主窗口失去焦点的情况下才有效
+
+            notification = wx.adv.NotificationMessage("下载完成", "所有任务已下载完成", self) # 弹出 Toast 通知
+
+            notification.Show()
+
+    def is_already_in_list(self, title, cid) -> bool:
+        for key, value in DownloadInfo.download_list.items():
+            if value["title"] == title and value["cid"] == cid:
+                return True
+            else:
+                return False
+            
 class DownloadItemPanel(wx.Panel):
     def __init__(self, parent, info: dict):
         self.info = info
@@ -308,7 +333,7 @@ class DownloadItemPanel(wx.Panel):
     def init_UI(self):
         self.preview_pic = wx.StaticBitmap(self, -1, size = (160, 75))
 
-        self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)))
+        self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_END)
         self.title_lab.SetToolTip(self.info["title"])
 
         self.resolution_lab = wx.StaticText(self, -1)
@@ -385,6 +410,8 @@ class DownloadItemPanel(wx.Panel):
         self.start_thread.start()
     
     def thread_start_download(self):
+        self.speed_lab.SetLabel("准备下载...")
+
         self.set_status("downloading")
 
         info_list = self.utils.get_download_info()
@@ -426,11 +453,12 @@ class DownloadItemPanel(wx.Panel):
         self.Layout()
 
     def onDownload(self, info: dict):
-        self.gauge.SetValue(info["progress"])
-        self.speed_lab.SetLabel(info["speed"])
-        self.size_lab.SetLabel(info["size"])
+        if self.info["status"] == "downloading":
+            self.gauge.SetValue(info["progress"])
+            self.speed_lab.SetLabel(info["speed"])
+            self.size_lab.SetLabel(info["size"])
 
-        self.Layout()
+            self.Layout()
 
     def onPause(self):
         self.downloader.onPause()

@@ -41,7 +41,10 @@ class Config:
     class Type:
         VIDEO = 1
         BANGUMI = 2
-
+    
+    class Temp:
+        download_window_pos = None
+        
 class Download:
     current_type = None
     download_list = []

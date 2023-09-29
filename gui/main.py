@@ -114,12 +114,14 @@ class MainWindow(Frame):
         if not Config.User.login:
             self.tool_menu.Append(self.ID_LOGIN, "登录(&L)")
 
-        self.tool_menu.Append(self.ID_CONSOLE, "控制台(&O)")
-        self.tool_menu.AppendSeparator()
-        self.tool_menu.Append(self.ID_SETTINGS, "设置(&S)")
+            if not Config.Misc.debug:
+                self.tool_menu.AppendSeparator()
 
         if Config.Misc.debug:
             self.tool_menu.Append(self.ID_DEBUG, "调试(&D)")
+            self.tool_menu.AppendSeparator()
+
+        self.tool_menu.Append(self.ID_SETTINGS, "设置(&S)")
 
         self.help_menu.Append(self.ID_CHECK_UPDATE, "检查更新(&U)")
         self.help_menu.Append(self.ID_CHANGE_LOG, "更新日志(&P)")
@@ -151,17 +153,16 @@ class MainWindow(Frame):
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
 
         self.Bind(wx.EVT_MENU, self.onLogin, id = self.ID_LOGIN)
-        self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_CONSOLE)
+        self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onLoadSetting, id = self.ID_SETTINGS)
         self.Bind(wx.EVT_MENU, self.OnAbout, id = self.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.OnShowChangeLog, id = self.ID_CHANGE_LOG)
         self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
-
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
+        self.Bind(wx.EVT_MENU, self.onHelp, id = self.ID_HELP)
 
     def init_utils(self):
         self.ID_LOGIN = wx.NewIdRef()
-        self.ID_CONSOLE = wx.NewIdRef()
         self.ID_DEBUG = wx.NewIdRef()
         self.ID_SETTINGS = wx.NewIdRef()
         self.ID_HELP = wx.NewIdRef()
@@ -176,6 +177,8 @@ class MainWindow(Frame):
         self.bangumi_parser = BangumiParser(self.OnError)
 
         self.download_window = DownloadWindow(self)
+
+        self.download_window_opened = False
 
     def OnAbout(self, event):
         about_window = AboutWindow(self)
@@ -192,6 +195,8 @@ class MainWindow(Frame):
         self.processing_window.Show()
 
     def ParseThread(self, url: str):
+        Download.download_list.clear()
+
         match find_str("av|BV|ep|ss", url):
             case "av" | "BV":
                 self.video_parser.parse_url(url)
@@ -220,15 +225,19 @@ class MainWindow(Frame):
 
         self.treelist.get_all_selected_item(resolution)
 
-        self.download_window.Show()
-        self.download_window.CenterOnParent()
-
-        self.download_window.SetFocus()
+        self.onOpenDownloadMgr(0)
         self.download_window.add_download_item()
 
     def onOpenDownloadMgr(self, event):
-        self.download_window.Show()
-        self.download_window.CenterOnParent()
+        if not self.download_window.IsShown():
+            self.download_window.Show()
+
+            if self.download_window_opened:
+                self.download_window.SetPosition(Config.Temp.download_window_pos)
+            else:
+                self.download_window.CenterOnParent()
+
+                self.download_window_opened = True
 
         self.download_window.SetFocus()
 
@@ -293,10 +302,11 @@ class MainWindow(Frame):
             login.logout()
 
             self.face.Hide()
-
             self.uname_lab.SetLabel("登录")
 
             self.userinfo_hbox.Layout()
+
+            self.infobar.ShowMessage("提示：您已注销登录", flags = wx.ICON_INFORMATION)
 
     def onShowUserMenu(self, event):
         if Config.User.login:
@@ -309,10 +319,15 @@ class MainWindow(Frame):
         setting_window.ShowModal()
 
     def onLoadShell(self, event):
-        shell = wx.py.shell.ShellFrame(self, -1, "控制台")
+        shell = wx.py.shell.ShellFrame(self, -1, "调试")
         
         shell.CenterOnParent()
         shell.Show()
+
+    def onHelp(self, event):
+        import webbrowser
+
+        webbrowser.open("http://116.63.172.112:6888/archives/12/")
 
     def onCheckUpdate(self, event):
         thread = Thread(target = self.UpdateJsonThread)
@@ -371,4 +386,4 @@ class MainWindow(Frame):
             if dlg.ShowModal() == wx.ID_YES:
                 import webbrowser
 
-                webbrowser.open("https://scott-sloan.cn")
+                webbrowser.open("http://116.63.172.112:6888/archives/120/")

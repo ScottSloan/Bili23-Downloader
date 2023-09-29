@@ -143,4 +143,4 @@ class Downloader:
         return chunk_list
 
     def format_speed(self, speed: int) -> str:
-        return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else ""
+        return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else "0 KB/s"

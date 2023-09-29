@@ -88,14 +88,14 @@ class DownloadTab(wx.Panel):
         quality_hbox.Add(lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         quality_hbox.Add(self.quality_choice, 0, wx.ALL, 10)
 
-        codec_lab = wx.StaticText(self.download_box, -1, "视频编码格式   ")
+        codec_lab = wx.StaticText(self.download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(self.download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
 
-        self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知")
+        self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知（仅下载窗口在后台时有效）")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(path_lab, 0, wx.ALL, 10)
@@ -357,8 +357,7 @@ class MiscTab(wx.Panel):
 
         path_lab = wx.StaticText(player_box, -1, "播放器路径")
         self.path_box = wx.TextCtrl(player_box, -1)
-        self.browse_btn = wx.Button(player_box, -1, "选择路径")
-        self.browse_btn.SetToolTip("选择播放器路径")
+        self.browse_btn = wx.Button(player_box, -1, "浏览")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -374,13 +373,11 @@ class MiscTab(wx.Panel):
         misc_box = wx.StaticBox(self, -1, "杂项")
 
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
-        self.check_update_chk.SetToolTip("在程序启动时检查更新")
 
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
-        self.debug_chk.SetToolTip("启用后，可在“工具”菜单项中找到调试入口")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
         vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
