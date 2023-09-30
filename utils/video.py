@@ -53,29 +53,28 @@ class VideoParser:
         if len(VideoInfo.pages) == 1:
             VideoInfo.type = 1
         else:
-            if "ugc_season" in info:
-                VideoInfo.type = 3
+            VideoInfo.type = 2
+        
+        if "ugc_season" in info:
+            VideoInfo.type = 3
 
-                info_ugc_season = info["ugc_season"]
-                info_section = info_ugc_season["sections"]
+            info_ugc_season = info["ugc_season"]
+            info_section = info_ugc_season["sections"]
                 
-                VideoInfo.title = info_ugc_season["title"]
+            VideoInfo.title = info_ugc_season["title"]
 
-                VideoInfo.episodes = info_section[0]["episodes"]
-                VideoInfo.sections["正片"] = VideoInfo.episodes
+            VideoInfo.episodes = info_section[0]["episodes"]
+            VideoInfo.sections["正片"] = VideoInfo.episodes
                 
-                if Config.Misc.show_sections:
-                    for section in info_section:
-                        section_title = section["title"]
-                        section_episodes = section["episodes"]
+            if Config.Misc.show_sections:
+                for section in info_section:
+                    section_title = section["title"]
+                    section_episodes = section["episodes"]
 
-                        for index, value in enumerate(section_episodes):
-                            value["title"] = str(index + 1)
+                    for index, value in enumerate(section_episodes):
+                        value["title"] = str(index + 1)
 
-                            VideoInfo.sections[section_title] = section_episodes
-            
-            else:
-                VideoInfo.type = 2
+                        VideoInfo.sections[section_title] = section_episodes
 
     def get_video_resolution(self):
         url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"

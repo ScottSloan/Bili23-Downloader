@@ -2,6 +2,7 @@ import re
 import os
 import json
 import random
+import ctypes
 import requests
 from requests.auth import HTTPProxyAuth
 
@@ -9,6 +10,11 @@ from .config import Config
 
 resolution_map = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
 codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
+
+def process_shorklink(url):
+    req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+    
+    return req.url
 
 def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
     header = {
@@ -97,10 +103,11 @@ def get_user_face(url):
 
 def remove_files(path, name):
     for i in name:
-        dir_path = os.path.join(path, i)
+        file_path = os.path.join(path, i)
         
-        if os.path.exists(dir_path):
-            os.remove(dir_path)
+        if os.path.exists(file_path):
+            ctypes.windll.kernel32.SetFileAttributesW(file_path, 128)
+            ctypes.windll.kernel32.DeleteFileW(file_path)
 
 def get_update_json():
     url = "https://scottsloan.github.io/Bili23-Downloader/update/update.json"

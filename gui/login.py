@@ -94,7 +94,7 @@ class LoginWindow(wx.Dialog):
         Config.User.uname = user_info["uname"]
         Config.User.sessdata = user_info["sessdata"]
 
-        conf.config.set("user", "login", str(Config.User.login))
+        conf.config.set("user", "login", str(int(Config.User.login)))
         conf.config.set("user", "face", str(Config.User.face))
         conf.config.set("user", "uname", str(Config.User.uname))
         conf.config.set("user", "sessdata", str(Config.User.sessdata))

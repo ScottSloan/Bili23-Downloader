@@ -72,7 +72,7 @@ class Downloader:
         with open(path, "rb+") as f:
             f.seek(chunk_list[0])
 
-            for chunk in req.iter_content(chunk_size = 16 * 1024):
+            for chunk in req.iter_content(chunk_size = 1024):
                 if chunk:
                     f.write(chunk)
                     f.flush()
@@ -80,6 +80,9 @@ class Downloader:
                     self.completed_size += len(chunk)
 
                     self.thread_info[thread_id]["chunk_list"][0] += len(chunk)
+
+                    if self.completed_size >= self.total_size:
+                        self.flag = True
 
     def onListen(self):
         while not self.flag:
@@ -95,9 +98,6 @@ class Downloader:
                 
             wx.CallAfter(self.onDownload, info)
 
-            if self.completed_size >= self.total_size:
-                self.flag = True
-
     def onPause(self):
         self.ThreadPool.stop()
         self.listen_thread.pause()
@@ -111,10 +111,10 @@ class Downloader:
         self.listen_thread.stop()
 
     def onFinished(self):
-        wx.CallAfter(self.onMerge)
-
         self.ThreadPool.stop()
         self.listen_thread.stop()
+
+        wx.CallAfter(self.onMerge)
 
     def wait(self):
         while not self.flag:

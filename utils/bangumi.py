@@ -6,7 +6,7 @@ from .tools import *
 from .config import Config
 
 class BangumiInfo:
-    url = bvid = epid = cid = season_id = None
+    url = bvid = epid = cid = season_id = mid = None
 
     title = cover = type = resolution = None
 
@@ -33,6 +33,19 @@ class BangumiParser:
         if not season_id: self.onError(101)
 
         self.argument, self.value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
+
+    def get_mid(self, url):
+        mid = re.findall(r"md([0-9]*)", url)
+        
+        if not mid: self.onError(101)
+
+        req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        resp = json.loads(req.text)
+
+        self.check_json(resp, 101)
+
+        BangumiInfo.season_id = resp["result"]["media"]["season_id"]
+        self.argument, self.value = "season_id", BangumiInfo.season_id
 
     def get_bangumi_info(self):
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.argument}={self.value}"
@@ -104,6 +117,8 @@ class BangumiParser:
             self.get_epid(url)
         elif "ss" in url:
             self.get_season_id(url)
+        elif "md" in url:
+            self.get_mid(url)
 
         self.get_bangumi_info()
         self.get_bangumi_resolution()

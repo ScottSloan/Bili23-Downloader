@@ -1,6 +1,7 @@
 import io
 import wx
 import json
+import time
 import wx.adv
 import requests
 import subprocess
@@ -333,7 +334,7 @@ class DownloadItemPanel(wx.Panel):
     def init_UI(self):
         self.preview_pic = wx.StaticBitmap(self, -1, size = (160, 75))
 
-        self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_END)
+        self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
 
         self.resolution_lab = wx.StaticText(self, -1)
@@ -405,14 +406,14 @@ class DownloadItemPanel(wx.Panel):
         self.panel_vbox.Layout()
 
     def start(self):
+        self.set_status("downloading")
+
         self.start_thread = Thread(target = self.thread_start_download)
         self.start_thread.setDaemon(True)
         self.start_thread.start()
     
     def thread_start_download(self):
         self.speed_lab.SetLabel("准备下载...")
-
-        self.set_status("downloading")
 
         info_list = self.utils.get_download_info()
         self.downloader.start(info_list)

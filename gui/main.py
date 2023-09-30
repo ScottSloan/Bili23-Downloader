@@ -5,6 +5,7 @@ from io import BytesIO
 from utils.config import Config, Download
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
+from utils.activity import ActivityInfo, ActivityParser
 from utils.tools import *
 from utils.thread import Thread
 from utils.login import QRLogin
@@ -175,6 +176,7 @@ class MainWindow(Frame):
 
         self.video_parser = VideoParser(self.OnError)
         self.bangumi_parser = BangumiParser(self.OnError)
+        self.activity_parser = ActivityParser(self.OnError)
 
         self.download_window = DownloadWindow(self)
 
@@ -189,6 +191,7 @@ class MainWindow(Frame):
         self.clear_treelist()
 
         self.parse_thraed = Thread(target = self.ParseThread, args = (url,))
+        self.parse_thraed.setDaemon(True)
         self.parse_thraed.start()
 
         self.processing_window = ProcessingWindow(self)
@@ -197,22 +200,35 @@ class MainWindow(Frame):
     def ParseThread(self, url: str):
         Download.download_list.clear()
 
-        match find_str("av|BV|ep|ss", url):
+        match find_str("av|BV|ep|ss|md|b23.tv|blackboard", url):
             case "av" | "BV":
                 self.video_parser.parse_url(url)
                 self.set_video_list()
 
                 self.set_resolution_list(VideoInfo)
-            case "ep" | "ss":
+            case "ep" | "ss" | "md":
                 self.bangumi_parser.parse_url(url)
                 self.set_bangumi_list()
 
                 self.set_resolution_list(BangumiInfo)
+            case "b23.tv":
+                new_url = process_shorklink(url)
+
+                Thread(target = self.ParseThread, args = (new_url,)).start()
+                
+                self.parse_thraed.stop()
+
+            case "blackboard":
+                self.activity_parser.parse_url(url)
+                
+                Thread(target = self.ParseThread, args = (ActivityInfo.new_url,)).start()
+                
+                self.parse_thraed.stop()
             case _:
                 self.OnError(100)
 
-        wx.CallAfter(self.OnGetFinished)
-    
+        self.OnGetFinished()
+
     def OnGetFinished(self):
         self.processing_window.Hide()
 

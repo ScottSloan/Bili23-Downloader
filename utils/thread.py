@@ -8,7 +8,7 @@ class Thread(threading.Thread):
 
         self.kernel32 = ctypes.windll.kernel32
     
-    def stop(self):
+    def stop(self):    
         ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident, ctypes.py_object(SystemExit))
     
     def start(self):
