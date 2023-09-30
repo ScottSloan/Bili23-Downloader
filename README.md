@@ -28,6 +28,7 @@ Bili23 Downloader GUI
 | 用户投稿视频 | https://www.bilibili.com/video/BV1t94y1C7fp |
 | 剧集（番剧、电影、纪录片等） | https://www.bilibili.com/bangumi/play/ss45574 |
 | b23.tv 短链接 | https://b23.tv/BV1UG411f7K1 |
+| 活动页链接 | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html |
 
 #### **部分类型可直接输入编号**
 - 视频 av、BV 号
@@ -42,12 +43,8 @@ Bili23 Downloader GUI
 > 登录有效期为半年，过期后需重新登录。
 
 # 更新日志
-### **Version 1.40 Beta2 (2023/9/29)**
-本次更新内容如下：
-* 修复部分已知问题
-
-### **Version 1.40 Beta1 (2023/9/28)**
-Bili23 Downloader 1.40 Beta1 版本发布
+### **Version 1.40 Beta1 (2023/9/30)**
+Bili23 Downloader 1.40 Beta3 版本发布
 
 迟来的更新。
 
