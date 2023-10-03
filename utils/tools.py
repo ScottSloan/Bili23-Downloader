@@ -110,7 +110,7 @@ def remove_files(path, name):
             ctypes.windll.kernel32.DeleteFileW(file_path)
 
 def get_update_json():
-    url = "https://scottsloan.github.io/Bili23-Downloader/update/update.json"
+    url = "http://116.63.172.112:7000/Bili23-Downloader/update.json"
 
     try:
         req = requests.get(url, headers = get_header())
@@ -128,7 +128,7 @@ def get_update_json():
         return {"error": True}
 
 def get_changelog(version_code: int):
-    url = f"https://scottsloan.github.io/Bili23-Downloader/update/CHANGELOG_{version_code}"
+    url = f"http://116.63.172.112:7000/Bili23-Downloader/CHANGELOG_{version_code}"
 
     req = requests.get(url, headers = get_header())
     req.encoding = "utf-8"

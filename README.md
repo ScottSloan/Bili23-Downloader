@@ -1,7 +1,6 @@
 # Bili23-Downloader-GUI
 ![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.5-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.1-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
 
-
 Bili23 Downloader GUI
 
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
@@ -43,21 +42,36 @@ Bili23 Downloader GUI
 > 登录有效期为半年，过期后需重新登录。
 
 # 更新日志
-### **Version 1.40 Beta3 (2023/9/30)**
-Bili23 Downloader 1.40 Beta3 版本发布
+### **Version 1.40 Beta4 (2023/10/03)**
+Bili23 Downloader 1.40 Beta4 版本发布
 
 迟来的更新。
 
-本次更新主要修复视频下载问题，下载管理器全新升级，全面优化多任务下载体验。  
-此次更新为 Beta 版本，暂不提供编译版本下载，详细安装教程请点击[这里](http://116.63.172.112:6888/archives/12/)。
+本次更新内容：
+* 新版下载管理器上线，支持并行下载，在下载管理页面中即可快速设置，即时生效，且下载任务可一键暂停，一键恢复
+* 新增下载任务略缩图显示功能
+* 增强活动页链接识别能力
+* 修正视频无法下载的问题 (文件大小显示为 18 字节)
+* 修正视频无法合成的问题
+* 修正无法覆盖下载的问题
+* 修正代理身份验证无法使用的问题
+* 修正部分视频标题显示异常的问题
+* 调整用户信息保存策略，现在程序仅获取用户名称、头像以及 SESSDATA
+* 调整检查更新接口，提升访问速度
+* 优化了下载逻辑，现在暂停任务后恢复下载不会导致下载速度变慢
+* 优化了程序关于页面
+* 移除了音乐、歌单以及直播的解析下载功能
+* 移除了用户中心
+* 暂时移除了弹幕、字幕、歌词下载功能，下个版本将优化相关下载体验
 
-完整更新日志请移步至 /update/CHANGELOG 中查看。
+关于并行下载的说明：
+目前并行下载功能最多支持设置 4 个，但程序并不严格限制，您也可手动点击 '开始下载' 按钮同时下载更多的视频。
 
-### **Version 1.36 (2022-12-11)**
-本次更新内容如下：
-* 优化代码结构
-* 修复视频下载失败的问题
-* 修复无法扫码登录的问题
+目前未登录情况下只能获取到 480P 的清晰度，因此建议您扫码登录后再下载视频。
+个人博客已重新上线，后续有关 Bili23 Downloader 的开发动态会在上面发布，也欢迎提出意见或指出问题，感谢大家的支持！
+Bili23 Downloader CLI 的新版本将会在后续推出。
+
+**此次更新为 Beta 版本，暂不提供编译版本下载，详细安装教程请点击[这里](http://116.63.172.112:6888/archives/12/)。**
 
 # 联系方式
 - QQ: 2592111619

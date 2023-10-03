@@ -95,7 +95,8 @@ class DownloadUtils:
         self.merge_process = subprocess.Popen(cmd, shell = True)
         self.merge_process.wait()
 
-        remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
+        if Config.Download.ffmpeg_available:
+            remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
 
     def has_codec(self, video_durl: List[dict], codec_id: int):
         for index, entry in enumerate(video_durl):
@@ -513,10 +514,18 @@ class DownloadItemPanel(wx.Panel):
     def onMergeComplete(self):
         self.set_status("completed")
 
-        self.speed_lab.SetLabel("下载完成")
+        if Config.Download.ffmpeg_available:
+            self.speed_lab.SetLabel("下载完成")
+
+            self.pause_btn.Enable(True)
+        else:
+            self.speed_lab.SetLabel("未安装 ffmpeg，合成视频失败")
+            self.speed_lab.SetForegroundColour(wx.Colour("red"))
+
+            self.pause_btn.Enable(False)
+
         self.stop_btn.SetToolTip("清除记录")
 
-        self.pause_btn.Enable(True)
         self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_folder_icon())).ConvertToBitmap())
         self.pause_btn.SetToolTip("打开所在位置")
 

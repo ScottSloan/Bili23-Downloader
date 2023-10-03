@@ -41,19 +41,22 @@ class QRLogin:
             "message": req_json["data"]["message"],
             "code": req_json["data"]["code"]}
 
-    def get_user_info(self):
+    def get_user_info(self, refresh = False):
         url = "https://api.bilibili.com/x/web-interface/nav"
 
-        info_requests = self.session.get(url, proxies = get_proxy(), auth = get_auth())
+        if refresh:
+            req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+        else:
+            req = self.session.get(url, proxies = get_proxy(), auth = get_auth())
 
-        info_json = json.loads(info_requests.text)["data"]
+        resp = json.loads(req.text)["data"]
                 
         return {
-            "uname": info_json["uname"],
-            "face": info_json["face"],
-            "sessdata": self.session.cookies["SESSDATA"]
+            "uname": resp["uname"],
+            "face": resp["face"],
+            "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata
         }
-    
+
     def logout(self):
         Config.User.login = False
         Config.User.face = Config.User.uname = Config.User.sessdata = ""

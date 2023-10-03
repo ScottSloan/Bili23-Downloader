@@ -2,7 +2,7 @@ import wx
 import wx.py
 from io import BytesIO
 
-from utils.config import Config, Download
+from utils.config import Config, Download, conf
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.activity import ActivityInfo, ActivityParser
@@ -160,6 +160,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.OnShowChangeLog, id = self.ID_CHANGE_LOG)
         self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
+        self.Bind(wx.EVT_MENU, self.onRefresh, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelp, id = self.ID_HELP)
 
     def init_utils(self):
@@ -182,6 +183,8 @@ class MainWindow(Frame):
 
         self.download_window_opened = False
 
+        wx.CallAfter(self.AutoCheckUpdate)
+
     def OnAbout(self, event):
         about_window = AboutWindow(self)
         about_window.ShowModal()
@@ -200,7 +203,7 @@ class MainWindow(Frame):
     def ParseThread(self, url: str):
         Download.download_list.clear()
 
-        match find_str("av|BV|ep|ss|md|b23.tv|blackboard", url):
+        match find_str("av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 self.video_parser.parse_url(url)
                 self.set_video_list()
@@ -218,12 +221,13 @@ class MainWindow(Frame):
                 
                 self.parse_thraed.stop()
 
-            case "blackboard":
+            case "blackboard" | "festival":
                 self.activity_parser.parse_url(url)
                 
                 Thread(target = self.ParseThread, args = (ActivityInfo.new_url,)).start()
                 
                 self.parse_thraed.stop()
+
             case _:
                 self.OnError(100)
 
@@ -324,6 +328,18 @@ class MainWindow(Frame):
 
             self.infobar.ShowMessage("提示：您已注销登录", flags = wx.ICON_INFORMATION)
 
+    def onRefresh(self, event):
+        login = QRLogin()
+        user_info = login.get_user_info(True)
+
+        Config.User.face = user_info["face"]
+        Config.User.uname = user_info["uname"]
+
+        conf.config.set("user", "face", str(Config.User.face))
+        conf.config.set("user", "uname", str(Config.User.uname))
+
+        conf.save()
+
     def onShowUserMenu(self, event):
         if Config.User.login:
             self.PopupMenu(self.get_user_context_menu())
@@ -365,6 +381,15 @@ class MainWindow(Frame):
 
         wx.CallAfter(self.userinfo_hbox.Layout)
         wx.CallAfter(self.frame_vbox.Layout)
+
+    def AutoCheckUpdate(self):
+        if Config.Misc.check_update:
+            update_json = get_update_json()
+            if update_json["error"]:
+                self.infobar.ShowMessage("检查更新：网络异常，检查更新失败", wx.ICON_ERROR)
+
+            if update_json["version_code"] > Config.APP.version_code:
+                self.infobar.ShowMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
 
     def UpdateJsonThread(self):
         update_json = get_update_json()
