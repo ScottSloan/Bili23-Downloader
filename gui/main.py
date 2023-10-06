@@ -245,6 +245,10 @@ class MainWindow(Frame):
 
         self.treelist.get_all_selected_item(resolution)
 
+        if not len(Download.download_list):
+            self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
+            return
+        
         self.onOpenDownloadMgr(0)
         self.download_window.add_download_item()
 
@@ -276,22 +280,19 @@ class MainWindow(Frame):
 
         Download.current_type = info
 
-    def set_video_list(self):
-        match VideoInfo.type:
-            case 1 | 2:
-                count = len(VideoInfo.pages)
-            case 3:
-                count = len(VideoInfo.episodes)
-        
+    def set_video_list(self):        
         self.treelist.set_video_list()
+
+        count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
         
         self.type_lab.SetLabel("视频 (共 %d 个)" % count)
     
     def set_bangumi_list(self):
-        count = len(BangumiInfo.episodes)
+        self.treelist.set_bangumi_list()
 
-        wx.CallAfter(self.treelist.set_bangumi_list)
-        self.type_lab.SetLabel("{} (正片共 {} 集)".format(BangumiInfo.type, count))
+        count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
+
+        self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type, count))
 
     def OnError(self, err_code):
         match err_code:

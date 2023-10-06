@@ -96,6 +96,8 @@ class BangumiParser:
                 BangumiInfo.type = "国创"
             case 5:
                 BangumiInfo.type = "电视剧"
+            case 6:
+                BangumiInfo.type = "Unknown"
             case 7:
                 BangumiInfo.type = "综艺"
 

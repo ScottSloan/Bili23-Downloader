@@ -34,7 +34,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.ClearColumns()
         self.DeleteAllItems()
         
-        self.AppendColumn("序号", width = self.FromDIP(100))
+        self.AppendColumn("序号", width = self.FromDIP(85))
         self.AppendColumn("标题", width = self.FromDIP(375))
         self.AppendColumn("备注", width = self.FromDIP(50))
         self.AppendColumn("时长", width = self.FromDIP(75))
@@ -44,7 +44,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.all_list_items = []
 
         for i in list:
-            rootitem = self.AppendItem(root, i)
+            rootitem = self.AppendItem(root, "")
+
+            for index, piece in enumerate(self.get_long_title_piece(i)):
+                self.SetItemText(rootitem, index, piece)
             
             self.all_list_items.append(rootitem)
 
@@ -64,9 +67,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         
         if VideoInfo.type == 3:
             for key, value in VideoInfo.sections.items():
-                if not Config.Misc.show_sections and key != "正片":
-                    continue
-                
                 video_list[key] = [[str(index + 1), episode["arc"]["title"], "", format_duration(episode["arc"]["duration"])] for index, episode in enumerate(value)]
 
                 self.parent_items.append(key)
@@ -92,10 +92,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def onCheckItem(self, event):
         item = event.GetItem()
 
-        item_text = self.GetItemText(item, 0)
         self.UpdateItemParentStateRecursively(item)
 
-        if item_text in self.parent_items:
+        if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
     
     def get_all_selected_item(self, resolution: int = None):
@@ -159,6 +158,29 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "status": "wait",
             "resolution": self.resolution if self.resolution else None,
         }
+
+    def get_long_title_piece(self, title: str):
+        expected_width, actual_width = self.WidthFor(title), self.GetColumnWidth(0) - self.GetTextExtent("一二三")[0]
+
+        if actual_width >= expected_width:
+            return [title]
+        else:
+            temp = []
+
+            for index in range(0, len(title)):
+                current = title[0: index + 1]
+                last = title[index + 1:]
+
+                next = title[0: index + 2]
+
+                if self.WidthFor(next) > actual_width and self.WidthFor(current) < actual_width:
+                    temp.append(current)
+                    temp.append(last)
+
+                if index + 2 == len(title):
+                    break
+            
+            return temp
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):
