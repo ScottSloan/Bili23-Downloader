@@ -360,7 +360,7 @@ class MainWindow(Frame):
     def onHelp(self, event):
         import webbrowser
 
-        webbrowser.open("http://116.63.172.112:6888/archives/12/")
+        webbrowser.open("https://scott-sloan.cn/archives/12/")
 
     def onCheckUpdate(self, event):
         thread = Thread(target = self.UpdateJsonThread)
@@ -428,4 +428,4 @@ class MainWindow(Frame):
             if dlg.ShowModal() == wx.ID_YES:
                 import webbrowser
 
-                webbrowser.open("http://116.63.172.112:6888/archives/120/")
+                webbrowser.open("https://scott-sloan.cn/archives/120/")

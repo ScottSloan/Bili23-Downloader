@@ -88,4 +88,4 @@ class AboutWindow(wx.Dialog):
         webbrowser.open("https://www.github.com/ScottSloan/Bili23-Downloader")
 
     def onOpenBlog(self, event):
-        webbrowser.open("http://116.63.172.112:6888/")
+        webbrowser.open("https://scott-sloan.cn")

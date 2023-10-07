@@ -16,7 +16,7 @@ Bili23 Downloader GUI
 * [CLI 命令行版本](https://github.com/ScottSloan/Bili23-Downloader-CLI) 
 
 # 使用说明
-本页仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](http://116.63.172.112:6888/archives/12/)。
+本页仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](https://scott-sloan.cn/archives/12/)。
 
 ### **主界面**
 [![pPb0AS0.png](https://z1.ax1x.com/2023/09/28/pPb0AS0.png)](https://imgse.com/i/pPb0AS0)
@@ -42,8 +42,8 @@ Bili23 Downloader GUI
 > 登录有效期为半年，过期后需重新登录。
 
 # 更新日志
-### **Version 1.40 Beta4 (2023/10/06)**
-Bili23 Downloader 1.40 Beta4 版本发布
+### **Version 1.40 (2023/10/06)**
+Bili23 Downloader 1.40 版本发布
 
 迟来的更新。
 
@@ -71,9 +71,9 @@ Bili23 Downloader 1.40 Beta4 版本发布
 个人博客已重新上线，后续有关 Bili23 Downloader 的开发动态会在上面发布，也欢迎提出意见或指出问题，感谢大家的支持！  
 Bili23 Downloader CLI 的新版本将会在后续推出。
 
-**此次更新为 Beta 版本，暂不提供编译版本下载，详细安装教程请点击[这里](http://116.63.172.112:6888/archives/12/)。**
+**此次更新为 Beta 版本，暂不提供编译版本下载，详细安装教程请点击[这里](https://scott-sloan.cn/archives/12/)。**
 
 # 联系方式
 - QQ: 2592111619
 - Email: scottsloan@petalmail.com
-- Blog: [沧笙踏歌](http://116.63.172.112:6888/)
+- Blog: [沧笙踏歌](https://scott-sloan.cn)
