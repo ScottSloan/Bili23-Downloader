@@ -47,7 +47,11 @@ class QRLogin:
         if refresh:
             req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
         else:
-            req = self.session.get(url, proxies = get_proxy(), auth = get_auth())
+            former_headers = get_header()
+            
+            former_headers["Cookie"] = ";".join([f'{key}={value}' for (key, value) in self.session.cookies.items()])
+
+            req = self.session.get(url, headers = former_headers, proxies = get_proxy(), auth = get_auth())
 
         resp = json.loads(req.text)["data"]
                 

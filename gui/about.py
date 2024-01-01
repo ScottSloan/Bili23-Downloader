@@ -36,7 +36,7 @@ class AboutWindow(wx.Dialog):
 
         desc_lab = wx.StaticText(self, -1, "下载 bilibili 视频/番剧/电影/纪录片 等资源")
 
-        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2023 Scott Sloan")
+        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2024 Scott Sloan")
 
         copyright_hbox = wx.BoxSizer(wx.HORIZONTAL)
         copyright_hbox.AddSpacer(25)

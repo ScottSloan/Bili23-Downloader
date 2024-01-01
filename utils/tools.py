@@ -19,7 +19,7 @@ def process_shorklink(url):
 def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
     header = {
         "Cookie": "CURRENT_FNVAL=4048;",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
     }
     
     if referer_url:
