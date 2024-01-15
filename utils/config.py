@@ -21,7 +21,9 @@ class Config:
         uname = face = sessdata = None
 
     class Misc:
-        show_sections = debug = check_update = False
+        show_episodes = 1
+
+        auto_select = debug = check_update = False
 
         player_path = None
 
@@ -88,7 +90,8 @@ class ConfigUtils:
         Config.Proxy.passwd = self.config.get("proxy", "passwd")
 
         # misc
-        Config.Misc.show_sections = self.config.getboolean("misc", "show_sections")
+        Config.Misc.show_episodes = self.config.getint("misc", "show_episodes")
+        Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
         Config.Misc.debug = self.config.getboolean("misc", "debug")

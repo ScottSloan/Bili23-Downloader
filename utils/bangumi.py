@@ -65,7 +65,7 @@ class BangumiParser:
         BangumiInfo.episodes = info_result["episodes"]
         BangumiInfo.sections["正片"] = BangumiInfo.episodes
 
-        if "section" in info_result and Config.Misc.show_sections:
+        if "section" in info_result and Config.Misc.show_episodes == 2:
             info_section = info_result["section"]
 
             for section in info_section:

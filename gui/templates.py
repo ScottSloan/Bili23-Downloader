@@ -53,13 +53,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             for n in list[i]:
                 childitem = self.AppendItem(rootitem, n[0])
-                self.CheckItem(childitem, state = wx.CHK_CHECKED)
+
+                if Config.Misc.auto_select:
+                    self.CheckItem(childitem, state = wx.CHK_CHECKED)
+
                 self.all_list_items.append(childitem)
 
                 for i in [1, 2, 3]:
                     self.SetItemText(childitem, i, n[i])
 
-            self.CheckItem(rootitem, state = wx.CHK_CHECKED)
+            if Config.Misc.auto_select:
+                self.CheckItem(rootitem, state = wx.CHK_CHECKED)
+                
             self.Expand(rootitem)
 
     def set_video_list(self):
@@ -80,7 +85,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         bangumi_list = {}
 
         for key, value in BangumiInfo.sections.items():
-            if not Config.Misc.show_sections and key != "正片":
+            if Config.Misc.show_episodes != 2 and key != "正片":
                 continue
 
             bangumi_list[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode["duration"], bangumi = True)] for index, episode in enumerate(value)]

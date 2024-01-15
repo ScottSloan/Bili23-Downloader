@@ -345,10 +345,17 @@ class MiscTab(wx.Panel):
     def init_UI(self):
         sections_box = wx.StaticBox(self, -1, "剧集列表显示设置")
 
-        self.show_sections_chk = wx.CheckBox(sections_box, -1, "显示非正片剧集 (如花絮、PV、OP、ED 等)")
+        self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
+        self.episodes_multiple_choice = wx.RadioButton(sections_box, -1, "根据链接获取正片")
+        self.episodes_all_choice = wx.RadioButton(sections_box, -1, "显示全部相关视频 (包括花絮、PV、OP、ED 等)")
+
+        self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.show_sections_chk, 0, wx.ALL, 10)
+        vbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
+        vbox.Add(self.episodes_multiple_choice, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.episodes_all_choice, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.auto_select_chk, 0, wx.ALL, 10)
         
         sections_sbox = wx.StaticBoxSizer(sections_box)
         sections_sbox.Add(vbox, 1, wx.EXPAND)
@@ -395,18 +402,34 @@ class MiscTab(wx.Panel):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.browse_btn_EVT)
 
     def init_data(self):
-        self.show_sections_chk.SetValue(Config.Misc.show_sections)
+        match Config.Misc.show_episodes:
+            case 0:
+                self.episodes_single_choice.SetValue(True)
+            case 1:
+                self.episodes_multiple_choice.SetValue(True)
+            case 2:
+                self.episodes_all_choice.SetValue(True)
+
+        self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.path_box.SetValue(Config.Misc.player_path)
         self.check_update_chk.SetValue(Config.Misc.check_update)
         self.debug_chk.SetValue(Config.Misc.debug)
 
     def save(self):
-        Config.Misc.show_sections = self.show_sections_chk.GetValue()
+        if self.episodes_single_choice.GetValue():
+            Config.Misc.show_episodes = 0
+        elif self.episodes_multiple_choice.GetValue():
+            Config.Misc.show_episodes = 1
+        elif self.episodes_all_choice.GetValue():
+            Config.Misc.show_episodes = 2
+
+        Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.path_box.GetValue()
         Config.Misc.check_update = self.check_update_chk.GetValue()
         Config.Misc.debug = self.debug_chk.GetValue()
 
-        conf.config.set("misc", "show_sections", str(int(Config.Misc.show_sections)))
+        conf.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
+        conf.config.set("misc", "show_episodes", str(int(Config.Misc.show_episodes)))
         conf.config.set("misc", "player_path", Config.Misc.player_path)
         conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
         conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
