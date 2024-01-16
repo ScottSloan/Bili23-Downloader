@@ -63,6 +63,14 @@ class BangumiParser:
         BangumiInfo.payment = True if "payment" in info_result else False
         
         BangumiInfo.episodes = info_result["episodes"]
+
+        if Config.Misc.show_episodes == 0:
+            match self.argument:
+                case "ep_id":
+                    BangumiInfo.episodes = [entry for entry in BangumiInfo.episodes if entry["id"] == int(self.value)]
+                case "season_id":
+                    BangumiInfo.episodes = [BangumiInfo.episodes[0]]
+            
         BangumiInfo.sections["正片"] = BangumiInfo.episodes
 
         if "section" in info_result and Config.Misc.show_episodes == 2:
@@ -96,8 +104,6 @@ class BangumiParser:
                 BangumiInfo.type = "国创"
             case 5:
                 BangumiInfo.type = "电视剧"
-            case 6:
-                BangumiInfo.type = "Unknown"
             case 7:
                 BangumiInfo.type = "综艺"
 

@@ -346,8 +346,8 @@ class MiscTab(wx.Panel):
         sections_box = wx.StaticBox(self, -1, "剧集列表显示设置")
 
         self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
-        self.episodes_multiple_choice = wx.RadioButton(sections_box, -1, "根据链接获取正片")
-        self.episodes_all_choice = wx.RadioButton(sections_box, -1, "显示全部相关视频 (包括花絮、PV、OP、ED 等)")
+        self.episodes_multiple_choice = wx.RadioButton(sections_box, -1, "获取正片列表")
+        self.episodes_all_choice = wx.RadioButton(sections_box, -1, "获取全部相关视频 (包括花絮、PV、OP、ED 等)")
 
         self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
 

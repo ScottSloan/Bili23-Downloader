@@ -20,7 +20,7 @@ class DownloadInfo:
 
 class DownloadUtils:
     def __init__(self, info: dict, onError: object):
-        self.info, self.onError = info, onError
+        self.info, self.onError, self.none_audio = info, onError, False
 
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
@@ -39,8 +39,14 @@ class DownloadUtils:
             self.video_durl = temp_video_durl[0]["backupUrl"][0]
             self.codec_id = 7
         
-        temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
-        self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.resolution or (i["id"] - 30200) < self.resolution][0]["backupUrl"][0]
+        
+        if json_dash["audio"]:
+            temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
+            self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.resolution or (i["id"] - 30200) < self.resolution][0]["backupUrl"][0]
+
+            self.none_audio = False
+        else:
+            self.none_audio = True
     
     def get_video_durl_json(self):
         try:
@@ -76,21 +82,25 @@ class DownloadUtils:
             "chunk_list": []
         }
 
-        audio_info = {
-            "id": self.info["id"],
-            "type": "audio",
-            "url": self.audio_durl,
-            "referer_url": self.info["url"],
-            "file_name": "audio_{}.mp3".format(self.info["id"]),
-            "chunk_list": []
-        }
+        if not self.none_audio:
+            audio_info = {
+                "id": self.info["id"],
+                "type": "audio",
+                "url": self.audio_durl,
+                "referer_url": self.info["url"],
+                "file_name": "audio_{}.mp3".format(self.info["id"]),
+                "chunk_list": []
+            }
 
-        return [video_info, audio_info]
-    
+        return [video_info] if self.none_audio else [video_info, audio_info]
+        
     def merge_video(self):
         title = get_legal_name(self.info["title"])
 
-        cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -y -i audio_{self.info['id']}.mp3 -i video_{self.info['id']}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
+        if self.none_audio:
+            cmd = f'''cd "{Config.Download.path}" && rename "video_{self.info['id']}.mp4" "{title}.mp4"'''
+        else:
+            cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -y -i audio_{self.info['id']}.mp3 -i video_{self.info['id']}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
                 
         self.merge_process = subprocess.Popen(cmd, shell = True)
         self.merge_process.wait()

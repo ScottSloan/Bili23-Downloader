@@ -18,6 +18,15 @@ class VideoParser:
     def __init__(self, onError):
         self.onError = onError
     
+    def get_part(self, url):
+        part = re.findall(r"p=([0-9]+)", url)
+
+        if part:
+            self.part = True
+            self.part_num = int(part[0])
+        else:
+            self.part = False
+            
     def get_aid(self, url):
         aid = re.findall(r"av([0-9]+)", url)
 
@@ -50,12 +59,15 @@ class VideoParser:
         VideoInfo.cid = info["cid"]
         VideoInfo.pages = info["pages"]
 
-        if len(VideoInfo.pages) == 1:
+        if len(VideoInfo.pages) == 1 :
             VideoInfo.type = 1
         else:
             VideoInfo.type = 2
+
+        if Config.Misc.show_episodes == 0 and self.part:
+            VideoInfo.pages = [VideoInfo.pages[self.part_num - 1]]
         
-        if "ugc_season" in info:
+        if "ugc_season" in info and Config.Misc.show_episodes != 0:
             VideoInfo.sections.clear()
             
             VideoInfo.type = 3
@@ -88,6 +100,8 @@ class VideoParser:
         VideoInfo.resolution_desc = info["accept_description"]
 
     def parse_url(self, url):
+        self.get_part(url)
+
         if "av" in url:
             self.get_aid(url)
         else:

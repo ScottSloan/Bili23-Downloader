@@ -77,7 +77,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 self.parent_items.append(key)
         else:
             self.parent_items.append("视频")
-            video_list["视频"] = [[str(episode["page"]), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode["duration"])] for episode in VideoInfo.pages]
+            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode["duration"])] for index, episode in enumerate(VideoInfo.pages)]
 
         self.set_list(video_list)
     
