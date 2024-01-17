@@ -1,7 +1,6 @@
 import io
 import wx
 import json
-import time
 import wx.adv
 import requests
 import subprocess
@@ -203,7 +202,12 @@ class DownloadWindow(Frame):
             case 1 | 2 | 3 | 4:
                 index = max_download - 1
             case max_download if max_download > 4:
-                index = 3
+                choices = self.max_download_choice.GetItems()
+                choices.append(f"{max_download} 个")
+
+                index = len(choices) - 1
+
+                self.max_download_choice.Set(choices)
 
         self.max_download_choice.SetSelection(index)
  
@@ -337,7 +341,7 @@ class DownloadItemPanel(wx.Panel):
         self.CentreOnParent()
 
     def init_utils(self):
-        self.downloader = Downloader(self.onStart, self.onDownload, self.onMerge)
+        self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge)
         self.utils = DownloadUtils(self.info, self.onError)
 
         Thread(target = self.get_preview_pic).start()
@@ -458,7 +462,7 @@ class DownloadItemPanel(wx.Panel):
         quality_dict = dict(map(reversed, resolution_map.items()))
         codec_dict = {7: "AVC/H.264", 12: "HEVC/H.265", 13: "AVC"}
         
-        self.resolution_lab.SetLabel("{}   {}".format(quality_dict[self.utils.resolution], codec_dict[self.utils.codec_id]))
+        self.resolution_lab.SetLabel("{}      {}".format(quality_dict[self.utils.resolution], codec_dict[self.utils.codec_id]))
 
         self.update_pause_btn("downloading")
 
@@ -533,6 +537,8 @@ class DownloadItemPanel(wx.Panel):
             self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
             self.pause_btn.Enable(False)
+        
+        self.downloader.download_info.clear()
 
         self.stop_btn.SetToolTip("清除记录")
 

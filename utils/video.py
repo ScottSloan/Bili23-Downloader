@@ -59,7 +59,7 @@ class VideoParser:
         VideoInfo.cid = info["cid"]
         VideoInfo.pages = info["pages"]
 
-        if len(VideoInfo.pages) == 1 :
+        if len(VideoInfo.pages) == 1:
             VideoInfo.type = 1
         else:
             VideoInfo.type = 2

@@ -1,6 +1,7 @@
 import os
 import wx
 import time
+import json
 import requests
 
 from .config import Config
@@ -8,8 +9,8 @@ from .tools import *
 from .thread import Thread, ThreadPool
 
 class Downloader:
-    def __init__(self, onStart, onDownload, onMerge):
-        self.onStart, self.onDownload, self.onMerge = onStart, onDownload, onMerge
+    def __init__(self, info, onStart, onDownload, onMerge):
+        self.info, self.onStart, self.onDownload, self.onMerge = info, onStart, onDownload, onMerge
 
         self.init_utils()
 
@@ -24,6 +25,9 @@ class Downloader:
         self.flag = False
         self.thread_info = {}
 
+        self.download_info = DownloaderInfo()
+        self.download_info.init_info(self.info)
+
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
 
@@ -36,6 +40,8 @@ class Downloader:
             thread_id = f"{info['type']}_{info['id']}_{index + 1}"
             temp["chunk_list"] = chunk_list
             self.thread_info[thread_id] = temp
+
+            self.download_id = info["id"]
 
             self.ThreadPool.submit(self.range_download, args = (thread_id, url, referer_url, path, chunk_list,))
 
@@ -95,12 +101,16 @@ class Downloader:
                 "speed": self.format_speed((self.completed_size - temp_size) / 1024),
                 "size": "{}/{}".format(format_size(self.completed_size / 1024), format_size(self.total_size / 1024))
             }
-                
+            
+            self.update_download_info()
+
             wx.CallAfter(self.onDownload, info)
 
     def onPause(self):
         self.ThreadPool.stop()
         self.listen_thread.pause()
+
+        self.update_download_info()
 
     def onResume(self):
         self.restart()
@@ -144,3 +154,51 @@ class Downloader:
 
     def format_speed(self, speed: int) -> str:
         return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else "0 KB/s"
+    
+    def update_download_info(self):
+        self.download_info.update_info(self.thread_info)
+
+class DownloaderInfo:
+    def __init__(self):
+        self.path = os.path.join(os.getcwd(), "download.json")
+    
+    def check_file(self):
+        if not os.path.exists(self.path):
+            contents = {}
+
+            self.write(contents)
+
+    def read_info(self):
+        self.check_file()
+        
+        with open(self.path, "r", encoding = "utf-8") as f:
+            return json.loads(f.read())
+    
+    def init_info(self, info):
+        self.id = info["id"]
+        contents = self.read_info()
+
+        contents[str(info["id"])] = {
+                "base_info": info,
+                "thread_info": {}
+            }
+        
+        self.write(contents)
+        
+    def update_info(self, thread_info):
+        contents = self.read_info()
+
+        contents[f"{self.id}"]["thread_info"] = thread_info
+
+        self.write(contents)
+
+    def write(self, contents):
+        with open(self.path, "w", encoding = "utf-8") as f:
+            f.write(json.dumps(contents, ensure_ascii = False))
+    
+    def clear(self):
+        contents = self.read_info()
+
+        contents.pop(f"{self.id}")
+
+        self.write(contents)

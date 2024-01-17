@@ -78,7 +78,8 @@ class DownloadTab(wx.Panel):
         self.max_thread_slider = wx.Slider(self.download_box, -1, 1, 1, 8)
 
         self.max_download_lab = wx.StaticText(self.download_box, -1, "并行下载数：1")
-        self.max_download_slider = wx.Slider(self.download_box, -1, 1, 1, 4)
+        max_download = Config.Download.max_download if Config.Download.max_download > 4 else 4
+        self.max_download_slider = wx.Slider(self.download_box, -1, 1, 1, max_download)
 
         quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
 

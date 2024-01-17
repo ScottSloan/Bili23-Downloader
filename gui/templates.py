@@ -44,10 +44,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.all_list_items = []
 
         for i in list:
-            rootitem = self.AppendItem(root, "")
-
-            for index, piece in enumerate(self.get_long_title_piece(i)):
-                self.SetItemText(rootitem, index, piece)
+            rootitem = self.AppendItem(root, i)
             
             self.all_list_items.append(rootitem)
 
@@ -163,29 +160,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "status": "wait",
             "resolution": self.resolution if self.resolution else None,
         }
-
-    def get_long_title_piece(self, title: str):
-        expected_width, actual_width = self.WidthFor(title), self.GetColumnWidth(0) - self.GetTextExtent("一二三")[0]
-
-        if actual_width >= expected_width:
-            return [title]
-        else:
-            temp = []
-
-            for index in range(0, len(title)):
-                current = title[0: index + 1]
-                last = title[index + 1:]
-
-                next = title[0: index + 2]
-
-                if self.WidthFor(next) > actual_width and self.WidthFor(current) < actual_width:
-                    temp.append(current)
-                    temp.append(last)
-
-                if index + 2 == len(title):
-                    break
-            
-            return temp
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):
