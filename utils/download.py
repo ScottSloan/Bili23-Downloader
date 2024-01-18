@@ -17,6 +17,7 @@ class Downloader:
     def init_utils(self):
         self.total_size = 0
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
+        self.listen_thread.setDaemon(True)
 
         self.session = requests.session()
         
@@ -26,7 +27,9 @@ class Downloader:
         self.thread_info = {}
 
         self.download_info = DownloaderInfo()
-        self.download_info.init_info(self.info)
+
+        if not self.info["flag"]:
+            self.download_info.init_info(self.info)
 
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
@@ -99,7 +102,8 @@ class Downloader:
             info = {
                 "progress": int(self.completed_size / self.total_size * 100),
                 "speed": self.format_speed((self.completed_size - temp_size) / 1024),
-                "size": "{}/{}".format(format_size(self.completed_size / 1024), format_size(self.total_size / 1024))
+                "size": "{}/{}".format(format_size(self.completed_size / 1024), format_size(self.total_size / 1024)),
+                "complete": format_size(self.completed_size / 1024)
             }
             
             self.update_download_info()
@@ -156,7 +160,7 @@ class Downloader:
         return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else "0 KB/s"
     
     def update_download_info(self):
-        self.download_info.update_info(self.thread_info)
+        self.download_info.update_thread_info(self.thread_info)
 
 class DownloaderInfo:
     def __init__(self):
@@ -185,10 +189,28 @@ class DownloaderInfo:
         
         self.write(contents)
         
-    def update_info(self, thread_info):
+    def update_thread_info(self, thread_info):
         contents = self.read_info()
 
         contents[f"{self.id}"]["thread_info"] = thread_info
+
+        self.write(contents)
+
+    def update_base_info(self, base_info):
+        contents = self.read_info()
+
+        contents[f"{self.id}"]["base_info"]["size"] = base_info["size"]
+        contents[f"{self.id}"]["base_info"]["codec"] = base_info["codec"]
+        contents[f"{self.id}"]["base_info"]["complete"] = base_info["complete"]
+        contents[f"{self.id}"]["base_info"]["resolution"] = base_info["resolution"]
+        
+        self.write(contents)
+
+    def update_base_info_progress(self, progress, complete):
+        contents = self.read_info()
+
+        contents[f"{self.id}"]["base_info"]["progress"] = progress
+        contents[f"{self.id}"]["base_info"]["complete"] = complete
 
         self.write(contents)
 

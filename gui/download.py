@@ -11,7 +11,7 @@ from .templates import Frame, ScrolledPanel
 from utils.icons import *
 from utils.config import Config, Download, conf
 from utils.thread import Thread
-from utils.download import Downloader
+from utils.download import Downloader, DownloaderInfo
 from utils.tools import *
 
 class DownloadInfo:
@@ -210,7 +210,20 @@ class DownloadWindow(Frame):
                 self.max_download_choice.Set(choices)
 
         self.max_download_choice.SetSelection(index)
- 
+
+        self.load_tasks()
+    
+    def load_tasks(self):
+        self.download_info = DownloaderInfo()
+
+        for task_id, info in self.download_info.read_info().items():
+            entry = info["base_info"]
+            entry["flag"] = True
+
+            Download.download_list.append(entry)
+
+        self.add_download_item(start_download = False)
+
     def OnClose(self, event):
         Config.Temp.download_window_pos = self.GetPosition()
 
@@ -256,7 +269,7 @@ class DownloadWindow(Frame):
         self.download_list_panel.Layout()
         self.update_task_lab()
 
-    def add_download_item(self):
+    def add_download_item(self, start_download = True):
         for entry in Download.download_list:
             if self.is_already_in_list(entry["title"], entry["cid"]):
                 continue
@@ -276,7 +289,8 @@ class DownloadWindow(Frame):
         
         self.layout_sizer()
 
-        self.start_download()
+        if start_download:
+            self.start_download()
 
     def layout_sizer(self):
         self.update_task_lab()
@@ -345,6 +359,16 @@ class DownloadItemPanel(wx.Panel):
         self.utils = DownloadUtils(self.info, self.onError)
 
         Thread(target = self.get_preview_pic).start()
+
+        if self.info["flag"]:
+            if self.info["complete"]:
+                self.size_lab.SetLabel("{}/{}".format(self.info["complete"], self.info["size"]))
+
+                self.gauge.SetValue(self.info["progress"])
+            else:
+                self.size_lab.SetLabel("0 MB/{}".format(self.info["size"]))
+
+            self.resolution_lab.SetLabel("{}      {}".format(self.info["resolution"], self.info["codec"]))
 
     def init_UI(self):
         self.preview_pic = wx.StaticBitmap(self, -1, size = (160, 75))
@@ -468,11 +492,22 @@ class DownloadItemPanel(wx.Panel):
 
         self.Layout()
 
+        base_info = {
+            "complete": None,
+            "size": self.total_size,
+            "resolution": quality_dict[self.utils.resolution],
+            "codec": codec_dict[self.utils.codec_id]
+        }
+
+        self.downloader.download_info.update_base_info(base_info)
+
     def onDownload(self, info: dict):
         if self.info["status"] == "downloading":
             self.gauge.SetValue(info["progress"])
             self.speed_lab.SetLabel(info["speed"])
             self.size_lab.SetLabel(info["size"])
+
+            self.downloader.download_info.update_base_info_progress(info["progress"], info["complete"])
 
             self.Layout()
 
@@ -508,6 +543,8 @@ class DownloadItemPanel(wx.Panel):
         self.GetParent().GetParent().layout_sizer()
 
         self.Destroy()
+
+        self.downloader.download_info.clear()
     
     def onMerge(self):
         self.size_lab.SetLabel(self.total_size)
@@ -563,6 +600,8 @@ class DownloadItemPanel(wx.Panel):
         self.GetParent().GetParent().update_task_lab()
 
         self.start_thread.stop()
+
+        self.downloader.download_info.clear()
     
     def onOpenFolder(self):
         subprocess.Popen(f"explorer /select,{Config.Download.path}\\{self.info['title']}.mp4", shell = True)

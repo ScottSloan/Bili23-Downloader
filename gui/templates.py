@@ -157,8 +157,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "title": get_legal_name(title),
             "pic": pic,
             "size": None,
+            "complete": None,
+            "progress": 0,
             "status": "wait",
             "resolution": self.resolution if self.resolution else None,
+            "codec": None,
+            "flag": False
         }
 
 class ScrolledPanel(_ScrolledPanel):
