@@ -30,6 +30,14 @@ class Downloader:
 
         if not self.info["flag"]:
             self.download_info.init_info(self.info)
+        else:
+            contents = self.download_info.read_info()
+            base_info = contents[str(self.info["id"])]["base_info"]
+
+            self.download_info.id = self.download_id = base_info["id"]
+            self.total_size = base_info["total_size"]
+            self.completed_size = base_info["completed_size"]
+            self.thread_info = contents[str(self.info["id"])]["thread_info"]
 
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
@@ -54,15 +62,15 @@ class Downloader:
         for entry in info:
             self.add_url(entry)
 
+        self.update_total_size(self.total_size)
+
         self.ThreadPool.start()
 
         self.listen_thread.start()
 
         wx.CallAfter(self.onStart)
 
-        self.wait()
-
-        self.onFinished()
+        self.start_wait_thread()
 
     def restart(self):
         for key, entry in self.thread_info.items():
@@ -74,6 +82,20 @@ class Downloader:
             self.ThreadPool.submit(target = self.range_download, args = (key, entry["url"], entry["referer_url"], path, chunk_list,))
         
         self.ThreadPool.start()
+
+        if self.info["flag"]:
+            self.start_wait_thread()
+            
+    def start_wait_thread(self):
+        wait_thread = Thread(target = self.thread_wait)
+        wait_thread.setDaemon(True)
+
+        wait_thread.start()
+
+    def thread_wait(self):
+        self.wait()
+
+        self.onFinished()
 
     def range_download(self, thread_id: str, url: str, referer_url: str, path: str, chunk_list: list):
         req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list), stream = True, proxies = get_proxy(), auth = get_auth())
@@ -112,13 +134,17 @@ class Downloader:
 
     def onPause(self):
         self.ThreadPool.stop()
-        self.listen_thread.pause()
+        self.listen_thread.stop()
 
         self.update_download_info()
 
     def onResume(self):
         self.restart()
-        self.listen_thread.resume()
+
+        self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
+        self.listen_thread.setDaemon(True)
+
+        self.listen_thread.start()
 
     def onStop(self):
         self.ThreadPool.stop()
@@ -160,7 +186,10 @@ class Downloader:
         return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else "0 KB/s"
     
     def update_download_info(self):
-        self.download_info.update_thread_info(self.thread_info)
+        self.download_info.update_thread_info(self.thread_info, self.completed_size)
+
+    def update_total_size(self, total_size):
+        self.download_info.update_base_info_total_size(total_size)
 
 class DownloaderInfo:
     def __init__(self):
@@ -189,10 +218,11 @@ class DownloaderInfo:
         
         self.write(contents)
         
-    def update_thread_info(self, thread_info):
+    def update_thread_info(self, thread_info, completed_size):
         contents = self.read_info()
 
         contents[f"{self.id}"]["thread_info"] = thread_info
+        contents[f"{self.id}"]["base_info"]["completed_size"] = completed_size
 
         self.write(contents)
 
@@ -211,6 +241,20 @@ class DownloaderInfo:
 
         contents[f"{self.id}"]["base_info"]["progress"] = progress
         contents[f"{self.id}"]["base_info"]["complete"] = complete
+
+        self.write(contents)
+
+    def update_base_info_status(self, status):
+        contents = self.read_info()
+
+        contents[f"{self.id}"]["base_info"]["status"] = status
+
+        self.write(contents)
+
+    def update_base_info_total_size(self, total_size):
+        contents = self.read_info()
+
+        contents[f"{self.id}"]["base_info"]["total_size"] = total_size
 
         self.write(contents)
 

@@ -1,6 +1,7 @@
 import io
 import wx
 import json
+import time
 import wx.adv
 import requests
 import subprocess
@@ -105,6 +106,8 @@ class DownloadUtils:
         self.merge_process.wait()
 
         if Config.Download.ffmpeg_available:
+            time.sleep(1)
+            
             remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
 
     def has_codec(self, video_durl: List[dict], codec_id: int):
@@ -216,13 +219,16 @@ class DownloadWindow(Frame):
     def load_tasks(self):
         self.download_info = DownloaderInfo()
 
-        for task_id, info in self.download_info.read_info().items():
+        tasks = self.download_info.read_info()
+
+        for task_id, info in tasks.items():
             entry = info["base_info"]
             entry["flag"] = True
 
             Download.download_list.append(entry)
 
-        self.add_download_item(start_download = False)
+        if len(tasks):
+            self.add_download_item(start_download = False)
 
     def OnClose(self, event):
         Config.Temp.download_window_pos = self.GetPosition()
@@ -370,6 +376,11 @@ class DownloadItemPanel(wx.Panel):
 
             self.resolution_lab.SetLabel("{}      {}".format(self.info["resolution"], self.info["codec"]))
 
+            if self.info["total_size"]:
+                self.total_size = self.info["size"]
+
+            self.update_pause_btn(self.info["status"])
+
     def init_UI(self):
         self.preview_pic = wx.StaticBitmap(self, -1, size = (160, 75))
 
@@ -477,6 +488,8 @@ class DownloadItemPanel(wx.Panel):
         
         self.update_pause_btn(self.info["status"])
 
+        self.downloader.download_info.update_base_info_status(self.info["status"])
+
     def onStart(self):
         self.total_size = format_size(self.downloader.total_size / 1024)
 
@@ -514,8 +527,6 @@ class DownloadItemPanel(wx.Panel):
     def onPause(self):
         self.downloader.onPause()
 
-        self.speed_lab.SetLabel("暂停中")
-
     def onPauseCallback(self, event):
         self.onPause()
         self.set_status("pause")
@@ -524,8 +535,6 @@ class DownloadItemPanel(wx.Panel):
 
     def onResume(self):
         self.downloader.onResume()
-
-        self.speed_lab.SetLabel("")
 
     def onResumeCallback(self, event):
         self.onResume()
@@ -612,9 +621,13 @@ class DownloadItemPanel(wx.Panel):
                 self.pause_btn.SetToolTip("暂停下载")
                 self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_pause_icon())).ConvertToBitmap())
 
+                self.speed_lab.SetLabel("")
+
             case "pause":
                 self.pause_btn.SetToolTip("继续下载")
                 self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_resume_icon())).ConvertToBitmap())
+
+                self.speed_lab.SetLabel("暂停中")
 
     def set_status(self, status: str):
         self.info["status"] = status
