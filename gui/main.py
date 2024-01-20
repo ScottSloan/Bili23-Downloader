@@ -9,11 +9,12 @@ from utils.activity import ActivityInfo, ActivityParser
 from utils.tools import *
 from utils.thread import Thread
 from utils.login import QRLogin
+from utils.download import DownloaderInfo
 
 from .templates import Frame, TreeListCtrl, InfoBar
 from .about import AboutWindow
 from .processing import ProcessingWindow
-from .download import DownloadWindow
+from .download import DownloadWindow, DownloadInfo
 from .update import UpdateWindow
 from .login import LoginWindow
 from .settings import SettingWindow
@@ -145,10 +146,10 @@ class MainWindow(Frame):
         return menu
     
     def Bind_EVT(self):
-        self.url_box.Bind(wx.EVT_TEXT_ENTER, self.OnGet)
-        self.get_btn.Bind(wx.EVT_BUTTON, self.OnGet)
+        self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGet)
+        self.get_btn.Bind(wx.EVT_BUTTON, self.onGet)
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgr)
-        self.download_btn.Bind(wx.EVT_BUTTON, self.OnDownload)
+        self.download_btn.Bind(wx.EVT_BUTTON, self.onDownload)
 
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
@@ -156,12 +157,14 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLogin, id = self.ID_LOGIN)
         self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onLoadSetting, id = self.ID_SETTINGS)
-        self.Bind(wx.EVT_MENU, self.OnAbout, id = self.ID_ABOUT)
-        self.Bind(wx.EVT_MENU, self.OnShowChangeLog, id = self.ID_CHANGE_LOG)
+        self.Bind(wx.EVT_MENU, self.onAbout, id = self.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.onShowChangeLog, id = self.ID_CHANGE_LOG)
         self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
         self.Bind(wx.EVT_MENU, self.onRefresh, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelp, id = self.ID_HELP)
+
+        self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def init_utils(self):
         self.ID_LOGIN = wx.NewIdRef()
@@ -175,21 +178,39 @@ class MainWindow(Frame):
         self.ID_LOGOUT = wx.NewIdRef()
         self.ID_REFRESH = wx.NewIdRef()
 
-        self.video_parser = VideoParser(self.OnError)
-        self.bangumi_parser = BangumiParser(self.OnError)
-        self.activity_parser = ActivityParser(self.OnError)
+        self.video_parser = VideoParser(self.onError)
+        self.bangumi_parser = BangumiParser(self.onError)
+        self.activity_parser = ActivityParser(self.onError)
 
         self.download_window = DownloadWindow(self)
 
         self.download_window_opened = False
 
-        wx.CallAfter(self.AutoCheckUpdate)
+        wx.CallAfter(self.utilsThread)
 
-    def OnAbout(self, event):
+    def utilsThread(self):
+        info = DownloaderInfo()
+        tasks = info.read_info()
+
+        if len(tasks):
+            self.onLoadDownloadProgress()
+
+        self.AutoCheckUpdate()
+
+    def onClose(self, event):
+        if len(DownloadInfo.download_list):
+            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？\n\n程序将自动保存下载进度，可随时恢复下载。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+
+            if dlg.ShowModal() == wx.ID_NO:
+                return
+
+        event.Skip()
+
+    def onAbout(self, event):
         about_window = AboutWindow(self)
         about_window.ShowModal()
 
-    def OnGet(self, event):
+    def onGet(self, event):
         url = self.url_box.GetValue()
         self.clear_treelist()
 
@@ -229,18 +250,18 @@ class MainWindow(Frame):
                 self.parse_thraed.stop()
 
             case _:
-                self.OnError(100)
+                self.onError(100)
 
-        self.OnGetFinished()
+        self.onGetFinished()
 
-    def OnGetFinished(self):
+    def onGetFinished(self):
         self.processing_window.Hide()
 
         self.download_btn.Enable(True)
 
         self.treelist.SetFocus()
 
-    def OnDownload(self, event):
+    def onDownload(self, event):
         resolution = resolution_map[self.resolution_choice.GetStringSelection()]
 
         self.treelist.get_all_selected_item(resolution)
@@ -294,7 +315,10 @@ class MainWindow(Frame):
 
         self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type, count))
 
-    def OnError(self, err_code):
+    def onLoadDownloadProgress(self):
+        self.infobar.ShowMessage("下载管理：已恢复中断的下载进度", flags = wx.ICON_INFORMATION)
+
+    def onError(self, err_code):
         match err_code:
             case 100:
                 self.infobar.ShowMessage("解析失败：不受支持的链接", flags = wx.ICON_ERROR)
@@ -368,7 +392,7 @@ class MainWindow(Frame):
 
         thread.start()
     
-    def OnShowChangeLog(self, event):
+    def onShowChangeLog(self, event):
         thread = Thread(target = self.ChangeLogThread)
         thread.setDaemon(True)
 

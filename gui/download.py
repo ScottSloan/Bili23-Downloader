@@ -225,6 +225,9 @@ class DownloadWindow(Frame):
             entry = info["base_info"]
             entry["flag"] = True
 
+            if entry["status"] == "downloading":
+                entry["status"] = "pause"
+
             Download.download_list.append(entry)
 
         if len(tasks):
@@ -372,9 +375,11 @@ class DownloadItemPanel(wx.Panel):
 
                 self.gauge.SetValue(self.info["progress"])
             else:
-                self.size_lab.SetLabel("0 MB/{}".format(self.info["size"]))
+                if self.info["size"]:
+                    self.size_lab.SetLabel("0 MB/{}".format(self.info["size"]))
 
-            self.resolution_lab.SetLabel("{}      {}".format(self.info["resolution"], self.info["codec"]))
+            if self.info["codec"]:
+                self.resolution_lab.SetLabel("{}      {}".format(self.info["resolution"], self.info["codec"]))
 
             if self.info["total_size"]:
                 self.total_size = self.info["size"]
@@ -513,6 +518,7 @@ class DownloadItemPanel(wx.Panel):
         }
 
         self.downloader.download_info.update_base_info(base_info)
+        self.downloader.download_info.update_base_info_status("downloading")
 
     def onDownload(self, info: dict):
         if self.info["status"] == "downloading":

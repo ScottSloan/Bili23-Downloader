@@ -33,11 +33,14 @@ class Downloader:
         else:
             contents = self.download_info.read_info()
             base_info = contents[str(self.info["id"])]["base_info"]
+            thread_info = contents[str(self.info["id"])]["thread_info"]
 
             self.download_info.id = self.download_id = base_info["id"]
-            self.total_size = base_info["total_size"]
-            self.completed_size = base_info["completed_size"]
-            self.thread_info = contents[str(self.info["id"])]["thread_info"]
+
+            if base_info["total_size"]:
+                self.total_size = base_info["total_size"]
+                self.completed_size = self.download_info.calc_completed_size(self.total_size, thread_info)
+                self.thread_info = contents[str(self.info["id"])]["thread_info"]
 
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
@@ -205,7 +208,10 @@ class DownloaderInfo:
         self.check_file()
         
         with open(self.path, "r", encoding = "utf-8") as f:
-            return json.loads(f.read())
+            try:
+                return json.loads(f.read())
+            except:
+                return {}
     
     def init_info(self, info):
         self.id = info["id"]
@@ -265,6 +271,20 @@ class DownloaderInfo:
     def clear(self):
         contents = self.read_info()
 
-        contents.pop(f"{self.id}")
+        id_string = str(self.id)
+
+        if id_string in contents:
+            contents.pop(id_string)
 
         self.write(contents)
+    
+    def calc_completed_size(self, total_size, thread_info):
+        uncompleted_size = 0
+
+        for key, thread_entry in thread_info.items():
+            chunk_list = thread_entry["chunk_list"]
+
+            if chunk_list[0] < chunk_list[1]:
+                uncompleted_size += chunk_list[1] - chunk_list[0]
+        
+        return total_size - uncompleted_size
