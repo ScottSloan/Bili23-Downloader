@@ -106,7 +106,7 @@ class DownloadUtils:
         self.merge_process.wait()
 
         if Config.Download.ffmpeg_available:
-            time.sleep(1)
+            time.sleep(0.5)
             
             remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
 
@@ -560,6 +560,13 @@ class DownloadItemPanel(wx.Panel):
         self.Destroy()
 
         self.downloader.download_info.clear()
+
+        Thread(target = self.onStopThread).start()
+
+    def onStopThread(self):
+        time.sleep(0.5)
+
+        remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
     
     def onMerge(self):
         self.size_lab.SetLabel(self.total_size)
