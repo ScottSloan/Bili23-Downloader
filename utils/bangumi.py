@@ -65,9 +65,18 @@ class BangumiParser:
         BangumiInfo.episodes = info_result["episodes"]
 
         if Config.Misc.show_episodes == 0:
+            if "section" in info_result:
+                extra_episodes = []
+
+                for section in info_result["section"]:
+                    extra_episodes += section["episodes"]
+
+                BangumiInfo.episodes += extra_episodes
+
             match self.argument:
                 case "ep_id":
                     BangumiInfo.episodes = [entry for entry in BangumiInfo.episodes if entry["id"] == int(self.value)]
+
                 case "season_id":
                     BangumiInfo.episodes = [BangumiInfo.episodes[0]]
             

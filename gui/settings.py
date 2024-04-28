@@ -81,13 +81,19 @@ class DownloadTab(wx.Panel):
         max_download = Config.Download.max_download if Config.Download.max_download > 4 else 4
         self.max_download_slider = wx.Slider(self.download_box, -1, 1, 1, max_download)
 
-        quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_lab = wx.StaticText(self.download_box, -1, "默认下载清晰度")
+        self.video_quality_choice = wx.Choice(self.download_box, -1, choices = list(resolution_map.keys()))
 
-        lab = wx.StaticText(self.download_box, -1, "默认下载清晰度")
-        self.quality_choice = wx.Choice(self.download_box, -1, choices = list(resolution_map.keys()))
+        video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL, 10)
 
-        quality_hbox.Add(lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        quality_hbox.Add(self.quality_choice, 0, wx.ALL, 10)
+        audio_lab = wx.StaticText(self.download_box, -1, "默认下载音质")
+        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(sound_quality_map.keys()))
+
+        sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         codec_lab = wx.StaticText(self.download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(self.download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
@@ -96,7 +102,9 @@ class DownloadTab(wx.Panel):
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
 
+        self.add_number_chk = wx.CheckBox(self.download_box, -1, "批量下载视频时自动添加序号")
         self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知（仅下载窗口在后台时有效）")
+        self.auto_delete_chk = wx.CheckBox(self.download_box, -1, "下载完成后只保留合成后的视频")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(path_lab, 0, wx.ALL, 10)
@@ -105,9 +113,12 @@ class DownloadTab(wx.Panel):
         vbox.Add(self.max_thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.max_download_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
-        vbox.Add(quality_hbox)
+        vbox.Add(video_quality_hbox)
+        vbox.Add(sound_quality_hbox)
         vbox.Add(codec_hbox)
+        vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
+        vbox.Add(self.auto_delete_chk, 0, wx.ALL, 10)
 
         download_sbox = wx.StaticBoxSizer(self.download_box)
         download_sbox.Add(vbox, 1, wx.EXPAND)
@@ -133,10 +144,13 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download))
         self.max_download_slider.SetValue(Config.Download.max_download)
         
-        self.quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
+        self.video_quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
+        self.audio_quality_choice.SetSelection(list(sound_quality_map.values()).index(Config.Download.sound_quality))
         self.codec_choice.SetSelection(list(codec_id_map.keys()).index(Config.Download.codec))
         
+        self.add_number_chk.SetValue(Config.Download.add_number)
         self.show_toast_chk.SetValue(Config.Download.show_notification)
+        self.auto_delete_chk.SetValue(Config.Download.auto_delete)
 
     def save(self):
         default_path = os.path.join(os.getcwd(), "download")
@@ -144,7 +158,8 @@ class DownloadTab(wx.Panel):
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread = self.max_thread_slider.GetValue()
         Config.Download.max_download = self.max_download_slider.GetValue()
-        Config.Download.resolution = list(resolution_map.values())[self.quality_choice.GetSelection()]
+        Config.Download.resolution = list(resolution_map.values())[self.video_quality_choice.GetSelection()]
+        Config.Download.sound_quality = list(sound_quality_map.values())[self.audio_quality_choice.GetSelection()]
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.show_notification = self.show_toast_chk.GetValue()
 
@@ -152,8 +167,11 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "max_thread", str(Config.Download.max_thread))
         conf.config.set("download", "max_download", str(Config.Download.max_download))
         conf.config.set("download", "resolution", str(Config.Download.resolution))
+        conf.config.set("download", "sound_quality", str(Config.Download.sound_quality))
         conf.config.set("download", "codec", Config.Download.codec)
+        conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "notification", str(int(Config.Download.show_notification)))
+        conf.config.set("download", "auto_delete", str(int(Config.Download.auto_delete)))
 
         conf.save()
 

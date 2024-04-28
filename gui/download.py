@@ -20,7 +20,7 @@ class DownloadInfo:
 
 class DownloadUtils:
     def __init__(self, info: dict, onError: object):
-        self.info, self.onError, self.none_audio = info, onError, False
+        self.info, self.onError, self.none_audio, self.merge_error = info, onError, False, False
 
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
@@ -38,7 +38,6 @@ class DownloadUtils:
         else:
             self.video_durl = temp_video_durl[0]["backupUrl"][0]
             self.codec_id = 7
-        
         
         if json_dash["audio"]:
             temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
@@ -107,8 +106,11 @@ class DownloadUtils:
 
         if Config.Download.ffmpeg_available:
             time.sleep(0.5)
-            
-            remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
+
+            if self.merge_process.returncode == 0:
+                remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
+            else:
+                self.merge_error = True
 
     def has_codec(self, video_durl: List[dict], codec_id: int):
         for index, entry in enumerate(video_durl):
@@ -588,9 +590,15 @@ class DownloadItemPanel(wx.Panel):
         self.set_status("completed")
 
         if Config.Download.ffmpeg_available:
-            self.speed_lab.SetLabel("下载完成")
+            if self.utils.merge_error:
+                self.speed_lab.SetLabel("合成视频失败")
+                self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
-            self.pause_btn.Enable(True)
+                self.pause_btn.Enable(False)
+            else:
+                self.speed_lab.SetLabel("下载完成")
+
+                self.pause_btn.Enable(True)
         else:
             self.speed_lab.SetLabel("未安装 ffmpeg，合成视频失败")
             self.speed_lab.SetForegroundColour(wx.Colour("red"))

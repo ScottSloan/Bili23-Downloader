@@ -9,6 +9,7 @@ from requests.auth import HTTPProxyAuth
 from .config import Config
 
 resolution_map = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
+sound_quality_map = {"Hi-Res 无损": 30251, "杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
 codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
 
 def process_shorklink(url):
@@ -67,9 +68,17 @@ def convert_to_bvid(aid):
 
     return "".join(r)
 
-def format_duration(duration, bangumi = False):
-    if bangumi:
-        duration /= 1000
+def format_duration(episode, flag):
+    match flag:
+        case 0:
+            duration = episode["arc"]["duration"]
+        case 1:
+            duration = episode["duration"]
+        case 2:
+            if "duration" in episode:
+                duration = episode["duration"] / 1000
+            else:
+                return "--:--"
 
     hours = int(duration // 3600)
     mins = int((duration - hours * 3600) // 60)
@@ -91,7 +100,10 @@ def format_bangumi_title(episode):
     if BangumiInfo.type == "电影":
         return "{} - {}".format(BangumiInfo.title, episode["title"])
     else:
-        return episode["share_copy"]
+        if "share_copy" in episode:
+            return episode["share_copy"]
+        else:
+            return episode["report"]["ep_title"]
     
 def get_legal_name(name):
     return re.sub('[/\:*?"<>|]', "", name)

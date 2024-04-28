@@ -301,7 +301,7 @@ class MainWindow(Frame):
 
         Download.current_type = info
 
-    def set_video_list(self):        
+    def set_video_list(self):
         self.treelist.set_video_list()
 
         count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)

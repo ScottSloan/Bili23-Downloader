@@ -6,10 +6,10 @@ class Config:
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.41"
-        version_code = 1410
+        version = "1.42"
+        version_code = 1420
 
-        release_date = "2024/1/21"
+        release_date = "2024/4/28"
 
     class Proxy:
         proxy = auth = False
@@ -33,12 +33,16 @@ class Config:
         ffmpeg_available = False
         
         resolution = 80
+        sound_quality = 30280
         codec = "HEVC"
 
         max_thread = 4
         max_download = 1
 
         show_notification = False
+
+        add_number = False
+        auto_delete = True
 
     class Type:
         VIDEO = 1
@@ -71,8 +75,11 @@ class ConfigUtils:
         Config.Download.max_download = self.config.getint("download", "max_download")
         Config.Download.max_thread = self.config.getint("download", "max_thread")
         Config.Download.resolution = self.config.getint("download", "resolution")
+        Config.Download.sound_quality = self.config.getint("download", "sound_quality")
         Config.Download.codec = self.config.get("download", "codec")
         Config.Download.show_notification = self.config.getint("download", "notification")
+        Config.Download.add_number = self.config.getboolean("download", "add_number")
+        Config.Download.auto_delete = self.config.getboolean("download", "auto_delete")
 
         # user
         Config.User.login = self.config.getboolean("user", "login")

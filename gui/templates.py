@@ -69,12 +69,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         
         if VideoInfo.type == 3:
             for key, value in VideoInfo.sections.items():
-                video_list[key] = [[str(index + 1), episode["arc"]["title"], "", format_duration(episode["arc"]["duration"])] for index, episode in enumerate(value)]
+                video_list[key] = [[str(index + 1), episode["arc"]["title"], "", format_duration(episode, flag = 0)] for index, episode in enumerate(value)]
 
                 self.parent_items.append(key)
         else:
             self.parent_items.append("视频")
-            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode["duration"])] for index, episode in enumerate(VideoInfo.pages)]
+            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode, flag = 1)] for index, episode in enumerate(VideoInfo.pages)]
 
         self.set_list(video_list)
     
@@ -85,7 +85,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if Config.Misc.show_episodes != 2 and key != "正片":
                 continue
 
-            bangumi_list[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode["duration"], bangumi = True)] for index, episode in enumerate(value)]
+            bangumi_list[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode, flag = 2)] for index, episode in enumerate(value)]
 
             self.parent_items.append(key)
 
