@@ -2,7 +2,7 @@ import wx
 import wx.py
 from io import BytesIO
 
-from utils.config import Config, Download, conf
+from utils.config import Config, Download, conf, Audio
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.activity import ActivityInfo, ActivityParser
@@ -56,10 +56,13 @@ class MainWindow(Frame):
         resolution_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.resolution_choice = wx.Choice(self.panel, -1)
 
+        self.audio_btn = wx.Button(self.panel, -1, "...", size = self.FromDIP((24, 24)))
+
         resolution_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         resolution_hbox.AddStretchSpacer()
         resolution_hbox.Add(resolution_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         resolution_hbox.Add(self.resolution_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        resolution_hbox.Add(self.audio_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
@@ -150,6 +153,7 @@ class MainWindow(Frame):
         self.get_btn.Bind(wx.EVT_BUTTON, self.onGet)
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgr)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownload)
+        self.audio_btn.Bind(wx.EVT_BUTTON, self.onAudioDetail)
 
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
@@ -164,6 +168,12 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onRefresh, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelp, id = self.ID_HELP)
 
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_HIRES)
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_DOLBY)
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_192K)
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_132K)
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_64K)
+
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def init_utils(self):
@@ -177,6 +187,12 @@ class MainWindow(Frame):
 
         self.ID_LOGOUT = wx.NewIdRef()
         self.ID_REFRESH = wx.NewIdRef()
+
+        self.ID_AUDIO_HIRES = wx.NewIdRef()
+        self.ID_AUDIO_DOLBY = wx.NewIdRef()
+        self.ID_AUDIO_192K = wx.NewIdRef()
+        self.ID_AUDIO_132K = wx.NewIdRef()
+        self.ID_AUDIO_64K = wx.NewIdRef()
 
         self.video_parser = VideoParser(self.onError)
         self.bangumi_parser = BangumiParser(self.onError)
@@ -198,7 +214,7 @@ class MainWindow(Frame):
         self.AutoCheckUpdate()
 
     def onClose(self, event):
-        if len(DownloadInfo.download_list):
+        if not DownloadInfo.no_task:
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？\n\n程序将自动保存下载进度，可随时恢复下载。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:
@@ -398,6 +414,22 @@ class MainWindow(Frame):
 
         thread.start()
 
+    def onAudioDetail(self, event):
+        self.ShowAudioQualityMenu()
+
+    def onChangeAudioQuality(self, event):
+        match event.GetId():
+            case self.ID_AUDIO_HIRES:
+                Audio.audio_quality = 30251
+            case self.ID_AUDIO_DOLBY:
+                Audio.audio_quality = 30250
+            case self.ID_AUDIO_192K:
+                Audio.audio_quality = 30280
+            case self.ID_AUDIO_132K:
+                Audio.audio_quality = 30232
+            case self.ID_AUDIO_64K:
+                Audio.audio_quality = 30216
+
     def ShowUserInfoThread(self):
         self.face.SetBitmap(wx.Image(BytesIO(get_user_face(Config.User.face))).Scale(48, 48))
         self.face.Show()
@@ -443,6 +475,29 @@ class MainWindow(Frame):
         update_window = UpdateWindow(self, update_json)
         update_window.ui_changelog()
         update_window.ShowWindowModal()
+
+    def ShowAudioQualityMenu(self):
+        menu = wx.Menu()
+        menu.Append(-1, "音质")
+        menu.AppendSeparator()
+
+        if Audio.q_hires:
+            menuitem_hires = menu.Append(self.ID_AUDIO_HIRES, "Hi-Res 无损", kind = wx.ITEM_RADIO)
+            menuitem_hires.Check(True if Audio.audio_quality == 30251 else False)
+
+        if Audio.q_dolby:
+            menuitem_dolby = menu.Append(self.ID_AUDIO_DOLBY, "杜比全景声", kind = wx.ITEM_RADIO)
+            menuitem_dolby.Check(True if Audio.audio_quality == 30250 else False)
+
+        menuitem_192k = menu.Append(self.ID_AUDIO_192K, "192K", kind = wx.ITEM_RADIO)
+        menuitem_132k = menu.Append(self.ID_AUDIO_132K, "132K", kind = wx.ITEM_RADIO)
+        menuitem_64k = menu.Append(self.ID_AUDIO_64K, "64K", kind = wx.ITEM_RADIO)
+
+        menuitem_192k.Check(True if Audio.audio_quality == 30280 else False)
+        menuitem_132k.Check(True if Audio.audio_quality == 30232 else False)
+        menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
+
+        self.PopupMenu(menu)
 
     def onCheckFFmpeg(self):
         if not Config.Download.ffmpeg_available:

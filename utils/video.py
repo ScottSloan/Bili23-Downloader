@@ -2,7 +2,7 @@ import re
 import json
 import requests
 
-from .config import Config
+from .config import Config, Audio
 from .tools import *
 
 class VideoInfo:
@@ -98,6 +98,9 @@ class VideoParser:
 
         VideoInfo.resolution_id = info["accept_quality"]
         VideoInfo.resolution_desc = info["accept_description"]
+
+        Audio.q_hires = True if info["dash"]["flac"]["audio"] else False
+        Audio.q_dolby = True if info["dash"]["dolby"]["audio"] else False
 
     def parse_url(self, url):
         self.get_part(url)

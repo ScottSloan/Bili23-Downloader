@@ -50,9 +50,19 @@ class Config:
     
     class Temp:
         download_window_pos = None
-        
+
+class Audio:
+    audio_quality = None
+
+    q_hires = False
+    q_dolby = False
+    q_192k = False
+    q_132k = False
+    q_64k = False
+
 class Download:
     current_type = None
+    
     download_list = []
 
 class ConfigUtils:
@@ -102,6 +112,8 @@ class ConfigUtils:
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
         Config.Misc.debug = self.config.getboolean("misc", "debug")
+
+        Audio.audio_quality = Config.Download.sound_quality
 
     def create_download_dir(self):
         if not os.path.exists(Config.Download.path):

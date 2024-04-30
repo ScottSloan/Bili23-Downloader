@@ -17,6 +17,7 @@ from utils.tools import *
 
 class DownloadInfo:
     download_list = {}
+    no_task = True
 
 class DownloadUtils:
     def __init__(self, info: dict, onError: object):
@@ -96,10 +97,13 @@ class DownloadUtils:
     def merge_video(self):
         title = get_legal_name(self.info["title"])
 
+        video_f_name = f"video_{self.info['id']}.mp4"
+        audio_f_name = f"audio_{self.info['id']}.mp3"
+
         if self.none_audio:
-            cmd = f'''cd "{Config.Download.path}" && rename "video_{self.info['id']}.mp4" "{title}.mp4"'''
+            cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}.mp4"'''
         else:
-            cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -y -i audio_{self.info['id']}.mp3 -i video_{self.info['id']}.mp4 -acodec copy -vcodec copy "{title}.mp4"'''
+            cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
                 
         self.merge_process = subprocess.Popen(cmd, shell = True)
         self.merge_process.wait()
@@ -108,7 +112,13 @@ class DownloadUtils:
             time.sleep(0.5)
 
             if self.merge_process.returncode == 0:
-                remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
+                if Config.Download.auto_delete:
+                    remove_files(Config.Download.path, [video_f_name, audio_f_name])
+                else:
+                    cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.mp3"'''
+
+                    process = subprocess.Popen(cmd, shell = True)
+                    process.wait()
             else:
                 self.merge_error = True
 
@@ -281,13 +291,18 @@ class DownloadWindow(Frame):
         self.update_task_lab()
 
     def add_download_item(self, start_download = True):
-        for entry in Download.download_list:
+        multiple = True if len(Download.download_list) > 1 else False
+        
+        for index, entry in enumerate(Download.download_list):
             if self.is_already_in_list(entry["title"], entry["cid"]):
                 continue
 
             item = DownloadItemPanel(self.download_list_panel, entry)
 
             self.download_list_panel.sizer.Add(item, 0, wx.EXPAND)
+
+            if multiple and Config.Download.add_number:
+                entry["title"] = f"{index + 1} - {entry['title']}"
 
             entry["start_callback"] = item.start
             entry["pause_callback"] = item.onPauseCallback
@@ -318,9 +333,13 @@ class DownloadWindow(Frame):
 
         if count:
             self.task_lab.SetLabel(f"{count} 个任务正在下载")
+
+            DownloadInfo.no_task = False
         else:
             self.task_lab.SetLabel("下载管理")
             self.ShowNotificationToast()
+
+            DownloadInfo.no_task = True
 
     def start_download(self):
         for key, value in DownloadInfo.download_list.items():
