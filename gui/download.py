@@ -48,10 +48,16 @@ class DownloadUtils:
                 self.audio_type = "mp3"
 
             elif Audio.audio_quality == 30251:
-                self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
+                if json_dash["flac"]:
+                    self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
 
-                self.audio_type = "flac"
+                    self.audio_type = "flac"
 
+                else:
+                    temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == 30280]
+                    self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
+
+                    self.audio_type = "mp3"
             else:
                 self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
 
@@ -129,7 +135,7 @@ class DownloadUtils:
                 if Config.Download.auto_delete:
                     remove_files(Config.Download.path, [video_f_name, audio_f_name])
                 else:
-                    cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.mp3"'''
+                    cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.{self.audio_type}"'''
 
                     process = subprocess.Popen(cmd, shell = True)
                     process.wait()

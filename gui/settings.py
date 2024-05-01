@@ -161,7 +161,9 @@ class DownloadTab(wx.Panel):
         Config.Download.resolution = list(resolution_map.values())[self.video_quality_choice.GetSelection()]
         Config.Download.sound_quality = list(sound_quality_map.values())[self.audio_quality_choice.GetSelection()]
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
+        Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
+        Config.Download.auto_delete = self.auto_delete_chk.GetValue()
 
         conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
         conf.config.set("download", "max_thread", str(Config.Download.max_thread))

@@ -3,7 +3,7 @@ import json
 import requests
 
 from .tools import *
-from .config import Config
+from .config import Config, Audio
 
 class BangumiInfo:
     url = bvid = epid = cid = season_id = mid = None
@@ -128,6 +128,11 @@ class BangumiParser:
 
         BangumiInfo.resolution_id = json_data["accept_quality"]
         BangumiInfo.resolution_desc = json_data["accept_description"]
+
+        if Config.Download.sound_quality == 30250 or Config.Download.sound_quality == 30251:
+            Audio.audio_quality = 30280
+        else:
+            Audio.audio_quality = Config.Download.sound_quality
 
     def parse_url(self, url):
         if "ep" in url:

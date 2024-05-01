@@ -9,7 +9,7 @@ class Config:
         version = "1.42"
         version_code = 1420
 
-        release_date = "2024/4/30"
+        release_date = "2024/5/1"
 
     class Proxy:
         proxy = auth = False
@@ -109,8 +109,6 @@ class ConfigUtils:
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
         Config.Misc.debug = self.config.getboolean("misc", "debug")
-
-        Audio.audio_quality = Config.Download.sound_quality
 
     def create_download_dir(self):
         if not os.path.exists(Config.Download.path):
