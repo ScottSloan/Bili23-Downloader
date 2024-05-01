@@ -201,6 +201,7 @@ class MainWindow(Frame):
         self.download_window = DownloadWindow(self)
 
         self.download_window_opened = False
+        self.parse_ready = False
 
         wx.CallAfter(self.utilsThread)
 
@@ -236,6 +237,8 @@ class MainWindow(Frame):
 
         self.processing_window = ProcessingWindow(self)
         self.processing_window.Show()
+
+        self.parse_ready = True
 
     def ParseThread(self, url: str):
         Download.download_list.clear()
@@ -415,6 +418,9 @@ class MainWindow(Frame):
         thread.start()
 
     def onAudioDetail(self, event):
+        if not self.parse_ready:
+            return
+        
         self.ShowAudioQualityMenu()
 
     def onChangeAudioQuality(self, event):

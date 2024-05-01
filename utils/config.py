@@ -9,7 +9,7 @@ class Config:
         version = "1.42"
         version_code = 1420
 
-        release_date = "2024/4/28"
+        release_date = "2024/4/30"
 
     class Proxy:
         proxy = auth = False
@@ -56,9 +56,6 @@ class Audio:
 
     q_hires = False
     q_dolby = False
-    q_192k = False
-    q_132k = False
-    q_64k = False
 
 class Download:
     current_type = None

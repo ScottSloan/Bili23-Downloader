@@ -94,12 +94,15 @@ class VideoParser:
 
         self.check_json(resp, 102)
 
+        with open("audio.json", "w", encoding = "utf-8") as f:
+            f.write(json.dumps(resp, ensure_ascii = False))
+
         info = resp["data"]
 
         VideoInfo.resolution_id = info["accept_quality"]
         VideoInfo.resolution_desc = info["accept_description"]
 
-        Audio.q_hires = True if info["dash"]["flac"]["audio"] else False
+        Audio.q_hires = True if info["dash"]["flac"] else False
         Audio.q_dolby = True if info["dash"]["dolby"]["audio"] else False
 
     def parse_url(self, url):

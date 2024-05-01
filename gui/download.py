@@ -10,7 +10,7 @@ from typing import List
 from .templates import Frame, ScrolledPanel
 
 from utils.icons import *
-from utils.config import Config, Download, conf
+from utils.config import Config, Download, conf, Audio
 from utils.thread import Thread
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import *
@@ -21,7 +21,7 @@ class DownloadInfo:
 
 class DownloadUtils:
     def __init__(self, info: dict, onError: object):
-        self.info, self.onError, self.none_audio, self.merge_error = info, onError, False, False
+        self.info, self.onError, self.none_audio, self.merge_error, self.audio_type = info, onError, False, False, None
 
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
@@ -41,8 +41,21 @@ class DownloadUtils:
             self.codec_id = 7
         
         if json_dash["audio"]:
-            temp_audio_durl = sorted(json_dash["audio"], key = lambda x: x["id"], reverse = True)
-            self.audio_durl = [i for i in temp_audio_durl if (i["id"] - 30200) == self.resolution or (i["id"] - 30200) < self.resolution][0]["backupUrl"][0]
+            if Audio.audio_quality != 30251 and Audio.audio_quality != 30250:
+                temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == Audio.audio_quality]
+                self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
+
+                self.audio_type = "mp3"
+
+            elif Audio.audio_quality == 30251:
+                self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
+
+                self.audio_type = "flac"
+
+            else:
+                self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
+
+                self.audio_type = "ec3"
 
             self.none_audio = False
         else:
@@ -58,6 +71,7 @@ class DownloadUtils:
                     resp = json.loads(req.text)
                         
                     json_dash = resp["data"]["dash"]
+
                 case Config.Type.BANGUMI:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.info['bvid']}&cid={self.info['cid']}&qn=0&fnver=0&fnval=4048&fourk=1"
                     
@@ -88,7 +102,7 @@ class DownloadUtils:
                 "type": "audio",
                 "url": self.audio_durl,
                 "referer_url": self.info["url"],
-                "file_name": "audio_{}.mp3".format(self.info["id"]),
+                "file_name": "audio_{}.{}".format(self.info["id"], self.audio_type),
                 "chunk_list": []
             }
 
@@ -98,7 +112,7 @@ class DownloadUtils:
         title = get_legal_name(self.info["title"])
 
         video_f_name = f"video_{self.info['id']}.mp4"
-        audio_f_name = f"audio_{self.info['id']}.mp3"
+        audio_f_name = f"audio_{self.info['id']}.{self.audio_type}"
 
         if self.none_audio:
             cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}.mp4"'''
