@@ -36,6 +36,8 @@ class AboutWindow(wx.Dialog):
 
         desc_lab = wx.StaticText(self, -1, "下载 bilibili 视频/番剧/电影/纪录片 等资源")
 
+        date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date}")
+
         copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2024 Scott Sloan")
 
         copyright_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -66,6 +68,7 @@ class AboutWindow(wx.Dialog):
         about_vbox.Add(app_name_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.CENTER, 10)
         about_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
         about_vbox.Add(desc_lab, 0, wx.ALL | wx.CENTER, 10)
+        about_vbox.Add(date_lab, 0, wx.ALL | wx.CENTER, 10)
         about_vbox.AddSpacer(20)
         about_vbox.Add(copyright_hbox, 0, wx.EXPAND)
         about_vbox.Add(self.website_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)

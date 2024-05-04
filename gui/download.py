@@ -20,8 +20,8 @@ class DownloadInfo:
     no_task = True
 
 class DownloadUtils:
-    def __init__(self, info: dict, onError: object):
-        self.info, self.onError, self.none_audio, self.merge_error, self.audio_type = info, onError, False, False, None
+    def __init__(self, info: dict, onError, onComplete):
+        self.info, self.onError, self.none_audio, self.merge_error, self.audio_type, self.onComplete = info, onError, False, False, None, onComplete
 
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
@@ -141,6 +141,8 @@ class DownloadUtils:
                     process.wait()
             else:
                 self.merge_error = True
+
+        self.onComplete()
 
     def has_codec(self, video_durl: List[dict], codec_id: int):
         for index, entry in enumerate(video_durl):
@@ -406,7 +408,7 @@ class DownloadItemPanel(wx.Panel):
 
     def init_utils(self):
         self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge)
-        self.utils = DownloadUtils(self.info, self.onError)
+        self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
 
         Thread(target = self.get_preview_pic).start()
 
@@ -610,20 +612,18 @@ class DownloadItemPanel(wx.Panel):
         remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
     
     def onMerge(self):
+        self.set_status("merging")
+
         self.size_lab.SetLabel(self.total_size)
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
-
-        self.set_status("merging")
 
         parent = self.GetParent().GetParent()
 
         parent.update_task_lab()
         parent.start_download()
 
-        self.utils.merge_video()
-
-        self.onMergeComplete()
+        Thread(target = self.utils.merge_video).start()
     
     def onMergeComplete(self):
         self.set_status("completed")
