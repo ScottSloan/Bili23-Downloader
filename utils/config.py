@@ -1,5 +1,4 @@
 import os
-import subprocess
 from configparser import RawConfigParser
 
 class Config:
@@ -29,8 +28,6 @@ class Config:
 
     class Download:
         path = None
-        ffmpeg_path = None
-        ffmpeg_available = False
         
         resolution = 80
         sound_quality = 30280
@@ -50,6 +47,18 @@ class Config:
     
     class Temp:
         download_window_pos = None
+
+    class FFmpeg:
+        env_path = None
+        local_path = None
+        path = None
+
+        env_available = False
+        local_available = False
+        available = False
+
+        env_version = None
+        local_version = None
 
 class Audio:
     audio_quality = None
@@ -72,7 +81,12 @@ class ConfigUtils:
         self.load_config()
         self.create_download_dir()
 
-        self.get_ffmpeg_path()
+        self.init_ffmpeg()
+
+    def init_ffmpeg(self):
+        from utils.tools import check_ffmpeg_available
+
+        check_ffmpeg_available()
 
     def load_config(self):
         download_path = self.config.get("download", "path")
@@ -113,19 +127,6 @@ class ConfigUtils:
     def create_download_dir(self):
         if not os.path.exists(Config.Download.path):
             os.makedirs(Config.Download.path)
-    
-    def get_ffmpeg_path(self):
-        local_path = os.path.join(os.getcwd(), "ffmpeg.exe")
-
-        path = local_path if os.path.exists(local_path) else "ffmpeg"
-
-        Config.Download.ffmpeg_path = path
-
-        process = subprocess.Popen(f'"{path}" -version', shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-
-        process.wait()
-
-        Config.Download.ffmpeg_available = True if "ffmpeg version" in str(process.stdout.read()) else False
     
     def save(self):
         with open(self.path, "w", encoding = "utf-8") as f:

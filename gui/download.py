@@ -123,12 +123,12 @@ class DownloadUtils:
         if self.none_audio:
             cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}.mp4"'''
         else:
-            cmd = f'''cd "{Config.Download.path}" && "{Config.Download.ffmpeg_path}" -v quiet -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
+            cmd = f'''cd "{Config.Download.path}" && "{Config.FFmpeg.path}" -v quiet -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
                 
         self.merge_process = subprocess.Popen(cmd, shell = True)
         self.merge_process.wait()
 
-        if Config.Download.ffmpeg_available:
+        if Config.FFmpeg.available:
             time.sleep(0.5)
 
             if self.merge_process.returncode == 0:
@@ -630,7 +630,7 @@ class DownloadItemPanel(wx.Panel):
     def onMergeComplete(self):
         self.set_status("completed")
 
-        if Config.Download.ffmpeg_available:
+        if Config.FFmpeg.available:
             if self.utils.merge_error:
                 self.speed_lab.SetLabel("合成视频失败")
                 self.speed_lab.SetForegroundColour(wx.Colour("red"))

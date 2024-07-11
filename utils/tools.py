@@ -4,6 +4,7 @@ import json
 import random
 import ctypes
 import requests
+import subprocess
 from requests.auth import HTTPProxyAuth
 
 from .config import Config
@@ -157,3 +158,44 @@ def find_str(pattern, string):
         return find[0]
     else:
         return None
+
+def get_cmd_output(cmd):
+    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    process.wait()
+
+    return process.stdout.read().decode("utf-8")
+
+def get_ffmpeg_path():
+    output = get_cmd_output("where ffmpeg").split("\r\n")
+
+    if output[0]:
+        if output[1]:
+            Config.FFmpeg.local_path = output[0]
+            Config.FFmpeg.env_path = output[1]
+
+            Config.FFmpeg.env_available = True
+            Config.FFmpeg.local_available = True
+        else:
+            Config.FFmpeg.env_path = output[0]
+
+            Config.FFmpeg.env_available = True
+
+    Config.FFmpeg.path = Config.FFmpeg.local_path if Config.FFmpeg.local_path else "ffmpeg"
+    
+def check_ffmpeg_available():
+    get_ffmpeg_path()
+
+    if Config.FFmpeg.env_available:
+        Config.FFmpeg.env_version = get_ffmpeg_version(Config.FFmpeg.env_path)
+    
+    if Config.FFmpeg.local_available:
+        Config.FFmpeg.local_version = get_ffmpeg_version(Config.FFmpeg.local_path)
+
+    Config.FFmpeg.available = Config.FFmpeg.env_available or Config.FFmpeg.local_available
+
+def get_ffmpeg_version(ffmpeg_path):
+    output = get_cmd_output(f'"{ffmpeg_path}" -version')
+
+    version = re.findall(r"ffmpeg version (.*) Copyright", output)
+    
+    return version[0] if version else "Unknown"

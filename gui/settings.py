@@ -24,6 +24,7 @@ class SettingWindow(wx.Dialog):
         self.note = wx.Notebook(self, -1)
 
         self.note.AddPage(DownloadTab(self.note), "下载")
+        self.note.AddPage(MergeTab(self.note), "合成")
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
         
@@ -199,6 +200,55 @@ class DownloadTab(wx.Panel):
 
     def onDownloadSlide(self, event):
         self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
+
+class MergeTab(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.init_data()
+
+    def init_UI(self):
+        ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
+
+        ffmpeg_label = wx.StaticText(ffmpeg_box, 0, "FFmpeg 路径（自动检测）")
+
+        self.env_choice = wx.RadioButton(ffmpeg_box, -1, "环境变量")
+        self.env_path = wx.StaticText(ffmpeg_box, -1, "未检测到 FFmpeg")
+        self.local_choice = wx.RadioButton(ffmpeg_box, -1, "运行目录")
+        self.local_path = wx.StaticText(ffmpeg_box, -1, "未检测到 FFmpeg")
+
+        self.env_choice.Enable(False)
+        self.env_path.Enable(False)
+        self.local_choice.Enable(False)
+        self.local_path.Enable(False)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(ffmpeg_label, 0, wx.ALL, 10)
+        vbox.Add(self.env_choice, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.env_path, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.local_choice, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.local_path, 0, wx.ALL & (~wx.TOP), 10)
+
+        ffmpeg_sbox = wx.StaticBoxSizer(ffmpeg_box)
+        ffmpeg_sbox.Add(vbox, 1, wx.EXPAND)
+
+        merge_vbox = wx.BoxSizer(wx.VERTICAL)
+        merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
+        self.SetSizer(merge_vbox)
+    
+    def init_data(self):
+        if Config.FFmpeg.env_path:
+            self.env_choice.Enable(True)
+            self.env_path.Enable(True)
+            self.env_path.SetLabel(f"{Config.FFmpeg.env_path}\n版本：{Config.FFmpeg.env_version}")
+        
+        if Config.FFmpeg.local_path:
+            self.local_choice.Enable(True)
+            self.local_path.Enable(True)
+            self.local_path.SetLabel(f"{Config.FFmpeg.local_path}\n版本：{Config.FFmpeg.local_version}")
 
 class ProxyTab(wx.Panel):
     def __init__(self, parent):

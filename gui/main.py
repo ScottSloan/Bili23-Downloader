@@ -508,7 +508,7 @@ class MainWindow(Frame):
         self.PopupMenu(menu)
 
     def onCheckFFmpeg(self):
-        if not Config.Download.ffmpeg_available:
+        if not Config.FFmpeg.available:
             dlg = wx.MessageDialog(self, "未安装 ffmpeg\n\n尚未安装 ffmpeg，无法合成视频。\n\n若您已确认安装 ffmpeg，请检查（二者其一即可）：\n1.为 ffmpeg 设置环境变量\n2.将 ffmpeg 放置到程序运行目录", "警告", wx.ICON_WARNING | wx.YES_NO)
             dlg.SetYesNoLabels("安装 ffmpeg", "忽略")
 
