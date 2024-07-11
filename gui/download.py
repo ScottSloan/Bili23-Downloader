@@ -163,7 +163,7 @@ class DownloadWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((750, 500)))
+        self.SetSize(self.FromDIP((780, 500)))
 
         self.Bind_EVT()
 
@@ -430,7 +430,7 @@ class DownloadItemPanel(wx.Panel):
             self.update_pause_btn(self.info["status"])
 
     def init_UI(self):
-        self.preview_pic = wx.StaticBitmap(self, -1, size = (160, 75))
+        self.preview_pic = wx.StaticBitmap(self, -1, size = self.FromDIP((128, 60)))
 
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
@@ -466,9 +466,9 @@ class DownloadItemPanel(wx.Panel):
         gauge_vbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP), 10)
         gauge_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_resume_icon())).Scale(24, 24).ConvertToBitmap())
+        self.pause_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_resume_icon())).Scale(24, 24, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((26, 26)))
         self.pause_btn.SetToolTip("开始下载")
-        self.stop_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_delete_icon())).Scale(24, 24).ConvertToBitmap())
+        self.stop_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_delete_icon())).Scale(24, 24, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((26, 26)))
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -497,7 +497,9 @@ class DownloadItemPanel(wx.Panel):
 
         wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
 
-        image = wx.Image(io.BytesIO(req.content)).Scale(160, 75)
+        scale_size = self.FromDIP((128, 60))
+
+        image = wx.Image(io.BytesIO(req.content)).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
         
         self.preview_pic.SetBitmap(image.ConvertToBitmap())
 

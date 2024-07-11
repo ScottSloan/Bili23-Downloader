@@ -71,21 +71,21 @@ class MainWindow(Frame):
         self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((100, 30)))
         self.download_btn.Enable(False)
         
-        self.face = wx.StaticBitmap(self.panel, -1)
+        self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((48, 48)))
         self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
         self.uname_lab = wx.StaticText(self.panel, -1, "登录")
         self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
 
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.userinfo_hbox.Add(self.face, 0, wx.ALL & ~(wx.RIGHT), 10)
-        self.userinfo_hbox.Add(self.uname_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        self.userinfo_hbox.Add(self.face, 0, wx.ALIGN_CENTER, 0)
+        self.userinfo_hbox.Add(self.uname_lab, 0, wx.ALIGN_CENTER)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        bottom_hbox.Add(self.userinfo_hbox, 0, wx.EXPAND)
+        bottom_hbox.Add(self.userinfo_hbox, 0, wx.EXPAND | wx.CENTER)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL, 10)
-        bottom_hbox.Add(self.download_btn, 0, wx.ALL & ~(wx.LEFT), 10)
+        bottom_hbox.Add(self.download_mgr_btn, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        bottom_hbox.Add(self.download_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.AddSpacer(10)
@@ -437,7 +437,9 @@ class MainWindow(Frame):
                 Audio.audio_quality = 30216
 
     def ShowUserInfoThread(self):
-        self.face.SetBitmap(wx.Image(BytesIO(get_user_face(Config.User.face))).Scale(48, 48))
+        scale_size = self.FromDIP((32, 32))
+
+        self.face.SetBitmap(wx.Image(BytesIO(get_user_face(Config.User.face))).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH))
         self.face.Show()
 
         self.uname_lab.SetLabel(Config.User.uname)
