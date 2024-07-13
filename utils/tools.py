@@ -180,22 +180,15 @@ def get_ffmpeg_path():
 
             Config.FFmpeg.env_available = True
 
-    Config.FFmpeg.path = Config.FFmpeg.local_path if Config.FFmpeg.local_path else "ffmpeg"
+    if Config.FFmpeg.local_available:
+        Config.FFmpeg.path = Config.FFmpeg.local_path
+
+        if Config.FFmpeg.env_available:
+            Config.FFmpeg.local_first = True
+
+    Config.FFmpeg.path = Config.FFmpeg.local_path if Config.FFmpeg.local_available else "ffmpeg"
     
 def check_ffmpeg_available():
     get_ffmpeg_path()
 
-    if Config.FFmpeg.env_available:
-        Config.FFmpeg.env_version = get_ffmpeg_version(Config.FFmpeg.env_path)
-    
-    if Config.FFmpeg.local_available:
-        Config.FFmpeg.local_version = get_ffmpeg_version(Config.FFmpeg.local_path)
-
     Config.FFmpeg.available = Config.FFmpeg.env_available or Config.FFmpeg.local_available
-
-def get_ffmpeg_version(ffmpeg_path):
-    output = get_cmd_output(f'"{ffmpeg_path}" -version')
-
-    version = re.findall(r"ffmpeg version (.*) Copyright", output)
-    
-    return version[0] if version else "Unknown"

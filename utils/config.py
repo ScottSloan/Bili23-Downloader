@@ -39,7 +39,10 @@ class Config:
         show_notification = False
 
         add_number = False
-        auto_delete = True
+    
+    class Merge:
+        auto_merge = False
+        auto_clean = False
 
     class Type:
         VIDEO = 1
@@ -57,8 +60,7 @@ class Config:
         local_available = False
         available = False
 
-        env_version = None
-        local_version = None
+        local_first = False
 
 class Audio:
     audio_quality = None
@@ -100,7 +102,10 @@ class ConfigUtils:
         Config.Download.codec = self.config.get("download", "codec")
         Config.Download.show_notification = self.config.getint("download", "notification")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
-        Config.Download.auto_delete = self.config.getboolean("download", "auto_delete")
+
+        # merge
+        Config.Merge.auto_merge = self.config.getboolean("merge", "auto_merge")
+        Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
         # user
         Config.User.login = self.config.getboolean("user", "login")

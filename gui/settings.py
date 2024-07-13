@@ -105,7 +105,6 @@ class DownloadTab(wx.Panel):
 
         self.add_number_chk = wx.CheckBox(self.download_box, -1, "批量下载视频时自动添加序号")
         self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知（仅下载窗口在后台时有效）")
-        self.auto_delete_chk = wx.CheckBox(self.download_box, -1, "下载完成后只保留合成后的视频")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(path_lab, 0, wx.ALL, 10)
@@ -119,7 +118,6 @@ class DownloadTab(wx.Panel):
         vbox.Add(codec_hbox)
         vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
-        vbox.Add(self.auto_delete_chk, 0, wx.ALL, 10)
 
         download_sbox = wx.StaticBoxSizer(self.download_box)
         download_sbox.Add(vbox, 1, wx.EXPAND)
@@ -151,7 +149,6 @@ class DownloadTab(wx.Panel):
         
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.show_toast_chk.SetValue(Config.Download.show_notification)
-        self.auto_delete_chk.SetValue(Config.Download.auto_delete)
 
     def save(self):
         default_path = os.path.join(os.getcwd(), "download")
@@ -164,7 +161,6 @@ class DownloadTab(wx.Panel):
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
-        Config.Download.auto_delete = self.auto_delete_chk.GetValue()
 
         conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
         conf.config.set("download", "max_thread", str(Config.Download.max_thread))
@@ -174,7 +170,6 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "codec", Config.Download.codec)
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "notification", str(int(Config.Download.show_notification)))
-        conf.config.set("download", "auto_delete", str(int(Config.Download.auto_delete)))
 
         conf.save()
 
@@ -224,18 +219,31 @@ class MergeTab(wx.Panel):
         self.local_choice.Enable(False)
         self.local_path.Enable(False)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(ffmpeg_label, 0, wx.ALL, 10)
-        vbox.Add(self.env_choice, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.env_path, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.local_choice, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.local_path, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_vbox = wx.BoxSizer(wx.VERTICAL)
+        ffmpeg_vbox.Add(ffmpeg_label, 0, wx.ALL, 10)
+        ffmpeg_vbox.Add(self.env_choice, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_vbox.Add(self.env_path, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_vbox.Add(self.local_choice, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_vbox.Add(self.local_path, 0, wx.ALL & (~wx.TOP), 10)
 
         ffmpeg_sbox = wx.StaticBoxSizer(ffmpeg_box)
-        ffmpeg_sbox.Add(vbox, 1, wx.EXPAND)
+        ffmpeg_sbox.Add(ffmpeg_vbox, 1, wx.EXPAND)
+
+        merge_option_box = wx.StaticBox(self, -1, "合成选项")
+
+        self.auto_merge_chk = wx.CheckBox(merge_option_box, -1, "自动合成视频")
+        self.auto_clean_chk = wx.CheckBox(merge_option_box, -1, "合成完成后清理文件")
+
+        merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
+        merge_option_vbox.Add(self.auto_merge_chk, 0, wx.ALL, 10)
+        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL & (~wx.TOP), 10)
+
+        merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
+        merge_option_sbox.Add(merge_option_vbox, 1, wx.EXPAND)
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
         merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        merge_vbox.Add(merge_option_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
 
         self.SetSizer(merge_vbox)
     
@@ -243,12 +251,31 @@ class MergeTab(wx.Panel):
         if Config.FFmpeg.env_path:
             self.env_choice.Enable(True)
             self.env_path.Enable(True)
-            self.env_path.SetLabel(f"{Config.FFmpeg.env_path}\n版本：{Config.FFmpeg.env_version}")
+            self.env_path.SetLabel(f"{Config.FFmpeg.env_path}")
+
+            if not Config.FFmpeg.local_path:
+                self.env_choice.SetValue(True)
         
         if Config.FFmpeg.local_path:
             self.local_choice.Enable(True)
             self.local_path.Enable(True)
-            self.local_path.SetLabel(f"{Config.FFmpeg.local_path}\n版本：{Config.FFmpeg.local_version}")
+            self.local_path.SetLabel(f"{Config.FFmpeg.local_path}")
+
+            if not Config.FFmpeg.env_path:
+                self.local_choice.SetValue(True)
+
+        if Config.FFmpeg.local_first:
+            self.local_choice.SetValue(True)
+
+        self.auto_merge_chk.SetValue(Config.Merge.auto_merge)
+        self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
+
+    def save(self):
+        Config.Merge.auto_merge = self.auto_merge_chk.GetValue()
+        Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
+
+        conf.config.set("merge", "auto_merge", str(int(Config.Merge.auto_merge)))
+        conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
 class ProxyTab(wx.Panel):
     def __init__(self, parent):
@@ -422,14 +449,14 @@ class MiscTab(wx.Panel):
 
         self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
-        vbox.Add(self.episodes_multiple_choice, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.episodes_all_choice, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.auto_select_chk, 0, wx.ALL, 10)
+        sections_vbox = wx.BoxSizer(wx.VERTICAL)
+        sections_vbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
+        sections_vbox.Add(self.episodes_multiple_choice, 0, wx.ALL & (~wx.TOP), 10)
+        sections_vbox.Add(self.episodes_all_choice, 0, wx.ALL & (~wx.TOP), 10)
+        sections_vbox.Add(self.auto_select_chk, 0, wx.ALL, 10)
         
         sections_sbox = wx.StaticBoxSizer(sections_box)
-        sections_sbox.Add(vbox, 1, wx.EXPAND)
+        sections_sbox.Add(sections_vbox, 1, wx.EXPAND)
 
         player_box = wx.StaticBox(self, -1, "播放器设置")
 
@@ -437,16 +464,16 @@ class MiscTab(wx.Panel):
         self.path_box = wx.TextCtrl(player_box, -1)
         self.browse_btn = wx.Button(player_box, -1, "浏览")
 
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        player_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        player_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        player_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(path_lab, 0, wx.ALL, 10)
-        vbox.Add(hbox, 1, wx.EXPAND)
+        player_vbox = wx.BoxSizer(wx.VERTICAL)
+        player_vbox.Add(path_lab, 0, wx.ALL, 10)
+        player_vbox.Add(player_hbox, 1, wx.EXPAND)
 
         player_sbox = wx.StaticBoxSizer(player_box)
-        player_sbox.Add(vbox, 1, wx.EXPAND)
+        player_sbox.Add(player_vbox, 1, wx.EXPAND)
 
         misc_box = wx.StaticBox(self, -1, "杂项")
 
@@ -454,12 +481,12 @@ class MiscTab(wx.Panel):
 
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
-        vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
+        misc_vbox = wx.BoxSizer(wx.VERTICAL)
+        misc_vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
+        misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
-        misc_sbox.Add(vbox, 1, wx.EXPAND)
+        misc_sbox.Add(misc_vbox, 1, wx.EXPAND)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
         misc_vbox.Add(sections_sbox, 0, wx.ALL | wx.EXPAND, 10)

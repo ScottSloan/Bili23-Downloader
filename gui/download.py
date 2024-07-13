@@ -132,7 +132,7 @@ class DownloadUtils:
             time.sleep(0.5)
 
             if self.merge_process.returncode == 0:
-                if Config.Download.auto_delete:
+                if Config.Merge.auto_clean:
                     remove_files(Config.Download.path, [video_f_name, audio_f_name])
                 else:
                     cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.{self.audio_type}"'''
