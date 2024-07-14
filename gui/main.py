@@ -71,14 +71,14 @@ class MainWindow(Frame):
         self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((100, 30)))
         self.download_btn.Enable(False)
         
-        self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((48, 48)))
+        self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
         self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
         self.uname_lab = wx.StaticText(self.panel, -1, "登录")
         self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
 
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.userinfo_hbox.Add(self.face, 0, wx.ALIGN_CENTER, 0)
-        self.userinfo_hbox.Add(self.uname_lab, 0, wx.ALIGN_CENTER)
+        self.userinfo_hbox.Add(self.face, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, 10)
+        self.userinfo_hbox.Add(self.uname_lab, 0, wx.LEFT | wx.ALIGN_CENTER, 10)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -139,6 +139,11 @@ class MainWindow(Frame):
     def init_user_info(self):
         if Config.User.login:
             Thread(target = self.ShowUserInfoThread).start()
+        else:
+            self.face.Hide()
+
+        wx.CallAfter(self.userinfo_hbox.Layout)
+        wx.CallAfter(self.frame_vbox.Layout)
 
     def get_user_context_menu(self):
         menu = wx.Menu()
@@ -382,7 +387,7 @@ class MainWindow(Frame):
         conf.config.set("user", "face", str(Config.User.face))
         conf.config.set("user", "uname", str(Config.User.uname))
 
-        conf.save()
+        conf.config_save()
 
     def onShowUserMenu(self, event):
         if Config.User.login:
@@ -440,8 +445,9 @@ class MainWindow(Frame):
         scale_size = self.FromDIP((32, 32))
 
         self.face.SetBitmap(wx.Image(BytesIO(get_user_face(Config.User.face))).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH))
+        self.face.SetSize(scale_size)
         self.face.Show()
-
+        
         self.uname_lab.SetLabel(Config.User.uname)
 
         wx.CallAfter(self.userinfo_hbox.Layout)

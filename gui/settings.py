@@ -171,7 +171,7 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "notification", str(int(Config.Download.show_notification)))
 
-        conf.save()
+        conf.config_save()
 
     def onConfirm(self):
         self.save()
@@ -370,7 +370,7 @@ class ProxyTab(wx.Panel):
         conf.config.set("proxy", "uname", Config.Proxy.uname)
         conf.config.set("proxy", "passwd", Config.Proxy.passwd)
 
-        conf.save()
+        conf.config_save()
 
     def set_proxy_enable(self, enable):
         self.ip_box.Enable(enable)
@@ -532,7 +532,7 @@ class MiscTab(wx.Panel):
         conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
         conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
 
-        conf.save()
+        conf.config_save()
 
     def browse_btn_EVT(self, event):
         wildcard = "可执行文件(*.exe)|*.exe"

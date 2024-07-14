@@ -16,6 +16,9 @@ class Config:
         ip = port = uname = passwd = None
     
     class User:
+        base_path = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
+        path = os.path.join(base_path, "user.ini")
+
         login = False
         uname = face = sessdata = None
 
@@ -77,11 +80,11 @@ class ConfigUtils:
     def __init__(self):
         self.path = os.path.join(os.getcwd(), "config.ini")
 
-        self.config = RawConfigParser()
-        self.config.read(self.path, encoding = "utf-8")
+        self.create_user_dirs()
 
         self.load_config()
-        self.create_download_dir()
+
+        self.create_download_dirs()
 
         self.init_ffmpeg()
 
@@ -91,6 +94,12 @@ class ConfigUtils:
         check_ffmpeg_available()
 
     def load_config(self):
+        self.config = RawConfigParser()
+        self.config.read(self.path, encoding = "utf-8")
+
+        self.user_config = RawConfigParser()
+        self.user_config.read(Config.User.path, encoding = "utf-8")
+
         download_path = self.config.get("download", "path")
 
         # download
@@ -108,10 +117,10 @@ class ConfigUtils:
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
         # user
-        Config.User.login = self.config.getboolean("user", "login")
-        Config.User.face = self.config.get("user", "face")
-        Config.User.uname = self.config.get("user", "uname")
-        Config.User.sessdata = self.config.get("user", "sessdata")
+        Config.User.login = self.user_config.getboolean("user", "login")
+        Config.User.face = self.user_config.get("user", "face")
+        Config.User.uname = self.user_config.get("user", "uname")
+        Config.User.sessdata = self.user_config.get("user", "sessdata")
 
         # proxy
         Config.Proxy.proxy = self.config.getboolean("proxy", "proxy")
@@ -129,12 +138,36 @@ class ConfigUtils:
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
         Config.Misc.debug = self.config.getboolean("misc", "debug")
 
-    def create_download_dir(self):
+    def create_download_dirs(self):
         if not os.path.exists(Config.Download.path):
             os.makedirs(Config.Download.path)
+
+    def create_user_dirs(self):
+        if not os.path.exists(Config.User.base_path):
+            os.makedirs(Config.User.base_path)
+
+        if not os.path.exists(Config.User.path):
+            self.create_user_ini()
     
-    def save(self):
+    def create_user_ini(self):
+        user_conf = RawConfigParser()
+        user_conf.read(Config.User.path, encoding = "utf-8")
+
+        user_conf.add_section("user")
+        user_conf.set("user", "login", "0")
+        user_conf.set("user", "face", "")
+        user_conf.set("user", "uname", "")
+        user_conf.set("user", "sessdata", "")
+
+        with open(Config.User.path, "w", encoding = "utf-8") as f:
+            user_conf.write(f)
+
+    def config_save(self):
         with open(self.path, "w", encoding = "utf-8") as f:
             self.config.write(f)
+
+    def user_config_save(self):
+        with open(Config.User.path, "w", encoding = "utf-8") as f:
+            self.user_config.write(f)
     
 conf = ConfigUtils()

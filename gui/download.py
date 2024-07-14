@@ -286,7 +286,7 @@ class DownloadWindow(Frame):
         Config.Download.max_download = index + 1
 
         conf.config.set("download", "max_download", str(Config.Download.max_download))
-        conf.save()
+        conf.config_save()
 
         self.start_download()
 
