@@ -122,31 +122,14 @@ def remove_files(path, name):
             ctypes.windll.kernel32.SetFileAttributesW(file_path, 128)
             ctypes.windll.kernel32.DeleteFileW(file_path)
 
-def get_update_json():
-    url = "http://api.scott-sloan.cn/Bili23-Downloader/update.json"
-
-    try:
-        req = requests.get(url, headers = get_header())
-        req.encoding = "utf-8"
-
-        update_json = json.loads(req.text)
-        update_json["error"] = False
-        
-        if update_json["version_code"] > Config.APP.version_code:
-            update_json["changelog"] = get_changelog(update_json["version_code"])
-            update_json["error"] = False
-
-        return update_json
-    except:
-        return {"error": True}
-
-def get_changelog(version_code: int):
-    url = f"http://api.scott-sloan.cn/Bili23-Downloader/CHANGELOG_{version_code}"
+def check_update():
+    url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
     req = requests.get(url, headers = get_header())
     req.encoding = "utf-8"
 
-    return req.text
+    update_json = json.loads(req.text)
+    Config.Temp.update_json = update_json["data"]
     
 def get_new_id():
     return random.randint(1000, 9999)

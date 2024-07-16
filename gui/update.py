@@ -1,9 +1,9 @@
 import wx
 
-class UpdateWindow(wx.Dialog):
-    def __init__(self, parent, update_json):
-        self.json = update_json
+from utils.config import Config
 
+class UpdateWindow(wx.Dialog):
+    def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1)
 
         self.init_UI()
@@ -12,29 +12,48 @@ class UpdateWindow(wx.Dialog):
 
         self.CenterOnParent()
 
+        self.showUpdateInfo()
+
         wx.Bell()
 
     def init_UI(self):
-        self.icon = wx.StaticBitmap(self, -1)
-        self.icon.Show(False)
+        title_font: wx.Font = self.GetFont()
+        title_font.SetPointSize(14)
 
-        self.title_lab = wx.StaticText(self, -1)
+        title_lab = wx.StaticText(self, -1, "有新的更新可用")
+        title_lab.SetFont(title_font)
 
-        title_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        title_hbox.Add(self.icon, 0, wx.ALL, 10)
-        title_hbox.Add(self.title_lab, 0, wx.ALL | wx.CENTER, 10)
+        self.detail_lab = wx.StaticText(self, -1, "Version 1.42，发布于 2024/5/4，大小 66.3MB")
 
-        self.changelog_box = wx.TextCtrl(self, -1, self.json["changelog"], size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        top_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        self.update_btn = wx.Button(self, -1, "更新", size = self.FromDIP((80, 25)))
-        self.update_btn.Show(False)
+        log_font: wx.Font = self.GetFont()
+        log_font.SetPointSize(10)
+
+        self.changelog = wx.StaticText(self, -1, size = self.FromDIP((600, 320)))
+        self.changelog.SetFont(log_font)
+
+        bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
+
+        self.update_btn = wx.Button(self, -1, "更新", size = self.FromDIP((100, 28)))
+        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((100, 28)))
+
+        bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_hbox.AddStretchSpacer()
+        bottom_hbox.Add(self.update_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.ignore_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         update_vbox = wx.BoxSizer(wx.VERTICAL)
-        update_vbox.Add(title_hbox, 0, wx.EXPAND)
-        update_vbox.Add(self.changelog_box, 1, wx.ALL & (~wx.TOP), 10)
-        update_vbox.Add(self.update_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_RIGHT, 10)
+        update_vbox.Add(title_lab, 0, wx.ALL, 10)
+        update_vbox.Add(self.detail_lab, 0, wx.ALL & (~wx.TOP), 10)
+        update_vbox.Add(top_border, 0, wx.EXPAND)
+        update_vbox.Add(self.changelog, 1, wx.ALL | wx.EXPAND, 10)
+        update_vbox.Add(bottom_border, 0, wx.EXPAND)
+        update_vbox.Add(bottom_hbox, 0, wx.EXPAND, 0)
 
         self.SetSizerAndFit(update_vbox)
+
+        self.SetBackgroundColour("white")
     
     def Bind_EVT(self):
         self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)
@@ -42,23 +61,17 @@ class UpdateWindow(wx.Dialog):
     def onUpdate(self, event):
         import webbrowser
 
-        webbrowser.open(self.json["url"])
+        webbrowser.open(Config.Temp.update_json["url"])
 
         self.Hide()
 
-    def ui_update(self):
+    def showUpdateInfo(self):
         self.SetTitle("检查更新")
 
-        self.icon.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, size = (48, 48)))
-        self.icon.Show(True)
+        tips = "点击更新按钮后，将跳转至版本发布页，请滑动至文章底部查看下载链接。"
 
-        self.title_lab.SetLabel(f"Version {self.json['version']} 更新可用\n\n发布时间：{self.json['date']}")
+        self.changelog.SetLabel(Config.Temp.update_json["changelog"] + f"\n\n\n{tips}")
 
         self.update_btn.Show(True)
 
         self.Layout()
-
-    def ui_changelog(self):
-        self.SetTitle("更新日志")
-
-        self.title_lab.SetLabel(f"当前版本更新日志")

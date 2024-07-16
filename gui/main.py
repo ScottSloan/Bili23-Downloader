@@ -129,7 +129,6 @@ class MainWindow(Frame):
         self.tool_menu.Append(self.ID_SETTINGS, "设置(&S)")
 
         self.help_menu.Append(self.ID_CHECK_UPDATE, "检查更新(&U)")
-        self.help_menu.Append(self.ID_CHANGE_LOG, "更新日志(&P)")
         self.help_menu.AppendSeparator()
         self.help_menu.Append(self.ID_HELP, "使用帮助(&C)")
         self.help_menu.Append(self.ID_ABOUT, "关于(&A)")
@@ -167,7 +166,6 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onLoadSetting, id = self.ID_SETTINGS)
         self.Bind(wx.EVT_MENU, self.onAbout, id = self.ID_ABOUT)
-        self.Bind(wx.EVT_MENU, self.onShowChangeLog, id = self.ID_CHANGE_LOG)
         self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
         self.Bind(wx.EVT_MENU, self.onRefresh, id = self.ID_REFRESH)
@@ -411,13 +409,7 @@ class MainWindow(Frame):
         webbrowser.open("https://scott-sloan.cn/archives/12/")
 
     def onCheckUpdate(self, event):
-        thread = Thread(target = self.UpdateJsonThread)
-        thread.setDaemon(True)
-
-        thread.start()
-    
-    def onShowChangeLog(self, event):
-        thread = Thread(target = self.ChangeLogThread)
+        thread = Thread(target = self.CheckUpdateManuallyThread)
         thread.setDaemon(True)
 
         thread.start()
@@ -426,7 +418,7 @@ class MainWindow(Frame):
         if not self.parse_ready:
             return
         
-        self.ShowAudioQualityMenu()
+        self.showAudioQualityMenu()
 
     def onChangeAudioQuality(self, event):
         match event.GetId():
@@ -455,42 +447,32 @@ class MainWindow(Frame):
 
     def AutoCheckUpdate(self):
         if Config.Misc.check_update:
-            update_json = get_update_json()
-            if update_json["error"]:
-                self.infobar.ShowMessage("检查更新：网络异常，检查更新失败", wx.ICON_ERROR)
+            try:
+                check_update()
 
-            if update_json["version_code"] > Config.APP.version_code:
-                self.infobar.ShowMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
-
-    def UpdateJsonThread(self):
-        update_json = get_update_json()
-        
-        wx.CallAfter(self.ShowCheckUpdateResult, update_json)
-
-    def ChangeLogThread(self):
-        changelog = get_changelog(Config.APP.version_code)
-        
-        wx.CallAfter(self.ShowChangeLogResult, {"changelog": changelog})
-
-    def ShowCheckUpdateResult(self, update_json):
-        if update_json["error"]:
-            wx.MessageDialog(self, "检查更新失败\n\n目前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal()
-    
-        else:
-            if update_json["version_code"] > Config.APP.version_code:
-                update_window = UpdateWindow(self, update_json)
-                update_window.ui_update()
-                update_window.ShowWindowModal()
+                if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                    self.infobar.ShowMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
+            except:
+                self.infobar.ShowMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
+                
+    def CheckUpdateManuallyThread(self):
+        if not Config.Temp.update_json:
+            try:
+                check_update()
+            except:
+                wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal()
+                return
             
-            else:
-                wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
+        if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+            wx.CallAfter(self.showUpdateWindow)
+        else:
+            wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
 
-    def ShowChangeLogResult(self, update_json):
-        update_window = UpdateWindow(self, update_json)
-        update_window.ui_changelog()
+    def showUpdateWindow(self):
+        update_window = UpdateWindow(self)
         update_window.ShowWindowModal()
 
-    def ShowAudioQualityMenu(self):
+    def showAudioQualityMenu(self):
         menu = wx.Menu()
         menu.Append(-1, "音质")
         menu.AppendSeparator()

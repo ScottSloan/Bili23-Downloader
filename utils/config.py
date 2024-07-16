@@ -8,7 +8,7 @@ class Config:
         version = "1.43"
         version_code = 1430
 
-        release_date = "2024/7/11"
+        release_date = "2024/7/16"
 
     class Proxy:
         proxy = auth = False
@@ -53,6 +53,8 @@ class Config:
     
     class Temp:
         download_window_pos = None
+
+        update_json = None
 
     class FFmpeg:
         env_path = None
