@@ -110,9 +110,10 @@ def get_legal_name(name):
     return re.sub('[/\:*?"<>|]', "", name)
 
 def get_user_face(url):
-    req = requests.get(url, proxies = get_proxy(), auth = get_auth())
+    return os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader", "face.jpg")
+    # req = requests.get(url, proxies = get_proxy(), auth = get_auth())
 
-    return req.content
+    # return req.content
 
 def remove_files(path, name):
     for i in name:
@@ -129,7 +130,7 @@ def check_update():
     req.encoding = "utf-8"
 
     update_json = json.loads(req.text)
-    Config.Temp.update_json = update_json["data"]
+    Config.Temp.update_json = update_json
     
 def get_new_id():
     return random.randint(1000, 9999)

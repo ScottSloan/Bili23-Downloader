@@ -6,7 +6,7 @@ class Config:
         name = "Bili23 Downloader"
 
         version = "1.43"
-        version_code = 1430
+        version_code = 1419
 
         release_date = "2024/7/16"
 

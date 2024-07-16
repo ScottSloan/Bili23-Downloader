@@ -137,7 +137,7 @@ class MainWindow(Frame):
 
     def init_user_info(self):
         if Config.User.login:
-            Thread(target = self.ShowUserInfoThread).start()
+            Thread(target = self.showUserInfoThread).start()
         else:
             self.face.Hide()
 
@@ -206,7 +206,10 @@ class MainWindow(Frame):
         self.download_window_opened = False
         self.parse_ready = False
 
-        wx.CallAfter(self.utilsThread)
+        utils_thread = Thread(target = self.utilsThread)
+        utils_thread.daemon = True
+
+        utils_thread.start()
 
     def utilsThread(self):
         info = DownloaderInfo()
@@ -215,7 +218,7 @@ class MainWindow(Frame):
         if len(tasks):
             self.onLoadDownloadProgress()
 
-        self.AutoCheckUpdate()
+        self.checkUpdateUtils()
 
     def onClose(self, event):
         if not DownloadInfo.no_task:
@@ -232,9 +235,9 @@ class MainWindow(Frame):
 
     def onGet(self, event):
         url = self.url_box.GetValue()
-        self.clear_treelist()
+        self.clearTreeList()
 
-        self.parse_thraed = Thread(target = self.ParseThread, args = (url,))
+        self.parse_thraed = Thread(target = self.parseThread, args = (url,))
         self.parse_thraed.setDaemon(True)
         self.parse_thraed.start()
 
@@ -243,31 +246,31 @@ class MainWindow(Frame):
 
         self.parse_ready = True
 
-    def ParseThread(self, url: str):
+    def parseThread(self, url: str):
         Download.download_list.clear()
 
         match find_str("av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 self.video_parser.parse_url(url)
-                self.set_video_list()
+                self.setVideoList()
 
-                self.set_resolution_list(VideoInfo)
+                self.setResolutionList(VideoInfo)
             case "ep" | "ss" | "md":
                 self.bangumi_parser.parse_url(url)
-                self.set_bangumi_list()
+                self.setBangumiList()
 
-                self.set_resolution_list(BangumiInfo)
+                self.setResolutionList(BangumiInfo)
             case "b23.tv":
                 new_url = process_shorklink(url)
 
-                Thread(target = self.ParseThread, args = (new_url,)).start()
+                Thread(target = self.parseThread, args = (new_url,)).start()
                 
                 self.parse_thraed.stop()
 
             case "blackboard" | "festival":
                 self.activity_parser.parse_url(url)
                 
-                Thread(target = self.ParseThread, args = (ActivityInfo.new_url,)).start()
+                Thread(target = self.parseThread, args = (ActivityInfo.new_url,)).start()
                 
                 self.parse_thraed.stop()
 
@@ -308,14 +311,14 @@ class MainWindow(Frame):
 
         self.download_window.SetFocus()
 
-    def clear_treelist(self):
+    def clearTreeList(self):
         wx.CallAfter(self.treelist.init_list)
 
         self.resolution_choice.Clear()
 
         self.type_lab.SetLabel("")
 
-    def set_resolution_list(self, info: VideoInfo | BangumiInfo):
+    def setResolutionList(self, info: VideoInfo | BangumiInfo):
         self.resolution_choice.Set(info.resolution_desc)
         
         info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[0]
@@ -323,14 +326,14 @@ class MainWindow(Frame):
 
         Download.current_type = info
 
-    def set_video_list(self):
+    def setVideoList(self):
         self.treelist.set_video_list()
 
         count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
         
         self.type_lab.SetLabel("视频 (共 %d 个)" % count)
     
-    def set_bangumi_list(self):
+    def setBangumiList(self):
         self.treelist.set_bangumi_list()
 
         count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
@@ -409,7 +412,7 @@ class MainWindow(Frame):
         webbrowser.open("https://scott-sloan.cn/archives/12/")
 
     def onCheckUpdate(self, event):
-        thread = Thread(target = self.CheckUpdateManuallyThread)
+        thread = Thread(target = self.checkUpdateManuallyThread)
         thread.setDaemon(True)
 
         thread.start()
@@ -433,10 +436,13 @@ class MainWindow(Frame):
             case self.ID_AUDIO_64K:
                 Audio.audio_quality = 30216
 
-    def ShowUserInfoThread(self):
-        scale_size = self.FromDIP((32, 32))
+    def showUserInfoThread(self):
+        # 显示用户头像及昵称
+        scale_size = (48, 48)
 
-        self.face.SetBitmap(wx.Image(BytesIO(get_user_face(Config.User.face))).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH))
+        image = wx.Image(get_user_face(Config.User.face), wx.BITMAP_TYPE_JPEG).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
+        
+        self.face.SetBitmap(self.convertToCircle(image).ConvertToBitmap())
         self.face.SetSize(scale_size)
         self.face.Show()
         
@@ -445,17 +451,18 @@ class MainWindow(Frame):
         wx.CallAfter(self.userinfo_hbox.Layout)
         wx.CallAfter(self.frame_vbox.Layout)
 
-    def AutoCheckUpdate(self):
+    def checkUpdateUtils(self):
+        # 检查更新
         if Config.Misc.check_update:
             try:
                 check_update()
 
                 if Config.Temp.update_json["version_code"] > Config.APP.version_code:
-                    self.infobar.ShowMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
+                    self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
             except:
-                self.infobar.ShowMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
+                self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
                 
-    def CheckUpdateManuallyThread(self):
+    def checkUpdateManuallyThread(self):
         if not Config.Temp.update_json:
             try:
                 check_update()
@@ -495,6 +502,9 @@ class MainWindow(Frame):
 
         self.PopupMenu(menu)
 
+    def showInfobarMessage(self, message, flag):
+        wx.CallAfter(self.infobar.ShowMessage, message, flag)
+
     def onCheckFFmpeg(self):
         if not Config.FFmpeg.available:
             dlg = wx.MessageDialog(self, "未安装 ffmpeg\n\n尚未安装 ffmpeg，无法合成视频。\n\n若您已确认安装 ffmpeg，请检查（二者其一即可）：\n1.为 ffmpeg 设置环境变量\n2.将 ffmpeg 放置到程序运行目录", "警告", wx.ICON_WARNING | wx.YES_NO)
@@ -504,3 +514,24 @@ class MainWindow(Frame):
                 import webbrowser
 
                 webbrowser.open("https://scott-sloan.cn/archives/120/")
+    
+    def convertToCircle(self, image):
+        size = image.GetSize()
+        width, height = size
+        diameter = min(width, height)
+        
+        image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
+        
+        circle_image = wx.Image(diameter, diameter)
+        circle_image.InitAlpha()
+        
+        for x in range(diameter):
+            for y in range(diameter):
+                dist = ((x - diameter / 2) ** 2 + (y - diameter / 2) ** 2) ** 0.5
+                if dist <= diameter / 2:
+                    circle_image.SetRGB(x, y, image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y))
+                    circle_image.SetAlpha(x, y, 255)
+                else:
+                    circle_image.SetAlpha(x, y, 0)
+        
+        return circle_image

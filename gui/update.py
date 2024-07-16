@@ -23,7 +23,7 @@ class UpdateWindow(wx.Dialog):
         title_lab = wx.StaticText(self, -1, "有新的更新可用")
         title_lab.SetFont(title_font)
 
-        self.detail_lab = wx.StaticText(self, -1, "Version 1.42，发布于 2024/5/4，大小 66.3MB")
+        self.detail_lab = wx.StaticText(self, -1, "Version 1.00，发布于 1970/1/1，大小 0MB")
 
         top_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
@@ -66,11 +66,15 @@ class UpdateWindow(wx.Dialog):
         self.Hide()
 
     def showUpdateInfo(self):
+        data = Config.Temp.update_json
+
         self.SetTitle("检查更新")
 
         tips = "点击更新按钮后，将跳转至版本发布页，请滑动至文章底部查看下载链接。"
 
-        self.changelog.SetLabel(Config.Temp.update_json["changelog"] + f"\n\n\n{tips}")
+        self.changelog.SetLabel(data["changelog"] + f"\n\n\n{tips}")
+
+        self.detail_lab.SetLabel(f"Version {data['version']}，发布于 {data['date']}，大小 {data['size']}")
 
         self.update_btn.Show(True)
 

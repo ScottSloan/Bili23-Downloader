@@ -129,12 +129,11 @@ class DownloadUtils:
         self.merge_process.wait()
 
         if Config.FFmpeg.available:
-            time.sleep(0.5)
-
             if self.merge_process.returncode == 0:
                 if Config.Merge.auto_clean:
                     remove_files(Config.Download.path, [video_f_name, audio_f_name])
-                else:
+                
+                if (not Config.Merge.auto_clean) or (not Config.Merge.auto_merge):
                     cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.{self.audio_type}"'''
 
                     process = subprocess.Popen(cmd, shell = True)
