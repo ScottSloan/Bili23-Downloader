@@ -137,7 +137,10 @@ class MainWindow(Frame):
 
     def init_user_info(self):
         if Config.User.login:
-            Thread(target = self.showUserInfoThread).start()
+            thread = Thread(target = self.showUserInfoThread)
+            thread.daemon = True
+
+            thread.start()
         else:
             self.face.Hide()
 
@@ -385,10 +388,15 @@ class MainWindow(Frame):
         Config.User.face = user_info["face"]
         Config.User.uname = user_info["uname"]
 
-        conf.config.set("user", "face", str(Config.User.face))
-        conf.config.set("user", "uname", str(Config.User.uname))
+        conf.save_all_user_config()
 
-        conf.config_save()
+        os.remove(Config.User.face_path)
+
+        # 刷新用户信息后重新显示
+        thread = Thread(target = self.showUserInfoThread)
+        thread.daemon = True
+
+        thread.start()
 
     def onShowUserMenu(self, event):
         if Config.User.login:
@@ -438,9 +446,9 @@ class MainWindow(Frame):
 
     def showUserInfoThread(self):
         # 显示用户头像及昵称
-        scale_size = (48, 48)
+        scale_size = self.FromDIP((32, 32))
 
-        image = wx.Image(get_user_face(Config.User.face), wx.BITMAP_TYPE_JPEG).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
+        image = wx.Image(get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
         
         self.face.SetBitmap(self.convertToCircle(image).ConvertToBitmap())
         self.face.SetSize(scale_size)

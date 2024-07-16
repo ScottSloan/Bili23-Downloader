@@ -65,9 +65,4 @@ class QRLogin:
         Config.User.login = False
         Config.User.face = Config.User.uname = Config.User.sessdata = ""
 
-        conf.user_config.set("user", "login", str(int(Config.User.login)))
-        conf.user_config.set("user", "face", Config.User.face)
-        conf.user_config.set("user", "uname", Config.User.uname)
-        conf.user_config.set("user", "sessdata", Config.User.sessdata)
-
-        conf.user_config_save()
+        conf.save_all_user_config()

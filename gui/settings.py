@@ -66,12 +66,11 @@ class DownloadTab(wx.Panel):
     def init_UI(self):
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
-        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-
         path_lab = wx.StaticText(self.download_box, -1, "下载目录")
-        self.path_box = wx.TextCtrl(self.download_box, -1, size = self.FromDIP((250, 24)))
-        self.browse_btn = wx.Button(self.download_box, -1, "选择目录", size = self.FromDIP((70, 24)))
+        self.path_box = wx.TextCtrl(self.download_box, -1, size = self.FromDIP((260, 24)))
+        self.browse_btn = wx.Button(self.download_box, -1, "浏览", size = self.FromDIP((60, 24)))
 
+        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         
@@ -202,41 +201,37 @@ class MergeTab(wx.Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.init_data()
 
     def init_UI(self):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
-        ffmpeg_label = wx.StaticText(ffmpeg_box, 0, "FFmpeg 路径（自动检测）")
+        ffmpeg_path_label = wx.StaticText(ffmpeg_box, 0, "FFmpeg 路径")
+        self.path_box = wx.TextCtrl(ffmpeg_box, -1, size = self.FromDIP((260, 24)))
+        self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.FromDIP((60, 24)))
 
-        self.env_choice = wx.RadioButton(ffmpeg_box, -1, "环境变量")
-        self.env_path = wx.StaticText(ffmpeg_box, -1, "未检测到 FFmpeg")
-        self.local_choice = wx.RadioButton(ffmpeg_box, -1, "运行目录")
-        self.local_path = wx.StaticText(ffmpeg_box, -1, "未检测到 FFmpeg")
+        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
-        self.env_choice.Enable(False)
-        self.env_path.Enable(False)
-        self.local_choice.Enable(False)
-        self.local_path.Enable(False)
+        self.auto_detect_btn = wx.Button(ffmpeg_box, -1, "自动检测", size = self.FromDIP((90, 28)))
 
         ffmpeg_vbox = wx.BoxSizer(wx.VERTICAL)
-        ffmpeg_vbox.Add(ffmpeg_label, 0, wx.ALL, 10)
-        ffmpeg_vbox.Add(self.env_choice, 0, wx.ALL & (~wx.TOP), 10)
-        ffmpeg_vbox.Add(self.env_path, 0, wx.ALL & (~wx.TOP), 10)
-        ffmpeg_vbox.Add(self.local_choice, 0, wx.ALL & (~wx.TOP), 10)
-        ffmpeg_vbox.Add(self.local_path, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_vbox.Add(ffmpeg_path_label, 0, wx.ALL, 10)
+        ffmpeg_vbox.Add(path_hbox, 0, wx.EXPAND)
+        ffmpeg_vbox.Add(self.auto_detect_btn, 0, wx.ALL & (~wx.TOP), 10)
 
         ffmpeg_sbox = wx.StaticBoxSizer(ffmpeg_box)
         ffmpeg_sbox.Add(ffmpeg_vbox, 1, wx.EXPAND)
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
 
-        self.auto_merge_chk = wx.CheckBox(merge_option_box, -1, "自动合成视频")
         self.auto_clean_chk = wx.CheckBox(merge_option_box, -1, "合成完成后清理文件")
 
         merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
-        merge_option_vbox.Add(self.auto_merge_chk, 0, wx.ALL, 10)
-        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL & (~wx.TOP), 10)
+        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
         merge_option_sbox.Add(merge_option_vbox, 1, wx.EXPAND)
@@ -247,36 +242,35 @@ class MergeTab(wx.Panel):
 
         self.SetSizer(merge_vbox)
     
+    def Bind_EVT(self):
+        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePath)
+
     def init_data(self):
-        if Config.FFmpeg.env_path:
-            self.env_choice.Enable(True)
-            self.env_path.Enable(True)
-            self.env_path.SetLabel(f"{Config.FFmpeg.env_path}")
-
-            if not Config.FFmpeg.local_path:
-                self.env_choice.SetValue(True)
+        self.path_box.SetValue(Config.FFmpeg.path)
         
-        if Config.FFmpeg.local_path:
-            self.local_choice.Enable(True)
-            self.local_path.Enable(True)
-            self.local_path.SetLabel(f"{Config.FFmpeg.local_path}")
-
-            if not Config.FFmpeg.env_path:
-                self.local_choice.SetValue(True)
-
-        if Config.FFmpeg.local_first:
-            self.local_choice.SetValue(True)
-
-        self.auto_merge_chk.SetValue(Config.Merge.auto_merge)
         self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
 
     def save(self):
-        Config.Merge.auto_merge = self.auto_merge_chk.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
-        conf.config.set("merge", "auto_merge", str(int(Config.Merge.auto_merge)))
         conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
+    def onBrowsePath(self, event):
+        default_dir = os.path.dirname(Config.FFmpeg.path) if Config.FFmpeg.path else os.getcwd()
+
+        dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = "ffmpeg.exe", style = wx.FD_OPEN, wildcard = ("FFmpeg|ffmpeg.exe"))
+
+        if dlg.ShowModal() == wx.ID_OK:
+            save_path = dlg.GetPath()
+            self.path_box.SetValue(save_path)
+
+        dlg.Destroy()
+
+    def onConfirm(self):
+        self.save()
+
+        return True
+    
 class ProxyTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)

@@ -109,11 +109,15 @@ def format_bangumi_title(episode):
 def get_legal_name(name):
     return re.sub('[/\:*?"<>|]', "", name)
 
-def get_user_face(url):
-    return os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader", "face.jpg")
-    # req = requests.get(url, proxies = get_proxy(), auth = get_auth())
+def get_user_face():
+    if not os.path.exists(Config.User.face_path):
+        # 若未缓存头像，则下载头像到本地
+        req = requests.get(Config.User.face, proxies = get_proxy(), auth = get_auth())
 
-    # return req.content
+        with open(Config.User.face_path, "wb") as f:
+            f.write(req.content)
+
+    return os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader", "face.jpg")
 
 def remove_files(path, name):
     for i in name:
@@ -149,30 +153,44 @@ def get_cmd_output(cmd):
 
     return process.stdout.read().decode("utf-8")
 
-def get_ffmpeg_path():
+def get_all_ffmpeg_path():
+    # 定位环境变量和运行目录中的 FFmpeg
     output = get_cmd_output("where ffmpeg").split("\r\n")
+
+    cwd_path = env_path = None
 
     if output[0]:
         if output[1]:
-            Config.FFmpeg.local_path = output[0]
-            Config.FFmpeg.env_path = output[1]
-
-            Config.FFmpeg.env_available = True
-            Config.FFmpeg.local_available = True
+            # 环境变量中存在，运行目录中也存在
+            cwd_path = output[0]
+            env_path = output[1]
         else:
-            Config.FFmpeg.env_path = output[0]
+            if output[0].startswith(os.getcwd()):
+                # 只存在于运行目录
+                cwd_path = output[0]
+            else:
+                # 只存在于环境变量
+                env_path = output[0]
 
-            Config.FFmpeg.env_available = True
+    return {"cwd_path": cwd_path, "env_path": env_path}
 
-    if Config.FFmpeg.local_available:
-        Config.FFmpeg.path = Config.FFmpeg.local_path
+def get_ffmpeg_path():
+    if not Config.FFmpeg.path:
+        # 若未指定 FFmpeg 路径，则自动检测 FFmpeg
+        paths = get_all_ffmpeg_path()
 
-        if Config.FFmpeg.env_available:
-            Config.FFmpeg.local_first = True
+        if paths["cwd_path"]:
+            # 优先使用运行目录下的 FFmpeg，
+            Config.FFmpeg.path = paths["cwd_path"]
 
-    Config.FFmpeg.path = Config.FFmpeg.local_path if Config.FFmpeg.local_available else "ffmpeg"
+        if paths["env_path"] and not paths["cwd_path"]:
+            # 使用环境变量中的 FFmpeg
+            Config.FFmpeg.path = paths["env_path"]
     
 def check_ffmpeg_available():
     get_ffmpeg_path()
 
-    Config.FFmpeg.available = Config.FFmpeg.env_available or Config.FFmpeg.local_available
+    output = get_cmd_output(f'cd "{os.path.dirname(Config.FFmpeg.path)}" && ffmpeg.exe -version')
+
+    if "ffmpeg version" in output:
+        Config.FFmpeg.available = True

@@ -6,7 +6,7 @@ class Config:
         name = "Bili23 Downloader"
 
         version = "1.43"
-        version_code = 1419
+        version_code = 1430
 
         release_date = "2024/7/16"
 
@@ -18,6 +18,8 @@ class Config:
     class User:
         base_path = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
         path = os.path.join(base_path, "user.ini")
+
+        face_path = os.path.join(base_path, "face.jpg")
 
         login = False
         uname = face = sessdata = None
@@ -44,7 +46,6 @@ class Config:
         add_number = False
     
     class Merge:
-        auto_merge = False
         auto_clean = False
 
     class Type:
@@ -115,7 +116,7 @@ class ConfigUtils:
         Config.Download.add_number = self.config.getboolean("download", "add_number")
 
         # merge
-        Config.Merge.auto_merge = self.config.getboolean("merge", "auto_merge")
+        Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
         # user
@@ -172,4 +173,12 @@ class ConfigUtils:
         with open(Config.User.path, "w", encoding = "utf-8") as f:
             self.user_config.write(f)
     
+    def save_all_user_config(self):
+        conf.user_config.set("user", "login", str(int(Config.User.login)))
+        conf.user_config.set("user", "face", Config.User.face)
+        conf.user_config.set("user", "uname", Config.User.uname)
+        conf.user_config.set("user", "sessdata", Config.User.sessdata)
+
+        conf.user_config_save()
+
 conf = ConfigUtils()
