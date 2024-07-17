@@ -4,6 +4,8 @@ import time
 import requests
 from requests.auth import HTTPProxyAuth
 
+from gui.ffmpeg_detect import DetectDialog
+
 from utils.config import Config, conf
 from utils.tools import *
 from utils.thread import Thread
@@ -27,19 +29,18 @@ class SettingWindow(wx.Dialog):
         self.note.AddPage(MergeTab(self.note), "合成")
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
-        
-        botton_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
 
-        botton_hbox.AddStretchSpacer(1)
-        botton_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
-        botton_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_hbox.AddStretchSpacer(1)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.note, 1, wx.EXPAND | wx.ALL, 10)
-        vbox.Add(botton_hbox, 0, wx.EXPAND)
+        vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
     
@@ -217,11 +218,16 @@ class MergeTab(wx.Panel):
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         self.auto_detect_btn = wx.Button(ffmpeg_box, -1, "自动检测", size = self.FromDIP((90, 28)))
+        self.tutorial_btn = wx.Button(ffmpeg_box, -1, "安装教程", size = self.FromDIP((90, 28)))
+
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_hbox.Add(self.auto_detect_btn, 0, wx.ALL & (~wx.TOP), 10)
+        btn_hbox.Add(self.tutorial_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         ffmpeg_vbox = wx.BoxSizer(wx.VERTICAL)
         ffmpeg_vbox.Add(ffmpeg_path_label, 0, wx.ALL, 10)
         ffmpeg_vbox.Add(path_hbox, 0, wx.EXPAND)
-        ffmpeg_vbox.Add(self.auto_detect_btn, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         ffmpeg_sbox = wx.StaticBoxSizer(ffmpeg_box)
         ffmpeg_sbox.Add(ffmpeg_vbox, 1, wx.EXPAND)
@@ -245,18 +251,24 @@ class MergeTab(wx.Panel):
     def Bind_EVT(self):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePath)
 
+        self.auto_detect_btn.Bind(wx.EVT_BUTTON, self.onAutoDetect)
+
+        self.tutorial_btn.Bind(wx.EVT_BUTTON, self.onTutorial)
+
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
         
         self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
 
     def save(self):
+        Config.FFmpeg.path = self.path_box.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
+        conf.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
         conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
     def onBrowsePath(self, event):
-        default_dir = os.path.dirname(Config.FFmpeg.path) if Config.FFmpeg.path else os.getcwd()
+        default_dir = os.path.dirname(self.path_box.GetValue())
 
         dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = "ffmpeg.exe", style = wx.FD_OPEN, wildcard = ("FFmpeg|ffmpeg.exe"))
 
@@ -265,6 +277,17 @@ class MergeTab(wx.Panel):
             self.path_box.SetValue(save_path)
 
         dlg.Destroy()
+
+    def onAutoDetect(self, event):
+        detect_window = DetectDialog(self)
+
+        if detect_window.ShowModal() == wx.ID_OK:
+            self.path_box.SetValue(detect_window.getPath())
+
+    def onTutorial(self, event):
+        import webbrowser
+
+        webbrowser.open("https://scott-sloan.cn/archives/120/")
 
     def onConfirm(self):
         self.save()

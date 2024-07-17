@@ -34,7 +34,7 @@ class LicenseWindow(wx.Dialog):
     def init_UI(self):
         license_box = wx.TextCtrl(self, -1, license, size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
-        close_btn = wx.Button(self, wx.ID_CANCEL, "关闭")
+        close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.FromDIP((80, 28)))
 
         dlg_vbox = wx.BoxSizer(wx.VERTICAL)
         dlg_vbox.Add(license_box, 0, wx.ALL, 10)
