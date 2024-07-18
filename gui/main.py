@@ -1,6 +1,5 @@
 import wx
 import wx.py
-from io import BytesIO
 
 from utils.config import Config, Download, conf, Audio
 from utils.video import VideoInfo, VideoParser
@@ -10,14 +9,15 @@ from utils.tools import *
 from utils.thread import Thread
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
+from utils.cookie import CookieUtils
 
-from .templates import Frame, TreeListCtrl, InfoBar
-from .about import AboutWindow
-from .processing import ProcessingWindow
-from .download import DownloadWindow, DownloadInfo
-from .update import UpdateWindow
-from .login import LoginWindow
-from .settings import SettingWindow
+from gui.templates import Frame, TreeListCtrl, InfoBar
+from gui.about import AboutWindow
+from gui.processing import ProcessingWindow
+from gui.download import DownloadWindow, DownloadInfo
+from gui.update import UpdateWindow
+from gui.login import LoginWindow
+from gui.settings import SettingWindow
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -73,7 +73,7 @@ class MainWindow(Frame):
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
         self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
-        self.uname_lab = wx.StaticText(self.panel, -1, "登录")
+        self.uname_lab = wx.StaticText(self.panel, -1, "登录", size = self.FromDIP((200, 32)), style = wx.ST_ELLIPSIZE_END)
         self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
 
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -221,7 +221,11 @@ class MainWindow(Frame):
         if len(tasks):
             self.onLoadDownloadProgress()
 
+        # 检查更新
         self.checkUpdateUtils()
+
+        # 检查风控状态
+        self.checkCookieUtils()
 
     def onClose(self, event):
         if not DownloadInfo.no_task:
@@ -482,6 +486,15 @@ class MainWindow(Frame):
             wx.CallAfter(self.showUpdateWindow)
         else:
             wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
+
+    def checkCookieUtils(self):
+        pass
+        # if Config.User.login:
+        #     # 判断用户是否登录，进行风控检查
+        #     refresh = CookieUtils.checkCookieInfo()
+
+        #     if refresh:
+        #        self.showInfobarMessage("帐号安全：检测到当前帐号已被风控，请重新登录", flag = wx.ICON_WARNING)
 
     def showUpdateWindow(self):
         update_window = UpdateWindow(self)

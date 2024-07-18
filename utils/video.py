@@ -2,8 +2,8 @@ import re
 import json
 import requests
 
-from .config import Config, Audio
-from .tools import *
+from utils.config import Config, Audio
+from utils.tools import *
 
 class VideoInfo:
     url = aid = bvid = cid = None
