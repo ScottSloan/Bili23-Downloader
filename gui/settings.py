@@ -90,7 +90,7 @@ class DownloadTab(wx.Panel):
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL, 10)
 
         audio_lab = wx.StaticText(self.download_box, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(sound_quality_map.keys()))
+        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(sound_quality_map_set.keys()))
 
         sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -144,7 +144,12 @@ class DownloadTab(wx.Panel):
         self.max_download_slider.SetValue(Config.Download.max_download)
         
         self.video_quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
-        self.audio_quality_choice.SetSelection(list(sound_quality_map.values()).index(Config.Download.sound_quality))
+
+        if Config.Download.sound_quality != 30250:
+            self.audio_quality_choice.SetSelection(list(sound_quality_map.values()).index(Config.Download.sound_quality))
+        else:
+            self.audio_quality_choice.SetSelection(0)
+
         self.codec_choice.SetSelection(list(codec_id_map.keys()).index(Config.Download.codec))
         
         self.add_number_chk.SetValue(Config.Download.add_number)
@@ -157,7 +162,7 @@ class DownloadTab(wx.Panel):
         Config.Download.max_thread = self.max_thread_slider.GetValue()
         Config.Download.max_download = self.max_download_slider.GetValue()
         Config.Download.resolution = list(resolution_map.values())[self.video_quality_choice.GetSelection()]
-        Config.Download.sound_quality = list(sound_quality_map.values())[self.audio_quality_choice.GetSelection()]
+        Config.Download.sound_quality = list(sound_quality_map_set.values())[self.audio_quality_choice.GetSelection()]
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()

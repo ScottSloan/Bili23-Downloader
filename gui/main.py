@@ -512,7 +512,7 @@ class MainWindow(Frame):
 
         if Audio.q_hires:
             menuitem_hires = menu.Append(self.ID_AUDIO_HIRES, "Hi-Res 无损", kind = wx.ITEM_RADIO)
-            menuitem_hires.Check(True if Audio.audio_quality == 30251 else False)
+            menuitem_hires.Check(True if Audio.audio_quality == 30250 else False)
 
         if Audio.q_dolby:
             menuitem_dolby = menu.Append(self.ID_AUDIO_DOLBY, "杜比全景声", kind = wx.ITEM_RADIO)

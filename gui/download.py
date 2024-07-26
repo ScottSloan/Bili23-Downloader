@@ -41,27 +41,34 @@ class DownloadUtils:
             self.codec_id = 7
         
         if json_dash["audio"]:
-            if Audio.audio_quality != 30251 and Audio.audio_quality != 30250:
+            # 除杜比全景声和无损以外
+            if Audio.audio_quality != 30250:
                 temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == Audio.audio_quality]
                 self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
 
                 self.audio_type = "mp3"
 
-            elif Audio.audio_quality == 30251:
-                if json_dash["flac"]:
-                    self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
-
-                    self.audio_type = "flac"
-
-                else:
-                    temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == 30280]
-                    self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
-
-                    self.audio_type = "mp3"
             else:
-                self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
+                # 无损
+                if json_dash["flac"]:
+                    if "audio" in json_dash and json_dash["flac"]["audio"]:
+                        self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
 
-                self.audio_type = "ec3"
+                        self.audio_type = "flac"
+                    else:
+                        self.get_audio_durl_192k(json_dash)
+                else:
+                    if json_dash["dolby"]:
+                        if "audio" in json_dash and json_dash["dolby"]["audio"]:
+                            # 杜比全景声
+                            self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
+
+                            self.audio_type = "ec3"
+                        else:
+                            self.get_audio_durl_192k(json_dash)
+                    else:
+                        # 默认下载 192K
+                        self.get_audio_durl_192k(json_dash)
 
             self.none_audio = False
         else:
@@ -90,6 +97,12 @@ class DownloadUtils:
 
         return json_dash
 
+    def get_audio_durl_192k(self, json_dash):
+        temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == 30280]
+        self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
+
+        self.audio_type = "mp3"
+
     def get_download_info(self) -> list:
         self.get_video_durl()
 
@@ -113,7 +126,7 @@ class DownloadUtils:
             }
 
         return [video_info] if self.none_audio else [video_info, audio_info]
-        
+
     def merge_video(self):
         title = get_legal_name(self.info["title"])
 
@@ -123,7 +136,7 @@ class DownloadUtils:
         if self.none_audio:
             cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}.mp4"'''
         else:
-            cmd = f'''cd "{Config.Download.path}" && {Config.FFmpeg.path} -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
+            cmd = f'''cd "{Config.Download.path}" && "{Config.FFmpeg.path}" -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
                 
         self.merge_process = subprocess.Popen(cmd, shell = True, stdout  = subprocess.PIPE, stderr = subprocess.PIPE)
         self.merge_process.wait()
@@ -135,11 +148,11 @@ class DownloadUtils:
                 else:
                     cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.{self.audio_type}"'''
 
-                    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE)
+                    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
                     process.wait()
             else:
                 # 报错时保存错误日志
-                stdout = self.merge_process.stderr.read().decode("gb2312")
+                stdout = self.merge_process.stderr.read().decode("gbk")
 
                 self.merge_error = True
 

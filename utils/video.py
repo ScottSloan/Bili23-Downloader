@@ -89,7 +89,7 @@ class VideoParser:
     def get_video_resolution(self):
         url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
                 
-        req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        req = requests.get(url, headers = get_header(referer_url = VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
         self.check_json(resp, 102)
@@ -102,8 +102,15 @@ class VideoParser:
         Audio.q_hires = True if info["dash"]["flac"] else False
         Audio.q_dolby = True if info["dash"]["dolby"]["audio"] else False
 
-        if not Audio.q_hires and not Audio.q_dolby and (Config.Download.sound_quality == 30250 or Config.Download.sound_quality == 30251):
-            Audio.audio_quality = 30280
+        # 存在无损或杜比
+        if Audio.q_hires or Audio.q_dolby:
+            # 如果选择下载无损或杜比
+            if Config.Download.sound_quality == 30250:
+                Audio.audio_quality = 30250
+            else:
+                Audio.audio_quality = Config.Download.sound_quality
+
+        # 否则根据实际所选音质下载
         else:
             Audio.audio_quality = Config.Download.sound_quality
 
