@@ -48,7 +48,7 @@ class Downloader:
         file_size = self.get_total_size(info["url"], info["referer_url"], path)
         self.total_size += file_size
 
-        for index, chunk_list in enumerate(self.get_chunk_list(file_size, Config.Download.max_thread)):
+        for index, chunk_list in enumerate(self.get_chunk_list(file_size, Config.Download.max_thread if info["type"] == "video" else 2)):
             url, referer_url, temp = info["url"], info["referer_url"], info.copy()
 
             thread_id = f"{info['type']}_{info['id']}_{index + 1}"
@@ -106,7 +106,7 @@ class Downloader:
         with open(path, "rb+") as f:
             f.seek(chunk_list[0])
 
-            for chunk in req.iter_content(chunk_size = 1024):
+            for chunk in req.iter_content(chunk_size = 1024 * 1024):
                 if chunk:
                     f.write(chunk)
                     f.flush()

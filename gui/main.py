@@ -23,9 +23,9 @@ class MainWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, Config.APP.name)
 
-        self.init_utils()
-
         self.init_UI()
+
+        self.init_utils()
 
         self.SetSize(self.FromDIP((800, 450)))
 
@@ -38,6 +38,8 @@ class MainWindow(Frame):
         self.init_user_info()
     
     def init_UI(self):
+        self.init_ids()
+
         self.infobar = InfoBar(self.panel)
 
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -73,12 +75,14 @@ class MainWindow(Frame):
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
         self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
-        self.uname_lab = wx.StaticText(self.panel, -1, "登录", size = self.FromDIP((200, 32)), style = wx.ST_ELLIPSIZE_END)
+        self.uname_lab = wx.StaticText(self.panel, -1, "登录", style = wx.ST_ELLIPSIZE_END)
         self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
+        self.uname_lab_ex = wx.StaticText(self.panel, -1, "", size = self.FromDIP((1, 32)))
 
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.userinfo_hbox.Add(self.face, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, 10)
+        self.userinfo_hbox.Add(self.face, 0, wx.ALL & (~wx.RIGHT), 10)
         self.userinfo_hbox.Add(self.uname_lab, 0, wx.LEFT | wx.ALIGN_CENTER, 10)
+        self.userinfo_hbox.Add(self.uname_lab_ex, 0, wx.ALIGN_CENTER)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -183,6 +187,21 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def init_utils(self):
+        self.video_parser = VideoParser(self.onError)
+        self.bangumi_parser = BangumiParser(self.onError)
+        self.activity_parser = ActivityParser(self.onError)
+
+        self.download_window = DownloadWindow(self)
+
+        self.download_window_opened = False
+        self.parse_ready = False
+
+        utils_thread = Thread(target = self.utilsThread)
+        utils_thread.daemon = True
+
+        utils_thread.start()
+
+    def init_ids(self):
         self.ID_LOGIN = wx.NewIdRef()
         self.ID_DEBUG = wx.NewIdRef()
         self.ID_SETTINGS = wx.NewIdRef()
@@ -199,20 +218,6 @@ class MainWindow(Frame):
         self.ID_AUDIO_192K = wx.NewIdRef()
         self.ID_AUDIO_132K = wx.NewIdRef()
         self.ID_AUDIO_64K = wx.NewIdRef()
-
-        self.video_parser = VideoParser(self.onError)
-        self.bangumi_parser = BangumiParser(self.onError)
-        self.activity_parser = ActivityParser(self.onError)
-
-        self.download_window = DownloadWindow(self)
-
-        self.download_window_opened = False
-        self.parse_ready = False
-
-        utils_thread = Thread(target = self.utilsThread)
-        utils_thread.daemon = True
-
-        utils_thread.start()
 
     def utilsThread(self):
         info = DownloaderInfo()
@@ -348,7 +353,7 @@ class MainWindow(Frame):
         self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type, count))
 
     def onLoadDownloadProgress(self):
-        self.infobar.ShowMessage("下载管理：已恢复中断的下载进度", flags = wx.ICON_INFORMATION)
+        self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
     def onError(self, err_code):
         match err_code:

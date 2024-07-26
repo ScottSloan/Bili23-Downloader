@@ -79,7 +79,7 @@ class DownloadUtils:
                     json_dash = resp["data"]["dash"]
 
                 case Config.Type.BANGUMI:
-                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.info['bvid']}&cid={self.info['cid']}&qn=0&fnver=0&fnval=4048&fourk=1"
+                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.info['bvid']}&cid={self.info['cid']}&qn=0&fnver=0&fnval=12240&fourk=1"
                     
                     req = requests.get(url, headers = get_header(self.info["url"], Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
                     resp = json.loads(req.text)
@@ -428,7 +428,7 @@ class DownloadItemPanel(wx.Panel):
             self.update_pause_btn(self.info["status"])
 
     def init_UI(self):
-        self.preview_pic = wx.StaticBitmap(self, -1, size = self.FromDIP((128, 60)))
+        self.preview_pic = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
 
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
@@ -495,7 +495,7 @@ class DownloadItemPanel(wx.Panel):
 
         wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
 
-        scale_size = self.FromDIP((128, 60))
+        scale_size = self.FromDIP((112, 63))
 
         image = wx.Image(io.BytesIO(req.content)).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
         
