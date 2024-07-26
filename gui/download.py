@@ -123,9 +123,9 @@ class DownloadUtils:
         if self.none_audio:
             cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}.mp4"'''
         else:
-            cmd = f'''cd "{Config.Download.path}" && "{Config.FFmpeg.path}" -v quiet -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
+            cmd = f'''cd "{Config.Download.path}" && {Config.FFmpeg.path} -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
                 
-        self.merge_process = subprocess.Popen(cmd, shell = True)
+        self.merge_process = subprocess.Popen(cmd, shell = True, stdout  = subprocess.PIPE, stderr = subprocess.PIPE)
         self.merge_process.wait()
 
         if Config.FFmpeg.available:
@@ -135,10 +135,15 @@ class DownloadUtils:
                 else:
                     cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.{self.audio_type}"'''
 
-                    process = subprocess.Popen(cmd, shell = True)
+                    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE)
                     process.wait()
             else:
+                # 报错时保存错误日志
+                stdout = self.merge_process.stderr.read().decode("gb2312")
+
                 self.merge_error = True
+
+                save_log(self.merge_process.returncode, stdout)
 
         self.onComplete()
 

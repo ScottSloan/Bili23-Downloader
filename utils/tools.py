@@ -5,6 +5,7 @@ import random
 import ctypes
 import requests
 import subprocess
+from datetime import datetime
 from requests.auth import HTTPProxyAuth
 
 from .config import Config
@@ -194,3 +195,10 @@ def check_ffmpeg_available():
 
     if "ffmpeg version" in output:
         Config.FFmpeg.available = True
+
+def get_current_time():
+    return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
+
+def save_log(returncode, output):
+    with open("error.log", "w", encoding = "utf-8") as f:
+        f.write(f"时间：{get_current_time()} 返回值：{returncode}\n错误信息：\n{output}")
