@@ -82,7 +82,7 @@ class MainWindow(Frame):
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.userinfo_hbox.Add(self.face, 0, wx.ALL & (~wx.RIGHT), 10)
         self.userinfo_hbox.Add(self.uname_lab, 0, wx.LEFT | wx.ALIGN_CENTER, 10)
-        self.userinfo_hbox.Add(self.uname_lab_ex, 0, wx.ALIGN_CENTER)
+        self.userinfo_hbox.Add(self.uname_lab_ex, 0, wx.ALIGN_CENTER, 10)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
 

@@ -152,7 +152,7 @@ class DownloadUtils:
                     process.wait()
             else:
                 # 报错时保存错误日志
-                stdout = self.merge_process.stderr.read().decode("gbk")
+                stdout = self.merge_process.stderr.read().decode("cp936")
 
                 self.merge_error = True
 
@@ -289,8 +289,12 @@ class DownloadWindow(Frame):
         self.Hide()
 
     def onClear(self, event):
+        # 首先遍历下载列表
         callback_list = [value["stop_callback"]for key, value in DownloadInfo.download_list.items() if value["status"] == "completed"]
+        self.run_callback_list(callback_list)
 
+        # 遍历scrollpanel中的项目
+        callback_list = [item["stop_callback"] for item in self.download_list_panel.GetChildren() if item.info["status"] == "completed"]
         self.run_callback_list(callback_list)
 
     def onOpenDir(self, event):
