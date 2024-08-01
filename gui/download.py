@@ -152,14 +152,11 @@ class DownloadUtils:
                     process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
                     process.wait()
             else:
-                # 报错时保存错误日志
-                raw_log = self.merge_process.stderr.read().decode("cp936").replace("\r\n", "")
+                output = self.merge_process.stderr.read().decode("cp936").replace("\r\n", "")
                 
-                self.merge_error_log = {"log": raw_log, "time": get_current_time(), "return_code": self.merge_process.returncode}
+                self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
 
                 self.merge_error = True
-
-                save_log(self.merge_process.returncode, raw_log)
 
         self.onComplete()
 
@@ -430,7 +427,7 @@ class DownloadItemPanel(wx.Panel):
         self.CentreOnParent()
 
     def init_utils(self):
-        self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge)
+        self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge, self.onError)
         self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
 
         Thread(target = self.get_preview_pic).start()
@@ -657,8 +654,9 @@ class DownloadItemPanel(wx.Panel):
 
         if Config.FFmpeg.available:
             if self.utils.merge_error:
-                self.speed_lab.SetLabel("合成视频失败")
+                self.speed_lab.SetLabel("合成视频失败，点击查看详情")
                 self.speed_lab.SetForegroundColour(wx.Colour("red"))
+                self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
                 self.pause_btn.Enable(False)
             else:
@@ -700,11 +698,12 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.clear()
     
     def onOpenFolder(self):
-        subprocess.Popen(f'explorer /select,"{Config.Download.path}"\\{self.info["title"]}.mp4', shell = True)
+        subprocess.Popen(f'explorer /select,{Config.Download.path}\\{self.info["title"]}.mp4', shell = True)
 
     def onShowError(self, event):
-        show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
-        show_error_dlg.ShowModal()
+        if not self.pause_btn.Enabled:
+            show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
+            show_error_dlg.ShowModal()
 
     def update_pause_btn(self, status: str):
         match status:

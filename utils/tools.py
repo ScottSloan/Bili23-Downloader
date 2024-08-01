@@ -194,7 +194,8 @@ def get_ffmpeg_path():
 def check_ffmpeg_available():
     get_ffmpeg_path()
 
-    output = get_cmd_output(f'cd "{os.path.dirname(Config.FFmpeg.path)}" && ffmpeg.exe -version')
+    # 获取 FFmpeg 输出信息，进而检测 FFmpeg 可用性
+    output = get_cmd_output(f'"{Config.FFmpeg.path}" -version')
 
     if "ffmpeg version" in output:
         Config.FFmpeg.available = True

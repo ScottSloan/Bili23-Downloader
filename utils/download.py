@@ -9,8 +9,8 @@ from .tools import *
 from .thread import Thread, ThreadPool
 
 class Downloader:
-    def __init__(self, info, onStart, onDownload, onMerge):
-        self.info, self.onStart, self.onDownload, self.onMerge = info, onStart, onDownload, onMerge
+    def __init__(self, info, onStart, onDownload, onMerge, onError):
+        self.info, self.onStart, self.onDownload, self.onMerge, self.onErrorEx = info, onStart, onDownload, onMerge, onError
 
         self.init_utils()
 
@@ -101,22 +101,29 @@ class Downloader:
         self.onFinished()
 
     def range_download(self, thread_id: str, url: str, referer_url: str, path: str, chunk_list: list):
-        req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list), stream = True, proxies = get_proxy(), auth = get_auth())
-        
-        with open(path, "rb+") as f:
-            f.seek(chunk_list[0])
+        try:
+            req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 8)
+            
+            with open(path, "rb+") as f:
+                f.seek(chunk_list[0])
 
-            for chunk in req.iter_content(chunk_size = 1024 * 1024):
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
+                for chunk in req.iter_content(chunk_size = 1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
 
-                    self.completed_size += len(chunk)
+                        self.completed_size += len(chunk)
 
-                    self.thread_info[thread_id]["chunk_list"][0] += len(chunk)
+                        self.thread_info[thread_id]["chunk_list"][0] += len(chunk)
 
-                    if self.completed_size >= self.total_size:
-                        self.flag = True
+                        if self.completed_size >= self.total_size:
+                            self.flag = True
+        except:
+            # 回调下载失败函数
+            self.onError()
+
+            # 抛出异常，停止线程
+            raise requests.exceptions.ConnectionError()
 
     def onListen(self):
         while not self.flag:
@@ -158,6 +165,13 @@ class Downloader:
         self.listen_thread.stop()
 
         wx.CallAfter(self.onMerge)
+    
+    def onError(self):
+        # 关闭线程池和监听线程
+        self.onStop()
+
+        # 回调 panel 下载失败函数，终止下载
+        self.onErrorEx()
 
     def wait(self):
         while not self.flag:
