@@ -14,6 +14,8 @@ resolution_map = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "
 sound_quality_map = {"Hi-Res 无损": 30251, "杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
 sound_quality_map_set = {"Hi-Res 无损 / 杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
 codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
+target_format_map = {"AVI": "avi", "MKV": "mkv", "FLV": "flv"}
+target_codec_map = {"原编码器": 1, "AVC/H.264": 1, "HEVC/H.265": 2, "AV1": 3}
 
 def process_shorklink(url):
     req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())

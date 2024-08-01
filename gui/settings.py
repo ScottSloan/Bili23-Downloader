@@ -113,9 +113,9 @@ class DownloadTab(wx.Panel):
         vbox.Add(self.max_thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.max_download_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
-        vbox.Add(video_quality_hbox)
-        vbox.Add(sound_quality_hbox)
-        vbox.Add(codec_hbox)
+        vbox.Add(video_quality_hbox, 0, wx.EXPAND)
+        vbox.Add(sound_quality_hbox, 0, wx.EXPAND)
+        vbox.Add(codec_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
@@ -146,7 +146,7 @@ class DownloadTab(wx.Panel):
         self.video_quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
 
         if Config.Download.sound_quality != 30250:
-            self.audio_quality_choice.SetSelection(list(sound_quality_map.values()).index(Config.Download.sound_quality))
+            self.audio_quality_choice.SetSelection(list(sound_quality_map_set.values()).index(Config.Download.sound_quality))
         else:
             self.audio_quality_choice.SetSelection(0)
 

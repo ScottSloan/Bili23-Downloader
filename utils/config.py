@@ -5,10 +5,10 @@ class Config:
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.43"
-        version_code = 1430
+        version = "1.44"
+        version_code = 1440
 
-        release_date = "2024/7/27"
+        release_date = "2024/08/01"
 
     class Proxy:
         proxy = auth = False

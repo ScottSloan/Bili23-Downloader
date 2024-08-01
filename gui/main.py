@@ -18,6 +18,7 @@ from gui.download import DownloadWindow, DownloadInfo
 from gui.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
+from gui.converter import ConverterWindow
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -123,13 +124,11 @@ class MainWindow(Frame):
         if not Config.User.login:
             self.tool_menu.Append(self.ID_LOGIN, "登录(&L)")
 
-            if not Config.Misc.debug:
-                self.tool_menu.AppendSeparator()
-
         if Config.Misc.debug:
             self.tool_menu.Append(self.ID_DEBUG, "调试(&D)")
-            self.tool_menu.AppendSeparator()
 
+        self.tool_menu.Append(self.ID_CONVERTER, "格式转换(&F)")
+        self.tool_menu.AppendSeparator()
         self.tool_menu.Append(self.ID_SETTINGS, "设置(&S)")
 
         self.help_menu.Append(self.ID_CHECK_UPDATE, "检查更新(&U)")
@@ -172,6 +171,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLogin, id = self.ID_LOGIN)
         self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onLoadSetting, id = self.ID_SETTINGS)
+        self.Bind(wx.EVT_MENU, self.onLoadConverter, id = self.ID_CONVERTER)
         self.Bind(wx.EVT_MENU, self.onAbout, id = self.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
@@ -204,6 +204,7 @@ class MainWindow(Frame):
     def init_ids(self):
         self.ID_LOGIN = wx.NewIdRef()
         self.ID_DEBUG = wx.NewIdRef()
+        self.ID_CONVERTER = wx.NewIdRef()
         self.ID_SETTINGS = wx.NewIdRef()
         self.ID_HELP = wx.NewIdRef()
         self.ID_CHECK_UPDATE = wx.NewIdRef()
@@ -412,6 +413,10 @@ class MainWindow(Frame):
             self.PopupMenu(self.get_user_context_menu())
         else:
             self.onLogin(0)
+
+    def onLoadConverter(self, event):
+        converter_window = ConverterWindow(self)
+        converter_window.Show()
 
     def onLoadSetting(self, event):
         setting_window = SettingWindow(self)

@@ -119,7 +119,7 @@ class BangumiParser:
     def get_bangumi_resolution(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
-        req = requests.get(url, headers = get_header(referer_url= "https://www.bilibili,com", cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        req = requests.get(url, headers = get_header(referer_url= "https://www.bilibili.com", cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
         self.check_json(resp, 102)

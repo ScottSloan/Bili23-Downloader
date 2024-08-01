@@ -7,7 +7,8 @@ import requests
 import subprocess
 from typing import List
 
-from .templates import Frame, ScrolledPanel
+from gui.templates import Frame, ScrolledPanel
+from gui.show_error import ShowErrorDialog
 
 from utils.icons import *
 from utils.config import Config, Download, conf, Audio
@@ -152,11 +153,13 @@ class DownloadUtils:
                     process.wait()
             else:
                 # 报错时保存错误日志
-                stdout = self.merge_process.stderr.read().decode("cp936")
+                raw_log = self.merge_process.stderr.read().decode("cp936").replace("\r\n", "")
+                
+                self.merge_error_log = {"log": raw_log, "time": get_current_time(), "return_code": self.merge_process.returncode}
 
                 self.merge_error = True
 
-                save_log(self.merge_process.returncode, stdout)
+                save_log(self.merge_process.returncode, raw_log)
 
         self.onComplete()
 
@@ -512,6 +515,8 @@ class DownloadItemPanel(wx.Panel):
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseBtn_EVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStop)
 
+        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowError)
+
     def get_preview_pic(self):
         req = requests.get(self.info["pic"])
 
@@ -695,7 +700,11 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.clear()
     
     def onOpenFolder(self):
-        subprocess.Popen(f"explorer /select,{Config.Download.path}\\{self.info['title']}.mp4", shell = True)
+        subprocess.Popen(f'explorer /select,"{Config.Download.path}"\\{self.info["title"]}.mp4', shell = True)
+
+    def onShowError(self, event):
+        show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
+        show_error_dlg.ShowModal()
 
     def update_pause_btn(self, status: str):
         match status:
