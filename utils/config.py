@@ -8,7 +8,7 @@ class Config:
         version = "1.44"
         version_code = 1440
 
-        release_date = "2024/08/01"
+        release_date = "2024/08/02"
 
     class Proxy:
         proxy = auth = False
