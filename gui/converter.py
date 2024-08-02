@@ -16,7 +16,7 @@ class ConverterWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((510, 275)))
+        self.SetSize(self.FromDIP((510, 270)))
 
         self.Bind_EVT()
 
@@ -138,6 +138,11 @@ class ConverterWindow(Frame):
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
+
+            if save_path == self.output_box.GetValue():
+                wx.MessageDialog(self, "文件已存在\n\n无法覆盖原文件，请指定新的文件名", "警告", wx.ICON_WARNING).ShowModal()
+                return
+            
             self.input_box.SetValue(save_path)
 
         dlg.Destroy()
@@ -147,6 +152,11 @@ class ConverterWindow(Frame):
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
+
+            if save_path == self.input_box.GetValue():
+                wx.MessageDialog(self, "文件已存在\n\n无法覆盖原文件，请指定新的文件名", "警告", wx.ICON_WARNING).ShowModal()
+                return
+            
             self.output_box.SetValue(save_path)
 
             self.target_format_lab.SetLabel(f"目标格式：{os.path.splitext(save_path)[-1][1:]}")
@@ -161,7 +171,7 @@ class ConverterWindow(Frame):
         encoder = self.getEncoder()
         bitrate = self.target_bitrate_box.GetValue() + "k"
 
-        cmd = [Config.FFmpeg.path, "-i", input_path, "-c:v", encoder, "-b:v", bitrate, output_path]
+        cmd = [Config.FFmpeg.path, "-y", "-i", input_path, "-c:v", encoder, "-b:v", bitrate, "-strict", "experimental", output_path]
 
         self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True, encoding = "utf-8")
 
@@ -196,12 +206,14 @@ class ConverterWindow(Frame):
     
         self.process.stdout.close()
 
-        if not self.start:
-            self.progress_bar.SetValue(0)
-            self.progress_lab.SetLabel("进度：--")
-            self.time_lab.SetLabel("耗时：--")
+        if self.process.returncode != 0:
+            wx.MessageDialog(self, "视频转换失败\n\n在视频转换时出现问题，请检查：\n1.输入文件是否损坏\n2.若开启 GPU 加速，请检查 GPU 类型是否选择正确，驱动是否安装，GPU 是否支持加速\n3.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持相关加速编码器", "警告", wx.ICON_WARNING).ShowModal()
+            self.setStatus(False)
+            self.resetProgress()
+            return
 
-            self.panel.Layout()
+        if not self.start:
+            self.resetProgress()
             return
 
         self.convertComplete()
@@ -280,3 +292,10 @@ class ConverterWindow(Frame):
         else:
             self.start_btn.SetLabel("开始转换")
             self.start = False
+    
+    def resetProgress(self):
+        self.progress_bar.SetValue(0)
+        self.progress_lab.SetLabel("进度：--")
+        self.time_lab.SetLabel("耗时：--")
+
+        self.panel.Layout()

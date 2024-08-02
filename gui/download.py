@@ -135,11 +135,11 @@ class DownloadUtils:
         audio_f_name = f"audio_{self.info['id']}.{self.audio_type}"
 
         if self.none_audio:
-            cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}.mp4"'''
+            cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}.mp4"]
         else:
-            cmd = f'''cd "{Config.Download.path}" && "{Config.FFmpeg.path}" -y -i {audio_f_name} -i {video_f_name} -acodec copy -vcodec copy "{title}.mp4"'''
+            cmd = ["cd", Config.Download.path, "&&", Config.FFmpeg.path, "-y", "-i", audio_f_name, "-acodec", "copy", "-vcodec", "copy", "-strict", "experimental", f"{title}.mp4"]
                 
-        self.merge_process = subprocess.Popen(cmd, shell = True, stdout  = subprocess.PIPE, stderr = subprocess.PIPE)
+        self.merge_process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
         self.merge_process.wait()
 
         if Config.FFmpeg.available:
@@ -147,12 +147,12 @@ class DownloadUtils:
                 if Config.Merge.auto_clean:
                     remove_files(Config.Download.path, [video_f_name, audio_f_name])
                 else:
-                    cmd = f'''cd "{Config.Download.path}" && rename {video_f_name} "{title}_video.mp4" && rename {audio_f_name} "{title}_audio.{self.audio_type}"'''
+                    cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}_video.mp4", "&&", "rename", audio_f_name, f"{title}_audio.{self.audio_type}"]
 
-                    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
                     process.wait()
             else:
-                output = self.merge_process.stderr.read().decode("cp936").replace("\r\n", "")
+                output = self.merge_process.stdout.read().decode("cp936").replace("\r\n", "")
                 
                 self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
 
