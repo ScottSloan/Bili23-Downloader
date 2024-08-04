@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime
 from requests.auth import HTTPProxyAuth
 
-from .config import Config
+from utils.config import Config
 
 resolution_map = {"超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "智能修复": 100, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
 sound_quality_map = {"Hi-Res 无损": 30251, "杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}

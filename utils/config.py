@@ -58,15 +58,8 @@ class Config:
         update_json = None
 
     class FFmpeg:
-        env_path = None
-        local_path = None
         path = None
-
-        env_available = False
-        local_available = False
         available = False
-
-        local_first = False
 
 class Audio:
     audio_quality = None

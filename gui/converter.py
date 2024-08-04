@@ -6,7 +6,7 @@ import subprocess
 
 from gui.templates import Frame
 
-from utils.tools import target_format_map, target_codec_map, gpu_map
+from utils.tools import target_codec_map, gpu_map
 from utils.config import Config
 from utils.thread import Thread
 
@@ -16,8 +16,6 @@ class ConverterWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((510, 270)))
-
         self.Bind_EVT()
 
         self.CenterOnParent()
@@ -25,32 +23,32 @@ class ConverterWindow(Frame):
         self.start = False
 
     def init_UI(self):
-        input_lab = wx.StaticText(self.panel, -1, "输入")
-        self.input_box = wx.TextCtrl(self.panel, -1, size = self.FromDIP((400, 24)))
-        self.input_browse_btn = wx.Button(self.panel, -1, "浏览", size = self.FromDIP((60, 24)))
+        input_lab = wx.StaticText(self, -1, "输入")
+        self.input_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, 24)))
+        self.input_browse_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
 
         input_hbox = wx.BoxSizer(wx.HORIZONTAL)
         input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         input_hbox.Add(self.input_box, 1, wx.ALL & (~wx.LEFT), 10)
         input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
-        output_lab = wx.StaticText(self.panel, -1, "输出")
-        self.output_box = wx.TextCtrl(self.panel, -1, size = self.FromDIP((400, 24)))
-        self.output_browse_btn = wx.Button(self.panel, -1, "浏览", size = self.FromDIP((60, 24)))
+        output_lab = wx.StaticText(self, -1, "输出")
+        self.output_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, 24)))
+        self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
 
         output_hbox = wx.BoxSizer(wx.HORIZONTAL)
         output_hbox.Add(output_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT), 10)
         output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
-        self.target_format_lab = wx.StaticText(self.panel, -1, "目标格式：---")
+        self.target_format_lab = wx.StaticText(self, -1, "目标格式：---")
 
-        target_codec_lab = wx.StaticText(self.panel, -1, "编码器")
-        self.target_codec_choice = wx.Choice(self.panel, -1, choices = list(target_codec_map.keys()))
+        target_codec_lab = wx.StaticText(self, -1, "编码器")
+        self.target_codec_choice = wx.Choice(self, -1, choices = list(target_codec_map.keys()))
 
-        target_bitrate_lab = wx.StaticText(self.panel, -1, "比特率")
-        self.target_bitrate_box = wx.TextCtrl(self.panel, -1, "2000")
-        target_bitrate_unit_lab = wx.StaticText(self.panel, -1, "kbit/s")
+        target_bitrate_lab = wx.StaticText(self, -1, "比特率")
+        self.target_bitrate_box = wx.TextCtrl(self, -1, "1500")
+        target_bitrate_unit_lab = wx.StaticText(self, -1, "kbit/s")
 
         target_params_hbox = wx.BoxSizer(wx.HORIZONTAL)
         target_params_hbox.Add(self.target_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -60,26 +58,26 @@ class ConverterWindow(Frame):
         target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT), 10)
         target_params_hbox.Add(target_bitrate_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.hwaccel_chk = wx.CheckBox(self.panel, -1, "启用 GPU 加速")
+        self.hwaccel_chk = wx.CheckBox(self, -1, "启用 GPU 加速")
 
-        gpu_lab = wx.StaticText(self.panel, -1, "GPU")
-        self.gpu_choice = wx.Choice(self.panel, -1, choices = list(gpu_map.keys()))
+        gpu_lab = wx.StaticText(self, -1, "GPU")
+        self.gpu_choice = wx.Choice(self, -1, choices = list(gpu_map.keys()))
 
         extra_hbox = wx.BoxSizer(wx.HORIZONTAL)
         extra_hbox.Add(self.hwaccel_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         extra_hbox.Add(gpu_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         extra_hbox.Add(self.gpu_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         
-        self.progress_lab = wx.StaticText(self.panel, -1, "进度：--")
-        self.time_lab = wx.StaticText(self.panel, -1, "耗时：--")
+        self.progress_lab = wx.StaticText(self, -1, "进度：--")
+        self.time_lab = wx.StaticText(self, -1, "耗时：--")
 
         progress_hbox = wx.BoxSizer(wx.HORIZONTAL)
         progress_hbox.Add(self.progress_lab, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         progress_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
 
-        self.progress_bar = wx.Gauge(self.panel, -1, style = wx.GA_PROGRESS)
+        self.progress_bar = wx.Gauge(self, -1, style = wx.GA_PROGRESS)
 
-        self.start_btn = wx.Button(self.panel, -1, "开始转换", size = self.FromDIP((110, 30)))
+        self.start_btn = wx.Button(self, -1, "开始转换", size = self.FromDIP((110, 30)))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(input_hbox, 0, wx.EXPAND)
@@ -90,9 +88,9 @@ class ConverterWindow(Frame):
         vbox.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, 10)
         vbox.Add(self.start_btn, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
-        self.panel.SetSizerAndFit(vbox)
+        self.SetSizerAndFit(vbox)
 
-        vbox.Layout()
+        self.SetBackgroundColour(wx.Colour(240, 240, 240))
 
     def Bind_EVT(self):
         self.start_btn.Bind(wx.EVT_BUTTON, self.onStart)
@@ -119,7 +117,7 @@ class ConverterWindow(Frame):
             return
         
         if not self.target_bitrate_box.GetValue():
-            wx.MessageDialog(self, "未指定比特率\n\n请指定比特率，默认为 2000 kbps", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "未指定比特率\n\n请指定比特率，默认为 1500 kbps", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         if self.gpu_choice.GetSelection() == -1 and self.hwaccel_chk.GetValue():
@@ -148,7 +146,10 @@ class ConverterWindow(Frame):
         dlg.Destroy()
 
     def onBrowseOutputPath(self, event):
-        dlg = wx.FileDialog(self, "选择输出文件", style = wx.FD_SAVE, wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
+        input_path = self.input_box.GetValue()
+        file = os.path.basename(input_path).split(".")[0] + "_out" + "." + os.path.basename(input_path).split(".")[1]
+
+        dlg = wx.FileDialog(self, "选择输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
