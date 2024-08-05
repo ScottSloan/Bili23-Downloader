@@ -147,9 +147,9 @@ class ConverterWindow(Frame):
 
     def onBrowseOutputPath(self, event):
         input_path = self.input_box.GetValue()
-        file = os.path.basename(input_path).split(".")[0] + "_out" + "." + os.path.basename(input_path).split(".")[1]
+        file = self.getNewFileName(os.path.basename(input_path))
 
-        dlg = wx.FileDialog(self, "选择输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
+        dlg = wx.FileDialog(self, "保存输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
@@ -300,3 +300,9 @@ class ConverterWindow(Frame):
         self.time_lab.SetLabel("耗时：--")
 
         self.panel.Layout()
+
+    def getNewFileName(self, filename: str):
+        new_filename = list(filename)
+        new_filename.insert(filename.rfind("."), "_out")
+
+        return "".join(new_filename)

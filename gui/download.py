@@ -137,7 +137,7 @@ class DownloadUtils:
         if self.none_audio:
             cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}.mp4"]
         else:
-            cmd = ["cd", Config.Download.path, "&&", Config.FFmpeg.path, "-y", "-i", audio_f_name, "-acodec", "copy", "-vcodec", "copy", "-strict", "experimental", f"{title}.mp4"]
+            cmd = ["cd", Config.Download.path, "&&", Config.FFmpeg.path, "-y", "-i", video_f_name, "-i", audio_f_name, "-acodec", "copy", "-vcodec", "copy", "-strict", "experimental", f"{title}.mp4"]
                 
         self.merge_process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
         self.merge_process.wait()

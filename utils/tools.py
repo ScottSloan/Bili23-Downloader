@@ -135,7 +135,7 @@ def remove_files(path, name):
 def check_update():
     url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
-    req = requests.get(url, headers = get_header())
+    req = requests.get(url, headers = get_header(), timeout = 5)
     req.encoding = "utf-8"
 
     update_json = json.loads(req.text)

@@ -60,9 +60,11 @@ class VideoParser:
         VideoInfo.pages = info["pages"]
 
         if len(VideoInfo.pages) == 1:
-            VideoInfo.type = 1
+            # 单个视频
+            VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
         else:
-            VideoInfo.type = 2
+            # 分 P 视频
+            VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
 
         if Config.Misc.show_episodes == 0 and self.part:
             VideoInfo.pages = [VideoInfo.pages[self.part_num - 1]]
@@ -70,7 +72,7 @@ class VideoParser:
         if "ugc_season" in info and Config.Misc.show_episodes != 0:
             VideoInfo.sections.clear()
             
-            VideoInfo.type = 3
+            VideoInfo.type = Config.Type.VIDEO_TYPE_SECTIONS
 
             info_ugc_season = info["ugc_season"]
             info_section = info_ugc_season["sections"]

@@ -30,7 +30,8 @@ class UpdateWindow(wx.Dialog):
         log_font: wx.Font = self.GetFont()
         log_font.SetPointSize(10)
 
-        self.changelog = wx.StaticText(self, -1, size = self.FromDIP((600, 320)))
+        self.changelog = wx.TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE)
+        self.changelog.SetBackgroundColour("white")
         self.changelog.SetFont(log_font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
@@ -72,7 +73,7 @@ class UpdateWindow(wx.Dialog):
 
         tips = "点击更新按钮后，将跳转至版本发布页，请滑动至文章底部查看下载链接。"
 
-        self.changelog.SetLabel(data["changelog"] + f"\n\n\n{tips}")
+        self.changelog.SetValue(data["changelog"] + f"\n\n\n{tips}")
 
         self.detail_lab.SetLabel(f"Version {data['version']}，发布于 {data['date']}，大小 {data['size']}")
 

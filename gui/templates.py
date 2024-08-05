@@ -117,7 +117,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     self.get_bangumi_download_info(item_title, parent, int(text))
     
     def get_video_download_info(self, item_title: str, parent: str, index: int):
-        if VideoInfo.type == 3:
+        if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
+            # 合集
             index = [index for index, value in enumerate(VideoInfo.sections[parent]) if value["arc"]["title"] == item_title][0]
 
             info_entry = VideoInfo.sections[parent][index]
@@ -128,10 +129,19 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             cid = info_entry["cid"]
 
         else:
+            # 分 P 或单个视频
             info_entry = VideoInfo.pages[index - 1]
 
+            # 分 P 视频显示每一个标题
             title = info_entry["part"] if VideoInfo.type == 2 else VideoInfo.title
-            pic = info_entry["first_frame"] if "first_frame" in info_entry else VideoInfo.cover
+
+            if VideoInfo.type == Config.Type.VIDEO_TYPE_SINGLE:
+                # 单个视频，直接显示封面
+                pic = VideoInfo.cover
+            else:
+                # 分 P 视频，以第一帧作为封面
+                pic = info_entry["first_frame"] if "first_frame" in info_entry else VideoInfo.cover
+                
             bvid = VideoInfo.bvid
             cid = info_entry["cid"]
 

@@ -51,6 +51,10 @@ class Config:
     class Type:
         VIDEO = 1
         BANGUMI = 2
+
+        VIDEO_TYPE_SINGLE = 1
+        VIDEO_TYPE_PAGES = 2
+        VIDEO_TYPE_SECTIONS = 3
     
     class Temp:
         download_window_pos = None
