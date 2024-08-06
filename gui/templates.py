@@ -3,7 +3,7 @@ import wx
 import wx.dataview
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
-from utils.icons import get_app_icon
+from utils.icons import getAppIconSmall
 from utils.tools import *
 from utils.config import Config, Download
 from utils.video import VideoInfo
@@ -13,7 +13,7 @@ class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, -1, title, style = style)
 
-        self.SetIcon(wx.Icon(wx.Image(io.BytesIO(get_app_icon())).ConvertToBitmap()))
+        self.SetIcon(wx.Icon(wx.Image(io.BytesIO(getAppIconSmall())).ConvertToBitmap()))
 
         self.panel = wx.Panel(self)
 
@@ -135,12 +135,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             # 分 P 视频显示每一个标题
             title = info_entry["part"] if VideoInfo.type == 2 else VideoInfo.title
 
-            if VideoInfo.type == Config.Type.VIDEO_TYPE_SINGLE:
-                # 单个视频，直接显示封面
-                pic = VideoInfo.cover
-            else:
-                # 分 P 视频，以第一帧作为封面
-                pic = info_entry["first_frame"] if "first_frame" in info_entry else VideoInfo.cover
+            # 不再以第一帧作为封面
+            pic = VideoInfo.cover
                 
             bvid = VideoInfo.bvid
             cid = info_entry["cid"]

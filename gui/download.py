@@ -419,6 +419,8 @@ class DownloadItemPanel(wx.Panel):
 
         wx.Panel.__init__(self, parent)
 
+        self.init_scale()
+
         self.init_UI()
 
         self.Bind_EVT()
@@ -449,6 +451,10 @@ class DownloadItemPanel(wx.Panel):
                 self.total_size = self.info["size"]
 
             self.update_pause_btn(self.info["status"])
+
+    def init_scale(self):
+        self.scale_size = self.FromDIP((16, 16))
+        self.is_scaled = True if self.scale_size != (16, 16) else False
 
     def init_UI(self):
         self.cover = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
@@ -488,9 +494,12 @@ class DownloadItemPanel(wx.Panel):
         gauge_vbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP), 10)
         gauge_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_resume_icon())).Scale(24, 24, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((26, 26)))
+        pause_image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
+        self.pause_btn = wx.BitmapButton(self, -1, pause_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((24, 24)))
         self.pause_btn.SetToolTip("开始下载")
-        self.stop_btn = wx.BitmapButton(self, -1, wx.Image(io.BytesIO(get_delete_icon())).Scale(24, 24, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((26, 26)))
+
+        stop_image = wx.Image(io.BytesIO(getDeleteIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getDeleteIcon16()))
+        self.stop_btn = wx.BitmapButton(self, -1, stop_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((24, 24)))
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -511,7 +520,7 @@ class DownloadItemPanel(wx.Panel):
         self.SetSizer(self.panel_vbox)
     
     def Bind_EVT(self):
-        self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseBtn_EVT)
+        self.pause_btn.Bind(wx.EVT_BUTTON, self.onPause_EVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStop)
 
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowError)
@@ -546,7 +555,7 @@ class DownloadItemPanel(wx.Panel):
         info_list = self.utils.get_download_info()
         self.downloader.start(info_list)
 
-    def onPauseBtn_EVT(self, event):
+    def onPause_EVT(self, event):
         match self.info["status"]:
             case "wait":
                 self.start()
@@ -679,7 +688,9 @@ class DownloadItemPanel(wx.Panel):
 
         self.stop_btn.SetToolTip("清除记录")
 
-        self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_folder_icon())).ConvertToBitmap())
+        folder_iamge = wx.Image(io.BytesIO(getFolderIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getFolderIcon16()))
+
+        self.pause_btn.SetBitmap(folder_iamge.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
         self.pause_btn.SetToolTip("打开所在位置")
 
         self.gauge.SetValue(100)
@@ -719,13 +730,17 @@ class DownloadItemPanel(wx.Panel):
         match status:
             case "downloading":
                 self.pause_btn.SetToolTip("暂停下载")
-                self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_pause_icon())).ConvertToBitmap())
+
+                pause_image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
+                self.pause_btn.SetBitmap(pause_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 
                 self.speed_lab.SetLabel("")
 
             case "pause":
                 self.pause_btn.SetToolTip("继续下载")
-                self.pause_btn.SetBitmap(wx.Image(io.BytesIO(get_resume_icon())).ConvertToBitmap())
+
+                resume_image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
+                self.pause_btn.SetBitmap(resume_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 
                 self.speed_lab.SetLabel("暂停中")
 

@@ -3,7 +3,7 @@ import wx
 import webbrowser
 
 from utils.config import Config
-from utils.icons import get_app_icon_big
+from utils.icons import getAppIcon
 
 from .license import LicenseWindow
 
@@ -22,7 +22,7 @@ class AboutWindow(wx.Dialog):
     def init_UI(self):
         self.SetBackgroundColour("white")
 
-        image = wx.Image(io.BytesIO(get_app_icon_big()), wx.BITMAP_TYPE_JPEG)
+        image = wx.Image(io.BytesIO(getAppIcon()), wx.BITMAP_TYPE_JPEG)
         logo = wx.StaticBitmap(self, -1, image.ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
@@ -91,4 +91,4 @@ class AboutWindow(wx.Dialog):
         webbrowser.open("https://www.github.com/ScottSloan/Bili23-Downloader")
 
     def onOpenBlog(self, event):
-        webbrowser.open("https://scott-sloan.cn")
+        webbrowser.open("https://www.scott-sloan.cn")
