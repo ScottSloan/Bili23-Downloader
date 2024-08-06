@@ -61,9 +61,9 @@ class MainWindow(Frame):
 
         self.audio_btn = wx.Button(self.panel, -1, "...", size = self.FromDIP((24, 24)))
 
-        resolution_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        resolution_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         resolution_hbox.AddStretchSpacer()
-        resolution_hbox.Add(resolution_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        resolution_hbox.Add(resolution_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         resolution_hbox.Add(self.resolution_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
         resolution_hbox.Add(self.audio_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
@@ -81,7 +81,7 @@ class MainWindow(Frame):
         self.uname_lab_ex = wx.StaticText(self.panel, -1, "", size = self.FromDIP((1, 32)))
 
         self.userinfo_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.userinfo_hbox.Add(self.face, 0, wx.ALL & (~wx.RIGHT), 10)
+        self.userinfo_hbox.Add(self.face, 0, wx.ALL & (~wx.RIGHT), 15)
         self.userinfo_hbox.Add(self.uname_lab, 0, wx.LEFT | wx.ALIGN_CENTER, 10)
         self.userinfo_hbox.Add(self.uname_lab_ex, 0, wx.ALIGN_CENTER, 10)
 
@@ -89,25 +89,18 @@ class MainWindow(Frame):
 
         bottom_hbox.Add(self.userinfo_hbox, 0, wx.EXPAND | wx.CENTER)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.download_mgr_btn, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
-        bottom_hbox.Add(self.download_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(10)
         vbox.Add(url_hbox, 0, wx.EXPAND)
         vbox.Add(resolution_hbox, 0, wx.EXPAND)
-        vbox.Add(self.treelist, 1, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(self.treelist, 1, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, 10)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
-        vbox.AddSpacer(10)
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(10)
-        hbox.Add(vbox, 1, wx.EXPAND)
-        hbox.AddSpacer(10)
 
         self.frame_vbox = wx.BoxSizer(wx.VERTICAL)
         self.frame_vbox.Add(self.infobar, 1, wx.EXPAND)
-        self.frame_vbox.Add(hbox, 1, wx.EXPAND)
+        self.frame_vbox.Add(vbox, 1, wx.EXPAND)
 
         self.panel.SetSizerAndFit(self.frame_vbox)
 

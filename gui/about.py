@@ -55,8 +55,8 @@ class AboutWindow(wx.Dialog):
         self.blog_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.blog_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
 
-        self.license_btn = wx.Button(self, -1, "授权")
-        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭")
+        self.license_btn = wx.Button(self, -1, "授权", size = self.FromDIP((80, 26)))
+        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.FromDIP((80, 26)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.license_btn, 0, wx.ALL, 10)

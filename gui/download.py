@@ -9,6 +9,7 @@ from typing import List
 
 from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
+from gui.cover_viewer import CoverViewerDialog
 
 from utils.icons import *
 from utils.config import Config, Download, conf, Audio
@@ -450,7 +451,8 @@ class DownloadItemPanel(wx.Panel):
             self.update_pause_btn(self.info["status"])
 
     def init_UI(self):
-        self.preview_pic = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
@@ -492,7 +494,7 @@ class DownloadItemPanel(wx.Panel):
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        panel_hbox.Add(self.preview_pic, 0, wx.ALL, 10)
+        panel_hbox.Add(self.cover, 0, wx.ALL, 10)
         panel_hbox.Add(info_vbox, 0, wx.EXPAND)
         panel_hbox.Add(gauge_vbox, 0, wx.EXPAND)
         panel_hbox.AddStretchSpacer()
@@ -513,6 +515,7 @@ class DownloadItemPanel(wx.Panel):
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStop)
 
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowError)
+        self.cover.Bind(wx.EVT_LEFT_DOWN, self.onViewCover)
 
     def get_preview_pic(self):
         req = requests.get(self.info["pic"])
@@ -521,9 +524,12 @@ class DownloadItemPanel(wx.Panel):
 
         scale_size = self.FromDIP((112, 63))
 
-        image = wx.Image(io.BytesIO(req.content)).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
+        self.cover_image = wx.Image(io.BytesIO(req.content))
+        self.cover_image_raw = req.content
+
+        image = self.cover_image.Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
         
-        self.preview_pic.SetBitmap(image.ConvertToBitmap())
+        self.cover.SetBitmap(image.ConvertToBitmap())
 
         self.panel_vbox.Layout()
 
@@ -699,6 +705,10 @@ class DownloadItemPanel(wx.Panel):
     
     def onOpenFolder(self):
         subprocess.Popen(f'explorer /select,{Config.Download.path}\\{self.info["title"]}.mp4', shell = True)
+
+    def onViewCover(self, event):
+        cover_viewer_dlg = CoverViewerDialog(self.GetParent().GetParent(), self.cover_image, self.cover_image_raw)
+        cover_viewer_dlg.ShowModal()
 
     def onShowError(self, event):
         if not self.pause_btn.Enabled:
