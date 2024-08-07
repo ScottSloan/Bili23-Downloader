@@ -11,12 +11,10 @@ class CoverViewerDialog(wx.Dialog):
 
         self.Bind_EVT()
 
-        self.SetSize(self.FromDIP((480, 270)))
-
         self.CenterOnParent()
 
     def init_UI(self):
-        scale_size = self.GetSize()
+        scale_size = self.FromDIP((640, 360))
 
         cover = wx.StaticBitmap(self, -1, bitmap = self.cover_image.Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 
