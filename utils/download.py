@@ -25,6 +25,7 @@ class Downloader:
 
         self.flag = False
         self.thread_info = {}
+        self.thread_alive_count = 0
 
         self.download_info = DownloaderInfo()
 
@@ -58,6 +59,7 @@ class Downloader:
             self.download_id = info["id"]
 
             self.ThreadPool.submit(self.range_download, args = (thread_id, url, referer_url, path, chunk_list,))
+            self.thread_alive_count += 1
 
     def start(self, info: list):
         self.completed_size = 0
@@ -83,6 +85,7 @@ class Downloader:
                 continue
 
             self.ThreadPool.submit(target = self.range_download, args = (key, entry["url"], entry["referer_url"], path, chunk_list,))
+            self.thread_alive_count += 1
         
         self.ThreadPool.start()
 
@@ -105,12 +108,17 @@ class Downloader:
             req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 8)
             
             with open(path, "rb+") as f:
+                start_time = time.time()
+                chunk_size = 1024 * 1024
                 f.seek(chunk_list[0])
 
-                for chunk in req.iter_content(chunk_size = 1024 * 1024):
+                for chunk in req.iter_content(chunk_size = chunk_size):
                     if chunk:
                         f.write(chunk)
                         f.flush()
+
+                        # 计算执行时间
+                        elapsed_time = time.time() - start_time
 
                         self.completed_size += len(chunk)
 
@@ -118,12 +126,21 @@ class Downloader:
 
                         if self.completed_size >= self.total_size:
                             self.flag = True
-        except:
+
+                        if elapsed_time < 1 and Config.Download.speed_limit:
+                            # 计算应暂停的时间，从而限制下载速度
+                            time.sleep(max(0, (chunk_size / (chunk_size * Config.Download.speed_limit_in_mb / self.thread_alive_count)) - elapsed_time))
+
+                        start_time = time.time()
+
+        except Exception:
             # 回调下载失败函数
             self.onError()
 
             # 抛出异常，停止线程
             raise requests.exceptions.ConnectionError()
+        
+        self.thread_alive_count -= 1
 
     def onListen(self):
         while not self.flag:
@@ -183,7 +200,9 @@ class Downloader:
         total_size = int(req.headers["Content-Length"])
         
         with open(path, "wb") as f:
-            f.truncate(total_size)
+            # 使用 seek 方法，移动文件指针，快速有效，完美解决大文件创建耗时的问题
+            f.seek(total_size - 1)
+            f.write(b"\0")
 
             return total_size
 

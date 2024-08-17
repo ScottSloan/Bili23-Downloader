@@ -5,10 +5,10 @@ class Config:
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.44"
-        version_code = 1440
+        version = "1.45"
+        version_code = 1450
 
-        release_date = "2024/08/07"
+        release_date = "2024/08/17"
 
     class Proxy:
         proxy = auth = False
@@ -44,6 +44,9 @@ class Config:
         show_notification = False
 
         add_number = False
+
+        speed_limit = False
+        speed_limit_in_mb = 10
     
     class Merge:
         auto_clean = False
@@ -111,6 +114,8 @@ class ConfigUtils:
         Config.Download.codec = self.config.get("download", "codec")
         Config.Download.show_notification = self.config.getint("download", "notification")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
+        Config.Download.speed_limit = self.config.getboolean("download", "speed_limit")
+        Config.Download.speed_limit_in_mb = self.config.getint("download", "speed_limit_in_mb")
 
         # merge
         Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")

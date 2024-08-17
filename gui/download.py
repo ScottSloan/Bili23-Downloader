@@ -1,5 +1,6 @@
 import io
 import wx
+import sys
 import json
 import time
 import wx.adv
@@ -139,8 +140,13 @@ class DownloadUtils:
             cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}.mp4"]
         else:
             cmd = ["cd", Config.Download.path, "&&", Config.FFmpeg.path, "-y", "-i", video_f_name, "-i", audio_f_name, "-acodec", "copy", "-vcodec", "copy", "-strict", "experimental", f"{title}.mp4"]
+
+        if Config.Misc.debug:
+            process_stdout = sys.stdout
+        else:
+            process_stdout = subprocess.PIPE
                 
-        self.merge_process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        self.merge_process = subprocess.Popen(cmd, shell = True, stdout = process_stdout, stderr = subprocess.STDOUT)
         self.merge_process.wait()
 
         if Config.FFmpeg.available:
@@ -553,6 +559,7 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.SetLabel("准备下载...")
 
         info_list = self.utils.get_download_info()
+
         self.downloader.start(info_list)
 
     def onPause_EVT(self, event):

@@ -1,5 +1,6 @@
 import wx
 import os
+import re
 import time
 import requests
 from requests.auth import HTTPProxyAuth
@@ -103,6 +104,17 @@ class DownloadTab(wx.Panel):
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
 
+        self.speed_limit_chk = wx.CheckBox(self.download_box, -1, "对单个下载任务进行限速")
+        self.speed_limit_lab = wx.StaticText(self.download_box, -1, "最高")
+        self.speed_limit_box = wx.TextCtrl(self.download_box, -1, size = self.FromDIP((50, 25)))
+        self.speed_limit_unit_lab = wx.StaticText(self.download_box, -1, "MB/s")
+
+        speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        speed_limit_hbox.AddSpacer(30)
+        speed_limit_hbox.Add(self.speed_limit_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
+        speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.add_number_chk = wx.CheckBox(self.download_box, -1, "批量下载视频时自动添加序号")
         self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知（仅下载窗口在后台时有效）")
 
@@ -116,6 +128,8 @@ class DownloadTab(wx.Panel):
         vbox.Add(video_quality_hbox, 0, wx.EXPAND)
         vbox.Add(sound_quality_hbox, 0, wx.EXPAND)
         vbox.Add(codec_hbox, 0, wx.EXPAND)
+        vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
@@ -134,6 +148,8 @@ class DownloadTab(wx.Panel):
         self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadSlide)
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadSlide)
 
+        self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimit)
+
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
         
@@ -151,9 +167,14 @@ class DownloadTab(wx.Panel):
             self.audio_quality_choice.SetSelection(0)
 
         self.codec_choice.SetSelection(list(codec_id_map.keys()).index(Config.Download.codec))
-        
+
+        self.speed_limit_chk.SetValue(Config.Download.speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.show_toast_chk.SetValue(Config.Download.show_notification)
+
+        self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
+
+        self.onChangeSpeedLimit(0)
 
     def save(self):
         default_path = os.path.join(os.getcwd(), "download")
@@ -166,6 +187,8 @@ class DownloadTab(wx.Panel):
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
+        Config.Download.speed_limit = self.speed_limit_chk.GetValue()
+        Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
 
         conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
         conf.config.set("download", "max_thread", str(Config.Download.max_thread))
@@ -175,10 +198,16 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "codec", Config.Download.codec)
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "notification", str(int(Config.Download.show_notification)))
+        conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
+        conf.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
 
         conf.config_save()
 
     def onConfirm(self):
+        if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):
+            wx.MessageDialog(self, "速度值无效\n\n输入的速度值无效，应为一个正整数", "警告", wx.ICON_WARNING).ShowModal()
+            return False
+        
         self.save()
 
         return True
@@ -201,6 +230,21 @@ class DownloadTab(wx.Panel):
     def onDownloadSlide(self, event):
         self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
 
+    def onChangeSpeedLimit(self, event):
+        if self.speed_limit_chk.GetValue():
+            self.speed_limit_box.Enable(True)
+
+            self.speed_limit_lab.Enable(True)
+            self.speed_limit_unit_lab.Enable(True)
+        else:
+            self.speed_limit_box.Enable(False)
+
+            self.speed_limit_lab.Enable(False)
+            self.speed_limit_unit_lab.Enable(False)
+
+    def isValidSpeedLimit(self, speed):
+        return bool(re.fullmatch(r'[1-9]\d*', speed))
+    
 class MergeTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
