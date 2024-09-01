@@ -137,34 +137,33 @@ class DownloadUtils:
         video_f_name = f"video_{self.info['id']}.mp4"
         audio_f_name = f"audio_{self.info['id']}.{self.audio_type}"
 
+        self.merge_error = False
+
         if self.none_audio:
             cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}.mp4"]
         else:
             cmd = ["cd", Config.Download.path, "&&", Config.FFmpeg.path, "-y", "-i", video_f_name, "-i", audio_f_name, "-acodec", "copy", "-vcodec", "copy", "-strict", "experimental", f"{title}.mp4"]
-
-        if Config.Misc.debug:
-            process_stdout = sys.stdout
-        else:
-            process_stdout = subprocess.PIPE
                 
-        self.merge_process = subprocess.Popen(cmd, shell = True, stdout = process_stdout, stderr = subprocess.STDOUT)
+        self.merge_process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
         self.merge_process.wait()
-
-        if Config.FFmpeg.available:
-            if self.merge_process.returncode == 0:
-                if Config.Merge.auto_clean:
-                    remove_files(Config.Download.path, [video_f_name, audio_f_name])
-                else:
-                    cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}_video.mp4", "&&", "rename", audio_f_name, f"{title}_audio.{self.audio_type}"]
-
-                    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-                    process.wait()
+        
+        if self.merge_process.returncode == 0:
+            if Config.Merge.auto_clean:
+                remove_files(Config.Download.path, [video_f_name, audio_f_name])
             else:
-                output = self.merge_process.stdout.read().decode("cp936").replace("\r\n", "")
-                
-                self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
+                cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}_video.mp4", "&&", "rename", audio_f_name, f"{title}_audio.{self.audio_type}"]
 
-                self.merge_error = True
+                process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+                process.wait()
+        else:
+            if self.merge_process.stdout:
+                output = self.merge_process.stdout.read().decode("cp936").replace("\r\n", "")
+            else:
+                output = "无法获取错误信息"
+            
+            self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
+
+            self.merge_error = True
 
         self.onComplete()
 
@@ -580,6 +579,10 @@ class DownloadItemPanel(wx.Panel):
             case "completed":
                 self.onOpenFolder()
                 return
+            
+            case "retry":
+                self.onMerge(retry = True)
+                return
         
         self.update_pause_btn(self.info["status"])
 
@@ -658,57 +661,46 @@ class DownloadItemPanel(wx.Panel):
 
         remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
     
-    def onMerge(self):
+    def onMerge(self, retry = False):
         self.set_status("merging")
+
+        self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         self.size_lab.SetLabel(self.total_size)
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
 
-        parent = self.GetParent().GetParent()
+        if not retry:
+            parent = self.GetParent().GetParent()
 
-        parent.update_task_lab()
-        parent.start_download()
+            parent.update_task_lab()
+            parent.start_download()
 
         Thread(target = self.utils.merge_video).start()
-    
+
     def onMergeComplete(self):
         self.set_status("completed")
-
-        if Config.FFmpeg.available:
-            if self.utils.merge_error:
-                self.speed_lab.SetLabel("合成视频失败，点击查看详情")
-                self.speed_lab.SetForegroundColour(wx.Colour("red"))
-                self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-
-                self.pause_btn.Enable(True)
-
-                retry_image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
-
-                self.pause_btn.SetBitmap(retry_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-                self.pause_btn.SetToolTip("重试")
-            else:
-                self.speed_lab.SetLabel("下载完成")
-
-                self.pause_btn.Enable(True)
-        else:
-            self.speed_lab.SetLabel("未安装 ffmpeg，合成视频失败")
+        
+        if self.utils.merge_error:
+            self.speed_lab.SetLabel("合成视频失败，点击查看详情")
             self.speed_lab.SetForegroundColour(wx.Colour("red"))
+            self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+            self.update_pause_btn("retry")
+
+            return
+                
+        else:
+            self.speed_lab.SetLabel("下载完成")
 
             self.pause_btn.Enable(True)
-
-            retry_image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
-
-            self.pause_btn.SetBitmap(retry_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-            self.pause_btn.SetToolTip("重试")
         
         self.downloader.download_info.clear()
 
         self.stop_btn.SetToolTip("清除记录")
 
-        folder_iamge = wx.Image(io.BytesIO(getFolderIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getFolderIcon16()))
+        self.update_pause_btn_image("folder")
 
-        self.pause_btn.SetBitmap(folder_iamge.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
         self.pause_btn.SetToolTip("打开所在位置")
 
         self.gauge.SetValue(100)
@@ -740,7 +732,7 @@ class DownloadItemPanel(wx.Panel):
         cover_viewer_dlg.ShowModal()
 
     def onShowError(self, event):
-        if not self.pause_btn.Enabled:
+        if not self.pause_btn.Enabled or self.info["status"] == "retry":
             show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
             show_error_dlg.ShowModal()
 
@@ -749,19 +741,40 @@ class DownloadItemPanel(wx.Panel):
             case "downloading":
                 self.pause_btn.SetToolTip("暂停下载")
 
-                pause_image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
-                self.pause_btn.SetBitmap(pause_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-
                 self.speed_lab.SetLabel("")
 
             case "pause":
                 self.pause_btn.SetToolTip("继续下载")
 
-                resume_image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
-                self.pause_btn.SetBitmap(resume_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-
                 self.speed_lab.SetLabel("暂停中")
+
+            case "retry":
+                self.pause_btn.SetToolTip("重试")
+
+                self.set_status("retry")
+
+                self.pause_btn.Enable(True)
+
+                self.update_pause_btn_image("retry")
+
+        self.update_pause_btn_image(status)
+
+    def update_pause_btn_image(self, status: str):
+        match status:
+            case "downloading":
+                image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
+            case "pause":
+                image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
+            case "retry":
+                image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
+            case "folder":
+                image = wx.Image(io.BytesIO(getFolderIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getFolderIcon16()))
+
+        self.pause_btn.SetBitmap(image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 
     def set_status(self, status: str):
         self.info["status"] = status
-        DownloadInfo.download_list[self.info["id"]]  = self.info
+
+        if self.info["id"] in DownloadInfo.download_list:
+            # 防止任务 id 不在下载列表中而报错
+            DownloadInfo.download_list[self.info["id"]]  = self.info
