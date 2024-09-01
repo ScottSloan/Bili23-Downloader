@@ -24,7 +24,7 @@ class DownloadInfo:
 
 class DownloadUtils:
     def __init__(self, info: dict, onError, onComplete):
-        self.info, self.onError, self.none_audio, self.merge_error, self.audio_type, self.onComplete = info, onError, False, False, None, onComplete
+        self.info, self.onError, self.none_audio, self.merge_error, self.audio_type, self.onComplete = info, onError, False, False, "mp3", onComplete
 
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
@@ -50,28 +50,29 @@ class DownloadUtils:
                 self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
 
                 self.audio_type = "mp3"
-
             else:
-                # 无损
-                if json_dash["flac"]:
-                    if "audio" in json_dash and json_dash["flac"]["audio"]:
-                        self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
+                # 默认为 192K
+                self.get_audio_durl_192k(json_dash)
 
-                        self.audio_type = "flac"
-                    else:
-                        self.get_audio_durl_192k(json_dash)
-                else:
-                    if json_dash["dolby"]:
-                        if "audio" in json_dash and json_dash["dolby"]["audio"]:
-                            # 杜比全景声
-                            self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
+                try:
+                    # 无损
+                    if json_dash["flac"]:
+                        if "audio" in json_dash:
+                            if json_dash["flac"]["audio"]:
+                                self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
 
-                            self.audio_type = "ec3"
-                        else:
-                            self.get_audio_durl_192k(json_dash)
+                                self.audio_type = "flac"
                     else:
-                        # 默认下载 192K
-                        self.get_audio_durl_192k(json_dash)
+                        if json_dash["dolby"]:
+                            if "audio" in json_dash:
+                                if json_dash["dolby"]["audio"]:
+                                    # 杜比全景声
+                                    self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
+
+                                    self.audio_type = "ec3"
+                except:
+                    # 无法获取无损或杜比链接，换回 192K
+                    self.get_audio_durl_192k(json_dash)
 
             self.none_audio = False
         else:
@@ -680,7 +681,12 @@ class DownloadItemPanel(wx.Panel):
                 self.speed_lab.SetForegroundColour(wx.Colour("red"))
                 self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
-                self.pause_btn.Enable(False)
+                self.pause_btn.Enable(True)
+
+                retry_image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
+
+                self.pause_btn.SetBitmap(retry_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
+                self.pause_btn.SetToolTip("重试")
             else:
                 self.speed_lab.SetLabel("下载完成")
 
@@ -689,7 +695,12 @@ class DownloadItemPanel(wx.Panel):
             self.speed_lab.SetLabel("未安装 ffmpeg，合成视频失败")
             self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
-            self.pause_btn.Enable(False)
+            self.pause_btn.Enable(True)
+
+            retry_image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
+
+            self.pause_btn.SetBitmap(retry_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
+            self.pause_btn.SetToolTip("重试")
         
         self.downloader.download_info.clear()
 
