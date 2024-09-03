@@ -1,6 +1,5 @@
 import io
 import wx
-import sys
 import json
 import time
 import wx.adv
@@ -633,7 +632,10 @@ class DownloadItemPanel(wx.Panel):
         self.update_pause_btn("pause")
 
     def onResume(self):
-        self.downloader.onResume()
+        if self.info["download_complete"]:
+            self.onMerge()
+        else:
+            self.downloader.onResume()
 
     def onResumeCallback(self, event):
         self.onResume()
@@ -669,6 +671,8 @@ class DownloadItemPanel(wx.Panel):
         self.size_lab.SetLabel(self.total_size)
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
+
+        self.downloader.download_info.update_base_info_download_complete(True)
 
         if not retry:
             parent = self.GetParent().GetParent()

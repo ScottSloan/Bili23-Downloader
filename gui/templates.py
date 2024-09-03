@@ -170,6 +170,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "status": "wait",
             "resolution": self.resolution if self.resolution else None,
             "codec": None,
+            "download_complete": False, # 下载完成标识
             "flag": False
         }
 

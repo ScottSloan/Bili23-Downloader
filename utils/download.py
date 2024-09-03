@@ -297,6 +297,13 @@ class DownloaderInfo:
 
         self.write(contents)
 
+    def update_base_info_download_complete(self, status: bool):
+        contents = self.read_info()
+
+        contents[f"{self.id}"]["base_info"]["download_complete"] = status
+
+        self.write(contents)
+
     def write(self, contents):
         with open(self.path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False))
