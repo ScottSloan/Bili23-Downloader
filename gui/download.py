@@ -385,9 +385,12 @@ class DownloadWindow(Frame):
             DownloadInfo.no_task = False
         else:
             self.task_lab.SetLabel("下载管理")
-            self.ShowNotificationToast()
+
+            if not DownloadInfo.no_task:
+                self.ShowNotificationToast()
 
             DownloadInfo.no_task = True
+            
 
     def start_download(self):
         for key, value in DownloadInfo.download_list.items():
@@ -404,7 +407,7 @@ class DownloadWindow(Frame):
         return count
     
     def ShowNotificationToast(self):
-        if Config.Download.show_notification and not self.IsShown():
+        if Config.Download.show_notification:
             self.GetParent().RequestUserAttention(wx.USER_ATTENTION_ERROR) # 任务栏闪烁，需主窗口失去焦点的情况下才有效
 
             notification = wx.adv.NotificationMessage("下载完成", "所有任务已下载完成", self) # 弹出 Toast 通知

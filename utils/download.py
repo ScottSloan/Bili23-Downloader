@@ -49,7 +49,11 @@ class Downloader:
         file_size = self.get_total_size(info["url"], info["referer_url"], path)
         self.total_size += file_size
 
-        for index, chunk_list in enumerate(self.get_chunk_list(file_size, Config.Download.max_thread if info["type"] == "video" else 2)):
+        chunk_list = self.get_chunk_list(file_size, Config.Download.max_thread if info["type"] == "video" else 2)
+        self.thread_alive_count += len(chunk_list)
+
+        # 音频文件较小，使用 2 线程下载
+        for index, chunk_list in enumerate(chunk_list):
             url, referer_url, temp = info["url"], info["referer_url"], info.copy()
 
             thread_id = f"{info['type']}_{info['id']}_{index + 1}"
@@ -57,9 +61,8 @@ class Downloader:
             self.thread_info[thread_id] = temp
 
             self.download_id = info["id"]
-
+            
             self.ThreadPool.submit(self.range_download, args = (thread_id, url, referer_url, path, chunk_list,))
-            self.thread_alive_count += 1
 
     def start(self, info: list):
         self.completed_size = 0
@@ -109,16 +112,14 @@ class Downloader:
             
             with open(path, "rb+") as f:
                 start_time = time.time()
-                chunk_size = 1024 * 1024
+                chunk_size = 8192
+                speed_limit = Config.Download.speed_limit_in_mb * 1024 * 1024
                 f.seek(chunk_list[0])
 
                 for chunk in req.iter_content(chunk_size = chunk_size):
                     if chunk:
                         f.write(chunk)
                         f.flush()
-
-                        # 计算执行时间
-                        elapsed_time = time.time() - start_time
 
                         self.completed_size += len(chunk)
 
@@ -127,9 +128,13 @@ class Downloader:
                         if self.completed_size >= self.total_size:
                             self.flag = True
 
+                        # 计算执行时间
+                        elapsed_time = time.time() - start_time
+                        expected_time = chunk_size / (speed_limit / self.thread_alive_count)
+
                         if elapsed_time < 1 and Config.Download.speed_limit:
                             # 计算应暂停的时间，从而限制下载速度
-                            time.sleep(max(0, (chunk_size / (chunk_size * Config.Download.speed_limit_in_mb / self.thread_alive_count)) - elapsed_time))
+                            time.sleep(max(0, expected_time - elapsed_time))
 
                         start_time = time.time()
 
