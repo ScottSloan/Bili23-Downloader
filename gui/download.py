@@ -164,7 +164,7 @@ class DownloadUtils:
 
             self.merge_error = True
 
-        self.onComplete()
+        self.onComplete([video_f_name, audio_f_name])
 
     def has_codec(self, video_durl: List[dict], codec_id: int):
         for index, entry in enumerate(video_durl):
@@ -685,7 +685,7 @@ class DownloadItemPanel(wx.Panel):
 
         Thread(target = self.utils.merge_video).start()
 
-    def onMergeComplete(self):
+    def onMergeComplete(self, file_names):
         self.set_status("completed")
         
         if self.utils.merge_error:
@@ -701,6 +701,10 @@ class DownloadItemPanel(wx.Panel):
             self.speed_lab.SetLabel("下载完成")
 
             self.pause_btn.Enable(True)
+
+            if Config.Merge.auto_clean:
+                # 再次删除文件，防止残留
+                remove_files(Config.Download.path, file_names)
         
         self.downloader.download_info.clear()
 
