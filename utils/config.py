@@ -3,6 +3,9 @@ import platform
 from configparser import RawConfigParser
 
 class Config:
+    class Sys:
+        platform = platform.system().lower()
+
     class APP:
         name = "Bili23 Downloader"
 
@@ -17,10 +20,7 @@ class Config:
         ip = port = uname = passwd = None
     
     class User:
-        base_path = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
-        path = os.path.join(base_path, "user.ini")
-
-        face_path = os.path.join(base_path, "face.jpg")
+        base_path = path = face_path = None
 
         login = False
         uname = face = sessdata = None
@@ -69,9 +69,6 @@ class Config:
         path = None
         available = False
 
-    class Sys:
-        platform = platform.system().lower()
-
 class Audio:
     audio_quality = None
 
@@ -99,6 +96,18 @@ class ConfigUtils:
         from utils.tools import check_ffmpeg_available
 
         check_ffmpeg_available()
+
+    def init_user(self):
+        match Config.Sys.platform:
+            case "windows":
+                Config.User.base_path = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
+
+            case "linux" | "darwin":
+                Config.User.base_path = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
+
+        Config.User.path = os.path.join(Config.User.base_path, "user.ini")
+
+        Config.User.face_path = os.path.join(Config.User.base_path, "face.jpg")
 
     def load_config(self):
         self.config = RawConfigParser()
@@ -152,6 +161,8 @@ class ConfigUtils:
             os.makedirs(Config.Download.path)
 
     def create_user_dirs(self):
+        self.init_user()
+
         if not os.path.exists(Config.User.base_path):
             os.makedirs(Config.User.base_path)
 

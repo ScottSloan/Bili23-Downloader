@@ -1,6 +1,7 @@
 import wx
 
 from utils.tools import get_all_ffmpeg_path
+from utils.config import Config
 
 class DetectDialog(wx.Dialog):
     def __init__(self, parent):
@@ -11,6 +12,8 @@ class DetectDialog(wx.Dialog):
         self.Bind_EVT()
 
         self.CenterOnParent()
+
+        self.set_dafault_label()
 
         self.init_utils()
 
@@ -45,6 +48,16 @@ class DetectDialog(wx.Dialog):
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
+
+    def set_dafault_label(self):
+        match Config.Sys.platform:
+            case "windows":
+                label = "未检测到 FFmpeg"
+
+            case "linux" | "darwin":
+                label = "Linux 或 macOS 系统下不可用"
+        
+        self.cwd_path_lab.SetLabel(label)
 
     def init_utils(self):
         paths = get_all_ffmpeg_path()

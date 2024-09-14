@@ -265,49 +265,55 @@ class DownloaderInfo:
     def update_thread_info(self, thread_info, completed_size):
         contents = self.read_info()
 
-        contents[f"{self.id}"]["thread_info"] = thread_info
-        contents[f"{self.id}"]["base_info"]["completed_size"] = completed_size
+        if f"{self.id}" in contents:
+            contents[f"{self.id}"]["thread_info"] = thread_info
+            contents[f"{self.id}"]["base_info"]["completed_size"] = completed_size
 
-        self.write(contents)
+            self.write(contents)
 
     def update_base_info(self, base_info):
         contents = self.read_info()
 
-        contents[f"{self.id}"]["base_info"]["size"] = base_info["size"]
-        contents[f"{self.id}"]["base_info"]["codec"] = base_info["codec"]
-        contents[f"{self.id}"]["base_info"]["complete"] = base_info["complete"]
-        contents[f"{self.id}"]["base_info"]["resolution"] = base_info["resolution"]
-        
-        self.write(contents)
+        if f"{self.id}" in contents:
+            contents[f"{self.id}"]["base_info"]["size"] = base_info["size"]
+            contents[f"{self.id}"]["base_info"]["codec"] = base_info["codec"]
+            contents[f"{self.id}"]["base_info"]["complete"] = base_info["complete"]
+            contents[f"{self.id}"]["base_info"]["resolution"] = base_info["resolution"]
+            
+            self.write(contents)
 
     def update_base_info_progress(self, progress, complete):
         contents = self.read_info()
 
-        contents[f"{self.id}"]["base_info"]["progress"] = progress
-        contents[f"{self.id}"]["base_info"]["complete"] = complete
+        if f"{self.id}" in contents:
+            contents[f"{self.id}"]["base_info"]["progress"] = progress
+            contents[f"{self.id}"]["base_info"]["complete"] = complete
 
-        self.write(contents)
+            self.write(contents)
 
     def update_base_info_status(self, status):
         contents = self.read_info()
 
-        contents[f"{self.id}"]["base_info"]["status"] = status
+        if f"{self.id}" in contents:
+            contents[f"{self.id}"]["base_info"]["status"] = status
 
-        self.write(contents)
+            self.write(contents)
 
     def update_base_info_total_size(self, total_size):
         contents = self.read_info()
 
-        contents[f"{self.id}"]["base_info"]["total_size"] = total_size
+        if f"{self.id}" in contents:
+            contents[f"{self.id}"]["base_info"]["total_size"] = total_size
 
-        self.write(contents)
+            self.write(contents)
 
     def update_base_info_download_complete(self, status: bool):
         contents = self.read_info()
 
-        contents[f"{self.id}"]["base_info"]["download_complete"] = status
+        if f"{self.id}" in contents:
+            contents[f"{self.id}"]["base_info"]["download_complete"] = status
 
-        self.write(contents)
+            self.write(contents)
 
     def write(self, contents):
         with open(self.path, "w", encoding = "utf-8") as f:

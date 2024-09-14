@@ -1,12 +1,12 @@
 import wx
 import wx.py
+from threading import Thread
 
 from utils.config import Config, Download, conf, Audio
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.activity import ActivityInfo, ActivityParser
 from utils.tools import *
-from utils.thread import Thread
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.cookie import CookieUtils
@@ -32,7 +32,7 @@ class MainWindow(Frame):
 
         self.Bind_EVT()
 
-        self.CenterOnScreen()
+        self.CenterOnParent()
 
         self.onCheckFFmpeg()
 
@@ -427,10 +427,7 @@ class MainWindow(Frame):
         webbrowser.open("https://scott-sloan.cn/archives/12/")
 
     def onCheckUpdate(self, event):
-        thread = Thread(target = self.checkUpdateManuallyThread)
-        thread.setDaemon(True)
-
-        thread.start()
+        wx.CallAfter(self.checkUpdateManuallyThread)
 
     def onAudioDetail(self, event):
         if not self.parse_ready:

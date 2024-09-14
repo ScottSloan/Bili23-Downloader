@@ -6,6 +6,7 @@ import wx.adv
 import requests
 import subprocess
 from typing import List
+from threading import Thread
 
 from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
@@ -13,7 +14,6 @@ from gui.cover_viewer import CoverViewerDialog
 
 from utils.icons import *
 from utils.config import Config, Download, conf, Audio
-from utils.thread import Thread
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import *
 
@@ -180,7 +180,7 @@ class DownloadUtils:
         else:
             # 合成失败时，获取错误信息
             try:
-                output = self.merge_process.stdout.read().decode("cp936").replace("\r\n", "")
+                output = self.merge_process.stdout.decode("cp936").replace("\r\n", "")
             except:
                 output = "无法获取错误信息"
 
@@ -189,10 +189,9 @@ class DownloadUtils:
         wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
 
     def run_subprocess(self, cmd):
-        process = subprocess.Popen(cmd, shell = True, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-        process.wait()
-
-        # 等待 subprocess 执行完成
+        process = subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        
+        # subprocess 执行完成后，返回 process 指针
 
         return process
     
@@ -340,7 +339,13 @@ class DownloadWindow(Frame):
 
     def onOpenDir(self, event):
         # 打开下载目录
-        os.startfile(Config.Download.path)
+        match Config.Sys.platform:
+            case "windows":
+                os.startfile(Config.Download.path)
+            case "linux":
+                subprocess.run(["xdg-open", f'{Config.Download.path}'])
+            case "darwin":
+                subprocess.run(["open", f'{Config.Download.path}'])
 
     def onMaxDownloadChoice(self, event):
         index = self.max_download_choice.GetSelection()

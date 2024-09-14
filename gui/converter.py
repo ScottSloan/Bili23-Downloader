@@ -8,7 +8,7 @@ from gui.templates import Frame
 
 from utils.tools import target_codec_map, gpu_map
 from utils.config import Config
-from utils.thread import Thread
+from threading import Thread
 
 class ConverterWindow(Frame):
     def __init__(self, parent):

@@ -1,9 +1,13 @@
 # Bili23-Downloader-GUI
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.1-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
+![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
 
 Bili23 Downloader GUI
 
 下载 Bilibili 视频/番剧/电影/纪录片 等资源  
+
+跨平台的 Bilibili 视频下载工具，支持 Windows、Linux*、macOS* 三平台。
+
+* Linux、MacOS 适配工作正在全力推进中，目前基本功能可正常使用，如需尝鲜，请切换至 dev 分支，自行下载源码运行
 
 ### **导航**
 + [下载地址](https://github.com/ScottSloan/Bili23-Downloader/releases)
@@ -16,7 +20,7 @@ Bili23 Downloader GUI
 * [CLI 命令行版本](https://github.com/ScottSloan/Bili23-Downloader-CLI) 
 
 # 使用说明
-本页仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](https://scott-sloan.cn/archives/12/)。
+本页面仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](https://www.scott-sloan.cn/archives/12/)。
 
 ### **主界面**
 [![pkAukBd.png](https://s21.ax1x.com/2024/05/04/pkAukBd.png)](https://imgse.com/i/pkAukBd)
