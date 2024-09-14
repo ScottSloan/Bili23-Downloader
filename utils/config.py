@@ -1,14 +1,15 @@
 import os
+import platform
 from configparser import RawConfigParser
 
 class Config:
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.45"
-        version_code = 1450
+        version = "1.46"
+        version_code = 1460
 
-        release_date = "2024/09/05"
+        release_date = "2024/09/14"
 
     class Proxy:
         proxy = auth = False
@@ -67,6 +68,9 @@ class Config:
     class FFmpeg:
         path = None
         available = False
+
+    class Sys:
+        platform = platform.system().lower()
 
 class Audio:
     audio_quality = None
