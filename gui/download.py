@@ -386,6 +386,10 @@ class DownloadWindow(Frame):
             if self.is_already_in_list(entry["title"], entry["cid"]):
                 continue
 
+            if multiple:
+                # 只有在批量下载视频时，才更新 index，否则都为 None
+                entry["index"] = index + 1
+
             item = DownloadItemPanel(self.download_list_panel, entry)
 
             self.download_list_panel.sizer.Add(item, 0, wx.EXPAND)
@@ -485,8 +489,13 @@ class DownloadItemPanel(wx.Panel):
         # 获取视频封面
         Thread(target = self.get_preview_pic).start()
 
-        self.file_full_name = f"{self.info['title']}.mp4"
+        # 当 index 不为 None 时，添加 index，避免无法打开文件所在位置
+        if self.info["index"]:
+            self.file_full_name = f"{self.info['index']} - {self.info['title']}.mp4"
+        else:
+            self.file_full_name = f"{self.info['title']}.mp4"
 
+        # 恢复下载 flag
         if self.info["flag"]:
             if self.info["complete"]:
                 self.size_lab.SetLabel("{}/{}".format(self.info["complete"], self.info["size"]))
@@ -802,7 +811,7 @@ class DownloadItemPanel(wx.Panel):
                     f'{self.file_full_name}'
                 ]
         
-        subprocess.run(cmd, shell = True, cwd = Config.Download.path)
+        subprocess.run(cmd, cwd = Config.Download.path)
 
     def onViewCover(self, event):
         cover_viewer_dlg = CoverViewerDialog(self.GetParent().GetParent(), self.cover_image, self.cover_image_raw)

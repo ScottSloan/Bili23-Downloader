@@ -129,7 +129,7 @@ def get_user_face():
         with open(Config.User.face_path, "wb") as f:
             f.write(req.content)
 
-    return os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader", "face.jpg")
+    return Config.User.face_path
 
 def remove_files(path, name):
     for i in name:
@@ -164,7 +164,7 @@ def find_str(pattern, string):
         return None
 
 def get_cmd_output(cmd):
-    process = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = True)
+    process = subprocess.run(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = True)
 
     return process.stdout
 

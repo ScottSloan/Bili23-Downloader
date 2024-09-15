@@ -156,6 +156,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def format_info_entry(self, type: int, title: str, pic: str, bvid: str = None, cid: str = None):
         return {
             "id": get_new_id(),
+            "index": None,
             "url": VideoInfo.url if Download.current_type == VideoInfo else BangumiInfo.url,
             "type": type,
             "bvid": bvid,
