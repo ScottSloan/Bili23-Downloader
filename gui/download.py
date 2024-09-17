@@ -141,42 +141,30 @@ class DownloadUtils:
 
         if self.none_audio:
             # 无音频文件，直接重命名
-            cmd = [
-                "rename", video_f_name, f'{title}.mp4'
-            ]
+            cmd = f'rename "{video_f_name}" "{title}.mp4"'
         else:
             # 存在音频文件，调用 FFmpeg 合成
-            cmd = [
-                f'{Config.FFmpeg.path}',
-                "-y",
-                "-i", f'{video_f_name}',
-                "-i", f'{audio_f_name}',
-                "-acodec", "copy",
-                "-vcodec", "copy",
-                "-strict", "experimental",
-                f'{title}.mp4'
-            ]
+            cmd = f'"{Config.FFmpeg.path}" -y -i "{video_f_name}" -i "{audio_f_name}" -acodec copy -vcodec copy -strict experimental "{title}.mp4"'
+
+        self.merge_process = self.run_subprocess(cmd)
 
         try:
             self.merge_process = self.run_subprocess(cmd)
-        except:
+        except Exception as e:
             # subprocess 运行出错
-            self.on_merge_error("尝试启动 subprocess 时出错")
+            self.on_merge_error(f"尝试启动 subprocess 时出错：{e}")
 
             wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
+            
             return
         
         if self.merge_process.returncode == 0:
             if Config.Merge.auto_clean:
                 remove_files(Config.Download.path, [video_f_name, audio_f_name])
             else:
-                cmd = [
-                    "rename", video_f_name, f'{title}_video.mp4',
-                    "&&",
-                    "rename", audio_f_name, f'{title}_audio.{self.audio_type}'
-                ]
+                cmd = f'rename "{video_f_name}" "{title}_video.mp4" && rename "{audio_f_name}" "{title}_audio.{self.audio_type}"'
 
-                self.run_subprocess(cmd)
+                self.merge_process = self.run_subprocess(cmd)
         else:
             # 合成失败时，获取错误信息
             try:
@@ -189,14 +177,19 @@ class DownloadUtils:
         wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
 
     def run_subprocess(self, cmd):
-        process = subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        process = subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
         
         # subprocess 执行完成后，返回 process 指针
 
         return process
     
     def on_merge_error(self, output):
-        self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
+        if hasattr(self, "merge_process"):
+            return_code = self.merge_process.returncode
+        else:
+            return_code = "未知"
+            
+        self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": return_code}
 
         self.merge_error = True
 
@@ -250,7 +243,7 @@ class DownloadWindow(Frame):
         top_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
         self.download_list_panel = ScrolledPanel(self, size = self.FromDIP((720, 280)))
-        self.download_list_panel.SetBackgroundColour("white")
+        self.download_list_panel.SetBackgroundColour(get_background_color())
 
         bottom_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
@@ -273,8 +266,8 @@ class DownloadWindow(Frame):
 
         self.SetSizerAndFit(vbox)
 
-        self.SetBackgroundColour("white")
-
+        self.SetBackgroundColour(get_background_color())
+        
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
@@ -343,9 +336,9 @@ class DownloadWindow(Frame):
             case "windows":
                 os.startfile(Config.Download.path)
             case "linux":
-                subprocess.run(["xdg-open", f'{Config.Download.path}'])
+                subprocess.run(f'xdg-open "{Config.Download.path}"', shell = True)
             case "darwin":
-                subprocess.run(["open", f'{Config.Download.path}'])
+                subprocess.run(f'open "{Config.Download.path}"', shell = True)
 
     def onMaxDownloadChoice(self, event):
         index = self.max_download_choice.GetSelection()
@@ -789,29 +782,22 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.clear()
     
     def onOpenFolder(self):
+        if not os.path.exists(os.path.join(Config.Download.path, self.file_full_name)):
+            wx.MessageDialog(self.GetParent().GetParent(), f"文件不存在\n\n无法打开文件：{self.file_full_name}\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
+            return
+
         match Config.Sys.platform:
             case "windows":
-                cmd = [
-                    "explorer.exe",
-                    "/select,",
-                    f'{self.file_full_name}'
-                ]
+                cmd = f'explorer.exe /select,{self.file_full_name}'
 
             case "linux":
                 # Linux 下 xdg-open 并不支持选中文件，故仅打开所在文件夹
-                cmd = [
-                    "xdg-open",
-                    f'{Config.Download.path}'
-                ]
+                cmd = f'xdg-open "{Config.Download.path}"'
 
             case "darwin":
-                cmd = [
-                    "open",
-                    "-R",
-                    f'{self.file_full_name}'
-                ]
+                cmd = f'open -R "{self.file_full_name}"'
         
-        subprocess.run(cmd, cwd = Config.Download.path)
+        subprocess.run(cmd, cwd = Config.Download.path, shell = True)
 
     def onViewCover(self, event):
         cover_viewer_dlg = CoverViewerDialog(self.GetParent().GetParent(), self.cover_image, self.cover_image_raw)

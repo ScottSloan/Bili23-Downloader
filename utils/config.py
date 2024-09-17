@@ -1,10 +1,12 @@
 import os
+import wx
 import platform
 from configparser import RawConfigParser
 
 class Config:
     class Sys:
         platform = platform.system().lower()
+        dark_mode = False
 
     class APP:
         name = "Bili23 Downloader"

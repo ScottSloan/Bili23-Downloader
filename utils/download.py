@@ -24,6 +24,8 @@ class Downloader:
         self.ThreadPool = ThreadPool()
 
         self.flag = False
+        self.stop_flag = False # 线程停止标志位
+
         self.thread_info = {}
         self.thread_alive_count = 0
 
@@ -81,6 +83,9 @@ class Downloader:
         self.start_wait_thread()
 
     def restart(self):
+        # 重置停止线程标志位
+        self.stop_flag = False
+
         for key, entry in self.thread_info.items():
             path, chunk_list = os.path.join(Config.Download.path, entry["file_name"]), entry["chunk_list"]
 
@@ -118,6 +123,10 @@ class Downloader:
 
                 for chunk in req.iter_content(chunk_size = chunk_size):
                     if chunk:
+                        if self.stop_flag:
+                            # 检测停止标志位
+                            break
+
                         f.write(chunk)
                         f.flush()
 
@@ -159,6 +168,10 @@ class Downloader:
                 "size": "{}/{}".format(format_size(self.completed_size / 1024), format_size(self.total_size / 1024)),
                 "complete": format_size(self.completed_size / 1024)
             }
+
+            if self.stop_flag:
+                # 检测停止标志位
+                break
             
             self.update_download_info()
 
@@ -173,18 +186,17 @@ class Downloader:
     def onResume(self):
         self.restart()
 
+        # 启动监听线程
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
         self.listen_thread.setDaemon(True)
 
         self.listen_thread.start()
 
     def onStop(self):
-        self.ThreadPool.stop()
-        self.listen_thread.stop()
+        self.stop_download()
 
     def onFinished(self):
-        self.ThreadPool.stop()
-        self.listen_thread.stop()
+        self.stop_download()
 
         wx.CallAfter(self.onMerge)
     
@@ -231,6 +243,13 @@ class Downloader:
 
     def update_total_size(self, total_size):
         self.download_info.update_base_info_total_size(total_size)
+
+    def stop_download(self):
+        # 停止下载线程，关闭线程池和监听线程
+        self.stop_flag = True
+
+        self.ThreadPool.stop()
+        self.listen_thread.stop()
 
 class DownloaderInfo:
     def __init__(self):

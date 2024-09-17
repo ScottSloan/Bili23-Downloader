@@ -39,6 +39,9 @@ class MainWindow(Frame):
         self.init_user_info()
     
     def init_UI(self):
+        # 获取系统是否处于深色模式
+        Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
+
         self.init_ids()
 
         self.infobar = InfoBar(self.panel)
@@ -272,18 +275,19 @@ class MainWindow(Frame):
             case "b23.tv":
                 new_url = process_shorklink(url)
 
-                new_thread = Thread(target = self.parseThread, args = (new_url,))
-                new_thread.setDaemon(True)
+                self.startNewParseThread((new_url,))
 
-                new_thread.start()
+                # 抛出异常，终止线程运行
+                # 此处不使用 stop 方法
+
+                raise Exception
 
             case "blackboard" | "festival":
                 self.activity_parser.parse_url(url)
-                
-                new_thread = Thread(target = self.parseThread, args = (ActivityInfo.new_url,))
-                new_thread.setDaemon(True)
 
-                new_thread.start()
+                self.startNewParseThread((ActivityInfo.new_url,))
+
+                raise Exception
 
             case _:
                 self.onError(100)
@@ -563,3 +567,9 @@ class MainWindow(Frame):
                     circle_image.SetAlpha(x, y, 0)
         
         return circle_image
+    
+    def startNewParseThread(self, *args):
+        self.parse_thread = Thread(target = self.parseThread, args = args)
+        self.parse_thread.setDaemon(True)
+
+        self.parse_thread.start()

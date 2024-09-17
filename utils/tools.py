@@ -1,5 +1,6 @@
 import re
 import os
+import wx
 import json
 import random
 import ctypes
@@ -164,7 +165,7 @@ def find_str(pattern, string):
         return None
 
 def get_cmd_output(cmd):
-    process = subprocess.run(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = True)
+    process = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = True)
 
     return process.stdout
 
@@ -213,9 +214,7 @@ def check_ffmpeg_available():
     get_ffmpeg_path()
 
     # 获取 FFmpeg 输出信息，进而检测 FFmpeg 可用性
-    cmd = [
-        f'{Config.FFmpeg.path}', "-version"
-    ]
+    cmd = f'"{Config.FFmpeg.path}" -version'
 
     output = get_cmd_output(cmd)
 
@@ -228,3 +227,9 @@ def get_current_time():
 def save_log(returncode, output):
     with open("error.log", "w", encoding = "utf-8") as f:
         f.write(f"时间：{get_current_time()} 返回值：{returncode}\n错误信息：\n{output}")
+
+def get_background_color():
+    if Config.Sys.dark_mode:
+        return wx.Colour(30, 30, 30)
+    else:
+        return "white"
