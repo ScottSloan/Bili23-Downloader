@@ -6,6 +6,7 @@ import random
 import ctypes
 import requests
 import subprocess
+import webbrowser
 from datetime import datetime
 from requests.auth import HTTPProxyAuth
 
@@ -169,46 +170,58 @@ def get_cmd_output(cmd):
 
     return process.stdout
 
-def get_all_ffmpeg_path():
-    # 定位环境变量和运行目录中的 FFmpeg
-
-    match Config.Sys.platform:
-        case "windows":
-            # Windows 下使用 where ffmpeg 执行结果
-            output = get_cmd_output("where ffmpeg").split("\r\n")
-        case "linux" | "darwin":
-            # Linux 和 macOS 下直接使用 ffmpeg
-            output = ["ffmpeg"]
-
-    cwd_path = env_path = None
-
-    if output[0]:
-        if len(output) > 1:
-            # 环境变量中存在，运行目录中也存在
-            cwd_path = output[0]
-            env_path = output[1]
-        else:
-            if output[0].startswith(os.getcwd()):
-                # 只存在于运行目录
-                cwd_path = output[0]
-            else:
-                # 只存在于环境变量
-                env_path = output[0]
-
-    return {"cwd_path": cwd_path, "env_path": env_path}
-
 def get_ffmpeg_path():
     if not Config.FFmpeg.path:
         # 若未指定 FFmpeg 路径，则自动检测 FFmpeg
-        paths = get_all_ffmpeg_path()
+        
+        cwd_path = get_ffmpeg_cwd_path()
+        env_path = get_ffmpeg_env_path()
 
-        if paths["cwd_path"]:
+        if cwd_path:
             # 优先使用运行目录下的 FFmpeg
-            Config.FFmpeg.path = paths["cwd_path"]
+            Config.FFmpeg.path = cwd_path
 
-        if paths["env_path"] and not paths["cwd_path"]:
+        if env_path and not cwd_path:
             # 使用环境变量中的 FFmpeg
-            Config.FFmpeg.path = paths["env_path"]
+            Config.FFmpeg.path = env_path
+
+def get_ffmpeg_env_path():
+    # 从 PATH 环境变量中获取 ffmpeg 的路径
+    ffmpeg_path = None
+    path_env = os.environ.get('PATH', '')
+    
+    match Config.Sys.platform:
+        case "windows":
+            file_name = "ffmpeg.exe"
+        case "linux" | "darwin":
+            file_name = "ffmpeg"
+
+    # 将 PATH 环境变量中的路径分割成各个目录
+    for directory in path_env.split(os.pathsep):
+        possible_path = os.path.join(directory, file_name)
+
+        if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
+            ffmpeg_path = possible_path
+            break
+
+    return ffmpeg_path
+
+def get_ffmpeg_cwd_path():
+    # 从运行目录中获取 ffmpeg 路径
+    ffmpeg_path = None
+
+    match Config.Sys.platform:
+        case "windows":
+            file_name = "ffmpeg.exe"
+        case "linux" | "darwin":
+            file_name = "ffmpeg"
+    
+    possible_path = os.path.join(os.getcwd(), file_name)
+    
+    if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
+        ffmpeg_path = possible_path
+
+    return ffmpeg_path
     
 def check_ffmpeg_available():
     get_ffmpeg_path()

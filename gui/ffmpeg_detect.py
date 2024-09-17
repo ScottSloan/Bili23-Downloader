@@ -1,7 +1,6 @@
 import wx
 
-from utils.tools import get_all_ffmpeg_path
-from utils.config import Config
+from utils.tools import *
 
 class DetectDialog(wx.Dialog):
     def __init__(self, parent):
@@ -13,18 +12,16 @@ class DetectDialog(wx.Dialog):
 
         self.CenterOnParent()
 
-        self.set_dafault_label()
-
         self.init_utils()
 
     def init_UI(self):
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
         self.env_chk = wx.RadioButton(self, -1, "环境变量")
-        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((250, 20)), style = wx.ST_ELLIPSIZE_END)
+        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((300, 20)), style = wx.ST_ELLIPSIZE_END)
 
         self.cwd_chk = wx.RadioButton(self, -1, "运行目录")
-        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((250, 20)), style = wx.ST_ELLIPSIZE_END)
+        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((300, 20)), style = wx.ST_ELLIPSIZE_END)
 
         self.env_chk.Enable(False)
         self.env_path_lab.Enable(False)
@@ -49,32 +46,23 @@ class DetectDialog(wx.Dialog):
 
         self.SetSizerAndFit(vbox)
 
-    def set_dafault_label(self):
-        match Config.Sys.platform:
-            case "windows":
-                label = "未检测到 FFmpeg"
-
-            case "linux" | "darwin":
-                label = "Linux 或 macOS 系统下不可用"
-        
-        self.cwd_path_lab.SetLabel(label)
-
     def init_utils(self):
-        paths = get_all_ffmpeg_path()
+        cwd_path = get_ffmpeg_cwd_path()
+        env_path = get_ffmpeg_env_path()
 
-        if paths["env_path"]:
+        if env_path:
             self.env_chk.Enable(True)
             self.env_path_lab.Enable(True)
 
-            self.env_path_lab.SetLabel(paths["env_path"])
-            self.env_path_lab.SetToolTip(paths["env_path"])
+            self.env_path_lab.SetLabel(env_path)
+            self.env_path_lab.SetToolTip(env_path)
 
-        if paths["cwd_path"]:
+        if cwd_path:
             self.cwd_chk.Enable(True)
             self.cwd_path_lab.Enable(True)
             
-            self.cwd_path_lab.SetLabel(paths["cwd_path"])
-            self.cwd_path_lab.SetToolTip(paths["cwd_path"])
+            self.cwd_path_lab.SetLabel(cwd_path)
+            self.cwd_path_lab.SetToolTip(cwd_path)
 
     def Bind_EVT(self):
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)

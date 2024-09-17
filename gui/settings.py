@@ -255,8 +255,6 @@ class MergeTab(wx.Panel):
 
         self.init_data()
 
-        self.check_sys_platform()
-
     def init_UI(self):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
@@ -310,16 +308,6 @@ class MergeTab(wx.Panel):
         self.path_box.SetValue(Config.FFmpeg.path)
         
         self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
-
-    def check_sys_platform(self):
-        match Config.Sys.platform:
-            case "windows":
-                enable = True
-            case "linux" | "darwin":
-                enable = False
-
-        self.path_box.Enable(enable)
-        self.browse_btn.Enable(enable)
 
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()

@@ -3,6 +3,7 @@ import wx
 import webbrowser
 
 from utils.config import Config
+from utils.tools import *
 from utils.icons import getAppIcon
 
 from .license import LicenseWindow

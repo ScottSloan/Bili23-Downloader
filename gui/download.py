@@ -336,9 +336,9 @@ class DownloadWindow(Frame):
             case "windows":
                 os.startfile(Config.Download.path)
             case "linux":
-                subprocess.run(f'xdg-open "{Config.Download.path}"', shell = True)
+                subprocess.Popen(f'xdg-open "{Config.Download.path}"', shell = True)
             case "darwin":
-                subprocess.run(f'open "{Config.Download.path}"', shell = True)
+                subprocess.Popen(f'open "{Config.Download.path}"', shell = True)
 
     def onMaxDownloadChoice(self, event):
         index = self.max_download_choice.GetSelection()
@@ -797,7 +797,7 @@ class DownloadItemPanel(wx.Panel):
             case "darwin":
                 cmd = f'open -R "{self.file_full_name}"'
         
-        subprocess.run(cmd, cwd = Config.Download.path, shell = True)
+        subprocess.Popen(cmd, cwd = Config.Download.path, shell = True)
 
     def onViewCover(self, event):
         cover_viewer_dlg = CoverViewerDialog(self.GetParent().GetParent(), self.cover_image, self.cover_image_raw)
