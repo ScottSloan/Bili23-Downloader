@@ -6,9 +6,9 @@ from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.activity import ActivityInfo, ActivityParser
 from utils.tools import *
-from utils.thread import Thread
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
+from utils.thread import Thread
 from utils.cookie import CookieUtils
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
@@ -32,7 +32,7 @@ class MainWindow(Frame):
 
         self.Bind_EVT()
 
-        self.CenterOnScreen()
+        self.CenterOnParent()
 
         self.onCheckFFmpeg()
 
@@ -59,7 +59,7 @@ class MainWindow(Frame):
         resolution_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.resolution_choice = wx.Choice(self.panel, -1)
 
-        self.audio_btn = wx.Button(self.panel, -1, "...", size = self.FromDIP((24, 24)))
+        self.audio_btn = wx.Button(self.panel, -1, "...", size = (self.resolution_choice.GetSize()[1], self.resolution_choice.GetSize()[1]))
 
         resolution_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         resolution_hbox.AddStretchSpacer()
@@ -243,12 +243,13 @@ class MainWindow(Frame):
         url = self.url_box.GetValue()
         self.clearTreeList()
 
-        self.parse_thraed = Thread(target = self.parseThread, args = (url,))
-        self.parse_thraed.setDaemon(True)
-        self.parse_thraed.start()
-
         self.processing_window = ProcessingWindow(self)
         self.processing_window.Show()
+
+        self.parse_thread = Thread(target = self.parseThread, args = (url, ))
+        self.parse_thread.setDaemon(True)
+
+        self.parse_thread.start()
 
         self.parse_ready = True
 
@@ -258,32 +259,36 @@ class MainWindow(Frame):
         match find_str("av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 self.video_parser.parse_url(url)
-                self.setVideoList()
+                wx.CallAfter(self.setVideoList)
 
-                self.setResolutionList(VideoInfo)
+                wx.CallAfter(self.setResolutionList, VideoInfo)
+
             case "ep" | "ss" | "md":
                 self.bangumi_parser.parse_url(url)
-                self.setBangumiList()
+                wx.CallAfter(self.setBangumiList)
 
-                self.setResolutionList(BangumiInfo)
+                wx.CallAfter(self.setResolutionList, BangumiInfo)
+
             case "b23.tv":
                 new_url = process_shorklink(url)
 
-                Thread(target = self.parseThread, args = (new_url,)).start()
-                
-                self.parse_thraed.stop()
+                new_thread = Thread(target = self.parseThread, args = (new_url,))
+                new_thread.setDaemon(True)
+
+                new_thread.start()
 
             case "blackboard" | "festival":
                 self.activity_parser.parse_url(url)
                 
-                Thread(target = self.parseThread, args = (ActivityInfo.new_url,)).start()
-                
-                self.parse_thraed.stop()
+                new_thread = Thread(target = self.parseThread, args = (ActivityInfo.new_url,))
+                new_thread.setDaemon(True)
+
+                new_thread.start()
 
             case _:
                 self.onError(100)
 
-        self.onGetFinished()
+        wx.CallAfter(self.onGetFinished)
 
     def onGetFinished(self):
         self.processing_window.Hide()
@@ -364,7 +369,9 @@ class MainWindow(Frame):
         self.download_btn.Enable(False)
 
         wx.CallAfter(self.SetFocus)
-        self.parse_thraed.stop()
+        self.parse_thread.stop()
+
+        self.parse_ready = False
 
     def onLogin(self, event):
         login_window = LoginWindow(self)
@@ -427,10 +434,7 @@ class MainWindow(Frame):
         webbrowser.open("https://scott-sloan.cn/archives/12/")
 
     def onCheckUpdate(self, event):
-        thread = Thread(target = self.checkUpdateManuallyThread)
-        thread.setDaemon(True)
-
-        thread.start()
+        wx.CallAfter(self.checkUpdateManuallyThread)
 
     def onAudioDetail(self, event):
         if not self.parse_ready:

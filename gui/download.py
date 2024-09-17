@@ -6,6 +6,7 @@ import wx.adv
 import requests
 import subprocess
 from typing import List
+from threading import Thread
 
 from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
@@ -13,7 +14,6 @@ from gui.cover_viewer import CoverViewerDialog
 
 from utils.icons import *
 from utils.config import Config, Download, conf, Audio
-from utils.thread import Thread
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import *
 
@@ -75,6 +75,7 @@ class DownloadUtils:
 
             self.none_audio = False
         else:
+            # 视频不存在音频，标记 flag
             self.none_audio = True
     
     def get_video_durl_json(self):
@@ -139,10 +140,12 @@ class DownloadUtils:
         self.merge_error = False
 
         if self.none_audio:
+            # 无音频文件，直接重命名
             cmd = [
-                "rename", video_f_name, f"{title}.mp4"
+                "rename", video_f_name, f'{title}.mp4'
             ]
         else:
+            # 存在音频文件，调用 FFmpeg 合成
             cmd = [
                 f'{Config.FFmpeg.path}',
                 "-y",
@@ -151,30 +154,51 @@ class DownloadUtils:
                 "-acodec", "copy",
                 "-vcodec", "copy",
                 "-strict", "experimental",
-                f"{title}.mp4"
+                f'{title}.mp4'
             ]
-        self.merge_process = subprocess.Popen(cmd, shell=True, cwd=Config.Download.path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        self.merge_process.wait()
+
+        try:
+            self.merge_process = self.run_subprocess(cmd)
+        except:
+            # subprocess 运行出错
+            self.on_merge_error("尝试启动 subprocess 时出错")
+
+            wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
+            return
         
         if self.merge_process.returncode == 0:
             if Config.Merge.auto_clean:
                 remove_files(Config.Download.path, [video_f_name, audio_f_name])
             else:
-                cmd = ["cd", Config.Download.path, "&&", "rename", video_f_name, f"{title}_video.mp4", "&&", "rename", audio_f_name, f"{title}_audio.{self.audio_type}"]
+                cmd = [
+                    "rename", video_f_name, f'{title}_video.mp4',
+                    "&&",
+                    "rename", audio_f_name, f'{title}_audio.{self.audio_type}'
+                ]
 
-                process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-                process.wait()
+                self.run_subprocess(cmd)
         else:
-            if self.merge_process.stdout:
-                output = self.merge_process.stdout.read().decode("cp936").replace("\r\n", "")
-            else:
+            # 合成失败时，获取错误信息
+            try:
+                output = self.merge_process.stdout.decode("cp936").replace("\r\n", "")
+            except:
                 output = "无法获取错误信息"
-            
-            self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
 
-            self.merge_error = True
+            self.on_merge_error(output)
 
-        self.onComplete([video_f_name, audio_f_name])
+        wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
+
+    def run_subprocess(self, cmd):
+        process = subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        
+        # subprocess 执行完成后，返回 process 指针
+
+        return process
+    
+    def on_merge_error(self, output):
+        self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": self.merge_process.returncode}
+
+        self.merge_error = True
 
     def has_codec(self, video_durl: List[dict], codec_id: int):
         for index, entry in enumerate(video_durl):
@@ -314,7 +338,14 @@ class DownloadWindow(Frame):
         self.run_callback_list(callback_list)
 
     def onOpenDir(self, event):
-        os.startfile(Config.Download.path)
+        # 打开下载目录
+        match Config.Sys.platform:
+            case "windows":
+                os.startfile(Config.Download.path)
+            case "linux":
+                subprocess.run(["xdg-open", f'{Config.Download.path}'])
+            case "darwin":
+                subprocess.run(["open", f'{Config.Download.path}'])
 
     def onMaxDownloadChoice(self, event):
         index = self.max_download_choice.GetSelection()
@@ -354,6 +385,10 @@ class DownloadWindow(Frame):
         for index, entry in enumerate(Download.download_list):
             if self.is_already_in_list(entry["title"], entry["cid"]):
                 continue
+
+            if multiple:
+                # 只有在批量下载视频时，才更新 index，否则都为 None
+                entry["index"] = index + 1
 
             item = DownloadItemPanel(self.download_list_panel, entry)
 
@@ -399,8 +434,7 @@ class DownloadWindow(Frame):
             if not DownloadInfo.no_task:
                 self.ShowNotificationToast()
 
-            DownloadInfo.no_task = True
-            
+            DownloadInfo.no_task = True      
 
     def start_download(self):
         for key, value in DownloadInfo.download_list.items():
@@ -425,6 +459,7 @@ class DownloadWindow(Frame):
             notification.Show()
 
     def is_already_in_list(self, title, cid) -> bool:
+        # 检查下载任务是否在下载列表中，防止重复下载
         for key, value in DownloadInfo.download_list.items():
             if value["title"] == title and value["cid"] == cid:
                 return True
@@ -451,8 +486,16 @@ class DownloadItemPanel(wx.Panel):
         self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge, self.onError)
         self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
 
+        # 获取视频封面
         Thread(target = self.get_preview_pic).start()
 
+        # 当 index 不为 None 时，添加 index，避免无法打开文件所在位置
+        if self.info["index"]:
+            self.file_full_name = f"{self.info['index']} - {self.info['title']}.mp4"
+        else:
+            self.file_full_name = f"{self.info['title']}.mp4"
+
+        # 恢复下载 flag
         if self.info["flag"]:
             if self.info["complete"]:
                 self.size_lab.SetLabel("{}/{}".format(self.info["complete"], self.info["size"]))
@@ -463,7 +506,7 @@ class DownloadItemPanel(wx.Panel):
                     self.size_lab.SetLabel("0 MB/{}".format(self.info["size"]))
 
             if self.info["codec"]:
-                self.resolution_lab.SetLabel("{}      {}".format(self.info["resolution"], self.info["codec"]))
+                self.resolution_lab.SetLabel("{}          {}".format(self.info["resolution"], self.info["codec"]))
 
             if self.info["total_size"]:
                 self.total_size = self.info["size"]
@@ -746,7 +789,29 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.clear()
     
     def onOpenFolder(self):
-        subprocess.Popen(f'explorer /select,{Config.Download.path}\\{self.info["title"]}.mp4', shell = True)
+        match Config.Sys.platform:
+            case "windows":
+                cmd = [
+                    "explorer.exe",
+                    "/select,",
+                    f'{self.file_full_name}'
+                ]
+
+            case "linux":
+                # Linux 下 xdg-open 并不支持选中文件，故仅打开所在文件夹
+                cmd = [
+                    "xdg-open",
+                    f'{Config.Download.path}'
+                ]
+
+            case "darwin":
+                cmd = [
+                    "open",
+                    "-R",
+                    f'{self.file_full_name}'
+                ]
+        
+        subprocess.run(cmd, cwd = Config.Download.path)
 
     def onViewCover(self, event):
         cover_viewer_dlg = CoverViewerDialog(self.GetParent().GetParent(), self.cover_image, self.cover_image_raw)

@@ -129,15 +129,19 @@ def get_user_face():
         with open(Config.User.face_path, "wb") as f:
             f.write(req.content)
 
-    return os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader", "face.jpg")
+    return Config.User.face_path
 
 def remove_files(path, name):
     for i in name:
         file_path = os.path.join(path, i)
         
         if os.path.exists(file_path):
-            ctypes.windll.kernel32.SetFileAttributesW(file_path, 128)
-            ctypes.windll.kernel32.DeleteFileW(file_path)
+            match Config.Sys.platform:
+                case "windows":
+                    ctypes.windll.kernel32.SetFileAttributesW(file_path, 128)
+                    ctypes.windll.kernel32.DeleteFileW(file_path)
+                case "linux" | "darwin":
+                    os.remove(file_path)
 
 def check_update():
     url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
@@ -160,19 +164,25 @@ def find_str(pattern, string):
         return None
 
 def get_cmd_output(cmd):
-    process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-    process.wait()
+    process = subprocess.run(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = True)
 
-    return process.stdout.read().decode("utf-8")
+    return process.stdout
 
 def get_all_ffmpeg_path():
     # 定位环境变量和运行目录中的 FFmpeg
-    output = get_cmd_output("where ffmpeg").split("\r\n")
+
+    match Config.Sys.platform:
+        case "windows":
+            # Windows 下使用 where ffmpeg 执行结果
+            output = get_cmd_output("where ffmpeg").split("\r\n")
+        case "linux" | "darwin":
+            # Linux 和 macOS 下直接使用 ffmpeg
+            output = ["ffmpeg"]
 
     cwd_path = env_path = None
 
     if output[0]:
-        if output[1]:
+        if len(output) > 1:
             # 环境变量中存在，运行目录中也存在
             cwd_path = output[0]
             env_path = output[1]
@@ -203,7 +213,11 @@ def check_ffmpeg_available():
     get_ffmpeg_path()
 
     # 获取 FFmpeg 输出信息，进而检测 FFmpeg 可用性
-    output = get_cmd_output(f'"{Config.FFmpeg.path}" -version')
+    cmd = [
+        f'{Config.FFmpeg.path}', "-version"
+    ]
+
+    output = get_cmd_output(cmd)
 
     if "ffmpeg version" in output:
         Config.FFmpeg.available = True
