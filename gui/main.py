@@ -334,7 +334,13 @@ class MainWindow(Frame):
         self.type_lab.SetLabel("")
 
     def setResolutionList(self, info: VideoInfo | BangumiInfo):
-        self.resolution_choice.Set(info.resolution_desc)
+        # 显示可用清晰度
+        resolution_desc = info.resolution_desc
+
+        # 自动在最前添加自动选项
+        resolution_desc.insert(0, "自动")
+
+        self.resolution_choice.Set(resolution_desc)
         
         info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[0]
         self.resolution_choice.Select(info.resolution_id.index(info.resolution))

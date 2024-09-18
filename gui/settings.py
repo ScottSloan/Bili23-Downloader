@@ -319,7 +319,17 @@ class MergeTab(wx.Panel):
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
 
-        dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = "ffmpeg.exe", style = wx.FD_OPEN, wildcard = ("FFmpeg|ffmpeg.exe"))
+        # 根据不同平台选取不同后缀名文件
+        match Config.Sys.platform:
+            case "windows":
+                defaultFile = "ffmpeg.exe"
+                wildcard = ("FFmpeg|ffmpeg.exe")
+
+            case "linux" | "darwin":
+                defaultFile = "ffmpeg"
+                wildcard = ("FFmpeg|ffmpeg")
+
+        dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = defaultFile, style = wx.FD_OPEN, wildcard = wildcard)
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()

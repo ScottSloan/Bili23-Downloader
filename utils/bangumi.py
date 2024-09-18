@@ -102,6 +102,7 @@ class BangumiParser:
         self.get_bangumi_type(info_result["type"])
 
     def get_bangumi_type(self, type_id):
+        # 识别类型
         match type_id:
             case 1:
                 BangumiInfo.type = "番剧"

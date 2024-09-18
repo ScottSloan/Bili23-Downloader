@@ -28,7 +28,18 @@ class DownloadUtils:
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
 
-        self.resolution = json_dash["video"][0]["id"] if json_dash["video"][0]["id"] < self.info["resolution"] else self.info["resolution"]
+        # 获取视频最高清晰度
+        highest_resolution = self.get_higest_resolution(json_dash["video"])
+
+        if self.info["resolution"] == 200:
+            # 当选择自动时，选取最高可用清晰度
+            self.resolution = highest_resolution
+        else:
+            if highest_resolution < self.info["resolution"]:
+                # 当视频不存在选取的清晰度时，选取最高可用的清晰度
+                self.resolution = highest_resolution
+            else:
+                self.resolution = self.info["resolution"]
 
         temp_video_durl = [i for i in json_dash["video"] if i["id"] == self.resolution]
 
@@ -205,6 +216,17 @@ class DownloadUtils:
             "result": False,
             "index": None
         }
+
+    def get_higest_resolution(self, data):
+        # 默认为 360P
+        highest_resolution = 16
+
+        for entry in data:
+            # 遍历列表，选取其中最高的清晰度
+            if entry["id"] > highest_resolution:
+                highest_resolution = entry["id"]
+
+        return highest_resolution
 
 class DownloadWindow(Frame):
     def __init__(self, parent):
