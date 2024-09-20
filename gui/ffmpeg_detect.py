@@ -17,11 +17,18 @@ class DetectDialog(wx.Dialog):
     def init_UI(self):
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
+        self.refresh_btn = wx.Button(self, -1, "刷新", size = self.FromDIP((80, 28)))
+
+        top_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        top_hbox.Add(select_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_hbox.AddStretchSpacer(1)
+        top_hbox.Add(self.refresh_btn, 0, wx.ALL, 10)
+
         self.env_chk = wx.RadioButton(self, -1, "环境变量")
-        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((300, 20)), style = wx.ST_ELLIPSIZE_END)
+        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((350, 20)), style = wx.ST_ELLIPSIZE_END)
 
         self.cwd_chk = wx.RadioButton(self, -1, "运行目录")
-        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((300, 20)), style = wx.ST_ELLIPSIZE_END)
+        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((350, 20)), style = wx.ST_ELLIPSIZE_END)
 
         self.env_chk.Enable(False)
         self.env_path_lab.Enable(False)
@@ -37,7 +44,7 @@ class DetectDialog(wx.Dialog):
         bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(select_lab, 0, wx.ALL, 10)
+        vbox.Add(top_hbox, 0, wx.EXPAND)
         vbox.Add(self.env_chk, 0, wx.ALL, 10)
         vbox.Add(self.env_path_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.cwd_chk, 0, wx.ALL & (~wx.TOP), 10)
@@ -56,6 +63,12 @@ class DetectDialog(wx.Dialog):
 
             self.env_path_lab.SetLabel(env_path)
             self.env_path_lab.SetToolTip(env_path)
+        else:
+            self.env_chk.Enable(False)
+            self.env_path_lab.Enable(False)
+
+            self.env_path_lab.SetLabel("未检测到 FFmpeg")
+            self.env_path_lab.SetToolTip("未检测到 FFmpeg")
 
         if cwd_path:
             self.cwd_chk.Enable(True)
@@ -63,9 +76,25 @@ class DetectDialog(wx.Dialog):
             
             self.cwd_path_lab.SetLabel(cwd_path)
             self.cwd_path_lab.SetToolTip(cwd_path)
+        else:
+            self.cwd_chk.Enable(False)
+            self.cwd_path_lab.Enable(False)
+
+            self.cwd_path_lab.SetLabel("未检测到 FFmpeg")
+            self.cwd_path_lab.SetToolTip("未检测到 FFmpeg")
+
+        if Config.FFmpeg.path == env_path:
+            self.env_chk.SetValue(True)
+        else:
+            self.cwd_chk.SetValue(True)
 
     def Bind_EVT(self):
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
+
+        self.refresh_btn.Bind(wx.EVT_BUTTON, self.onRefresh)
+
+    def onRefresh(self, event):
+        self.init_utils()
 
     def onConfirm(self, event):
         if self.env_chk.GetValue() or self.cwd_chk.GetValue():
