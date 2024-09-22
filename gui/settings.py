@@ -94,7 +94,7 @@ class DownloadTab(wx.Panel):
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         audio_lab = wx.StaticText(self.download_box, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(sound_quality_map_set.keys()))
+        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(audio_quality_map_set.keys()))
         self.audio_quality_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
@@ -175,7 +175,7 @@ class DownloadTab(wx.Panel):
         self.video_quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
 
         if Config.Download.sound_quality != 30250:
-            self.audio_quality_choice.SetSelection(list(sound_quality_map_set.values()).index(Config.Download.sound_quality))
+            self.audio_quality_choice.SetSelection(list(audio_quality_map_set.values()).index(Config.Download.sound_quality))
         else:
             self.audio_quality_choice.SetSelection(0)
 
@@ -196,7 +196,7 @@ class DownloadTab(wx.Panel):
         Config.Download.max_thread = self.max_thread_slider.GetValue()
         Config.Download.max_download = self.max_download_slider.GetValue()
         Config.Download.resolution = list(resolution_map.values())[self.video_quality_choice.GetSelection()]
-        Config.Download.sound_quality = list(sound_quality_map_set.values())[self.audio_quality_choice.GetSelection()]
+        Config.Download.sound_quality = list(audio_quality_map_set.values())[self.audio_quality_choice.GetSelection()]
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()

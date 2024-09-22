@@ -25,11 +25,11 @@ class DownloadUtils:
     def __init__(self, info: dict, onError, onComplete):
         self.info, self.onError, self.merge_error, self.audio_type, self.onComplete = info, onError, False, "mp3", onComplete
 
-    def get_video_durl(self):
-        json_dash = self.get_video_durl_json()
+    def getVideoDurl(self):
+        json_dash = self.getVideoDurlJson()
 
         # 获取视频最高清晰度
-        highest_resolution = self.get_higest_resolution(json_dash["video"])
+        highest_resolution = self.getHigestResolution(json_dash["video"])
 
         if self.info["resolution"] == 200:
             # 当选择自动时，选取最高可用清晰度
@@ -45,7 +45,7 @@ class DownloadUtils:
 
         self.codec_id = codec_id_map[Config.Download.codec]
 
-        resp = self.has_codec(temp_video_durl, self.codec_id)
+        resp = self.hasCodec(temp_video_durl, self.codec_id)
 
         if resp["result"]:
             self.video_durl = temp_video_durl[resp['index']]["backupUrl"][0]
@@ -65,9 +65,10 @@ class DownloadUtils:
                 self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
 
                 self.audio_type = "mp3"
+                self.audio_quality = Audio.audio_quality
             else:
                 # 默认为 192K
-                self.get_audio_durl_192k(json_dash)
+                self.getAudioDurl_192k(json_dash)
 
                 try:
                     # 无损
@@ -77,6 +78,7 @@ class DownloadUtils:
                                 self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
 
                                 self.audio_type = "flac"
+                                self.audio_quality = 30251
                     else:
                         if json_dash["dolby"]:
                             if "audio" in json_dash:
@@ -85,15 +87,16 @@ class DownloadUtils:
                                     self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
 
                                     self.audio_type = "ec3"
+                                    self.audio_quality = 30250
                 except:
                     # 无法获取无损或杜比链接，换回 192K
-                    self.get_audio_durl_192k(json_dash)
+                    self.getAudioDurl_192k(json_dash)
 
         else:
             # 视频不存在音频，标记 flag
             self.merge_type = Config.Type.MERGE_TYPE_VIDEO
     
-    def get_video_durl_json(self):
+    def getVideoDurlJson(self):
         try:
             match self.info["type"]:
                 case Config.Type.VIDEO:
@@ -116,28 +119,29 @@ class DownloadUtils:
 
         return json_dash
 
-    def get_audio_durl_192k(self, json_dash):
+    def getAudioDurl_192k(self, json_dash):
         temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == 30280]
         self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
 
         self.audio_type = "mp3"
+        self.audio_quality = 30280
 
-    def get_download_info(self) -> list:
-        self.get_video_durl()
+    def getDownloadInfo(self) -> list:
+        self.getVideoDurl()
 
         temp_info = []
         video_info = audio_info = None
 
         match self.merge_type:
             case Config.Type.MERGE_TYPE_V_A:
-                video_info = self.get_video_download_info()
-                audio_info = self.get_audio_download_info()
+                video_info = self.getVideoDownloadInfo()
+                audio_info = self.getAudioDownloadInfo()
 
             case Config.Type.MERGE_TYPE_VIDEO:
-                video_info = self.get_video_download_info()
+                video_info = self.getVideoDownloadInfo()
 
             case Config.Type.MERGE_TYPE_AUDIO:
-                audio_info = self.get_audio_download_info()
+                audio_info = self.getAudioDownloadInfo()
 
         if video_info:
             temp_info.append(video_info)
@@ -147,7 +151,7 @@ class DownloadUtils:
 
         return temp_info
 
-    def get_video_download_info(self):
+    def getVideoDownloadInfo(self):
         return {
             "id": self.info["id"],
             "type": "video",
@@ -157,7 +161,7 @@ class DownloadUtils:
             "chunk_list": []
         } 
     
-    def get_audio_download_info(self):
+    def getAudioDownloadInfo(self):
         return {
                 "id": self.info["id"],
                 "type": "audio",
@@ -167,7 +171,7 @@ class DownloadUtils:
                 "chunk_list": []
             } 
 
-    def merge_video(self):
+    def mergeVideo(self):
         title = get_legal_name(self.info["title"])
 
         video_f_name = f"video_{self.info['id']}.mp4"
@@ -189,10 +193,10 @@ class DownloadUtils:
                 cmd = f'rename "{audio_f_name}" "{title}.{self.audio_type}"'
 
         try:
-            self.merge_process = self.run_subprocess(cmd)
+            self.merge_process = self.runSubprocess(cmd)
         except Exception as e:
             # subprocess 运行出错
-            self.on_merge_error(f"尝试启动 subprocess 时出错：{e}")
+            self.onMergeError(f"尝试启动 subprocess 时出错：{e}")
 
             wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
             
@@ -205,7 +209,7 @@ class DownloadUtils:
                 else:
                     cmd = f'rename "{video_f_name}" "{title}_video.mp4" && rename "{audio_f_name}" "{title}_audio.{self.audio_type}"'
 
-                    self.merge_process = self.run_subprocess(cmd)
+                    self.merge_process = self.runSubprocess(cmd)
         else:
             # 合成失败时，获取错误信息
             try:
@@ -213,18 +217,18 @@ class DownloadUtils:
             except:
                 output = "无法获取错误信息"
 
-            self.on_merge_error(output)
+            self.onMergeError(output)
 
         wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
 
-    def run_subprocess(self, cmd):
+    def runSubprocess(self, cmd):
         process = subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
         
         # subprocess 执行完成后，返回 process 指针
 
         return process
     
-    def on_merge_error(self, output):
+    def onMergeError(self, output):
         if hasattr(self, "merge_process"):
             return_code = self.merge_process.returncode
         else:
@@ -234,7 +238,7 @@ class DownloadUtils:
 
         self.merge_error = True
 
-    def has_codec(self, video_durl: List[dict], codec_id: int):
+    def hasCodec(self, video_durl: List[dict], codec_id: int):
         for index, entry in enumerate(video_durl):
             if entry["codecid"] == codec_id:
                 return {
@@ -247,7 +251,7 @@ class DownloadUtils:
             "index": None
         }
 
-    def get_higest_resolution(self, data):
+    def getHigestResolution(self, data):
         # 默认为 360P
         highest_resolution = 16
 
@@ -264,7 +268,7 @@ class DownloadWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((780, 500)))
+        self.SetSize(self.FromDIP((800, 500)))
 
         self.Bind_EVT()
 
@@ -510,7 +514,7 @@ class DownloadWindow(Frame):
                 return True
             else:
                 return False
-            
+
 class DownloadItemPanel(wx.Panel):
     def __init__(self, parent, info: dict):
         self.info = info
@@ -528,17 +532,11 @@ class DownloadItemPanel(wx.Panel):
         self.CentreOnParent()
 
     def init_utils(self):
+        # 获取视频封面
+        Thread(target = self.getPreviewPic).start()
+
         self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge, self.onError)
         self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
-
-        # 获取视频封面
-        Thread(target = self.get_preview_pic).start()
-
-        # 当 index 不为 None 时，添加 index，避免无法打开文件所在位置
-        if self.info["index"]:
-            self.file_full_name = f"{self.info['index']} - {self.info['title']}.mp4"
-        else:
-            self.file_full_name = f"{self.info['title']}.mp4"
 
         # 恢复下载 flag
         if self.info["flag"]:
@@ -556,7 +554,7 @@ class DownloadItemPanel(wx.Panel):
             if self.info["total_size"]:
                 self.total_size = self.info["size"]
 
-            self.update_pause_btn(self.info["status"])
+            self.updatePauseBtn(self.info["status"])
 
     def init_scale(self):
         self.scale_size = self.FromDIP((16, 16))
@@ -571,24 +569,34 @@ class DownloadItemPanel(wx.Panel):
 
         self.resolution_lab = wx.StaticText(self, -1)
         self.resolution_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+
+        self.codec_lab = wx.StaticText(self, -1)
+        self.codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
         self.size_lab = wx.StaticText(self, -1, "")
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
         resolution_hbox.Add(self.resolution_lab, 0, wx.ALL & (~wx.TOP), 10)
-        resolution_hbox.AddStretchSpacer()
+        resolution_hbox.AddSpacer(40)
+        resolution_hbox.Add(self.codec_lab, 0, wx.ALL & (~wx.TOP), 10)
+        resolution_hbox.AddSpacer(40)
         resolution_hbox.Add(self.size_lab, 0, wx.ALL & (~wx.TOP), 10)
-        resolution_hbox.AddStretchSpacer()
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
         info_vbox.AddSpacer(5)
-        info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
+        info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, 10)
         info_vbox.AddStretchSpacer()
         info_vbox.Add(resolution_hbox, 0, wx.EXPAND)
         info_vbox.AddSpacer(5)
 
-        self.gauge = wx.Gauge(self, -1, 100)
+        match Config.Sys.platform:
+            case "windows" | "linux":
+                size = (294, 24)
+            case "darwin":
+                size = (190, 24)
+
+        self.gauge = wx.Gauge(self, -1, 100, size = size)
 
         self.speed_lab = wx.StaticText(self, -1, "等待下载...")
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
@@ -610,9 +618,10 @@ class DownloadItemPanel(wx.Panel):
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
         panel_hbox.Add(self.cover, 0, wx.ALL, 10)
-        panel_hbox.Add(info_vbox, 0, wx.EXPAND)
+        panel_hbox.Add(info_vbox, 10, wx.EXPAND)
+        panel_hbox.AddStretchSpacer(1)
         panel_hbox.Add(gauge_vbox, 0, wx.EXPAND)
-        panel_hbox.AddStretchSpacer()
+        panel_hbox.AddSpacer(10)
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.AddSpacer(10)
@@ -632,7 +641,7 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowError)
         self.cover.Bind(wx.EVT_LEFT_DOWN, self.onViewCover)
 
-    def get_preview_pic(self):
+    def getPreviewPic(self):
         req = requests.get(self.info["pic"])
 
         wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
@@ -649,16 +658,16 @@ class DownloadItemPanel(wx.Panel):
         self.panel_vbox.Layout()
 
     def start(self):
-        self.set_status("downloading")
+        self.setStatus("downloading")
 
-        self.start_thread = Thread(target = self.thread_start_download)
+        self.start_thread = Thread(target = self.startDownloadThread)
         self.start_thread.setDaemon(True)
         self.start_thread.start()
     
-    def thread_start_download(self):
+    def startDownloadThread(self):
         self.speed_lab.SetLabel("准备下载...")
 
-        info_list = self.utils.get_download_info()
+        info_list = self.utils.getDownloadInfo()
 
         self.downloader.start(info_list)
 
@@ -666,15 +675,15 @@ class DownloadItemPanel(wx.Panel):
         match self.info["status"]:
             case "wait":
                 self.start()
-                self.set_status("downloading")
+                self.setStatus("downloading")
             
             case "downloading":
                 self.onPause()
-                self.set_status("pause")
+                self.setStatus("pause")
 
             case "pause":
                 self.onResume()
-                self.set_status("downloading")
+                self.setStatus("downloading")
             
             case "completed":
                 self.onOpenFolder()
@@ -684,29 +693,37 @@ class DownloadItemPanel(wx.Panel):
                 self.onMerge(retry = True)
                 return
         
-        self.update_pause_btn(self.info["status"])
+        self.updatePauseBtn(self.info["status"])
 
         self.downloader.download_info.update_base_info_status(self.info["status"])
 
     def onStart(self):
+        # 开始下载，更新下载信息
         self.total_size = format_size(self.downloader.total_size / 1024)
 
         self.speed_lab.SetLabel("")
         self.size_lab.SetLabel("0 MB/{}".format(self.total_size))
 
-        quality_dict = dict(map(reversed, resolution_map.items()))
+        video_quality_dict = dict(map(reversed, resolution_map.items()))
         codec_dict = {7: "AVC/H.264", 12: "HEVC/H.265", 13: "AVC"}
-        
-        self.resolution_lab.SetLabel("{}      {}".format(quality_dict[self.utils.resolution], codec_dict[self.utils.codec_id]))
+        audio_dict = {value: key for key, value in audio_quality_map.items()}
 
-        self.update_pause_btn("downloading")
+        match self.utils.merge_type:
+            case Config.Type.MERGE_TYPE_V_A | Config.Type.MERGE_TYPE_VIDEO:
+                self.resolution_lab.SetLabel(video_quality_dict[self.utils.resolution])
+                self.codec_lab.SetLabel(codec_dict[self.utils.codec_id])
+            case Config.Type.MERGE_TYPE_AUDIO:
+                self.resolution_lab.SetLabel("音频")
+                self.codec_lab.SetLabel(audio_dict[self.utils.audio_quality])
+
+        self.updatePauseBtn("downloading")
 
         self.Layout()
 
         base_info = {
             "complete": None,
             "size": self.total_size,
-            "resolution": quality_dict[self.utils.resolution],
+            "resolution": video_quality_dict[self.utils.resolution],
             "codec": codec_dict[self.utils.codec_id]
         }
 
@@ -728,9 +745,9 @@ class DownloadItemPanel(wx.Panel):
 
     def onPauseCallback(self, event):
         self.onPause()
-        self.set_status("pause")
+        self.setStatus("pause")
 
-        self.update_pause_btn("pause")
+        self.updatePauseBtn("pause")
 
     def onResume(self):
         if self.info["download_complete"]:
@@ -740,9 +757,9 @@ class DownloadItemPanel(wx.Panel):
 
     def onResumeCallback(self, event):
         self.onResume()
-        self.set_status("downloading")
+        self.setStatus("downloading")
 
-        self.update_pause_btn("downloading")
+        self.updatePauseBtn("downloading")
 
     def onStop(self, event):
         self.downloader.onStop()
@@ -765,7 +782,7 @@ class DownloadItemPanel(wx.Panel):
         remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
     
     def onMerge(self, retry = False):
-        self.set_status("merging")
+        self.setStatus("merging")
 
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
@@ -781,17 +798,17 @@ class DownloadItemPanel(wx.Panel):
             parent.update_task_lab()
             parent.start_download()
 
-        Thread(target = self.utils.merge_video).start()
+        Thread(target = self.utils.mergeVideo).start()
 
     def onMergeComplete(self, file_names):
-        self.set_status("completed")
+        self.setStatus("completed")
         
         if self.utils.merge_error:
             self.speed_lab.SetLabel("合成视频失败，点击查看详情")
             self.speed_lab.SetForegroundColour(wx.Colour("red"))
             self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
-            self.update_pause_btn("retry")
+            self.updatePauseBtn("retry")
 
             return
                 
@@ -808,7 +825,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.stop_btn.SetToolTip("清除记录")
 
-        self.update_pause_btn_image("folder")
+        self.updatePauseBtnImage("folder")
 
         self.pause_btn.SetToolTip("打开所在位置")
 
@@ -817,7 +834,7 @@ class DownloadItemPanel(wx.Panel):
         self.Layout()
 
     def onError(self):
-        self.set_status("error")
+        self.setStatus("error")
 
         self.speed_lab.SetLabel("下载失败")
         self.speed_lab.SetForegroundColour("red")
@@ -834,6 +851,18 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.clear()
     
     def onOpenFolder(self):
+        # 当 index 不为 None 时，添加 index，避免无法打开文件所在位置
+        match self.utils.merge_type:
+            case Config.Type.MERGE_TYPE_V_A | Config.Type.MERGE_TYPE_VIDEO:
+                file_type = "mp4"
+            case Config.Type.MERGE_TYPE_AUDIO:
+                file_type = f"{self.utils.audio_type}"
+
+        if self.info["index"]:
+            self.file_full_name = f"{self.info['index']} - {self.info['title']}.{file_type}"
+        else:
+            self.file_full_name = f"{self.info['title']}.{file_type}"
+
         if not os.path.exists(os.path.join(Config.Download.path, self.file_full_name)):
             wx.MessageDialog(self.GetParent().GetParent(), f"文件不存在\n\n无法打开文件：{self.file_full_name}\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
@@ -860,7 +889,7 @@ class DownloadItemPanel(wx.Panel):
             show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
             show_error_dlg.ShowModal()
 
-    def update_pause_btn(self, status: str):
+    def updatePauseBtn(self, status: str):
         match status:
             case "downloading":
                 self.pause_btn.SetToolTip("暂停下载")
@@ -875,15 +904,15 @@ class DownloadItemPanel(wx.Panel):
             case "retry":
                 self.pause_btn.SetToolTip("重试")
 
-                self.set_status("retry")
+                self.setStatus("retry")
 
                 self.pause_btn.Enable(True)
 
-                self.update_pause_btn_image("retry")
+                self.updatePauseBtnImage("retry")
 
-        self.update_pause_btn_image(status)
+        self.updatePauseBtnImage(status)
 
-    def update_pause_btn_image(self, status: str):
+    def updatePauseBtnImage(self, status: str):
         match status:
             case "downloading":
                 image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
@@ -896,7 +925,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.pause_btn.SetBitmap(image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 
-    def set_status(self, status: str):
+    def setStatus(self, status: str):
         self.info["status"] = status
 
         if self.info["id"] in DownloadInfo.download_list:
