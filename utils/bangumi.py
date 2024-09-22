@@ -135,6 +135,8 @@ class BangumiParser:
         else:
             Audio.audio_quality = Config.Download.sound_quality
 
+        Audio.audio_only = False
+
     def parse_url(self, url):
         if "ep" in url:
             self.get_epid(url)

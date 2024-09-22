@@ -39,8 +39,9 @@ class MainWindow(Frame):
         self.init_user_info()
     
     def init_UI(self):
-        # 获取系统是否处于深色模式
-        Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
+        # （macOS）获取系统是否处于深色模式
+        if Config.Sys.platform == "darwin":
+            Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
 
         self.init_ids()
 
@@ -179,6 +180,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_192K)
         self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_132K)
         self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_64K)
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_ONLY)
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
@@ -215,6 +217,7 @@ class MainWindow(Frame):
         self.ID_AUDIO_192K = wx.NewIdRef()
         self.ID_AUDIO_132K = wx.NewIdRef()
         self.ID_AUDIO_64K = wx.NewIdRef()
+        self.ID_AUDIO_ONLY = wx.NewIdRef()
 
     def utilsThread(self):
         info = DownloaderInfo()
@@ -342,8 +345,14 @@ class MainWindow(Frame):
 
         self.resolution_choice.Set(resolution_desc)
         
-        info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[0]
-        self.resolution_choice.Select(info.resolution_id.index(info.resolution))
+        info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[1]
+
+        if info.resolution == 200:
+            index = 0
+        else:
+            index = info.resolution_id.index(info.resolution) + 1
+
+        self.resolution_choice.Select(index)
 
         Download.current_type = info
 
@@ -456,14 +465,24 @@ class MainWindow(Frame):
         match event.GetId():
             case self.ID_AUDIO_HIRES:
                 Audio.audio_quality = 30251
+
             case self.ID_AUDIO_DOLBY:
                 Audio.audio_quality = 30250
+
             case self.ID_AUDIO_192K:
                 Audio.audio_quality = 30280
+
             case self.ID_AUDIO_132K:
                 Audio.audio_quality = 30232
+
             case self.ID_AUDIO_64K:
                 Audio.audio_quality = 30216
+
+            case self.ID_AUDIO_ONLY:
+                if Audio.audio_only:
+                    Audio.audio_only = False
+                else:
+                    Audio.audio_only = True
 
     def showUserInfoThread(self):
         # 显示用户头像及昵称
@@ -537,6 +556,11 @@ class MainWindow(Frame):
         menuitem_192k.Check(True if Audio.audio_quality == 30280 else False)
         menuitem_132k.Check(True if Audio.audio_quality == 30232 else False)
         menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
+
+        menu.AppendSeparator()
+
+        menuitem_audio_only = menu.Append(self.ID_AUDIO_ONLY, "仅下载音频", kind = wx.ITEM_CHECK)
+        menuitem_audio_only.Check(True if Audio.audio_only else False)
 
         self.PopupMenu(menu)
 

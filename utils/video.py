@@ -116,6 +116,9 @@ class VideoParser:
         else:
             Audio.audio_quality = Config.Download.sound_quality
 
+        # 重置仅下载音频标识符
+        Audio.audio_only = False
+
     def parse_url(self, url):
         self.get_part(url)
 

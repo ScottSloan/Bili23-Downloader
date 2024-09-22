@@ -23,7 +23,7 @@ class DownloadInfo:
 
 class DownloadUtils:
     def __init__(self, info: dict, onError, onComplete):
-        self.info, self.onError, self.none_audio, self.merge_error, self.audio_type, self.onComplete = info, onError, False, False, "mp3", onComplete
+        self.info, self.onError, self.merge_error, self.audio_type, self.onComplete = info, onError, False, "mp3", onComplete
 
     def get_video_durl(self):
         json_dash = self.get_video_durl_json()
@@ -52,6 +52,11 @@ class DownloadUtils:
         else:
             self.video_durl = temp_video_durl[0]["backupUrl"][0]
             self.codec_id = 7
+
+        if Audio.audio_only:
+            self.merge_type = Config.Type.MERGE_TYPE_AUDIO # 仅下载音频
+        else:
+            self.merge_type = Config.Type.MERGE_TYPE_V_A # 合成视频和音频
         
         if json_dash["audio"]:
             # 除杜比全景声和无损以外
@@ -84,10 +89,9 @@ class DownloadUtils:
                     # 无法获取无损或杜比链接，换回 192K
                     self.get_audio_durl_192k(json_dash)
 
-            self.none_audio = False
         else:
             # 视频不存在音频，标记 flag
-            self.none_audio = True
+            self.merge_type = Config.Type.MERGE_TYPE_VIDEO
     
     def get_video_durl_json(self):
         try:
@@ -121,26 +125,47 @@ class DownloadUtils:
     def get_download_info(self) -> list:
         self.get_video_durl()
 
-        video_info = {
+        temp_info = []
+        video_info = audio_info = None
+
+        match self.merge_type:
+            case Config.Type.MERGE_TYPE_V_A:
+                video_info = self.get_video_download_info()
+                audio_info = self.get_audio_download_info()
+
+            case Config.Type.MERGE_TYPE_VIDEO:
+                video_info = self.get_video_download_info()
+
+            case Config.Type.MERGE_TYPE_AUDIO:
+                audio_info = self.get_audio_download_info()
+
+        if video_info:
+            temp_info.append(video_info)
+
+        if audio_info:
+            temp_info.append(audio_info)
+
+        return temp_info
+
+    def get_video_download_info(self):
+        return {
             "id": self.info["id"],
             "type": "video",
             "url": self.video_durl,
             "referer_url": self.info["url"],
             "file_name": "video_{}.mp4".format(self.info["id"]),
             "chunk_list": []
-        }
-
-        if not self.none_audio:
-            audio_info = {
+        } 
+    
+    def get_audio_download_info(self):
+        return {
                 "id": self.info["id"],
                 "type": "audio",
                 "url": self.audio_durl,
                 "referer_url": self.info["url"],
                 "file_name": "audio_{}.{}".format(self.info["id"], self.audio_type),
                 "chunk_list": []
-            }
-
-        return [video_info] if self.none_audio else [video_info, audio_info]
+            } 
 
     def merge_video(self):
         title = get_legal_name(self.info["title"])
@@ -150,14 +175,18 @@ class DownloadUtils:
 
         self.merge_error = False
 
-        if self.none_audio:
-            # 无音频文件，直接重命名
-            cmd = f'rename "{video_f_name}" "{title}.mp4"'
-        else:
-            # 存在音频文件，调用 FFmpeg 合成
-            cmd = f'"{Config.FFmpeg.path}" -y -i "{video_f_name}" -i "{audio_f_name}" -acodec copy -vcodec copy -strict experimental "{title}.mp4"'
+        match self.merge_type:
+            case Config.Type.MERGE_TYPE_V_A:
+                # 存在音频文件，调用 FFmpeg 合成
+                cmd = f'"{Config.FFmpeg.path}" -y -i "{video_f_name}" -i "{audio_f_name}" -acodec copy -vcodec copy -strict experimental "{title}.mp4"'
 
-        self.merge_process = self.run_subprocess(cmd)
+            case Config.Type.MERGE_TYPE_VIDEO:
+                # 无音频文件，仅有视频，直接重命名
+                cmd = f'rename "{video_f_name}" "{title}.mp4"'
+
+            case Config.Type.MERGE_TYPE_AUDIO:
+                # 无视频文件，仅有音频，直接重命名
+                cmd = f'rename "{audio_f_name}" "{title}.{self.audio_type}"'
 
         try:
             self.merge_process = self.run_subprocess(cmd)
@@ -170,12 +199,13 @@ class DownloadUtils:
             return
         
         if self.merge_process.returncode == 0:
-            if Config.Merge.auto_clean:
-                remove_files(Config.Download.path, [video_f_name, audio_f_name])
-            else:
-                cmd = f'rename "{video_f_name}" "{title}_video.mp4" && rename "{audio_f_name}" "{title}_audio.{self.audio_type}"'
+            if self.merge_type == Config.Type.MERGE_TYPE_V_A:
+                if Config.Merge.auto_clean:
+                    remove_files(Config.Download.path, [video_f_name, audio_f_name])
+                else:
+                    cmd = f'rename "{video_f_name}" "{title}_video.mp4" && rename "{audio_f_name}" "{title}_audio.{self.audio_type}"'
 
-                self.merge_process = self.run_subprocess(cmd)
+                    self.merge_process = self.run_subprocess(cmd)
         else:
             # 合成失败时，获取错误信息
             try:

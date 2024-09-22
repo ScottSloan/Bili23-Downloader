@@ -265,7 +265,7 @@ class DownloadTab(wx.Panel):
         wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载 192K", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onCodecTip(self, event):
-        wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则自动下载 H264\n\nmacOS 平台上下载的 H265 和 AV1 编码的视频无法直接播放，请使用视频转换工具进行转换或切换为 H264 编码", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则自动下载 H.264", "说明", wx.ICON_INFORMATION).ShowModal()
 
 class MergeTab(wx.Panel):
     def __init__(self, parent):

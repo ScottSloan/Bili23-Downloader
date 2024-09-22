@@ -11,10 +11,10 @@ class Config:
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.46"
-        version_code = 1460
+        version = "1.50"
+        version_code = 1500
 
-        release_date = "2024/09/20"
+        release_date = "2024/09/22"
 
     class Proxy:
         proxy = auth = False
@@ -61,6 +61,10 @@ class Config:
         VIDEO_TYPE_SINGLE = 1
         VIDEO_TYPE_PAGES = 2
         VIDEO_TYPE_SECTIONS = 3
+
+        MERGE_TYPE_V_A = 0
+        MERGE_TYPE_VIDEO = 1
+        MERGE_TYPE_AUDIO = 2
     
     class Temp:
         download_window_pos = None
@@ -73,6 +77,8 @@ class Config:
 
 class Audio:
     audio_quality = None
+
+    audio_only = False
 
     q_hires = False
     q_dolby = False
