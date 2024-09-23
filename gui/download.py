@@ -268,7 +268,7 @@ class DownloadWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((800, 500)))
+        self.SetSize(self.FromDIP((810, 500)))
 
         self.Bind_EVT()
 
@@ -538,6 +538,9 @@ class DownloadItemPanel(wx.Panel):
         self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge, self.onError)
         self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
 
+        self.loadDownloadInfo()
+    
+    def loadDownloadInfo(self):
         # 恢复下载 flag
         if self.info["flag"]:
             if self.info["complete"]:
@@ -549,7 +552,8 @@ class DownloadItemPanel(wx.Panel):
                     self.size_lab.SetLabel("0 MB/{}".format(self.info["size"]))
 
             if self.info["codec"]:
-                self.resolution_lab.SetLabel("{}          {}".format(self.info["resolution"], self.info["codec"]))
+                self.resolution_lab.SetLabel(self.info["resolution"])
+                self.codec_lab.SetLabel(self.info["codec"])
 
             if self.info["total_size"]:
                 self.total_size = self.info["size"]
@@ -567,13 +571,13 @@ class DownloadItemPanel(wx.Panel):
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
 
-        self.resolution_lab = wx.StaticText(self, -1)
+        self.resolution_lab = wx.StaticText(self, -1, size = self.FromDIP((75, -1)))
         self.resolution_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        self.codec_lab = wx.StaticText(self, -1)
+        self.codec_lab = wx.StaticText(self, -1, size = self.FromDIP((70, -1)))
         self.codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
-        self.size_lab = wx.StaticText(self, -1, "")
+        self.size_lab = wx.StaticText(self, -1, size = self.FromDIP((100, -1)))
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -598,7 +602,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.gauge = wx.Gauge(self, -1, 100, size = size)
 
-        self.speed_lab = wx.StaticText(self, -1, "等待下载...")
+        self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((120, -1)))
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         gauge_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -834,6 +838,8 @@ class DownloadItemPanel(wx.Panel):
         self.Layout()
 
     def onError(self):
+        print("onError")
+
         self.setStatus("error")
 
         self.speed_lab.SetLabel("下载失败")

@@ -3,6 +3,7 @@ import wx
 import time
 import json
 import requests
+from requests.adapters import HTTPAdapter
 
 from .config import Config
 from .tools import *
@@ -19,12 +20,18 @@ class Downloader:
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
         self.listen_thread.setDaemon(True)
 
+        # 创建持久化 Session
         self.session = requests.session()
+
+        # 出错重连机制
+        self.session.mount("http://", HTTPAdapter(max_retries = 5))
+        self.session.mount("https://", HTTPAdapter(max_retries = 5))
         
         self.ThreadPool = ThreadPool()
 
-        self.flag = False
-        self.stop_flag = False # 线程停止标志位
+        # 初始化停止 + 错误标志位
+        self.stop_flag = False
+        self.error_flag = False
 
         self.thread_info = {}
         self.thread_alive_count = 0
@@ -34,6 +41,7 @@ class Downloader:
         if not self.info["flag"]:
             self.download_info.init_info(self.info)
         else:
+            # 断点续传，直接读取数据
             contents = self.download_info.read_info()
             base_info = contents[str(self.info["id"])]["base_info"]
             thread_info = contents[str(self.info["id"])]["thread_info"]
@@ -51,10 +59,10 @@ class Downloader:
         file_size = self.get_total_size(info["url"], info["referer_url"], path)
         self.total_size += file_size
 
+        # 音频文件较小，使用 2 线程下载
         chunk_list = self.get_chunk_list(file_size, Config.Download.max_thread if info["type"] == "video" else 2)
         self.thread_alive_count += len(chunk_list)
 
-        # 音频文件较小，使用 2 线程下载
         for index, chunk_list in enumerate(chunk_list):
             url, referer_url, temp = info["url"], info["referer_url"], info.copy()
 
@@ -101,10 +109,10 @@ class Downloader:
             self.start_wait_thread()
             
     def start_wait_thread(self):
-        wait_thread = Thread(target = self.thread_wait)
-        wait_thread.setDaemon(True)
+        self.wait_thread = Thread(target = self.thread_wait)
+        self.wait_thread.setDaemon(True)
 
-        wait_thread.start()
+        self.wait_thread.start()
 
     def thread_wait(self):
         self.wait()
@@ -113,7 +121,7 @@ class Downloader:
 
     def range_download(self, thread_id: str, url: str, referer_url: str, path: str, chunk_list: list):
         try:
-            req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list, download = True), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 8)
+            req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list, download = True), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 15)
             
             with open(path, "rb+") as f:
                 start_time = time.time()
@@ -135,7 +143,8 @@ class Downloader:
                         self.thread_info[thread_id]["chunk_list"][0] += len(chunk)
 
                         if self.completed_size >= self.total_size:
-                            self.flag = True
+                            # 下载完成，置停止标志位为 True
+                            self.stop_flag = True
 
                         # 计算执行时间
                         elapsed_time = time.time() - start_time
@@ -148,8 +157,8 @@ class Downloader:
                         start_time = time.time()
 
         except Exception:
-            # 回调下载失败函数
-            self.onError()
+            # 置错误标志位为 True
+            self.error_flag = True
 
             # 抛出异常，停止线程
             raise requests.exceptions.ConnectionError()
@@ -157,7 +166,7 @@ class Downloader:
         self.thread_alive_count -= 1
 
     def onListen(self):
-        while not self.flag:
+        while not self.stop_flag:
             temp_size = self.completed_size
 
             time.sleep(1)
@@ -171,6 +180,12 @@ class Downloader:
 
             if self.stop_flag:
                 # 检测停止标志位
+                break
+
+            if self.error_flag:
+                # 检测错误标志位
+                # 回调下载失败函数
+                self.onError()
                 break
             
             self.update_download_info()
@@ -205,10 +220,10 @@ class Downloader:
         self.onStop()
 
         # 回调 panel 下载失败函数，终止下载
-        self.onErrorEx()
+        wx.CallAfter(self.onErrorEx)
 
     def wait(self):
-        while not self.flag:
+        while not self.stop_flag:
             time.sleep(1)
     
     def get_total_size(self, url: str, referer_url: str, path: str) -> int:
