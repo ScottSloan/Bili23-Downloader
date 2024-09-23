@@ -16,7 +16,11 @@ class Downloader:
         self.init_utils()
 
     def init_utils(self):
+        # 初始化变量
         self.total_size = 0
+        self.completed_size = 0
+
+        # 创建监听线程
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
         self.listen_thread.setDaemon(True)
 
@@ -29,9 +33,13 @@ class Downloader:
         
         self.ThreadPool = ThreadPool()
 
-        # 初始化停止 + 错误标志位
+        # 初始化停止标志位，包含监听线程停止标志位和分片下载停止标志位
         self.stop_flag = False
+        self.range_stop_flag = False
+
+        # 初始化错误标志位 + 下载完成标志位
         self.error_flag = False
+        self.finish_flag = False
 
         self.thread_info = {}
         self.thread_alive_count = 0
@@ -75,20 +83,18 @@ class Downloader:
             self.ThreadPool.submit(self.range_download, args = (thread_id, url, referer_url, path, chunk_list,))
 
     def start(self, info: list):
-        self.completed_size = 0
-
+        # 添加下载链接
         for entry in info:
             self.add_url(entry)
 
         self.update_total_size(self.total_size)
 
+        # 开启线程池和监听线程
         self.ThreadPool.start()
-
         self.listen_thread.start()
 
-        wx.CallAfter(self.onStart)
-
-        self.start_wait_thread()
+        # 回调 onStart，UI 更新下载信息
+        self.onStart()
 
     def restart(self):
         # 重置停止线程标志位
@@ -105,21 +111,8 @@ class Downloader:
         
         self.ThreadPool.start()
 
-        if self.info["flag"]:
-            self.start_wait_thread()
-            
-    def start_wait_thread(self):
-        self.wait_thread = Thread(target = self.thread_wait)
-        self.wait_thread.setDaemon(True)
-
-        self.wait_thread.start()
-
-    def thread_wait(self):
-        self.wait()
-
-        self.onFinished()
-
     def range_download(self, thread_id: str, url: str, referer_url: str, path: str, chunk_list: list):
+        # 分片下载
         try:
             req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list, download = True), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 15)
             
@@ -131,8 +124,8 @@ class Downloader:
 
                 for chunk in req.iter_content(chunk_size = chunk_size):
                     if chunk:
-                        if self.stop_flag:
-                            # 检测停止标志位
+                        if self.range_stop_flag:
+                            # 检测分片下载停止标志位
                             break
 
                         f.write(chunk)
@@ -143,8 +136,9 @@ class Downloader:
                         self.thread_info[thread_id]["chunk_list"][0] += len(chunk)
 
                         if self.completed_size >= self.total_size:
-                            # 下载完成，置停止标志位为 True
-                            self.stop_flag = True
+                            # 下载完成，置停止分片下载标志位为 True，下载完成标志位为 True
+                            self.range_stop_flag = True
+                            self.finish_flag = True
 
                         # 计算执行时间
                         elapsed_time = time.time() - start_time
@@ -156,7 +150,7 @@ class Downloader:
 
                         start_time = time.time()
 
-        except Exception:
+        except Exception as e:
             # 置错误标志位为 True
             self.error_flag = True
 
@@ -166,6 +160,7 @@ class Downloader:
         self.thread_alive_count -= 1
 
     def onListen(self):
+        # 监听线程，负责监听下载进度
         while not self.stop_flag:
             temp_size = self.completed_size
 
@@ -183,9 +178,14 @@ class Downloader:
                 break
 
             if self.error_flag:
-                # 检测错误标志位
-                # 回调下载失败函数
+                # 检测错误标志位，回调下载失败函数
                 self.onError()
+                break
+
+            if self.finish_flag:
+                # 检测下载完成标志位
+                self.stop_flag = True
+                self.onFinished()
                 break
             
             self.update_download_info()
@@ -193,12 +193,13 @@ class Downloader:
             wx.CallAfter(self.onDownload, info)
 
     def onPause(self):
-        self.ThreadPool.stop()
-        self.listen_thread.stop()
+        # 暂停下载
+        self.onStop()
 
         self.update_download_info()
 
     def onResume(self):
+        # 恢复下载
         self.restart()
 
         # 启动监听线程
@@ -208,23 +209,24 @@ class Downloader:
         self.listen_thread.start()
 
     def onStop(self):
-        self.stop_download()
+        # 停止下载
+        self.range_stop_flag = True
+        self.stop_flag = True
+
+        self.ThreadPool.stop()
 
     def onFinished(self):
-        self.stop_download()
+        # 下载完成，关闭所有线程，回调 onMerge 进行合成
+        self.stop_flag = True
 
         wx.CallAfter(self.onMerge)
     
     def onError(self):
-        # 关闭线程池和监听线程
+        # 关闭线程池和监听线程，停止下载
         self.onStop()
 
         # 回调 panel 下载失败函数，终止下载
         wx.CallAfter(self.onErrorEx)
-
-    def wait(self):
-        while not self.stop_flag:
-            time.sleep(1)
     
     def get_total_size(self, url: str, referer_url: str, path: str) -> int:
         req = self.session.head(url, headers = get_header(referer_url))
@@ -239,6 +241,7 @@ class Downloader:
             return total_size
 
     def get_chunk_list(self, total_size: int, chunk: int) -> list:
+        # 计算分片下载区间
         piece_size = int(total_size / chunk)
         chunk_list = []
 
@@ -258,13 +261,6 @@ class Downloader:
 
     def update_total_size(self, total_size):
         self.download_info.update_base_info_total_size(total_size)
-
-    def stop_download(self):
-        # 停止下载线程，关闭线程池和监听线程
-        self.stop_flag = True
-
-        self.ThreadPool.stop()
-        self.listen_thread.stop()
 
 class DownloaderInfo:
     def __init__(self):

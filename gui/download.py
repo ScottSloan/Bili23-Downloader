@@ -95,6 +95,9 @@ class DownloadUtils:
         else:
             # 视频不存在音频，标记 flag
             self.merge_type = Config.Type.MERGE_TYPE_VIDEO
+
+        # 更新 info 中的 merge_type
+        self.info["merge_type"] = self.merge_type
     
     def getVideoDurlJson(self):
         try:
@@ -560,6 +563,8 @@ class DownloadItemPanel(wx.Panel):
 
             self.updatePauseBtn(self.info["status"])
 
+            self.utils.merge_type = self.info["merge_type"]
+
     def init_scale(self):
         self.scale_size = self.FromDIP((16, 16))
         self.is_scaled = True if self.scale_size != (16, 16) else False
@@ -571,13 +576,13 @@ class DownloadItemPanel(wx.Panel):
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
 
-        self.resolution_lab = wx.StaticText(self, -1, size = self.FromDIP((75, -1)))
+        self.resolution_lab = wx.StaticText(self, -1, "高清 1080P")
         self.resolution_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        self.codec_lab = wx.StaticText(self, -1, size = self.FromDIP((70, -1)))
+        self.codec_lab = wx.StaticText(self, -1, "HEVC/H.265")
         self.codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
-        self.size_lab = wx.StaticText(self, -1, size = self.FromDIP((100, -1)))
+        self.size_lab = wx.StaticText(self, -1, "0MB")
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -602,7 +607,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.gauge = wx.Gauge(self, -1, 100, size = size)
 
-        self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((120, -1)))
+        self.speed_lab = wx.StaticText(self, -1, "等待下载...")
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         gauge_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -664,6 +669,7 @@ class DownloadItemPanel(wx.Panel):
     def start(self):
         self.setStatus("downloading")
 
+        # 开启线程，防止 UI 阻塞
         self.start_thread = Thread(target = self.startDownloadThread)
         self.start_thread.setDaemon(True)
         self.start_thread.start()
@@ -671,6 +677,7 @@ class DownloadItemPanel(wx.Panel):
     def startDownloadThread(self):
         self.speed_lab.SetLabel("准备下载...")
 
+        # 获取下载信息，开始下载
         info_list = self.utils.getDownloadInfo()
 
         self.downloader.start(info_list)

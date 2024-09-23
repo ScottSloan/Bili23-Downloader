@@ -172,7 +172,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "resolution": self.resolution if self.resolution else None,
             "codec": None,
             "download_complete": False, # 下载完成标识
-            "flag": False
+            "flag": False,
+            "merge_type": 0, # 视频合成类型
         }
 
 class ScrolledPanel(_ScrolledPanel):
