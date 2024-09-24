@@ -577,9 +577,8 @@ class MainWindow(Frame):
 
                 webbrowser.open("https://scott-sloan.cn/archives/120/")
     
-    def convertToCircle(self, image):
-        size = image.GetSize()
-        width, height = size
+    def convertToCircle(self, image: wx.Image):
+        width, height = image.GetSize()
         diameter = min(width, height)
         
         image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)

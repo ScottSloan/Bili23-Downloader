@@ -540,7 +540,7 @@ class DownloadItemPanel(wx.Panel):
 
     def init_utils(self):
         # 获取视频封面
-        Thread(target = self.getPreviewPic).start()
+        Thread(target = self.getCover).start()
 
         self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge, self.onError)
         self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
@@ -654,14 +654,21 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowError)
         self.cover.Bind(wx.EVT_LEFT_DOWN, self.onViewCover)
 
-    def getPreviewPic(self):
+    def getCover(self):
         req = requests.get(self.info["pic"])
 
         wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
 
         scale_size = self.FromDIP((112, 63))
 
-        self.cover_image = wx.Image(io.BytesIO(req.content))
+        temp_cover_image = wx.Image(io.BytesIO(req.content))
+
+        # 判断封面是否为 16:9，若不是，进行裁剪
+        if not self.isCover16_9(temp_cover_image):
+            temp_cover_image = self.resizeCoverTo16_9(temp_cover_image)
+
+        self.cover_image = temp_cover_image
+
         self.cover_image_raw = req.content
 
         image = self.cover_image.Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
@@ -945,3 +952,21 @@ class DownloadItemPanel(wx.Panel):
         if self.info["id"] in DownloadInfo.download_list:
             # 防止任务 id 不在下载列表中而报错
             DownloadInfo.download_list[self.info["id"]]  = self.info
+
+    def resizeCoverTo16_9(self, image: wx.Image):
+        # 将非 16:9 封面调整为 16:9
+        width, height = image.GetSize()
+
+        new_height = int(width * (9 / 16))
+
+        y_offset = (height - new_height) // 2
+
+        cropped_image = image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
+
+        return cropped_image
+    
+    def isCover16_9(self, image: wx.Image):
+        # 判断封面原始比例是否为 16:9
+        width, height = image.GetSize()
+
+        return (width / height) == (16 / 9)
