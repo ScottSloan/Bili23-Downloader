@@ -272,6 +272,7 @@ class DownloadWindow(Frame):
         self.init_UI()
 
         self.SetSize(self.FromDIP((810, 500)))
+        self.SetMinSize(self.FromDIP((810, 500)))
 
         self.Bind_EVT()
 
@@ -339,22 +340,7 @@ class DownloadWindow(Frame):
         self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAll)
 
     def init_utils(self):
-        max_download = Config.Download.max_download
-
-        match max_download:
-            case max_download if max_download < 1:
-                index = 0
-            case 1 | 2 | 3 | 4:
-                index = max_download - 1
-            case max_download if max_download > 4:
-                choices = self.max_download_choice.GetItems()
-                choices.append(f"{max_download} 个")
-
-                index = len(choices) - 1
-
-                self.max_download_choice.Set(choices)
-
-        self.max_download_choice.SetSelection(index)
+        self.update_max_download_choice()
 
         self.load_tasks()
     
@@ -518,6 +504,24 @@ class DownloadWindow(Frame):
             else:
                 return False
 
+    def update_max_download_choice(self):
+        max_download = Config.Download.max_download
+
+        match max_download:
+            case max_download if max_download < 1:
+                index = 0
+            case 1 | 2 | 3 | 4:
+                index = max_download - 1
+            case max_download if max_download > 4:
+                choices = self.max_download_choice.GetItems()
+                choices.append(f"{max_download} 个")
+
+                index = len(choices) - 1
+
+                self.max_download_choice.Set(choices)
+
+        self.max_download_choice.SetSelection(index)
+
 class DownloadItemPanel(wx.Panel):
     def __init__(self, parent, info: dict):
         self.info = info
@@ -576,13 +580,13 @@ class DownloadItemPanel(wx.Panel):
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
 
-        self.resolution_lab = wx.StaticText(self, -1, "高清 1080P")
+        self.resolution_lab = wx.StaticText(self, -1, "--          ")
         self.resolution_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        self.codec_lab = wx.StaticText(self, -1, "HEVC/H.265")
+        self.codec_lab = wx.StaticText(self, -1, "--          ")
         self.codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
-        self.size_lab = wx.StaticText(self, -1, "0MB")
+        self.size_lab = wx.StaticText(self, -1, "--          ")
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -871,10 +875,7 @@ class DownloadItemPanel(wx.Panel):
             case Config.Type.MERGE_TYPE_AUDIO:
                 file_type = f"{self.utils.audio_type}"
 
-        if self.info["index"]:
-            self.file_full_name = f"{self.info['index']} - {self.info['title']}.{file_type}"
-        else:
-            self.file_full_name = f"{self.info['title']}.{file_type}"
+        self.file_full_name = f"{self.info['title']}.{file_type}"
 
         if not os.path.exists(os.path.join(Config.Download.path, self.file_full_name)):
             wx.MessageDialog(self.GetParent().GetParent(), f"文件不存在\n\n无法打开文件：{self.file_full_name}\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()

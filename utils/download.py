@@ -25,7 +25,7 @@ class Downloader:
         self.listen_thread.setDaemon(True)
 
         # 创建持久化 Session
-        self.session = requests.session()
+        self.session = requests.Session()
 
         # 出错重连机制
         self.session.mount("http://", HTTPAdapter(max_retries = 5))
@@ -99,6 +99,7 @@ class Downloader:
     def restart(self):
         # 重置停止线程标志位
         self.stop_flag = False
+        self.range_stop_flag = False
 
         for key, entry in self.thread_info.items():
             path, chunk_list = os.path.join(Config.Download.path, entry["file_name"]), entry["chunk_list"]
@@ -166,6 +167,7 @@ class Downloader:
 
             time.sleep(1)
             
+            # 记录下载信息
             info = {
                 "progress": int(self.completed_size / self.total_size * 100),
                 "speed": self.format_speed((self.completed_size - temp_size) / 1024),
@@ -264,6 +266,7 @@ class Downloader:
 
 class DownloaderInfo:
     def __init__(self):
+        # 下载信息类，用于断点续传
         self.path = os.path.join(os.getcwd(), "download.json")
     
     def check_file(self):

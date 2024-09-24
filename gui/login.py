@@ -78,6 +78,9 @@ class LoginWindow(wx.Dialog):
         self.GetParent().init_user_info()
         self.GetParent().infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
 
+        # 重新创建主窗口菜单
+        self.GetParent().init_menubar()
+
     def refresh_qrcode(self):
         self.login = QRLogin()
         self.login.init_qrcode()

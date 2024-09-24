@@ -216,6 +216,9 @@ class DownloadTab(wx.Panel):
 
         conf.config_save()
 
+        # 更新下载窗口中并行下载数信息
+        self.GetParent().GetParent().GetParent().download_window.update_max_download_choice()
+
     def onConfirm(self):
         if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):
             wx.MessageDialog(self, "速度值无效\n\n输入的速度值无效，应为一个正整数", "警告", wx.ICON_WARNING).ShowModal()
@@ -631,6 +634,9 @@ class MiscTab(wx.Panel):
         conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
 
         conf.config_save()
+
+        # 重新创建主窗口的菜单
+        self.GetParent().GetParent().GetParent().init_menubar()
 
     def browse_btn_EVT(self, event):
         wildcard = "可执行文件(*.exe)|*.exe"
