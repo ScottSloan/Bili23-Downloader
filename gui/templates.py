@@ -82,8 +82,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         bangumi_list = {}
 
         for key, value in BangumiInfo.sections.items():
-            if Config.Misc.show_episodes != 2 and key != "正片":
-                continue
+            # if Config.Misc.show_episodes != Config.Type.EPISODES_ALL_SECTIONS:
+            #     continue
 
             bangumi_list[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode, flag = 2)] for index, episode in enumerate(value)]
 

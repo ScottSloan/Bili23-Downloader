@@ -39,7 +39,7 @@ class BangumiParser:
         
         if not mid: self.onError(101)
 
-        req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
         self.check_json(resp, 101)
@@ -54,6 +54,9 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp, 101)
+
+        with open("bangumi.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
         
         info_result = resp["result"]
 
@@ -64,40 +67,86 @@ class BangumiParser:
         
         BangumiInfo.episodes = info_result["episodes"]
 
-        if Config.Misc.show_episodes == 0:
-            if "section" in info_result:
-                extra_episodes = []
-
-                for section in info_result["section"]:
-                    extra_episodes += section["episodes"]
-
-                BangumiInfo.episodes += extra_episodes
-
-            match self.argument:
-                case "ep_id":
-                    BangumiInfo.episodes = [entry for entry in BangumiInfo.episodes if entry["id"] == int(self.value)]
-
-                case "season_id":
-                    BangumiInfo.episodes = [BangumiInfo.episodes[0]]
-            
-        BangumiInfo.sections["正片"] = BangumiInfo.episodes
-
-        if "section" in info_result and Config.Misc.show_episodes == 2:
-            info_section = info_result["section"]
-
-            for section in info_section:
-                section_title = section["title"]
-                section_episodes = section["episodes"]
-
-                for index, value in enumerate(section_episodes):
-                    value["title"] = str(index + 1)
-
-                BangumiInfo.sections[section_title] = section_episodes
-
         BangumiInfo.url = BangumiInfo.episodes[0]["link"]
         BangumiInfo.bvid = BangumiInfo.episodes[0]["bvid"]
         BangumiInfo.cid = BangumiInfo.episodes[0]["cid"]
         BangumiInfo.epid = BangumiInfo.episodes[0]["id"]
+
+        BangumiInfo.mid = info_result["media_id"]
+
+        BangumiInfo.sections.clear()
+
+        # 剧集列表解析方式
+        match Config.Misc.show_episodes:
+            case Config.Type.EPISODES_SINGLE:
+                # 解析单个视频
+
+                # 先解析其他相关视频
+                if "section" in info_result:
+                    extra_episodes = []
+
+                    for section_entry in info_result["section"]:
+                        extra_episodes += section_entry["episodes"]
+
+                    BangumiInfo.episodes += extra_episodes
+
+                match self.argument:
+                    case "ep_id":
+                        for entry in BangumiInfo.episodes.copy():
+                            if entry["ep_id"] == int(self.value):
+                                BangumiInfo.sections["视频"] = [entry]
+                                break
+
+                    case "season_id":
+                        # 对于 ssid，默认获取第一集
+                        BangumiInfo.episodes = [BangumiInfo.episodes[0]]
+
+            
+            case Config.Type.EPISODES_IN_SECTION:
+                # 解析视频所在集合
+
+                # 判断视频是否在正片中
+                for episode_entry in BangumiInfo.episodes:
+                    if episode_entry["ep_id"] == int(self.value):
+                        # 解析正片
+                        self.parse_episodes(info_result)
+                        break
+
+                # 判断视频是否在其他集合中
+                if "section" in info_result:
+                    info_section = info_result["section"]
+
+                    for section_entry in info_section:
+                        section_title = section_entry["title"]
+                        info_episodes = section_entry["episodes"]
+
+                        for episode_entry in info_episodes:
+                            if episode_entry["ep_id"] == int(self.value):
+                                # 解析此部分内容
+                                for index, value in enumerate(info_episodes):
+                                    value["title"] = str(index + 1)
+
+                                BangumiInfo.sections[section_title] = info_episodes
+                                break
+
+            case Config.Type.EPISODES_ALL_SECTIONS:
+                # 解析视频所有集合
+
+                # 先解析正片
+                self.parse_episodes(info_result)
+
+                # 再解析其他内容
+                if "section" in info_result:
+                    info_section = info_result["section"]
+
+                    for section_entry in info_section:
+                        section_title = section_entry["title"]
+                        section_episodes = section_entry["episodes"]
+
+                        for index, value in enumerate(section_episodes):
+                            value["title"] = str(index + 1)
+
+                        BangumiInfo.sections[section_title] = section_episodes
 
         self.get_bangumi_type(info_result["type"])
 
@@ -151,3 +200,15 @@ class BangumiParser:
     def check_json(self, json, err_code):
         if json["code"] != 0:
             self.onError(err_code)
+
+    def parse_episodes(self, info_result):
+        # 解析正片
+        if "seasons" in info_result:
+            seasons_info = info_result["seasons"]
+
+            for season_entry in seasons_info:
+                if season_entry["media_id"] == BangumiInfo.mid:
+                    season_title = season_entry["season_title"]
+
+            BangumiInfo.sections[season_title] = BangumiInfo.episodes
+

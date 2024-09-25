@@ -58,13 +58,17 @@ class Config:
         VIDEO = 1
         BANGUMI = 2
 
-        VIDEO_TYPE_SINGLE = 1
-        VIDEO_TYPE_PAGES = 2
-        VIDEO_TYPE_SECTIONS = 3
+        VIDEO_TYPE_SINGLE = 1 # 单个视频
+        VIDEO_TYPE_PAGES = 2 # 分 P 视频
+        VIDEO_TYPE_SECTIONS = 3 # 合集
 
-        MERGE_TYPE_V_A = 0
-        MERGE_TYPE_VIDEO = 1
-        MERGE_TYPE_AUDIO = 2
+        MERGE_TYPE_V_A = 0 # 合成视频和音频
+        MERGE_TYPE_VIDEO = 1 # 仅下载视频
+        MERGE_TYPE_AUDIO = 2 # 仅下载音频
+
+        EPISODES_SINGLE = 0 # 只解析单个视频
+        EPISODES_IN_SECTION = 1 # 解析视频所在合集
+        EPISODES_ALL_SECTIONS = 2 # 解析全部合集 
     
     class Temp:
         download_window_pos = None
