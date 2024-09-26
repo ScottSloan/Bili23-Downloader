@@ -915,7 +915,7 @@ class DownloadItemPanel(wx.Panel):
             case "downloading":
                 self.pause_btn.SetToolTip("暂停下载")
 
-                self.speed_lab.SetLabel("")
+                self.speed_lab.SetLabel("准备下载...")
 
             case "pause":
                 self.pause_btn.SetToolTip("继续下载")
