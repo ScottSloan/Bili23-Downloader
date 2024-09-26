@@ -271,8 +271,7 @@ class DownloadWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((810, 500)))
-        self.SetMinSize(self.FromDIP((810, 500)))
+        self.setDownloadWindowSize()
 
         self.Bind_EVT()
 
@@ -522,6 +521,16 @@ class DownloadWindow(Frame):
 
         self.max_download_choice.SetSelection(index)
 
+    def setDownloadWindowSize(self):
+        match Config.Sys.platform:
+            case "windows" | "darwin":
+                self.SetSize(self.FromDIP((810, 500)))
+
+            case "linux":
+                self.SetClientSize(self.FromDIP((950, 550)))
+
+        self.SetMinSize(self.GetSize())
+
 class DownloadItemPanel(wx.Panel):
     def __init__(self, parent, info: dict):
         self.info = info
@@ -565,6 +574,9 @@ class DownloadItemPanel(wx.Panel):
             if self.info["total_size"]:
                 self.total_size = self.info["size"]
 
+            if self.info["completed_size"] >= self.info["total_size"]:
+                self.info["download_complete"] = True
+
             self.updatePauseBtn(self.info["status"])
 
             self.utils.merge_type = self.info["merge_type"]
@@ -603,13 +615,7 @@ class DownloadItemPanel(wx.Panel):
         info_vbox.Add(resolution_hbox, 0, wx.EXPAND)
         info_vbox.AddSpacer(5)
 
-        match Config.Sys.platform:
-            case "windows" | "linux":
-                size = (294, 24)
-            case "darwin":
-                size = (190, 24)
-
-        self.gauge = wx.Gauge(self, -1, 100, size = size)
+        self.gauge = wx.Gauge(self, -1, 100, size = self.getGaugeSize())
 
         self.speed_lab = wx.StaticText(self, -1, "等待下载...")
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
@@ -970,3 +976,12 @@ class DownloadItemPanel(wx.Panel):
         width, height = image.GetSize()
 
         return (width / height) == (16 / 9)
+    
+    def getGaugeSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                size = (294, 24)
+            case "darwin" | "linux":
+                size = (190, 24)
+
+        return size

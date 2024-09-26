@@ -28,7 +28,7 @@ class MainWindow(Frame):
 
         self.init_utils()
 
-        self.SetSize(self.FromDIP((800, 450)))
+        self.setMainWindowSize()
 
         self.Bind_EVT()
 
@@ -234,7 +234,7 @@ class MainWindow(Frame):
 
     def onClose(self, event):
         if not DownloadInfo.no_task:
-            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？\n\n程序将自动保存下载进度，可随时恢复下载。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:
                 return
@@ -602,3 +602,11 @@ class MainWindow(Frame):
         self.parse_thread.setDaemon(True)
 
         self.parse_thread.start()
+
+    def setMainWindowSize(self):
+        # 解决 Linux 上 UI 太小的问题
+        match Config.Sys.platform:
+            case "windows" | "darwin":
+                self.SetSize(self.FromDIP((800, 450)))
+            case "linux":
+                self.SetClientSize(self.FromDIP((880, 450)))
