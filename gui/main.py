@@ -74,8 +74,8 @@ class MainWindow(Frame):
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
 
-        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.FromDIP((100, 30)))
-        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((100, 30)))
+        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.getButtonSize())
+        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.getButtonSize())
         self.download_btn.Enable(False)
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
@@ -610,3 +610,13 @@ class MainWindow(Frame):
                 self.SetSize(self.FromDIP((800, 450)))
             case "linux":
                 self.SetClientSize(self.FromDIP((880, 450)))
+
+    def getButtonSize(self):
+        # 解决 Linux macOS 按钮太小对的问题
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((100, 30))
+            case "linux" | "darwin":
+                size = self.FromDIP((120, 40))
+
+        return size

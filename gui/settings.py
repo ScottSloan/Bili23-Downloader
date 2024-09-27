@@ -31,8 +31,8 @@ class SettingWindow(wx.Dialog):
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.getButtonSize())
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.getButtonSize())
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -54,6 +54,16 @@ class SettingWindow(wx.Dialog):
                 return
             
         event.Skip()
+
+    def getButtonSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((80, 30))
+
+            case "linux" | "darwin":
+                size = self.FromDIP((100, 40))
+        
+        return size
 
 class DownloadTab(wx.Panel):
     def __init__(self, parent):

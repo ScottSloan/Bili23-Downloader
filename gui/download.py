@@ -308,8 +308,8 @@ class DownloadWindow(Frame):
 
         botton_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.open_btn = wx.Button(self, -1, "打开下载目录", size = self.FromDIP((100, 30)))
-        self.clear_btn = wx.Button(self, -1, "清除下载记录", size = self.FromDIP((100, 30)))
+        self.open_btn = wx.Button(self, -1, "打开下载目录", size = self.getButtonSize())
+        self.clear_btn = wx.Button(self, -1, "清除下载记录", size = self.getButtonSize())
 
         botton_hbox.Add(self.open_btn, 0, wx.ALL, 10)
         botton_hbox.AddStretchSpacer(1)
@@ -531,6 +531,16 @@ class DownloadWindow(Frame):
 
         self.SetMinSize(self.GetSize())
 
+    def getButtonSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((100, 30))
+
+            case "linux" | "darwin":
+                size = self.FromDIP((120, 40))
+        
+        return size
+
 class DownloadItemPanel(wx.Panel):
     def __init__(self, parent, info: dict):
         self.info = info
@@ -574,16 +584,22 @@ class DownloadItemPanel(wx.Panel):
             if self.info["total_size"]:
                 self.total_size = self.info["size"]
 
-            if self.info["completed_size"] >= self.info["total_size"]:
-                self.info["download_complete"] = True
+            if self.info["completed_size"]:
+                if self.info["completed_size"] >= self.info["total_size"]:
+                    self.info["download_complete"] = True
 
             self.updatePauseBtn(self.info["status"])
 
             self.utils.merge_type = self.info["merge_type"]
 
     def init_scale(self):
-        self.scale_size = self.FromDIP((16, 16))
-        self.is_scaled = True if self.scale_size != (16, 16) else False
+        match Config.Sys.platform:
+            case "windows":
+                self.scale_size = self.FromDIP((16, 16))
+                self.is_scaled = True if self.scale_size != (16, 16) else False
+            case "linux" | "darwin":
+                self.scale_size = self.FromDIP((32, 32))
+                self.is_scaled = True
 
     def init_UI(self):
         self.cover = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
@@ -628,11 +644,11 @@ class DownloadItemPanel(wx.Panel):
         gauge_vbox.AddSpacer(5)
 
         pause_image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
-        self.pause_btn = wx.BitmapButton(self, -1, pause_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((24, 24)))
+        self.pause_btn = wx.BitmapButton(self, -1, pause_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.getButtonSize())
         self.pause_btn.SetToolTip("开始下载")
 
         stop_image = wx.Image(io.BytesIO(getDeleteIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getDeleteIcon16()))
-        self.stop_btn = wx.BitmapButton(self, -1, stop_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.FromDIP((24, 24)))
+        self.stop_btn = wx.BitmapButton(self, -1, stop_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.getButtonSize())
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -778,6 +794,9 @@ class DownloadItemPanel(wx.Panel):
         self.updatePauseBtn("pause")
 
     def onResume(self):
+        if self.info["completed_size"] >= self.info["total_size"]:
+            self.info["download_complete"] = True
+
         if self.info["download_complete"]:
             self.onMerge()
         else:
@@ -981,7 +1000,18 @@ class DownloadItemPanel(wx.Panel):
         match Config.Sys.platform:
             case "windows":
                 size = (294, 24)
+
             case "darwin" | "linux":
                 size = (190, 24)
+
+        return size
+
+    def getButtonSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((24, 24))
+
+            case "linux" | "darwin":
+                size = self.FromDIP((32, 32))
 
         return size
