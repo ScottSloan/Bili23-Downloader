@@ -28,7 +28,7 @@ class MainWindow(Frame):
 
         self.init_utils()
 
-        self.SetSize(self.FromDIP((800, 450)))
+        self.setMainWindowSize()
 
         self.Bind_EVT()
 
@@ -39,6 +39,10 @@ class MainWindow(Frame):
         self.init_user_info()
     
     def init_UI(self):
+        # （macOS）获取系统是否处于深色模式
+        if Config.Sys.platform == "darwin":
+            Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
+
         self.init_ids()
 
         self.infobar = InfoBar(self.panel)
@@ -70,8 +74,8 @@ class MainWindow(Frame):
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
 
-        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.FromDIP((100, 30)))
-        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.FromDIP((100, 30)))
+        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.getButtonSize())
+        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.getButtonSize())
         self.download_btn.Enable(False)
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
@@ -176,6 +180,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_192K)
         self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_132K)
         self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_64K)
+        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_ONLY)
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
@@ -212,6 +217,7 @@ class MainWindow(Frame):
         self.ID_AUDIO_192K = wx.NewIdRef()
         self.ID_AUDIO_132K = wx.NewIdRef()
         self.ID_AUDIO_64K = wx.NewIdRef()
+        self.ID_AUDIO_ONLY = wx.NewIdRef()
 
     def utilsThread(self):
         info = DownloaderInfo()
@@ -228,7 +234,7 @@ class MainWindow(Frame):
 
     def onClose(self, event):
         if not DownloadInfo.no_task:
-            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？\n\n程序将自动保存下载进度，可随时恢复下载。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:
                 return
@@ -272,18 +278,19 @@ class MainWindow(Frame):
             case "b23.tv":
                 new_url = process_shorklink(url)
 
-                new_thread = Thread(target = self.parseThread, args = (new_url,))
-                new_thread.setDaemon(True)
+                self.startNewParseThread((new_url,))
 
-                new_thread.start()
+                # 抛出异常，终止线程运行
+                # 此处不使用 stop 方法
+
+                raise Exception
 
             case "blackboard" | "festival":
                 self.activity_parser.parse_url(url)
-                
-                new_thread = Thread(target = self.parseThread, args = (ActivityInfo.new_url,))
-                new_thread.setDaemon(True)
 
-                new_thread.start()
+                self.startNewParseThread((ActivityInfo.new_url,))
+
+                raise Exception
 
             case _:
                 self.onError(100)
@@ -330,10 +337,22 @@ class MainWindow(Frame):
         self.type_lab.SetLabel("")
 
     def setResolutionList(self, info: VideoInfo | BangumiInfo):
-        self.resolution_choice.Set(info.resolution_desc)
+        # 显示可用清晰度
+        resolution_desc = info.resolution_desc
+
+        # 自动在最前添加自动选项
+        resolution_desc.insert(0, "自动")
+
+        self.resolution_choice.Set(resolution_desc)
         
-        info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[0]
-        self.resolution_choice.Select(info.resolution_id.index(info.resolution))
+        info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[1]
+
+        if info.resolution == 200:
+            index = 0
+        else:
+            index = info.resolution_id.index(info.resolution) + 1
+
+        self.resolution_choice.Select(index)
 
         Download.current_type = info
 
@@ -446,14 +465,24 @@ class MainWindow(Frame):
         match event.GetId():
             case self.ID_AUDIO_HIRES:
                 Audio.audio_quality = 30251
+
             case self.ID_AUDIO_DOLBY:
                 Audio.audio_quality = 30250
+
             case self.ID_AUDIO_192K:
                 Audio.audio_quality = 30280
+
             case self.ID_AUDIO_132K:
                 Audio.audio_quality = 30232
+
             case self.ID_AUDIO_64K:
                 Audio.audio_quality = 30216
+
+            case self.ID_AUDIO_ONLY:
+                if Audio.audio_only:
+                    Audio.audio_only = False
+                else:
+                    Audio.audio_only = True
 
     def showUserInfoThread(self):
         # 显示用户头像及昵称
@@ -528,6 +557,11 @@ class MainWindow(Frame):
         menuitem_132k.Check(True if Audio.audio_quality == 30232 else False)
         menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
 
+        menu.AppendSeparator()
+
+        menuitem_audio_only = menu.Append(self.ID_AUDIO_ONLY, "仅下载音频", kind = wx.ITEM_CHECK)
+        menuitem_audio_only.Check(True if Audio.audio_only else False)
+
         self.PopupMenu(menu)
 
     def showInfobarMessage(self, message, flag):
@@ -543,9 +577,8 @@ class MainWindow(Frame):
 
                 webbrowser.open("https://scott-sloan.cn/archives/120/")
     
-    def convertToCircle(self, image):
-        size = image.GetSize()
-        width, height = size
+    def convertToCircle(self, image: wx.Image):
+        width, height = image.GetSize()
         diameter = min(width, height)
         
         image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
@@ -563,3 +596,27 @@ class MainWindow(Frame):
                     circle_image.SetAlpha(x, y, 0)
         
         return circle_image
+    
+    def startNewParseThread(self, *args):
+        self.parse_thread = Thread(target = self.parseThread, args = args)
+        self.parse_thread.setDaemon(True)
+
+        self.parse_thread.start()
+
+    def setMainWindowSize(self):
+        # 解决 Linux 上 UI 太小的问题
+        match Config.Sys.platform:
+            case "windows" | "darwin":
+                self.SetSize(self.FromDIP((800, 450)))
+            case "linux":
+                self.SetClientSize(self.FromDIP((880, 450)))
+
+    def getButtonSize(self):
+        # 解决 Linux macOS 按钮太小对的问题
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((100, 30))
+            case "linux" | "darwin":
+                size = self.FromDIP((120, 40))
+
+        return size

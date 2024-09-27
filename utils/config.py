@@ -1,18 +1,20 @@
 import os
+import wx
 import platform
 from configparser import RawConfigParser
 
 class Config:
     class Sys:
         platform = platform.system().lower()
+        dark_mode = False
 
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.46"
-        version_code = 1460
+        version = "1.50"
+        version_code = 1501
 
-        release_date = "2024/09/14"
+        release_date = "2024/09/27"
 
     class Proxy:
         proxy = auth = False
@@ -56,9 +58,17 @@ class Config:
         VIDEO = 1
         BANGUMI = 2
 
-        VIDEO_TYPE_SINGLE = 1
-        VIDEO_TYPE_PAGES = 2
-        VIDEO_TYPE_SECTIONS = 3
+        VIDEO_TYPE_SINGLE = 1 # 单个视频
+        VIDEO_TYPE_PAGES = 2 # 分 P 视频
+        VIDEO_TYPE_SECTIONS = 3 # 合集
+
+        MERGE_TYPE_V_A = 0 # 合成视频和音频
+        MERGE_TYPE_VIDEO = 1 # 仅下载视频
+        MERGE_TYPE_AUDIO = 2 # 仅下载音频
+
+        EPISODES_SINGLE = 0 # 只解析单个视频
+        EPISODES_IN_SECTION = 1 # 解析视频所在合集
+        EPISODES_ALL_SECTIONS = 2 # 解析全部合集 
     
     class Temp:
         download_window_pos = None
@@ -71,6 +81,8 @@ class Config:
 
 class Audio:
     audio_quality = None
+
+    audio_only = False
 
     q_hires = False
     q_dolby = False

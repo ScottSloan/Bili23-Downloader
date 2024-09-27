@@ -31,8 +31,8 @@ class SettingWindow(wx.Dialog):
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.getButtonSize())
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.getButtonSize())
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -54,6 +54,16 @@ class SettingWindow(wx.Dialog):
                 return
             
         event.Skip()
+
+    def getButtonSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((80, 30))
+
+            case "linux" | "darwin":
+                size = self.FromDIP((100, 40))
+        
+        return size
 
 class DownloadTab(wx.Panel):
     def __init__(self, parent):
@@ -85,24 +95,33 @@ class DownloadTab(wx.Panel):
 
         video_lab = wx.StaticText(self.download_box, -1, "默认下载清晰度")
         self.video_quality_choice = wx.Choice(self.download_box, -1, choices = list(resolution_map.keys()))
+        self.video_quality_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL, 10)
+        video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         audio_lab = wx.StaticText(self.download_box, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(sound_quality_map_set.keys()))
+        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(audio_quality_map_set.keys()))
+        self.audio_quality_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         codec_lab = wx.StaticText(self.download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(self.download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
+        self.codec_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
+        codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.speed_limit_chk = wx.CheckBox(self.download_box, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(self.download_box, -1, "最高")
@@ -116,7 +135,7 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.add_number_chk = wx.CheckBox(self.download_box, -1, "批量下载视频时自动添加序号")
-        self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知（仅下载窗口在后台时有效）")
+        self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(path_lab, 0, wx.ALL, 10)
@@ -150,6 +169,10 @@ class DownloadTab(wx.Panel):
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimit)
 
+        self.video_quality_tip.Bind(wx.EVT_LEFT_DOWN, self.onVideoQualityTip)
+        self.audio_quality_tip.Bind(wx.EVT_LEFT_DOWN, self.onAudioQualityTip)
+        self.codec_tip.Bind(wx.EVT_LEFT_DOWN, self.onCodecTip)
+
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
         
@@ -162,7 +185,7 @@ class DownloadTab(wx.Panel):
         self.video_quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
 
         if Config.Download.sound_quality != 30250:
-            self.audio_quality_choice.SetSelection(list(sound_quality_map_set.values()).index(Config.Download.sound_quality))
+            self.audio_quality_choice.SetSelection(list(audio_quality_map_set.values()).index(Config.Download.sound_quality))
         else:
             self.audio_quality_choice.SetSelection(0)
 
@@ -183,7 +206,7 @@ class DownloadTab(wx.Panel):
         Config.Download.max_thread = self.max_thread_slider.GetValue()
         Config.Download.max_download = self.max_download_slider.GetValue()
         Config.Download.resolution = list(resolution_map.values())[self.video_quality_choice.GetSelection()]
-        Config.Download.sound_quality = list(sound_quality_map_set.values())[self.audio_quality_choice.GetSelection()]
+        Config.Download.sound_quality = list(audio_quality_map_set.values())[self.audio_quality_choice.GetSelection()]
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
@@ -202,6 +225,9 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
 
         conf.config_save()
+
+        # 更新下载窗口中并行下载数信息
+        self.GetParent().GetParent().GetParent().download_window.update_max_download_choice()
 
     def onConfirm(self):
         if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):
@@ -245,6 +271,15 @@ class DownloadTab(wx.Panel):
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
     
+    def onVideoQualityTip(self, event):
+        wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度", "说明", wx.ICON_INFORMATION).ShowModal()
+
+    def onAudioQualityTip(self, event):
+        wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载 192K", "说明", wx.ICON_INFORMATION).ShowModal()
+
+    def onCodecTip(self, event):
+        wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则自动下载 H.264", "说明", wx.ICON_INFORMATION).ShowModal()
+
 class MergeTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -254,8 +289,6 @@ class MergeTab(wx.Panel):
         self.Bind_EVT()
 
         self.init_data()
-
-        self.check_sys_platform()
 
     def init_UI(self):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
@@ -311,16 +344,6 @@ class MergeTab(wx.Panel):
         
         self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
 
-    def check_sys_platform(self):
-        match Config.Sys.platform:
-            case "windows":
-                enable = True
-            case "linux" | "darwin":
-                enable = False
-
-        self.path_box.Enable(enable)
-        self.browse_btn.Enable(enable)
-
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
@@ -331,7 +354,17 @@ class MergeTab(wx.Panel):
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
 
-        dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = "ffmpeg.exe", style = wx.FD_OPEN, wildcard = ("FFmpeg|ffmpeg.exe"))
+        # 根据不同平台选取不同后缀名文件
+        match Config.Sys.platform:
+            case "windows":
+                defaultFile = "ffmpeg.exe"
+                wildcard = ("FFmpeg|ffmpeg.exe")
+
+            case "linux" | "darwin":
+                defaultFile = "ffmpeg"
+                wildcard = ("FFmpeg|ffmpeg")
+
+        dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = defaultFile, style = wx.FD_OPEN, wildcard = wildcard)
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
@@ -522,7 +555,7 @@ class MiscTab(wx.Panel):
         sections_box = wx.StaticBox(self, -1, "剧集列表显示设置")
 
         self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
-        self.episodes_multiple_choice = wx.RadioButton(sections_box, -1, "获取正片列表")
+        self.episodes_multiple_choice = wx.RadioButton(sections_box, -1, "获取视频所在合集")
         self.episodes_all_choice = wx.RadioButton(sections_box, -1, "获取全部相关视频 (包括花絮、PV、OP、ED 等)")
 
         self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
@@ -611,6 +644,9 @@ class MiscTab(wx.Panel):
         conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
 
         conf.config_save()
+
+        # 重新创建主窗口的菜单
+        self.GetParent().GetParent().GetParent().init_menubar()
 
     def browse_btn_EVT(self, event):
         wildcard = "可执行文件(*.exe)|*.exe"

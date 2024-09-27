@@ -82,9 +82,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         bangumi_list = {}
 
         for key, value in BangumiInfo.sections.items():
-            if Config.Misc.show_episodes != 2 and key != "正片":
-                continue
-
             bangumi_list[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode, flag = 2)] for index, episode in enumerate(value)]
 
             self.parent_items.append(key)
@@ -172,7 +169,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "resolution": self.resolution if self.resolution else None,
             "codec": None,
             "download_complete": False, # 下载完成标识
-            "flag": False
+            "flag": False,
+            "merge_type": 0, # 视频合成类型
         }
 
 class ScrolledPanel(_ScrolledPanel):

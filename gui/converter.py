@@ -172,9 +172,9 @@ class ConverterWindow(Frame):
         encoder = self.getEncoder()
         bitrate = self.target_bitrate_box.GetValue() + "k"
 
-        cmd = [Config.FFmpeg.path, "-y", "-i", input_path, "-c:v", encoder, "-b:v", bitrate, "-strict", "experimental", output_path]
+        cmd = f'"{Config.FFmpeg.path}" -y -i "{input_path}" -c:v {encoder} -b:v {bitrate} -strict experimental "{output_path}"'
 
-        self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True, encoding = "utf-8")
+        self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True, encoding = "utf-8", shell = True)
 
         duration = None
         time_1 = time.time()
