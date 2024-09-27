@@ -57,6 +57,9 @@ class BangumiParser:
         
         info_result = resp["result"]
 
+        with open("bangumi.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
+
         BangumiInfo.url = info_result["episodes"][0]["link"]
         BangumiInfo.title = info_result["title"]
 
@@ -205,12 +208,14 @@ class BangumiParser:
 
     def parse_episodes(self, info_result):
         # 解析正片
-        if "seasons" in info_result:
+        if "seasons" in info_result and info_result["seasons"]:
             seasons_info = info_result["seasons"]
 
             for season_entry in seasons_info:
                 if season_entry["media_id"] == BangumiInfo.mid:
                     season_title = season_entry["season_title"]
+            
+        else:
+            season_title = "正片"
 
-            BangumiInfo.sections[season_title] = BangumiInfo.episodes
-
+        BangumiInfo.sections[season_title] = BangumiInfo.episodes
