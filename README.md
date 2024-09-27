@@ -19,7 +19,7 @@ Bili23 Downloader GUI
 本页面仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](https://www.scott-sloan.cn/archives/12/)。
 
 ### **主界面**
-[![pkAukBd.png](https://s21.ax1x.com/2024/05/04/pkAukBd.png)](https://imgse.com/i/pkAukBd)
+[![pAlhXgU.png](https://s21.ax1x.com/2024/09/27/pAlhXgU.png)](https://imgse.com/i/pAlhXgU)
 
 #### **支持输入的 URL 链接**
 | 类型 | 示例  |
@@ -34,7 +34,7 @@ Bili23 Downloader GUI
 - 剧集 ep、md、ss 号
 
 ### **下载**
-[![pkAuu38.png](https://s21.ax1x.com/2024/05/04/pkAuu38.png)](https://imgse.com/i/pkAuu38)
+[![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
 ### **登录**
 由于B站限制，未登录状态下只能获取到 `480P` 视频，因此建议您扫码登录后使用。
