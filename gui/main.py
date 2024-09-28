@@ -344,12 +344,12 @@ class MainWindow(Frame):
         resolution_desc.insert(0, "自动")
 
         self.resolution_choice.Set(resolution_desc)
-        
-        info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[1]
 
-        if info.resolution == 200:
+        if Config.Download.resolution == 200:
             index = 0
         else:
+            info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[0]
+
             index = info.resolution_id.index(info.resolution) + 1
 
         self.resolution_choice.Select(index)
