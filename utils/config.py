@@ -14,7 +14,7 @@ class Config:
         version = "1.51"
         version_code = 1510
 
-        release_date = "2024/09/28"
+        release_date = "2024/09/29"
 
     class Proxy:
         proxy = auth = False
@@ -83,9 +83,13 @@ class Audio:
     audio_quality = None
 
     audio_only = False
-
+    
+    # 各音质是否存在
     q_hires = False
     q_dolby = False
+    q_192k = False
+    q_132k = False
+    q_64k = False
 
 class Download:
     current_type = None

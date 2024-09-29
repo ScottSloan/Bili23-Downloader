@@ -52,6 +52,7 @@ class ConverterWindow(Frame):
 
         target_params_hbox = wx.BoxSizer(wx.HORIZONTAL)
         target_params_hbox.Add(self.target_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        target_params_hbox.AddSpacer(20)
         target_params_hbox.Add(target_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         target_params_hbox.Add(self.target_codec_choice, 0, wx.ALL & (~wx.LEFT), 10)
         target_params_hbox.Add(target_bitrate_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)

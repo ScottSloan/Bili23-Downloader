@@ -424,7 +424,7 @@ class DownloadWindow(Frame):
 
     def run_callback_list(self, callback_list):
         for callback in callback_list:
-            wx.CallAfter(callback(0))
+            wx.CallAfter(callback, 0)
 
         self.download_list_panel.Layout()
         self.update_task_lab()

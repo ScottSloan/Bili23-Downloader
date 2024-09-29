@@ -19,7 +19,7 @@ Bili23 Downloader GUI
 本页面仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](https://www.scott-sloan.cn/archives/12/)。
 
 ### **主界面**
-[![pkAukBd.png](https://s21.ax1x.com/2024/05/04/pkAukBd.png)](https://imgse.com/i/pkAukBd)
+[![pAlhXgU.png](https://s21.ax1x.com/2024/09/27/pAlhXgU.png)](https://imgse.com/i/pAlhXgU)
 
 #### **支持输入的 URL 链接**
 | 类型 | 示例  |
@@ -34,7 +34,7 @@ Bili23 Downloader GUI
 - 剧集 ep、md、ss 号
 
 ### **下载**
-[![pkAuu38.png](https://s21.ax1x.com/2024/05/04/pkAuu38.png)](https://imgse.com/i/pkAuu38)
+[![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
 ### **登录**
 由于B站限制，未登录状态下只能获取到 `480P` 视频，因此建议您扫码登录后使用。
@@ -43,9 +43,10 @@ Bili23 Downloader GUI
 
 # 更新日志
 ### **Version 1.51 (2024/09/29)**
-Version 1.51 Beta2
+Version 1.51 Beta3 发布
 
 本次更新内容：
+* 修复部分页面在深色模式下显示异常的问题
 * 修复部分情况下无法下载视频的问题
 * 修复解析视频时默认下载清晰度勾选不正确的问题
 * 修复解析视频所在合集对用户投稿类视频不生效的问题

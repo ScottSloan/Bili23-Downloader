@@ -3,6 +3,7 @@ from io import BytesIO
 
 from utils.login import QRLogin
 from utils.config import Config, conf
+from utils.tools import get_background_color
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent):
@@ -24,8 +25,6 @@ class LoginWindow(wx.Dialog):
         self.timer.Start(1000)
 
     def init_UI(self):
-        self.SetBackgroundColour("white")
-
         font: wx.Font = self.GetFont()
 
         scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
@@ -44,6 +43,8 @@ class LoginWindow(wx.Dialog):
         vbox.Add(self.lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         self.SetSizerAndFit(vbox)
+
+        self.SetBackgroundColour(get_background_color())
         
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onClose)

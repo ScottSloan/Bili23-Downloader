@@ -56,8 +56,16 @@ class VideoParser:
         VideoInfo.cover = info["pic"]
         VideoInfo.duration = info["duration"]
         VideoInfo.aid = info["aid"]
-        VideoInfo.cid = info["cid"]
         VideoInfo.pages = info["pages"]
+
+        # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
+        if Config.Misc.show_episodes == Config.Type.EPISODES_SINGLE:
+            if hasattr(self, "part_num"):
+                VideoInfo.cid = VideoInfo.pages[self.part_num - 1]["cid"]
+            else:
+                VideoInfo.cid = info["pages"][0]["cid"]
+        else:
+            VideoInfo.cid = info["cid"]
 
         VideoInfo.sections.clear()
 
@@ -139,8 +147,20 @@ class VideoParser:
         VideoInfo.resolution_id = info["accept_quality"]
         VideoInfo.resolution_desc = info["accept_description"]
 
+        # 检测无损或杜比是否存在
         Audio.q_hires = True if info["dash"]["flac"] else False
         Audio.q_dolby = True if info["dash"]["dolby"]["audio"] else False
+
+        # 检测 192k, 132k, 64k 音质是否存在
+        for entry in info["dash"]["audio"]:
+            if entry["id"] == 30280:
+                Audio.q_192k = True
+            
+            if entry["id"] == 30232:
+                Audio.q_132k = True
+
+            if entry["id"] == 30216:
+                Audio.q_64k = True
 
         # 存在无损或杜比
         if Audio.q_hires or Audio.q_dolby:

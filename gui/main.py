@@ -549,13 +549,17 @@ class MainWindow(Frame):
             menuitem_dolby = menu.Append(self.ID_AUDIO_DOLBY, "杜比全景声", kind = wx.ITEM_RADIO)
             menuitem_dolby.Check(True if Audio.audio_quality == 30250 else False)
 
-        menuitem_192k = menu.Append(self.ID_AUDIO_192K, "192K", kind = wx.ITEM_RADIO)
-        menuitem_132k = menu.Append(self.ID_AUDIO_132K, "132K", kind = wx.ITEM_RADIO)
-        menuitem_64k = menu.Append(self.ID_AUDIO_64K, "64K", kind = wx.ITEM_RADIO)
+        if Audio.q_192k:
+            menuitem_192k = menu.Append(self.ID_AUDIO_192K, "192K", kind = wx.ITEM_RADIO)
+            menuitem_192k.Check(True if Audio.audio_quality == 30280 else False)
 
-        menuitem_192k.Check(True if Audio.audio_quality == 30280 else False)
-        menuitem_132k.Check(True if Audio.audio_quality == 30232 else False)
-        menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
+        if Audio.q_132k:
+            menuitem_132k = menu.Append(self.ID_AUDIO_132K, "132K", kind = wx.ITEM_RADIO)
+            menuitem_132k.Check(True if Audio.audio_quality == 30232 else False)
+
+        if Audio.q_64k:
+            menuitem_64k = menu.Append(self.ID_AUDIO_64K, "64K", kind = wx.ITEM_RADIO)
+            menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
 
         menu.AppendSeparator()
 
