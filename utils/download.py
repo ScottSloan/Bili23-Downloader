@@ -41,6 +41,9 @@ class Downloader:
         self.error_flag = False
         self.finish_flag = False
 
+        # 初始化重试计数器
+        self.retry_count = 0
+
         self.thread_info = {}
         self.thread_alive_count = 0
 
@@ -100,6 +103,9 @@ class Downloader:
         # 重置停止线程标志位
         self.stop_flag = False
         self.range_stop_flag = False
+
+        # 重置重试计数器
+        self.retry_count = 0
 
         for key, entry in self.thread_info.items():
             path, chunk_list = os.path.join(Config.Download.path, entry["file_name"]), entry["chunk_list"]
@@ -168,12 +174,22 @@ class Downloader:
             time.sleep(1)
             
             # 记录下载信息
+            speed = self.format_speed((self.completed_size - temp_size) / 1024)
+
             info = {
                 "progress": int(self.completed_size / self.total_size * 100),
-                "speed": self.format_speed((self.completed_size - temp_size) / 1024),
+                "speed": speed,
                 "size": "{}/{}".format(format_size(self.completed_size / 1024), format_size(self.total_size / 1024)),
                 "complete": format_size(self.completed_size / 1024)
             }
+
+            if speed == "0 KB/s":
+                self.retry_count += 1
+
+            if self.retry_count == 5:
+                self.onStop()
+
+                self.restart()
 
             if self.stop_flag:
                 # 检测停止标志位

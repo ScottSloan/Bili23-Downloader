@@ -21,8 +21,6 @@ class AboutWindow(wx.Dialog):
         wx.Bell()
     
     def init_UI(self):
-        self.SetBackgroundColour("white")
-
         image = wx.Image(io.BytesIO(getAppIcon()), wx.BITMAP_TYPE_JPEG)
         logo = wx.StaticBitmap(self, -1, image.ConvertToBitmap())
 
@@ -77,6 +75,8 @@ class AboutWindow(wx.Dialog):
         about_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(about_vbox)
+
+        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.website_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenWebsite)
