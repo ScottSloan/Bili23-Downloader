@@ -13,7 +13,7 @@ from gui.show_error import ShowErrorDialog
 from gui.cover_viewer import CoverViewerDialog
 
 from utils.icons import *
-from utils.config import Config, Download, conf, Audio
+from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import *
 

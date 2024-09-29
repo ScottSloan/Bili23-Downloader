@@ -4,6 +4,7 @@ import re
 import time
 import requests
 from requests.auth import HTTPProxyAuth
+from gui.templates import ScrolledPanel
 
 from gui.ffmpeg_detect import DetectDialog
 
@@ -15,7 +16,7 @@ class SettingWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "设置")
 
-        self.SetSize(self.FromDIP((400, 500)))
+        self.SetSize(self.FromDIP((600, 600)))
 
         self.init_UI()
 
@@ -40,10 +41,12 @@ class SettingWindow(wx.Dialog):
         bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.note, 1, wx.EXPAND | wx.ALL, 10)
+        vbox.Add(self.note, 0, wx.EXPAND | wx.ALL, 10)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
+
+        print(self.GetSize())
     
     def Bind_EVT(self):
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
@@ -78,24 +81,26 @@ class DownloadTab(wx.Panel):
     def init_UI(self):
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
-        path_lab = wx.StaticText(self.download_box, -1, "下载目录")
-        self.path_box = wx.TextCtrl(self.download_box, -1, size = self.FromDIP((260, 24)))
-        self.browse_btn = wx.Button(self.download_box, -1, "浏览", size = self.FromDIP((60, 24)))
+        self.scrolled_panel = ScrolledPanel(self.download_box, (470, 500))
+
+        path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
+        self.path_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((220, 24)))
+        self.browse_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = self.FromDIP((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         
-        self.max_thread_lab = wx.StaticText(self.download_box, -1, "多线程数：1")
-        self.max_thread_slider = wx.Slider(self.download_box, -1, 1, 1, 8)
+        self.max_thread_lab = wx.StaticText(self.scrolled_panel, -1, "多线程数：1")
+        self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
 
-        self.max_download_lab = wx.StaticText(self.download_box, -1, "并行下载数：1")
+        self.max_download_lab = wx.StaticText(self.scrolled_panel, -1, "并行下载数：1")
         max_download = Config.Download.max_download if Config.Download.max_download > 4 else 4
-        self.max_download_slider = wx.Slider(self.download_box, -1, 1, 1, max_download)
+        self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, max_download)
 
-        video_lab = wx.StaticText(self.download_box, -1, "默认下载清晰度")
-        self.video_quality_choice = wx.Choice(self.download_box, -1, choices = list(resolution_map.keys()))
-        self.video_quality_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
+        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(resolution_map.keys()))
+        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -103,9 +108,9 @@ class DownloadTab(wx.Panel):
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL, 10)
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        audio_lab = wx.StaticText(self.download_box, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.download_box, -1, choices = list(audio_quality_map_set.keys()))
-        self.audio_quality_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
+        self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_map_set.keys()))
+        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -113,9 +118,9 @@ class DownloadTab(wx.Panel):
         sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        codec_lab = wx.StaticText(self.download_box, -1, "视频编码格式")
-        self.codec_choice = wx.Choice(self.download_box, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
-        self.codec_tip = wx.StaticBitmap(self.download_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        codec_lab = wx.StaticText(self.scrolled_panel, -1, "视频编码格式")
+        self.codec_choice = wx.Choice(self.scrolled_panel, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
+        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -123,10 +128,10 @@ class DownloadTab(wx.Panel):
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.speed_limit_chk = wx.CheckBox(self.download_box, -1, "对单个下载任务进行限速")
-        self.speed_limit_lab = wx.StaticText(self.download_box, -1, "最高")
-        self.speed_limit_box = wx.TextCtrl(self.download_box, -1, size = self.FromDIP((50, 25)))
-        self.speed_limit_unit_lab = wx.StaticText(self.download_box, -1, "MB/s")
+        self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
+        self.speed_limit_lab = wx.StaticText(self.scrolled_panel, -1, "最高")
+        self.speed_limit_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((50, 25)))
+        self.speed_limit_unit_lab = wx.StaticText(self.scrolled_panel, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
         speed_limit_hbox.AddSpacer(30)
@@ -134,8 +139,8 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.add_number_chk = wx.CheckBox(self.download_box, -1, "批量下载视频时自动添加序号")
-        self.show_toast_chk = wx.CheckBox(self.download_box, -1, "下载完成后弹出通知")
+        self.add_number_chk = wx.CheckBox(self.scrolled_panel, -1, "批量下载视频时自动添加序号")
+        self.show_toast_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后弹出通知")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(path_lab, 0, wx.ALL, 10)
@@ -152,13 +157,17 @@ class DownloadTab(wx.Panel):
         vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
+        self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
+
         download_sbox = wx.StaticBoxSizer(self.download_box)
-        download_sbox.Add(vbox, 1, wx.EXPAND)
+        download_sbox.Add(self.scrolled_panel, 0, wx.EXPAND)
 
         download_vbox = wx.BoxSizer(wx.VERTICAL)
         download_vbox.Add(download_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
         self.SetSizerAndFit(download_vbox)
+
+        self.layout_sizer()
 
     def Bind_EVT(self):
         self.path_box.Bind(wx.EVT_TEXT, self.onChangePath)
@@ -280,6 +289,13 @@ class DownloadTab(wx.Panel):
     def onCodecTip(self, event):
         wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则自动下载 H.264", "说明", wx.ICON_INFORMATION).ShowModal()
 
+    def layout_sizer(self):
+        self.scrolled_panel.Layout()
+
+        self.scrolled_panel.sizer.Layout()
+
+        self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+
 class MergeTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -294,7 +310,7 @@ class MergeTab(wx.Panel):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
         ffmpeg_path_label = wx.StaticText(ffmpeg_box, 0, "FFmpeg 路径")
-        self.path_box = wx.TextCtrl(ffmpeg_box, -1, size = self.FromDIP((260, 24)))
+        self.path_box = wx.TextCtrl(ffmpeg_box, -1, size = self.FromDIP((220, 24)))
         self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.FromDIP((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
