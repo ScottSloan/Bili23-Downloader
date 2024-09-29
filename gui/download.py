@@ -53,28 +53,22 @@ class DownloadUtils:
             self.video_durl = temp_video_durl[0]["backupUrl"][0]
             self.codec_id = 7
 
-        if Audio.audio_only:
+        if self.info["audio_only"]:
             self.merge_type = Config.Type.MERGE_TYPE_AUDIO # 仅下载音频
         else:
             self.merge_type = Config.Type.MERGE_TYPE_V_A # 合成视频和音频
         
         if json_dash["audio"]:
-            # 除杜比全景声和无损以外
-            if Audio.audio_quality != 30250:
-                temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == Audio.audio_quality]
-                self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
+            # 解析默认音质
+            self.getDefaultAudioDurl(json_dash["audio"])
 
-                self.audio_type = "mp3"
-                self.audio_quality = Audio.audio_quality
-            else:
-                # 默认为 192K
-                self.getAudioDurl_192k(json_dash)
-
+            if self.info["audio_quality"] == 30250:
                 try:
-                    # 无损
+                    # 获取无损或杜比链接
                     if json_dash["flac"]:
                         if "audio" in json_dash:
                             if json_dash["flac"]["audio"]:
+                                # 无损
                                 self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
 
                                 self.audio_type = "flac"
@@ -89,8 +83,8 @@ class DownloadUtils:
                                     self.audio_type = "ec3"
                                     self.audio_quality = 30250
                 except:
-                    # 无法获取无损或杜比链接，换回 192K
-                    self.getAudioDurl_192k(json_dash)
+                    # 无法获取无损或杜比链接，换回默认音质
+                    self.getDefaultAudioDurl(json_dash["audio"])
 
         else:
             # 视频不存在音频，标记 flag
@@ -122,12 +116,21 @@ class DownloadUtils:
 
         return json_dash
 
-    def getAudioDurl_192k(self, json_dash):
-        temp_audio_durl = [i for i in json_dash["audio"] if i["id"] == 30280]
+    def getDefaultAudioDurl(self, data):
+        highest_audio_quality = self.getHighestAudioQuality(data)
+
+        if highest_audio_quality < self.info["audio_quality"] or self.info["audio_quality"] == 30250:
+            # 当视频不存在选取的音质时，选取最高可用的音质
+            audio_quality = highest_audio_quality
+        else:
+            audio_quality = self.info["audio_quality"]
+
+        temp_audio_durl = [i for i in data if i["id"] == audio_quality]
+
         self.audio_durl = temp_audio_durl[0]["backupUrl"][0]
 
         self.audio_type = "mp3"
-        self.audio_quality = 30280
+        self.audio_quality = audio_quality
 
     def getDownloadInfo(self) -> list:
         self.getVideoDurl()
@@ -264,6 +267,16 @@ class DownloadUtils:
                 highest_resolution = entry["id"]
 
         return highest_resolution
+    
+    def getHighestAudioQuality(self, data):
+        # 默认为 64K
+        highest_audio_quality = 30216
+
+        for entry in data:
+            if entry["id"] > highest_audio_quality:
+                highest_audio_quality = entry["id"]
+        
+        return highest_audio_quality
 
 class DownloadWindow(Frame):
     def __init__(self, parent):
@@ -411,7 +424,7 @@ class DownloadWindow(Frame):
 
     def run_callback_list(self, callback_list):
         for callback in callback_list:
-            callback(0)
+            wx.CallAfter(callback(0))
 
         self.download_list_panel.Layout()
         self.update_task_lab()
@@ -794,13 +807,22 @@ class DownloadItemPanel(wx.Panel):
         self.updatePauseBtn("pause")
 
     def onResume(self):
-        if self.info["completed_size"] >= self.info["total_size"]:
-            self.info["download_complete"] = True
+        # 判断是否下载完成
+        if self.info["completed_size"]:
+            if self.info["completed_size"] >= self.info["total_size"]:
+                self.info["download_complete"] = True
 
+        # 判断下载状态
         if self.info["download_complete"]:
+            # 下载完成，直接开始合成
             self.onMerge()
         else:
-            self.downloader.onResume()
+            # 判断是否存在下载信息
+            if self.info["completed_size"]:
+                self.downloader.onResume()
+            else:
+                # 未开始下载，调用 start
+                self.start()
 
     def onResumeCallback(self, event):
         self.onResume()
@@ -962,7 +984,7 @@ class DownloadItemPanel(wx.Panel):
         match status:
             case "downloading":
                 image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
-            case "pause":
+            case "pause" | "wait":
                 image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
             case "retry":
                 image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
