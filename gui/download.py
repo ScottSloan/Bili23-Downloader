@@ -1,12 +1,12 @@
 import io
 import wx
+import math
 import json
 import time
 import wx.adv
 import requests
 import subprocess
 from typing import List
-from threading import Thread
 
 from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
@@ -16,6 +16,7 @@ from utils.icons import *
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import *
+from utils.thread import Thread
 
 class DownloadInfo:
     download_list = {}
@@ -431,36 +432,54 @@ class DownloadWindow(Frame):
 
     def add_download_item(self, start_download = True):
         multiple = True if len(Download.download_list) > 1 else False
+
+        self.add_panel_item_worker(multiple, start_download)
+
+    def add_panel_item_worker(self, multiple, start_download):
+        item_list = []
+
+        # 暂时停止 UI 更新
+        self.download_list_panel.Freeze()
         
         for index, entry in enumerate(Download.download_list):
             if self.is_already_in_list(entry["title"], entry["cid"]):
                 continue
 
-            if multiple:
-                # 只有在批量下载视频时，才更新 index，否则都为 None
-                entry["index"] = index + 1
+            item_list.append(self.add_panel_item_to_panel(index, entry, multiple))
 
-            item = DownloadItemPanel(self.download_list_panel, entry)
-
-            self.download_list_panel.sizer.Add(item, 0, wx.EXPAND)
-
-            if multiple and Config.Download.add_number:
-                entry["title"] = f"{index + 1} - {entry['title']}"
-
-            entry["start_callback"] = item.start
-            entry["pause_callback"] = item.onPauseCallback
-            entry["resume_callback"] = item.onResumeCallback
-            entry["stop_callback"] = item.onStop
-
-            DownloadInfo.download_list[entry["id"]] = entry
-
-            self.download_list_panel.SetupScrolling(scroll_x = False)
+        # 恢复 UI 更新
+        self.download_list_panel.Thaw()
         
+        # 添加下载项并更新 UI
+        self.download_list_panel.sizer.AddMany(item_list)
         self.layout_sizer()
 
+        # 关闭加载窗口回调
+        self.GetParent().hideProcessWindowCallback()
+
+        # 开始下载
         if start_download:
             self.start_download()
 
+    def add_panel_item_to_panel(self, index, entry, multiple):
+        if multiple:
+            # 只有在批量下载视频时，才更新 index，否则都为 None
+            entry["index"] = index + 1
+
+        item = DownloadItemPanel(self.download_list_panel, entry)
+
+        if multiple and Config.Download.add_number:
+            entry["title"] = f"{index + 1} - {entry['title']}"
+
+        entry["start_callback"] = item.start
+        entry["pause_callback"] = item.onPauseCallback
+        entry["resume_callback"] = item.onResumeCallback
+        entry["stop_callback"] = item.onStop
+
+        DownloadInfo.download_list[entry["id"]] = entry
+
+        return (item, 0, wx.EXPAND)
+        
     def layout_sizer(self):
         self.update_task_lab()
 
@@ -572,7 +591,7 @@ class DownloadItemPanel(wx.Panel):
 
     def init_utils(self):
         # 获取视频封面
-        Thread(target = self.getCover).start()
+        Thread(target = self.getCover, daemon = False).start()
 
         self.downloader = Downloader(self.info, self.onStart, self.onDownload, self.onMerge, self.onError)
         self.utils = DownloadUtils(self.info, self.onError, self.onMergeComplete)
@@ -717,7 +736,6 @@ class DownloadItemPanel(wx.Panel):
 
         # 开启线程，防止 UI 阻塞
         self.start_thread = Thread(target = self.startDownloadThread)
-        self.start_thread.setDaemon(True)
         self.start_thread.start()
     
     def startDownloadThread(self):
@@ -835,7 +853,8 @@ class DownloadItemPanel(wx.Panel):
 
         self.Hide()
 
-        DownloadInfo.download_list.pop(self.info["id"])
+        if self.info["id"] in DownloadInfo.download_list:
+            DownloadInfo.download_list.pop(self.info["id"])
 
         self.GetParent().GetParent().layout_sizer()
 
@@ -903,8 +922,6 @@ class DownloadItemPanel(wx.Panel):
         self.Layout()
 
     def onError(self):
-        print("onError")
-
         self.setStatus("error")
 
         self.speed_lab.SetLabel("下载失败")
@@ -916,8 +933,6 @@ class DownloadItemPanel(wx.Panel):
         self.Layout()
 
         self.GetParent().GetParent().update_task_lab()
-
-        self.start_thread.stop()
 
         self.downloader.download_info.clear()
     

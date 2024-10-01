@@ -1,4 +1,5 @@
 import wx
+import time
 import wx.py
 
 from utils.config import Config, Download, conf, Audio
@@ -249,12 +250,12 @@ class MainWindow(Frame):
         url = self.url_box.GetValue()
         self.clearTreeList()
 
+        # 显示加载窗口
         self.processing_window = ProcessingWindow(self)
         self.processing_window.Show()
 
+        # 开启解析线程
         self.parse_thread = Thread(target = self.parseThread, args = (url, ))
-        self.parse_thread.setDaemon(True)
-
         self.parse_thread.start()
 
         self.parse_ready = True
@@ -313,8 +314,26 @@ class MainWindow(Frame):
             self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
             return
         
+        # 显示加载窗口
+        self.processing_window = ProcessingWindow(self)
+        self.processing_window.Show()
+
+        # 添加下载项目
+        download_thread = Thread(target = self.downloadThread)
+        download_thread.start()
+    
+    def downloadThread(self):
+        # 延迟 0.1s 防止加载窗口白屏
+        time.sleep(0.1)
+
+        wx.CallAfter(self.download_window.add_download_item)
+
+    def hideProcessWindowCallback(self):
+        # 关闭加载窗口
+        self.processing_window.Hide()
+
+        # 显示下载窗口
         self.onOpenDownloadMgr(0)
-        self.download_window.add_download_item()
 
     def onOpenDownloadMgr(self, event):
         if not self.download_window.IsShown():
@@ -603,8 +622,6 @@ class MainWindow(Frame):
     
     def startNewParseThread(self, *args):
         self.parse_thread = Thread(target = self.parseThread, args = args)
-        self.parse_thread.setDaemon(True)
-
         self.parse_thread.start()
 
     def setMainWindowSize(self):

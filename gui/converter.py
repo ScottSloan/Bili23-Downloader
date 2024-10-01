@@ -8,7 +8,7 @@ from gui.templates import Frame
 
 from utils.tools import target_codec_map, gpu_map, get_background_color
 from utils.config import Config
-from threading import Thread
+from utils.thread import Thread
 
 class ConverterWindow(Frame):
     def __init__(self, parent):
@@ -126,8 +126,6 @@ class ConverterWindow(Frame):
             return
 
         convert_thread = Thread(target = self.startConvert)
-        convert_thread.setDaemon(True)
-
         convert_thread.start()
 
         self.setStatus(True)

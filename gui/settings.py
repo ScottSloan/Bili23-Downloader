@@ -10,7 +10,7 @@ from gui.ffmpeg_detect import DetectDialog
 
 from utils.config import Config, conf
 from utils.tools import *
-from threading import Thread
+from utils.thread import Thread
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -45,8 +45,6 @@ class SettingWindow(wx.Dialog):
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        print(self.GetSize())
     
     def Bind_EVT(self):
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)

@@ -22,7 +22,6 @@ class Downloader:
 
         # 创建监听线程
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
-        self.listen_thread.setDaemon(True)
 
         # 创建持久化 Session
         self.session = requests.Session()
@@ -222,7 +221,6 @@ class Downloader:
 
         # 启动监听线程
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
-        self.listen_thread.setDaemon(True)
 
         self.listen_thread.start()
 

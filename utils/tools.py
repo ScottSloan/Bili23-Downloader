@@ -55,13 +55,13 @@ def get_proxy():
             "https": f"{Config.Proxy.ip}:{Config.Proxy.port}"
         }
     else:
-        return {}
+        return None
 
 def get_auth():
     if Config.Proxy.auth:
         return HTTPProxyAuth(Config.Proxy.uname, Config.Proxy.passwd)
     else:
-        return HTTPProxyAuth(None, None)
+        return None
     
 def convert_to_bvid(aid):
     table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
@@ -154,7 +154,7 @@ def check_update():
     Config.Temp.update_json = update_json
     
 def get_new_id():
-    return random.randint(1000, 9999)
+    return random.randint(1000, 9999999)
 
 def find_str(pattern, string):
     find = re.findall(pattern, string)
