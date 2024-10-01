@@ -147,20 +147,30 @@ class VideoParser:
         VideoInfo.resolution_id = info["accept_quality"]
         VideoInfo.resolution_desc = info["accept_description"]
 
+        # 重置音质标识符
+        Audio.q_dolby = Audio.q_hires = Audio.q_192k = Audio.q_132k = Audio.q_64k = False
+
         # 检测无损或杜比是否存在
-        Audio.q_hires = True if info["dash"]["flac"] else False
-        Audio.q_dolby = True if info["dash"]["dolby"]["audio"] else False
+        if "flac" in info["dash"]:
+            if info["dash"]["flac"]:
+                Audio.q_hires = True
+
+        if "dolby" in info["dash"]:
+            if info["dash"]["dolby"]["audio"]:
+                Audio.q_dolby = True
 
         # 检测 192k, 132k, 64k 音质是否存在
-        for entry in info["dash"]["audio"]:
-            if entry["id"] == 30280:
-                Audio.q_192k = True
-            
-            if entry["id"] == 30232:
-                Audio.q_132k = True
+        if "audio" in info["dash"]:
+            if info["dash"]["audio"]:
+                for entry in info["dash"]["audio"]:
+                    if entry["id"] == 30280:
+                        Audio.q_192k = True
+                    
+                    if entry["id"] == 30232:
+                        Audio.q_132k = True
 
-            if entry["id"] == 30216:
-                Audio.q_64k = True
+                    if entry["id"] == 30216:
+                        Audio.q_64k = True
 
         # 存在无损或杜比
         if Audio.q_hires or Audio.q_dolby:

@@ -66,25 +66,41 @@ class DownloadUtils:
             if self.info["audio_quality"] == 30250:
                 try:
                     # 获取无损或杜比链接
-                    if json_dash["flac"]:
-                        if "audio" in json_dash:
-                            if json_dash["flac"]["audio"]:
-                                # 无损
-                                self.audio_durl = json_dash["flac"]["audio"]["backupUrl"][0]
+                    if "flac" in json_dash:
+                        if json_dash["flac"]:
+                            if "audio" in json_dash["flac"]:
+                                if json_dash["flac"]["audio"]:
+                                    # 无损
+                                    audio_node = json_dash["flac"]["audio"]
 
-                                self.audio_type = "flac"
-                                self.audio_quality = 30251
+                                    # 自动检测链接可用性
+                                    if "backupUrl" in audio_node:
+                                        self.audio_durl = audio_node["backupUrl"][0]
+                                    else:
+                                        self.audio_durl = audio_node["backup_url"][0]
+
+                                    self.audio_type = "flac"
+                                    self.audio_quality = 30251
                     else:
-                        if json_dash["dolby"]:
-                            if "audio" in json_dash:
-                                if json_dash["dolby"]["audio"]:
-                                    # 杜比全景声
-                                    self.audio_durl = json_dash["dolby"]["audio"][0]["backupUrl"][0]
+                        if "dolby" in json_dash:
+                            if json_dash["dolby"]:
+                                if "audio" in json_dash["dolby"]:
+                                    if json_dash["dolby"]["audio"]:
+                                        # 杜比全景声
+                                        audio_node = self.audio_durl = json_dash["dolby"]["audio"][0]
 
-                                    self.audio_type = "ec3"
-                                    self.audio_quality = 30250
+                                        # 自动检测链接可用性
+                                        if "backupUrl" in audio_node:
+                                            self.audio_durl = audio_node["backupUrl"][0]
+                                        else:
+                                            self.audio_durl = audio_node["backup_url"][0]
+
+                                        self.audio_type = "ec3"
+                                        self.audio_quality = 30250
+
                 except:
                     # 无法获取无损或杜比链接，换回默认音质
+
                     self.getDefaultAudioDurl(json_dash["audio"])
 
         else:

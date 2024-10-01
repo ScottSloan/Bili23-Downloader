@@ -57,9 +57,6 @@ class BangumiParser:
         
         info_result = resp["result"]
 
-        with open("bangumi.json", "w", encoding = "utf-8") as f:
-            f.write(req.text)
-
         BangumiInfo.url = info_result["episodes"][0]["link"]
         BangumiInfo.title = info_result["title"]
 
@@ -184,11 +181,44 @@ class BangumiParser:
         BangumiInfo.resolution_id = json_data["accept_quality"]
         BangumiInfo.resolution_desc = json_data["accept_description"]
 
-        if Config.Download.sound_quality == 30250 or Config.Download.sound_quality == 30251:
-            Audio.audio_quality = 30280
+        # 重置音质标识符
+        Audio.q_dolby = Audio.q_hires = Audio.q_192k = Audio.q_132k = Audio.q_64k = False
+
+        # 检测无损或杜比是否存在
+        if "flac" in json_data["dash"]:
+            if json_data["dash"]["flac"]:
+                Audio.q_hires = True
+
+        if "dolby" in json_data["dash"]:
+            if json_data["dash"]["dolby"]["audio"]:
+                Audio.q_dolby = True
+
+        # 检测 192k, 132k, 64k 音质是否存在
+        if "audio" in json_data["dash"]:
+            if json_data["dash"]["audio"]:
+                for entry in json_data["dash"]["audio"]:
+                    if entry["id"] == 30280:
+                        Audio.q_192k = True
+                    
+                    if entry["id"] == 30232:
+                        Audio.q_132k = True
+
+                    if entry["id"] == 30216:
+                        Audio.q_64k = True
+
+        # 存在无损或杜比
+        if Audio.q_hires or Audio.q_dolby:
+            # 如果选择下载无损或杜比
+            if Config.Download.sound_quality == 30250:
+                Audio.audio_quality = 30250
+            else:
+                Audio.audio_quality = Config.Download.sound_quality
+
+        # 否则根据实际所选音质下载
         else:
             Audio.audio_quality = Config.Download.sound_quality
 
+        # 重置仅下载音频标识符
         Audio.audio_only = False
 
     def parse_url(self, url):

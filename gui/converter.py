@@ -4,15 +4,13 @@ import os
 import time
 import subprocess
 
-from gui.templates import Frame
-
 from utils.tools import target_codec_map, gpu_map, get_background_color
 from utils.config import Config
 from utils.thread import Thread
 
-class ConverterWindow(Frame):
+class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "格式转换", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
+        wx.Dialog.__init__(self, parent, -1, "格式转换", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
 
         self.init_UI()
 
@@ -59,7 +57,7 @@ class ConverterWindow(Frame):
         target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT), 10)
         target_params_hbox.Add(target_bitrate_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.hwaccel_chk = wx.CheckBox(self, -1, "启用 GPU 加速")
+        self.hwaccel_chk = wx.CheckBox(self, -1, "启用硬件加速")
 
         gpu_lab = wx.StaticText(self, -1, "GPU")
         self.gpu_choice = wx.Choice(self, -1, choices = self.getGPUList())
@@ -91,7 +89,7 @@ class ConverterWindow(Frame):
 
         self.SetSizerAndFit(vbox)
 
-        self.SetBackgroundColour(get_background_color())
+        # self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.start_btn.Bind(wx.EVT_BUTTON, self.onStart)

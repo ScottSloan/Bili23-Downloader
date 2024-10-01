@@ -219,6 +219,7 @@ class MainWindow(Frame):
         self.ID_AUDIO_132K = wx.NewIdRef()
         self.ID_AUDIO_64K = wx.NewIdRef()
         self.ID_AUDIO_ONLY = wx.NewIdRef()
+        self.ID_AUDIO_NONE = wx.NewIdRef()
 
     def utilsThread(self):
         info = DownloaderInfo()
@@ -329,11 +330,12 @@ class MainWindow(Frame):
         wx.CallAfter(self.download_window.add_download_item)
 
     def hideProcessWindowCallback(self):
-        # 关闭加载窗口
-        self.processing_window.Hide()
+        if hasattr(self, "processing_window"):
+            # 关闭加载窗口
+            self.processing_window.Hide()
 
-        # 显示下载窗口
-        self.onOpenDownloadMgr(0)
+            # 显示下载窗口
+            self.onOpenDownloadMgr(0)
 
     def onOpenDownloadMgr(self, event):
         if not self.download_window.IsShown():
@@ -454,7 +456,7 @@ class MainWindow(Frame):
 
     def onLoadConverter(self, event):
         converter_window = ConverterWindow(self)
-        converter_window.Show()
+        converter_window.ShowModal()
 
     def onLoadSetting(self, event):
         setting_window = SettingWindow(self)
@@ -556,9 +558,12 @@ class MainWindow(Frame):
         update_window.ShowWindowModal()
 
     def showAudioQualityMenu(self):
+        # 显示音质菜单
         menu = wx.Menu()
         menu.Append(-1, "音质")
         menu.AppendSeparator()
+
+        audio_none = False
 
         if Audio.q_hires:
             menuitem_hires = menu.Append(self.ID_AUDIO_HIRES, "Hi-Res 无损", kind = wx.ITEM_RADIO)
@@ -580,10 +585,19 @@ class MainWindow(Frame):
             menuitem_64k = menu.Append(self.ID_AUDIO_64K, "64K", kind = wx.ITEM_RADIO)
             menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
 
+        if not Audio.q_64k and not Audio.q_132k and not Audio.q_192k:
+            menuitem_none = menu.Append(self.ID_AUDIO_NONE, "无音轨")
+            menuitem_none.Enable(False)
+
+            audio_none = True
+
         menu.AppendSeparator()
 
         menuitem_audio_only = menu.Append(self.ID_AUDIO_ONLY, "仅下载音频", kind = wx.ITEM_CHECK)
         menuitem_audio_only.Check(True if Audio.audio_only else False)
+
+        if audio_none:
+            menuitem_audio_only.Enable(False)
 
         self.PopupMenu(menu)
 
