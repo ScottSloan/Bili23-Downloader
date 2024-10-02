@@ -11,6 +11,7 @@ from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.thread import Thread
 from utils.cookie import CookieUtils
+from utils.error import Error, ErrorCallback
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -137,6 +138,7 @@ class MainWindow(Frame):
         self.SetMenuBar(menu_bar)
 
     def init_user_info(self):
+        # 如果用户已登录，则获取用户信息
         if Config.User.login:
             thread = Thread(target = self.showUserInfoThread)
             thread.daemon = True
@@ -145,6 +147,7 @@ class MainWindow(Frame):
         else:
             self.face.Hide()
 
+        # 调整用户信息 UI
         wx.CallAfter(self.userinfo_hbox.Layout)
         wx.CallAfter(self.frame_vbox.Layout)
 
@@ -186,6 +189,8 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def init_utils(self):
+        ErrorCallback.onErrorCallbak = self.onError
+        
         self.video_parser = VideoParser(self.onError)
         self.bangumi_parser = BangumiParser(self.onError)
         self.activity_parser = ActivityParser(self.onError)
@@ -395,6 +400,11 @@ class MainWindow(Frame):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
     def onError(self, err_code):
+        # 初始化错误类
+        error = Error()
+
+        error_info = error.getERRORInfo(err_code)
+
         match err_code:
             case 100:
                 self.infobar.ShowMessage("解析失败：不受支持的链接", flags = wx.ICON_ERROR)
@@ -404,6 +414,9 @@ class MainWindow(Frame):
 
             case 102:
                 self.infobar.ShowMessage("解析失败：无法获取视频信息，请登录后再试", flags = wx.ICON_ERROR)
+            
+            case 103:
+                self.infobar.ShowMessage(f"解析失败：{error_info}", flags = wx.ICON_ERROR)
 
         self.processing_window.Hide()
         self.download_btn.Enable(False)

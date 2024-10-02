@@ -4,6 +4,7 @@ import requests
 
 from utils.config import Config, Audio
 from utils.tools import *
+from utils.error import process_exception
 
 class VideoInfo:
     url = aid = bvid = cid = None
@@ -42,6 +43,7 @@ class VideoParser:
 
         self.save_bvid(bvid[0])
 
+    @process_exception
     def get_video_info(self):
         url = f"https://api.bilibili.com/x/web-interface/view?bvid={VideoInfo.bvid}"
         
@@ -134,6 +136,7 @@ class VideoParser:
                     # 非合集视频，判断是否为分P视频
                     self.parse_pages()
 
+    @process_exception
     def get_video_resolution(self):
         url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
                 

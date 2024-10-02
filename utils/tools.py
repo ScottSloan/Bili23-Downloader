@@ -27,7 +27,7 @@ def process_shorklink(url):
 def get_header(referer_url = None, cookie = None, chunk_list = None, download = False) -> dict:
     header = {
         "Cookie": "CURRENT_FNVAL=4048;",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0",
     }
     
     if referer_url:
@@ -49,13 +49,18 @@ def get_header(referer_url = None, cookie = None, chunk_list = None, download = 
     return header
 
 def get_proxy():
-    if Config.Proxy.proxy:
-        return {
-            "http": f"{Config.Proxy.ip}:{Config.Proxy.port}",
-            "https": f"{Config.Proxy.ip}:{Config.Proxy.port}"
-        }
-    else:
-        return None
+    match Config.Proxy.proxy:
+        case Config.Type.PROXY_DISABLE:
+            return {}
+        
+        case Config.Type.PROXY_FOLLOW:
+            return None
+        
+        case Config.Type.PROXY_MANUAL:
+            return {
+                "http": f"{Config.Proxy.ip}:{Config.Proxy.port}",
+                "https": f"{Config.Proxy.ip}:{Config.Proxy.port}"
+            }
 
 def get_auth():
     if Config.Proxy.auth:
@@ -125,7 +130,7 @@ def get_legal_name(name):
 def get_user_face():
     if not os.path.exists(Config.User.face_path):
         # 若未缓存头像，则下载头像到本地
-        req = requests.get(Config.User.face, proxies = get_proxy(), auth = get_auth())
+        req = requests.get(Config.User.face, headers = get_header(), proxies = get_proxy(), auth = get_auth())
 
         with open(Config.User.face_path, "wb") as f:
             f.write(req.content)
@@ -145,6 +150,7 @@ def remove_files(path, name):
                     os.remove(file_path)
 
 def check_update():
+    # 检查更新接口不走代理，避免出现问题
     url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
     req = requests.get(url, headers = get_header(), timeout = 5)

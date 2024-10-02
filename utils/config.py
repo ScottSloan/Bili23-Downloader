@@ -17,7 +17,8 @@ class Config:
         release_date = "2024/10/02"
 
     class Proxy:
-        proxy = auth = False
+        proxy = 1
+        auth = False
 
         ip = port = uname = passwd = None
     
@@ -69,6 +70,16 @@ class Config:
         EPISODES_SINGLE = 0 # 只解析单个视频
         EPISODES_IN_SECTION = 1 # 解析视频所在合集
         EPISODES_ALL_SECTIONS = 2 # 解析全部合集 
+
+        PROXY_DISABLE = 0 # 不使用代理
+        PROXY_FOLLOW = 1 # 跟随系统
+        PROXY_MANUAL = 2 # 手动设置
+
+        ERROR_CODE_SSLERROR = 103 # SSLERROR
+        ERROR_CODE_TimeOut = 104 # TimeOut
+        ERROR_CODE_TooManyRedirects = 105 # TooManyRedirects
+        ERROR_CODE_ConnectionError = 106 # ConnectionError
+        ERROR_CODE_UnknownError = 107 # UnknownError
     
     class Temp:
         download_window_pos = None
@@ -157,7 +168,7 @@ class ConfigUtils:
         Config.User.sessdata = self.user_config.get("user", "sessdata")
 
         # proxy
-        Config.Proxy.proxy = self.config.getboolean("proxy", "proxy")
+        Config.Proxy.proxy = self.config.getint("proxy", "proxy")
         Config.Proxy.ip = self.config.get("proxy", "ip")
         Config.Proxy.port = self.config.get("proxy", "port")
 

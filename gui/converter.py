@@ -4,7 +4,7 @@ import os
 import time
 import subprocess
 
-from utils.tools import target_codec_map, gpu_map, get_background_color
+from utils.tools import target_codec_map, gpu_map
 from utils.config import Config
 from utils.thread import Thread
 
@@ -88,8 +88,6 @@ class ConverterWindow(wx.Dialog):
         vbox.Add(self.start_btn, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
         self.SetSizerAndFit(vbox)
-
-        # self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.start_btn.Bind(wx.EVT_BUTTON, self.onStart)

@@ -415,7 +415,14 @@ class ProxyTab(wx.Panel):
     def init_UI(self):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
         
-        self.proxy_chk = wx.CheckBox(proxy_box, -1, "启用代理")
+        self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, "不使用代理")
+        self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, "跟随系统")
+        self.proxy_manual_radio = wx.RadioButton(proxy_box, -1, "手动设置")
+
+        proxy_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        proxy_hbox.Add(self.proxy_disable_radio, 0, wx.ALL, 10)
+        proxy_hbox.Add(self.proxy_follow_radio, 0, wx.ALL, 10)
+        proxy_hbox.Add(self.proxy_manual_radio, 0, wx.ALL, 10)
         
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
         self.ip_box = wx.TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
@@ -445,7 +452,7 @@ class ProxyTab(wx.Panel):
         bag_box.Add(self.passwd_box, pos = (4, 1), span = (1, 3), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.proxy_chk, 0, wx.ALL, 10)
+        vbox.Add(proxy_hbox, 0, wx.EXPAND)
         vbox.Add(bag_box)
         vbox.Add(self.test_btn, 0, wx.ALL, 10)
 
@@ -458,19 +465,34 @@ class ProxyTab(wx.Panel):
         self.SetSizer(proxy_vbox)
     
     def Bind_EVT(self):
-        self.proxy_chk.Bind(wx.EVT_CHECKBOX, self.enable_chk_EVT)
-        self.auth_chk.Bind(wx.EVT_CHECKBOX, self.auth_chk_EVT)
+        self.proxy_disable_radio.Bind(wx.EVT_RADIOBUTTON, self.onProxyRadioEVT)
+        self.proxy_follow_radio.Bind(wx.EVT_RADIOBUTTON, self.onProxyRadioEVT)
+        self.proxy_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onProxyRadioEVT)
+
+        self.auth_chk.Bind(wx.EVT_CHECKBOX, self.onAuthCheckEVT)
         
-        self.test_btn.Bind(wx.EVT_BUTTON, self.test_btn_EVT)
+        self.test_btn.Bind(wx.EVT_BUTTON, self.onTestEVT)
 
     def init_data(self):
-        if not Config.Proxy.proxy:
-            self.set_proxy_enable(False)
+        match Config.Proxy.proxy:
+            case Config.Type.PROXY_DISABLE:
+                self.proxy_disable_radio.SetValue(True)
+
+                self.setProxyEnable(False)
+
+            case Config.Type.PROXY_FOLLOW:
+                self.proxy_follow_radio.SetValue(True)
+
+                self.setProxyEnable(False)
+
+            case Config.Type.PROXY_MANUAL:
+                self.proxy_manual_radio.SetValue(True)
+
+                self.setProxyEnable(True)
 
         if not Config.Proxy.auth:
-            self.set_auth_enable(False)
+            self.setAuthEnable(False)
 
-        self.proxy_chk.SetValue(Config.Proxy.proxy)
         self.ip_box.SetValue(Config.Proxy.ip)
         self.port_box.SetValue(Config.Proxy.port)
     
@@ -479,7 +501,17 @@ class ProxyTab(wx.Panel):
         self.passwd_box.SetValue(Config.Proxy.passwd)
 
     def save(self):
-        Config.Proxy.proxy = self.proxy_chk.GetValue()
+        if self.proxy_disable_radio.GetValue():
+            proxy = Config.Type.PROXY_DISABLE
+
+        elif self.proxy_follow_radio.GetValue():
+            proxy = Config.Type.PROXY_FOLLOW
+
+        else:
+            proxy = Config.Type.PROXY_MANUAL
+
+        Config.Proxy.proxy = proxy
+
         Config.Proxy.ip = self.ip_box.GetValue()
         Config.Proxy.port = self.port_box.GetValue()
 
@@ -487,7 +519,7 @@ class ProxyTab(wx.Panel):
         Config.Proxy.uname = self.uname_box.GetValue()
         Config.Proxy.passwd = self.passwd_box.GetValue()
 
-        conf.config.set("proxy", "proxy", str(int(Config.Proxy.proxy)))
+        conf.config.set("proxy", "proxy", str(Config.Proxy.proxy))
         conf.config.set("proxy", "ip", Config.Proxy.ip)
         conf.config.set("proxy", "port", Config.Proxy.port)
 
@@ -497,28 +529,32 @@ class ProxyTab(wx.Panel):
 
         conf.config_save()
 
-    def set_proxy_enable(self, enable):
+    def setProxyEnable(self, enable):
         self.ip_box.Enable(enable)
         self.port_box.Enable(enable)
 
-    def set_auth_enable(self, enable):
+    def setAuthEnable(self, enable):
         self.uname_box.Enable(enable)
         self.passwd_box.Enable(enable)
 
-    def enable_chk_EVT(self, event):
-        if event.IsChecked():
-            self.set_proxy_enable(True)
-        else:
-            self.set_proxy_enable(False)
+    def onProxyRadioEVT(self, event):
+        if self.proxy_disable_radio.GetValue():
+            self.setProxyEnable(False)
 
-    def auth_chk_EVT(self, event):
-        if event.IsChecked():
-            self.set_auth_enable(True)
+        elif self.proxy_follow_radio.GetValue():
+            self.setProxyEnable(False)
+
         else:
-            self.set_auth_enable(False)
+            self.setProxyEnable(True)
+
+    def onAuthCheckEVT(self, event):
+        if event.IsChecked():
+            self.setAuthEnable(True)
+        else:
+            self.setAuthEnable(False)
  
-    def test_btn_EVT(self, event):
-        if self.proxy_chk.GetValue():
+    def onTestEVT(self, event):
+        if self.proxy_manual_radio.GetValue():
             proxy = {
                 "http": f"{self.ip_box.GetValue()}:{self.port_box.GetValue()}",
                 "https": f"{self.ip_box.GetValue()}:{self.port_box.GetValue()}"
@@ -534,9 +570,9 @@ class ProxyTab(wx.Panel):
         else:
             auth = HTTPProxyAuth(None, None)
 
-        Thread(target = self.test_connection, args = (proxy, auth, )).start()
+        Thread(target = self.testProxy, args = (proxy, auth, )).start()
 
-    def test_connection(self, proxy, auth):
+    def testProxy(self, proxy, auth):
         try:
             start_time = time.time()
 

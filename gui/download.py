@@ -731,7 +731,7 @@ class DownloadItemPanel(wx.Panel):
         self.cover.Bind(wx.EVT_LEFT_DOWN, self.onViewCover)
 
     def getCover(self):
-        req = requests.get(self.info["pic"])
+        req = requests.get(self.info["pic"], headers = get_header(), proxies = get_proxy(), auth = get_auth())
 
         wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
 

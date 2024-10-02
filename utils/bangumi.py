@@ -2,8 +2,9 @@ import re
 import json
 import requests
 
-from .tools import *
-from .config import Config, Audio
+from utils.tools import *
+from utils.config import Config, Audio
+from utils.error import process_exception
 
 class BangumiInfo:
     url = bvid = epid = cid = season_id = mid = None
@@ -34,6 +35,7 @@ class BangumiParser:
 
         self.argument, self.value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
+    @process_exception
     def get_mid(self, url):
         mid = re.findall(r"md([0-9]*)", url)
         
@@ -47,6 +49,7 @@ class BangumiParser:
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
         self.argument, self.value = "season_id", BangumiInfo.season_id
 
+    @process_exception
     def get_bangumi_info(self):
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.argument}={self.value}"
 
@@ -151,23 +154,8 @@ class BangumiParser:
                         BangumiInfo.sections[section_title] = section_episodes
 
         self.get_bangumi_type(info_result["type"])
-
-    def get_bangumi_type(self, type_id):
-        # 识别类型
-        match type_id:
-            case 1:
-                BangumiInfo.type = "番剧"
-            case 2:
-                BangumiInfo.type = "电影"
-            case 3:
-                BangumiInfo.type = "纪录片"
-            case 4:
-                BangumiInfo.type = "国创"
-            case 5:
-                BangumiInfo.type = "电视剧"
-            case 7:
-                BangumiInfo.type = "综艺"
-
+    
+    @process_exception
     def get_bangumi_resolution(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
@@ -220,6 +208,22 @@ class BangumiParser:
 
         # 重置仅下载音频标识符
         Audio.audio_only = False
+
+    def get_bangumi_type(self, type_id):
+        # 识别类型
+        match type_id:
+            case 1:
+                BangumiInfo.type = "番剧"
+            case 2:
+                BangumiInfo.type = "电影"
+            case 3:
+                BangumiInfo.type = "纪录片"
+            case 4:
+                BangumiInfo.type = "国创"
+            case 5:
+                BangumiInfo.type = "电视剧"
+            case 7:
+                BangumiInfo.type = "综艺"
 
     def parse_url(self, url):
         if "ep" in url:
