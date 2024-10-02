@@ -398,11 +398,11 @@ class DownloadWindow(Frame):
     def onClear(self, event):
         # 首先遍历下载列表
         callback_list = [value["stop_callback"]for key, value in DownloadInfo.download_list.items() if value["status"] == "completed"]
-        self.run_callback_list(callback_list)
+        self.runCallbackList(callback_list)
 
         # 遍历scrollpanel中的项目
         callback_list = [item["stop_callback"] for item in self.download_list_panel.GetChildren() if item.info["status"] == "completed"]
-        self.run_callback_list(callback_list)
+        self.runCallbackList(callback_list)
 
     def onOpenDir(self, event):
         # 打开下载目录
@@ -427,24 +427,30 @@ class DownloadWindow(Frame):
     def onStartAll(self, event):
         callback_list = [value["resume_callback"] for key, value in DownloadInfo.download_list.items() if value["status"] == "pause"]
 
-        self.run_callback_list(callback_list)
+        self.runCallbackList(callback_list)
 
     def onPauseAll(self, event):
         callback_list = [value["pause_callback"] for key, value in DownloadInfo.download_list.items() if value["status"] == "downloading"]
 
-        self.run_callback_list(callback_list)
+        self.runCallbackList(callback_list)
 
     def onStopAll(self, event):
         callback_list = [value["stop_callback"] for key, value in DownloadInfo.download_list.items() if value["status"] == "wait" or value["status"] == "downloading" or value["status"] == "pause"]
 
-        self.run_callback_list(callback_list)
+        self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
+        
+        wx.CallAfter(self.runCallbackList, callback_list, True)
 
-    def run_callback_list(self, callback_list):
+    def runCallbackList(self, callback_list, stopAll = False):
         for callback in callback_list:
-            wx.CallAfter(callback, 0)
+            if stopAll:
+                callback(0, stopAll)
+            else:
+                callback(0)
+        
+        self.layout_sizer()
 
-        self.download_list_panel.Layout()
-        self.update_task_lab()
+        self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
     def add_download_item(self, start_download = True):
         multiple = True if len(Download.download_list) > 1 else False
@@ -864,7 +870,9 @@ class DownloadItemPanel(wx.Panel):
 
         self.updatePauseBtn("downloading")
 
-    def onStop(self, event):
+    def onStop(self, event, stopAll = False):
+        self.downloader.download_info.clear()
+
         self.downloader.onStop()
 
         self.Hide()
@@ -872,16 +880,15 @@ class DownloadItemPanel(wx.Panel):
         if self.info["id"] in DownloadInfo.download_list:
             DownloadInfo.download_list.pop(self.info["id"])
 
-        self.GetParent().GetParent().layout_sizer()
+        Thread(target = self.onStopThread).start()
+
+        if not stopAll:
+            self.GetParent().GetParent().layout_sizer()
 
         self.Destroy()
 
-        self.downloader.download_info.clear()
-
-        Thread(target = self.onStopThread).start()
-
     def onStopThread(self):
-        time.sleep(0.5)
+        time.sleep(1)
 
         remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
     

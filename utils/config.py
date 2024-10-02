@@ -14,7 +14,7 @@ class Config:
         version = "1.51"
         version_code = 1510
 
-        release_date = "2024/10/01"
+        release_date = "2024/10/02"
 
     class Proxy:
         proxy = auth = False
