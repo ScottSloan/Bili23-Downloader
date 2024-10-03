@@ -56,30 +56,41 @@ class Config:
         auto_clean = False
 
     class Type:
-        VIDEO = 1
-        BANGUMI = 2
+        VIDEO = 1                               # 用户投稿视频
+        BANGUMI = 2                             # 番组
 
-        VIDEO_TYPE_SINGLE = 1 # 单个视频
-        VIDEO_TYPE_PAGES = 2 # 分 P 视频
-        VIDEO_TYPE_SECTIONS = 3 # 合集
+        VIDEO_TYPE_SINGLE = 1                   # 单个视频
+        VIDEO_TYPE_PAGES = 2                    # 分 P 视频
+        VIDEO_TYPE_SECTIONS = 3                 # 合集
 
-        MERGE_TYPE_V_A = 0 # 合成视频和音频
-        MERGE_TYPE_VIDEO = 1 # 仅下载视频
-        MERGE_TYPE_AUDIO = 2 # 仅下载音频
+        MERGE_TYPE_V_A = 0                      # 合成视频和音频
+        MERGE_TYPE_VIDEO = 1                    # 仅下载视频
+        MERGE_TYPE_AUDIO = 2                    # 仅下载音频
 
-        EPISODES_SINGLE = 0 # 只解析单个视频
-        EPISODES_IN_SECTION = 1 # 解析视频所在合集
-        EPISODES_ALL_SECTIONS = 2 # 解析全部合集 
+        EPISODES_SINGLE = 0                     # 只解析单个视频
+        EPISODES_IN_SECTION = 1                 # 解析视频所在合集
+        EPISODES_ALL_SECTIONS = 2               # 解析全部合集 
 
-        PROXY_DISABLE = 0 # 不使用代理
-        PROXY_FOLLOW = 1 # 跟随系统
-        PROXY_MANUAL = 2 # 手动设置
+        PROXY_DISABLE = 0                       # 不使用代理
+        PROXY_FOLLOW = 1                        # 跟随系统
+        PROXY_MANUAL = 2                        # 手动设置
+        
+        ERROR_CODE_Invalid_URL = 100            # URL 无效
+        ERROR_CODE_ParseError = 101             # 解析失败
+        ERROR_CODE_VIP_Required = 102           # 需要大会员
+        ERROR_CODE_SSLERROR = 103               # SSLERROR
+        ERROR_CODE_TimeOut = 104                # TimeOut
+        ERROR_CODE_TooManyRedirects = 105       # TooManyRedirects
+        ERROR_CODE_ConnectionError = 106        # ConnectionError
+        ERROR_CODE_UnknownError = 107           # UnknownError
 
-        ERROR_CODE_SSLERROR = 103 # SSLERROR
-        ERROR_CODE_TimeOut = 104 # TimeOut
-        ERROR_CODE_TooManyRedirects = 105 # TooManyRedirects
-        ERROR_CODE_ConnectionError = 106 # ConnectionError
-        ERROR_CODE_UnknownError = 107 # UnknownError
+        STATUS_CODE_0 = 0                       # 请求成功
+        STATUS_CODE_400 = -400                  # 请求错误
+        STATUS_CODE_403 = -403                  # 权限不足
+        STATUS_CODE_404 = -404                  # 视频不存在
+        STATUS_CODE_62002 = 62002               # 稿件不可见
+        STATUS_CODE_62004 = 62004               # 稿件审核中
+        STATUS_CODE_62012 = 62012               # 仅 UP 主自己可见
     
     class Temp:
         download_window_pos = None

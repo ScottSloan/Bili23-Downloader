@@ -42,8 +42,8 @@ Bili23 Downloader GUI
 > 登录有效期为半年，过期后需重新登录。
 
 # 更新日志
-### **Version 1.51 (2024/10/02)**
-Version 1.51 Beta9 发布
+### **Version 1.51 (2024/10/03)**
+Version 1.51 Beta10 发布
 
 本次更新内容：
 * 视频转换工具支持 macOS 使用硬件加速

@@ -11,7 +11,7 @@ from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.thread import Thread
 from utils.cookie import CookieUtils
-from utils.error import Error, ErrorCallback
+from utils.error import Error, ErrorCallback, ParseError
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -399,21 +399,22 @@ class MainWindow(Frame):
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
-    def onError(self, err_code):
-        # 初始化错误类
+    def onError(self, err_code, exceptionInfo: ParseError = None):
+        # 错误回调函数
+
         error = Error()
-
-        error_info = error.getERRORInfo(err_code)
-
+        error_info = error.getErrorInfo(err_code)
+        
+        # 匹配不同错误码
         match err_code:
-            case 100:
+            case Config.Type.ERROR_CODE_Invalid_URL:
                 self.infobar.ShowMessage("解析失败：不受支持的链接", flags = wx.ICON_ERROR)
             
-            case 101:
-                self.infobar.ShowMessage("解析失败：视频不存在", flags = wx.ICON_ERROR)
+            case Config.Type.ERROR_CODE_ParseError:
+                self.infobar.ShowMessage(f"解析失败：{exceptionInfo.message} ({exceptionInfo.status_code})", flags = wx.ICON_ERROR)
 
-            case 102:
-                self.infobar.ShowMessage("解析失败：无法获取视频信息，请登录后再试", flags = wx.ICON_ERROR)
+            case Config.Type.ERROR_CODE_VIP_Required:
+                self.infobar.ShowMessage("解析失败：此内容为大会员专享，请登录大会员账号后再试", flags = wx.ICON_ERROR)
             
             case 103:
                 self.infobar.ShowMessage(f"解析失败：{error_info}", flags = wx.ICON_ERROR)
@@ -422,9 +423,11 @@ class MainWindow(Frame):
         self.download_btn.Enable(False)
 
         wx.CallAfter(self.SetFocus)
-        self.parse_thread.stop()
 
         self.parse_ready = False
+
+        # 停止解析线程
+        raise Exception()
 
     def onLogin(self, event):
         login_window = LoginWindow(self)

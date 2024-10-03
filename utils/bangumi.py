@@ -4,7 +4,7 @@ import requests
 
 from utils.tools import *
 from utils.config import Config, Audio
-from utils.error import process_exception
+from utils.error import process_exception, Error, VIPError, ParseError
 
 class BangumiInfo:
     url = bvid = epid = cid = season_id = mid = None
@@ -44,7 +44,7 @@ class BangumiParser:
         req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
-        self.check_json(resp, 101)
+        self.check_json(resp)
 
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
         self.argument, self.value = "season_id", BangumiInfo.season_id
@@ -56,7 +56,7 @@ class BangumiParser:
         req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
-        self.check_json(resp, 101)
+        self.check_json(resp)
         
         info_result = resp["result"]
 
@@ -162,9 +162,13 @@ class BangumiParser:
         req = requests.get(url, headers = get_header(referer_url= "https://www.bilibili.com", cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
-        self.check_json(resp, 102)
-        
+        self.check_json(resp)
+            
         json_data = resp["result"]
+        
+        # 检测是否为试看内容
+        if "dash" not in json_data:
+            raise VIPError()
 
         BangumiInfo.resolution_id = json_data["accept_quality"]
         BangumiInfo.resolution_desc = json_data["accept_description"]
@@ -236,9 +240,14 @@ class BangumiParser:
         self.get_bangumi_info()
         self.get_bangumi_resolution()
     
-    def check_json(self, json, err_code):
-        if json["code"] != 0:
-            self.onError(err_code)
+    def check_json(self, json):
+        # 检查接口返回状态码
+        status_code = json["code"]
+        error = Error()
+
+        if status_code != Config.Type.STATUS_CODE_0:
+            # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
+            raise ParseError(error.getStatusInfo(status_code), status_code)
 
     def parse_episodes(self, info_result):
         # 解析正片

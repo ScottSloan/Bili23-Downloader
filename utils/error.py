@@ -7,47 +7,59 @@ from utils.config import Config
 class ErrorCallback:
     onErrorCallbak = None
 
+class VIPError(Exception):
+    # 大会员认证异常类
+    pass
+
+class ParseError(Exception):
+    # 解析异常类
+    def __init__(self, message, status_code):
+        self.message, self.status_code = message, status_code
+
+        super().__init__(self.message, self.status_code)
+
 class Error:
     def __init__(self):
         pass
 
-    def getERRORInfo(self, error_code):
-        # 根据错误马获取错误信息
+    def getErrorInfo(self, error_code):
+        # 根据错误码获取错误信息
         match error_code:
             case Config.Type.ERROR_CODE_SSLERROR:
-                # SSL 证书错误
-                return self.SSLERROR()
+                return "SSL 证书错误"
             
             case Config.Type.ERROR_CODE_TimeOut:
-                # 连接超时
-                return self.TimeOut()
+                return "连接超时"
             
             case Config.Type.ERROR_CODE_TooManyRedirects:
-                # 重定向次数过多
-                return self.TooManyRedirects()
+                return "重定向次数过多"
             
             case Config.Type.ERROR_CODE_ConnectionError:
-                # 无法连接到服务器或 DNS 解析失败
-                return self.ConnectionError()
+                return "无法连接到服务器或 DNS 解析失败"
             
             case Config.Type.ERROR_CODE_UnknownError:
-                # 未知错误
-                return self.UnknownError()
+                return "未知错误"
 
-    def SSLERROR(self):
-        return "SSL 证书错误"
-    
-    def TimeOut(self):
-        return "连接超时"
-    
-    def TooManyRedirects(self):
-        return "重定向次数过多"
-    
-    def ConnectionError(self):
-        return "无法连接到服务器或 DNS 解析失败"
-    
-    def UnknownError(self):
-        return "未知错误"
+    def getStatusInfo(self, status_code):
+        # 根据状态码获取错误信息
+        match status_code:
+            case Config.Type.STATUS_CODE_400:
+                return "请求错误"
+            
+            case Config.Type.STATUS_CODE_403:
+                return "权限不足"
+            
+            case Config.Type.STATUS_CODE_404:
+                return "视频不存在"
+            
+            case Config.Type.STATUS_CODE_62002:
+                return "稿件不可见"
+            
+            case Config.Type.STATUS_CODE_62004:
+                return "稿件审核中"
+            
+            case Config.Type.STATUS_CODE_62012:
+                return "仅 UP 主自己可见"
 
 def process_exception(f):
     @wraps(f)
@@ -66,6 +78,12 @@ def process_exception(f):
 
         except requests.exceptions.ConnectionError:
             ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_ConnectionError)
+
+        except ParseError as e:
+            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_ParseError, e)
+
+        except VIPError:
+            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_VIP_Required)
 
         except Exception:
             ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_UnknownError)

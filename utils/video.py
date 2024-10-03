@@ -4,7 +4,7 @@ import requests
 
 from utils.config import Config, Audio
 from utils.tools import *
-from utils.error import process_exception
+from utils.error import process_exception, ParseError, Error
 
 class VideoInfo:
     url = aid = bvid = cid = None
@@ -45,12 +45,13 @@ class VideoParser:
 
     @process_exception
     def get_video_info(self):
+        # 获取视频信息
         url = f"https://api.bilibili.com/x/web-interface/view?bvid={VideoInfo.bvid}"
         
         req = requests.get(url, headers = get_header(VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
-        self.check_json(resp, 101)
+        self.check_json(resp)
 
         info = resp["data"]
 
@@ -138,12 +139,13 @@ class VideoParser:
 
     @process_exception
     def get_video_resolution(self):
+        # 获取视频清晰度
         url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
                 
         req = requests.get(url, headers = get_header(referer_url = VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
-        self.check_json(resp, 102)
+        self.check_json(resp)
 
         info = resp["data"]
 
@@ -205,9 +207,14 @@ class VideoParser:
     def save_bvid(self, bvid):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 
-    def check_json(self, json, err_code):
-        if json["code"] != 0:
-            self.onError(err_code)
+    def check_json(self, json):
+        # 检查接口返回状态码
+        status_code = json["code"]
+        error = Error()
+
+        if status_code != Config.Type.STATUS_CODE_0:
+            # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
+            raise ParseError(error.getStatusInfo(status_code), status_code)
 
     def parse_pages(self):
         # 判断是否为分P视频
