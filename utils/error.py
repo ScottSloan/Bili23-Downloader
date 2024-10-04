@@ -25,20 +25,17 @@ class Error:
     def getErrorInfo(self, error_code):
         # 根据错误码获取错误信息
         match error_code:
-            case Config.Type.ERROR_CODE_SSLERROR:
+            case Config.Type.REQUEST_CODE_SSLERROR:
                 return "SSL 证书错误"
             
-            case Config.Type.ERROR_CODE_TimeOut:
+            case Config.Type.REQUEST_CODE_TimeOut:
                 return "连接超时"
             
-            case Config.Type.ERROR_CODE_TooManyRedirects:
+            case Config.Type.REQUEST_CODE_TooManyRedirects:
                 return "重定向次数过多"
             
-            case Config.Type.ERROR_CODE_ConnectionError:
+            case Config.Type.REQUEST_CODE_ConnectionError:
                 return "无法连接到服务器或 DNS 解析失败"
-            
-            case Config.Type.ERROR_CODE_UnknownError:
-                return "未知错误"
 
     def getStatusInfo(self, status_code):
         # 根据状态码获取错误信息
@@ -68,16 +65,16 @@ def process_exception(f):
             return f(*args, **kwargs)
 
         except requests.exceptions.SSLError:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_SSLERROR)
+            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_SSLERROR)
 
         except requests.exceptions.Timeout:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_TimeOut)
+            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_TimeOut)
 
         except requests.exceptions.TooManyRedirects:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_TooManyRedirects)
+            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_TooManyRedirects)
 
         except requests.exceptions.ConnectionError:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_ConnectionError)
+            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_ConnectionError)
 
         except ParseError as e:
             ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_ParseError, e)

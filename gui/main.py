@@ -399,14 +399,14 @@ class MainWindow(Frame):
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
-    def onError(self, err_code, exceptionInfo: ParseError = None):
+    def onError(self, errCode, exceptionInfo: ParseError = None, requestCode = None):
         # 错误回调函数
 
         error = Error()
-        error_info = error.getErrorInfo(err_code)
+        error_info = error.getErrorInfo(requestCode)
         
         # 匹配不同错误码
-        match err_code:
+        match errCode:
             case Config.Type.ERROR_CODE_Invalid_URL:
                 self.infobar.ShowMessage("解析失败：不受支持的链接", flags = wx.ICON_ERROR)
             
@@ -416,8 +416,11 @@ class MainWindow(Frame):
             case Config.Type.ERROR_CODE_VIP_Required:
                 self.infobar.ShowMessage("解析失败：此内容为大会员专享，请登录大会员账号后再试", flags = wx.ICON_ERROR)
             
-            case 103:
+            case Config.Type.ERROR_CODE_RequestError:
                 self.infobar.ShowMessage(f"解析失败：{error_info}", flags = wx.ICON_ERROR)
+            
+            case Config.Type.ERROR_CODE_UnknownError:
+                self.infobar.ShowMessage(f"解析失败：发生未知错误", flags = wx.ICON_ERROR)
 
         self.processing_window.Hide()
         self.download_btn.Enable(False)

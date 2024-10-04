@@ -14,7 +14,7 @@ class Config:
         version = "1.51"
         version_code = 1510
 
-        release_date = "2024/10/02"
+        release_date = "2024/10/04"
 
     class Proxy:
         proxy = 1
@@ -76,14 +76,16 @@ class Config:
         PROXY_MANUAL = 2                        # 手动设置
         
         ERROR_CODE_Invalid_URL = 100            # URL 无效
-        ERROR_CODE_ParseError = 101             # 解析失败
+        ERROR_CODE_ParseError = 101             # 解析异常
         ERROR_CODE_VIP_Required = 102           # 需要大会员
-        ERROR_CODE_SSLERROR = 103               # SSLERROR
-        ERROR_CODE_TimeOut = 104                # TimeOut
-        ERROR_CODE_TooManyRedirects = 105       # TooManyRedirects
-        ERROR_CODE_ConnectionError = 106        # ConnectionError
-        ERROR_CODE_UnknownError = 107           # UnknownError
+        ERROR_CODE_RequestError = 103           # 请求异常
+        ERROR_CODE_UnknownError = 104           # 未知错误
 
+        REQUEST_CODE_SSLERROR = 200             # SSLERROR
+        REQUEST_CODE_TimeOut = 201              # TimeOut
+        REQUEST_CODE_TooManyRedirects = 202     # TooManyRedirects
+        REQUEST_CODE_ConnectionError = 203      # ConnectionError
+        
         STATUS_CODE_0 = 0                       # 请求成功
         STATUS_CODE_400 = -400                  # 请求错误
         STATUS_CODE_403 = -403                  # 权限不足
