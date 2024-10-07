@@ -29,6 +29,9 @@ class DownloadUtils:
     def getVideoDurl(self):
         json_dash = self.getVideoDurlJson()
 
+        with open("durl.json", "w", encoding = "utf-8") as f:
+            f.write(json.dumps(json_dash, ensure_ascii = False))
+
         # 获取视频最高清晰度
         highest_resolution = self.getHigestResolution(json_dash["video"])
 
@@ -48,11 +51,20 @@ class DownloadUtils:
 
         resp = self.hasCodec(temp_video_durl, self.codec_id)
 
+        # 判断视频是否支持多种编码
         if resp["result"]:
-            self.video_durl = temp_video_durl[resp['index']]["backupUrl"][0]
+            durl_json = temp_video_durl[resp['index']]
+
+
+            # self.video_durl = durl_json["backupUrl"][0]
         else:
-            self.video_durl = temp_video_durl[0]["backupUrl"][0]
+            durl_json = temp_video_durl[0]
+
+            # self.video_durl = durl_json["backupUrl"][0]
+
             self.codec_id = 7
+
+        self.video_durl = {"backupUrl": durl_json["backupUrl"][0], "base_url": durl_json["base_url"]}
 
         if self.info["audio_only"]:
             self.merge_type = Config.Type.MERGE_TYPE_AUDIO # 仅下载音频
@@ -178,7 +190,7 @@ class DownloadUtils:
         return {
             "id": self.info["id"],
             "type": "video",
-            "url": self.video_durl,
+            "url": self.video_durl, # 字典，含 base_url 和 backupurl
             "referer_url": self.info["url"],
             "file_name": "video_{}.mp4".format(self.info["id"]),
             "chunk_list": []
@@ -188,7 +200,7 @@ class DownloadUtils:
         return {
                 "id": self.info["id"],
                 "type": "audio",
-                "url": self.audio_durl,
+                "url": {"backupUrl": self.audio_durl},
                 "referer_url": self.info["url"],
                 "file_name": "audio_{}.{}".format(self.info["id"], self.audio_type),
                 "chunk_list": []

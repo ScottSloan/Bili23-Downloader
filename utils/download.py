@@ -66,7 +66,7 @@ class Downloader:
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
 
-        file_size = self.get_total_size(info["url"], info["referer_url"], path)
+        durl, file_size = self.get_total_size(info["url"], info["referer_url"], path)
         self.total_size += file_size
 
         # 音频文件较小，使用 2 线程下载
@@ -74,7 +74,7 @@ class Downloader:
         self.thread_alive_count += len(chunk_list)
 
         for index, chunk_list in enumerate(chunk_list):
-            url, referer_url, temp = info["url"], info["referer_url"], info.copy()
+            url, referer_url, temp = durl, info["referer_url"], info.copy()
 
             thread_id = f"{info['type']}_{info['id']}_{index + 1}"
             temp["chunk_list"] = chunk_list
@@ -244,17 +244,28 @@ class Downloader:
         # 回调 panel 下载失败函数，终止下载
         wx.CallAfter(self.onErrorEx)
     
-    def get_total_size(self, url: str, referer_url: str, path: str) -> int:
-        req = self.session.head(url, headers = get_header(referer_url))
+    def get_total_size(self, url: dict, referer_url: str, path: str):
+        durl = url["backupUrl"]
+        headers = self.get_header_info(durl, referer_url)
 
-        total_size = int(req.headers["Content-Length"])
+        # 检测 headers 是否包含 Content-Length，若不含，则使用备用 url (不含 Content-Length 的链接属于无效链接)
+        if "Content-Length" not in headers:
+            durl = url["base_url"]
+            headers = self.get_header_info(durl, referer_url)
+
+        total_size = int(headers["Content-Length"])
         
         with open(path, "wb") as f:
             # 使用 seek 方法，移动文件指针，快速有效，完美解决大文件创建耗时的问题
             f.seek(total_size - 1)
             f.write(b"\0")
+        
+        return (durl, total_size)
+    
+    def get_header_info(self, url: str, referer_url: str):
+        req = self.session.head(url, headers = get_header(referer_url))
 
-            return total_size
+        return req.headers
 
     def get_chunk_list(self, total_size: int, chunk: int) -> list:
         # 计算分片下载区间
