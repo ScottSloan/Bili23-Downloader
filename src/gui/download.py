@@ -1,6 +1,5 @@
 import io
 import wx
-import math
 import json
 import time
 import wx.adv
@@ -673,20 +672,18 @@ class DownloadItemPanel(wx.Panel):
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
 
-        self.resolution_lab = wx.StaticText(self, -1, "--          ")
+        self.resolution_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((90, 17)))
         self.resolution_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        self.codec_lab = wx.StaticText(self, -1, "--          ")
+        self.codec_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((90, 17)))
         self.codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
-        self.size_lab = wx.StaticText(self, -1, "--          ")
+        self.size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((120, 17)))
         self.size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
         resolution_hbox.Add(self.resolution_lab, 0, wx.ALL & (~wx.TOP), 10)
-        resolution_hbox.AddSpacer(40)
         resolution_hbox.Add(self.codec_lab, 0, wx.ALL & (~wx.TOP), 10)
-        resolution_hbox.AddSpacer(40)
         resolution_hbox.Add(self.size_lab, 0, wx.ALL & (~wx.TOP), 10)
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -698,7 +695,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.gauge = wx.Gauge(self, -1, 100, size = self.getGaugeSize())
 
-        self.speed_lab = wx.StaticText(self, -1, "等待下载...")
+        self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((150, 17)))
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         gauge_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -977,7 +974,6 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.clear()
     
     def onOpenFolder(self):
-        # 当 index 不为 None 时，添加 index，避免无法打开文件所在位置
         match self.utils.merge_type:
             case Config.Type.MERGE_TYPE_V_A | Config.Type.MERGE_TYPE_VIDEO:
                 file_type = "mp4"
