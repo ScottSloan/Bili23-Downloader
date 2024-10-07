@@ -16,3 +16,5 @@ download.json
 
 # IDE
 .vscode
+
+.DS_Store
