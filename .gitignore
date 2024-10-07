@@ -1,2 +1,18 @@
-gui/__pycache__/
-utils/__pycache__/
+*/__pycache__/
+
+
+# 虚拟环境
+.venv
+
+# 下载目录
+download
+
+# 配置文件
+bangumi.json
+download.json
+
+# commitizen
+.cz.toml
+
+# IDE
+.vscode

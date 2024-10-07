@@ -1,0 +1,16 @@
+[project]
+name = "bili23-downloader"
+version = "0.1.0"
+description = "跨平台的 B 站视频下载工具，支持 Windows、Linux、macOS 三平台，下载 B 站视频/番剧/电影/纪录片 等资源"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "qrcode[pil]>=8.0",
+    "requests>=2.32.3",
+    "wxpython>=4.2.2",
+]
+authors = [
+    {name = "ScottSloan", email = "scottsloan@petalmail.com"},
+]
+[project.scripts]
+bili23-cli = "GUI"
