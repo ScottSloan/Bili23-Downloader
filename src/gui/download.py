@@ -51,13 +51,8 @@ class DownloadUtils:
         if resp["result"]:
             durl_json = temp_video_durl[resp['index']]
 
-
-            # self.video_durl = durl_json["backupUrl"][0]
         else:
             durl_json = temp_video_durl[0]
-
-            # self.video_durl = durl_json["backupUrl"][0]
-
             self.codec_id = 7
 
         self.video_durl = {"backupUrl": durl_json["backupUrl"][0], "base_url": durl_json["base_url"]}
@@ -65,7 +60,7 @@ class DownloadUtils:
         if self.info["audio_only"]:
             self.merge_type = Config.Type.MERGE_TYPE_AUDIO # 仅下载音频
         else:
-            self.merge_type = Config.Type.MERGE_TYPE_V_A # 合成视频和音频
+            self.merge_type = Config.Type.MERGE_TYPE_ALL # 合成视频和音频
         
         if json_dash["audio"]:
             # 解析默认音质
@@ -164,7 +159,7 @@ class DownloadUtils:
         video_info = audio_info = None
 
         match self.merge_type:
-            case Config.Type.MERGE_TYPE_V_A:
+            case Config.Type.MERGE_TYPE_ALL:
                 video_info = self.getVideoDownloadInfo()
                 audio_info = self.getAudioDownloadInfo()
 
@@ -213,7 +208,7 @@ class DownloadUtils:
         self.merge_error = False
 
         match self.merge_type:
-            case Config.Type.MERGE_TYPE_V_A:
+            case Config.Type.MERGE_TYPE_ALL:
                 # 存在音频文件，调用 FFmpeg 合成
                 cmd = f'"{Config.FFmpeg.path}" -y -i "{video_f_name}" -i "{audio_f_name}" -acodec copy -vcodec copy -strict experimental "{title}.mp4"'
 
@@ -236,7 +231,7 @@ class DownloadUtils:
             return
         
         if self.merge_process.returncode == 0:
-            if self.merge_type == Config.Type.MERGE_TYPE_V_A:
+            if self.merge_type == Config.Type.MERGE_TYPE_ALL:
                 if Config.Merge.auto_clean:
                     remove_files(Config.Download.path, [video_f_name, audio_f_name])
                 else:
@@ -587,10 +582,10 @@ class DownloadWindow(Frame):
 
     def setDownloadWindowSize(self):
         match Config.Sys.platform:
-            case "windows" | "darwin":
+            case "windows":
                 self.SetSize(self.FromDIP((810, 500)))
 
-            case "linux":
+            case "linux" | "darwin":
                 self.SetClientSize(self.FromDIP((950, 550)))
 
         self.SetMinSize(self.GetSize())
@@ -658,10 +653,10 @@ class DownloadItemPanel(wx.Panel):
 
     def init_scale(self):
         match Config.Sys.platform:
-            case "windows":
+            case "windows" | "darwin":
                 self.scale_size = self.FromDIP((16, 16))
                 self.is_scaled = True if self.scale_size != (16, 16) else False
-            case "linux" | "darwin":
+            case "linux":
                 self.scale_size = self.FromDIP((32, 32))
                 self.is_scaled = True
 
@@ -816,7 +811,7 @@ class DownloadItemPanel(wx.Panel):
         audio_dict = {value: key for key, value in audio_quality_map.items()}
 
         match self.utils.merge_type:
-            case Config.Type.MERGE_TYPE_V_A | Config.Type.MERGE_TYPE_VIDEO:
+            case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
                 self.resolution_lab.SetLabel(video_quality_dict[self.utils.resolution])
                 self.codec_lab.SetLabel(codec_dict[self.utils.codec_id])
             case Config.Type.MERGE_TYPE_AUDIO:
@@ -975,7 +970,7 @@ class DownloadItemPanel(wx.Panel):
     
     def onOpenFolder(self):
         match self.utils.merge_type:
-            case Config.Type.MERGE_TYPE_V_A | Config.Type.MERGE_TYPE_VIDEO:
+            case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
                 file_type = "mp4"
             case Config.Type.MERGE_TYPE_AUDIO:
                 file_type = f"{self.utils.audio_type}"
@@ -1081,10 +1076,10 @@ class DownloadItemPanel(wx.Panel):
 
     def getButtonSize(self):
         match Config.Sys.platform:
-            case "windows":
+            case "windows" | "darwin":
                 size = self.FromDIP((24, 24))
 
-            case "linux" | "darwin":
+            case "linux":
                 size = self.FromDIP((32, 32))
 
         return size

@@ -43,7 +43,7 @@ Bili23 Downloader GUI
 
 # 更新日志
 ### **Version 1.51 (2024/10/07)**
-Version 1.51 Beta11 发布
+Version 1.51 Beta15 发布
 
 本次更新内容：
 * 视频转换工具支持 macOS 使用硬件加速

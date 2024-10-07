@@ -63,7 +63,7 @@ class Config:
         VIDEO_TYPE_PAGES = 2                    # 分 P 视频
         VIDEO_TYPE_SECTIONS = 3                 # 合集
 
-        MERGE_TYPE_V_A = 0                      # 合成视频和音频
+        MERGE_TYPE_ALL = 0                      # 合成视频和音频
         MERGE_TYPE_VIDEO = 1                    # 仅下载视频
         MERGE_TYPE_AUDIO = 2                    # 仅下载音频
 

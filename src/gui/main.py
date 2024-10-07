@@ -414,7 +414,7 @@ class MainWindow(Frame):
                 self.infobar.ShowMessage(f"解析失败：{exceptionInfo.message} ({exceptionInfo.status_code})", flags = wx.ICON_ERROR)
 
             case Config.Type.ERROR_CODE_VIP_Required:
-                self.infobar.ShowMessage("解析失败：此内容为大会员专享，请登录大会员账号后再试", flags = wx.ICON_ERROR)
+                self.infobar.ShowMessage("解析失败：此内容为大会员专享或需要付费购买，请登录大会员账号后再试", flags = wx.ICON_ERROR)
             
             case Config.Type.ERROR_CODE_RequestError:
                 self.infobar.ShowMessage(f"解析失败：{error_info}", flags = wx.ICON_ERROR)
