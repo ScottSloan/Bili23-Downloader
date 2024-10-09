@@ -10,11 +10,16 @@ download
 # 配置文件
 bangumi.json
 download.json
+icon.ico
+ffmpeg.exe
+build.bat
+src/
 
 # commitizen
-.cz.toml
+cz.json
 
 # IDE
 .vscode
 
 .DS_Store
+src/config.ini

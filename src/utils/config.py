@@ -1,5 +1,4 @@
 import os
-import wx
 import platform
 from configparser import RawConfigParser
 
@@ -11,10 +10,10 @@ class Config:
     class APP:
         name = "Bili23 Downloader"
 
-        version = "1.51"
+        version = "1.51.0"
         version_code = 1510
 
-        release_date = "2024/10/07"
+        release_date = "2024/10/09"
 
     class Proxy:
         proxy = 1

@@ -269,7 +269,7 @@ class MainWindow(Frame):
     def parseThread(self, url: str):
         Download.download_list.clear()
 
-        match find_str("av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
+        match find_str(r"av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 self.video_parser.parse_url(url)
                 wx.CallAfter(self.setVideoList)

@@ -125,7 +125,7 @@ def format_bangumi_title(episode):
             return episode["report"]["ep_title"]
     
 def get_legal_name(name):
-    return re.sub('[/\:*?"<>|]', "", name)
+    return re.sub(r'[/\:*?"<>|]', "", name)
 
 def get_user_face():
     if not os.path.exists(Config.User.face_path):
