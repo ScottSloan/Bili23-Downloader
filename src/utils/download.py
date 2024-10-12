@@ -5,9 +5,9 @@ import json
 import requests
 from requests.adapters import HTTPAdapter
 
-from .config import Config
-from .tools import *
-from .thread import Thread, ThreadPool
+from utils.config import Config
+from utils.tools import get_header, get_proxy, get_auth, format_size
+from utils.thread import Thread, ThreadPool
 
 class Downloader:
     def __init__(self, info, onStart, onDownload, onMerge, onError):
@@ -159,7 +159,7 @@ class Downloader:
 
                         start_time = time.time()
 
-        except Exception as e:
+        except Exception:
             # 置错误标志位为 True
             self.error_flag = True
 
@@ -313,7 +313,8 @@ class DownloaderInfo:
         with open(self.path, "r", encoding = "utf-8") as f:
             try:
                 return json.loads(f.read())
-            except:
+            
+            except Exception:
                 return {}
     
     def init_info(self, info):

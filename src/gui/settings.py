@@ -9,7 +9,7 @@ from gui.templates import ScrolledPanel
 from gui.ffmpeg_detect import DetectDialog
 
 from utils.config import Config, conf
-from utils.tools import *
+from utils.tools import codec_id_map, audio_quality_map_set, resolution_map, get_header
 from utils.thread import Thread
 
 class SettingWindow(wx.Dialog):

@@ -1,5 +1,5 @@
-*/__pycache__/
-
+src/*/__pycache__/
+src/config.ini
 
 # 虚拟环境
 .venv
@@ -13,13 +13,15 @@ download.json
 icon.ico
 ffmpeg.exe
 build.bat
-src/
 
 # commitizen
 cz.json
+cz.toml
 
 # IDE
 .vscode
 
+# uv
+uv.toml
+
 .DS_Store
-src/config.ini

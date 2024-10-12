@@ -4,7 +4,7 @@ import wx.dataview
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.icons import getAppIconSmall
-from utils.tools import *
+from utils.tools import format_duration, format_bangumi_title, get_new_id, get_legal_name
 from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo

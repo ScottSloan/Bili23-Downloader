@@ -13,7 +13,7 @@ class Config:
         version = "1.51.0"
         version_code = 1510
 
-        release_date = "2024/10/09"
+        release_date = "2024/10/13"
 
     class Proxy:
         proxy = 1
@@ -73,12 +73,6 @@ class Config:
         PROXY_DISABLE = 0                       # 不使用代理
         PROXY_FOLLOW = 1                        # 跟随系统
         PROXY_MANUAL = 2                        # 手动设置
-        
-        ERROR_CODE_Invalid_URL = 100            # URL 无效
-        ERROR_CODE_ParseError = 101             # 解析异常
-        ERROR_CODE_VIP_Required = 102           # 需要大会员
-        ERROR_CODE_RequestError = 103           # 请求异常
-        ERROR_CODE_UnknownError = 104           # 未知错误
 
         REQUEST_CODE_SSLERROR = 200             # SSLERROR
         REQUEST_CODE_TimeOut = 201              # TimeOut

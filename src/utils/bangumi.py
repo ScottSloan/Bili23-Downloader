@@ -2,7 +2,7 @@ import re
 import json
 import requests
 
-from utils.tools import *
+from utils.tools import get_header, get_auth, get_proxy
 from utils.config import Config, Audio
 from utils.error import process_exception, Error, VIPError, ParseError
 
@@ -24,14 +24,16 @@ class BangumiParser:
     def get_epid(self, url):
         epid = re.findall(r"ep([0-9]+)", url)
 
-        if not epid: self.onError(101)
+        if not epid:
+            self.onError(101)
 
         self.argument, self.value = "ep_id", epid[0]
 
     def get_season_id(self, url):
         season_id = re.findall(r"ss([0-9]+)", url)
 
-        if not season_id: self.onError(101)
+        if not season_id:
+            self.onError(101)
 
         self.argument, self.value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
@@ -39,7 +41,8 @@ class BangumiParser:
     def get_mid(self, url):
         mid = re.findall(r"md([0-9]*)", url)
         
-        if not mid: self.onError(101)
+        if not mid:
+            self.onError(101)
 
         req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)

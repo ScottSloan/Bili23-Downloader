@@ -3,8 +3,8 @@ import qrcode
 import requests
 from io import BytesIO
 
-from .tools import *
-from .config import Config, conf
+from utils.tools import get_header, get_proxy, get_auth
+from utils.config import Config, conf
 
 class QRLoginInfo:
     url = qrcode_key = None

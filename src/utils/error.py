@@ -4,6 +4,14 @@ from functools import wraps
 
 from utils.config import Config
 
+class ErrorCode:
+    Invalid_URL = 100         # URL 无效
+    Parse_Error = 101         # 解析异常
+    VIP_Required = 102        # 需要大会员或付费内容
+    Area_Limit = 103          # 区域限制
+    Request_Error = 104       # 请求异常
+    Unknown_Error = 105       # 其他未知错误
+
 class ErrorCallback:
     onErrorCallbak = None
 

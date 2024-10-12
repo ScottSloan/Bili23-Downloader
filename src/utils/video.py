@@ -3,7 +3,7 @@ import json
 import requests
 
 from utils.config import Config, Audio
-from utils.tools import *
+from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid
 from utils.error import process_exception, ParseError, Error
 
 class VideoInfo:
@@ -31,7 +31,8 @@ class VideoParser:
     def get_aid(self, url):
         aid = re.findall(r"av([0-9]+)", url)
 
-        if not aid: self.onError(101)
+        if not aid:
+            self.onError(101)
 
         bvid = convert_to_bvid(int(aid[0]))
         self.save_bvid(bvid)
@@ -39,7 +40,8 @@ class VideoParser:
     def get_bvid(self, url):
         bvid = re.findall(r"BV\w+", url)
 
-        if not bvid: self.onError(101)
+        if not bvid:
+            self.onError(101)
 
         self.save_bvid(bvid[0])
 

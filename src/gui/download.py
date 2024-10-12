@@ -1,5 +1,6 @@
 import io
 import wx
+import os
 import json
 import time
 import wx.adv
@@ -11,10 +12,10 @@ from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
 from gui.cover_viewer import CoverViewerDialog
 
-from utils.icons import *
+from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
-from utils.tools import *
+from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, resolution_map, audio_quality_map, codec_id_map
 from utils.thread import Thread
 
 class DownloadInfo:
@@ -101,7 +102,7 @@ class DownloadUtils:
                                         self.audio_type = "ec3"
                                         self.audio_quality = 30250
 
-                except:
+                except Exception:
                     # 无法获取无损或杜比链接，换回默认音质
 
                     self.getDefaultAudioDurl(json_dash["audio"])
@@ -131,7 +132,8 @@ class DownloadUtils:
                     resp = json.loads(req.text)
                         
                     json_dash = resp["result"]["dash"]
-        except:
+                    
+        except Exception:
             self.onError()
 
         return json_dash
@@ -242,7 +244,8 @@ class DownloadUtils:
             # 合成失败时，获取错误信息
             try:
                 output = self.merge_process.stdout.decode("cp936").replace("\r\n", "")
-            except:
+
+            except Exception:
                 output = "无法获取错误信息"
 
             self.onMergeError(output)

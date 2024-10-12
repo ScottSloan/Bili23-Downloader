@@ -1,6 +1,7 @@
 import requests
+import re
 
-from .tools import *
+from utils.tools import get_header, get_proxy, get_auth, convert_to_bvid
 
 class ActivityInfo:
     new_url = None
@@ -13,7 +14,8 @@ class ActivityParser:
         # 其他类型的视频则提供 aid，取第 1 个即可
         aid = re.findall(r'"aid":([0-9]+)', initial_state)
 
-        if not aid: self.onError(100)
+        if not aid:
+            self.onError(100)
 
         ActivityInfo.new_url = f"https://www.bilibili.com/video/{convert_to_bvid(int(aid[0]))}"
 
@@ -24,7 +26,8 @@ class ActivityParser:
 
         initial_state = re.findall(r"window.__initialState = (.*?);", req.text)
 
-        if not initial_state: self.onError(100)
+        if not initial_state:
+            self.onError(100)
 
         return initial_state[0]
 

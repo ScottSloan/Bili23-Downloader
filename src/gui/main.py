@@ -1,4 +1,5 @@
 import wx
+import os
 import time
 import wx.py
 
@@ -6,12 +7,12 @@ from utils.config import Config, Download, conf, Audio
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.activity import ActivityInfo, ActivityParser
-from utils.tools import *
+
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.thread import Thread
-from utils.cookie import CookieUtils
-from utils.error import Error, ErrorCallback, ParseError
+from utils.tools import find_str, check_update, process_shorklink, get_user_face, resolution_map
+from utils.error import Error, ErrorCallback, ParseError, ErrorCode
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -407,20 +408,25 @@ class MainWindow(Frame):
         
         # 匹配不同错误码
         match errCode:
-            case Config.Type.ERROR_CODE_Invalid_URL:
-                self.infobar.ShowMessage("解析失败：不受支持的链接", flags = wx.ICON_ERROR)
+            case ErrorCode.Invalid_URL:
+                msg = "解析失败：不受支持的链接"
             
-            case Config.Type.ERROR_CODE_ParseError:
-                self.infobar.ShowMessage(f"解析失败：{exceptionInfo.message} ({exceptionInfo.status_code})", flags = wx.ICON_ERROR)
+            case ErrorCode.Parse_Error:
+                msg = f"解析失败：{exceptionInfo.message} ({exceptionInfo.status_code})"
 
-            case Config.Type.ERROR_CODE_VIP_Required:
-                self.infobar.ShowMessage("解析失败：此内容为大会员专享或需要付费购买，请登录大会员账号后再试", flags = wx.ICON_ERROR)
+            case ErrorCode.VIP_Required:
+                msg = "解析失败：此内容为大会员专享或需要付费购买，请确保已经登录大会员账号或购买此内容"
+
+            case ErrorCode.Area_Limit:
+                msg = "解析失败：此视频仅限特定地区用户观看，请开启代理后在试"
             
-            case Config.Type.ERROR_CODE_RequestError:
-                self.infobar.ShowMessage(f"解析失败：{error_info}", flags = wx.ICON_ERROR)
+            case ErrorCode.Request_Error:
+                msg = f"解析失败：{error_info}"
             
-            case Config.Type.ERROR_CODE_UnknownError:
-                self.infobar.ShowMessage(f"解析失败：发生未知错误", flags = wx.ICON_ERROR)
+            case ErrorCode.Unknown_Error:
+                msg = "解析失败：发生未知错误"
+        
+        self.infobar.ShowMessage(msg, flags = wx.ICON_ERROR)
 
         self.processing_window.Hide()
         self.download_btn.Enable(False)
@@ -547,14 +553,16 @@ class MainWindow(Frame):
 
                 if Config.Temp.update_json["version_code"] > Config.APP.version_code:
                     self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
-            except:
+
+            except Exception:
                 self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
                 
     def checkUpdateManuallyThread(self):
         if not Config.Temp.update_json:
             try:
                 check_update()
-            except:
+                
+            except Exception:
                 wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal()
                 return
             
