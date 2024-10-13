@@ -4,7 +4,7 @@ import requests
 
 from utils.tools import get_header, get_auth, get_proxy
 from utils.config import Config, Audio
-from utils.error import process_exception, Error, VIPError, ParseError
+from utils.error import process_exception, Error, VIPError, ParseError, StatusCode
 
 class BangumiInfo:
     url = bvid = epid = cid = season_id = mid = None
@@ -60,6 +60,9 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
+
+        with open("bangumi.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
         
         info_result = resp["result"]
 
@@ -248,7 +251,7 @@ class BangumiParser:
         status_code = json["code"]
         error = Error()
 
-        if status_code != Config.Type.STATUS_CODE_0:
+        if status_code != StatusCode.CODE_0:
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
             raise ParseError(error.getStatusInfo(status_code), status_code)
 

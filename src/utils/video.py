@@ -4,7 +4,7 @@ import requests
 
 from utils.config import Config, Audio
 from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid
-from utils.error import process_exception, ParseError, Error
+from utils.error import process_exception, ParseError, Error, StatusCode
 
 class VideoInfo:
     url = aid = bvid = cid = None
@@ -214,7 +214,7 @@ class VideoParser:
         status_code = json["code"]
         error = Error()
 
-        if status_code != Config.Type.STATUS_CODE_0:
+        if status_code != StatusCode.CODE_0:
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
             raise ParseError(error.getStatusInfo(status_code), status_code)
 

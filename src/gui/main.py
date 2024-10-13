@@ -3,7 +3,7 @@ import os
 import time
 import wx.py
 
-from utils.config import Config, Download, conf, Audio
+from utils.config import Config, Download, Audio, conf
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.activity import ActivityInfo, ActivityParser
@@ -12,7 +12,7 @@ from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.thread import Thread
 from utils.tools import find_str, check_update, process_shorklink, get_user_face, resolution_map
-from utils.error import Error, ErrorCallback, ParseError, ErrorCode
+from utils.error import ErrorCallback, ErrorCode
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -272,12 +272,16 @@ class MainWindow(Frame):
 
         match find_str(r"av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
             case "av" | "BV":
+                self.current_parse_type = Config.Type.VIDEO
+
                 self.video_parser.parse_url(url)
                 wx.CallAfter(self.setVideoList)
 
                 wx.CallAfter(self.setResolutionList, VideoInfo)
 
             case "ep" | "ss" | "md":
+                self.current_parse_type = Config.Type.BANGUMI
+
                 self.bangumi_parser.parse_url(url)
                 wx.CallAfter(self.setBangumiList)
 
@@ -289,7 +293,6 @@ class MainWindow(Frame):
                 self.startNewParseThread((new_url,))
 
                 # 抛出异常，终止线程运行
-                # 此处不使用 stop 方法
 
                 raise Exception
 
@@ -400,25 +403,24 @@ class MainWindow(Frame):
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
-    def onError(self, errCode, exceptionInfo: ParseError = None, requestCode = None):
-        # 错误回调函数
-
-        error = Error()
-        error_info = error.getErrorInfo(requestCode)
-        
+    def onError(self, error_code: int, error_info: str = None):
         # 匹配不同错误码
-        match errCode:
+        match error_code:
             case ErrorCode.Invalid_URL:
                 msg = "解析失败：不受支持的链接"
             
             case ErrorCode.Parse_Error:
-                msg = f"解析失败：{exceptionInfo.message} ({exceptionInfo.status_code})"
+                msg = f"解析失败：{error_info}"
 
             case ErrorCode.VIP_Required:
-                msg = "解析失败：此内容为大会员专享或需要付费购买，请确保已经登录大会员账号或购买此内容"
+                msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号"
+            
+                if self.current_parse_type == Config.Type.BANGUMI:
+                    if BangumiInfo.payment:
+                        msg = "解析失败：此视频需要付费购买，请确保已经购买此视频"
 
             case ErrorCode.Area_Limit:
-                msg = "解析失败：此视频仅限特定地区用户观看，请开启代理后在试"
+                msg = "解析失败：此视频仅限特定地区用户观看，请开启代理后再试"
             
             case ErrorCode.Request_Error:
                 msg = f"解析失败：{error_info}"

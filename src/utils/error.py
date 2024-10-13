@@ -2,15 +2,28 @@ import requests
 
 from functools import wraps
 
-from utils.config import Config
-
 class ErrorCode:
-    Invalid_URL = 100         # URL 无效
-    Parse_Error = 101         # 解析异常
-    VIP_Required = 102        # 需要大会员或付费内容
-    Area_Limit = 103          # 区域限制
-    Request_Error = 104       # 请求异常
-    Unknown_Error = 105       # 其他未知错误
+    Invalid_URL = 100                       # URL 无效
+    Parse_Error = 101                       # 解析异常
+    VIP_Required = 102                      # 需要大会员或付费内容
+    Area_Limit = 103                        # 区域限制
+    Request_Error = 104                     # 请求异常
+    Unknown_Error = 105                     # 其他未知错误
+
+class StatusCode:
+    CODE_0 = 0                              # 请求成功
+    CODE_400 = -400                         # 请求错误
+    CODE_403 = -403                         # 权限不足
+    CODE_404 = -404                         # 视频不存在
+    CODE_62002 = 62002                      # 稿件不可见
+    CODE_62004 = 62004                      # 稿件审核中
+    CODE_62012 = 62012                      # 仅 UP 主自己可见
+
+class RequestCode:
+    SSLERROR = 200                          # SSLERROR
+    TimeOut = 201                           # TimeOut
+    TooManyRedirects = 202                  # TooManyRedirects
+    ConnectionError = 203                   # ConnectionError
 
 class ErrorCallback:
     onErrorCallbak = None
@@ -33,64 +46,76 @@ class Error:
     def getErrorInfo(self, error_code):
         # 根据错误码获取错误信息
         match error_code:
-            case Config.Type.REQUEST_CODE_SSLERROR:
+            case RequestCode.SSLERROR:
                 return "SSL 证书错误"
             
-            case Config.Type.REQUEST_CODE_TimeOut:
+            case RequestCode.TimeOut:
                 return "连接超时"
             
-            case Config.Type.REQUEST_CODE_TooManyRedirects:
+            case RequestCode.TooManyRedirects:
                 return "重定向次数过多"
             
-            case Config.Type.REQUEST_CODE_ConnectionError:
+            case RequestCode.ConnectionError:
                 return "无法连接到服务器或 DNS 解析失败"
 
     def getStatusInfo(self, status_code):
         # 根据状态码获取错误信息
         match status_code:
-            case Config.Type.STATUS_CODE_400:
+            case StatusCode.CODE_400:
                 return "请求错误"
             
-            case Config.Type.STATUS_CODE_403:
+            case StatusCode.CODE_403:
                 return "权限不足"
             
-            case Config.Type.STATUS_CODE_404:
+            case StatusCode.CODE_404:
                 return "视频不存在"
             
-            case Config.Type.STATUS_CODE_62002:
+            case StatusCode.CODE_62002:
                 return "稿件不可见"
             
-            case Config.Type.STATUS_CODE_62004:
+            case StatusCode.CODE_62004:
                 return "稿件审核中"
             
-            case Config.Type.STATUS_CODE_62012:
+            case StatusCode.CODE_62012:
                 return "仅 UP 主自己可见"
 
 def process_exception(f):
     @wraps(f)
     def func(*args, **kwargs):
+        error = Error()
+
         try:
             return f(*args, **kwargs)
 
         except requests.exceptions.SSLError:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_SSLERROR)
+            error_info = error.getErrorInfo(RequestCode.SSLERROR)
+
+            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
 
         except requests.exceptions.Timeout:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_TimeOut)
+            error_info = error.getErrorInfo(RequestCode.TimeOut)
+
+            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
 
         except requests.exceptions.TooManyRedirects:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_TooManyRedirects)
+            error_info = error.getErrorInfo(RequestCode.TooManyRedirects)
+
+            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
 
         except requests.exceptions.ConnectionError:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_RequestError, Config.Type.REQUEST_CODE_ConnectionError)
+            error_info = error.getErrorInfo(RequestCode.ConnectionError)
+
+            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
 
         except ParseError as e:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_ParseError, e)
+            error_info = f"{e.message} ({e.status_code})"
+
+            ErrorCallback.onErrorCallbak(ErrorCode.Parse_Error, error_info)
 
         except VIPError:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_VIP_Required)
+            ErrorCallback.onErrorCallbak(ErrorCode.VIP_Required)
 
         except Exception:
-            ErrorCallback.onErrorCallbak(Config.Type.ERROR_CODE_UnknownError)
+            ErrorCallback.onErrorCallbak(ErrorCode.Unknown_Error)
             
     return func

@@ -73,19 +73,6 @@ class Config:
         PROXY_DISABLE = 0                       # 不使用代理
         PROXY_FOLLOW = 1                        # 跟随系统
         PROXY_MANUAL = 2                        # 手动设置
-
-        REQUEST_CODE_SSLERROR = 200             # SSLERROR
-        REQUEST_CODE_TimeOut = 201              # TimeOut
-        REQUEST_CODE_TooManyRedirects = 202     # TooManyRedirects
-        REQUEST_CODE_ConnectionError = 203      # ConnectionError
-        
-        STATUS_CODE_0 = 0                       # 请求成功
-        STATUS_CODE_400 = -400                  # 请求错误
-        STATUS_CODE_403 = -403                  # 权限不足
-        STATUS_CODE_404 = -404                  # 视频不存在
-        STATUS_CODE_62002 = 62002               # 稿件不可见
-        STATUS_CODE_62004 = 62004               # 稿件审核中
-        STATUS_CODE_62012 = 62012               # 仅 UP 主自己可见
     
     class Temp:
         download_window_pos = None
