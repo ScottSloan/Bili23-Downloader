@@ -96,7 +96,7 @@ class Audio:
     q_64k = False
 
 class Download:
-    current_type = None
+    current_parse_type = None
     
     download_list = []
 

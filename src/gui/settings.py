@@ -9,8 +9,9 @@ from gui.templates import ScrolledPanel
 from gui.ffmpeg_detect import DetectDialog
 
 from utils.config import Config, conf
-from utils.tools import codec_id_map, audio_quality_map_set, resolution_map, get_header
+from utils.tools import codec_id_map, audio_quality_map_set, get_header
 from utils.thread import Thread
+from utils.mapping import video_quality_mapping
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -97,7 +98,7 @@ class DownloadTab(wx.Panel):
         self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, max_download)
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
-        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(resolution_map.keys()))
+        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_mapping.keys()))
         self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
@@ -189,7 +190,7 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download))
         self.max_download_slider.SetValue(Config.Download.max_download)
         
-        self.video_quality_choice.SetSelection(list(resolution_map.values()).index(Config.Download.resolution))
+        self.video_quality_choice.SetSelection(list(video_quality_mapping.values()).index(Config.Download.resolution))
 
         if Config.Download.sound_quality != 30250:
             self.audio_quality_choice.SetSelection(list(audio_quality_map_set.values()).index(Config.Download.sound_quality))
@@ -212,7 +213,7 @@ class DownloadTab(wx.Panel):
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread = self.max_thread_slider.GetValue()
         Config.Download.max_download = self.max_download_slider.GetValue()
-        Config.Download.resolution = list(resolution_map.values())[self.video_quality_choice.GetSelection()]
+        Config.Download.resolution = list(video_quality_mapping.values())[self.video_quality_choice.GetSelection()]
         Config.Download.sound_quality = list(audio_quality_map_set.values())[self.audio_quality_choice.GetSelection()]
         Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()

@@ -15,8 +15,9 @@ from gui.cover_viewer import CoverViewerDialog
 from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
-from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, resolution_map, audio_quality_map, codec_id_map
+from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, audio_quality_map, codec_id_map
 from utils.thread import Thread
+from utils.mapping import video_quality_mapping
 
 class DownloadInfo:
     download_list = {}
@@ -809,7 +810,7 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.SetLabel("")
         self.size_lab.SetLabel("0 MB/{}".format(self.total_size))
 
-        video_quality_dict = dict(map(reversed, resolution_map.items()))
+        video_quality_dict = dict(map(reversed, video_quality_mapping.items()))
         codec_dict = {7: "AVC/H.264", 12: "HEVC/H.265", 13: "AVC"}
         audio_dict = {value: key for key, value in audio_quality_map.items()}
 

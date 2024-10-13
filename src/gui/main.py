@@ -11,8 +11,9 @@ from utils.activity import ActivityInfo, ActivityParser
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.thread import Thread
-from utils.tools import find_str, check_update, process_shorklink, get_user_face, resolution_map
+from utils.tools import find_str, check_update, process_shorklink, get_user_face
 from utils.error import ErrorCallback, ErrorCode
+from utils.mapping import VideoQuality, video_quality_mapping
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -64,14 +65,14 @@ class MainWindow(Frame):
 
         self.type_lab = wx.StaticText(self.panel, -1, "")
         resolution_lab = wx.StaticText(self.panel, -1, "清晰度")
-        self.resolution_choice = wx.Choice(self.panel, -1)
+        self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.audio_btn = wx.Button(self.panel, -1, "...", size = (self.resolution_choice.GetSize()[1], self.resolution_choice.GetSize()[1]))
+        self.audio_btn = wx.Button(self.panel, -1, "...", size = (self.video_quality_choice.GetSize()[1], self.video_quality_choice.GetSize()[1]))
 
         resolution_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         resolution_hbox.AddStretchSpacer()
         resolution_hbox.Add(resolution_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
-        resolution_hbox.Add(self.resolution_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        resolution_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
         resolution_hbox.Add(self.audio_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
         self.treelist = TreeListCtrl(self.panel)
@@ -277,7 +278,7 @@ class MainWindow(Frame):
                 self.video_parser.parse_url(url)
                 wx.CallAfter(self.setVideoList)
 
-                wx.CallAfter(self.setResolutionList, VideoInfo)
+                wx.CallAfter(self.setResolutionList)
 
             case "ep" | "ss" | "md":
                 self.current_parse_type = Config.Type.BANGUMI
@@ -285,7 +286,7 @@ class MainWindow(Frame):
                 self.bangumi_parser.parse_url(url)
                 wx.CallAfter(self.setBangumiList)
 
-                wx.CallAfter(self.setResolutionList, BangumiInfo)
+                wx.CallAfter(self.setResolutionList)
 
             case "b23.tv":
                 new_url = process_shorklink(url)
@@ -316,9 +317,9 @@ class MainWindow(Frame):
         self.treelist.SetFocus()
 
     def onDownload(self, event):
-        resolution = resolution_map[self.resolution_choice.GetStringSelection()]
+        video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
 
-        self.treelist.get_all_selected_item(resolution)
+        self.treelist.get_all_selected_item(video_quality_id)
 
         if not len(Download.download_list):
             self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
@@ -362,29 +363,36 @@ class MainWindow(Frame):
     def clearTreeList(self):
         wx.CallAfter(self.treelist.init_list)
 
-        self.resolution_choice.Clear()
+        self.video_quality_choice.Clear()
 
         self.type_lab.SetLabel("")
 
-    def setResolutionList(self, info: VideoInfo | BangumiInfo):
-        # 显示可用清晰度
-        resolution_desc = info.resolution_desc
+    def setResolutionList(self):
+        if self.current_parse_type == Config.Type.VIDEO:
+            video_quality_id_list = VideoInfo.video_quality_id_list
+            video_quality_desc_list = VideoInfo.video_quality_desc_list
+            Download.current_parse_type = Config.Type.VIDEO
+        else:
+            video_quality_id_list = BangumiInfo.video_quality_id_list
+            video_quality_desc_list = BangumiInfo.video_quality_desc_list
+            Download.current_parse_type = Config.Type.BANGUMI
 
         # 自动在最前添加自动选项
-        resolution_desc.insert(0, "自动")
+        video_quality_desc_list.insert(0, "自动")
+        self.video_quality_choice.Set(video_quality_desc_list)
 
-        self.resolution_choice.Set(resolution_desc)
-
-        if Config.Download.resolution == 200:
+        if Config.Download.resolution == VideoQuality.Quality_AUTO:
             index = 0
+
         else:
-            info.resolution = Config.Download.resolution if Config.Download.resolution in info.resolution_id else info.resolution_id[0]
+            if Config.Download.resolution in video_quality_id_list:
+                video_quality_id = Config.Download.resolution
+            else:
+                video_quality_id = video_quality_id_list[0]
 
-            index = info.resolution_id.index(info.resolution) + 1
+            index = video_quality_id_list.index(video_quality_id) + 1
 
-        self.resolution_choice.Select(index)
-
-        Download.current_type = info
+        self.video_quality_choice.Select(index)
 
     def setVideoList(self):
         self.treelist.set_video_list()
@@ -398,7 +406,7 @@ class MainWindow(Frame):
 
         count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
 
-        self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type, count))
+        self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_id, count))
 
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)

@@ -10,8 +10,8 @@ from datetime import datetime
 from requests.auth import HTTPProxyAuth
 
 from utils.config import Config
+from utils.mapping import BangumiType
 
-resolution_map = {"自动": 200, "超高清 8K": 127, "杜比视界": 126, "真彩 HDR": 125, "超清 4K": 120, "高清 1080P60": 116, "高清 1080P+": 112, "智能修复": 100, "高清 1080P": 80, "高清 720P": 64, "清晰 480P": 32, "流畅 360P": 16}
 audio_quality_map = {"Hi-Res 无损": 30251, "杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
 audio_quality_map_set = {"Hi-Res 无损 / 杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
 codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
@@ -114,9 +114,9 @@ def format_size(size):
         return "{:.1f} KB".format(size)
 
 def format_bangumi_title(episode):
-    from .bangumi import BangumiInfo
+    from utils.bangumi import BangumiInfo
 
-    if BangumiInfo.type == "电影":
+    if BangumiInfo.type_id == BangumiType.Type_Movie:
         return "{} - {}".format(BangumiInfo.title, episode["title"])
     else:
         if "share_copy" in episode:

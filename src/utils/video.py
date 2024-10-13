@@ -1,19 +1,26 @@
 import re
 import json
 import requests
+from typing import List, Dict
 
 from utils.config import Config, Audio
 from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid, find_str
 from utils.error import process_exception, ParseError, ErrorUtils, URLError, StatusCode
 
 class VideoInfo:
-    url = aid = bvid = cid = None
+    url: str = ""
+    aid = bvid = cid = None
 
-    title = cover = duration = type = resolution = None
+    title: str = ""
+    cover: str = ""
+    type: int = 0
 
-    pages = episodes = resolution_id = resolution_desc = []
+    pages_list: List = []
+    episodes_list: List = []
+    video_quality_id_list: List = []
+    video_quality_desc_list: List = []
 
-    sections = {}
+    sections: Dict = {}
 
 class VideoParser:
     def __init__(self, onError):
@@ -61,14 +68,13 @@ class VideoParser:
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
-        VideoInfo.duration = info["duration"]
         VideoInfo.aid = info["aid"]
-        VideoInfo.pages = info["pages"]
+        VideoInfo.pages_list = info["pages"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.show_episodes == Config.Type.EPISODES_SINGLE:
             if hasattr(self, "part_num"):
-                VideoInfo.cid = VideoInfo.pages[self.part_num - 1]["cid"]
+                VideoInfo.cid = VideoInfo.pages_list[self.part_num - 1]["cid"]
             else:
                 VideoInfo.cid = info["pages"][0]["cid"]
         else:
@@ -80,7 +86,7 @@ class VideoParser:
             case Config.Type.EPISODES_SINGLE:
                 # 解析单个视频
 
-                if len(VideoInfo.pages) == 1:
+                if len(VideoInfo.pages_list) == 1:
                     # 单个视频
                     VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
                 else:
@@ -88,9 +94,9 @@ class VideoParser:
                     VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
 
                     if hasattr(self, "part_num"):
-                        VideoInfo.pages = [VideoInfo.pages[self.part_num - 1]]
+                        VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
                     else:
-                        VideoInfo.pages = [VideoInfo.pages[0]]
+                        VideoInfo.pages_list = [VideoInfo.pages_list[0]]
 
             case Config.Type.EPISODES_IN_SECTION:
                 # 解析视频所在合集
@@ -153,8 +159,8 @@ class VideoParser:
 
         info = resp["data"]
 
-        VideoInfo.resolution_id = info["accept_quality"]
-        VideoInfo.resolution_desc = info["accept_description"]
+        VideoInfo.video_quality_id_list = info["accept_quality"]
+        VideoInfo.video_quality_desc_list = info["accept_description"]
 
         # 重置音质标识符
         Audio.q_dolby = Audio.q_hires = Audio.q_192k = Audio.q_132k = Audio.q_64k = False
@@ -225,7 +231,7 @@ class VideoParser:
 
     def parse_pages(self):
         # 判断是否为分P视频
-        if len(VideoInfo.pages) == 1:
+        if len(VideoInfo.pages_list) == 1:
             # 单个视频
             VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
         else:

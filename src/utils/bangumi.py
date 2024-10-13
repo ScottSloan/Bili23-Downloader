@@ -1,23 +1,31 @@
 import re
 import json
 import requests
+from typing import List, Dict
 
 from utils.tools import get_header, get_auth, get_proxy, find_str
 from utils.config import Config, Audio
 from utils.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
+from utils.mapping import bangumi_type_mapping
 
 class BangumiInfo:
     url: str = ""
     bvid: str = ""
     epid = cid = season_id = mid = None
 
-    title = cover = type = resolution = None
+    title: str = ""
+    cover: str = ""
+
+    type_id: int = 0
+    type_name: str = ""
 
     payment = False
 
-    episodes = resolution_id = resolution_desc = []
+    episodes_list: List = []
+    video_quality_id_list: List = []
+    video_quality_desc_list: List = []
 
-    sections = {}
+    sections: Dict = {}
 
 class BangumiParser:
     def __init__(self, onError):
@@ -30,7 +38,7 @@ class BangumiParser:
         if not epid:
             raise URLError()
 
-        self.argument, self.value = "ep_id", epid[0]
+        self.url_type, self.url_type_value = "ep_id", epid[0]
 
     @process_exception
     def get_season_id(self, url):
@@ -39,14 +47,14 @@ class BangumiParser:
         if not season_id:
             raise URLError()
 
-        self.argument, self.value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
+        self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
     @process_exception
     def get_mid(self, url):
         mid = re.findall(r"md([0-9]*)", url)
         
         if not mid:
-            self.onError(101)
+            raise URLError()
 
         req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
@@ -54,11 +62,11 @@ class BangumiParser:
         self.check_json(resp)
 
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
-        self.argument, self.value = "season_id", BangumiInfo.season_id
+        self.url_type, self.url_type_value = "season_id", BangumiInfo.season_id
 
     @process_exception
     def get_bangumi_info(self):
-        url = f"https://api.bilibili.com/pgc/view/web/season?{self.argument}={self.value}"
+        url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
         req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
@@ -72,14 +80,16 @@ class BangumiParser:
 
         BangumiInfo.payment = True if "payment" in info_result else False
         
-        BangumiInfo.episodes = info_result["episodes"]
+        BangumiInfo.episodes_list = info_result["episodes"]
 
-        BangumiInfo.url = BangumiInfo.episodes[0]["link"]
-        BangumiInfo.bvid = BangumiInfo.episodes[0]["bvid"]
-        BangumiInfo.cid = BangumiInfo.episodes[0]["cid"]
-        BangumiInfo.epid = BangumiInfo.episodes[0]["id"]
+        BangumiInfo.url = BangumiInfo.episodes_list[0]["link"]
+        BangumiInfo.bvid = BangumiInfo.episodes_list[0]["bvid"]
+        BangumiInfo.cid = BangumiInfo.episodes_list[0]["cid"]
+        BangumiInfo.epid = BangumiInfo.episodes_list[0]["id"]
 
         BangumiInfo.mid = info_result["media_id"]
+
+        BangumiInfo.type_id = info_result["type"]
 
         BangumiInfo.sections.clear()
 
@@ -95,12 +105,12 @@ class BangumiParser:
                     for section_entry in info_result["section"]:
                         extra_episodes += section_entry["episodes"]
 
-                    BangumiInfo.episodes += extra_episodes
+                    BangumiInfo.episodes_list += extra_episodes
 
-                match self.argument:
+                match self.url_type:
                     case "ep_id":
-                        for entry in BangumiInfo.episodes.copy():
-                            if entry["ep_id"] == int(self.value):
+                        for entry in BangumiInfo.episodes_list.copy():
+                            if entry["ep_id"] == int(self.url_type_value):
                                 BangumiInfo.sections["视频"] = [entry]
                                 break
 
@@ -111,11 +121,11 @@ class BangumiParser:
             case Config.Type.EPISODES_IN_SECTION:
                 # 解析视频所在集合
 
-                match self.argument:
+                match self.url_type:
                     case "ep_id":
                         # 判断视频是否在正片中
-                        for episode_entry in BangumiInfo.episodes:
-                            if episode_entry["ep_id"] == int(self.value):
+                        for episode_entry in BangumiInfo.episodes_list:
+                            if episode_entry["ep_id"] == int(self.url_type_value):
                                 # 解析正片
                                 self.parse_episodes(info_result)
                                 break
@@ -129,7 +139,7 @@ class BangumiParser:
                                 info_episodes = section_entry["episodes"]
 
                                 for episode_entry in info_episodes:
-                                    if episode_entry["ep_id"] == int(self.value):
+                                    if episode_entry["ep_id"] == int(self.url_type_value):
                                         # 解析此部分内容
                                         for index, value in enumerate(info_episodes):
                                             value["title"] = str(index + 1)
@@ -160,7 +170,7 @@ class BangumiParser:
 
                         BangumiInfo.sections[section_title] = section_episodes
 
-        self.get_bangumi_type(info_result["type"])
+        self.get_bangumi_type()
     
     @process_exception
     def get_bangumi_resolution(self):
@@ -177,8 +187,8 @@ class BangumiParser:
         if "dash" not in json_data:
             raise VIPError()
 
-        BangumiInfo.resolution_id = json_data["accept_quality"]
-        BangumiInfo.resolution_desc = json_data["accept_description"]
+        BangumiInfo.video_quality_id_list = json_data["accept_quality"]
+        BangumiInfo.video_quality_desc_list = json_data["accept_description"]
 
         # 重置音质标识符
         Audio.q_dolby = Audio.q_hires = Audio.q_192k = Audio.q_132k = Audio.q_64k = False
@@ -222,28 +232,21 @@ class BangumiParser:
 
     @process_exception
     def check_bangumi_can_play(self):
-        url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.argument}={self.value}"
+        url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
         req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
         self.check_json(resp)
 
-    def get_bangumi_type(self, type_id):
+    def get_bangumi_type(self):
         # 识别类型
-        match type_id:
-            case 1:
-                BangumiInfo.type = "番剧"
-            case 2:
-                BangumiInfo.type = "电影"
-            case 3:
-                BangumiInfo.type = "纪录片"
-            case 4:
-                BangumiInfo.type = "国创"
-            case 5:
-                BangumiInfo.type = "电视剧"
-            case 7:
-                BangumiInfo.type = "综艺"
+
+        if BangumiInfo.type_id in bangumi_type_mapping:
+            BangumiInfo.type_name = bangumi_type_mapping[BangumiInfo.type_id]
+        
+        else:
+            BangumiInfo.type_name = "未知"
 
     def parse_url(self, url):
         match find_str(r"ep|ss|md", url):
@@ -283,4 +286,4 @@ class BangumiParser:
         else:
             season_title = "正片"
 
-        BangumiInfo.sections[season_title] = BangumiInfo.episodes
+        BangumiInfo.sections[season_title] = BangumiInfo.episodes_list

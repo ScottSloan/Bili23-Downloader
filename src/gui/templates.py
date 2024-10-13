@@ -8,6 +8,7 @@ from utils.tools import format_duration, format_bangumi_title, get_new_id, get_l
 from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
+from utils.mapping import BangumiType
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -74,7 +75,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 self.parent_items.append(key)
         else:
             self.parent_items.append("视频")
-            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode, flag = 1)] for index, episode in enumerate(VideoInfo.pages)]
+            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode, flag = 1)] for index, episode in enumerate(VideoInfo.pages_list)]
 
         self.set_list(video_list)
     
@@ -96,8 +97,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
     
-    def get_all_selected_item(self, resolution: int = None):
-        self.resolution = resolution
+    def get_all_selected_item(self, video_quality_id: int = None):
+        self.video_quality_id = video_quality_id
         Download.download_list.clear()
         
         for i in self.all_list_items:
@@ -108,9 +109,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 item_title = self.GetItemText(i, 1)
                 parent = self.GetItemText(self.GetItemParent(i), 0)
                 
-                if Download.current_type == VideoInfo:
+                if Download.current_parse_type == VideoInfo:
                     self.get_video_download_info(item_title, parent, int(text))
-                elif Download.current_type == BangumiInfo:
+                elif Download.current_parse_type == BangumiInfo:
                     self.get_bangumi_download_info(item_title, parent, int(text))
     
     def get_video_download_info(self, item_title: str, parent: str, index: int):
@@ -127,7 +128,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         else:
             # 分 P 或单个视频
-            info_entry = VideoInfo.pages[index - 1]
+            info_entry = VideoInfo.pages_list[index - 1]
 
             # 分 P 视频显示每一个标题
             title = info_entry["part"] if VideoInfo.type == 2 else VideoInfo.title
@@ -143,7 +144,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def get_bangumi_download_info(self, item_title: str, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
 
-        title = info_entry["share_copy"] if BangumiInfo.type != "电影" else format_bangumi_title(info_entry)
+        title = info_entry["share_copy"] if BangumiInfo.type_id != BangumiType.Type_Movie else format_bangumi_title(info_entry)
         pic = info_entry["cover"]
         bvid = info_entry["bvid"]
         cid = info_entry["cid"]
@@ -154,7 +155,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return {
             "id": get_new_id(),
             "index": None,
-            "url": VideoInfo.url if Download.current_type == VideoInfo else BangumiInfo.url,
+            "url": VideoInfo.url if Download.current_parse_type == Config.Type.VIDEO else BangumiInfo.url,
             "type": type,
             "bvid": bvid,
             "cid": cid,
@@ -166,7 +167,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "completed_size": None,
             "progress": 0,
             "status": "wait",
-            "resolution": self.resolution if self.resolution else None,
+            "resolution": self.video_quality_id if self.video_quality_id else None,
             "audio_quality": Audio.audio_quality,
             "audio_only": Audio.audio_only,
             "codec": None,
