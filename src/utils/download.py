@@ -70,7 +70,7 @@ class Downloader:
         self.total_size += file_size
 
         # 音频文件较小，使用 2 线程下载
-        chunk_list = self.get_chunk_list(file_size, Config.Download.max_thread if info["type"] == "video" else 2)
+        chunk_list = self.get_chunk_list(file_size, Config.Download.max_thread_count if info["type"] == "video" else 2)
         self.thread_alive_count += len(chunk_list)
 
         for index, chunk_list in enumerate(chunk_list):

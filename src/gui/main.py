@@ -638,6 +638,7 @@ class MainWindow(Frame):
         menuitem_audio_only.Check(True if Audio.audio_only else False)
 
         if audio_none:
+            menuitem_auto.Hide(True)
             menuitem_audio_only.Enable(False)
 
         self.PopupMenu(menu)

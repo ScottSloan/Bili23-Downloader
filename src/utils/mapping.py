@@ -30,3 +30,15 @@ audio_quality_mapping = {
     "132K": 30232,
     "64K": 30216
 }
+
+video_codec_mapping = {
+    "AVC/H.264": 7,
+    "HEVC/H.265": 12,
+    "AV1": 13
+}
+
+supported_gpu_mapping = {
+    "NVIDIA": 1,
+    "AMD": 2,
+    "Intel": 3
+}

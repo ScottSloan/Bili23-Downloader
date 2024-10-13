@@ -4,9 +4,9 @@ import os
 import time
 import subprocess
 
-from utils.tools import target_codec_map, gpu_map
 from utils.config import Config
 from utils.thread import Thread
+from utils.mapping import video_codec_mapping, supported_gpu_mapping
 
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
@@ -42,7 +42,7 @@ class ConverterWindow(wx.Dialog):
         self.target_format_lab = wx.StaticText(self, -1, "目标格式：---")
 
         target_codec_lab = wx.StaticText(self, -1, "编码器")
-        self.target_codec_choice = wx.Choice(self, -1, choices = list(target_codec_map.keys()))
+        self.target_codec_choice = wx.Choice(self, -1, choices = list(video_codec_mapping.keys()))
 
         target_bitrate_lab = wx.StaticText(self, -1, "比特率")
         self.target_bitrate_box = wx.TextCtrl(self, -1, "1500")
@@ -331,7 +331,7 @@ class ConverterWindow(wx.Dialog):
     def getGPUList(self):
         match Config.Sys.platform:
             case "windows" | "linux":
-                return list(gpu_map.keys())
+                return list(supported_gpu_mapping.keys())
             
             case "darwin":
                 return ["VideoToolBox"]

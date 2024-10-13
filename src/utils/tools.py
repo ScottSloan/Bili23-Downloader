@@ -11,11 +11,6 @@ from requests.auth import HTTPProxyAuth
 
 from utils.config import Config
 
-codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
-target_format_map = {"AVI": "avi", "MKV": "mkv", "FLV": "flv", "MOV": "mov", "WMV": "wmv"}
-target_codec_map = {"AVC/H.264": 1, "HEVC/H.265": 2, "AV1": 3}
-gpu_map = {"NVIDIA": 1, "AMD": 2, "Intel": 3}
-
 def process_shorklink(url):
     req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
     

@@ -9,9 +9,9 @@ from gui.templates import ScrolledPanel
 from gui.ffmpeg_detect import DetectDialog
 
 from utils.config import Config, conf
-from utils.tools import get_header, codec_id_map
+from utils.tools import get_header
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -94,7 +94,7 @@ class DownloadTab(wx.Panel):
         self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
 
         self.max_download_lab = wx.StaticText(self.scrolled_panel, -1, "并行下载数：1")
-        max_download = Config.Download.max_download if Config.Download.max_download > 4 else 4
+        max_download = Config.Download.max_download_count if Config.Download.max_download_count > 4 else 4
         self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, max_download)
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
@@ -184,16 +184,16 @@ class DownloadTab(wx.Panel):
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
         
-        self.max_thread_lab.SetLabel("多线程数：{}".format(Config.Download.max_thread))
-        self.max_thread_slider.SetValue(Config.Download.max_thread)
+        self.max_thread_lab.SetLabel("多线程数：{}".format(Config.Download.max_thread_count))
+        self.max_thread_slider.SetValue(Config.Download.max_thread_count)
 
-        self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download))
-        self.max_download_slider.SetValue(Config.Download.max_download)
+        self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download_count))
+        self.max_download_slider.SetValue(Config.Download.max_download_count)
         
         self.video_quality_choice.SetSelection(list(video_quality_mapping.values()).index(Config.Download.video_quality_id))
         self.audio_quality_choice.SetSelection(list(audio_quality_mapping.values()).index(Config.Download.audio_quality_id))
 
-        self.codec_choice.SetSelection(list(codec_id_map.keys()).index(Config.Download.codec))
+        self.codec_choice.SetSelection(list(video_codec_mapping.values()).index(Config.Download.video_codec))
 
         self.speed_limit_chk.SetValue(Config.Download.speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
@@ -207,22 +207,22 @@ class DownloadTab(wx.Panel):
         default_path = os.path.join(os.getcwd(), "download")
 
         Config.Download.path = self.path_box.GetValue()
-        Config.Download.max_thread = self.max_thread_slider.GetValue()
-        Config.Download.max_download = self.max_download_slider.GetValue()
+        Config.Download.max_thread_count = self.max_thread_slider.GetValue()
+        Config.Download.max_download_count = self.max_download_slider.GetValue()
         Config.Download.video_quality_id = list(video_quality_mapping.values())[self.video_quality_choice.GetSelection()]
         Config.Download.audio_quality_id = list(audio_quality_mapping.values())[self.audio_quality_choice.GetSelection()]
-        Config.Download.codec = list(codec_id_map.keys())[self.codec_choice.GetSelection()]
+        Config.Download.video_codec = list(video_codec_mapping.keys())[self.codec_choice.GetSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
         Config.Download.speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
 
         conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
-        conf.config.set("download", "max_thread", str(Config.Download.max_thread))
-        conf.config.set("download", "max_download", str(Config.Download.max_download))
+        conf.config.set("download", "max_thread", str(Config.Download.max_thread_count))
+        conf.config.set("download", "max_download", str(Config.Download.max_download_count))
         conf.config.set("download", "resolution", str(Config.Download.video_quality_id))
         conf.config.set("download", "sound_quality", str(Config.Download.audio_quality_id))
-        conf.config.set("download", "codec", Config.Download.codec)
+        conf.config.set("download", "codec", Config.Download.video_codec)
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "notification", str(int(Config.Download.show_notification)))
         conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
@@ -279,7 +279,7 @@ class DownloadTab(wx.Panel):
         wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onAudioQualityTip(self, event):
-        wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载 192K", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onCodecTip(self, event):
         wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则自动下载 H.264", "说明", wx.ICON_INFORMATION).ShowModal()
@@ -411,6 +411,8 @@ class ProxyTab(wx.Panel):
 
     def init_UI(self):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
+
+        proxy_tip = wx.StaticText(proxy_box, -1, "代理策略")
         
         self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, "不使用代理")
         self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, "跟随系统")
@@ -449,6 +451,7 @@ class ProxyTab(wx.Panel):
         bag_box.Add(self.passwd_box, pos = (4, 1), span = (1, 3), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(proxy_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(proxy_hbox, 0, wx.EXPAND)
         vbox.Add(bag_box)
         vbox.Add(self.test_btn, 0, wx.ALL, 10)

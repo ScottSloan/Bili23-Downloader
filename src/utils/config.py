@@ -36,14 +36,14 @@ class Config:
         player_path = None
 
     class Download:
-        path = None
+        path: str = None
         
-        video_quality_id = 80
-        audio_quality_id = 30280
-        codec = "HEVC"
+        video_quality_id: int = 200
+        audio_quality_id: int = 30300
+        video_codec: int = 12
 
-        max_thread = 4
-        max_download = 1
+        max_thread_count: int = 4
+        max_download_count: int = 1
 
         show_notification = False
 
@@ -141,11 +141,11 @@ class ConfigUtils:
 
         # download
         Config.Download.path = download_path if download_path else os.path.join(os.getcwd(), "download")
-        Config.Download.max_download = self.config.getint("download", "max_download")
-        Config.Download.max_thread = self.config.getint("download", "max_thread")
+        Config.Download.max_download_count = self.config.getint("download", "max_download")
+        Config.Download.max_thread_count = self.config.getint("download", "max_thread")
         Config.Download.video_quality_id = self.config.getint("download", "resolution")
         Config.Download.audio_quality_id = self.config.getint("download", "sound_quality")
-        Config.Download.codec = self.config.get("download", "codec")
+        Config.Download.video_codec = self.config.getint("download", "codec")
         Config.Download.show_notification = self.config.getint("download", "notification")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
         Config.Download.speed_limit = self.config.getboolean("download", "speed_limit")

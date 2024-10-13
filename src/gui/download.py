@@ -15,7 +15,7 @@ from gui.cover_viewer import CoverViewerDialog
 from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
-from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, codec_id_map
+from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping
 
@@ -45,9 +45,9 @@ class DownloadUtils:
 
         temp_video_durl = [i for i in json_dash["video"] if i["id"] == self.resolution]
 
-        self.codec_id = codec_id_map[Config.Download.codec]
+        self.video_codec_id = Config.Download.video_codec
 
-        resp = self.hasCodec(temp_video_durl, self.codec_id)
+        resp = self.hasCodec(temp_video_durl, self.video_codec_id)
 
         # 判断视频是否支持多种编码
         if resp["result"]:
@@ -55,7 +55,7 @@ class DownloadUtils:
 
         else:
             durl_json = temp_video_durl[0]
-            self.codec_id = 7
+            self.video_codec_id = 7
 
         self.video_durl = {"backupUrl": durl_json["backupUrl"][0], "base_url": durl_json["base_url"]}
 
@@ -425,9 +425,9 @@ class DownloadWindow(Frame):
     def onMaxDownloadChoice(self, event):
         index = self.max_download_choice.GetSelection()
 
-        Config.Download.max_download = index + 1
+        Config.Download.max_download_count = index + 1
 
-        conf.config.set("download", "max_download", str(Config.Download.max_download))
+        conf.config.set("download", "max_download", str(Config.Download.max_download_count))
         conf.config_save()
 
         self.start_download()
@@ -537,7 +537,7 @@ class DownloadWindow(Frame):
 
     def start_download(self):
         for key, value in DownloadInfo.download_list.items():
-            if value["status"] == "wait" and self.get_downloading_count() < Config.Download.max_download:
+            if value["status"] == "wait" and self.get_downloading_count() < Config.Download.max_download_count:
                 value["start_callback"]()
     
     def get_downloading_count(self):
@@ -566,7 +566,7 @@ class DownloadWindow(Frame):
                 return False
 
     def update_max_download_choice(self):
-        max_download = Config.Download.max_download
+        max_download = Config.Download.max_download_count
 
         match max_download:
             case max_download if max_download < 1:
@@ -816,7 +816,7 @@ class DownloadItemPanel(wx.Panel):
         match self.utils.merge_type:
             case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
                 self.resolution_lab.SetLabel(video_quality_dict[self.utils.resolution])
-                self.codec_lab.SetLabel(codec_dict[self.utils.codec_id])
+                self.codec_lab.SetLabel(codec_dict[self.utils.video_codec_id])
             case Config.Type.MERGE_TYPE_AUDIO:
                 self.resolution_lab.SetLabel("音频")
                 self.codec_lab.SetLabel(audio_dict[self.utils.audio_quality])
@@ -829,7 +829,7 @@ class DownloadItemPanel(wx.Panel):
             "complete": None,
             "size": self.total_size,
             "resolution": video_quality_dict[self.utils.resolution],
-            "codec": codec_dict[self.utils.codec_id]
+            "codec": codec_dict[self.utils.video_codec_id]
         }
 
         self.downloader.download_info.update_base_info(base_info)
