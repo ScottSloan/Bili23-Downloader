@@ -3,8 +3,8 @@ import json
 import requests
 
 from utils.config import Config, Audio
-from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid
-from utils.error import process_exception, ParseError, Error, StatusCode
+from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid, find_str
+from utils.error import process_exception, ParseError, ErrorUtils, URLError, StatusCode
 
 class VideoInfo:
     url = aid = bvid = cid = None
@@ -27,21 +27,23 @@ class VideoParser:
             self.part_num = int(part[0])
         else:
             self.part = False
-            
+
+    @process_exception
     def get_aid(self, url):
         aid = re.findall(r"av([0-9]+)", url)
 
         if not aid:
-            self.onError(101)
+            raise URLError
 
         bvid = convert_to_bvid(int(aid[0]))
         self.save_bvid(bvid)
 
+    @process_exception
     def get_bvid(self, url):
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            self.onError(101)
+            raise URLError
 
         self.save_bvid(bvid[0])
 
@@ -195,12 +197,15 @@ class VideoParser:
         Audio.audio_only = False
 
     def parse_url(self, url):
+        # 先检查是否为分 P 视频
         self.get_part(url)
 
-        if "av" in url:
-            self.get_aid(url)
-        else:
-            self.get_bvid(url)
+        match find_str(r"av|BV", url):
+            case "av":
+                self.get_aid(url)
+
+            case "BV":
+                self.get_bvid(url)
 
         self.get_video_info()
 
@@ -212,7 +217,7 @@ class VideoParser:
     def check_json(self, json):
         # 检查接口返回状态码
         status_code = json["code"]
-        error = Error()
+        error = ErrorUtils()
 
         if status_code != StatusCode.CODE_0:
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理

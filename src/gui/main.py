@@ -190,7 +190,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def init_utils(self):
-        ErrorCallback.onErrorCallbak = self.onError
+        ErrorCallback.onError = self.onError
         
         self.video_parser = VideoParser(self.onError)
         self.bangumi_parser = BangumiParser(self.onError)
@@ -418,9 +418,6 @@ class MainWindow(Frame):
                 if self.current_parse_type == Config.Type.BANGUMI:
                     if BangumiInfo.payment:
                         msg = "解析失败：此视频需要付费购买，请确保已经购买此视频"
-
-            case ErrorCode.Area_Limit:
-                msg = "解析失败：此视频仅限特定地区用户观看，请开启代理后再试"
             
             case ErrorCode.Request_Error:
                 msg = f"解析失败：{error_info}"

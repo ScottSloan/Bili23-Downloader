@@ -6,15 +6,15 @@ class ErrorCode:
     Invalid_URL = 100                       # URL 无效
     Parse_Error = 101                       # 解析异常
     VIP_Required = 102                      # 需要大会员或付费内容
-    Area_Limit = 103                        # 区域限制
-    Request_Error = 104                     # 请求异常
-    Unknown_Error = 105                     # 其他未知错误
+    Request_Error = 103                     # 请求异常
+    Unknown_Error = 104                     # 其他未知错误
 
 class StatusCode:
     CODE_0 = 0                              # 请求成功
     CODE_400 = -400                         # 请求错误
     CODE_403 = -403                         # 权限不足
     CODE_404 = -404                         # 视频不存在
+    CODE_10403 = -10403                     # 地区限制
     CODE_62002 = 62002                      # 稿件不可见
     CODE_62004 = 62004                      # 稿件审核中
     CODE_62012 = 62012                      # 仅 UP 主自己可见
@@ -26,10 +26,13 @@ class RequestCode:
     ConnectionError = 203                   # ConnectionError
 
 class ErrorCallback:
-    onErrorCallbak = None
+    onError = None
 
 class VIPError(Exception):
     # 大会员认证异常类
+    pass
+
+class URLError(Exception):
     pass
 
 class ParseError(Exception):
@@ -39,7 +42,7 @@ class ParseError(Exception):
 
         super().__init__(self.message, self.status_code)
 
-class Error:
+class ErrorUtils:
     def __init__(self):
         pass
 
@@ -70,6 +73,9 @@ class Error:
             case StatusCode.CODE_404:
                 return "视频不存在"
             
+            case StatusCode.CODE_10403:
+                return "根据版权方要求，您所在的地区无法观看本片"
+        
             case StatusCode.CODE_62002:
                 return "稿件不可见"
             
@@ -82,7 +88,7 @@ class Error:
 def process_exception(f):
     @wraps(f)
     def func(*args, **kwargs):
-        error = Error()
+        error = ErrorUtils()
 
         try:
             return f(*args, **kwargs)
@@ -90,32 +96,35 @@ def process_exception(f):
         except requests.exceptions.SSLError:
             error_info = error.getErrorInfo(RequestCode.SSLERROR)
 
-            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
+            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
 
         except requests.exceptions.Timeout:
             error_info = error.getErrorInfo(RequestCode.TimeOut)
 
-            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
+            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
 
         except requests.exceptions.TooManyRedirects:
             error_info = error.getErrorInfo(RequestCode.TooManyRedirects)
 
-            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
+            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
 
         except requests.exceptions.ConnectionError:
             error_info = error.getErrorInfo(RequestCode.ConnectionError)
 
-            ErrorCallback.onErrorCallbak(ErrorCode.Request_Error, error_info)
+            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
+
+        except URLError:
+            ErrorCallback.onError(ErrorCode.Invalid_URL)
 
         except ParseError as e:
             error_info = f"{e.message} ({e.status_code})"
 
-            ErrorCallback.onErrorCallbak(ErrorCode.Parse_Error, error_info)
+            ErrorCallback.onError(ErrorCode.Parse_Error, error_info)
 
         except VIPError:
-            ErrorCallback.onErrorCallbak(ErrorCode.VIP_Required)
+            ErrorCallback.onError(ErrorCode.VIP_Required)
 
         except Exception:
-            ErrorCallback.onErrorCallbak(ErrorCode.Unknown_Error)
+            ErrorCallback.onError(ErrorCode.Unknown_Error)
             
     return func

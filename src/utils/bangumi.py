@@ -2,12 +2,14 @@ import re
 import json
 import requests
 
-from utils.tools import get_header, get_auth, get_proxy
+from utils.tools import get_header, get_auth, get_proxy, find_str
 from utils.config import Config, Audio
-from utils.error import process_exception, Error, VIPError, ParseError, StatusCode
+from utils.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
 
 class BangumiInfo:
-    url = bvid = epid = cid = season_id = mid = None
+    url: str = ""
+    bvid: str = ""
+    epid = cid = season_id = mid = None
 
     title = cover = type = resolution = None
 
@@ -21,19 +23,21 @@ class BangumiParser:
     def __init__(self, onError):
         self.onError = onError
     
+    @process_exception
     def get_epid(self, url):
         epid = re.findall(r"ep([0-9]+)", url)
 
         if not epid:
-            self.onError(101)
+            raise URLError()
 
         self.argument, self.value = "ep_id", epid[0]
 
+    @process_exception
     def get_season_id(self, url):
         season_id = re.findall(r"ss([0-9]+)", url)
 
         if not season_id:
-            self.onError(101)
+            raise URLError()
 
         self.argument, self.value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
@@ -60,9 +64,6 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
-
-        with open("bangumi.json", "w", encoding = "utf-8") as f:
-            f.write(req.text)
         
         info_result = resp["result"]
 
@@ -219,6 +220,15 @@ class BangumiParser:
         # 重置仅下载音频标识符
         Audio.audio_only = False
 
+    @process_exception
+    def check_bangumi_can_play(self):
+        url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.argument}={self.value}"
+
+        req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        resp = json.loads(req.text)
+
+        self.check_json(resp)
+
     def get_bangumi_type(self, type_id):
         # 识别类型
         match type_id:
@@ -236,12 +246,18 @@ class BangumiParser:
                 BangumiInfo.type = "综艺"
 
     def parse_url(self, url):
-        if "ep" in url:
-            self.get_epid(url)
-        elif "ss" in url:
-            self.get_season_id(url)
-        elif "md" in url:
-            self.get_mid(url)
+        match find_str(r"ep|ss|md", url):
+            case "ep":
+                self.get_epid(url)
+
+            case "ss":
+                self.get_season_id(url)
+
+            case "md":
+                self.get_mid(url)
+
+        # 先检查视频是否存在区域限制
+        self.check_bangumi_can_play()
 
         self.get_bangumi_info()
         self.get_bangumi_resolution()
@@ -249,7 +265,7 @@ class BangumiParser:
     def check_json(self, json):
         # 检查接口返回状态码
         status_code = json["code"]
-        error = Error()
+        error = ErrorUtils()
 
         if status_code != StatusCode.CODE_0:
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
