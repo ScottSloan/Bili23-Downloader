@@ -8,7 +8,6 @@ from utils.tools import format_duration, format_bangumi_title, get_new_id, get_l
 from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
-from utils.mapping import BangumiType
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -109,11 +108,37 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 item_title = self.GetItemText(i, 1)
                 parent = self.GetItemText(self.GetItemParent(i), 0)
                 
-                if Download.current_parse_type == VideoInfo:
+                if Download.current_parse_type == Config.Type.VIDEO:
                     self.get_video_download_info(item_title, parent, int(text))
-                elif Download.current_parse_type == BangumiInfo:
+
+                elif Download.current_parse_type == Config.Type.BANGUMI:
                     self.get_bangumi_download_info(item_title, parent, int(text))
     
+    def format_info_entry(self, type: int, title: str, pic: str, bvid: str = None, cid: str = None):
+        return {
+            "id": get_new_id(),
+            "index": None,
+            "url": VideoInfo.url if Download.current_parse_type == Config.Type.VIDEO else BangumiInfo.url,
+            "type": type,
+            "bvid": bvid,
+            "cid": cid,
+            "title": get_legal_name(title),
+            "pic": pic,
+            "size": None,
+            "total_size": None,
+            "complete": None,
+            "completed_size": None,
+            "progress": 0,
+            "status": "wait",
+            "resolution": self.video_quality_id if self.video_quality_id else None,
+            "audio_quality": Audio.audio_quality,
+            "audio_only": Audio.audio_only,
+            "codec": None,
+            "download_complete": False, # 下载完成标识
+            "flag": False,
+            "merge_type": 0, # 视频合成类型
+        }
+
     def get_video_download_info(self, item_title: str, parent: str, index: int):
         if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
             # 合集
@@ -141,40 +166,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         Download.download_list.append(self.format_info_entry(Config.Type.VIDEO, title, pic, bvid, cid))
     
-    def get_bangumi_download_info(self, item_title: str, parent: str, index: int):
+    def get_bangumi_download_info(self: str, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
 
-        title = info_entry["share_copy"] if BangumiInfo.type_id != BangumiType.Type_Movie else format_bangumi_title(info_entry)
+        title = info_entry["share_copy"] if BangumiInfo.type_id != 2 else format_bangumi_title(info_entry)
         pic = info_entry["cover"]
         bvid = info_entry["bvid"]
         cid = info_entry["cid"]
 
-        Download.download_list.append(self.format_info_entry(Config.Type.BANGUMI, title, pic, bvid, cid))
-
-    def format_info_entry(self, type: int, title: str, pic: str, bvid: str = None, cid: str = None):
-        return {
-            "id": get_new_id(),
-            "index": None,
-            "url": VideoInfo.url if Download.current_parse_type == Config.Type.VIDEO else BangumiInfo.url,
-            "type": type,
-            "bvid": bvid,
-            "cid": cid,
-            "title": get_legal_name(title),
-            "pic": pic,
-            "size": None,
-            "total_size": None,
-            "complete": None,
-            "completed_size": None,
-            "progress": 0,
-            "status": "wait",
-            "resolution": self.video_quality_id if self.video_quality_id else None,
-            "audio_quality": Audio.audio_quality,
-            "audio_only": Audio.audio_only,
-            "codec": None,
-            "download_complete": False, # 下载完成标识
-            "flag": False,
-            "merge_type": 0, # 视频合成类型
-        }
+        Download.download_list.append(info_entry = self.format_info_entry(Config.Type.BANGUMI, title, pic, bvid, cid))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):

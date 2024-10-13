@@ -9,7 +9,9 @@ from utils.error import process_exception, ParseError, ErrorUtils, URLError, Sta
 
 class VideoInfo:
     url: str = ""
-    aid = bvid = cid = None
+    aid: str = ""
+    bvid: str = ""
+    cid: int = 0
 
     title: str = ""
     cover: str = ""
@@ -178,26 +180,17 @@ class VideoParser:
         if "audio" in info["dash"]:
             if info["dash"]["audio"]:
                 for entry in info["dash"]["audio"]:
-                    if entry["id"] == 30280:
-                        Audio.q_192k = True
-                    
-                    if entry["id"] == 30232:
-                        Audio.q_132k = True
+                    match entry["id"]:
+                        case 30280:
+                            Audio.q_192k = True
 
-                    if entry["id"] == 30216:
-                        Audio.q_64k = True
+                        case 30232:
+                            Audio.q_132k = True
 
-        # 存在无损或杜比
-        if Audio.q_hires or Audio.q_dolby:
-            # 如果选择下载无损或杜比
-            if Config.Download.sound_quality == 30250:
-                Audio.audio_quality = 30250
-            else:
-                Audio.audio_quality = Config.Download.sound_quality
+                        case 30216:
+                            Audio.q_64k = True
 
-        # 否则根据实际所选音质下载
-        else:
-            Audio.audio_quality = Config.Download.sound_quality
+            Audio.audio_quality = Config.Download.audio_quality_id
 
         # 重置仅下载音频标识符
         Audio.audio_only = False

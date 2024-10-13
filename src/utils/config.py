@@ -1,6 +1,7 @@
 import os
 import platform
 from configparser import RawConfigParser
+from typing import List
 
 class Config:
     class Sys:
@@ -37,8 +38,8 @@ class Config:
     class Download:
         path = None
         
-        resolution = 80
-        sound_quality = 30280
+        video_quality_id = 80
+        audio_quality_id = 30280
         codec = "HEVC"
 
         max_thread = 4
@@ -96,9 +97,9 @@ class Audio:
     q_64k = False
 
 class Download:
-    current_parse_type = None
+    current_parse_type: int = 0
     
-    download_list = []
+    download_list: List = []
 
 class ConfigUtils:
     def __init__(self):
@@ -142,8 +143,8 @@ class ConfigUtils:
         Config.Download.path = download_path if download_path else os.path.join(os.getcwd(), "download")
         Config.Download.max_download = self.config.getint("download", "max_download")
         Config.Download.max_thread = self.config.getint("download", "max_thread")
-        Config.Download.resolution = self.config.getint("download", "resolution")
-        Config.Download.sound_quality = self.config.getint("download", "sound_quality")
+        Config.Download.video_quality_id = self.config.getint("download", "resolution")
+        Config.Download.audio_quality_id = self.config.getint("download", "sound_quality")
         Config.Download.codec = self.config.get("download", "codec")
         Config.Download.show_notification = self.config.getint("download", "notification")
         Config.Download.add_number = self.config.getboolean("download", "add_number")

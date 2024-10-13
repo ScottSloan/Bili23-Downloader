@@ -11,7 +11,10 @@ from utils.mapping import bangumi_type_mapping
 class BangumiInfo:
     url: str = ""
     bvid: str = ""
-    epid = cid = season_id = mid = None
+    epid: int = 0 
+    cid: int = 0
+    season_id: int = 0
+    mid: int = 0
 
     title: str = ""
     cover: str = ""
@@ -19,7 +22,7 @@ class BangumiInfo:
     type_id: int = 0
     type_name: str = ""
 
-    payment = False
+    payment: bool = False
 
     episodes_list: List = []
     video_quality_id_list: List = []
@@ -206,26 +209,17 @@ class BangumiParser:
         if "audio" in json_data["dash"]:
             if json_data["dash"]["audio"]:
                 for entry in json_data["dash"]["audio"]:
-                    if entry["id"] == 30280:
-                        Audio.q_192k = True
+                    match entry["id"]:
+                        case 30280:
+                            Audio.q_192k = True
                     
-                    if entry["id"] == 30232:
-                        Audio.q_132k = True
+                        case 30232:
+                            Audio.q_132k = True
 
-                    if entry["id"] == 30216:
-                        Audio.q_64k = True
+                        case 30216:
+                            Audio.q_64k = True
 
-        # 存在无损或杜比
-        if Audio.q_hires or Audio.q_dolby:
-            # 如果选择下载无损或杜比
-            if Config.Download.sound_quality == 30250:
-                Audio.audio_quality = 30250
-            else:
-                Audio.audio_quality = Config.Download.sound_quality
-
-        # 否则根据实际所选音质下载
-        else:
-            Audio.audio_quality = Config.Download.sound_quality
+            Audio.audio_quality = Config.Download.audio_quality_id
 
         # 重置仅下载音频标识符
         Audio.audio_only = False

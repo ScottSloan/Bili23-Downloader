@@ -10,10 +10,7 @@ from datetime import datetime
 from requests.auth import HTTPProxyAuth
 
 from utils.config import Config
-from utils.mapping import BangumiType
 
-audio_quality_map = {"Hi-Res 无损": 30251, "杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
-audio_quality_map_set = {"Hi-Res 无损 / 杜比全景声": 30250, "192K": 30280, "132K": 30232, "64K": 30216}
 codec_id_map = {"AVC": 7, "HEVC": 12, "AV1": 13}
 target_format_map = {"AVI": "avi", "MKV": "mkv", "FLV": "flv", "MOV": "mov", "WMV": "wmv"}
 target_codec_map = {"AVC/H.264": 1, "HEVC/H.265": 2, "AV1": 3}
@@ -116,7 +113,7 @@ def format_size(size):
 def format_bangumi_title(episode):
     from utils.bangumi import BangumiInfo
 
-    if BangumiInfo.type_id == BangumiType.Type_Movie:
+    if BangumiInfo.type_id == 2:
         return "{} - {}".format(BangumiInfo.title, episode["title"])
     else:
         if "share_copy" in episode:

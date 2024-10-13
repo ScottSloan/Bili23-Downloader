@@ -1,9 +1,3 @@
-class BangumiType:
-    Type_Movie = 2
-
-class VideoQuality:
-    Quality_AUTO = 200
-
 bangumi_type_mapping = {
     1: "番剧",
     2: "电影",
@@ -26,4 +20,13 @@ video_quality_mapping = {
     "高清 720P": 64,
     "清晰 480P": 32,
     "流畅 360P": 16,
+}
+
+audio_quality_mapping = {
+    "自动": 30300,
+    "Hi-Res 无损": 30251,
+    "杜比全景声": 30250,
+    "192K": 30280,
+    "132K": 30232,
+    "64K": 30216
 }

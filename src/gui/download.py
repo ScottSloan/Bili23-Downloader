@@ -15,9 +15,9 @@ from gui.cover_viewer import CoverViewerDialog
 from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
-from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, audio_quality_map, codec_id_map
+from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, codec_id_map
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping
+from utils.mapping import video_quality_mapping, audio_quality_mapping
 
 class DownloadInfo:
     download_list = {}
@@ -68,7 +68,7 @@ class DownloadUtils:
             # 解析默认音质
             self.getDefaultAudioDurl(json_dash["audio"])
 
-            if self.info["audio_quality"] == 30250:
+            if self.info["audio_quality"] == 30300:
                 try:
                     # 获取无损或杜比链接
                     if "flac" in json_dash:
@@ -86,26 +86,25 @@ class DownloadUtils:
 
                                     self.audio_type = "flac"
                                     self.audio_quality = 30251
-                    else:
-                        if "dolby" in json_dash:
-                            if json_dash["dolby"]:
-                                if "audio" in json_dash["dolby"]:
-                                    if json_dash["dolby"]["audio"]:
-                                        # 杜比全景声
-                                        audio_node = self.audio_durl = json_dash["dolby"]["audio"][0]
+                    
+                    if "dolby" in json_dash:
+                        if json_dash["dolby"]:
+                            if "audio" in json_dash["dolby"]:
+                                if json_dash["dolby"]["audio"]:
+                                    # 杜比全景声
+                                    audio_node = self.audio_durl = json_dash["dolby"]["audio"][0]
 
-                                        # 自动检测链接可用性
-                                        if "backupUrl" in audio_node:
-                                            self.audio_durl = audio_node["backupUrl"][0]
-                                        else:
-                                            self.audio_durl = audio_node["backup_url"][0]
+                                    # 自动检测链接可用性
+                                    if "backupUrl" in audio_node:
+                                        self.audio_durl = audio_node["backupUrl"][0]
+                                    else:
+                                        self.audio_durl = audio_node["backup_url"][0]
 
-                                        self.audio_type = "ec3"
-                                        self.audio_quality = 30250
+                                    self.audio_type = "ec3"
+                                    self.audio_quality = 30250
 
                 except Exception:
                     # 无法获取无损或杜比链接，换回默认音质
-
                     self.getDefaultAudioDurl(json_dash["audio"])
 
         else:
@@ -142,7 +141,7 @@ class DownloadUtils:
     def getDefaultAudioDurl(self, data):
         highest_audio_quality = self.getHighestAudioQuality(data)
 
-        if highest_audio_quality < self.info["audio_quality"] or self.info["audio_quality"] == 30250:
+        if highest_audio_quality < self.info["audio_quality"] or self.info["audio_quality"] == 30300:
             # 当视频不存在选取的音质时，选取最高可用的音质
             audio_quality = highest_audio_quality
         else:
@@ -812,7 +811,7 @@ class DownloadItemPanel(wx.Panel):
 
         video_quality_dict = dict(map(reversed, video_quality_mapping.items()))
         codec_dict = {7: "AVC/H.264", 12: "HEVC/H.265", 13: "AVC"}
-        audio_dict = {value: key for key, value in audio_quality_map.items()}
+        audio_dict = {value: key for key, value in audio_quality_mapping.items()}
 
         match self.utils.merge_type:
             case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:

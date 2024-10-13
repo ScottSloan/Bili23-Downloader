@@ -13,7 +13,7 @@ from utils.download import DownloaderInfo
 from utils.thread import Thread
 from utils.tools import find_str, check_update, process_shorklink, get_user_face
 from utils.error import ErrorCallback, ErrorCode
-from utils.mapping import VideoQuality, video_quality_mapping
+from utils.mapping import video_quality_mapping
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -220,6 +220,7 @@ class MainWindow(Frame):
         self.ID_LOGOUT = wx.NewIdRef()
         self.ID_REFRESH = wx.NewIdRef()
 
+        self.ID_AUDIO_AUTO = wx.NewIdRef()
         self.ID_AUDIO_HIRES = wx.NewIdRef()
         self.ID_AUDIO_DOLBY = wx.NewIdRef()
         self.ID_AUDIO_192K = wx.NewIdRef()
@@ -381,12 +382,12 @@ class MainWindow(Frame):
         video_quality_desc_list.insert(0, "自动")
         self.video_quality_choice.Set(video_quality_desc_list)
 
-        if Config.Download.resolution == VideoQuality.Quality_AUTO:
+        if Config.Download.video_quality_id == 200:
             index = 0
 
         else:
-            if Config.Download.resolution in video_quality_id_list:
-                video_quality_id = Config.Download.resolution
+            if Config.Download.video_quality_id in video_quality_id_list:
+                video_quality_id = Config.Download.video_quality_id
             else:
                 video_quality_id = video_quality_id_list[0]
 
@@ -516,6 +517,9 @@ class MainWindow(Frame):
 
     def onChangeAudioQuality(self, event):
         match event.GetId():
+            case self.ID_AUDIO_AUTO:
+                Audio.audio_quality = 30300
+
             case self.ID_AUDIO_HIRES:
                 Audio.audio_quality = 30251
 
@@ -599,9 +603,12 @@ class MainWindow(Frame):
 
         audio_none = False
 
+        menuitem_auto = menu.Append(self.ID_AUDIO_AUTO, "自动", kind = wx.ITEM_RADIO)
+        menuitem_auto.Check(True if Audio.audio_quality == 30300 else False)
+
         if Audio.q_hires:
             menuitem_hires = menu.Append(self.ID_AUDIO_HIRES, "Hi-Res 无损", kind = wx.ITEM_RADIO)
-            menuitem_hires.Check(True if Audio.audio_quality == 30250 else False)
+            menuitem_hires.Check(True if Audio.audio_quality == 30251 else False)
 
         if Audio.q_dolby:
             menuitem_dolby = menu.Append(self.ID_AUDIO_DOLBY, "杜比全景声", kind = wx.ITEM_RADIO)
