@@ -16,7 +16,7 @@ def process_shorklink(url):
     
     return req.url
 
-def get_header(referer_url = None, cookie = None, chunk_list = None, download = False) -> dict:
+def get_header(referer_url = None, cookie = None, chunk_list = None) -> dict:
     header = {
         "Cookie": "CURRENT_FNVAL=4048;",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0",
@@ -30,13 +30,6 @@ def get_header(referer_url = None, cookie = None, chunk_list = None, download = 
 
     if cookie:
         header["Cookie"] += "SESSDATA=" + cookie
-
-    if download:
-        header["Accept"] = "*/*"
-        header["Accept-Encoding"] = "identity"
-        header["Accept-Language"] = "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6"
-        header["Origin"] = "https://www.bilibili.com"
-        header["Priority"] = "u=1, i"
     
     return header
 

@@ -42,7 +42,7 @@ class VideoParser:
         aid = re.findall(r"av([0-9]+)", url)
 
         if not aid:
-            raise URLError
+            raise URLError()
 
         bvid = convert_to_bvid(int(aid[0]))
         self.save_bvid(bvid)
@@ -52,7 +52,7 @@ class VideoParser:
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            raise URLError
+            raise URLError()
 
         self.save_bvid(bvid[0])
 
@@ -61,7 +61,7 @@ class VideoParser:
         # 获取视频信息
         url = f"https://api.bilibili.com/x/web-interface/view?bvid={VideoInfo.bvid}"
         
-        req = requests.get(url, headers = get_header(VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        req = requests.get(url, headers = get_header(referer_url = VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -82,23 +82,11 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
-        VideoInfo.sections.clear()
-
         match Config.Misc.show_episodes:
             case Config.Type.EPISODES_SINGLE:
                 # 解析单个视频
 
-                if len(VideoInfo.pages_list) == 1:
-                    # 单个视频
-                    VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
-                else:
-                    # 分P视频
-                    VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
-
-                    if hasattr(self, "part_num"):
-                        VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
-                    else:
-                        VideoInfo.pages_list = [VideoInfo.pages_list[0]]
+                self.parse_pages()
 
             case Config.Type.EPISODES_IN_SECTION:
                 # 解析视频所在合集
@@ -164,9 +152,6 @@ class VideoParser:
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]
 
-        # 重置音质标识符
-        Audio.q_dolby = Audio.q_hires = Audio.q_192k = Audio.q_132k = Audio.q_64k = False
-
         # 检测无损或杜比是否存在
         if "flac" in info["dash"]:
             if info["dash"]["flac"]:
@@ -192,12 +177,12 @@ class VideoParser:
 
             Audio.audio_quality = Config.Download.audio_quality_id
 
-        # 重置仅下载音频标识符
-        Audio.audio_only = False
-
     def parse_url(self, url):
         # 先检查是否为分 P 视频
         self.get_part(url)
+
+        # 清除当前的视频信息
+        self.clear_video_info()
 
         match find_str(r"av|BV", url):
             case "av":
@@ -230,3 +215,24 @@ class VideoParser:
         else:
             # 分P视频
             VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
+
+            if hasattr(self, "part_num"):
+                VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
+            else:
+                VideoInfo.pages_list = [VideoInfo.pages_list[0]]
+
+    def clear_video_info(self):
+        # 清除当前的视频信息
+        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
+        VideoInfo.cid = VideoInfo.type = 0
+
+        VideoInfo.pages_list.clear()
+        VideoInfo.episodes_list.clear()
+        VideoInfo.video_quality_id_list.clear()
+        VideoInfo.video_quality_desc_list.clear()
+
+        VideoInfo.sections.clear()
+
+        # 重置音质信息
+        Audio.q_hires = Audio.q_dolby = Audio.q_192k = Audio.q_132k = Audio.q_64k = Audio.audio_only = False
+        Audio.audio_quality = 0

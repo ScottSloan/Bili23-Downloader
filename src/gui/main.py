@@ -407,7 +407,7 @@ class MainWindow(Frame):
 
         count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
 
-        self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_id, count))
+        self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
 
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)

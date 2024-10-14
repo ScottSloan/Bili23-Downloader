@@ -123,7 +123,7 @@ class Downloader:
     def range_download(self, thread_id: str, url: str, referer_url: str, path: str, chunk_list: list):
         # 分片下载
         try:
-            req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list, download = True), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 15)
+            req = self.session.get(url, headers = get_header(referer_url, Config.User.sessdata, chunk_list), stream = True, proxies = get_proxy(), auth = get_auth(), timeout = 15)
             
             with open(path, "rb+") as f:
                 start_time = time.time()

@@ -69,6 +69,7 @@ class BangumiParser:
 
     @process_exception
     def get_bangumi_info(self):
+        # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
         req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
@@ -89,12 +90,9 @@ class BangumiParser:
         BangumiInfo.bvid = BangumiInfo.episodes_list[0]["bvid"]
         BangumiInfo.cid = BangumiInfo.episodes_list[0]["cid"]
         BangumiInfo.epid = BangumiInfo.episodes_list[0]["id"]
-
         BangumiInfo.mid = info_result["media_id"]
 
         BangumiInfo.type_id = info_result["type"]
-
-        BangumiInfo.sections.clear()
 
         # 剧集列表解析方式
         match Config.Misc.show_episodes:
@@ -193,9 +191,6 @@ class BangumiParser:
         BangumiInfo.video_quality_id_list = json_data["accept_quality"]
         BangumiInfo.video_quality_desc_list = json_data["accept_description"]
 
-        # 重置音质标识符
-        Audio.q_dolby = Audio.q_hires = Audio.q_192k = Audio.q_132k = Audio.q_64k = False
-
         # 检测无损或杜比是否存在
         if "flac" in json_data["dash"]:
             if json_data["dash"]["flac"]:
@@ -221,9 +216,6 @@ class BangumiParser:
 
             Audio.audio_quality = Config.Download.audio_quality_id
 
-        # 重置仅下载音频标识符
-        Audio.audio_only = False
-
     @process_exception
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
@@ -234,15 +226,13 @@ class BangumiParser:
         self.check_json(resp)
 
     def get_bangumi_type(self):
-        # 识别类型
-
-        if BangumiInfo.type_id in bangumi_type_mapping:
-            BangumiInfo.type_name = bangumi_type_mapping[BangumiInfo.type_id]
-        
-        else:
-            BangumiInfo.type_name = "未知"
+        # 识别番组类型
+        BangumiInfo.type_name = bangumi_type_mapping.get(BangumiInfo.type_id, "未知")
 
     def parse_url(self, url):
+        # 清除当前的番组信息
+        self.clear_bangumi_info()
+
         match find_str(r"ep|ss|md", url):
             case "ep":
                 self.get_epid(url)
@@ -281,3 +271,20 @@ class BangumiParser:
             season_title = "正片"
 
         BangumiInfo.sections[season_title] = BangumiInfo.episodes_list
+
+    def clear_bangumi_info(self):
+        # 清除当前的番组信息
+        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = ""
+        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = 0
+
+        BangumiInfo.payment = False
+
+        BangumiInfo.episodes_list.clear()
+        BangumiInfo.video_quality_id_list.clear()
+        BangumiInfo.video_quality_desc_list.clear()
+
+        BangumiInfo.sections.clear()
+
+        # 重置音质信息
+        Audio.q_hires = Audio.q_dolby = Audio.q_192k = Audio.q_132k = Audio.q_64k = Audio.audio_only = False
+        Audio.audio_quality = 0
