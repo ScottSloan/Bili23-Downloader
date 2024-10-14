@@ -6,7 +6,7 @@ import time
 import wx.adv
 import requests
 import subprocess
-from typing import List
+from typing import List, Dict
 
 from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
@@ -20,8 +20,8 @@ from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping
 
 class DownloadInfo:
-    download_list = {}
-    no_task = True
+    download_list: Dict = {}
+    no_task: bool = True
 
 class DownloadUtils:
     def __init__(self, info: dict, onError, onComplete):
@@ -449,7 +449,7 @@ class DownloadWindow(Frame):
         
         wx.CallAfter(self.runCallbackList, callback_list, True)
 
-    def runCallbackList(self, callback_list, stopAll = False):
+    def runCallbackList(self, callback_list: List, stopAll: bool = False):
         for callback in callback_list:
             if stopAll:
                 callback(0, stopAll)
@@ -460,12 +460,12 @@ class DownloadWindow(Frame):
 
         self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
-    def add_download_item(self, start_download = True):
+    def add_download_item(self, start_download: bool = True):
         multiple = True if len(Download.download_list) > 1 else False
 
         self.add_panel_item_worker(multiple, start_download)
 
-    def add_panel_item_worker(self, multiple, start_download):
+    def add_panel_item_worker(self, multiple: bool, start_download: bool):
         item_list = []
 
         # 暂时停止 UI 更新
@@ -491,7 +491,7 @@ class DownloadWindow(Frame):
         if start_download:
             self.start_download()
 
-    def add_panel_item_to_panel(self, index, entry, multiple):
+    def add_panel_item_to_panel(self, index: int, entry: Dict, multiple: bool):
         if multiple:
             # 只有在批量下载视频时，才更新 index，否则都为 None
             entry["index"] = index + 1
@@ -557,7 +557,7 @@ class DownloadWindow(Frame):
 
             notification.Show()
 
-    def is_already_in_list(self, title, cid) -> bool:
+    def is_already_in_list(self, title: str, cid: int) -> bool:
         # 检查下载任务是否在下载列表中，防止重复下载
         for key, value in DownloadInfo.download_list.items():
             if value["title"] == title and value["cid"] == cid:
@@ -604,7 +604,7 @@ class DownloadWindow(Frame):
         return size
 
 class DownloadItemPanel(wx.Panel):
-    def __init__(self, parent, info: dict):
+    def __init__(self, parent, info: Dict):
         self.info = info
 
         wx.Panel.__init__(self, parent)
@@ -835,7 +835,7 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.download_info.update_base_info(base_info)
         self.downloader.download_info.update_base_info_status("downloading")
 
-    def onDownload(self, info: dict):
+    def onDownload(self, info: Dict):
         # 更新下载进度
         if self.info["status"] == "downloading":
             self.gauge.SetValue(info["progress"])
@@ -882,7 +882,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.updatePauseBtn("downloading")
 
-    def onStop(self, event, stopAll = False):
+    def onStop(self, event, stopAll: bool = False):
         self.downloader.download_info.clear()
 
         self.downloader.onStop()
@@ -904,7 +904,7 @@ class DownloadItemPanel(wx.Panel):
 
         remove_files(Config.Download.path, [f"video_{self.info['id']}.mp4", f"audio_{self.info['id']}.mp3"])
     
-    def onMerge(self, retry = False):
+    def onMerge(self, retry: bool = False):
         self.setStatus("merging")
 
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
@@ -923,7 +923,7 @@ class DownloadItemPanel(wx.Panel):
 
         Thread(target = self.utils.mergeVideo).start()
 
-    def onMergeComplete(self, file_names):
+    def onMergeComplete(self, file_list: List):
         self.setStatus("completed")
         
         if self.utils.merge_error:
@@ -942,7 +942,7 @@ class DownloadItemPanel(wx.Panel):
 
             if Config.Merge.auto_clean:
                 # 再次删除文件，防止残留
-                remove_files(Config.Download.path, file_names)
+                remove_files(Config.Download.path, file_list)
         
         self.downloader.download_info.clear()
 

@@ -31,11 +31,11 @@ class BangumiInfo:
     sections: Dict = {}
 
 class BangumiParser:
-    def __init__(self, onError):
-        self.onError = onError
+    def __init__(self):
+        pass
     
     @process_exception
-    def get_epid(self, url):
+    def get_epid(self, url: str):
         epid = re.findall(r"ep([0-9]+)", url)
 
         if not epid:
@@ -44,7 +44,7 @@ class BangumiParser:
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
     @process_exception
-    def get_season_id(self, url):
+    def get_season_id(self, url: str):
         season_id = re.findall(r"ss([0-9]+)", url)
 
         if not season_id:
@@ -53,7 +53,7 @@ class BangumiParser:
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
     @process_exception
-    def get_mid(self, url):
+    def get_mid(self, url: str):
         mid = re.findall(r"md([0-9]*)", url)
         
         if not mid:
@@ -214,7 +214,7 @@ class BangumiParser:
                         case 30216:
                             Audio.q_64k = True
 
-            Audio.audio_quality = Config.Download.audio_quality_id
+            Audio.audio_quality_id = Config.Download.audio_quality_id
 
     @process_exception
     def check_bangumi_can_play(self):
@@ -229,7 +229,7 @@ class BangumiParser:
         # 识别番组类型
         BangumiInfo.type_name = bangumi_type_mapping.get(BangumiInfo.type_id, "未知")
 
-    def parse_url(self, url):
+    def parse_url(self, url: str):
         # 清除当前的番组信息
         self.clear_bangumi_info()
 
@@ -249,7 +249,7 @@ class BangumiParser:
         self.get_bangumi_info()
         self.get_bangumi_resolution()
     
-    def check_json(self, json):
+    def check_json(self, json: Dict):
         # 检查接口返回状态码
         status_code = json["code"]
         error = ErrorUtils()
@@ -258,7 +258,7 @@ class BangumiParser:
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
             raise ParseError(error.getStatusInfo(status_code), status_code)
 
-    def parse_episodes(self, info_result):
+    def parse_episodes(self, info_result: Dict):
         # 解析正片
         if "seasons" in info_result and info_result["seasons"]:
             seasons_info = info_result["seasons"]
@@ -287,4 +287,4 @@ class BangumiParser:
 
         # 重置音质信息
         Audio.q_hires = Audio.q_dolby = Audio.q_192k = Audio.q_132k = Audio.q_64k = Audio.audio_only = False
-        Audio.audio_quality = 0
+        Audio.audio_quality_id = 0

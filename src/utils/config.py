@@ -5,38 +5,47 @@ from typing import List
 
 class Config:
     class Sys:
-        platform = platform.system().lower()
-        dark_mode = False
+        platform: str = platform.system().lower()
+        dark_mode: bool = False
 
     class APP:
-        name = "Bili23 Downloader"
+        name: str = "Bili23 Downloader"
 
-        version = "1.51.0"
-        version_code = 1510
+        version: str = "1.51.0"
+        version_code: int = 1510
 
-        release_date = "2024/10/13"
+        release_date: str = "2024/10/14"
 
     class Proxy:
-        proxy = 1
-        auth = False
+        proxy_enable_status: int = 1
+        auth_enable: bool = False
 
-        ip = port = uname = passwd = None
+        proxy_ip_addr: str = ""
+        proxy_port: int = 0
+        auth_uname: str = ""
+        auth_passwd: str = ""
     
     class User:
-        base_path = path = face_path = None
+        base_path: str = ""
+        path: str = ""
+        face_path: str = ""
 
-        login = False
-        uname = face = sessdata = None
+        login: bool = False
+        uname: str = ""
+        face: str = ""
+        sessdata: str = ""
 
     class Misc:
-        show_episodes = 1
+        show_episodes: int = 1
 
-        auto_select = debug = check_update = False
+        auto_select: bool = False
+        debug: bool = False
+        check_update: bool = False
 
-        player_path = None
+        player_path: str = ""
 
     class Download:
-        path: str = None
+        path: str = ""
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
@@ -45,35 +54,35 @@ class Config:
         max_thread_count: int = 4
         max_download_count: int = 1
 
-        show_notification = False
+        show_notification: bool = False
 
-        add_number = False
+        add_number: bool = False
 
-        speed_limit = False
-        speed_limit_in_mb = 10
+        speed_limit: bool = False
+        speed_limit_in_mb: int = 10
     
     class Merge:
-        auto_clean = False
+        auto_clean: bool = False
 
     class Type:
-        VIDEO = 1                               # 用户投稿视频
-        BANGUMI = 2                             # 番组
+        VIDEO: int = 1                               # 用户投稿视频
+        BANGUMI: int = 2                             # 番组
 
-        VIDEO_TYPE_SINGLE = 1                   # 单个视频
-        VIDEO_TYPE_PAGES = 2                    # 分 P 视频
-        VIDEO_TYPE_SECTIONS = 3                 # 合集
+        VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
+        VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
+        VIDEO_TYPE_SECTIONS: int = 3                 # 合集
 
-        MERGE_TYPE_ALL = 0                      # 合成视频和音频
-        MERGE_TYPE_VIDEO = 1                    # 仅下载视频
-        MERGE_TYPE_AUDIO = 2                    # 仅下载音频
+        MERGE_TYPE_ALL: int = 0                      # 合成视频和音频
+        MERGE_TYPE_VIDEO: int = 1                    # 仅下载视频
+        MERGE_TYPE_AUDIO: int = 2                    # 仅下载音频
 
-        EPISODES_SINGLE = 0                     # 只解析单个视频
-        EPISODES_IN_SECTION = 1                 # 解析视频所在合集
-        EPISODES_ALL_SECTIONS = 2               # 解析全部合集 
+        EPISODES_SINGLE: int = 0                     # 只解析单个视频
+        EPISODES_IN_SECTION: int = 1                 # 解析视频所在合集
+        EPISODES_ALL_SECTIONS: int = 2               # 解析全部合集 
 
-        PROXY_DISABLE = 0                       # 不使用代理
-        PROXY_FOLLOW = 1                        # 跟随系统
-        PROXY_MANUAL = 2                        # 手动设置
+        PROXY_DISABLE: int = 0                       # 不使用代理
+        PROXY_FOLLOW: int = 1                        # 跟随系统
+        PROXY_MANUAL: int = 2                        # 手动设置
     
     class Temp:
         download_window_pos = None
@@ -81,20 +90,21 @@ class Config:
         update_json = None
 
     class FFmpeg:
-        path = None
-        available = False
+        path: str = ""
+        available: bool = False
 
 class Audio:
-    audio_quality = None
+    audio_quality_id: int = 0
 
-    audio_only = False
+    # 仅下载音频标识符
+    audio_only: bool = False
     
-    # 各音质是否存在
-    q_hires = False
-    q_dolby = False
-    q_192k = False
-    q_132k = False
-    q_64k = False
+    # 各音质标识符
+    q_hires: bool = False
+    q_dolby: bool = False
+    q_192k: bool = False
+    q_132k: bool = False
+    q_64k: bool = False
 
 class Download:
     current_parse_type: int = 0
@@ -162,13 +172,13 @@ class ConfigUtils:
         Config.User.sessdata = self.user_config.get("user", "sessdata")
 
         # proxy
-        Config.Proxy.proxy = self.config.getint("proxy", "proxy")
-        Config.Proxy.ip = self.config.get("proxy", "ip")
-        Config.Proxy.port = self.config.get("proxy", "port")
+        Config.Proxy.proxy_enable_status = self.config.getint("proxy", "proxy")
+        Config.Proxy.proxy_ip_addr = self.config.get("proxy", "ip")
+        Config.Proxy.proxy_port = self.config.get("proxy", "port")
 
-        Config.Proxy.auth = self.config.getboolean("proxy", "auth")
-        Config.Proxy.uname = self.config.get("proxy", "uname")
-        Config.Proxy.passwd = self.config.get("proxy", "passwd")
+        Config.Proxy.auth_enable = self.config.getboolean("proxy", "auth")
+        Config.Proxy.auth_uname = self.config.get("proxy", "uname")
+        Config.Proxy.auth_passwd = self.config.get("proxy", "passwd")
 
         # misc
         Config.Misc.show_episodes = self.config.getint("misc", "show_episodes")

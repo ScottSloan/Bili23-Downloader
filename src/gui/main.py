@@ -2,6 +2,7 @@ import wx
 import os
 import time
 import wx.py
+from typing import Optional
 
 from utils.config import Config, Download, Audio, conf
 from utils.video import VideoInfo, VideoParser
@@ -193,8 +194,8 @@ class MainWindow(Frame):
     def init_utils(self):
         ErrorCallback.onError = self.onError
         
-        self.video_parser = VideoParser(self.onError)
-        self.bangumi_parser = BangumiParser(self.onError)
+        self.video_parser = VideoParser()
+        self.bangumi_parser = BangumiParser()
         self.activity_parser = ActivityParser(self.onError)
 
         self.download_window = DownloadWindow(self)
@@ -412,7 +413,7 @@ class MainWindow(Frame):
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
-    def onError(self, error_code: int, error_info: str = None):
+    def onError(self, error_code: int, error_info: Optional[str] = None):
         # 匹配不同错误码
         match error_code:
             case ErrorCode.Invalid_URL:
@@ -518,22 +519,22 @@ class MainWindow(Frame):
     def onChangeAudioQuality(self, event):
         match event.GetId():
             case self.ID_AUDIO_AUTO:
-                Audio.audio_quality = 30300
+                Audio.audio_quality_id = 30300
 
             case self.ID_AUDIO_HIRES:
-                Audio.audio_quality = 30251
+                Audio.audio_quality_id = 30251
 
             case self.ID_AUDIO_DOLBY:
-                Audio.audio_quality = 30250
+                Audio.audio_quality_id = 30250
 
             case self.ID_AUDIO_192K:
-                Audio.audio_quality = 30280
+                Audio.audio_quality_id = 30280
 
             case self.ID_AUDIO_132K:
-                Audio.audio_quality = 30232
+                Audio.audio_quality_id = 30232
 
             case self.ID_AUDIO_64K:
-                Audio.audio_quality = 30216
+                Audio.audio_quality_id = 30216
 
             case self.ID_AUDIO_ONLY:
                 if Audio.audio_only:
@@ -604,27 +605,27 @@ class MainWindow(Frame):
         audio_none = False
 
         menuitem_auto = menu.Append(self.ID_AUDIO_AUTO, "自动", kind = wx.ITEM_RADIO)
-        menuitem_auto.Check(True if Audio.audio_quality == 30300 else False)
+        menuitem_auto.Check(True if Audio.audio_quality_id == 30300 else False)
 
         if Audio.q_hires:
             menuitem_hires = menu.Append(self.ID_AUDIO_HIRES, "Hi-Res 无损", kind = wx.ITEM_RADIO)
-            menuitem_hires.Check(True if Audio.audio_quality == 30251 else False)
+            menuitem_hires.Check(True if Audio.audio_quality_id == 30251 else False)
 
         if Audio.q_dolby:
             menuitem_dolby = menu.Append(self.ID_AUDIO_DOLBY, "杜比全景声", kind = wx.ITEM_RADIO)
-            menuitem_dolby.Check(True if Audio.audio_quality == 30250 else False)
+            menuitem_dolby.Check(True if Audio.audio_quality_id == 30250 else False)
 
         if Audio.q_192k:
             menuitem_192k = menu.Append(self.ID_AUDIO_192K, "192K", kind = wx.ITEM_RADIO)
-            menuitem_192k.Check(True if Audio.audio_quality == 30280 else False)
+            menuitem_192k.Check(True if Audio.audio_quality_id == 30280 else False)
 
         if Audio.q_132k:
             menuitem_132k = menu.Append(self.ID_AUDIO_132K, "132K", kind = wx.ITEM_RADIO)
-            menuitem_132k.Check(True if Audio.audio_quality == 30232 else False)
+            menuitem_132k.Check(True if Audio.audio_quality_id == 30232 else False)
 
         if Audio.q_64k:
             menuitem_64k = menu.Append(self.ID_AUDIO_64K, "64K", kind = wx.ITEM_RADIO)
-            menuitem_64k.Check(True if Audio.audio_quality == 30216 else False)
+            menuitem_64k.Check(True if Audio.audio_quality_id == 30216 else False)
 
         if not Audio.q_64k and not Audio.q_132k and not Audio.q_192k:
             menuitem_none = menu.Append(self.ID_AUDIO_NONE, "无音轨")
@@ -643,7 +644,7 @@ class MainWindow(Frame):
 
         self.PopupMenu(menu)
 
-    def showInfobarMessage(self, message, flag):
+    def showInfobarMessage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
 
     def onCheckFFmpeg(self):

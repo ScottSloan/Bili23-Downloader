@@ -1,4 +1,5 @@
 import wx
+from typing import Dict
 from io import BytesIO
 
 from utils.login import QRLogin
@@ -91,7 +92,7 @@ class LoginWindow(wx.Dialog):
 
         self.Layout()
 
-    def save_user_info(self, user_info: dict):
+    def save_user_info(self, user_info: Dict):
         Config.User.login = True
 
         Config.User.face = user_info["face"]

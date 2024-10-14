@@ -474,7 +474,7 @@ class ProxyTab(wx.Panel):
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestEVT)
 
     def init_data(self):
-        match Config.Proxy.proxy:
+        match Config.Proxy.proxy_enable_status:
             case Config.Type.PROXY_DISABLE:
                 self.proxy_disable_radio.SetValue(True)
 
@@ -490,15 +490,15 @@ class ProxyTab(wx.Panel):
 
                 self.setProxyEnable(True)
 
-        if not Config.Proxy.auth:
+        if not Config.Proxy.auth_enable:
             self.setAuthEnable(False)
 
-        self.ip_box.SetValue(Config.Proxy.ip)
-        self.port_box.SetValue(Config.Proxy.port)
+        self.ip_box.SetValue(Config.Proxy.proxy_ip_addr)
+        self.port_box.SetValue(Config.Proxy.proxy_port)
     
-        self.auth_chk.SetValue(Config.Proxy.auth)
-        self.uname_box.SetValue(Config.Proxy.uname)
-        self.passwd_box.SetValue(Config.Proxy.passwd)
+        self.auth_chk.SetValue(Config.Proxy.auth_enable)
+        self.uname_box.SetValue(Config.Proxy.auth_uname)
+        self.passwd_box.SetValue(Config.Proxy.auth_passwd)
 
     def save(self):
         if self.proxy_disable_radio.GetValue():
@@ -510,22 +510,22 @@ class ProxyTab(wx.Panel):
         else:
             proxy = Config.Type.PROXY_MANUAL
 
-        Config.Proxy.proxy = proxy
+        Config.Proxy.proxy_enable_status = proxy
 
-        Config.Proxy.ip = self.ip_box.GetValue()
-        Config.Proxy.port = self.port_box.GetValue()
+        Config.Proxy.proxy_ip_addr = self.ip_box.GetValue()
+        Config.Proxy.proxy_port = self.port_box.GetValue()
 
-        Config.Proxy.auth = self.auth_chk.GetValue()
-        Config.Proxy.uname = self.uname_box.GetValue()
-        Config.Proxy.passwd = self.passwd_box.GetValue()
+        Config.Proxy.auth_enable = self.auth_chk.GetValue()
+        Config.Proxy.auth_uname = self.uname_box.GetValue()
+        Config.Proxy.auth_passwd = self.passwd_box.GetValue()
 
-        conf.config.set("proxy", "proxy", str(Config.Proxy.proxy))
-        conf.config.set("proxy", "ip", Config.Proxy.ip)
-        conf.config.set("proxy", "port", Config.Proxy.port)
+        conf.config.set("proxy", "proxy", str(Config.Proxy.proxy_enable_status))
+        conf.config.set("proxy", "ip", Config.Proxy.proxy_ip_addr)
+        conf.config.set("proxy", "port", Config.Proxy.proxy_port)
 
-        conf.config.set("proxy", "auth", str(int(Config.Proxy.auth)))
-        conf.config.set("proxy", "uname", Config.Proxy.uname)
-        conf.config.set("proxy", "passwd", Config.Proxy.passwd)
+        conf.config.set("proxy", "auth", str(int(Config.Proxy.auth_enable)))
+        conf.config.set("proxy", "uname", Config.Proxy.auth_uname)
+        conf.config.set("proxy", "passwd", Config.Proxy.auth_passwd)
 
         conf.config_save()
 

@@ -25,10 +25,10 @@ class VideoInfo:
     sections: Dict = {}
 
 class VideoParser:
-    def __init__(self, onError):
-        self.onError = onError
+    def __init__(self):
+        pass
     
-    def get_part(self, url):
+    def get_part(self, url: str):
         part = re.findall(r"p=([0-9]+)", url)
 
         if part:
@@ -38,23 +38,23 @@ class VideoParser:
             self.part = False
 
     @process_exception
-    def get_aid(self, url):
+    def get_aid(self, url: str):
         aid = re.findall(r"av([0-9]+)", url)
 
         if not aid:
             raise URLError()
 
         bvid = convert_to_bvid(int(aid[0]))
-        self.save_bvid(bvid)
+        self.set_bvid(bvid)
 
     @process_exception
-    def get_bvid(self, url):
+    def get_bvid(self, url: str):
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
             raise URLError()
 
-        self.save_bvid(bvid[0])
+        self.set_bvid(bvid[0])
 
     @process_exception
     def get_video_info(self):
@@ -175,9 +175,9 @@ class VideoParser:
                         case 30216:
                             Audio.q_64k = True
 
-            Audio.audio_quality = Config.Download.audio_quality_id
+            Audio.audio_quality_id = Config.Download.audio_quality_id
 
-    def parse_url(self, url):
+    def parse_url(self, url: str):
         # 先检查是否为分 P 视频
         self.get_part(url)
 
@@ -195,10 +195,10 @@ class VideoParser:
 
         self.get_video_resolution()
 
-    def save_bvid(self, bvid):
+    def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 
-    def check_json(self, json):
+    def check_json(self, json: Dict):
         # 检查接口返回状态码
         status_code = json["code"]
         error = ErrorUtils()
@@ -235,4 +235,4 @@ class VideoParser:
 
         # 重置音质信息
         Audio.q_hires = Audio.q_dolby = Audio.q_192k = Audio.q_132k = Audio.q_64k = Audio.audio_only = False
-        Audio.audio_quality = 0
+        Audio.audio_quality_id = 0
