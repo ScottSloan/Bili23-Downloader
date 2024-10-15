@@ -1,5 +1,5 @@
 src/*/__pycache__/
-src/config.ini
+config.ini
 
 # 虚拟环境
 .venv

@@ -220,11 +220,11 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
         conf.config.set("download", "max_thread", str(Config.Download.max_thread_count))
         conf.config.set("download", "max_download", str(Config.Download.max_download_count))
-        conf.config.set("download", "resolution", str(Config.Download.video_quality_id))
-        conf.config.set("download", "sound_quality", str(Config.Download.audio_quality_id))
-        conf.config.set("download", "codec", Config.Download.video_codec)
+        conf.config.set("download", "video_quality", str(Config.Download.video_quality_id))
+        conf.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
+        conf.config.set("download", "video_codec", Config.Download.video_codec)
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
-        conf.config.set("download", "notification", str(int(Config.Download.show_notification)))
+        conf.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
         conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
         conf.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
 
@@ -519,11 +519,11 @@ class ProxyTab(wx.Panel):
         Config.Proxy.auth_uname = self.uname_box.GetValue()
         Config.Proxy.auth_passwd = self.passwd_box.GetValue()
 
-        conf.config.set("proxy", "proxy", str(Config.Proxy.proxy_enable_status))
-        conf.config.set("proxy", "ip", Config.Proxy.proxy_ip_addr)
+        conf.config.set("proxy", "proxy_enable_status", str(Config.Proxy.proxy_enable_status))
+        conf.config.set("proxy", "ip_addr", Config.Proxy.proxy_ip_addr)
         conf.config.set("proxy", "port", Config.Proxy.proxy_port)
 
-        conf.config.set("proxy", "auth", str(int(Config.Proxy.auth_enable)))
+        conf.config.set("proxy", "auth_enable", str(int(Config.Proxy.auth_enable)))
         conf.config.set("proxy", "uname", Config.Proxy.auth_uname)
         conf.config.set("proxy", "passwd", Config.Proxy.auth_passwd)
 
