@@ -26,6 +26,7 @@ class RequestCode:
     ConnectionError = 203                   # ConnectionError
 
 class ErrorCallback:
+    parse_thread_stop_flag: bool = False
     onError = None
 
 class VIPError(Exception):

@@ -7,7 +7,7 @@ from typing import Optional
 from utils.config import Config, Download, Audio, conf
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
-from utils.activity import ActivityInfo, ActivityParser
+from utils.festival import FestivalInfo, FestivalParser
 
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
@@ -196,15 +196,14 @@ class MainWindow(Frame):
         
         self.video_parser = VideoParser()
         self.bangumi_parser = BangumiParser()
-        self.activity_parser = ActivityParser(self.onError)
+        self.activity_parser = FestivalParser(self.onError)
 
         self.download_window = DownloadWindow(self)
 
         self.download_window_opened = False
         self.parse_ready = False
 
-        utils_thread = Thread(target = self.utilsThread)
-        utils_thread.daemon = True
+        utils_thread = Thread(target = self.utilsThread, daemon = True)
 
         utils_thread.start()
 
@@ -278,36 +277,36 @@ class MainWindow(Frame):
                 self.current_parse_type = Config.Type.VIDEO
 
                 self.video_parser.parse_url(url)
+
                 wx.CallAfter(self.setVideoList)
 
-                wx.CallAfter(self.setResolutionList)
+                wx.CallAfter(self.setVideoQualityList)
 
             case "ep" | "ss" | "md":
                 self.current_parse_type = Config.Type.BANGUMI
 
                 self.bangumi_parser.parse_url(url)
+                
                 wx.CallAfter(self.setBangumiList)
 
-                wx.CallAfter(self.setResolutionList)
+                wx.CallAfter(self.setVideoQualityList)
 
             case "b23.tv":
                 new_url = process_shorklink(url)
 
-                self.startNewParseThread((new_url,))
+                self.parseThread(new_url)
 
-                # 抛出异常，终止线程运行
-
-                raise Exception
+                return
 
             case "blackboard" | "festival":
                 self.activity_parser.parse_url(url)
 
-                self.startNewParseThread((ActivityInfo.new_url,))
+                self.parseThread(FestivalInfo.url)
 
-                raise Exception
+                return
 
             case _:
-                self.onError(100)
+                self.onError(ErrorCode.Invalid_URL)
 
         wx.CallAfter(self.onGetFinished)
 
@@ -369,7 +368,7 @@ class MainWindow(Frame):
 
         self.type_lab.SetLabel("")
 
-    def setResolutionList(self):
+    def setVideoQualityList(self):
         if self.current_parse_type == Config.Type.VIDEO:
             video_quality_id_list = VideoInfo.video_quality_id_list
             video_quality_desc_list = VideoInfo.video_quality_desc_list
@@ -423,11 +422,11 @@ class MainWindow(Frame):
                 msg = f"解析失败：{error_info}"
 
             case ErrorCode.VIP_Required:
-                msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号"
+                msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号后再试"
             
                 if self.current_parse_type == Config.Type.BANGUMI:
                     if BangumiInfo.payment:
-                        msg = "解析失败：此视频需要付费购买，请确保已经购买此视频"
+                        msg = "解析失败：此视频需要付费购买，请确保已经购买此视频后再试"
             
             case ErrorCode.Request_Error:
                 msg = f"解析失败：{error_info}"
@@ -444,8 +443,7 @@ class MainWindow(Frame):
 
         self.parse_ready = False
 
-        # 停止解析线程
-        raise Exception()
+        raise Exception
 
     def onLogin(self, event):
         login_window = LoginWindow(self)
@@ -678,7 +676,7 @@ class MainWindow(Frame):
         return circle_image
     
     def startNewParseThread(self, *args):
-        self.parse_thread = Thread(target = self.parseThread, args = args)
+        self.parse_thread = Thread(target = self.parseThread, args = args, daemon = True)
         self.parse_thread.start()
 
     def setMainWindowSize(self):
