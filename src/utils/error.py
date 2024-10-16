@@ -28,6 +28,7 @@ class RequestCode:
 class ErrorCallback:
     parse_thread_stop_flag: bool = False
     onError = None
+    onReadConfigError = None
 
 class VIPError(Exception):
     # 大会员认证异常类
@@ -85,6 +86,17 @@ class ErrorUtils:
             
             case StatusCode.CODE_62012:
                 return "仅 UP 主自己可见"
+            
+def process_read_config_exception(f):
+    @wraps(f)
+    def func(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        
+        except Exception:
+            ErrorCallback.onReadConfigError()
+
+    return func
 
 def process_exception(f):
     @wraps(f)

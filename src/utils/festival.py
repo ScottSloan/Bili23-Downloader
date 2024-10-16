@@ -17,7 +17,7 @@ class FestivalParser:
         aid = re.findall(r'"aid":([0-9]+)', initial_state)
 
         if not aid:
-            self.onError(100)
+            raise URLError()
 
         FestivalInfo.url = f"https://www.bilibili.com/video/{convert_to_bvid(int(aid[0]))}"
 
@@ -57,6 +57,7 @@ class FestivalParser:
             # 解析网页中的json信息
             info_json = json.loads(initial_state)
 
+            # 找到当前视频的 bvid
             bvid = info_json["videoInfo"]["bvid"]
 
             FestivalInfo.url = f"https://www.bilibili.com/video/{bvid}"

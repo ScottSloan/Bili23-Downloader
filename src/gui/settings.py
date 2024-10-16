@@ -412,7 +412,7 @@ class ProxyTab(wx.Panel):
     def init_UI(self):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
 
-        proxy_tip = wx.StaticText(proxy_box, -1, "代理策略")
+        proxy_tip = wx.StaticText(proxy_box, -1, "代理选项")
         
         self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, "不使用代理")
         self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, "跟随系统")

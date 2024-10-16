@@ -3,6 +3,8 @@ import platform
 from configparser import RawConfigParser
 from typing import List
 
+from utils.error import ErrorCallback, process_read_config_exception
+
 class Config:
     class Sys:
         platform: str = platform.system().lower()
@@ -14,7 +16,7 @@ class Config:
         version: str = "1.51.0"
         version_code: int = 1510
 
-        release_date: str = "2024/10/15"
+        release_date: str = "2024/10/16"
 
     class Proxy:
         proxy_enable_status: int = 1
@@ -115,6 +117,14 @@ class ConfigUtils:
     def __init__(self):
         self.path = os.path.join(os.getcwd(), "config.ini")
 
+        ErrorCallback.onReadConfigError = self.onError
+
+        if Config.Sys.platform == "windows":
+            # Windows 环境下，启用高 DPI 适配
+            import ctypes
+
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
         # 检查配置文件是否存在
         if not os.path.exists(self.path):
             self.create_config_ini()
@@ -126,6 +136,24 @@ class ConfigUtils:
         self.create_download_directory()
 
         self.init_ffmpeg()    
+
+    def onError(self):
+        # 弹出信息框提示
+        import wx
+
+        app = wx.App()
+
+        dlg = wx.MessageDialog(None, "配置文件不兼容\n\n配置文件较旧，不兼容当前版本，继续使用将覆盖旧文件，是否继续？", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+            os.remove(self.path)
+
+            self.__init__()
+
+        else:
+            wx.Exit()
+
+        app.MainLoop()
 
     def init_ffmpeg(self):
         from utils.tools import check_ffmpeg_available
@@ -144,6 +172,7 @@ class ConfigUtils:
 
         Config.User.face_path = os.path.join(Config.User.base_path, "face.jpg")
 
+    @process_read_config_exception
     def load_config(self):
         self.config = RawConfigParser()
         self.config.read(self.path, encoding = "utf-8")
