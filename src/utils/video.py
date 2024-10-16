@@ -74,7 +74,7 @@ class VideoParser:
         VideoInfo.pages_list = info["pages"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
-        if Config.Misc.show_episodes == Config.Type.EPISODES_SINGLE:
+        if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
             if hasattr(self, "part_num"):
                 VideoInfo.cid = VideoInfo.pages_list[self.part_num - 1]["cid"]
             else:
@@ -82,7 +82,7 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
-        match Config.Misc.show_episodes:
+        match Config.Misc.episode_display_mode:
             case Config.Type.EPISODES_SINGLE:
                 # 解析单个视频
 

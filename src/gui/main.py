@@ -201,7 +201,8 @@ class MainWindow(Frame):
         self.download_window = DownloadWindow(self)
 
         self.download_window_opened = False
-        self.parse_ready = False
+        # 解析完成标识符
+        self.parse_finish_flag = False
 
         utils_thread = Thread(target = self.utilsThread, daemon = True)
 
@@ -267,13 +268,14 @@ class MainWindow(Frame):
         self.parse_thread = Thread(target = self.parseThread, args = (url, ))
         self.parse_thread.start()
 
-        self.parse_ready = True
+        self.parse_finish_flag = False
 
     def parseThread(self, url: str):
         Download.download_list.clear()
 
         match find_str(r"av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
             case "av" | "BV":
+                # 用户投稿视频
                 self.current_parse_type = Config.Type.VIDEO
 
                 self.video_parser.parse_url(url)
@@ -283,6 +285,7 @@ class MainWindow(Frame):
                 wx.CallAfter(self.setVideoQualityList)
 
             case "ep" | "ss" | "md":
+                # 番组
                 self.current_parse_type = Config.Type.BANGUMI
 
                 self.bangumi_parser.parse_url(url)
@@ -292,6 +295,7 @@ class MainWindow(Frame):
                 wx.CallAfter(self.setVideoQualityList)
 
             case "b23.tv":
+                # 短链接
                 new_url = process_shorklink(url)
 
                 self.parseThread(new_url)
@@ -299,6 +303,7 @@ class MainWindow(Frame):
                 return
 
             case "blackboard" | "festival":
+                # 活动页链接
                 self.activity_parser.parse_url(url)
 
                 self.parseThread(FestivalInfo.url)
@@ -311,6 +316,8 @@ class MainWindow(Frame):
         wx.CallAfter(self.onGetFinished)
 
     def onGetFinished(self):
+        self.parse_finish_flag = True
+
         self.processing_window.Hide()
 
         self.download_btn.Enable(True)
@@ -441,7 +448,7 @@ class MainWindow(Frame):
 
         wx.CallAfter(self.SetFocus)
 
-        self.parse_ready = False
+        self.parse_finish_flag = False
 
         raise Exception
 
@@ -509,7 +516,7 @@ class MainWindow(Frame):
         wx.CallAfter(self.checkUpdateManuallyThread)
 
     def onAudioDetail(self, event):
-        if not self.parse_ready:
+        if not self.parse_finish_flag:
             return
         
         self.showAudioQualityMenu()

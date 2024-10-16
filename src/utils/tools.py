@@ -36,7 +36,7 @@ def get_header(referer_url: Optional[str] = None, cookie: Optional[str] = None, 
     return header
 
 def get_proxy():
-    match Config.Proxy.proxy_enable_status:
+    match Config.Proxy.proxy_mode:
         case Config.Type.PROXY_DISABLE:
             return {}
         

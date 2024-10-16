@@ -209,9 +209,9 @@ class DownloadTab(wx.Panel):
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
-        Config.Download.video_quality_id = list(video_quality_mapping.values())[self.video_quality_choice.GetSelection()]
-        Config.Download.audio_quality_id = list(audio_quality_mapping.values())[self.audio_quality_choice.GetSelection()]
-        Config.Download.video_codec = list(video_codec_mapping.keys())[self.codec_choice.GetSelection()]
+        Config.Download.video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
+        Config.Download.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
+        Config.Download.video_codec = video_codec_mapping[self.codec_choice.GetStringSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
         Config.Download.speed_limit = self.speed_limit_chk.GetValue()
@@ -474,7 +474,7 @@ class ProxyTab(wx.Panel):
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestEVT)
 
     def init_data(self):
-        match Config.Proxy.proxy_enable_status:
+        match Config.Proxy.proxy_mode:
             case Config.Type.PROXY_DISABLE:
                 self.proxy_disable_radio.SetValue(True)
 
@@ -510,7 +510,7 @@ class ProxyTab(wx.Panel):
         else:
             proxy = Config.Type.PROXY_MANUAL
 
-        Config.Proxy.proxy_enable_status = proxy
+        Config.Proxy.proxy_mode = proxy
 
         Config.Proxy.proxy_ip_addr = self.ip_box.GetValue()
         Config.Proxy.proxy_port = self.port_box.GetValue()
@@ -519,7 +519,7 @@ class ProxyTab(wx.Panel):
         Config.Proxy.auth_uname = self.uname_box.GetValue()
         Config.Proxy.auth_passwd = self.passwd_box.GetValue()
 
-        conf.config.set("proxy", "proxy_enable_status", str(Config.Proxy.proxy_enable_status))
+        conf.config.set("proxy", "proxy_mode", str(Config.Proxy.proxy_mode))
         conf.config.set("proxy", "ip_addr", Config.Proxy.proxy_ip_addr)
         conf.config.set("proxy", "port", Config.Proxy.proxy_port)
 
@@ -661,7 +661,7 @@ class MiscTab(wx.Panel):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.browse_btn_EVT)
 
     def init_data(self):
-        match Config.Misc.show_episodes:
+        match Config.Misc.episode_display_mode:
             case 0:
                 self.episodes_single_choice.SetValue(True)
             case 1:
@@ -676,11 +676,11 @@ class MiscTab(wx.Panel):
 
     def save(self):
         if self.episodes_single_choice.GetValue():
-            Config.Misc.show_episodes = 0
+            Config.Misc.episode_display_mode = 0
         elif self.episodes_multiple_choice.GetValue():
-            Config.Misc.show_episodes = 1
+            Config.Misc.episode_display_mode = 1
         elif self.episodes_all_choice.GetValue():
-            Config.Misc.show_episodes = 2
+            Config.Misc.episode_display_mode = 2
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.path_box.GetValue()
@@ -688,7 +688,7 @@ class MiscTab(wx.Panel):
         Config.Misc.debug = self.debug_chk.GetValue()
 
         conf.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
-        conf.config.set("misc", "show_episodes", str(int(Config.Misc.show_episodes)))
+        conf.config.set("misc", "episode_display_mode", str(int(Config.Misc.episode_display_mode)))
         conf.config.set("misc", "player_path", Config.Misc.player_path)
         conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
         conf.config.set("misc", "debug", str(int(Config.Misc.debug)))

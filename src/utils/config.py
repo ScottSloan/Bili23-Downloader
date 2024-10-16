@@ -19,7 +19,7 @@ class Config:
         release_date: str = "2024/10/16"
 
     class Proxy:
-        proxy_enable_status: int = 1
+        proxy_mode: int = 1
         auth_enable: bool = False
 
         proxy_ip_addr: str = ""
@@ -38,7 +38,7 @@ class Config:
         sessdata: str = ""
 
     class Misc:
-        show_episodes: int = 1
+        episode_display_mode: int = 1
 
         auto_select: bool = False
         debug: bool = False
@@ -69,6 +69,8 @@ class Config:
     class Type:
         VIDEO: int = 1                               # 用户投稿视频
         BANGUMI: int = 2                             # 番组
+        MUSIC: int = 3                               # 音乐 TODO
+        LIVE: int = 4                                # 直播 TODO
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
@@ -205,7 +207,7 @@ class ConfigUtils:
         Config.User.sessdata = self.user_config.get("user", "sessdata")
 
         # proxy
-        Config.Proxy.proxy_enable_status = self.config.getint("proxy", "proxy_enable_status")
+        Config.Proxy.proxy_mode = self.config.getint("proxy", "proxy_mode")
         Config.Proxy.proxy_ip_addr = self.config.get("proxy", "ip_addr")
         Config.Proxy.proxy_port = self.config.get("proxy", "port")
 
@@ -214,7 +216,7 @@ class ConfigUtils:
         Config.Proxy.auth_passwd = self.config.get("proxy", "passwd")
 
         # misc
-        Config.Misc.show_episodes = self.config.getint("misc", "show_episodes")
+        Config.Misc.episode_display_mode = self.config.getint("misc", "episode_display_mode")
         Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
@@ -257,9 +259,9 @@ class ConfigUtils:
 
         # proxy
         self.config.add_section("proxy")
-        self.config.set("proxy", "proxy_enable_status", str(Config.Proxy.proxy_enable_status))
+        self.config.set("proxy", "proxy_mode", str(Config.Proxy.proxy_mode))
         self.config.set("proxy", "ip_addr", Config.Proxy.proxy_ip_addr)
-        self.config.set("proxy", "port", str(Config.Proxy.proxy_port))
+        self.config.set("proxy", "port", "")
 
         self.config.set("proxy", "auth_enable", str(int(Config.Proxy.auth_enable)))
         self.config.set("proxy", "uname", Config.Proxy.auth_uname)
@@ -267,7 +269,7 @@ class ConfigUtils:
 
         # misc
         self.config.add_section("misc")
-        self.config.set("misc", "show_episodes", str(Config.Misc.show_episodes))
+        self.config.set("misc", "episode_display_mode", str(Config.Misc.episode_display_mode))
         self.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
         self.config.set("misc", "player_path", Config.Misc.player_path)
         self.config.set("misc", "check_update", str(int(Config.Misc.check_update)))

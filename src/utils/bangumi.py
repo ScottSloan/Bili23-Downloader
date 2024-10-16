@@ -95,7 +95,7 @@ class BangumiParser:
         BangumiInfo.type_id = info_result["type"]
 
         # 剧集列表解析方式
-        match Config.Misc.show_episodes:
+        match Config.Misc.episode_display_mode:
             case Config.Type.EPISODES_SINGLE:
                 # 解析单个视频
 
