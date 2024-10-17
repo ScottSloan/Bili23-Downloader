@@ -43,18 +43,20 @@ class DownloadUtils:
             else:
                 self.video_quality_id = self.info["video_quality"]
 
-        temp_video_durl = [i for i in json_dash["video"] if i["id"] == self.video_quality_id]
+        # 获取选定清晰度的视频列表，包含多种清晰度
+        temp_video_durl_list = [i for i in json_dash["video"] if i["id"] == self.video_quality_id]
 
         self.video_codec_id = Config.Download.video_codec
 
-        resp = self.hasCodec(temp_video_durl, self.video_codec_id)
+        codec_index = self.getAvailableVideoCodecIndex(temp_video_durl_list)
 
-        # 判断视频是否支持多种编码
-        if resp["result"]:
-            durl_json = temp_video_durl[resp['index']]
+        # 判断视频支持选定的编码
+        if codec_index is not None:
+            durl_json = temp_video_durl_list[codec_index]
 
         else:
-            durl_json = temp_video_durl[0]
+            # 不支持选定编码，自动切换到 H264
+            durl_json = temp_video_durl_list[0]
             self.video_codec_id = 7
 
         self.video_durl = {"backupUrl": durl_json["backupUrl"][0], "base_url": durl_json["base_url"]}
@@ -269,19 +271,6 @@ class DownloadUtils:
 
         self.merge_error = True
 
-    def hasCodec(self, video_durl: List[dict], video_codec_id: int):
-        for index, entry in enumerate(video_durl):
-            if entry["codecid"] == video_codec_id:
-                return {
-                    "result": True,
-                    "index": index
-                }
-        
-        return {
-            "result": False,
-            "index": None
-        }
-
     def getHighestVideoQuality(self, data):
         # 默认为 360P
         highest_video_quality_id = 16
@@ -303,8 +292,10 @@ class DownloadUtils:
         
         return highest_audio_quality
 
-    def getAvailableVideoCodec(self, data):
-        pass
+    def getAvailableVideoCodecIndex(self, data):
+        for index, entry in enumerate(data):
+            if entry["codecid"] == self.video_codec_id:
+                return index
 
 class DownloadWindow(Frame):
     def __init__(self, parent):

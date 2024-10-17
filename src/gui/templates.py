@@ -167,7 +167,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         Download.download_list.append(self.format_info_entry(Config.Type.VIDEO, title, pic, bvid, cid))
     
-    def get_bangumi_download_info(self: str, parent: str, index: int):
+    def get_bangumi_download_info(self, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
 
         title = info_entry["share_copy"] if BangumiInfo.type_id != 2 else format_bangumi_title(info_entry)
