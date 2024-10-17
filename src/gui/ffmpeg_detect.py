@@ -1,6 +1,7 @@
 import wx
 
-from utils.tools import *
+from utils.tools import get_ffmpeg_cwd_path, get_ffmpeg_env_path
+from utils.config import Config
 
 class DetectDialog(wx.Dialog):
     def __init__(self, parent):

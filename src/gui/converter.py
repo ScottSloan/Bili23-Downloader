@@ -4,15 +4,13 @@ import os
 import time
 import subprocess
 
-from gui.templates import Frame
-
-from utils.tools import target_codec_map, gpu_map
 from utils.config import Config
-from threading import Thread
+from utils.thread import Thread
+from utils.mapping import video_codec_mapping, supported_gpu_mapping
 
-class ConverterWindow(Frame):
+class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "格式转换", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
+        wx.Dialog.__init__(self, parent, -1, "格式转换", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
 
         self.init_UI()
 
@@ -44,7 +42,7 @@ class ConverterWindow(Frame):
         self.target_format_lab = wx.StaticText(self, -1, "目标格式：---")
 
         target_codec_lab = wx.StaticText(self, -1, "编码器")
-        self.target_codec_choice = wx.Choice(self, -1, choices = list(target_codec_map.keys()))
+        self.target_codec_choice = wx.Choice(self, -1, choices = list(video_codec_mapping.keys()))
 
         target_bitrate_lab = wx.StaticText(self, -1, "比特率")
         self.target_bitrate_box = wx.TextCtrl(self, -1, "1500")
@@ -52,16 +50,17 @@ class ConverterWindow(Frame):
 
         target_params_hbox = wx.BoxSizer(wx.HORIZONTAL)
         target_params_hbox.Add(self.target_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        target_params_hbox.AddSpacer(20)
         target_params_hbox.Add(target_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         target_params_hbox.Add(self.target_codec_choice, 0, wx.ALL & (~wx.LEFT), 10)
         target_params_hbox.Add(target_bitrate_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT), 10)
         target_params_hbox.Add(target_bitrate_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.hwaccel_chk = wx.CheckBox(self, -1, "启用 GPU 加速")
+        self.hwaccel_chk = wx.CheckBox(self, -1, "启用硬件加速")
 
         gpu_lab = wx.StaticText(self, -1, "GPU")
-        self.gpu_choice = wx.Choice(self, -1, choices = list(gpu_map.keys()))
+        self.gpu_choice = wx.Choice(self, -1, choices = self.getGPUList())
 
         extra_hbox = wx.BoxSizer(wx.HORIZONTAL)
         extra_hbox.Add(self.hwaccel_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -89,8 +88,6 @@ class ConverterWindow(Frame):
         vbox.Add(self.start_btn, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(wx.Colour(240, 240, 240))
 
     def Bind_EVT(self):
         self.start_btn.Bind(wx.EVT_BUTTON, self.onStart)
@@ -125,8 +122,6 @@ class ConverterWindow(Frame):
             return
 
         convert_thread = Thread(target = self.startConvert)
-        convert_thread.setDaemon(True)
-
         convert_thread.start()
 
         self.setStatus(True)
@@ -234,24 +229,39 @@ class ConverterWindow(Frame):
             os.startfile(os.path.dirname(self.output_box.GetValue()))
 
     def getEncoder(self):
-        if self.hwaccel_chk.GetValue():
-            match self.gpu_choice.GetSelection():
-                case 0:
-                    return self.getNVAccels()
-                case 1:
-                    return self.getAMDAaccels()
-                case 2:
-                    return self.getINTELAccels()
-        else:
-            match self.target_codec_choice.GetSelection():
-                case 0:
-                    return "libx264"
-                
-                case 1:
-                    return "libx265"
-                
-                case 2:
-                    return "libaom-av1"
+        match Config.Sys.platform:
+            case "windows" | "linux":
+                if self.hwaccel_chk.GetValue():
+                    match self.gpu_choice.GetSelection():
+                        case 0:
+                            return self.getNVAccels()
+                        case 1:
+                            return self.getAMDAaccels()
+                        case 2:
+                            return self.getINTELAccels()
+                else:
+                    match self.target_codec_choice.GetSelection():
+                        case 0:
+                            return "libx264"
+                        
+                        case 1:
+                            return "libx265"
+                        
+                        case 2:
+                            return "libaom-av1"
+            case "darwin":
+                if self.hwaccel_chk.GetValue():
+                    return self.getMACAccels()
+                else:
+                    match self.target_codec_choice.GetSelection():
+                        case 0:
+                            return "libx264"
+                        
+                        case 1:
+                            return "libx265"
+                        
+                        case 2:
+                            return "libaom-av1"
 
     def getNVAccels(self):
         match self.target_codec_choice.GetSelection():
@@ -285,6 +295,17 @@ class ConverterWindow(Frame):
 
             case 2:
                 return "av1_qsv"
+    
+    def getMACAccels(self):
+        match self.target_codec_choice.GetSelection():
+            case 0:
+                return "h264_videotoolbox"
+            
+            case 1:
+                return "hevc_videotoolbox"
+
+            case 2:
+                return ""
             
     def setStatus(self, status):
         if status:
@@ -306,3 +327,12 @@ class ConverterWindow(Frame):
         new_filename.insert(filename.rfind("."), "_out")
 
         return "".join(new_filename)
+    
+    def getGPUList(self):
+        match Config.Sys.platform:
+            case "windows" | "linux":
+                return list(supported_gpu_mapping.keys())
+            
+            case "darwin":
+                return ["VideoToolBox"]
+    

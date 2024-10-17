@@ -1,6 +1,7 @@
 import wx
 
 from utils.config import Config
+from utils.tools import get_background_color
 
 class UpdateWindow(wx.Dialog):
     def __init__(self, parent):
@@ -54,7 +55,7 @@ class UpdateWindow(wx.Dialog):
 
         self.SetSizerAndFit(update_vbox)
 
-        self.SetBackgroundColour("white")
+        self.SetBackgroundColour(get_background_color())
     
     def Bind_EVT(self):
         self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)

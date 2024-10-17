@@ -1,7 +1,8 @@
 import json
 import requests
 
-from utils.tools import *
+from utils.tools import get_header, get_auth, get_proxy
+from utils.config import Config
 
 class CookieUtils:
     def checkCookieInfo():

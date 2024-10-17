@@ -1,7 +1,7 @@
 import wx
 import wx.adv
 
-from utils.tools import save_log
+from utils.tools import save_log, get_background_color
 
 class ShowErrorDialog(wx.Dialog):
     def __init__(self, parent, log):
@@ -53,7 +53,7 @@ class ShowErrorDialog(wx.Dialog):
 
         self.SetSizerAndFit(vbox)
 
-        self.SetBackgroundColour("white")
+        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.copy_btn.Bind(wx.EVT_BUTTON, self.onSave)
