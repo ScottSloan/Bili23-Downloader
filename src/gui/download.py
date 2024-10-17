@@ -17,7 +17,7 @@ from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
 
 class DownloadInfo:
     download_list: Dict = {}
@@ -664,19 +664,19 @@ class DownloadItemPanel(wx.Panel):
         self.title_lab = wx.StaticText(self, -1, self.info["title"], size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
         self.title_lab.SetToolTip(self.info["title"])
 
-        self.video_quality_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((90, 17)))
+        self.video_quality_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
         self.video_quality_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        self.video_codec_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((90, 17)))
+        self.video_codec_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
         self.video_codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
         
-        self.video_size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((120, 17)))
+        self.video_size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
         self.video_size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        video_info_hbox.Add(self.video_quality_lab, 0, wx.ALL & (~wx.TOP), 10)
-        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP), 10)
-        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP), 10)
+        video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
         info_vbox.AddSpacer(5)
@@ -685,16 +685,22 @@ class DownloadItemPanel(wx.Panel):
         info_vbox.Add(video_info_hbox, 0, wx.EXPAND)
         info_vbox.AddSpacer(5)
 
-        self.gauge = wx.Gauge(self, -1, 100, size = self.getGaugeSize())
+        self.gauge = wx.Gauge(self, -1, 100, size = self.getGaugeSize(), style = wx.GA_SMOOTH)
 
-        self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((150, 17)))
+        gauge_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        gauge_hbox.Add(self.gauge, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+
+        self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((-1, -1)))
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+
+        speed_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
 
         gauge_vbox = wx.BoxSizer(wx.VERTICAL)
         gauge_vbox.AddSpacer(5)
-        gauge_vbox.Add(self.gauge, 0, wx.ALL | wx.EXPAND, 10)
+        gauge_vbox.Add(gauge_hbox, 0, wx.EXPAND)
         gauge_vbox.AddStretchSpacer()
-        gauge_vbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP), 10)
+        gauge_vbox.Add(speed_hbox, 0, wx.EXPAND)
         gauge_vbox.AddSpacer(5)
 
         pause_image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
@@ -707,10 +713,10 @@ class DownloadItemPanel(wx.Panel):
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
         panel_hbox.Add(self.cover, 0, wx.ALL, 10)
-        panel_hbox.Add(info_vbox, 10, wx.EXPAND)
+        panel_hbox.Add(info_vbox, 0, wx.EXPAND)
         panel_hbox.AddStretchSpacer(1)
         panel_hbox.Add(gauge_vbox, 0, wx.EXPAND)
-        panel_hbox.AddSpacer(10)
+        panel_hbox.AddSpacer(20)
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.AddSpacer(10)
@@ -732,8 +738,6 @@ class DownloadItemPanel(wx.Panel):
 
     def getCover(self):
         req = requests.get(self.info["pic"], headers = get_header(), proxies = get_proxy(), auth = get_auth())
-
-        wx.Image.SetDefaultLoadFlags(0) # 避免出现 iCCP sRGB 警告
 
         scale_size = self.FromDIP((112, 63))
 
@@ -797,33 +801,35 @@ class DownloadItemPanel(wx.Panel):
     def onStart(self):
         # 开始下载，更新下载信息
         self.total_size = format_size(self.downloader.total_size / 1024)
-
         self.info["total_size"] = self.downloader.total_size
 
+        # 加入全角空格，解决 Linux 汉字和英文字符高度不统一的问题
         self.speed_lab.SetLabel("")
-        self.video_size_lab.SetLabel("0 MB/{}".format(self.total_size))
+        self.video_size_lab.SetLabel(f"0 MB/{self.total_size}")
 
         video_quality_dict = dict(map(reversed, video_quality_mapping.items()))
-        codec_dict = {7: "AVC/H.264", 12: "HEVC/H.265", 13: "AVC"}
-        audio_dict = {value: key for key, value in audio_quality_mapping.items()}
+        audio_quality_dict = dict(map(reversed, audio_quality_mapping.items()))
+        video_codec_dict = dict(map(reversed, video_codec_mapping.items()))
 
         match self.utils.merge_type:
             case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
                 self.video_quality_lab.SetLabel(video_quality_dict[self.utils.video_quality_id])
-                self.video_codec_lab.SetLabel(codec_dict[self.utils.video_codec_id])
+                self.video_codec_lab.SetLabel(video_codec_dict[self.utils.video_codec_id])
+
             case Config.Type.MERGE_TYPE_AUDIO:
                 self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(audio_dict[self.utils.audio_quality])
+                self.video_codec_lab.SetLabel(audio_quality_dict[self.utils.audio_quality])
 
         self.updatePauseBtn("downloading")
 
         self.Layout()
 
+        # 写入文件，记录下载信息
         base_info = {
             "complete": None,
             "size": self.total_size,
             "video_quality": video_quality_dict[self.utils.video_quality_id],
-            "video_codec": codec_dict[self.utils.video_codec_id]
+            "video_codec": video_codec_dict[self.utils.video_codec_id]
         }
 
         self.downloader.download_info.update_base_info(base_info)
@@ -833,6 +839,7 @@ class DownloadItemPanel(wx.Panel):
         # 更新下载进度
         if self.info["status"] == "downloading":
             self.gauge.SetValue(info["progress"])
+
             self.speed_lab.SetLabel(info["speed"])
             self.video_size_lab.SetLabel(info["size"])
 

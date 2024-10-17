@@ -96,7 +96,7 @@ class Downloader:
         self.listen_thread.start()
 
         # 回调 onStart，UI 更新下载信息
-        self.onStart()
+        wx.CallAfter(self.onStart)
 
     def restart(self):
         # 重置停止线程标志位

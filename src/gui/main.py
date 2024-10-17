@@ -48,6 +48,9 @@ class MainWindow(Frame):
         if Config.Sys.platform == "darwin":
             Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
 
+        # 避免出现 iCCP sRGB 警告
+        wx.Image.SetDefaultLoadFlags(0)
+
         self.init_ids()
 
         self.infobar = InfoBar(self.panel)
