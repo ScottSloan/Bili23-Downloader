@@ -113,7 +113,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     self.get_video_download_info(item_title, parent, int(text))
 
                 elif Download.current_parse_type == Config.Type.BANGUMI:
-                    self.get_bangumi_download_info(item_title, parent, int(text))
+                    self.get_bangumi_download_info(parent, int(text))
     
     def format_info_entry(self, type: int, title: str, pic: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
         return {
@@ -131,10 +131,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "completed_size": None,
             "progress": 0,
             "status": "wait",
-            "resolution": self.video_quality_id if self.video_quality_id else None,
+            "video_quality": self.video_quality_id if self.video_quality_id else None,
             "audio_quality": Audio.audio_quality_id,
             "audio_only": Audio.audio_only,
-            "codec": None,
+            "video_codec": None,
             "download_complete": False, # 下载完成标识
             "flag": False,
             "merge_type": 0, # 视频合成类型
@@ -175,7 +175,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         bvid = info_entry["bvid"]
         cid = info_entry["cid"]
 
-        Download.download_list.append(info_entry = self.format_info_entry(Config.Type.BANGUMI, title, pic, bvid, cid))
+        Download.download_list.append(self.format_info_entry(Config.Type.BANGUMI, title, pic, bvid, cid))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):

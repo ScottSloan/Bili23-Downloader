@@ -138,7 +138,7 @@ class VideoParser:
                     self.parse_pages()
 
     @process_exception
-    def get_video_resolution(self):
+    def get_video_available_media_info(self):
         # 获取视频清晰度
         url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
                 
@@ -193,7 +193,7 @@ class VideoParser:
 
         self.get_video_info()
 
-        self.get_video_resolution()
+        self.get_video_available_media_info()
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"

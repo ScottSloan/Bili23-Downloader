@@ -62,19 +62,19 @@ class MainWindow(Frame):
         url_hbox.Add(self.url_box, 1, wx.EXPAND | wx.ALL & (~wx.LEFT), 10)
         url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        resolution_lab = wx.StaticText(self.panel, -1, "清晰度")
+        video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
         self.audio_btn = wx.Button(self.panel, -1, "...", size = (self.video_quality_choice.GetSize()[1], self.video_quality_choice.GetSize()[1]))
 
-        resolution_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
-        resolution_hbox.AddStretchSpacer()
-        resolution_hbox.Add(resolution_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
-        resolution_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
-        resolution_hbox.Add(self.audio_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.AddStretchSpacer()
+        video_info_hbox.Add(video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.audio_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
@@ -103,7 +103,7 @@ class MainWindow(Frame):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(url_hbox, 0, wx.EXPAND)
-        vbox.Add(resolution_hbox, 0, wx.EXPAND)
+        vbox.Add(video_info_hbox, 0, wx.EXPAND)
         vbox.Add(self.treelist, 1, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, 10)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
@@ -167,7 +167,7 @@ class MainWindow(Frame):
         self.get_btn.Bind(wx.EVT_BUTTON, self.onGet)
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgr)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownload)
-        self.audio_btn.Bind(wx.EVT_BUTTON, self.onAudioDetail)
+        self.audio_btn.Bind(wx.EVT_BUTTON, self.onShowAudioMenu)
 
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
@@ -271,6 +271,7 @@ class MainWindow(Frame):
         self.parse_finish_flag = False
 
     def parseThread(self, url: str):
+        # 清除下载列表
         Download.download_list.clear()
 
         match find_str(r"av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
@@ -327,6 +328,7 @@ class MainWindow(Frame):
     def onDownload(self, event):
         video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
 
+        # 获取要下载的视频列表
         self.treelist.get_all_selected_item(video_quality_id)
 
         if not len(Download.download_list):
@@ -515,11 +517,10 @@ class MainWindow(Frame):
     def onCheckUpdate(self, event):
         wx.CallAfter(self.checkUpdateManuallyThread)
 
-    def onAudioDetail(self, event):
-        if not self.parse_finish_flag:
-            return
-        
-        self.showAudioQualityMenu()
+    def onShowAudioMenu(self, event):
+        # 只有解析成功才会显示音频菜单
+        if self.parse_finish_flag:
+            self.showAudioQualityMenu()
 
     def onChangeAudioQuality(self, event):
         match event.GetId():

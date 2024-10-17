@@ -21,8 +21,8 @@ class AboutWindow(wx.Dialog):
         wx.Bell()
     
     def init_UI(self):
-        image = wx.Image(io.BytesIO(getAppIcon()), wx.BITMAP_TYPE_JPEG)
-        logo = wx.StaticBitmap(self, -1, image.ConvertToBitmap())
+        app_icon = wx.Image(io.BytesIO(getAppIcon()), wx.BITMAP_TYPE_JPEG)
+        logo = wx.StaticBitmap(self, -1, app_icon.ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
         font.SetPointSize(10)

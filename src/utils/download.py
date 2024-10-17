@@ -21,7 +21,7 @@ class Downloader:
         self.completed_size = 0
 
         # 创建监听线程
-        self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
+        self.listen_thread = Thread(target = self.onListen, name = "ListenThread", daemon = True)
 
         # 创建持久化 Session
         self.session = requests.Session()
@@ -342,9 +342,9 @@ class DownloaderInfo:
 
         if f"{self.id}" in contents:
             contents[f"{self.id}"]["base_info"]["size"] = base_info["size"]
-            contents[f"{self.id}"]["base_info"]["codec"] = base_info["codec"]
+            contents[f"{self.id}"]["base_info"]["video_codec"] = base_info["video_codec"]
             contents[f"{self.id}"]["base_info"]["complete"] = base_info["complete"]
-            contents[f"{self.id}"]["base_info"]["resolution"] = base_info["resolution"]
+            contents[f"{self.id}"]["base_info"]["video_quality"] = base_info["video_quality"]
             
             self.write(contents)
 

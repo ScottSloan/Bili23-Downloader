@@ -174,7 +174,7 @@ class BangumiParser:
         self.get_bangumi_type()
     
     @process_exception
-    def get_bangumi_resolution(self):
+    def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
         req = requests.get(url, headers = get_header(referer_url= "https://www.bilibili.com", cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
@@ -247,7 +247,7 @@ class BangumiParser:
         self.check_bangumi_can_play()
 
         self.get_bangumi_info()
-        self.get_bangumi_resolution()
+        self.get_bangumi_available_media_info()
     
     def check_json(self, json: Dict):
         # 检查接口返回状态码
