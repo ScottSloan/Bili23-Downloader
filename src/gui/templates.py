@@ -9,6 +9,7 @@ from utils.tools import format_duration, format_bangumi_title, get_new_id, get_l
 from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
+from utils.live import LiveInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -88,6 +89,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.parent_items.append(key)
 
         self.set_list(bangumi_list)
+
+    def set_live_list(self):
+        live_list = {}
+        
+        live_list["直播"] = [["1", LiveInfo.title, "", "--:--"]]
+        self.parent_items.append("直播")
+
+        self.set_list(live_list)
 
     def onCheckItem(self, event):
         item = event.GetItem()
