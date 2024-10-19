@@ -30,6 +30,9 @@ class DownloadUtils:
     def getVideoDurl(self):
         json_dash = self.getVideoDurlJson()
 
+        # with open("video.json", "w", encoding = "utf-8") as f:
+        #     f.write(json.dumps(json_dash, ensure_ascii = True))
+
         # 获取视频最高清晰度
         highest_video_quality_id = self.getHighestVideoQuality(json_dash["video"])
 
@@ -48,7 +51,7 @@ class DownloadUtils:
 
         self.video_codec_id = Config.Download.video_codec
 
-        codec_index = self.getAvailableVideoCodecIndex(temp_video_durl_list)
+        codec_index = self.getVideoAvailableCodecIndex(temp_video_durl_list)
 
         # 判断视频支持选定的编码
         if codec_index is not None:
@@ -59,7 +62,7 @@ class DownloadUtils:
             durl_json = temp_video_durl_list[0]
             self.video_codec_id = 7
 
-        self.video_durl = {"backupUrl": durl_json["backupUrl"][0], "base_url": durl_json["base_url"]}
+        self.video_durl_list = self.getAvailableDurlList(durl_json)
 
         if self.info["audio_only"]:
             self.merge_type = Config.Type.MERGE_TYPE_AUDIO # 仅下载音频
@@ -80,11 +83,7 @@ class DownloadUtils:
                                     # 无损
                                     audio_node = json_dash["flac"]["audio"]
 
-                                    # 因为下面已经做了全部 Exception 拦截，这里就不做额外检查了
-                                    self.audio_durl = {
-                                        "backupUrl": audio_node.get("backupUrl", audio_node["backup_url"])[0],
-                                        "base_url": audio_node.get("base_url", audio_node["baseUrl"]),
-                                    }
+                                    self.audio_durl = self.getAvailableDurlList(audio_node)
 
                                     self.audio_type = "flac"
                                     self.audio_quality = 30251
@@ -96,11 +95,7 @@ class DownloadUtils:
                                     # 杜比全景声
                                     audio_node = self.audio_durl = json_dash["dolby"]["audio"][0]
 
-                                    # 因为下面已经做了全部 Exception 拦截，这里就不做额外检查了
-                                    self.audio_durl = {
-                                        "backupUrl": audio_node.get("backupUrl", audio_node["backup_url"])[0],
-                                        "base_url": audio_node.get("base_url", audio_node["baseUrl"]),
-                                    }
+                                    self.audio_durl = self.getAvailableDurlList(audio_node)
 
                                     self.audio_type = "ec3"
                                     self.audio_quality = 30250
@@ -116,7 +111,7 @@ class DownloadUtils:
         # 更新 info 中的 merge_type
         self.info["merge_type"] = self.merge_type
 
-    def getVideoDurlJson(self):
+    def getVideoDurlJson(self) -> Dict:
         try:
             match self.info["type"]:
                 case Config.Type.VIDEO:
@@ -151,10 +146,7 @@ class DownloadUtils:
 
         temp_audio_durl = [i for i in data if i["id"] == audio_quality]
 
-        self.audio_durl = {
-            "backupUrl": temp_audio_durl[0]["backupUrl"][0],
-            "base_url": temp_audio_durl[0]["base_url"],
-        }
+        self.audio_durl = self.getAvailableDurlList(temp_audio_durl[0])
 
         self.audio_type = "mp3"
         self.audio_quality = audio_quality
@@ -189,7 +181,7 @@ class DownloadUtils:
         return {
             "id": self.info["id"],
             "type": "video",
-            "url": self.video_durl, # 字典，含 base_url 和 backupurl
+            "url": self.video_durl_list, # 包含下载链接的列表，后续将遍历其可用性
             "referer_url": self.info["url"],
             "file_name": "video_{}.mp4".format(self.info["id"]),
             "chunk_list": []
@@ -200,18 +192,27 @@ class DownloadUtils:
         return {
                 "id": self.info["id"],
                 "type": "audio",
-                # 向前兼容，返回前判断是字典类型还是字符串类型。
-                # 防止有未更新的代码传递了旧版本的字符串。
-                # 此处应优先传递字典，包含 backUrl 和 base_url。
-                "url": (
-                    self.audio_durl
-                    if isinstance(self.audio_durl, dict)
-                    else {"backupUrl": self.audio_durl}
-                ),
+                "url": self.audio_durl,
                 "referer_url": self.info["url"],
                 "file_name": "audio_{}.{}".format(self.info["id"], self.audio_type),
                 "chunk_list": []
             }
+
+    def getAvailableDurlList(self, entry):
+        temp_list = []
+
+        node_list = ["backupUrl", "backup_url", "baseUrl", "base_url"]
+
+        for node_name in node_list:
+            if node_name in entry:
+                # 是否为列表
+                if isinstance(entry[node_name], list):
+                    temp_list.extend(entry[node_name])
+                
+                else:
+                    temp_list.append(entry[node_name])
+
+        return temp_list
 
     def mergeVideo(self):
         title = get_legal_name(self.info["title"])
@@ -302,7 +303,7 @@ class DownloadUtils:
 
         return highest_audio_quality
 
-    def getAvailableVideoCodecIndex(self, data):
+    def getVideoAvailableCodecIndex(self, data):
         for index, entry in enumerate(data):
             if entry["codecid"] == self.video_codec_id:
                 return index
@@ -575,8 +576,10 @@ class DownloadWindow(Frame):
         match max_download:
             case max_download if max_download < 1:
                 index = 0
+
             case 1 | 2 | 3 | 4:
                 index = max_download - 1
+
             case max_download if max_download > 4:
                 choices = self.max_download_choice.GetItems()
                 choices.append(f"{max_download} 个")
