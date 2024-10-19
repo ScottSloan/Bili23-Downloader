@@ -98,9 +98,9 @@ class ConverterWindow(wx.Dialog):
     def onStart(self, event):
         if self.start:
             self.terminate_ffmpeg_process()
-            self.process.kill()
 
             self.setStatus(False)
+            
             return
 
         if not self.input_box.GetValue():
@@ -345,3 +345,5 @@ class ConverterWindow(wx.Dialog):
         # 向 ffmpeg 输入 q 来停止运行，强制终止 ffmpeg 进程将导致视频无法播放
         self.process.stdin.write("q")
         self.process.stdin.flush()
+
+        self.process.kill()

@@ -3,7 +3,7 @@ import json
 import requests
 from typing import List, Dict
 
-from utils.tools import get_header, get_proxy, get_auth
+from utils.tools import get_header, get_proxy, get_auth, get_legal_name
 from utils.config import Config
 from utils.error import process_exception, ErrorUtils, StatusCode, ParseError
 
@@ -22,7 +22,7 @@ class LiveParser:
     def __init__(self):
         pass
 
-    def get_short_id(self, url):
+    def get_short_id(self, url: str):
         short_id = re.findall(r"live.bilibili.com/([0-9]+)", url)
 
         if short_id:
@@ -40,7 +40,7 @@ class LiveParser:
 
         info = resp["data"]
 
-        LiveInfo.title = info["title"]
+        LiveInfo.title = get_legal_name(info["title"])
         LiveInfo.room_id = info["room_id"]
 
     @process_exception
@@ -60,7 +60,7 @@ class LiveParser:
         LiveInfo.live_quality_desc_list = [entry["desc"] for entry in quality_description]
     
     @process_exception
-    def get_live_stream(self, qn):
+    def get_live_stream(self, qn: int):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
         req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
@@ -72,7 +72,7 @@ class LiveParser:
 
         LiveInfo.m3u8_link = info["durl"][0]["url"]
 
-    def parse_url(self, url):
+    def parse_url(self, url: str):
         # 清除当前直播信息
         self.clear_live_info()
 
