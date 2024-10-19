@@ -745,7 +745,7 @@ class MainWindow(Frame):
                 self.SetClientSize(self.FromDIP((880, 450)))
 
     def getButtonSize(self):
-        # 解决 Linux macOS 按钮太小对的问题
+        # 解决 Linux macOS 按钮太小的问题
         match Config.Sys.platform:
             case "windows":
                 size = self.FromDIP((100, 30))

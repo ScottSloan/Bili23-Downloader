@@ -1071,7 +1071,7 @@ class DownloadItemPanel(wx.Panel):
     def getGaugeSize(self):
         match Config.Sys.platform:
             case "windows":
-                size = (294, 24)
+                size = (-1, -1)
 
             case "darwin" | "linux":
                 size = (190, 24)
