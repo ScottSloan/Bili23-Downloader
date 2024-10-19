@@ -1,9 +1,11 @@
 import wx
 import os
+import re
 import subprocess
 
 from utils.live import LiveInfo
 from utils.config import Config
+from utils.thread import Thread
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -43,6 +45,19 @@ class LiveRecordingWindow(wx.Dialog):
         self.start_recording_btn = wx.Button(self, -1, "开始录制", size = self.getButtonSize())
         self.open_player_btn = wx.Button(self, -1, "直接播放", size = self.getButtonSize())
 
+        font: wx.Font = self.GetFont()
+        font.SetPointSize(11)
+
+        self.status_lab = wx.StaticText(self, -1, "状态：未开始录制")
+        self.status_lab.SetFont(font)
+        self.duration_lab = wx.StaticText(self, -1, "时长：00:00:00.00")
+        self.duration_lab.SetFont(font)
+
+        info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        info_hbox.Add(self.status_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
+        info_hbox.AddSpacer(20)
+        info_hbox.Add(self.duration_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
+
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.AddStretchSpacer()
         action_hbox.Add(self.open_player_btn, 0, wx.ALL, 10)
@@ -51,6 +66,7 @@ class LiveRecordingWindow(wx.Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.title_lab, 0, wx.ALL, 10)
         vbox.Add(bag_box)
+        vbox.Add(info_hbox, 0, wx.EXPAND)
         vbox.Add(action_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -60,6 +76,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowse)
 
         self.open_player_btn.Bind(wx.EVT_BUTTON, self.onPlay)
+        self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartRecording)
 
     def init_live_info(self):
         self.title_lab.SetLabel(LiveInfo.title)
@@ -69,6 +86,8 @@ class LiveRecordingWindow(wx.Dialog):
         path = os.path.join(Config.Download.path, f"{LiveInfo.title}.mp4")
 
         self.recording_path_box.SetValue(path)
+
+        self.start = False
 
     def onCopy(self, event):
         # 复制到剪切板
@@ -103,3 +122,59 @@ class LiveRecordingWindow(wx.Dialog):
                 size = self.FromDIP((120, 40))
 
         return size
+
+    def onStartRecording(self, event):
+        if self.start:
+            self.terminate_ffmpeg_process()
+            self.process.kill()
+
+            self.setStatus(False)
+
+            return
+        
+        recording_thread = Thread(target = self.onRecording)
+        recording_thread.start()
+
+        self.setStatus(True)
+
+        self.status_lab.SetLabel("状态：正在解析链接")
+
+    def onRecording(self):
+        output_path = self.recording_path_box.GetValue()
+
+        cmd = f'"{Config.FFmpeg.path}" -i "{LiveInfo.m3u8_link}" -c copy "{output_path}"'
+
+        self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, universal_newlines = True, encoding = "utf-8", shell = True, start_new_session = True)
+
+        while True:
+            output = self.process.stdout.readline()
+
+            if self.process.poll() is not None:
+                break
+
+            if "time=" in output:
+                duration = re.findall(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", output)
+
+                if duration:
+                    wx.CallAfter(self.updateProgress, duration[0])
+
+        self.setStatus(False)
+
+        self.status_lab.SetLabel("状态：录制结束")
+
+    def setStatus(self, status: bool):
+        if status:
+            self.start_recording_btn.SetLabel("停止录制")
+        else:
+            self.start_recording_btn.SetLabel("开始录制")
+
+        self.start = status
+
+    def updateProgress(self, duration):
+        self.status_lab.SetLabel("状态：正在录制")
+        self.duration_lab.SetLabel(f"时间：{duration}")
+
+    def terminate_ffmpeg_process(self):
+        # 向 ffmpeg 输入 q 来停止运行，强制终止 ffmpeg 进程将导致视频无法播放
+        self.process.stdin.write("q")
+        self.process.stdin.flush()

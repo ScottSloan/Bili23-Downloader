@@ -97,7 +97,9 @@ class ConverterWindow(wx.Dialog):
 
     def onStart(self, event):
         if self.start:
+            self.terminate_ffmpeg_process()
             self.process.kill()
+
             self.setStatus(False)
             return
 
@@ -169,7 +171,7 @@ class ConverterWindow(wx.Dialog):
 
         cmd = f'"{Config.FFmpeg.path}" -y -i "{input_path}" -c:v {encoder} -b:v {bitrate} -strict experimental "{output_path}"'
 
-        self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True, encoding = "utf-8", shell = True)
+        self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True, encoding = "utf-8", shell = True, start_new_session = True)
 
         duration = None
         time_1 = time.time()
@@ -194,11 +196,9 @@ class ConverterWindow(wx.Dialog):
                     current_time = sum(int(x) * 60 ** i for i, x in enumerate(reversed(time_match.groups())))
                     progress = int(current_time / duration * 100)
 
-                    self.progress_bar.SetValue(progress)
-                    self.progress_lab.SetLabel(f"进度：{progress}%")
-                    self.time_lab.SetLabel(f"耗时：{int(time.time() - time_1)}s")
+                    wx.CallAfter(self.updateProgress, progress, int(time.time() - time_1))
 
-                    self.panel.Layout()
+                    self.Layout()
     
         self.process.stdout.close()
 
@@ -310,10 +310,10 @@ class ConverterWindow(wx.Dialog):
     def setStatus(self, status):
         if status:
             self.start_btn.SetLabel("停止")
-            self.start = True
         else:
             self.start_btn.SetLabel("开始转换")
-            self.start = False
+
+        self.status = status
     
     def resetProgress(self):
         self.progress_bar.SetValue(0)
@@ -336,3 +336,12 @@ class ConverterWindow(wx.Dialog):
             case "darwin":
                 return ["VideoToolBox"]
     
+    def updateProgress(self, progress, time):
+        self.progress_bar.SetValue(progress)
+        self.progress_lab.SetLabel(f"进度：{progress}%")
+        self.time_lab.SetLabel(f"耗时：{time}s")
+
+    def terminate_ffmpeg_process(self):
+        # 向 ffmpeg 输入 q 来停止运行，强制终止 ffmpeg 进程将导致视频无法播放
+        self.process.stdin.write("q")
+        self.process.stdin.flush()
