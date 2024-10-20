@@ -4,8 +4,8 @@ import wx.html2
 import json
 import base64
 
-from utils.captchaPage import CaptchaPage
-from utils.login import Captcha, CaptchaInfo
+from utils.captcha_page import CaptchaPage
+from utils.login import CaptchaUtils, CaptchaInfo
 
 class CaptchaWindow(wx.Dialog):
     def __init__(self, parent):
@@ -37,7 +37,7 @@ class CaptchaWindow(wx.Dialog):
         self.webview.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoaded)
 
     def init_utils(self):
-        self.captcha = Captcha()
+        self.captcha = CaptchaUtils()
 
         self.webview.EnableAccessToDevTools(True)
 

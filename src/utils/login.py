@@ -1,7 +1,10 @@
 import json
+import base64
 import qrcode
 import requests
 from io import BytesIO
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_v1_5
 
 from utils.tools import get_header, get_proxy, get_auth
 from utils.config import Config, conf
@@ -92,15 +95,52 @@ class PasswordLogin:
         PasswordLoginInfo.hash = data["data"]["hash"]
         PasswordLoginInfo.key = data["data"]["key"]
 
-    def login(self):
+    def login(self, username, password_encrypt: str):
         url = "https://passport.bilibili.com/x/passport-login/web/login"
 
-        req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        form = {
+            "username": username,
+            "password": password_encrypt,
+            "keep": 0,
+            "token": CaptchaInfo.token,
+            "challenge": CaptchaInfo.challenge,
+            "validate": CaptchaInfo.validate,
+            "seccode": CaptchaInfo.seccode,
+        }
+
+        req = self.session.post(url, params = form, headers = get_header(), proxies = get_proxy(), auth = get_auth())
         data = json.loads(req.text)
 
-        print(data)
+        return data
 
-class Captcha:
+    def encrypt_password(self, password: str):
+        public_key = RSA.import_key(PasswordLoginInfo.key)
+
+        cipher = PKCS1_v1_5.new(public_key)
+
+        # 盐加在密码前
+        password_encrypt = cipher.encrypt(bytes(PasswordLoginInfo.hash + password, encoding = "utf-8"))
+
+        return base64.b64encode(password_encrypt)
+    
+    def get_user_info(self):
+        url = "https://api.bilibili.com/x/web-interface/nav"
+        
+        former_headers = get_header()
+            
+        former_headers["Cookie"] = ";".join([f'{key}={value}' for (key, value) in self.session.cookies.items()])
+
+        req = self.session.get(url, headers = former_headers, proxies = get_proxy(), auth = get_auth())
+
+        resp = json.loads(req.text)["data"]
+                
+        return {
+            "uname": resp["uname"],
+            "face": resp["face"],
+            "sessdata": self.session.cookies["SESSDATA"]
+        }
+        
+class CaptchaUtils:
     def __init__(self):
         pass
 

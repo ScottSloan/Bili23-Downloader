@@ -7,8 +7,9 @@ import wx.adv
 from utils.login import QRLogin
 from utils.config import Config, conf
 from utils.tools import get_background_color
+from utils.login import PasswordLogin
 
-from gui.captcha import CaptchaWindow
+from gui.captcha_validate import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent):
@@ -79,11 +80,8 @@ class LoginWindow(wx.Dialog):
         match self.login.check_scan()["code"]:
             case 0:
                 user_info = self.login.get_user_info()
-                self.save_user_info(user_info)
-
-                self.Hide()
                 
-                wx.CallAfter(self.init_userinfo)
+                self.login_success(user_info)
 
             case 86090:
                 self.lab.SetLabel("请在设备侧确认登录")
@@ -119,6 +117,13 @@ class LoginWindow(wx.Dialog):
 
         conf.save_all_user_config()
 
+    def login_success(self, user_info):
+        self.save_user_info(user_info)
+
+        self.Hide()
+
+        wx.CallAfter(self.init_userinfo)
+
 class PasswordPage(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -130,12 +135,12 @@ class PasswordPage(wx.Panel):
         self.init_utils()
 
     def init_UI(self):
-        account_lab = wx.StaticText(self, -1, "账号")
-        self.account_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)))
+        username_lab = wx.StaticText(self, -1, "账号")
+        self.username_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)))
 
-        account_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        account_hbox.Add(account_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        account_hbox.Add(self.account_box, 0, wx.ALL & (~wx.LEFT), 10)
+        username_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        username_hbox.Add(username_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        username_hbox.Add(self.username_box, 0, wx.ALL & (~wx.LEFT), 10)
 
         password_lab = wx.StaticText(self, -1, "密码")
         self.password_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)), style = wx.TE_PASSWORD)
@@ -152,7 +157,7 @@ class PasswordPage(wx.Panel):
         login_hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(account_hbox, 0, wx.EXPAND)
+        vbox.Add(username_hbox, 0, wx.EXPAND)
         vbox.Add(password_hbox, 0, wx.EXPAND)
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
@@ -166,8 +171,37 @@ class PasswordPage(wx.Panel):
     def init_utils(self):
         self.is_captcha_passed = False
 
+        self.login = PasswordLogin()
+
     def onLogin(self, event):
         # 判断是否通过极验 captcha
         if not self.is_captcha_passed:
             captcha_window = CaptchaWindow(self)
-            captcha_window.Show()
+            captcha_window.ShowModal()
+
+        # 获取公钥
+        self.login.get_public_key()
+
+        # 将密码进行加盐加密
+        password_encrypt = self.login.encrypt_password(self.password_box.GetValue())
+        username = self.username_box.GetValue()
+
+        # 进行登录操作
+        result = self.login.login(username, password_encrypt)
+
+        self.check_login_result(result)
+
+    def check_login_result(self, result):
+        if result["code"] != 0:
+            wx.MessageDialog(self, f"登录失败\n\n登录失败，原因：{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
+
+        else:
+            if result["data"]["status"] != 0:
+                wx.MessageDialog(self, f"登录失败\n\n登录失败，原因：{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
+
+                return
+
+            # 登录成功，关闭窗口
+            user_info = self.login.get_user_info()
+
+            self.GetParent().login_success(user_info)
