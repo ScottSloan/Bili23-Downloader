@@ -47,6 +47,12 @@ live_quality_mapping = {
     "流畅": 80
 }
 
+live_status_mapping = {
+    0: "未开播",
+    1: "直播中",
+    2: "轮播中"
+}
+
 supported_gpu_mapping = {
     "NVIDIA": 1,
     "AMD": 2,

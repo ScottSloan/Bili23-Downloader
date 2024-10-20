@@ -10,7 +10,7 @@ from utils.mapping import video_codec_mapping, supported_gpu_mapping
 
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "格式转换", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
+        wx.Dialog.__init__(self, parent, -1, "格式转换")
 
         self.init_UI()
 
@@ -21,6 +21,9 @@ class ConverterWindow(wx.Dialog):
         self.start = False
 
     def init_UI(self):
+        font: wx.Font = self.GetFont()
+        font.SetPointSize(10)
+
         input_lab = wx.StaticText(self, -1, "输入")
         self.input_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, 24)))
         self.input_browse_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
@@ -68,7 +71,9 @@ class ConverterWindow(wx.Dialog):
         extra_hbox.Add(self.gpu_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         
         self.progress_lab = wx.StaticText(self, -1, "进度：--")
+        self.progress_lab.SetFont(font)
         self.time_lab = wx.StaticText(self, -1, "耗时：--")
+        self.time_lab.SetFont(font)
 
         progress_hbox = wx.BoxSizer(wx.HORIZONTAL)
         progress_hbox.Add(self.progress_lab, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.ALIGN_CENTER, 10)

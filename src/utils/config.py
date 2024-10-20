@@ -70,7 +70,7 @@ class Config:
         VIDEO: int = 1                               # 用户投稿视频
         BANGUMI: int = 2                             # 番组
         MUSIC: int = 3                               # 音乐 TODO
-        LIVE: int = 4                                # 直播 TODO
+        LIVE: int = 4                                # 直播
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
@@ -82,11 +82,15 @@ class Config:
 
         EPISODES_SINGLE: int = 0                     # 只解析单个视频
         EPISODES_IN_SECTION: int = 1                 # 解析视频所在合集
-        EPISODES_ALL_SECTIONS: int = 2               # 解析全部合集 
+        EPISODES_ALL_SECTIONS: int = 2               # 解析全部合集
 
         PROXY_DISABLE: int = 0                       # 不使用代理
         PROXY_FOLLOW: int = 1                        # 跟随系统
         PROXY_MANUAL: int = 2                        # 手动设置
+
+        LIVE_STATUS_0: int = 0                       # 未开播
+        LIVE_STATUS_1: int = 1                       # 直播中
+        LIVE_STATUS_2: int = 2                       # 轮播中
     
     class Temp:
         download_window_pos = None

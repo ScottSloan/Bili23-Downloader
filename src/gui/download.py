@@ -196,13 +196,14 @@ class DownloadUtils:
             }
 
     def getAvailableDurlList(self, entry):
+        # 取视频音频的所有下载链接
         temp_list = []
 
         node_list = ["backupUrl", "backup_url", "baseUrl", "base_url"]
 
         for node_name in node_list:
             if node_name in entry:
-                # 是否为列表
+                # 判断是否为列表
                 if isinstance(entry[node_name], list):
                     temp_list.extend(entry[node_name])
                 
@@ -419,8 +420,10 @@ class DownloadWindow(Frame):
         match Config.Sys.platform:
             case "windows":
                 os.startfile(Config.Download.path)
+
             case "linux":
                 subprocess.Popen(f'xdg-open "{Config.Download.path}"', shell = True)
+
             case "darwin":
                 subprocess.Popen(f'open "{Config.Download.path}"', shell = True)
 

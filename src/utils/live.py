@@ -6,12 +6,16 @@ from typing import List, Dict
 from utils.tools import get_header, get_proxy, get_auth, get_legal_name
 from utils.config import Config
 from utils.error import process_exception, ErrorUtils, StatusCode, ParseError
+from utils.mapping import live_status_mapping
 
 class LiveInfo:
     title: str = ""
 
     room_id: int = 0
     short_id: int = 0
+
+    status: int = 0
+    status_str: str = ""
 
     m3u8_link: str = ""
 
@@ -42,6 +46,9 @@ class LiveParser:
 
         LiveInfo.title = get_legal_name(info["title"])
         LiveInfo.room_id = info["room_id"]
+
+        LiveInfo.status = info["live_status"]
+        LiveInfo.status_str = live_status_mapping[LiveInfo.status]
 
     @process_exception
     def get_live_available_media_info(self):

@@ -93,7 +93,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def set_live_list(self):
         live_list = {}
         
-        live_list["直播"] = [["1", LiveInfo.title, "", "--:--"]]
+        live_list["直播"] = [["1", LiveInfo.title, LiveInfo.status_str, "--:--:--"]]
         self.parent_items.append("直播")
 
         self.set_list(live_list)
