@@ -85,7 +85,6 @@ class VideoParser:
         match Config.Misc.episode_display_mode:
             case Config.Type.EPISODES_SINGLE:
                 # 解析单个视频
-
                 self.parse_pages()
 
             case Config.Type.EPISODES_IN_SECTION:
@@ -212,15 +211,17 @@ class VideoParser:
         if len(VideoInfo.pages_list) == 1:
             # 单个视频
             VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
+
         else:
             # 分P视频
             VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
 
+        if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
             if hasattr(self, "part_num"):
                 VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
             else:
                 VideoInfo.pages_list = [VideoInfo.pages_list[0]]
-
+            
     def clear_video_info(self):
         # 清除当前的视频信息
         VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""

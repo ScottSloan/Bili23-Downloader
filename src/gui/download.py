@@ -30,9 +30,6 @@ class DownloadUtils:
     def getVideoDurl(self):
         json_dash = self.getVideoDurlJson()
 
-        # with open("video.json", "w", encoding = "utf-8") as f:
-        #     f.write(json.dumps(json_dash, ensure_ascii = True))
-
         # 获取视频最高清晰度
         highest_video_quality_id = self.getHighestVideoQuality(json_dash["video"])
 
@@ -83,7 +80,7 @@ class DownloadUtils:
                                     # 无损
                                     audio_node = json_dash["flac"]["audio"]
 
-                                    self.audio_durl = self.getAvailableDurlList(audio_node)
+                                    self.audio_durl_list = self.getAvailableDurlList(audio_node)
 
                                     self.audio_type = "flac"
                                     self.audio_quality = 30251
@@ -93,9 +90,9 @@ class DownloadUtils:
                             if "audio" in json_dash["dolby"]:
                                 if json_dash["dolby"]["audio"]:
                                     # 杜比全景声
-                                    audio_node = self.audio_durl = json_dash["dolby"]["audio"][0]
+                                    audio_node = self.audio_durl_list = json_dash["dolby"]["audio"][0]
 
-                                    self.audio_durl = self.getAvailableDurlList(audio_node)
+                                    self.audio_durl_list = self.getAvailableDurlList(audio_node)
 
                                     self.audio_type = "ec3"
                                     self.audio_quality = 30250
@@ -146,7 +143,7 @@ class DownloadUtils:
 
         temp_audio_durl = [i for i in data if i["id"] == audio_quality]
 
-        self.audio_durl = self.getAvailableDurlList(temp_audio_durl[0])
+        self.audio_durl_list = self.getAvailableDurlList(temp_audio_durl[0])
 
         self.audio_type = "mp3"
         self.audio_quality = audio_quality
@@ -192,7 +189,7 @@ class DownloadUtils:
         return {
                 "id": self.info["id"],
                 "type": "audio",
-                "url": self.audio_durl,
+                "url": self.audio_durl_list, # 包含下载链接的列表，后续将遍历其可用性
                 "referer_url": self.info["url"],
                 "file_name": "audio_{}.{}".format(self.info["id"], self.audio_type),
                 "chunk_list": []
@@ -861,8 +858,6 @@ class DownloadItemPanel(wx.Panel):
             # 更新 completed_size 的值
             self.info["completed_size"] = info["raw_completed_size"]
 
-            self.Layout()
-
     def onPause(self):
         self.downloader.onPause()
 
@@ -967,8 +962,6 @@ class DownloadItemPanel(wx.Panel):
         self.pause_btn.SetToolTip("打开所在位置")
 
         self.gauge.SetValue(100)
-
-        self.Layout()
 
     def onError(self):
         self.setStatus("error")

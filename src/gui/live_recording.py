@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import subprocess
+from typing import List
 
 from utils.live import LiveInfo
 from utils.config import Config
@@ -168,8 +169,7 @@ class LiveRecordingWindow(wx.Dialog):
                 size = re.findall(r"size=\s+(\d+)KiB", output)
                 speed = re.findall(r"speed=\s?(\d+\.\d+)x", output)
 
-                if duration:
-                    wx.CallAfter(self.updateProgress, duration[0], size[0], speed[0])
+                wx.CallAfter(self.updateProgress, duration, size, speed)
 
         self.setStatus(False)
 
@@ -199,11 +199,17 @@ class LiveRecordingWindow(wx.Dialog):
 
         self.start = status
 
-    def updateProgress(self, duration: str, size: str, speed: str):
+    def updateProgress(self, duration: List[str], size: List[str], speed: List[str]):
         self.status_lab.SetLabel("状态：正在录制")
-        self.duration_lab.SetLabel(f"时间：{duration}")
-        self.size_lab.SetLabel(f"大小：{format_size(int(size))}")
-        self.speed_lab.SetLabel(f"速度：{speed}x")
+
+        if duration:
+            self.duration_lab.SetLabel(f"时间：{duration[0]}")
+        
+        if size:
+            self.size_lab.SetLabel(f"大小：{format_size(int(size[0]))}")
+
+        if speed:
+            self.speed_lab.SetLabel(f"速度：{speed[0]}x")
 
         self.Layout()
 

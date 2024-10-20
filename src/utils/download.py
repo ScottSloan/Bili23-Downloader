@@ -4,6 +4,7 @@ import time
 import json
 import requests
 from requests.adapters import HTTPAdapter
+from typing import Optional
 
 from utils.config import Config
 from utils.tools import get_header, get_proxy, get_auth, format_size
@@ -248,11 +249,11 @@ class Downloader:
         # 回调 panel 下载失败函数，终止下载
         wx.CallAfter(self.onErrorEx)
     
-    def get_total_size(self, url_list: list, referer_url: str, path: str = None):
+    def get_total_size(self, url_list: list, referer_url: str, path: Optional[str] = None):
         for url in url_list:
             headers = self.get_header_info(url, referer_url)
 
-            # 检测 headers 是否包含 Content-Length，若不含，则使用备用 url (不含 Content-Length 的链接属于无效链接)
+            # 检测 headers 是否包含 Content-Length，不包含的链接属于无效链接
             if "Content-Length" not in headers:
                 # 无效链接，遍历下一个
                 continue
