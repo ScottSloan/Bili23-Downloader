@@ -166,7 +166,7 @@ class LiveRecordingWindow(wx.Dialog):
 
             if "time=" in output:
                 duration = re.findall(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", output)
-                size = re.findall(r"size=\s+(\d+)KiB", output)
+                size = os.path.getsize(output_path) / 1024
                 speed = re.findall(r"speed=\s?(\d+\.\d+)x", output)
 
                 wx.CallAfter(self.updateProgress, duration, size, speed)
@@ -206,7 +206,7 @@ class LiveRecordingWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时间：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{format_size(int(size[0]))}")
+            self.size_lab.SetLabel(f"大小：{format_size(int(size))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")
