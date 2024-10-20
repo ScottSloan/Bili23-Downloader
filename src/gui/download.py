@@ -991,7 +991,7 @@ class DownloadItemPanel(wx.Panel):
         self.file_full_name = f"{self.info['title']}.{file_type}"
 
         if not os.path.exists(os.path.join(Config.Download.path, self.file_full_name)):
-            wx.MessageDialog(self.GetParent().GetParent(), f"文件不存在\n\n无法打开文件：{self.file_full_name}\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self.GetParent().GetParent(), f"文件不存在\n\n无法打开文件：{self.file_full_name}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
 
         match Config.Sys.platform:

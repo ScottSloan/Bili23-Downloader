@@ -166,8 +166,8 @@ class LiveRecordingWindow(wx.Dialog):
 
             if "time=" in output:
                 duration = re.findall(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", output)
-                size = re.findall(r"size=\s+(\d+)KiB", output)
-                speed = re.findall(r"speed=\s?(\d+\.\d+)x", output)
+                size = re.findall(r"size=\s*(\d+)KiB", output)
+                speed = re.findall(r"speed=\s*(\d+\.\d+)x", output)
 
                 wx.CallAfter(self.updateProgress, duration, size, speed)
 
@@ -178,6 +178,10 @@ class LiveRecordingWindow(wx.Dialog):
     def onOpenDirectory(self, event):
         path = self.recording_path_box.GetValue()
         directory = os.path.dirname(path)
+
+        if not os.path.exists(path):
+            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
+            return
 
         match Config.Sys.platform:
             case "windows":
@@ -203,7 +207,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.status_lab.SetLabel("状态：正在录制")
 
         if duration:
-            self.duration_lab.SetLabel(f"时间：{duration[0]}")
+            self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
             self.size_lab.SetLabel(f"大小：{format_size(int(size[0]))}")
