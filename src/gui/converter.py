@@ -6,6 +6,7 @@ import subprocess
 from utils.config import Config
 from utils.thread import Thread
 from utils.mapping import video_codec_mapping, supported_gpu_mapping
+from utils.tools import format_size
 
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
@@ -87,9 +88,15 @@ class ConverterWindow(wx.Dialog):
         info_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
         info_hbox.Add(self.speed_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
 
-        self.progress_bar = wx.Gauge(self, -1, style = wx.GA_PROGRESS)
+        self.progress_bar = wx.Gauge(self, -1, style = wx.GA_PROGRESS | wx.GA_SMOOTH)
 
-        self.start_btn = wx.Button(self, -1, "开始转换", size = self.FromDIP((110, 30)))
+        self.start_convert_btn = wx.Button(self, -1, "开始转换", size = self.getButtonSize())
+        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.getButtonSize())
+
+        action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        action_hbox.AddStretchSpacer()
+        action_hbox.Add(self.open_directory_btn, 0, wx.ALL, 10)
+        action_hbox.Add(self.start_convert_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(input_hbox, 0, wx.EXPAND)
@@ -98,15 +105,17 @@ class ConverterWindow(wx.Dialog):
         vbox.Add(extra_hbox, 0, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
         vbox.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, 10)
-        vbox.Add(self.start_btn, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
+        vbox.Add(action_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.start_btn.Bind(wx.EVT_BUTTON, self.onStartConverting)
+        self.start_convert_btn.Bind(wx.EVT_BUTTON, self.onStartConverting)
 
         self.input_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseInputPath)
         self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseOutputPath)
+
+        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
 
     def onStartConverting(self, event):
         if self.start:
@@ -219,10 +228,11 @@ class ConverterWindow(wx.Dialog):
     
         self.process.stdout.close()
 
-        if self.process.returncode != 0:
+        if self.process.returncode != 0 and self.start:
             wx.MessageDialog(self, "视频转换失败\n\n在视频转换时出现问题，请检查：\n1.输入文件是否损坏\n2.若开启 GPU 加速，请检查 GPU 类型是否选择正确，驱动是否安装，GPU 是否支持加速\n3.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持相关加速编码器", "警告", wx.ICON_WARNING).ShowModal()
             self.setStatus(False)
             self.resetProgress()
+
             return
 
         if not self.start:
@@ -326,9 +336,9 @@ class ConverterWindow(wx.Dialog):
             
     def setStatus(self, status: bool):
         if status:
-            self.start_btn.SetLabel("停止")
+            self.start_convert_btn.SetLabel("停止")
         else:
-            self.start_btn.SetLabel("开始转换")
+            self.start_convert_btn.SetLabel("开始转换")
 
         self.start = status
     
@@ -367,7 +377,7 @@ class ConverterWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
 
         if size:
-            self.size_lab.SetLabel(f"大小：{size[0]}")
+            self.size_lab.SetLabel(f"大小：{format_size(int(size[0][0]))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")
@@ -378,3 +388,33 @@ class ConverterWindow(wx.Dialog):
         self.process.stdin.flush()
 
         self.process.kill()
+
+    def getButtonSize(self):
+        # 解决 Linux macOS 按钮太小的问题
+        match Config.Sys.platform:
+            case "windows":
+                size = self.FromDIP((100, 30))
+            case "linux" | "darwin":
+                size = self.FromDIP((120, 40))
+
+        return size
+    
+    def onOpenDirectory(self, event):
+        path = self.output_box.GetValue()
+        directory = os.path.dirname(path)
+
+        if not os.path.exists(path):
+            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
+            return
+
+        match Config.Sys.platform:
+            case "windows":
+                cmd = f'explorer.exe /select,{path}'
+
+            case "linux":
+                cmd = f'xdg-open "{directory}"'
+
+            case "darwin":
+                cmd = f'open -R "{path}"'
+        
+        subprocess.Popen(cmd, cwd = directory, shell = True)

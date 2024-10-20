@@ -192,6 +192,14 @@ class LiveRecordingWindow(wx.Dialog):
 
                 wx.CallAfter(self.updateProgress, duration, size, speed)
 
+        if self.process.returncode != 0 and self.start:
+            wx.MessageDialog(self, "FFmpeg 进程异常终止\n\n由于配置不当，FFmpeg 进程异常终止，请检查：\n1.m3u8 链接是否已经过期，如过期，请重新解析\n2.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持流媒体合成功能", "警告", wx.ICON_WARNING).ShowModal()
+            self.setStatus(False)
+
+            self.resetProgress()
+            
+            return
+
         self.setStatus(False)
 
         self.status_lab.SetLabel("状态：录制结束")
@@ -244,3 +252,9 @@ class LiveRecordingWindow(wx.Dialog):
         self.process.stdin.flush()
 
         self.process.kill()
+
+    def resetProgress(self):
+        self.status_lab.SetLabel("状态：未开始录制")
+        self.duration_lab.SetLabel("时长：00:00:00.00")
+        self.size_lab.SetLabel("大小：0 KB")
+        self.speed_lab.SetLabel("速度：0.0x")

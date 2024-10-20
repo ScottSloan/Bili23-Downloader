@@ -729,7 +729,6 @@ class DownloadItemPanel(wx.Panel):
         panel_hbox.Add(info_vbox, 0, wx.EXPAND)
         panel_hbox.AddStretchSpacer(1)
         panel_hbox.Add(gauge_vbox, 0, wx.EXPAND)
-        panel_hbox.AddSpacer(20)
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.AddSpacer(10)
