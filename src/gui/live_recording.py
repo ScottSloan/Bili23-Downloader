@@ -55,7 +55,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.status_lab.SetFont(font)
         self.duration_lab = wx.StaticText(self, -1, "时长：00:00:00.00")
         self.duration_lab.SetFont(font)
-        self.size_lab = wx.StaticText(self, -1, "大小：0KB")
+        self.size_lab = wx.StaticText(self, -1, "大小：0 KB")
         self.size_lab.SetFont(font)
         self.speed_lab = wx.StaticText(self, -1, "速度：0.0x")
         self.speed_lab.SetFont(font)
@@ -82,6 +82,8 @@ class LiveRecordingWindow(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+
         self.copy_link_btn.Bind(wx.EVT_BUTTON, self.onCopy)
         self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowse)
 
@@ -99,6 +101,19 @@ class LiveRecordingWindow(wx.Dialog):
         self.recording_path_box.SetValue(path)
 
         self.start = False
+
+    def onClose(self, event):
+        if self.start:
+            dlg = wx.MessageDialog(self, "是否结束录制\n\n当前正在录制直播，是否要结束录制？", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+            if dlg.ShowModal() == wx.ID_YES:
+                self.terminate_ffmpeg_process()
+
+                event.Skip()
+
+                return
+            
+        event.Skip()
 
     def onCopy(self, event):
         # 复制到剪切板
@@ -140,14 +155,20 @@ class LiveRecordingWindow(wx.Dialog):
             
             self.setStatus(False)
 
+            self.start = False
+
             return
         
+        if not self.recording_path_box.GetValue():
+            wx.MessageDialog(self, "未选择保存位置\n\n请选择保存位置", "警告", wx.ICON_WARNING).ShowModal()
+            return
+
         recording_thread = Thread(target = self.onRecording)
         recording_thread.start()
 
         self.setStatus(True)
 
-        self.status_lab.SetLabel("状态：正在解析链接")
+        self.status_lab.SetLabel("状态：准备开始录制")
 
         self.Layout()
 
@@ -166,7 +187,7 @@ class LiveRecordingWindow(wx.Dialog):
 
             if "time=" in output:
                 duration = re.findall(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", output)
-                size = re.findall(r"size=\s*(\d+)KiB", output)
+                size = re.findall(r"size=\s*(\d+)(KiB|kB)", output)
                 speed = re.findall(r"speed=\s*(\d+\.\d+)x", output)
 
                 wx.CallAfter(self.updateProgress, duration, size, speed)
@@ -210,7 +231,7 @@ class LiveRecordingWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{format_size(int(size[0]))}")
+            self.size_lab.SetLabel(f"大小：{format_size(int(size[0][0]))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")

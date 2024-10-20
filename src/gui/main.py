@@ -345,6 +345,12 @@ class MainWindow(Frame):
     def onDownload(self, event):
         # 直播类型视频跳转合成窗口
         if self.current_parse_type == Config.Type.LIVE:
+            if LiveInfo.status == Config.Type.LIVE_STATUS_0:
+                # 未开播，无法解析
+                wx.MessageDialog(self, "直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING).ShowModal()
+
+                return
+
             # 获取选定清晰度的直播流
             self.get_live_stream()
 
