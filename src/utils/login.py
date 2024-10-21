@@ -25,6 +25,8 @@ class CaptchaInfo:
     validate: str = ""
     seccode: str = ""
 
+    captcha_key: str = ""
+
 class LoginCookies:
     # 进行登录操作时所需的 Cookie 字段
     buvid3: str = ""
@@ -34,8 +36,8 @@ class LoginCookies:
 
 class LoginBase:
     # 登录基类
-    def __init__(self):
-        self.session = requests.sessions.session()
+    def __init__(self, session: requests.sessions.Session):
+        self.session = session
 
     def get_user_info(self, refresh = False):
         url = "https://api.bilibili.com/x/web-interface/nav"
@@ -59,9 +61,30 @@ class LoginBase:
             "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata
         }
 
+    def access_main_domain(self):
+        # 访问主站，获取 buvid3 和 b_nut 的值
+        url = "https://www.bilibili.com"
+
+        req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+
+        cookie = requests.utils.dict_from_cookiejar(req.cookies)
+
+        LoginCookies.buvid3 = cookie["buvid3"]
+        LoginCookies.b_nut = cookie["b_nut"]
+
+    def get_finger_spi(self):
+        # 获取指纹 spi，得到 buvid4
+        url = "https://api.bilibili.com/x/frontend/finger/spi"
+
+        req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        data = json.loads(req.text)
+
+        # buvid3 = data["data"]["b_3"]
+        LoginCookies.buvid4 = data["data"]["b_4"]
+
 class QRLogin(LoginBase):
-    def __init__(self):
-        LoginBase.__init__(self)
+    def __init__(self, session):
+        LoginBase.__init__(self, session)
 
     def init_qrcode(self):
         url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
@@ -96,19 +119,8 @@ class QRLogin(LoginBase):
         conf.save_all_user_config()
 
 class PasswordLogin(LoginBase):
-    def __init__(self):
-        LoginBase.__init__(self)
-
-    def access_main_domain(self):
-        # 访问主站
-        url = "https://www.bilibili.com"
-
-        req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-
-        cookie = requests.utils.dict_from_cookiejar(req.cookies)
-
-        LoginCookies.buvid3 = cookie["buvid3"]
-        LoginCookies.b_nut = cookie["b_nut"]
+    def __init__(self, session):
+        LoginBase.__init__(self, session)
 
     def access_api(self):
         url = "https://api.bilibili.com/x/web-interface/nav"
@@ -126,17 +138,6 @@ class PasswordLogin(LoginBase):
 
         PasswordLoginInfo.hash = data["data"]["hash"]
         PasswordLoginInfo.key = data["data"]["key"]
-
-    def get_fingerprint(self):
-        # 获取浏览器指纹
-        url = "https://api.bilibili.com/x/frontend/finger/spi"
-
-        req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-        data = json.loads(req.text)
-
-        # 抓包发现似乎只用到 buvid4, buvid3 还是用的访问主站时设置的 buvid3
-        # buvid3 = data["data"]["b_3"]
-        LoginCookies.buvid4 = data["data"]["b_4"]
 
     def activate_fringerprint(self, df35: str):
         # 激活浏览器指纹
@@ -367,7 +368,45 @@ class PasswordLogin(LoginBase):
         password_encrypt = cipher.encrypt(bytes(PasswordLoginInfo.hash + password, encoding = "utf-8"))
 
         return base64.b64encode(password_encrypt)
+
+class SMSLogin(LoginBase):
+    def __init__(self, session):
+        LoginBase.__init__(self, session)
+
+    def send_sms(self, tel: int):
+        url = "https://passport.bilibili.com/x/passport-login/web/sms/send"
+
+        form = {
+            "cid": 86,
+            "tel": tel,
+            "source": "main-fe-header",
+            "token": CaptchaInfo.token,
+            "challenge": CaptchaInfo.challenge,
+            "validate": CaptchaInfo.validate,
+            "seccode": CaptchaInfo.seccode
+        }
+
+        req = self.session.post(url, params = form, headers = get_login_header(), proxies = get_proxy(), auth = get_auth())
+        data = json.loads(req.text)
+
+        CaptchaInfo.captcha_key = data["data"]["captcha_key"]
+
+    def login(self, tel: int, code: int):
+        url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
+
+        form = {
+            "cid": 86,
+            "tel": tel,
+            "code": code,
+            "source": "main-fe-header",
+            "captcha_key": CaptchaInfo.captcha_key
+        }
         
+        req = self.session.post(url, params = form, headers = get_login_header(), proxies = get_proxy(), auth = get_auth())
+        data = json.loads(req.text)
+
+        return data
+
 class CaptchaUtils:
     def __init__(self):
         pass
