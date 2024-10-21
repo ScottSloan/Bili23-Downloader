@@ -21,7 +21,7 @@ def process_shorklink(url: str) -> str:
 def get_header(referer_url: Optional[str] = None, cookie: Optional[str] = None, chunk_list: Optional[str] = None) -> dict:
     header = {
         "Cookie": "CURRENT_FNVAL=4048;",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
     }
     
     if referer_url:
@@ -34,6 +34,37 @@ def get_header(referer_url: Optional[str] = None, cookie: Optional[str] = None, 
         header["Cookie"] += "SESSDATA=" + cookie
     
     return header
+
+def get_login_header():
+    from utils.login import LoginCookies
+
+    cookie_dict = {
+        "buvid3": LoginCookies.buvid3,
+        "b_lsid": "8512CC53_192AEC0CA1F",
+        "b_nut": LoginCookies.b_nut,
+        "_uuid": LoginCookies.uuid,
+        "buvid_fp": "a22acd07567177ce6984b9e995a4a6fb",
+        "enable_web_push": "DISABLE",
+        "home_feed_column": "5",
+        "buvid4": LoginCookies.buvid4,
+    }
+    
+    return {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
+        "Origin": "https://www.bilibili.com",
+        "Referer": "https://www.bilibili.com",
+        "Cookie": ";".join([f"{key}={value}" for key, value in cookie_dict.items()]),
+        "Priority": "u=1, i",
+        "Sec-Ch-Ua": '"Chromium";v="130", "Microsoft Edge";v="130", "Not?A_Brand";v="99"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site"
+    }
 
 def get_proxy():
     match Config.Proxy.proxy_mode:

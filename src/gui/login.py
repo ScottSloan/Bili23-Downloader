@@ -4,10 +4,10 @@ from io import BytesIO
 
 import wx.adv
 
-from utils.login import QRLogin
+from utils.login import QRLogin, PasswordLogin, LoginCookies
 from utils.config import Config, conf
 from utils.tools import get_background_color
-from utils.login import PasswordLogin
+from utils.thread import Thread
 
 from gui.captcha_validate import CaptchaWindow
 
@@ -173,6 +173,17 @@ class PasswordPage(wx.Panel):
 
         self.login = PasswordLogin()
 
+        # 开启后台线程，获取浏览器指纹等信息
+        background_thread = Thread(target = self.background_thread)
+        background_thread.start()
+
+    def background_thread(self):
+        self.login.access_main_domain()
+
+        self.login.get_fingerprint()
+
+        self.login.activate_fringerprint(LoginCookies.buvid3)
+
     def onLogin(self, event):
         # 判断是否通过极验 captcha
         if not self.is_captcha_passed:
@@ -193,11 +204,11 @@ class PasswordPage(wx.Panel):
 
     def check_login_result(self, result):
         if result["code"] != 0:
-            wx.MessageDialog(self, f"登录失败\n\n登录失败，原因：{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, f"登录失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
 
         else:
             if result["data"]["status"] != 0:
-                wx.MessageDialog(self, f"登录失败\n\n登录失败，原因：{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
+                wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
 
                 return
 
