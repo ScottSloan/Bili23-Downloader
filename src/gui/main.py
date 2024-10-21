@@ -2,6 +2,7 @@ import wx
 import os
 import time
 import wx.py
+import requests
 from typing import Optional
 
 from utils.config import Config, Download, Audio, conf
@@ -517,7 +518,9 @@ class MainWindow(Frame):
         dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要注销用户 "{Config.User.uname}"？', "注销", wx.ICON_WARNING | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_YES:
-            login = QRLogin()
+            session = requests.sessions.Session()
+
+            login = QRLogin(session)
             login.logout()
 
             self.face.Hide()

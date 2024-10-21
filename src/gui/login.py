@@ -10,7 +10,7 @@ from utils.config import Config, conf
 from utils.tools import get_background_color
 from utils.thread import Thread
 
-from gui.captcha_validate import CaptchaWindow
+from gui.captcha import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent):
@@ -44,7 +44,10 @@ class LoginWindow(wx.Dialog):
 
         self.note = wx.Simplebook(self, -1)
 
-        self.note.AddPage(PasswordPage(self.note, self.session), "账号密码登录")
+        password_page = PasswordPage(self.note, self.session)
+        password_page.get_finger_spi()
+
+        self.note.AddPage(password_page, "账号密码登录")
         self.note.AddPage(SMSPage(self.note, self.session), "手机号登录")
 
         font_2: wx.Font = self.GetFont()
@@ -87,8 +90,6 @@ class LoginWindow(wx.Dialog):
 
         self.login = QRLogin(self.session)
         self.login.init_qrcode()
-
-        self.login.get_finger_spi()
 
         # 开启轮询，获取扫码状态
         self.timer = wx.Timer(self, -1)
@@ -209,6 +210,12 @@ class LoginPage(wx.Panel):
         background_thread = Thread(target = self._get_finger_spi_thread)
         background_thread.start()
 
+    def check_captcha(self):
+        # 判断是否通过极验 captcha
+        if not self.is_captcha_passed:
+            captcha_window = CaptchaWindow(self)
+            captcha_window.ShowModal()
+
 class PasswordPage(LoginPage):
     def __init__(self, parent, session):
         LoginPage.__init__(self, parent, session)
@@ -257,10 +264,7 @@ class PasswordPage(LoginPage):
         self.login = PasswordLogin(self.session)
 
     def onLogin(self, event):
-        # 判断是否通过极验 captcha
-        if not self.is_captcha_passed:
-            captcha_window = CaptchaWindow(self)
-            captcha_window.ShowModal()
+        self.check_captcha()
 
         # 获取公钥
         self.login.get_public_key()
@@ -325,10 +329,7 @@ class SMSPage(LoginPage):
         self.login = SMSLogin(self.session)
 
     def onGetValidateCode(self, event):
-        # 判断是否通过极验 captcha
-        if not self.is_captcha_passed:
-            captcha_window = CaptchaWindow(self)
-            captcha_window.ShowModal()
+        self.check_captcha()
 
         tel = int(self.phone_number_box.GetValue())
 

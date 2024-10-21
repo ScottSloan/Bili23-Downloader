@@ -6,6 +6,7 @@ import base64
 
 from utils.captcha_page import CaptchaPage
 from utils.login import CaptchaUtils, CaptchaInfo
+from utils.config import Config
 
 class CaptchaWindow(wx.Dialog):
     def __init__(self, parent):
@@ -22,7 +23,8 @@ class CaptchaWindow(wx.Dialog):
         self.init_utils()
         
     def init_UI(self):
-        self.webview: wx.html2.WebView = wx.html2.WebView.New(self, -1, backend = wx.html2.WebViewBackendEdge)
+        # 初始化 WebView
+        self.webview: wx.html2.WebView = wx.html2.WebView.New(self, -1, backend = self.get_webview_backend())
 
         self.webview.SetPage(base64.b64decode(CaptchaPage.html).decode("utf-8"), "")
 
@@ -38,9 +40,8 @@ class CaptchaWindow(wx.Dialog):
 
     def init_utils(self):
         self.captcha = CaptchaUtils()
-
-        self.webview.EnableAccessToDevTools(True)
-
+        
+        # 设置 MessageHandler，便于接收从前端返回的验证结果
         self.webview.AddScriptMessageHandler("MainApplication")
 
     def onLoaded(self, event):
@@ -51,6 +52,7 @@ class CaptchaWindow(wx.Dialog):
         self.webview.RunScriptAsync(f"receiveMessage('{CaptchaInfo.gt}','{CaptchaInfo.challenge}')")
 
     def onMessage(self, event):
+        # 接收前端返回的验证结果
         message = event.GetString()
 
         data = json.loads(message)
@@ -61,3 +63,14 @@ class CaptchaWindow(wx.Dialog):
 
             # 验证通过，关闭窗口
             self.Destroy()
+
+    def get_webview_backend(self):
+        # 根据不同平台，使用不同的 webview
+        match Config.Sys.platform:
+            case "windows":
+                # Windows 下使用 Edge Webview2 (需要系统安装)
+                return wx.html2.WebViewBackendEdge
+            
+            case "linux" | "darwin":
+                # Linux 和 macOS 使用 Webkit
+                return wx.html2.WebViewBackendWebKit
