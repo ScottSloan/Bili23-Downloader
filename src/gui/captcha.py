@@ -4,7 +4,7 @@ import wx.html2
 import json
 import base64
 
-from utils.captcha_page import CaptchaPage
+from utils.captcha import CaptchaPage
 from utils.login import CaptchaUtils, CaptchaInfo
 from utils.config import Config
 

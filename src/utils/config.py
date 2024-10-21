@@ -40,6 +40,7 @@ class Config:
     class Misc:
         episode_display_mode: int = 1
 
+        show_episode_full_name: bool = True
         auto_select: bool = False
         debug: bool = False
         check_update: bool = True
@@ -221,6 +222,7 @@ class ConfigUtils:
 
         # misc
         Config.Misc.episode_display_mode = self.config.getint("misc", "episode_display_mode")
+        Config.Misc.show_episode_full_name = self.config.getboolean("misc", "show_episode_full_name")
         Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
@@ -274,6 +276,7 @@ class ConfigUtils:
         # misc
         self.config.add_section("misc")
         self.config.set("misc", "episode_display_mode", str(Config.Misc.episode_display_mode))
+        self.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
         self.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
         self.config.set("misc", "player_path", Config.Misc.player_path)
         self.config.set("misc", "check_update", str(int(Config.Misc.check_update)))

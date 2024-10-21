@@ -147,7 +147,12 @@ def format_bangumi_title(episode: Dict):
     
     else:
         if "share_copy" in episode:
-            return episode["share_copy"]
+            if Config.Misc.show_episode_full_name:
+                return episode["share_copy"]
+            
+            else:
+                return episode["long_title"]
+        
         else:
             return episode["report"]["ep_title"]
     
