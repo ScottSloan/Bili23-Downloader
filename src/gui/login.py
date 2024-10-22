@@ -15,7 +15,7 @@ from gui.captcha import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "扫码登录")
+        wx.Dialog.__init__(self, parent, -1, "登录")
         
         self.init_utils()
 
@@ -199,23 +199,15 @@ class LoginPage(wx.Panel):
 
             self.GetParent().GetParent().login_success(user_info)
 
-    def _get_finger_spi_thread(self):
-        self.login.access_main_domain()
-
-        self.login.get_finger_spi()
-        
-        # self.login.activate_fringerprint(LoginCookies.buvid3)
-
     def get_finger_spi(self):
         # 开启后台线程，获取指纹 spi 等信息
-        background_thread = Thread(target = self._get_finger_spi_thread)
+        background_thread = Thread(target = self.login.init_finger)
         background_thread.start()
 
     def check_captcha(self):
-        # 判断是否通过极验 captcha
-        if not self.is_captcha_passed:
-            captcha_window = CaptchaWindow(self)
-            captcha_window.ShowModal()
+        # 显示极验 captcha 窗口
+        captcha_window = CaptchaWindow(self)
+        captcha_window.ShowModal()
 
 class PasswordPage(LoginPage):
     def __init__(self, parent, session):
@@ -407,7 +399,8 @@ class SMSPage(LoginPage):
 
         tel = int(self.phone_number_box.GetValue())
         code = int(self.validate_code_box.GetValue())
+        cid = self.country_id_list[self.country_choice.GetSelection()]
 
-        result = self.login.login(tel, code)
+        result = self.login.login(tel, code, cid)
 
         self.check_login_result(result)

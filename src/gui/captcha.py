@@ -69,8 +69,10 @@ class CaptchaWindow(wx.Dialog):
         match Config.Sys.platform:
             case "windows":
                 # Windows 下使用 Edge Webview2 (需要系统安装)
-                return wx.html2.WebViewBackendEdge
+                backend = wx.html2.WebViewBackendEdge
             
             case "linux" | "darwin":
                 # Linux 和 macOS 使用 Webkit
-                return wx.html2.WebViewBackendWebKit
+                backend = wx.html2.WebViewBackendWebKit
+
+        return backend
