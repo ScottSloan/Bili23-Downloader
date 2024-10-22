@@ -298,21 +298,24 @@ class SMSPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
+        country_lab = wx.StaticText(self, -1, "区号")
+        self.country_choice = wx.Choice(self, -1)
+
         phone_number_lab = wx.StaticText(self, -1, "手机号")
         self.phone_number_box = wx.TextCtrl(self, -1, size = self.FromDIP((110, 26)))
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
-        phone_number_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        phone_number_hbox.Add(phone_number_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        phone_number_hbox.Add(self.phone_number_box, 0, wx.ALL & (~wx.LEFT), 10)
-        phone_number_hbox.Add(self.get_validate_code_btn, 0, wx.ALL & (~wx.LEFT), 10)
-
         validate_code_lab = wx.StaticText(self, -1, "验证码")
         self.validate_code_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)))
 
-        validate_code_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        validate_code_hbox.Add(validate_code_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        validate_code_hbox.Add(self.validate_code_box, 0, wx.ALL & (~wx.LEFT), 10)
+        bag_box = wx.GridBagSizer(3, 3)
+        bag_box.Add(country_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.country_choice, pos = (0, 1), span = (0, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
+        bag_box.Add(phone_number_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.phone_number_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
+        bag_box.Add(self.get_validate_code_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
+        bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
+        bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
 
         self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
 
@@ -322,8 +325,7 @@ class SMSPage(LoginPage):
         login_hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(phone_number_hbox, 0, wx.EXPAND)
-        vbox.Add(validate_code_hbox, 0, wx.EXPAND)
+        vbox.Add(bag_box)
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -337,6 +339,20 @@ class SMSPage(LoginPage):
     def init_utils(self):
         self.login = SMSLogin(self.session)
 
+        # 获取国际区号列表
+        data = self.login.get_country_list()
+
+        self.set_country_list(data)
+
+    def set_country_list(self, data):
+        country_data_list = data["data"]["list"]
+
+        self.country_id_list = [entry["country_code"] for entry in country_data_list]
+        country_list = [f"+{entry['country_code']} - {entry['cname']}" for entry in country_data_list]
+
+        self.country_choice.Set(country_list)
+        self.country_choice.SetSelection(0)
+
     def onGetValidateCode(self, event):
         if not self.phone_number_box.GetValue():
             wx.MessageDialog(self, "发送短信验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
@@ -344,10 +360,11 @@ class SMSPage(LoginPage):
         
         self.check_captcha()
 
+        cid = self.country_id_list[self.country_choice.GetSelection()]
         tel = int(self.phone_number_box.GetValue())
 
         # 发送短信验证码
-        result = self.login.send_sms(tel)
+        result = self.login.send_sms(tel, cid)
 
         self.check_sms_send_status(result)
 

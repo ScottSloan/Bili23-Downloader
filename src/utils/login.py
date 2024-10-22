@@ -374,11 +374,20 @@ class SMSLogin(LoginBase):
     def __init__(self, session):
         LoginBase.__init__(self, session)
 
-    def send_sms(self, tel: int):
+    def get_country_list(self):
+        url = "https://passport.bilibili.com/x/passport-login/web/country"
+
+        req = self.session.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+
+        data = json.loads(req.text)
+
+        return data
+
+    def send_sms(self, tel: int, cid: int):
         url = "https://passport.bilibili.com/x/passport-login/web/sms/send"
 
         form = {
-            "cid": 86,
+            "cid": cid,
             "tel": tel,
             "source": "main-fe-header",
             "token": CaptchaInfo.token,
