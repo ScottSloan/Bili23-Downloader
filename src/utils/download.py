@@ -250,7 +250,10 @@ class Downloader:
         wx.CallAfter(self.onErrorEx)
     
     def get_total_size(self, url_list: list, referer_url: str, path: Optional[str] = None):
+        download_url = None
+
         for url in url_list:
+            download_url = url
             headers = self.get_header_info(url, referer_url)
 
             # 检测 headers 是否包含 Content-Length，不包含的链接属于无效链接
@@ -261,6 +264,10 @@ class Downloader:
             total_size = int(headers["Content-Length"])
 
             break
+
+        if not download_url:
+            # 如果没有可用的下载链接，抛出异常
+            self.onError()
 
         # 当 path 不为空时，才创建本地空文件
         if path:

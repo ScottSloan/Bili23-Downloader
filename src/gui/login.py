@@ -1,4 +1,5 @@
 import wx
+import time
 import requests
 from typing import Dict
 from io import BytesIO
@@ -132,7 +133,7 @@ class LoginWindow(wx.Dialog):
         self.GetParent().init_menubar()
 
     def refresh_qrcode(self):
-        self.login = QRLogin()
+        self.login = QRLogin(self.session)
         self.login.init_qrcode()
 
         self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
@@ -264,6 +265,14 @@ class PasswordPage(LoginPage):
         self.login = PasswordLogin(self.session)
 
     def onLogin(self, event):
+        if not self.username_box.GetValue():
+            wx.MessageDialog(self, "登录失败\n\n账号不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        if not self.password_box.GetValue():
+            wx.MessageDialog(self, "登录失败\n\n密码不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
         self.check_captcha()
 
         # 获取公钥
@@ -329,13 +338,56 @@ class SMSPage(LoginPage):
         self.login = SMSLogin(self.session)
 
     def onGetValidateCode(self, event):
+        if not self.phone_number_box.GetValue():
+            wx.MessageDialog(self, "发送短信验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
         self.check_captcha()
 
         tel = int(self.phone_number_box.GetValue())
 
-        self.login.send_sms(tel)
+        # 发送短信验证码
+        result = self.login.send_sms(tel)
+
+        self.check_sms_send_status(result)
+
+    def check_sms_send_status(self, result):
+        # 检查短信是否发送成功
+        if result["code"] != 0:
+            wx.MessageDialog(self, f"发送短信验证码失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
+
+        else:
+            # 发送成功，倒计时一分钟
+            self.get_validate_code_btn.Enable(False)
+
+            countdown_thread = Thread(target = self.countdown_thread)
+            countdown_thread.start()
+
+    def countdown_thread(self):
+        for i in range(60, 0, -1):
+            wx.CallAfter(self.update_countdown_info, i)
+            time.sleep(1)
+
+        wx.CallAfter(self.countdown_finished)
+
+    def countdown_finished(self):
+        # 倒计时结束，恢复按钮
+        self.get_validate_code_btn.SetLabel("重新发送")
+        self.get_validate_code_btn.Enable(True)
+
+    def update_countdown_info(self, seconds: int):
+        # 更新倒计时信息
+        self.get_validate_code_btn.SetLabel(f"重新发送({seconds})")
     
     def onLogin(self, event):
+        if not self.phone_number_box.GetValue():
+            wx.MessageDialog(self, "登录失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        if not self.validate_code_box.GetValue():
+            wx.MessageDialog(self, "登录失败\n\n验证码不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+
         tel = int(self.phone_number_box.GetValue())
         code = int(self.validate_code_box.GetValue())
 

@@ -9,6 +9,7 @@ from Crypto.Cipher import PKCS1_v1_5
 
 from utils.tools import get_header, get_proxy, get_auth, get_login_header
 from utils.config import Config, conf
+from utils.error import StatusCode
 
 class QRLoginInfo:
     url = qrcode_key = None
@@ -82,6 +83,12 @@ class LoginBase:
         # buvid3 = data["data"]["b_3"]
         LoginCookies.buvid4 = data["data"]["b_4"]
 
+    def logout(self):
+        Config.User.login = False
+        Config.User.face = Config.User.uname = Config.User.sessdata = ""
+
+        conf.save_all_user_config()
+
 class QRLogin(LoginBase):
     def __init__(self, session):
         LoginBase.__init__(self, session)
@@ -111,12 +118,6 @@ class QRLogin(LoginBase):
         return {
             "message": req_json["data"]["message"],
             "code": req_json["data"]["code"]}
-
-    def logout(self):
-        Config.User.login = False
-        Config.User.face = Config.User.uname = Config.User.sessdata = ""
-
-        conf.save_all_user_config()
 
 class PasswordLogin(LoginBase):
     def __init__(self, session):
@@ -389,7 +390,11 @@ class SMSLogin(LoginBase):
         req = self.session.post(url, params = form, headers = get_login_header(), proxies = get_proxy(), auth = get_auth())
         data = json.loads(req.text)
 
-        CaptchaInfo.captcha_key = data["data"]["captcha_key"]
+        if data["code"]  == StatusCode.CODE_0:
+            # 只有短信发送成功时才设置 captcha_key
+            CaptchaInfo.captcha_key = data["data"]["captcha_key"]
+
+        return data
 
     def login(self, tel: int, code: int):
         url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
