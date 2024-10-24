@@ -9,6 +9,7 @@ dependencies = [
     "qrcode[pil]>=7.3.1",
     "requests>=2.30.0",
     "wxpython>=4.2.0",
+    "pycryptodome>=3.21.0",
 ]
 authors = [
     {name = "ScottSloan", email = "scottsloan@petalmail.com"},

@@ -17,8 +17,6 @@ class SettingWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "设置")
 
-        self.SetSize(self.FromDIP((600, 600)))
-
         self.init_UI()
 
         self.Bind_EVT()
@@ -80,7 +78,7 @@ class DownloadTab(wx.Panel):
     def init_UI(self):
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
-        self.scrolled_panel = ScrolledPanel(self.download_box, (470, 500))
+        self.scrolled_panel = ScrolledPanel(self.download_box, self.getPanelSize())
 
         path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
         self.path_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((220, 24)))
@@ -291,6 +289,14 @@ class DownloadTab(wx.Panel):
 
         self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
+    def getPanelSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                return self.FromDIP((-1, 350))
+            
+            case "linux" | "darwin":
+                return self.FromDIP((400, 430))
+
 class MergeTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -304,7 +310,7 @@ class MergeTab(wx.Panel):
     def init_UI(self):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
-        ffmpeg_path_label = wx.StaticText(ffmpeg_box, 0, "FFmpeg 路径")
+        ffmpeg_path_label = wx.StaticText(ffmpeg_box, -1, "FFmpeg 路径")
         self.path_box = wx.TextCtrl(ffmpeg_box, -1, size = self.FromDIP((220, 24)))
         self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.FromDIP((60, 24)))
 
@@ -335,7 +341,7 @@ class MergeTab(wx.Panel):
         merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
-        merge_option_sbox.Add(merge_option_vbox, 1, wx.EXPAND)
+        merge_option_sbox.Add(merge_option_vbox, 0, wx.EXPAND)
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
         merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, 10)
@@ -619,12 +625,12 @@ class MiscTab(wx.Panel):
         sections_vbox.Add(self.auto_select_chk, 0, wx.ALL, 10)
         
         sections_sbox = wx.StaticBoxSizer(sections_box)
-        sections_sbox.Add(sections_vbox, 1, wx.EXPAND)
+        sections_sbox.Add(sections_vbox, 0, wx.EXPAND)
 
         player_box = wx.StaticBox(self, -1, "播放器设置")
 
         path_lab = wx.StaticText(player_box, -1, "播放器路径")
-        self.path_box = wx.TextCtrl(player_box, -1)
+        self.path_box = wx.TextCtrl(player_box, -1, size = self.FromDIP((220, 24)))
         self.browse_btn = wx.Button(player_box, -1, "浏览")
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -639,9 +645,7 @@ class MiscTab(wx.Panel):
         player_sbox.Add(player_vbox, 1, wx.EXPAND)
 
         misc_box = wx.StaticBox(self, -1, "杂项")
-
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
-
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -649,7 +653,7 @@ class MiscTab(wx.Panel):
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
-        misc_sbox.Add(misc_vbox, 1, wx.EXPAND)
+        misc_sbox.Add(misc_vbox, 0, wx.EXPAND)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
         misc_vbox.Add(sections_sbox, 0, wx.ALL | wx.EXPAND, 10)
