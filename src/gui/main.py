@@ -199,6 +199,7 @@ class MainWindow(Frame):
 
     def init_utils(self):
         ErrorCallback.onError = self.onError
+        ErrorCallback.onRedirect = self.onRedirect
         
         self.video_parser = VideoParser()
         self.bangumi_parser = BangumiParser()
@@ -272,8 +273,7 @@ class MainWindow(Frame):
         self.processing_window.Show()
 
         # 开启解析线程
-        self.parse_thread = Thread(target = self.parseThread, args = (url, ))
-        self.parse_thread.start()
+        self.onRedirect(url)
 
         self.parse_finish_flag = False
 
@@ -288,9 +288,11 @@ class MainWindow(Frame):
 
                 self.video_parser.parse_url(url)
 
-                wx.CallAfter(self.setVideoList)
+                if self.video_parser.continue_to_parse:
+                    # 当存在跳转链接时，使用新的跳转链接重新开始解析，原先解析线程不继续执行
+                    wx.CallAfter(self.setVideoList)
 
-                wx.CallAfter(self.setVideoQualityList)
+                    wx.CallAfter(self.setVideoQualityList)
 
             case "ep" | "ss" | "md":
                 # 番组
@@ -331,7 +333,12 @@ class MainWindow(Frame):
             case _:
                 self.onError(ErrorCode.Invalid_URL)
 
-        wx.CallAfter(self.onGetFinished)
+        if self.video_parser.continue_to_parse:
+            wx.CallAfter(self.onGetFinished)
+
+    def onRedirect(self, url: str):
+        self.parse_thread = Thread(target = self.parseThread, args = (url, ))
+        self.parse_thread.start()
 
     def onGetFinished(self):
         if self.current_parse_type != Config.Type.LIVE:
@@ -490,7 +497,7 @@ class MainWindow(Frame):
                 msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号后再试"
             
                 if self.current_parse_type == Config.Type.BANGUMI:
-                    if BangumiInfo.payment:
+                    if BangumiInfo.payment and Config.User.login:
                         msg = "解析失败：此视频需要付费购买，请确保已经购买此视频后再试"
             
             case ErrorCode.Request_Error:

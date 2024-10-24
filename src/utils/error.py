@@ -32,6 +32,8 @@ class ErrorCallback:
     onError = None
     onReadConfigError = None
 
+    onRedirect = None
+
 class VIPError(Exception):
     # 大会员认证异常类
     pass

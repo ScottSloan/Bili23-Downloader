@@ -5,7 +5,7 @@ from typing import List, Dict
 
 from utils.config import Config, Audio
 from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid, find_str
-from utils.error import process_exception, ParseError, ErrorUtils, URLError, StatusCode
+from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 
 class VideoInfo:
     url: str = ""
@@ -67,6 +67,13 @@ class VideoParser:
         self.check_json(resp)
 
         info = resp["data"]
+
+        if "redirect_url" in info:
+            # 存在跳转链接，重新跳转解析，抛出异常仅为停止线程
+            ErrorCallback.onRedirect(info["redirect_url"])
+            self.continue_to_parse = False
+
+            return
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
@@ -183,6 +190,8 @@ class VideoParser:
         # 清除当前的视频信息
         self.clear_video_info()
 
+        self.continue_to_parse = True
+
         match find_str(r"av|BV", url):
             case "av":
                 self.get_aid(url)
@@ -192,7 +201,8 @@ class VideoParser:
 
         self.get_video_info()
 
-        self.get_video_available_media_info()
+        if self.continue_to_parse:
+            self.get_video_available_media_info()
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
