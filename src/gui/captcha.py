@@ -24,7 +24,12 @@ class CaptchaWindow(wx.Dialog):
         
     def init_UI(self):
         # 初始化 WebView
-        self.webview: wx.html2.WebView = wx.html2.WebView.New(self, -1, backend = self.get_webview_backend())
+        backend = self.get_webview_backend()
+
+        # 检查 webview 可用性
+        self.check_webview_backend(backend)
+        
+        self.webview: wx.html2.WebView = wx.html2.WebView.New(self, -1, backend = backend)
 
         self.webview.SetPage(base64.b64decode(CaptchaPage.html).decode("utf-8"), "")
 
@@ -76,3 +81,19 @@ class CaptchaWindow(wx.Dialog):
                 backend = wx.html2.WebViewBackendWebKit
 
         return backend
+    
+    def check_webview_backend(self, backend):
+        if not wx.html2.WebView.IsBackendAvailable():
+            match Config.Sys.platform:
+                case "windows":
+                    msg = "Windows 平台：请安装 Microsoft Edge WebView2 Runtime"
+
+                case "linux":
+                    msg = "Linux 平台：请安装 WebKitGtk+，例如 Ubuntu 执行 sudo apt install libwebkit2gtk-4.0-dev 进行安装"
+
+            # macOS 系统使用的是 Apple WKWebView，系统自带。
+
+            wx.MessageDialog(self, f"WebView 不可用\n\n未找到可用的 WebView 环境，无法进行人机验证，请使用扫码登录。\n\n解决方案：\n{msg}", "警告", wx.ICON_WARNING).ShowModal()
+
+            # 销毁窗口
+            self.Destroy()

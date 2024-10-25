@@ -225,14 +225,14 @@ class PasswordPage(LoginPage):
 
         username_hbox = wx.BoxSizer(wx.HORIZONTAL)
         username_hbox.Add(username_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        username_hbox.Add(self.username_box, 0, wx.ALL & (~wx.LEFT), 10)
+        username_hbox.Add(self.username_box, 1, wx.ALL & (~wx.LEFT), 10)
 
         password_lab = wx.StaticText(self, -1, "密码")
         self.password_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)), style = wx.TE_PASSWORD)
 
         password_hbox = wx.BoxSizer(wx.HORIZONTAL)
         password_hbox.Add(password_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        password_hbox.Add(self.password_box, 0, wx.ALL & (~wx.LEFT), 10)
+        password_hbox.Add(self.password_box, 1, wx.ALL & (~wx.LEFT), 10)
 
         self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
 
@@ -294,20 +294,20 @@ class SMSPage(LoginPage):
         self.country_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = wx.TextCtrl(self, -1, size = self.FromDIP((110, 26)))
+        self.phone_number_box = wx.TextCtrl(self, -1)
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)))
+        self.validate_code_box = wx.TextCtrl(self, -1)
 
         bag_box = wx.GridBagSizer(3, 3)
         bag_box.Add(country_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(self.country_choice, pos = (0, 1), span = (0, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
         bag_box.Add(phone_number_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.phone_number_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
+        bag_box.Add(self.phone_number_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(self.get_validate_code_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
         bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
+        bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, border = 10)
 
         self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
 
@@ -347,7 +347,7 @@ class SMSPage(LoginPage):
 
     def onGetValidateCode(self, event):
         if not self.phone_number_box.GetValue():
-            wx.MessageDialog(self, "发送短信验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "发送验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         self.check_captcha()

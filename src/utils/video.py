@@ -26,7 +26,7 @@ class VideoInfo:
 
 class VideoParser:
     def __init__(self):
-        pass
+        self.continue_to_parse = True
     
     def get_part(self, url: str):
         part = re.findall(r"p=([0-9]+)", url)
@@ -164,8 +164,9 @@ class VideoParser:
                 Audio.q_hires = True
 
         if "dolby" in info["dash"]:
-            if info["dash"]["dolby"]["audio"]:
-                Audio.q_dolby = True
+            if "audio" in info["dash"]["dolby"]:
+                if info["dash"]["dolby"]["audio"]:
+                    Audio.q_dolby = True
 
         # 检测 192k, 132k, 64k 音质是否存在
         if "audio" in info["dash"]:

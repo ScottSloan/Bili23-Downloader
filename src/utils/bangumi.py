@@ -182,28 +182,29 @@ class BangumiParser:
 
         self.check_json(resp)
             
-        json_data = resp["result"]
+        info = resp["result"]
         
         # 检测是否为试看内容
-        if "dash" not in json_data:
+        if "dash" not in info:
             raise VIPError()
 
-        BangumiInfo.video_quality_id_list = json_data["accept_quality"]
-        BangumiInfo.video_quality_desc_list = json_data["accept_description"]
+        BangumiInfo.video_quality_id_list = info["accept_quality"]
+        BangumiInfo.video_quality_desc_list = info["accept_description"]
 
         # 检测无损或杜比是否存在
-        if "flac" in json_data["dash"]:
-            if json_data["dash"]["flac"]:
+        if "flac" in info["dash"]:
+            if info["dash"]["flac"]:
                 Audio.q_hires = True
 
-        if "dolby" in json_data["dash"]:
-            if json_data["dash"]["dolby"]["audio"]:
-                Audio.q_dolby = True
+        if "dolby" in info["dash"]:
+            if "audio" in info["dash"]["dolby"]:
+                if info["dash"]["dolby"]["audio"]:
+                    Audio.q_dolby = True
 
         # 检测 192k, 132k, 64k 音质是否存在
-        if "audio" in json_data["dash"]:
-            if json_data["dash"]["audio"]:
-                for entry in json_data["dash"]["audio"]:
+        if "audio" in info["dash"]:
+            if info["dash"]["audio"]:
+                for entry in info["dash"]["audio"]:
                     match entry["id"]:
                         case 30280:
                             Audio.q_192k = True
