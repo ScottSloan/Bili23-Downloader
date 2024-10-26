@@ -236,6 +236,8 @@ class Downloader:
 
         self.ThreadPool.stop()
 
+        self.session.close()
+
     def onFinished(self):
         # 下载完成，关闭所有线程，回调 onMerge 进行合成
         self.stop_flag = True

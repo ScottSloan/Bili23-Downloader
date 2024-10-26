@@ -67,6 +67,9 @@ class CaptchaWindow(wx.Dialog):
             CaptchaInfo.seccode = data["data"]["seccode"]
 
             # 验证通过，关闭窗口
+            self.webview.Close()
+            
+            self.Close()
             self.Destroy()
 
     def get_webview_backend(self):
@@ -83,7 +86,7 @@ class CaptchaWindow(wx.Dialog):
         return backend
     
     def check_webview_backend(self, backend):
-        if not wx.html2.WebView.IsBackendAvailable():
+        if not wx.html2.WebView.IsBackendAvailable(backend):
             match Config.Sys.platform:
                 case "windows":
                     msg = "Windows 平台：请安装 Microsoft Edge WebView2 Runtime"

@@ -518,8 +518,8 @@ class MainWindow(Frame):
         raise Exception
 
     def onLogin(self, event):
-        login_window = LoginWindow(self)
-        login_window.ShowModal()
+        self.login_window = LoginWindow(self)
+        self.login_window.ShowModal()
 
     def onLogout(self, event):
         dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要注销用户 "{Config.User.uname}"？', "注销", wx.ICON_WARNING | wx.YES_NO)
@@ -751,6 +751,17 @@ class MainWindow(Frame):
     def startNewParseThread(self, *args):
         self.parse_thread = Thread(target = self.parseThread, args = args, daemon = True)
         self.parse_thread.start()
+
+    def onLoginSuccess(self):
+        self.init_user_info()
+        
+        self.infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
+
+        self.init_menubar()
+
+        # 安全关闭扫码登录窗口
+        self.login_window.Close()
+        self.login_window.Destroy()
 
     def setMainWindowSize(self):
         # 解决 Linux 上 UI 太小的问题
