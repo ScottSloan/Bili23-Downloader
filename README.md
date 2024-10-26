@@ -22,12 +22,15 @@ Bili23 Downloader GUI
 [![pAlhXgU.png](https://s21.ax1x.com/2024/09/27/pAlhXgU.png)](https://imgse.com/i/pAlhXgU)
 
 #### **支持输入的 URL 链接**
-| 类型 | 示例  |
-| ---- | ---- |
-| 用户投稿视频 | https://www.bilibili.com/video/BV1t94y1C7fp |
-| 剧集（番剧、电影、纪录片等） | https://www.bilibili.com/bangumi/play/ss45574 |
-| b23.tv 短链接 | https://b23.tv/BV1UG411f7K1 |
-| 活动页链接 | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html |
+| 类型 | 支持的功能 | 示例  |
+| ---- | ---- | ---- |
+| 用户投稿视频 （含分P，合集视频） | 解析下载 | https://www.bilibili.com/video/BV1t94y1C7fp |
+| 剧集（含番剧、电影、纪录片、国创、电视剧、综艺） | 解析下载 | https://www.bilibili.com/bangumi/play/ss45574 |
+| 直播 | m3u8直链解析、录制 | https://live.bilibili.com/1 |
+| b23.tv 短链接 | - | https://b23.tv/BV1UG411f7K1 |
+| 活动页链接 | - | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html |
+
+**注意：本程序不提供付费视频解析服务，请自行登录大会员账号后再进行使用。**
 
 #### **部分类型可直接输入编号**
 - 视频 av、BV 号
