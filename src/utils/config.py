@@ -13,8 +13,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.52.0"
-        version_code: int = 1520
+        version: str = "1.52.1"
+        version_code: int = 1521
 
         release_date: str = "2024/10/26"
 

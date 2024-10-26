@@ -105,7 +105,10 @@ class LoginWindow(wx.Dialog):
         self.sms_login_btn.Bind(wx.EVT_LEFT_DOWN, self.onSwitchSMSLogin)
 
     def onClose(self, event):
+        # 关闭窗口，停止轮询并关闭 session
         self.timer.Stop()
+
+        self.session.close()
 
         event.Skip()
 
@@ -122,15 +125,6 @@ class LoginWindow(wx.Dialog):
 
             case 86038:
                 wx.CallAfter(self.refresh_qrcode)
-    
-    def init_userinfo(self):
-        self.timer.Stop()
-        
-        self.GetParent().init_user_info()
-        self.GetParent().infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
-
-        # 重新创建主窗口菜单
-        self.GetParent().init_menubar()
 
     def refresh_qrcode(self):
         self.login = QRLogin(self.session)
@@ -153,9 +147,7 @@ class LoginWindow(wx.Dialog):
     def login_success(self, user_info):
         self.save_user_info(user_info)
 
-        self.Hide()
-
-        wx.CallAfter(self.init_userinfo)
+        wx.CallAfter(self.GetParent().onLoginSuccess)
     
     def onSwitchPasswordLogin(self, event):
         self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
@@ -182,7 +174,7 @@ class LoginPage(wx.Panel):
         self._init_utils()
 
     def _init_utils(self):
-        self.is_captcha_passed = False
+        self.isLogin = False
 
     def check_login_result(self, result: Dict):
         if result["code"] != 0:
@@ -195,6 +187,8 @@ class LoginPage(wx.Panel):
                 return
 
             # 登录成功，关闭窗口
+            self.isLogin = True
+
             user_info = self.login.get_user_info()
 
             self.GetParent().GetParent().login_success(user_info)
@@ -363,7 +357,7 @@ class SMSPage(LoginPage):
     def check_sms_send_status(self, result):
         # 检查短信是否发送成功
         if result["code"] != 0:
-            wx.MessageDialog(self, f"发送短信验证码失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, f"发送验证码失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
 
         else:
             # 发送成功，倒计时一分钟
@@ -374,6 +368,9 @@ class SMSPage(LoginPage):
 
     def countdown_thread(self):
         for i in range(60, 0, -1):
+            if self.isLogin:
+                return
+            
             wx.CallAfter(self.update_countdown_info, i)
             time.sleep(1)
 
