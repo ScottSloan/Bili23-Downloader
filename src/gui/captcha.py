@@ -89,7 +89,7 @@ class CaptchaWindow(wx.Dialog):
                     msg = "Windows 平台：请安装 Microsoft Edge WebView2 Runtime"
 
                 case "linux":
-                    msg = "Linux 平台：请安装 WebKitGtk+，例如 Ubuntu 执行 sudo apt install libwebkit2gtk-4.0-dev 进行安装"
+                    msg = "Linux 平台：请安装 WebKitGTK+，例如 Ubuntu 执行 sudo apt install libwebkit2gtk-4.0-dev 进行安装"
 
             # macOS 系统使用的是 Apple WKWebView，系统自带。
 

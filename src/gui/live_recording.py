@@ -162,6 +162,8 @@ class LiveRecordingWindow(wx.Dialog):
         if not self.recording_path_box.GetValue():
             wx.MessageDialog(self, "未选择保存位置\n\n请选择保存位置", "警告", wx.ICON_WARNING).ShowModal()
             return
+        
+        self.retry = False
 
         recording_thread = Thread(target = self.onRecording)
         recording_thread.start()
@@ -193,6 +195,13 @@ class LiveRecordingWindow(wx.Dialog):
                 wx.CallAfter(self.updateProgress, duration, size, speed)
 
         if self.process.returncode != 0 and self.start:
+            # 重试
+            if not self.retry:
+                self.onRecording()
+                self.retry = True
+
+                return
+
             wx.MessageDialog(self, "FFmpeg 进程异常终止\n\n由于配置不当，FFmpeg 进程异常终止，请检查：\n1.m3u8 链接是否已经过期，如过期，请重新解析\n2.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持流媒体合成功能", "警告", wx.ICON_WARNING).ShowModal()
             self.setStatus(False)
 

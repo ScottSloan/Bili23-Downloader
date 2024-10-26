@@ -285,14 +285,14 @@ class Downloader:
 
         return req.headers
 
-    def get_chunk_list(self, total_size: int, chunk: int) -> list:
+    def get_chunk_list(self, total_size: int, thread_count: int) -> list:
         # 计算分片下载区间
-        piece_size = int(total_size / chunk)
+        piece_size = int(total_size / thread_count)
         chunk_list = []
 
-        for i in range(chunk):
+        for i in range(thread_count):
             start = i * piece_size + 1 if i != 0 else 0 
-            end = (i + 1) * piece_size if i != chunk - 1 else total_size
+            end = (i + 1) * piece_size if i != thread_count - 1 else total_size
 
             chunk_list.append([start, end])
 
