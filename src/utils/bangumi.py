@@ -182,28 +182,29 @@ class BangumiParser:
 
         self.check_json(resp)
             
-        json_data = resp["result"]
+        info = resp["result"]
         
         # 检测是否为试看内容
-        if "dash" not in json_data:
+        if "dash" not in info:
             raise VIPError()
 
-        BangumiInfo.video_quality_id_list = json_data["accept_quality"]
-        BangumiInfo.video_quality_desc_list = json_data["accept_description"]
+        BangumiInfo.video_quality_id_list = info["accept_quality"]
+        BangumiInfo.video_quality_desc_list = info["accept_description"]
 
         # 检测无损或杜比是否存在
-        if "flac" in json_data["dash"]:
-            if json_data["dash"]["flac"]:
+        if "flac" in info["dash"]:
+            if info["dash"]["flac"]:
                 Audio.q_hires = True
 
-        if "dolby" in json_data["dash"]:
-            if json_data["dash"]["dolby"]["audio"]:
-                Audio.q_dolby = True
+        if "dolby" in info["dash"]:
+            if "audio" in info["dash"]["dolby"]:
+                if info["dash"]["dolby"]["audio"]:
+                    Audio.q_dolby = True
 
         # 检测 192k, 132k, 64k 音质是否存在
-        if "audio" in json_data["dash"]:
-            if json_data["dash"]["audio"]:
-                for entry in json_data["dash"]["audio"]:
+        if "audio" in info["dash"]:
+            if info["dash"]["audio"]:
+                for entry in info["dash"]["audio"]:
                     match entry["id"]:
                         case 30280:
                             Audio.q_192k = True
@@ -220,7 +221,7 @@ class BangumiParser:
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -252,9 +253,14 @@ class BangumiParser:
     def check_json(self, json: Dict):
         # 检查接口返回状态码
         status_code = json["code"]
+        message = json["message"]
         error = ErrorUtils()
 
         if status_code != StatusCode.CODE_0:
+            if status_code == StatusCode.CODE_10403 and message == "大会员专享限制":
+                # 如果提示大会员专享限制就不用抛出异常，因为和地区限制共用一个状态码 -10403
+                return
+            
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
             raise ParseError(error.getStatusInfo(status_code), status_code)
 

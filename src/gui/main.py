@@ -2,19 +2,21 @@ import wx
 import os
 import time
 import wx.py
+import requests
 from typing import Optional
 
 from utils.config import Config, Download, Audio, conf
 from utils.video import VideoInfo, VideoParser
 from utils.bangumi import BangumiInfo, BangumiParser
 from utils.festival import FestivalInfo, FestivalParser
+from utils.live import LiveInfo, LiveParser
 
 from utils.login import QRLogin
 from utils.download import DownloaderInfo
 from utils.thread import Thread
 from utils.tools import find_str, check_update, process_shorklink, get_user_face
 from utils.error import ErrorCallback, ErrorCode
-from utils.mapping import video_quality_mapping
+from utils.mapping import video_quality_mapping, live_quality_mapping
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
@@ -24,6 +26,7 @@ from gui.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
 from gui.converter import ConverterWindow
+from gui.live_recording import LiveRecordingWindow
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -196,9 +199,11 @@ class MainWindow(Frame):
 
     def init_utils(self):
         ErrorCallback.onError = self.onError
+        ErrorCallback.onRedirect = self.onRedirect
         
         self.video_parser = VideoParser()
         self.bangumi_parser = BangumiParser()
+        self.live_parser = LiveParser()
         self.activity_parser = FestivalParser(self.onError)
 
         self.download_window = DownloadWindow(self)
@@ -268,8 +273,7 @@ class MainWindow(Frame):
         self.processing_window.Show()
 
         # 开启解析线程
-        self.parse_thread = Thread(target = self.parseThread, args = (url, ))
-        self.parse_thread.start()
+        self.onRedirect(url)
 
         self.parse_finish_flag = False
 
@@ -277,16 +281,18 @@ class MainWindow(Frame):
         # 清除下载列表
         Download.download_list.clear()
 
-        match find_str(r"av|BV|ep|ss|md|b23.tv|blackboard|festival", url):
+        match find_str(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 # 用户投稿视频
                 self.current_parse_type = Config.Type.VIDEO
 
                 self.video_parser.parse_url(url)
 
-                wx.CallAfter(self.setVideoList)
+                if self.video_parser.continue_to_parse:
+                    # 当存在跳转链接时，使用新的跳转链接重新开始解析，原先解析线程不继续执行
+                    wx.CallAfter(self.setVideoList)
 
-                wx.CallAfter(self.setVideoQualityList)
+                    wx.CallAfter(self.setVideoQualityList)
 
             case "ep" | "ss" | "md":
                 # 番组
@@ -297,6 +303,16 @@ class MainWindow(Frame):
                 wx.CallAfter(self.setBangumiList)
 
                 wx.CallAfter(self.setVideoQualityList)
+
+            case "live":
+                # 直播
+                self.current_parse_type = Config.Type.LIVE
+
+                self.live_parser.parse_url(url)
+
+                wx.CallAfter(self.setLiveList)
+
+                wx.CallAfter(self.setLiveQualityList)
 
             case "b23.tv":
                 # 短链接
@@ -317,10 +333,16 @@ class MainWindow(Frame):
             case _:
                 self.onError(ErrorCode.Invalid_URL)
 
-        wx.CallAfter(self.onGetFinished)
+        if self.video_parser.continue_to_parse:
+            wx.CallAfter(self.onGetFinished)
+
+    def onRedirect(self, url: str):
+        self.parse_thread = Thread(target = self.parseThread, args = (url, ))
+        self.parse_thread.start()
 
     def onGetFinished(self):
-        self.parse_finish_flag = True
+        if self.current_parse_type != Config.Type.LIVE:
+            self.parse_finish_flag = True
 
         self.processing_window.Hide()
 
@@ -329,6 +351,22 @@ class MainWindow(Frame):
         self.treelist.SetFocus()
 
     def onDownload(self, event):
+        # 直播类型视频跳转合成窗口
+        if self.current_parse_type == Config.Type.LIVE:
+            if LiveInfo.status == Config.Type.LIVE_STATUS_0:
+                # 未开播，无法解析
+                wx.MessageDialog(self, "直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING).ShowModal()
+
+                return
+
+            # 获取选定清晰度的直播流
+            self.get_live_stream()
+
+            live_recording_window = LiveRecordingWindow(self)
+            live_recording_window.ShowModal()
+
+            return
+        
         video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
 
         # 获取要下载的视频列表
@@ -407,6 +445,14 @@ class MainWindow(Frame):
 
         self.video_quality_choice.Select(index)
 
+    def setLiveQualityList(self):
+        live_quality_desc_list = LiveInfo.live_quality_desc_list
+
+        live_quality_desc_list.insert(0, "自动")
+        self.video_quality_choice.Set(live_quality_desc_list)
+
+        self.video_quality_choice.Select(0)
+
     def setVideoList(self):
         self.treelist.set_video_list()
 
@@ -420,6 +466,20 @@ class MainWindow(Frame):
         count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
 
         self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
+
+    def setLiveList(self):
+        self.treelist.set_live_list()
+
+        self.type_lab.SetLabel("直播")
+
+    def get_live_stream(self):
+        # 获取选定清晰度的直播流
+        live_qn_id = live_quality_mapping[self.video_quality_choice.GetStringSelection()]
+
+        if live_qn_id == 40000:
+            live_qn_id = max(LiveInfo.live_quality_id_list)
+
+        self.live_parser.get_live_stream(live_qn_id)
 
     def onLoadDownloadProgress(self):
         self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
@@ -437,7 +497,7 @@ class MainWindow(Frame):
                 msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号后再试"
             
                 if self.current_parse_type == Config.Type.BANGUMI:
-                    if BangumiInfo.payment:
+                    if BangumiInfo.payment and Config.User.login:
                         msg = "解析失败：此视频需要付费购买，请确保已经购买此视频后再试"
             
             case ErrorCode.Request_Error:
@@ -465,7 +525,9 @@ class MainWindow(Frame):
         dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要注销用户 "{Config.User.uname}"？', "注销", wx.ICON_WARNING | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_YES:
-            login = QRLogin()
+            session = requests.sessions.Session()
+
+            login = QRLogin(session)
             login.logout()
 
             self.face.Hide()
@@ -699,7 +761,7 @@ class MainWindow(Frame):
                 self.SetClientSize(self.FromDIP((880, 450)))
 
     def getButtonSize(self):
-        # 解决 Linux macOS 按钮太小对的问题
+        # 解决 Linux macOS 按钮太小的问题
         match Config.Sys.platform:
             case "windows":
                 size = self.FromDIP((100, 30))

@@ -37,6 +37,22 @@ video_codec_mapping = {
     "AV1": 13
 }
 
+live_quality_mapping = {
+    "自动": 40000,
+    "杜比": 30000,
+    "4K": 20000,
+    "原画": 10000,
+    "蓝光": 400,
+    "高清": 150,
+    "流畅": 80
+}
+
+live_status_mapping = {
+    0: "未开播",
+    1: "直播中",
+    2: "轮播中"
+}
+
 supported_gpu_mapping = {
     "NVIDIA": 1,
     "AMD": 2,

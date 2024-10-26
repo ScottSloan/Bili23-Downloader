@@ -13,10 +13,10 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.51.0"
-        version_code: int = 1510
+        version: str = "1.52.0"
+        version_code: int = 1520
 
-        release_date: str = "2024/10/17"
+        release_date: str = "2024/10/26"
 
     class Proxy:
         proxy_mode: int = 1
@@ -40,6 +40,7 @@ class Config:
     class Misc:
         episode_display_mode: int = 1
 
+        show_episode_full_name: bool = True
         auto_select: bool = False
         debug: bool = False
         check_update: bool = True
@@ -70,7 +71,7 @@ class Config:
         VIDEO: int = 1                               # 用户投稿视频
         BANGUMI: int = 2                             # 番组
         MUSIC: int = 3                               # 音乐 TODO
-        LIVE: int = 4                                # 直播 TODO
+        LIVE: int = 4                                # 直播
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
@@ -82,11 +83,15 @@ class Config:
 
         EPISODES_SINGLE: int = 0                     # 只解析单个视频
         EPISODES_IN_SECTION: int = 1                 # 解析视频所在合集
-        EPISODES_ALL_SECTIONS: int = 2               # 解析全部合集 
+        EPISODES_ALL_SECTIONS: int = 2               # 解析全部合集
 
         PROXY_DISABLE: int = 0                       # 不使用代理
         PROXY_FOLLOW: int = 1                        # 跟随系统
         PROXY_MANUAL: int = 2                        # 手动设置
+
+        LIVE_STATUS_0: int = 0                       # 未开播
+        LIVE_STATUS_1: int = 1                       # 直播中
+        LIVE_STATUS_2: int = 2                       # 轮播中
     
     class Temp:
         download_window_pos = None
@@ -217,6 +222,7 @@ class ConfigUtils:
 
         # misc
         Config.Misc.episode_display_mode = self.config.getint("misc", "episode_display_mode")
+        Config.Misc.show_episode_full_name = self.config.getboolean("misc", "show_episode_full_name")
         Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
@@ -270,6 +276,7 @@ class ConfigUtils:
         # misc
         self.config.add_section("misc")
         self.config.set("misc", "episode_display_mode", str(Config.Misc.episode_display_mode))
+        self.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
         self.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
         self.config.set("misc", "player_path", Config.Misc.player_path)
         self.config.set("misc", "check_update", str(int(Config.Misc.check_update)))

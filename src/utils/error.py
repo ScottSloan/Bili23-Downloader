@@ -11,6 +11,7 @@ class ErrorCode:
 
 class StatusCode:
     CODE_0 = 0                              # 请求成功
+    CODE_1 = 1                              # 未找到该房间
     CODE_400 = -400                         # 请求错误
     CODE_403 = -403                         # 权限不足
     CODE_404 = -404                         # 视频不存在
@@ -18,6 +19,7 @@ class StatusCode:
     CODE_62002 = 62002                      # 稿件不可见
     CODE_62004 = 62004                      # 稿件审核中
     CODE_62012 = 62012                      # 仅 UP 主自己可见
+    CODE_19002003 = 19002003                # 房间信息不存在
 
 class RequestCode:
     SSLERROR = 200                          # SSLERROR
@@ -29,6 +31,8 @@ class ErrorCallback:
     parse_thread_stop_flag: bool = False
     onError = None
     onReadConfigError = None
+
+    onRedirect = None
 
 class VIPError(Exception):
     # 大会员认证异常类
@@ -66,6 +70,9 @@ class ErrorUtils:
     def getStatusInfo(self, status_code):
         # 根据状态码获取错误信息
         match status_code:
+            case StatusCode.CODE_1:
+                return "未找到该房间"
+            
             case StatusCode.CODE_400:
                 return "请求错误"
             
@@ -86,6 +93,12 @@ class ErrorUtils:
             
             case StatusCode.CODE_62012:
                 return "仅 UP 主自己可见"
+            
+            case StatusCode.CODE_19002003:
+                return "房间信息不存在"
+            
+            case _:
+                return "未知错误"
             
 def process_read_config_exception(f):
     @wraps(f)

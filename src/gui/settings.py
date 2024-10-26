@@ -17,8 +17,6 @@ class SettingWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "设置")
 
-        self.SetSize(self.FromDIP((600, 600)))
-
         self.init_UI()
 
         self.Bind_EVT()
@@ -80,7 +78,7 @@ class DownloadTab(wx.Panel):
     def init_UI(self):
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
-        self.scrolled_panel = ScrolledPanel(self.download_box, (470, 500))
+        self.scrolled_panel = ScrolledPanel(self.download_box, self.getPanelSize())
 
         path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
         self.path_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((220, 24)))
@@ -291,6 +289,14 @@ class DownloadTab(wx.Panel):
 
         self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
+    def getPanelSize(self):
+        match Config.Sys.platform:
+            case "windows":
+                return self.FromDIP((-1, 350))
+            
+            case "linux" | "darwin":
+                return self.FromDIP((400, 430))
+
 class MergeTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -304,7 +310,7 @@ class MergeTab(wx.Panel):
     def init_UI(self):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
-        ffmpeg_path_label = wx.StaticText(ffmpeg_box, 0, "FFmpeg 路径")
+        ffmpeg_path_label = wx.StaticText(ffmpeg_box, -1, "FFmpeg 路径")
         self.path_box = wx.TextCtrl(ffmpeg_box, -1, size = self.FromDIP((220, 24)))
         self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.FromDIP((60, 24)))
 
@@ -335,7 +341,7 @@ class MergeTab(wx.Panel):
         merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
-        merge_option_sbox.Add(merge_option_vbox, 1, wx.EXPAND)
+        merge_option_sbox.Add(merge_option_vbox, 0, wx.EXPAND)
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
         merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, 10)
@@ -605,24 +611,26 @@ class MiscTab(wx.Panel):
         sections_box = wx.StaticBox(self, -1, "剧集列表显示设置")
 
         self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
-        self.episodes_multiple_choice = wx.RadioButton(sections_box, -1, "获取视频所在合集")
-        self.episodes_all_choice = wx.RadioButton(sections_box, -1, "获取全部相关视频 (包括花絮、PV、OP、ED 等)")
+        self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "获取视频所在合集")
+        self.episodes_all_sections_choice = wx.RadioButton(sections_box, -1, "获取全部相关视频 (包括花絮、PV、OP、ED 等)")
 
+        self.show_episode_full_name = wx.CheckBox(sections_box, -1, "显示完整剧集名称")
         self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
 
         sections_vbox = wx.BoxSizer(wx.VERTICAL)
         sections_vbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
-        sections_vbox.Add(self.episodes_multiple_choice, 0, wx.ALL & (~wx.TOP), 10)
-        sections_vbox.Add(self.episodes_all_choice, 0, wx.ALL & (~wx.TOP), 10)
+        sections_vbox.Add(self.episodes_in_section_choice, 0, wx.ALL & (~wx.TOP), 10)
+        sections_vbox.Add(self.episodes_all_sections_choice, 0, wx.ALL & (~wx.TOP), 10)
+        sections_vbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), 10)
         sections_vbox.Add(self.auto_select_chk, 0, wx.ALL, 10)
         
         sections_sbox = wx.StaticBoxSizer(sections_box)
-        sections_sbox.Add(sections_vbox, 1, wx.EXPAND)
+        sections_sbox.Add(sections_vbox, 0, wx.EXPAND)
 
         player_box = wx.StaticBox(self, -1, "播放器设置")
 
         path_lab = wx.StaticText(player_box, -1, "播放器路径")
-        self.path_box = wx.TextCtrl(player_box, -1)
+        self.path_box = wx.TextCtrl(player_box, -1, size = self.FromDIP((220, 24)))
         self.browse_btn = wx.Button(player_box, -1, "浏览")
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -637,9 +645,7 @@ class MiscTab(wx.Panel):
         player_sbox.Add(player_vbox, 1, wx.EXPAND)
 
         misc_box = wx.StaticBox(self, -1, "杂项")
-
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
-
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -647,7 +653,7 @@ class MiscTab(wx.Panel):
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
-        misc_sbox.Add(misc_vbox, 1, wx.EXPAND)
+        misc_sbox.Add(misc_vbox, 0, wx.EXPAND)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
         misc_vbox.Add(sections_sbox, 0, wx.ALL | wx.EXPAND, 10)
@@ -664,11 +670,14 @@ class MiscTab(wx.Panel):
         match Config.Misc.episode_display_mode:
             case 0:
                 self.episodes_single_choice.SetValue(True)
-            case 1:
-                self.episodes_multiple_choice.SetValue(True)
-            case 2:
-                self.episodes_all_choice.SetValue(True)
 
+            case 1:
+                self.episodes_in_section_choice.SetValue(True)
+                
+            case 2:
+                self.episodes_all_sections_choice.SetValue(True)
+
+        self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.path_box.SetValue(Config.Misc.player_path)
         self.check_update_chk.SetValue(Config.Misc.check_update)
@@ -676,11 +685,13 @@ class MiscTab(wx.Panel):
 
     def save(self):
         if self.episodes_single_choice.GetValue():
-            Config.Misc.episode_display_mode = 0
-        elif self.episodes_multiple_choice.GetValue():
-            Config.Misc.episode_display_mode = 1
-        elif self.episodes_all_choice.GetValue():
-            Config.Misc.episode_display_mode = 2
+            Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
+
+        elif self.episodes_in_section_choice.GetValue():
+            Config.Misc.episode_display_mode = Config.Type.EPISODES_IN_SECTION
+
+        elif self.episodes_all_sections_choice.GetValue():
+            Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.path_box.GetValue()
@@ -688,6 +699,7 @@ class MiscTab(wx.Panel):
         Config.Misc.debug = self.debug_chk.GetValue()
 
         conf.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
+        conf.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
         conf.config.set("misc", "episode_display_mode", str(int(Config.Misc.episode_display_mode)))
         conf.config.set("misc", "player_path", Config.Misc.player_path)
         conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))

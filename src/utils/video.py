@@ -5,7 +5,7 @@ from typing import List, Dict
 
 from utils.config import Config, Audio
 from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid, find_str
-from utils.error import process_exception, ParseError, ErrorUtils, URLError, StatusCode
+from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 
 class VideoInfo:
     url: str = ""
@@ -26,7 +26,7 @@ class VideoInfo:
 
 class VideoParser:
     def __init__(self):
-        pass
+        self.continue_to_parse = True
     
     def get_part(self, url: str):
         part = re.findall(r"p=([0-9]+)", url)
@@ -68,6 +68,13 @@ class VideoParser:
 
         info = resp["data"]
 
+        if "redirect_url" in info:
+            # 存在跳转链接，重新跳转解析，抛出异常仅为停止线程
+            ErrorCallback.onRedirect(info["redirect_url"])
+            self.continue_to_parse = False
+
+            return
+
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
         VideoInfo.aid = info["aid"]
@@ -85,7 +92,6 @@ class VideoParser:
         match Config.Misc.episode_display_mode:
             case Config.Type.EPISODES_SINGLE:
                 # 解析单个视频
-
                 self.parse_pages()
 
             case Config.Type.EPISODES_IN_SECTION:
@@ -158,8 +164,9 @@ class VideoParser:
                 Audio.q_hires = True
 
         if "dolby" in info["dash"]:
-            if info["dash"]["dolby"]["audio"]:
-                Audio.q_dolby = True
+            if "audio" in info["dash"]["dolby"]:
+                if info["dash"]["dolby"]["audio"]:
+                    Audio.q_dolby = True
 
         # 检测 192k, 132k, 64k 音质是否存在
         if "audio" in info["dash"]:
@@ -184,6 +191,8 @@ class VideoParser:
         # 清除当前的视频信息
         self.clear_video_info()
 
+        self.continue_to_parse = True
+
         match find_str(r"av|BV", url):
             case "av":
                 self.get_aid(url)
@@ -193,7 +202,8 @@ class VideoParser:
 
         self.get_video_info()
 
-        self.get_video_available_media_info()
+        if self.continue_to_parse:
+            self.get_video_available_media_info()
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
@@ -212,15 +222,17 @@ class VideoParser:
         if len(VideoInfo.pages_list) == 1:
             # 单个视频
             VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
+
         else:
             # 分P视频
             VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
 
+        if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
             if hasattr(self, "part_num"):
                 VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
             else:
                 VideoInfo.pages_list = [VideoInfo.pages_list[0]]
-
+            
     def clear_video_info(self):
         # 清除当前的视频信息
         VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
