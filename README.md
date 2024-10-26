@@ -39,11 +39,6 @@ Bili23 Downloader GUI
 ### **下载**
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
-### **登录**
-由于B站限制，未登录状态下只能获取到 `480P` 视频，因此建议您扫码登录后使用。
-
-> 登录有效期为半年，过期后需重新登录。
-
 # 更新日志
 ### **Version 1.52.0 (2024/10/26)**
 Version 1.52.0 正式版发布
