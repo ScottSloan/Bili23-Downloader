@@ -13,10 +13,10 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.52.1"
-        version_code: int = 1521
+        version: str = "1.53.0"
+        version_code: int = 1530
 
-        release_date: str = "2024/10/26"
+        release_date: str = "2024/10/31"
 
     class Proxy:
         proxy_mode: int = 1

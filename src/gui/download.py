@@ -213,42 +213,33 @@ class DownloadUtils:
         return temp_list
 
     def mergeVideo(self):
+        # 去除特殊符号，并移除 - 前缀，防止视频合成失败
         title = get_legal_name(self.info["title"])
-
-        video_f_name = f"video_{self.info['id']}.mp4"
-        audio_f_name = f"audio_{self.info['id']}.{self.audio_type}"
 
         self.merge_error = False
 
-        match self.merge_type:
-            case Config.Type.MERGE_TYPE_ALL:
-                # 存在音频文件，调用 FFmpeg 合成
-                cmd = f'"{Config.FFmpeg.path}" -y -i "{video_f_name}" -i "{audio_f_name}" -acodec copy -vcodec copy -strict experimental "{title}.mp4"'
+        video_file_name = f"video_{self.info['id']}.mp4"
+        audio_file_name = f"audio_{self.info['id']}.{self.audio_type}"
 
-            case Config.Type.MERGE_TYPE_VIDEO:
-                # 无音频文件，仅有视频，直接重命名
-                cmd = f'rename "{video_f_name}" "{title}.mp4"'
-
-            case Config.Type.MERGE_TYPE_AUDIO:
-                # 无视频文件，仅有音频，直接重命名
-                cmd = f'rename "{audio_f_name}" "{title}.{self.audio_type}"'
+        cmd = self.getMergeVideoCmd(video_file_name, audio_file_name, title)
 
         try:
             self.merge_process = self.runSubprocess(cmd)
+
         except Exception as e:
             # subprocess 运行出错
             self.onMergeError(f"尝试启动 subprocess 时出错：{e}")
 
-            wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
+            wx.CallAfter(self.onComplete, [video_file_name, audio_file_name])
 
             return
 
         if self.merge_process.returncode == 0:
             if self.merge_type == Config.Type.MERGE_TYPE_ALL:
                 if Config.Merge.auto_clean:
-                    remove_files(Config.Download.path, [video_f_name, audio_f_name])
+                    remove_files(Config.Download.path, [video_file_name, audio_file_name])
                 else:
-                    cmd = f'rename "{video_f_name}" "{title}_video.mp4" && rename "{audio_f_name}" "{title}_audio.{self.audio_type}"'
+                    cmd = f'rename "{video_file_name}" "{title}_video.mp4" && rename "{audio_file_name}" "{title}_audio.{self.audio_type}"'
 
                     self.merge_process = self.runSubprocess(cmd)
         else:
@@ -259,9 +250,43 @@ class DownloadUtils:
             except Exception:
                 output = "无法获取错误信息"
 
-            self.onMergeError(output)
+            finally:
+                self.onMergeError(output)
 
-        wx.CallAfter(self.onComplete, [video_f_name, audio_f_name])
+        wx.CallAfter(self.onComplete, [video_file_name, audio_file_name])
+
+    def getMergeVideoCmd(self, video_file_name, audio_file_name, title):
+        match self.merge_type:
+            case Config.Type.MERGE_TYPE_ALL:
+                # 存在音频文件，调用 FFmpeg 合成
+                cmd_piece = f'"{Config.FFmpeg.path}" -y -i "{video_file_name}" -i "{audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4'
+
+                match Config.Sys.platform:
+                    case "windows":
+                        cmd = f'{cmd_piece} && rename _out.mp4 "{title}.mp4"'
+
+                    case "linux" | "darwin":
+                        cmd = f'{cmd_piece} && mv _out.mp4 "{title}.mp4"'
+
+            case Config.Type.MERGE_TYPE_VIDEO:
+                # 无音频文件，仅有视频，直接重命名
+                match Config.Sys.platform:
+                    case "windows":
+                        cmd = f'rename "{video_file_name}" "{title}.mp4"'
+                    
+                    case "linux" | "darwin":
+                        cmd = f'mv "{video_file_name}" "{title}"'
+
+            case Config.Type.MERGE_TYPE_AUDIO:
+                # 无视频文件，仅有音频，直接重命名
+                match Config.Sys.platform:
+                    case "win":
+                        cmd = f'rename "{audio_file_name}" "{title}.{self.audio_type}"'
+
+                    case "linux" | "darwin":
+                        cmd = f'mv "{audio_file_name}" "{title}.{self.audio_type}"'
+
+        return cmd
 
     def runSubprocess(self, cmd):
         process = subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)

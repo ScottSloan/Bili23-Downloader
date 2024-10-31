@@ -132,7 +132,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "type": type,
             "bvid": bvid,
             "cid": cid,
-            "title": get_legal_name(title),
+            "title": get_legal_name(title).removeprefix("-"),
             "pic": pic,
             "size": None,
             "total_size": None,
