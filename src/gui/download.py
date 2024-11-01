@@ -256,35 +256,27 @@ class DownloadUtils:
         wx.CallAfter(self.onComplete, [video_file_name, audio_file_name])
 
     def getMergeVideoCmd(self, video_file_name, audio_file_name, title):
+        match Config.Sys.platform:
+            case "windows":
+                rename_cmd = "rename"
+
+            case "linux" | "darwin":
+                rename_cmd = "mv"
+
         match self.merge_type:
             case Config.Type.MERGE_TYPE_ALL:
                 # 存在音频文件，调用 FFmpeg 合成
                 cmd_piece = f'"{Config.FFmpeg.path}" -y -i "{video_file_name}" -i "{audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4'
 
-                match Config.Sys.platform:
-                    case "windows":
-                        cmd = f'{cmd_piece} && rename _out.mp4 "{title}.mp4"'
-
-                    case "linux" | "darwin":
-                        cmd = f'{cmd_piece} && mv _out.mp4 "{title}.mp4"'
+                cmd = f'{cmd_piece} && {rename_cmd} _out.mp4 "{title}.mp4"'
 
             case Config.Type.MERGE_TYPE_VIDEO:
                 # 无音频文件，仅有视频，直接重命名
-                match Config.Sys.platform:
-                    case "windows":
-                        cmd = f'rename "{video_file_name}" "{title}.mp4"'
-                    
-                    case "linux" | "darwin":
-                        cmd = f'mv "{video_file_name}" "{title}"'
+                cmd = f'{rename_cmd} "{video_file_name}" "{title}.mp4"'
 
             case Config.Type.MERGE_TYPE_AUDIO:
                 # 无视频文件，仅有音频，直接重命名
-                match Config.Sys.platform:
-                    case "win":
-                        cmd = f'rename "{audio_file_name}" "{title}.{self.audio_type}"'
-
-                    case "linux" | "darwin":
-                        cmd = f'mv "{audio_file_name}" "{title}.{self.audio_type}"'
+                cmd = f'{rename_cmd} "{audio_file_name}" "{title}.{self.audio_type}"'
 
         return cmd
 
