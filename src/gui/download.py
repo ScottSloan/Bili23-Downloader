@@ -238,10 +238,7 @@ class DownloadUtils:
             if self.merge_type == Config.Type.MERGE_TYPE_ALL:
                 if Config.Merge.auto_clean:
                     remove_files(Config.Download.path, [video_file_name, audio_file_name])
-                else:
-                    cmd = f'rename "{video_file_name}" "{title}_video.mp4" && rename "{audio_file_name}" "{title}_audio.{self.audio_type}"'
 
-                    self.merge_process = self.runSubprocess(cmd)
         else:
             # 合成失败时，获取错误信息
             try:
@@ -266,9 +263,15 @@ class DownloadUtils:
         match self.merge_type:
             case Config.Type.MERGE_TYPE_ALL:
                 # 存在音频文件，调用 FFmpeg 合成
+                if not Config.Merge.auto_clean:
+                    # 不自动清理文件，保留音视频
+                    cmd_extra = f'&& {rename_cmd} "{video_file_name}" "{title}_video.mp4" && {rename_cmd} "{audio_file_name}" "{title}_audio.{self.audio_type}"'
+                else:
+                    cmd_extra = ""
+
                 cmd_piece = f'"{Config.FFmpeg.path}" -y -i "{video_file_name}" -i "{audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4'
 
-                cmd = f'{cmd_piece} && {rename_cmd} _out.mp4 "{title}.mp4"'
+                cmd = f'{cmd_piece} && {rename_cmd} _out.mp4 "{title}.mp4"{cmd_extra}'
 
             case Config.Type.MERGE_TYPE_VIDEO:
                 # 无音频文件，仅有视频，直接重命名
