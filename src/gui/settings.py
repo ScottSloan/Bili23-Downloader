@@ -335,10 +335,13 @@ class MergeTab(wx.Panel):
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
 
+        self.convert_to_flac_flac = wx.CheckBox(merge_option_box, -1, "将无损音频流转化为标准无损格式")
+
         self.auto_clean_chk = wx.CheckBox(merge_option_box, -1, "合成完成后清理文件")
 
         merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
-        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
+        merge_option_vbox.Add(self.convert_to_flac_flac, 0, wx.ALL, 10)
+        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
         merge_option_sbox.Add(merge_option_vbox, 0, wx.EXPAND)
@@ -359,13 +362,16 @@ class MergeTab(wx.Panel):
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
         
+        self.convert_to_flac_flac.SetValue(Config.Merge.convert_to_flac)
         self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
 
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()
+        Config.Merge.convert_to_flac = self.convert_to_flac_flac.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
         conf.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
+        conf.config.set("merge", "convert_to_flac", str(int(Config.Merge.convert_to_flac)))
         conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
     def onBrowsePath(self, event):

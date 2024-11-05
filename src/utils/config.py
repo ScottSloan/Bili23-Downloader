@@ -16,7 +16,7 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
-        release_date: str = "2024/10/31"
+        release_date: str = "2024/11/05"
 
     class Proxy:
         proxy_mode: int = 1
@@ -65,6 +65,7 @@ class Config:
         speed_limit_in_mb: int = 10
     
     class Merge:
+        convert_to_flac: bool = True
         auto_clean: bool = True
 
     class Type:
@@ -203,6 +204,7 @@ class ConfigUtils:
 
         # merge
         Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")
+        Config.Merge.convert_to_flac = self.config.getboolean("merge", "convert_to_flac")
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
         # user
@@ -261,6 +263,7 @@ class ConfigUtils:
         # merge
         self.config.add_section("merge")
         self.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
+        self.config.set("merge", "convert_to_flac", str(int(Config.Merge.convert_to_flac)))
         self.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
         # proxy

@@ -307,3 +307,11 @@ def get_background_color():
         return wx.Colour(30, 30, 30)
     else:
         return "white"
+    
+def get_system_encoding():
+    match Config.Sys.platform:
+        case "windows":
+            return "cp936"
+        
+        case "linux" | "darwin":
+            return "utf-8"

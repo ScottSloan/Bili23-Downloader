@@ -40,11 +40,12 @@ Bili23 Downloader GUI
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
 # 更新日志
-### **Version 1.53.0 (2024/10/31)**
-Version 1.53.0 Beta1 发布
+### **Version 1.53.0 (2024/11/05)**
+Version 1.53.0 Beta2 发布
 
 本次更新内容：
 * 修复名称以"-"开头的视频无法合成的问题
+* 支持将无损音频流(fLaC)转化为标准无损格式(FLAC)
 
 # 联系方式
 - QQ: 2592111619

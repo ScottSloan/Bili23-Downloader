@@ -15,7 +15,7 @@ from gui.cover_viewer import CoverViewerDialog
 from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
-from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time
+from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, get_system_encoding
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
 
@@ -242,7 +242,7 @@ class DownloadUtils:
         else:
             # 合成失败时，获取错误信息
             try:
-                output = self.merge_process.stdout.decode("cp936").replace("\r\n", "")
+                output = self.merge_process.stdout.decode(get_system_encoding()).replace("\r\n", "")
 
             except Exception:
                 output = "无法获取错误信息"
@@ -252,7 +252,7 @@ class DownloadUtils:
 
         wx.CallAfter(self.onComplete, [video_file_name, audio_file_name])
 
-    def getMergeVideoCmd(self, video_file_name, audio_file_name, title):
+    def getMergeVideoCmd(self, video_file_name: str, audio_file_name: str, title: str):
         match Config.Sys.platform:
             case "windows":
                 rename_cmd = "rename"
@@ -278,8 +278,11 @@ class DownloadUtils:
                 cmd = f'{rename_cmd} "{video_file_name}" "{title}.mp4"'
 
             case Config.Type.MERGE_TYPE_AUDIO:
-                # 无视频文件，仅有音频，直接重命名
-                cmd = f'{rename_cmd} "{audio_file_name}" "{title}.{self.audio_type}"'
+                # 无视频文件，仅有音频，直接重命名，若为无损格式，根据设置决定是否转化为标准无损格式
+                if self.audio_type == "flac" and Config.Merge.convert_to_flac:
+                    cmd = f'"{Config.FFmpeg.path}" -y -i "{audio_file_name}" -c:a flac "{title}.flac"'
+                else:
+                    cmd = f'{rename_cmd} "{audio_file_name}" "{title}.{self.audio_type}"'
 
         return cmd
 
