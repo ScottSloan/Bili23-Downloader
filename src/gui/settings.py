@@ -335,13 +335,19 @@ class MergeTab(wx.Panel):
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
 
-        self.convert_to_flac_flac = wx.CheckBox(merge_option_box, -1, "将无损音频流转化为标准无损格式")
+        self.convert_to_flac_flac = wx.CheckBox(merge_option_box, -1, "将无损音频流编码转换为标准的无损 FLAC 编码")
+        self.convert_to_flac_flac_tip = wx.StaticBitmap(merge_option_box, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.convert_to_flac_flac_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+        convert_to_flac_box = wx.BoxSizer(wx.HORIZONTAL)
+        convert_to_flac_box.Add(self.convert_to_flac_flac, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        convert_to_flac_box.Add(self.convert_to_flac_flac_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.auto_clean_chk = wx.CheckBox(merge_option_box, -1, "合成完成后清理文件")
 
         merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
-        merge_option_vbox.Add(self.convert_to_flac_flac, 0, wx.ALL, 10)
-        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL & (~wx.TOP), 10)
+        merge_option_vbox.Add(convert_to_flac_box, 0, wx.EXPAND)
+        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
         merge_option_sbox.Add(merge_option_vbox, 0, wx.EXPAND)
@@ -358,6 +364,8 @@ class MergeTab(wx.Panel):
         self.auto_detect_btn.Bind(wx.EVT_BUTTON, self.onAutoDetect)
 
         self.tutorial_btn.Bind(wx.EVT_BUTTON, self.onTutorial)
+
+        self.convert_to_flac_flac_tip.Bind(wx.EVT_LEFT_DOWN, self.onConvertToFlacTip)
 
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
@@ -405,6 +413,9 @@ class MergeTab(wx.Panel):
         import webbrowser
 
         webbrowser.open("https://scott-sloan.cn/archives/120/")
+
+    def onConvertToFlacTip(self, event):
+        wx.MessageDialog(self, "无损音频转换说明\n\nB站无损音频流编码为 fLaC，与标准的无损编码 FLAC 不同，部分软件可能无法正常播放。\n\n此功能可将其转换为标准的无损 FLAC 编码，能够正常识别和播放。", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onConfirm(self):
         self.save()
