@@ -281,14 +281,16 @@ class MainWindow(Frame):
         # 清除下载列表
         Download.download_list.clear()
 
+        continue_to_parse = True
+
         match find_str(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 # 用户投稿视频
                 self.current_parse_type = Config.Type.VIDEO
 
-                self.video_parser.parse_url(url)
+                continue_to_parse = self.video_parser.parse_url(url)
 
-                if self.video_parser.continue_to_parse:
+                if continue_to_parse:
                     # 当存在跳转链接时，使用新的跳转链接重新开始解析，原先解析线程不继续执行
                     wx.CallAfter(self.setVideoList)
 
@@ -333,7 +335,7 @@ class MainWindow(Frame):
             case _:
                 self.onError(ErrorCode.Invalid_URL)
 
-        if self.video_parser.continue_to_parse:
+        if continue_to_parse:
             wx.CallAfter(self.onGetFinished)
 
     def onRedirect(self, url: str):

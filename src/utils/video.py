@@ -205,6 +205,8 @@ class VideoParser:
         if self.continue_to_parse:
             self.get_video_available_media_info()
 
+        return self.continue_to_parse
+
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 

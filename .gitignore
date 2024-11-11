@@ -14,6 +14,7 @@ download.json
 icon.ico
 ffmpeg.exe
 build.bat
+test.py
 
 # commitizen
 cz.json
