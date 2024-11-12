@@ -315,3 +315,36 @@ def get_system_encoding():
         
         case "linux" | "darwin":
             return "utf-8"
+        
+def msw_open_in_explorer(file_path):
+    # 仅 Windows 平台可用
+    def get_pidl(path):
+        pidl = ctypes.POINTER(ITEMIDLIST)()
+        shell32.SHParseDisplayName(path, None, ctypes.byref(pidl), 0, None)
+        
+        return pidl
+    
+    ole32 = ctypes.windll.ole32
+    shell32 = ctypes.windll.shell32
+
+    class ITEMIDLIST(ctypes.Structure):
+        _fields_ = [("mkid", ctypes.c_byte)]
+
+    shell32.SHParseDisplayName.argtypes = [
+        ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_void_p),
+        ctypes.POINTER(ctypes.POINTER(ITEMIDLIST)),
+        ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)
+    ]
+
+    shell32.SHParseDisplayName.restype = ctypes.HRESULT
+
+    ole32.CoInitialize(None)
+    
+    try:
+        folder_pidl = get_pidl(os.path.dirname(file_path))
+        file_pidl = get_pidl(file_path)
+        
+        shell32.SHOpenFolderAndSelectItems(folder_pidl, 1, ctypes.byref(file_pidl), 0)
+
+    finally:
+        ole32.CoUninitialize()

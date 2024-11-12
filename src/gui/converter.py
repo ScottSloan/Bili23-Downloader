@@ -6,7 +6,7 @@ import subprocess
 from utils.config import Config
 from utils.thread import Thread
 from utils.mapping import video_codec_mapping, supported_gpu_mapping
-from utils.tools import format_size
+from utils.tools import format_size, msw_open_in_explorer
 
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
@@ -407,14 +407,15 @@ class ConverterWindow(wx.Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
 
-        match Config.Sys.platform:
-            case "windows":
-                cmd = f'explorer.exe /select,{path}'
+        if Config.Sys.platform:
+            msw_open_in_explorer(path)
 
-            case "linux":
-                cmd = f'xdg-open "{directory}"'
+        else:
+            match Config.Sys.platform:
+                case "linux":
+                    cmd = f'xdg-open "{directory}"'
 
-            case "darwin":
-                cmd = f'open -R "{path}"'
-        
-        subprocess.Popen(cmd, cwd = directory, shell = True)
+                case "darwin":
+                    cmd = f'open -R "{path}"'
+            
+            subprocess.Popen(cmd, cwd = directory, shell = True)

@@ -15,7 +15,7 @@ from gui.cover_viewer import CoverViewerDialog
 from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
-from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, get_system_encoding
+from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, get_system_encoding, msw_open_in_explorer
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
 
@@ -1007,27 +1007,31 @@ class DownloadItemPanel(wx.Panel):
         match self.utils.merge_type:
             case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
                 file_type = "mp4"
+
             case Config.Type.MERGE_TYPE_AUDIO:
                 file_type = f"{self.utils.audio_type}"
 
         self.file_full_name = f"{self.info['title']}.{file_type}"
+        full_path = os.path.join(Config.Download.path, self.file_full_name)
 
-        if not os.path.exists(os.path.join(Config.Download.path, self.file_full_name)):
+        if not os.path.exists(full_path):
             wx.MessageDialog(self.GetParent().GetParent(), f"文件不存在\n\n无法打开文件：{self.file_full_name}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
+        
+        if Config.Sys.platform == "windows":
+            # Windows 下直接使用 SHOpenFolderAndSelectItems API 函数，避免被360拦截
+            msw_open_in_explorer(full_path)
 
-        match Config.Sys.platform:
-            case "windows":
-                cmd = f'explorer.exe /select,{self.file_full_name}'
+        else:
+            match Config.Sys.platform:
+                case "linux":
+                    # Linux 下 xdg-open 并不支持选中文件，故仅打开所在文件夹
+                    cmd = f'xdg-open "{Config.Download.path}"'
 
-            case "linux":
-                # Linux 下 xdg-open 并不支持选中文件，故仅打开所在文件夹
-                cmd = f'xdg-open "{Config.Download.path}"'
+                case "darwin":
+                    cmd = f'open -R "{self.file_full_name}"'
 
-            case "darwin":
-                cmd = f'open -R "{self.file_full_name}"'
-
-        subprocess.Popen(cmd, cwd = Config.Download.path, shell = True)
+            subprocess.Popen(cmd, cwd = Config.Download.path, shell = True)
 
     def onViewCover(self, event):
         cover_viewer_dlg = CoverViewerDialog(self.GetParent().GetParent(), self.cover_image, self.cover_image_raw)

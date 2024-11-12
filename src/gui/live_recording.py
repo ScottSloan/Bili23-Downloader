@@ -7,7 +7,7 @@ from typing import List
 from utils.live import LiveInfo
 from utils.config import Config
 from utils.thread import Thread
-from utils.tools import format_size
+from utils.tools import format_size, msw_open_in_explorer
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -220,18 +220,18 @@ class LiveRecordingWindow(wx.Dialog):
         if not os.path.exists(path):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
-
-        match Config.Sys.platform:
-            case "windows":
-                cmd = f'explorer.exe /select,{path}'
-
-            case "linux":
-                cmd = f'xdg-open "{directory}"'
-
-            case "darwin":
-                cmd = f'open -R "{path}"'
         
-        subprocess.Popen(cmd, cwd = directory, shell = True)
+        if Config.Sys.platform == "windows":
+            msw_open_in_explorer(path)
+        else:
+            match Config.Sys.platform:
+                case "linux":
+                    cmd = f'xdg-open "{directory}"'
+
+                case "darwin":
+                    cmd = f'open -R "{path}"'
+            
+            subprocess.Popen(cmd, cwd = directory, shell = True)
 
     def setStatus(self, status: bool):
         if status:
