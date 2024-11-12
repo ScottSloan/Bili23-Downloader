@@ -389,11 +389,11 @@ class MergeTab(wx.Panel):
         match Config.Sys.platform:
             case "windows":
                 defaultFile = "ffmpeg.exe"
-                wildcard = ("FFmpeg|ffmpeg.exe")
+                wildcard = "FFmpeg|ffmpeg.exe"
 
             case "linux" | "darwin":
                 defaultFile = "ffmpeg"
-                wildcard = ("FFmpeg|ffmpeg")
+                wildcard = "FFmpeg|*"
 
         dlg = wx.FileDialog(self, "选择 FFmpeg 路径", defaultDir = default_dir, defaultFile = defaultFile, style = wx.FD_OPEN, wildcard = wildcard)
 
@@ -681,7 +681,7 @@ class MiscTab(wx.Panel):
 
     def Bind_EVT(self):
         self.path_box.Bind(wx.EVT_TEXT, self.onChangePath)
-        self.browse_btn.Bind(wx.EVT_BUTTON, self.browse_btn_EVT)
+        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowse)
 
     def init_data(self):
         match Config.Misc.episode_display_mode:
@@ -727,8 +727,15 @@ class MiscTab(wx.Panel):
         # 重新创建主窗口的菜单
         self.GetParent().GetParent().GetParent().init_menubar()
 
-    def browse_btn_EVT(self, event):
-        wildcard = "可执行文件(*.exe)|*.exe"
+    def onBrowse(self, event):
+        # 根据不同平台选取不同后缀名文件
+        match Config.Sys.platform:
+            case "windows":
+                wildcard = "可执行文件(*.exe)|*.exe"
+
+            case "linux" | "darwin":
+                wildcard = "可执行文件|*"
+
         dialog = wx.FileDialog(self, "选择播放器路径", os.getcwd(), wildcard = wildcard, style = wx.FD_OPEN)
 
         if dialog.ShowModal() == wx.ID_OK:
