@@ -93,6 +93,9 @@ class Config:
         LIVE_STATUS_0: int = 0                       # 未开播
         LIVE_STATUS_1: int = 1                       # 直播中
         LIVE_STATUS_2: int = 2                       # 轮播中
+
+        DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
+        DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕
     
     class Temp:
         download_window_pos = None
@@ -104,8 +107,10 @@ class Config:
         available: bool = False
 
     class Extra:
-        download_danmaku = True
-        download_cover = True
+        download_danmaku = False
+        danmaku_format = 0
+
+        download_cover = False
 
 class Audio:
     audio_quality_id: int = 0
@@ -211,6 +216,11 @@ class ConfigUtils:
         Config.Merge.convert_to_flac = self.config.getboolean("merge", "convert_to_flac")
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
+        # extra
+        Config.Extra.download_danmaku = self.config.getboolean("extra", "download_danmaku")
+        Config.Extra.danmaku_format = self.config.getint("extra", "danmaku_format")
+        Config.Extra.download_cover = self.config.getboolean("extra", "download_cover")
+
         # user
         Config.User.login = self.user_config.getboolean("user", "login")
         Config.User.face = self.user_config.get("user", "face")
@@ -269,6 +279,12 @@ class ConfigUtils:
         self.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
         self.config.set("merge", "convert_to_flac", str(int(Config.Merge.convert_to_flac)))
         self.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
+
+        # extra
+        self.config.add_section("extra")
+        self.config.set("extra", "download_danmaku", str(int(Config.Extra.download_danmaku)))
+        self.config.set("extra", "danmaku_format", str(Config.Extra.danmaku_format))
+        self.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
 
         # proxy
         self.config.add_section("proxy")

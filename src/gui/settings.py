@@ -11,7 +11,7 @@ from gui.ffmpeg_detect import DetectDialog
 from utils.config import Config, conf
 from utils.tools import get_header
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -434,11 +434,20 @@ class ExtraTab(wx.Panel):
     def init_UI(self):
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
 
-        self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载弹幕")
+        self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
+        danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
+        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_mapping.keys()))
+
+        danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        danmaku_hbox.AddSpacer(30)
+        danmaku_hbox.Add(danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(danmaku_hbox, 0, wx.EXPAND)
         vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
 
         extra_sbox = wx.StaticBoxSizer(extra_box)
@@ -451,8 +460,25 @@ class ExtraTab(wx.Panel):
     
     def init_data(self):
         self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku)
+        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_format)
         self.get_cover_chk.SetValue(Config.Extra.download_cover)
 
+    def save(self):
+        Config.Extra.download_danmaku = self.get_danmaku_chk.GetValue()
+        Config.Extra.danmaku_format = self.danmaku_format_choice.GetSelection()
+        Config.Extra.download_cover = self.get_cover_chk.GetValue()
+        
+        conf.config.set("extra", "download_danmaku", str(int(Config.Extra.download_danmaku)))
+        conf.config.set("extra", "danmaku_format", str(Config.Extra.danmaku_format))
+        conf.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
+
+        conf.config_save()
+
+    def onConfirm(self):
+        self.save()
+
+        return True
+    
 class ProxyTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)

@@ -58,3 +58,8 @@ supported_gpu_mapping = {
     "AMD": 2,
     "Intel": 3
 }
+
+danmaku_format_mapping = {
+    "xml": 0,
+    "protobuf": 1
+}
