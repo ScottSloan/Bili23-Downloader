@@ -23,7 +23,7 @@ class LiveRecordingWindow(wx.Dialog):
 
     def init_UI(self):
         font: wx.Font = self.GetFont()
-        font.SetPointSize(12)
+        font.SetFractionalPointSize(12)
 
         self.title_lab = wx.StaticText(self, -1)
         self.title_lab.SetFont(font)
@@ -49,7 +49,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.getButtonSize())
 
         font: wx.Font = self.GetFont()
-        font.SetPointSize(10)
+        font.SetFractionalPointSize(10)
 
         self.status_lab = wx.StaticText(self, -1, "状态：未开始录制")
         self.status_lab.SetFont(font)

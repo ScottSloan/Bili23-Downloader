@@ -16,7 +16,7 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
-        release_date: str = "2024/11/12"
+        release_date: str = "2024/11/13"
 
     class Proxy:
         proxy_mode: int = 1
@@ -102,6 +102,10 @@ class Config:
     class FFmpeg:
         path: str = ""
         available: bool = False
+
+    class Extra:
+        download_danmaku = True
+        download_cover = True
 
 class Audio:
     audio_quality_id: int = 0

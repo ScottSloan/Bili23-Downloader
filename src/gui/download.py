@@ -18,6 +18,7 @@ from utils.download import Downloader, DownloaderInfo
 from utils.tools import get_header, get_auth, get_proxy, get_legal_name, get_background_color, remove_files, format_size, get_current_time, get_system_encoding, msw_open_in_explorer
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
+from utils.danmaku import DanmakuParser
 
 class DownloadInfo:
     download_list: Dict = {}
@@ -988,6 +989,8 @@ class DownloadItemPanel(wx.Panel):
 
         self.gauge.SetValue(100)
 
+        self.getAttaches()
+
     def onError(self):
         self.setStatus("error")
 
@@ -1077,6 +1080,11 @@ class DownloadItemPanel(wx.Panel):
                 image = wx.Image(io.BytesIO(getFolderIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getFolderIcon16()))
 
         self.pause_btn.SetBitmap(image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
+
+    def getAttaches(self):
+        if Config.Extra.download_danmaku:
+            danmaku_parser = DanmakuParser()
+            danmaku_parser.get_danmaku(self.info["title"], self.info["cid"])
 
     def setStatus(self, status: str):
         self.info["status"] = status

@@ -28,6 +28,7 @@ class SettingWindow(wx.Dialog):
 
         self.note.AddPage(DownloadTab(self.note), "下载")
         self.note.AddPage(MergeTab(self.note), "合成")
+        self.note.AddPage(ExtraTab(self.note), "附加内容")
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
 
@@ -421,7 +422,37 @@ class MergeTab(wx.Panel):
         self.save()
 
         return True
+
+class ExtraTab(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.init_data()
+
+    def init_UI(self):
+        extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
+
+        self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载弹幕")
+        self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
+
+        extra_sbox = wx.StaticBoxSizer(extra_box)
+        extra_sbox.Add(vbox, 0, wx.EXPAND)
+
+        extra_vbox = wx.BoxSizer(wx.VERTICAL)
+        extra_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
+        self.SetSizer(extra_vbox)
     
+    def init_data(self):
+        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku)
+        self.get_cover_chk.SetValue(Config.Extra.download_cover)
+
 class ProxyTab(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
