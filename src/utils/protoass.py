@@ -6,7 +6,7 @@ import datetime
 class BiliProtoAss:
     def __init__(self,title:str="",author:str="Bili23 Downloader",created:str=datetime.datetime.now(),
                  language:str="简体中文",Timer:str="100.0000",duration:int=15000,
-                 ResX:int=None,ResY:int=None,WarpStyle:int=2):
+                 ResX:int=None,ResY:int=None,WarpStyle:int=2,alpha:float=0.8):
         """
         将Proto转化为Ass文件
         title: 标题
@@ -17,8 +17,9 @@ class BiliProtoAss:
         Timer: 定时器(默认100.0000,200.0000则播放速度为2倍,保留4位小数)
         ResX: 原始宽度
         ResY: 原始高度
+        WarpStyle: 字幕换行方式
+        alpha: 透明度，0-1之间，0为完全透明，1为完全不透明
         """
-
         self.header={
             'Title':title,
             'ScriptType':"v4.00+",
@@ -35,6 +36,7 @@ class BiliProtoAss:
             self.header['PlayerResY']=ResY
 
 
+        self.alpha=str(hex(int(alpha*255))[2:]) # 透明度
         self.StyleFormat=[
             "Name", "Fontname", "Fontsize", "PrimaryColour", 
             "SecondaryColour", "TertiaryColour", "BackColour",
@@ -48,9 +50,9 @@ class BiliProtoAss:
                 "Name": "Normal",
                 "Fontname": "黑体",
                 "Fontsize": 25,
-                "PrimaryColour": "&H7fFFFFFF",
-                "SecondaryColour": "&H7f000000",
-                "TertiaryColour": "&H7f000000",
+                "PrimaryColour": f"&H{self.alpha}FFFFFF", ## 注意颜色表示为16进制ABGR
+                "SecondaryColour": f"&H{self.alpha}000000",
+                "TertiaryColour": f"&H{self.alpha}000000",
                 "BackColour": "&H00000000",
                 "Bold": 0,
                 "Italic": 0,
@@ -176,13 +178,42 @@ class BiliProtoAss:
             # 处理无效弹幕
             return None
         danmuInfo=self.EvnetTemplate.copy()
+        danmu['color']=danmu.get('color',16777215)
+        danmu['fontsize']=danmu.get('fontsize',25)
         if danmu['mode'] in [1,2,3]:
             # 普通弹幕
             danmuInfo.update({
                 "Start":self.formatMS(danmu['progress']),
                 "End":self.formatMS(danmu['progress']+self.duration),
-                "Text":danmu['content']
+                "Text":self.textHandler(danmu['content'],danmu['color'],danmu['fontsize'])
             })
+        elif danmu['mode']==4:
+            # 底部弹幕
+            danmuInfo.update({
+                "Start":self.formatMS(danmu['progress']),
+                "End":self.formatMS(danmu['progress']+self.duration),
+                "Style":"BTM",
+                "Text":self.textHandler(danmu['content'],danmu['color'],danmu['fontsize'])
+            })
+        elif danmu['mode']==5:
+            # 顶部弹幕
+            danmuInfo.update({
+                "Start":self.formatMS(danmu['progress']),
+                "End":self.formatMS(danmu['progress']+self.duration),
+                "Style":"TOP",
+                "Text":self.textHandler(danmu['content'],danmu['color'],danmu['fontsize'])
+            })
+        elif danmu['mode']==6:
+            # 逆向弹幕
+            danmuInfo.update({
+                "Start":self.formatMS(danmu['progress']),
+                "End":self.formatMS(danmu['progress']+self.duration),
+                "Style":"Normal",
+                "Text":self.textHandler(danmu['content'],danmu['color'],danmu['fontsize']),
+                "Effect":"Banner;0;1"
+            })
+        else:
+            return None
         return danmuInfo
 
     def formatMS(self,milliseconds:int):
@@ -192,3 +223,13 @@ class BiliProtoAss:
         minutes, seconds = divmod(remainder, 60)
 
         return "{:02}:{:02}:{:02}:{:02}".format(hours, minutes, seconds, ms)
+    
+    def textHandler(self,text:str,color:int=16777215,size:int=25):
+        """
+        给文本加上颜色、透明度、字体大小
+        """
+        color=str(hex(color)[2:])# 转化为十六进制RGB
+        ## 将RGB转化为BGR
+        realcolor="&H"+color[4:]+color[2:4]+color[:2]
+        text="{\\1a&H"+self.alpha+"}{\\c"+realcolor+"}{\\fs"+str(size)+"}"+text
+        return text
