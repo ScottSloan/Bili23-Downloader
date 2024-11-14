@@ -6,7 +6,8 @@ import datetime
 class BiliProtoAss:
     def __init__(self,title:str="",author:str="Bili23 Downloader",created:str=datetime.datetime.now(),
                  language:str="简体中文",Timer:str="100.0000",duration:int=15000,
-                 ResX:int=1920,ResY:int=1080,WarpStyle:int=2,alpha:float=0.2):
+                 ResX:int=1920,ResY:int=1080,WarpStyle:int=2,alpha:float=0.2,
+                 speed:int=2,defaultFont:str="黑体",collisions:str="Reverse"):
         """
         将Proto转化为Ass文件
         title: 标题
@@ -19,11 +20,14 @@ class BiliProtoAss:
         ResY: 原始高度
         WarpStyle: 字幕换行方式
         alpha: 透明度，0-1之间，1为完全透明，0为完全不透明
+        speed: 滚动弹幕速度，默认为2，值越大，速度越慢
+        defaultFont: 默认字体名称
+        collisions: 弹幕防碰撞方式，默认为Reverse，可改为Normal
         """
         self.header={
             'Title':title,
             'ScriptType':"v4.00+",
-            'Collisions':"Reverse",
+            'Collisions':collisions,
             'Author':author,
             'Created':created,
             'Original Script':language,
@@ -33,7 +37,8 @@ class BiliProtoAss:
             'Timer':Timer
         }
 
-
+        self.speed=speed
+        self.defaultFont=defaultFont
         self.alpha=str(hex(int(alpha*255))[2:]) # 透明度
         self.StyleFormat=[
             "Name", "Fontname", "Fontsize", "PrimaryColour", 
@@ -46,7 +51,7 @@ class BiliProtoAss:
         self.StyleSheet = [
             {
                 "Name": "Normal",
-                "Fontname": "黑体",
+                "Fontname": self.defaultFont,
                 "Fontsize": 25,
                 "PrimaryColour": f"&H{self.alpha}FFFFFF", ## 注意颜色表示为16进制ABGR
                 "SecondaryColour": f"&H{self.alpha}000000",
@@ -100,7 +105,7 @@ class BiliProtoAss:
             "MarginL":0,
             "MarginR":0,
             "MarginV":0,
-            "Effect":"Banner;2;0",
+            "Effect":f"Banner;{self.speed};0",
             "Text":None
         }
 
@@ -210,7 +215,7 @@ class BiliProtoAss:
                 "End":self.formatMS(danmu['progress']+self.duration),
                 "Style":"Normal",
                 "Text":self.textHandler(danmu['content'],danmu['color'],danmu['fontsize']),
-                "Effect":"Banner;2;1"
+                "Effect":f"Banner;{self.speed};1"
             })
         else:
             return None
