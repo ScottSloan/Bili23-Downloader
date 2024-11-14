@@ -1,5 +1,5 @@
 # from . import bilidanmu_pb2 as Danmaku
-import google.protobuf.text_format as text_format
+from google.protobuf.json_format import MessageToDict
 import bilidanmu_pb2 as Danmaku
 import datetime
 
@@ -35,30 +35,13 @@ class BiliProtoAss:
 
         self.duration=duration
 
-    def __toList(self, content):
+    def __decode(self, content):
         """
         将content解码并返回
         """
         danmakuSeg = Danmaku.DmSegMobileReply()
         danmakuSeg.ParseFromString(content)
-        danmakuList=[]
-        for i in range(len(danmakuSeg.elems)):
-            danmu={} #此条弹幕的所有属性
-            thisContent=text_format.MessageToString(danmakuSeg.elems[i], as_utf8=True)
-            thisContent=thisContent.split('\n')
-            for j in thisContent:
-                # 处理单个弹幕属性
-                if j=='' or j=='\n':
-                    continue
-                split=j.find(':') # 找到冒号的位置
-                key=j[:split]
-                value=j[split+1:]
-                # 去除空格
-                key=key.strip()
-                value=value.strip()
-                danmu[key]=value
-            if danmu:
-                danmakuList.append(danmu)
+        danmakuList=MessageToDict(danmakuSeg)["elems"]
         return danmakuList
 
     def getDanmu(self, content):
