@@ -127,12 +127,11 @@ class BiliProtoAss:
             danmu=self.danmuFormater(i)
             if danmu is None:
                 continue
-            Event="Dialogue: "
-            for key in self.EventFormat:
+            for key in danmu.keys():
                 if danmu[key] is None:
-                    Event+=","
-                else:
-                    Event+=","+str(danmu[key])
+                    danmu[key]=""
+            Event="Dialogue: "
+            Event+=",".join(str(danmu[key]) for key in self.EventFormat)
             Events+=Event+"\n"
         return Events
 
