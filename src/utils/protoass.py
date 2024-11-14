@@ -63,9 +63,9 @@ class BiliProtoAss:
                 "BorderStyle": 1,
                 "Outline": 1,
                 "Shadow": 0,
-                "Alignment": 2,
-                "MarginL": 20,
-                "MarginR": 20,
+                "Alignment": 8,# 注意！此处遵循ASS格式标准，SSA标准与此不同
+                "MarginL": 10,
+                "MarginR": 10,
                 "MarginV": 2,
                 "AlphaLevel": 0,
                 "Encoding": 134 # 简体中文
