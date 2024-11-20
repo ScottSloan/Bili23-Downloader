@@ -139,33 +139,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         download_info.video_quality_id = self.video_quality_id
         download_info.audio_quality_id = Audio.audio_quality_id
+
+        if Audio.audio_only:
+            download_info.video_merge_type = Config.Type.MERGE_TYPE_AUDIO
+
         download_info.download_type = download_type
 
         return download_info
-
-        # return {
-        #     "id": get_new_id(),
-        #     "index": None,
-        #     "url": VideoInfo.url if Download.current_parse_type == Config.Type.VIDEO else BangumiInfo.url,
-        #     "type": type,
-        #     "bvid": bvid,
-        #     "cid": cid,
-        #     "title": get_legal_name(title).removeprefix("-"),
-        #     "pic": cover_url,
-        #     "size": None,
-        #     "total_size": None,
-        #     "complete": None,
-        #     "completed_size": None,
-        #     "progress": 0,
-        #     "status": "wait",
-        #     "video_quality": self.video_quality_id if self.video_quality_id else None,
-        #     "audio_quality": Audio.audio_quality_id,
-        #     "audio_only": Audio.audio_only,
-        #     "video_codec": None,
-        #     "download_complete": False, # 下载完成标识
-        #     "flag": False,
-        #     "merge_type": 0, # 视频合成类型
-        # }
 
     def get_video_download_info(self, item_title: str, parent: str, index: int):
         if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:

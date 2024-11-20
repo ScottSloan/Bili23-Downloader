@@ -40,7 +40,7 @@ class DownloadTaskInfo:
         self.audio_quality_id = Config.Type.UNDEFINED
         self.video_codec = Config.Type.UNDEFINED
 
-        # 下载类型，1 为用户投稿视频，2 为番组，3 为音频， 4 为直播，0 为未定义
+        # 下载类型，1 为用户投稿视频，2 为番组
         self.download_type: int = Config.Type.UNDEFINED
         # 视频合成类型
         self.video_merge_type: int = 0
@@ -68,7 +68,9 @@ class DownloadTaskInfo:
             "video_quality": self.video_quality_id,
             "audio_quality": self.audio_quality_id,
             "video_codec": self.video_codec,
-            "download_type": self.download_type
+            "download_type": self.download_type,
+            "video_merge_type": self.video_merge_type,
+            "download_finish_flag": self.download_finish_flag
         }
 
     def load_from_dict(self, data):
@@ -87,3 +89,5 @@ class DownloadTaskInfo:
         self.video_quality_id = data["video_quality"]
         self.video_codec = data["video_codec"]
         self.download_type = data["download_type"]
+        self.video_merge_type = data["video_merge_type"]
+        self.download_finish_flag = data["download_finish_flag"]

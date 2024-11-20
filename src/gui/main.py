@@ -253,7 +253,7 @@ class MainWindow(Frame):
 
     def onClose(self, event):
         if not DownloadManagerInfo.no_task:
-            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序在下次启动时将自动恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:
                 return

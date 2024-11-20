@@ -17,7 +17,7 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
-        release_date: str = "2024/11/13"
+        release_date: str = "2024/11/20"
 
     class Proxy:
         proxy_mode: int = 1
@@ -73,8 +73,7 @@ class Config:
         UNDEFINED: int = 0                           # 未定义
         VIDEO: int = 1                               # 用户投稿视频
         BANGUMI: int = 2                             # 番组
-        AUDIO: int = 3                               # 音频
-        LIVE: int = 4                                # 直播
+        LIVE: int = 3                                # 直播
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频

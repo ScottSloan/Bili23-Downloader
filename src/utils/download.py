@@ -60,16 +60,17 @@ class Downloader:
             contents = self.downloader_info.read_info()
 
             # base_info 为基本信息，包含总体下载进度、视频信息等内容
-            base_info = contents[str(self.download_task_info["id"])]["base_info"]
+            base_info = contents[str(self.download_task_info.id)]["base_info"]
+            
             # thread_info 为线程信息，记录各个线程的下载进度
-            thread_info = contents[str(self.download_task_info["id"])]["thread_info"]
+            thread_info = contents[str(self.download_task_info.id)]["thread_info"]
 
             self.downloader_info.id = self.download_id = base_info["id"]
 
             if base_info["total_size"]:
                 self.total_size = base_info["total_size"]
                 self.completed_size = self.downloader_info.calc_completed_size(self.total_size, thread_info)
-                self.thread_info = contents[str(self.download_task_info["id"])]["thread_info"]
+                self.thread_info = contents[str(self.download_task_info.id)]["thread_info"]
 
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
@@ -376,14 +377,6 @@ class DownloaderInfo:
             contents[f"{self.id}"]["base_info"][key] = value
         
         self.write(contents)
-
-    def update_base_info_download_complete(self, status: bool):
-        contents = self.read_info()
-
-        if f"{self.id}" in contents:
-            contents[f"{self.id}"]["base_info"]["download_complete"] = status
-
-            self.write(contents)
 
     def write(self, contents):
         with open(self.path, "w", encoding = "utf-8") as f:

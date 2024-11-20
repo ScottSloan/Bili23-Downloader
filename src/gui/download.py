@@ -63,15 +63,6 @@ class DownloadUtils:
 
         self.video_durl_list = self.getAvailableDurlList(durl_json)
 
-        match self.info.download_type:
-            case Config.Type.AUDIO:
-                # 仅下载音频
-                self.merge_type = Config.Type.MERGE_TYPE_AUDIO
-
-            case Config.Type.VIDEO | Config.Type.BANGUMI:
-                # 合成视频和音频
-                self.merge_type = Config.Type.MERGE_TYPE_ALL
-
         if json_dash["audio"]:
             # 解析默认音质
             self.getDefaultAudioDurl(json_dash["audio"])
@@ -108,11 +99,8 @@ class DownloadUtils:
                     self.getDefaultAudioDurl(json_dash["audio"])
 
         else:
-            # 视频不存在音频，标记 flag
-            self.merge_type = Config.Type.MERGE_TYPE_VIDEO
-
-        # 更新 info 中的 merge_type
-        self.info.video_merge_type = self.merge_type
+            # 视频不存在音频，标记 flag 为仅下载视频
+            self.info.video_merge_type = Config.Type.MERGE_TYPE_VIDEO
 
     def getVideoDurlJson(self) -> Dict:
         try:
@@ -133,10 +121,10 @@ class DownloadUtils:
 
                     json_dash = resp["result"]["dash"]
 
+            return json_dash
+
         except Exception:
             self.onError()
-
-        return json_dash
 
     def getDefaultAudioDurl(self, data):
         highest_audio_quality = self.getHighestAudioQuality(data)
@@ -155,12 +143,13 @@ class DownloadUtils:
         self.audio_quality = audio_quality
 
     def getDownloadInfo(self) -> list:
+        # 获取视频下载链接
         self.getVideoDurl()
 
         temp_info = []
         video_info = audio_info = None
 
-        match self.merge_type:
+        match self.info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL:
                 video_info = self.getVideoDownloaderInfo()
                 audio_info = self.getAudioDownloaderInfo()
@@ -238,7 +227,7 @@ class DownloadUtils:
             return
 
         if self.merge_process.returncode == 0:
-            if self.merge_type == Config.Type.MERGE_TYPE_ALL:
+            if self.info.video_merge_type == Config.Type.MERGE_TYPE_ALL:
                 if Config.Merge.auto_clean:
                     remove_files(Config.Download.path, [video_file_name, audio_file_name])
 
@@ -263,7 +252,7 @@ class DownloadUtils:
             case "linux" | "darwin":
                 rename_cmd = "mv"
 
-        match self.merge_type:
+        match self.info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL:
                 # 存在音频文件，调用 FFmpeg 合成
                 if not Config.Merge.auto_clean:
@@ -678,10 +667,6 @@ class DownloadItemPanel(wx.Panel):
             self.video_quality_lab.SetLabel(self.info.video_quality_id)
             self.video_codec_lab.SetLabel(self.info.video_codec)
 
-        # if self.info["completed_size"]:
-        #     if self.info["completed_size"] >= self.info["total_size"]:
-        #         self.info["download_complete"] = True
-
         self.updatePauseBtn(self.info.status)
 
         self.utils.merge_type = self.info.video_merge_type
@@ -715,6 +700,7 @@ class DownloadItemPanel(wx.Panel):
         video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        video_info_hbox.AddSpacer(10)
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
         info_vbox.AddSpacer(5)
@@ -850,13 +836,13 @@ class DownloadItemPanel(wx.Panel):
         audio_quality_dict = dict(map(reversed, audio_quality_mapping.items()))
         video_codec_dict = dict(map(reversed, video_codec_mapping.items()))
 
-        match self.info.download_type:
-            case Config.Type.VIDEO | Config.Type.BANGUMI:
+        match self.info.video_merge_type:
+            case Config.Type.MERGE_TYPE_VIDEO | Config.Type.MERGE_TYPE_ALL:
                 # 视频番组类
                 self.video_quality_lab.SetLabel(video_quality_dict[self.utils.video_quality_id])
                 self.video_codec_lab.SetLabel(video_codec_dict[self.utils.video_codec_id])
 
-            case Config.Type.AUDIO:
+            case Config.Type.MERGE_TYPE_AUDIO:
                 # 音频类
                 self.video_quality_lab.SetLabel("音频")
                 self.video_codec_lab.SetLabel(audio_quality_dict[self.utils.audio_quality])
@@ -867,7 +853,6 @@ class DownloadItemPanel(wx.Panel):
 
         # 写入文件，记录下载信息
         base_info = {
-            "completed_size": 0,
             "total_size": self.info.total_size,
             "video_quality": video_quality_dict[self.utils.video_quality_id],
             "video_codec": video_codec_dict[self.utils.video_codec_id],
@@ -905,18 +890,19 @@ class DownloadItemPanel(wx.Panel):
 
     def onResume(self):
         # 判断是否下载完成
-        if self.info["completed_size"]:
-            if self.info["completed_size"] >= self.info["total_size"]:
-                self.info["download_complete"] = True
+        if self.info.completed_size:
+            if self.info.completed_size >= self.info.total_size:
+                self.info.download_finish_flag = True
 
         # 判断下载状态
-        if self.info["download_complete"]:
+        if self.info.download_finish_flag:
             # 下载完成，直接开始合成
             self.onMerge()
         else:
-            # 判断是否存在下载信息
-            if self.info["completed_size"]:
+            # 判断是否已经开始下载
+            if self.info.completed_size:
                 self.downloader.onResume()
+
             else:
                 # 未开始下载，调用 start
                 self.start()
@@ -958,7 +944,12 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
 
-        self.downloader.downloader_info.update_base_info_download_complete(True)
+        # 保存下载完成标识符
+        finish_info = {
+            "download_finish_flag": True
+        }
+
+        self.downloader.downloader_info.update_base_info_kwargs(**finish_info)
 
         if not retry:
             parent = self.GetParent().GetParent()
