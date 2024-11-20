@@ -9,7 +9,7 @@ from typing import Optional
 from utils.config import Config
 from utils.tools import get_header, get_proxy, get_auth
 from utils.thread import Thread, ThreadPool
-from utils.info import DownloadTaskInfo
+from utils.data_type import DownloadTaskInfo
 
 class Downloader:
     def __init__(self, info: DownloadTaskInfo, onStart, onDownload, onMerge, onError):

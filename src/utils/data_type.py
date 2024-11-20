@@ -31,7 +31,7 @@ class DownloadTaskInfo:
         # 已下载完成的大小，单位字节
         self.completed_size: int = 0
         # 下载状态
-        self.status: str = "wait"
+        self.status: int = Config.Type.DOWNLOAD_STATUS_WAITING
         # 下载完成标识符
         self.download_finish_flag = False
 

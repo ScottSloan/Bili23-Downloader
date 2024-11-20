@@ -11,7 +11,7 @@ from gui.ffmpeg_detect import DetectDialog
 from utils.config import Config, conf
 from utils.tools import get_header
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, get_mapping_index_by_value
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -189,10 +189,10 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download_count))
         self.max_download_slider.SetValue(Config.Download.max_download_count)
         
-        self.video_quality_choice.SetSelection(list(video_quality_mapping.values()).index(Config.Download.video_quality_id))
-        self.audio_quality_choice.SetSelection(list(audio_quality_mapping.values()).index(Config.Download.audio_quality_id))
+        self.video_quality_choice.SetSelection(get_mapping_index_by_value(video_quality_mapping, Config.Download.video_quality_id))
+        self.audio_quality_choice.SetSelection(get_mapping_index_by_value(audio_quality_mapping, Config.Download.audio_quality_id))
 
-        self.codec_choice.SetSelection(list(video_codec_mapping.values()).index(Config.Download.video_codec))
+        self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_mapping, Config.Download.video_codec_id))
 
         self.speed_limit_chk.SetValue(Config.Download.speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
@@ -210,7 +210,7 @@ class DownloadTab(wx.Panel):
         Config.Download.max_download_count = self.max_download_slider.GetValue()
         Config.Download.video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
         Config.Download.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
-        Config.Download.video_codec = video_codec_mapping[self.codec_choice.GetStringSelection()]
+        Config.Download.video_codec_id = video_codec_mapping[self.codec_choice.GetStringSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
         Config.Download.speed_limit = self.speed_limit_chk.GetValue()
@@ -221,7 +221,7 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "max_download", str(Config.Download.max_download_count))
         conf.config.set("download", "video_quality", str(Config.Download.video_quality_id))
         conf.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
-        conf.config.set("download", "video_codec", Config.Download.video_codec)
+        conf.config.set("download", "video_codec", Config.Download.video_codec_id)
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
         conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
@@ -416,7 +416,7 @@ class MergeTab(wx.Panel):
         webbrowser.open("https://scott-sloan.cn/archives/120/")
 
     def onConvertToFlacTip(self, event):
-        wx.MessageDialog(self, "无损音频转换说明\n\nB站无损音频流编码为 fLaC，与标准的无损编码 FLAC 不同，部分软件可能无法正常播放。\n\n此功能可将其转换为标准的无损 FLAC 编码，能够正常识别和播放。", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "无损音频转换说明\n\nB站无损音频流编码为 fLaC，与标准的无损编码 FLAC 不同，部分软件可能无法正常播放。\n\n此功能可将其转换为标准的无损 FLAC 编码，使其能够正常播放。", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onConfirm(self):
         self.save()

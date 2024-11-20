@@ -19,7 +19,7 @@ from utils.tools import get_header, get_auth, get_proxy, get_background_color, r
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
-from utils.info import DownloadTaskInfo
+from utils.data_type import DownloadTaskInfo
 
 class DownloadManagerInfo:
     download_list: Dict[int, DownloadTaskInfo] = {}
@@ -27,7 +27,7 @@ class DownloadManagerInfo:
 
 class DownloadUtils:
     def __init__(self, info: DownloadTaskInfo, onError, onComplete):
-        self.info, self.onError, self.merge_error, self.audio_type, self.onComplete = info, onError, False, "mp3", onComplete
+        self.info, self.onError, self.audio_type, self.onComplete = info, onError, "mp3", onComplete
 
     def getVideoDurl(self):
         json_dash = self.getVideoDurlJson()
@@ -48,7 +48,7 @@ class DownloadUtils:
         # 获取选定清晰度的视频列表，包含多种清晰度
         temp_video_durl_list = [i for i in json_dash["video"] if i["id"] == self.info.video_quality_id]
 
-        self.info.video_codec_id = Config.Download.video_codec
+        self.info.video_codec_id = Config.Download.video_codec_id
 
         codec_index = self.getVideoAvailableCodecIndex(temp_video_durl_list)
 
@@ -208,8 +208,6 @@ class DownloadUtils:
         return temp_list
 
     def mergeVideo(self):
-        self.merge_error = False
-
         video_file_name = f"video_{self.info.id}.mp4"
         audio_file_name = f"audio_{self.info.id}.{self.audio_type}"
 
@@ -293,7 +291,7 @@ class DownloadUtils:
 
         self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": return_code}
 
-        self.merge_error = True
+        self.info.status = Config.Type.DOWNLOAD_STATUS_MERGE_FAILED
 
     def getHighestVideoQuality(self, data):
         # 默认为 360P
@@ -414,8 +412,8 @@ class DownloadWindow(Frame):
             download_task_info = DownloadTaskInfo()
             download_task_info.load_from_dict(info["base_info"])
 
-            if download_task_info.status == "downloading":
-                download_task_info.status = "pause"
+            if download_task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+                download_task_info.status = Config.Type.DOWNLOAD_STATUS_PAUSE
 
             Download.download_list.append(download_task_info)
 
@@ -429,11 +427,7 @@ class DownloadWindow(Frame):
 
     def onClear(self, event):
         # 首先遍历下载列表
-        callback_list = [value.onStop_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == "completed"]
-        self.runCallbackList(callback_list)
-
-        # 遍历scrollpanel中的项目
-        callback_list = [item["stop_callback"] for item in self.download_list_panel.GetChildren() if item.info["status"] == "completed"]
+        callback_list = [value.onStop_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == Config.Type.DOWNLOAD_STATUS_FINISHED]
         self.runCallbackList(callback_list)
 
     def onOpenDir(self, event):
@@ -459,17 +453,17 @@ class DownloadWindow(Frame):
         self.start_download()
 
     def onStartAll(self, event):
-        callback_list = [value.onResume_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == "pause"]
+        callback_list = [value.onResume_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == Config.Type.DOWNLOAD_STATUS_PAUSE]
 
         self.runCallbackList(callback_list)
 
     def onPauseAll(self, event):
-        callback_list = [value.onPause_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == "downloading"]
+        callback_list = [value.onPause_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING]
 
         self.runCallbackList(callback_list)
 
     def onStopAll(self, event):
-        callback_list = [value.onStop_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == "wait" or value.status == "downloading" or value.status == "pause"]
+        callback_list = [value.onStop_Callback for key, value in DownloadManagerInfo.download_list.items() if value.status == Config.Type.DOWNLOAD_STATUS_WAITING or value.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING or value.status == Config.Type.DOWNLOAD_STATUS_PAUSE]
 
         self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 
@@ -543,7 +537,7 @@ class DownloadWindow(Frame):
         count = 0
 
         for key, value in DownloadManagerInfo.download_list.items():
-            if value.status == "wait" or value.status == "downloading" or value.status == "pause":
+            if value.status == Config.Type.DOWNLOAD_STATUS_WAITING or value.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING or value.status == Config.Type.DOWNLOAD_STATUS_PAUSE:
                 count += 1
 
         if count:
@@ -560,14 +554,14 @@ class DownloadWindow(Frame):
 
     def start_download(self):
         for key, value in DownloadManagerInfo.download_list.items():
-            if value.status == "wait" and self.get_downloading_count() < Config.Download.max_download_count:
+            if value.status == Config.Type.DOWNLOAD_STATUS_WAITING and self.get_downloading_count() < Config.Download.max_download_count:
                 value.startDwonload_Callback()
 
     def get_downloading_count(self):
         count = 0
 
         for key, value in DownloadManagerInfo.download_list.items():
-            if value.status == "downloading":
+            if value.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
                 count += 1
 
         return count
@@ -670,6 +664,7 @@ class DownloadItemPanel(wx.Panel):
             case "windows" | "darwin":
                 self.scale_size = self.FromDIP((16, 16))
                 self.is_scaled = True if self.scale_size != (16, 16) else False
+
             case "linux":
                 self.scale_size = self.FromDIP((32, 32))
                 self.is_scaled = True
@@ -774,7 +769,7 @@ class DownloadItemPanel(wx.Panel):
         self.panel_vbox.Layout()
 
     def start(self):
-        self.setStatus("downloading")
+        self.setStatus(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
 
         # 开启线程，防止 UI 阻塞
         self.start_thread = Thread(target = self.startDownloadThread)
@@ -790,23 +785,23 @@ class DownloadItemPanel(wx.Panel):
 
     def onPause_EVT(self, event):
         match self.info.status:
-            case "wait":
+            case Config.Type.DOWNLOAD_STATUS_WAITING:
                 self.start()
-                self.setStatus("downloading")
+                self.setStatus(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
 
-            case "downloading":
+            case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
                 self.onPause()
-                self.setStatus("pause")
+                self.setStatus(Config.Type.DOWNLOAD_STATUS_PAUSE)
 
-            case "pause":
+            case Config.Type.DOWNLOAD_STATUS_PAUSE:
                 self.onResume()
-                self.setStatus("downloading")
+                self.setStatus(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
 
-            case "completed":
+            case Config.Type.DOWNLOAD_STATUS_FINISHED:
                 self.onOpenFolder()
                 return
 
-            case "retry":
+            case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
                 self.onMerge(retry = True)
                 return
 
@@ -836,7 +831,7 @@ class DownloadItemPanel(wx.Panel):
                 self.video_quality_lab.SetLabel("音频")
                 self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_mapping, self.info.audio_quality_id))
 
-        self.updatePauseBtn("downloading")
+        self.updatePauseBtn(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
 
         self.Layout()
 
@@ -846,14 +841,14 @@ class DownloadItemPanel(wx.Panel):
             "video_quality_id": self.info.video_quality_id,
             "audio_quality_id": self.info.audio_quality_id,
             "video_codec_id": self.info.video_codec_id,
-            "status": "downloading"
+            "status": Config.Type.DOWNLOAD_STATUS_DOWNLOADING
         }
 
         self.downloader.downloader_info.update_base_info_kwargs(**base_info)
 
     def onDownload(self, download_progress_info: Dict):
         # 更新下载进度
-        if self.info.status == "downloading":
+        if self.info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
             self.gauge.SetValue(download_progress_info["progress"])
 
             self.speed_lab.SetLabel(download_progress_info["speed"])
@@ -874,9 +869,9 @@ class DownloadItemPanel(wx.Panel):
 
     def onPauseCallback(self, event):
         self.onPause()
-        self.setStatus("pause")
+        self.setStatus(Config.Type.DOWNLOAD_STATUS_PAUSE)
 
-        self.updatePauseBtn("pause")
+        self.updatePauseBtn(Config.Type.DOWNLOAD_STATUS_PAUSE)
 
     def onResume(self):
         # 判断是否下载完成
@@ -899,9 +894,9 @@ class DownloadItemPanel(wx.Panel):
 
     def onResumeCallback(self, event):
         self.onResume()
-        self.setStatus("downloading")
+        self.setStatus(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
 
-        self.updatePauseBtn("downloading")
+        self.updatePauseBtn(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
 
     def onStop(self, event, stopAll: bool = False):
         self.downloader.downloader_info.clear()
@@ -926,7 +921,7 @@ class DownloadItemPanel(wx.Panel):
         remove_files(Config.Download.path, [f"video_{self.info.id}.mp4", f"audio_{self.info.id}.mp3"])
 
     def onMerge(self, retry: bool = False):
-        self.setStatus("merging")
+        self.setStatus(Config.Type.DOWNLOAD_STATUS_MERGING)
 
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
@@ -950,19 +945,19 @@ class DownloadItemPanel(wx.Panel):
         Thread(target = self.utils.mergeVideo).start()
 
     def onMergeComplete(self, file_list: List):
-        self.setStatus("completed")
-
-        if self.utils.merge_error:
+        if self.info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
             self.speed_lab.SetLabel("合成视频失败，点击查看详情")
             self.speed_lab.SetForegroundColour(wx.Colour("red"))
             self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
-            self.updatePauseBtn("retry")
+            self.updatePauseBtn(Config.Type.DOWNLOAD_STATUS_MERGE_FAILED)
 
             return
 
         else:
             self.speed_lab.SetLabel("下载完成")
+            
+            self.setStatus(Config.Type.DOWNLOAD_STATUS_FINISHED)
 
             self.pause_btn.Enable(True)
 
@@ -974,7 +969,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.stop_btn.SetToolTip("清除记录")
 
-        self.updatePauseBtnImage("folder")
+        self.updatePauseBtnImage(self.info.status)
 
         self.pause_btn.SetToolTip("打开所在位置")
 
@@ -983,7 +978,7 @@ class DownloadItemPanel(wx.Panel):
         self.getExtraContents()
 
     def onError(self):
-        self.setStatus("error")
+        self.setStatus(Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED)
 
         self.speed_lab.SetLabel("下载失败")
         self.speed_lab.SetForegroundColour("red")
@@ -1032,42 +1027,41 @@ class DownloadItemPanel(wx.Panel):
         cover_viewer_dlg.ShowModal()
 
     def onShowError(self, event):
-        if not self.pause_btn.Enabled or self.info.status == "retry":
+        if not self.pause_btn.Enabled or self.info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
             show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
             show_error_dlg.ShowModal()
 
-    def updatePauseBtn(self, status: str):
+    def updatePauseBtn(self, status: int):
         match status:
-            case "downloading":
+            case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
                 self.pause_btn.SetToolTip("暂停下载")
 
                 self.speed_lab.SetLabel("准备下载...")
 
-            case "pause":
+            case Config.Type.DOWNLOAD_STATUS_PAUSE:
                 self.pause_btn.SetToolTip("继续下载")
 
                 self.speed_lab.SetLabel("暂停中")
 
-            case "retry":
+            case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
                 self.pause_btn.SetToolTip("重试")
-
-                self.setStatus("retry")
 
                 self.pause_btn.Enable(True)
 
-                self.updatePauseBtnImage("retry")
-
         self.updatePauseBtnImage(status)
 
-    def updatePauseBtnImage(self, status: str):
+    def updatePauseBtnImage(self, status: int):
         match status:
-            case "downloading":
+            case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
                 image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
-            case "pause" | "wait":
+
+            case Config.Type.DOWNLOAD_STATUS_PAUSE | Config.Type.DOWNLOAD_STATUS_WAITING:
                 image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
-            case "retry":
+
+            case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
                 image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
-            case "folder":
+
+            case Config.Type.DOWNLOAD_STATUS_FINISHED:
                 image = wx.Image(io.BytesIO(getFolderIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getFolderIcon16()))
 
         self.pause_btn.SetBitmap(image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
@@ -1079,7 +1073,7 @@ class DownloadItemPanel(wx.Panel):
         if Config.Extra.download_danmaku:
             extra_parser.get_danmaku()
 
-    def setStatus(self, status: str):
+    def setStatus(self, status: int):
         self.info.status = status
 
         if self.info.id in DownloadManagerInfo.download_list:

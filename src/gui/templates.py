@@ -10,7 +10,7 @@ from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.live import LiveInfo
-from utils.info import DownloadTaskInfo
+from utils.data_type import DownloadTaskInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):

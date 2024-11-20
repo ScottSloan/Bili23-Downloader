@@ -70,3 +70,6 @@ def get_mapping_key_by_value(mapping: Dict, value: int):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
     return mapping_reversed[value]
+
+def get_mapping_index_by_value(mapping: Dict, value: int):
+    return list(mapping.values()).index(value)

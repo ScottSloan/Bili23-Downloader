@@ -4,7 +4,7 @@ from configparser import RawConfigParser
 from typing import List
 
 from utils.error import ErrorCallback, process_read_config_exception
-from utils.info import DownloadTaskInfo
+from utils.data_type import DownloadTaskInfo
 
 class Config:
     class Sys:
@@ -53,7 +53,7 @@ class Config:
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
-        video_codec: int = 12
+        video_codec_id: int = 12
 
         max_thread_count: int = 2
         max_download_count: int = 1
@@ -97,6 +97,14 @@ class Config:
 
         DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
         DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕
+
+        DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
+        DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载
+        DOWNLOAD_STATUS_PAUSE: int = 2               # 暂停中
+        DOWNLOAD_STATUS_MERGING: int = 3             # 正在合成
+        DOWNLOAD_STATUS_FINISHED: int = 4            # 下载完成
+        DOWNLOAD_STATUS_DOWNLOAD_FAILED: int = 5     # 下载失败
+        DOWNLOAD_STATUS_MERGE_FAILED: int = 6        # 合成失败
     
     class Temp:
         download_window_pos = None
@@ -206,7 +214,7 @@ class ConfigUtils:
         Config.Download.max_thread_count = self.config.getint("download", "max_thread")
         Config.Download.video_quality_id = self.config.getint("download", "video_quality")
         Config.Download.audio_quality_id = self.config.getint("download", "audio_quality")
-        Config.Download.video_codec = self.config.getint("download", "video_codec")
+        Config.Download.video_codec_id = self.config.getint("download", "video_codec")
         Config.Download.show_notification = self.config.getint("download", "show_notification")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
         Config.Download.speed_limit = self.config.getboolean("download", "speed_limit")
@@ -269,7 +277,7 @@ class ConfigUtils:
         self.config.set("download", "max_thread", str(Config.Download.max_thread_count))
         self.config.set("download", "video_quality", str(Config.Download.video_quality_id))
         self.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
-        self.config.set("download", "video_codec", str(Config.Download.video_codec))
+        self.config.set("download", "video_codec", str(Config.Download.video_codec_id))
         self.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
         self.config.set("download", "add_number", str(int(Config.Download.add_number)))
         self.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
