@@ -7,7 +7,7 @@ from requests.adapters import HTTPAdapter
 from typing import Optional
 
 from utils.config import Config
-from utils.tools import get_header, get_proxy, get_auth, format_size
+from utils.tools import get_header, get_proxy, get_auth
 from utils.thread import Thread, ThreadPool
 from utils.info import DownloadTaskInfo
 
@@ -61,7 +61,7 @@ class Downloader:
 
             # base_info 为基本信息，包含总体下载进度、视频信息等内容
             base_info = contents[str(self.download_task_info.id)]["base_info"]
-            
+
             # thread_info 为线程信息，记录各个线程的下载进度
             thread_info = contents[str(self.download_task_info.id)]["thread_info"]
 
@@ -189,8 +189,7 @@ class Downloader:
                 "progress": int(self.completed_size / self.total_size * 100),
                 "speed": self.format_speed(self.completed_size - temp_size),
                 "raw_speed": self.completed_size - temp_size,
-                "completed_size": format_size(self.completed_size),
-                "raw_completed_size": self.completed_size
+                "completed_size": self.completed_size
             }
 
             if info["raw_speed"] <= 0:

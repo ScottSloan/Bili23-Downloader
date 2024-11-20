@@ -1,3 +1,5 @@
+from typing import Dict
+
 bangumi_type_mapping = {
     1: "番剧",
     2: "电影",
@@ -63,3 +65,8 @@ danmaku_format_mapping = {
     "xml": 0,
     "protobuf": 1
 }
+
+def get_mapping_key_by_value(mapping: Dict, value: int):
+    mapping_reversed = dict(map(reversed, mapping.items()))
+
+    return mapping_reversed[value]

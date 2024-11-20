@@ -38,7 +38,7 @@ class DownloadTaskInfo:
         # 媒体信息，0 表示未定义
         self.video_quality_id = Config.Type.UNDEFINED
         self.audio_quality_id = Config.Type.UNDEFINED
-        self.video_codec = Config.Type.UNDEFINED
+        self.video_codec_id = Config.Type.UNDEFINED
 
         # 下载类型，1 为用户投稿视频，2 为番组
         self.download_type: int = Config.Type.UNDEFINED
@@ -65,9 +65,9 @@ class DownloadTaskInfo:
             "total_size": self.total_size,
             "completed_size": self.completed_size,
             "status": self.status,
-            "video_quality": self.video_quality_id,
-            "audio_quality": self.audio_quality_id,
-            "video_codec": self.video_codec,
+            "video_quality_id": self.video_quality_id,
+            "audio_quality_id": self.audio_quality_id,
+            "video_codec_id": self.video_codec_id,
             "download_type": self.download_type,
             "video_merge_type": self.video_merge_type,
             "download_finish_flag": self.download_finish_flag
@@ -86,8 +86,9 @@ class DownloadTaskInfo:
         self.total_size = data["total_size"]
         self.completed_size = data["completed_size"]
         self.status = data["status"]
-        self.video_quality_id = data["video_quality"]
-        self.video_codec = data["video_codec"]
+        self.video_quality_id = data["video_quality_id"]
+        self.audio_quality_id = data["audio_quality_id"]
+        self.video_codec_id = data["video_codec_id"]
         self.download_type = data["download_type"]
         self.video_merge_type = data["video_merge_type"]
         self.download_finish_flag = data["download_finish_flag"]

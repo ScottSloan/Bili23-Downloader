@@ -17,7 +17,7 @@ from utils.config import Config, Download, conf
 from utils.download import Downloader, DownloaderInfo
 from utils.tools import get_header, get_auth, get_proxy, get_background_color, remove_files, format_size, get_current_time, get_system_encoding, msw_open_in_explorer
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
 from utils.info import DownloadTaskInfo
 
@@ -37,18 +37,18 @@ class DownloadUtils:
 
         if self.info.video_quality_id == 200:
             # 当选择自动时，选取最高可用清晰度
-            self.video_quality_id = highest_video_quality_id
+            self.info.video_quality_id = highest_video_quality_id
         else:
             if highest_video_quality_id < self.info.video_quality_id:
                 # 当视频不存在选取的清晰度时，选取最高可用的清晰度
-                self.video_quality_id = highest_video_quality_id
+                self.info.video_quality_id = highest_video_quality_id
             else:
-                self.video_quality_id = self.info.video_quality_id
+                self.info.video_quality_id = self.info.video_quality_id
 
         # 获取选定清晰度的视频列表，包含多种清晰度
-        temp_video_durl_list = [i for i in json_dash["video"] if i["id"] == self.video_quality_id]
+        temp_video_durl_list = [i for i in json_dash["video"] if i["id"] == self.info.video_quality_id]
 
-        self.video_codec_id = Config.Download.video_codec
+        self.info.video_codec_id = Config.Download.video_codec
 
         codec_index = self.getVideoAvailableCodecIndex(temp_video_durl_list)
 
@@ -59,7 +59,7 @@ class DownloadUtils:
         else:
             # 不支持选定编码，自动切换到 H264
             durl_json = temp_video_durl_list[0]
-            self.video_codec_id = 7
+            self.info.video_codec_id = 7
 
         self.video_durl_list = self.getAvailableDurlList(durl_json)
 
@@ -318,11 +318,11 @@ class DownloadUtils:
 
     def getVideoAvailableCodecIndex(self, data):
         for index, entry in enumerate(data):
-            if entry["codecid"] == self.video_codec_id:
+            if entry["codecid"] == self.info.video_codec_id:
                 return index
 
     def getFileNameWithIndex(self):
-        if self.info.index:
+        if self.info.index and Config.Download.add_number:
             return f"{self.info.index} - {self.info.title_legal}"
         else:
             return self.info.title_legal
@@ -524,9 +524,6 @@ class DownloadWindow(Frame):
 
         item = DownloadItemPanel(self.download_list_panel, entry)
 
-        if multiple and Config.Download.add_number:
-            entry["title"] = f"{index + 1} - {entry['title']}"
-
         entry.startDwonload_Callback = item.start
         entry.onPause_Callback = item.onPauseCallback
         entry.onResume_Callback = item.onResumeCallback
@@ -663,13 +660,10 @@ class DownloadItemPanel(wx.Panel):
 
             self.gauge.SetValue(self.info.progress)
 
-        if self.info.video_quality_id:
-            self.video_quality_lab.SetLabel(self.info.video_quality_id)
-            self.video_codec_lab.SetLabel(self.info.video_codec)
+        self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_mapping, self.info.video_quality_id))
+        self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_mapping, self.info.video_codec_id))
 
         self.updatePauseBtn(self.info.status)
-
-        self.utils.merge_type = self.info.video_merge_type
 
     def init_scale(self):
         match Config.Sys.platform:
@@ -700,7 +694,6 @@ class DownloadItemPanel(wx.Panel):
         video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        video_info_hbox.AddSpacer(10)
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
         info_vbox.AddSpacer(5)
@@ -832,20 +825,16 @@ class DownloadItemPanel(wx.Panel):
         self.speed_lab.SetLabel("")
         self.video_size_lab.SetLabel(f"0 MB/{format_size(self.info.total_size)}")
 
-        video_quality_dict = dict(map(reversed, video_quality_mapping.items()))
-        audio_quality_dict = dict(map(reversed, audio_quality_mapping.items()))
-        video_codec_dict = dict(map(reversed, video_codec_mapping.items()))
-
         match self.info.video_merge_type:
             case Config.Type.MERGE_TYPE_VIDEO | Config.Type.MERGE_TYPE_ALL:
                 # 视频番组类
-                self.video_quality_lab.SetLabel(video_quality_dict[self.utils.video_quality_id])
-                self.video_codec_lab.SetLabel(video_codec_dict[self.utils.video_codec_id])
+                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_mapping, self.info.video_quality_id))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_mapping, self.info.video_codec_id))
 
             case Config.Type.MERGE_TYPE_AUDIO:
                 # 音频类
                 self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(audio_quality_dict[self.utils.audio_quality])
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_mapping, self.info.audio_quality_id))
 
         self.updatePauseBtn("downloading")
 
@@ -854,8 +843,9 @@ class DownloadItemPanel(wx.Panel):
         # 写入文件，记录下载信息
         base_info = {
             "total_size": self.info.total_size,
-            "video_quality": video_quality_dict[self.utils.video_quality_id],
-            "video_codec": video_codec_dict[self.utils.video_codec_id],
+            "video_quality_id": self.info.video_quality_id,
+            "audio_quality_id": self.info.audio_quality_id,
+            "video_codec_id": self.info.video_codec_id,
             "status": "downloading"
         }
 
@@ -867,7 +857,7 @@ class DownloadItemPanel(wx.Panel):
             self.gauge.SetValue(download_progress_info["progress"])
 
             self.speed_lab.SetLabel(download_progress_info["speed"])
-            self.video_size_lab.SetLabel("{}/{}".format(format_size(download_progress_info["raw_completed_size"]), format_size(self.info.total_size)))
+            self.video_size_lab.SetLabel("{}/{}".format(format_size(download_progress_info["completed_size"]), format_size(self.info.total_size)))
 
             progress_info = {
                 "progress": download_progress_info["progress"],
@@ -877,7 +867,7 @@ class DownloadItemPanel(wx.Panel):
             self.downloader.downloader_info.update_base_info_kwargs(**progress_info)
 
             # 更新 completed_size 的值
-            self.info.completed_size = download_progress_info["raw_completed_size"]
+            self.info.completed_size = download_progress_info["completed_size"]
 
     def onPause(self):
         self.downloader.onPause()
@@ -1008,7 +998,7 @@ class DownloadItemPanel(wx.Panel):
         self.downloader.downloader_info.clear()
 
     def onOpenFolder(self):
-        match self.utils.merge_type:
+        match self.info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
                 file_type = "mp4"
 
