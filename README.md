@@ -27,10 +27,8 @@ Bili23 Downloader GUI
 | 用户投稿视频 （含分P，合集视频） | 解析下载 | https://www.bilibili.com/video/BV1t94y1C7fp |
 | 剧集（含番剧、电影、纪录片、国创、电视剧、综艺） | 解析下载 | https://www.bilibili.com/bangumi/play/ss45574 |
 | 直播 | m3u8直链解析、录制 | https://live.bilibili.com/1 |
-| b23.tv 短链接 | - | https://b23.tv/BV1UG411f7K1 |
-| 活动页链接 | - | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html 
-
-程序还支持杜比和 Hi-Res 无损音频下载和单独下载音频功能，以及视频封面提取等功能。
+| b23.tv 短链接 | 解析下载 | https://b23.tv/BV1UG411f7K1 |
+| 活动页链接 | 解析下载 | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html 
 
 **注意：本程序不提供付费视频解析服务，请自行登录大会员账号后再进行使用。**
 
@@ -42,15 +40,16 @@ Bili23 Downloader GUI
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
 # 更新日志
-### **Version 1.53.0 (2024/11/13)**
-Version 1.53.0 Beta3 发布
+### **Version 1.53.0 (2024/11/19)**
+Version 1.53.0 Beta4 发布
 
 本次更新内容：
 * 支持将无损音频流编码(fLaC)转换为标准的无损编码(FLAC)
-* 支持视频封面提取功能 (TO-DO)
+* 支持视频封面提取功能
 * 支持视频弹幕下载功能
 * 支持调用默认播放器播放直播视频流
-* 配置文件不兼容时支持迁移原有设置项 (TO-DO)
+* 重构下载功能，优化相关流程
+* 仅下载音频时文件名也受自动添加序号控制
 * 修复名称以"-"开头的视频无法合成的问题
 * 修复 Linux/macOS 平台无法选择播放器路径的问题
 

@@ -4,6 +4,7 @@ from configparser import RawConfigParser
 from typing import List
 
 from utils.error import ErrorCallback, process_read_config_exception
+from utils.info import DownloadTaskInfo
 
 class Config:
     class Sys:
@@ -69,9 +70,10 @@ class Config:
         auto_clean: bool = True
 
     class Type:
+        UNDEFINED: int = 0                           # 未定义
         VIDEO: int = 1                               # 用户投稿视频
         BANGUMI: int = 2                             # 番组
-        MUSIC: int = 3                               # 音乐 TODO
+        AUDIO: int = 3                               # 音频
         LIVE: int = 4                                # 直播
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
@@ -128,7 +130,7 @@ class Audio:
 class Download:
     current_parse_type: int = 0
     
-    download_list: List = []
+    download_list: List[DownloadTaskInfo] = []
 
 class ConfigUtils:
     def __init__(self):

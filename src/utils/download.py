@@ -9,10 +9,11 @@ from typing import Optional
 from utils.config import Config
 from utils.tools import get_header, get_proxy, get_auth, format_size
 from utils.thread import Thread, ThreadPool
+from utils.info import DownloadTaskInfo
 
 class Downloader:
-    def __init__(self, info, onStart, onDownload, onMerge, onError):
-        self.info, self.onStart, self.onDownload, self.onMerge, self.onErrorEx = info, onStart, onDownload, onMerge, onError
+    def __init__(self, info: DownloadTaskInfo, onStart, onDownload, onMerge, onError):
+        self.download_task_info, self.onStart, self.onDownload, self.onMerge, self.onErrorEx = info, onStart, onDownload, onMerge, onError
 
         self.init_utils()
 
@@ -47,22 +48,28 @@ class Downloader:
         self.thread_info = {}
         self.thread_alive_count = 0
 
-        self.download_info = DownloaderInfo()
+        self.downloader_info = DownloaderInfo()
 
-        if not self.info["flag"]:
-            self.download_info.init_info(self.info)
+        # 判断是否为断点续传，以 completed_size 判断
+        if not self.download_task_info.completed_size:
+            # 非断点续传，保存下载信息
+            self.downloader_info.init_info(self.download_task_info.to_dict())
+
         else:
             # 断点续传，直接读取数据
-            contents = self.download_info.read_info()
-            base_info = contents[str(self.info["id"])]["base_info"]
-            thread_info = contents[str(self.info["id"])]["thread_info"]
+            contents = self.downloader_info.read_info()
 
-            self.download_info.id = self.download_id = base_info["id"]
+            # base_info 为基本信息，包含总体下载进度、视频信息等内容
+            base_info = contents[str(self.download_task_info["id"])]["base_info"]
+            # thread_info 为线程信息，记录各个线程的下载进度
+            thread_info = contents[str(self.download_task_info["id"])]["thread_info"]
+
+            self.downloader_info.id = self.download_id = base_info["id"]
 
             if base_info["total_size"]:
                 self.total_size = base_info["total_size"]
-                self.completed_size = self.download_info.calc_completed_size(self.total_size, thread_info)
-                self.thread_info = contents[str(self.info["id"])]["thread_info"]
+                self.completed_size = self.downloader_info.calc_completed_size(self.total_size, thread_info)
+                self.thread_info = contents[str(self.download_task_info["id"])]["thread_info"]
 
     def add_url(self, info: dict):
         path = os.path.join(Config.Download.path, info["file_name"])
@@ -90,7 +97,7 @@ class Downloader:
         for entry in info:
             self.add_url(entry)
 
-        self.update_total_size(self.total_size)
+        self.update_total_size()
 
         # 开启线程池和监听线程
         self.ThreadPool.start()
@@ -177,17 +184,15 @@ class Downloader:
             time.sleep(1)
             
             # 记录下载信息
-            speed = self.format_speed((self.completed_size - temp_size) / 1024)
-
             info = {
                 "progress": int(self.completed_size / self.total_size * 100),
-                "speed": speed,
-                "size": "{}/{}".format(format_size(self.completed_size / 1024), format_size(self.total_size / 1024)),
-                "complete": format_size(self.completed_size / 1024),
+                "speed": self.format_speed(self.completed_size - temp_size),
+                "raw_speed": self.completed_size - temp_size,
+                "completed_size": format_size(self.completed_size),
                 "raw_completed_size": self.completed_size
             }
 
-            if speed == "0 KB/s":
+            if info["raw_speed"] <= 0:
                 self.retry_count += 1
 
             if self.retry_count == 5:
@@ -301,13 +306,27 @@ class Downloader:
         return chunk_list
 
     def format_speed(self, speed: int) -> str:
-        return "{:.1f} MB/s".format(speed / 1024) if speed > 1024 else "{:.1f} KB/s".format(speed) if speed > 0 else "0 KB/s"
-    
+        if speed > 1024 * 1024 * 1024:
+            return "{:.1f} GB/s".format(speed / 1024 / 1024 / 1024)
+        
+        elif speed > 1024 * 1024:
+            return "{:.1f} MB/s".format(speed / 1024 / 1024)
+        
+        elif speed > 1024:
+            return "{:.1f} KB/s".format(speed / 1024)
+        
+        else:
+            return "0 KB/s"
+            
     def update_download_info(self):
-        self.download_info.update_thread_info(self.thread_info, self.completed_size)
+        self.downloader_info.update_thread_info(self.thread_info, self.completed_size)
 
-    def update_total_size(self, total_size):
-        self.download_info.update_base_info_total_size(total_size)
+    def update_total_size(self):
+        info = {
+            "total_size": self.total_size
+        }
+
+        self.downloader_info.update_base_info_kwargs(**info)
 
 class DownloaderInfo:
     def __init__(self):
@@ -350,41 +369,13 @@ class DownloaderInfo:
 
             self.write(contents)
 
-    def update_base_info(self, base_info):
+    def update_base_info_kwargs(self, **kwargs):
         contents = self.read_info()
 
-        if f"{self.id}" in contents:
-            contents[f"{self.id}"]["base_info"]["size"] = base_info["size"]
-            contents[f"{self.id}"]["base_info"]["video_codec"] = base_info["video_codec"]
-            contents[f"{self.id}"]["base_info"]["complete"] = base_info["complete"]
-            contents[f"{self.id}"]["base_info"]["video_quality"] = base_info["video_quality"]
-            
-            self.write(contents)
-
-    def update_base_info_progress(self, progress, complete):
-        contents = self.read_info()
-
-        if f"{self.id}" in contents:
-            contents[f"{self.id}"]["base_info"]["progress"] = progress
-            contents[f"{self.id}"]["base_info"]["complete"] = complete
-
-            self.write(contents)
-
-    def update_base_info_status(self, status):
-        contents = self.read_info()
-
-        if f"{self.id}" in contents:
-            contents[f"{self.id}"]["base_info"]["status"] = status
-
-            self.write(contents)
-
-    def update_base_info_total_size(self, total_size):
-        contents = self.read_info()
-
-        if f"{self.id}" in contents:
-            contents[f"{self.id}"]["base_info"]["total_size"] = total_size
-
-            self.write(contents)
+        for key, value in kwargs.items():
+            contents[f"{self.id}"]["base_info"][key] = value
+        
+        self.write(contents)
 
     def update_base_info_download_complete(self, status: bool):
         contents = self.read_info()

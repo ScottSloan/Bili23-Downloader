@@ -10,6 +10,7 @@ from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
 from utils.live import LiveInfo
+from utils.info import DownloadTaskInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -124,30 +125,47 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 elif Download.current_parse_type == Config.Type.BANGUMI:
                     self.get_bangumi_download_info(parent, int(text))
     
-    def format_info_entry(self, type: int, title: str, pic: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
-        return {
-            "id": get_new_id(),
-            "index": None,
-            "url": VideoInfo.url if Download.current_parse_type == Config.Type.VIDEO else BangumiInfo.url,
-            "type": type,
-            "bvid": bvid,
-            "cid": cid,
-            "title": get_legal_name(title).removeprefix("-"),
-            "pic": pic,
-            "size": None,
-            "total_size": None,
-            "complete": None,
-            "completed_size": None,
-            "progress": 0,
-            "status": "wait",
-            "video_quality": self.video_quality_id if self.video_quality_id else None,
-            "audio_quality": Audio.audio_quality_id,
-            "audio_only": Audio.audio_only,
-            "video_codec": None,
-            "download_complete": False, # 下载完成标识
-            "flag": False,
-            "merge_type": 0, # 视频合成类型
-        }
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
+        download_info = DownloadTaskInfo()
+
+        download_info.id = get_new_id()
+
+        download_info.title = title
+        download_info.title_legal = get_legal_name(title).removeprefix("-")
+        download_info.cover_url = cover_url
+        download_info.referer_url = referer_url
+        download_info.bvid = bvid
+        download_info.cid = cid
+
+        download_info.video_quality_id = self.video_quality_id
+        download_info.audio_quality_id = Audio.audio_quality_id
+        download_info.download_type = download_type
+
+        return download_info
+
+        # return {
+        #     "id": get_new_id(),
+        #     "index": None,
+        #     "url": VideoInfo.url if Download.current_parse_type == Config.Type.VIDEO else BangumiInfo.url,
+        #     "type": type,
+        #     "bvid": bvid,
+        #     "cid": cid,
+        #     "title": get_legal_name(title).removeprefix("-"),
+        #     "pic": cover_url,
+        #     "size": None,
+        #     "total_size": None,
+        #     "complete": None,
+        #     "completed_size": None,
+        #     "progress": 0,
+        #     "status": "wait",
+        #     "video_quality": self.video_quality_id if self.video_quality_id else None,
+        #     "audio_quality": Audio.audio_quality_id,
+        #     "audio_only": Audio.audio_only,
+        #     "video_codec": None,
+        #     "download_complete": False, # 下载完成标识
+        #     "flag": False,
+        #     "merge_type": 0, # 视频合成类型
+        # }
 
     def get_video_download_info(self, item_title: str, parent: str, index: int):
         if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
@@ -157,7 +175,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             info_entry = VideoInfo.sections[parent][index]
 
             title = info_entry["arc"]["title"]
-            pic = info_entry["arc"]["pic"]
+            cover_url = info_entry["arc"]["pic"]
             bvid = info_entry["bvid"]
             cid = info_entry["cid"]
 
@@ -169,22 +187,25 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             title = info_entry["part"] if VideoInfo.type == 2 else VideoInfo.title
 
             # 不再以第一帧作为封面
-            pic = VideoInfo.cover
+            cover_url = VideoInfo.cover
                 
             bvid = VideoInfo.bvid
             cid = info_entry["cid"]
 
-        Download.download_list.append(self.format_info_entry(Config.Type.VIDEO, title, pic, bvid, cid))
+        referer_url = VideoInfo.url
+
+        Download.download_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, cover_url, bvid, cid))
     
     def get_bangumi_download_info(self, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
 
         title = info_entry["share_copy"] if BangumiInfo.type_id != 2 else format_bangumi_title(info_entry)
-        pic = info_entry["cover"]
+        cover_url = info_entry["cover"]
         bvid = info_entry["bvid"]
         cid = info_entry["cid"]
+        referer_url = BangumiInfo.url
 
-        Download.download_list.append(self.format_info_entry(Config.Type.BANGUMI, title, pic, bvid, cid))
+        Download.download_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, cover_url, bvid, cid))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):

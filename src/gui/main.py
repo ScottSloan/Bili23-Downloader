@@ -21,7 +21,7 @@ from utils.mapping import video_quality_mapping, live_quality_mapping
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
 from gui.processing import ProcessingWindow
-from gui.download import DownloadWindow, DownloadInfo
+from gui.download import DownloadWindow, DownloadManagerInfo
 from gui.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
@@ -252,7 +252,7 @@ class MainWindow(Frame):
         self.checkCookieUtils()
 
     def onClose(self, event):
-        if not DownloadInfo.no_task:
+        if not DownloadManagerInfo.no_task:
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否继续退出？", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:

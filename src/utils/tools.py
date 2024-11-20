@@ -147,14 +147,17 @@ def format_duration(episode: Dict, flag: int):
     return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
 
 def format_size(size: int):
-    if size > 1024 * 1024:
-        return "{:.1f} GB".format(size / 1024 / 1024)
+    if not size:
+        return "0 MB"
     
-    elif size > 1024:
-        return "{:.1f} MB".format(size / 1024)
+    elif size > 1024 * 1024 * 1024:
+        return "{:.1f} GB".format(size / 1024 / 1024 / 1024)
+    
+    elif size > 1024 * 1024:
+        return "{:.1f} MB".format(size / 1024 / 1024)
     
     else:
-        return "{:.1f} KB".format(size)
+        return "{:.1f} KB".format(size / 1024)
 
 def format_bangumi_title(episode: Dict):
     from utils.bangumi import BangumiInfo
