@@ -268,7 +268,7 @@ class DownloadTaskUtils:
 
             case Config.Type.MERGE_TYPE_AUDIO:
                 # 无视频文件，仅有音频，直接重命名，若为无损格式，根据设置决定是否转化为标准无损格式
-                if self.audio_type == "flac" and Config.Merge.convert_to_flac:
+                if self.audio_type == "flac" and Config.Merge.m4a_to_mp3:
                     cmd = f'"{Config.FFmpeg.path}" -y -i "{audio_file_name}" -c:a flac "{title}.flac"'
                 else:
                     cmd = f'{rename_cmd} "{audio_file_name}" "{title}.{self.audio_type}"'

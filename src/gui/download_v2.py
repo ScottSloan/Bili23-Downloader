@@ -312,9 +312,6 @@ class DownloadUtils:
 
         def get_audio_available_quality():
             if json_dash["audio"]:
-                # 解析默认音质
-                self._get_default_audio_download_url(json_dash["audio"])
-
                 if self.task_info.audio_quality_id == 30300:
                     try:
                         # 获取无损或杜比链接
@@ -345,6 +342,9 @@ class DownloadUtils:
                     except Exception:
                         # 无法获取无损或杜比链接，换回默认音质
                         self._get_default_audio_download_url(json_dash["audio"])
+
+                else:
+                    self._get_default_audio_download_url(json_dash["audio"])
 
             else:
                 # 视频不存在音频，标记 flag 为仅下载视频
@@ -384,10 +384,8 @@ class DownloadUtils:
             self._temp_audio_file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
         def clear_files():
-            if Config.Merge.auto_clean and self.task_info.video_merge_type == Config.Type.MERGE_TYPE_ALL:
-                os.remove(os.path.join(Config.Download.path, self._temp_video_file_name))
-
-                os.remove(os.path.join(Config.Download.path, self._temp_audio_file_name))
+            if Config.Merge.auto_clean:
+                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name])
 
         get_temp_file_name()
 
@@ -411,6 +409,17 @@ class DownloadUtils:
             self.callback.onErrorCallback(_error_log)
 
     def _get_shell_cmd(self):
+        def _get_audio_cmd():
+            match self.task_info.audio_type:
+                case "m4a" | "ec3":
+                    if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
+                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.task_info.title_legal}.mp3"'
+                    else:
+                        return f'{_rename_cmd} "{self._temp_audio_file_name}" "{self.full_file_name}"'
+                
+                case "flac":
+                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.task_info.title_legal}.flac"'
+
         if Config.Sys.platform == "windows":
             _rename_cmd = "rename"
         else:
@@ -424,7 +433,7 @@ class DownloadUtils:
                 _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" "{self.task_info.title_legal}.mp4"'
 
             case Config.Type.MERGE_TYPE_AUDIO:
-                _cmd = f'{_rename_cmd} "{self._temp_audio_file_name}" "{self.task_info.title_legal}.{self.task_info.audio_type}"'
+                _cmd = _get_audio_cmd()
 
         return _cmd
 
@@ -519,7 +528,10 @@ class DownloadUtils:
                 return f"{self.file_title}.mp4"
 
             case Config.Type.MERGE_TYPE_AUDIO:
-                return f"{self.file_title}.{self.task_info.audio_type}"
+                if self.task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
+                    return f"{self.file_title}.mp3"
+                else:
+                    return f"{self.file_title}.{self.task_info.audio_type}"
 
 class DownloadTaskPanel(wx.Panel):
     def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
@@ -792,7 +804,10 @@ class DownloadTaskPanel(wx.Panel):
             self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
             self.pause_btn.Enable(False)
 
-            self.speed_lab.SetLabel("正在合成视频...")
+            if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
+                self.speed_lab.SetLabel("正在转换音频...")
+            else:
+                self.speed_lab.SetLabel("正在合成视频...")
         
         self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGING)
 
@@ -817,7 +832,11 @@ class DownloadTaskPanel(wx.Panel):
             # 合成失败回调函数
             self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGE_FAILED)
 
-            self.speed_lab.SetLabel("视频合成失败，点击查看详情")
+            if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
+                self.speed_lab.SetLabel("音频转换失败，点击查看详情")
+            else:
+                self.speed_lab.SetLabel("视频合成失败，点击查看详情")
+
             self.speed_lab.SetForegroundColour(wx.Colour("red"))
             self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
@@ -898,7 +917,12 @@ class DownloadTaskPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.get_button_icon(RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
-                    self.speed_lab.SetLabel("视频合成失败")
+
+                    if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
+                        self.speed_lab.SetLabel("音频转换失败")
+                    else:
+                        self.speed_lab.SetLabel("视频合成失败")
+
                     self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
                 case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:

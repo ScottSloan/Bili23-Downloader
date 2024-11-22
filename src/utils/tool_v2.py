@@ -304,3 +304,11 @@ class UniversalTool:
     @staticmethod
     def get_current_time():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
+
+    @staticmethod
+    def remove_files(directory: str, file_name_list: List[str]):
+        for i in file_name_list:
+            _path = os.path.join(directory, i)
+            
+            if os.path.exists(_path):
+                os.remove(_path)

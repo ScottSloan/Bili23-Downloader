@@ -4,7 +4,6 @@ from configparser import RawConfigParser
 from typing import List
 
 from utils.error import ErrorCallback, process_read_config_exception
-from utils.data_type import DownloadTaskInfo
 
 class Config:
     class Sys:
@@ -66,7 +65,7 @@ class Config:
         speed_limit_in_mb: int = 10
     
     class Merge:
-        convert_to_flac: bool = True
+        m4a_to_mp3: bool = True
         auto_clean: bool = True
 
     class Type:
@@ -145,8 +144,6 @@ class Audio:
 
 class Download:
     current_parse_type: int = 0
-    
-    download_list: List[DownloadTaskInfo] = []
 
 class ConfigUtils:
     def __init__(self):
@@ -173,22 +170,9 @@ class ConfigUtils:
         self.init_ffmpeg()    
 
     def onError(self):
-        # 弹出信息框提示
-        import wx
+        os.remove(self.path)
 
-        app = wx.App()
-
-        dlg = wx.MessageDialog(None, "配置文件不兼容\n\n配置文件较旧，不兼容当前版本，继续使用将覆盖旧文件，是否继续？", "警告", wx.ICON_WARNING | wx.YES_NO)
-
-        if dlg.ShowModal() == wx.ID_YES:
-            os.remove(self.path)
-
-            self.__init__()
-
-        else:
-            wx.Exit()
-
-        app.MainLoop()
+        self.__init__()
 
     def init_ffmpeg(self):
         from utils.tools import check_ffmpeg_available
@@ -231,7 +215,7 @@ class ConfigUtils:
 
         # merge
         Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")
-        Config.Merge.convert_to_flac = self.config.getboolean("merge", "convert_to_flac")
+        Config.Merge.m4a_to_mp3 = self.config.getboolean("merge", "m4a_to_mp3")
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
         # extra
@@ -295,7 +279,7 @@ class ConfigUtils:
         # merge
         self.config.add_section("merge")
         self.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
-        self.config.set("merge", "convert_to_flac", str(int(Config.Merge.convert_to_flac)))
+        self.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
         self.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
         # extra
