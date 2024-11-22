@@ -17,7 +17,7 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
-        release_date: str = "2024/11/20"
+        release_date: str = "2024/11/22"
 
     class Proxy:
         proxy_mode: int = 1
@@ -105,7 +105,12 @@ class Config:
         DOWNLOAD_STATUS_FINISHED: int = 4            # 下载完成
         DOWNLOAD_STATUS_DOWNLOAD_FAILED: int = 5     # 下载失败
         DOWNLOAD_STATUS_MERGE_FAILED: int = 6        # 合成失败
-    
+
+        DOWNLOAD_STATUS_ALIVE_LIST: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE]
+        
+        DOWNLOAD_TYPE_VIDEO: int = 0,
+        DOWNLOAD_TYPE_AUDIO: int = 1
+        
     class Temp:
         download_window_pos = None
 

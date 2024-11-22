@@ -12,7 +12,6 @@ from utils.festival import FestivalInfo, FestivalParser
 from utils.live import LiveInfo, LiveParser
 
 from utils.login import QRLogin
-from utils.download import DownloaderInfo
 from utils.thread import Thread
 from utils.tools import find_str, check_update, process_shorklink, get_user_face
 from utils.error import ErrorCallback, ErrorCode
@@ -21,7 +20,8 @@ from utils.mapping import video_quality_mapping, live_quality_mapping
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
 from gui.processing import ProcessingWindow
-from gui.download import DownloadWindow, DownloadManagerInfo
+from gui.download import DownloadManagerInfo
+from gui.download_v2 import DownloadManagerWindow
 from gui.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
@@ -206,7 +206,7 @@ class MainWindow(Frame):
         self.live_parser = LiveParser()
         self.activity_parser = FestivalParser(self.onError)
 
-        self.download_window = DownloadWindow(self)
+        self.download_window = DownloadManagerWindow(self)
 
         self.download_window_opened = False
         # 解析完成标识符
@@ -239,12 +239,6 @@ class MainWindow(Frame):
         self.ID_AUDIO_NONE = wx.NewIdRef()
 
     def utilsThread(self):
-        info = DownloaderInfo()
-        tasks = info.read_info()
-
-        if len(tasks):
-            self.onLoadDownloadProgress()
-
         # 检查更新
         self.checkUpdateUtils()
 
@@ -278,9 +272,6 @@ class MainWindow(Frame):
         self.parse_finish_flag = False
 
     def parseThread(self, url: str):
-        # 清除下载列表
-        Download.download_list.clear()
-
         continue_to_parse = True
 
         match find_str(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
@@ -353,6 +344,19 @@ class MainWindow(Frame):
         self.treelist.SetFocus()
 
     def onDownload(self, event):
+        def add_download_task_callback():
+            if hasattr(self, "processing_window"):
+                # 关闭加载窗口
+                self.processing_window.Hide()
+
+                # 显示下载窗口
+                self.onOpenDownloadMgr(0)
+
+        def worker():
+            time.sleep(0.1)
+
+            wx.CallAfter(self.download_window.add_download_task_panel, self.treelist.download_task_info_list, add_download_task_callback, True)
+
         # 直播类型视频跳转合成窗口
         if self.current_parse_type == Config.Type.LIVE:
             if LiveInfo.status == Config.Type.LIVE_STATUS_0:
@@ -374,7 +378,7 @@ class MainWindow(Frame):
         # 获取要下载的视频列表
         self.treelist.get_all_selected_item(video_quality_id)
 
-        if not len(Download.download_list):
+        if not len(self.treelist.download_task_info_list):
             self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
             return
         
@@ -383,29 +387,15 @@ class MainWindow(Frame):
         self.processing_window.Show()
 
         # 添加下载项目
-        download_thread = Thread(target = self.downloadThread)
+        download_thread = Thread(target = worker)
         download_thread.start()
-    
-    def downloadThread(self):
-        # 延迟 0.1s 防止加载窗口白屏
-        time.sleep(0.1)
-
-        wx.CallAfter(self.download_window.add_download_item)
-
-    def hideProcessWindowCallback(self):
-        if hasattr(self, "processing_window"):
-            # 关闭加载窗口
-            self.processing_window.Hide()
-
-            # 显示下载窗口
-            self.onOpenDownloadMgr(0)
-
+        
     def onOpenDownloadMgr(self, event):
         if not self.download_window.IsShown():
             self.download_window.Show()
 
             if self.download_window_opened:
-                self.download_window.SetPosition(Config.Temp.download_window_pos)
+                pass
             else:
                 self.download_window.CenterOnParent()
 

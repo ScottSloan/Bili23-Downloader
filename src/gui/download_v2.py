@@ -1,0 +1,835 @@
+import io
+import os
+import wx
+import json
+import requests
+import subprocess
+from typing import List, Callable
+
+from gui.templates import Frame, ScrolledPanel
+
+from utils.config import Config
+from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback
+from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
+from utils.thread import Thread
+from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool
+from utils.downloader import Downloader
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
+
+class DownloadManagerWindow(Frame):
+    def __init__(self, parent):
+        # 下载管理窗口
+        Frame.__init__(self, parent, "下载管理", style = wx.DEFAULT_FRAME_STYLE & (~wx.MINIMIZE_BOX) & (~wx.MAXIMIZE_BOX))
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+        self.init_utils()
+
+    def init_UI(self):
+        # 初始化下载管理窗口 UI
+        self.SetBackgroundColour("white")
+
+        count_font: wx.Font = self.GetFont()
+        count_font.SetFractionalPointSize(14)
+
+        self.task_count_lab = wx.StaticText(self.panel, -1, "下载管理")
+        self.task_count_lab.SetFont(count_font)
+
+        self.start_all_btn = wx.Button(self.panel, -1, "全部开始")
+        self.pause_all_btn = wx.Button(self.panel, -1, "全部暂停")
+        self.stop_all_btn = wx.Button(self.panel, -1, "全部取消")
+
+        top_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        top_bar_hbox.AddStretchSpacer()
+        top_bar_hbox.Add(self.start_all_btn, 0, wx.ALL & (~wx.TOP), 10)
+        top_bar_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        top_bar_hbox.Add(self.stop_all_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+
+        top_bar_border = wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL)
+
+        self.download_task_list_panel = ScrolledPanel(self.panel, size = self.FromDIP((800, 350)))
+        
+        bottom_bar_border = wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL)
+
+        self.open_download_directory_btn = wx.Button(self.panel, -1, "打开下载目录", size = self.FromDIP((100, 30)))
+        self.clear_history_btn = wx.Button(self.panel, -1, "清除下载记录", size = self.FromDIP((100, 30)))
+
+        bottom_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_bar_hbox.Add(self.open_download_directory_btn, 0, wx.ALL, 10)
+        bottom_bar_hbox.AddStretchSpacer()
+        bottom_bar_hbox.Add(self.clear_history_btn, 0, wx.ALL, 10)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.task_count_lab, 0, wx.ALL, 10)
+        vbox.Add(top_bar_hbox, 0, wx.EXPAND)
+        vbox.Add(top_bar_border, 0, wx.EXPAND)
+        vbox.Add(self.download_task_list_panel, 1, wx.EXPAND)
+        vbox.Add(bottom_bar_border, 0, wx.EXPAND)
+        vbox.Add(bottom_bar_hbox, 0, wx.EXPAND)
+
+        self.panel.SetSizerAndFit(vbox)
+
+        self.Fit()
+
+    def Bind_EVT(self):
+        # 绑定相关事件
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+        self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAllEVT)
+        self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
+        self.stop_all_btn.Bind(wx.EVT_BUTTON, self.onStopAllEVT)
+
+        self.open_download_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadDirectoryEVT)
+        self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearHistoryEVT)
+
+    def onCloseEVT(self, event):
+        # 窗口关闭事件
+        self.Hide()
+
+    def onStartAllEVT(self, event):
+        # 开始全部下载任务
+        self.start_download()
+
+    def onPauseAllEVT(self, event):
+        # 暂停全部下载任务
+        for panel in self.get_download_task_panel_list():
+            if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                panel.onPause()
+
+    def onStopAllEVT(self, event):
+        # 取消全部下载任务
+        self.download_task_list_panel.Freeze()
+
+        for panel in self.get_download_task_panel_list():
+            if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                panel.onStopEVT(event)
+
+        self.download_task_list_panel.Thaw()
+
+    def init_utils(self):
+        # 记录下载任务的 cid 列表
+        self._temp_cid_list = []
+
+        # 读取断点续传信息
+        self.load_download_task()
+
+    def onOpenDownloadDirectoryEVT(self, event):
+        # 打开下载目录事件
+        DirectoryTool.open_directory(Config.Download.path)
+
+    def onClearHistoryEVT(self, event):
+        # 清除已完成的下载记录
+        self.download_task_list_panel.Freeze()
+
+        for panel in self.get_download_task_panel_list():
+            if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_FINISHED:
+                panel.onStopEVT(event)
+
+        self.download_task_list_panel.Thaw()
+        
+    def load_download_task(self):
+        def callback():
+            pass
+
+        _download_task_info_list = []
+
+        # 读取断点续传信息
+        for file in os.listdir(Config.Download.path):
+            # 遍历下载目录
+            file_path = os.path.join(Config.Download.path, file)
+
+            # 判断是否为断点续传信息文件
+            if os.path.isfile(file_path):
+                if file.startswith("info_") and file.endswith(".json"):
+                    download_file_tool = DownloadFileTool(file_name = file)
+
+                    _task_info = DownloadTaskInfo()
+                    _task_info.load_from_dict(download_file_tool._read_download_file_json()["task_info"])
+
+                    # 如果下载状态为等待下载，或者正在下载，则更新为暂停中
+                    if _task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                        _task_info.status = Config.Type.DOWNLOAD_STATUS_PAUSE
+
+                    _download_task_info_list.append(_task_info)
+
+        wx.CallAfter(self.add_download_task_panel, _download_task_info_list, callback, False)
+
+    def start_download(self):
+        # 开始下载
+        for panel in self.get_download_task_panel_list():
+            if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE] and self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
+                panel.onResume()
+
+    def get_download_task_panel_list(self):
+        children: List[DownloadTaskPanel] = self.download_task_list_panel.GetChildren()
+        
+        return children
+    
+    def get_download_task_count(self, condition: List[int]):
+        # 统计正在下载的任务数
+        _count = 0
+
+        for panel in self.get_download_task_panel_list():
+            # 正在下载的任务包括 等待下载、正在下载、暂停中 三种状态
+            if panel.task_info.status in condition:
+                _count += 1
+
+        return _count
+
+    def add_download_task_panel(self, download_task_info_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
+        def worker(info: DownloadTaskInfo, multiple_flag: bool, index: int):
+            if multiple_flag:
+                info.index = index + 1
+
+            item = DownloadTaskPanel(self.download_task_list_panel, info, stop_download_callback)
+
+            # 添加进 cid 列表记录
+            self._temp_cid_list.append(info.cid)
+
+            return  (item, 0, wx.EXPAND)
+
+        def stop_download_callback(cid: int):
+            # 停止下载回调函数
+            self.refresh_task_list_panel_ui()
+
+            # 清除 cid 列表中的记录
+            self._temp_cid_list.remove(cid)
+        
+        task_panel_list = []
+
+        # 批量下载标识符
+        multiple_flag = len(download_task_info_list) > 1
+
+        # 暂时停止 UI 更新
+        self.download_task_list_panel.Freeze()
+
+        for index, info in enumerate(download_task_info_list):
+            # 检查 cid 列表是否已包含，防止重复下载
+            if info.cid not in self._temp_cid_list:
+                task_panel_list.append(worker(info, multiple_flag, index))
+
+        self.download_task_list_panel.sizer.AddMany(task_panel_list)
+
+        # 恢复 UI 更新
+        self.download_task_list_panel.Thaw()
+
+        self.refresh_task_list_panel_ui()
+
+        # 下载任务添加完毕，回调函数
+        callback()
+
+        if start_download:
+            self.start_download()
+
+    def refresh_task_list_panel_ui(self):
+        def refresh_ui(count: int):
+            if count:
+                _label = f"{count} 个任务正在下载"
+            else:
+                _label = "下载管理"
+
+            self.task_count_lab.SetLabel(_label)
+
+        # 刷新面板 ui
+        self.download_task_list_panel.Layout()
+        self.download_task_list_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+
+        wx.CallAfter(refresh_ui, self.get_download_task_count(Config.Type.DOWNLOAD_STATUS_ALIVE_LIST))
+
+class DownloadUtils:
+    def __init__(self, task_info: DownloadTaskInfo, callback: UtilsCallback):
+        self.task_info, self.callback = task_info, callback
+
+    def get_video_bangumi_download_url(self):
+        def get_json():
+            def request_get(url: str):
+                req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+                return json.loads(req.text)
+        
+            match self.task_info.download_type:
+                case Config.Type.VIDEO:
+                    url = f"https://api.bilibili.com/x/player/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
+
+                    json_dash = request_get(url)
+
+                    return json_dash["data"]["dash"]
+                
+                case Config.Type.BANGUMI:
+                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
+
+                    json_dash = request_get(url)
+
+                    return json_dash["result"]["dash"]
+        
+        def get_video_available_quality():
+            # 获取视频最高清晰度
+            highest_video_quality_id = self._get_highest_video_quality(json_dash["video"])
+
+            if self.task_info.video_quality_id == 200:
+                # 当选择自动时，选取最高可用清晰度
+                self.task_info.video_quality_id = highest_video_quality_id
+            else:
+                if highest_video_quality_id < self.task_info.video_quality_id:
+                    # 当视频不存在选取的清晰度时，选取最高可用的清晰度
+                    self.task_info.video_quality_id = highest_video_quality_id
+                else:
+                    self.task_info.video_quality_id = self.task_info.video_quality_id
+
+        def get_video_available_codec():
+            def get_codec_index(data: List[dict]):
+                for index, entry in enumerate(data):
+                    if entry["codecid"] == self.task_info.video_codec_id:
+                        return index
+
+            # 获取选定清晰度的视频列表，包含多种清晰度
+            temp_video_durl_list = [i for i in json_dash["video"] if i["id"] == self.task_info.video_quality_id]
+
+            self.task_info.video_codec_id = Config.Download.video_codec_id
+
+            codec_index = get_codec_index(temp_video_durl_list)
+
+            # 判断视频支持选定的编码
+            if codec_index is not None:
+                durl_json = temp_video_durl_list[codec_index]
+
+            else:
+                # 不支持选定编码，自动切换到 H264
+                durl_json = temp_video_durl_list[0]
+                self.task_info.video_codec_id = 7
+
+            self._video_download_url_list = self._get_all_available_download_url_list(durl_json)
+
+        def get_audio_available_quality():
+            if json_dash["audio"]:
+                # 解析默认音质
+                self._get_default_audio_download_url(json_dash["audio"])
+
+                if self.task_info.audio_quality_id == 30300:
+                    try:
+                        # 获取无损或杜比链接
+                        if "flac" in json_dash:
+                            if json_dash["flac"]:
+                                if "audio" in json_dash["flac"]:
+                                    if json_dash["flac"]["audio"]:
+                                        # 无损
+                                        audio_node = json_dash["flac"]["audio"]
+
+                                        self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
+
+                                        self.task_info.audio_type = "flac"
+                                        self.task_info.audio_quality_id = 30251
+
+                        if "dolby" in json_dash:
+                            if json_dash["dolby"]:
+                                if "audio" in json_dash["dolby"]:
+                                    if json_dash["dolby"]["audio"]:
+                                        # 杜比全景声
+                                        audio_node = json_dash["dolby"]["audio"][0]
+
+                                        self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
+
+                                        self.task_info.audio_type = "ec3"
+                                        self.task_info.audio_quality_id = 30250
+
+                    except Exception:
+                        # 无法获取无损或杜比链接，换回默认音质
+                        self._get_default_audio_download_url(json_dash["audio"])
+
+            else:
+                # 视频不存在音频，标记 flag 为仅下载视频
+                self.task_info.video_merge_type = Config.Type.MERGE_TYPE_VIDEO
+
+        json_dash = get_json()
+
+        self._video_download_url_list = self._audio_download_url_list = []
+
+        get_video_available_quality()
+
+        get_video_available_codec()
+
+        get_audio_available_quality()
+    
+    def get_downloader_info_list(self):
+        self.get_video_bangumi_download_url()
+
+        _temp_info = []
+
+        match self.task_info.video_merge_type:
+            case Config.Type.MERGE_TYPE_ALL:
+                _temp_info.append(self._get_video_downloader_info())
+                _temp_info.append(self._get_audio_downloader_info())
+
+            case Config.Type.MERGE_TYPE_VIDEO:
+                _temp_info.append(self._get_video_downloader_info())
+            
+            case Config.Type.MERGE_TYPE_AUDIO:
+                _temp_info.append(self._get_audio_downloader_info())
+
+        return _temp_info
+
+    def merge_video(self):
+        def get_temp_file_name():
+            self._temp_video_file_name = f"video_{self.task_info.id}.mp4"
+            self._temp_audio_file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
+
+        def clear_files():
+            if Config.Merge.auto_clean and self.task_info.video_merge_type == Config.Type.MERGE_TYPE_ALL:
+                os.remove(os.path.join(Config.Download.path, self._temp_video_file_name))
+
+                os.remove(os.path.join(Config.Download.path, self._temp_audio_file_name))
+
+        get_temp_file_name()
+
+        _cmd = self._get_shell_cmd()
+
+        _process = self._run_subprocess(_cmd)
+
+        if _process.returncode == 0:
+            # 视频合成完毕，清理文件并回调函数
+            clear_files()
+
+            self.callback.onMergeFinishCallback()
+
+        else:
+            pass
+
+    def _get_shell_cmd(self):
+        if Config.Sys.platform == "windows":
+            _rename_cmd = "rename"
+        else:
+            _rename_cmd = "mv"
+
+        match self.task_info.video_merge_type:
+            case Config.Type.MERGE_TYPE_ALL:
+                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4 && {_rename_cmd} _out.mp4 "{self.file_title}.mp4"'
+
+            case Config.Type.MERGE_TYPE_VIDEO:
+                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" "{self.task_info.title_legal}.mp4"'
+
+            case Config.Type.MERGE_TYPE_AUDIO:
+                _cmd = f'{_rename_cmd} "{self._temp_audio_file_name}" "{self.task_info.title_legal}.{self.task_info.audio_type}"'
+
+        return _cmd
+
+    def _run_subprocess(self, cmd: str):
+        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
+
+    def _get_video_downloader_info(self):
+        info = DownloaderInfo()
+        info.url_list = self._video_download_url_list
+        info.type = "video"
+        info.file_name = f"video_{self.task_info.id}.mp4"
+
+        self._temp_video_file_name = info.file_name
+
+        return info.to_dict()
+
+    def _get_audio_downloader_info(self):
+        info = DownloaderInfo()
+        info.url_list = self._audio_download_url_list
+        info.type = "audio"
+        info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
+
+        self._temp_audio_file_name = info.file_name
+
+        return info.to_dict()
+        
+    def _get_default_audio_download_url(self, data: List[dict]):
+        highest_audio_quality = self._get_highest_audio_quality(data)
+
+        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == 30300:
+            # 当视频不存在选取的音质时，选取最高可用的音质
+            audio_quality = highest_audio_quality
+        else:
+            audio_quality = self.task_info.audio_quality_id
+
+        temp_audio_durl = [i for i in data if i["id"] == audio_quality]
+
+        self._audio_download_url_list = self._get_all_available_download_url_list(temp_audio_durl[0])
+
+        self.task_info.audio_type = "m4a"
+        self.task_info.audio_quality_id = audio_quality
+
+    def _get_all_available_download_url_list(self, entry: dict):
+        # 取视频音频的所有下载链接
+        temp_list = []
+
+        node_list = ["backupUrl", "backup_url", "baseUrl", "base_url"]
+
+        for node_name in node_list:
+            if node_name in entry:
+                # 判断是否为列表
+                if isinstance(entry[node_name], list):
+                    temp_list.extend(entry[node_name])
+                
+                else:
+                    temp_list.append(entry[node_name])
+
+        return temp_list
+
+    def _get_highest_video_quality(self, data: List[dict]):
+        # 默认为 360P
+        highest_video_quality_id = 16
+
+        for entry in data:
+            # 遍历列表，选取其中最高的清晰度
+            if entry["id"] > highest_video_quality_id:
+                highest_video_quality_id = entry["id"]
+
+        return highest_video_quality_id
+
+    def _get_highest_audio_quality(self, data: List[dict]):
+        # 默认为 64K
+        highest_audio_quality = 30216
+
+        for entry in data:
+            if entry["id"] > highest_audio_quality:
+                highest_audio_quality = entry["id"]
+
+        return highest_audio_quality
+
+    @property
+    def file_title(self):
+        if self.task_info.index:
+            return f"{self.task_info.index} - {self.task_info.title_legal}"
+        else:
+            return self.task_info.title_legal
+
+    @property
+    def full_file_name(self):
+        match self.task_info.video_merge_type:
+            case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
+                return f"{self.file_title}.mp4"
+
+            case Config.Type.MERGE_TYPE_AUDIO:
+                return f"{self.file_title}.{self.task_info.audio_type}"
+
+class DownloadTaskPanel(wx.Panel):
+    def __init__(self, parent, info: DownloadTaskInfo, callback: Callable):
+        self.task_info, self.callback = info, callback
+
+        # 下载任务面板
+        wx.Panel.__init__(self, parent)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+        self.init_utils()
+
+    def init_UI(self):
+        # 初始化 UI
+        self.icon_manager = IconManager(self.GetDPIScaleFactor())
+
+        self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+        self.title_lab = wx.StaticText(self, -1, self.task_info.title, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
+        self.title_lab.SetToolTip(self.task_info.title)
+
+        self.video_quality_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
+        self.video_quality_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+
+        self.video_codec_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
+        self.video_codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+
+        self.video_size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
+        self.video_size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+
+        video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+
+        video_info_vbox = wx.BoxSizer(wx.VERTICAL)
+        video_info_vbox.AddSpacer(5)
+        video_info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, 10)
+        video_info_vbox.AddStretchSpacer()
+        video_info_vbox.Add(video_info_hbox, 0, wx.EXPAND)
+        video_info_vbox.AddSpacer(5)
+
+        self.progress_bar = wx.Gauge(self, -1, 100, size = (-1, -1), style = wx.GA_SMOOTH)
+
+        progress_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+
+        self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((-1, -1)))
+        self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+
+        speed_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+
+        progress_bar_vbox = wx.BoxSizer(wx.VERTICAL)
+        progress_bar_vbox.AddSpacer(5)
+        progress_bar_vbox.Add(progress_bar_hbox, 0, wx.EXPAND)
+        progress_bar_vbox.AddStretchSpacer()
+        progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
+        progress_bar_vbox.AddSpacer(5)
+
+        self.pause_btn = wx.BitmapButton(self, -1, self.get_button_icon(RESUME_ICON), size = self.FromDIP((24, 24)))
+        self.pause_btn.SetToolTip("开始下载")
+
+        self.stop_btn = wx.BitmapButton(self, -1, self.get_button_icon(DELETE_ICON), size = self.FromDIP((24, 24)))
+        self.stop_btn.SetToolTip("取消下载")
+
+        panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        panel_hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
+        panel_hbox.Add(video_info_vbox, 0, wx.EXPAND)
+        panel_hbox.AddStretchSpacer()
+        panel_hbox.Add(progress_bar_vbox, 0, wx.EXPAND)
+        panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        panel_hbox.AddSpacer(10)
+
+        bottom_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
+
+        self.panel_vbox = wx.BoxSizer(wx.VERTICAL)
+        self.panel_vbox.Add(panel_hbox, 1, wx.EXPAND)
+        self.panel_vbox.Add(bottom_border, 0, wx.EXPAND)
+
+        self.SetSizer(self.panel_vbox)
+
+    def Bind_EVT(self):
+        self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseResumeEVT)
+        self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
+
+    def init_utils(self):
+        def show_cover():
+            scale = self.FromDIP((112, 63))
+
+            # 获取封面数据并保存为 wx.Image 对象
+            temp_image = wx.Image(io.BytesIO(RequestTool.request(self.task_info.cover_url)))
+            
+            # 裁剪图片至合适大小
+            temp_image: wx.Image = temp_image.Scale(scale[0], scale[1], wx.IMAGE_QUALITY_HIGH)
+
+            wx.CallAfter(set_cover, temp_image)
+
+        def set_cover(image: wx.Image):
+            # 设置封面
+            self.cover_bmp.SetBitmap(image.ConvertToBitmap())
+
+            self.panel_vbox.Layout()
+        
+        def get_downloader_callback():
+            _callback = DownloaderCallback()
+            _callback.onStartCallback = self.onStart
+            _callback.onDownloadCallback = self.onDownload
+            _callback.onMergeCallback = self.onMerge
+            _callback.onErrorCallback = self.onError
+
+            return _callback
+
+        def get_utils_callback():
+            _callback = UtilsCallback()
+            _callback.onMergeFinishCallback = self.onMergeFinish
+            _callback.onErrorCallback = self.onError
+
+            return _callback
+
+        # 获取视频封面
+        if self.task_info.cover_url:
+            Thread(target = show_cover).start()
+
+        # 初始化断点续传工具类，并保存信息
+        self.download_file_tool = DownloadFileTool(self.task_info.id)
+        self.download_file_tool.save_download_info(self.task_info)
+        
+        self.downloader = Downloader(self.task_info, self.download_file_tool, get_downloader_callback())
+
+        self.utils = DownloadUtils(self.task_info, get_utils_callback())
+
+        self.load_download_task_info()
+
+    def load_download_task_info(self):
+        # 读取断点续传信息
+
+        # 更新下载状态
+        self.update_download_status(self.task_info.status)
+
+        if self.task_info.completed_size:
+            # 载入下载进度和下载状态
+            self.progress_bar.SetValue(self.task_info.progress)
+
+            self.show_media_info()
+
+    def onPauseResumeEVT(self, event):
+        # 暂停继续事件
+        match self.task_info.status:
+            case Config.Type.DOWNLOAD_STATUS_WAITING:
+                # 等待下载的任务，开始下载
+                self.start_download()
+
+            case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+                # 正在下载的任务，暂停
+                self.onPause()
+
+            case Config.Type.DOWNLOAD_STATUS_PAUSE:
+                # 暂停的任务，恢复下载
+                self.onResume()
+
+            case Config.Type.DOWNLOAD_STATUS_MERGING:
+                # 正在合成的任务，合成
+                self.onMerge()
+
+            case Config.Type.DOWNLOAD_STATUS_FINISHED:
+                # 下载完成的任务，打开文件所在位置
+                self.onOpenLocation()
+    
+    def onPause(self):
+        # 暂停下载
+        self.downloader.onPause()
+        
+        # 更新下载状态为暂停中
+        self.update_download_status(Config.Type.DOWNLOAD_STATUS_PAUSE)
+
+    def onResume(self):
+        # 继续下载
+
+        if self.task_info.progress == 100:
+            # 下载完成，合成视频
+            self.onMerge()
+        else:
+            self.start_download()
+
+    def onStopEVT(self, event):
+        # 停止下载，删除下载任务
+        self.Hide()
+
+        # 销毁下载任务面板，并清除断点续传信息
+        self.Destroy()
+        self.download_file_tool.clear_download_info()
+
+        # 回调函数，刷新 UI
+        self.callback(self.task_info.cid)
+
+    def onStart(self, total_size: int):
+        # 开始下载回调函数
+        self.task_info.total_size = total_size
+
+        self.speed_lab.SetLabel("")
+        
+        self.show_media_info()
+
+        kwargs = {
+            "total_size": total_size,
+            "video_quality_id": self.utils.task_info.video_quality_id,
+            "video_codec_id": self.utils.task_info.video_codec_id,
+            "audio_quality_id": self.utils.task_info.audio_quality_id,
+            "audio_type": self.utils.task_info.audio_type,
+            "video_merge_type": self.utils.task_info.video_merge_type
+        }
+
+        self.download_file_tool.update_task_info_kwargs(**kwargs)
+
+    def onDownload(self, info: dict):
+        # 更新下载进度回调函数
+        if self.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+            self.progress_bar.SetValue(info["progress"])
+
+            self.speed_lab.SetLabel(DownloadFileTool.format_speed(info["speed"]))
+            self.video_size_lab.SetLabel("{}/{}".format(DownloadFileTool.format_size(info["completed_size"]), DownloadFileTool.format_size(self.task_info.total_size)))
+            
+            self.task_info.progress = info["progress"]
+            self.task_info.completed_size = info["completed_size"]
+
+    def onMerge(self):
+        # 合成视频回调函数
+        self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGING)
+        self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
+        self.pause_btn.Enable(False)
+
+        self.speed_lab.SetLabel("正在合成视频...")
+
+        Thread(target = self.utils.merge_video).start()
+
+    def onMergeFinish(self):
+        self.update_download_status(Config.Type.DOWNLOAD_STATUS_FINISHED)
+        self.pause_btn.Enable(True)
+
+        self.speed_lab.SetLabel("下载完成")
+
+    def onError(self):
+        # 下载失败回调函数
+        pass
+    
+    def onOpenLocation(self):
+        path = os.path.join(Config.Download.path, self.utils.full_file_name)
+
+        DirectoryTool.open_file_location(path)
+
+    def start_download(self):
+        def worker():
+            # 开始下载
+            downloader_info_list = self.utils.get_downloader_info_list()
+
+            self.downloader.start_download(downloader_info_list)
+
+        # 更新下载状态为正在下载
+        self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
+
+        Thread(target = worker).start()
+
+    def show_media_info(self):
+        self.video_size_lab.SetLabel(f"{DownloadFileTool.format_size(self.task_info.completed_size)}/{DownloadFileTool.format_size(self.task_info.total_size)}")
+
+        match self.task_info.video_merge_type:
+            case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
+                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_mapping, self.utils.task_info.video_quality_id))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_mapping, self.utils.task_info.video_codec_id))
+
+            case Config.Type.MERGE_TYPE_AUDIO:
+                self.video_quality_lab.SetLabel("音频")
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_mapping, self.utils.task_info.audio_quality_id))
+
+    def update_download_status(self, status: int):
+        def update_btn_icon():
+            match self.task_info.status:
+                case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+                    # 正在下载，显示暂停图标
+                    self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
+
+                    self.pause_btn.SetToolTip("暂停下载")
+                    self.speed_lab.SetLabel("正在获取下载信息...")
+
+                case Config.Type.DOWNLOAD_STATUS_PAUSE:
+                    # 暂停中，显示继续下载图标
+                    self.pause_btn.SetBitmap(self.get_button_icon(RESUME_ICON))
+
+                    self.pause_btn.SetToolTip("继续下载")
+                    self.speed_lab.SetLabel("暂停中")
+
+                case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED | Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
+                    # 下载失败，显示重试图标
+                    self.pause_btn.SetBitmap(self.get_button_icon(RETRY_ICON))
+
+                    self.pause_btn.SetToolTip("重试")
+
+                case Config.Type.DOWNLOAD_STATUS_FINISHED:
+                    # 下载完成，显示打开文件所在位置图标
+                    self.pause_btn.SetBitmap(self.get_button_icon(FOLDER_ICON))
+
+                    self.pause_btn.SetToolTip("打开文件所在位置")
+                    self.speed_lab.SetLabel("下载完成")
+
+        # 更新下载状态
+        self.task_info.status = status
+
+        update_btn_icon()
+
+        kwargs = {
+            "status": status
+        }
+
+        # 同步更新到文件
+        self.download_file_tool.update_task_info_kwargs(**kwargs)
+
+    def get_button_icon(self, icon_id: int):
+        # 获取按钮位图图标
+        scale_size = self.FromDIP((16, 16))
+
+        image = wx.Image(io.BytesIO(self.icon_manager.get_icon_bytes(icon_id)))
+
+        return image.Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()

@@ -66,6 +66,16 @@ danmaku_format_mapping = {
     "protobuf": 1
 }
 
+download_status_mapping = {
+    0: "等待下载",
+    1: "正在获取下载信息...",
+    2: "暂停中",
+    3: "正在合成视频",
+    4: "下载完成",
+    5: "下载失败",
+    6: "视频合成失败"
+}
+
 def get_mapping_key_by_value(mapping: Dict, value: int):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

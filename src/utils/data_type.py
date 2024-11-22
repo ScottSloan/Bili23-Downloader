@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, List, Dict
 
 class DownloadTaskInfo:
     # 下载任务信息
@@ -33,12 +33,13 @@ class DownloadTaskInfo:
         # 下载状态
         self.status: int = Config.Type.DOWNLOAD_STATUS_WAITING
         # 下载完成标识符
-        self.download_finish_flag = False
+        self.download_finish_flag: bool = False
 
         # 媒体信息，0 表示未定义
-        self.video_quality_id = Config.Type.UNDEFINED
-        self.audio_quality_id = Config.Type.UNDEFINED
-        self.video_codec_id = Config.Type.UNDEFINED
+        self.video_quality_id: int = Config.Type.UNDEFINED
+        self.audio_quality_id: int = Config.Type.UNDEFINED
+        self.video_codec_id: int = Config.Type.UNDEFINED
+        self.audio_type: str = ""
 
         # 下载类型，1 为用户投稿视频，2 为番组
         self.download_type: int = Config.Type.UNDEFINED
@@ -46,10 +47,10 @@ class DownloadTaskInfo:
         self.video_merge_type: int = 0
 
         # 回调函数指针
-        self.startDwonload_Callback: Optional[Callable] = None
-        self.onPause_Callback: Optional[Callable] = None
-        self.onResume_Callback: Optional[Callable] = None
-        self.onStop_Callback: Optional[Callable] = None
+        self.startDwonload_Callback: Callable = None
+        self.onPause_Callback: Callable = None
+        self.onResume_Callback: Callable = None
+        self.onStop_Callback: Callable = None
 
     def to_dict(self):
         return {
@@ -68,12 +69,13 @@ class DownloadTaskInfo:
             "video_quality_id": self.video_quality_id,
             "audio_quality_id": self.audio_quality_id,
             "video_codec_id": self.video_codec_id,
+            "audio_type": self.audio_type,
             "download_type": self.download_type,
             "video_merge_type": self.video_merge_type,
             "download_finish_flag": self.download_finish_flag
         }
 
-    def load_from_dict(self, data):
+    def load_from_dict(self, data: Dict):
         self.id = data["id"]
         self.index = data["index"]
         self.referer_url = data["referer_url"]
@@ -89,6 +91,68 @@ class DownloadTaskInfo:
         self.video_quality_id = data["video_quality_id"]
         self.audio_quality_id = data["audio_quality_id"]
         self.video_codec_id = data["video_codec_id"]
+        self.audio_type = data["audio_type"]
         self.download_type = data["download_type"]
         self.video_merge_type = data["video_merge_type"]
         self.download_finish_flag = data["download_finish_flag"]
+
+class ThreadInfo:
+    # 线程信息
+    def __init__(self):
+        # 文件名称
+        self.file_name: str = ""
+        # 下载类型，0为视频，1为音频
+        self.download_type: int = 0
+        # range 分片信息
+        self.range: List[int] = []
+
+    def to_dict(self):
+        return {
+            "file_name": self.file_name,
+            "thread_type": self.download_type,
+            "range": self.range
+        }
+    
+    def load_from_dict(self, data: Dict):
+        self.file_name = data["file_name"]
+        self.download_type = data["download_type"]
+        self.range = data["range"]
+
+class DownloaderInfo:
+    def __init__(self):
+        self.url_list: List[str] = []
+        self.type: str = ""
+        self.file_name: str = ""
+
+    def to_dict(self):
+        return {
+            "url_list": self.url_list,
+            "type": self.type,
+            "file_name": self.file_name
+        }
+    
+    def load_from_dict(self, data: Dict):
+        self.url_list = data["url_list"]
+        self.type = data["type"]
+        self.file_name = data["file_name"]
+
+class RangeDownloadInfo:
+    def __init__(self):
+        self.index: int = 0
+        self.type: str = ""
+        self.url: str = ""
+        self.referer_url: str = ""
+        self.file_path: str = ""
+        self.range: List[int] = []
+
+class DownloaderCallback:
+    def __init__(self):
+        self.onStartCallback: Callable = None
+        self.onDownloadCallback: Callable = None
+        self.onMergeCallback: Callable = None
+        self.onErrorCallback: Callable = None
+
+class UtilsCallback:
+    def __init__(self):
+        self.onMergeFinishCallback: Callable = None
+        self.onErrorCallback: Callable = None

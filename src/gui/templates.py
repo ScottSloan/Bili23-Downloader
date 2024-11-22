@@ -108,8 +108,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
     
     def get_all_selected_item(self, video_quality_id: Optional[int] = None):
+        self.download_task_info_list = []
         self.video_quality_id = video_quality_id
-        Download.download_list.clear()
         
         for i in self.all_list_items:
             text = self.GetItemText(i, 0)
@@ -174,7 +174,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         referer_url = VideoInfo.url
 
-        Download.download_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, cover_url, bvid, cid))
     
     def get_bangumi_download_info(self, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
@@ -185,7 +185,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         cid = info_entry["cid"]
         referer_url = BangumiInfo.url
 
-        Download.download_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, cover_url, bvid, cid))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):
