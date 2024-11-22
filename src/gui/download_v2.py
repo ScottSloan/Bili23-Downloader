@@ -9,7 +9,7 @@ from typing import List, Callable
 from gui.templates import Frame, ScrolledPanel
 
 from utils.config import Config
-from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback
+from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback
 from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
 from utils.thread import Thread
 from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool
@@ -183,7 +183,12 @@ class DownloadManagerWindow(Frame):
             if multiple_flag:
                 info.index = index + 1
 
-            item = DownloadTaskPanel(self.download_task_list_panel, info, stop_download_callback)
+            task_panel_callback = TaskPanelCallback()
+            task_panel_callback.onStartNextCallback = self.start_download
+            task_panel_callback.onStopCallbacak = stop_download_callback
+            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+
+            item = DownloadTaskPanel(self.download_task_list_panel, info, task_panel_callback)
 
             # 添加进 cid 列表记录
             self._temp_cid_list.append(info.cid)
@@ -223,20 +228,22 @@ class DownloadManagerWindow(Frame):
         if start_download:
             self.start_download()
 
+    def update_task_count_label(self):
+        count = self.get_download_task_count(Config.Type.DOWNLOAD_STATUS_ALIVE_LIST)
+
+        if count:
+            _label = f"{count} 个任务正在下载"
+        else:
+            _label = "下载管理"
+
+        self.task_count_lab.SetLabel(_label)
+
     def refresh_task_list_panel_ui(self):
-        def refresh_ui(count: int):
-            if count:
-                _label = f"{count} 个任务正在下载"
-            else:
-                _label = "下载管理"
-
-            self.task_count_lab.SetLabel(_label)
-
         # 刷新面板 ui
         self.download_task_list_panel.Layout()
         self.download_task_list_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        wx.CallAfter(refresh_ui, self.get_download_task_count(Config.Type.DOWNLOAD_STATUS_ALIVE_LIST))
+        wx.CallAfter(self.update_task_count_label)
 
 class DownloadUtils:
     def __init__(self, task_info: DownloadTaskInfo, callback: UtilsCallback):
@@ -507,7 +514,7 @@ class DownloadUtils:
                 return f"{self.file_title}.{self.task_info.audio_type}"
 
 class DownloadTaskPanel(wx.Panel):
-    def __init__(self, parent, info: DownloadTaskInfo, callback: Callable):
+    def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
         self.task_info, self.callback = info, callback
 
         # 下载任务面板
@@ -687,12 +694,12 @@ class DownloadTaskPanel(wx.Panel):
 
     def onResume(self):
         # 继续下载
-
-        if self.task_info.progress == 100:
-            # 下载完成，合成视频
-            self.onMerge()
-        else:
-            self.start_download()
+        if self.task_info.status != Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+            if self.task_info.progress == 100:
+                # 下载完成，合成视频
+                self.onMerge()
+            else:
+                self.start_download()
 
     def onStopEVT(self, event):
         # 停止下载，删除下载任务
@@ -703,7 +710,7 @@ class DownloadTaskPanel(wx.Panel):
         self.download_file_tool.clear_download_info()
 
         # 回调函数，刷新 UI
-        self.callback(self.task_info.cid)
+        self.callback.onStopCallbacak(self.task_info.cid)
 
     def onStart(self, total_size: int):
         # 开始下载回调函数
@@ -725,31 +732,45 @@ class DownloadTaskPanel(wx.Panel):
         self.download_file_tool.update_task_info_kwargs(**kwargs)
 
     def onDownload(self, info: dict):
-        # 更新下载进度回调函数
-        if self.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+        def callback():
+            # 更新下载进度回调函数
             self.progress_bar.SetValue(info["progress"])
 
             self.speed_lab.SetLabel(DownloadFileTool.format_speed(info["speed"]))
             self.video_size_lab.SetLabel("{}/{}".format(DownloadFileTool.format_size(info["completed_size"]), DownloadFileTool.format_size(self.task_info.total_size)))
-            
+                
             self.task_info.progress = info["progress"]
             self.task_info.completed_size = info["completed_size"]
+        
+        wx.CallAfter(callback)
 
     def onMerge(self):
-        # 合成视频回调函数
-        self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGING)
-        self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
-        self.pause_btn.Enable(False)
+        def callback():
+            # 合成视频回调函数
+            self.callback.onUpdateTaskCountCallback()
 
-        self.speed_lab.SetLabel("正在合成视频...")
+            self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
+            self.pause_btn.Enable(False)
+
+            self.speed_lab.SetLabel("正在合成视频...")
+        
+        self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGING)
+
+        wx.CallAfter(callback)
 
         Thread(target = self.utils.merge_video).start()
 
-    def onMergeFinish(self):
-        self.update_download_status(Config.Type.DOWNLOAD_STATUS_FINISHED)
-        self.pause_btn.Enable(True)
+        # 在合成时下载下一个视频
+        self.callback.onStartNextCallback()
 
-        self.speed_lab.SetLabel("下载完成")
+    def onMergeFinish(self):
+        def callback():
+            self.update_download_status(Config.Type.DOWNLOAD_STATUS_FINISHED)
+            self.pause_btn.Enable(True)
+
+            self.speed_lab.SetLabel("下载完成")
+
+        wx.CallAfter(callback)
 
     def onError(self):
         # 下载失败回调函数

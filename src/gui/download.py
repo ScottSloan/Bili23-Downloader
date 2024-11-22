@@ -12,7 +12,6 @@ from gui.templates import Frame, ScrolledPanel
 from gui.show_error import ShowErrorDialog
 from gui.cover_viewer import CoverViewerDialog
 
-from utils.icons import getDeleteIcon16, getDeleteIcon24, getFolderIcon16, getFolderIcon24, getPauseIcon16, getPauseIcon24, getResumeIcon16, getResumeIcon24, getRetryIcon16, getRetryIcon24
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
 from utils.tools import get_header, get_auth, get_proxy, get_background_color, remove_files, format_size, get_current_time, get_system_encoding, msw_open_in_explorer

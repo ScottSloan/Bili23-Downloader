@@ -156,3 +156,9 @@ class UtilsCallback:
     def __init__(self):
         self.onMergeFinishCallback: Callable = None
         self.onErrorCallback: Callable = None
+
+class TaskPanelCallback:
+    def __init__(self):
+        self.onStartNextCallback: Callable = None
+        self.onStopCallbacak: Callable = None
+        self.onUpdateTaskCountCallback: Callable = None

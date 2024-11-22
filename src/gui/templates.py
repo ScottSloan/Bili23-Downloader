@@ -4,7 +4,7 @@ import wx.dataview
 from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
-from utils.icons import getAppIconSmall
+from utils.icon_v2 import IconManager, APP_ICON_SMALL
 from utils.tools import format_duration, format_bangumi_title, get_new_id, get_legal_name
 from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
@@ -16,7 +16,9 @@ class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, -1, title, style = style)
 
-        self.SetIcon(wx.Icon(wx.Image(io.BytesIO(getAppIconSmall())).ConvertToBitmap()))
+        icon_manager = IconManager(self.GetDPIScaleFactor())
+
+        self.SetIcon(wx.Icon(wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_SMALL))).ConvertToBitmap()))
 
         self.panel = wx.Panel(self)
 

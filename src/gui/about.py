@@ -3,8 +3,8 @@ import wx
 import webbrowser
 
 from utils.config import Config
+from utils.icon_v2 import IconManager, APP_ICON_DEFAULT
 from utils.tools import get_background_color
-from utils.icons import getAppIcon
 
 from .license import LicenseWindow
 
@@ -21,7 +21,9 @@ class AboutWindow(wx.Dialog):
         wx.Bell()
     
     def init_UI(self):
-        app_icon = wx.Image(io.BytesIO(getAppIcon()), wx.BITMAP_TYPE_JPEG)
+        icon_manager = IconManager(self.GetDPIScaleFactor())
+
+        app_icon = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_DEFAULT)), wx.BITMAP_TYPE_JPEG)
         logo = wx.StaticBitmap(self, -1, app_icon.ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
