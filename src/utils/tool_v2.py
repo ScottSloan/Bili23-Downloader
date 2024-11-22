@@ -159,22 +159,25 @@ class DownloadFileTool:
 
     def clear_download_info(self):
         # 清除断点续传信息
-        os.remove(self.file_path)
+        if os.path.exists(self.file_path):
+            os.remove(self.file_path)
 
     def update_task_info_kwargs(self, **kwargs):
         contents = self._read_download_file_json()
 
-        for key, value in kwargs.items():
-            contents["task_info"][key] = value
+        if contents is not None:
+            for key, value in kwargs.items():
+                contents["task_info"][key] = value
 
-        self._write_download_file(contents)
+            self._write_download_file(contents)
 
     def update_thread_info(self, thread_info: Dict):
         contents = self._read_download_file_json()
 
-        contents["thread_info"] = thread_info
+        if contents is not None:
+            contents["thread_info"] = thread_info
 
-        self._write_download_file(contents)
+            self._write_download_file(contents)
 
     def get_thread_info(self):
         contents = self._read_download_file_json()
@@ -182,12 +185,13 @@ class DownloadFileTool:
         return contents["thread_info"]
     
     def _read_download_file_json(self):
-        with open(self.file_path, "r", encoding = "utf-8") as f:
-            try:
-                return json.loads(f.read())
-            
-            except Exception:
-                return {}
+        if os.path.exists(self.file_path):
+            with open(self.file_path, "r", encoding = "utf-8") as f:
+                try:
+                    return json.loads(f.read())
+                
+                except Exception:
+                    return {}
 
     def _write_download_file(self, contents: Dict):
         with open(self.file_path, "w", encoding = "utf-8") as f:
@@ -311,4 +315,7 @@ class UniversalTool:
             _path = os.path.join(directory, i)
             
             if os.path.exists(_path):
-                os.remove(_path)
+                try:
+                    os.remove(_path)
+                except Exception:
+                    pass

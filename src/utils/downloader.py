@@ -163,7 +163,7 @@ class Downloader:
                     if chunk:
                         if self.range_thread_stop_flag:
                             # 检测分片下载停止标志位
-                            print("flag_stop", self.range_thread_stop_flag)
+                            break
 
                         f.write(chunk)
                         f.flush()
@@ -264,8 +264,6 @@ class Downloader:
         # 停止下载
         self.range_thread_stop_flag = True
         self.listen_stop_flag = True
-
-        self.ThreadPool.stop()
 
         self.session.close()
 

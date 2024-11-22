@@ -1,6 +1,7 @@
 import io
 import os
 import wx
+import time
 import json
 import requests
 import subprocess
@@ -752,15 +753,26 @@ class DownloadTaskPanel(wx.Panel):
                 self.start_download()
 
     def onStopEVT(self, event):
+        def worker():
+            # 清除本地残留文件
+            time.sleep(2.5)
+
+            UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name])
+
+            self.download_file_tool.clear_download_info()
+
         # 停止下载，删除下载任务
+        self.downloader.onStop()
+
         self.Hide()
 
         # 销毁下载任务面板，并清除断点续传信息
         self.Destroy()
-        self.download_file_tool.clear_download_info()
-
+        
         # 回调函数，刷新 UI
         self.callback.onStopCallbacak(self.task_info.cid)
+
+        Thread(target = worker).start()
 
     def onStart(self, total_size: int):
         # 开始下载回调函数

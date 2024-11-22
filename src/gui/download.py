@@ -14,7 +14,7 @@ from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
-from utils.tools import get_background_color, remove_files, msw_open_in_explorer
+from utils.tools import get_background_color, msw_open_in_explorer
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
@@ -226,7 +226,7 @@ class DownloadTaskUtils:
         if self.merge_process.returncode == 0:
             if self.info.video_merge_type == Config.Type.MERGE_TYPE_ALL:
                 if Config.Merge.auto_clean:
-                    remove_files(Config.Download.path, [video_file_name, audio_file_name])
+                    pass
 
         else:
             # 合成失败时，获取错误信息
@@ -913,8 +913,6 @@ class DownloadItemPanel(wx.Panel):
     def onStopThread(self):
         time.sleep(1)
 
-        remove_files(Config.Download.path, [f"video_{self.info.id}.mp4", f"audio_{self.info.id}.mp3"])
-
     def onMerge(self, retry: bool = False):
         self.setStatus(Config.Type.DOWNLOAD_STATUS_MERGING)
 
@@ -953,7 +951,7 @@ class DownloadItemPanel(wx.Panel):
 
             if Config.Merge.auto_clean:
                 # 再次删除文件，防止残留
-                remove_files(Config.Download.path, file_list)
+                pass
 
         self.downloader.downloader_info.clear()
 

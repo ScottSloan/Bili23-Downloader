@@ -4,7 +4,6 @@ import wx
 import random
 import ctypes
 import subprocess
-from typing import List
 
 from utils.config import Config
 
@@ -78,19 +77,6 @@ def convert_to_bvid(aid: int):
     
 def get_legal_name(name: str):
     return re.sub(r'[/\:*?"<>|]', "", name)
-
-def remove_files(path: str, name: List):
-    for i in name:
-        file_path = os.path.join(path, i)
-        
-        if os.path.exists(file_path):
-            match Config.Sys.platform:
-                case "windows":
-                    ctypes.windll.kernel32.SetFileAttributesW(file_path, 128)
-                    ctypes.windll.kernel32.DeleteFileW(file_path)
-
-                case "linux" | "darwin":
-                    os.remove(file_path)
     
 def get_new_id():
     return random.randint(1000, 9999999)
