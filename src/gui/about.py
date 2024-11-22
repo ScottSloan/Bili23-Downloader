@@ -6,7 +6,7 @@ from utils.config import Config
 from utils.icon_v2 import IconManager, APP_ICON_DEFAULT
 from utils.tools import get_background_color
 
-from .license import LicenseWindow
+from .dialog.license import LicenseWindow
 
 class AboutWindow(wx.Dialog):
     def __init__(self, parent):

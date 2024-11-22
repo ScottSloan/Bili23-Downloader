@@ -6,7 +6,7 @@ import requests
 from requests.auth import HTTPProxyAuth
 from gui.templates import ScrolledPanel
 
-from gui.ffmpeg_detect import DetectDialog
+from gui.dialog.ffmpeg import DetectDialog
 
 from utils.config import Config, conf
 from utils.tool_v2 import RequestTool

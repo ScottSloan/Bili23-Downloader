@@ -249,7 +249,7 @@ class FormatTool:
 
     @staticmethod
     def format_bangumi_title(episode: Dict):
-        from utils.bangumi import BangumiInfo
+        from utils.parse.bangumi import BangumiInfo
 
         if BangumiInfo.type_id == 2:
             return "{} - {}".format(BangumiInfo.title, episode["title"])

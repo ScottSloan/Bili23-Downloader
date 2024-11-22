@@ -8,9 +8,9 @@ from utils.icon_v2 import IconManager, APP_ICON_SMALL
 from utils.tools import get_new_id, get_legal_name
 from utils.tool_v2 import FormatTool
 from utils.config import Config, Download, Audio
-from utils.video import VideoInfo
-from utils.bangumi import BangumiInfo
-from utils.live import LiveInfo
+from utils.parse.video import VideoInfo
+from utils.parse.bangumi import BangumiInfo
+from utils.parse.live import LiveInfo
 from utils.data_type import DownloadTaskInfo
 
 class Frame(wx.Frame):

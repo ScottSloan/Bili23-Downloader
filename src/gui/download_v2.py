@@ -8,6 +8,7 @@ from typing import List, Callable
 
 from gui.templates import Frame, ScrolledPanel
 from gui.dialog.error_info import ErrorInfoDialog
+from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
 from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog
@@ -609,6 +610,7 @@ class DownloadTaskPanel(wx.Panel):
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseResumeEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onShowCoverViewerDialog)
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowErrorInfoDialog)
 
     def init_utils(self):
@@ -663,6 +665,8 @@ class DownloadTaskPanel(wx.Panel):
             _callback.onErrorCallback = self.onMergeFailed
 
             return _callback
+
+        self._parent_download_manager = self.GetParent().GetParent().GetParent()
 
         # 获取视频封面
         if self.task_info.cover_url:
@@ -838,8 +842,12 @@ class DownloadTaskPanel(wx.Panel):
 
     def onShowErrorInfoDialog(self, event):
         if hasattr(self, "_error_log"):
-            dlg = ErrorInfoDialog(self.GetParent().GetParent().GetParent(), self._error_log)
+            dlg = ErrorInfoDialog(self._parent_download_manager, self._error_log)
             dlg.ShowModal()
+
+    def onShowCoverViewerDialog(self, event):
+        dlg = CoverViewerDialog(self._parent_download_manager, self.task_info.cover_url)
+        dlg.ShowModal()
 
     def start_download(self):
         def worker():

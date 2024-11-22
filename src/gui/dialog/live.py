@@ -4,7 +4,7 @@ import re
 import subprocess
 from typing import List
 
-from utils.live import LiveInfo
+from utils.parse.live import LiveInfo
 from utils.config import Config
 from utils.thread import Thread
 from utils.tools import msw_open_in_explorer

@@ -1,9 +1,12 @@
 import wx
+import io
 import os
 
+from utils.tool_v2 import RequestTool
+
 class CoverViewerDialog(wx.Dialog):
-    def __init__(self, parent, cover_image: wx.Image, cover_image_raw):
-        self.cover_image, self.cover_image_raw = cover_image, cover_image_raw
+    def __init__(self, parent, cover_url: str):
+        self.cover_url = cover_url
 
         wx.Dialog.__init__(self, parent, -1, "封面")
 
@@ -14,9 +17,7 @@ class CoverViewerDialog(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        scale_size = self.FromDIP((640, 360))
-
-        cover = wx.StaticBitmap(self, -1, bitmap = self.cover_image.Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
+        cover = wx.StaticBitmap(self, -1, bitmap = self.get_cover_bmp())
 
         self.save_btn = wx.Button(self, -1, "保存", size = self.FromDIP((80, 28)))
 
@@ -34,6 +35,18 @@ class CoverViewerDialog(wx.Dialog):
     def Bind_EVT(self):
         self.save_btn.Bind(wx.EVT_BUTTON, self.onSave)
 
+    def get_cover_bmp(self):
+        self.cover_raw_contents = RequestTool.request(self.cover_url)
+
+        _temp_image = wx.Image(io.BytesIO(self.cover_raw_contents))
+
+        _width, _height = _temp_image.GetSize()
+
+        # 按图片原纵横比缩放
+        new_height = int(self.FromDIP(640) / (_width / _height))
+
+        return _temp_image.Scale(self.FromDIP(640), new_height, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+
     def onSave(self, event):
         dlg = wx.FileDialog(self, "保存封面", os.getcwd(), wildcard = "图片文件|*.jpg", style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
@@ -41,4 +54,4 @@ class CoverViewerDialog(wx.Dialog):
             save_path = dlg.GetPath()
 
             with open(save_path, "wb") as f:
-                f.write(self.cover_image_raw)
+                f.write(self.cover_raw_contents)

@@ -6,10 +6,10 @@ import requests
 from typing import Optional
 
 from utils.config import Config, Download, Audio, conf
-from utils.video import VideoInfo, VideoParser
-from utils.bangumi import BangumiInfo, BangumiParser
-from utils.festival import FestivalInfo, FestivalParser
-from utils.live import LiveInfo, LiveParser
+from utils.parse.video import VideoInfo, VideoParser
+from utils.parse.bangumi import BangumiInfo, BangumiParser
+from utils.parse.festival import FestivalInfo, FestivalParser
+from utils.parse.live import LiveInfo, LiveParser
 
 from utils.login import QRLogin
 from utils.thread import Thread
@@ -20,14 +20,14 @@ from utils.mapping import video_quality_mapping, live_quality_mapping
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.about import AboutWindow
-from gui.processing import ProcessingWindow
+from gui.dialog.processing import ProcessingWindow
 from gui.download import DownloadManagerInfo
 from gui.download_v2 import DownloadManagerWindow
 from gui.dialog.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
 from gui.converter import ConverterWindow
-from gui.live_recording import LiveRecordingWindow
+from gui.dialog.live import LiveRecordingWindow
 
 class MainWindow(Frame):
     def __init__(self, parent):

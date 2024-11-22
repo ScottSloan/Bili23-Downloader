@@ -10,7 +10,7 @@ from typing import List, Dict
 
 from gui.templates import Frame, ScrolledPanel
 from gui.dialog.error_info import ErrorInfoDialog
-from gui.cover_viewer import CoverViewerDialog
+from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
