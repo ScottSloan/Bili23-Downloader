@@ -1,39 +1,14 @@
 import re
 import os
 import wx
-import json
 import random
 import ctypes
-import requests
 import subprocess
-from typing import Optional, Dict, List
+from typing import List
 
 from datetime import datetime
-from requests.auth import HTTPProxyAuth
 
 from utils.config import Config
-
-def process_shorklink(url: str) -> str:
-    req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-    
-    return req.url
-
-def get_header(referer_url: Optional[str] = None, cookie: Optional[str] = None, chunk_list: Optional[str] = None) -> dict:
-    header = {
-        "Cookie": "CURRENT_FNVAL=4048;",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
-    }
-    
-    if referer_url:
-        header["Referer"] = referer_url
-
-    if chunk_list:
-        header["Range"] = "bytes={}-{}".format(chunk_list[0], chunk_list[1])
-
-    if cookie:
-        header["Cookie"] += "SESSDATA=" + cookie
-    
-    return header
 
 def get_exclimbwuzhi_header():
     return {
@@ -82,26 +57,6 @@ def get_login_cookies():
     }
 
     return "; ".join([f"{key}={value}" for key, value in cookie_dict.items()])
-
-def get_proxy():
-    match Config.Proxy.proxy_mode:
-        case Config.Type.PROXY_DISABLE:
-            return {}
-        
-        case Config.Type.PROXY_FOLLOW:
-            return None
-        
-        case Config.Type.PROXY_MANUAL:
-            return {
-                "http": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}",
-                "https": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}"
-            }
-
-def get_auth():
-    if Config.Proxy.auth_enable:
-        return HTTPProxyAuth(Config.Proxy.auth_uname, Config.Proxy.auth_passwd)
-    else:
-        return None
     
 def convert_to_bvid(aid: int):
     # 将 avid 转换为 BVid
@@ -122,76 +77,9 @@ def convert_to_bvid(aid: int):
         r[s[i]] = table[aid // 58 ** i % 58]
 
     return "".join(r)
-
-def format_duration(episode: Dict, flag: int):
-    match flag:
-        case 0:
-            # 合集视频
-            duration = episode["arc"]["duration"]
-
-        case 1:
-            # 非合集视频
-            duration = episode["duration"]
-
-        case 2:
-            # 番组
-            if "duration" in episode:
-                duration = episode["duration"] / 1000
-            else:
-                return "--:--"
-
-    hours = int(duration // 3600)
-    mins = int((duration - hours * 3600) // 60)
-    secs = int(duration - hours * 3600 - mins * 60)
-    
-    return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
-
-def format_size(size: int):
-    if not size:
-        return "0 MB"
-    
-    elif size > 1024 * 1024 * 1024:
-        return "{:.1f} GB".format(size / 1024 / 1024 / 1024)
-    
-    elif size > 1024 * 1024:
-        return "{:.1f} MB".format(size / 1024 / 1024)
-    
-    else:
-        return "{:.1f} KB".format(size / 1024)
-
-def format_bangumi_title(episode: Dict):
-    from utils.bangumi import BangumiInfo
-
-    if BangumiInfo.type_id == 2:
-        return "{} - {}".format(BangumiInfo.title, episode["title"])
-    
-    else:
-        if "share_copy" in episode:
-            if Config.Misc.show_episode_full_name:
-                return episode["share_copy"]
-            
-            else:
-                if "long_title" in episode:
-                    if episode["long_title"]:
-                        return episode["long_title"]
-                
-                return episode["share_copy"]
-
-        else:
-            return episode["report"]["ep_title"]
     
 def get_legal_name(name: str):
     return re.sub(r'[/\:*?"<>|]', "", name)
-
-def get_user_face():
-    if not os.path.exists(Config.User.face_path):
-        # 若未缓存头像，则下载头像到本地
-        req = requests.get(Config.User.face, headers = get_header(), proxies = get_proxy(), auth = get_auth())
-
-        with open(Config.User.face_path, "wb") as f:
-            f.write(req.content)
-
-    return Config.User.face_path
 
 def remove_files(path: str, name: List):
     for i in name:
@@ -205,16 +93,6 @@ def remove_files(path: str, name: List):
 
                 case "linux" | "darwin":
                     os.remove(file_path)
-
-def check_update():
-    url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
-
-    req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth(), timeout = 5)
-    req.encoding = "utf-8"
-
-    update_json = json.loads(req.text)
-
-    Config.Temp.update_json = update_json
     
 def get_new_id():
     return random.randint(1000, 9999999)

@@ -7,7 +7,8 @@ from typing import List
 from utils.live import LiveInfo
 from utils.config import Config
 from utils.thread import Thread
-from utils.tools import format_size, msw_open_in_explorer
+from utils.tools import msw_open_in_explorer
+from utils.tool_v2 import FormatTool
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -248,7 +249,7 @@ class LiveRecordingWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{format_size(int(size[0][0]))}")
+            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")

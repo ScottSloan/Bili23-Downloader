@@ -17,15 +17,17 @@ class RequestTool:
         try:
             req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
-        except Exception as e:
+            return req.content
+
+        except Exception:
             if error_callback is not None:
                 error_callback()
 
-                return
-            
-            raise e
-
-        return req.content
+    @staticmethod
+    def get_real_url(url: str):
+        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+    
+        return req.url
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
@@ -190,6 +192,32 @@ class DownloadFileTool:
         with open(self.file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
+class FormatTool:
+    # 格式化数据类
+    @staticmethod
+    def format_duration(episode: Dict, flag: int):
+        match flag:
+            case Config.Type.DURATION_VIDEO_SECTIONS:
+                # 合集视频
+                duration = episode["arc"]["duration"]
+
+            case Config.Type.DURATION_VIDEO_OTHERS:
+                # 非合集视频
+                duration = episode["duration"]
+
+            case Config.Type.DURATION_BANGUMI:
+                # 番组
+                if "duration" in episode:
+                    duration = episode["duration"] / 1000
+                else:
+                    return "--:--"
+
+        hours = int(duration // 3600)
+        mins = int((duration - hours * 3600) // 60)
+        secs = int(duration - hours * 3600 - mins * 60)
+        
+        return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
+
     @staticmethod
     def format_speed(speed: int):
         if speed > 1024 * 1024 * 1024:
@@ -217,3 +245,48 @@ class DownloadFileTool:
         
         else:
             return "{:.1f} KB".format(size / 1024)
+
+    @staticmethod
+    def format_bangumi_title(episode: Dict):
+        from utils.bangumi import BangumiInfo
+
+        if BangumiInfo.type_id == 2:
+            return "{} - {}".format(BangumiInfo.title, episode["title"])
+        
+        else:
+            if "share_copy" in episode:
+                if Config.Misc.show_episode_full_name:
+                    return episode["share_copy"]
+                
+                else:
+                    if "long_title" in episode:
+                        if episode["long_title"]:
+                            return episode["long_title"]
+                    
+                    return episode["share_copy"]
+
+            else:
+                return episode["report"]["ep_title"]
+
+class UniversalTool:
+    @staticmethod
+    def get_update_json():
+        url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
+
+        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req.encoding = "utf-8"
+
+        update_json = json.loads(req.text)
+
+        Config.Temp.update_json = update_json
+
+    
+    def get_user_face():
+        if not os.path.exists(Config.User.face_path):
+            # 若未缓存头像，则下载头像到本地
+            content = RequestTool.request(Config.User.face)
+
+            with open(Config.User.face_path, "wb") as f:
+                f.write(content)
+
+        return Config.User.face_path

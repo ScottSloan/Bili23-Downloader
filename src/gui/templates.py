@@ -5,7 +5,8 @@ from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.icon_v2 import IconManager, APP_ICON_SMALL
-from utils.tools import format_duration, format_bangumi_title, get_new_id, get_legal_name
+from utils.tools import get_new_id, get_legal_name
+from utils.tool_v2 import FormatTool
 from utils.config import Config, Download, Audio
 from utils.video import VideoInfo
 from utils.bangumi import BangumiInfo
@@ -74,12 +75,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         
         if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
             for key, value in VideoInfo.sections.items():
-                video_list[key] = [[str(index + 1), episode["arc"]["title"], "", format_duration(episode, 0)] for index, episode in enumerate(value)]
+                video_list[key] = [[str(index + 1), episode["arc"]["title"], "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_SECTIONS)] for index, episode in enumerate(value)]
 
                 self.parent_items.append(key)
         else:
             self.parent_items.append("视频")
-            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", format_duration(episode, 1)] for index, episode in enumerate(VideoInfo.pages_list)]
+            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_OTHERS)] for index, episode in enumerate(VideoInfo.pages_list)]
 
         self.set_list(video_list)
     
@@ -87,7 +88,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         bangumi_list = {}
 
         for key, value in BangumiInfo.sections.items():
-            bangumi_list[key] = [[str(index + 1), format_bangumi_title(episode), episode["badge"], format_duration(episode, 2)] for index, episode in enumerate(value)]
+            bangumi_list[key] = [[str(index + 1), FormatTool.format_bangumi_title(episode), episode["badge"], FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)] for index, episode in enumerate(value)]
 
             self.parent_items.append(key)
 
@@ -181,7 +182,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def get_bangumi_download_info(self, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
 
-        title = info_entry["share_copy"] if BangumiInfo.type_id != 2 else format_bangumi_title(info_entry)
+        title = info_entry["share_copy"] if BangumiInfo.type_id != 2 else FormatTool.format_bangumi_title(info_entry)
         cover_url = info_entry["cover"]
         bvid = info_entry["bvid"]
         cid = info_entry["cid"]

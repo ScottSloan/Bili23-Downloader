@@ -1,7 +1,9 @@
 import os
 import requests
+
 from utils.config import Config
-from utils.tools import get_header, get_proxy, get_auth
+
+from utils.tool_v2 import RequestTool
 
 class ExtraParser:
     def __init__(self, title: str, cid: int):
@@ -20,7 +22,7 @@ class ExtraParser:
         # 下载 xml 格式弹幕文件
         url = f"https://comment.bilibili.com/{self.cid}.xml"
 
-        req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
         path = os.path.join(Config.Download.path, f"{self.title}.xml")
 

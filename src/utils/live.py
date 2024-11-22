@@ -3,7 +3,8 @@ import json
 import requests
 from typing import List, Dict
 
-from utils.tools import get_header, get_proxy, get_auth, get_legal_name
+from utils.tools import get_legal_name
+from utils.tool_v2 import RequestTool
 from utils.config import Config
 from utils.error import process_exception, ErrorUtils, StatusCode, ParseError
 from utils.mapping import live_status_mapping
@@ -37,7 +38,7 @@ class LiveParser:
         # 获取直播间信息
         url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={LiveInfo.short_id}"
 
-        req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -54,7 +55,7 @@ class LiveParser:
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
 
-        req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -70,7 +71,7 @@ class LiveParser:
     def get_live_stream(self, qn: int):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
-        req = requests.get(url, headers = get_header(cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
         resp = json.loads(req.text)
 
         self.check_json(resp)

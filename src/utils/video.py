@@ -4,7 +4,8 @@ import requests
 from typing import List, Dict
 
 from utils.config import Config, Audio
-from utils.tools import get_header, get_auth, get_proxy, convert_to_bvid, find_str
+from utils.tools import convert_to_bvid, find_str
+from utils.tool_v2 import RequestTool
 from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 
 class VideoInfo:
@@ -61,7 +62,7 @@ class VideoParser:
         # 获取视频信息
         url = f"https://api.bilibili.com/x/web-interface/view?bvid={VideoInfo.bvid}"
         
-        req = requests.get(url, headers = get_header(referer_url = VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -148,7 +149,7 @@ class VideoParser:
         # 获取视频清晰度
         url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
                 
-        req = requests.get(url, headers = get_header(referer_url = VideoInfo.url, cookie = Config.User.sessdata), proxies = get_proxy(), auth = get_auth(), timeout = 8)
+        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)
 
         self.check_json(resp)

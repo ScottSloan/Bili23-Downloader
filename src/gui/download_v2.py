@@ -12,7 +12,7 @@ from utils.config import Config
 from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback
 from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
 from utils.thread import Thread
-from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool
+from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool, FormatTool
 from utils.downloader import Downloader
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 
@@ -684,6 +684,10 @@ class DownloadTaskPanel(wx.Panel):
             case Config.Type.DOWNLOAD_STATUS_FINISHED:
                 # 下载完成的任务，打开文件所在位置
                 self.onOpenLocation()
+
+            case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED | Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+                # 下载失败或合成失败，重试
+                self.onResume()
     
     def onPause(self):
         # 暂停下载
@@ -736,8 +740,8 @@ class DownloadTaskPanel(wx.Panel):
             # 更新下载进度回调函数
             self.progress_bar.SetValue(info["progress"])
 
-            self.speed_lab.SetLabel(DownloadFileTool.format_speed(info["speed"]))
-            self.video_size_lab.SetLabel("{}/{}".format(DownloadFileTool.format_size(info["completed_size"]), DownloadFileTool.format_size(self.task_info.total_size)))
+            self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
+            self.video_size_lab.SetLabel("{}/{}".format(FormatTool.format_size(info["completed_size"]), FormatTool.format_size(self.task_info.total_size)))
                 
             self.task_info.progress = info["progress"]
             self.task_info.completed_size = info["completed_size"]
@@ -747,6 +751,8 @@ class DownloadTaskPanel(wx.Panel):
     def onMerge(self):
         def callback():
             # 合成视频回调函数
+            self.show_media_info()
+
             self.callback.onUpdateTaskCountCallback()
 
             self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
@@ -773,8 +779,12 @@ class DownloadTaskPanel(wx.Panel):
         wx.CallAfter(callback)
 
     def onError(self):
-        # 下载失败回调函数
-        pass
+        def callback():
+            # 下载失败回调函数
+            self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED)
+            self.speed_lab.SetLabel("下载失败")
+
+        wx.CallAfter(callback)
     
     def onOpenLocation(self):
         path = os.path.join(Config.Download.path, self.utils.full_file_name)
@@ -794,7 +804,10 @@ class DownloadTaskPanel(wx.Panel):
         Thread(target = worker).start()
 
     def show_media_info(self):
-        self.video_size_lab.SetLabel(f"{DownloadFileTool.format_size(self.task_info.completed_size)}/{DownloadFileTool.format_size(self.task_info.total_size)}")
+        if self.task_info.progress == 100:
+            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
+        else:
+            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
 
         match self.task_info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:

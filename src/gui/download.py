@@ -14,7 +14,7 @@ from gui.cover_viewer import CoverViewerDialog
 
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
-from utils.tools import get_header, get_auth, get_proxy, get_background_color, remove_files, format_size, get_current_time, get_system_encoding, msw_open_in_explorer
+from utils.tools import get_background_color, remove_files, get_current_time, get_system_encoding, msw_open_in_explorer
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
@@ -652,7 +652,6 @@ class DownloadItemPanel(wx.Panel):
     def loadDownloadInfo(self):
         # 当存在文件总大小信息时，才显示已下载的文件大小
         if self.info.total_size:
-            self.video_size_lab.SetLabel("{}/{}".format(format_size(self.info.completed_size), format_size(self.info.total_size)))
 
             self.gauge.SetValue(self.info.progress)
 
@@ -717,12 +716,10 @@ class DownloadItemPanel(wx.Panel):
         gauge_vbox.Add(speed_hbox, 0, wx.EXPAND)
         gauge_vbox.AddSpacer(5)
 
-        pause_image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
-        self.pause_btn = wx.BitmapButton(self, -1, pause_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.getButtonSize())
+        self.pause_btn = wx.BitmapButton(self, -1, size = self.getButtonSize())
         self.pause_btn.SetToolTip("开始下载")
 
-        stop_image = wx.Image(io.BytesIO(getDeleteIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getDeleteIcon16()))
-        self.stop_btn = wx.BitmapButton(self, -1, stop_image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap(), size = self.getButtonSize())
+        self.stop_btn = wx.BitmapButton(self, -1, size = self.getButtonSize())
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -815,7 +812,7 @@ class DownloadItemPanel(wx.Panel):
         self.info.total_size = self.downloader.total_size
 
         self.speed_lab.SetLabel("")
-        self.video_size_lab.SetLabel(f"0 MB/{format_size(self.info.total_size)}")
+        self.video_size_lab.SetLabel(f"0 MB/{(self.info.total_size)}")
 
         match self.info.video_merge_type:
             case Config.Type.MERGE_TYPE_VIDEO | Config.Type.MERGE_TYPE_ALL:
@@ -849,7 +846,7 @@ class DownloadItemPanel(wx.Panel):
             self.gauge.SetValue(download_progress_info["progress"])
 
             self.speed_lab.SetLabel(download_progress_info["speed"])
-            self.video_size_lab.SetLabel("{}/{}".format(format_size(download_progress_info["completed_size"]), format_size(self.info.total_size)))
+            self.video_size_lab.SetLabel("{}/{}".format((download_progress_info["completed_size"]), (self.info.total_size)))
 
             progress_info = {
                 "progress": download_progress_info["progress"],
@@ -923,7 +920,7 @@ class DownloadItemPanel(wx.Panel):
 
         self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
 
-        self.video_size_lab.SetLabel(format_size(self.info.total_size))
+        self.video_size_lab.SetLabel((self.info.total_size))
         self.speed_lab.SetLabel("正在合成视频...")
         self.pause_btn.Enable(False)
 
@@ -1054,16 +1051,16 @@ class DownloadItemPanel(wx.Panel):
     def updatePauseBtnImage(self, status: int):
         match status:
             case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
-                image = wx.Image(io.BytesIO(getPauseIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getPauseIcon16()))
+                image = wx.Image(io.BytesIO(())) if self.is_scaled else wx.Image(io.BytesIO(()))
 
             case Config.Type.DOWNLOAD_STATUS_PAUSE | Config.Type.DOWNLOAD_STATUS_WAITING:
-                image = wx.Image(io.BytesIO(getResumeIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getResumeIcon16()))
+                image = wx.Image(io.BytesIO(())) if self.is_scaled else wx.Image(io.BytesIO(()))
 
             case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
-                image = wx.Image(io.BytesIO(getRetryIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getRetryIcon16()))
+                image = wx.Image(io.BytesIO(())) if self.is_scaled else wx.Image(io.BytesIO(()))
 
             case Config.Type.DOWNLOAD_STATUS_FINISHED:
-                image = wx.Image(io.BytesIO(getFolderIcon24())) if self.is_scaled else wx.Image(io.BytesIO(getFolderIcon16()))
+                image = wx.Image(io.BytesIO(())) if self.is_scaled else wx.Image(io.BytesIO(()))
 
         self.pause_btn.SetBitmap(image.Scale(self.scale_size[0], self.scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 

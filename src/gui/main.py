@@ -13,7 +13,8 @@ from utils.live import LiveInfo, LiveParser
 
 from utils.login import QRLogin
 from utils.thread import Thread
-from utils.tools import find_str, check_update, process_shorklink, get_user_face
+from utils.tools import find_str
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.error import ErrorCallback, ErrorCode
 from utils.mapping import video_quality_mapping, live_quality_mapping
 
@@ -309,7 +310,7 @@ class MainWindow(Frame):
 
             case "b23.tv":
                 # 短链接
-                new_url = process_shorklink(url)
+                new_url = RequestTool.get_real_url(url)
 
                 self.parseThread(new_url)
 
@@ -609,7 +610,7 @@ class MainWindow(Frame):
         # 显示用户头像及昵称
         scale_size = self.FromDIP((32, 32))
 
-        image = wx.Image(get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
+        image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
         
         self.face.SetBitmap(self.convertToCircle(image).ConvertToBitmap())
         self.face.SetSize(scale_size)
@@ -624,7 +625,7 @@ class MainWindow(Frame):
         # 检查更新
         if Config.Misc.check_update:
             try:
-                check_update()
+                UniversalTool.get_update_json()
 
                 if Config.Temp.update_json["version_code"] > Config.APP.version_code:
                     self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
@@ -635,7 +636,7 @@ class MainWindow(Frame):
     def checkUpdateManuallyThread(self):
         if not Config.Temp.update_json:
             try:
-                check_update()
+                UniversalTool.get_update_json()
                 
             except Exception:
                 wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal()

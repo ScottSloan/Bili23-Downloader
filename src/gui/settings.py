@@ -9,7 +9,7 @@ from gui.templates import ScrolledPanel
 from gui.ffmpeg_detect import DetectDialog
 
 from utils.config import Config, conf
-from utils.tools import get_header
+from utils.tool_v2 import RequestTool
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, get_mapping_index_by_value
 
@@ -657,7 +657,7 @@ class ProxyTab(wx.Panel):
             start_time = time.time()
 
             url = "https://www.bilibili.com"
-            req = requests.get(url, headers = get_header(), proxies = proxy, auth = auth, timeout = 5)
+            req = requests.get(url, headers = RequestTool.get_headers(), proxies = proxy, auth = auth, timeout = 5)
             
             end_time = time.time()
 
