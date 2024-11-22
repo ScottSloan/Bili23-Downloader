@@ -6,8 +6,6 @@ import ctypes
 import subprocess
 from typing import List
 
-from datetime import datetime
-
 from utils.config import Config
 
 def get_exclimbwuzhi_header():
@@ -176,26 +174,11 @@ def check_ffmpeg_available():
     if "ffmpeg version" in output:
         Config.FFmpeg.available = True
 
-def get_current_time():
-    return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
-
-def save_log(return_code: int, output: str):
-    with open("error.log", "w", encoding = "utf-8") as f:
-        f.write(f"时间：{get_current_time()} 返回值：{return_code}\n错误信息：\n{output}")
-
 def get_background_color():
     if Config.Sys.dark_mode:
         return wx.Colour(30, 30, 30)
     else:
         return "white"
-    
-def get_system_encoding():
-    match Config.Sys.platform:
-        case "windows":
-            return "cp936"
-        
-        case "linux" | "darwin":
-            return "utf-8"
         
 def msw_open_in_explorer(file_path):
     # 仅 Windows 平台可用

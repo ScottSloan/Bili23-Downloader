@@ -7,12 +7,13 @@ import subprocess
 from typing import List, Callable
 
 from gui.templates import Frame, ScrolledPanel
+from gui.dialog.error_info import ErrorInfoDialog
 
 from utils.config import Config
-from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback
+from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog
 from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
 from utils.thread import Thread
-from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool, FormatTool
+from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.downloader import Downloader
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 
@@ -398,9 +399,15 @@ class DownloadUtils:
             clear_files()
 
             self.callback.onMergeFinishCallback()
-
         else:
-            pass
+            _stdout = _process.stdout.decode(UniversalTool.get_system_encoding()).replace("\r\n", "")
+
+            _error_log = ErrorLog()
+            _error_log.log = _stdout
+            _error_log.return_code = _process.returncode
+            _error_log.time = UniversalTool.get_current_time()
+
+            self.callback.onErrorCallback(_error_log)
 
     def _get_shell_cmd(self):
         if Config.Sys.platform == "windows":
@@ -602,12 +609,33 @@ class DownloadTaskPanel(wx.Panel):
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseResumeEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
+        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowErrorInfoDialog)
+
     def init_utils(self):
         def show_cover():
+            def _is_16_9(_image: wx.Image):
+                width, height = _image.GetSize()
+
+                return (width / height) == (16 / 9)
+
+            def resize_to_16_9(_image: wx.Image):
+                # 将非 16:9 封面调整为 16:9
+                width, height = _image.GetSize()
+
+                new_height = int(width * (9 / 16))
+
+                y_offset = (height - new_height) // 2
+
+                return _image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
+            
             scale = self.FromDIP((112, 63))
 
             # 获取封面数据并保存为 wx.Image 对象
             temp_image = wx.Image(io.BytesIO(RequestTool.request(self.task_info.cover_url)))
+
+            # 非 16:9 封面，进行裁剪
+            if not _is_16_9(temp_image):
+                temp_image = resize_to_16_9(temp_image)
             
             # 裁剪图片至合适大小
             temp_image: wx.Image = temp_image.Scale(scale[0], scale[1], wx.IMAGE_QUALITY_HIGH)
@@ -632,7 +660,7 @@ class DownloadTaskPanel(wx.Panel):
         def get_utils_callback():
             _callback = UtilsCallback()
             _callback.onMergeFinishCallback = self.onMergeFinish
-            _callback.onErrorCallback = self.onError
+            _callback.onErrorCallback = self.onMergeFailed
 
             return _callback
 
@@ -688,6 +716,8 @@ class DownloadTaskPanel(wx.Panel):
             case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED | Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
                 # 下载失败或合成失败，重试
                 self.onResume()
+
+        self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
     
     def onPause(self):
         # 暂停下载
@@ -778,6 +808,21 @@ class DownloadTaskPanel(wx.Panel):
 
         wx.CallAfter(callback)
 
+    def onMergeFailed(self, error_log: ErrorLog):
+        def callback():
+            # 合成失败回调函数
+            self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGE_FAILED)
+
+            self.speed_lab.SetLabel("视频合成失败，点击查看详情")
+            self.speed_lab.SetForegroundColour(wx.Colour("red"))
+            self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+            self.pause_btn.Enable(True)
+        
+        self._error_log = error_log
+
+        wx.CallAfter(callback)
+
     def onError(self):
         def callback():
             # 下载失败回调函数
@@ -790,6 +835,11 @@ class DownloadTaskPanel(wx.Panel):
         path = os.path.join(Config.Download.path, self.utils.full_file_name)
 
         DirectoryTool.open_file_location(path)
+
+    def onShowErrorInfoDialog(self, event):
+        if hasattr(self, "_error_log"):
+            dlg = ErrorInfoDialog(self.GetParent().GetParent().GetParent(), self._error_log)
+            dlg.ShowModal()
 
     def start_download(self):
         def worker():
@@ -835,11 +885,21 @@ class DownloadTaskPanel(wx.Panel):
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中")
 
-                case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED | Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
+                case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+                    # 合成失败，显示重试图标
+                    self.pause_btn.SetBitmap(self.get_button_icon(RETRY_ICON))
+
+                    self.pause_btn.SetToolTip("重试")
+                    self.speed_lab.SetLabel("视频合成失败")
+                    self.speed_lab.SetForegroundColour(wx.Colour("red"))
+
+                case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
                     # 下载失败，显示重试图标
                     self.pause_btn.SetBitmap(self.get_button_icon(RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
+                    self.speed_lab.SetLabel("下载失败")
+                    self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
                 case Config.Type.DOWNLOAD_STATUS_FINISHED:
                     # 下载完成，显示打开文件所在位置图标

@@ -23,7 +23,7 @@ from gui.about import AboutWindow
 from gui.processing import ProcessingWindow
 from gui.download import DownloadManagerInfo
 from gui.download_v2 import DownloadManagerWindow
-from gui.update import UpdateWindow
+from gui.dialog.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
 from gui.converter import ConverterWindow

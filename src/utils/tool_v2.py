@@ -4,6 +4,7 @@ import ctypes
 import requests
 import subprocess
 import requests.auth
+from datetime import datetime
 from typing import Optional, Callable, List, Dict
 
 from utils.config import Config
@@ -280,7 +281,7 @@ class UniversalTool:
 
         Config.Temp.update_json = update_json
 
-    
+    @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
@@ -290,3 +291,16 @@ class UniversalTool:
                 f.write(content)
 
         return Config.User.face_path
+
+    @staticmethod
+    def get_system_encoding():
+        match Config.Sys.platform:
+            case "windows":
+                return "cp936"
+            
+            case "linux" | "darwin":
+                return "utf-8"
+
+    @staticmethod
+    def get_current_time():
+        return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")

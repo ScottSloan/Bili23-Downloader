@@ -9,12 +9,12 @@ import subprocess
 from typing import List, Dict
 
 from gui.templates import Frame, ScrolledPanel
-from gui.show_error import ShowErrorDialog
+from gui.dialog.error_info import ErrorInfoDialog
 from gui.cover_viewer import CoverViewerDialog
 
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
-from utils.tools import get_background_color, remove_files, get_current_time, get_system_encoding, msw_open_in_explorer
+from utils.tools import get_background_color, remove_files, msw_open_in_explorer
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
@@ -107,7 +107,7 @@ class DownloadTaskUtils:
                 case Config.Type.VIDEO:
                     url = f"https://api.bilibili.com/x/player/playurl?bvid={self.info.bvid}&cid={self.info.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
 
-                    req = requests.get(url, headers = get_header(self.info.referer_url, Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+                    req = requests.get(url)
                     resp = json.loads(req.text)
 
                     json_dash = resp["data"]["dash"]
@@ -115,7 +115,7 @@ class DownloadTaskUtils:
                 case Config.Type.BANGUMI:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.info.bvid}&cid={self.info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
-                    req = requests.get(url, headers = get_header(self.info.referer_url, Config.User.sessdata), proxies = get_proxy(), auth = get_auth())
+                    req = requests.get(url)
                     resp = json.loads(req.text)
 
                     json_dash = resp["result"]["dash"]
@@ -231,7 +231,7 @@ class DownloadTaskUtils:
         else:
             # 合成失败时，获取错误信息
             try:
-                output = self.merge_process.stdout.decode(get_system_encoding()).replace("\r\n", "")
+                output = self.merge_process.stdout.decode()
 
             except Exception:
                 output = "无法获取错误信息"
@@ -288,7 +288,7 @@ class DownloadTaskUtils:
         else:
             return_code = "未知"
 
-        self.merge_error_log = {"log": output, "time": get_current_time(), "return_code": return_code}
+        self.merge_error_log = {"log": output, "time": "", "return_code": return_code}
 
         self.info.status = Config.Type.DOWNLOAD_STATUS_MERGE_FAILED
 
@@ -747,7 +747,7 @@ class DownloadItemPanel(wx.Panel):
         self.cover.Bind(wx.EVT_LEFT_DOWN, self.onViewCover)
 
     def getCover(self):
-        req = requests.get(self.info.cover_url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(self.info.cover_url)
 
         scale_size = self.FromDIP((112, 63))
 
@@ -1026,7 +1026,7 @@ class DownloadItemPanel(wx.Panel):
 
     def onShowError(self, event):
         if not self.pause_btn.Enabled or self.info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
-            show_error_dlg = ShowErrorDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
+            show_error_dlg = ErrorInfoDialog(self.GetParent().GetParent(), self.utils.merge_error_log)
             show_error_dlg.ShowModal()
 
     def updatePauseBtn(self, status: int):
