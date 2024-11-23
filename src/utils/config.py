@@ -16,7 +16,7 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
-        release_date: str = "2024/11/22"
+        release_date: str = "2024/11/23"
 
     class Proxy:
         proxy_mode: int = 1
@@ -29,6 +29,7 @@ class Config:
     
     class User:
         base_path: str = ""
+        download_file_directory:str = ""
         path: str = ""
         face_path: str = ""
 
@@ -58,7 +59,7 @@ class Config:
         max_download_count: int = 1
 
         show_notification: bool = False
-
+        delete_history: bool = False
         add_number: bool = True
 
         speed_limit: bool = False
@@ -151,12 +152,6 @@ class ConfigUtils:
 
         ErrorCallback.onReadConfigError = self.onError
 
-        if Config.Sys.platform == "windows":
-            # Windows 环境下，启用高 DPI 适配
-            import ctypes
-
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)
-
         # 检查配置文件是否存在
         if not os.path.exists(self.path):
             self.create_config_ini()
@@ -191,6 +186,8 @@ class ConfigUtils:
 
         Config.User.face_path = os.path.join(Config.User.base_path, "face.jpg")
 
+        Config.User.download_file_directory = os.path.join(Config.User.base_path, "download")
+
     @process_read_config_exception
     def load_config(self):
         self.config = RawConfigParser()
@@ -209,6 +206,7 @@ class ConfigUtils:
         Config.Download.audio_quality_id = self.config.getint("download", "audio_quality")
         Config.Download.video_codec_id = self.config.getint("download", "video_codec")
         Config.Download.show_notification = self.config.getint("download", "show_notification")
+        Config.Download.delete_history = self.config.getint("download", "delete_history")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
         Config.Download.speed_limit = self.config.getboolean("download", "speed_limit")
         Config.Download.speed_limit_in_mb = self.config.getint("download", "speed_limit_in_mb")
@@ -272,6 +270,7 @@ class ConfigUtils:
         self.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
         self.config.set("download", "video_codec", str(Config.Download.video_codec_id))
         self.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
+        self.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
         self.config.set("download", "add_number", str(int(Config.Download.add_number)))
         self.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
         self.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))

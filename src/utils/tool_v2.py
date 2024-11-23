@@ -142,7 +142,7 @@ class DownloadFileTool:
         else:
             _file = f"info_{id}.json"
 
-        self.file_path = os.path.join(Config.Download.path, _file)
+        self.file_path = os.path.join(Config.User.download_file_directory, _file)
 
         # 检查本地文件是否存在
         check()
@@ -319,6 +319,35 @@ class UniversalTool:
     def get_random_id():
         return random.randint(10000000, 99999999)
     
+    @staticmethod
+    def re_find_string(_pattern: str, _string: str):
+        find = re.findall(_pattern, _string)
+    
+        if find:
+            return find[0]
+        else:
+            return None
+    
+    @staticmethod
+    def aid_to_bvid(_aid: int):
+        table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
+        map = {}
+
+        s = [11, 10, 3, 8, 4, 6]
+        xor = 177451812
+        add = 8728348608
+
+        for i in range(58):
+            map[table[i]] = i
+
+        _aid = (_aid ^ xor) + add
+        r = list("BV1  4 1 7  ")
+
+        for i in range(6):
+            r[s[i]] = table[_aid // 58 ** i % 58]
+
+        return "".join(r)
+
     @staticmethod
     def remove_files(directory: str, file_name_list: List[str]):
         for i in file_name_list:

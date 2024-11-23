@@ -11,7 +11,7 @@ from utils.config import Config, conf
 from utils.tools import get_background_color
 from utils.thread import Thread
 
-from gui.captcha import CaptchaWindow
+from gui.dialog.captcha import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent):

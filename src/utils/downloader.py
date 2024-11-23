@@ -302,6 +302,8 @@ class Downloader:
             # 如果没有可用的下载链接，抛出异常
             self.onError()
 
+            return
+
         # 判断本地文件是否存在
         if not os.path.exists(path):
             with open(path, "wb") as f:

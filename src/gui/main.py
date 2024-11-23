@@ -13,20 +13,19 @@ from utils.parse.live import LiveInfo, LiveParser
 
 from utils.login import QRLogin
 from utils.thread import Thread
-from utils.tools import find_str
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.error import ErrorCallback, ErrorCode
 from utils.mapping import video_quality_mapping, live_quality_mapping
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
-from gui.about import AboutWindow
+from gui.dialog.about import AboutWindow
 from gui.dialog.processing import ProcessingWindow
 from gui.download import DownloadManagerInfo
 from gui.download_v2 import DownloadManagerWindow
 from gui.dialog.update import UpdateWindow
 from gui.login import LoginWindow
 from gui.settings import SettingWindow
-from gui.converter import ConverterWindow
+from gui.dialog.converter import ConverterWindow
 from gui.dialog.live import LiveRecordingWindow
 
 class MainWindow(Frame):
@@ -275,7 +274,7 @@ class MainWindow(Frame):
     def parseThread(self, url: str):
         continue_to_parse = True
 
-        match find_str(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
+        match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 # 用户投稿视频
                 self.current_parse_type = Config.Type.VIDEO

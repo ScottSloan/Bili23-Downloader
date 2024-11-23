@@ -197,6 +197,7 @@ class DownloadTab(wx.Panel):
 
         self.speed_limit_chk.SetValue(Config.Download.speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
+        self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.show_notification)
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
@@ -224,6 +225,7 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
         conf.config.set("download", "video_codec", Config.Download.video_codec_id)
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
+        conf.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
         conf.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
         conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
         conf.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))

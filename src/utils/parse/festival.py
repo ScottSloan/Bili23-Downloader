@@ -2,8 +2,7 @@ import re
 import json
 import requests
 
-from utils.tools import convert_to_bvid, find_str
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.error import URLError
 
 class FestivalInfo:
@@ -20,7 +19,7 @@ class FestivalParser:
         if not aid:
             raise URLError()
 
-        FestivalInfo.url = f"https://www.bilibili.com/video/{convert_to_bvid(int(aid[0]))}"
+        FestivalInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
     def get_bvid(self, url: str):
         bvid = re.findall(r"BV\w+", url)
@@ -69,7 +68,7 @@ class FestivalParser:
             self.get_aid(initial_state)
 
     def parse_url(self, url: str):
-        match find_str(r"BV", url):
+        match UniversalTool.re_find_string(r"BV", url):
             case "BV":
                 # 判断视频链接是否包含 BV 号
                 self.get_bvid(url)

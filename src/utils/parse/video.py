@@ -4,8 +4,7 @@ import requests
 from typing import List, Dict
 
 from utils.config import Config, Audio
-from utils.tools import convert_to_bvid, find_str
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 
 class VideoInfo:
@@ -45,7 +44,7 @@ class VideoParser:
         if not aid:
             raise URLError()
 
-        bvid = convert_to_bvid(int(aid[0]))
+        bvid = UniversalTool.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
 
     @process_exception
@@ -197,7 +196,7 @@ class VideoParser:
 
         self.continue_to_parse = True
 
-        match find_str(r"av|BV", url):
+        match UniversalTool.re_find_string(r"av|BV", url):
             case "av":
                 self.get_aid(url)
 

@@ -3,8 +3,7 @@ import json
 import requests
 from typing import List, Dict
 
-from utils.tools import find_str
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config, Audio
 from utils.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
 from utils.mapping import bangumi_type_mapping
@@ -235,7 +234,7 @@ class BangumiParser:
         # 清除当前的番组信息
         self.clear_bangumi_info()
 
-        match find_str(r"ep|ss|md", url):
+        match UniversalTool.re_find_string(r"ep|ss|md", url):
             case "ep":
                 self.get_epid(url)
 

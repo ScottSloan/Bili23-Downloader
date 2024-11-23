@@ -1,4 +1,3 @@
-import re
 import os
 import wx
 import subprocess
@@ -52,34 +51,6 @@ def get_login_cookies():
     }
 
     return "; ".join([f"{key}={value}" for key, value in cookie_dict.items()])
-    
-def convert_to_bvid(aid: int):
-    # 将 avid 转换为 BVid
-    table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
-    map = {}
-
-    s = [11, 10, 3, 8, 4, 6]
-    xor = 177451812
-    add = 8728348608
-
-    for i in range(58):
-        map[table[i]] = i
-
-    aid = (aid ^ xor) + add
-    r = list("BV1  4 1 7  ")
-
-    for i in range(6):
-        r[s[i]] = table[aid // 58 ** i % 58]
-
-    return "".join(r)
-
-def find_str(pattern: str, string: str):
-    find = re.findall(pattern, string)
-    
-    if find:
-        return find[0]
-    else:
-        return None
 
 def get_cmd_output(cmd: str):
     # 获取命令输出

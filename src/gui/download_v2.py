@@ -139,9 +139,9 @@ class DownloadManagerWindow(Frame):
         _download_task_info_list = []
 
         # 读取断点续传信息
-        for file in os.listdir(Config.Download.path):
+        for file in os.listdir(Config.User.download_file_directory):
             # 遍历下载目录
-            file_path = os.path.join(Config.Download.path, file)
+            file_path = os.path.join(Config.User.download_file_directory, file)
 
             # 判断是否为断点续传信息文件
             if os.path.isfile(file_path):
@@ -328,6 +328,8 @@ class DownloadUtils:
                                         self.task_info.audio_type = "flac"
                                         self.task_info.audio_quality_id = 30251
 
+                                        return
+
                         if "dolby" in json_dash:
                             if json_dash["dolby"]:
                                 if "audio" in json_dash["dolby"]:
@@ -339,6 +341,10 @@ class DownloadUtils:
 
                                         self.task_info.audio_type = "ec3"
                                         self.task_info.audio_quality_id = 30250
+
+                                        return
+                                    
+                        self._get_default_audio_download_url(json_dash["audio"])
 
                     except Exception:
                         # 无法获取无损或杜比链接，换回默认音质
@@ -759,8 +765,6 @@ class DownloadTaskPanel(wx.Panel):
 
             UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name])
 
-            self.download_file_tool.clear_download_info()
-
         # 停止下载，删除下载任务
         self.downloader.onStop()
 
@@ -771,6 +775,8 @@ class DownloadTaskPanel(wx.Panel):
         
         # 回调函数，刷新 UI
         self.callback.onStopCallbacak(self.task_info.cid)
+
+        self.download_file_tool.clear_download_info()
 
         Thread(target = worker).start()
 
@@ -952,6 +958,8 @@ class DownloadTaskPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
+
+                    self.stop_btn.SetToolTip("清除记录")
 
         # 更新下载状态
         self.task_info.status = status
