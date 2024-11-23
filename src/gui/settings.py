@@ -93,8 +93,7 @@ class DownloadTab(wx.Panel):
         self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
 
         self.max_download_lab = wx.StaticText(self.scrolled_panel, -1, "并行下载数：1")
-        max_download = Config.Download.max_download_count if Config.Download.max_download_count > 4 else 4
-        self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, max_download)
+        self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
         self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_mapping.keys()))
@@ -138,6 +137,7 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.add_number_chk = wx.CheckBox(self.scrolled_panel, -1, "批量下载视频时自动添加序号")
+        self.delete_history_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后清除本地下载记录")
         self.show_toast_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后弹出通知")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -153,6 +153,7 @@ class DownloadTab(wx.Panel):
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
+        vbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
         self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)

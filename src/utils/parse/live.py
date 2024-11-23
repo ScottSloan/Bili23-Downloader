@@ -3,8 +3,7 @@ import json
 import requests
 from typing import List, Dict
 
-from utils.tools import get_legal_name
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 from utils.error import process_exception, ErrorUtils, StatusCode, ParseError
 from utils.mapping import live_status_mapping
@@ -45,7 +44,7 @@ class LiveParser:
 
         info = resp["data"]
 
-        LiveInfo.title = get_legal_name(info["title"])
+        LiveInfo.title = UniversalTool.get_legal_name(info["title"])
         LiveInfo.room_id = info["room_id"]
 
         LiveInfo.status = info["live_status"]

@@ -836,6 +836,7 @@ class DownloadTaskPanel(wx.Panel):
             self.pause_btn.Enable(True)
 
             self.speed_lab.SetLabel("下载完成")
+            self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
         wx.CallAfter(callback)
 

@@ -14,7 +14,7 @@ from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
-from utils.tools import get_background_color, msw_open_in_explorer
+from utils.tools import get_background_color
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
@@ -1005,7 +1005,7 @@ class DownloadItemPanel(wx.Panel):
         
         if Config.Sys.platform == "windows":
             # Windows 下直接使用 SHOpenFolderAndSelectItems API 函数，避免被360拦截
-            msw_open_in_explorer(full_path)
+            pass
 
         else:
             match Config.Sys.platform:

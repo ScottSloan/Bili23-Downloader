@@ -1,8 +1,6 @@
 import re
 import os
 import wx
-import random
-import ctypes
 import subprocess
 
 from utils.config import Config
@@ -74,12 +72,6 @@ def convert_to_bvid(aid: int):
         r[s[i]] = table[aid // 58 ** i % 58]
 
     return "".join(r)
-    
-def get_legal_name(name: str):
-    return re.sub(r'[/\:*?"<>|]', "", name)
-    
-def get_new_id():
-    return random.randint(1000, 9999999)
 
 def find_str(pattern: str, string: str):
     find = re.findall(pattern, string)
@@ -165,36 +157,3 @@ def get_background_color():
         return wx.Colour(30, 30, 30)
     else:
         return "white"
-        
-def msw_open_in_explorer(file_path):
-    # 仅 Windows 平台可用
-    def get_pidl(path):
-        pidl = ctypes.POINTER(ITEMIDLIST)()
-        shell32.SHParseDisplayName(path, None, ctypes.byref(pidl), 0, None)
-        
-        return pidl
-    
-    ole32 = ctypes.windll.ole32
-    shell32 = ctypes.windll.shell32
-
-    class ITEMIDLIST(ctypes.Structure):
-        _fields_ = [("mkid", ctypes.c_byte)]
-
-    shell32.SHParseDisplayName.argtypes = [
-        ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_void_p),
-        ctypes.POINTER(ctypes.POINTER(ITEMIDLIST)),
-        ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)
-    ]
-
-    shell32.SHParseDisplayName.restype = ctypes.HRESULT
-
-    ole32.CoInitialize(None)
-    
-    try:
-        folder_pidl = get_pidl(os.path.dirname(file_path))
-        file_pidl = get_pidl(file_path)
-        
-        shell32.SHOpenFolderAndSelectItems(folder_pidl, 1, ctypes.byref(file_pidl), 0)
-
-    finally:
-        ole32.CoUninitialize()

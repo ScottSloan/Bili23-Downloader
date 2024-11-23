@@ -1,6 +1,8 @@
 import os
+import re
 import json
 import ctypes
+import random
 import requests
 import subprocess
 import requests.auth
@@ -309,6 +311,14 @@ class UniversalTool:
     def get_current_time():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
 
+    @staticmethod
+    def get_legal_name(_name: str):
+        return re.sub(r'[/\:*?"<>|]', "", _name)
+
+    @staticmethod
+    def get_random_id():
+        return random.randint(10000000, 99999999)
+    
     @staticmethod
     def remove_files(directory: str, file_name_list: List[str]):
         for i in file_name_list:

@@ -5,8 +5,7 @@ from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.icon_v2 import IconManager, APP_ICON_SMALL
-from utils.tools import get_new_id, get_legal_name
-from utils.tool_v2 import FormatTool
+from utils.tool_v2 import FormatTool, UniversalTool
 from utils.config import Config, Download, Audio
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -131,10 +130,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def format_info_entry(self, referer_url: str, download_type: int, title: str, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
-        download_info.id = get_new_id()
+        download_info.id = UniversalTool.get_random_id()
 
         download_info.title = title
-        download_info.title_legal = get_legal_name(title).removeprefix("-")
+        download_info.title_legal = UniversalTool.get_legal_name(title).removeprefix("-")
         download_info.cover_url = cover_url
         download_info.referer_url = referer_url
         download_info.bvid = bvid
