@@ -5,7 +5,7 @@ import time
 import json
 import requests
 import subprocess
-from typing import List, Callable
+from typing import Dict, List, Callable
 
 from gui.templates import Frame, ScrolledPanel
 from gui.dialog.error_info import ErrorInfoDialog
@@ -312,45 +312,49 @@ class DownloadUtils:
             self._video_download_url_list = self._get_all_available_download_url_list(durl_json)
 
         def get_audio_available_quality():
-            if json_dash["audio"]:
-                if self.task_info.audio_quality_id == 30300:
-                    try:
-                        # 获取无损或杜比链接
-                        if "flac" in json_dash:
-                            if json_dash["flac"]:
-                                if "audio" in json_dash["flac"]:
-                                    if json_dash["flac"]["audio"]:
-                                        # 无损
-                                        audio_node = json_dash["flac"]["audio"]
+            def _get_flac(_json_dash: Dict):
+                # 无损
+                if "flac" in _json_dash:
+                    if _json_dash["flac"]:
+                        if "audio" in _json_dash["flac"]:
+                            if _json_dash["flac"]["audio"]:
+                                audio_node = _json_dash["flac"]["audio"]
 
-                                        self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
+                                self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
 
-                                        self.task_info.audio_type = "flac"
-                                        self.task_info.audio_quality_id = 30251
+                                self.task_info.audio_type = "flac"
+                                self.task_info.audio_quality_id = 30251
 
-                                        return
+            def _get_dolby(_json_dash: Dict):
+                # 杜比全景声
+                if "dolby" in _json_dash:
+                    if _json_dash["dolby"]:
+                        if "audio" in _json_dash["dolby"]:
+                            if _json_dash["dolby"]["audio"]:
+                                audio_node = _json_dash["dolby"]["audio"][0]
 
-                        if "dolby" in json_dash:
-                            if json_dash["dolby"]:
-                                if "audio" in json_dash["dolby"]:
-                                    if json_dash["dolby"]["audio"]:
-                                        # 杜比全景声
-                                        audio_node = json_dash["dolby"]["audio"][0]
+                                self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
 
-                                        self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
-
-                                        self.task_info.audio_type = "ec3"
-                                        self.task_info.audio_quality_id = 30250
-
-                                        return
+                                self.task_info.audio_type = "ec3"
+                                self.task_info.audio_quality_id = 30250
                                     
+            if json_dash["audio"]:
+                match self.task_info.audio_quality_id:
+                    case 30300:
+                        _get_flac(json_dash)
+
+                        _get_dolby(json_dash)
+
+                    case 30251:
+                        _get_flac(json_dash)
+
+                    case 30250:
+                        _get_dolby(json_dash)
+
+                    case _:
                         self._get_default_audio_download_url(json_dash["audio"])
 
-                    except Exception:
-                        # 无法获取无损或杜比链接，换回默认音质
-                        self._get_default_audio_download_url(json_dash["audio"])
-
-                else:
+                if not self._audio_download_url_list:
                     self._get_default_audio_download_url(json_dash["audio"])
 
             else:
@@ -763,7 +767,8 @@ class DownloadTaskPanel(wx.Panel):
             # 清除本地残留文件
             time.sleep(2.5)
 
-            UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name])
+            if hasattr(self.utils, "_temp_video_file_name"):
+                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name])
 
         # 停止下载，删除下载任务
         self.downloader.onStop()

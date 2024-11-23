@@ -63,6 +63,18 @@ class Downloader:
 
                 return _range_list
 
+            def _get_range_download_info():
+                # 创建 RangeDownloadInfo
+                _range_info = RangeDownloadInfo()
+                _range_info.index = str(index)
+                _range_info.type = download_info.type
+                _range_info.url = download_url
+                _range_info.referer_url = self.task_info.referer_url
+                _range_info.file_path = file_path
+                _range_info.range = _range
+
+                return _range_info
+            
             file_path = os.path.join(Config.Download.path, download_info.file_name)
 
             download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
@@ -79,27 +91,23 @@ class Downloader:
                 self.thread_info[download_info.type] = {}
 
             for index, _range in enumerate(range_list):
-                # 同步创建 thread_info
-                _thread_info = ThreadInfo()
-                _thread_info.file_name = download_info.file_name
-                _thread_info.range = _range
+                if _range[0] < _range[1]:
+                    # 同步创建 thread_info
+                    _thread_info = ThreadInfo()
+                    _thread_info.file_name = download_info.file_name
+                    _thread_info.range = _range
 
-                self.thread_info[download_info.type][index] = _thread_info.to_dict()
+                    self.thread_info[download_info.type][str(index)] = _thread_info.to_dict()
 
-                # 创建 RangeDownloadInfo
-                _range_info = RangeDownloadInfo()
-                _range_info.index = index
-                _range_info.type = download_info.type
-                _range_info.url = download_url
-                _range_info.referer_url = self.task_info.referer_url
-                _range_info.file_path = file_path
-                _range_info.range = _range
+                    _range_info = _get_range_download_info()
 
-                self.ThreadPool.submit(self.range_download, args = (_range_info, ))
+                    self.ThreadPool.submit(self.range_download, args = (_range_info, ))
 
         def reset():
             # 创建监听线程
             self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
+
+            self.ThreadPool = ThreadPool()
             
             self.session = requests.Session()
 

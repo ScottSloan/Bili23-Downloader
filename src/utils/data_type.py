@@ -130,7 +130,7 @@ class DownloaderInfo:
 
 class RangeDownloadInfo:
     def __init__(self):
-        self.index: int = 0
+        self.index: str = ""
         self.type: str = ""
         self.url: str = ""
         self.referer_url: str = ""

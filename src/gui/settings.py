@@ -233,7 +233,7 @@ class DownloadTab(wx.Panel):
         conf.config_save()
 
         # 更新下载窗口中并行下载数信息
-        self.GetParent().GetParent().GetParent().download_window.update_max_download_choice()
+        # self.GetParent().GetParent().GetParent().download_window.update_max_download_choice()
 
     def onConfirm(self):
         if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):

@@ -248,6 +248,9 @@ class ConfigUtils:
         if not os.path.exists(Config.Download.path):
             os.makedirs(Config.Download.path)
 
+        if not os.path.exists(Config.User.download_file_directory):
+            os.makedirs(Config.User.download_file_directory)
+
     def create_user_directory(self):
         self.init_user_config()
 
