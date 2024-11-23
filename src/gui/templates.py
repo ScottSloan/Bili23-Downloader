@@ -131,6 +131,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info = DownloadTaskInfo()
 
         download_info.id = UniversalTool.get_random_id()
+        download_info.timestamp = UniversalTool.get_timestamp()
 
         download_info.title = title
         download_info.title_legal = UniversalTool.get_legal_name(title).removeprefix("-")

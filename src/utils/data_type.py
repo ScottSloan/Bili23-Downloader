@@ -9,6 +9,8 @@ class DownloadTaskInfo:
         self.id: int = 0
         # 序号，从 1 开始，0 为空
         self.index: int = 0
+        # 时间戳
+        self.timestamp: int = 0
         
         # Referer URL
         self.referer_url: str = ""
@@ -54,6 +56,7 @@ class DownloadTaskInfo:
         return {
             "id": self.id,
             "index": self.index,
+            "timestamp": self.timestamp,
             "referer_url": self.referer_url,
             "cover_url": self.cover_url,
             "bvid": self.bvid,
@@ -75,6 +78,7 @@ class DownloadTaskInfo:
     def load_from_dict(self, data: Dict):
         self.id = data["id"]
         self.index = data["index"]
+        self.timestamp = data["timestamp"]
         self.referer_url = data["referer_url"]
         self.cover_url = data["cover_url"]
         self.bvid = data["bvid"]

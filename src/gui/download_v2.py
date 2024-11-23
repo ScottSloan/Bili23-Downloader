@@ -157,6 +157,9 @@ class DownloadManagerWindow(Frame):
 
                     _download_task_info_list.append(_task_info)
 
+        # 根据时间戳排序
+        _download_task_info_list.sort(key = lambda _task_info: _task_info.timestamp, reverse = False)
+
         wx.CallAfter(self.add_download_task_panel, _download_task_info_list, callback, False)
 
     def start_download(self):
@@ -633,8 +636,8 @@ class DownloadTaskPanel(wx.Panel):
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseResumeEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
-        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onShowCoverViewerDialog)
-        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowErrorInfoDialog)
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onShowCoverViewerDialogEVT)
+        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowErrorInfoDialogEVT)
 
     def init_utils(self):
         def show_cover():
@@ -655,8 +658,10 @@ class DownloadTaskPanel(wx.Panel):
             
             scale = self.FromDIP((112, 63))
 
+            self._cover_raw_contents = RequestTool.request(self.task_info.cover_url)
+
             # 获取封面数据并保存为 wx.Image 对象
-            temp_image = wx.Image(io.BytesIO(RequestTool.request(self.task_info.cover_url)))
+            temp_image = wx.Image(io.BytesIO(self._cover_raw_contents))
 
             # 非 16:9 封面，进行裁剪
             if not _is_16_9(temp_image):
@@ -690,6 +695,7 @@ class DownloadTaskPanel(wx.Panel):
             return _callback
 
         self._parent_download_manager = self.GetParent().GetParent().GetParent()
+        self._cover_raw_contents = None
 
         # 获取视频封面
         if self.task_info.cover_url:
@@ -883,14 +889,14 @@ class DownloadTaskPanel(wx.Panel):
 
         DirectoryTool.open_file_location(path)
 
-    def onShowErrorInfoDialog(self, event):
+    def onShowErrorInfoDialogEVT(self, event):
         if hasattr(self, "_error_log") and self.task_info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
             dlg = ErrorInfoDialog(self._parent_download_manager, self._error_log)
             dlg.ShowModal()
 
-    def onShowCoverViewerDialog(self, event):
-        dlg = CoverViewerDialog(self._parent_download_manager, self.task_info.cover_url)
-        dlg.ShowModal()
+    def onShowCoverViewerDialogEVT(self, event):
+        dlg = CoverViewerDialog(self._parent_download_manager, self._cover_raw_contents)
+        dlg.Show()
 
     def start_download(self):
         def worker():

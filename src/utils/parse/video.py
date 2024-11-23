@@ -158,9 +158,6 @@ class VideoParser:
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]
 
-        with open("video.json", "w", encoding = "utf-8") as f:
-            f.write(req.text)
-
         # 检测无损或杜比是否存在
         if "flac" in info["dash"]:
             if info["dash"]["flac"]:
