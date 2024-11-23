@@ -1,6 +1,6 @@
 import wx
 
-from utils.tools import get_ffmpeg_cwd_path, get_ffmpeg_env_path
+from utils.tool_v2 import FFmpegCheckTool
 from utils.config import Config
 
 class DetectDialog(wx.Dialog):
@@ -55,8 +55,8 @@ class DetectDialog(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
-        cwd_path = get_ffmpeg_cwd_path()
-        env_path = get_ffmpeg_env_path()
+        cwd_path = FFmpegCheckTool._get_ffmpeg_cwd_path()
+        env_path = FFmpegCheckTool._get_ffmpeg_env_path()
 
         if env_path:
             self.env_chk.Enable(True)

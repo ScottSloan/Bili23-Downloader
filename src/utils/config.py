@@ -170,9 +170,9 @@ class ConfigUtils:
         self.__init__()
 
     def init_ffmpeg(self):
-        from utils.tools import check_ffmpeg_available
+        from utils.tool_v2 import FFmpegCheckTool
 
-        check_ffmpeg_available()
+        FFmpegCheckTool.check_available()
 
     def init_user_config(self):
         match Config.Sys.platform:

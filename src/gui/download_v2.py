@@ -879,7 +879,7 @@ class DownloadTaskPanel(wx.Panel):
         DirectoryTool.open_file_location(path)
 
     def onShowErrorInfoDialog(self, event):
-        if hasattr(self, "_error_log"):
+        if hasattr(self, "_error_log") and self.task_info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
             dlg = ErrorInfoDialog(self._parent_download_manager, self._error_log)
             dlg.ShowModal()
 
