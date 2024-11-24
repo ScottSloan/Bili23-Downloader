@@ -214,6 +214,7 @@ class DownloadTab(wx.Panel):
         Config.Download.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
         Config.Download.video_codec_id = video_codec_mapping[self.codec_choice.GetStringSelection()]
         Config.Download.add_number = self.add_number_chk.GetValue()
+        Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
         Config.Download.speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
@@ -697,7 +698,7 @@ class MiscTab(wx.Panel):
 
         path_lab = wx.StaticText(player_box, -1, "播放器路径")
         self.path_box = wx.TextCtrl(player_box, -1, size = self.FromDIP((220, 24)))
-        self.browse_btn = wx.Button(player_box, -1, "浏览")
+        self.browse_btn = wx.Button(player_box, -1, "浏览", size = self.FromDIP((60, 24)))
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)

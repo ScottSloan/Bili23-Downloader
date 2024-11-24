@@ -10,6 +10,7 @@ PAUSE_ICON = 11
 DELETE_ICON = 12
 FOLDER_ICON = 13
 RETRY_ICON = 14
+REFRESH_ICON = 15
 
 class IconManager:
     def __init__(self, DPI_scale_factor: float):
@@ -42,6 +43,9 @@ class IconManager:
 
             case 14:
                 bytes_data = self._get_assets_retry_icon()
+
+            case 15:
+                bytes_data = self._get_assets_refresh_icon()
         
         return base64.b64decode(bytes_data)
 
@@ -152,3 +156,23 @@ class IconManager:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABfElEQVR4nLXVvUodURQF4FGLFLGJ8bdLbp4jEAjGKqUgGhuLwFWwTB/0EYwYEF8jCT5FIlgK/mDSpLKxEL6wyb5hvJncO6OTBQfm7LNnrznnrL2mKBoCI03faVL8Na5wgS/YwGydF1/gY9/YHJD/GPPYwSW2MT6I4AkWc7zDDT7V3NVkEh2hMyz5GU6wW5egByzjDE+LKuABjrGE500JAljBt8rjwnsc5POdCAK5+62iDDzCD0zkfA5rt5JqAlN58TPl4Fvs36VgFfAB6+XAIV4WLQGv8Lkc+FmrYWoipXvWm4zhuk0LwEh2/GhMRnPyfwgCOO8pqA34raTTciCMa75FgoVbfZSuuNMiwS665cBMNsdkC8Wns9Z0/8J2G7vAXthO1cJ4Wu7yPYqv4ise/iuhk5bbmARvQjnxbxmW2EnLjYuaqnnme/nlg4v3HdcWvidReMsfAaTOQ4qxFhcaVl99LEOIQl3roelsxujOGPEcse5farkP0gIaWcovj7/76vMd1EMAAAAASUVORK5CYII="
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABZklEQVR4nLXVvUokQRTF8Z9uYKCJ63em43MIguhGhoL4kRgIKhiaiz6CDgqyr7HKPoUKhsKu4m5iZGJgIFeu0I7M2DO2f6ie7js1faiqc8/QPl2+kHk84BZn2MJomR9O47hhbLeYP4BZHOAO++hrJTCOhRw7eMKvkqsaTKFL1D6aPIlr1NsQeGUJfzGhCT24wiKmOhAIlnHRbLt28TPvOxWQq9/TQD/+43s+j2GtcVJJhvLgR4rFdZyojkNsFgu/MVOhwBxOi4X7sg3ThnXDUS98w2PFEdCVHd8tLw9fKRDcFBxUBUP4UyycZbZUxY/GPtrKPKmKOjaKhZFsjjj9zzKc74rPN+xXtIqjjJ139GXkRip2yirO0dtsQi0bpBORlXRO/Le0pJaRW0+7fcRwbst5mZcXtysi918KRbYUDRDCYcX4Lg409rzptrQi3BWpGJ6OZozujBH3UQsrvnPLZ4gIaCtSngEvOUGXUU0xKwAAAABJRU5ErkJggg=="
+
+    def _get_assets_refresh_icon(self):
+        if self.DPI_scale_factor == 1:
+            return self._assets_refresh_icon_16x16
+        else:
+            return self._assets_refresh_icon_24x24
+    
+    @property
+    def _assets_refresh_icon_16x16(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA40lEQVR4nKXTS04CQRAG4DGCe0PwALJyweMSLnxETHysuQBBd6BXmvE2LjzNZyo2OsIMj6GSTjpV/6O7ujrLKgJHGOIOY4wiV4X9FzjBKwos8IgHvOEj1Vo4qyJ3kONqrfiHuU5CXzhedc5xXkdOuFN8+olBufCyybmE6+ISE1yUG5ZvI29SHWJ+iMB9dPoQgXE8VwPec8xJlq6waCDwjv6yiUUDgeJ3OjHDzR7kGPFpOdFOg9TbgdxL2PZqYTnKt1uc4+idOkCcJK4ToPhAT2nFPnLTNecaoWhsPznGin3ld/4GAHggVeGf/B8AAAAASUVORK5CYII="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA10lEQVR4nKXTSUoEQRCF4a9x2IvoAXTlQstLuHDAFhzWXkBadw5X6vY2LjyN8iAKSi0sq/0hIYmMiBcZGUk/EzQ4xxSHZRtkHQ9Y4AlXuMQzXutsFdt9wZuY4/gXgZNK9I6V78pz7AxUuIE3fOCge3A/oNyyhSPcYq81Tkp9aRo8/ifBRXV6aab1XGO5qTnR1JuP5QX7bRMzOGNZdKdzhtMRwSn9rmtYq6fc/UNwfOKbmC+0o3w2oJzS49tLsuY6ccoHuq6VfWwp+4dyH2lOOhzFrOx7v/Mna1kcS5kBMWoAAAAASUVORK5CYII="
+
+    @property
+    def _assets_refresh_icon_24x24(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABWklEQVR4nLXWOUoFQRQF0K+hA6LfCUwcwMzILThswEAcMFYEA2MDFQ0MnXAnDrtwWICzBka6gCOFJTbflu7f9r9Q0NR7dW/1q9uvulKpA2gKo541WYT9WMUFHvERxzPOsYbeIsTt2I1EB5hANRHvwCT28Yo9tMTYeBb5CG7i4mqOzVRxhGus4zaL/B6zBd56yw8G/irLTUHyUbwlBGbSkkLN9+slD8AYlrCBE8xXUtzynKfmhRCteFBsdQ5En09UGgU8obNR5M14bwh5QuCjzB7jq2cFzubvidBnukoU6MFd7SFPligwjbNamx6WKHCMlbQPrbsE8l68oK82sFPGW/hqFZtpgbbYcuf+Qb6IS7T+lTAc23XdIlgIzsFgVmIQuYoH1ZOz5idx50N5dxPKtR0PKwhNJQ0QfR6sGGIhJ1w26WXJEOoLdsMpHhKXfngOc8u/3PIfFPlt+QQQvd8jiD4RUwAAAABJRU5ErkJggg=="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABTUlEQVR4nLXWuUoDURQG4C+WLojGqGDjAnZWvoLLC1iIC9ZKwMLaQsUUlm7kTVzewuUBXKOFlXkA5coVQpiYZJz8cGGYc+b/z5z7z7lDe8jFlRlGUcQ1XlCNq4IrbGM4DXEfSpHoBHPI18T7MY9jvOMI3TE224x8Cvfx4XwLxYScM9xhBw/NyJ+wrH3s4yuusUZtuU9JPo2PGoGlpKRSbEsazGADuyhjNcktlRZ7ngrF6JaO4TpasWN4xUCnyLvw2SnyX4FqxjMmFzkD9w/CnBnMUKCAx/pNDrMlKyzist6mpxkKnGMr6UMbyoB8GG8YqQ8cZvQWZewlBXrjyF35B/k6btDTKGEyjus0ImvROePNEoPIbdyoQos9L8fKJ1qtJrTrIG5WEFqoM0AQDlYMsZATDpuGbfkLwQnBbhd4rjn0w3W4t5nklv+g7d+Wb/taP7VcoSfrAAAAAElFTkSuQmCC"

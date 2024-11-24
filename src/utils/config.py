@@ -16,7 +16,7 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
-        release_date: str = "2024/11/23"
+        release_date: str = "2024/11/24"
 
     class Proxy:
         proxy_mode: int = 1

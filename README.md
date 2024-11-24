@@ -40,7 +40,7 @@ Bili23 Downloader GUI
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
 # 更新日志
-### **Version 1.53.0 (2024/11/23)**
+### **Version 1.53.0 (2024/11/24)**
 Version 1.53.0 Beta5 发布
 
 本次更新内容：

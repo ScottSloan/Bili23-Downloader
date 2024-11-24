@@ -855,6 +855,9 @@ class DownloadTaskPanel(wx.Panel):
             self.speed_lab.SetLabel("下载完成")
             self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
+            if Config.Download.delete_history:
+                self.download_file_tool.clear_download_info()
+
         wx.CallAfter(callback)
 
     def onMergeFailed(self, error_log: ErrorLog):
