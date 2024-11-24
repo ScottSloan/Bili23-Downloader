@@ -2,7 +2,6 @@ import os
 import re
 import time
 import json
-import ctypes
 import random
 import requests
 import subprocess
@@ -60,7 +59,7 @@ class RequestTool:
             case Config.Type.PROXY_FOLLOW:
                 return None
             
-            case Config.Type.PROXY_MANUAL:
+            case Config.Type.PROXY_CUSTOM:
                 return {
                     "http": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}",
                     "https": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}"
@@ -73,7 +72,7 @@ class RequestTool:
         else:
             return None
     
-class DirectoryTool:
+class FileDirectoryTool:
     @staticmethod
     def open_directory(directory: str):
         match Config.Sys.platform:
@@ -90,7 +89,7 @@ class DirectoryTool:
     def open_file_location(path: str):
         match Config.Sys.platform:
             case "windows":
-                DirectoryTool._msw_SHOpenFolderAndSelectItems(path)
+                FileDirectoryTool._msw_SHOpenFolderAndSelectItems(path)
 
             case "linux":
                 subprocess.Popen(f'xdg-open "{Config.Download.path}"', shell = True)
@@ -99,37 +98,49 @@ class DirectoryTool:
                 subprocess.Popen(f'open -R "{path}"', shell = True)
     
     @staticmethod
+    def get_file_associated_app(file_ext: str):
+        result, buffer = FileDirectoryTool._msw_AssocQueryStringW(file_ext)
+
+        if result == 0:
+            return buffer.value
+        else:
+            return result
+
+    @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):
         def get_pidl(path):
             pidl = ctypes.POINTER(ITEMIDLIST)()
-            shell32.SHParseDisplayName(path, None, ctypes.byref(pidl), 0, None)
+            ctypes.windll.shell32.SHParseDisplayName(path, None, ctypes.byref(pidl), 0, None)
             
             return pidl
+        
+        import ctypes
     
         class ITEMIDLIST(ctypes.Structure):
             _fields_ = [("mkid", ctypes.c_byte)]
 
-        ole32 = ctypes.windll.ole32
-        shell32 = ctypes.windll.shell32
-
-        shell32.SHParseDisplayName.argtypes = [
-            ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_void_p),
-            ctypes.POINTER(ctypes.POINTER(ITEMIDLIST)),
-            ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)
-        ]
-
-        shell32.SHParseDisplayName.restype = ctypes.HRESULT
-
-        ole32.CoInitialize(None)
+        ctypes.windll.ole32.CoInitialize(None)
 
         try:
             folder_pidl = get_pidl(os.path.dirname(path))
             file_pidl = get_pidl(path)
             
-            shell32.SHOpenFolderAndSelectItems(folder_pidl, 1, ctypes.byref(file_pidl), 0)
+            ctypes.windll.shell32.SHOpenFolderAndSelectItems(folder_pidl, 1, ctypes.byref(file_pidl), 0)
 
         finally:
-            ole32.CoUninitialize()
+            ctypes.windll.ole32.CoUninitialize()
+
+    @staticmethod
+    def _msw_AssocQueryStringW(file_ext: str):
+        import ctypes
+        from ctypes import wintypes
+
+        buffer = ctypes.create_unicode_buffer(512)
+        pcchOut = wintypes.DWORD(512)
+        
+        result = ctypes.windll.shlwapi.AssocQueryStringW(0x00000000, 1, file_ext, None, buffer, ctypes.byref(pcchOut))
+
+        return (result, buffer)
 
 class DownloadFileTool:
     # 记录断点续传信息工具类

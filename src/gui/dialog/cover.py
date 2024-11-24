@@ -43,7 +43,7 @@ class CoverViewerDialog(Frame):
         menu_bar.Append(self.file_menu, "文件(&F)")
         menu_bar.Append(self.options_menu, "选项(&O)")
 
-        self.file_menu.Append(self.ID_SAVE, "保存(&S)")
+        self.file_menu.Append(self.ID_SAVE, "保存原图(&S)")
         self.file_menu.AppendSeparator()
         self.file_menu.Append(self.ID_CLOSE, "关闭(&X)")
 

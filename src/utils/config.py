@@ -46,6 +46,7 @@ class Config:
         debug: bool = False
         check_update: bool = True
 
+        player_preference: int = 0
         player_path: str = ""
 
     class Download:
@@ -93,7 +94,7 @@ class Config:
 
         PROXY_DISABLE: int = 0                       # 不使用代理
         PROXY_FOLLOW: int = 1                        # 跟随系统
-        PROXY_MANUAL: int = 2                        # 手动设置
+        PROXY_CUSTOM: int = 2                        # 手动设置
 
         LIVE_STATUS_0: int = 0                       # 未开播
         LIVE_STATUS_1: int = 1                       # 直播中
@@ -101,6 +102,9 @@ class Config:
 
         DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
         DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕
+
+        PLAYER_PREFERENCE_DEFAULT: int = 0           # 系统默认
+        PLAYER_PREFERENCE_CUSTOM: int = 0            # 手动设置
 
         DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
         DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载
@@ -111,9 +115,6 @@ class Config:
         DOWNLOAD_STATUS_MERGE_FAILED: int = 6        # 合成失败
 
         DOWNLOAD_STATUS_ALIVE_LIST: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE]
-        
-        DOWNLOAD_TYPE_VIDEO: int = 0,
-        DOWNLOAD_TYPE_AUDIO: int = 1
         
     class Temp:
         download_window_pos = None
@@ -240,6 +241,7 @@ class ConfigUtils:
         Config.Misc.episode_display_mode = self.config.getint("misc", "episode_display_mode")
         Config.Misc.show_episode_full_name = self.config.getboolean("misc", "show_episode_full_name")
         Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
+        Config.Misc.player_preference = self.config.getint("misc", "player_preference")
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
         Config.Misc.debug = self.config.getboolean("misc", "debug")
@@ -305,6 +307,7 @@ class ConfigUtils:
         self.config.set("misc", "episode_display_mode", str(Config.Misc.episode_display_mode))
         self.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
         self.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
+        self.config.set("misc", "player_preference", str(Config.Misc.player_preference))
         self.config.set("misc", "player_path", Config.Misc.player_path)
         self.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
         self.config.set("misc", "debug", str(int(Config.Misc.debug)))

@@ -17,6 +17,7 @@ icon.ico
 ffmpeg.exe
 build.bat
 test.py
+test_2.py
 bilidanmu.proto
 
 # commitizen

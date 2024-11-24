@@ -15,7 +15,7 @@ from utils.config import Config
 from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog
 from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
 from utils.thread import Thread
-from utils.tool_v2 import RequestTool, DirectoryTool, DownloadFileTool, FormatTool, UniversalTool
+from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.downloader import Downloader
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 
@@ -120,7 +120,7 @@ class DownloadManagerWindow(Frame):
 
     def onOpenDownloadDirectoryEVT(self, event):
         # 打开下载目录事件
-        DirectoryTool.open_directory(Config.Download.path)
+        FileDirectoryTool.open_directory(Config.Download.path)
 
     def onClearHistoryEVT(self, event):
         # 清除已完成的下载记录
@@ -890,7 +890,7 @@ class DownloadTaskPanel(wx.Panel):
     def onOpenLocation(self):
         path = os.path.join(Config.Download.path, self.utils.full_file_name)
 
-        DirectoryTool.open_file_location(path)
+        FileDirectoryTool.open_file_location(path)
 
     def onShowErrorInfoDialogEVT(self, event):
         if hasattr(self, "_error_log") and self.task_info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:

@@ -6,7 +6,7 @@ import subprocess
 from utils.config import Config
 from utils.thread import Thread
 from utils.mapping import video_codec_mapping, supported_gpu_mapping
-from utils.tool_v2 import FormatTool, DirectoryTool
+from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
@@ -406,4 +406,4 @@ class ConverterWindow(wx.Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        DirectoryTool.open_file_location(path)
+        FileDirectoryTool.open_file_location(path)

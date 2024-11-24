@@ -7,7 +7,7 @@ from typing import List
 from utils.parse.live import LiveInfo
 from utils.config import Config
 from utils.thread import Thread
-from utils.tool_v2 import FormatTool, DirectoryTool
+from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -19,7 +19,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         self.CenterOnParent()
 
-        self.init_live_info()
+        self.init_utils()
 
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -91,7 +91,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartRecording)
         self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
 
-    def init_live_info(self):
+    def init_utils(self):
         self.title_lab.SetLabel(LiveInfo.title)
 
         self.m3u8_link_box.SetValue(LiveInfo.m3u8_link)
@@ -131,11 +131,15 @@ class LiveRecordingWindow(wx.Dialog):
         dlg.Destroy()
 
     def onPlay(self, event):
-        if not Config.Misc.player_path:
-            wx.MessageDialog(self, "未配置播放器\n\n未配置播放器，请打开程序设置进行相关配置", "警告", wx.ICON_WARNING).ShowModal()
-            return
+        match Config.Misc.player_preference:
+            case Config.Type.PLAYER_PREFERENCE_DEFAULT:
+                # 寻找关联的播放器
+                _default = FileDirectoryTool.get_file_associated_app(".mp4")
 
-        cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
+                cmd = _default.replace("%1", self.m3u8_link_box.GetValue())
+            
+            case Config.Type.PLAYER_PREFERENCE_CUSTOM:
+                cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
 
         subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
@@ -175,6 +179,12 @@ class LiveRecordingWindow(wx.Dialog):
         self.Layout()
 
     def onRecording(self):
+        def reset():
+            self.status_lab.SetLabel("状态：未开始录制")
+            self.duration_lab.SetLabel("时长：00:00:00.00")
+            self.size_lab.SetLabel("大小：0 KB")
+            self.speed_lab.SetLabel("速度：0.0x")
+
         output_path = self.recording_path_box.GetValue()
 
         cmd = f'"{Config.FFmpeg.path}" -y -i "{LiveInfo.m3u8_link}" -c copy "{output_path}"'
@@ -205,7 +215,7 @@ class LiveRecordingWindow(wx.Dialog):
             wx.MessageDialog(self, "FFmpeg 进程异常终止\n\n由于配置不当，FFmpeg 进程异常终止，请检查：\n1.m3u8 链接是否已经过期，如过期，请重新解析\n2.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持流媒体合成功能", "警告", wx.ICON_WARNING).ShowModal()
             self.setStatus(False)
 
-            self.resetProgress()
+            reset()
             
             return
 
@@ -220,7 +230,7 @@ class LiveRecordingWindow(wx.Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        DirectoryTool.open_file_location(path)
+        FileDirectoryTool.open_file_location(path)
 
     def setStatus(self, status: bool):
         if status:
@@ -250,9 +260,3 @@ class LiveRecordingWindow(wx.Dialog):
         self.process.stdin.flush()
 
         self.process.kill()
-
-    def resetProgress(self):
-        self.status_lab.SetLabel("状态：未开始录制")
-        self.duration_lab.SetLabel("时长：00:00:00.00")
-        self.size_lab.SetLabel("大小：0 KB")
-        self.speed_lab.SetLabel("速度：0.0x")

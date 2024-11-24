@@ -489,12 +489,12 @@ class ProxyTab(wx.Panel):
         
         self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, "不使用代理")
         self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, "跟随系统")
-        self.proxy_manual_radio = wx.RadioButton(proxy_box, -1, "手动设置")
+        self.proxy_custom_radio = wx.RadioButton(proxy_box, -1, "手动设置")
 
         proxy_hbox = wx.BoxSizer(wx.HORIZONTAL)
         proxy_hbox.Add(self.proxy_disable_radio, 0, wx.ALL, 10)
         proxy_hbox.Add(self.proxy_follow_radio, 0, wx.ALL, 10)
-        proxy_hbox.Add(self.proxy_manual_radio, 0, wx.ALL, 10)
+        proxy_hbox.Add(self.proxy_custom_radio, 0, wx.ALL, 10)
         
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
         self.ip_box = wx.TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
@@ -538,11 +538,11 @@ class ProxyTab(wx.Panel):
         self.SetSizer(proxy_vbox)
     
     def Bind_EVT(self):
-        self.proxy_disable_radio.Bind(wx.EVT_RADIOBUTTON, self.onProxyRadioEVT)
-        self.proxy_follow_radio.Bind(wx.EVT_RADIOBUTTON, self.onProxyRadioEVT)
-        self.proxy_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onProxyRadioEVT)
+        self.proxy_disable_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeProxyModeEVT)
+        self.proxy_follow_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeProxyModeEVT)
+        self.proxy_custom_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeProxyModeEVT)
 
-        self.auth_chk.Bind(wx.EVT_CHECKBOX, self.onAuthCheckEVT)
+        self.auth_chk.Bind(wx.EVT_CHECKBOX, self.onChangeAuthEVT)
         
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestEVT)
 
@@ -551,20 +551,11 @@ class ProxyTab(wx.Panel):
             case Config.Type.PROXY_DISABLE:
                 self.proxy_disable_radio.SetValue(True)
 
-                self.setProxyEnable(False)
-
             case Config.Type.PROXY_FOLLOW:
                 self.proxy_follow_radio.SetValue(True)
 
-                self.setProxyEnable(False)
-
-            case Config.Type.PROXY_MANUAL:
-                self.proxy_manual_radio.SetValue(True)
-
-                self.setProxyEnable(True)
-
-        if not Config.Proxy.auth_enable:
-            self.setAuthEnable(False)
+            case Config.Type.PROXY_CUSTOM:
+                self.proxy_custom_radio.SetValue(True)
 
         self.ip_box.SetValue(Config.Proxy.proxy_ip_addr)
         self.port_box.SetValue(Config.Proxy.proxy_port)
@@ -572,6 +563,9 @@ class ProxyTab(wx.Panel):
         self.auth_chk.SetValue(Config.Proxy.auth_enable)
         self.uname_box.SetValue(Config.Proxy.auth_uname)
         self.passwd_box.SetValue(Config.Proxy.auth_passwd)
+
+        self.onChangeProxyModeEVT(None)
+        self.onChangeAuthEVT(None)
 
     def save(self):
         if self.proxy_disable_radio.GetValue():
@@ -581,7 +575,7 @@ class ProxyTab(wx.Panel):
             proxy = Config.Type.PROXY_FOLLOW
 
         else:
-            proxy = Config.Type.PROXY_MANUAL
+            proxy = Config.Type.PROXY_CUSTOM
 
         Config.Proxy.proxy_mode = proxy
 
@@ -602,32 +596,46 @@ class ProxyTab(wx.Panel):
 
         conf.config_save()
 
-    def setProxyEnable(self, enable):
-        self.ip_box.Enable(enable)
-        self.port_box.Enable(enable)
+    def onChangeProxyModeEVT(self, event):
+        def set_enable(enable: bool):
+            self.ip_box.Enable(enable)
+            self.port_box.Enable(enable)
 
-    def setAuthEnable(self, enable):
-        self.uname_box.Enable(enable)
-        self.passwd_box.Enable(enable)
-
-    def onProxyRadioEVT(self, event):
         if self.proxy_disable_radio.GetValue():
-            self.setProxyEnable(False)
+            set_enable(False)
 
         elif self.proxy_follow_radio.GetValue():
-            self.setProxyEnable(False)
+            set_enable(False)
 
         else:
-            self.setProxyEnable(True)
+            set_enable(True)
 
-    def onAuthCheckEVT(self, event):
-        if event.IsChecked():
-            self.setAuthEnable(True)
+    def onChangeAuthEVT(self, event):
+        def set_enable(enable: bool):
+            self.uname_box.Enable(enable)
+            self.passwd_box.Enable(enable)
+
+        if self.auth_chk.GetValue():
+            set_enable(True)
         else:
-            self.setAuthEnable(False)
+            set_enable(False)
  
     def onTestEVT(self, event):
-        if self.proxy_manual_radio.GetValue():
+        def test():
+            try:
+                start_time = time.time()
+
+                url = "https://www.bilibili.com"
+                req = requests.get(url, headers = RequestTool.get_headers(), proxies = proxy, auth = auth, timeout = 5)
+                
+                end_time = time.time()
+
+                wx.MessageDialog(self, f"测试成功\n\n请求站点：{url}\n状态码：{req.status_code}\n耗时：{round(end_time - start_time, 1)}s", "提示", wx.ICON_INFORMATION).ShowModal()
+
+            except requests.RequestException as e:
+                wx.MessageDialog(self, f"测试失败\n\n请求站点：{url}\n错误信息：\n\n{e}", "测试代理", wx.ICON_WARNING).ShowModal()
+
+        if self.proxy_custom_radio.GetValue():
             proxy = {
                 "http": f"{self.ip_box.GetValue()}:{self.port_box.GetValue()}",
                 "https": f"{self.ip_box.GetValue()}:{self.port_box.GetValue()}"
@@ -643,21 +651,7 @@ class ProxyTab(wx.Panel):
         else:
             auth = HTTPProxyAuth(None, None)
 
-        Thread(target = self.testProxy, args = (proxy, auth, )).start()
-
-    def testProxy(self, proxy, auth):
-        try:
-            start_time = time.time()
-
-            url = "https://www.bilibili.com"
-            req = requests.get(url, headers = RequestTool.get_headers(), proxies = proxy, auth = auth, timeout = 5)
-            
-            end_time = time.time()
-
-            wx.MessageDialog(self, f"测试成功\n\n请求站点：{url}\n状态码：{req.status_code}\n耗时：{round(end_time - start_time, 1)}s", "提示", wx.ICON_INFORMATION).ShowModal()
-
-        except requests.RequestException as e:
-            wx.MessageDialog(self, f"测试失败\n\n请求站点：{url}\n错误信息：\n\n{e}", "测试代理", wx.ICON_WARNING).ShowModal()
+        Thread(target = test).start()
 
     def onConfirm(self):
         self.save()
@@ -697,16 +691,24 @@ class MiscTab(wx.Panel):
         player_box = wx.StaticBox(self, -1, "播放器设置")
 
         path_lab = wx.StaticText(player_box, -1, "播放器路径")
-        self.path_box = wx.TextCtrl(player_box, -1, size = self.FromDIP((220, 24)))
-        self.browse_btn = wx.Button(player_box, -1, "浏览", size = self.FromDIP((60, 24)))
+        self.player_default_rdbtn = wx.RadioButton(player_box, -1, "系统默认")
+        self.player_custom_rdbtn = wx.RadioButton(player_box, -1, "手动设置")
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        player_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
+        player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
+
+        self.player_path_box = wx.TextCtrl(player_box, -1, size = self.FromDIP((220, 24)))
+        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.FromDIP((60, 24)))
+
+        player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         
         player_vbox = wx.BoxSizer(wx.VERTICAL)
         player_vbox.Add(path_lab, 0, wx.ALL, 10)
-        player_vbox.Add(player_hbox, 1, wx.EXPAND)
+        player_vbox.Add(player_hbox, 0, wx.EXPAND)
+        player_vbox.Add(player_path_hbox, 1, wx.EXPAND)
 
         player_sbox = wx.StaticBoxSizer(player_box)
         player_sbox.Add(player_vbox, 1, wx.EXPAND)
@@ -730,25 +732,36 @@ class MiscTab(wx.Panel):
         self.SetSizer(misc_vbox)
 
     def Bind_EVT(self):
-        self.path_box.Bind(wx.EVT_TEXT, self.onChangePath)
-        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowse)
+        self.player_default_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
+        self.player_custom_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
+
+        self.browse_player_btn.Bind(wx.EVT_BUTTON, self.onBrowsePlayerEVT)
 
     def init_data(self):
         match Config.Misc.episode_display_mode:
-            case 0:
+            case Config.Type.EPISODES_SINGLE:
                 self.episodes_single_choice.SetValue(True)
 
-            case 1:
+            case Config.Type.EPISODES_IN_SECTION:
                 self.episodes_in_section_choice.SetValue(True)
                 
-            case 2:
+            case Config.Type.EPISODES_ALL_SECTIONS:
                 self.episodes_all_sections_choice.SetValue(True)
+
+        match Config.Misc.player_preference:
+            case Config.Type.PLAYER_PREFERENCE_DEFAULT:
+                self.player_default_rdbtn.SetValue(True)
+
+            case Config.Type.PLAYER_PREFERENCE_CUSTOM:
+                self.player_custom_rdbtn.SetValue(True)
 
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
-        self.path_box.SetValue(Config.Misc.player_path)
+        self.player_path_box.SetValue(Config.Misc.player_path)
         self.check_update_chk.SetValue(Config.Misc.check_update)
         self.debug_chk.SetValue(Config.Misc.debug)
+
+        self.onChangePlayerPreferenceEVT(None)
 
     def save(self):
         if self.episodes_single_choice.GetValue():
@@ -757,17 +770,23 @@ class MiscTab(wx.Panel):
         elif self.episodes_in_section_choice.GetValue():
             Config.Misc.episode_display_mode = Config.Type.EPISODES_IN_SECTION
 
-        elif self.episodes_all_sections_choice.GetValue():
+        else:
             Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
 
+        if self.player_default_rdbtn.GetValue():
+            Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_DEFAULT
+        else:
+            Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_CUSTOM
+
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
-        Config.Misc.player_path = self.path_box.GetValue()
+        Config.Misc.player_path = self.player_path_box.GetValue()
         Config.Misc.check_update = self.check_update_chk.GetValue()
         Config.Misc.debug = self.debug_chk.GetValue()
 
         conf.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
         conf.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
         conf.config.set("misc", "episode_display_mode", str(int(Config.Misc.episode_display_mode)))
+        conf.config.set("misc", "player_preference", str(Config.Misc.player_preference))
         conf.config.set("misc", "player_path", Config.Misc.player_path)
         conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
         conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
@@ -777,7 +796,7 @@ class MiscTab(wx.Panel):
         # 重新创建主窗口的菜单
         self.GetParent().GetParent().GetParent().init_menubar()
 
-    def onBrowse(self, event):
+    def onBrowsePlayerEVT(self, event):
         # 根据不同平台选取不同后缀名文件
         match Config.Sys.platform:
             case "windows":
@@ -789,11 +808,18 @@ class MiscTab(wx.Panel):
         dialog = wx.FileDialog(self, "选择播放器路径", os.getcwd(), wildcard = wildcard, style = wx.FD_OPEN)
 
         if dialog.ShowModal() == wx.ID_OK:
-            self.path_box.SetValue(dialog.GetPath())
-
-    def onChangePath(self, event):
-        self.path_box.SetToolTip(self.path_box.GetValue())
+            self.player_path_box.SetValue(dialog.GetPath())
     
+    def onChangePlayerPreferenceEVT(self, event):
+        def set_enable(enable: bool):
+            self.player_path_box.Enable(enable)
+            self.browse_player_btn.Enable(enable)
+
+        if self.player_default_rdbtn.GetValue():
+            set_enable(False)
+        else:
+            set_enable(True)
+
     def onConfirm(self):
         self.save()
 
