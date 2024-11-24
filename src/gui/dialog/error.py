@@ -32,12 +32,12 @@ class ErrorInfoDialog(wx.Dialog):
 
         top_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        log_font: wx.Font = self.GetFont()
-        log_font.SetPointSize(10)
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         self.log_box = wx.TextCtrl(self, -1, self.error_log.log, size = self.FromDIP((500, 230)), style = wx.TE_MULTILINE)
         self.log_box.SetBackgroundColour("white")
-        self.log_box.SetFont(log_font)
+        self.log_box.SetFont(font)
 
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.FromDIP((80, 28)))
 

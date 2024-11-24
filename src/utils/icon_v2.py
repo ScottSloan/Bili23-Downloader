@@ -16,7 +16,7 @@ class IconManager:
     def __init__(self, DPI_scale_factor: float):
         self.DPI_scale_factor = DPI_scale_factor
 
-        if Config.Sys.dark_mode and Config.Sys.platform == "darwin":
+        if Config.Sys.dark_mode:
             self.dark_mode = True
         else:
             self.dark_mode = False

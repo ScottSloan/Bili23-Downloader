@@ -22,34 +22,44 @@ class LiveRecordingWindow(wx.Dialog):
         self.init_utils()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+                
         font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(12)
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         self.title_lab = wx.StaticText(self, -1)
         self.title_lab.SetFont(font)
 
         m3u8_link_lab = wx.StaticText(self, -1, "m3u8 链接")
-        self.m3u8_link_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, -1)))
-        self.copy_link_btn = wx.Button(self, -1, "复制", size = self.FromDIP((60, 24)))
+        self.m3u8_link_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, -1)))
+        self.copy_link_btn = wx.Button(self, -1, "复制", size = _get_scale_size((60, 24)))
 
         recording_lab = wx.StaticText(self, -1, "保存位置")
-        self.recording_path_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, -1)))
-        self.browse_path_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
+        self.recording_path_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, -1)))
+        self.browse_path_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
-        bag_box = wx.GridBagSizer(2, 3)
-        bag_box.Add(m3u8_link_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.m3u8_link_box, pos = (0, 1), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(self.copy_link_btn, pos = (0, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(recording_lab, pos = (1, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.recording_path_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(self.browse_path_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
+        bag_box = wx.FlexGridSizer(2, 3, 0, 0)
+        bag_box.Add(m3u8_link_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        bag_box.Add(self.m3u8_link_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
+        bag_box.Add(self.copy_link_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bag_box.Add(recording_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        bag_box.Add(self.recording_path_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
+        bag_box.Add(self.browse_path_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
-        self.start_recording_btn = wx.Button(self, -1, "开始录制", size = self.getButtonSize())
-        self.open_player_btn = wx.Button(self, -1, "直接播放", size = self.getButtonSize())
-        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.getButtonSize())
+        bag_box.AddGrowableCol(1, 1)
+
+        self.start_recording_btn = wx.Button(self, -1, "开始录制", size = _get_scale_size((100, 30)))
+        self.open_player_btn = wx.Button(self, -1, "直接播放", size = _get_scale_size((100, 30)))
+        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = _get_scale_size((100, 30)))
 
         font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(10)
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         self.status_lab = wx.StaticText(self, -1, "状态：未开始录制")
         self.status_lab.SetFont(font)
@@ -74,7 +84,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.title_lab, 0, wx.ALL, 10)
-        vbox.Add(bag_box)
+        vbox.Add(bag_box, 1, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
         vbox.AddSpacer(10)
         vbox.Add(action_hbox, 0, wx.EXPAND)
@@ -150,16 +160,6 @@ class LiveRecordingWindow(wx.Dialog):
                 cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
 
         subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
-
-    def getButtonSize(self):
-        # 解决 Linux macOS 按钮太小的问题
-        match Config.Sys.platform:
-            case "windows":
-                size = self.FromDIP((100, 30))
-            case "linux" | "darwin":
-                size = self.FromDIP((120, 40))
-
-        return size
 
     def onStartRecording(self, event):
         if self.start:

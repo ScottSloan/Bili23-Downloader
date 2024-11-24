@@ -21,25 +21,30 @@ class ConverterWindow(wx.Dialog):
         self.start = False
 
     def init_UI(self):
-        font: wx.Font = self.GetFont()
-        font.SetPointSize(10)
-
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+                
         input_lab = wx.StaticText(self, -1, "输入")
-        self.input_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, 24)))
-        self.input_browse_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
+        self.input_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
+        self.input_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
         input_hbox = wx.BoxSizer(wx.HORIZONTAL)
         input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        input_hbox.Add(self.input_box, 1, wx.ALL & (~wx.LEFT), 10)
+        input_hbox.Add(self.input_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         output_lab = wx.StaticText(self, -1, "输出")
-        self.output_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, 24)))
-        self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
+        self.output_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
+        self.output_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
         output_hbox = wx.BoxSizer(wx.HORIZONTAL)
         output_hbox.Add(output_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT), 10)
+        output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         self.target_format_lab = wx.StaticText(self, -1, "目标格式：---")
@@ -57,7 +62,7 @@ class ConverterWindow(wx.Dialog):
         target_params_hbox.Add(target_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         target_params_hbox.Add(self.target_codec_choice, 0, wx.ALL & (~wx.LEFT), 10)
         target_params_hbox.Add(target_bitrate_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT), 10)
+        target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         target_params_hbox.Add(target_bitrate_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.hwaccel_chk = wx.CheckBox(self, -1, "启用硬件加速")
@@ -69,6 +74,9 @@ class ConverterWindow(wx.Dialog):
         extra_hbox.Add(self.hwaccel_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         extra_hbox.Add(gpu_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         extra_hbox.Add(self.gpu_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
+        font: wx.Font = self.GetFont()
+        font.SetPointSize(int(font.GetFractionalPointSize() + 1))
         
         self.progress_lab = wx.StaticText(self, -1, "进度：--")
         self.progress_lab.SetFont(font)
@@ -90,8 +98,8 @@ class ConverterWindow(wx.Dialog):
 
         self.progress_bar = wx.Gauge(self, -1, style = wx.GA_PROGRESS | wx.GA_SMOOTH)
 
-        self.start_convert_btn = wx.Button(self, -1, "开始转换", size = self.getButtonSize())
-        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.getButtonSize())
+        self.start_convert_btn = wx.Button(self, -1, "开始转换", size = _get_scale_size((100, 30)))
+        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = _get_scale_size((100, 30)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.AddStretchSpacer()

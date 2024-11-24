@@ -32,15 +32,17 @@ class LoginWindow(wx.Dialog):
         _set_dark_mode()
 
         font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
-        font.SetPointSize(12)
         scan_lab.SetFont(font)
 
         self.qrcode = wx.StaticBitmap(self, -1, wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
 
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
+
         self.lab = wx.StaticText(self, -1, "请使用哔哩哔哩客户端扫码登录")
-        font.SetPointSize(10)
         self.lab.SetFont(font)
 
         qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -56,16 +58,16 @@ class LoginWindow(wx.Dialog):
         self.note.AddPage(password_page, "账号密码登录")
         self.note.AddPage(SMSPage(self.note, self.session), "手机号登录")
 
-        font_2: wx.Font = self.GetFont()
-        font_2.SetPointSize(12)
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         self.password_login_btn = wx.StaticText(self, -1, "密码登录")
         self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.password_login_btn.SetFont(font_2)
+        self.password_login_btn.SetFont(font)
         self.password_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.sms_login_btn = wx.StaticText(self, -1, "短信登录")
-        self.sms_login_btn.SetFont(font_2)
+        self.sms_login_btn.SetFont(font)
         self.sms_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         swicher_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -20,7 +20,6 @@ from utils.mapping import video_quality_mapping, live_quality_mapping
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
 from gui.dialog.processing import ProcessingWindow
-from gui.download import DownloadManagerInfo
 from gui.download_v2 import DownloadManagerWindow
 from gui.dialog.update import UpdateWindow
 from gui.login import LoginWindow
@@ -56,10 +55,7 @@ class MainWindow(Frame):
                 case "windows":
                     return self.FromDIP(_size)
                 
-                case "linux":
-                    return wx.DefaultSize
-                
-                case "darwin":
+                case "linux" | "darwin":
                     return wx.DefaultSize
                 
         _dark_mode()
@@ -259,7 +255,7 @@ class MainWindow(Frame):
         self.checkCookieUtils()
 
     def onClose(self, event):
-        if not DownloadManagerInfo.no_task:
+        if self.download_window.get_download_task_count([Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE, Config.Type.DOWNLOAD_STATUS_DOWNLOADING, Config.Type.DOWNLOAD_STATUS_MERGING]):
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:

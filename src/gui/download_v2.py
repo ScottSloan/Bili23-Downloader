@@ -8,7 +8,7 @@ import subprocess
 from typing import Dict, List, Callable
 
 from gui.templates import Frame, ScrolledPanel
-from gui.dialog.error_info import ErrorInfoDialog
+from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
@@ -36,10 +36,7 @@ class DownloadManagerWindow(Frame):
                 case "windows":
                     return self.FromDIP(_size)
 
-                case "linux":
-                    return wx.DefaultSize
-
-                case "darwin":
+                case "linux" | "darwin":
                     return wx.DefaultSize
 
         def _set_dark_mode():
@@ -48,11 +45,11 @@ class DownloadManagerWindow(Frame):
 
         _set_dark_mode()
 
-        count_font: wx.Font = self.GetFont()
-        count_font.SetFractionalPointSize(14)
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
         self.task_count_lab = wx.StaticText(self.panel, -1, "下载管理")
-        self.task_count_lab.SetFont(count_font)
+        self.task_count_lab.SetFont(font)
 
         self.start_all_btn = wx.Button(self.panel, -1, "全部开始")
         self.pause_all_btn = wx.Button(self.panel, -1, "全部暂停")
@@ -192,7 +189,6 @@ class DownloadManagerWindow(Frame):
         _count = 0
 
         for panel in self.get_download_task_panel_list():
-            # 正在下载的任务包括 等待下载、正在下载、暂停中 三种状态
             if panel.task_info.status in condition:
                 _count += 1
 
@@ -575,6 +571,10 @@ class DownloadTaskPanel(wx.Panel):
         self.init_utils()
 
     def init_UI(self):
+        def _set_dark_mode(_control: wx.Control):
+            if not Config.Sys.dark_mode:
+                _control.SetForegroundColour(wx.Colour(108, 108, 108))
+
         # 初始化 UI
         self.icon_manager = IconManager(self.GetDPIScaleFactor())
 
@@ -585,13 +585,13 @@ class DownloadTaskPanel(wx.Panel):
         self.title_lab.SetToolTip(self.task_info.title)
 
         self.video_quality_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
-        self.video_quality_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+        _set_dark_mode(self.video_quality_lab)
 
         self.video_codec_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
-        self.video_codec_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+        _set_dark_mode(self.video_codec_lab)
 
         self.video_size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
-        self.video_size_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+        _set_dark_mode(self.video_size_lab)
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -611,7 +611,7 @@ class DownloadTaskPanel(wx.Panel):
         progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.speed_lab = wx.StaticText(self, -1, "等待下载...", size = self.FromDIP((-1, -1)))
-        self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+        _set_dark_mode(self.speed_lab)
 
         speed_hbox = wx.BoxSizer(wx.HORIZONTAL)
         speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
