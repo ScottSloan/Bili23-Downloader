@@ -1,7 +1,3 @@
-import wx
-
-from utils.config import Config
-
 def get_exclimbwuzhi_header():
     return {
         "Accept": "*/*",
@@ -49,9 +45,3 @@ def get_login_cookies():
     }
 
     return "; ".join([f"{key}={value}" for key, value in cookie_dict.items()])
-
-def get_background_color():
-    if Config.Sys.dark_mode:
-        return wx.Colour(30, 30, 30)
-    else:
-        return "white"

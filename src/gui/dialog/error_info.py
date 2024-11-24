@@ -1,7 +1,7 @@
 import wx
 import wx.adv
 
-from utils.tools import get_background_color
+from utils.config import Config
 from utils.data_type import ErrorLog
 
 class ErrorInfoDialog(wx.Dialog):
@@ -17,6 +17,12 @@ class ErrorInfoDialog(wx.Dialog):
         self.log_box.SetFocus()
 
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
         self.detail_lab = wx.StaticText(self, -1, f"时间：{self.error_log.time}      返回值：{self.error_log.return_code}")
 
@@ -49,5 +55,3 @@ class ErrorInfoDialog(wx.Dialog):
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(get_background_color())

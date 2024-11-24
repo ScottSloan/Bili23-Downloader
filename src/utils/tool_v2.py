@@ -98,13 +98,25 @@ class FileDirectoryTool:
                 subprocess.Popen(f'open -R "{path}"', shell = True)
     
     @staticmethod
-    def get_file_associated_app(file_ext: str):
-        result, buffer = FileDirectoryTool._msw_AssocQueryStringW(file_ext)
+    def get_file_ext_associated_app(file_ext: str):
+        def _linux():
+            _desktop = subprocess.Popen("xdg-mime query default video/mp4", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
 
-        if result == 0:
-            return buffer.value
-        else:
-            return result
+            _desktop_path = os.path.join("/usr/share/applications", _desktop.stdout.read().replace("\n", ""))
+
+            _exec = subprocess.Popen(f"grep '^Exec=' {_desktop_path} | head -n 1 | cut -d'=' -f2", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
+
+            return _exec.stdout.read().replace("\n", "")
+
+        match Config.Sys.platform:
+            case "windows":
+                return FileDirectoryTool._msw_AssocQueryStringW(file_ext)
+
+            case "linux":
+                return _linux()
+
+            case "darwin":
+                pass
 
     @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):

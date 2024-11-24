@@ -4,7 +4,6 @@ import webbrowser
 
 from utils.config import Config
 from utils.icon_v2 import IconManager, APP_ICON_DEFAULT
-from utils.tools import get_background_color
 
 from .license import LicenseWindow
 
@@ -21,6 +20,12 @@ class AboutWindow(wx.Dialog):
         wx.Bell()
     
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
         icon_manager = IconManager(self.GetDPIScaleFactor())
 
         app_icon = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_DEFAULT)), wx.BITMAP_TYPE_JPEG)
@@ -77,8 +82,6 @@ class AboutWindow(wx.Dialog):
         about_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(about_vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.website_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenWebsite)

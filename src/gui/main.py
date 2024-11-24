@@ -47,9 +47,22 @@ class MainWindow(Frame):
         self.init_user_info()
     
     def init_UI(self):
-        # （macOS）获取系统是否处于深色模式
-        if Config.Sys.platform == "darwin":
-            Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
+        def _dark_mode():
+            if Config.Sys.platform != "windows":
+                Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
+
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux":
+                    return wx.DefaultSize
+                
+                case "darwin":
+                    return wx.DefaultSize
+                
+        _dark_mode()
 
         # 避免出现 iCCP sRGB 警告
         wx.Image.SetDefaultLoadFlags(0)
@@ -85,8 +98,8 @@ class MainWindow(Frame):
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
 
-        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.getButtonSize())
-        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = self.getButtonSize())
+        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = _get_scale_size((100, 30)))
+        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = _get_scale_size((100, 30)))
         self.download_btn.Enable(False)
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
@@ -762,13 +775,3 @@ class MainWindow(Frame):
                 self.SetSize(self.FromDIP((800, 450)))
             case "linux":
                 self.SetClientSize(self.FromDIP((880, 450)))
-
-    def getButtonSize(self):
-        # 解决 Linux macOS 按钮太小的问题
-        match Config.Sys.platform:
-            case "windows":
-                size = self.FromDIP((100, 30))
-            case "linux" | "darwin":
-                size = self.FromDIP((120, 40))
-
-        return size

@@ -14,7 +14,6 @@ from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config, Download, conf
 from utils.downloader import Downloader, DownloaderInfo
-from utils.tools import get_background_color
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.extra import ExtraParser
@@ -361,7 +360,6 @@ class DownloadWindow(Frame):
         top_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
         self.download_list_panel = ScrolledPanel(self, size = self.FromDIP((720, 280)))
-        self.download_list_panel.SetBackgroundColour(get_background_color())
 
         bottom_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
@@ -383,8 +381,6 @@ class DownloadWindow(Frame):
         vbox.Add(botton_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.OnClose)

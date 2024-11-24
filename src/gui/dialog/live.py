@@ -134,14 +134,22 @@ class LiveRecordingWindow(wx.Dialog):
         match Config.Misc.player_preference:
             case Config.Type.PLAYER_PREFERENCE_DEFAULT:
                 # 寻找关联的播放器
-                _default = FileDirectoryTool.get_file_associated_app(".mp4")
+                _default = FileDirectoryTool.get_file_ext_associated_app(".mp4")
 
-                cmd = _default.replace("%1", self.m3u8_link_box.GetValue())
+                match Config.Sys.platform:
+                    case "windows":
+                        cmd = _default.replace("%1", self.m3u8_link_box.GetValue())
+
+                    case "linux":
+                        cmd = _default.replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
+
+                    case "darwin":
+                        pass
             
             case Config.Type.PLAYER_PREFERENCE_CUSTOM:
                 cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
 
-        subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
 
     def getButtonSize(self):
         # 解决 Linux macOS 按钮太小的问题

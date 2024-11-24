@@ -8,7 +8,6 @@ import wx.adv
 
 from utils.login import QRLogin, PasswordLogin, SMSLogin
 from utils.config import Config, conf
-from utils.tools import get_background_color
 from utils.thread import Thread
 
 from gui.dialog.captcha import CaptchaWindow
@@ -26,6 +25,12 @@ class LoginWindow(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
         font: wx.Font = self.GetFont()
 
         scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
@@ -82,8 +87,6 @@ class LoginWindow(wx.Dialog):
         hbox.Add(note_vbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(hbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def init_utils(self):
         # 共用一个 session
@@ -171,7 +174,16 @@ class LoginPage(wx.Panel):
 
         wx.Panel.__init__(self, parent, -1)
 
+        self._init_UI()
+
         self._init_utils()
+
+    def _init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+        
+        _set_dark_mode()
 
     def _init_utils(self):
         self.isLogin = False
@@ -241,8 +253,6 @@ class PasswordPage(LoginPage):
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLogin)
@@ -315,8 +325,6 @@ class SMSPage(LoginPage):
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCode)

@@ -31,8 +31,22 @@ class DownloadManagerWindow(Frame):
         self.init_utils()
 
     def init_UI(self):
-        # 初始化下载管理窗口 UI
-        self.SetBackgroundColour("white")
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+
+                case "linux":
+                    return wx.DefaultSize
+
+                case "darwin":
+                    return wx.DefaultSize
+
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
 
         count_font: wx.Font = self.GetFont()
         count_font.SetFractionalPointSize(14)
@@ -56,8 +70,8 @@ class DownloadManagerWindow(Frame):
         
         bottom_bar_border = wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL)
 
-        self.open_download_directory_btn = wx.Button(self.panel, -1, "打开下载目录", size = self.FromDIP((100, 30)))
-        self.clear_history_btn = wx.Button(self.panel, -1, "清除下载记录", size = self.FromDIP((100, 30)))
+        self.open_download_directory_btn = wx.Button(self.panel, -1, "打开下载目录", size = _get_scale_size((100, 30)))
+        self.clear_history_btn = wx.Button(self.panel, -1, "清除下载记录", size = _get_scale_size((100, 30)))
 
         bottom_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_bar_hbox.Add(self.open_download_directory_btn, 0, wx.ALL, 10)

@@ -1,7 +1,6 @@
 import wx
 
 from utils.config import Config
-from utils.tools import get_background_color
 
 class UpdateWindow(wx.Dialog):
     def __init__(self, parent):
@@ -18,6 +17,12 @@ class UpdateWindow(wx.Dialog):
         wx.Bell()
 
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
         title_font: wx.Font = self.GetFont()
         title_font.SetPointSize(14)
 
@@ -54,8 +59,6 @@ class UpdateWindow(wx.Dialog):
         update_vbox.Add(bottom_hbox, 0, wx.EXPAND, 0)
 
         self.SetSizerAndFit(update_vbox)
-
-        self.SetBackgroundColour(get_background_color())
     
     def Bind_EVT(self):
         self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)
