@@ -1,4 +1,3 @@
-
 class AudioInfo:
     class Availability:
         audio: bool = False

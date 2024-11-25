@@ -13,6 +13,7 @@ from utils.config import Config
 from utils.data_type import DownloadTaskInfo
 
 class RequestTool:
+    # 请求工具类
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
 
     @staticmethod
@@ -73,6 +74,7 @@ class RequestTool:
             return None
     
 class FileDirectoryTool:
+    # 文件目录工具类
     @staticmethod
     def open_directory(directory: str):
         match Config.Sys.platform:
@@ -156,8 +158,8 @@ class FileDirectoryTool:
         return (result, buffer)
 
 class DownloadFileTool:
-    # 记录断点续传信息工具类
-    def __init__(self, id: Optional[int] = None, file_name: Optional[str] = None):
+    # 断点续传信息工具类
+    def __init__(self, _id: Optional[int] = None, file_name: Optional[str] = None):
         def check():
             if not os.path.exists(self.file_path):
                 self._write_download_file({})
@@ -165,7 +167,7 @@ class DownloadFileTool:
         if file_name:
             _file = file_name
         else:
-            _file = f"info_{id}.json"
+            _file = f"info_{_id}.json"
 
         self.file_path = os.path.join(Config.User.download_file_directory, _file)
 
@@ -173,9 +175,15 @@ class DownloadFileTool:
         check()
 
     def save_download_info(self, info: DownloadTaskInfo):
+        def _header():
+            return {
+                "min_version": Config.APP._task_file_min_version_code
+            }
+        
         # 保存断点续传信息，适用于初次添加下载任务
         contents = self._read_download_file_json()
 
+        contents["header"] = _header()
         contents["task_info"] = info.to_dict()
 
         # 检查是否已断点续传信息
@@ -224,6 +232,19 @@ class DownloadFileTool:
         with open(self.file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
+    def _check_compatibility(self):
+        if not self._read_download_file_json():
+            return False
+        
+        try:
+            if self._read_download_file_json()["header"]["min_version"] < Config.APP._task_file_min_version_code:
+                return False
+
+        except Exception:
+            return False
+
+        return True
+        
 class FormatTool:
     # 格式化数据类
     @staticmethod
@@ -301,6 +322,7 @@ class FormatTool:
                 return episode["report"]["ep_title"]
 
 class UniversalTool:
+    # 通用工具类
     @staticmethod
     def get_update_json():
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
@@ -389,6 +411,7 @@ class UniversalTool:
                     pass
 
 class FFmpegCheckTool:
+    # FFmpeg 检查工具类
     @staticmethod
     def get_path():
         if not Config.FFmpeg.path:

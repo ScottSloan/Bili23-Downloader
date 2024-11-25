@@ -46,11 +46,10 @@ class DownloadTaskInfo:
         # 视频合成类型
         self.video_merge_type: int = 0
 
-        # 回调函数指针
-        self.startDwonload_Callback: Callable = None
-        self.onPause_Callback: Callable = None
-        self.onResume_Callback: Callable = None
-        self.onStop_Callback: Callable = None
+        # 附加内容选项
+        self.get_danmaku: bool = False
+        self.danmaku_type: int = 0
+        self.get_cover: bool = False
 
     def to_dict(self):
         return {
@@ -73,6 +72,9 @@ class DownloadTaskInfo:
             "audio_type": self.audio_type,
             "download_type": self.download_type,
             "video_merge_type": self.video_merge_type,
+            "get_danmaku": self.get_danmaku,
+            "danmaku_type": self.danmaku_type,
+            "get_cover": self.get_cover
         }
 
     def load_from_dict(self, data: Dict):
@@ -95,6 +97,9 @@ class DownloadTaskInfo:
         self.audio_type = data["audio_type"]
         self.download_type = data["download_type"]
         self.video_merge_type = data["video_merge_type"]
+        self.get_danmaku = data["get_danmaku"]
+        self.danmaku_type = data["danmaku_type"]
+        self.get_cover = data["get_cover"]
 
 class ThreadInfo:
     # 线程信息

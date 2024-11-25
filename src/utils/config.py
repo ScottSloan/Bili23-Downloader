@@ -16,6 +16,9 @@ class Config:
         version: str = "1.53.0"
         version_code: int = 1530
 
+        # 断点续传文件最低支持版本号
+        _task_file_min_version_code: int = 1531
+
         release_date: str = "2024/11/25"
 
     class Proxy:

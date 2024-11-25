@@ -2,8 +2,18 @@ import os
 import requests
 
 from utils.config import Config
-
 from utils.tool_v2 import RequestTool
+
+class ExtraInfo:
+    get_danmaku: bool = False
+    danmaku_type: int = 0
+
+    get_cover: bool = False
+
+    @staticmethod
+    def clear_extra_info():
+        ExtraInfo.get_danmaku = ExtraInfo.get_cover = False
+        ExtraInfo.danmaku_type = 0
 
 class ExtraParser:
     def __init__(self, title: str, cid: int):

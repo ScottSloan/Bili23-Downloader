@@ -203,6 +203,11 @@ class DownloadManagerWindow(Frame):
             if os.path.isfile(file_path):
                 if file.startswith("info_") and file.endswith(".json"):
                     download_file_tool = DownloadFileTool(file_name = file)
+                    
+                    # 检查文件兼容性
+                    if not download_file_tool._check_compatibility():
+                        download_file_tool.clear_download_info()
+                        continue
 
                     _task_info = DownloadTaskInfo()
                     _task_info.load_from_dict(download_file_tool._read_download_file_json()["task_info"])

@@ -8,6 +8,7 @@ from utils.config import Config
 from utils.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
 from utils.mapping import bangumi_type_mapping
 from utils.parse.audio import AudioInfo
+from utils.parse.extra import ExtraInfo
 
 class BangumiInfo:
     url: str = ""
@@ -30,6 +31,19 @@ class BangumiInfo:
     video_quality_desc_list: List = []
 
     sections: Dict = {}
+
+    @staticmethod
+    def clear_bangumi_info():
+        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = ""
+        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = 0
+
+        BangumiInfo.payment = False
+
+        BangumiInfo.episodes_list.clear()
+        BangumiInfo.video_quality_id_list.clear()
+        BangumiInfo.video_quality_desc_list.clear()
+
+        BangumiInfo.sections.clear()
 
 class BangumiParser:
     def __init__(self):
@@ -194,6 +208,10 @@ class BangumiParser:
 
         AudioInfo.get_audio_quality_list(info["dash"])
 
+        ExtraInfo.get_danmaku = Config.Extra.download_danmaku
+        ExtraInfo.danmaku_type = Config.Extra.danmaku_format
+        ExtraInfo.get_cover = Config.Extra.download_cover
+
     @process_exception
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
@@ -256,17 +274,11 @@ class BangumiParser:
         BangumiInfo.sections[season_title] = BangumiInfo.episodes_list
 
     def clear_bangumi_info(self):
-        # 清除当前的番组信息
-        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = ""
-        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = 0
-
-        BangumiInfo.payment = False
-
-        BangumiInfo.episodes_list.clear()
-        BangumiInfo.video_quality_id_list.clear()
-        BangumiInfo.video_quality_desc_list.clear()
-
-        BangumiInfo.sections.clear()
+        # 清除番组信息
+        BangumiInfo.clear_bangumi_info()
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
+
+        # 重置附加内容信息
+        ExtraInfo.clear_extra_info()

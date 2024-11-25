@@ -2,7 +2,8 @@ import wx
 
 from utils.config import Config
 from utils.parse.audio import AudioInfo
-from utils.mapping import audio_quality_mapping
+from utils.parse.extra import ExtraInfo
+from utils.mapping import audio_quality_mapping, danmaku_format_mapping
 
 class OptionDialog(wx.Dialog):
     def __init__(self, parent):
@@ -25,7 +26,7 @@ class OptionDialog(wx.Dialog):
                 case "linux" | "darwin":
                     return wx.DefaultSize
                 
-        video_quality_lab = wx.StaticText(self, -1, "清晰度")
+        self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
 
         audio_quality_lab = wx.StaticText(self, -1, "音质")
@@ -34,10 +35,34 @@ class OptionDialog(wx.Dialog):
         self.audio_only_chk = wx.CheckBox(self, -1, "仅下载音频")
 
         flex_box = wx.FlexGridSizer(2, 2, 0, 0)
-        flex_box.Add(video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        flex_box.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         flex_box.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), 10)
         flex_box.Add(audio_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         flex_box.Add(self.audio_quality_choice, 0, wx.ALL & (~wx.LEFT), 10)
+
+        media_vbox = wx.BoxSizer(wx.VERTICAL)
+        media_vbox.Add(flex_box, 0, wx.EXPAND)
+        media_vbox.Add(self.audio_only_chk, 0, wx.ALL, 10)
+
+        self.get_danmaku_chk = wx.CheckBox(self, -1, "下载视频弹幕")
+        danmaku_format_lab = wx.StaticText(self, -1, "弹幕文件格式")
+        self.danmaku_type_choice = wx.Choice(self, -1, choices = list(danmaku_format_mapping.keys()))
+
+        danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        danmaku_hbox.AddSpacer(30)
+        danmaku_hbox.Add(danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        danmaku_hbox.Add(self.danmaku_type_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
+        self.get_cover_chk = wx.CheckBox(self, -1, "下载视频封面")
+
+        extra_vbox = wx.BoxSizer(wx.VERTICAL)
+        extra_vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        extra_vbox.Add(danmaku_hbox, 0, wx.EXPAND)
+        extra_vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(media_vbox, 0, wx.EXPAND)
+        hbox.Add(extra_vbox, 0, wx.EXPAND)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
@@ -48,8 +73,7 @@ class OptionDialog(wx.Dialog):
         bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(flex_box, 0, wx.EXPAND)
-        vbox.Add(self.audio_only_chk, 0, wx.ALL, 10)
+        vbox.Add(hbox, 0, wx.EXPAND)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -81,11 +105,22 @@ class OptionDialog(wx.Dialog):
 
         self.audio_only_chk.SetValue(AudioInfo.download_audio_only)
 
+        self.get_danmaku_chk.SetValue(ExtraInfo.get_danmaku)
+        self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_type)
+        self.get_cover_chk.SetValue(ExtraInfo.get_cover)
+
     def onCheckAudioOnlyEVT(self, event):
-        self.video_quality_choice.Enable(not self.audio_only_chk.GetValue())
+        _enable = not self.audio_only_chk.GetValue()
+
+        self.video_quality_choice.Enable(_enable)
+        self.video_quality_lab.Enable(_enable)
 
     def onConfirmEVT(self, event):
         AudioInfo.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
         AudioInfo.download_audio_only = self.audio_only_chk.GetValue()
+
+        ExtraInfo.get_danmaku = self.get_danmaku_chk.GetValue()
+        ExtraInfo.danmaku_type = self.danmaku_type_choice.GetSelection()
+        ExtraInfo.get_cover = self.get_cover_chk.GetValue()
 
         event.Skip()

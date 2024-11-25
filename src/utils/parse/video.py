@@ -7,6 +7,7 @@ from utils.config import Config
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 from utils.parse.audio import AudioInfo
+from utils.parse.extra import ExtraInfo
 
 class VideoInfo:
     url: str = ""
@@ -24,6 +25,18 @@ class VideoInfo:
     video_quality_desc_list: List = []
 
     sections: Dict = {}
+
+    @staticmethod
+    def clear_video_info():
+        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
+        VideoInfo.cid = VideoInfo.type = 0
+
+        VideoInfo.pages_list.clear()
+        VideoInfo.episodes_list.clear()
+        VideoInfo.video_quality_id_list.clear()
+        VideoInfo.video_quality_desc_list.clear()
+
+        VideoInfo.sections.clear()
 
 class VideoParser:
     def __init__(self):
@@ -161,6 +174,10 @@ class VideoParser:
 
         AudioInfo.get_audio_quality_list(info["dash"])
 
+        ExtraInfo.get_danmaku = Config.Extra.download_danmaku
+        ExtraInfo.danmaku_type = Config.Extra.danmaku_format
+        ExtraInfo.get_cover = Config.Extra.download_cover
+
     def parse_url(self, url: str):
         # 先检查是否为分 P 视频
         self.get_part(url)
@@ -213,16 +230,11 @@ class VideoParser:
                 VideoInfo.pages_list = [VideoInfo.pages_list[0]]
             
     def clear_video_info(self):
-        # 清除当前的视频信息
-        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
-        VideoInfo.cid = VideoInfo.type = 0
-
-        VideoInfo.pages_list.clear()
-        VideoInfo.episodes_list.clear()
-        VideoInfo.video_quality_id_list.clear()
-        VideoInfo.video_quality_desc_list.clear()
-
-        VideoInfo.sections.clear()
+        # 清除视频信息
+        VideoInfo.clear_video_info()
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
+
+        # 重置附加内容信息
+        ExtraInfo.clear_extra_info()
