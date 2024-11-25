@@ -17,6 +17,7 @@ from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOL
 from utils.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.downloader import Downloader
+from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 
 class DownloadManagerWindow(Frame):
@@ -464,7 +465,7 @@ class DownloadUtils:
 
         def clear_files():
             if Config.Merge.auto_clean:
-                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name])
+                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, "_out.mp4"])
 
         get_temp_file_name()
 
@@ -492,12 +493,17 @@ class DownloadUtils:
             match self.task_info.audio_type:
                 case "m4a" | "ec3":
                     if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
-                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.task_info.title_legal}.mp3"'
+                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
                     else:
                         return f'{_rename_cmd} "{self._temp_audio_file_name}" "{self.full_file_name}"'
                 
                 case "flac":
-                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.task_info.title_legal}.flac"'
+                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
+        
+        def override_file(_file_name_list):
+            # 覆盖文件
+            if Config.Merge.override_file:
+                UniversalTool.remove_files(Config.Download.path, _file_name_list)
 
         if Config.Sys.platform == "windows":
             _rename_cmd = "rename"
@@ -509,10 +515,12 @@ class DownloadUtils:
                 _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4 && {_rename_cmd} _out.mp4 "{self.file_title}.mp4"'
 
             case Config.Type.MERGE_TYPE_VIDEO:
-                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" "{self.task_info.title_legal}.mp4"'
+                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" "{self.file_title}.mp4"'
 
             case Config.Type.MERGE_TYPE_AUDIO:
                 _cmd = _get_audio_cmd()
+
+        override_file([self.full_file_name])
 
         return _cmd
 
@@ -846,7 +854,7 @@ class DownloadTaskPanel(wx.Panel):
             time.sleep(2.5)
 
             if hasattr(self.utils, "_temp_video_file_name"):
-                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name])
+                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name, "_out.mp4"])
 
         # 停止下载，删除下载任务
         self.downloader.onStop()
@@ -937,6 +945,24 @@ class DownloadTaskPanel(wx.Panel):
 
             if Config.Download.delete_history:
                 self.download_file_tool.clear_download_info()
+
+            _get_extra()
+
+        def _get_extra():
+            def _get_cover():
+                _path = os.path.join(Config.Download.path, f"{self.utils.file_title}.jpg")
+
+                with open(_path, "wb") as f:
+                    f.write(self._cover_raw_contents)
+
+            # 下载完成后，才进行下载附加内容
+            extra_parser = ExtraParser(self.utils.file_title, self.task_info.cid)
+            
+            if ExtraInfo.get_danmaku:
+                extra_parser.get_danmaku()
+
+            if ExtraInfo.get_cover:
+                _get_cover()
 
         wx.CallAfter(callback)
 

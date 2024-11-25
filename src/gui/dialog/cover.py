@@ -85,7 +85,7 @@ class CoverViewerDialog(Frame):
             save_path = dlg.GetPath()
 
             with open(save_path, "wb") as f:
-                f.write(self.cover_raw_contents)
+                f.write(self._cover_raw_contents)
 
     def onExitEVT(self, event):
         self.Destroy()

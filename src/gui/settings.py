@@ -363,11 +363,12 @@ class MergeTab(wx.Panel):
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
 
+        self.override_file_chk = wx.CheckBox(merge_option_box, -1, "存在同名文件时覆盖原文件")
         self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, "仅下载音频时将 m4a 音频转换为 mp3 格式")
-
         self.auto_clean_chk = wx.CheckBox(merge_option_box, -1, "合成完成后清理文件")
 
         merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
+        merge_option_vbox.Add(self.override_file_chk, 0, wx.ALL, 10)
         merge_option_vbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL, 10)
         merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
 
@@ -390,15 +391,18 @@ class MergeTab(wx.Panel):
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
         
+        self.override_file_chk.SetValue(Config.Merge.override_file)
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
         self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
 
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()
+        Config.Merge.override_file = self.override_file_chk.GetValue()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
         conf.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
+        conf.config.set("merge", "override_file", str(int(Config.Merge.override_file)))
         conf.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
         conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 
@@ -447,18 +451,20 @@ class ExtraTab(wx.Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.init_data()
 
     def init_UI(self):
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
 
         self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
-        danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
+        self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
         self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_mapping.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(30)
-        danmaku_hbox.Add(danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
@@ -481,6 +487,11 @@ class ExtraTab(wx.Panel):
         self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_format)
         self.get_cover_chk.SetValue(Config.Extra.download_cover)
 
+        self.onChangeDanmakuEVT(None)
+
+    def Bind_EVT(self):
+        self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
+
     def save(self):
         Config.Extra.download_danmaku = self.get_danmaku_chk.GetValue()
         Config.Extra.danmaku_format = self.danmaku_format_choice.GetSelection()
@@ -491,6 +502,13 @@ class ExtraTab(wx.Panel):
         conf.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
 
         conf.config_save()
+
+    def onChangeDanmakuEVT(self, event):
+        def set_enable(enable: bool):
+            self.danmaku_format_choice.Enable(enable)
+            self.danmaku_format_lab.Enable(enable)
+
+        set_enable(self.get_danmaku_chk.GetValue())
 
     def onConfirm(self):
         self.save()

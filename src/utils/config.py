@@ -70,6 +70,7 @@ class Config:
         speed_limit_in_mb: int = 10
     
     class Merge:
+        override_file: bool = False
         m4a_to_mp3: bool = True
         auto_clean: bool = True
 
@@ -209,6 +210,7 @@ class ConfigUtils:
 
         # merge
         Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")
+        Config.Merge.override_file = self.config.getboolean("merge", "override_file")
         Config.Merge.m4a_to_mp3 = self.config.getboolean("merge", "m4a_to_mp3")
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
 
@@ -278,6 +280,7 @@ class ConfigUtils:
         # merge
         self.config.add_section("merge")
         self.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
+        self.config.set("merge", "override_file", str(int(Config.Merge.override_file)))
         self.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
         self.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
 

@@ -45,20 +45,23 @@ class OptionDialog(wx.Dialog):
         media_vbox.Add(self.audio_only_chk, 0, wx.ALL, 10)
 
         self.get_danmaku_chk = wx.CheckBox(self, -1, "下载视频弹幕")
-        danmaku_format_lab = wx.StaticText(self, -1, "弹幕文件格式")
+        self.danmaku_format_lab = wx.StaticText(self, -1, "弹幕文件格式")
         self.danmaku_type_choice = wx.Choice(self, -1, choices = list(danmaku_format_mapping.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(30)
-        danmaku_hbox.Add(danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_type_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.get_cover_chk = wx.CheckBox(self, -1, "下载视频封面")
+
+        self.add_number_chk = wx.CheckBox(self, -1, "批量下载视频时自动添加序号")
 
         extra_vbox = wx.BoxSizer(wx.VERTICAL)
         extra_vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         extra_vbox.Add(danmaku_hbox, 0, wx.EXPAND)
         extra_vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
+        extra_vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(media_vbox, 0, wx.EXPAND)
@@ -80,6 +83,7 @@ class OptionDialog(wx.Dialog):
 
     def Bind_EVT(self):
         self.audio_only_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAudioOnlyEVT)
+        self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDanmakuEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -109,11 +113,22 @@ class OptionDialog(wx.Dialog):
         self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_type)
         self.get_cover_chk.SetValue(ExtraInfo.get_cover)
 
+        self.add_number_chk.SetValue(Config.Download.add_number)
+
+        self.onCheckDanmakuEVT(None)
+
     def onCheckAudioOnlyEVT(self, event):
         _enable = not self.audio_only_chk.GetValue()
 
         self.video_quality_choice.Enable(_enable)
         self.video_quality_lab.Enable(_enable)
+
+    def onCheckDanmakuEVT(self, event):
+        def set_enable(enable: bool):
+            self.danmaku_type_choice.Enable(enable)
+            self.danmaku_format_lab.Enable(enable)
+
+        set_enable(self.get_danmaku_chk.GetValue())
 
     def onConfirmEVT(self, event):
         AudioInfo.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
@@ -122,5 +137,7 @@ class OptionDialog(wx.Dialog):
         ExtraInfo.get_danmaku = self.get_danmaku_chk.GetValue()
         ExtraInfo.danmaku_type = self.danmaku_type_choice.GetSelection()
         ExtraInfo.get_cover = self.get_cover_chk.GetValue()
+
+        Config.Download.add_number = self.add_number_chk.GetValue()
 
         event.Skip()

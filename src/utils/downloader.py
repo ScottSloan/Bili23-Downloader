@@ -75,6 +75,13 @@ class Downloader:
 
                 return _range_info
             
+            def _get_thread_count(_file_size: int):
+                # 小于 10 MB 的文件只开启 1 个线程下载
+                if _file_size < 10 * 1024 * 1024:
+                    return 1
+                else:
+                    return Config.Download.max_thread_count
+
             file_path = os.path.join(Config.Download.path, download_info.file_name)
 
             download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
@@ -82,7 +89,7 @@ class Downloader:
             if self.completed_size:
                 range_list = get_range_list_from_file(download_info.type)
             else:
-                range_list = get_range_list(file_size, Config.Download.max_thread_count)
+                range_list = get_range_list(file_size, _get_thread_count(file_size))
                 self.task_info.total_size += file_size
 
             self.thread_alive_count += len(range_list)

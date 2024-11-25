@@ -21,7 +21,7 @@ class ExtraParser:
 
     def get_danmaku(self):
         # 下载弹幕文件
-        match Config.Extra.danmaku_format:
+        match ExtraInfo.danmaku_type:
             case Config.Type.DANMAKU_TYPE_XML:
                 self.get_danmaku_xml()
 
@@ -41,8 +41,4 @@ class ExtraParser:
 
     def get_danmaku_protobuf(self):
         # 下载 protobuf 格式弹幕文件
-        pass
-
-    def get_cover(self):
-        # 下载视频封面
         pass
