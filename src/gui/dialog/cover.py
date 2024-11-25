@@ -18,8 +18,8 @@ class CoverViewerDialog(Frame):
 
         self.CenterOnParent()
 
-        self.onSize(None)
-        self.onFitSize(None)
+        self.onResizeEVT(None)
+        self.onFitSizeEVT(None)
 
     def init_UI(self):
         self.cover_bmp = wx.StaticBitmap(self.panel, -1, bitmap = self.show_cover(self.FromDIP(640)))
@@ -43,9 +43,9 @@ class CoverViewerDialog(Frame):
         menu_bar.Append(self.file_menu, "文件(&F)")
         menu_bar.Append(self.options_menu, "选项(&O)")
 
-        self.file_menu.Append(self.ID_SAVE, "保存原图(&S)")
+        self.file_menu.Append(self.ID_SAVE, "保存原图(&S)\tCtrl+S")
         self.file_menu.AppendSeparator()
-        self.file_menu.Append(self.ID_CLOSE, "关闭(&X)")
+        self.file_menu.Append(self.ID_CLOSE, "关闭(&X)\tAlt+F4")
 
         self.options_menu.Append(self.ID_ORIGINAL_SIZE, "显示原图(&R)")
         self.options_menu.AppendSeparator()
@@ -65,12 +65,12 @@ class CoverViewerDialog(Frame):
         self.status_bar.SetStatusText(f"原图：{_size[0]}x{_size[1]}", 1)
 
     def Bind_EVT(self):
-        self.Bind(wx.EVT_MENU, self.onSave, id = self.ID_SAVE)
-        self.Bind(wx.EVT_MENU, self.onClose, id = self.ID_CLOSE)
-        self.Bind(wx.EVT_MENU, self.onFitSize, id = self.ID_FIT_SIZE)
-        self.Bind(wx.EVT_MENU, self.onOriginalSize, id = self.ID_ORIGINAL_SIZE)
+        self.Bind(wx.EVT_MENU, self.onSaveEVT, id = self.ID_SAVE)
+        self.Bind(wx.EVT_MENU, self.onExitEVT, id = self.ID_CLOSE)
+        self.Bind(wx.EVT_MENU, self.onFitSizeEVT, id = self.ID_FIT_SIZE)
+        self.Bind(wx.EVT_MENU, self.onOriginalSizeEVT, id = self.ID_ORIGINAL_SIZE)
 
-        self.panel.Bind(wx.EVT_SIZE, self.onSize)
+        self.panel.Bind(wx.EVT_SIZE, self.onResizeEVT)
 
     def init_utils(self):
         self.ID_SAVE = wx.NewIdRef()
@@ -78,7 +78,7 @@ class CoverViewerDialog(Frame):
         self.ID_ORIGINAL_SIZE = wx.NewIdRef()
         self.ID_FIT_SIZE = wx.NewIdRef()
 
-    def onSave(self, event):
+    def onSaveEVT(self, event):
         dlg = wx.FileDialog(self, "保存封面", os.getcwd(), wildcard = "图片文件|*.jpg", style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -87,10 +87,10 @@ class CoverViewerDialog(Frame):
             with open(save_path, "wb") as f:
                 f.write(self.cover_raw_contents)
 
-    def onClose(self, event):
+    def onExitEVT(self, event):
         self.Destroy()
 
-    def onSize(self, event):
+    def onResizeEVT(self, event):
         temp_bmp: wx.Bitmap = self.show_cover(self.GetSize()[0])
         _size = temp_bmp.GetSize()
 
@@ -98,13 +98,13 @@ class CoverViewerDialog(Frame):
 
         self.status_bar.SetStatusText(f"尺寸：{_size[0]}x{_size[1]}", 0)
 
-    def onFitSize(self, event):
+    def onFitSizeEVT(self, event):
         self.SetSize(self.cover_bmp.GetSize()[0], self.cover_bmp.GetSize()[1] + (self.GetSize()[1] - self.GetClientSize()[1]))
 
-    def onOriginalSize(self, event):
+    def onOriginalSizeEVT(self, event):
         self.cover_bmp.SetBitmap(self._temp_image)
 
-        self.onFitSize(event)
+        self.onFitSizeEVT(event)
 
         self.CenterOnScreen()
 

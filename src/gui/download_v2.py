@@ -51,11 +51,17 @@ class DownloadManagerWindow(Frame):
         self.task_count_lab = wx.StaticText(self.panel, -1, "下载管理")
         self.task_count_lab.SetFont(font)
 
+        max_download_lab = wx.StaticText(self.panel, -1, "并行下载数：")
+        self.max_download_choice = wx.Choice(self.panel, -1, choices = [f"{i + 1}" for i in range(8)])
+        self.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
+
         self.start_all_btn = wx.Button(self.panel, -1, "全部开始")
         self.pause_all_btn = wx.Button(self.panel, -1, "全部暂停")
         self.stop_all_btn = wx.Button(self.panel, -1, "全部取消")
 
         top_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        top_bar_hbox.Add(max_download_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        top_bar_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         top_bar_hbox.AddStretchSpacer()
         top_bar_hbox.Add(self.start_all_btn, 0, wx.ALL & (~wx.TOP), 10)
         top_bar_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
@@ -91,6 +97,8 @@ class DownloadManagerWindow(Frame):
         # 绑定相关事件
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
+        self.max_download_choice.Bind(wx.EVT_CHOICE, self.onChangeMaxDownloaderEVT)
+
         self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAllEVT)
         self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
         self.stop_all_btn.Bind(wx.EVT_BUTTON, self.onStopAllEVT)
@@ -119,22 +127,42 @@ class DownloadManagerWindow(Frame):
 
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                # EX 列表还包含了下载失败和合成失败两种情况，当前正在合成的视频或者正在转换的音频暂不支持取消
+                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST_EX:
                     panel.onStopEVT(event)
 
         self.download_task_list_panel.Thaw()
 
-    def init_utils(self):
-        # 记录下载任务的 cid 列表
-        self._temp_cid_list = []
+    def onChangeMaxDownloaderEVT(self, event):
+        def _update_config():
+            Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
 
-        # 读取断点续传信息
-        self.load_download_task()
+        # 动态调整并行下载数
+        _update_config()
+
+        _count = 0
+
+        for panel in self.get_download_task_panel_list():
+            if isinstance(panel, DownloadTaskPanel):
+                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                    # 处于等待、下载中、暂停三种状态
+                    if self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
+                        # 当前下载数小于设置的并行下载数
+                        if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE]:
+                            # 等待和暂停的任务开始下载
+                            panel.onResume()
+                    else:
+                        # 当前下载数大于设置的并行下载数
+                        if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+                            _count += 1
+                            if _count > Config.Download.max_download_count:
+                                # 正在下载的任务暂停下载
+                                panel.onPause()
 
     def onOpenDownloadDirectoryEVT(self, event):
         # 打开下载目录事件
         FileDirectoryTool.open_directory(Config.Download.path)
-
+    
     def onClearHistoryEVT(self, event):
         # 清除已完成的下载记录
         self.download_task_list_panel.Freeze()
@@ -145,6 +173,13 @@ class DownloadManagerWindow(Frame):
                     panel.onStopEVT(event)
 
         self.download_task_list_panel.Thaw()
+
+    def init_utils(self):
+        # 记录下载任务的 cid 列表
+        self._temp_cid_list = []
+
+        # 读取断点续传信息
+        self.load_download_task()
         
     def load_download_task(self):
         def callback():
@@ -180,10 +215,12 @@ class DownloadManagerWindow(Frame):
         # 开始下载
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE] and self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
-                    panel.onResume()
+                if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE]:
+                    if self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
+                        panel.onResume()
 
     def get_download_task_panel_list(self):
+        # 获取下载列表项 (DownloadTaskPanel)，供遍历
         children: List[DownloadTaskPanel] = self.download_task_list_panel.GetChildren()
         
         return children
@@ -857,6 +894,7 @@ class DownloadTaskPanel(wx.Panel):
 
             self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
             self.pause_btn.Enable(False)
+            self.stop_btn.Enable(False)
 
             if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
                 self.speed_lab.SetLabel("正在转换音频...")
@@ -876,6 +914,7 @@ class DownloadTaskPanel(wx.Panel):
         def callback():
             self.update_download_status(Config.Type.DOWNLOAD_STATUS_FINISHED)
             self.pause_btn.Enable(True)
+            self.stop_btn.Enable(True)
 
             self.speed_lab.SetLabel("下载完成")
             self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
@@ -899,6 +938,7 @@ class DownloadTaskPanel(wx.Panel):
             self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
             self.pause_btn.Enable(True)
+            self.stop_btn.Enable(True)
         
         self._error_log = error_log
 

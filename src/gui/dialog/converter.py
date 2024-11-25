@@ -29,6 +29,14 @@ class ConverterWindow(wx.Dialog):
                 case "linux" | "darwin":
                     return wx.DefaultSize
                 
+        def _get_gpu_list():
+            match Config.Sys.platform:
+                case "windows" | "linux":
+                    return list(supported_gpu_mapping.keys())
+                
+                case "darwin":
+                    return ["VideoToolBox"]
+                
         input_lab = wx.StaticText(self, -1, "输入")
         self.input_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
         self.input_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
@@ -68,7 +76,7 @@ class ConverterWindow(wx.Dialog):
         self.hwaccel_chk = wx.CheckBox(self, -1, "启用硬件加速")
 
         gpu_lab = wx.StaticText(self, -1, "GPU")
-        self.gpu_choice = wx.Choice(self, -1, choices = self.getGPUList())
+        self.gpu_choice = wx.Choice(self, -1, choices = _get_gpu_list())
 
         extra_hbox = wx.BoxSizer(wx.HORIZONTAL)
         extra_hbox.Add(self.hwaccel_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -123,7 +131,7 @@ class ConverterWindow(wx.Dialog):
         self.input_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseInputEVT)
         self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseOutputEVT)
 
-        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
+        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenLocationEVT)
 
     def onStartEVT(self, event):
         if self.start:
@@ -173,8 +181,14 @@ class ConverterWindow(wx.Dialog):
         dlg.Destroy()
 
     def onBrowseOutputEVT(self, event):
+        def _get_new_file_name(_file_name: str):
+            _new_file_name = list(_file_name)
+            _new_file_name.insert(_file_name.rfind("."), "_out")
+
+            return "".join(_new_file_name)
+
         input_path = self.input_box.GetValue()
-        file = self.getNewFileName(os.path.basename(input_path))
+        file = _get_new_file_name(os.path.basename(input_path))
 
         dlg = wx.FileDialog(self, "保存输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
 
@@ -193,7 +207,27 @@ class ConverterWindow(wx.Dialog):
 
         dlg.Destroy()
 
+    def onOpenLocationEVT(self, event):
+        path = self.output_box.GetValue()
+
+        if not os.path.exists(path):
+            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        FileDirectoryTool.open_file_location(path)
+
     def onConverting(self):
+        def _get_mac_accels():
+            match self.target_codec_choice.GetSelection():
+                case 0:
+                    return "h264_videotoolbox"
+                
+                case 1:
+                    return "hevc_videotoolbox"
+
+                case 2:
+                    return ""
+
         def _get_encoder():
             _target_gpu = self.gpu_choice.GetSelection()
             _target_encoder = self.target_codec_choice.GetSelection()
@@ -204,7 +238,7 @@ class ConverterWindow(wx.Dialog):
                         return video_hw_encoder_mapping[_target_gpu][_target_encoder]
 
                     case "darwin":
-                        return self.getMACAccels()
+                        return _get_mac_accels()
             else:
                 return video_sw_encoder_mapping[_target_encoder]
 
@@ -272,11 +306,11 @@ class ConverterWindow(wx.Dialog):
             _reset()
             return
 
-        self.convertComplete()
+        self.onComplete()
 
         self.setStatus(False)
 
-    def convertComplete(self):
+    def onComplete(self):
         self.progress_bar.SetValue(100)
         self.progress_lab.SetLabel("进度：100%")
 
@@ -287,18 +321,7 @@ class ConverterWindow(wx.Dialog):
 
         if dlg.ShowModal() == wx.ID_YES:
             os.startfile(os.path.dirname(self.output_box.GetValue()))
-    
-    def getMACAccels(self):
-        match self.target_codec_choice.GetSelection():
-            case 0:
-                return "h264_videotoolbox"
-            
-            case 1:
-                return "hevc_videotoolbox"
 
-            case 2:
-                return ""
-            
     def setStatus(self, status: bool):
         if status:
             self.start_convert_btn.SetLabel("停止")
@@ -306,20 +329,6 @@ class ConverterWindow(wx.Dialog):
             self.start_convert_btn.SetLabel("开始转换")
 
         self.start = status
-
-    def getNewFileName(self, filename: str):
-        new_filename = list(filename)
-        new_filename.insert(filename.rfind("."), "_out")
-
-        return "".join(new_filename)
-    
-    def getGPUList(self):
-        match Config.Sys.platform:
-            case "windows" | "linux":
-                return list(supported_gpu_mapping.keys())
-            
-            case "darwin":
-                return ["VideoToolBox"]
     
     def updateProgress(self, progress, frame, duration, size, speed):
         self.progress_bar.SetValue(progress)
@@ -343,12 +352,3 @@ class ConverterWindow(wx.Dialog):
         self.process.stdin.flush()
 
         self.process.kill()
-    
-    def onOpenDirectory(self, event):
-        path = self.output_box.GetValue()
-
-        if not os.path.exists(path):
-            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
-            return
-        
-        FileDirectoryTool.open_file_location(path)

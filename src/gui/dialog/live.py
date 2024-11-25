@@ -92,14 +92,14 @@ class LiveRecordingWindow(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
-        self.copy_link_btn.Bind(wx.EVT_BUTTON, self.onCopy)
+        self.copy_link_btn.Bind(wx.EVT_BUTTON, self.onCopyLinkEVT)
         self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowseSavePathEVT)
 
         self.open_player_btn.Bind(wx.EVT_BUTTON, self.onPlayStreamEVT)
         self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
-        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
+        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenLocationEVT)
 
     def init_utils(self):
         self.title_lab.SetLabel(LiveInfo.title)
@@ -112,7 +112,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         self.start = False
 
-    def onClose(self, event):
+    def onCloseEVT(self, event):
         if self.start:
             dlg = wx.MessageDialog(self, "是否结束录制\n\n当前正在录制直播，是否要结束录制？", "警告", wx.ICON_WARNING | wx.YES_NO)
 
@@ -125,7 +125,7 @@ class LiveRecordingWindow(wx.Dialog):
             
         event.Skip()
 
-    def onCopy(self, event):
+    def onCopyLinkEVT(self, event):
         # 复制到剪切板
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(self.m3u8_link_box.GetValue()))
@@ -139,6 +139,15 @@ class LiveRecordingWindow(wx.Dialog):
             self.recording_path_box.SetValue(path)
 
         dlg.Destroy()
+
+    def onOpenLocationEVT(self, event):
+        path = self.recording_path_box.GetValue()
+        
+        if not os.path.exists(path):
+            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        FileDirectoryTool.open_file_location(path)
 
     def onPlayStreamEVT(self, event):
         match Config.Misc.player_preference:
@@ -232,15 +241,6 @@ class LiveRecordingWindow(wx.Dialog):
         self.setStatus(False)
 
         self.status_lab.SetLabel("状态：录制结束")
-
-    def onOpenDirectory(self, event):
-        path = self.recording_path_box.GetValue()
-        
-        if not os.path.exists(path):
-            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
-            return
-        
-        FileDirectoryTool.open_file_location(path)
 
     def setStatus(self, status: bool):
         if status:
