@@ -5,7 +5,7 @@ import wx.py
 import requests
 from typing import Optional
 
-from utils.config import Config, Download, Audio, conf
+from utils.config import Config, Download, conf
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.festival import FestivalInfo, FestivalParser
@@ -83,13 +83,13 @@ class MainWindow(Frame):
         video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.audio_btn = wx.Button(self.panel, -1, "...", size = (self.video_quality_choice.GetSize()[1], self.video_quality_choice.GetSize()[1]))
+        self.download_option_btn = wx.Button(self.panel, -1, "...", size = (self.video_quality_choice.GetSize()[1], self.video_quality_choice.GetSize()[1]))
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.AddStretchSpacer()
         video_info_hbox.Add(video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
-        video_info_hbox.Add(self.audio_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.download_option_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
@@ -178,11 +178,11 @@ class MainWindow(Frame):
         return menu
     
     def Bind_EVT(self):
-        self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGet)
-        self.get_btn.Bind(wx.EVT_BUTTON, self.onGet)
+        self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGetEVT)
+        self.get_btn.Bind(wx.EVT_BUTTON, self.onGetEVT)
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgr)
-        self.download_btn.Bind(wx.EVT_BUTTON, self.onDownload)
-        self.audio_btn.Bind(wx.EVT_BUTTON, self.onShowAudioMenu)
+        self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
+        self.download_option_btn.Bind(wx.EVT_BUTTON, self.onDownloadOptionEVT)
 
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
@@ -191,22 +191,22 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onLoadSetting, id = self.ID_SETTINGS)
         self.Bind(wx.EVT_MENU, self.onLoadConverter, id = self.ID_CONVERTER)
-        self.Bind(wx.EVT_MENU, self.onAbout, id = self.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.onAboutEVT, id = self.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
         self.Bind(wx.EVT_MENU, self.onRefresh, id = self.ID_REFRESH)
-        self.Bind(wx.EVT_MENU, self.onHelp, id = self.ID_HELP)
+        self.Bind(wx.EVT_MENU, self.onHelpEVT, id = self.ID_HELP)
 
-        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_HIRES)
-        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_DOLBY)
-        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_192K)
-        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_132K)
-        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_64K)
-        self.Bind(wx.EVT_MENU, self.onChangeAudioQuality, id = self.ID_AUDIO_ONLY)
-
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
     def init_utils(self):
+        def worker():
+            # 检查更新
+            self.checkUpdateUtils()
+
+            # 检查风控状态
+            self.checkCookieUtils()
+
         ErrorCallback.onError = self.onError
         ErrorCallback.onRedirect = self.onRedirect
         
@@ -221,9 +221,7 @@ class MainWindow(Frame):
         # 解析完成标识符
         self.parse_finish_flag = False
 
-        utils_thread = Thread(target = self.utilsThread, daemon = True)
-
-        utils_thread.start()
+        Thread(target = worker).start()
 
     def init_ids(self):
         self.ID_LOGIN = wx.NewIdRef()
@@ -238,23 +236,7 @@ class MainWindow(Frame):
         self.ID_LOGOUT = wx.NewIdRef()
         self.ID_REFRESH = wx.NewIdRef()
 
-        self.ID_AUDIO_AUTO = wx.NewIdRef()
-        self.ID_AUDIO_HIRES = wx.NewIdRef()
-        self.ID_AUDIO_DOLBY = wx.NewIdRef()
-        self.ID_AUDIO_192K = wx.NewIdRef()
-        self.ID_AUDIO_132K = wx.NewIdRef()
-        self.ID_AUDIO_64K = wx.NewIdRef()
-        self.ID_AUDIO_ONLY = wx.NewIdRef()
-        self.ID_AUDIO_NONE = wx.NewIdRef()
-
-    def utilsThread(self):
-        # 检查更新
-        self.checkUpdateUtils()
-
-        # 检查风控状态
-        self.checkCookieUtils()
-
-    def onClose(self, event):
+    def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE, Config.Type.DOWNLOAD_STATUS_DOWNLOADING, Config.Type.DOWNLOAD_STATUS_MERGING]):
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
@@ -263,13 +245,26 @@ class MainWindow(Frame):
 
         event.Skip()
 
-    def onAbout(self, event):
+    def onHelpEVT(self, event):
+        import webbrowser
+
+        webbrowser.open("https://scott-sloan.cn/archives/12/")
+
+    def onAboutEVT(self, event):
         about_window = AboutWindow(self)
         about_window.ShowModal()
 
-    def onGet(self, event):
+    def onGetEVT(self, event):
+        def _clear():
+            self.treelist.init_list()
+
+            self.video_quality_choice.Clear()
+
+            self.type_lab.SetLabel("")
+
+        _clear()
+
         url = self.url_box.GetValue()
-        self.clearTreeList()
 
         # 显示加载窗口
         self.processing_window = ProcessingWindow(self)
@@ -281,6 +276,35 @@ class MainWindow(Frame):
         self.parse_finish_flag = False
 
     def parseThread(self, url: str):
+        def callback():
+            if self.current_parse_type != Config.Type.LIVE:
+                self.parse_finish_flag = True
+
+            self.processing_window.Hide()
+
+            self.download_btn.Enable(True)
+
+            self.treelist.SetFocus()
+
+        def _set_video_list():
+            self.treelist.set_video_list()
+
+            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
+            
+            self.type_lab.SetLabel("视频 (共 %d 个)" % count)
+
+        def _set_bangumi_list():
+            self.treelist.set_bangumi_list()
+
+            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
+
+            self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
+
+        def _set_live_list():
+            self.treelist.set_live_list()
+
+            self.type_lab.SetLabel("直播")
+
         continue_to_parse = True
 
         match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
@@ -292,7 +316,7 @@ class MainWindow(Frame):
 
                 if continue_to_parse:
                     # 当存在跳转链接时，使用新的跳转链接重新开始解析，原先解析线程不继续执行
-                    wx.CallAfter(self.setVideoList)
+                    wx.CallAfter(_set_video_list)
 
                     wx.CallAfter(self.setVideoQualityList)
 
@@ -302,7 +326,7 @@ class MainWindow(Frame):
 
                 self.bangumi_parser.parse_url(url)
                 
-                wx.CallAfter(self.setBangumiList)
+                wx.CallAfter(_set_bangumi_list)
 
                 wx.CallAfter(self.setVideoQualityList)
 
@@ -312,7 +336,7 @@ class MainWindow(Frame):
 
                 self.live_parser.parse_url(url)
 
-                wx.CallAfter(self.setLiveList)
+                wx.CallAfter(_set_live_list)
 
                 wx.CallAfter(self.setLiveQualityList)
 
@@ -336,23 +360,13 @@ class MainWindow(Frame):
                 self.onError(ErrorCode.Invalid_URL)
 
         if continue_to_parse:
-            wx.CallAfter(self.onGetFinished)
+            wx.CallAfter(callback)
 
     def onRedirect(self, url: str):
         self.parse_thread = Thread(target = self.parseThread, args = (url, ))
         self.parse_thread.start()
 
-    def onGetFinished(self):
-        if self.current_parse_type != Config.Type.LIVE:
-            self.parse_finish_flag = True
-
-        self.processing_window.Hide()
-
-        self.download_btn.Enable(True)
-
-        self.treelist.SetFocus()
-
-    def onDownload(self, event):
+    def onDownloadEVT(self, event):
         def add_download_task_callback():
             if hasattr(self, "processing_window"):
                 # 关闭加载窗口
@@ -366,6 +380,15 @@ class MainWindow(Frame):
 
             wx.CallAfter(self.download_window.add_download_task_panel, self.treelist.download_task_info_list, add_download_task_callback, True)
 
+        def _get_live_stram():
+            # 获取选定清晰度的直播流
+            live_qn_id = live_quality_mapping[self.video_quality_choice.GetStringSelection()]
+
+            if live_qn_id == 40000:
+                live_qn_id = max(LiveInfo.live_quality_id_list)
+
+            self.live_parser.get_live_stream(live_qn_id)
+
         # 直播类型视频跳转合成窗口
         if self.current_parse_type == Config.Type.LIVE:
             if LiveInfo.status == Config.Type.LIVE_STATUS_0:
@@ -375,7 +398,7 @@ class MainWindow(Frame):
                 return
 
             # 获取选定清晰度的直播流
-            self.get_live_stream()
+            _get_live_stram()
 
             live_recording_window = LiveRecordingWindow(self)
             live_recording_window.ShowModal()
@@ -412,13 +435,6 @@ class MainWindow(Frame):
 
         self.download_window.SetFocus()
 
-    def clearTreeList(self):
-        wx.CallAfter(self.treelist.init_list)
-
-        self.video_quality_choice.Clear()
-
-        self.type_lab.SetLabel("")
-
     def setVideoQualityList(self):
         if self.current_parse_type == Config.Type.VIDEO:
             video_quality_id_list = VideoInfo.video_quality_id_list
@@ -453,37 +469,6 @@ class MainWindow(Frame):
         self.video_quality_choice.Set(live_quality_desc_list)
 
         self.video_quality_choice.Select(0)
-
-    def setVideoList(self):
-        self.treelist.set_video_list()
-
-        count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
-        
-        self.type_lab.SetLabel("视频 (共 %d 个)" % count)
-    
-    def setBangumiList(self):
-        self.treelist.set_bangumi_list()
-
-        count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
-
-        self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
-
-    def setLiveList(self):
-        self.treelist.set_live_list()
-
-        self.type_lab.SetLabel("直播")
-
-    def get_live_stream(self):
-        # 获取选定清晰度的直播流
-        live_qn_id = live_quality_mapping[self.video_quality_choice.GetStringSelection()]
-
-        if live_qn_id == 40000:
-            live_qn_id = max(LiveInfo.live_quality_id_list)
-
-        self.live_parser.get_live_stream(live_qn_id)
-
-    def onLoadDownloadProgress(self):
-        self.showInfobarMessage("下载管理：已恢复中断的下载进度", flag = wx.ICON_INFORMATION)
 
     def onError(self, error_code: int, error_info: Optional[str] = None):
         # 匹配不同错误码
@@ -575,44 +560,16 @@ class MainWindow(Frame):
         shell.CenterOnParent()
         shell.Show()
 
-    def onHelp(self, event):
-        import webbrowser
-
-        webbrowser.open("https://scott-sloan.cn/archives/12/")
-
     def onCheckUpdate(self, event):
         wx.CallAfter(self.checkUpdateManuallyThread)
 
-    def onShowAudioMenu(self, event):
+    def onDownloadOptionEVT(self, event):
         # 只有解析成功才会显示音频菜单
         if self.parse_finish_flag:
-            self.showAudioQualityMenu()
+            from gui.dialog.option import OptionDialog
 
-    def onChangeAudioQuality(self, event):
-        match event.GetId():
-            case self.ID_AUDIO_AUTO:
-                Audio.audio_quality_id = 30300
-
-            case self.ID_AUDIO_HIRES:
-                Audio.audio_quality_id = 30251
-
-            case self.ID_AUDIO_DOLBY:
-                Audio.audio_quality_id = 30250
-
-            case self.ID_AUDIO_192K:
-                Audio.audio_quality_id = 30280
-
-            case self.ID_AUDIO_132K:
-                Audio.audio_quality_id = 30232
-
-            case self.ID_AUDIO_64K:
-                Audio.audio_quality_id = 30216
-
-            case self.ID_AUDIO_ONLY:
-                if Audio.audio_only:
-                    Audio.audio_only = False
-                else:
-                    Audio.audio_only = True
+            dlg = OptionDialog(self)
+            dlg.ShowModal()
 
     def showUserInfoThread(self):
         # 显示用户头像及昵称
@@ -668,54 +625,6 @@ class MainWindow(Frame):
         update_window = UpdateWindow(self)
         update_window.ShowWindowModal()
 
-    def showAudioQualityMenu(self):
-        # 显示音质菜单
-        menu = wx.Menu()
-        menu.Append(-1, "音质")
-        menu.AppendSeparator()
-
-        audio_none = False
-
-        menuitem_auto = menu.Append(self.ID_AUDIO_AUTO, "自动", kind = wx.ITEM_RADIO)
-        menuitem_auto.Check(True if Audio.audio_quality_id == 30300 else False)
-
-        if Audio.q_hires:
-            menuitem_hires = menu.Append(self.ID_AUDIO_HIRES, "Hi-Res 无损", kind = wx.ITEM_RADIO)
-            menuitem_hires.Check(True if Audio.audio_quality_id == 30251 else False)
-
-        if Audio.q_dolby:
-            menuitem_dolby = menu.Append(self.ID_AUDIO_DOLBY, "杜比全景声", kind = wx.ITEM_RADIO)
-            menuitem_dolby.Check(True if Audio.audio_quality_id == 30250 else False)
-
-        if Audio.q_192k:
-            menuitem_192k = menu.Append(self.ID_AUDIO_192K, "192K", kind = wx.ITEM_RADIO)
-            menuitem_192k.Check(True if Audio.audio_quality_id == 30280 else False)
-
-        if Audio.q_132k:
-            menuitem_132k = menu.Append(self.ID_AUDIO_132K, "132K", kind = wx.ITEM_RADIO)
-            menuitem_132k.Check(True if Audio.audio_quality_id == 30232 else False)
-
-        if Audio.q_64k:
-            menuitem_64k = menu.Append(self.ID_AUDIO_64K, "64K", kind = wx.ITEM_RADIO)
-            menuitem_64k.Check(True if Audio.audio_quality_id == 30216 else False)
-
-        if not Audio.q_64k and not Audio.q_132k and not Audio.q_192k:
-            menuitem_none = menu.Append(self.ID_AUDIO_NONE, "无音轨")
-            menuitem_none.Enable(False)
-
-            audio_none = True
-
-        menu.AppendSeparator()
-
-        menuitem_audio_only = menu.Append(self.ID_AUDIO_ONLY, "仅下载音频", kind = wx.ITEM_CHECK)
-        menuitem_audio_only.Check(True if Audio.audio_only else False)
-
-        if audio_none:
-            menuitem_auto.Hide(True)
-            menuitem_audio_only.Enable(False)
-
-        self.PopupMenu(menu)
-
     def showInfobarMessage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
 
@@ -748,10 +657,6 @@ class MainWindow(Frame):
                     circle_image.SetAlpha(x, y, 0)
         
         return circle_image
-    
-    def startNewParseThread(self, *args):
-        self.parse_thread = Thread(target = self.parseThread, args = args, daemon = True)
-        self.parse_thread.start()
 
     def onLoginSuccess(self):
         self.init_user_info()

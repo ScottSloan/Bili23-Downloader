@@ -120,7 +120,7 @@ class Config:
 
         DOWNLOAD_STATUS_ALIVE_LIST: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE]
         DOWNLOAD_STATUS_ALIVE_LIST_EX: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE, DOWNLOAD_STATUS_MERGE_FAILED, DOWNLOAD_STATUS_DOWNLOAD_FAILED]
-        
+
     class Temp:
         download_window_pos = None
 
@@ -135,19 +135,6 @@ class Config:
         danmaku_format = 0
 
         download_cover = False
-
-class Audio:
-    audio_quality_id: int = 0
-
-    # 仅下载音频标识符
-    audio_only: bool = False
-    
-    # 各音质标识符
-    q_hires: bool = False
-    q_dolby: bool = False
-    q_192k: bool = False
-    q_132k: bool = False
-    q_64k: bool = False
 
 class Download:
     current_parse_type: int = 0

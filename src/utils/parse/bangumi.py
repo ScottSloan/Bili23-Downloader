@@ -4,9 +4,10 @@ import requests
 from typing import List, Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.config import Config, Audio
+from utils.config import Config
 from utils.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
 from utils.mapping import bangumi_type_mapping
+from utils.parse.audio import AudioInfo
 
 class BangumiInfo:
     url: str = ""
@@ -191,31 +192,7 @@ class BangumiParser:
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
 
-        # 检测无损或杜比是否存在
-        if "flac" in info["dash"]:
-            if info["dash"]["flac"]:
-                Audio.q_hires = True
-
-        if "dolby" in info["dash"]:
-            if "audio" in info["dash"]["dolby"]:
-                if info["dash"]["dolby"]["audio"]:
-                    Audio.q_dolby = True
-
-        # 检测 192k, 132k, 64k 音质是否存在
-        if "audio" in info["dash"]:
-            if info["dash"]["audio"]:
-                for entry in info["dash"]["audio"]:
-                    match entry["id"]:
-                        case 30280:
-                            Audio.q_192k = True
-                    
-                        case 30232:
-                            Audio.q_132k = True
-
-                        case 30216:
-                            Audio.q_64k = True
-
-            Audio.audio_quality_id = Config.Download.audio_quality_id
+        AudioInfo.get_audio_quality_list(info["dash"])
 
     @process_exception
     def check_bangumi_can_play(self):
@@ -292,5 +269,4 @@ class BangumiParser:
         BangumiInfo.sections.clear()
 
         # 重置音质信息
-        Audio.q_hires = Audio.q_dolby = Audio.q_192k = Audio.q_132k = Audio.q_64k = Audio.audio_only = False
-        Audio.audio_quality_id = 0
+        AudioInfo.clear_audio_info()

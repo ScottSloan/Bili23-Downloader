@@ -6,10 +6,11 @@ from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.icon_v2 import IconManager, APP_ICON_SMALL
 from utils.tool_v2 import FormatTool, UniversalTool
-from utils.config import Config, Download, Audio
+from utils.config import Config, Download
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.live import LiveInfo
+from utils.parse.audio import AudioInfo
 from utils.data_type import DownloadTaskInfo
 
 class Frame(wx.Frame):
@@ -141,9 +142,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.cid = cid
 
         download_info.video_quality_id = self.video_quality_id
-        download_info.audio_quality_id = Audio.audio_quality_id
+        download_info.audio_quality_id = AudioInfo.audio_quality_id
 
-        if Audio.audio_only:
+        if AudioInfo.download_audio_only:
             download_info.video_merge_type = Config.Type.MERGE_TYPE_AUDIO
 
         download_info.download_type = download_type
