@@ -116,7 +116,8 @@ class FileDirectoryTool:
                 return _linux()
 
             case "darwin":
-                pass
+                # macOS 不支持获取默认程序
+                return
 
     @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):

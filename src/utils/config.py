@@ -81,7 +81,7 @@ class Config:
         VIDEO_TYPE_SECTIONS: int = 3                 # 合集
 
         DURATION_VIDEO_SECTIONS: int = 0             # 合集视频
-        DURATION_VIDEO_OTHERS: int = 1                # 其他视频
+        DURATION_VIDEO_OTHERS: int = 1               # 其他视频
         DURATION_BANGUMI: int = 2                    # 番组
 
         MERGE_TYPE_ALL: int = 0                      # 合成视频和音频
@@ -105,6 +105,10 @@ class Config:
 
         PLAYER_PREFERENCE_DEFAULT: int = 0           # 系统默认
         PLAYER_PREFERENCE_CUSTOM: int = 0            # 手动设置
+
+        GPU_NVIDIA: int = 0                          # NVIDIA GPU
+        GPU_AMD: int = 1                             # AMD GPU
+        GPU_INTEL: int = 2                           # INTEL GPU
 
         DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
         DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载

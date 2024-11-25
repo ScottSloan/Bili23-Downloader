@@ -5,7 +5,7 @@ import subprocess
 
 from utils.config import Config
 from utils.thread import Thread
-from utils.mapping import video_codec_mapping, supported_gpu_mapping
+from utils.mapping import video_codec_mapping, supported_gpu_mapping, video_sw_encoder_mapping, video_hw_encoder_mapping
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class ConverterWindow(wx.Dialog):
@@ -118,14 +118,14 @@ class ConverterWindow(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.start_convert_btn.Bind(wx.EVT_BUTTON, self.onStartConverting)
+        self.start_convert_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
 
-        self.input_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseInputPath)
-        self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseOutputPath)
+        self.input_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseInputEVT)
+        self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseOutputEVT)
 
         self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
 
-    def onStartConverting(self, event):
+    def onStartEVT(self, event):
         if self.start:
             self.terminate_ffmpeg_process()
 
@@ -158,7 +158,7 @@ class ConverterWindow(wx.Dialog):
 
         self.setStatus(True)
 
-    def onBrowseInputPath(self, event):
+    def onBrowseInputEVT(self, event):
         dlg = wx.FileDialog(self, "选择输入文件", style = wx.FD_OPEN, wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -172,7 +172,7 @@ class ConverterWindow(wx.Dialog):
 
         dlg.Destroy()
 
-    def onBrowseOutputPath(self, event):
+    def onBrowseOutputEVT(self, event):
         input_path = self.input_box.GetValue()
         file = self.getNewFileName(os.path.basename(input_path))
 
@@ -194,9 +194,33 @@ class ConverterWindow(wx.Dialog):
         dlg.Destroy()
 
     def onConverting(self):
+        def _get_encoder():
+            _target_gpu = self.gpu_choice.GetSelection()
+            _target_encoder = self.target_codec_choice.GetSelection()
+
+            if self.hwaccel_chk.GetValue():
+                match Config.Sys.platform:
+                    case "windows" | "linux":
+                        return video_hw_encoder_mapping[_target_gpu][_target_encoder]
+
+                    case "darwin":
+                        return self.getMACAccels()
+            else:
+                return video_sw_encoder_mapping[_target_encoder]
+
+        def _reset():
+            self.progress_bar.SetValue(0)
+            self.progress_lab.SetLabel("进度：--")
+            self.frame_lab.SetLabel("帧：0")
+            self.duration_lab.SetLabel("时长：00:00:00.00")
+            self.size_lab.SetLabel("大小：0 KB")
+            self.speed_lab.SetLabel("速度：0.0x")
+
+            self.Layout()
+
         input_path = self.input_box.GetValue()
         output_path = self.output_box.GetValue()
-        encoder = self.getEncoder()
+        encoder = _get_encoder()
         bitrate = self.target_bitrate_box.GetValue() + "k"
 
         cmd = f'"{Config.FFmpeg.path}" -y -i "{input_path}" -c:v {encoder} -b:v {bitrate} -strict experimental "{output_path}"'
@@ -239,12 +263,13 @@ class ConverterWindow(wx.Dialog):
         if self.process.returncode != 0 and self.start:
             wx.MessageDialog(self, "视频转换失败\n\n在视频转换时出现问题，请检查：\n1.输入文件是否损坏\n2.若开启 GPU 加速，请检查 GPU 类型是否选择正确，驱动是否安装，GPU 是否支持加速\n3.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持相关加速编码器", "警告", wx.ICON_WARNING).ShowModal()
             self.setStatus(False)
-            self.resetProgress()
+
+            _reset()
 
             return
 
         if not self.start:
-            self.resetProgress()
+            _reset()
             return
 
         self.convertComplete()
@@ -262,74 +287,6 @@ class ConverterWindow(wx.Dialog):
 
         if dlg.ShowModal() == wx.ID_YES:
             os.startfile(os.path.dirname(self.output_box.GetValue()))
-
-    def getEncoder(self):
-        match Config.Sys.platform:
-            case "windows" | "linux":
-                if self.hwaccel_chk.GetValue():
-                    match self.gpu_choice.GetSelection():
-                        case 0:
-                            return self.getNVAccels()
-                        case 1:
-                            return self.getAMDAaccels()
-                        case 2:
-                            return self.getINTELAccels()
-                else:
-                    match self.target_codec_choice.GetSelection():
-                        case 0:
-                            return "libx264"
-                        
-                        case 1:
-                            return "libx265"
-                        
-                        case 2:
-                            return "libaom-av1"
-            case "darwin":
-                if self.hwaccel_chk.GetValue():
-                    return self.getMACAccels()
-                else:
-                    match self.target_codec_choice.GetSelection():
-                        case 0:
-                            return "libx264"
-                        
-                        case 1:
-                            return "libx265"
-                        
-                        case 2:
-                            return "libaom-av1"
-
-    def getNVAccels(self):
-        match self.target_codec_choice.GetSelection():
-            case 0:
-                return "h264_nvenc"
-            
-            case 1:
-                return "hevc_nvenc"
-
-            case 2:
-                return "av1_nvenc"
-            
-    def getAMDAaccels(self):
-        match self.target_codec_choice.GetSelection():
-            case 0:
-                return "h264_amf"
-            
-            case 1:
-                return "hevc_amf"
-
-            case 2:
-                return "av1_amf"
-            
-    def getINTELAccels(self):
-        match self.target_codec_choice.GetSelection():
-            case 0:
-                return "h264_qsv"
-            
-            case 1:
-                return "hevc_qsv"
-
-            case 2:
-                return "av1_qsv"
     
     def getMACAccels(self):
         match self.target_codec_choice.GetSelection():
@@ -349,16 +306,6 @@ class ConverterWindow(wx.Dialog):
             self.start_convert_btn.SetLabel("开始转换")
 
         self.start = status
-    
-    def resetProgress(self):
-        self.progress_bar.SetValue(0)
-        self.progress_lab.SetLabel("进度：--")
-        self.frame_lab.SetLabel("帧：0")
-        self.duration_lab.SetLabel("时长：00:00:00.00")
-        self.size_lab.SetLabel("大小：0 KB")
-        self.speed_lab.SetLabel("速度：0.0x")
-
-        self.Layout()
 
     def getNewFileName(self, filename: str):
         new_filename = list(filename)
@@ -396,16 +343,6 @@ class ConverterWindow(wx.Dialog):
         self.process.stdin.flush()
 
         self.process.kill()
-
-    def getButtonSize(self):
-        # 解决 Linux macOS 按钮太小的问题
-        match Config.Sys.platform:
-            case "windows":
-                size = self.FromDIP((100, 30))
-            case "linux" | "darwin":
-                size = self.FromDIP((120, 40))
-
-        return size
     
     def onOpenDirectory(self, event):
         path = self.output_box.GetValue()

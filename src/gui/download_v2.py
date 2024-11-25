@@ -109,16 +109,18 @@ class DownloadManagerWindow(Frame):
     def onPauseAllEVT(self, event):
         # 暂停全部下载任务
         for panel in self.get_download_task_panel_list():
-            if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
-                panel.onPause()
+            if isinstance(panel, DownloadTaskPanel):
+                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                    panel.onPause()
 
     def onStopAllEVT(self, event):
         # 取消全部下载任务
         self.download_task_list_panel.Freeze()
 
         for panel in self.get_download_task_panel_list():
-            if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
-                panel.onStopEVT(event)
+            if isinstance(panel, DownloadTaskPanel):
+                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                    panel.onStopEVT(event)
 
         self.download_task_list_panel.Thaw()
 
@@ -138,8 +140,9 @@ class DownloadManagerWindow(Frame):
         self.download_task_list_panel.Freeze()
 
         for panel in self.get_download_task_panel_list():
-            if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_FINISHED:
-                panel.onStopEVT(event)
+            if isinstance(panel, DownloadTaskPanel):
+                if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_FINISHED:
+                    panel.onStopEVT(event)
 
         self.download_task_list_panel.Thaw()
         
@@ -176,8 +179,9 @@ class DownloadManagerWindow(Frame):
     def start_download(self):
         # 开始下载
         for panel in self.get_download_task_panel_list():
-            if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE] and self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
-                panel.onResume()
+            if isinstance(panel, DownloadTaskPanel):
+                if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE] and self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
+                    panel.onResume()
 
     def get_download_task_panel_list(self):
         children: List[DownloadTaskPanel] = self.download_task_list_panel.GetChildren()
@@ -189,8 +193,9 @@ class DownloadManagerWindow(Frame):
         _count = 0
 
         for panel in self.get_download_task_panel_list():
-            if panel.task_info.status in condition:
-                _count += 1
+            if isinstance(panel, DownloadTaskPanel):
+                if panel.task_info.status in condition:
+                    _count += 1
 
         return _count
 
@@ -229,6 +234,7 @@ class DownloadManagerWindow(Frame):
         for index, info in enumerate(download_task_info_list):
             # 检查 cid 列表是否已包含，防止重复下载
             if info.cid not in self._temp_cid_list:
+                info.timestamp += index
                 task_panel_list.append(worker(info, multiple_flag, index))
 
         self.download_task_list_panel.sizer.AddMany(task_panel_list)
@@ -591,9 +597,11 @@ class DownloadTaskPanel(wx.Panel):
         _set_dark_mode(self.video_codec_lab)
 
         self.video_size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
+
         _set_dark_mode(self.video_size_lab)
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+
         video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -697,7 +705,7 @@ class DownloadTaskPanel(wx.Panel):
             _callback.onStartCallback = self.onStart
             _callback.onDownloadCallback = self.onDownload
             _callback.onMergeCallback = self.onMerge
-            _callback.onErrorCallback = self.onError
+            _callback.onErrorCallback = self.onDownloadFailed
 
             return _callback
 
@@ -806,23 +814,26 @@ class DownloadTaskPanel(wx.Panel):
         Thread(target = worker).start()
 
     def onStart(self, total_size: int):
+        def callback():
         # 开始下载回调函数
-        self.task_info.total_size = total_size
+            self.task_info.total_size = total_size
 
-        self.speed_lab.SetLabel("")
+            self.speed_lab.SetLabel("")
+            
+            self.show_media_info()
+
+            kwargs = {
+                "total_size": total_size,
+                "video_quality_id": self.utils.task_info.video_quality_id,
+                "video_codec_id": self.utils.task_info.video_codec_id,
+                "audio_quality_id": self.utils.task_info.audio_quality_id,
+                "audio_type": self.utils.task_info.audio_type,
+                "video_merge_type": self.utils.task_info.video_merge_type
+            }
+
+            self.download_file_tool.update_task_info_kwargs(**kwargs)
         
-        self.show_media_info()
-
-        kwargs = {
-            "total_size": total_size,
-            "video_quality_id": self.utils.task_info.video_quality_id,
-            "video_codec_id": self.utils.task_info.video_codec_id,
-            "audio_quality_id": self.utils.task_info.audio_quality_id,
-            "audio_type": self.utils.task_info.audio_type,
-            "video_merge_type": self.utils.task_info.video_merge_type
-        }
-
-        self.download_file_tool.update_task_info_kwargs(**kwargs)
+        wx.CallAfter(callback)
 
     def onDownload(self, info: dict):
         def callback():
@@ -893,13 +904,16 @@ class DownloadTaskPanel(wx.Panel):
 
         wx.CallAfter(callback)
 
-    def onError(self):
+    def onDownloadFailed(self):
         def callback():
             # 下载失败回调函数
             self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED)
             self.speed_lab.SetLabel("下载失败")
 
         wx.CallAfter(callback)
+
+        # 跳过当前下载下一个视频
+        self.callback.onStartNextCallback()
     
     def onOpenLocation(self):
         path = os.path.join(Config.Download.path, self.utils.full_file_name)

@@ -95,10 +95,10 @@ class LiveRecordingWindow(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
         self.copy_link_btn.Bind(wx.EVT_BUTTON, self.onCopy)
-        self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowse)
+        self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowseSavePathEVT)
 
-        self.open_player_btn.Bind(wx.EVT_BUTTON, self.onPlay)
-        self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartRecording)
+        self.open_player_btn.Bind(wx.EVT_BUTTON, self.onPlayStreamEVT)
+        self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
         self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
 
     def init_utils(self):
@@ -131,7 +131,7 @@ class LiveRecordingWindow(wx.Dialog):
             wx.TheClipboard.SetData(wx.TextDataObject(self.m3u8_link_box.GetValue()))
             wx.TheClipboard.Close()
 
-    def onBrowse(self, event):
+    def onBrowseSavePathEVT(self, event):
         dlg = wx.FileDialog(self, "选择保存位置", defaultDir = Config.Download.path, defaultFile = LiveInfo.title, wildcard = "视频文件(*.mp4)|*.mp4", style = wx.FD_SAVE)
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -140,7 +140,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         dlg.Destroy()
 
-    def onPlay(self, event):
+    def onPlayStreamEVT(self, event):
         match Config.Misc.player_preference:
             case Config.Type.PLAYER_PREFERENCE_DEFAULT:
                 # 寻找关联的播放器
@@ -154,14 +154,16 @@ class LiveRecordingWindow(wx.Dialog):
                         cmd = _default.replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
 
                     case "darwin":
-                        pass
+                        wx.MessageDialog(self, "无法获取默认播放器\n\nmacOS 平台不支持获取默认播放器，无法播放直播视频流，请手动设置", "警告", wx.ICON_WARNING).ShowModal()
+
+                        return
             
             case Config.Type.PLAYER_PREFERENCE_CUSTOM:
                 cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
 
         subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
 
-    def onStartRecording(self, event):
+    def onStartEVT(self, event):
         if self.start:
             self.terminate_ffmpeg_process()
             
@@ -187,7 +189,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.Layout()
 
     def onRecording(self):
-        def reset():
+        def _reset():
             self.status_lab.SetLabel("状态：未开始录制")
             self.duration_lab.SetLabel("时长：00:00:00.00")
             self.size_lab.SetLabel("大小：0 KB")
@@ -223,7 +225,7 @@ class LiveRecordingWindow(wx.Dialog):
             wx.MessageDialog(self, "FFmpeg 进程异常终止\n\n由于配置不当，FFmpeg 进程异常终止，请检查：\n1.m3u8 链接是否已经过期，如过期，请重新解析\n2.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持流媒体合成功能", "警告", wx.ICON_WARNING).ShowModal()
             self.setStatus(False)
 
-            reset()
+            _reset()
             
             return
 

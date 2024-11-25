@@ -187,8 +187,8 @@ class Downloader:
             # 置错误标志位为 True
             self.error_flag = True
 
-            # 抛出异常，停止线程
-            raise requests.exceptions.ConnectionError()
+            # 停止线程
+            return
         
         self.thread_alive_count -= 1
 
