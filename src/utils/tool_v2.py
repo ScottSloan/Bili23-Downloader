@@ -194,8 +194,7 @@ class DownloadFileTool:
 
         if contents is not None:
             for key, value in kwargs.items():
-                if "task_info" in contents:
-                    contents["task_info"][key] = value
+                contents["task_info"][key] = value
 
             self._write_download_file(contents)
 
@@ -203,15 +202,14 @@ class DownloadFileTool:
         contents = self._read_download_file_json()
 
         if contents is not None:
-            if "thread_info" in contents:
-                contents["thread_info"] = thread_info
+            contents["thread_info"] = thread_info
 
             self._write_download_file(contents)
 
     def get_thread_info(self):
         contents = self._read_download_file_json()
 
-        return contents["thread_info"]
+        return contents.get("thread_info", {})
     
     def _read_download_file_json(self):
         if os.path.exists(self.file_path):

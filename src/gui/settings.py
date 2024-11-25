@@ -34,11 +34,11 @@ class SettingWindow(wx.Dialog):
         
         self.note = wx.Notebook(self, -1)
 
-        self.note.AddPage(DownloadTab(self.note), "下载")
-        self.note.AddPage(MergeTab(self.note), "合成")
-        self.note.AddPage(ExtraTab(self.note), "附加内容")
-        self.note.AddPage(ProxyTab(self.note), "代理")
-        self.note.AddPage(MiscTab(self.note), "其他")
+        self.note.AddPage(DownloadTab(self.note, self.GetParent()), "下载")
+        self.note.AddPage(MergeTab(self.note, self.GetParent()), "合成")
+        self.note.AddPage(ExtraTab(self.note, self.GetParent()), "附加内容")
+        self.note.AddPage(ProxyTab(self.note, self.GetParent()), "代理")
+        self.note.AddPage(MiscTab(self.note, self.GetParent()), "其他")
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
@@ -65,7 +65,9 @@ class SettingWindow(wx.Dialog):
         event.Skip()
 
 class DownloadTab(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, _main_window):
+        self._main_window = _main_window
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -211,6 +213,11 @@ class DownloadTab(wx.Panel):
         self.onChangeSpeedLimit(0)
 
     def save(self):
+        def _update_download_window():
+            self._main_window.download_window.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
+
+            self._main_window.download_window.onChangeMaxDownloaderEVT(None)
+
         default_path = os.path.join(os.getcwd(), "download")
 
         Config.Download.path = self.path_box.GetValue()
@@ -240,8 +247,8 @@ class DownloadTab(wx.Panel):
         conf.config_save()
 
         # 更新下载窗口中并行下载数信息
-        # self.GetParent().GetParent().GetParent().download_window.update_max_download_choice()
-
+        _update_download_window()
+        
     def onConfirm(self):
         if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):
             wx.MessageDialog(self, "速度值无效\n\n输入的速度值无效，应为一个正整数", "警告", wx.ICON_WARNING).ShowModal()
@@ -309,7 +316,9 @@ class DownloadTab(wx.Panel):
                 return self.FromDIP((400, 430))
 
 class MergeTab(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, _main_window):
+        self._main_window = _main_window
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -431,7 +440,9 @@ class MergeTab(wx.Panel):
         return True
 
 class ExtraTab(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, _main_window):
+        self._main_window = _main_window
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -487,7 +498,9 @@ class ExtraTab(wx.Panel):
         return True
     
 class ProxyTab(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, _main_window):
+        self._main_window = _main_window
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -673,7 +686,9 @@ class ProxyTab(wx.Panel):
         return True
 
 class MiscTab(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, _main_window):
+        self._main_window = _main_window
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -816,7 +831,7 @@ class MiscTab(wx.Panel):
         conf.config_save()
 
         # 重新创建主窗口的菜单
-        self.GetParent().GetParent().GetParent().init_menubar()
+        self._main_window.init_menubar()
 
     def onBrowsePlayerEVT(self, event):
         # 根据不同平台选取不同后缀名文件

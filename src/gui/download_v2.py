@@ -135,7 +135,13 @@ class DownloadManagerWindow(Frame):
 
     def onChangeMaxDownloaderEVT(self, event):
         def _update_config():
+            from utils.config import conf
+
             Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
+
+            conf.config.set("download", "max_download", str(Config.Download.max_download_count))
+
+            conf.config_save()
 
         # 动态调整并行下载数
         _update_config()
@@ -155,6 +161,7 @@ class DownloadManagerWindow(Frame):
                         # 当前下载数大于设置的并行下载数
                         if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
                             _count += 1
+                            
                             if _count > Config.Download.max_download_count:
                                 # 正在下载的任务暂停下载
                                 panel.onPause()
@@ -820,6 +827,7 @@ class DownloadTaskPanel(wx.Panel):
 
     def onResume(self):
         # 继续下载
+
         if self.task_info.status != Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
             if self.task_info.progress == 100:
                 # 下载完成，合成视频
@@ -877,7 +885,10 @@ class DownloadTaskPanel(wx.Panel):
             # 更新下载进度回调函数
             self.progress_bar.SetValue(info["progress"])
 
-            self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
+            if self.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+                # 只有在下载状态时才更新下载速度
+                self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
+
             self.video_size_lab.SetLabel("{}/{}".format(FormatTool.format_size(info["completed_size"]), FormatTool.format_size(self.task_info.total_size)))
                 
             self.task_info.progress = info["progress"]
