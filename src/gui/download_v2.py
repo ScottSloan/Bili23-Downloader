@@ -344,12 +344,13 @@ class DownloadUtils:
         
         def get_video_available_quality():
             # 获取视频最高清晰度
-            highest_video_quality_id = self._get_highest_video_quality(json_dash["video"])
-
+            
             if self.task_info.video_quality_id == 200:
-                # 当选择自动时，选取最高可用清晰度
+                highest_video_quality_id = self._get_highest_video_quality(json_dash["video"], without_dolby = not Config.Download.enable_dolby)
+
                 self.task_info.video_quality_id = highest_video_quality_id
             else:
+                highest_video_quality_id = self._get_highest_video_quality(json_dash["video"])
                 if highest_video_quality_id < self.task_info.video_quality_id:
                     # 当视频不存在选取的清晰度时，选取最高可用的清晰度
                     self.task_info.video_quality_id = highest_video_quality_id
@@ -412,7 +413,8 @@ class DownloadUtils:
                     case 30300:
                         _get_flac(json_dash)
 
-                        _get_dolby(json_dash)
+                        if Config.Download.enable_dolby:
+                            _get_dolby(json_dash)
 
                     case 30251:
                         _get_flac(json_dash)
@@ -580,12 +582,15 @@ class DownloadUtils:
 
         return temp_list
 
-    def _get_highest_video_quality(self, data: List[dict]):
+    def _get_highest_video_quality(self, data: List[dict], without_dolby: bool = False):
         # 默认为 360P
         highest_video_quality_id = 16
 
         for entry in data:
             # 遍历列表，选取其中最高的清晰度
+            if without_dolby and entry["id"] == 126:
+                continue
+
             if entry["id"] > highest_video_quality_id:
                 highest_video_quality_id = entry["id"]
 
@@ -715,8 +720,8 @@ class DownloadTaskPanel(wx.Panel):
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseResumeEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
-        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onShowCoverViewerDialogEVT)
-        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowErrorInfoDialogEVT)
+        self.cover_bmp.Bind(wx.EVT_LEFT_UP, self.onShowCoverViewerDialogEVT)
+        self.speed_lab.Bind(wx.EVT_LEFT_UP, self.onShowErrorInfoDialogEVT)
 
     def init_utils(self):
         def show_cover():

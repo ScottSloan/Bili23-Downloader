@@ -62,6 +62,8 @@ class Config:
         max_thread_count: int = 2
         max_download_count: int = 1
 
+        enable_dolby: bool = False
+
         show_notification: bool = False
         delete_history: bool = False
         add_number: bool = True
@@ -202,6 +204,7 @@ class ConfigUtils:
         Config.Download.video_quality_id = self.config.getint("download", "video_quality")
         Config.Download.audio_quality_id = self.config.getint("download", "audio_quality")
         Config.Download.video_codec_id = self.config.getint("download", "video_codec")
+        Config.Download.enable_dolby = self.config.getboolean("download", "enable_dolby")
         Config.Download.show_notification = self.config.getint("download", "show_notification")
         Config.Download.delete_history = self.config.getint("download", "delete_history")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
@@ -271,6 +274,7 @@ class ConfigUtils:
         self.config.set("download", "video_quality", str(Config.Download.video_quality_id))
         self.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
         self.config.set("download", "video_codec", str(Config.Download.video_codec_id))
+        self.config.set("download", "enable_dolby", str(int(Config.Download.enable_dolby)))
         self.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
         self.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
         self.config.set("download", "add_number", str(int(Config.Download.add_number)))

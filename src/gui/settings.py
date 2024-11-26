@@ -107,6 +107,7 @@ class DownloadTab(wx.Panel):
         self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_mapping.keys()))
         self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.video_quality_tip.SetToolTip("说明")
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -117,6 +118,7 @@ class DownloadTab(wx.Panel):
         self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_mapping.keys()))
         self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.audio_quality_tip.SetToolTip("说明")
 
         sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -127,11 +129,21 @@ class DownloadTab(wx.Panel):
         self.codec_choice = wx.Choice(self.scrolled_panel, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
         self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
         self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.codec_tip.SetToolTip("说明")
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
+        self.enable_dolby_chk = wx.CheckBox(self.scrolled_panel, -1, '自动下载杜比视界或杜比全景声')
+        self.dolby_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.dolby_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.dolby_tip.SetToolTip("说明")
+
+        dolby_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        dolby_hbox.Add(self.enable_dolby_chk, 0, wx.ALL, 10)
+        dolby_hbox.Add(self.dolby_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(self.scrolled_panel, -1, "最高")
@@ -158,9 +170,10 @@ class DownloadTab(wx.Panel):
         vbox.Add(video_quality_hbox, 0, wx.EXPAND)
         vbox.Add(sound_quality_hbox, 0, wx.EXPAND)
         vbox.Add(codec_hbox, 0, wx.EXPAND)
+        vbox.Add(dolby_hbox, 0, wx.EXPAND)
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
+        vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
 
@@ -177,17 +190,17 @@ class DownloadTab(wx.Panel):
         self.layout_sizer()
 
     def Bind_EVT(self):
-        self.path_box.Bind(wx.EVT_TEXT, self.onChangePath)
-        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePath)
+        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
 
-        self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadSlide)
-        self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadSlide)
+        self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadCountSlideEVT)
+        self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
 
-        self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimit)
+        self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
 
-        self.video_quality_tip.Bind(wx.EVT_LEFT_DOWN, self.onVideoQualityTip)
-        self.audio_quality_tip.Bind(wx.EVT_LEFT_DOWN, self.onAudioQualityTip)
-        self.codec_tip.Bind(wx.EVT_LEFT_DOWN, self.onCodecTip)
+        self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
+        self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
+        self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
+        self.dolby_tip.Bind(wx.EVT_LEFT_UP, self.onDolbyTipEVT)
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
@@ -203,6 +216,7 @@ class DownloadTab(wx.Panel):
 
         self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_mapping, Config.Download.video_codec_id))
 
+        self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
         self.speed_limit_chk.SetValue(Config.Download.speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
@@ -210,7 +224,7 @@ class DownloadTab(wx.Panel):
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
 
-        self.onChangeSpeedLimit(0)
+        self.onChangeSpeedLimitEVT(0)
 
     def save(self):
         def _update_download_window():
@@ -226,6 +240,7 @@ class DownloadTab(wx.Panel):
         Config.Download.video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
         Config.Download.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
         Config.Download.video_codec_id = video_codec_mapping[self.codec_choice.GetStringSelection()]
+        Config.Download.enable_dolby = self.enable_dolby_chk.GetValue()
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.show_notification = self.show_toast_chk.GetValue()
@@ -238,6 +253,7 @@ class DownloadTab(wx.Panel):
         conf.config.set("download", "video_quality", str(Config.Download.video_quality_id))
         conf.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
         conf.config.set("download", "video_codec", Config.Download.video_codec_id)
+        conf.config.set("download", "enable_dolby", str(int(Config.Download.enable_dolby)))
         conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
         conf.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
         conf.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
@@ -258,7 +274,7 @@ class DownloadTab(wx.Panel):
 
         return True
     
-    def onBrowsePath(self, event):
+    def onBrowsePathEVT(self, event):
         dlg = wx.DirDialog(self, "选择下载目录", defaultPath = Config.Download.path)
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -267,16 +283,13 @@ class DownloadTab(wx.Panel):
 
         dlg.Destroy()
 
-    def onChangePath(self, event):
-        self.path_box.SetToolTip(self.path_box.GetValue())
-
-    def onThreadSlide(self, event):
+    def onThreadCountSlideEVT(self, event):
         self.max_thread_lab.SetLabel("多线程数：{}".format(self.max_thread_slider.GetValue()))
 
-    def onDownloadSlide(self, event):
+    def onDownloadCountSlideEVT(self, event):
         self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
 
-    def onChangeSpeedLimit(self, event):
+    def onChangeSpeedLimitEVT(self, event):
         if self.speed_limit_chk.GetValue():
             self.speed_limit_box.Enable(True)
 
@@ -291,14 +304,17 @@ class DownloadTab(wx.Panel):
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
     
-    def onVideoQualityTip(self, event):
+    def onVideoQualityTipEVT(self, event):
         wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度", "说明", wx.ICON_INFORMATION).ShowModal()
 
-    def onAudioQualityTip(self, event):
+    def onAudioQualityTipEVT(self, event):
         wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质", "说明", wx.ICON_INFORMATION).ShowModal()
 
-    def onCodecTip(self, event):
-        wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则自动下载 H.264", "说明", wx.ICON_INFORMATION).ShowModal()
+    def onVideoCodecTipEVT(self, event):
+        wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认下载 AVC/H.264", "说明", wx.ICON_INFORMATION).ShowModal()
+    
+    def onDolbyTipEVT(self, event):
+        wx.MessageDialog(self, '自动下载杜比选项说明\n\n当上方选择 "自动" 时，若视频支持杜比，则自动下载杜比视界或杜比全景声，否则需要手动选择\n开启此项前请先确认设备是否支持杜比', "说明", wx.ICON_INFORMATION).ShowModal()
 
     def layout_sizer(self):
         self.scrolled_panel.Layout()
@@ -369,8 +385,8 @@ class MergeTab(wx.Panel):
 
         merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
         merge_option_vbox.Add(self.override_file_chk, 0, wx.ALL, 10)
-        merge_option_vbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL, 10)
-        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL, 10)
+        merge_option_vbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), 10)
+        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
         merge_option_sbox.Add(merge_option_vbox, 0, wx.EXPAND)
@@ -772,9 +788,12 @@ class MiscTab(wx.Panel):
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
+        self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = _get_scale_size((100, 28)))
+
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
         misc_vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
+        misc_vbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
         misc_sbox.Add(misc_vbox, 0, wx.EXPAND)
@@ -791,6 +810,8 @@ class MiscTab(wx.Panel):
         self.player_custom_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
 
         self.browse_player_btn.Bind(wx.EVT_BUTTON, self.onBrowsePlayerEVT)
+
+        self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
 
     def init_data(self):
         match Config.Misc.episode_display_mode:
@@ -874,6 +895,14 @@ class MiscTab(wx.Panel):
             set_enable(False)
         else:
             set_enable(True)
+
+    def onClearUserDataEVT(self, event):
+        dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+
+            # 退出程序
+            exit()
 
     def onConfirm(self):
         self.save()
