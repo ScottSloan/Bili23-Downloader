@@ -139,7 +139,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.timestamp = UniversalTool.get_timestamp()
 
         download_info.title = title
-        download_info.title_legal = UniversalTool.get_legal_name(title).removeprefix("-")
+        download_info.title_legal = UniversalTool.get_legal_name(title)
         download_info.cover_url = cover_url
         download_info.referer_url = referer_url
         download_info.bvid = bvid

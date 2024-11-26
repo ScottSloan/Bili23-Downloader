@@ -505,7 +505,7 @@ class DownloadUtils:
                     if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
                         return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
                     else:
-                        return f'{_rename_cmd} "{self._temp_audio_file_name}" "{self.full_file_name}"'
+                        return f'{_rename_cmd} "{self._temp_audio_file_name}" {_extra}"{self.full_file_name}"'
                 
                 case "flac":
                     return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
@@ -517,15 +517,17 @@ class DownloadUtils:
 
         if Config.Sys.platform == "windows":
             _rename_cmd = "rename"
+            _extra = ""
         else:
             _rename_cmd = "mv"
+            _extra = "-- "
 
         match self.task_info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL:
-                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4 && {_rename_cmd} _out.mp4 "{self.file_title}.mp4"'
+                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4 && {_rename_cmd} _out.mp4 {_extra}"{self.file_title}.mp4"'
 
             case Config.Type.MERGE_TYPE_VIDEO:
-                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" "{self.file_title}.mp4"'
+                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.file_title}.mp4"'
 
             case Config.Type.MERGE_TYPE_AUDIO:
                 _cmd = _get_audio_cmd()
@@ -667,7 +669,6 @@ class DownloadTaskPanel(wx.Panel):
         _set_dark_mode(self.video_codec_lab)
 
         self.video_size_lab = wx.StaticText(self, -1, "--", size = self.FromDIP((-1, -1)))
-
         _set_dark_mode(self.video_size_lab)
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -842,7 +843,8 @@ class DownloadTaskPanel(wx.Panel):
                 # 下载失败或合成失败，重试
                 self.onResume()
 
-        self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
+        if not Config.Sys.dark_mode:
+            self.speed_lab.SetForegroundColour(wx.Colour(108, 108, 108))
     
     def onPause(self):
         # 暂停下载

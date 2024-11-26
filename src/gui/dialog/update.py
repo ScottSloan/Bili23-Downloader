@@ -20,8 +20,7 @@ class UpdateWindow(wx.Dialog):
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
-
-        _set_dark_mode()
+                self.changelog.SetBackgroundColour("white")
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
@@ -37,7 +36,6 @@ class UpdateWindow(wx.Dialog):
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         self.changelog = wx.TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE)
-        self.changelog.SetBackgroundColour("white")
         self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
@@ -59,6 +57,8 @@ class UpdateWindow(wx.Dialog):
         update_vbox.Add(bottom_hbox, 0, wx.EXPAND, 0)
 
         self.SetSizerAndFit(update_vbox)
+
+        _set_dark_mode()
     
     def Bind_EVT(self):
         self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)

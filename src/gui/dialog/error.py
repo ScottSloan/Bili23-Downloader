@@ -20,8 +20,7 @@ class ErrorInfoDialog(wx.Dialog):
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
-
-        _set_dark_mode()
+                self.log_box.SetBackgroundColour("white")
 
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
         self.detail_lab = wx.StaticText(self, -1, f"时间：{self.error_log.time}      返回值：{self.error_log.return_code}")
@@ -36,7 +35,6 @@ class ErrorInfoDialog(wx.Dialog):
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         self.log_box = wx.TextCtrl(self, -1, self.error_log.log, size = self.FromDIP((500, 230)), style = wx.TE_MULTILINE)
-        self.log_box.SetBackgroundColour("white")
         self.log_box.SetFont(font)
 
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.FromDIP((80, 28)))
@@ -55,3 +53,5 @@ class ErrorInfoDialog(wx.Dialog):
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
+
+        _set_dark_mode()
