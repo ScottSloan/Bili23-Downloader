@@ -44,6 +44,14 @@ class DownloadManagerWindow(Frame):
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
 
+        def _get_panel_size():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return self.FromDIP((800, 350))
+
+                case "linux":
+                    return self.FromDIP((850, 400))
+
         _set_dark_mode()
 
         font: wx.Font = self.GetFont()
@@ -70,7 +78,7 @@ class DownloadManagerWindow(Frame):
 
         top_bar_border = wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL)
 
-        self.download_task_list_panel = ScrolledPanel(self.panel, size = self.FromDIP((800, 350)))
+        self.download_task_list_panel = ScrolledPanel(self.panel, _get_panel_size())
         
         bottom_bar_border = wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL)
 
@@ -929,15 +937,14 @@ class DownloadTaskPanel(wx.Panel):
                 self.speed_lab.SetLabel("正在转换音频...")
             else:
                 self.speed_lab.SetLabel("正在合成视频...")
+
+            self.callback.onStartNextCallback()
         
         self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGING)
 
         wx.CallAfter(callback)
 
         Thread(target = self.utils.merge_video).start()
-
-        # 在合成时下载下一个视频
-        self.callback.onStartNextCallback()
 
     def onMergeFinish(self):
         def callback():
@@ -997,10 +1004,10 @@ class DownloadTaskPanel(wx.Panel):
             self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED)
             self.speed_lab.SetLabel("下载失败")
 
-        wx.CallAfter(callback)
+            self.callback.onUpdateTaskCountCallback()
+            self.callback.onStartNextCallback()
 
-        # 跳过当前下载下一个视频
-        self.callback.onStartNextCallback()
+        wx.CallAfter(callback)
     
     def onOpenLocation(self):
         path = os.path.join(Config.Download.path, self.utils.full_file_name)

@@ -177,7 +177,6 @@ class LoginWindow(wx.Dialog):
         _set_dark_mode()
                 
         self.sms_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.password_login_btn.SetForegroundColour(wx.Colour(0, 0, 0))
 
         self.note.ChangeSelection(1)
 
@@ -241,21 +240,29 @@ class PasswordPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         username_lab = wx.StaticText(self, -1, "账号")
-        self.username_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)))
+        self.username_box = wx.TextCtrl(self, -1, size = _get_scale_size((200, 26)))
 
         username_hbox = wx.BoxSizer(wx.HORIZONTAL)
         username_hbox.Add(username_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         username_hbox.Add(self.username_box, 1, wx.ALL & (~wx.LEFT), 10)
 
         password_lab = wx.StaticText(self, -1, "密码")
-        self.password_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)), style = wx.TE_PASSWORD)
+        self.password_box = wx.TextCtrl(self, -1, size = _get_scale_size((200, 26)), style = wx.TE_PASSWORD)
 
         password_hbox = wx.BoxSizer(wx.HORIZONTAL)
         password_hbox.Add(password_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         password_hbox.Add(self.password_box, 1, wx.ALL & (~wx.LEFT), 10)
 
-        self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
+        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()
@@ -309,6 +316,14 @@ class SMSPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         country_lab = wx.StaticText(self, -1, "区号")
         self.country_choice = wx.Choice(self, -1)
 
@@ -328,7 +343,7 @@ class SMSPage(LoginPage):
         bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, border = 10)
 
-        self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
+        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()

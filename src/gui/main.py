@@ -35,8 +35,6 @@ class MainWindow(Frame):
 
         self.init_utils()
 
-        self.setMainWindowSize()
-
         self.Bind_EVT()
 
         self.CenterOnParent()
@@ -57,7 +55,14 @@ class MainWindow(Frame):
                 
                 case "linux" | "darwin":
                     return wx.DefaultSize
-                
+        
+        def _set_window_size():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    self.SetSize(self.FromDIP((800, 450)))
+                case "linux":
+                    self.SetClientSize(self.FromDIP((880, 450)))
+
         _dark_mode()
 
         # 避免出现 iCCP sRGB 警告
@@ -80,14 +85,14 @@ class MainWindow(Frame):
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
+        self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.download_option_btn = wx.Button(self.panel, -1, "...", size = (self.video_quality_choice.GetSize()[1], self.video_quality_choice.GetSize()[1]))
+        self.download_option_btn = wx.Button(self.panel, -1, "...", size = _get_scale_size((24, 24)))
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.AddStretchSpacer()
-        video_info_hbox.Add(video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.download_option_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
@@ -129,6 +134,8 @@ class MainWindow(Frame):
         self.panel.SetSizerAndFit(self.frame_vbox)
 
         self.init_menubar()
+
+        _set_window_size()
     
     def init_menubar(self):
         menu_bar = wx.MenuBar()
@@ -184,17 +191,17 @@ class MainWindow(Frame):
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
         self.download_option_btn.Bind(wx.EVT_BUTTON, self.onDownloadOptionEVT)
 
-        self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
-        self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenu)
+        self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
+        self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
 
-        self.Bind(wx.EVT_MENU, self.onLogin, id = self.ID_LOGIN)
-        self.Bind(wx.EVT_MENU, self.onLoadShell, id = self.ID_DEBUG)
-        self.Bind(wx.EVT_MENU, self.onLoadSetting, id = self.ID_SETTINGS)
+        self.Bind(wx.EVT_MENU, self.onLoginEVT, id = self.ID_LOGIN)
+        self.Bind(wx.EVT_MENU, self.onDebugEVT, id = self.ID_DEBUG)
+        self.Bind(wx.EVT_MENU, self.onSettingEVT, id = self.ID_SETTINGS)
         self.Bind(wx.EVT_MENU, self.onLoadConverter, id = self.ID_CONVERTER)
         self.Bind(wx.EVT_MENU, self.onAboutEVT, id = self.ID_ABOUT)
-        self.Bind(wx.EVT_MENU, self.onCheckUpdate, id = self.ID_CHECK_UPDATE)
+        self.Bind(wx.EVT_MENU, self.onCheckUpdateEVT, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
-        self.Bind(wx.EVT_MENU, self.onRefresh, id = self.ID_REFRESH)
+        self.Bind(wx.EVT_MENU, self.onRefreshEVT, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelpEVT, id = self.ID_HELP)
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
@@ -501,7 +508,7 @@ class MainWindow(Frame):
 
         raise Exception
 
-    def onLogin(self, event):
+    def onLoginEVT(self, event):
         self.login_window = LoginWindow(self)
         self.login_window.ShowModal()
 
@@ -521,7 +528,7 @@ class MainWindow(Frame):
 
             self.infobar.ShowMessage("提示：您已注销登录", flags = wx.ICON_INFORMATION)
 
-    def onRefresh(self, event):
+    def onRefreshEVT(self, event):
         login = QRLogin()
         user_info = login.get_user_info(True)
 
@@ -538,35 +545,40 @@ class MainWindow(Frame):
 
         thread.start()
 
-    def onShowUserMenu(self, event):
+    def onShowUserMenuEVT(self, event):
         if Config.User.login:
             self.PopupMenu(self.get_user_context_menu())
         else:
-            self.onLogin(0)
+            self.onLoginEVT(0)
 
     def onLoadConverter(self, event):
         converter_window = ConverterWindow(self)
         converter_window.ShowModal()
 
-    def onLoadSetting(self, event):
+    def onSettingEVT(self, event):
         setting_window = SettingWindow(self)
         setting_window.ShowModal()
 
-    def onLoadShell(self, event):
+    def onDebugEVT(self, event):
         shell = wx.py.shell.ShellFrame(self, -1, "调试")
         
         shell.CenterOnParent()
         shell.Show()
 
-    def onCheckUpdate(self, event):
+    def onCheckUpdateEVT(self, event):
         wx.CallAfter(self.checkUpdateManuallyThread)
 
     def onDownloadOptionEVT(self, event):
+        def callback(index: int, enable: bool):
+            self.video_quality_choice.SetSelection(index)
+            self.video_quality_choice.Enable(enable)
+            self.video_quality_lab.Enable(enable)
+
         # 只有解析成功才会显示音频菜单
         if self.parse_finish_flag:
             from gui.dialog.option import OptionDialog
 
-            dlg = OptionDialog(self)
+            dlg = OptionDialog(self, callback)
             dlg.ShowModal()
 
     def showUserInfoThread(self):
@@ -666,11 +678,3 @@ class MainWindow(Frame):
         # 安全关闭扫码登录窗口
         self.login_window.Close()
         self.login_window.Destroy()
-
-    def setMainWindowSize(self):
-        # 解决 Linux 上 UI 太小的问题
-        match Config.Sys.platform:
-            case "windows" | "darwin":
-                self.SetSize(self.FromDIP((800, 450)))
-            case "linux":
-                self.SetClientSize(self.FromDIP((880, 450)))

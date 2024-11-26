@@ -1,5 +1,7 @@
 # Bili23-Downloader-GUI
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
+![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) 
+
+![Windows](https://img.shields.io/badge/-Windows-blue?logo=windows) ![Linux](https://img.shields.io/badge/-Linux-333?logo=ubuntu) ![macOS](https://img.shields.io/badge/-MacOS-black?logo=apple)
 
 Bili23 Downloader GUI
 
@@ -39,9 +41,11 @@ Bili23 Downloader GUI
 ### **下载**
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
+程序支持多线程下载（最多 8 线程）、并行下载（上限为 8 个，支持动态调整）、断点续传、下载限速、出错重试等功能。
+
 # 更新日志
 ### **Version 1.53.0 (2024/11/26)**
-Version 1.53.0 Beta5 发布
+Version 1.53.0 Beta6 发布
 
 本次更新内容：
 * 重构下载功能，解决历史遗留问题

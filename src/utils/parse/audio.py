@@ -43,7 +43,7 @@ class AudioInfo:
                             case 30216:
                                 AudioInfo.Availability._64K = True
             
-                AudioInfo.Availability.audio = True
+                    AudioInfo.Availability.audio = True
             else:
                 AudioInfo.Availability.audio = False
         

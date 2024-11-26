@@ -6,7 +6,9 @@ from utils.parse.extra import ExtraInfo
 from utils.mapping import audio_quality_mapping, danmaku_format_mapping
 
 class OptionDialog(wx.Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, callback):
+        self.callback = callback
+
         wx.Dialog.__init__(self, parent, -1, "下载选项")
 
         self.init_UI()
@@ -91,7 +93,10 @@ class OptionDialog(wx.Dialog):
         def _get_audio_quality_list():
             audio_quality_desc_list = AudioInfo.aduio_quality_desc_list.copy()
 
-            audio_quality_desc_list.insert(0, "自动")
+            if AudioInfo.Availability.audio:
+                audio_quality_desc_list.insert(0, "自动")
+            else:
+                audio_quality_desc_list.insert(0, "--无音轨--")
 
             return audio_quality_desc_list
 
@@ -108,6 +113,10 @@ class OptionDialog(wx.Dialog):
         self.audio_quality_choice.SetSelection(_get_choice_index(AudioInfo.audio_quality_id))
 
         self.audio_only_chk.SetValue(AudioInfo.download_audio_only)
+
+        if not AudioInfo.Availability.audio:
+            self.audio_only_chk.Enable(False)
+            self.audio_only_chk.SetValue(False)
 
         self.get_danmaku_chk.SetValue(ExtraInfo.get_danmaku)
         self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_type)
@@ -139,5 +148,7 @@ class OptionDialog(wx.Dialog):
         ExtraInfo.get_cover = self.get_cover_chk.GetValue()
 
         Config.Download.add_number = self.add_number_chk.GetValue()
+
+        self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 
         event.Skip()
