@@ -4,8 +4,6 @@ import requests
 from typing import Dict
 from io import BytesIO
 
-import wx.adv
-
 from utils.login import QRLogin, PasswordLogin, SMSLogin
 from utils.config import Config, conf
 from utils.thread import Thread
@@ -155,14 +153,29 @@ class LoginWindow(wx.Dialog):
         wx.CallAfter(self.GetParent().onLoginSuccess)
     
     def onSwitchPasswordLogin(self, event):
+        def _set_dark_mode():
+            if Config.Sys.dark_mode:
+                self.sms_login_btn.SetForegroundColour("white")
+            else:
+                self.sms_login_btn.SetForegroundColour("black")
+
+        _set_dark_mode()
+
         self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.sms_login_btn.SetForegroundColour(wx.Colour(0, 0, 0))
 
         self.note.ChangeSelection(0)
 
         self.Refresh()
 
     def onSwitchSMSLogin(self, event):
+        def _set_dark_mode():
+            if Config.Sys.dark_mode:
+                self.password_login_btn.SetForegroundColour("white")
+            else:
+                self.password_login_btn.SetForegroundColour("black")
+
+        _set_dark_mode()
+                
         self.sms_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
         self.password_login_btn.SetForegroundColour(wx.Colour(0, 0, 0))
 

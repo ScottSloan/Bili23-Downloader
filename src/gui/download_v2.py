@@ -220,7 +220,7 @@ class DownloadManagerWindow(Frame):
                     _download_task_info_list.append(_task_info)
 
         # 根据时间戳排序
-        _download_task_info_list.sort(key = lambda _task_info: _task_info.timestamp, reverse = False)
+        _download_task_info_list.sort(key = lambda _timestamp: _task_info.timestamp, reverse = False)
 
         wx.CallAfter(self.add_download_task_panel, _download_task_info_list, empty_callback, False)
 

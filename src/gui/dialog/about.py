@@ -36,12 +36,15 @@ class AboutWindow(wx.Dialog):
             _width, _height = image.GetSize()
 
             if Config.Sys.dark_mode:
+                color = self.GetBackgroundColour()
+
                 for x in range(_width):
                     for y in range(_height):
                         r, g, b = image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y)
 
                         if r > 200 and g > 200 and b > 200:
-                            image.SetRGB(x, y, 30, 30, 30)
+                            # 选取背景颜色填充
+                            image.SetRGB(x, y, color[0], color[1], color[2])
 
             return image
 

@@ -40,12 +40,27 @@ class ExtraParser:
             f.write(req.content)
 
     def get_danmaku_protobuf(self):
-        # 下载 protobuf 格式弹幕文件
-        url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.cid}&segment_index=1"
+        def _get_protobuf(index: int, _package_count: int):
+            def _get_file_name(index: int, _package_count: int):
+                if _package_count == 1:
+                    return f"{self.title}.protobuf"
+                else:
+                    return f"{self.title}_part{index}.protobuf"
+            
+            # 下载 protobuf 格式弹幕文件
+            url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.cid}&segment_index={index}"
 
-        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+            req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
-        path = os.path.join(Config.Download.path, f"{self.title}.protobuf")
+            path = os.path.join(Config.Download.path, _get_file_name(index, _package_count))
 
-        with open(path, "wb") as f:
-            f.write(req.content)
+            with open(path, "wb") as f:
+                f.write(req.content)
+
+        import math
+
+        # protobuf 每 6min 分一包，向上取整下载全部分包
+        _package_count = math.ceil(self.duration / 360)
+
+        for i in range(_package_count):
+            _get_protobuf(i + 1)

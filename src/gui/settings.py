@@ -9,7 +9,7 @@ from gui.templates import ScrolledPanel
 from gui.dialog.ffmpeg import DetectDialog
 
 from utils.config import Config, conf
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, get_mapping_index_by_value
 
@@ -901,6 +901,8 @@ class MiscTab(wx.Panel):
 
         if dlg.ShowModal() == wx.ID_YES:
             conf.clear_config()
+
+            DownloadFileTool._clear_all_files()
 
             # 退出程序
             exit()

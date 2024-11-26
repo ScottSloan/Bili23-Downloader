@@ -244,7 +244,16 @@ class DownloadFileTool:
             return False
 
         return True
-        
+    
+    @staticmethod
+    def _clear_all_files():
+        for file in os.listdir(Config.User.download_file_directory):
+            file_path = os.path.join(Config.User.download_file_directory, file)
+
+            if os.path.isfile(file_path):
+                if file.startswith("info_") and file.endswith(".json"):
+                    os.remove(file_path)
+
 class FormatTool:
     # 格式化数据类
     @staticmethod
