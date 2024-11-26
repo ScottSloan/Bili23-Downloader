@@ -410,6 +410,14 @@ class UniversalTool:
                 except Exception:
                     pass
 
+    @staticmethod
+    def set_dpi_awareness():
+        import ctypes
+
+        # Windows 环境下，启用高 DPI 适配
+        if Config.Sys.platform == "windows":
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
 class FFmpegCheckTool:
     # FFmpeg 检查工具类
     @staticmethod

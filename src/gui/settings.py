@@ -900,6 +900,7 @@ class MiscTab(wx.Panel):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
+            conf.clear_config()
 
             # 退出程序
             exit()

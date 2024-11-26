@@ -17,9 +17,9 @@ class Config:
         version_code: int = 1530
 
         # 断点续传文件最低支持版本号
-        _task_file_min_version_code: int = 1531
+        _task_file_min_version_code: int = 1532
 
-        release_date: str = "2024/11/25"
+        release_date: str = "2024/11/26"
 
     class Proxy:
         proxy_mode: int = 1
@@ -141,9 +141,6 @@ class Config:
         danmaku_format = 0
 
         download_cover = False
-
-class Download:
-    current_parse_type: int = 0
 
 class ConfigUtils:
     def __init__(self):
@@ -344,5 +341,11 @@ class ConfigUtils:
         conf.user_config.set("user", "sessdata", Config.User.sessdata)
 
         conf.user_config_save()
+
+    def clear_config(self):
+        from utils.tool_v2 import UniversalTool
+
+        UniversalTool.remove_files(os.getcwd(), ["config.ini"])
+        UniversalTool.remove_files(Config.User.base_path, ["user.ini"])
 
 conf = ConfigUtils()

@@ -188,9 +188,9 @@ class DownloadManagerWindow(Frame):
 
         # 读取断点续传信息
         self.load_download_task()
-        
+
     def load_download_task(self):
-        def callback():
+        def empty_callback():
             pass
 
         _download_task_info_list = []
@@ -222,7 +222,7 @@ class DownloadManagerWindow(Frame):
         # 根据时间戳排序
         _download_task_info_list.sort(key = lambda _task_info: _task_info.timestamp, reverse = False)
 
-        wx.CallAfter(self.add_download_task_panel, _download_task_info_list, callback, False)
+        wx.CallAfter(self.add_download_task_panel, _download_task_info_list, empty_callback, False)
 
     def start_download(self):
         # 开始下载
@@ -961,7 +961,7 @@ class DownloadTaskPanel(wx.Panel):
                     f.write(self._cover_raw_contents)
 
             # 下载完成后，才进行下载附加内容
-            extra_parser = ExtraParser(self.utils.file_title, self.task_info.cid)
+            extra_parser = ExtraParser(self.utils.file_title, self.task_info.cid, self.task_info.duration)
             
             if ExtraInfo.get_danmaku:
                 extra_parser.get_danmaku()

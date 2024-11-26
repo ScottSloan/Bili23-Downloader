@@ -5,7 +5,7 @@ import wx.py
 import requests
 from typing import Optional
 
-from utils.config import Config, Download, conf
+from utils.config import Config, conf
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.festival import FestivalInfo, FestivalParser
@@ -180,7 +180,7 @@ class MainWindow(Frame):
     def Bind_EVT(self):
         self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGetEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onGetEVT)
-        self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgr)
+        self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgrEVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
         self.download_option_btn.Bind(wx.EVT_BUTTON, self.onDownloadOptionEVT)
 
@@ -373,7 +373,7 @@ class MainWindow(Frame):
                 self.processing_window.Hide()
 
                 # 显示下载窗口
-                self.onOpenDownloadMgr(0)
+                self.onOpenDownloadMgrEVT(0)
 
         def worker():
             time.sleep(0.1)
@@ -422,7 +422,7 @@ class MainWindow(Frame):
         download_thread = Thread(target = worker)
         download_thread.start()
         
-    def onOpenDownloadMgr(self, event):
+    def onOpenDownloadMgrEVT(self, event):
         if not self.download_window.IsShown():
             self.download_window.Show()
 
@@ -439,11 +439,9 @@ class MainWindow(Frame):
         if self.current_parse_type == Config.Type.VIDEO:
             video_quality_id_list = VideoInfo.video_quality_id_list
             video_quality_desc_list = VideoInfo.video_quality_desc_list
-            Download.current_parse_type = Config.Type.VIDEO
         else:
             video_quality_id_list = BangumiInfo.video_quality_id_list
             video_quality_desc_list = BangumiInfo.video_quality_desc_list
-            Download.current_parse_type = Config.Type.BANGUMI
 
         # 自动在最前添加自动选项
         video_quality_desc_list.insert(0, "自动")

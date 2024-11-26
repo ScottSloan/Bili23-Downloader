@@ -6,7 +6,7 @@ from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.icon_v2 import IconManager, APP_ICON_SMALL
 from utils.tool_v2 import FormatTool, UniversalTool
-from utils.config import Config, Download
+from utils.config import Config
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.live import LiveInfo
@@ -31,6 +31,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind_EVT()
 
         self.init_list()
+
+        self._main_window = self.GetParent().GetParent()
     
     def Bind_EVT(self):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
@@ -122,14 +124,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if text not in self.parent_items and state:
                 item_title = self.GetItemText(i, 1)
                 parent = self.GetItemText(self.GetItemParent(i), 0)
-                
-                if Download.current_parse_type == Config.Type.VIDEO:
-                    self.get_video_download_info(item_title, parent, int(text))
 
-                elif Download.current_parse_type == Config.Type.BANGUMI:
-                    self.get_bangumi_download_info(parent, int(text))
+                match self._main_window.current_parse_type:
+                    case Config.Type.VIDEO:
+                        self.get_video_download_info(item_title, parent, int(text))
+
+                    case Config.Type.BANGUMI:
+                        self.get_bangumi_download_info(parent, int(text))
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
         download_info.id = UniversalTool.get_random_id()
@@ -141,6 +144,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.referer_url = referer_url
         download_info.bvid = bvid
         download_info.cid = cid
+        download_info.duration = duration
 
         download_info.video_quality_id = self.video_quality_id
         download_info.audio_quality_id = AudioInfo.audio_quality_id
@@ -167,6 +171,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             cover_url = info_entry["arc"]["pic"]
             bvid = info_entry["bvid"]
             cid = info_entry["cid"]
+            duration = info_entry["arc"]["duration"]
 
         else:
             # 分 P 或单个视频
@@ -180,10 +185,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 
             bvid = VideoInfo.bvid
             cid = info_entry["cid"]
+            duration = info_entry["duration"]
 
         referer_url = VideoInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, duration, cover_url, bvid, cid))
     
     def get_bangumi_download_info(self, parent: str, index: int):
         info_entry = BangumiInfo.sections[parent][index - 1]
@@ -192,9 +198,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         cover_url = info_entry["cover"]
         bvid = info_entry["bvid"]
         cid = info_entry["cid"]
+
+        if "duration" in info_entry:
+            duration = info_entry["duration"] / 1000
+        else:
+            duration = 1
+
         referer_url = BangumiInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, duration, cover_url, bvid, cid))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):
