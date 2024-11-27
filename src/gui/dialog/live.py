@@ -4,10 +4,10 @@ import re
 import subprocess
 from typing import List
 
-from utils.live import LiveInfo
+from utils.parse.live import LiveInfo
 from utils.config import Config
 from utils.thread import Thread
-from utils.tools import format_size
+from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -19,37 +19,47 @@ class LiveRecordingWindow(wx.Dialog):
 
         self.CenterOnParent()
 
-        self.init_live_info()
+        self.init_utils()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+                
         font: wx.Font = self.GetFont()
-        font.SetPointSize(12)
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         self.title_lab = wx.StaticText(self, -1)
         self.title_lab.SetFont(font)
 
         m3u8_link_lab = wx.StaticText(self, -1, "m3u8 链接")
-        self.m3u8_link_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, -1)))
-        self.copy_link_btn = wx.Button(self, -1, "复制", size = self.FromDIP((60, 24)))
+        self.m3u8_link_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, -1)))
+        self.copy_link_btn = wx.Button(self, -1, "复制", size = _get_scale_size((60, 24)))
 
         recording_lab = wx.StaticText(self, -1, "保存位置")
-        self.recording_path_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, -1)))
-        self.browse_path_btn = wx.Button(self, -1, "浏览", size = self.FromDIP((60, 24)))
+        self.recording_path_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, -1)))
+        self.browse_path_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
-        bag_box = wx.GridBagSizer(2, 3)
-        bag_box.Add(m3u8_link_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.m3u8_link_box, pos = (0, 1), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(self.copy_link_btn, pos = (0, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(recording_lab, pos = (1, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.recording_path_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(self.browse_path_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
+        bag_box = wx.FlexGridSizer(2, 3, 0, 0)
+        bag_box.Add(m3u8_link_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        bag_box.Add(self.m3u8_link_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
+        bag_box.Add(self.copy_link_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bag_box.Add(recording_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        bag_box.Add(self.recording_path_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
+        bag_box.Add(self.browse_path_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
-        self.start_recording_btn = wx.Button(self, -1, "开始录制", size = self.getButtonSize())
-        self.open_player_btn = wx.Button(self, -1, "直接播放", size = self.getButtonSize())
-        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.getButtonSize())
+        bag_box.AddGrowableCol(1, 1)
+
+        self.start_recording_btn = wx.Button(self, -1, "开始录制", size = _get_scale_size((100, 30)))
+        self.open_player_btn = wx.Button(self, -1, "直接播放", size = _get_scale_size((100, 30)))
+        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = _get_scale_size((100, 30)))
 
         font: wx.Font = self.GetFont()
-        font.SetPointSize(10)
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         self.status_lab = wx.StaticText(self, -1, "状态：未开始录制")
         self.status_lab.SetFont(font)
@@ -74,7 +84,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.title_lab, 0, wx.ALL, 10)
-        vbox.Add(bag_box)
+        vbox.Add(bag_box, 1, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
         vbox.AddSpacer(10)
         vbox.Add(action_hbox, 0, wx.EXPAND)
@@ -82,16 +92,16 @@ class LiveRecordingWindow(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
-        self.copy_link_btn.Bind(wx.EVT_BUTTON, self.onCopy)
-        self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowse)
+        self.copy_link_btn.Bind(wx.EVT_BUTTON, self.onCopyLinkEVT)
+        self.browse_path_btn.Bind(wx.EVT_BUTTON, self.onBrowseSavePathEVT)
 
-        self.open_player_btn.Bind(wx.EVT_BUTTON, self.onPlay)
-        self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartRecording)
-        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenDirectory)
+        self.open_player_btn.Bind(wx.EVT_BUTTON, self.onPlayStreamEVT)
+        self.start_recording_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
+        self.open_directory_btn.Bind(wx.EVT_BUTTON, self.onOpenLocationEVT)
 
-    def init_live_info(self):
+    def init_utils(self):
         self.title_lab.SetLabel(LiveInfo.title)
 
         self.m3u8_link_box.SetValue(LiveInfo.m3u8_link)
@@ -102,7 +112,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         self.start = False
 
-    def onClose(self, event):
+    def onCloseEVT(self, event):
         if self.start:
             dlg = wx.MessageDialog(self, "是否结束录制\n\n当前正在录制直播，是否要结束录制？", "警告", wx.ICON_WARNING | wx.YES_NO)
 
@@ -115,13 +125,13 @@ class LiveRecordingWindow(wx.Dialog):
             
         event.Skip()
 
-    def onCopy(self, event):
+    def onCopyLinkEVT(self, event):
         # 复制到剪切板
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(self.m3u8_link_box.GetValue()))
             wx.TheClipboard.Close()
 
-    def onBrowse(self, event):
+    def onBrowseSavePathEVT(self, event):
         dlg = wx.FileDialog(self, "选择保存位置", defaultDir = Config.Download.path, defaultFile = LiveInfo.title, wildcard = "视频文件(*.mp4)|*.mp4", style = wx.FD_SAVE)
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -130,26 +140,39 @@ class LiveRecordingWindow(wx.Dialog):
 
         dlg.Destroy()
 
-    def onPlay(self, event):
-        if not Config.Misc.player_path:
-            wx.MessageDialog(self, "未配置播放器\n\n未配置播放器，请打开程序设置进行相关配置", "警告", wx.ICON_WARNING).ShowModal()
+    def onOpenLocationEVT(self, event):
+        path = self.recording_path_box.GetValue()
+        
+        if not os.path.exists(path):
+            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
+        
+        FileDirectoryTool.open_file_location(path)
 
-        cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
+    def onPlayStreamEVT(self, event):
+        match Config.Misc.player_preference:
+            case Config.Type.PLAYER_PREFERENCE_DEFAULT:
+                # 寻找关联的播放器
+                _default = FileDirectoryTool.get_file_ext_associated_app(".mp4")
 
-        subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+                match Config.Sys.platform:
+                    case "windows":
+                        cmd = _default.replace("%1", self.m3u8_link_box.GetValue())
 
-    def getButtonSize(self):
-        # 解决 Linux macOS 按钮太小的问题
-        match Config.Sys.platform:
-            case "windows":
-                size = self.FromDIP((100, 30))
-            case "linux" | "darwin":
-                size = self.FromDIP((120, 40))
+                    case "linux":
+                        cmd = _default.replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
 
-        return size
+                    case "darwin":
+                        wx.MessageDialog(self, "无法获取默认播放器\n\nmacOS 平台不支持获取默认播放器，无法播放直播视频流，请手动设置", "警告", wx.ICON_WARNING).ShowModal()
 
-    def onStartRecording(self, event):
+                        return
+            
+            case Config.Type.PLAYER_PREFERENCE_CUSTOM:
+                cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
+
+        subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
+
+    def onStartEVT(self, event):
         if self.start:
             self.terminate_ffmpeg_process()
             
@@ -175,6 +198,12 @@ class LiveRecordingWindow(wx.Dialog):
         self.Layout()
 
     def onRecording(self):
+        def _reset():
+            self.status_lab.SetLabel("状态：未开始录制")
+            self.duration_lab.SetLabel("时长：00:00:00.00")
+            self.size_lab.SetLabel("大小：0 KB")
+            self.speed_lab.SetLabel("速度：0.0x")
+
         output_path = self.recording_path_box.GetValue()
 
         cmd = f'"{Config.FFmpeg.path}" -y -i "{LiveInfo.m3u8_link}" -c copy "{output_path}"'
@@ -205,33 +234,13 @@ class LiveRecordingWindow(wx.Dialog):
             wx.MessageDialog(self, "FFmpeg 进程异常终止\n\n由于配置不当，FFmpeg 进程异常终止，请检查：\n1.m3u8 链接是否已经过期，如过期，请重新解析\n2.若您使用的 FFmpeg 版本并非程序自带版本，请检查是否支持流媒体合成功能", "警告", wx.ICON_WARNING).ShowModal()
             self.setStatus(False)
 
-            self.resetProgress()
+            _reset()
             
             return
 
         self.setStatus(False)
 
         self.status_lab.SetLabel("状态：录制结束")
-
-    def onOpenDirectory(self, event):
-        path = self.recording_path_box.GetValue()
-        directory = os.path.dirname(path)
-
-        if not os.path.exists(path):
-            wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
-            return
-
-        match Config.Sys.platform:
-            case "windows":
-                cmd = f'explorer.exe /select,{path}'
-
-            case "linux":
-                cmd = f'xdg-open "{directory}"'
-
-            case "darwin":
-                cmd = f'open -R "{path}"'
-        
-        subprocess.Popen(cmd, cwd = directory, shell = True)
 
     def setStatus(self, status: bool):
         if status:
@@ -248,7 +257,7 @@ class LiveRecordingWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{format_size(int(size[0][0]))}")
+            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")
@@ -261,9 +270,3 @@ class LiveRecordingWindow(wx.Dialog):
         self.process.stdin.flush()
 
         self.process.kill()
-
-    def resetProgress(self):
-        self.status_lab.SetLabel("状态：未开始录制")
-        self.duration_lab.SetLabel("时长：00:00:00.00")
-        self.size_lab.SetLabel("大小：0 KB")
-        self.speed_lab.SetLabel("速度：0.0x")

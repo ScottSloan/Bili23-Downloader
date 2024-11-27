@@ -1,5 +1,7 @@
 # Bili23-Downloader-GUI
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat)
+![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) 
+
+![Windows](https://img.shields.io/badge/-Windows-blue?logo=windows) ![Linux](https://img.shields.io/badge/-Linux-333?logo=ubuntu) ![macOS](https://img.shields.io/badge/-MacOS-black?logo=apple)
 
 Bili23 Downloader GUI
 
@@ -27,8 +29,8 @@ Bili23 Downloader GUI
 | 用户投稿视频 （含分P，合集视频） | 解析下载 | https://www.bilibili.com/video/BV1t94y1C7fp |
 | 剧集（含番剧、电影、纪录片、国创、电视剧、综艺） | 解析下载 | https://www.bilibili.com/bangumi/play/ss45574 |
 | 直播 | m3u8直链解析、录制 | https://live.bilibili.com/1 |
-| b23.tv 短链接 | - | https://b23.tv/BV1UG411f7K1 |
-| 活动页链接 | - | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html |
+| b23.tv 短链接 | 解析下载 | https://b23.tv/BV1UG411f7K1 |
+| 活动页链接 | 解析下载 | https://www.bilibili.com/blackboard/topic/activity-jjR1nNRUF.html 
 
 **注意：本程序不提供付费视频解析服务，请自行登录大会员账号后再进行使用。**
 
@@ -39,20 +41,27 @@ Bili23 Downloader GUI
 ### **下载**
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
+程序支持多线程下载（最多 8 线程）、并行下载（上限为 8 个，支持动态调整）、断点续传、下载限速、出错重试等功能。
+
 # 更新日志
-### **Version 1.52.0 (2024/10/26)**
-Version 1.52.0 正式版发布
+### **Version 1.53.0 (2024/11/28)**
+Version 1.53.0 正式版发布
 
 本次更新内容：
-* 支持解析直播链接，可进行录制，也可调用播放器直接播放
-* 支持账号密码登录和短信登录
-* 新增“显示完整剧集名称”功能，例如开启时，显示为《孤独摇滚》第1话 孤独的转机；关闭后，将只显示：孤独的转机
-* 优化视频转换功能
-* 优化默认缩放下的显示效果
-* 修复部分视频提示不存在的问题
-* 修复部分视频名称空白的问题
-* 修复部分分P视频无法解析的问题
-* 修复部分视频因缺少 Content-Length 请求头而导致无法下载的问题
+* 重构下载功能，解决历史遗留问题
+* 支持动态调整并行下载数
+* 支持将下载的 m4a 音频转换为 mp3 格式
+* 支持视频封面提取功能和视频弹幕下载功能
+* 支持调用系统默认播放器播放直播视频流
+* 新增下载选项对话框，可修改清晰度和音频等设置
+* 新增 "自动下载杜比"选项，可控制是否下载杜比视频
+* 适配 Linux 平台深色模式
+* 并行下载数最大可设置 8 个
+* 默认下载编码调整为 AVC/H.264
+* 下载失败的任务支持继续下载，保留下载进度
+* 优化部分界面显示效果
+* 修复名称以"-"开头的视频无法合成的问题
+* 修复 Linux/macOS 平台无法选择播放器路径的问题
 
 # 联系方式
 - QQ: 2592111619

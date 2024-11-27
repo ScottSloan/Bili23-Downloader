@@ -4,14 +4,11 @@ import requests
 from typing import Dict
 from io import BytesIO
 
-import wx.adv
-
 from utils.login import QRLogin, PasswordLogin, SMSLogin
 from utils.config import Config, conf
-from utils.tools import get_background_color
 from utils.thread import Thread
 
-from gui.captcha import CaptchaWindow
+from gui.dialog.captcha import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent):
@@ -26,16 +23,24 @@ class LoginWindow(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
         font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
-        font.SetPointSize(12)
         scan_lab.SetFont(font)
 
         self.qrcode = wx.StaticBitmap(self, -1, wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
 
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
+
         self.lab = wx.StaticText(self, -1, "请使用哔哩哔哩客户端扫码登录")
-        font.SetPointSize(10)
         self.lab.SetFont(font)
 
         qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -51,16 +56,16 @@ class LoginWindow(wx.Dialog):
         self.note.AddPage(password_page, "账号密码登录")
         self.note.AddPage(SMSPage(self.note, self.session), "手机号登录")
 
-        font_2: wx.Font = self.GetFont()
-        font_2.SetPointSize(12)
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         self.password_login_btn = wx.StaticText(self, -1, "密码登录")
         self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.password_login_btn.SetFont(font_2)
+        self.password_login_btn.SetFont(font)
         self.password_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.sms_login_btn = wx.StaticText(self, -1, "短信登录")
-        self.sms_login_btn.SetFont(font_2)
+        self.sms_login_btn.SetFont(font)
         self.sms_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         swicher_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -82,8 +87,6 @@ class LoginWindow(wx.Dialog):
         hbox.Add(note_vbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(hbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def init_utils(self):
         # 共用一个 session
@@ -150,16 +153,30 @@ class LoginWindow(wx.Dialog):
         wx.CallAfter(self.GetParent().onLoginSuccess)
     
     def onSwitchPasswordLogin(self, event):
+        def _set_dark_mode():
+            if Config.Sys.dark_mode:
+                self.sms_login_btn.SetForegroundColour("white")
+            else:
+                self.sms_login_btn.SetForegroundColour("black")
+
+        _set_dark_mode()
+
         self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.sms_login_btn.SetForegroundColour(wx.Colour(0, 0, 0))
 
         self.note.ChangeSelection(0)
 
         self.Refresh()
 
     def onSwitchSMSLogin(self, event):
+        def _set_dark_mode():
+            if Config.Sys.dark_mode:
+                self.password_login_btn.SetForegroundColour("white")
+            else:
+                self.password_login_btn.SetForegroundColour("black")
+
+        _set_dark_mode()
+                
         self.sms_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.password_login_btn.SetForegroundColour(wx.Colour(0, 0, 0))
 
         self.note.ChangeSelection(1)
 
@@ -171,7 +188,16 @@ class LoginPage(wx.Panel):
 
         wx.Panel.__init__(self, parent, -1)
 
+        self._init_UI()
+
         self._init_utils()
+
+    def _init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+        
+        _set_dark_mode()
 
     def _init_utils(self):
         self.isLogin = False
@@ -214,21 +240,29 @@ class PasswordPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         username_lab = wx.StaticText(self, -1, "账号")
-        self.username_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)))
+        self.username_box = wx.TextCtrl(self, -1, size = _get_scale_size((200, 26)))
 
         username_hbox = wx.BoxSizer(wx.HORIZONTAL)
         username_hbox.Add(username_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         username_hbox.Add(self.username_box, 1, wx.ALL & (~wx.LEFT), 10)
 
         password_lab = wx.StaticText(self, -1, "密码")
-        self.password_box = wx.TextCtrl(self, -1, size = self.FromDIP((200, 26)), style = wx.TE_PASSWORD)
+        self.password_box = wx.TextCtrl(self, -1, size = _get_scale_size((200, 26)), style = wx.TE_PASSWORD)
 
         password_hbox = wx.BoxSizer(wx.HORIZONTAL)
         password_hbox.Add(password_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         password_hbox.Add(self.password_box, 1, wx.ALL & (~wx.LEFT), 10)
 
-        self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
+        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()
@@ -241,8 +275,6 @@ class PasswordPage(LoginPage):
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLogin)
@@ -284,6 +316,14 @@ class SMSPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         country_lab = wx.StaticText(self, -1, "区号")
         self.country_choice = wx.Choice(self, -1)
 
@@ -303,7 +343,7 @@ class SMSPage(LoginPage):
         bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, border = 10)
 
-        self.login_btn = wx.Button(self, -1, "登录", size = self.FromDIP((120, 30)))
+        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()
@@ -315,8 +355,6 @@ class SMSPage(LoginPage):
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCode)

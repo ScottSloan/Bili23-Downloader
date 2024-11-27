@@ -1,6 +1,6 @@
 [project]
 name = "bili23-downloader"
-version = "1.52.0"
+version = "1.53.0"
 description = "跨平台的 B 站视频下载工具，支持 Windows、Linux、macOS 三平台，下载 B 站视频/番剧/电影/纪录片 等资源  "
 readme = "README.md"
 license = "MIT License"

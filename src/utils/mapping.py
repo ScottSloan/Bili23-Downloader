@@ -1,3 +1,5 @@
+from typing import Dict
+
 bangumi_type_mapping = {
     1: "番剧",
     2: "电影",
@@ -58,3 +60,50 @@ supported_gpu_mapping = {
     "AMD": 2,
     "Intel": 3
 }
+
+video_sw_encoder_mapping = {
+    0: "libx264",
+    1: "libx265",
+    2: "libaom-av1"
+}
+
+video_hw_encoder_mapping = {
+    0: {
+        0: "h264_nvenc",
+        1: "hevc_nvenc",
+        2: "av1_nvenc"
+    },
+    1: {
+        0: "h264_amf",
+        1: "hevc_amf",
+        2: "av1_amf"
+    },
+    2: {
+        0: "h264_qsv",
+        1: "hevc_qsv",
+        2: "av1_qsv"
+    }
+}
+
+danmaku_format_mapping = {
+    "xml": 0,
+    "protobuf": 1
+}
+
+download_status_mapping = {
+    0: "等待下载",
+    1: "正在获取下载信息...",
+    2: "暂停中",
+    3: "正在合成视频",
+    4: "下载完成",
+    5: "下载失败",
+    6: "视频合成失败"
+}
+
+def get_mapping_key_by_value(mapping: Dict, value: int):
+    mapping_reversed = dict(map(reversed, mapping.items()))
+
+    return mapping_reversed[value]
+
+def get_mapping_index_by_value(mapping: Dict, value: int):
+    return list(mapping.values()).index(value)

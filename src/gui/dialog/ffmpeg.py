@@ -1,6 +1,8 @@
 import wx
+import io
 
-from utils.tools import get_ffmpeg_cwd_path, get_ffmpeg_env_path
+from utils.tool_v2 import FFmpegCheckTool
+from utils.icon_v2 import IconManager, REFRESH_ICON
 from utils.config import Config
 
 class DetectDialog(wx.Dialog):
@@ -16,13 +18,36 @@ class DetectDialog(wx.Dialog):
         self.init_utils()
 
     def init_UI(self):
+        def _refresh_icon():
+            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(REFRESH_ICON)))
+
+            return _image.ConvertToBitmap()
+        
+        def _get_scale_button_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((24, 24))
+                
+                case "linux" | "darwin":
+                    return self.FromDIP((32, 32))
+                
+        def _get_style():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return 0
+                
+                case "linux":
+                    return wx.NO_BORDER
+        
+        icon_manager = IconManager(self.GetDPIScaleFactor())
+
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = wx.Button(self, -1, "刷新", size = self.FromDIP((80, 28)))
+        self.refresh_btn = wx.BitmapButton(self, -1, _refresh_icon(), size = _get_scale_button_size(), style = _get_style())
+        self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(select_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.AddStretchSpacer(1)
         top_hbox.Add(self.refresh_btn, 0, wx.ALL, 10)
 
         self.env_chk = wx.RadioButton(self, -1, "环境变量")
@@ -55,8 +80,8 @@ class DetectDialog(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
-        cwd_path = get_ffmpeg_cwd_path()
-        env_path = get_ffmpeg_env_path()
+        cwd_path = FFmpegCheckTool._get_ffmpeg_cwd_path()
+        env_path = FFmpegCheckTool._get_ffmpeg_env_path()
 
         if env_path:
             self.env_chk.Enable(True)

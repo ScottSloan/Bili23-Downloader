@@ -1,6 +1,8 @@
 import wx
 
 from utils.config import Config
+from utils.tool_v2 import UniversalTool
+
 from gui.main import MainWindow
 
 class APP(wx.App):
@@ -12,6 +14,8 @@ class APP(wx.App):
         self.SetAppName(Config.APP.name)
 
 if __name__ == "__main__":
+    UniversalTool.set_dpi_awareness()
+
     app = APP()
 
     main_window = MainWindow(None)

@@ -2,7 +2,7 @@ import re
 import json
 import requests
 
-from utils.tools import get_header, get_proxy, get_auth, convert_to_bvid, find_str
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.error import URLError
 
 class FestivalInfo:
@@ -19,7 +19,7 @@ class FestivalParser:
         if not aid:
             raise URLError()
 
-        FestivalInfo.url = f"https://www.bilibili.com/video/{convert_to_bvid(int(aid[0]))}"
+        FestivalInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
     def get_bvid(self, url: str):
         bvid = re.findall(r"BV\w+", url)
@@ -32,7 +32,7 @@ class FestivalParser:
     def get_initial_state(self, url: str):
         # 活动页链接不会包含 BV 号，ep 号等关键信息，故采用网页解析方式获取视频数据
 
-        req = requests.get(url, headers = get_header(), proxies = get_proxy(), auth = get_auth())
+        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
         if "window.__initialState" in req.text:
             initial_state_info = re.findall(r"window.__initialState = (.*?);", req.text)
@@ -68,7 +68,7 @@ class FestivalParser:
             self.get_aid(initial_state)
 
     def parse_url(self, url: str):
-        match find_str(r"BV", url):
+        match UniversalTool.re_find_string(r"BV", url):
             case "BV":
                 # 判断视频链接是否包含 BV 号
                 self.get_bvid(url)

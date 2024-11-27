@@ -3,8 +3,7 @@ import wx
 import webbrowser
 
 from utils.config import Config
-from utils.tools import get_background_color
-from utils.icons import getAppIcon
+from utils.icon_v2 import IconManager, APP_ICON_DEFAULT
 
 from .license import LicenseWindow
 
@@ -21,11 +20,43 @@ class AboutWindow(wx.Dialog):
         wx.Bell()
     
     def init_UI(self):
-        app_icon = wx.Image(io.BytesIO(getAppIcon()), wx.BITMAP_TYPE_JPEG)
-        logo = wx.StaticBitmap(self, -1, app_icon.ConvertToBitmap())
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
+        def _set_icon_background(image: wx.Image):
+            _width, _height = image.GetSize()
+
+            if Config.Sys.dark_mode:
+                color = self.GetBackgroundColour()
+
+                for x in range(_width):
+                    for y in range(_height):
+                        r, g, b = image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y)
+
+                        if r > 200 and g > 200 and b > 200:
+                            # 选取背景颜色填充
+                            image.SetRGB(x, y, color[0], color[1], color[2])
+
+            return image
+
+        _set_dark_mode()
+
+        icon_manager = IconManager(self.GetDPIScaleFactor())
+
+        app_icon = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_DEFAULT)), wx.BITMAP_TYPE_JPEG)
+        logo = wx.StaticBitmap(self, -1, _set_icon_background(app_icon).ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
-        font.SetPointSize(10)
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         app_name_lab = wx.StaticText(self, -1, f"{Config.APP.name}")
         app_name_lab.SetFont(font.MakeBold())
@@ -54,8 +85,8 @@ class AboutWindow(wx.Dialog):
         self.blog_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.blog_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
 
-        self.license_btn = wx.Button(self, -1, "授权", size = self.FromDIP((80, 26)))
-        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.FromDIP((80, 26)))
+        self.license_btn = wx.Button(self, -1, "授权", size = _get_scale_size((80, 26)))
+        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 26)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.license_btn, 0, wx.ALL, 10)
@@ -75,8 +106,6 @@ class AboutWindow(wx.Dialog):
         about_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(about_vbox)
-
-        self.SetBackgroundColour(get_background_color())
 
     def Bind_EVT(self):
         self.website_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenWebsite)

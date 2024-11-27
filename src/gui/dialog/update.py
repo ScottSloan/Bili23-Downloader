@@ -1,7 +1,6 @@
 import wx
 
 from utils.config import Config
-from utils.tools import get_background_color
 
 class UpdateWindow(wx.Dialog):
     def __init__(self, parent):
@@ -18,22 +17,26 @@ class UpdateWindow(wx.Dialog):
         wx.Bell()
 
     def init_UI(self):
-        title_font: wx.Font = self.GetFont()
-        title_font.SetPointSize(14)
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+                self.changelog.SetBackgroundColour("white")
+
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
         title_lab = wx.StaticText(self, -1, "有新的更新可用")
-        title_lab.SetFont(title_font)
+        title_lab.SetFont(font)
 
         self.detail_lab = wx.StaticText(self, -1, "Version 1.00，发布于 1970/1/1，大小 0MB")
 
         top_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        log_font: wx.Font = self.GetFont()
-        log_font.SetPointSize(10)
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
         self.changelog = wx.TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE)
-        self.changelog.SetBackgroundColour("white")
-        self.changelog.SetFont(log_font)
+        self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
@@ -55,7 +58,7 @@ class UpdateWindow(wx.Dialog):
 
         self.SetSizerAndFit(update_vbox)
 
-        self.SetBackgroundColour(get_background_color())
+        _set_dark_mode()
     
     def Bind_EVT(self):
         self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)

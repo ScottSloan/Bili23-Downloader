@@ -13,10 +13,13 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.52.1"
-        version_code: int = 1521
+        version: str = "1.53.0"
+        version_code: int = 1531
 
-        release_date: str = "2024/10/26"
+        # 断点续传文件最低支持版本号
+        _task_file_min_version_code: int = 1532
+
+        release_date: str = "2024/11/28"
 
     class Proxy:
         proxy_mode: int = 1
@@ -29,6 +32,7 @@ class Config:
     
     class User:
         base_path: str = ""
+        download_file_directory:str = ""
         path: str = ""
         face_path: str = ""
 
@@ -45,6 +49,7 @@ class Config:
         debug: bool = False
         check_update: bool = True
 
+        player_preference: int = 0
         player_path: str = ""
 
     class Download:
@@ -52,30 +57,38 @@ class Config:
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
-        video_codec: int = 12
+        video_codec_id: int = 7
 
         max_thread_count: int = 2
         max_download_count: int = 1
 
-        show_notification: bool = False
+        enable_dolby: bool = False
 
+        show_notification: bool = False
+        delete_history: bool = False
         add_number: bool = True
 
         speed_limit: bool = False
         speed_limit_in_mb: int = 10
     
     class Merge:
+        override_file: bool = False
+        m4a_to_mp3: bool = True
         auto_clean: bool = True
 
     class Type:
+        UNDEFINED: int = 0                           # 未定义
         VIDEO: int = 1                               # 用户投稿视频
         BANGUMI: int = 2                             # 番组
-        MUSIC: int = 3                               # 音乐 TODO
-        LIVE: int = 4                                # 直播
+        LIVE: int = 3                                # 直播
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
         VIDEO_TYPE_SECTIONS: int = 3                 # 合集
+
+        DURATION_VIDEO_SECTIONS: int = 0             # 合集视频
+        DURATION_VIDEO_OTHERS: int = 1               # 其他视频
+        DURATION_BANGUMI: int = 2                    # 番组
 
         MERGE_TYPE_ALL: int = 0                      # 合成视频和音频
         MERGE_TYPE_VIDEO: int = 1                    # 仅下载视频
@@ -87,12 +100,33 @@ class Config:
 
         PROXY_DISABLE: int = 0                       # 不使用代理
         PROXY_FOLLOW: int = 1                        # 跟随系统
-        PROXY_MANUAL: int = 2                        # 手动设置
+        PROXY_CUSTOM: int = 2                        # 手动设置
 
         LIVE_STATUS_0: int = 0                       # 未开播
         LIVE_STATUS_1: int = 1                       # 直播中
         LIVE_STATUS_2: int = 2                       # 轮播中
-    
+
+        DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
+        DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕
+
+        PLAYER_PREFERENCE_DEFAULT: int = 0           # 系统默认
+        PLAYER_PREFERENCE_CUSTOM: int = 0            # 手动设置
+
+        GPU_NVIDIA: int = 0                          # NVIDIA GPU
+        GPU_AMD: int = 1                             # AMD GPU
+        GPU_INTEL: int = 2                           # INTEL GPU
+
+        DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
+        DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载
+        DOWNLOAD_STATUS_PAUSE: int = 2               # 暂停中
+        DOWNLOAD_STATUS_MERGING: int = 3             # 正在合成
+        DOWNLOAD_STATUS_FINISHED: int = 4            # 下载完成
+        DOWNLOAD_STATUS_DOWNLOAD_FAILED: int = 5     # 下载失败
+        DOWNLOAD_STATUS_MERGE_FAILED: int = 6        # 合成失败
+
+        DOWNLOAD_STATUS_ALIVE_LIST: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE]
+        DOWNLOAD_STATUS_ALIVE_LIST_EX: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE, DOWNLOAD_STATUS_MERGE_FAILED, DOWNLOAD_STATUS_DOWNLOAD_FAILED]
+
     class Temp:
         download_window_pos = None
 
@@ -102,35 +136,17 @@ class Config:
         path: str = ""
         available: bool = False
 
-class Audio:
-    audio_quality_id: int = 0
+    class Extra:
+        download_danmaku = False
+        danmaku_format = 0
 
-    # 仅下载音频标识符
-    audio_only: bool = False
-    
-    # 各音质标识符
-    q_hires: bool = False
-    q_dolby: bool = False
-    q_192k: bool = False
-    q_132k: bool = False
-    q_64k: bool = False
-
-class Download:
-    current_parse_type: int = 0
-    
-    download_list: List = []
+        download_cover = False
 
 class ConfigUtils:
     def __init__(self):
         self.path = os.path.join(os.getcwd(), "config.ini")
 
         ErrorCallback.onReadConfigError = self.onError
-
-        if Config.Sys.platform == "windows":
-            # Windows 环境下，启用高 DPI 适配
-            import ctypes
-
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
         # 检查配置文件是否存在
         if not os.path.exists(self.path):
@@ -145,27 +161,14 @@ class ConfigUtils:
         self.init_ffmpeg()    
 
     def onError(self):
-        # 弹出信息框提示
-        import wx
+        os.remove(self.path)
 
-        app = wx.App()
-
-        dlg = wx.MessageDialog(None, "配置文件不兼容\n\n配置文件较旧，不兼容当前版本，继续使用将覆盖旧文件，是否继续？", "警告", wx.ICON_WARNING | wx.YES_NO)
-
-        if dlg.ShowModal() == wx.ID_YES:
-            os.remove(self.path)
-
-            self.__init__()
-
-        else:
-            wx.Exit()
-
-        app.MainLoop()
+        self.__init__()
 
     def init_ffmpeg(self):
-        from utils.tools import check_ffmpeg_available
+        from utils.tool_v2 import FFmpegCheckTool
 
-        check_ffmpeg_available()
+        FFmpegCheckTool.check_available()
 
     def init_user_config(self):
         match Config.Sys.platform:
@@ -178,6 +181,8 @@ class ConfigUtils:
         Config.User.path = os.path.join(Config.User.base_path, "user.ini")
 
         Config.User.face_path = os.path.join(Config.User.base_path, "face.jpg")
+
+        Config.User.download_file_directory = os.path.join(Config.User.base_path, "download")
 
     @process_read_config_exception
     def load_config(self):
@@ -195,15 +200,24 @@ class ConfigUtils:
         Config.Download.max_thread_count = self.config.getint("download", "max_thread")
         Config.Download.video_quality_id = self.config.getint("download", "video_quality")
         Config.Download.audio_quality_id = self.config.getint("download", "audio_quality")
-        Config.Download.video_codec = self.config.getint("download", "video_codec")
+        Config.Download.video_codec_id = self.config.getint("download", "video_codec")
+        Config.Download.enable_dolby = self.config.getboolean("download", "enable_dolby")
         Config.Download.show_notification = self.config.getint("download", "show_notification")
+        Config.Download.delete_history = self.config.getint("download", "delete_history")
         Config.Download.add_number = self.config.getboolean("download", "add_number")
         Config.Download.speed_limit = self.config.getboolean("download", "speed_limit")
         Config.Download.speed_limit_in_mb = self.config.getint("download", "speed_limit_in_mb")
 
         # merge
         Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")
+        Config.Merge.override_file = self.config.getboolean("merge", "override_file")
+        Config.Merge.m4a_to_mp3 = self.config.getboolean("merge", "m4a_to_mp3")
         Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
+
+        # extra
+        Config.Extra.download_danmaku = self.config.getboolean("extra", "download_danmaku")
+        Config.Extra.danmaku_format = self.config.getint("extra", "danmaku_format")
+        Config.Extra.download_cover = self.config.getboolean("extra", "download_cover")
 
         # user
         Config.User.login = self.user_config.getboolean("user", "login")
@@ -224,6 +238,7 @@ class ConfigUtils:
         Config.Misc.episode_display_mode = self.config.getint("misc", "episode_display_mode")
         Config.Misc.show_episode_full_name = self.config.getboolean("misc", "show_episode_full_name")
         Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
+        Config.Misc.player_preference = self.config.getint("misc", "player_preference")
         Config.Misc.player_path = self.config.get("misc", "player_path")
         Config.Misc.check_update = self.config.getboolean("misc", "check_update")
         Config.Misc.debug = self.config.getboolean("misc", "debug")
@@ -231,6 +246,9 @@ class ConfigUtils:
     def create_download_directory(self):
         if not os.path.exists(Config.Download.path):
             os.makedirs(Config.Download.path)
+
+        if not os.path.exists(Config.User.download_file_directory):
+            os.makedirs(Config.User.download_file_directory)
 
     def create_user_directory(self):
         self.init_user_config()
@@ -252,8 +270,10 @@ class ConfigUtils:
         self.config.set("download", "max_thread", str(Config.Download.max_thread_count))
         self.config.set("download", "video_quality", str(Config.Download.video_quality_id))
         self.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
-        self.config.set("download", "video_codec", str(Config.Download.video_codec))
+        self.config.set("download", "video_codec", str(Config.Download.video_codec_id))
+        self.config.set("download", "enable_dolby", str(int(Config.Download.enable_dolby)))
         self.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
+        self.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
         self.config.set("download", "add_number", str(int(Config.Download.add_number)))
         self.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
         self.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
@@ -261,7 +281,15 @@ class ConfigUtils:
         # merge
         self.config.add_section("merge")
         self.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
+        self.config.set("merge", "override_file", str(int(Config.Merge.override_file)))
+        self.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
         self.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
+
+        # extra
+        self.config.add_section("extra")
+        self.config.set("extra", "download_danmaku", str(int(Config.Extra.download_danmaku)))
+        self.config.set("extra", "danmaku_format", str(Config.Extra.danmaku_format))
+        self.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
 
         # proxy
         self.config.add_section("proxy")
@@ -278,6 +306,7 @@ class ConfigUtils:
         self.config.set("misc", "episode_display_mode", str(Config.Misc.episode_display_mode))
         self.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
         self.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
+        self.config.set("misc", "player_preference", str(Config.Misc.player_preference))
         self.config.set("misc", "player_path", Config.Misc.player_path)
         self.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
         self.config.set("misc", "debug", str(int(Config.Misc.debug)))
@@ -312,5 +341,11 @@ class ConfigUtils:
         conf.user_config.set("user", "sessdata", Config.User.sessdata)
 
         conf.user_config_save()
+
+    def clear_config(self):
+        from utils.tool_v2 import UniversalTool
+
+        UniversalTool.remove_files(os.getcwd(), ["config.ini"])
+        UniversalTool.remove_files(Config.User.base_path, ["user.ini"])
 
 conf = ConfigUtils()
