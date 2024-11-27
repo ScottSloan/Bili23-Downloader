@@ -31,7 +31,7 @@ class SettingWindow(wx.Dialog):
                 
                 case "linux" | "darwin":
                     return wx.DefaultSize
-        
+
         self.note = wx.Notebook(self, -1)
 
         self.note.AddPage(DownloadTab(self.note, self.GetParent()), "下载")
@@ -110,7 +110,7 @@ class DownloadTab(wx.Panel):
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         
         self.max_thread_lab = wx.StaticText(self.scrolled_panel, -1, "多线程数：1")
         self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
@@ -360,7 +360,7 @@ class MergeTab(wx.Panel):
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.auto_detect_btn = wx.Button(ffmpeg_box, -1, "自动检测", size = _get_scale_size((90, 28)))
         self.tutorial_btn = wx.Button(ffmpeg_box, -1, "安装教程", size = _get_scale_size((90, 28)))
@@ -791,7 +791,7 @@ class MiscTab(wx.Panel):
 
         player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         
         player_vbox = wx.BoxSizer(wx.VERTICAL)
         player_vbox.Add(path_lab, 0, wx.ALL, 10)

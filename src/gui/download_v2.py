@@ -489,10 +489,8 @@ class DownloadUtils:
 
             self.callback.onMergeFinishCallback()
         else:
-            _stdout = _process.stdout.decode(UniversalTool.get_system_encoding()).replace("\r\n", "")
-
             _error_log = ErrorLog()
-            _error_log.log = _stdout
+            _error_log.log = _process.stdout
             _error_log.return_code = _process.returncode
             _error_log.time = UniversalTool.get_current_time()
 
@@ -515,12 +513,18 @@ class DownloadUtils:
             if Config.Merge.override_file:
                 UniversalTool.remove_files(Config.Download.path, _file_name_list)
 
-        if Config.Sys.platform == "windows":
-            _rename_cmd = "rename"
-            _extra = ""
-        else:
-            _rename_cmd = "mv"
-            _extra = "-- "
+        match Config.Sys.platform:
+            case "windows":
+                _rename_cmd = "rename"
+                _extra = ""
+
+            case "linux":
+                _rename_cmd = "mv"
+                _extra = "-- "
+
+            case "darwin":
+                _rename_cmd = "mv"
+                _extra = ""
 
         match self.task_info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL:
@@ -537,7 +541,7 @@ class DownloadUtils:
         return _cmd
 
     def _run_subprocess(self, cmd: str):
-        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
+        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
 
     def _get_video_downloader_info(self):
         info = DownloaderInfo()
@@ -659,11 +663,19 @@ class DownloadTaskPanel(wx.Panel):
 
         def _get_button_scale_size():
             match Config.Sys.platform:
-                case "windows":
+                case "windows" | "darwin":
                     return self.FromDIP((24, 24))
-                
-                case "linux" | "darwin":
+ 
+                case "linux":
                     return self.FromDIP((32, 32))
+
+        def _get_progress_scale_size():
+            match Config.Sys.platform:
+                case "windows" | "linux":
+                    return (-1, -1)
+                
+                case "darwin":
+                    return self.FromDIP((120, 18))
 
         def _get_style():
             match Config.Sys.platform:
@@ -704,7 +716,7 @@ class DownloadTaskPanel(wx.Panel):
         video_info_vbox.Add(video_info_hbox, 0, wx.EXPAND)
         video_info_vbox.AddSpacer(5)
 
-        self.progress_bar = wx.Gauge(self, -1, 100, size = (-1, -1), style = wx.GA_SMOOTH)
+        self.progress_bar = wx.Gauge(self, -1, 100, size = _get_progress_scale_size(), style = wx.GA_SMOOTH)
 
         progress_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
         progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
@@ -1133,8 +1145,6 @@ class DownloadTaskPanel(wx.Panel):
 
     def get_button_icon(self, icon_id: int):
         # 获取按钮位图图标
-        scale_size = self.FromDIP((16, 16))
-
         image = wx.Image(io.BytesIO(self.icon_manager.get_icon_bytes(icon_id)))
 
-        return image.Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+        return image.ConvertToBitmap()

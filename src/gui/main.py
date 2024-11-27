@@ -3,6 +3,7 @@ import os
 import time
 import wx.py
 import requests
+import wx.lib.buttons
 from typing import Optional
 
 from utils.config import Config, conf
@@ -57,10 +58,10 @@ class MainWindow(Frame):
         
         def _get_button_scale_size():
             match Config.Sys.platform:
-                case "windows":
+                case "windows" | "darwin":
                     return self.FromDIP((24, 24))
                 
-                case "linux" | "darwin":
+                case "linux":
                     return self.FromDIP((32, 32))
 
         def _set_window_size():
@@ -82,6 +83,11 @@ class MainWindow(Frame):
                 
                 case "linux":
                     return wx.NO_BORDER
+
+        def _set_button_variant():
+            if Config.Sys.platform == "darwin":
+                self.download_mgr_btn.SetWindowVariant(wx.WINDOW_VARIANT_LARGE)
+                self.download_btn.SetWindowVariant(wx.WINDOW_VARIANT_LARGE)
 
         _dark_mode()
 
@@ -161,6 +167,8 @@ class MainWindow(Frame):
         self.init_menubar()
 
         _set_window_size()
+
+        _set_button_variant()
     
     def init_menubar(self):
         menu_bar = wx.MenuBar()
