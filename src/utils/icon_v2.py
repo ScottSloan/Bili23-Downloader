@@ -11,6 +11,7 @@ DELETE_ICON = 12
 FOLDER_ICON = 13
 RETRY_ICON = 14
 REFRESH_ICON = 15
+SETTING_ICON = 16
 
 class IconManager:
     def __init__(self, DPI_scale_factor: float):
@@ -20,6 +21,17 @@ class IconManager:
             self.dark_mode = True
         else:
             self.dark_mode = False
+
+        match Config.Sys.platform:
+            case "windows":
+                self.DPI_factor_1 = 1
+                self.DPI_factor_1_5 = 1.5
+                self.DPI_factor_2 = 2
+
+            case "linux" | "darwin":
+                self.DPI_factor_1 = 1.5
+                self.DPI_factor_1_5 = 2
+                self.DPI_factor_2 = 3
 
     def get_icon_bytes(self, icon_id: int):
         match icon_id:
@@ -46,6 +58,9 @@ class IconManager:
 
             case 15:
                 bytes_data = self._get_assets_refresh_icon()
+
+            case 16:
+                bytes_data = self._get_assets_setting_icon()
         
         return base64.b64decode(bytes_data)
 
@@ -58,10 +73,17 @@ class IconManager:
         return "AAABAAEAICAAAAEAIACoEAAAFgAAACgAAAAgAAAAQAAAAAEAIAAAAAAAABAAABMLAAATCwAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A1qEAANahAADWoQAG1qEAb9ahAMvWoQD01qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD01qEAy9ahAG/WoQAG1qEAANahAADWoQAA1qEAG9ahAM/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahANDWoQAb1qEAANahAAfWoQDQ1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahANHWoQAH1qEAbtahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAG7WoQDH1qEA/9ahAP/WoQD/1qEAtdahABjWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahABvWoQC11qEA/9ahAP/WoQD/1qEAx9ahAPnWoQD/1qEA/9ahAP/WoQAZ1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahABjWoQD/1qEA/9ahAP/WoQDz1qEA/9ahAP/WoQD/1qEA/9ahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEAANahAADWoQAA1qEAANahAErWoQDn1qEA5NahAErWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAErWoQDn1qEA5NahAErWoQAA1qEAANahAADWoQAA1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQAA1qEAANahAADWoQAA1qEA5tahAP/WoQD/1qEA59ahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEA5tahAP/WoQD/1qEA59ahAADWoQAA1qEAANahAADWoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAADWoQAA1qEAANahAADWoQD/1qEA/9ahAP/WoQD/1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQD/1qEA/9ahAP/WoQD/1qEAANahAADWoQAA1qEAANahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEAANahAADWoQAA1qEAANahAP/WoQD/1qEA/9ahAP/WoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAP/WoQD/1qEA/9ahAP/WoQAA1qEAANahAADWoQAA1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQAA1qEAANahAADWoQAA1qEA5tahAP/WoQD/1qEA5tahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEA5tahAP/WoQD/1qEA5tahAADWoQAA1qEAANahAADWoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAADWoQAA1qEAANahAADWoQBJ1qEA5tahAObWoQBJ1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQBJ1qEA5tahAObWoQBJ1qEAANahAADWoQAA1qEAANahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQD/1qEA/9ahAP/WoQD/1qEA+dahAP/WoQD/1qEA/9ahABnWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAGdahAP/WoQD/1qEA/9ahAPjWoQDH1qEA/9ahAP/WoQD/1qEAttahABnWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahABnWoQC21qEA/9ahAP/WoQD/1qEAx9ahAG3WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQBt1qEABtahAM/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA0NahAAfWoQAA1qEAG9ahAM/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAM/WoQAb1qEAANahAADWoQAA1qEABtahAG7WoQDH1qEA89ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA/9ahAP/WoQD/1qEA89ahAMfWoQBu1qEABtahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEADtahAMXWoQD/1qEA/9ahAP/WoQD/1qEAxdahAA/WoQAA1qEAANahAADWoQAA1qEADtahAMXWoQD/1qEA/9ahAP/WoQD/1qEAxdahAA/WoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAAbWoQDF1qEA/9ahAP/WoQD/1qEA/9ahAMXWoQAP1qEAANahAADWoQAA1qEAANahAADWoQAA1qEADtahAMXWoQD/1qEA/9ahAP/WoQD/1qEAxdahAAbWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAYtahAP/WoQD/1qEA/9ahAP/WoQDF1qEADtahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEADtahAMXWoQD/1qEA/9ahAP/WoQD/1qEAY9ahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQBf1qEA/9ahAP/WoQD/1qEAxdahAA7WoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEADtahAMXWoQD/1qEA/9ahAP/WoQBf1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAATWoQCg1qEA6tahAKjWoQAO1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEAANahAADWoQAA1qEADtahAKjWoQDr1qEAoNahAATWoQAA1qEAANahAADWoQAA1qEAAP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A///////////AAAADgAAAAQAAAAAAAAAAA///wAf//+AP///wD///8A////AP///wDw/w8A8P8PAPD/DwDw/w8A8P8PAPD/DwD///8A////AH///gA///wAAAAAAAAAAAgAAAAcAAAAP8A8A/+AfgH/gP8B/4H/gf+D/8H/////8="
 
     def _get_assets_resume_icon(self):
-        if self.DPI_scale_factor == 1:
+        if self.DPI_scale_factor <= self.DPI_factor_1:
             return self._assets_resume_icon_16x16
-        else:
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
             return self._assets_resume_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_resume_icon_32x32
+        
+        else:
+            return self._assets_resume_icon_32x32
 
     @property
     def _assets_resume_icon_16x16(self):
@@ -77,11 +99,25 @@ class IconManager:
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAtElEQVR4nN3VIQoCURSF4Y/BIBPENM1mEIwi2FyBLsFodQtuwS24BZNgsgiaxGgwKLgCuwy82cG7Qf902w/vnXsu/0iFXqRghA/WaEcJbtjijnmE4JjmMU44YBghqCmwwAsbdGQWNHST4IllEmcVNAywxwUTAYKGGR4pDHW0swtqyhTnN1ZoySxo6GOHK6Z+SVBGPtEs6pMHKabn3DHtRi1aEVkV46iyC6/rT+TBqaJPpp/iC4yOMVjDfyV2AAAAAElFTkSuQmCC"
     
-    def _get_assets_pause_icon(self):
-        if self.DPI_scale_factor == 1:
-            return self._assets_pause_icon_16x16
+    @property
+    def _assets_resume_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA70lEQVR4nO3XL0sDQBiA8Xc4EARBJibBKibDogu2Ff0KfgW/gjar0Wo3GQxLBqvBOrA5TMOioCg/Gd5hV7hXcE+6K8fD3fvvIub8VTBEL1PgDFMcYiFLYIJn3GKQIXCBdZz74hIbTQXie7+Lu3IjR1hsKjAD3RITTxhjL1oKVLCKU7xjhK1oKVBBHzd4K0LL0VJgBjo4wCMeyroTrQQqWMEJXnGN7WgpUMEmrvBR0nctWgpUsI/7H1dTvxQoZyzhGC+lmu78HwFZTyArCGWlocxCJKsUy2pGMtuxrIFE8kg2yR5Kp5lj+TD1YzInGvEJ0qNCI674BMgAAAAASUVORK5CYII="
         else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA70lEQVR4nO3XoUrDURTH8c9wIAjCcJgG1mFaWNSwtuJewVfwFbRZjat2k2HBZLAurAo2h2lYFBRF+cO9TzA4R3DfdLnpy733/M65bPjDjLGXKTDFCmfYyhJY4g1zHGcI3KCHa/zgFgfRApURFuVEzrEtWKChXd7EKx5xIlig0sUVvnCHQ8EClSEe8FmEdgULNLRwihc8l3WzFyZQ6eASH7jHQLBApY8Zvkv57gsWqEzwtE6aTtcUaNjBBd5Lmh79K4FJ1hX0sx5hJ6sMW5lBNMyK4m5WM2pntuNR1kDSyxzJltlD6SpzLB9nf0w2iOAXCqBX8RiGHjYAAAAASUVORK5CYII="
+
+    def _get_assets_pause_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_pause_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
             return self._assets_pause_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_pause_icon_32x32
+        
+        else:
+            return self._assets_pause_icon_32x32
 
     @property
     def _assets_pause_icon_16x16(self):
@@ -97,11 +133,25 @@ class IconManager:
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAY0lEQVR4nGNgGAVkAk4GBgZNNCyGJC+GRR6kh2hgy8DA8JGBgeEsFD9kYGDoR5Lvh4rB5D9C9ZBkwQ4kfhoWC0BiMABSO2oBw2gQoYDRVEQQjAbRCAmij7Qsrmle4YwCBhgAAPKFSYXeEzgmAAAAAElFTkSuQmCC"
 
-    def _get_assets_delete_icon(self):
-        if self.DPI_scale_factor == 1:
-            return self._assets_delete_icon_16x16
+    @property
+    def _assets_pause_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAeUlEQVR4nO2WwQnAIBAErwUhndiEb4tIJTaaJgRfE0LyECE+IkQfO3CfY4UF9W7NhFgZIADHS7lK5zq6MGIgAgXYq0rcbJVue3qp0V5n46iB3PR8x4BvtFkG0BWgR4i+YdQgMo3ir6BlhNYxSwSSMjOShamhVAj7gRNNZVwWr4OJaAAAAABJRU5ErkJggg=="
         else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAfUlEQVR4nO2WwQnAIAxF3wpCN3EJzw7RSVy0SwieWgQPQaiHSmsP/0Eu8RsC0SQgxM8JwHFjzujcQFdjPCYCBdiNJeAENqPbmi912tJiTCWQO58fJFDPLPWuEogqAXqEE0R9Q9SIUCtGwyh3vUHj2H+9kJSVK1lYvZQKwdtc1e2CxUpNV5MAAAAASUVORK5CYII="
+
+    def _get_assets_delete_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_delete_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
             return self._assets_delete_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_delete_icon_32x32
+        
+        else:
+            return self._assets_delete_icon_32x32
         
     @property
     def _assets_delete_icon_16x16(self):
@@ -117,11 +167,25 @@ class IconManager:
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAgUlEQVR4nO2VSwrAIAxE51wZC/WwPZvX6EahSBuSqIuCs3Iz7/lFYMeZC0BCPKkyPiMACoAzAKe1G5HQ2/FIGF11k+QV8B6QV8A1CWfB3yTT4S1HBZc6xq8EfGyLdvDD8JZpEioHOiyx3BZGb5SnKF5JZFZi7Yw8IrF0l384O+hzA5R6Ls0YqsYZAAAAAElFTkSuQmCC"
     
-    def _get_assets_folder_icon(self):
-        if self.DPI_scale_factor == 1:
-            return self._assets_folder_icon_16x16
+    @property
+    def _assets_delete_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoUlEQVR4nO2W0QqAIBAE/dqequ/op2siKIgQ8XTPglzorW4G060QenoeARZgDOIcM4/ZOTcOwArMQvg1c7I+MDeHKyWK4QqJaniNhAxeIiGHWyTc4DkS7vCURDN4TKI5/FGt23nJq/vbAtyW3ePbkUzsnTeTILHh3CXI2O1uEhiOmlyCgnMuk6CiZKolEDRcsQTCejVL4NDtJgne/i3v+V12aZ/ohD/nUdgAAAAASUVORK5CYII="
         else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoElEQVR4nO2WUQqAIBBE57TzVZ3DSxf9FASJueusBTnQp/seplPAyMg9CcAEfaZj9mMIYAWwCOHnzNm6YHkDrpRwwxUSzfAWCRncIyGHWyTC4DUS4fCSRDd4TqI7/Fqt2/FEVPe3BXjZ9ohvRzG5d95NgoUDFy7BitMeJkHDVZNL0HHPZRJsKJlmCQoazi1BYb2aJRjQ7SaJ9PZv+ci/sgM32VIN2RJOpwAAAABJRU5ErkJggg=="
+
+    def _get_assets_folder_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_folder_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
             return self._assets_folder_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_folder_icon_32x32
+        
+        else:
+            return self._assets_folder_icon_32x32
         
     @property
     def _assets_folder_icon_16x16(self):
@@ -137,11 +201,25 @@ class IconManager:
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAqklEQVR4nO3VsQnCUBhF4U8UFAvFDcQVbDORW9kpbhAXsLC1tDRNCu20lIQEQjCoJKYxF84rXnEu3OanxUwwKzBtUr5DhHOBC9ZNyIe4oVf6H+CAFRZfMkc/F40RV5QvsMfxS04IPymokytGecEja9w3RJg5E3f63BFg2RBB5hz/cqK4K3iXbqK36Sb6p4mGFQenTnqZM3Gn2b44mXWIsCm3lo9+HRJXO3kCdH5cUMrVJbgAAAAASUVORK5CYII="
 
-    def _get_assets_retry_icon(self):
-        if self.DPI_scale_factor == 1:
-            return self._assets_retry_icon_16x16
+    @property
+    def _assets_folder_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA3UlEQVR4nO3XMWoCQRjF8W1sbS08TPQUNjbBEDxAwAOkX7EJRG+QJlh5hrRWNtkLiDmB8pOFLcSsm4g7i8U8eM3MwPfnfTPDTJJEFUIfL5iUuJeEFJ5wQIbvEu8xCAmwxLxi/hU/6IYCWCGtmG/hC7sLCV3rT3T+DVCsaWOI5xs9xgZvVwHUKUzzmucAa3w05HUZwBYLvAf2oqj1C2DWYAtmZQBpgwBpBBBbIG5C8Riu4kUUE4gJ3FUClc/yAAD5q2h5OjD642NSp7Oi1uM5Va/ia1an8xoPTaWd3L2Od3q8qy5QT9cAAAAASUVORK5CYII="
         else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA1ElEQVR4nO3XMWrCUADG8d/i2tWhh2k8hYtLUaQHEDyAu8WloLlBF+mUM7g6uegFRE/QQgkGhRojoUko9P3hG8Ibvj/fW/IIXOhghHFOIjUzwBd22ObkE906BT6wKDif4IjHugQSTAvOW1jhcGOhslmiXUYg5QE9DH+ZF2zwVlagSl6zzjPpxxrvDWWdJ7BHjHnNibOuK4GZ5pjlCUwbFEi7gkASriAsEBYIC4QFwgJ/aoF7v+VVE2edZ/p3HiZVZpd1PV/qT0QFT7Mqk3Y8/Sz3b/kG0iOnlleH9TwAAAAASUVORK5CYII="
+
+    def _get_assets_retry_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_retry_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
             return self._assets_retry_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_retry_icon_32x32
+        
+        else:
+            return self._assets_retry_icon_32x32
         
     @property
     def _assets_retry_icon_16x16(self):
@@ -157,11 +235,25 @@ class IconManager:
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABZklEQVR4nLXVvUokQRTF8Z9uYKCJ63em43MIguhGhoL4kRgIKhiaiz6CDgqyr7HKPoUKhsKu4m5iZGJgIFeu0I7M2DO2f6ie7js1faiqc8/QPl2+kHk84BZn2MJomR9O47hhbLeYP4BZHOAO++hrJTCOhRw7eMKvkqsaTKFL1D6aPIlr1NsQeGUJfzGhCT24wiKmOhAIlnHRbLt28TPvOxWQq9/TQD/+43s+j2GtcVJJhvLgR4rFdZyojkNsFgu/MVOhwBxOi4X7sg3ThnXDUS98w2PFEdCVHd8tLw9fKRDcFBxUBUP4UyycZbZUxY/GPtrKPKmKOjaKhZFsjjj9zzKc74rPN+xXtIqjjJ139GXkRip2yirO0dtsQi0bpBORlXRO/Le0pJaRW0+7fcRwbst5mZcXtysi918KRbYUDRDCYcX4Lg409rzptrQi3BWpGJ6OZozujBH3UQsrvnPLZ4gIaCtSngEvOUGXUU0xKwAAAABJRU5ErkJggg=="
 
-    def _get_assets_refresh_icon(self):
-        if self.DPI_scale_factor == 1:
-            return self._assets_refresh_icon_16x16
+    @property
+    def _assets_retry_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAACHklEQVR4nNXXPWtUQRQG4A0RJCtY6eYX+NUZ7DWxNAmKjZ2FH41/wEItJfgDTAK7RKOIYqVo7ERILEVC/GoTGwsDNip+xUeGHPCaZLN3s3cveGCKe5hzzjtzZ97zTqXyPxtO4wFu4wqGsK1MAEfRwGPM4xeWcQP720m0HU/xYoPxvI08u3EGs/iJSdTyBPbgAi5mxiOr9iX3Sv7NOYw3eI+BdoNP4BtebRVA5OnDXXzGSN6gI1H8Kk52AiCzu2MBYvOdQA0fUI/vjgFkQNzDUjonm028g9dp64oEELmqeIuJZhMO4Xe6yxnfCD4VASDyjcbtWH9FrZLJszW+XuwpCkDknMPURtvzFaeKLNYEwNkgq7+MiWP4jp0lAOjHCgazzsTjL7tdPFNvAZezjulEGCUCmMHNrOMhrpcIoJ666FoA9RIBNNYCmE4ttUQAT1LLzjrSIZwv+RBeyjqG4mr0l1C8FrUOZ52J8T4mMVECgPPriChZyKjZSpctKax1VJwMe/Ejt3DYgoXQSc3oQLMJkyGj+rpQfAfeYbzVAVkKGdVTYPEkSO5jEbtaTR4I+TRWBIgofi1yHswbNBIBSUZVOyhejZWnXMPtBg/E70gyanQLxY/HP1/MvfImD42JOLlzISZqLXr9ubhq6UaNt/zneSxpuOCJ5WCxhXiONWLMhG8l5kxhX6Vos8qYg4nHcSsepmmkZpZ86U3RW3jhbtofqakG4sW6D2IAAAAASUVORK5CYII="
         else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB/0lEQVR4nNXXsWsUURDH8Y9EECNYmfMvUGPnYa/GUiMGGzsLo43/gIVaSvAPUAM51BjEYBXR2ImgKUUkamwTGwsDNlE0MSoP5mDvuONuL3sL+cIrdpj3dva9N7+ZZZtzAXOYwQ2MYGeZAZxEDc/xHn+wivsYzrPQLrzE2xZjIcc6Q7iI19jAJCrdTNyBK7iaGc/wDz/0xml8whdU804ewy982EIAid14jDWMdjvpeLz8Js5tMYD67k5EEB13ooKvmIrnIgKoBzGLlbgnbXmEj7F1RQaQGMQS7rZzOIq/kct10rl9VxxnIjtapugMXjXZBnBAsbzBvVbb8xPn9Z/xEKsGxTyF39hbQgD7sYkTWWPS8XfKYxHXs4bpEIyymMeDrOEpbpcYwFRU0YYA6uJTBrXmAKajpJbFiyjZDZcw1fMyL+G1rGEkUiOlSL+pxLuOZY1J8b5FM9FvLrcSInEmqZPpNwutpDhxEOt5GoceGItidLidw2S0UfVyXCR78Bl3Ol2QlVDF1EQURVrrCZaxr5NzNdqniYKCSGvcijWPdDtpNCbMRqnulcH48rXoknNRjeNYik4mL2fjzJfzfHkzQ9HDbUQnM97hRyMJ2aVItfW4cB3PvBuGQydWQ8UWo3bUYsyHbTN8Up4f0gcGopNJOv4wKloaqZglW/qnSD7bh/8CxnVJDcX9VAAAAABJRU5ErkJggg=="
+
+    def _get_assets_refresh_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_refresh_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
             return self._assets_refresh_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_refresh_icon_32x32
+        
+        else:
+            return self._assets_refresh_icon_32x32
     
     @property
     def _assets_refresh_icon_16x16(self):
@@ -176,3 +268,44 @@ class IconManager:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABWklEQVR4nLXWOUoFQRQF0K+hA6LfCUwcwMzILThswEAcMFYEA2MDFQ0MnXAnDrtwWICzBka6gCOFJTbflu7f9r9Q0NR7dW/1q9uvulKpA2gKo541WYT9WMUFHvERxzPOsYbeIsTt2I1EB5hANRHvwCT28Yo9tMTYeBb5CG7i4mqOzVRxhGus4zaL/B6zBd56yw8G/irLTUHyUbwlBGbSkkLN9+slD8AYlrCBE8xXUtzynKfmhRCteFBsdQ5En09UGgU8obNR5M14bwh5QuCjzB7jq2cFzubvidBnukoU6MFd7SFPligwjbNamx6WKHCMlbQPrbsE8l68oK82sFPGW/hqFZtpgbbYcuf+Qb6IS7T+lTAc23XdIlgIzsFgVmIQuYoH1ZOz5idx50N5dxPKtR0PKwhNJQ0QfR6sGGIhJ1w26WXJEOoLdsMpHhKXfngOc8u/3PIfFPlt+QQQvd8jiD4RUwAAAABJRU5ErkJggg=="
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABTUlEQVR4nLXWuUoDURQG4C+WLojGqGDjAnZWvoLLC1iIC9ZKwMLaQsUUlm7kTVzewuUBXKOFlXkA5coVQpiYZJz8cGGYc+b/z5z7z7lDe8jFlRlGUcQ1XlCNq4IrbGM4DXEfSpHoBHPI18T7MY9jvOMI3TE224x8Cvfx4XwLxYScM9xhBw/NyJ+wrH3s4yuusUZtuU9JPo2PGoGlpKRSbEsazGADuyhjNcktlRZ7ngrF6JaO4TpasWN4xUCnyLvw2SnyX4FqxjMmFzkD9w/CnBnMUKCAx/pNDrMlKyzist6mpxkKnGMr6UMbyoB8GG8YqQ8cZvQWZewlBXrjyF35B/k6btDTKGEyjus0ImvROePNEoPIbdyoQos9L8fKJ1qtJrTrIG5WEFqoM0AQDlYMsZATDpuGbfkLwQnBbhd4rjn0w3W4t5nklv+g7d+Wb/taP7VcoSfrAAAAAElFTkSuQmCC"
+
+    @property
+    def _assets_refresh_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB+klEQVR4nNXXy29NcRAH8NtoE6orcdv/QHWnVlaorkqFja14/hFC7USsJa3c0nqGiEVR9kViJ1SwJV2qxEIXHs1HfulITi7tffTce2KSs5nfzHxnzvx+8yiV/idCJ/ZhDLfwEA9wGWexF12tAB7AdXzBL7zGLK5iEo+Ct4yvuIH+PIB7UcFPzOE4ymvIl3EUL8PRm9gSZ1040gj4TizgLfY34fwIPuAjduEaXtWrfBBLuIONjYJn7PTgdqRG/MmeeiJfwgV0NAuesZdSkqWhWjlfiMjzAB/G9yoHzqylUImcb1oveNg7hHOYwGO8Sa9pNeH+yNFIqQiy8s7niqxwizhWlAPDUTjKRTlwPpXSQsATRe2eLRVFVrpapWgHJtuIl7roTJbR1hTgKaazjLF2XkLMpwEmyxiKjtXXBvDewNqdZW7AZ5xogwOno+h1Vh9M41kbHHiBqX8dbMMPjLYQ/HA0vIHVBK7gXV7tuMr25hjRxmtdkE+4m8dAkrHbgfsxH26tJTyIb7iY01SUwC+FzR31Ko2Gwj10rwO8OyJPtg40qjwY6XifpuQmx7E/Y3l9ka+yaEzEzX2Ok+merCHfh1Px1NKLGq+Z83oI26NOLEYVm8+sZul7ErzlkJnKZTUr/e1IqphpAU2LaFq7ZuJLzSzx9iSZ3IFbSb8BcSPoGWVPjFMAAAAASUVORK5CYII="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB60lEQVR4nNXXzW+NURAG8J8goaxE6z9QdmplheoKFTa2jc8/QqidiLUEaanWR4hYqK+9j8ROqGBLulSJhS6Uhkwylevmuvf29r33TZ/kbOacOTPnzJxn5rDMsAp7MIybmMR9XMRp7MbqdhjeinF8xS+8wWNcxSgepmwe3zCB3iIM92AEP/EMR9FdZ33MDeFVOnoDG3IububwYoxvxzTeYV8Lzu/FR3zCDlzD62aVD2AWt7FG61iPWxma33mTIWt48lmcwwpLx1AaXxj9jWI+nScvwvgAflQ5cKqewkjGfK1icBBncBmP8DZfU030ZowieUrBeD610hhuBkfKcmAgiaMeybQVZ5NKS8NEcntpmMwnWKoDox20F1X0QaWg0yF4iuuVguEOJ+FUNjB/0Z8Va5P2oydt7awUrsQXHOuAAyeT9IL8/kHE5Ln24yXGak1sxhwG22j8UBa86DFr4greF1iOK7EuW7RLjRLkM+4U1JAsIPa6l/3hxkaL+/Ad5wtyIva4kHtua1ZpMBXuomsJxrvy5LHX/sUq92U4PmSX3Eo7ttCWN33yanRnPxeZ+wLHM0/+hyCyE/nU5jLhGsa8GWxJnphJFpuq+JrFeJKy+VwzVtTXTBWCMeMDGjwe366oaDGimIVsV65ZPvgDXDZxdDZBGysAAAAASUVORK5CYII="
+
+    def _get_assets_setting_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_setting_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
+            return self._assets_setting_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_setting_icon_32x32
+        
+        else:
+            return self._assets_setting_icon_32x32
+
+    @property
+    def _assets_setting_icon_16x16(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAABEUlEQVR4nJXTy0oDQRCF4cEsg+4kWfoA3uJT6EbduMoigpfoXkEFjTd8HqOS5O0+KajAmMyQWFDQ0111uvvM30VRE1jDSWaz+G/gEM94x8EyDeuY4DK/X7GNDgY5d45x1FYJjLGBM3zhAY3MRwxTIGpGVQKn6C9x0mv06ha/S+M2bjPbpfmf2aZVHKdZ96XmYd6/k+NWrg3S3KPoLdDFC7awkkWxa6e0yR5uctxIc8Pk7lTgA7v/EOhkTzcmmtjPU9zVXOFz5gpPwcYcYP6a2IpdM1u1Jk4jAAoGigWBi+ChamGSkPTz+LMgBVxXWTOpEgiUR1NI8IZN7JRQ7mXNPMoVgvGfw7DlHlOFQAC28Dn/ApxuuJWGeQXyAAAAAElFTkSuQmCC"
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAABBklEQVR4nJ3TTUoDQRCG4QezDLqTuPQA/sVT6EbduMpCQY1xn4AKGo3ieYyKyfGkoAaGmcREP+ihZrq+6u6at5mvNZzmaPqHjvCEVxwuY1jHFN18H2EHbQzz2yUmmVvTBJu4wAfu0cjxgHEWiJzvWQXOcb3ETm9wNm/ysxRvYJAj4kJfVdMqTrJZdyXzOM/fzriVc8Ns7nF6dfCMbaxk0iCNhfbRz7iRzR2lVzzesPeHAu30dCQkB7mL2zlHeK8c4THZaP7WxFau2i+ZZzaxUDcZWKSr5KGmaUISLMT2qyAFXL3MidyaAs8grIDkBVvYLaEcc5EzE+Wq4j+HcenLVFVAsvA6/wBsli4SSVpKtQAAAABJRU5ErkJggg=="
+
+    @property
+    def _assets_setting_icon_24x24(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB80lEQVR4nK3WyWpUQRQG4JCYFoISfAgJDmCWBoSIUxxA3yQuskzrWhfiWhs1eQgHEBNjApo4LHTjgEHQpaI+wSdHTofKpft226ag4Nbhr/9UneGvOzTU50AD+3KODu30wBv8xC+s7jT5aBIPF98jg5JNYh0zhe1g3KBYv8P+Yj2Teyb7If+GWXzATZzDY9wpcAt4iFO4gY+4nHu7O8EzzOX3HrTwAGewq5Lw83iCu9ib9jms1Dk4hi9RKb2DuX1gHJ9xvBfwOu7VgjoMLOJaP8ALuF+x7caVTGTMZtgqmKc4UUcccT2MJZyskL/ELRzNeRsbpRNczHwd2NaIkbxsot94nZu3ahxXg7zDgQLXrBxkoeB69bcwMIbv0URdbrYep+5gn8LzLnuGk3Os7eBHhKgL+MUADhrJOdYO0Vpe6200VCVEzQhHB5LokflKiBazy4NrteydAIxgIpunmuSNjPlUzlaHJF+K6gsJqdWpmjJtRkhyznco0+XaMi2AoT+tnsDKiOYMXeoFCs351NaWfxmpXe8jAnWgKMnZQlsW8CjluBS70QzlUiZ2PO2hwut1Do7ga6riZurS2ZTrrbClgobj04nZzD31cl28CSuYLmyHosuLdZTzRLGeTqmvJ+/zyWz815NZ46R89Nd2lDwdDPTb8gcivx324MW15AAAAABJRU5ErkJggg=="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB0UlEQVR4nLWWyUoDQRRFDzGJIIr4EUEcwCwVhIjzAPonunBpdK0LydoENfkIBxBnIcZpoRsHFEGXiuYPpMJtKIp0Ool6oUKneO++qjfcbqgeUaBNK8I/4Ab4Ar6B078mj4g4ZD031EsWBwrAmLXXqRt4uANi1v8x+cSrIX8HZoEHIAVMAHvAumWXBXaAYWAVeATm5FsxyAkwr+dmIANsA6NA2Cn4JLAPbAAt2je+x5UC9AOv6pRa0Qo8AwNBhivAZh0BcsByNYZTwJaz1wgsqpBmJbVn4wgYrERs8toNHABDDvklsAb0aqWBCyfItOrV4Q5iWC1YBK7lbPf4kshdpHUT+yBZi+vKa4wm4ENDVA4FndpFH5D38QmJ03CXfj6VonI4ryNAVJylAOYaZ7rWrQbKTlFS6XBhZmTBSVFOU16UXtmzUyJt1/C4Rb5QkD6tTJkiz6j7YkE65demSaUkr5O7bXoY1KYeUjphrdiULlWE0ZwnS1tqgdGue2XAFwUpqactWWBXcmwXLCKiAxXW2CJfw+GLHuBNqvgiXRqXXNtp21DgEdm8yCdQrpGBkdyEtdelKfdwq47zkJDUB5JX88qM/vaV6Qf7pW8G889R12fLD8veaIHgpQV/AAAAAElFTkSuQmCC"
+        
+    @property
+    def _assets_setting_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAC3UlEQVR4nNWXW0tUURTHz+hzF+0hIijoDmOa5u0DiJGvVp+gC0heoQwsUXvIgvKlQHtNqKgoy0Gl7IpdHpUSsrQe6gtUdFP5xW7+1W7Ycy42jLTgMGfv/V/rv87ea629xvP+RwHKgGHgtp4hoCCbDnQDM/o1zzvgaDYduAn0WeN+4GKmSXYBd4Eix9oroMkatwLPHbhC2aiNSr4HmAXGga+GDIhpbRswB1Rb+BrgOxDXOAY0AF+ACdnaHeXLZ4FjMlQHfAZGgTGRm/dllk4e8AiYB+4BIyI/KBvtslkb9nxfAjnWXFxbeRpY5aO7BjgrZ7Za8znAFDAQxoF1wAfgkJchAY4An4BNYRUO6OyLMkBeDHwD9kZRiukc7wfgVpgnAPMYSETwOSnAM+CUlyJALtACvOGPzChTch34XlMtvSgClCtqVzrIryvCO4QzT6fmrqU6oZgy2bElqLZ3A7eAaSmMOHAtIip2rJVorTHNMcypgN0ATgClNiChLe1TAakCljgMGUyHz4d0mQ9wzJs6UQ00A+eBt3/FBcnbrCftFiUx+Trvch9MhTB5AbZ6DOdCHajwwVQu1IFB4D1wATgM7LBLrYUz0d7pY/g48DqN8zW6tPrFNWgDCoA24DIwqQwYdhhqUqCVONZKVbzqHWtPZPOFONp8Gxhge5o0NDX9qpzo0pZX6ssN+RX7DpHOemXV5rSELgGe+hSiRqXrLzHv9ankwpvMuuNFEZKl2Fy5owG4/BABN6b+MRbFgWZtc2EEv9PZiqufaAirUCDyun8lt2w2hL5dSTYe4/aWqQ17CJwBVvvorgXOaduLU450IuhIf4ppm5QB7Yr6Vt3nQzI8LyeXWjrLgQfWWkI6rbIRviUzYhpIKZg26iOwL6XBMERV1txO4X/nNrBfXdBUpKY0ZScGgA2OtWk7qFQ9Jx24jeoxo7XlQaJru9cam/J6ycuWACcX+69Z2aL+Oc2k/AB1R7TSB/zSWQAAAABJRU5ErkJggg=="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAACwElEQVR4nNWXW29MURTHf8OzS+tBREJS12TqUlr6AYTo6+ATuCRCb4mOpDTUg5LQFxL1qgmCuNRkCOqWujwSJMpMPfAFELe2IUv+oyfbOWfOGZNp/JKd9py991rr7L322v+B/5QG4AZwSy0L1FYygB4gr7/W3gP7KhnANaDP89wPnC23k03AILDCp+8N0Op5TgMvfMYtl41UXOdbgFHgGfBNzhLqWwmMAes945uAH0BSzza2GfgKPJetzXG+fBTYL0M7gS/AHWBIzu3/GZ45VcBDYBy4C9yU812y0SWbqaj7+xqY4nmX1FIeA+aEzJ0HnFAwyzzvzdYwcDVKADXAR2AP5WMv8BlYHHXCDu29XwLGpQ74DmyNMymhfbxXZNwstTAeARlK4Clw1Of9VKAdGAF+quV1UqzP5ZSqZSzWKGtn+zi/rAw/oHHWDurdJZ8ganQ6lhar7T3AAJDTBNsCl3Y5sn11WaW+loBtGFMBuwIcBuq9AzJa0j4VkHXANB9DI/ryILr1AS5VKlxtwGngnZsXWaCXcKq137bkQazVGHMYRq98lhSAOQmisdQArgMfgDNAB7DBKbUF8kq4IA4BbwOCb9Kl1S9f5vMPJiY6gfPAK50AExwurUo0SziXehWv3T59j2XzpXx0FhMwqwOOodX0iwqiW0veqC835xecO8RYoFO1hJg8CSlELcr2QiHK6ctd5+hk3Y7rPKEr11oY1RESbkjbWdATkWjTMpui+VeS0hNWXyJRK+cmRMpFc5zbdVBSzLtkJsMeAMeBuSFz5wMntezecp2QNCu2pb9J6QR0KanSus+zMjyuIKczwUzgvqcvozlp2YglyZCAHJWM+gRsY4I6ObL7osBGjfee7e1SQcNxRWmBlDTcQv4m5yRVhwqYyyJpzNiyvBgDEhoFrLyeo4IcmeyfZg2T/eO0bPwCCCa5lVGYU1IAAAAASUVORK5CYII="

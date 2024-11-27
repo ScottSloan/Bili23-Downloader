@@ -84,10 +84,25 @@ class DownloadTab(wx.Panel):
                 
                 case "linux" | "darwin":
                     return wx.DefaultSize
+        
+        def _get_panel_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((-1, 350))
                 
+                case "linux" | "darwin":
+                    return self.FromDIP((400, 430))
+
+        def _layout():
+            self.scrolled_panel.Layout()
+
+            self.scrolled_panel.sizer.Layout()
+
+            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
-        self.scrolled_panel = ScrolledPanel(self.download_box, self.getPanelSize())
+        self.scrolled_panel = ScrolledPanel(self.download_box, _get_panel_size())
 
         path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
         self.path_box = wx.TextCtrl(self.scrolled_panel, -1, size = _get_scale_size((220, 24)))
@@ -187,7 +202,7 @@ class DownloadTab(wx.Panel):
 
         self.SetSizerAndFit(download_vbox)
 
-        self.layout_sizer()
+        _layout()
 
     def Bind_EVT(self):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
@@ -315,21 +330,6 @@ class DownloadTab(wx.Panel):
     
     def onDolbyTipEVT(self, event):
         wx.MessageDialog(self, '自动下载杜比选项说明\n\n当上方选择 "自动" 时，若视频支持杜比，则自动下载杜比视界或杜比全景声，否则需要手动选择\n开启此项前请先确认设备是否支持杜比', "说明", wx.ICON_INFORMATION).ShowModal()
-
-    def layout_sizer(self):
-        self.scrolled_panel.Layout()
-
-        self.scrolled_panel.sizer.Layout()
-
-        self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
-
-    def getPanelSize(self):
-        match Config.Sys.platform:
-            case "windows":
-                return self.FromDIP((-1, 350))
-            
-            case "linux" | "darwin":
-                return self.FromDIP((400, 430))
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):
@@ -740,7 +740,24 @@ class MiscTab(wx.Panel):
                 case "linux" | "darwin":
                     return wx.DefaultSize
 
-        sections_box = wx.StaticBox(self, -1, "剧集列表显示设置")
+        def _get_panel_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((-1, 380))
+                
+                case "linux" | "darwin":
+                    return self.FromDIP((400, 430))
+
+        def _layout():
+            self.scrolled_panel.Layout()
+
+            self.scrolled_panel.sizer.Layout()
+
+            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+
+        self.scrolled_panel = ScrolledPanel(self, _get_panel_size())
+        
+        sections_box = wx.StaticBox(self.scrolled_panel, -1, "剧集列表显示设置")
 
         self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
         self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "获取视频所在合集")
@@ -759,7 +776,7 @@ class MiscTab(wx.Panel):
         sections_sbox = wx.StaticBoxSizer(sections_box)
         sections_sbox.Add(sections_vbox, 0, wx.EXPAND)
 
-        player_box = wx.StaticBox(self, -1, "播放器设置")
+        player_box = wx.StaticBox(self.scrolled_panel, -1, "播放器设置")
 
         path_lab = wx.StaticText(player_box, -1, "播放器路径")
         self.player_default_rdbtn = wx.RadioButton(player_box, -1, "系统默认")
@@ -784,7 +801,7 @@ class MiscTab(wx.Panel):
         player_sbox = wx.StaticBoxSizer(player_box)
         player_sbox.Add(player_vbox, 1, wx.EXPAND)
 
-        misc_box = wx.StaticBox(self, -1, "杂项")
+        misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
@@ -798,12 +815,19 @@ class MiscTab(wx.Panel):
         misc_sbox = wx.StaticBoxSizer(misc_box)
         misc_sbox.Add(misc_vbox, 0, wx.EXPAND)
 
-        misc_vbox = wx.BoxSizer(wx.VERTICAL)
-        misc_vbox.Add(sections_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        misc_vbox.Add(player_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
-        misc_vbox.Add(misc_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(sections_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
-        self.SetSizer(misc_vbox)
+        self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
+
+        self.SetSizer(vbox)
+
+        _layout()
 
     def Bind_EVT(self):
         self.player_default_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)

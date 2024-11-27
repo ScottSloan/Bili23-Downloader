@@ -653,6 +653,14 @@ class DownloadTaskPanel(wx.Panel):
             if not Config.Sys.dark_mode:
                 _control.SetForegroundColour(wx.Colour(108, 108, 108))
 
+        def _get_button_scale_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((24, 24))
+                
+                case "linux" | "darwin":
+                    return self.FromDIP((32, 32))
+
         # 初始化 UI
         self.icon_manager = IconManager(self.GetDPIScaleFactor())
 
@@ -702,10 +710,10 @@ class DownloadTaskPanel(wx.Panel):
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, self.get_button_icon(RESUME_ICON), size = self.FromDIP((24, 24)))
+        self.pause_btn = wx.BitmapButton(self, -1, self.get_button_icon(RESUME_ICON), size = _get_button_scale_size())
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = wx.BitmapButton(self, -1, self.get_button_icon(DELETE_ICON), size = self.FromDIP((24, 24)))
+        self.stop_btn = wx.BitmapButton(self, -1, self.get_button_icon(DELETE_ICON), size = _get_button_scale_size())
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)

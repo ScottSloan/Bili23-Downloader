@@ -10,7 +10,6 @@ from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.festival import FestivalInfo, FestivalParser
 from utils.parse.live import LiveInfo, LiveParser
-
 from utils.login import QRLogin
 from utils.thread import Thread
 from utils.tool_v2 import RequestTool, UniversalTool
@@ -56,6 +55,14 @@ class MainWindow(Frame):
                 case "linux" | "darwin":
                     return wx.DefaultSize
         
+        def _get_button_scale_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((24, 24))
+                
+                case "linux" | "darwin":
+                    return self.FromDIP((32, 32))
+
         def _set_window_size():
             match Config.Sys.platform:
                 case "windows" | "darwin":
@@ -63,7 +70,17 @@ class MainWindow(Frame):
                 case "linux":
                     self.SetClientSize(self.FromDIP((880, 450)))
 
+        def _setting_icon():
+            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(SETTING_ICON)))
+
+            return _image.ConvertToBitmap()
+
         _dark_mode()
+
+        import io
+        from utils.icon_v2 import IconManager, SETTING_ICON
+
+        icon_manager = IconManager(self.GetDPIScaleFactor())
 
         # 避免出现 iCCP sRGB 警告
         wx.Image.SetDefaultLoadFlags(0)
@@ -88,7 +105,7 @@ class MainWindow(Frame):
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.download_option_btn = wx.Button(self.panel, -1, "...", size = _get_scale_size((24, 24)))
+        self.download_option_btn = wx.BitmapButton(self.panel, -1, _setting_icon(), size = _get_button_scale_size())
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.AddStretchSpacer()
