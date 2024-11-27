@@ -470,12 +470,12 @@ class DownloadUtils:
 
     def merge_video(self):
         def get_temp_file_name():
-            self._temp_video_file_name = f"video_{self.task_info.id}.mp4"
+            self._temp_video_file_name = f"video_{self.task_info.id}.m4s"
             self._temp_audio_file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
         def clear_files():
             if Config.Merge.auto_clean:
-                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, "_out.mp4"])
+                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name])
 
         get_temp_file_name()
 
@@ -524,10 +524,10 @@ class DownloadUtils:
 
         match self.task_info.video_merge_type:
             case Config.Type.MERGE_TYPE_ALL:
-                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental _out.mp4 && {_rename_cmd} _out.mp4 {_extra}"{self.file_title}.mp4"'
+                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
 
             case Config.Type.MERGE_TYPE_VIDEO:
-                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.file_title}.mp4"'
+                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
 
             case Config.Type.MERGE_TYPE_AUDIO:
                 _cmd = _get_audio_cmd()
@@ -543,7 +543,7 @@ class DownloadUtils:
         info = DownloaderInfo()
         info.url_list = self._video_download_url_list
         info.type = "video"
-        info.file_name = f"video_{self.task_info.id}.mp4"
+        info.file_name = f"video_{self.task_info.id}.m4s"
 
         self._temp_video_file_name = info.file_name
 
@@ -635,6 +635,10 @@ class DownloadUtils:
                 else:
                     return f"{self.file_title}.{self.task_info.audio_type}"
 
+    @property
+    def _temp_out_file_name(self):
+        return f"out_{self.task_info.id}.mp4"
+
 class DownloadTaskPanel(wx.Panel):
     def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
         self.task_info, self.callback = info, callback
@@ -660,6 +664,14 @@ class DownloadTaskPanel(wx.Panel):
                 
                 case "linux" | "darwin":
                     return self.FromDIP((32, 32))
+
+        def _get_style():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return 0
+                
+                case "linux":
+                    return wx.NO_BORDER
 
         # 初始化 UI
         self.icon_manager = IconManager(self.GetDPIScaleFactor())
@@ -710,10 +722,10 @@ class DownloadTaskPanel(wx.Panel):
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, self.get_button_icon(RESUME_ICON), size = _get_button_scale_size())
+        self.pause_btn = wx.BitmapButton(self, -1, self.get_button_icon(RESUME_ICON), size = _get_button_scale_size(), style = _get_style())
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = wx.BitmapButton(self, -1, self.get_button_icon(DELETE_ICON), size = _get_button_scale_size())
+        self.stop_btn = wx.BitmapButton(self, -1, self.get_button_icon(DELETE_ICON), size = _get_button_scale_size(), style = _get_style())
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -877,7 +889,7 @@ class DownloadTaskPanel(wx.Panel):
             time.sleep(2.5)
 
             if hasattr(self.utils, "_temp_video_file_name"):
-                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name, "_out.mp4"])
+                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name, self.utils._temp_out_file_name])
 
         # 停止下载，删除下载任务
         self.downloader.onStop()

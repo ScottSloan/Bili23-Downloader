@@ -75,6 +75,14 @@ class MainWindow(Frame):
 
             return _image.ConvertToBitmap()
 
+        def _get_style():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return 0
+                
+                case "linux":
+                    return wx.NO_BORDER
+
         _dark_mode()
 
         import io
@@ -105,7 +113,7 @@ class MainWindow(Frame):
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.download_option_btn = wx.BitmapButton(self.panel, -1, _setting_icon(), size = _get_button_scale_size())
+        self.download_option_btn = wx.BitmapButton(self.panel, -1, _setting_icon(), size = _get_button_scale_size(), style = _get_style())
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.AddStretchSpacer()

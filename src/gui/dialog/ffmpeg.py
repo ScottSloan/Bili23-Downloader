@@ -30,12 +30,20 @@ class DetectDialog(wx.Dialog):
                 
                 case "linux" | "darwin":
                     return self.FromDIP((32, 32))
+                
+        def _get_style():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return 0
+                
+                case "linux":
+                    return wx.NO_BORDER
         
         icon_manager = IconManager(self.GetDPIScaleFactor())
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = wx.BitmapButton(self, -1, _refresh_icon(), size = _get_scale_button_size())
+        self.refresh_btn = wx.BitmapButton(self, -1, _refresh_icon(), size = _get_scale_button_size(), style = _get_style())
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)

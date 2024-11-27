@@ -14,12 +14,12 @@ class Config:
         name: str = "Bili23 Downloader"
 
         version: str = "1.53.0"
-        version_code: int = 1530
+        version_code: int = 1531
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1532
 
-        release_date: str = "2024/11/26"
+        release_date: str = "2024/11/28"
 
     class Proxy:
         proxy_mode: int = 1
@@ -57,7 +57,7 @@ class Config:
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
-        video_codec_id: int = 12
+        video_codec_id: int = 7
 
         max_thread_count: int = 2
         max_download_count: int = 1
