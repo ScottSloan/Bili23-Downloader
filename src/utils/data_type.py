@@ -161,7 +161,8 @@ class DownloaderCallback:
 class UtilsCallback:
     def __init__(self):
         self.onMergeFinishCallback: Callable = None
-        self.onErrorCallback: Callable = None
+        self.onMergeFailedCallback: Callable = None
+        self.onDownloadFailedCallback: Callable = None
 
 class TaskPanelCallback:
     def __init__(self):
@@ -174,3 +175,9 @@ class ErrorLog:
         self.log: str = ""
         self.time: str = ""
         self.return_code: int = 0
+
+class NotificationMessage:
+    def __init__(self):
+        self.video_title: str = ""
+        self.status: int = 0
+        self.video_merge_type: int = 0

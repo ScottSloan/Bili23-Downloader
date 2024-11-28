@@ -153,19 +153,18 @@ class LiveRecordingWindow(wx.Dialog):
         match Config.Misc.player_preference:
             case Config.Type.PLAYER_PREFERENCE_DEFAULT:
                 # 寻找关联的播放器
-                _default = FileDirectoryTool.get_file_ext_associated_app(".mp4")
+                result = FileDirectoryTool.get_file_ext_associated_app(".mp4")
+
+                if not result[0]:
+                    wx.MessageDialog(self, "无法获取默认播放器\n\n无法获取系统默认播放器，请手动设置\n\n请使用支持播放 m3u8 视频流的播放器（如 VLC、PotPlayer、MPV等），Windows 默认的媒体播放器不支持播放，请知悉", "警告", wx.ICON_WARNING).ShowModal()
+                    return
 
                 match Config.Sys.platform:
                     case "windows":
-                        cmd = _default.replace("%1", self.m3u8_link_box.GetValue())
+                        cmd = result[1].replace("%1", self.m3u8_link_box.GetValue())
 
                     case "linux":
-                        cmd = _default.replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
-
-                    case "darwin":
-                        wx.MessageDialog(self, "无法获取默认播放器\n\nmacOS 平台不支持获取默认播放器，无法播放直播视频流，请手动设置", "警告", wx.ICON_WARNING).ShowModal()
-
-                        return
+                        cmd = result[1].replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
             
             case Config.Type.PLAYER_PREFERENCE_CUSTOM:
                 cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'

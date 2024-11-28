@@ -38,13 +38,17 @@ Bili23 Downloader GUI
 - 视频 av、BV 号
 - 剧集 ep、md、ss 号
 
+解析完成后，点击右上角小齿轮图标可自定义清晰度和音质等设置。
+
+[![pA4xzQJ.png](https://s21.ax1x.com/2024/11/28/pA4xzQJ.png)](https://imgse.com/i/pA4xzQJ)
+
 ### **下载**
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
 
 程序支持多线程下载（最多 8 线程）、并行下载（上限为 8 个，支持动态调整）、断点续传、下载限速、出错重试等功能。
 
 # 更新日志
-### **Version 1.53.0 (2024/11/28)**
+### **Version 1.53 (2024/11/28)**
 Version 1.53.0 正式版发布
 
 本次更新内容：
