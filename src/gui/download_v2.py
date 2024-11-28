@@ -3,6 +3,7 @@ import os
 import wx
 import time
 import json
+import wx.adv
 import requests
 import subprocess
 from typing import Dict, List, Callable
@@ -12,7 +13,7 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
-from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog
+from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog, NotificationMessage
 from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
 from utils.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
@@ -308,13 +309,48 @@ class DownloadManagerWindow(Frame):
         if start_download:
             self.start_download()
 
-    def update_task_count_label(self):
+    def update_task_count_label(self, message: NotificationMessage = None, stop_by_manual: bool = False):
+        def _show_notification():
+            if Config.Download.show_notification:
+                if message:
+                    _show_notification_failed()
+
+                if not stop_by_manual:
+                    _show_notification_finish()
+
+                self.RequestUserAttention(wx.USER_ATTENTION_ERROR)
+
+        def _show_notification_finish():
+            notification = wx.adv.NotificationMessage("下载完成", "所有下载任务均已完成", parent = self, flags = wx.ICON_INFORMATION)
+            notification.Show()
+
+        def _show_notification_failed():
+            match message.status:
+                case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+                    match message.video_merge_type:
+                        case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
+                            _title = "合成失败"
+                            _message = f'任务 "{message.video_title}" 合成失败'
+
+                        case Config.Type.MERGE_TYPE_AUDIO:
+                            _title = "转换失败"
+                            _message = f'任务 "{message.video_title}" 转换失败'
+
+                case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
+                    _title = "下载失败"
+                    _message = f'任务 "{message.video_title}" 下载失败'
+
+            notification = wx.adv.NotificationMessage(_title, _message,  parent = self, flags = wx.ICON_ERROR)
+            notification.Show()
+
         count = self.get_download_task_count(Config.Type.DOWNLOAD_STATUS_ALIVE_LIST)
 
         if count:
             _label = f"{count} 个任务正在下载"
         else:
             _label = "下载管理"
+
+            _show_notification()
 
         self.task_count_lab.SetLabel(_label)
 
@@ -323,7 +359,7 @@ class DownloadManagerWindow(Frame):
         self.download_task_list_panel.Layout()
         self.download_task_list_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        wx.CallAfter(self.update_task_count_label)
+        wx.CallAfter(self.update_task_count_label, stop_by_manual = True)
 
 class DownloadUtils:
     def __init__(self, task_info: DownloadTaskInfo, callback: UtilsCallback):
@@ -440,16 +476,20 @@ class DownloadUtils:
                 # 视频不存在音频，标记 flag 为仅下载视频
                 self.task_info.video_merge_type = Config.Type.MERGE_TYPE_VIDEO
 
-        json_dash = get_json()
+        try:
+            json_dash = get_json()
 
-        self._video_download_url_list = self._audio_download_url_list = []
+            self._video_download_url_list = self._audio_download_url_list = []
 
-        get_video_available_quality()
+            get_video_available_quality()
 
-        get_video_available_codec()
+            get_video_available_codec()
 
-        get_audio_available_quality()
-    
+            get_audio_available_quality()
+
+        except Exception:
+            self.callback.onDownloadFailedCallback()
+
     def get_downloader_info_list(self):
         self.get_video_bangumi_download_url()
 
@@ -494,7 +534,7 @@ class DownloadUtils:
             _error_log.return_code = _process.returncode
             _error_log.time = UniversalTool.get_current_time()
 
-            self.callback.onErrorCallback(_error_log)
+            self.callback.onMergeFailedCallback(_error_log)
 
     def _get_shell_cmd(self):
         def _get_audio_cmd():
@@ -815,7 +855,8 @@ class DownloadTaskPanel(wx.Panel):
         def get_utils_callback():
             _callback = UtilsCallback()
             _callback.onMergeFinishCallback = self.onMergeFinish
-            _callback.onErrorCallback = self.onMergeFailed
+            _callback.onMergeFailedCallback = self.onMergeFailed
+            _callback.onDownloadFailedCallback = self.onDownloadFailed
 
             return _callback
 
@@ -1027,6 +1068,13 @@ class DownloadTaskPanel(wx.Panel):
 
             self.pause_btn.Enable(True)
             self.stop_btn.Enable(True)
+
+            message = NotificationMessage()
+            message.video_title = self.task_info.title
+            message.status = self.task_info.status
+            message.video_merge_type = self.task_info.video_merge_type
+
+            self.callback.onUpdateTaskCountCallback(message)
         
         self._error_log = error_log
 
@@ -1038,7 +1086,12 @@ class DownloadTaskPanel(wx.Panel):
             self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED)
             self.speed_lab.SetLabel("下载失败")
 
-            self.callback.onUpdateTaskCountCallback()
+            message = NotificationMessage()
+            message.video_title = self.task_info.title
+            message.status = self.task_info.status
+            message.video_merge_type = self.task_info.video_merge_type
+
+            self.callback.onUpdateTaskCountCallback(message)
             self.callback.onStartNextCallback()
 
         wx.CallAfter(callback)

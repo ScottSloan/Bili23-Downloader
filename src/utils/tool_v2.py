@@ -112,14 +112,19 @@ class FileDirectoryTool:
 
         match Config.Sys.platform:
             case "windows":
-                return FileDirectoryTool._msw_AssocQueryStringW(file_ext)
+                result, buffer = FileDirectoryTool._msw_AssocQueryStringW(file_ext)
+
+                if result == 0:
+                    return (True, str(buffer.value))
+                else:
+                    return (False, "")
 
             case "linux":
-                return _linux()
+                return (True, _linux())
 
             case "darwin":
                 # macOS 不支持获取默认程序
-                return
+                return (False, "")
 
     @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):
@@ -496,4 +501,3 @@ class FFmpegCheckTool:
             ffmpeg_path = possible_path
 
         return ffmpeg_path
-    
