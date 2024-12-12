@@ -200,7 +200,7 @@ class MainWindow(Frame):
     def init_user_info(self):
         # 如果用户已登录，则获取用户信息
         if Config.User.login:
-            thread = Thread(target = self.show_user_face_thread)
+            thread = Thread(target = self.show_user_info_thread)
             thread.daemon = True
 
             thread.start()
@@ -600,7 +600,7 @@ class MainWindow(Frame):
         os.remove(Config.User.face_path)
 
         # 刷新用户信息后重新显示
-        Thread(target = self.show_user_face_thread).start()
+        Thread(target = self.show_user_info_thread).start()
 
     def onShowUserMenuEVT(self, event):
         if Config.User.login:
@@ -638,7 +638,7 @@ class MainWindow(Frame):
             dlg = OptionDialog(self, callback)
             dlg.ShowModal()
 
-    def show_user_face_thread(self):
+    def show_user_info_thread(self):
         # 显示用户头像及昵称
         scale_size = self.FromDIP((32, 32))
 

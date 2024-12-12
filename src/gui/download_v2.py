@@ -1,6 +1,7 @@
 import io
 import os
 import wx
+import re
 import time
 import json
 import wx.adv
@@ -623,6 +624,12 @@ class DownloadUtils:
         self.task_info.audio_quality_id = audio_quality
 
     def _get_all_available_download_url_list(self, entry: dict):
+        def _replace(url: str):
+            if Config.Download.enable_custom_cdn:
+                return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url)
+            else:
+                return url
+
         # 取视频音频的所有下载链接
         temp_list = []
 
@@ -632,10 +639,13 @@ class DownloadUtils:
             if node_name in entry:
                 # 判断是否为列表
                 if isinstance(entry[node_name], list):
-                    temp_list.extend(entry[node_name])
+                    for _url in entry[node_name]:
+                        new = _replace(_url)
+                        temp_list.append(entry[node_name])
                 
                 else:
-                    temp_list.append(entry[node_name])
+                    new = _replace(entry[node_name])
+                    temp_list.append(new)
 
         return temp_list
 

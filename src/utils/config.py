@@ -26,7 +26,7 @@ class Config:
         enable_auth: bool = False
 
         proxy_ip: str = ""
-        proxy_port: int = 0
+        proxy_port: int = None
         auth_username: str = ""
         auth_password: str = ""
     
@@ -70,6 +70,9 @@ class Config:
 
         enable_speed_limit: bool = False
         speed_limit_in_mb: int = 10
+
+        enable_custom_cdn: bool = True
+        custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
     
     class Merge:
         override_file: bool = False
@@ -205,6 +208,8 @@ class ConfigUtils:
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
         Config.Download.speed_limit_in_mb = app_config["download"].get("speed_limit_in_mb", Config.Download.speed_limit_in_mb)
+        Config.Download.enable_custom_cdn = app_config["download"].get("enable_custom_cdn", Config.Download.enable_custom_cdn)
+        Config.Download.custom_cdn = app_config["download"].get("custom_cdn", Config.Download.custom_cdn)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)

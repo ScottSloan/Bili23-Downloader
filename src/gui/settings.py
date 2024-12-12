@@ -171,6 +171,15 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换B站 CDN")
+        self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "替换为")
+        self.custom_cdn_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((200, 25)))
+
+        custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        custom_cdn_hbox.AddSpacer(30)
+        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        custom_cdn_hbox.Add(self.custom_cdn_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.add_number_chk = wx.CheckBox(self.scrolled_panel, -1, "批量下载视频时自动添加序号")
         self.delete_history_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后清除本地下载记录")
         self.show_toast_chk = wx.CheckBox(self.scrolled_panel, -1, "允许弹出通知提示")
@@ -188,6 +197,8 @@ class DownloadTab(wx.Panel):
         vbox.Add(dolby_hbox, 0, wx.EXPAND)
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
+        vbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), 10)
+        vbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
@@ -211,6 +222,7 @@ class DownloadTab(wx.Panel):
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
+        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onChangeCustomCDNEVT)
 
         self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
@@ -233,13 +245,16 @@ class DownloadTab(wx.Panel):
 
         self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
+        self.enable_custom_cdn_chk.SetValue(Config.Download.enable_custom_cdn)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
+        self.custom_cdn_box.SetValue(Config.Download.custom_cdn)
 
         self.onChangeSpeedLimitEVT(0)
+        self.onChangeCustomCDNEVT(0)
 
     def save(self):
         def _update_download_window():
@@ -259,6 +274,8 @@ class DownloadTab(wx.Panel):
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
+        Config.Download.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
+        Config.Download.custom_cdn = self.custom_cdn_box.GetValue()
 
         kwargs = {
             "path": Config.Download.path,
@@ -272,7 +289,9 @@ class DownloadTab(wx.Panel):
             "delete_history": Config.Download.delete_history,
             "add_number": Config.Download.add_number,
             "enable_speed_limit": Config.Download.enable_speed_limit,
-            "speed_limit_in_mb": Config.Download.speed_limit_in_mb
+            "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
+            "enable_custom_cdn": Config.Download.enable_custom_cdn,
+            "custom_cdn": Config.Download.custom_cdn
         }
 
         utils = ConfigUtils()
@@ -306,16 +325,13 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
 
     def onChangeSpeedLimitEVT(self, event):
-        if self.speed_limit_chk.GetValue():
-            self.speed_limit_box.Enable(True)
-
-            self.speed_limit_lab.Enable(True)
-            self.speed_limit_unit_lab.Enable(True)
-        else:
-            self.speed_limit_box.Enable(False)
-
-            self.speed_limit_lab.Enable(False)
-            self.speed_limit_unit_lab.Enable(False)
+        self.speed_limit_box.Enable(self.speed_limit_chk.GetValue())
+        self.speed_limit_lab.Enable(self.speed_limit_chk.GetValue())
+        self.speed_limit_unit_lab.Enable(self.speed_limit_chk.GetValue())
+        
+    def onChangeCustomCDNEVT(self, event):
+        self.custom_cdn_lab.Enable(self.enable_custom_cdn_chk.GetValue())
+        self.custom_cdn_box.Enable(self.enable_custom_cdn_chk.GetValue())
 
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
@@ -628,7 +644,7 @@ class ProxyTab(wx.Panel):
                 self.proxy_custom_radio.SetValue(True)
 
         self.ip_box.SetValue(Config.Proxy.proxy_ip)
-        self.port_box.SetValue(str(Config.Proxy.proxy_port))
+        self.port_box.SetValue(str(Config.Proxy.proxy_port) if Config.Proxy.proxy_port is not None else "")
     
         self.auth_chk.SetValue(Config.Proxy.enable_auth)
         self.uname_box.SetValue(Config.Proxy.auth_username)
@@ -649,7 +665,7 @@ class ProxyTab(wx.Panel):
 
         Config.Proxy.proxy_mode = proxy
         Config.Proxy.proxy_ip = self.ip_box.GetValue()
-        Config.Proxy.proxy_port = int(self.port_box.GetValue())
+        Config.Proxy.proxy_port = int(self.port_box.GetValue()) if self.port_box.GetValue() != "" else None
         Config.Proxy.enable_auth = self.auth_chk.GetValue()
         Config.Proxy.auth_username = self.uname_box.GetValue()
         Config.Proxy.auth_password = self.passwd_box.GetValue()
