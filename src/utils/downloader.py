@@ -146,7 +146,7 @@ class Downloader:
 
     def range_download(self, info: RangeDownloadInfo):
         def limit_speed():
-            if Config.Download.speed_limit:
+            if Config.Download.enable_speed_limit:
                 # 计算执行时间
                 limit_bytes = Config.Download.speed_limit_in_mb * 1024 * 1024
 

@@ -62,14 +62,14 @@ class RequestTool:
             
             case Config.Type.PROXY_CUSTOM:
                 return {
-                    "http": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}",
-                    "https": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}"
+                    "http": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}",
+                    "https": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}"
                 }
     
     @staticmethod
     def get_auth():
-        if Config.Proxy.auth_enable:
-            return requests.auth.HTTPProxyAuth(Config.Proxy.auth_uname, Config.Proxy.auth_passwd)
+        if Config.Proxy.enable_auth:
+            return requests.auth.HTTPProxyAuth(Config.Proxy.auth_username, Config.Proxy.auth_password)
         else:
             return None
     
@@ -352,7 +352,7 @@ class UniversalTool:
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
-            content = RequestTool.request(Config.User.face)
+            content = RequestTool.request(Config.User.face_url)
 
             with open(Config.User.face_path, "wb") as f:
                 f.write(content)

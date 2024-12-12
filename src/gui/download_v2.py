@@ -145,13 +145,16 @@ class DownloadManagerWindow(Frame):
 
     def onChangeMaxDownloaderEVT(self, event):
         def _update_config():
-            from utils.config import conf
+            from utils.config import ConfigUtils
 
             Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
 
-            conf.config.set("download", "max_download", str(Config.Download.max_download_count))
+            kwargs = {
+                "max_download_count": Config.Download.max_download_count
+            }
 
-            conf.config_save()
+            utils = ConfigUtils()
+            utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 动态调整并行下载数
         _update_config()
@@ -311,7 +314,7 @@ class DownloadManagerWindow(Frame):
 
     def update_task_count_label(self, message: NotificationMessage = None, stop_by_manual: bool = False):
         def _show_notification():
-            if Config.Download.show_notification:
+            if Config.Download.enable_notification:
                 if message:
                     _show_notification_failed()
 

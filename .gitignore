@@ -19,6 +19,7 @@ build.bat
 test.py
 test_2.py
 bilidanmu.proto
+config.json
 
 # commitizen
 cz.json

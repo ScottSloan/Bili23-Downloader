@@ -174,9 +174,9 @@ class VideoParser:
 
         AudioInfo.get_audio_quality_list(info["dash"])
 
-        ExtraInfo.get_danmaku = Config.Extra.download_danmaku
-        ExtraInfo.danmaku_type = Config.Extra.danmaku_format
-        ExtraInfo.get_cover = Config.Extra.download_cover
+        ExtraInfo.get_danmaku = Config.Extra.get_danmaku
+        ExtraInfo.danmaku_type = Config.Extra.danmaku_type
+        ExtraInfo.get_cover = Config.Extra.get_cover
 
     def parse_url(self, url: str):
         # 先检查是否为分 P 视频

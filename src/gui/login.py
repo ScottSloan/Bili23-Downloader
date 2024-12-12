@@ -1,17 +1,19 @@
 import wx
 import time
 import requests
-from typing import Dict
+from typing import Dict, Callable
 from io import BytesIO
 
 from utils.login import QRLogin, PasswordLogin, SMSLogin
-from utils.config import Config, conf
+from utils.config import Config, ConfigUtils
 from utils.thread import Thread
 
 from gui.dialog.captcha import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
+        self.callback = callback
+
         wx.Dialog.__init__(self, parent, -1, "登录")
         
         self.init_utils()
@@ -138,19 +140,23 @@ class LoginWindow(wx.Dialog):
 
         self.Layout()
 
-    def save_user_info(self, user_info: Dict):
+    def login_success(self, user_info):
         Config.User.login = True
-
-        Config.User.face = user_info["face"]
-        Config.User.uname = user_info["uname"]
+        Config.User.face_url = user_info["face_url"]
+        Config.User.username = user_info["username"]
         Config.User.sessdata = user_info["sessdata"]
 
-        conf.save_all_user_config()
+        kwargs = {
+            "login": True,
+            "face_url": user_info["face_url"],
+            "username": user_info["username"],
+            "sessdata": user_info["sessdata"]
+        }
 
-    def login_success(self, user_info):
-        self.save_user_info(user_info)
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
 
-        wx.CallAfter(self.GetParent().onLoginSuccess)
+        wx.CallAfter(self.callback)
     
     def onSwitchPasswordLogin(self, event):
         def _set_dark_mode():

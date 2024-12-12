@@ -6,7 +6,7 @@ import requests
 import wx.lib.buttons
 from typing import Optional
 
-from utils.config import Config, conf
+from utils.config import Config
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.festival import FestivalInfo, FestivalParser
@@ -181,7 +181,7 @@ class MainWindow(Frame):
         if not Config.User.login:
             self.tool_menu.Append(self.ID_LOGIN, "登录(&L)")
 
-        if Config.Misc.debug:
+        if Config.Misc.enable_debug:
             self.tool_menu.Append(self.ID_DEBUG, "调试(&D)")
 
         self.tool_menu.Append(self.ID_CONVERTER, "格式转换(&F)")
@@ -542,11 +542,22 @@ class MainWindow(Frame):
         raise Exception
 
     def onLoginEVT(self, event):
-        self.login_window = LoginWindow(self)
+        def callback():
+            self.init_user_info()
+        
+            self.infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
+
+            self.init_menubar()
+
+            # 安全关闭扫码登录窗口
+            self.login_window.Close()
+            self.login_window.Destroy()
+
+        self.login_window = LoginWindow(self, callback)
         self.login_window.ShowModal()
 
     def onLogout(self, event):
-        dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要注销用户 "{Config.User.uname}"？', "注销", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要注销用户 "{Config.User.username}"？', "注销", wx.ICON_WARNING | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_YES:
             session = requests.sessions.Session()
@@ -565,18 +576,13 @@ class MainWindow(Frame):
         login = QRLogin()
         user_info = login.get_user_info(True)
 
-        Config.User.face = user_info["face"]
-        Config.User.uname = user_info["uname"]
-
-        conf.save_all_user_config()
+        Config.User.face_url = user_info["face_url"]
+        Config.User.username = user_info["username"]
 
         os.remove(Config.User.face_path)
 
         # 刷新用户信息后重新显示
-        thread = Thread(target = self.showUserInfoThread)
-        thread.daemon = True
-
-        thread.start()
+        Thread(target = self.showUserInfoThread).start()
 
     def onShowUserMenuEVT(self, event):
         if Config.User.login:
@@ -624,14 +630,14 @@ class MainWindow(Frame):
         self.face.SetSize(scale_size)
         self.face.Show()
         
-        self.uname_lab.SetLabel(Config.User.uname)
+        self.uname_lab.SetLabel(Config.User.username)
 
         wx.CallAfter(self.userinfo_hbox.Layout)
         wx.CallAfter(self.frame_vbox.Layout)
 
     def checkUpdateUtils(self):
         # 检查更新
-        if Config.Misc.check_update:
+        if Config.Misc.auto_check_update:
             try:
                 UniversalTool.get_update_json()
 
@@ -700,14 +706,3 @@ class MainWindow(Frame):
                     circle_image.SetAlpha(x, y, 0)
         
         return circle_image
-
-    def onLoginSuccess(self):
-        self.init_user_info()
-        
-        self.infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
-
-        self.init_menubar()
-
-        # 安全关闭扫码登录窗口
-        self.login_window.Close()
-        self.login_window.Destroy()

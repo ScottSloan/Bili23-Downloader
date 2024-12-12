@@ -10,7 +10,7 @@ from Crypto.Cipher import PKCS1_v1_5
 
 from utils.tools import get_exclimbwuzhi_header, get_login_header
 from utils.tool_v2 import RequestTool
-from utils.config import Config, conf
+from utils.config import Config, ConfigUtils
 from utils.error import StatusCode
 
 class QRLoginInfo:
@@ -91,8 +91,8 @@ class LoginBase:
         resp = json.loads(req.text)["data"]
                 
         return {
-            "uname": resp["uname"],
-            "face": resp["face"],
+            "username": resp["uname"],
+            "face_url": resp["face"],
             "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata
         }
 
@@ -119,9 +119,17 @@ class LoginBase:
 
     def logout(self):
         Config.User.login = False
-        Config.User.face = Config.User.uname = Config.User.sessdata = ""
+        Config.User.face_url = Config.User.username = Config.User.sessdata = ""
 
-        conf.save_all_user_config()
+        kwargs = {
+            "login": False,
+            "face_url": "",
+            "username": "",
+            "sessdata": ""
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.User.user_config_path, "user", kwargs)
     
     def generate_uuid(self):
         t = self.get_timestamp() % 100000

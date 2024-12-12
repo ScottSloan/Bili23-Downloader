@@ -1,9 +1,7 @@
 import os
+import json
 import platform
-from configparser import RawConfigParser
-from typing import List
-
-from utils.error import ErrorCallback, process_read_config_exception
+from typing import List, Dict
 
 class Config:
     class Sys:
@@ -13,32 +11,34 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.53.0"
-        version_code: int = 1531
+        version: str = "1.54.0"
+        version_code: int = 1540
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1532
 
-        release_date: str = "2024/11/28"
+        release_date: str = "2024/12/12"
+
+        app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
     class Proxy:
         proxy_mode: int = 1
-        auth_enable: bool = False
+        enable_auth: bool = False
 
-        proxy_ip_addr: str = ""
+        proxy_ip: str = ""
         proxy_port: int = 0
-        auth_uname: str = ""
-        auth_passwd: str = ""
+        auth_username: str = ""
+        auth_password: str = ""
     
     class User:
-        base_path: str = ""
-        download_file_directory:str = ""
-        path: str = ""
+        directory: str = ""
+        download_file_directory: str = ""
+        user_config_path: str = ""
         face_path: str = ""
 
         login: bool = False
-        uname: str = ""
-        face: str = ""
+        username: str = ""
+        face_url: str = ""
         sessdata: str = ""
 
     class Misc:
@@ -46,14 +46,14 @@ class Config:
 
         show_episode_full_name: bool = True
         auto_select: bool = False
-        debug: bool = False
-        check_update: bool = True
+        enable_debug: bool = False
+        auto_check_update: bool = True
 
         player_preference: int = 0
         player_path: str = ""
 
     class Download:
-        path: str = ""
+        path: str = os.path.join(os.getcwd(), "download")
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
@@ -64,11 +64,11 @@ class Config:
 
         enable_dolby: bool = False
 
-        show_notification: bool = False
+        enable_notification: bool = False
         delete_history: bool = False
         add_number: bool = True
 
-        speed_limit: bool = False
+        enable_speed_limit: bool = False
         speed_limit_in_mb: int = 10
     
     class Merge:
@@ -137,215 +137,135 @@ class Config:
         available: bool = False
 
     class Extra:
-        download_danmaku = False
-        danmaku_format = 0
+        get_danmaku = False
+        danmaku_type = 0
 
-        download_cover = False
+        get_cover = False
 
 class ConfigUtils:
     def __init__(self):
-        self.path = os.path.join(os.getcwd(), "config.ini")
+        pass
 
-        ErrorCallback.onReadConfigError = self.onError
-
-        # 检查配置文件是否存在
-        if not os.path.exists(self.path):
-            self.create_config_ini()
-
-        self.create_user_directory()
-
-        self.load_config()
-
-        self.create_download_directory()
-
-        self.init_ffmpeg()    
-
-    def onError(self):
-        os.remove(self.path)
-
-        self.__init__()
-
-    def init_ffmpeg(self):
-        from utils.tool_v2 import FFmpegCheckTool
-
-        FFmpegCheckTool.check_available()
-
-    def init_user_config(self):
-        match Config.Sys.platform:
-            case "windows":
-                Config.User.base_path = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
-
-            case "linux" | "darwin":
-                Config.User.base_path = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
-
-        Config.User.path = os.path.join(Config.User.base_path, "user.ini")
-
-        Config.User.face_path = os.path.join(Config.User.base_path, "face.jpg")
-
-        Config.User.download_file_directory = os.path.join(Config.User.base_path, "download")
-
-    @process_read_config_exception
     def load_config(self):
-        self.config = RawConfigParser()
-        self.config.read(self.path, encoding = "utf-8")
+        def _check():
+            if not os.path.exists(Config.Download.path):
+                os.makedirs(Config.Download.path)
 
-        self.user_config = RawConfigParser()
-        self.user_config.read(Config.User.path, encoding = "utf-8")
+            if not os.path.exists(Config.User.directory):
+                os.makedirs(Config.User.directory)
 
-        download_path = self.config.get("download", "path")
+            if not os.path.exists(Config.User.download_file_directory):
+                os.makedirs(Config.User.download_file_directory)
 
+            if not os.path.exists(Config.APP.app_config_path):
+                self._write_config_json(Config.APP.app_config_path, app_config)
+
+            if not os.path.exists(Config.User.user_config_path):
+                self._write_config_json(Config.User.user_config_path, user_config)
+
+        def _after_read():
+            for node_name in ["download", "merge", "extra", "proxy", "misc"]:
+                if node_name not in app_config:
+                    app_config[node_name] = {}
+            
+            if "user" not in user_config:
+                user_config["user"] = {}
+        
+        def _init():
+            match Config.Sys.platform:
+                case "windows":
+                    Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
+
+                case "linux" | "darwin":
+                    Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
+
+            Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
+
+            Config.User.face_path = os.path.join(Config.User.directory, "face.jpg")
+
+            Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
+        
+        _init()
+
+        app_config: Dict[str, dict] = self._read_config_json(Config.APP.app_config_path)
+        user_config: Dict[str, dict] = self._read_config_json(Config.User.user_config_path)
+
+        _after_read()
+        
         # download
-        Config.Download.path = download_path if download_path else os.path.join(os.getcwd(), "download")
-        Config.Download.max_download_count = self.config.getint("download", "max_download")
-        Config.Download.max_thread_count = self.config.getint("download", "max_thread")
-        Config.Download.video_quality_id = self.config.getint("download", "video_quality")
-        Config.Download.audio_quality_id = self.config.getint("download", "audio_quality")
-        Config.Download.video_codec_id = self.config.getint("download", "video_codec")
-        Config.Download.enable_dolby = self.config.getboolean("download", "enable_dolby")
-        Config.Download.show_notification = self.config.getint("download", "show_notification")
-        Config.Download.delete_history = self.config.getint("download", "delete_history")
-        Config.Download.add_number = self.config.getboolean("download", "add_number")
-        Config.Download.speed_limit = self.config.getboolean("download", "speed_limit")
-        Config.Download.speed_limit_in_mb = self.config.getint("download", "speed_limit_in_mb")
+        Config.Download.path = app_config["download"].get("path", Config.Download.path)
+        Config.Download.max_download_count = app_config["download"].get("max_download_count", Config.Download.max_download_count)
+        Config.Download.max_thread_count = app_config["download"].get("max_thread_count", Config.Download.max_thread_count)
+        Config.Download.video_quality_id = app_config["download"].get("video_quality_id", Config.Download.video_quality_id)
+        Config.Download.audio_quality_id = app_config["download"].get("audio_quality_id", Config.Download.audio_quality_id)
+        Config.Download.video_codec_id = app_config["download"].get("video_codec_id", Config.Download.video_codec_id)
+        Config.Download.enable_dolby = app_config["download"].get("enable_dolby", Config.Download.enable_dolby)
+        Config.Download.enable_notification = app_config["download"].get("show_notification", Config.Download.enable_notification)
+        Config.Download.delete_history = app_config["download"].get("delete_history", Config.Download.delete_history)
+        Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
+        Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
+        Config.Download.speed_limit_in_mb = app_config["download"].get("speed_limit_in_mb", Config.Download.speed_limit_in_mb)
 
         # merge
-        Config.FFmpeg.path = self.config.get("merge", "ffmpeg_path")
-        Config.Merge.override_file = self.config.getboolean("merge", "override_file")
-        Config.Merge.m4a_to_mp3 = self.config.getboolean("merge", "m4a_to_mp3")
-        Config.Merge.auto_clean = self.config.getboolean("merge", "auto_clean")
+        Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
+        Config.Merge.override_file = app_config["merge"].get("override_file", Config.Merge.override_file)
+        Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
+        Config.Merge.auto_clean = app_config["merge"].get("auto_clean", Config.Merge.auto_clean)
 
         # extra
-        Config.Extra.download_danmaku = self.config.getboolean("extra", "download_danmaku")
-        Config.Extra.danmaku_format = self.config.getint("extra", "danmaku_format")
-        Config.Extra.download_cover = self.config.getboolean("extra", "download_cover")
+        Config.Extra.get_danmaku = app_config["extra"].get("get_danmaku", Config.Extra.get_danmaku)
+        Config.Extra.danmaku_type = app_config["extra"].get("danmaku_type", Config.Extra.danmaku_type)
+        Config.Extra.get_cover = app_config["extra"].get("get_cover", Config.Extra.get_cover)
+
+        # proxy
+        Config.Proxy.proxy_mode = app_config["proxy"].get("proxy_mode", Config.Proxy.proxy_mode)
+        Config.Proxy.proxy_ip = app_config["proxy"].get("proxy_ip", Config.Proxy.proxy_ip)
+        Config.Proxy.proxy_port = app_config["proxy"].get("proxy_port", Config.Proxy.proxy_port)
+        Config.Proxy.enable_auth = app_config["proxy"].get("enable_auth", Config.Proxy.enable_auth)
+        Config.Proxy.auth_username = app_config["proxy"].get("auth_username", Config.Proxy.auth_username)
+        Config.Proxy.auth_password = app_config["proxy"].get("auth_password", Config.Proxy.auth_password)
+
+        # misc
+        Config.Misc.episode_display_mode = app_config["misc"].get("episode_display_mode", Config.Misc.episode_display_mode)
+        Config.Misc.show_episode_full_name = app_config["misc"].get("show_episode_full_name", Config.Misc.show_episode_full_name)
+        Config.Misc.auto_select = app_config["misc"].get("auto_select", Config.Misc.auto_select)
+        Config.Misc.player_preference = app_config["misc"].get("player_preference", Config.Misc.player_preference)
+        Config.Misc.player_path = app_config["misc"].get("player_path", Config.Misc.player_path)
+        Config.Misc.auto_check_update = app_config["misc"].get("auto_check_update", Config.Misc.auto_check_update)
+        Config.Misc.enable_debug = app_config["misc"].get("enable_debug", Config.Misc.enable_debug)
 
         # user
-        Config.User.login = self.user_config.getboolean("user", "login")
-        Config.User.face = self.user_config.get("user", "face")
-        Config.User.uname = self.user_config.get("user", "uname")
-        Config.User.sessdata = self.user_config.get("user", "sessdata")
+        Config.User.login = user_config["user"].get("login", Config.User.login)
+        Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
+        Config.User.username = user_config["user"].get("username", Config.User.username)
+        Config.User.sessdata = user_config["user"].get("sessdata", Config.User.sessdata)
 
-        # proxy
-        Config.Proxy.proxy_mode = self.config.getint("proxy", "proxy_mode")
-        Config.Proxy.proxy_ip_addr = self.config.get("proxy", "ip_addr")
-        Config.Proxy.proxy_port = self.config.get("proxy", "port")
+        _check()
 
-        Config.Proxy.auth_enable = self.config.getboolean("proxy", "auth_enable")
-        Config.Proxy.auth_uname = self.config.get("proxy", "uname")
-        Config.Proxy.auth_passwd = self.config.get("proxy", "passwd")
+    def update_config_kwargs(self, file_path: str, category: str, **kwargs):
+        config = self._read_config_json(file_path)
 
-        # misc
-        Config.Misc.episode_display_mode = self.config.getint("misc", "episode_display_mode")
-        Config.Misc.show_episode_full_name = self.config.getboolean("misc", "show_episode_full_name")
-        Config.Misc.auto_select = self.config.getboolean("misc", "auto_select")
-        Config.Misc.player_preference = self.config.getint("misc", "player_preference")
-        Config.Misc.player_path = self.config.get("misc", "player_path")
-        Config.Misc.check_update = self.config.getboolean("misc", "check_update")
-        Config.Misc.debug = self.config.getboolean("misc", "debug")
+        for key, value in kwargs.items():
+            config[category][key] = value
 
-    def create_download_directory(self):
-        if not os.path.exists(Config.Download.path):
-            os.makedirs(Config.Download.path)
+        self._write_config_json(file_path, config)
 
-        if not os.path.exists(Config.User.download_file_directory):
-            os.makedirs(Config.User.download_file_directory)
-
-    def create_user_directory(self):
-        self.init_user_config()
-
-        if not os.path.exists(Config.User.base_path):
-            os.makedirs(Config.User.base_path)
-
-        if not os.path.exists(Config.User.path):
-            self.create_user_ini()
-    
-    def create_config_ini(self):
-        self.config = RawConfigParser()
-        self.config.read(self.path, encoding = "utf-8")
-
-        # download
-        self.config.add_section("download")
-        self.config.set("download", "path", Config.Download.path)
-        self.config.set("download", "max_download", str(Config.Download.max_download_count))
-        self.config.set("download", "max_thread", str(Config.Download.max_thread_count))
-        self.config.set("download", "video_quality", str(Config.Download.video_quality_id))
-        self.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
-        self.config.set("download", "video_codec", str(Config.Download.video_codec_id))
-        self.config.set("download", "enable_dolby", str(int(Config.Download.enable_dolby)))
-        self.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
-        self.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
-        self.config.set("download", "add_number", str(int(Config.Download.add_number)))
-        self.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
-        self.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
-
-        # merge
-        self.config.add_section("merge")
-        self.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
-        self.config.set("merge", "override_file", str(int(Config.Merge.override_file)))
-        self.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
-        self.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
-
-        # extra
-        self.config.add_section("extra")
-        self.config.set("extra", "download_danmaku", str(int(Config.Extra.download_danmaku)))
-        self.config.set("extra", "danmaku_format", str(Config.Extra.danmaku_format))
-        self.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
-
-        # proxy
-        self.config.add_section("proxy")
-        self.config.set("proxy", "proxy_mode", str(Config.Proxy.proxy_mode))
-        self.config.set("proxy", "ip_addr", Config.Proxy.proxy_ip_addr)
-        self.config.set("proxy", "port", "")
-
-        self.config.set("proxy", "auth_enable", str(int(Config.Proxy.auth_enable)))
-        self.config.set("proxy", "uname", Config.Proxy.auth_uname)
-        self.config.set("proxy", "passwd", Config.Proxy.auth_passwd)
-
-        # misc
-        self.config.add_section("misc")
-        self.config.set("misc", "episode_display_mode", str(Config.Misc.episode_display_mode))
-        self.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
-        self.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
-        self.config.set("misc", "player_preference", str(Config.Misc.player_preference))
-        self.config.set("misc", "player_path", Config.Misc.player_path)
-        self.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
-        self.config.set("misc", "debug", str(int(Config.Misc.debug)))
-
-        self.config_save()
-
-    def create_user_ini(self):
-        user_conf = RawConfigParser()
-        user_conf.read(Config.User.path, encoding = "utf-8")
-
-        user_conf.add_section("user")
-        user_conf.set("user", "login", "0")
-        user_conf.set("user", "face", "")
-        user_conf.set("user", "uname", "")
-        user_conf.set("user", "sessdata", "")
-
-        with open(Config.User.path, "w", encoding = "utf-8") as f:
-            user_conf.write(f)
-
-    def config_save(self):
-        with open(self.path, "w", encoding = "utf-8") as f:
-            self.config.write(f)
-
-    def user_config_save(self):
-        with open(Config.User.path, "w", encoding = "utf-8") as f:
-            self.user_config.write(f)
-    
-    def save_all_user_config(self):
-        conf.user_config.set("user", "login", str(int(Config.User.login)))
-        conf.user_config.set("user", "face", Config.User.face)
-        conf.user_config.set("user", "uname", Config.User.uname)
-        conf.user_config.set("user", "sessdata", Config.User.sessdata)
-
-        conf.user_config_save()
-
-    def clear_config(self):
+    def clear_config():
         from utils.tool_v2 import UniversalTool
 
-        UniversalTool.remove_files(os.getcwd(), ["config.ini"])
-        UniversalTool.remove_files(Config.User.base_path, ["user.ini"])
+        UniversalTool.remove_files(os.getcwd(), ["config.json"])
+        UniversalTool.remove_files(Config.User.directory, ["user.json"])
 
-conf = ConfigUtils()
+    def _read_config_json(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding = "utf-8") as f:
+                return json.loads(f.read())
+        except Exception:
+                return {}
+
+    def _write_config_json(self, file_path: str, contents: dict):
+        with open(file_path, "w", encoding = "utf-8") as f:
+            f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
+
+utils = ConfigUtils()
+utils.load_config()

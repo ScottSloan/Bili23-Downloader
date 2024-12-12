@@ -8,7 +8,7 @@ from gui.templates import ScrolledPanel
 
 from gui.dialog.ffmpeg import DetectDialog
 
-from utils.config import Config, conf
+from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, get_mapping_index_by_value
@@ -232,10 +232,10 @@ class DownloadTab(wx.Panel):
         self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_mapping, Config.Download.video_codec_id))
 
         self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
-        self.speed_limit_chk.SetValue(Config.Download.speed_limit)
+        self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
-        self.show_toast_chk.SetValue(Config.Download.show_notification)
+        self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
 
@@ -247,8 +247,6 @@ class DownloadTab(wx.Panel):
 
             self._main_window.download_window.onChangeMaxDownloaderEVT(None)
 
-        default_path = os.path.join(os.getcwd(), "download")
-
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
@@ -258,24 +256,27 @@ class DownloadTab(wx.Panel):
         Config.Download.enable_dolby = self.enable_dolby_chk.GetValue()
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
-        Config.Download.show_notification = self.show_toast_chk.GetValue()
-        Config.Download.speed_limit = self.speed_limit_chk.GetValue()
+        Config.Download.enable_notification = self.show_toast_chk.GetValue()
+        Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
 
-        conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
-        conf.config.set("download", "max_thread", str(Config.Download.max_thread_count))
-        conf.config.set("download", "max_download", str(Config.Download.max_download_count))
-        conf.config.set("download", "video_quality", str(Config.Download.video_quality_id))
-        conf.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
-        conf.config.set("download", "video_codec", Config.Download.video_codec_id)
-        conf.config.set("download", "enable_dolby", str(int(Config.Download.enable_dolby)))
-        conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
-        conf.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
-        conf.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
-        conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
-        conf.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
+        kwargs = {
+            "path": Config.Download.path,
+            "max_download_count": Config.Download.max_download_count,
+            "max_thread_count": Config.Download.max_thread_count,
+            "video_quality_id": Config.Download.video_quality_id,
+            "audio_quality_id": Config.Download.audio_quality_id,
+            "video_codec_id": Config.Download.video_codec_id,
+            "enable_dolby": Config.Download.enable_dolby,
+            "enable_notification": Config.Download.enable_notification,
+            "delete_history": Config.Download.delete_history,
+            "add_number": Config.Download.add_number,
+            "enable_speed_limit": Config.Download.enable_speed_limit,
+            "speed_limit_in_mb": Config.Download.speed_limit_in_mb
+        }
 
-        conf.config_save()
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 更新下载窗口中并行下载数信息
         _update_download_window()
@@ -417,10 +418,15 @@ class MergeTab(wx.Panel):
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
-        conf.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
-        conf.config.set("merge", "override_file", str(int(Config.Merge.override_file)))
-        conf.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
-        conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
+        kwargs = {
+            "ffmpeg_path": Config.FFmpeg.path,
+            "override_file": Config.Merge.override_file,
+            "m4a_to_mp3": Config.Merge.m4a_to_mp3,
+            "auto_clean": Config.Merge.auto_clean
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
@@ -499,9 +505,9 @@ class ExtraTab(wx.Panel):
         self.SetSizer(extra_vbox)
     
     def init_data(self):
-        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku)
-        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_format)
-        self.get_cover_chk.SetValue(Config.Extra.download_cover)
+        self.get_danmaku_chk.SetValue(Config.Extra.get_danmaku)
+        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_type)
+        self.get_cover_chk.SetValue(Config.Extra.get_cover)
 
         self.onChangeDanmakuEVT(None)
 
@@ -509,15 +515,18 @@ class ExtraTab(wx.Panel):
         self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
 
     def save(self):
-        Config.Extra.download_danmaku = self.get_danmaku_chk.GetValue()
-        Config.Extra.danmaku_format = self.danmaku_format_choice.GetSelection()
-        Config.Extra.download_cover = self.get_cover_chk.GetValue()
-        
-        conf.config.set("extra", "download_danmaku", str(int(Config.Extra.download_danmaku)))
-        conf.config.set("extra", "danmaku_format", str(Config.Extra.danmaku_format))
-        conf.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
+        Config.Extra.get_danmaku = self.get_danmaku_chk.GetValue()
+        Config.Extra.danmaku_type = self.danmaku_format_choice.GetSelection()
+        Config.Extra.get_cover = self.get_cover_chk.GetValue()
 
-        conf.config_save()
+        kwargs = {
+            "get_danmaku": Config.Extra.get_danmaku,
+            "danmaku_type": Config.Extra.danmaku_type,
+            "get_cover": Config.Extra.get_cover
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
 
     def onChangeDanmakuEVT(self, event):
         def set_enable(enable: bool):
@@ -618,12 +627,12 @@ class ProxyTab(wx.Panel):
             case Config.Type.PROXY_CUSTOM:
                 self.proxy_custom_radio.SetValue(True)
 
-        self.ip_box.SetValue(Config.Proxy.proxy_ip_addr)
-        self.port_box.SetValue(Config.Proxy.proxy_port)
+        self.ip_box.SetValue(Config.Proxy.proxy_ip)
+        self.port_box.SetValue(str(Config.Proxy.proxy_port))
     
-        self.auth_chk.SetValue(Config.Proxy.auth_enable)
-        self.uname_box.SetValue(Config.Proxy.auth_uname)
-        self.passwd_box.SetValue(Config.Proxy.auth_passwd)
+        self.auth_chk.SetValue(Config.Proxy.enable_auth)
+        self.uname_box.SetValue(Config.Proxy.auth_username)
+        self.passwd_box.SetValue(Config.Proxy.auth_password)
 
         self.onChangeProxyModeEVT(None)
         self.onChangeAuthEVT(None)
@@ -639,23 +648,23 @@ class ProxyTab(wx.Panel):
             proxy = Config.Type.PROXY_CUSTOM
 
         Config.Proxy.proxy_mode = proxy
+        Config.Proxy.proxy_ip = self.ip_box.GetValue()
+        Config.Proxy.proxy_port = int(self.port_box.GetValue())
+        Config.Proxy.enable_auth = self.auth_chk.GetValue()
+        Config.Proxy.auth_username = self.uname_box.GetValue()
+        Config.Proxy.auth_password = self.passwd_box.GetValue()
 
-        Config.Proxy.proxy_ip_addr = self.ip_box.GetValue()
-        Config.Proxy.proxy_port = self.port_box.GetValue()
+        kwargs = {
+            "proxy_mode": Config.Proxy.proxy_mode,
+            "proxy_ip": Config.Proxy.proxy_ip,
+            "proxy_port": Config.Proxy.proxy_port,
+            "enable_auth": Config.Proxy.enable_auth,
+            "auth_username": Config.Proxy.auth_username,
+            "auth_password": Config.Proxy.auth_password
+        }
 
-        Config.Proxy.auth_enable = self.auth_chk.GetValue()
-        Config.Proxy.auth_uname = self.uname_box.GetValue()
-        Config.Proxy.auth_passwd = self.passwd_box.GetValue()
-
-        conf.config.set("proxy", "proxy_mode", str(Config.Proxy.proxy_mode))
-        conf.config.set("proxy", "ip_addr", Config.Proxy.proxy_ip_addr)
-        conf.config.set("proxy", "port", Config.Proxy.proxy_port)
-
-        conf.config.set("proxy", "auth_enable", str(int(Config.Proxy.auth_enable)))
-        conf.config.set("proxy", "uname", Config.Proxy.auth_uname)
-        conf.config.set("proxy", "passwd", Config.Proxy.auth_passwd)
-
-        conf.config_save()
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
 
     def onChangeProxyModeEVT(self, event):
         def set_enable(enable: bool):
@@ -858,8 +867,8 @@ class MiscTab(wx.Panel):
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.player_path_box.SetValue(Config.Misc.player_path)
-        self.check_update_chk.SetValue(Config.Misc.check_update)
-        self.debug_chk.SetValue(Config.Misc.debug)
+        self.check_update_chk.SetValue(Config.Misc.auto_check_update)
+        self.debug_chk.SetValue(Config.Misc.enable_debug)
 
         self.onChangePlayerPreferenceEVT(None)
 
@@ -880,18 +889,21 @@ class MiscTab(wx.Panel):
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.player_path_box.GetValue()
-        Config.Misc.check_update = self.check_update_chk.GetValue()
-        Config.Misc.debug = self.debug_chk.GetValue()
+        Config.Misc.auto_check_update = self.check_update_chk.GetValue()
+        Config.Misc.enable_debug = self.debug_chk.GetValue()
 
-        conf.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
-        conf.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
-        conf.config.set("misc", "episode_display_mode", str(int(Config.Misc.episode_display_mode)))
-        conf.config.set("misc", "player_preference", str(Config.Misc.player_preference))
-        conf.config.set("misc", "player_path", Config.Misc.player_path)
-        conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
-        conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
+        kwargs = {
+            "episode_display_mode": Config.Misc.episode_display_mode,
+            "show_episode_full_name": Config.Misc.show_episode_full_name,
+            "auto_select": Config.Misc.auto_select,
+            "player_preference": Config.Misc.player_preference,
+            "player_path": Config.Misc.player_path,
+            "auto_check_update": Config.Misc.auto_check_update,
+            "enable_debug": Config.Misc.enable_debug
+        }
 
-        conf.config_save()
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
         self._main_window.init_menubar()
@@ -924,7 +936,8 @@ class MiscTab(wx.Panel):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            conf.clear_config()
+            utils = ConfigUtils()
+            utils.clear_config()
 
             DownloadFileTool._clear_all_files()
 

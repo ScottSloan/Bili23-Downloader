@@ -68,7 +68,7 @@ class AboutWindow(wx.Dialog):
 
         date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date}")
 
-        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2024 Scott Sloan")
+        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
 
         copyright_hbox = wx.BoxSizer(wx.HORIZONTAL)
         copyright_hbox.AddSpacer(25)
