@@ -321,7 +321,7 @@ class DownloadTab(wx.Panel):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
     
     def onVideoQualityTipEVT(self, event):
-        wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度\n\n若需要自动下载杜比视频，请开启下方的选项", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onAudioQualityTipEVT(self, event):
         wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质", "说明", wx.ICON_INFORMATION).ShowModal()
@@ -539,7 +539,7 @@ class ExtraTab(wx.Panel):
         self.save()
 
         return True
-    
+
 class ProxyTab(wx.Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window

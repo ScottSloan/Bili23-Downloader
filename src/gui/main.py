@@ -1,5 +1,6 @@
 import wx
 import os
+import io
 import time
 import wx.py
 import requests
@@ -13,17 +14,18 @@ from utils.parse.festival import FestivalInfo, FestivalParser
 from utils.parse.live import LiveInfo, LiveParser
 from utils.login import QRLogin
 from utils.thread import Thread
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
 from utils.error import ErrorCallback, ErrorCode
 from utils.mapping import video_quality_mapping, live_quality_mapping
+from utils.icon_v2 import IconManager, SETTING_ICON, LIST_ICON
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
 from gui.dialog.processing import ProcessingWindow
 from gui.download_v2 import DownloadManagerWindow
 from gui.dialog.update import UpdateWindow
-from gui.login import LoginWindow
 from gui.settings import SettingWindow
+from gui.login import LoginWindow
 from gui.dialog.converter import ConverterWindow
 from gui.dialog.live import LiveRecordingWindow
 
@@ -38,10 +40,6 @@ class MainWindow(Frame):
         self.Bind_EVT()
 
         self.CenterOnParent()
-
-        self.onCheckFFmpeg()
-
-        self.init_user_info()
     
     def init_UI(self):
         def _dark_mode():
@@ -71,6 +69,11 @@ class MainWindow(Frame):
                 case "linux":
                     self.SetClientSize(self.FromDIP((880, 450)))
 
+        def _list_icon():
+            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(LIST_ICON)))
+
+            return _image.ConvertToBitmap()
+
         def _setting_icon():
             _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(SETTING_ICON)))
 
@@ -90,9 +93,6 @@ class MainWindow(Frame):
                 self.download_btn.SetWindowVariant(wx.WINDOW_VARIANT_LARGE)
 
         _dark_mode()
-
-        import io
-        from utils.icon_v2 import IconManager, SETTING_ICON
 
         icon_manager = IconManager(self.GetDPIScaleFactor())
 
@@ -119,12 +119,14 @@ class MainWindow(Frame):
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
+        self.episode_option_btn = wx.BitmapButton(self.panel, -1, _list_icon(), size = _get_button_scale_size(), style = _get_style())
         self.download_option_btn = wx.BitmapButton(self.panel, -1, _setting_icon(), size = _get_button_scale_size(), style = _get_style())
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.AddStretchSpacer()
         video_info_hbox.Add(self.video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.episode_option_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.download_option_btn, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
 
         self.treelist = TreeListCtrl(self.panel)
@@ -198,7 +200,7 @@ class MainWindow(Frame):
     def init_user_info(self):
         # 如果用户已登录，则获取用户信息
         if Config.User.login:
-            thread = Thread(target = self.showUserInfoThread)
+            thread = Thread(target = self.show_user_face_thread)
             thread.daemon = True
 
             thread.start()
@@ -247,6 +249,18 @@ class MainWindow(Frame):
             # 检查风控状态
             self.checkCookieUtils()
 
+        def check_ffmpeg():
+            FFmpegCheckTool.check_available()
+
+            if not Config.FFmpeg.available:
+                dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，视频合成不可用。\n\n若您已确认安装 FFmpeg，请检查（二者其一即可）：\n1.为 FFmpeg 设置环境变量\n2.将 FFmpeg 放置到程序运行目录下\n\n点击下方安装 FFmpeg 按钮，将打开 FFmpeg 安装教程，请按照教程安装。", "警告", wx.ICON_WARNING | wx.YES_NO)
+                dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+
+                if dlg.ShowModal() == wx.ID_YES:
+                    import webbrowser
+
+                    webbrowser.open("https://scott-sloan.cn/archives/120/")
+
         ErrorCallback.onError = self.onError
         ErrorCallback.onRedirect = self.onRedirect
         
@@ -261,7 +275,11 @@ class MainWindow(Frame):
         # 解析完成标识符
         self.parse_finish_flag = False
 
+        self.init_user_info()
+
         Thread(target = worker).start()
+
+        check_ffmpeg()
 
     def init_ids(self):
         self.ID_LOGIN = wx.NewIdRef()
@@ -557,7 +575,7 @@ class MainWindow(Frame):
         self.login_window.ShowModal()
 
     def onLogout(self, event):
-        dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要注销用户 "{Config.User.username}"？', "注销", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要清除 {Config.User.username} 账号的 Cookie 信息？', "注销", wx.ICON_WARNING | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_YES:
             session = requests.sessions.Session()
@@ -573,8 +591,8 @@ class MainWindow(Frame):
             self.infobar.ShowMessage("提示：您已注销登录", flags = wx.ICON_INFORMATION)
 
     def onRefreshEVT(self, event):
-        login = QRLogin()
-        user_info = login.get_user_info(True)
+        login = QRLogin(requests.Session())
+        user_info = login.get_user_info(refresh = True)
 
         Config.User.face_url = user_info["face_url"]
         Config.User.username = user_info["username"]
@@ -582,7 +600,7 @@ class MainWindow(Frame):
         os.remove(Config.User.face_path)
 
         # 刷新用户信息后重新显示
-        Thread(target = self.showUserInfoThread).start()
+        Thread(target = self.show_user_face_thread).start()
 
     def onShowUserMenuEVT(self, event):
         if Config.User.login:
@@ -620,7 +638,7 @@ class MainWindow(Frame):
             dlg = OptionDialog(self, callback)
             dlg.ShowModal()
 
-    def showUserInfoThread(self):
+    def show_user_face_thread(self):
         # 显示用户头像及昵称
         scale_size = self.FromDIP((32, 32))
 
@@ -648,6 +666,10 @@ class MainWindow(Frame):
                 self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
                 
     def checkUpdateManuallyThread(self):
+        def show():
+            update_window = UpdateWindow(self)
+            update_window.ShowWindowModal()
+
         if not Config.Temp.update_json:
             try:
                 UniversalTool.get_update_json()
@@ -657,7 +679,7 @@ class MainWindow(Frame):
                 return
             
         if Config.Temp.update_json["version_code"] > Config.APP.version_code:
-            wx.CallAfter(self.showUpdateWindow)
+            wx.CallAfter(show)
         else:
             wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
 
@@ -670,22 +692,8 @@ class MainWindow(Frame):
         #     if refresh:
         #        self.showInfobarMessage("帐号安全：检测到当前帐号已被风控，请重新登录", flag = wx.ICON_WARNING)
 
-    def showUpdateWindow(self):
-        update_window = UpdateWindow(self)
-        update_window.ShowWindowModal()
-
     def showInfobarMessage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
-
-    def onCheckFFmpeg(self):
-        if not Config.FFmpeg.available:
-            dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，视频合成不可用。\n\n若您已确认安装 FFmpeg，请检查（二者其一即可）：\n1.为 FFmpeg 设置环境变量\n2.将 FFmpeg 放置到程序运行目录下\n\n点击下方安装 FFmpeg 按钮，将打开 FFmpeg 安装教程，请按照教程安装。", "警告", wx.ICON_WARNING | wx.YES_NO)
-            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                import webbrowser
-
-                webbrowser.open("https://scott-sloan.cn/archives/120/")
     
     def convertToCircle(self, image: wx.Image):
         width, height = image.GetSize()

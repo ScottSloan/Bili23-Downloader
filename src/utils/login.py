@@ -129,7 +129,7 @@ class LoginBase:
         }
 
         utils = ConfigUtils()
-        utils.update_config_kwargs(Config.User.user_config_path, "user", kwargs)
+        utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
     
     def generate_uuid(self):
         t = self.get_timestamp() % 100000

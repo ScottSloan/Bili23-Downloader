@@ -12,6 +12,7 @@ FOLDER_ICON = 13
 RETRY_ICON = 14
 REFRESH_ICON = 15
 SETTING_ICON = 16
+LIST_ICON = 17
 
 class IconManager:
     def __init__(self, DPI_scale_factor: float):
@@ -61,6 +62,9 @@ class IconManager:
 
             case 16:
                 bytes_data = self._get_assets_setting_icon()
+
+            case 17:
+                bytes_data = self._get_assets_list_icon()
         
         return base64.b64decode(bytes_data)
 
@@ -309,3 +313,37 @@ class IconManager:
             return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAC3UlEQVR4nNWXW0tUURTHz+hzF+0hIijoDmOa5u0DiJGvVp+gC0heoQwsUXvIgvKlQHtNqKgoy0Gl7IpdHpUSsrQe6gtUdFP5xW7+1W7Ycy42jLTgMGfv/V/rv87ea629xvP+RwHKgGHgtp4hoCCbDnQDM/o1zzvgaDYduAn0WeN+4GKmSXYBd4Eix9oroMkatwLPHbhC2aiNSr4HmAXGga+GDIhpbRswB1Rb+BrgOxDXOAY0AF+ACdnaHeXLZ4FjMlQHfAZGgTGRm/dllk4e8AiYB+4BIyI/KBvtslkb9nxfAjnWXFxbeRpY5aO7BjgrZ7Za8znAFDAQxoF1wAfgkJchAY4An4BNYRUO6OyLMkBeDHwD9kZRiukc7wfgVpgnAPMYSETwOSnAM+CUlyJALtACvOGPzChTch34XlMtvSgClCtqVzrIryvCO4QzT6fmrqU6oZgy2bElqLZ3A7eAaSmMOHAtIip2rJVorTHNMcypgN0ATgClNiChLe1TAakCljgMGUyHz4d0mQ9wzJs6UQ00A+eBt3/FBcnbrCftFiUx+Trvch9MhTB5AbZ6DOdCHajwwVQu1IFB4D1wATgM7LBLrYUz0d7pY/g48DqN8zW6tPrFNWgDCoA24DIwqQwYdhhqUqCVONZKVbzqHWtPZPOFONp8Gxhge5o0NDX9qpzo0pZX6ssN+RX7DpHOemXV5rSELgGe+hSiRqXrLzHv9ankwpvMuuNFEZKl2Fy5owG4/BABN6b+MRbFgWZtc2EEv9PZiqufaAirUCDyun8lt2w2hL5dSTYe4/aWqQ17CJwBVvvorgXOaduLU450IuhIf4ppm5QB7Yr6Vt3nQzI8LyeXWjrLgQfWWkI6rbIRviUzYhpIKZg26iOwL6XBMERV1txO4X/nNrBfXdBUpKY0ZScGgA2OtWk7qFQ9Jx24jeoxo7XlQaJru9cam/J6ycuWACcX+69Z2aL+Oc2k/AB1R7TSB/zSWQAAAABJRU5ErkJggg=="
         else:
             return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAACwElEQVR4nNWXW29MURTHf8OzS+tBREJS12TqUlr6AYTo6+ATuCRCb4mOpDTUg5LQFxL1qgmCuNRkCOqWujwSJMpMPfAFELe2IUv+oyfbOWfOGZNp/JKd9py991rr7L322v+B/5QG4AZwSy0L1FYygB4gr7/W3gP7KhnANaDP89wPnC23k03AILDCp+8N0Op5TgMvfMYtl41UXOdbgFHgGfBNzhLqWwmMAes945uAH0BSzza2GfgKPJetzXG+fBTYL0M7gS/AHWBIzu3/GZ45VcBDYBy4C9yU812y0SWbqaj7+xqY4nmX1FIeA+aEzJ0HnFAwyzzvzdYwcDVKADXAR2AP5WMv8BlYHHXCDu29XwLGpQ74DmyNMymhfbxXZNwstTAeARlK4Clw1Of9VKAdGAF+quV1UqzP5ZSqZSzWKGtn+zi/rAw/oHHWDurdJZ8ganQ6lhar7T3AAJDTBNsCl3Y5sn11WaW+loBtGFMBuwIcBuq9AzJa0j4VkHXANB9DI/ryILr1AS5VKlxtwGngnZsXWaCXcKq137bkQazVGHMYRq98lhSAOQmisdQArgMfgDNAB7DBKbUF8kq4IA4BbwOCb9Kl1S9f5vMPJiY6gfPAK50AExwurUo0SziXehWv3T59j2XzpXx0FhMwqwOOodX0iwqiW0veqC835xecO8RYoFO1hJg8CSlELcr2QiHK6ctd5+hk3Y7rPKEr11oY1RESbkjbWdATkWjTMpui+VeS0hNWXyJRK+cmRMpFc5zbdVBSzLtkJsMeAMeBuSFz5wMntezecp2QNCu2pb9J6QR0KanSus+zMjyuIKczwUzgvqcvozlp2YglyZCAHJWM+gRsY4I6ObL7osBGjfee7e1SQcNxRWmBlDTcQv4m5yRVhwqYyyJpzNiyvBgDEhoFrLyeo4IcmeyfZg2T/eO0bPwCCCa5lVGYU1IAAAAASUVORK5CYII="
+    
+    def _get_assets_list_icon(self):
+        if self.DPI_scale_factor <= self.DPI_factor_1:
+            return self._assets_list_icon_16x16
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
+            return self._assets_list_icon_24x24
+            
+        elif self.DPI_scale_factor <= self.DPI_factor_2:
+            return self._assets_list_icon_32x32
+        
+        else:
+            return self._assets_list_icon_32x32
+
+    @property
+    def _assets_list_icon_16x16(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAcElEQVR4nNXSsQnCUBhF4X8CIaVgFjCdYDZJLYJDhFRJrQvYxV4ryXyfjenNezY5cNoDF25ELjjjgTI18MYBA7a4LzHQ4ol9rBMUqHMCE664YINmifEN3HICBY6xXtDhhSo1MF+5T73yCSN2f5/3Cx/B7xE5x++4MgAAAABJRU5ErkJggg=="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAbElEQVR4nNXSMQrCQAAF0XcCIWXAXMB0gt7EOggeQqxiHS+QLvamCrmfpEif3U2zA9MOfPjswB1fVLGBCWe8UaIP1BM/nGRLgWtKYEaHBw64BWoJfFICBS6y5oURdWxgvXIbe+UGA4677trKH6IaIhoHQfzBAAAAAElFTkSuQmCC"
+        
+    @property
+    def _assets_list_icon_24x24(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAuUlEQVR4nO3VvW0CQRDF8ZMld2DJGLkBzgUgMvPRglM+qiC23AYiPzdgx0jQABQAAQ6giB86ad3BDpfckyaZ4P13n3ZniuIewiMeoswXuOIPwwjABS+1OTap18N3jqrN9ukWX6gS4AkfOer/tBVWeM4eUavmhQkO2OEtAnBCH1P8pt4rljmqNjtigBl+IgDj9Nm2KLNH1Kp5oUyjdY1OBGCfnuhn1Li+oItR1MKZJ8gZ79kjKqKXfrRuHwg+qyT3ct8AAAAASUVORK5CYII="
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAr0lEQVR4nO3VwWlCURCF4Y+AHQiJYgN5KSC4M2oLbjWpImuxDXGfNGDWgjbwLEAXunhpIkSmhDc+BH84m1mcc+9w7wxXooWHLPMP/OKMt4yACp0w30TtGd81SRm3WOArAtqY1KTLaf+Nl3jMaNGd5hljjx1eMgKOeMUUP1Hr4bMmOaCPGdYZAaP4bFsUGS260zxFjNUVnjICynii86xxXaGLYdbCeY+QEwZucenL5A8peU5/A8gNfwAAAABJRU5ErkJggg=="
+    
+    @property
+    def _assets_list_icon_32x32(self):
+        if self.dark_mode:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA/0lEQVR4nO3XsS5EURDG8UNiE4knQYlKJ/To6FhaK+EB0NDwChQUXkHLa9BYCVtRkBD5yVnzCjsrcf/JJGdOM9+duZl8p5SGUgqmsInZ9IZgHV94xDf2swU84DDOW/hAK/JpHA8yCnpoR8Gl6MJE5PO4GWSUUPKGK7zgMnsEo9jAOXYwliqgoeFPgEUcYAUj2cV3YxXf4h1n2QKe0Ilz7cAnxiOfw/Ugo6BbuxAFV4choBMjuIsRnKaOoIKF+AmX+xcNDf8Kv4akjYvYiq1sASd4rVYMz9WaZQvo1TfBME3pPY6i4HZsw1RbvharuBtfv5c6ggom42k2079oKHn8AEH2QvzCkieKAAAAAElFTkSuQmCC"
+        else:
+            return "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA70lEQVR4nO3XPS6FURDG8Z+bkEisBCUqndCjo/PVuhIWgIaGLVBQ2IKWbdC4Em5FQUIk8sZjCfccifefTHKmeubMnEyeQ8sPE1jHtAqs4hMP+MJe6QLucZDzJt4xknwSRwMOfWxEcCFdGEs+i+sBh6aKV1ziGRelR9DBGs6wjeHSBbS0/AnmsY8lDJUW38kqvsEbTksX8Ihuzk0HPjCafAZXAw69dKFhuUYB3YzgNiM4UYG5PMLFGuItLdXpxJKdZx/8+sFiHOMlVuwp1qwo/fwJqpnSOxxGcCvbsKgtX8kq7uX2uyownjFM1RD3r/kGS+SKijjDaegAAAAASUVORK5CYII="

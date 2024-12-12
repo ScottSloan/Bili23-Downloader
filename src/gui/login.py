@@ -118,45 +118,43 @@ class LoginWindow(wx.Dialog):
         event.Skip()
 
     def onTimer(self, event):
+        def _success(info):
+            Config.User.login = True
+            Config.User.face_url = info["face_url"]
+            Config.User.username = info["username"]
+            Config.User.sessdata = info["sessdata"]
+
+            kwargs = {
+                "login": True,
+                "face_url": info["face_url"],
+                "username": info["username"],
+                "sessdata": info["sessdata"]
+            }
+
+            utils = ConfigUtils()
+            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+
+            wx.CallAfter(self.callback)
+
+        def _refresh():
+            self.login.init_qrcode()
+
+            self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
+            self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
+
+            self.Layout()
+
         match self.login.check_scan()["code"]:
             case 0:
-                user_info = self.login.get_user_info()
-                
-                self.login_success(user_info)
+                info = self.login.get_user_info()
+                _success(info)
 
             case 86090:
                 self.lab.SetLabel("请在设备侧确认登录")
                 self.Layout()
 
             case 86038:
-                wx.CallAfter(self.refresh_qrcode)
-
-    def refresh_qrcode(self):
-        self.login = QRLogin(self.session)
-        self.login.init_qrcode()
-
-        self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
-        self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
-
-        self.Layout()
-
-    def login_success(self, user_info):
-        Config.User.login = True
-        Config.User.face_url = user_info["face_url"]
-        Config.User.username = user_info["username"]
-        Config.User.sessdata = user_info["sessdata"]
-
-        kwargs = {
-            "login": True,
-            "face_url": user_info["face_url"],
-            "username": user_info["username"],
-            "sessdata": user_info["sessdata"]
-        }
-
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
-
-        wx.CallAfter(self.callback)
+                wx.CallAfter(_refresh)
     
     def onSwitchPasswordLogin(self, event):
         def _set_dark_mode():
