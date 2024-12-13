@@ -641,7 +641,7 @@ class DownloadUtils:
                 if isinstance(entry[node_name], list):
                     for _url in entry[node_name]:
                         new = _replace(_url)
-                        temp_list.append(entry[node_name])
+                        temp_list.append(new)
                 
                 else:
                     new = _replace(entry[node_name])

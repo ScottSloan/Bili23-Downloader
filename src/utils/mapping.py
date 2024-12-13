@@ -100,6 +100,16 @@ download_status_mapping = {
     6: "视频合成失败"
 }
 
+cdn_mapping = {
+    0: "upos-sz-mirror08c.bilivideo.com",
+    1: "upos-sz-mirrorcoso1.bilivideo.com",
+    2: "upos-sz-mirrorhw.bilivideo.com",
+    3: "upos-sz-mirrorcos.bilivideo.com",
+    4: "upos-sz-mirrorcosb.bilivideo.com",
+    5: "upos-sz-mirrorbos.bilivideo.com",
+    6: "upos-sz-mirrorhwb.bilivideo.com"
+}
+
 def get_mapping_key_by_value(mapping: Dict, value: int):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

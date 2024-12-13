@@ -11,7 +11,7 @@ from gui.dialog.ffmpeg import DetectDialog
 from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, get_mapping_index_by_value
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, cdn_mapping, get_mapping_index_by_value
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -173,7 +173,7 @@ class DownloadTab(wx.Panel):
 
         self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换音视频流 CDN")
         self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "CDN")
-        self.custom_cdn_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((200, 25)))
+        self.custom_cdn_box = wx.ComboBox(self.scrolled_panel, -1, choices = list(cdn_mapping.values()))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
