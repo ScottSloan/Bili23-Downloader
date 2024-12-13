@@ -107,7 +107,8 @@ cdn_mapping = {
     3: "upos-sz-mirrorcos.bilivideo.com",
     4: "upos-sz-mirrorcosb.bilivideo.com",
     5: "upos-sz-mirrorbos.bilivideo.com",
-    6: "upos-sz-mirrorhwb.bilivideo.com"
+    6: "upos-sz-mirrorhwb.bilivideo.com",
+    7: "upos-sz-mirrorali.bilivideo.com"
 }
 
 def get_mapping_key_by_value(mapping: Dict, value: int):

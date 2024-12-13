@@ -699,6 +699,18 @@ class MainWindow(Frame):
             self.treelist.init_list()
             self.type_lab.SetLabel("")
 
+        def _set_video_list():
+            self.treelist.set_video_list()
+
+            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
+            self.type_lab.SetLabel("视频 (共 %d 个)" % count)
+
+        def _set_bangumi_list():
+            self.treelist.set_bangumi_list()
+
+            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
+            self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
+
         match event.GetId():
             case self.ID_EPISODE_SINGLE:
                 Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
@@ -715,12 +727,12 @@ class MainWindow(Frame):
             case Config.Type.VIDEO:
                 self.video_parser.parse_episodes()
 
-                self.treelist.set_video_list()
+                _set_video_list()
 
             case Config.Type.BANGUMI:
                 self.bangumi_parser.parse_episodes()
 
-                self.treelist.set_bangumi_list()
+                _set_bangumi_list()
 
     def show_user_info_thread(self):
         def _process(image: wx.Image):
