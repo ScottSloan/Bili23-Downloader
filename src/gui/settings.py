@@ -171,8 +171,8 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换B站 CDN")
-        self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "替换为")
+        self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换音视频流 CDN")
+        self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "CDN")
         self.custom_cdn_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((200, 25)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -784,8 +784,8 @@ class MiscTab(wx.Panel):
         
         sections_box = wx.StaticBox(self.scrolled_panel, -1, "剧集列表显示设置")
 
-        self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
-        self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "获取视频所在合集")
+        self.episodes_single_choice = wx.RadioButton(sections_box, -1, "获取单个视频")
+        self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "获取视频所在的合集")
         self.episodes_all_sections_choice = wx.RadioButton(sections_box, -1, "获取全部相关视频 (包括花絮、PV、OP、ED 等)")
 
         self.show_episode_full_name = wx.CheckBox(sections_box, -1, "显示完整剧集名称")

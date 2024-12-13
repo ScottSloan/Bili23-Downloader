@@ -209,15 +209,7 @@ class MainWindow(Frame):
 
         # 调整用户信息 UI
         wx.CallAfter(self.userinfo_hbox.Layout)
-        wx.CallAfter(self.frame_vbox.Layout)
-
-    def get_user_context_menu(self):
-        menu = wx.Menu()
-
-        menu.Append(self.ID_REFRESH, "刷新")
-        menu.Append(self.ID_LOGOUT, "注销")
-
-        return menu
+        wx.CallAfter(self.frame_vbox.Layout)   
     
     def Bind_EVT(self):
         self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGetEVT)
@@ -225,6 +217,7 @@ class MainWindow(Frame):
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgrEVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
         self.download_option_btn.Bind(wx.EVT_BUTTON, self.onDownloadOptionEVT)
+        self.episode_option_btn.Bind(wx.EVT_BUTTON, self.onEpisodeOptionEVT)
 
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
@@ -238,16 +231,39 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
         self.Bind(wx.EVT_MENU, self.onRefreshEVT, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelpEVT, id = self.ID_HELP)
+        self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_SINGLE)
+        self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_IN_SECTION)
+        self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_ALL_SECTIONS)
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
     def init_utils(self):
         def worker():
+            def _check_update():
+                if Config.Misc.auto_check_update:
+                    try:
+                        UniversalTool.get_update_json()
+
+                        if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                            self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
+
+                    except Exception:
+                        self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
+
+            def _check_wbi():
+                pass
+                # if Config.User.login:
+                #     # 判断用户是否登录，进行风控检查
+                #     refresh = CookieUtils.checkCookieInfo()
+
+                #     if refresh:
+                #        self.showInfobarMessage("帐号安全：检测到当前帐号已被风控，请重新登录", flag = wx.ICON_WARNING)
+
             # 检查更新
-            self.checkUpdateUtils()
+            _check_update()
 
             # 检查风控状态
-            self.checkCookieUtils()
+            _check_wbi()
 
         def check_ffmpeg():
             FFmpegCheckTool.check_available()
@@ -272,7 +288,6 @@ class MainWindow(Frame):
         self.download_window = DownloadManagerWindow(self)
 
         self.download_window_opened = False
-        # 解析完成标识符
         self.parse_finish_flag = False
 
         self.init_user_info()
@@ -293,6 +308,10 @@ class MainWindow(Frame):
 
         self.ID_LOGOUT = wx.NewIdRef()
         self.ID_REFRESH = wx.NewIdRef()
+
+        self.ID_EPISODE_SINGLE = wx.NewIdRef()
+        self.ID_EPISODE_IN_SECTION = wx.NewIdRef()
+        self.ID_EPISODE_ALL_SECTIONS = wx.NewIdRef()
 
     def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING, Config.Type.DOWNLOAD_STATUS_MERGING]):
@@ -603,8 +622,16 @@ class MainWindow(Frame):
         Thread(target = self.show_user_info_thread).start()
 
     def onShowUserMenuEVT(self, event):
+        def _get_menu():
+            context_menu = wx.Menu()
+
+            context_menu.Append(self.ID_REFRESH, "刷新")
+            context_menu.Append(self.ID_LOGOUT, "注销")
+
+            return context_menu
+
         if Config.User.login:
-            self.PopupMenu(self.get_user_context_menu())
+            self.PopupMenu(_get_menu())
         else:
             self.onLoginEVT(0)
 
@@ -624,6 +651,35 @@ class MainWindow(Frame):
 
     def onCheckUpdateEVT(self, event):
         wx.CallAfter(self.checkUpdateManuallyThread)
+    
+    def onEpisodeOptionEVT(self, event):
+        def _get_menu():
+            context_menu = wx.Menu()
+
+            single_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_SINGLE, "获取单个视频", kind = wx.ITEM_RADIO)
+            in_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_IN_SECTION, "获取视频所在的合集", kind = wx.ITEM_RADIO)
+            all_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_ALL_SECTIONS, "获取全部相关视频", kind = wx.ITEM_RADIO)
+
+            context_menu.Append(wx.NewIdRef(), "剧集列表显示设置")
+            context_menu.AppendSeparator()
+            context_menu.Append(single_menuitem)
+            context_menu.Append(in_section_menuitem)
+            context_menu.Append(all_section_menuitem)
+
+            match Config.Misc.episode_display_mode:
+                case Config.Type.EPISODES_SINGLE:
+                    single_menuitem.Check(True)
+
+                case Config.Type.EPISODES_IN_SECTION:
+                    in_section_menuitem.Check(True)
+
+                case Config.Type.EPISODES_ALL_SECTIONS:
+                    all_section_menuitem.Check(True)
+
+            return context_menu
+        
+        if self.parse_finish_flag:
+            self.PopupMenu(_get_menu())
 
     def onDownloadOptionEVT(self, event):
         def callback(index: int, enable: bool):
@@ -638,13 +694,61 @@ class MainWindow(Frame):
             dlg = OptionDialog(self, callback)
             dlg.ShowModal()
 
+    def onEpisodeOptionMenuEVT(self, event):
+        def _clear():
+            self.treelist.init_list()
+            self.type_lab.SetLabel("")
+
+        match event.GetId():
+            case self.ID_EPISODE_SINGLE:
+                Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
+
+            case self.ID_EPISODE_IN_SECTION:
+                Config.Misc.episode_display_mode = Config.Type.EPISODES_IN_SECTION
+
+            case self.ID_EPISODE_ALL_SECTIONS:
+                Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
+
+        _clear()
+
+        match self.current_parse_type:
+            case Config.Type.VIDEO:
+                self.video_parser.parse_episodes()
+
+                self.treelist.set_video_list()
+
+            case Config.Type.BANGUMI:
+                self.bangumi_parser.parse_episodes()
+
+                self.treelist.set_bangumi_list()
+
     def show_user_info_thread(self):
+        def _process(image: wx.Image):
+            width, height = image.GetSize()
+            diameter = min(width, height)
+            
+            image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
+            
+            circle_image = wx.Image(diameter, diameter)
+            circle_image.InitAlpha()
+            
+            for x in range(diameter):
+                for y in range(diameter):
+                    dist = ((x - diameter / 2) ** 2 + (y - diameter / 2) ** 2) ** 0.5
+                    if dist <= diameter / 2:
+                        circle_image.SetRGB(x, y, image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y))
+                        circle_image.SetAlpha(x, y, 255)
+                    else:
+                        circle_image.SetAlpha(x, y, 0)
+            
+            return circle_image
+
         # 显示用户头像及昵称
         scale_size = self.FromDIP((32, 32))
 
         image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
         
-        self.face.SetBitmap(self.convertToCircle(image).ConvertToBitmap())
+        self.face.SetBitmap(_process(image).ConvertToBitmap())
         self.face.SetSize(scale_size)
         self.face.Show()
         
@@ -652,18 +756,6 @@ class MainWindow(Frame):
 
         wx.CallAfter(self.userinfo_hbox.Layout)
         wx.CallAfter(self.frame_vbox.Layout)
-
-    def checkUpdateUtils(self):
-        # 检查更新
-        if Config.Misc.auto_check_update:
-            try:
-                UniversalTool.get_update_json()
-
-                if Config.Temp.update_json["version_code"] > Config.APP.version_code:
-                    self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
-
-            except Exception:
-                self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
                 
     def checkUpdateManuallyThread(self):
         def show():
@@ -683,34 +775,5 @@ class MainWindow(Frame):
         else:
             wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
 
-    def checkCookieUtils(self):
-        pass
-        # if Config.User.login:
-        #     # 判断用户是否登录，进行风控检查
-        #     refresh = CookieUtils.checkCookieInfo()
-
-        #     if refresh:
-        #        self.showInfobarMessage("帐号安全：检测到当前帐号已被风控，请重新登录", flag = wx.ICON_WARNING)
-
     def showInfobarMessage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
-    
-    def convertToCircle(self, image: wx.Image):
-        width, height = image.GetSize()
-        diameter = min(width, height)
-        
-        image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
-        
-        circle_image = wx.Image(diameter, diameter)
-        circle_image.InitAlpha()
-        
-        for x in range(diameter):
-            for y in range(diameter):
-                dist = ((x - diameter / 2) ** 2 + (y - diameter / 2) ** 2) ** 0.5
-                if dist <= diameter / 2:
-                    circle_image.SetRGB(x, y, image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y))
-                    circle_image.SetAlpha(x, y, 255)
-                else:
-                    circle_image.SetAlpha(x, y, 0)
-        
-        return circle_image

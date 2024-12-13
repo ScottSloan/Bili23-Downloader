@@ -25,6 +25,7 @@ class VideoInfo:
     video_quality_desc_list: List = []
 
     sections: Dict = {}
+    info_json: Dict = {}
 
     @staticmethod
     def clear_video_info():
@@ -37,6 +38,7 @@ class VideoInfo:
         VideoInfo.video_quality_desc_list.clear()
 
         VideoInfo.sections.clear()
+        VideoInfo.info_json.clear()
 
 class VideoParser:
     def __init__(self):
@@ -80,13 +82,12 @@ class VideoParser:
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
-            # 存在跳转链接，重新跳转解析，抛出异常仅为停止线程
+            # 存在跳转链接
             ErrorCallback.onRedirect(info["redirect_url"])
             self.continue_to_parse = False
-
             return
 
         VideoInfo.title = info["title"]
@@ -103,59 +104,7 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
-        match Config.Misc.episode_display_mode:
-            case Config.Type.EPISODES_SINGLE:
-                # 解析单个视频
-                self.parse_pages()
-
-            case Config.Type.EPISODES_IN_SECTION:
-                # 解析视频所在合集
-
-                if "ugc_season" in info:
-                    # 判断是否为合集视频，若是则设置类型为合集
-                    VideoInfo.type = Config.Type.VIDEO_TYPE_SECTIONS
-
-                    info_section = info["ugc_season"]["sections"]
-
-                    for section_entry in info_section:
-                        section_title = section_entry["title"]
-                        info_episodes = section_entry["episodes"]
-
-                        for episode_entry in info_episodes:
-                            if episode_entry["bvid"] == VideoInfo.bvid:
-                                # 解析此部分内容
-                                for index, value in enumerate(info_episodes):
-                                    value["title"] = str(index + 1)
-                                    break
-
-                                VideoInfo.sections[section_title] = info_episodes
-                else:
-                    # 非合集视频，判断是否为分P视频
-                    self.parse_pages()
-
-            case Config.Type.EPISODES_ALL_SECTIONS:
-                # 解析全部相关视频
-    
-                if "ugc_season" in info:
-                    # 判断是否为合集视频，若是则设置类型为合集
-                    VideoInfo.type = Config.Type.VIDEO_TYPE_SECTIONS
-
-                    info_ugc_season = info["ugc_season"]
-                    info_section = info_ugc_season["sections"]
-                    
-                    VideoInfo.title = info_ugc_season["title"]
-                    
-                    for section in info_section:
-                        section_title = section["title"]
-                        section_episodes = section["episodes"]
-
-                        for index, value in enumerate(section_episodes):
-                            value["title"] = str(index + 1)
-
-                            VideoInfo.sections[section_title] = section_episodes
-                else:
-                    # 非合集视频，判断是否为分P视频
-                    self.parse_pages()
+        self.parse_episodes()
 
     @process_exception
     def get_video_available_media_info(self):
@@ -212,23 +161,80 @@ class VideoParser:
         if status_code != StatusCode.CODE_0:
             # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
             raise ParseError(error.getStatusInfo(status_code), status_code)
+    
+    def parse_episodes(self):
+        def parse_pages():
+            # 判断是否为分P视频
+            if len(VideoInfo.pages_list) == 1:
+                # 单个视频
+                VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
 
-    def parse_pages(self):
-        # 判断是否为分P视频
-        if len(VideoInfo.pages_list) == 1:
-            # 单个视频
-            VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
-
-        else:
-            # 分P视频
-            VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
-
-        if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
-            if hasattr(self, "part_num"):
-                VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
             else:
-                VideoInfo.pages_list = [VideoInfo.pages_list[0]]
-            
+                # 分P视频
+                VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
+
+            if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
+                if hasattr(self, "part_num"):
+                    VideoInfo.pages_list = [VideoInfo.pages_list[self.part_num - 1]]
+                else:
+                    VideoInfo.pages_list = [VideoInfo.pages_list[0]]
+
+        VideoInfo.sections.clear()
+        
+        match Config.Misc.episode_display_mode:
+            case Config.Type.EPISODES_SINGLE:
+                # 解析单个视频
+                parse_pages()
+
+            case Config.Type.EPISODES_IN_SECTION:
+                # 解析视频所在合集
+
+                if "ugc_season" in VideoInfo.info_json:
+                    # 判断是否为合集视频，若是则设置类型为合集
+                    VideoInfo.type = Config.Type.VIDEO_TYPE_SECTIONS
+
+                    info_section = VideoInfo.info_json["ugc_season"]["sections"]
+
+                    for section_entry in info_section:
+                        section_title = section_entry["title"]
+                        info_episodes = section_entry["episodes"]
+
+                        for episode_entry in info_episodes:
+                            if episode_entry["bvid"] == VideoInfo.bvid:
+                                # 解析此部分内容
+                                for index, value in enumerate(info_episodes):
+                                    value["title"] = str(index + 1)
+                                    break
+
+                                VideoInfo.sections[section_title] = info_episodes
+                else:
+                    # 非合集视频，判断是否为分P视频
+                    parse_pages()
+
+            case Config.Type.EPISODES_ALL_SECTIONS:
+                # 解析全部相关视频
+    
+                if "ugc_season" in VideoInfo.info_json:
+                    # 判断是否为合集视频，若是则设置类型为合集
+                    VideoInfo.type = Config.Type.VIDEO_TYPE_SECTIONS
+
+                    info_ugc_season = VideoInfo.info_json["ugc_season"]
+                    info_section = info_ugc_season["sections"]
+                    
+                    VideoInfo.title = info_ugc_season["title"]
+                    
+                    for section in info_section:
+                        section_title = section["title"]
+                        section_episodes = section["episodes"]
+
+                        for index, value in enumerate(section_episodes):
+                            value["title"] = str(index + 1)
+
+                            VideoInfo.sections[section_title] = section_episodes
+                else:
+                    # 非合集视频，判断是否为分P视频
+                    parse_pages()
+
     def clear_video_info(self):
         # 清除视频信息
         VideoInfo.clear_video_info()
