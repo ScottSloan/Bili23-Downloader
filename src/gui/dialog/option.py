@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
-from utils.mapping import audio_quality_mapping, danmaku_format_mapping
+from utils.mapping import audio_quality_mapping, danmaku_format_mapping, subtitle_format_mapping
 
 class OptionDialog(wx.Dialog):
     def __init__(self, parent, callback):
@@ -55,6 +55,15 @@ class OptionDialog(wx.Dialog):
         danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_type_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        self.get_subtitle_chk = wx.CheckBox(self, -1, "下载视频字幕")
+        self.subtitle_format_lab = wx.StaticText(self, -1, "字幕文件格式")
+        self.subtitle_format_choice = wx.Choice(self, -1, choices = list(subtitle_format_mapping.keys()))
+
+        subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        subtitle_hbox.AddSpacer(30)
+        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.get_cover_chk = wx.CheckBox(self, -1, "下载视频封面")
 
         self.add_number_chk = wx.CheckBox(self, -1, "批量下载视频时自动添加序号")
@@ -62,6 +71,8 @@ class OptionDialog(wx.Dialog):
         extra_vbox = wx.BoxSizer(wx.VERTICAL)
         extra_vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         extra_vbox.Add(danmaku_hbox, 0, wx.EXPAND)
+        extra_vbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        extra_vbox.Add(subtitle_hbox, 0, wx.EXPAND)
         extra_vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
         extra_vbox.Add(self.add_number_chk, 0, wx.ALL, 10)
 
@@ -86,6 +97,7 @@ class OptionDialog(wx.Dialog):
     def Bind_EVT(self):
         self.audio_only_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAudioOnlyEVT)
         self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDanmakuEVT)
+        self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onCheckSubtitleEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -120,11 +132,14 @@ class OptionDialog(wx.Dialog):
 
         self.get_danmaku_chk.SetValue(ExtraInfo.get_danmaku)
         self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_type)
+        self.get_subtitle_chk.SetValue(ExtraInfo.get_subtitle)
+        self.subtitle_format_choice.SetSelection(ExtraInfo.subtitle_type)
         self.get_cover_chk.SetValue(ExtraInfo.get_cover)
 
         self.add_number_chk.SetValue(Config.Download.add_number)
 
-        self.onCheckDanmakuEVT(None)
+        self.onCheckDanmakuEVT(0)
+        self.onCheckSubtitleEVT(0)
 
     def onCheckAudioOnlyEVT(self, event):
         _enable = not self.audio_only_chk.GetValue()
@@ -138,6 +153,13 @@ class OptionDialog(wx.Dialog):
             self.danmaku_format_lab.Enable(enable)
 
         set_enable(self.get_danmaku_chk.GetValue())
+
+    def onCheckSubtitleEVT(self, event):
+        def set_enable(enable: bool):
+            self.subtitle_format_choice.Enable(enable)
+            self.subtitle_format_lab.Enable(enable)
+
+        set_enable(self.get_subtitle_chk.GetValue())
 
     def onConfirmEVT(self, event):
         AudioInfo.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]

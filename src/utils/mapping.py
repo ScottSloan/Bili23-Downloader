@@ -90,6 +90,12 @@ danmaku_format_mapping = {
     "protobuf": 1
 }
 
+subtitle_format_mapping = {
+    "srt": 0,
+    "txt": 1,
+    "bcc": 2
+}
+
 download_status_mapping = {
     0: "等待下载",
     1: "正在获取下载信息...",

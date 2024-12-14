@@ -1,6 +1,7 @@
 import os
 import json
 import math
+import datetime
 import requests
 
 from utils.config import Config
@@ -10,12 +11,15 @@ class ExtraInfo:
     get_danmaku: bool = False
     danmaku_type: int = 0
 
+    get_subtitle: bool = False
+    subtitle_type: int = 0
+
     get_cover: bool = False
 
     @staticmethod
     def clear_extra_info():
-        ExtraInfo.get_danmaku = ExtraInfo.get_cover = False
-        ExtraInfo.danmaku_type = 0
+        ExtraInfo.get_danmaku = ExtraInfo.get_subtitle = ExtraInfo.get_cover = False
+        ExtraInfo.danmaku_type = ExtraInfo.subtitle_type = 0
 
 class ExtraParser:
     def __init__(self, title: str, bvid: str, cid: int, duration: int):
@@ -66,10 +70,14 @@ class ExtraParser:
             _get_protobuf(i + 1)
 
     def get_subtitle(self):
+        def get_subtitle_json(subtitle_url: str):
+            req = requests.get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+
+            return json.loads(req.text)
+        
         url = f"https://api.bilibili.com/x/player/wbi/v2?bvid={self.bvid}&cid={self.cid}&w_rid={Config.Auth.wbi_key}&wts={UniversalTool.get_timestamp()}"
 
         req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-
         resp = json.loads(req.text)
 
         subtitle_list = resp["data"]["subtitle"]["subtitles"]
@@ -77,4 +85,31 @@ class ExtraParser:
         for entry in subtitle_list:
             lan = entry["lan"]
             lan_doc = entry["lan_doc"]
-            subtitle_url = entry["subtitle_url"]
+            subtitle_url = "https:" + entry["subtitle_url"]
+
+            self.parse_subtitle_json(get_subtitle_json(subtitle_url), lan)
+
+    def parse_subtitle_json(self, json: dict, lan: str):
+        def _format_timestamp(_from: float, _to: float):
+            def _get_timestamp(t: float):
+                ms = int((t - int(t)) * 1000)
+
+                _t = str(datetime.timedelta(seconds = int(t))).split('.')[0]
+
+                return f"{_t},{ms:03d}"
+
+            return f"{_get_timestamp(_from)} --> {_get_timestamp(_to)}"
+
+        _temp = ""
+
+        for index, entry in enumerate(json["body"]):
+            id = index + 1
+            timestamp = _format_timestamp(entry["from"], entry["to"])
+            content = entry["content"]
+
+            _temp += f"{id}\n{timestamp}\n{content}\n\n"
+
+        path = os.path.join(Config.Download.path, f"{self.title}_{lan}.srt")
+        
+        with open(path, "w", encoding = "utf-8") as f:
+            f.write(_temp)

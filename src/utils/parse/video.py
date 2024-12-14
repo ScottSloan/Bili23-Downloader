@@ -125,6 +125,8 @@ class VideoParser:
 
         ExtraInfo.get_danmaku = Config.Extra.get_danmaku
         ExtraInfo.danmaku_type = Config.Extra.danmaku_type
+        ExtraInfo.get_subtitle = Config.Extra.get_subtitle
+        ExtraInfo.subtitle_type = Config.Extra.subtitle_type
         ExtraInfo.get_cover = Config.Extra.get_cover
 
     def parse_url(self, url: str):

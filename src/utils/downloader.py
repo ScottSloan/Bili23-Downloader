@@ -311,9 +311,10 @@ class Downloader:
                 _url_flag = True
                 total_size = int(headers["Content-Length"])
 
-                break
+                if total_size:
+                    break
 
-        if not _url_flag:
+        if not _url_flag or not total_size:
             # 如果没有可用的下载链接，抛出异常
             self.onError()
 

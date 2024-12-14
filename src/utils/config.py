@@ -143,6 +143,9 @@ class Config:
         get_danmaku = False
         danmaku_type = 0
 
+        get_subtitle = False
+        subtitle_type = 0
+
         get_cover = False
 
     class Auth:
@@ -223,6 +226,8 @@ class ConfigUtils:
         # extra
         Config.Extra.get_danmaku = app_config["extra"].get("get_danmaku", Config.Extra.get_danmaku)
         Config.Extra.danmaku_type = app_config["extra"].get("danmaku_type", Config.Extra.danmaku_type)
+        Config.Extra.get_subtitle = app_config["extra"].get("get_subtitle", Config.Extra.get_subtitle)
+        Config.Extra.subtitle_type = app_config["extra"].get("subtitle_type", Config.Extra.subtitle_type)
         Config.Extra.get_cover = app_config["extra"].get("get_cover", Config.Extra.get_cover)
 
         # proxy

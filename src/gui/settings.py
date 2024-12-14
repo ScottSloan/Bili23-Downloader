@@ -11,7 +11,7 @@ from gui.dialog.ffmpeg import DetectDialog
 from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, cdn_mapping, get_mapping_index_by_value
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -505,11 +505,22 @@ class ExtraTab(wx.Panel):
         danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
+        self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
+        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_mapping.keys()))
+
+        subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        subtitle_hbox.AddSpacer(30)
+        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(danmaku_hbox, 0, wx.EXPAND)
+        vbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(subtitle_hbox, 0, wx.EXPAND)
         vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
 
         extra_sbox = wx.StaticBoxSizer(extra_box)
@@ -523,21 +534,29 @@ class ExtraTab(wx.Panel):
     def init_data(self):
         self.get_danmaku_chk.SetValue(Config.Extra.get_danmaku)
         self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_type)
+        self.get_subtitle_chk.SetValue(Config.Extra.get_subtitle)
+        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_type)
         self.get_cover_chk.SetValue(Config.Extra.get_cover)
 
-        self.onChangeDanmakuEVT(None)
+        self.onChangeDanmakuEVT(0)
+        self.onChangeSubtitleEVT(0)
 
     def Bind_EVT(self):
         self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
+        self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSubtitleEVT)
 
     def save(self):
         Config.Extra.get_danmaku = self.get_danmaku_chk.GetValue()
         Config.Extra.danmaku_type = self.danmaku_format_choice.GetSelection()
+        Config.Extra.get_subtitle = self.get_subtitle_chk.GetValue()
+        Config.Extra.subtitle_type = self.subtitle_format_choice.GetSelection()
         Config.Extra.get_cover = self.get_cover_chk.GetValue()
 
         kwargs = {
             "get_danmaku": Config.Extra.get_danmaku,
             "danmaku_type": Config.Extra.danmaku_type,
+            "get_subtitle": Config.Extra.get_subtitle,
+            "subtitle_type": Config.Extra.subtitle_type,
             "get_cover": Config.Extra.get_cover
         }
 
@@ -550,6 +569,13 @@ class ExtraTab(wx.Panel):
             self.danmaku_format_lab.Enable(enable)
 
         set_enable(self.get_danmaku_chk.GetValue())
+
+    def onChangeSubtitleEVT(self, event):
+        def set_enable(enable: bool):
+            self.subtitle_format_choice.Enable(enable)
+            self.subtitle_format_lab.Enable(enable)
+
+        set_enable(self.get_subtitle_chk.GetValue())
 
     def onConfirm(self):
         self.save()
