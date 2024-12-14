@@ -383,7 +383,7 @@ class UniversalTool:
     @staticmethod
     def get_timestamp(us = False):
         if us:
-            return round(time.time() * 1000000)
+            return int(round(time.time() * 1000000))
         else:
             return round(time.time())
 

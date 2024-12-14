@@ -17,7 +17,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1532
 
-        release_date: str = "2024/12/13"
+        release_date: str = "2024/12/14"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -112,8 +112,12 @@ class Config:
         DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
         DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕
 
+        SUBTITLE_TYPE_SRT: int = 0                   # srt 格式字幕
+        SUBTITLE_TYPE_TXT: int = 1                   # txt 格式字幕
+        SUBTITLE_TYPE_JSON: int = 2                  # json 格式字幕
+
         PLAYER_PREFERENCE_DEFAULT: int = 0           # 系统默认
-        PLAYER_PREFERENCE_CUSTOM: int = 0            # 手动设置
+        PLAYER_PREFERENCE_CUSTOM: int = 1            # 手动设置
 
         GPU_NVIDIA: int = 0                          # NVIDIA GPU
         GPU_AMD: int = 1                             # AMD GPU

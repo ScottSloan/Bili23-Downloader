@@ -167,6 +167,8 @@ class OptionDialog(wx.Dialog):
 
         ExtraInfo.get_danmaku = self.get_danmaku_chk.GetValue()
         ExtraInfo.danmaku_type = self.danmaku_type_choice.GetSelection()
+        ExtraInfo.get_subtitle = self.get_subtitle_chk.GetValue()
+        ExtraInfo.subtitle_type = self.subtitle_format_choice.GetSelection()
         ExtraInfo.get_cover = self.get_cover_chk.GetValue()
 
         Config.Download.add_number = self.add_number_chk.GetValue()

@@ -75,6 +75,49 @@ class ExtraParser:
 
             return json.loads(req.text)
         
+        def _to_srt(subtitle_json: dict, lan: str):
+            def _format_timestamp(_from: float, _to: float):
+                def _get_timestamp(t: float):
+                    ms = int((t - int(t)) * 1000)
+
+                    _t = str(datetime.timedelta(seconds = int(t))).split('.')[0]
+
+                    return f"{_t},{ms:03d}"
+
+                return f"{_get_timestamp(_from)} --> {_get_timestamp(_to)}"
+
+            _temp = ""
+
+            for index, entry in enumerate(subtitle_json["body"]):
+                id = index + 1
+                timestamp = _format_timestamp(entry["from"], entry["to"])
+                content = entry["content"]
+
+                _temp += f"{id}\n{timestamp}\n{content}\n\n"
+
+            _save(_temp, f"{self.title}_{lan}.srt")
+
+        def _to_txt(subtitle_json: dict, lan: str):
+            _temp = ""
+
+            for entry in subtitle_json["body"]:
+                content = entry["content"]
+
+                _temp += f"{content}\n"
+
+            _save(_temp, f"{self.title}_{lan}.txt")
+        
+        def _to_json(subtitle_json: dict, lan: str):
+            _temp = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
+
+            _save(_temp, f"{self.title}_{lan}.json")
+
+        def _save(_temp: str, file_name: str):
+            path = os.path.join(Config.Download.path, file_name)
+
+            with open(path, "w", encoding = "utf-8") as f:
+                f.write(_temp)
+
         url = f"https://api.bilibili.com/x/player/wbi/v2?bvid={self.bvid}&cid={self.cid}&w_rid={Config.Auth.wbi_key}&wts={UniversalTool.get_timestamp()}"
 
         req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
@@ -84,32 +127,17 @@ class ExtraParser:
 
         for entry in subtitle_list:
             lan = entry["lan"]
-            lan_doc = entry["lan_doc"]
+            # lan_doc = entry["lan_doc"]
             subtitle_url = "https:" + entry["subtitle_url"]
 
-            self.parse_subtitle_json(get_subtitle_json(subtitle_url), lan)
+            subtitle_json = get_subtitle_json(subtitle_url)
 
-    def parse_subtitle_json(self, json: dict, lan: str):
-        def _format_timestamp(_from: float, _to: float):
-            def _get_timestamp(t: float):
-                ms = int((t - int(t)) * 1000)
+            match ExtraInfo.subtitle_type:
+                case Config.Type.SUBTITLE_TYPE_SRT:
+                    _to_srt(subtitle_json, lan)
 
-                _t = str(datetime.timedelta(seconds = int(t))).split('.')[0]
+                case Config.Type.SUBTITLE_TYPE_TXT:
+                    _to_txt(subtitle_json, lan)
 
-                return f"{_t},{ms:03d}"
-
-            return f"{_get_timestamp(_from)} --> {_get_timestamp(_to)}"
-
-        _temp = ""
-
-        for index, entry in enumerate(json["body"]):
-            id = index + 1
-            timestamp = _format_timestamp(entry["from"], entry["to"])
-            content = entry["content"]
-
-            _temp += f"{id}\n{timestamp}\n{content}\n\n"
-
-        path = os.path.join(Config.Download.path, f"{self.title}_{lan}.srt")
-        
-        with open(path, "w", encoding = "utf-8") as f:
-            f.write(_temp)
+                case Config.Type.SUBTITLE_TYPE_JSON:
+                    _to_json(subtitle_json, lan)

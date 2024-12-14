@@ -1064,7 +1064,8 @@ class DownloadTaskPanel(wx.Panel):
             if ExtraInfo.get_cover:
                 _get_cover()
 
-            extra_parser.get_subtitle()
+            if ExtraInfo.get_subtitle:
+                extra_parser.get_subtitle()
 
         wx.CallAfter(callback)
 
