@@ -1056,13 +1056,15 @@ class DownloadTaskPanel(wx.Panel):
                     f.write(self._cover_raw_contents)
 
             # 下载完成后，才进行下载附加内容
-            extra_parser = ExtraParser(self.utils.file_title, self.task_info.cid, self.task_info.duration)
+            extra_parser = ExtraParser(self.utils.file_title, self.task_info.bvid, self.task_info.cid, self.task_info.duration)
             
             if ExtraInfo.get_danmaku:
                 extra_parser.get_danmaku()
 
             if ExtraInfo.get_cover:
                 _get_cover()
+
+            extra_parser.get_subtitle()
 
         wx.CallAfter(callback)
 

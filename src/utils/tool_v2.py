@@ -381,8 +381,11 @@ class UniversalTool:
         return random.randint(10000000, 99999999)
     
     @staticmethod
-    def get_timestamp():
-        return int(round(time.time() * 1000000))
+    def get_timestamp(us = False):
+        if us:
+            return round(time.time() * 1000000)
+        else:
+            return round(time.time())
 
     @staticmethod
     def re_find_string(_pattern: str, _string: str):

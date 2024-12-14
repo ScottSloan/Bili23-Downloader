@@ -12,12 +12,13 @@ from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.festival import FestivalInfo, FestivalParser
 from utils.parse.live import LiveInfo, LiveParser
-from utils.login import QRLogin
+from utils.auth.login import QRLogin
 from utils.thread import Thread
 from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
 from utils.error import ErrorCallback, ErrorCode
 from utils.mapping import video_quality_mapping, live_quality_mapping
 from utils.icon_v2 import IconManager, SETTING_ICON, LIST_ICON
+from utils.auth.wbi import WbiUtils
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
@@ -250,20 +251,14 @@ class MainWindow(Frame):
                     except Exception:
                         self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
 
-            def _check_wbi():
-                pass
-                # if Config.User.login:
-                #     # 判断用户是否登录，进行风控检查
-                #     refresh = CookieUtils.checkCookieInfo()
-
-                #     if refresh:
-                #        self.showInfobarMessage("帐号安全：检测到当前帐号已被风控，请重新登录", flag = wx.ICON_WARNING)
+            def _generate_wbi_sign():
+                WbiUtils()
 
             # 检查更新
             _check_update()
 
-            # 检查风控状态
-            _check_wbi()
+            # 获取 wbi 签名
+            _generate_wbi_sign()
 
         def check_ffmpeg():
             FFmpegCheckTool.check_available()

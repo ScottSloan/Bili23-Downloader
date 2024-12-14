@@ -1,8 +1,10 @@
 import os
+import json
+import math
 import requests
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 
 class ExtraInfo:
     get_danmaku: bool = False
@@ -16,8 +18,8 @@ class ExtraInfo:
         ExtraInfo.danmaku_type = 0
 
 class ExtraParser:
-    def __init__(self, title: str, cid: int, duration: int):
-        self.title, self.cid, self.duration = title, cid, duration
+    def __init__(self, title: str, bvid: str, cid: int, duration: int):
+        self.title, self.bvid, self.cid, self.duration = title, bvid, cid, duration
 
     def get_danmaku(self):
         # 下载弹幕文件
@@ -57,10 +59,22 @@ class ExtraParser:
             with open(path, "wb") as f:
                 f.write(req.content)
 
-        import math
-
         # protobuf 每 6min 分一包，向上取整下载全部分包
         _package_count = math.ceil(self.duration / 360)
 
         for i in range(_package_count):
             _get_protobuf(i + 1)
+
+    def get_subtitle(self):
+        url = f"https://api.bilibili.com/x/player/wbi/v2?bvid={self.bvid}&cid={self.cid}&w_rid={Config.Auth.wbi_key}&wts={UniversalTool.get_timestamp()}"
+
+        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+
+        resp = json.loads(req.text)
+
+        subtitle_list = resp["data"]["subtitle"]["subtitles"]
+
+        for entry in subtitle_list:
+            lan = entry["lan"]
+            lan_doc = entry["lan_doc"]
+            subtitle_url = entry["subtitle_url"]

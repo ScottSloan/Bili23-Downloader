@@ -4,7 +4,7 @@ import requests
 from typing import Dict, Callable
 from io import BytesIO
 
-from utils.login import QRLogin, PasswordLogin, SMSLogin
+from utils.auth.login import QRLogin, PasswordLogin, SMSLogin
 from utils.config import Config, ConfigUtils
 from utils.thread import Thread
 

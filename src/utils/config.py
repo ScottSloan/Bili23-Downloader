@@ -145,6 +145,9 @@ class Config:
 
         get_cover = False
 
+    class Auth:
+        wbi_key: str = ""
+
 class ConfigUtils:
     def __init__(self):
         pass
