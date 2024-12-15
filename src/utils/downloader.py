@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import requests
 from typing import List
@@ -7,6 +8,7 @@ from utils.config import Config
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.thread import Thread, ThreadPool
 from utils.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
+from utils.mapping import cdn_mapping
 
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
@@ -316,7 +318,10 @@ class Downloader:
                     break
 
         if not total_size:
-            # 如果没有可用的下载链接，抛出异常
+            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == Config.Type.CUSTOM_CDN_MODE_AUTO:
+                self.get_file_size(self.switch_cdn(url_list), referer_url, path)
+                return
+
             self.onError()
             raise Exception
 
@@ -329,3 +334,10 @@ class Downloader:
         
         # 返回可以正常下载的链接
         return (url, total_size)
+
+    def switch_cdn(self, url_list: list):
+        def _replace(url: str, cdn: str):
+            return re.sub(r'(?<=https://)[^/]+', cdn, url)
+
+        for cdn in cdn_mapping.values():
+            yield [_replace(url, cdn) for url in url_list]

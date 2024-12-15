@@ -20,7 +20,7 @@ from utils.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, cdn_mapping, get_mapping_key_by_value
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -625,13 +625,8 @@ class DownloadUtils:
 
     def _get_all_available_download_url_list(self, entry: dict):
         def _replace(url: str):
-            if Config.Download.enable_custom_cdn:
-                match Config.Download.custom_cdn_mode:
-                    case Config.Type.CUSTOM_CDN_MODE_AUTO:
-                        return re.sub(r'(?<=https://)[^/]+', cdn_mapping.get(0), url)
-                    
-                    case Config.Type.CUSTOM_CDN_MODE_MANUAL:
-                        return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url) 
+            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == Config.Type.CUSTOM_CDN_MODE_MANUAL:
+                return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url) 
             else:
                 return url
 
