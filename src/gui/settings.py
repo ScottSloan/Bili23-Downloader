@@ -888,11 +888,16 @@ class MiscTab(wx.Panel):
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
         self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = _get_scale_size((100, 28)))
+        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = _get_scale_size((100, 28)))
+        
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
+        btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
         misc_vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
-        misc_vbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
+        misc_vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
         misc_sbox.Add(misc_vbox, 0, wx.EXPAND)

@@ -235,6 +235,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_SINGLE)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_IN_SECTION)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_ALL_SECTIONS)
+        self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_FULL_NAME)
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
@@ -307,6 +308,7 @@ class MainWindow(Frame):
         self.ID_EPISODE_SINGLE = wx.NewIdRef()
         self.ID_EPISODE_IN_SECTION = wx.NewIdRef()
         self.ID_EPISODE_ALL_SECTIONS = wx.NewIdRef()
+        self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
 
     def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING, Config.Type.DOWNLOAD_STATUS_MERGING]):
@@ -655,11 +657,15 @@ class MainWindow(Frame):
             in_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_IN_SECTION, "获取视频所在的合集", kind = wx.ITEM_RADIO)
             all_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_ALL_SECTIONS, "获取全部相关视频", kind = wx.ITEM_RADIO)
 
+            show_episode_full_name = wx.MenuItem(context_menu, self.ID_EPISODE_FULL_NAME, "显示完整剧集名称", kind = wx.ITEM_CHECK)
+
             context_menu.Append(wx.NewIdRef(), "剧集列表显示设置")
             context_menu.AppendSeparator()
             context_menu.Append(single_menuitem)
             context_menu.Append(in_section_menuitem)
             context_menu.Append(all_section_menuitem)
+            context_menu.AppendSeparator()
+            context_menu.Append(show_episode_full_name)
 
             match Config.Misc.episode_display_mode:
                 case Config.Type.EPISODES_SINGLE:
@@ -670,6 +676,8 @@ class MainWindow(Frame):
 
                 case Config.Type.EPISODES_ALL_SECTIONS:
                     all_section_menuitem.Check(True)
+
+            show_episode_full_name.Check(Config.Misc.show_episode_full_name)
 
             return context_menu
         
@@ -715,6 +723,9 @@ class MainWindow(Frame):
 
             case self.ID_EPISODE_ALL_SECTIONS:
                 Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
+
+            case self.ID_EPISODE_FULL_NAME:
+                Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
 
         _clear()
 
