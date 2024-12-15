@@ -84,7 +84,12 @@ class Downloader:
 
             file_path = os.path.join(Config.Download.path, download_info.file_name)
 
-            download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
+            try:
+                download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
+
+            except Exception:
+                self.onError()
+                return
 
             if self.completed_size:
                 range_list = get_range_list_from_file(download_info.type)
@@ -244,7 +249,6 @@ class Downloader:
              # 检测停止标志位
             if self.listen_stop_flag:
                 update_download_file_info()
-
                 break
             
             # 检测错误标志位，回调下载失败函数
@@ -296,29 +300,25 @@ class Downloader:
         self.callback.onErrorCallback()
     
     def get_file_size(self, url_list: list, referer_url: str, path: str):
-        def request_head(url: str, referer_url: str):
-            req = self.session.head(url, headers = RequestTool.get_headers(referer_url))
-
-            return req.headers
+        def request_head_gen():
+            for url in url_list:
+                req = self.session.head(url, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+                yield url, req.headers
         
-        _url_flag = False
+        total_size = None
 
-        for url in url_list:
-            headers = request_head(url, referer_url)
-            
+        for url, headers in request_head_gen():
             # 检测 headers 是否包含 Content-Length，不包含的链接属于无效链接
             if "Content-Length" in headers:
-                _url_flag = True
                 total_size = int(headers["Content-Length"])
 
                 if total_size:
                     break
 
-        if not _url_flag or not total_size:
+        if not total_size:
             # 如果没有可用的下载链接，抛出异常
             self.onError()
-
-            return
+            raise Exception
 
         # 判断本地文件是否存在
         if not os.path.exists(path):

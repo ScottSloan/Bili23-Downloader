@@ -172,6 +172,14 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换音视频流 CDN")
+        self.custom_cdn_auto_switch_radio = wx.RadioButton(self.scrolled_panel, -1, "自动切换")
+        self.custom_cdn_manual_radio = wx.RadioButton(self.scrolled_panel, -1, "手动设置")
+
+        custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        custom_cdn_mode_hbox.AddSpacer(30)
+        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+
         self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "CDN")
         self.custom_cdn_box = wx.ComboBox(self.scrolled_panel, -1, choices = list(cdn_mapping.values()))
 
@@ -198,6 +206,7 @@ class DownloadTab(wx.Panel):
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
         vbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), 10)
+        vbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
         vbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
@@ -223,6 +232,8 @@ class DownloadTab(wx.Panel):
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
         self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onChangeCustomCDNEVT)
+        self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
+        self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
 
         self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
@@ -253,6 +264,13 @@ class DownloadTab(wx.Panel):
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
         self.custom_cdn_box.SetValue(Config.Download.custom_cdn)
 
+        match Config.Download.custom_cdn_mode:
+            case Config.Type.CUSTOM_CDN_MODE_AUTO:
+                self.custom_cdn_auto_switch_radio.SetValue(True)
+
+            case Config.Type.CUSTOM_CDN_MODE_MANUAL:
+                self.custom_cdn_manual_radio.SetValue(True)
+
         self.onChangeSpeedLimitEVT(0)
         self.onChangeCustomCDNEVT(0)
 
@@ -277,6 +295,11 @@ class DownloadTab(wx.Panel):
         Config.Download.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
         Config.Download.custom_cdn = self.custom_cdn_box.GetValue()
 
+        if self.custom_cdn_auto_switch_radio.GetValue():
+            Config.Download.custom_cdn_mode = 0
+        else:
+            Config.Download.custom_cdn_mode = 1
+
         kwargs = {
             "path": Config.Download.path,
             "max_download_count": Config.Download.max_download_count,
@@ -291,7 +314,8 @@ class DownloadTab(wx.Panel):
             "enable_speed_limit": Config.Download.enable_speed_limit,
             "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
             "enable_custom_cdn": Config.Download.enable_custom_cdn,
-            "custom_cdn": Config.Download.custom_cdn
+            "custom_cdn": Config.Download.custom_cdn,
+            "custom_cdn_mode": Config.Download.custom_cdn_mode
         }
 
         utils = ConfigUtils()
@@ -330,8 +354,18 @@ class DownloadTab(wx.Panel):
         self.speed_limit_unit_lab.Enable(self.speed_limit_chk.GetValue())
         
     def onChangeCustomCDNEVT(self, event):
-        self.custom_cdn_lab.Enable(self.enable_custom_cdn_chk.GetValue())
-        self.custom_cdn_box.Enable(self.enable_custom_cdn_chk.GetValue())
+        self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
+        self.custom_cdn_manual_radio.Enable(self.enable_custom_cdn_chk.GetValue())
+
+        if self.enable_custom_cdn_chk.GetValue():
+            self.onChangeCustomCDNModeEVT(0)
+        else:
+            self.custom_cdn_lab.Enable(False)
+            self.custom_cdn_box.Enable(False)
+
+    def onChangeCustomCDNModeEVT(self, event):
+        self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
+        self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
 
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
@@ -727,10 +761,7 @@ class ProxyTab(wx.Panel):
             self.uname_box.Enable(enable)
             self.passwd_box.Enable(enable)
 
-        if self.auth_chk.GetValue():
-            set_enable(True)
-        else:
-            set_enable(False)
+        set_enable(self.auth_chk.GetValue())
  
     def onTestEVT(self, event):
         def test():

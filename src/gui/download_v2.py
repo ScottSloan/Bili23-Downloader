@@ -20,7 +20,7 @@ from utils.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
+from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, cdn_mapping, get_mapping_key_by_value
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -626,28 +626,25 @@ class DownloadUtils:
     def _get_all_available_download_url_list(self, entry: dict):
         def _replace(url: str):
             if Config.Download.enable_custom_cdn:
-                return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url)
+                match Config.Download.custom_cdn_mode:
+                    case Config.Type.CUSTOM_CDN_MODE_AUTO:
+                        return re.sub(r'(?<=https://)[^/]+', cdn_mapping.get(0), url)
+                    
+                    case Config.Type.CUSTOM_CDN_MODE_MANUAL:
+                        return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url) 
             else:
                 return url
 
-        # 取视频音频的所有下载链接
-        temp_list = []
-
-        node_list = ["backupUrl", "backup_url", "baseUrl", "base_url"]
-
-        for node_name in node_list:
-            if node_name in entry:
-                # 判断是否为列表
-                if isinstance(entry[node_name], list):
-                    for _url in entry[node_name]:
-                        new = _replace(_url)
-                        temp_list.append(new)
-                
+        def _gen(x: list):
+            for v in x:
+                if isinstance(v, list):
+                    for y in v:
+                        yield y
                 else:
-                    new = _replace(entry[node_name])
-                    temp_list.append(new)
+                    yield v
 
-        return temp_list
+        # 取视频音频的所有下载链接
+        return [_replace(i) for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url"] if n in entry])]
 
     def _get_highest_video_quality(self, data: List[dict], without_dolby: bool = False):
         # 默认为 360P

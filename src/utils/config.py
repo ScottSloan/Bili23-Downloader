@@ -17,7 +17,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1532
 
-        release_date: str = "2024/12/14"
+        release_date: str = "2024/12/15"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -72,6 +72,7 @@ class Config:
         speed_limit_in_mb: int = 10
 
         enable_custom_cdn: bool = True
+        custom_cdn_mode: int = 0
         custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
     
     class Merge:
@@ -122,6 +123,9 @@ class Config:
         GPU_NVIDIA: int = 0                          # NVIDIA GPU
         GPU_AMD: int = 1                             # AMD GPU
         GPU_INTEL: int = 2                           # INTEL GPU
+
+        CUSTOM_CDN_MODE_AUTO: int = 0                # 自动切换 CDN
+        CUSTOM_CDN_MODE_MANUAL: int = 1              # 手动指定 CDN
 
         DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
         DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载
@@ -220,6 +224,7 @@ class ConfigUtils:
         Config.Download.speed_limit_in_mb = app_config["download"].get("speed_limit_in_mb", Config.Download.speed_limit_in_mb)
         Config.Download.enable_custom_cdn = app_config["download"].get("enable_custom_cdn", Config.Download.enable_custom_cdn)
         Config.Download.custom_cdn = app_config["download"].get("custom_cdn", Config.Download.custom_cdn)
+        Config.Download.custom_cdn_mode = app_config["download"].get("custom_cdn_mode", Config.Download.custom_cdn_mode)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
