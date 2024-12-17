@@ -319,8 +319,7 @@ class Downloader:
 
         if not total_size:
             if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == Config.Type.CUSTOM_CDN_MODE_AUTO:
-                self.get_file_size(self.switch_cdn(url_list), referer_url, path)
-                return
+                return self.get_file_size(next(self.switch_cdn(url_list)), referer_url, path)
 
             self.onError()
             raise Exception

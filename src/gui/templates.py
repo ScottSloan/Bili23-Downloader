@@ -12,6 +12,7 @@ from utils.parse.bangumi import BangumiInfo
 from utils.parse.live import LiveInfo
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
+from utils.parse.episode import EpisodeInfo
 from utils.data_type import DownloadTaskInfo
 
 class Frame(wx.Frame):
@@ -38,8 +39,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
 
     def init_list(self):
-        self.parent_items = []
-
         self.ClearColumns()
         self.DeleteAllItems()
         
@@ -48,54 +47,60 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("备注", width = self.FromDIP(50))
         self.AppendColumn("时长", width = self.FromDIP(75))
 
-    def set_list(self, video_list: dict):
-        root = self.GetRootItem()
-        self.all_list_items = []
+    def set_list(self, episodes_data: dict):
+        def _gen(data: list | dict, node):
+            def set_item(data: dict):
+                if "entries" in data:
+                    self.SetItemText(item, 0, str(data["title"]))
 
-        for i in video_list:
-            rootitem = self.AppendItem(root, i)
-            
-            self.all_list_items.append(rootitem)
+                else:
+                    self._index += 1
 
-            for n in video_list[i]:
-                childitem = self.AppendItem(rootitem, n[0])
+                    self.SetItemText(item, 0, str(self._index))
+                    self.SetItemText(item, 1, data["title"])
 
                 if Config.Misc.auto_select:
-                    self.CheckItem(childitem, state = wx.CHK_CHECKED)
+                    self.CheckItem(item, wx.CHK_CHECKED)
 
-                self.all_list_items.append(childitem)
+                self.Expand(node)
 
-                for i in [1, 2, 3]:
-                    self.SetItemText(childitem, i, n[i])
+            if isinstance(data, list):
+                for entry in data:
+                    _gen(entry, node)
 
-            if Config.Misc.auto_select:
-                self.CheckItem(rootitem, state = wx.CHK_CHECKED)
+            elif isinstance(data, dict):
+                item = self.AppendItem(node, "")
                 
-            self.Expand(rootitem)
+                set_item(data)
+
+                for value in data.values():
+                    _gen(value, item)
+
+        self._index = 0
+
+        _gen(episodes_data, self.GetRootItem())
 
     def set_video_list(self):
-        video_list = {}
-        
-        if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
-            for key, value in VideoInfo.sections.items():
-                video_list[key] = [[str(index + 1), episode["arc"]["title"], "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_SECTIONS)] for index, episode in enumerate(value)]
+        # if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
+        #     for key, value in VideoInfo.sections.items():
+        #         video_list[key] = [[str(index + 1), episode["arc"]["title"], "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_SECTIONS)] for index, episode in enumerate(value)]
 
-                self.parent_items.append(key)
-        else:
-            self.parent_items.append("视频")
-            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_OTHERS)] for index, episode in enumerate(VideoInfo.pages_list)]
+        #         self.parent_items.append(key)
+        # else:
+        #     self.parent_items.append("视频")
+        #     video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_OTHERS)] for index, episode in enumerate(VideoInfo.pages_list)]
 
-        self.set_list(video_list)
+        self.set_list(EpisodeInfo.data)
     
     def set_bangumi_list(self):
-        bangumi_list = {}
+        # bangumi_list = {}
 
-        for key, value in BangumiInfo.sections.items():
-            bangumi_list[key] = [[str(index + 1), FormatTool.format_bangumi_title(episode), episode["badge"], FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)] for index, episode in enumerate(value)]
+        # for key, value in BangumiInfo.sections.items():
+        #     bangumi_list[key] = [[str(index + 1), FormatTool.format_bangumi_title(episode), episode["badge"], FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)] for index, episode in enumerate(value)]
 
-            self.parent_items.append(key)
+        #     self.parent_items.append(key)
 
-        self.set_list(bangumi_list)
+        self.set_list(EpisodeInfo.data)
 
     def set_live_list(self):
         live_list = {}

@@ -4,7 +4,6 @@ import io
 import time
 import wx.py
 import requests
-import wx.lib.buttons
 from typing import Optional
 
 from utils.config import Config
@@ -362,17 +361,13 @@ class MainWindow(Frame):
 
         def _set_video_list():
             self.treelist.set_video_list()
-
-            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
             
-            self.type_lab.SetLabel("视频 (共 %d 个)" % count)
+            self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
 
         def _set_bangumi_list():
             self.treelist.set_bangumi_list()
 
-            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
-
-            self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
+            self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
 
         def _set_live_list():
             self.treelist.set_live_list()
@@ -705,14 +700,12 @@ class MainWindow(Frame):
         def _set_video_list():
             self.treelist.set_video_list()
 
-            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
-            self.type_lab.SetLabel("视频 (共 %d 个)" % count)
+            self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
 
         def _set_bangumi_list():
             self.treelist.set_bangumi_list()
 
-            count = len(self.treelist.all_list_items) - len(self.treelist.parent_items)
-            self.type_lab.SetLabel("{} (共 {} 个)".format(BangumiInfo.type_name, count))
+            self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
 
         match event.GetId():
             case self.ID_EPISODE_SINGLE:
