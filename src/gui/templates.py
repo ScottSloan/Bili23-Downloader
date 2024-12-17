@@ -58,6 +58,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                     self.SetItemText(item, 0, str(self._index))
                     self.SetItemText(item, 1, data["title"])
+                    self.SetItemText(item, 2, data["badge"])
+                    self.SetItemText(item, 3, data["duration"])
 
                 if Config.Misc.auto_select:
                     self.CheckItem(item, wx.CHK_CHECKED)

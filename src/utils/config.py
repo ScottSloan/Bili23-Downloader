@@ -17,7 +17,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1532
 
-        release_date: str = "2024/12/15"
+        release_date: str = "2024/12/17"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -90,9 +90,8 @@ class Config:
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
         VIDEO_TYPE_SECTIONS: int = 3                 # 合集
 
-        DURATION_VIDEO_SECTIONS: int = 0             # 合集视频
-        DURATION_VIDEO_OTHERS: int = 1               # 其他视频
-        DURATION_BANGUMI: int = 2                    # 番组
+        DURATION_VIDEO: int = 0                      # 视频
+        DURATION_BANGUMI: int = 1                    # 番组
 
         MERGE_TYPE_ALL: int = 0                      # 合成视频和音频
         MERGE_TYPE_VIDEO: int = 1                    # 仅下载视频

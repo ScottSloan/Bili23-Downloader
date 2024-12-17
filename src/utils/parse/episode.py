@@ -30,10 +30,15 @@ def video_ugc_season_parser(info_json: dict, cid: int):
             EpisodeInfo.clear_episode_data()
 
             for episode in _in_section:
-                EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
-                    "title": episode["title"] if "title" in episode else episode["part"],
-                    "cid": episode["cid"]
-                })
+                EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))
+
+    def _get_entry(episode: dict):
+        return {
+            "title": episode["title"] if "title" in episode else episode["part"],
+            "cid": episode["cid"],
+            "badge": "",
+            "duration": FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO)
+        }
 
     for section in info_json["ugc_season"]["sections"]:
         EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
@@ -43,10 +48,7 @@ def video_ugc_season_parser(info_json: dict, cid: int):
 
         for episode in section["episodes"]:
             if len(episode["pages"]) == 1:
-                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], {
-                    "title": episode["title"],
-                    "cid": episode["cid"]
-                })
+                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_entry(episode))
 
                 if episode["cid"] == cid:
                     _in_section = section["episodes"]
@@ -57,10 +59,7 @@ def video_ugc_season_parser(info_json: dict, cid: int):
                 })
 
                 for page in episode["pages"]:
-                    EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], {
-                        "title": page["part"],
-                        "cid": page["cid"]
-                    })
+                    EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], _get_entry(page))
 
                     if episode["cid"] == cid:
                         _in_section = episode["pages"]
@@ -75,10 +74,7 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
         })
 
         for episode in info_json["episodes"]:
-            EpisodeInfo.add_item(EpisodeInfo.data, "正片", {
-                "title": FormatTool.format_bangumi_title(episode),
-                "cid": episode["cid"]
-            })
+            EpisodeInfo.add_item(EpisodeInfo.data, "正片", _get_entry(episode))
 
             if not _check(episode, info_json["episodes"]):
                 return False
@@ -93,11 +89,7 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
             })
 
             for episode in section["episodes"]:
-                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], {
-                    "title": FormatTool.format_bangumi_title(episode),
-                    "cid": episode["cid"],
-                    "ep_id": episode["ep_id"]
-                })
+                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_entry(episode))
 
                 _check(episode, section["episodes"])
     
@@ -106,11 +98,7 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
             EpisodeInfo.clear_episode_data()
 
             for episode in _in_section:
-                EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
-                    "title": FormatTool.format_bangumi_title(episode),
-                    "cid": episode["cid"],
-                    "ep_id": episode["ep_id"]
-                })
+                EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))
 
     def _check(episode: dict, episodes_list: list):
         if Config.Misc.episode_display_mode != Config.Type.EPISODES_ALL_SECTIONS and episode["ep_id"] == ep_id:
@@ -125,5 +113,13 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
         
         return True
     
+    def _get_entry(episode: dict):
+        return {
+            "title": FormatTool.format_bangumi_title(episode),
+            "ep_id": episode["ep_id"],
+            "badge": episode["badge"],
+            "duration": FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)
+        }
+
     if bangumi_main_episodes_parser(info_json, ep_id):
         bangumi_sections_parser(info_json, ep_id)
