@@ -20,24 +20,20 @@ class VideoInfo:
     type: int = 0
 
     pages_list: list = []
-    episodes_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
-    sections: dict = {}
     info_json: dict = {}
 
     @staticmethod
     def clear_video_info():
         VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
-        VideoInfo.cid = VideoInfo.type = 0
+        VideoInfo.cid = VideoInfo.type = Config.Type.UNDEFINED
 
         VideoInfo.pages_list.clear()
-        VideoInfo.episodes_list.clear()
         VideoInfo.video_quality_id_list.clear()
         VideoInfo.video_quality_desc_list.clear()
 
-        VideoInfo.sections.clear()
         VideoInfo.info_json.clear()
 
 class VideoParser:

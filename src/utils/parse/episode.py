@@ -97,16 +97,17 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
         return True
 
     def bangumi_sections_parser(info_json: dict):
-        for section in info_json["section"]:
-            EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
-                "title": section["title"],
-                "entries": []
-            })
+        if "section" in info_json:
+            for section in info_json["section"]:
+                EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
+                    "title": section["title"],
+                    "entries": []
+                })
 
-            for episode in section["episodes"]:
-                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_entry(episode))
+                for episode in section["episodes"]:
+                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_entry(episode))
 
-                _check(episode, section["episodes"])
+                    _check(episode, section["episodes"])
     
     def episode_display_in_section(_in_section: list, main_episode: bool = False):
         if _in_section:

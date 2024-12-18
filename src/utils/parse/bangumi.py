@@ -31,7 +31,6 @@ class BangumiInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
-    sections: dict = {}
     info_json: dict = {}
 
     @staticmethod
@@ -45,7 +44,6 @@ class BangumiInfo:
         BangumiInfo.video_quality_id_list.clear()
         BangumiInfo.video_quality_desc_list.clear()
 
-        BangumiInfo.sections.clear()
         BangumiInfo.info_json.clear()
 
 class BangumiParser:

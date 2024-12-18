@@ -357,15 +357,14 @@ class MainWindow(Frame):
 
             self.download_btn.Enable(True)
 
-            self.treelist.set_list()
             self.treelist.SetFocus()
 
             match self.current_parse_type:
                 case Config.Type.VIDEO:
-                    self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
+                    self.set_video_list()
 
                 case Config.Type.BANGUMI:
-                    self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
+                    self.set_bangumi_list()
 
         def _set_live_list():
             self.treelist.set_live_list()
@@ -710,16 +709,22 @@ class MainWindow(Frame):
             case Config.Type.VIDEO:
                 self.video_parser.parse_episodes()
 
-                self.treelist.set_list()
-
-                self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
+                self.set_video_list()
 
             case Config.Type.BANGUMI:
                 self.bangumi_parser.parse_episodes()
 
-                self.treelist.set_list()
+                self.set_bangumi_list()
 
-                self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
+    def set_video_list(self):
+        self.treelist.set_list()
+
+        self.type_lab.SetLabel(f"投稿视频 (共 {self.treelist._index} 个)")
+
+    def set_bangumi_list(self):
+        self.treelist.set_list()
+
+        self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
 
     def show_user_info_thread(self):
         def _process(image: wx.Image):
