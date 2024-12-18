@@ -181,3 +181,9 @@ class NotificationMessage:
         self.video_title: str = ""
         self.status: int = 0
         self.video_merge_type: int = 0
+
+class TreeListItemInfo:
+    def __init__(self):
+        self.type: str = ""
+        self.title: str = ""
+        self.cid: int = 0

@@ -264,13 +264,13 @@ class FormatTool:
     @staticmethod
     def format_duration(episode: Dict, flag: int):
         match flag:
-            case Config.Type.DURATION_VIDEO:
+            case Config.Type.VIDEO:
                 if "arc" in episode:
                     duration = episode["arc"]["duration"]
                 else:
                     duration = episode["duration"]
 
-            case Config.Type.DURATION_BANGUMI:
+            case Config.Type.BANGUMI:
                 if "duration" in episode:
                     duration = episode["duration"] / 1000
                 else:

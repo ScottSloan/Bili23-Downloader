@@ -82,6 +82,9 @@ class VideoParser:
 
         self.check_json(resp)
 
+        with open("video.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
+
         info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
@@ -172,14 +175,17 @@ class VideoParser:
                 VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
 
             for page in VideoInfo.pages_list:
-                if not (Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE and page["cid"] == VideoInfo.cid):
-                    continue
+                if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
+                    if page["cid"] != VideoInfo.cid:
+                        continue
+
+                EpisodeInfo.cid_dict[page["cid"]] = page
 
                 EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
                     "title": page["part"],
                     "cid": page["cid"],
                     "badge": "",
-                    "duration": FormatTool.format_duration(page, Config.Type.DURATION_VIDEO)
+                    "duration": FormatTool.format_duration(page, Config.Type.VIDEO)
                 })
 
         EpisodeInfo.clear_episode_data()

@@ -710,14 +710,16 @@ class MainWindow(Frame):
             case Config.Type.VIDEO:
                 self.video_parser.parse_episodes()
 
+                self.treelist.set_list()
+
                 self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
 
             case Config.Type.BANGUMI:
                 self.bangumi_parser.parse_episodes()
 
+                self.treelist.set_list()
+
                 self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
-        
-        self.treelist.set_list()
 
     def show_user_info_thread(self):
         def _process(image: wx.Image):

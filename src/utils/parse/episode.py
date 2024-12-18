@@ -3,6 +3,7 @@ from utils.tool_v2 import FormatTool
 
 class EpisodeInfo:
     data: dict = {}
+    cid_dict: dict = {}
 
     @staticmethod
     def clear_episode_data():
@@ -10,6 +11,8 @@ class EpisodeInfo:
             "title": "视频",
             "entries": []
         }
+        
+        EpisodeInfo.cid_dict.clear()
 
     @staticmethod
     def add_item(data: list | dict, parent: str, entry_data: dict):
@@ -42,18 +45,24 @@ def video_ugc_season_parser(info_json: dict, cid: int):
             else:
                 return episode["part"]
 
+        EpisodeInfo.cid_dict[episode["cid"]] = episode
+
         return {
             "title": _get_title(episode),
             "cid": episode["cid"],
             "badge": "",
-            "duration": FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO)
+            "duration": FormatTool.format_duration(episode, Config.Type.VIDEO)
+        }
+
+    def _get_node(title: str, duration: str = ""):
+        return {
+            "title": title,
+            "duration": duration,
+            "entries": []
         }
 
     for section in info_json["ugc_season"]["sections"]:
-        EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
-            "title": section["title"],
-            "entries": []
-        })
+        EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_node(section["title"]))
 
         for episode in section["episodes"]:
             if len(episode["pages"]) == 1:
@@ -62,11 +71,7 @@ def video_ugc_season_parser(info_json: dict, cid: int):
                 if episode["cid"] == cid:
                     _in_section = section["episodes"]
             else:
-                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], {
-                    "title": episode["title"],
-                    "duration": FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO),
-                    "entries": []
-                })
+                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_node(episode["title"], FormatTool.format_duration(episode, Config.Type.VIDEO)))
 
                 for page in episode["pages"]:
                     EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], _get_entry(page))
@@ -124,12 +129,14 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
         return True
     
     def _get_entry(episode: dict):
+        EpisodeInfo.cid_dict[episode["cid"]] = episode
+
         return {
             "title": FormatTool.format_bangumi_title(episode),
             "cid": episode["cid"],
             "ep_id": episode["ep_id"],
             "badge": episode["badge"],
-            "duration": FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)
+            "duration": FormatTool.format_duration(episode, Config.Type.BANGUMI)
         }
 
     if bangumi_main_episodes_parser(info_json, ep_id):
