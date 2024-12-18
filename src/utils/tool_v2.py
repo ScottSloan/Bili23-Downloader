@@ -323,10 +323,10 @@ class FormatTool:
                     return episode["share_copy"]
                 
                 else:
-                    if "long_title" in episode:
-                        if episode["long_title"]:
-                            return episode["long_title"]
-                    
+                    for key in ["long_title", "show_title"]:
+                        if key in episode and episode[key]:
+                            return episode[key]
+
                     return episode["share_copy"]
 
             else:

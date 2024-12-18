@@ -47,12 +47,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("备注", width = self.FromDIP(50))
         self.AppendColumn("时长", width = self.FromDIP(75))
 
-    def set_list(self, episodes_data: dict):
+    def set_list(self):
         def _gen(data: list | dict, node):
             def set_item(data: dict):
                 if "entries" in data:
                     self.SetItemText(item, 0, str(data["title"]))
 
+                    if "duration" in data:
+                        self.SetItemText(item, 3, data["duration"])
                 else:
                     self._index += 1
 
@@ -80,29 +82,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self._index = 0
 
-        _gen(episodes_data, self.GetRootItem())
-
-    def set_video_list(self):
-        # if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
-        #     for key, value in VideoInfo.sections.items():
-        #         video_list[key] = [[str(index + 1), episode["arc"]["title"], "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_SECTIONS)] for index, episode in enumerate(value)]
-
-        #         self.parent_items.append(key)
-        # else:
-        #     self.parent_items.append("视频")
-        #     video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_OTHERS)] for index, episode in enumerate(VideoInfo.pages_list)]
-
-        self.set_list(EpisodeInfo.data)
-    
-    def set_bangumi_list(self):
-        # bangumi_list = {}
-
-        # for key, value in BangumiInfo.sections.items():
-        #     bangumi_list[key] = [[str(index + 1), FormatTool.format_bangumi_title(episode), episode["badge"], FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)] for index, episode in enumerate(value)]
-
-        #     self.parent_items.append(key)
-
-        self.set_list(EpisodeInfo.data)
+        _gen(EpisodeInfo.data, self.GetRootItem())
 
     def set_live_list(self):
         live_list = {}

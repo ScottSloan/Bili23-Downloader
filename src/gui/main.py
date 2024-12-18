@@ -357,17 +357,15 @@ class MainWindow(Frame):
 
             self.download_btn.Enable(True)
 
+            self.treelist.set_list()
             self.treelist.SetFocus()
 
-        def _set_video_list():
-            self.treelist.set_video_list()
-            
-            self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
+            match self.current_parse_type:
+                case Config.Type.VIDEO:
+                    self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
 
-        def _set_bangumi_list():
-            self.treelist.set_bangumi_list()
-
-            self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
+                case Config.Type.BANGUMI:
+                    self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
 
         def _set_live_list():
             self.treelist.set_live_list()
@@ -385,8 +383,6 @@ class MainWindow(Frame):
 
                 if continue_to_parse:
                     # 当存在跳转链接时，使用新的跳转链接重新开始解析，原先解析线程不继续执行
-                    wx.CallAfter(_set_video_list)
-
                     wx.CallAfter(self.setVideoQualityList)
 
             case "ep" | "ss" | "md":
@@ -394,8 +390,6 @@ class MainWindow(Frame):
                 self.current_parse_type = Config.Type.BANGUMI
 
                 self.bangumi_parser.parse_url(url)
-                
-                wx.CallAfter(_set_bangumi_list)
 
                 wx.CallAfter(self.setVideoQualityList)
 
@@ -697,16 +691,6 @@ class MainWindow(Frame):
             self.treelist.init_list()
             self.type_lab.SetLabel("")
 
-        def _set_video_list():
-            self.treelist.set_video_list()
-
-            self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
-
-        def _set_bangumi_list():
-            self.treelist.set_bangumi_list()
-
-            self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
-
         match event.GetId():
             case self.ID_EPISODE_SINGLE:
                 Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
@@ -726,12 +710,14 @@ class MainWindow(Frame):
             case Config.Type.VIDEO:
                 self.video_parser.parse_episodes()
 
-                _set_video_list()
+                self.type_lab.SetLabel(f"视频 (共 {self.treelist._index} 个)")
 
             case Config.Type.BANGUMI:
                 self.bangumi_parser.parse_episodes()
 
-                _set_bangumi_list()
+                self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
+        
+        self.treelist.set_list()
 
     def show_user_info_thread(self):
         def _process(image: wx.Image):

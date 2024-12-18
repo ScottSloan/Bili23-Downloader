@@ -3,7 +3,7 @@ import json
 import requests
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
@@ -177,7 +177,9 @@ class VideoParser:
 
                 EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
                     "title": page["part"],
-                    "cid": page["cid"]
+                    "cid": page["cid"],
+                    "badge": "",
+                    "duration": FormatTool.format_duration(page, Config.Type.DURATION_VIDEO)
                 })
 
         EpisodeInfo.clear_episode_data()

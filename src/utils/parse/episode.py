@@ -33,8 +33,17 @@ def video_ugc_season_parser(info_json: dict, cid: int):
                 EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))
 
     def _get_entry(episode: dict):
+        def _get_title(episode: dict):
+            if "title" in episode:
+                if Config.Misc.show_episode_full_name:
+                    return episode["page"]["part"]
+                else:
+                    return episode["title"]
+            else:
+                return episode["part"]
+
         return {
-            "title": episode["title"] if "title" in episode else episode["part"],
+            "title": _get_title(episode),
             "cid": episode["cid"],
             "badge": "",
             "duration": FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO)
@@ -55,6 +64,7 @@ def video_ugc_season_parser(info_json: dict, cid: int):
             else:
                 EpisodeInfo.add_item(EpisodeInfo.data, section["title"], {
                     "title": episode["title"],
+                    "duration": FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO),
                     "entries": []
                 })
 
@@ -116,6 +126,7 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
     def _get_entry(episode: dict):
         return {
             "title": FormatTool.format_bangumi_title(episode),
+            "cid": episode["cid"],
             "ep_id": episode["ep_id"],
             "badge": episode["badge"],
             "duration": FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)
