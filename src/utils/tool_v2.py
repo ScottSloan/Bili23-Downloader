@@ -262,7 +262,7 @@ class DownloadFileTool:
 class FormatTool:
     # 格式化数据类
     @staticmethod
-    def format_duration(episode: Dict, flag: int):
+    def format_duration(episode: dict, flag: int):
         match flag:
             case Config.Type.VIDEO:
                 if "arc" in episode:
@@ -311,11 +311,11 @@ class FormatTool:
             return "{:.1f} KB".format(size / 1024)
 
     @staticmethod
-    def format_bangumi_title(episode: Dict):
+    def format_bangumi_title(episode: dict, main_episode: bool = False):
         from utils.parse.bangumi import BangumiInfo
 
-        if BangumiInfo.type_id == 2:
-            return "{} - {}".format(BangumiInfo.title, episode["title"])
+        if BangumiInfo.type_id == 2 and main_episode:
+            return f"《{BangumiInfo.title}》{episode['title']}"
         
         else:
             if "share_copy" in episode:
@@ -323,7 +323,7 @@ class FormatTool:
                     return episode["share_copy"]
                 
                 else:
-                    for key in ["long_title", "show_title"]:
+                    for key in ["show_title", "long_title"]:
                         if key in episode and episode[key]:
                             return episode[key]
 

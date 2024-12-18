@@ -94,6 +94,9 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
+
+        with open("bangumi.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
         
         info_result = BangumiInfo.info_json = resp["result"]
 
@@ -192,7 +195,12 @@ class BangumiParser:
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()
 
-        bangumi_episodes_parser(BangumiInfo.info_json, int(self.url_type_value))
+        if self.url_type == "season_id":
+            ep_id = BangumiInfo.epid
+        else:
+            ep_id = int(self.url_type_value)
+
+        bangumi_episodes_parser(BangumiInfo.info_json, ep_id)
 
     def clear_bangumi_info(self):
         # 清除番组信息
