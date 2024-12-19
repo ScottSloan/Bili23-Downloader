@@ -15,18 +15,25 @@ mixinKeyEncTab = [
 ]
 
 class WbiUtils:
-    def __init__(self):
-        _params = {"foo": "114", "bar": "514", "baz": 1919180}
+    @staticmethod
+    def getWbiKeys():
+        resp = requests.get('https://api.bilibili.com/x/web-interface/nav', headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com"), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        json_content = resp.json()
 
-        img_key, sub_key = self.getWbiKeys()
-        self.encWbi(_params, img_key, sub_key)
+        img_url: str = json_content['data']['wbi_img']['img_url']
+        sub_url: str = json_content['data']['wbi_img']['sub_url']
 
-    def encWbi(self, params: dict, img_key: str, sub_key: str):
+        Config.Auth.img_key = img_url.rsplit('/', 1)[1].split('.')[0]
+        Config.Auth.sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
+
+    @staticmethod
+    def encWbi(params: dict):
         def getMixinKey(orig: str):
             return reduce(lambda s, i: s + orig[i], mixinKeyEncTab, '')[:32]
-
-        mixin_key = getMixinKey(img_key + sub_key)
+        
+        mixin_key = getMixinKey(Config.Auth.img_key + Config.Auth.sub_key)
         curr_time = round(time.time())
+
         params['wts'] = curr_time
         params = dict(sorted(params.items()))
         params = {
@@ -34,18 +41,8 @@ class WbiUtils:
             for k, v 
             in params.items()
         }
-        query = urllib.parse.urlencode(params)
         
-        Config.Auth.wbi_key = md5((query + mixin_key).encode()).hexdigest()
+        query = urllib.parse.urlencode(params)
+        params["w_rid"] = md5((query + mixin_key).encode()).hexdigest()
 
-    def getWbiKeys(self):
-        resp = requests.get('https://api.bilibili.com/x/web-interface/nav', headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com"))
-        json_content = resp.json()
-
-        img_url: str = json_content['data']['wbi_img']['img_url']
-        sub_url: str = json_content['data']['wbi_img']['sub_url']
-
-        img_key = img_url.rsplit('/', 1)[1].split('.')[0]
-        sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
-
-        return img_key, sub_key
+        return urllib.parse.urlencode(params)

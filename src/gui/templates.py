@@ -67,6 +67,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     
                     self.SetItemData(item, _get_item_data("item", data["title"], data["cid"]))
 
+                    _column_width = self.WidthFor(data["title"])
+
+                    if _column_width > self._title_longest_width:
+                        self._title_longest_width = _column_width
+
                 if Config.Misc.auto_select:
                     self.CheckItem(item, wx.CHK_CHECKED)
 
@@ -92,9 +97,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             return data
 
-        self._index = 0
+        self._index, self._title_longest_width = 0, 0
 
         _gen(EpisodeInfo.data, self.GetRootItem())
+
+        self.SetColumnWidth(1, self._title_longest_width)
 
     def set_live_list(self):
         live_list = {}
@@ -141,7 +148,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info = DownloadTaskInfo()
 
         download_info.id = UniversalTool.get_random_id()
-        download_info.timestamp = UniversalTool.get_timestamp(us = True)
+        download_info.timestamp = UniversalTool.get_timestamp()
 
         download_info.title = title
         download_info.title_legal = UniversalTool.get_legal_name(title)

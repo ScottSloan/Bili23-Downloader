@@ -8,6 +8,7 @@ from utils.error import process_exception, ParseError, ErrorUtils, URLError, Err
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
+from utils.auth.wbi import WbiUtils
 
 class VideoInfo:
     url: str = ""
@@ -71,15 +72,16 @@ class VideoParser:
     @process_exception
     def get_video_info(self):
         # 获取视频信息
-        url = f"https://api.bilibili.com/x/web-interface/view?bvid={VideoInfo.bvid}"
+        params = {
+            "bvid": VideoInfo.bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
         
         req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)
 
         self.check_json(resp)
-
-        with open("video.json", "w", encoding = "utf-8") as f:
-            f.write(req.text)
 
         info = VideoInfo.info_json = resp["data"]
 
@@ -108,7 +110,15 @@ class VideoParser:
     @process_exception
     def get_video_available_media_info(self):
         # 获取视频清晰度
-        url = f"https://api.bilibili.com/x/player/playurl?bvid={VideoInfo.bvid}&cid={VideoInfo.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
+        params = {
+            "bvid": VideoInfo.bvid,
+            "cid": VideoInfo.cid,
+            "fnver": 0,
+            "fnval": 4048,
+            "fourk": 1
+        }
+
+        url = f"https://api.bilibili.com/x/player/playurl?{WbiUtils.encWbi(params)}"
                 
         req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)

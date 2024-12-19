@@ -153,6 +153,9 @@ class Config:
         get_cover = False
 
     class Auth:
+        img_key: str = ""
+        sub_key: str = ""
+
         wbi_key: str = ""
 
 class ConfigUtils:

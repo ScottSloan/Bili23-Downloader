@@ -21,6 +21,7 @@ from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, Form
 from utils.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
+from utils.auth.wbi import WbiUtils
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -377,7 +378,15 @@ class DownloadUtils:
         
             match self.task_info.download_type:
                 case Config.Type.VIDEO:
-                    url = f"https://api.bilibili.com/x/player/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=4048&fourk=1"
+                    params = {
+                        "bvid": self.task_info.bvid,
+                        "cid": self.task_info.cid,
+                        "fnver": 0,
+                        "fnval": 4048,
+                        "fourk": 1
+                    }
+
+                    url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
                     json_dash = request_get(url)
 

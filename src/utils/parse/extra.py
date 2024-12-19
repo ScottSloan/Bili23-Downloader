@@ -5,7 +5,8 @@ import datetime
 import requests
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import RequestTool
+from utils.auth.wbi import WbiUtils
 
 class ExtraInfo:
     get_danmaku: bool = False
@@ -118,7 +119,12 @@ class ExtraParser:
             with open(path, "w", encoding = "utf-8") as f:
                 f.write(_temp)
 
-        url = f"https://api.bilibili.com/x/player/wbi/v2?bvid={self.bvid}&cid={self.cid}&w_rid={Config.Auth.wbi_key}&wts={UniversalTool.get_timestamp()}"
+        params = {
+            "bvid": self.bvid,
+            "cid": self.cid
+        }
+
+        url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"
 
         req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
         resp = json.loads(req.text)

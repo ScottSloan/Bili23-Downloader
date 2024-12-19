@@ -251,14 +251,14 @@ class MainWindow(Frame):
                     except Exception:
                         self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
 
-            def _generate_wbi_sign():
-                WbiUtils()
+            def _get_wbi_key():
+                WbiUtils.getWbiKeys()
 
             # 检查更新
             _check_update()
 
-            # 获取 wbi 签名
-            _generate_wbi_sign()
+            # 获取 wbi key
+            _get_wbi_key()
 
         def check_ffmpeg():
             FFmpegCheckTool.check_available()
