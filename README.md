@@ -12,6 +12,7 @@ Bili23 Downloader GUI
 + [使用说明](#使用说明)
 + [更新日志](#更新日志) 
 + [免责声明](#免责声明) 
++ [开源许可](#开源许可) 
 + [联系方式](#联系方式)
 
 ### **Bili23 Downloader 系列**
@@ -49,7 +50,7 @@ Bili23 Downloader GUI
 程序支持多线程下载（最多 8 线程）、并行下载（上限为 8 个，支持动态调整）、断点续传、下载限速、出错重试等功能。
 
 # 更新日志
-### **Version 1.54 (2024/12/18)**
+### **Version 1.54 (2024/12/19)**
 Version 1.54.0 Beta3 发布
 
 本次更新内容：
@@ -70,7 +71,10 @@ Version 1.54.0 Beta3 发布
 本项目不拥有任何下载内容的版权，B站上的所有视频均为其原始版权方的财产。用户需遵守相关法律法规，且仅限于合理使用，不得进行任何形式的商业化传播或使用。
 
 # 开源许可
-本项目在 MIT License 许可协议下进行发布
+本项目在 **MIT License** 许可协议下进行发布
+
+wbi 签名参考 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)  
+编译版提供的 FFmpeg 来源于 [gyan.dev](https://www.gyan.dev/ffmpeg/builds/)  
 
 # 联系方式
 - QQ: 2592111619

@@ -92,9 +92,6 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
-
-        with open("bangumi.json", "w", encoding = "utf-8") as f:
-            f.write(req.text)
         
         info_result = BangumiInfo.info_json = resp["result"]
 

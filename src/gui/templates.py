@@ -64,7 +64,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     self.SetItemText(item, 1, data["title"])
                     self.SetItemText(item, 2, data["badge"])
                     self.SetItemText(item, 3, data["duration"])
-
+                    
                     self.SetItemData(item, _get_item_data("item", data["title"], data["cid"]))
 
                 if Config.Misc.auto_select:
@@ -133,8 +133,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
                     title = self.GetItemData(item).title
                     cid = self.GetItemData(item).cid
-
-                    get_item_info(title, cid)
+                    
+                    if cid:
+                        get_item_info(title, cid)
     
     def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
         download_info = DownloadTaskInfo()
@@ -165,27 +166,16 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return download_info
 
     def get_video_download_info(self, title: str, entry: dict):
-        if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
-            if "arc" in entry:
-                cover_url = entry["arc"]["pic"]
-                duration = entry["arc"]["duration"]
-            else:
-                cover_url = VideoInfo.cover
-                duration = entry["duration"]
-
-            if "bvid" in entry:
-                bvid = entry["bvid"]
-            else:
-                bvid = VideoInfo.bvid
-
-            cid = entry["cid"]
-
+        if "arc" in entry:
+            cover_url = entry["arc"]["pic"]
+            duration = entry["arc"]["duration"]
+            bvid = entry["bvid"]
         else:
             cover_url = VideoInfo.cover
             bvid = VideoInfo.bvid
-            cid = entry["cid"]
             duration = entry["duration"]
 
+        cid = entry["cid"]
         referer_url = VideoInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, duration, cover_url, bvid, cid))
@@ -198,7 +188,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if "duration" in entry:
             duration = entry["duration"] / 1000
         else:
-            duration = 1
+            duration = 0
 
         referer_url = BangumiInfo.url
 
