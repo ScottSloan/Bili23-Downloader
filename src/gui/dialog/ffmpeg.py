@@ -1,8 +1,7 @@
 import wx
-import io
 
 from utils.tool_v2 import FFmpegCheckTool
-from utils.icon_v2 import IconManager, REFRESH_ICON
+from utils.icon_v2 import IconManager, IconType
 from utils.config import Config
 
 class DetectDialog(wx.Dialog):
@@ -21,11 +20,6 @@ class DetectDialog(wx.Dialog):
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
-
-        def _refresh_icon():
-            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(REFRESH_ICON)))
-
-            return _image.ConvertToBitmap()
         
         def _get_scale_button_size():
             match Config.Sys.platform:
@@ -49,7 +43,7 @@ class DetectDialog(wx.Dialog):
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = wx.BitmapButton(self, -1, _refresh_icon(), size = _get_scale_button_size(), style = _get_style())
+        self.refresh_btn = wx.BitmapButton(self, -1, icon_manager.get_icon_bitmap(IconType.REFRESH_ICON), size = _get_scale_button_size(), style = _get_style())
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)

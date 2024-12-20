@@ -1,10 +1,11 @@
-import io
 import wx
+import time
+import random
 import wx.dataview
 from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
-from utils.icon_v2 import IconManager, APP_ICON_SMALL
+from utils.icon_v2 import IconManager, IconType
 from utils.tool_v2 import UniversalTool
 from utils.config import Config
 from utils.parse.video import VideoInfo
@@ -20,7 +21,7 @@ class Frame(wx.Frame):
 
         icon_manager = IconManager(self.GetDPIScaleFactor())
 
-        self.SetIcon(wx.Icon(wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_SMALL))).ConvertToBitmap()))
+        self.SetIcon(wx.Icon(icon_manager.get_icon_bitmap(IconType.APP_ICON_SMALL)))
 
         self.panel = wx.Panel(self)
 
@@ -101,7 +102,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         _gen(EpisodeInfo.data, self.GetRootItem())
 
         if self._title_longest_width > self.FromDIP(375):
-            self.SetColumnWidth(1, self.FromDIP(self._title_longest_width))
+            self.SetColumnWidth(1, self._title_longest_width + 15)
 
     def onCheckItem(self, event):
         item = event.GetItem()
@@ -155,8 +156,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
-        download_info.id = UniversalTool.get_random_id()
-        download_info.timestamp = UniversalTool.get_timestamp()
+        download_info.id = random.randint(10000000, 99999999)
+        download_info.timestamp = int(round(time.time() * 1000000))
 
         download_info.title = title
         download_info.title_legal = UniversalTool.get_legal_name(title)

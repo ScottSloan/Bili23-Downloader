@@ -1,8 +1,7 @@
 import os
 import re
-import time
 import json
-import random
+import ctypes
 import requests
 import subprocess
 import requests.auth
@@ -134,8 +133,6 @@ class FileDirectoryTool:
             
             return pidl
         
-        import ctypes
-    
         class ITEMIDLIST(ctypes.Structure):
             _fields_ = [("mkid", ctypes.c_byte)]
 
@@ -152,7 +149,6 @@ class FileDirectoryTool:
 
     @staticmethod
     def _msw_AssocQueryStringW(file_ext: str):
-        import ctypes
         from ctypes import wintypes
 
         buffer = ctypes.create_unicode_buffer(512)
@@ -339,11 +335,8 @@ class UniversalTool:
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
         req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
-        req.encoding = "utf-8"
 
-        update_json = json.loads(req.text)
-
-        Config.Temp.update_json = update_json
+        Config.Temp.update_json = json.loads(req.text)
 
     @staticmethod
     def get_user_face():
@@ -357,29 +350,12 @@ class UniversalTool:
         return Config.User.face_path
 
     @staticmethod
-    def get_system_encoding():
-        match Config.Sys.platform:
-            case "windows":
-                return "cp936"
-            
-            case "linux" | "darwin":
-                return "utf-8"
-
-    @staticmethod
     def get_current_time():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
 
     @staticmethod
     def get_legal_name(_name: str):
         return re.sub(r'[/\:*?"<>|]', "", _name)
-
-    @staticmethod
-    def get_random_id():
-        return random.randint(10000000, 99999999)
-    
-    @staticmethod
-    def get_timestamp():
-        return int(round(time.time() * 1000000))
 
     @staticmethod
     def re_find_string(_pattern: str, _string: str):
@@ -423,9 +399,6 @@ class UniversalTool:
 
     @staticmethod
     def set_dpi_awareness():
-        import ctypes
-
-        # Windows 环境下，启用高 DPI 适配
         if Config.Sys.platform == "windows":
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
 

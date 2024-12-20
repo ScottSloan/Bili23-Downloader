@@ -1,9 +1,8 @@
-import io
 import wx
 import webbrowser
 
 from utils.config import Config
-from utils.icon_v2 import IconManager, APP_ICON_DEFAULT
+from utils.icon_v2 import IconManager, IconType
 
 from .license import LicenseWindow
 
@@ -52,8 +51,7 @@ class AboutWindow(wx.Dialog):
 
         icon_manager = IconManager(self.GetDPIScaleFactor())
 
-        app_icon = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_DEFAULT)), wx.BITMAP_TYPE_JPEG)
-        logo = wx.StaticBitmap(self, -1, _set_icon_background(app_icon).ConvertToBitmap())
+        logo = wx.StaticBitmap(self, -1, _set_icon_background(icon_manager.get_icon_bitmap(IconType.APP_ICON_DEFAULT)).ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))

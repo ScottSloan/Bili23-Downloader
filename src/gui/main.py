@@ -1,6 +1,5 @@
 import wx
 import os
-import io
 import time
 import wx.py
 import requests
@@ -16,7 +15,7 @@ from utils.thread import Thread
 from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
 from utils.error import ErrorCallback, ErrorCode
 from utils.mapping import video_quality_mapping, live_quality_mapping
-from utils.icon_v2 import IconManager, SETTING_ICON, LIST_ICON
+from utils.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
@@ -69,16 +68,6 @@ class MainWindow(Frame):
                 case "linux":
                     self.SetClientSize(self.FromDIP((880, 450)))
 
-        def _list_icon():
-            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(LIST_ICON)))
-
-            return _image.ConvertToBitmap()
-
-        def _setting_icon():
-            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(SETTING_ICON)))
-
-            return _image.ConvertToBitmap()
-
         def _get_style():
             match Config.Sys.platform:
                 case "windows" | "darwin":
@@ -119,8 +108,10 @@ class MainWindow(Frame):
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.episode_option_btn = wx.BitmapButton(self.panel, -1, _list_icon(), size = _get_button_scale_size(), style = _get_style())
-        self.download_option_btn = wx.BitmapButton(self.panel, -1, _setting_icon(), size = _get_button_scale_size(), style = _get_style())
+        self.episode_option_btn = wx.BitmapButton(self.panel, -1, icon_manager.get_icon_bitmap(IconType.LIST_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.episode_option_btn.SetToolTip("剧集列表显示设置")
+        self.download_option_btn = wx.BitmapButton(self.panel, -1, icon_manager.get_icon_bitmap(IconType.SETTING_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.download_option_btn.SetToolTip("下载选项")
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.AddStretchSpacer()

@@ -15,7 +15,7 @@ from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
 from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog, NotificationMessage
-from utils.icon_v2 import IconManager, RESUME_ICON, PAUSE_ICON, DELETE_ICON, FOLDER_ICON, RETRY_ICON
+from utils.icon_v2 import IconManager, IconType
 from utils.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.downloader import Downloader
@@ -788,10 +788,10 @@ class DownloadTaskPanel(wx.Panel):
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, self.get_button_icon(RESUME_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.pause_btn = wx.BitmapButton(self, -1, self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON), size = _get_button_scale_size(), style = _get_style())
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = wx.BitmapButton(self, -1, self.get_button_icon(DELETE_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.stop_btn = wx.BitmapButton(self, -1, self.icon_manager.get_icon_bitmap(IconType.DELETE_ICON), size = _get_button_scale_size(), style = _get_style())
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -1018,7 +1018,7 @@ class DownloadTaskPanel(wx.Panel):
 
             self.callback.onUpdateTaskCountCallback()
 
-            self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
+            self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
             self.pause_btn.Enable(False)
             self.stop_btn.Enable(False)
 
@@ -1159,21 +1159,21 @@ class DownloadTaskPanel(wx.Panel):
             match self.task_info.status:
                 case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
                     # 正在下载，显示暂停图标
-                    self.pause_btn.SetBitmap(self.get_button_icon(PAUSE_ICON))
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载信息...")
 
                 case Config.Type.DOWNLOAD_STATUS_PAUSE:
                     # 暂停中，显示继续下载图标
-                    self.pause_btn.SetBitmap(self.get_button_icon(RESUME_ICON))
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中")
 
                 case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
                     # 合成失败，显示重试图标
-                    self.pause_btn.SetBitmap(self.get_button_icon(RETRY_ICON))
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
 
@@ -1186,7 +1186,7 @@ class DownloadTaskPanel(wx.Panel):
 
                 case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
                     # 下载失败，显示重试图标
-                    self.pause_btn.SetBitmap(self.get_button_icon(RETRY_ICON))
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
                     self.speed_lab.SetLabel("下载失败")
@@ -1194,7 +1194,7 @@ class DownloadTaskPanel(wx.Panel):
 
                 case Config.Type.DOWNLOAD_STATUS_FINISHED:
                     # 下载完成，显示打开文件所在位置图标
-                    self.pause_btn.SetBitmap(self.get_button_icon(FOLDER_ICON))
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.FOLDER_ICON))
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
@@ -1212,9 +1212,3 @@ class DownloadTaskPanel(wx.Panel):
 
         # 同步更新到文件
         self.download_file_tool.update_task_info_kwargs(**kwargs)
-
-    def get_button_icon(self, icon_id: int):
-        # 获取按钮位图图标
-        image = wx.Image(io.BytesIO(self.icon_manager.get_icon_bytes(icon_id)))
-
-        return image.ConvertToBitmap()

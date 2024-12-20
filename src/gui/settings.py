@@ -12,6 +12,7 @@ from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.thread import Thread
 from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
+from utils.icon_v2 import IconManager, IconType
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -100,6 +101,8 @@ class DownloadTab(wx.Panel):
 
             self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
+        icon_manager = IconManager(self.GetDPIScaleFactor())
+
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
         self.scrolled_panel = ScrolledPanel(self.download_box, _get_panel_size())
@@ -120,7 +123,7 @@ class DownloadTab(wx.Panel):
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
         self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_mapping.keys()))
-        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.video_quality_tip.SetToolTip("说明")
 
