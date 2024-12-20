@@ -6,9 +6,9 @@ class EpisodeInfo:
     cid_dict: dict = {}
 
     @staticmethod
-    def clear_episode_data():
+    def clear_episode_data(title: str = "视频"):
         EpisodeInfo.data = {
-            "title": "视频",
+            "title": title,
             "entries": []
         }
         
@@ -142,3 +142,11 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
 
     if bangumi_main_episodes_parser(info_json):
         bangumi_sections_parser(info_json)
+
+def live_episode_parser(title: str, status: str):
+    EpisodeInfo.add_item(EpisodeInfo.data, "直播", {
+        "title": title,
+        "badge": status,
+        "duration": "--:--",
+        "cid": 0
+    })

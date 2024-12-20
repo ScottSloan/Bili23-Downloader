@@ -9,7 +9,6 @@ from utils.tool_v2 import UniversalTool
 from utils.config import Config
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
-from utils.parse.live import LiveInfo
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo
@@ -103,14 +102,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         if self._title_longest_width > self.FromDIP(375):
             self.SetColumnWidth(1, self.FromDIP(self._title_longest_width))
-
-    def set_live_list(self):
-        live_list = {}
-        
-        live_list["直播"] = [["1", LiveInfo.title, LiveInfo.status_str, "--:--:--"]]
-        self.parent_items.append("直播")
-
-        self.set_list(live_list)
 
     def onCheckItem(self, event):
         item = event.GetItem()

@@ -363,11 +363,6 @@ class MainWindow(Frame):
             self.treelist.set_list()
             self.update_video_count_label()
 
-        def _set_live_list():
-            self.treelist.set_live_list()
-
-            self.type_lab.SetLabel("直播")
-
         continue_to_parse = True
 
         match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
@@ -394,8 +389,6 @@ class MainWindow(Frame):
                 self.current_parse_type = Config.Type.LIVE
 
                 self.live_parser.parse_url(url)
-
-                wx.CallAfter(_set_live_list)
 
                 wx.CallAfter(self.setLiveQualityList)
 
@@ -724,6 +717,9 @@ class MainWindow(Frame):
 
             case Config.Type.BANGUMI:
                 _type = BangumiInfo.type_name
+
+            case Config.Type.LIVE:
+                _type = "直播"
         
         self.type_lab.SetLabel(f"{_type} {_total}")
 

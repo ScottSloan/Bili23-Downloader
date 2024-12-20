@@ -7,6 +7,7 @@ from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 from utils.error import process_exception, ErrorUtils, StatusCode, ParseError
 from utils.mapping import live_status_mapping
+from utils.parse.episode import EpisodeInfo, live_episode_parser
 
 class LiveInfo:
     title: str = ""
@@ -49,6 +50,10 @@ class LiveParser:
 
         LiveInfo.status = info["live_status"]
         LiveInfo.status_str = live_status_mapping[LiveInfo.status]
+
+        EpisodeInfo.clear_episode_data("直播")
+
+        live_episode_parser(LiveInfo.title, LiveInfo.status_str)
 
     @process_exception
     def get_live_available_media_info(self):

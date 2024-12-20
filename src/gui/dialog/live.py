@@ -65,7 +65,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.status_lab.SetFont(font)
         self.duration_lab = wx.StaticText(self, -1, "时长：00:00:00.00")
         self.duration_lab.SetFont(font)
-        self.size_lab = wx.StaticText(self, -1, "大小：0 KB")
+        self.size_lab = wx.StaticText(self, -1, "大小：0 MB")
         self.size_lab.SetFont(font)
         self.speed_lab = wx.StaticText(self, -1, "速度：0.0x")
         self.speed_lab.SetFont(font)
@@ -256,7 +256,7 @@ class LiveRecordingWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]))}")
+            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]) * 1024)}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")
