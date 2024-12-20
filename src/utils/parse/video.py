@@ -118,7 +118,7 @@ class VideoParser:
             "fourk": 1
         }
 
-        url = f"https://api.bilibili.com/x/player/playurl?{WbiUtils.encWbi(params)}"
+        url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
                 
         req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)

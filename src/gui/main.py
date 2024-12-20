@@ -171,9 +171,10 @@ class MainWindow(Frame):
         _set_window_size()
 
         _set_button_variant()
-    
+
     def init_menubar(self):
         menu_bar = wx.MenuBar()
+
         self.help_menu = wx.Menu()
         self.tool_menu = wx.Menu()
         
@@ -358,13 +359,9 @@ class MainWindow(Frame):
             self.download_btn.Enable(True)
 
             self.treelist.SetFocus()
-
-            match self.current_parse_type:
-                case Config.Type.VIDEO:
-                    self.set_video_list()
-
-                case Config.Type.BANGUMI:
-                    self.set_bangumi_list()
+            
+            self.treelist.set_list()
+            self.update_video_count_label()
 
         def _set_live_list():
             self.treelist.set_live_list()
@@ -470,7 +467,7 @@ class MainWindow(Frame):
         video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
 
         # 获取要下载的视频列表
-        self.treelist.get_all_selected_item(video_quality_id)
+        self.treelist.get_all_checked_item(video_quality_id)
 
         if not len(self.treelist.download_task_info_list):
             self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
@@ -709,22 +706,26 @@ class MainWindow(Frame):
             case Config.Type.VIDEO:
                 self.video_parser.parse_episodes()
 
-                self.set_video_list()
-
             case Config.Type.BANGUMI:
                 self.bangumi_parser.parse_episodes()
 
-                self.set_bangumi_list()
-
-    def set_video_list(self):
         self.treelist.set_list()
+        self.update_video_count_label()
+    
+    def update_video_count_label(self, checked: int = 0):
+        if checked:
+            _total = f"(共 {self.treelist._index} 个，已选择 {checked} 个)"
+        else:
+            _total = f"(共 {self.treelist._index} 个)"
 
-        self.type_lab.SetLabel(f"投稿视频 (共 {self.treelist._index} 个)")
+        match self.current_parse_type:
+            case Config.Type.VIDEO:
+                _type = "投稿视频"
 
-    def set_bangumi_list(self):
-        self.treelist.set_list()
-
-        self.type_lab.SetLabel(f"{BangumiInfo.type_name} (共 {self.treelist._index} 个)")
+            case Config.Type.BANGUMI:
+                _type = BangumiInfo.type_name
+        
+        self.type_lab.SetLabel(f"{_type} {_total}")
 
     def show_user_info_thread(self):
         def _process(image: wx.Image):

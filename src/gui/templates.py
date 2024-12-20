@@ -101,7 +101,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         _gen(EpisodeInfo.data, self.GetRootItem())
 
-        self.SetColumnWidth(1, self._title_longest_width)
+        if self._title_longest_width > self.FromDIP(375):
+            self.SetColumnWidth(1, self.FromDIP(self._title_longest_width))
 
     def set_live_list(self):
         live_list = {}
@@ -118,8 +119,24 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
+
+        self._main_window.update_video_count_label(self.get_checked_item_count())
+
+    def get_checked_item_count(self):
+        _count = 0
+
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    _count += 1
+
+        return _count
     
-    def get_all_selected_item(self, video_quality_id: Optional[int] = None):
+    def get_all_checked_item(self, video_quality_id: Optional[int] = None):
         def get_item_info(title: str, cid: int):
             match self._main_window.current_parse_type:
                 case Config.Type.VIDEO:

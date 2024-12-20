@@ -18,6 +18,10 @@ class DetectDialog(wx.Dialog):
         self.init_utils()
 
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
         def _refresh_icon():
             _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(REFRESH_ICON)))
 
@@ -39,6 +43,8 @@ class DetectDialog(wx.Dialog):
                 case "linux":
                     return wx.NO_BORDER
         
+        _set_dark_mode()
+
         icon_manager = IconManager(self.GetDPIScaleFactor())
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
@@ -75,9 +81,17 @@ class DetectDialog(wx.Dialog):
         vbox.Add(self.env_path_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.cwd_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.cwd_path_lab, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
-        self.SetSizerAndFit(vbox)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddSpacer(30)
+        hbox.Add(vbox, 0, wx.EXPAND)
+        hbox.AddSpacer(30)
+
+        dlg_vbox = wx.BoxSizer(wx.VERTICAL)
+        dlg_vbox.Add(hbox, 0, wx.EXPAND)
+        dlg_vbox.Add(bottom_hbox, 0, wx.EXPAND)
+
+        self.SetSizerAndFit(dlg_vbox)
 
     def init_utils(self):
         cwd_path = FFmpegCheckTool._get_ffmpeg_cwd_path()
