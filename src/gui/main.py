@@ -8,13 +8,13 @@ from typing import Optional
 from utils.config import Config
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
-from utils.parse.festival import FestivalInfo, FestivalParser
+from utils.parse.activity import FestivalInfo, FestivalParser
 from utils.parse.live import LiveInfo, LiveParser
 from utils.auth.login import QRLogin
-from utils.thread import Thread
+from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
-from utils.error import ErrorCallback, ErrorCode
-from utils.mapping import video_quality_mapping, live_quality_mapping
+from utils.common.error import ErrorCallback, ErrorCode
+from utils.common.map import video_quality_mapping, live_quality_mapping
 from utils.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
 

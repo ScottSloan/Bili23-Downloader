@@ -6,7 +6,7 @@ from typing import List
 
 from utils.parse.live import LiveInfo
 from utils.config import Config
-from utils.thread import Thread
+from utils.common.thread import Thread
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class LiveRecordingWindow(wx.Dialog):

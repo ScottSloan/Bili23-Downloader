@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional, Callable, List, Dict
 
 from utils.config import Config
-from utils.data_type import DownloadTaskInfo
+from utils.common.data_type import DownloadTaskInfo
 
 class RequestTool:
     # 请求工具类

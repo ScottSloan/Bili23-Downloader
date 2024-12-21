@@ -4,8 +4,8 @@ import os
 import subprocess
 
 from utils.config import Config
-from utils.thread import Thread
-from utils.mapping import video_codec_mapping, supported_gpu_mapping, video_sw_encoder_mapping, video_hw_encoder_mapping
+from utils.common.thread import Thread
+from utils.common.map import video_codec_mapping, supported_gpu_mapping, video_sw_encoder_mapping, video_hw_encoder_mapping
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class ConverterWindow(wx.Dialog):

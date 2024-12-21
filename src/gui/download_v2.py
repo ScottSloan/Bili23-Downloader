@@ -7,20 +7,20 @@ import json
 import wx.adv
 import requests
 import subprocess
-from typing import Dict, List, Callable
+from typing import List, Callable
 
 from gui.templates import Frame, ScrolledPanel
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
-from utils.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog, NotificationMessage
+from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog, NotificationMessage
 from utils.icon_v2 import IconManager, IconType
-from utils.thread import Thread
+from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
-from utils.downloader import Downloader
+from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
+from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
 
 class DownloadManagerWindow(Frame):
@@ -439,7 +439,7 @@ class DownloadUtils:
             self._video_download_url_list = self._get_all_available_download_url_list(durl_json)
 
         def get_audio_available_quality():
-            def _get_flac(_json_dash: Dict):
+            def _get_flac(_json_dash: dict):
                 # 无损
                 if "flac" in _json_dash:
                     if _json_dash["flac"]:
@@ -452,7 +452,7 @@ class DownloadUtils:
                                 self.task_info.audio_type = "flac"
                                 self.task_info.audio_quality_id = 30251
 
-            def _get_dolby(_json_dash: Dict):
+            def _get_dolby(_json_dash: dict):
                 # 杜比全景声
                 if "dolby" in _json_dash:
                     if _json_dash["dolby"]:

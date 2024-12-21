@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
-from utils.mapping import audio_quality_mapping, danmaku_format_mapping, subtitle_format_mapping, video_codec_mapping, get_mapping_index_by_value
+from utils.common.map import audio_quality_mapping, danmaku_format_mapping, subtitle_format_mapping, video_codec_mapping, get_mapping_index_by_value
 
 class OptionDialog(wx.Dialog):
     def __init__(self, parent, callback):

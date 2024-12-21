@@ -2,7 +2,7 @@ import wx
 import wx.adv
 
 from utils.config import Config
-from utils.data_type import ErrorLog
+from utils.common.data_type import ErrorLog
 
 class ErrorInfoDialog(wx.Dialog):
     def __init__(self, parent, error_log: ErrorLog):

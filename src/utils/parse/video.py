@@ -4,7 +4,7 @@ import requests
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
-from utils.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
+from utils.common.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser

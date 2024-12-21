@@ -13,7 +13,7 @@ from utils.parse.bangumi import BangumiInfo
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo
-from utils.data_type import DownloadTaskInfo, TreeListItemInfo
+from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):

@@ -5,8 +5,8 @@ from typing import Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
-from utils.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
-from utils.mapping import bangumi_type_mapping
+from utils.common.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
+from utils.common.map import bangumi_type_mapping
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser

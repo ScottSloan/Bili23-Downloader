@@ -6,9 +6,9 @@ from typing import List
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, DownloadFileTool
-from utils.thread import Thread, ThreadPool
-from utils.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
-from utils.mapping import cdn_mapping
+from utils.common.thread import Thread, ThreadPool
+from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
+from utils.common.map import cdn_mapping
 
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):

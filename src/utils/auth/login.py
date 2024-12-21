@@ -11,7 +11,7 @@ from Crypto.Cipher import PKCS1_v1_5
 from utils.tools import get_exclimbwuzhi_header, get_login_header
 from utils.tool_v2 import RequestTool
 from utils.config import Config, ConfigUtils
-from utils.error import StatusCode
+from utils.common.error import StatusCode
 
 class QRLoginInfo:
     url = qrcode_key = None

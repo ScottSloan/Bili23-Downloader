@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 bangumi_type_mapping = {
     1: "番剧",
@@ -117,13 +117,13 @@ cdn_mapping = {
     7: "upos-sz-mirrorali.bilivideo.com"
 }
 
-def get_mapping_key_by_value(mapping: Dict, value: int):
+def get_mapping_key_by_value(mapping: dict, value: int):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
     return mapping_reversed[value]
 
-def get_mapping_index_by_value(mapping: Dict, value: Any):
+def get_mapping_index_by_value(mapping: dict, value: Any):
     return list(mapping.values()).index(value)
 
-def get_mapping_index_by_key(mapping: Dict, key: Any):
+def get_mapping_index_by_key(mapping: dict, key: Any):
     return list(mapping.keys()).index(key)

@@ -10,8 +10,8 @@ from gui.dialog.ffmpeg import DetectDialog
 
 from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
-from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
+from utils.common.thread import Thread
+from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
 from utils.icon_v2 import IconManager, IconType
 
 class SettingWindow(wx.Dialog):
@@ -134,7 +134,7 @@ class DownloadTab(wx.Panel):
 
         audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
         self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_mapping.keys()))
-        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.audio_quality_tip.SetToolTip("说明")
 
@@ -145,7 +145,7 @@ class DownloadTab(wx.Panel):
 
         codec_lab = wx.StaticText(self.scrolled_panel, -1, "视频编码格式")
         self.codec_choice = wx.Choice(self.scrolled_panel, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
-        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.codec_tip.SetToolTip("说明")
 
@@ -155,7 +155,7 @@ class DownloadTab(wx.Panel):
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.enable_dolby_chk = wx.CheckBox(self.scrolled_panel, -1, '自动下载杜比视界或杜比全景声')
-        self.dolby_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.dolby_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.dolby_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.dolby_tip.SetToolTip("说明")
 

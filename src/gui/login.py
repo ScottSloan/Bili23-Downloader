@@ -6,7 +6,7 @@ from io import BytesIO
 
 from utils.auth.login import QRLogin, PasswordLogin, SMSLogin
 from utils.config import Config, ConfigUtils
-from utils.thread import Thread
+from utils.common.thread import Thread
 
 from gui.dialog.captcha import CaptchaWindow
 
