@@ -6,7 +6,7 @@ from typing import List, Dict
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 from utils.common.error import process_exception, ErrorUtils, StatusCode, ParseError
-from utils.common.map import live_status_mapping
+from utils.common.map import live_status_map
 from utils.parse.episode import EpisodeInfo, live_episode_parser
 
 class LiveInfo:
@@ -49,7 +49,7 @@ class LiveParser:
         LiveInfo.room_id = info["room_id"]
 
         LiveInfo.status = info["live_status"]
-        LiveInfo.status_str = live_status_mapping[LiveInfo.status]
+        LiveInfo.status_str = live_status_map[LiveInfo.status]
 
         EpisodeInfo.clear_episode_data("直播")
 

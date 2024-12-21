@@ -83,25 +83,13 @@ class Config:
     class Type:
         UNDEFINED: int = 0                           # 未定义
 
-        VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
-        VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频
-        VIDEO_TYPE_SECTIONS: int = 3                 # 合集
-
         MERGE_TYPE_ALL: int = 0                      # 合成视频和音频
         MERGE_TYPE_VIDEO: int = 1                    # 仅下载视频
         MERGE_TYPE_AUDIO: int = 2                    # 仅下载音频
 
-        EPISODES_SINGLE: int = 0                     # 只解析单个视频
-        EPISODES_IN_SECTION: int = 1                 # 解析视频所在合集
-        EPISODES_ALL_SECTIONS: int = 2               # 解析全部合集
-
         PROXY_DISABLE: int = 0                       # 不使用代理
         PROXY_FOLLOW: int = 1                        # 跟随系统
         PROXY_CUSTOM: int = 2                        # 手动设置
-
-        LIVE_STATUS_0: int = 0                       # 未开播
-        LIVE_STATUS_1: int = 1                       # 直播中
-        LIVE_STATUS_2: int = 2                       # 轮播中
 
         DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
         DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕

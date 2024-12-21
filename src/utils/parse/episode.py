@@ -1,6 +1,6 @@
 from utils.config import Config
 from utils.tool_v2 import FormatTool
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, EpisodeDisplayType
 
 class EpisodeInfo:
     data: dict = {}
@@ -19,7 +19,8 @@ class EpisodeInfo:
     def add_item(data: list | dict, parent: str, entry_data: dict):
         if isinstance(data, dict):
             if data["title"] == parent:
-                data["entries"].append(entry_data)
+                if "entries" in data:
+                    data["entries"].append(entry_data)
             else:
                 if "entries" in data:
                     EpisodeInfo.add_item(data["entries"], parent, entry_data)
@@ -30,7 +31,7 @@ class EpisodeInfo:
 
 def video_ugc_season_parser(info_json: dict, cid: int):
     def episode_display_in_section():
-        if Config.Misc.episode_display_mode == Config.Type.EPISODES_IN_SECTION:
+        if Config.Misc.episode_display_mode == EpisodeDisplayType.InSection.value:
             EpisodeInfo.clear_episode_data()
 
             for episode in _in_section:
@@ -118,12 +119,12 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
                 EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode, main_episode))
 
     def _check(episode: dict, episodes_list: list, main_episode: bool = False):
-        if Config.Misc.episode_display_mode != Config.Type.EPISODES_ALL_SECTIONS and episode["ep_id"] == ep_id:
-            match Config.Misc.episode_display_mode:
-                case Config.Type.EPISODES_SINGLE:
+        if Config.Misc.episode_display_mode != EpisodeDisplayType.All.value and episode["ep_id"] == ep_id:
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
+                case EpisodeDisplayType.Single:
                     episode_display_in_section([episode], main_episode)
 
-                case Config.Type.EPISODES_IN_SECTION:
+                case EpisodeDisplayType.InSection:
                     episode_display_in_section(episodes_list, main_episode)
 
             return False

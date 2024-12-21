@@ -49,7 +49,7 @@ live_quality_mapping = {
     "流畅": 80
 }
 
-live_status_mapping = {
+live_status_map = {
     0: "未开播",
     1: "直播中",
     2: "轮播中"

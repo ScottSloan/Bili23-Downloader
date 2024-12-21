@@ -17,7 +17,7 @@ from utils.common.error import ErrorCallback, ErrorCode
 from utils.common.map import video_quality_mapping, live_quality_mapping
 from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
@@ -436,7 +436,7 @@ class MainWindow(Frame):
 
         # 直播类型视频跳转合成窗口
         if self.current_parse_type == ParseType.Live:
-            if LiveInfo.status == Config.Type.LIVE_STATUS_0:
+            if LiveInfo.status == LiveStatus.NotStarted.value:
                 # 未开播，无法解析
                 wx.MessageDialog(self, "直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING).ShowModal()
 
@@ -638,14 +638,14 @@ class MainWindow(Frame):
             context_menu.AppendSeparator()
             context_menu.Append(show_episode_full_name)
 
-            match Config.Misc.episode_display_mode:
-                case Config.Type.EPISODES_SINGLE:
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
+                case EpisodeDisplayType.Single:
                     single_menuitem.Check(True)
 
-                case Config.Type.EPISODES_IN_SECTION:
+                case EpisodeDisplayType.InSection:
                     in_section_menuitem.Check(True)
 
-                case Config.Type.EPISODES_ALL_SECTIONS:
+                case EpisodeDisplayType.All:
                     all_section_menuitem.Check(True)
 
             show_episode_full_name.Check(Config.Misc.show_episode_full_name)
@@ -670,13 +670,13 @@ class MainWindow(Frame):
 
         match event.GetId():
             case self.ID_EPISODE_SINGLE:
-                Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
+                Config.Misc.episode_display_mode = EpisodeDisplayType.Single.value
 
             case self.ID_EPISODE_IN_SECTION:
-                Config.Misc.episode_display_mode = Config.Type.EPISODES_IN_SECTION
+                Config.Misc.episode_display_mode = EpisodeDisplayType.InSection.value
 
             case self.ID_EPISODE_ALL_SECTIONS:
-                Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
+                Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
             case self.ID_EPISODE_FULL_NAME:
                 Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name

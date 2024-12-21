@@ -13,6 +13,7 @@ from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
+from utils.common.enums import EpisodeDisplayType
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -928,14 +929,14 @@ class MiscTab(wx.Panel):
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
 
     def init_data(self):
-        match Config.Misc.episode_display_mode:
-            case Config.Type.EPISODES_SINGLE:
+        match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            case EpisodeDisplayType.Single:
                 self.episodes_single_choice.SetValue(True)
 
-            case Config.Type.EPISODES_IN_SECTION:
+            case EpisodeDisplayType.InSection:
                 self.episodes_in_section_choice.SetValue(True)
                 
-            case Config.Type.EPISODES_ALL_SECTIONS:
+            case EpisodeDisplayType.All:
                 self.episodes_all_sections_choice.SetValue(True)
 
         match Config.Misc.player_preference:
@@ -955,13 +956,13 @@ class MiscTab(wx.Panel):
 
     def save(self):
         if self.episodes_single_choice.GetValue():
-            Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
+            Config.Misc.episode_display_mode = EpisodeDisplayType.Single.value
 
         elif self.episodes_in_section_choice.GetValue():
-            Config.Misc.episode_display_mode = Config.Type.EPISODES_IN_SECTION
+            Config.Misc.episode_display_mode = EpisodeDisplayType.InSection.value
 
         else:
-            Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
+            Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
         if self.player_default_rdbtn.GetValue():
             Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_DEFAULT

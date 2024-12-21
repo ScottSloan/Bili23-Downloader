@@ -9,7 +9,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, VideoType, EpisodeDisplayType
 
 class VideoInfo:
     url: str = ""
@@ -98,7 +98,7 @@ class VideoParser:
         VideoInfo.pages_list = info["pages"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
-        if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
+        if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
             if hasattr(self, "part_num"):
                 VideoInfo.cid = VideoInfo.pages_list[self.part_num - 1]["cid"]
             else:
@@ -177,19 +177,19 @@ class VideoParser:
     def parse_episodes(self):
         def pages_parser():
             if len(VideoInfo.pages_list) == 1:
-                VideoInfo.type = Config.Type.VIDEO_TYPE_SINGLE
+                VideoInfo.type = VideoType.Single
             else:
-                VideoInfo.type = Config.Type.VIDEO_TYPE_PAGES
+                VideoInfo.type = VideoType.Part
 
             for page in VideoInfo.pages_list:
-                if Config.Misc.episode_display_mode == Config.Type.EPISODES_SINGLE:
+                if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
                     if page["cid"] != VideoInfo.cid:
                         continue
 
                 EpisodeInfo.cid_dict[page["cid"]] = page
 
                 EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
-                    "title": page["part"],
+                    "title": page["part"] if VideoInfo.type == VideoType.Part else VideoInfo.title,
                     "cid": page["cid"],
                     "badge": "",
                     "duration": FormatTool.format_duration(page, ParseType.Video)
@@ -197,13 +197,13 @@ class VideoParser:
 
         EpisodeInfo.clear_episode_data()
 
-        match Config.Misc.episode_display_mode:
-            case Config.Type.EPISODES_SINGLE:
+        match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            case EpisodeDisplayType.Single:
                 pages_parser()
 
-            case Config.Type.EPISODES_IN_SECTION | Config.Type.EPISODES_ALL_SECTIONS:
+            case EpisodeDisplayType.InSection | EpisodeDisplayType.All:
                 if "ugc_season" in VideoInfo.info_json:
-                    VideoInfo.type = Config.Type.VIDEO_TYPE_SECTIONS
+                    VideoInfo.type = VideoType.Collection
 
                     video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
                 else:
