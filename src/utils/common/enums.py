@@ -18,10 +18,24 @@ class MergeType(Enum):
 
 class EpisodeDisplayType(Enum):
     Single = 1            # 获取单个视频
-    In_Section = 2         # 获取视频所在的合集
+    In_Section = 2        # 获取视频所在的合集
     All = 3               # 获取全部相关视频
 
 class LiveStatus(Enum):
-    Not_Started = 1        # 未开播
+    Not_Started = 1       # 未开播
     Live = 2              # 直播中
     Replay = 3            # 轮播中
+
+class ProxyMode(Enum):
+    Disable = 0           # 不使用
+    Follow = 1            # 跟随系统
+    Custom = 2            # 手动设置
+
+class DanmakuType(Enum):
+    XML = 0               # XML 格式
+    Protobuf = 1          # Protobuf 格式
+
+class SubtitleType(Enum):
+    SRT = 0               # SRT 格式
+    TXT = 1               # TXT 格式
+    JSON = 2              # JSON 格式

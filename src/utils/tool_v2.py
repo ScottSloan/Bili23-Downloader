@@ -10,7 +10,7 @@ from typing import Optional, Callable, List, Dict
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
     # 请求工具类
@@ -53,14 +53,14 @@ class RequestTool:
 
     @staticmethod
     def get_proxies():
-        match Config.Proxy.proxy_mode:
-            case Config.Type.PROXY_DISABLE:
+        match ProxyMode(Config.Proxy.proxy_mode):
+            case ProxyMode.Disable:
                 return {}
             
-            case Config.Type.PROXY_FOLLOW:
+            case ProxyMode.Follow:
                 return None
             
-            case Config.Type.PROXY_CUSTOM:
+            case ProxyMode.Custom:
                 return {
                     "http": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}",
                     "https": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}"

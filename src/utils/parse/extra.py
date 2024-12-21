@@ -7,6 +7,7 @@ import requests
 from utils.config import Config
 from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
+from utils.common.enums import DanmakuType, SubtitleType
 
 class ExtraInfo:
     get_danmaku: bool = False
@@ -28,11 +29,11 @@ class ExtraParser:
 
     def get_danmaku(self):
         # 下载弹幕文件
-        match ExtraInfo.danmaku_type:
-            case Config.Type.DANMAKU_TYPE_XML:
+        match DanmakuType(ExtraInfo.danmaku_type):
+            case DanmakuType.XML:
                 self.get_danmaku_xml()
 
-            case Config.Type.DANMAKU_TYPE_PROTOBUF:
+            case DanmakuType.Protobuf:
                 self.get_danmaku_protobuf()
 
     def get_danmaku_xml(self):
@@ -138,12 +139,12 @@ class ExtraParser:
 
             subtitle_json = get_subtitle_json(subtitle_url)
 
-            match ExtraInfo.subtitle_type:
-                case Config.Type.SUBTITLE_TYPE_SRT:
+            match SubtitleType(ExtraInfo.subtitle_type):
+                case SubtitleType.SRT:
                     _to_srt(subtitle_json, lan)
 
-                case Config.Type.SUBTITLE_TYPE_TXT:
+                case SubtitleType.TXT:
                     _to_txt(subtitle_json, lan)
 
-                case Config.Type.SUBTITLE_TYPE_JSON:
+                case SubtitleType.JSON:
                     _to_json(subtitle_json, lan)

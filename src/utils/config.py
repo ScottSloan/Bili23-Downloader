@@ -83,17 +83,6 @@ class Config:
     class Type:
         UNDEFINED: int = 0                           # 未定义
 
-        PROXY_DISABLE: int = 0                       # 不使用代理
-        PROXY_FOLLOW: int = 1                        # 跟随系统
-        PROXY_CUSTOM: int = 2                        # 手动设置
-
-        DANMAKU_TYPE_XML: int = 0                    # xml 格式弹幕
-        DANMAKU_TYPE_PROTOBUF: int = 1               # protobuf 格式弹幕
-
-        SUBTITLE_TYPE_SRT: int = 0                   # srt 格式字幕
-        SUBTITLE_TYPE_TXT: int = 1                   # txt 格式字幕
-        SUBTITLE_TYPE_JSON: int = 2                  # json 格式字幕
-
         PLAYER_PREFERENCE_DEFAULT: int = 0           # 系统默认
         PLAYER_PREFERENCE_CUSTOM: int = 1            # 手动设置
 

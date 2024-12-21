@@ -13,7 +13,7 @@ from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import EpisodeDisplayType
+from utils.common.enums import EpisodeDisplayType, ProxyMode
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -697,14 +697,14 @@ class ProxyTab(wx.Panel):
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestEVT)
 
     def init_data(self):
-        match Config.Proxy.proxy_mode:
-            case Config.Type.PROXY_DISABLE:
+        match ProxyMode(Config.Proxy.proxy_mode):
+            case ProxyMode.Disable:
                 self.proxy_disable_radio.SetValue(True)
 
-            case Config.Type.PROXY_FOLLOW:
+            case ProxyMode.Follow:
                 self.proxy_follow_radio.SetValue(True)
 
-            case Config.Type.PROXY_CUSTOM:
+            case ProxyMode.Custom:
                 self.proxy_custom_radio.SetValue(True)
 
         self.ip_box.SetValue(Config.Proxy.proxy_ip)
@@ -719,13 +719,13 @@ class ProxyTab(wx.Panel):
 
     def save(self):
         if self.proxy_disable_radio.GetValue():
-            proxy = Config.Type.PROXY_DISABLE
+            proxy = ProxyMode.Disable.value
 
         elif self.proxy_follow_radio.GetValue():
-            proxy = Config.Type.PROXY_FOLLOW
+            proxy = ProxyMode.Follow.value
 
         else:
-            proxy = Config.Type.PROXY_CUSTOM
+            proxy = ProxyMode.Custom.value
 
         Config.Proxy.proxy_mode = proxy
         Config.Proxy.proxy_ip = self.ip_box.GetValue()
