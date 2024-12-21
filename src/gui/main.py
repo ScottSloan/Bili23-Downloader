@@ -436,7 +436,7 @@ class MainWindow(Frame):
 
         # 直播类型视频跳转合成窗口
         if self.current_parse_type == ParseType.Live:
-            if LiveInfo.status == LiveStatus.NotStarted.value:
+            if LiveInfo.status == LiveStatus.Not_Started.value:
                 # 未开播，无法解析
                 wx.MessageDialog(self, "直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING).ShowModal()
 
@@ -642,7 +642,7 @@ class MainWindow(Frame):
                 case EpisodeDisplayType.Single:
                     single_menuitem.Check(True)
 
-                case EpisodeDisplayType.InSection:
+                case EpisodeDisplayType.In_Section:
                     in_section_menuitem.Check(True)
 
                 case EpisodeDisplayType.All:
@@ -673,7 +673,7 @@ class MainWindow(Frame):
                 Config.Misc.episode_display_mode = EpisodeDisplayType.Single.value
 
             case self.ID_EPISODE_IN_SECTION:
-                Config.Misc.episode_display_mode = EpisodeDisplayType.InSection.value
+                Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
 
             case self.ID_EPISODE_ALL_SECTIONS:
                 Config.Misc.episode_display_mode = EpisodeDisplayType.All.value

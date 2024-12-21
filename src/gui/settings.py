@@ -933,7 +933,7 @@ class MiscTab(wx.Panel):
             case EpisodeDisplayType.Single:
                 self.episodes_single_choice.SetValue(True)
 
-            case EpisodeDisplayType.InSection:
+            case EpisodeDisplayType.In_Section:
                 self.episodes_in_section_choice.SetValue(True)
                 
             case EpisodeDisplayType.All:
@@ -959,7 +959,7 @@ class MiscTab(wx.Panel):
             Config.Misc.episode_display_mode = EpisodeDisplayType.Single.value
 
         elif self.episodes_in_section_choice.GetValue():
-            Config.Misc.episode_display_mode = EpisodeDisplayType.InSection.value
+            Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
 
         else:
             Config.Misc.episode_display_mode = EpisodeDisplayType.All.value

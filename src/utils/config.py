@@ -83,10 +83,6 @@ class Config:
     class Type:
         UNDEFINED: int = 0                           # 未定义
 
-        MERGE_TYPE_ALL: int = 0                      # 合成视频和音频
-        MERGE_TYPE_VIDEO: int = 1                    # 仅下载视频
-        MERGE_TYPE_AUDIO: int = 2                    # 仅下载音频
-
         PROXY_DISABLE: int = 0                       # 不使用代理
         PROXY_FOLLOW: int = 1                        # 跟随系统
         PROXY_CUSTOM: int = 2                        # 手动设置

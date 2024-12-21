@@ -31,7 +31,7 @@ class EpisodeInfo:
 
 def video_ugc_season_parser(info_json: dict, cid: int):
     def episode_display_in_section():
-        if Config.Misc.episode_display_mode == EpisodeDisplayType.InSection.value:
+        if Config.Misc.episode_display_mode == EpisodeDisplayType.In_Section.value:
             EpisodeInfo.clear_episode_data()
 
             for episode in _in_section:
@@ -124,7 +124,7 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
                 case EpisodeDisplayType.Single:
                     episode_display_in_section([episode], main_episode)
 
-                case EpisodeDisplayType.InSection:
+                case EpisodeDisplayType.In_Section:
                     episode_display_in_section(episodes_list, main_episode)
 
             return False

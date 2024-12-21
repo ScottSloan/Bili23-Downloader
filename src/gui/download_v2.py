@@ -22,7 +22,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, MergeType
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -333,12 +333,12 @@ class DownloadManagerWindow(Frame):
         def _show_notification_failed():
             match message.status:
                 case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
-                    match message.video_merge_type:
-                        case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
+                    match MergeType(message.video_merge_type):
+                        case MergeType.Video_And_Audio | MergeType.Only_Video:
                             _title = "合成失败"
                             _message = f'任务 "{message.video_title}" 合成失败'
 
-                        case Config.Type.MERGE_TYPE_AUDIO:
+                        case MergeType.Only_Audio:
                             _title = "转换失败"
                             _message = f'任务 "{message.video_title}" 转换失败'
 
@@ -491,7 +491,7 @@ class DownloadUtils:
 
             else:
                 # 视频不存在音频，标记 flag 为仅下载视频
-                self.task_info.video_merge_type = Config.Type.MERGE_TYPE_VIDEO
+                self.task_info.video_merge_type = MergeType.Only_Video.value
 
         try:
             json_dash = get_json()
@@ -512,15 +512,15 @@ class DownloadUtils:
 
         _temp_info = []
 
-        match self.task_info.video_merge_type:
-            case Config.Type.MERGE_TYPE_ALL:
+        match MergeType(self.task_info.video_merge_type):
+            case MergeType.Video_And_Audio:
                 _temp_info.append(self._get_video_downloader_info())
                 _temp_info.append(self._get_audio_downloader_info())
 
-            case Config.Type.MERGE_TYPE_VIDEO:
+            case MergeType.Only_Video:
                 _temp_info.append(self._get_video_downloader_info())
             
-            case Config.Type.MERGE_TYPE_AUDIO:
+            case MergeType.Only_Audio:
                 _temp_info.append(self._get_audio_downloader_info())
 
         return _temp_info
@@ -583,14 +583,14 @@ class DownloadUtils:
                 _rename_cmd = "mv"
                 _extra = ""
 
-        match self.task_info.video_merge_type:
-            case Config.Type.MERGE_TYPE_ALL:
+        match MergeType(self.task_info.video_merge_type):
+            case MergeType.Video_And_Audio:
                 _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
 
-            case Config.Type.MERGE_TYPE_VIDEO:
+            case MergeType.Only_Video:
                 _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
 
-            case Config.Type.MERGE_TYPE_AUDIO:
+            case MergeType.Only_Audio:
                 _cmd = _get_audio_cmd()
 
         override_file([self.full_file_name])
@@ -598,7 +598,7 @@ class DownloadUtils:
         return _cmd
 
     def _run_subprocess(self, cmd: str):
-        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
+        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
 
     def _get_video_downloader_info(self):
         info = DownloaderInfo()
@@ -687,11 +687,11 @@ class DownloadUtils:
 
     @property
     def full_file_name(self):
-        match self.task_info.video_merge_type:
-            case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
+        match MergeType(self.task_info.video_merge_type):
+            case MergeType.Video_And_Audio | MergeType.Only_Video:
                 return f"{self.file_title}.mp4"
 
-            case Config.Type.MERGE_TYPE_AUDIO:
+            case MergeType.Only_Audio:
                 if self.task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
                     return f"{self.file_title}.mp3"
                 else:
@@ -1026,7 +1026,7 @@ class DownloadTaskPanel(wx.Panel):
             self.pause_btn.Enable(False)
             self.stop_btn.Enable(False)
 
-            if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
+            if self.task_info.video_merge_type == MergeType.Only_Audio.value:
                 self.speed_lab.SetLabel("正在转换音频...")
             else:
                 self.speed_lab.SetLabel("正在合成视频...")
@@ -1079,7 +1079,7 @@ class DownloadTaskPanel(wx.Panel):
             # 合成失败回调函数
             self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGE_FAILED)
 
-            if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
+            if self.task_info.video_merge_type == MergeType.Only_Audio.value:
                 self.speed_lab.SetLabel("音频转换失败，点击查看详情")
             else:
                 self.speed_lab.SetLabel("视频合成失败，点击查看详情")
@@ -1149,12 +1149,12 @@ class DownloadTaskPanel(wx.Panel):
         else:
             self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
 
-        match self.task_info.video_merge_type:
-            case Config.Type.MERGE_TYPE_ALL | Config.Type.MERGE_TYPE_VIDEO:
+        match MergeType(self.task_info.video_merge_type):
+            case MergeType.Video_And_Audio | MergeType.Only_Video:
                 self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_mapping, self.utils.task_info.video_quality_id))
                 self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_mapping, self.utils.task_info.video_codec_id))
 
-            case Config.Type.MERGE_TYPE_AUDIO:
+            case MergeType.Only_Audio:
                 self.video_quality_lab.SetLabel("音频")
                 self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_mapping, self.utils.task_info.audio_quality_id))
 
@@ -1181,7 +1181,7 @@ class DownloadTaskPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("重试")
 
-                    if self.task_info.video_merge_type == Config.Type.MERGE_TYPE_AUDIO:
+                    if self.task_info.video_merge_type == MergeType.Only_Audio.value:
                         self.speed_lab.SetLabel("音频转换失败")
                     else:
                         self.speed_lab.SetLabel("视频合成失败")

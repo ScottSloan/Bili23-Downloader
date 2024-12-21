@@ -14,7 +14,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, MergeType
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -172,7 +172,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.audio_quality_id = AudioInfo.audio_quality_id
 
         if AudioInfo.download_audio_only:
-            download_info.video_merge_type = Config.Type.MERGE_TYPE_AUDIO
+            download_info.video_merge_type = MergeType.Only_Audio.value
 
         download_info.download_type = download_type
 

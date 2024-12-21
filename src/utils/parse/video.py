@@ -201,7 +201,7 @@ class VideoParser:
             case EpisodeDisplayType.Single:
                 pages_parser()
 
-            case EpisodeDisplayType.InSection | EpisodeDisplayType.All:
+            case EpisodeDisplayType.In_Section | EpisodeDisplayType.All:
                 if "ugc_season" in VideoInfo.info_json:
                     VideoInfo.type = VideoType.Collection
 
