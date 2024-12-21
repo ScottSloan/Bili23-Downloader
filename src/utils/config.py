@@ -81,18 +81,6 @@ class Config:
         auto_clean: bool = True
 
     class Type:
-        UNDEFINED: int = 0                           # 未定义
-
-        PLAYER_PREFERENCE_DEFAULT: int = 0           # 系统默认
-        PLAYER_PREFERENCE_CUSTOM: int = 1            # 手动设置
-
-        GPU_NVIDIA: int = 0                          # NVIDIA GPU
-        GPU_AMD: int = 1                             # AMD GPU
-        GPU_INTEL: int = 2                           # INTEL GPU
-
-        CUSTOM_CDN_MODE_AUTO: int = 0                # 自动切换 CDN
-        CUSTOM_CDN_MODE_MANUAL: int = 1              # 手动指定 CDN
-
         DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
         DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载
         DOWNLOAD_STATUS_PAUSE: int = 2               # 暂停中

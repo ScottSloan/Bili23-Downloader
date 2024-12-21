@@ -39,3 +39,11 @@ class SubtitleType(Enum):
     SRT = 0               # SRT 格式
     TXT = 1               # TXT 格式
     JSON = 2              # JSON 格式
+
+class PlayerMode(Enum):
+    Default = 0           # 系统默认
+    Custom = 1            # 自定义
+
+class CDNMode(Enum):
+    Auto = 0              # 自动切换
+    Custom = 1            # 手动设置

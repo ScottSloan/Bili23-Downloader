@@ -9,6 +9,7 @@ from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread, ThreadPool
 from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
 from utils.common.map import cdn_mapping
+from utils.common.enums import CDNMode
 
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
@@ -318,7 +319,7 @@ class Downloader:
                     break
 
         if not total_size:
-            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == Config.Type.CUSTOM_CDN_MODE_AUTO:
+            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Auto.value:
                 return self.get_file_size(next(self.switch_cdn(url_list)), referer_url, path)
 
             self.onError()

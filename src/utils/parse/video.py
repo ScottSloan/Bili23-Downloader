@@ -30,7 +30,7 @@ class VideoInfo:
     @staticmethod
     def clear_video_info():
         VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
-        VideoInfo.cid = VideoInfo.type = Config.Type.UNDEFINED
+        VideoInfo.cid = VideoInfo.type = 0
 
         VideoInfo.pages_list.clear()
         VideoInfo.video_quality_id_list.clear()

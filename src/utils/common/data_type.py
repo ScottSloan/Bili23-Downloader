@@ -39,13 +39,13 @@ class DownloadTaskInfo:
         self.status: int = Config.Type.DOWNLOAD_STATUS_WAITING
 
         # 媒体信息，0 表示未定义
-        self.video_quality_id: int = Config.Type.UNDEFINED
-        self.audio_quality_id: int = Config.Type.UNDEFINED
-        self.video_codec_id: int = Config.Type.UNDEFINED
+        self.video_quality_id: int = 0
+        self.audio_quality_id: int = 0
+        self.video_codec_id: int = 0
         self.audio_type: str = ""
 
-        # 下载类型，1 为用户投稿视频，2 为番组
-        self.download_type: int = Config.Type.UNDEFINED
+        # 下载类型，1 为投稿视频，2 为番组
+        self.download_type: int = 0
         # 视频合成类型
         self.video_merge_type: int = 0
 

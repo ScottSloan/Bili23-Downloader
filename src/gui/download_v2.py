@@ -22,7 +22,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType
+from utils.common.enums import ParseType, MergeType, CDNMode
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -638,7 +638,7 @@ class DownloadUtils:
 
     def _get_all_available_download_url_list(self, entry: dict):
         def _replace(url: str):
-            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == Config.Type.CUSTOM_CDN_MODE_MANUAL:
+            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Custom:
                 return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url) 
             else:
                 return url

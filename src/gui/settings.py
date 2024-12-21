@@ -13,7 +13,7 @@ from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import EpisodeDisplayType, ProxyMode
+from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -268,11 +268,11 @@ class DownloadTab(wx.Panel):
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
         self.custom_cdn_box.SetValue(Config.Download.custom_cdn)
 
-        match Config.Download.custom_cdn_mode:
-            case Config.Type.CUSTOM_CDN_MODE_AUTO:
+        match CDNMode(Config.Download.custom_cdn_mode):
+            case CDNMode.Auto:
                 self.custom_cdn_auto_switch_radio.SetValue(True)
 
-            case Config.Type.CUSTOM_CDN_MODE_MANUAL:
+            case CDNMode.Custom:
                 self.custom_cdn_manual_radio.SetValue(True)
 
         self.onChangeSpeedLimitEVT(0)
@@ -939,11 +939,11 @@ class MiscTab(wx.Panel):
             case EpisodeDisplayType.All:
                 self.episodes_all_sections_choice.SetValue(True)
 
-        match Config.Misc.player_preference:
-            case Config.Type.PLAYER_PREFERENCE_DEFAULT:
+        match PlayerMode(Config.Misc.player_preference):
+            case PlayerMode.Default:
                 self.player_default_rdbtn.SetValue(True)
 
-            case Config.Type.PLAYER_PREFERENCE_CUSTOM:
+            case PlayerMode.Custom:
                 self.player_custom_rdbtn.SetValue(True)
 
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
@@ -965,9 +965,9 @@ class MiscTab(wx.Panel):
             Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
         if self.player_default_rdbtn.GetValue():
-            Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_DEFAULT
+            Config.Misc.player_preference = PlayerMode.Default.value
         else:
-            Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_CUSTOM
+            Config.Misc.player_preference = PlayerMode.Custom.value
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.player_path_box.GetValue()
