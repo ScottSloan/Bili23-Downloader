@@ -47,3 +47,15 @@ class PlayerMode(Enum):
 class CDNMode(Enum):
     Auto = 0              # 自动切换
     Custom = 1            # 手动设置
+
+class DownloadStatus(Enum):
+    Waiting = 0           # 等待下载
+    Downloading = 1       # 下载中
+    Pause = 2             # 暂停中
+    Merging = 3           # 合成中
+    Complete = 4          # 下载完成
+    Download_Failed = 5   # 下载失败
+    Merge_Failed = 6      # 合成失败
+
+    Alive = [Waiting, Downloading, Pause]
+    Alive_Ex = [Waiting, Downloading, Pause, Merge_Failed, Download_Failed]

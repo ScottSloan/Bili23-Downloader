@@ -1,10 +1,10 @@
 from typing import Callable, List, Dict
 
+from utils.common.enums import DownloadStatus
+
 class DownloadTaskInfo:
     # 下载任务信息
     def __init__(self):
-        from utils.config import Config
-
         # id，区分不同下载任务的唯一标识符
         self.id: int = 0
         # 序号，从 1 开始，0 为空
@@ -36,7 +36,7 @@ class DownloadTaskInfo:
         # 已下载完成的大小，单位字节
         self.completed_size: int = 0
         # 下载状态
-        self.status: int = Config.Type.DOWNLOAD_STATUS_WAITING
+        self.status: int = DownloadStatus.Waiting.value
 
         # 媒体信息，0 表示未定义
         self.video_quality_id: int = 0

@@ -22,7 +22,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType, CDNMode
+from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -131,7 +131,7 @@ class DownloadManagerWindow(Frame):
         # 暂停全部下载任务
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                if panel.task_info.status in DownloadStatus.Alive.value:
                     panel.onPause()
 
     def onStopAllEVT(self, event):
@@ -141,7 +141,7 @@ class DownloadManagerWindow(Frame):
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
                 # EX 列表还包含了下载失败和合成失败两种情况，当前正在合成的视频或者正在转换的音频暂不支持取消
-                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST_EX:
+                if panel.task_info.status in DownloadStatus.Alive_Ex.value:
                     panel.onStopEVT(event)
 
         self.download_task_list_panel.Thaw()
@@ -166,16 +166,16 @@ class DownloadManagerWindow(Frame):
 
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
+                if panel.task_info.status in DownloadStatus.Alive.value:
                     # 处于等待、下载中、暂停三种状态
-                    if self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
+                    if self.get_download_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         # 当前下载数小于设置的并行下载数
-                        if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE]:
+                        if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
                             # 等待和暂停的任务开始下载
                             panel.onResume()
                     else:
                         # 当前下载数大于设置的并行下载数
-                        if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+                        if panel.task_info.status == DownloadStatus.Downloading.value:
                             _count += 1
                             
                             if _count > Config.Download.max_download_count:
@@ -192,7 +192,7 @@ class DownloadManagerWindow(Frame):
 
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status == Config.Type.DOWNLOAD_STATUS_FINISHED:
+                if panel.task_info.status == DownloadStatus.Complete.value:
                     panel.onStopEVT(event)
 
         self.download_task_list_panel.Thaw()
@@ -229,8 +229,8 @@ class DownloadManagerWindow(Frame):
                     _task_info.load_from_dict(download_file_tool._read_download_file_json()["task_info"])
 
                     # 如果下载状态为等待下载，或者正在下载，则更新为暂停中
-                    if _task_info.status in Config.Type.DOWNLOAD_STATUS_ALIVE_LIST:
-                        _task_info.status = Config.Type.DOWNLOAD_STATUS_PAUSE
+                    if _task_info.status in DownloadStatus.Alive.value:
+                        _task_info.status = DownloadStatus.Pause.value
 
                     _download_task_info_list.append(_task_info)
 
@@ -243,8 +243,8 @@ class DownloadManagerWindow(Frame):
         # 开始下载
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status in [Config.Type.DOWNLOAD_STATUS_WAITING, Config.Type.DOWNLOAD_STATUS_PAUSE]:
-                    if self.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING]) < Config.Download.max_download_count:
+                if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
+                    if self.get_download_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.onResume()
 
     def get_download_task_panel_list(self):
@@ -331,8 +331,8 @@ class DownloadManagerWindow(Frame):
             notification.Show()
 
         def _show_notification_failed():
-            match message.status:
-                case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+            match DownloadStatus(message.status):
+                case DownloadStatus.Merge_Failed:
                     match MergeType(message.video_merge_type):
                         case MergeType.Video_And_Audio | MergeType.Only_Video:
                             _title = "合成失败"
@@ -342,14 +342,14 @@ class DownloadManagerWindow(Frame):
                             _title = "转换失败"
                             _message = f'任务 "{message.video_title}" 转换失败'
 
-                case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
+                case DownloadStatus.Download_Failed:
                     _title = "下载失败"
                     _message = f'任务 "{message.video_title}" 下载失败'
 
             notification = wx.adv.NotificationMessage(_title, _message,  parent = self, flags = wx.ICON_ERROR)
             notification.Show()
 
-        count = self.get_download_task_count(Config.Type.DOWNLOAD_STATUS_ALIVE_LIST)
+        count = self.get_download_task_count(DownloadStatus.Alive.value)
 
         if count:
             _label = f"{count} 个任务正在下载"
@@ -909,28 +909,28 @@ class DownloadTaskPanel(wx.Panel):
 
     def onPauseResumeEVT(self, event):
         # 暂停继续事件
-        match self.task_info.status:
-            case Config.Type.DOWNLOAD_STATUS_WAITING:
+        match DownloadStatus(self.task_info.status):
+            case DownloadStatus.Waiting:
                 # 等待下载的任务，开始下载
                 self.start_download()
 
-            case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+            case DownloadStatus.Downloading:
                 # 正在下载的任务，暂停
                 self.onPause()
 
-            case Config.Type.DOWNLOAD_STATUS_PAUSE:
+            case DownloadStatus.Pause:
                 # 暂停的任务，恢复下载
                 self.onResume()
 
-            case Config.Type.DOWNLOAD_STATUS_MERGING:
+            case DownloadStatus.Merging:
                 # 正在合成的任务，合成
                 self.onMerge()
 
-            case Config.Type.DOWNLOAD_STATUS_FINISHED:
+            case DownloadStatus.Complete:
                 # 下载完成的任务，打开文件所在位置
                 self.onOpenLocation()
 
-            case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED | Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+            case DownloadStatus.Download_Failed | DownloadStatus.Merge_Failed:
                 # 下载失败或合成失败，重试
                 self.onResume()
 
@@ -942,12 +942,12 @@ class DownloadTaskPanel(wx.Panel):
         self.downloader.onPause()
         
         # 更新下载状态为暂停中
-        self.update_download_status(Config.Type.DOWNLOAD_STATUS_PAUSE)
+        self.update_download_status(DownloadStatus.Pause.value)
 
     def onResume(self):
         # 继续下载
 
-        if self.task_info.status != Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+        if self.task_info.status != DownloadStatus.Downloading.value:
             if self.task_info.progress == 100:
                 # 下载完成，合成视频
                 self.onMerge()
@@ -1004,7 +1004,7 @@ class DownloadTaskPanel(wx.Panel):
             # 更新下载进度回调函数
             self.progress_bar.SetValue(info["progress"])
 
-            if self.task_info.status == Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+            if self.task_info.status == DownloadStatus.Downloading.value:
                 # 只有在下载状态时才更新下载速度
                 self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
 
@@ -1022,18 +1022,9 @@ class DownloadTaskPanel(wx.Panel):
 
             self.callback.onUpdateTaskCountCallback()
 
-            self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
-            self.pause_btn.Enable(False)
-            self.stop_btn.Enable(False)
-
-            if self.task_info.video_merge_type == MergeType.Only_Audio.value:
-                self.speed_lab.SetLabel("正在转换音频...")
-            else:
-                self.speed_lab.SetLabel("正在合成视频...")
-
             self.callback.onStartNextCallback()
         
-        self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGING)
+        self.update_download_status(DownloadStatus.Merging.value)
 
         wx.CallAfter(callback)
 
@@ -1041,12 +1032,7 @@ class DownloadTaskPanel(wx.Panel):
 
     def onMergeFinish(self):
         def callback():
-            self.update_download_status(Config.Type.DOWNLOAD_STATUS_FINISHED)
-            self.pause_btn.Enable(True)
-            self.stop_btn.Enable(True)
-
-            self.speed_lab.SetLabel("下载完成")
-            self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+            self.update_download_status(DownloadStatus.Complete.value)
 
             if Config.Download.delete_history:
                 self.download_file_tool.clear_download_info()
@@ -1077,18 +1063,7 @@ class DownloadTaskPanel(wx.Panel):
     def onMergeFailed(self, error_log: ErrorLog):
         def callback():
             # 合成失败回调函数
-            self.update_download_status(Config.Type.DOWNLOAD_STATUS_MERGE_FAILED)
-
-            if self.task_info.video_merge_type == MergeType.Only_Audio.value:
-                self.speed_lab.SetLabel("音频转换失败，点击查看详情")
-            else:
-                self.speed_lab.SetLabel("视频合成失败，点击查看详情")
-
-            self.speed_lab.SetForegroundColour(wx.Colour("red"))
-            self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-
-            self.pause_btn.Enable(True)
-            self.stop_btn.Enable(True)
+            self.update_download_status(DownloadStatus.Merge_Failed.value)
 
             message = NotificationMessage()
             message.video_title = self.task_info.title
@@ -1104,8 +1079,7 @@ class DownloadTaskPanel(wx.Panel):
     def onDownloadFailed(self):
         def callback():
             # 下载失败回调函数
-            self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED)
-            self.speed_lab.SetLabel("下载失败")
+            self.update_download_status(DownloadStatus.Download_Failed.value)
 
             message = NotificationMessage()
             message.video_title = self.task_info.title
@@ -1123,7 +1097,7 @@ class DownloadTaskPanel(wx.Panel):
         FileDirectoryTool.open_file_location(path)
 
     def onShowErrorInfoDialogEVT(self, event):
-        if hasattr(self, "_error_log") and self.task_info.status == Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+        if hasattr(self, "_error_log") and self.task_info.status == DownloadStatus.Merge_Failed.value:
             dlg = ErrorInfoDialog(self._parent_download_manager, self._error_log)
             dlg.ShowModal()
 
@@ -1139,7 +1113,7 @@ class DownloadTaskPanel(wx.Panel):
             self.downloader.start_download(downloader_info_list)
 
         # 更新下载状态为正在下载
-        self.update_download_status(Config.Type.DOWNLOAD_STATUS_DOWNLOADING)
+        self.update_download_status(DownloadStatus.Downloading.value)
 
         Thread(target = worker).start()
 
@@ -1160,35 +1134,50 @@ class DownloadTaskPanel(wx.Panel):
 
     def update_download_status(self, status: int):
         def update_btn_icon():
-            match self.task_info.status:
-                case Config.Type.DOWNLOAD_STATUS_DOWNLOADING:
+            match DownloadStatus(self.task_info.status):
+                case DownloadStatus.Downloading:
                     # 正在下载，显示暂停图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载信息...")
 
-                case Config.Type.DOWNLOAD_STATUS_PAUSE:
+                case DownloadStatus.Pause:
                     # 暂停中，显示继续下载图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中")
 
-                case Config.Type.DOWNLOAD_STATUS_MERGE_FAILED:
+                case DownloadStatus.Merging:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+
+                    if self.task_info.video_merge_type == MergeType.Only_Audio.value:
+                        self.speed_lab.SetLabel("正在转换音频...")
+                    else:
+                        self.speed_lab.SetLabel("正在合成视频...")
+                    
+                    self.pause_btn.Enable(False)
+                    self.stop_btn.Enable(False)
+
+                case DownloadStatus.Merge_Failed:
                     # 合成失败，显示重试图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
 
                     if self.task_info.video_merge_type == MergeType.Only_Audio.value:
-                        self.speed_lab.SetLabel("音频转换失败")
+                        self.speed_lab.SetLabel("音频转换失败，点击查看详情")
                     else:
-                        self.speed_lab.SetLabel("视频合成失败")
+                        self.speed_lab.SetLabel("视频合成失败，点击查看详情")
 
+                    self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
                     self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
-                case Config.Type.DOWNLOAD_STATUS_DOWNLOAD_FAILED:
+                    self.pause_btn.Enable(True)
+                    self.stop_btn.Enable(True)
+
+                case DownloadStatus.Download_Failed:
                     # 下载失败，显示重试图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
@@ -1196,7 +1185,7 @@ class DownloadTaskPanel(wx.Panel):
                     self.speed_lab.SetLabel("下载失败")
                     self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
-                case Config.Type.DOWNLOAD_STATUS_FINISHED:
+                case DownloadStatus.Complete:
                     # 下载完成，显示打开文件所在位置图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.FOLDER_ICON))
 
@@ -1204,6 +1193,11 @@ class DownloadTaskPanel(wx.Panel):
                     self.speed_lab.SetLabel("下载完成")
 
                     self.stop_btn.SetToolTip("清除记录")
+
+                    self.pause_btn.Enable(True)
+                    self.stop_btn.Enable(True)
+
+                    self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
         # 更新下载状态
         self.task_info.status = status

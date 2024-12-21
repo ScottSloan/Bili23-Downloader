@@ -1,7 +1,7 @@
 import os
 import json
 import platform
-from typing import List, Dict
+from typing import Dict
 
 class Config:
     class Sys:
@@ -79,18 +79,6 @@ class Config:
         override_file: bool = False
         m4a_to_mp3: bool = True
         auto_clean: bool = True
-
-    class Type:
-        DOWNLOAD_STATUS_WAITING: int = 0             # 等待下载
-        DOWNLOAD_STATUS_DOWNLOADING: int = 1         # 正在下载
-        DOWNLOAD_STATUS_PAUSE: int = 2               # 暂停中
-        DOWNLOAD_STATUS_MERGING: int = 3             # 正在合成
-        DOWNLOAD_STATUS_FINISHED: int = 4            # 下载完成
-        DOWNLOAD_STATUS_DOWNLOAD_FAILED: int = 5     # 下载失败
-        DOWNLOAD_STATUS_MERGE_FAILED: int = 6        # 合成失败
-
-        DOWNLOAD_STATUS_ALIVE_LIST: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE]
-        DOWNLOAD_STATUS_ALIVE_LIST_EX: List[int] = [DOWNLOAD_STATUS_WAITING, DOWNLOAD_STATUS_DOWNLOADING, DOWNLOAD_STATUS_PAUSE, DOWNLOAD_STATUS_MERGE_FAILED, DOWNLOAD_STATUS_DOWNLOAD_FAILED]
 
     class Temp:
         download_window_pos = None

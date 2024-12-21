@@ -17,7 +17,7 @@ from utils.common.error import ErrorCallback, ErrorCode
 from utils.common.map import video_quality_mapping, live_quality_mapping
 from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
@@ -303,7 +303,7 @@ class MainWindow(Frame):
         self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
 
     def onCloseEVT(self, event):
-        if self.download_window.get_download_task_count([Config.Type.DOWNLOAD_STATUS_DOWNLOADING, Config.Type.DOWNLOAD_STATUS_MERGING]):
+        if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
             if dlg.ShowModal() == wx.ID_NO:
