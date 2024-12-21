@@ -15,7 +15,7 @@ class Config:
         version_code: int = 1540
 
         # 断点续传文件最低支持版本号
-        _task_file_min_version_code: int = 1532
+        _task_file_min_version_code: int = 1540
 
         release_date: str = "2024/12/20"
 

@@ -170,12 +170,6 @@ class TaskPanelCallback:
         self.onStopCallbacak: Callable = None
         self.onUpdateTaskCountCallback: Callable = None
 
-class ErrorLog:
-    def __init__(self):
-        self.log: str = ""
-        self.time: str = ""
-        self.return_code: int = 0
-
 class NotificationMessage:
     def __init__(self):
         self.video_title: str = ""

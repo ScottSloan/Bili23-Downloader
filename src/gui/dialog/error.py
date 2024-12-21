@@ -2,13 +2,12 @@ import wx
 import wx.adv
 
 from utils.config import Config
-from utils.common.data_type import ErrorLog
 
 class ErrorInfoDialog(wx.Dialog):
-    def __init__(self, parent, error_log: ErrorLog):
+    def __init__(self, parent, error_log: dict):
         self.error_log = error_log
 
-        wx.Dialog.__init__(self, parent, -1, "错误信息")
+        wx.Dialog.__init__(self, parent, -1, "错误日志")
 
         self.init_UI()
 
@@ -22,27 +21,47 @@ class ErrorInfoDialog(wx.Dialog):
                 self.SetBackgroundColour("white")
                 self.log_box.SetBackgroundColour("white")
 
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
-        self.detail_lab = wx.StaticText(self, -1, f"时间：{self.error_log.time}      返回值：{self.error_log.return_code}")
+
+        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(self.error_log["timestamp"]))
+        source_lab = wx.StaticText(self, -1, "来源：")
+        event_id_lab = wx.StaticText(self, -1, "错误 ID：")
+        return_code_lab = wx.StaticText(self, -1, "返回值：{}".format(self.error_log["return_code"]))
+
+        box_sizer = wx.FlexGridSizer(2, 2, 0, 75)
+        box_sizer.Add(time_lab, 0, wx.ALL, 10)
+        box_sizer.Add(source_lab, 0, wx.ALL, 10)
+        box_sizer.Add(event_id_lab, 0, wx.ALL, 10)
+        box_sizer.Add(return_code_lab, 0, wx.ALL, 10)
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_hbox.Add(err_icon, 0, wx.ALL, 10)
-        top_hbox.Add(self.detail_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(err_icon, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(box_sizer, 0, wx.ALL | wx.EXPAND, 10)
 
         top_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = wx.TextCtrl(self, -1, self.error_log.log, size = self.FromDIP((500, 230)), style = wx.TE_MULTILINE)
+        self.log_box = wx.TextCtrl(self, -1, self.error_log["log"], size = self.FromDIP((550, 230)), style = wx.TE_MULTILINE)
         self.log_box.SetFont(font)
 
-        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.FromDIP((80, 28)))
+        self.save_btn = wx.Button(self, -1, "保存到文件", size = _get_scale_size((100, 28)))
+        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 28)))
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
+        bottom_hbox.Add(self.save_btn, 0, wx.ALL, 10)
         bottom_hbox.Add(self.close_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)

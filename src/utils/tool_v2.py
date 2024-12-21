@@ -6,7 +6,7 @@ import requests
 import subprocess
 import requests.auth
 from datetime import datetime
-from typing import Optional, Callable, List, Dict
+from typing import Optional, Callable, List
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo
@@ -181,14 +181,14 @@ class DownloadFileTool:
             return {
                 "min_version": Config.APP._task_file_min_version_code
             }
-        
+
         # 保存断点续传信息，适用于初次添加下载任务
         contents = self._read_download_file_json()
 
         contents["header"] = _header()
         contents["task_info"] = info.to_dict()
+        contents["error_info"] = self.get_error_info()
 
-        # 检查是否已断点续传信息
         if not contents:
             contents["thread_info"] = {}
 
@@ -208,11 +208,19 @@ class DownloadFileTool:
 
             self._write_download_file(contents)
 
-    def update_thread_info(self, thread_info: Dict):
+    def update_thread_info(self, thread_info: dict):
         contents = self._read_download_file_json()
 
         if contents is not None:
             contents["thread_info"] = thread_info
+
+            self._write_download_file(contents)
+
+    def update_error_info(self, error_info: dict):
+        contents = self._read_download_file_json()
+
+        if contents is not None:
+            contents["error_info"] = error_info
 
             self._write_download_file(contents)
 
@@ -221,6 +229,15 @@ class DownloadFileTool:
 
         return contents.get("thread_info", {})
     
+    def get_error_info(self):
+        contents = self._read_download_file_json()
+
+        return contents.get("error_info", {
+            "timestamp": 0,
+            "return_code": 0,
+            "log": ""
+        })
+
     def _read_download_file_json(self):
         if os.path.exists(self.file_path):
             with open(self.file_path, "r", encoding = "utf-8") as f:
@@ -230,7 +247,7 @@ class DownloadFileTool:
                 except Exception:
                     return {}
 
-    def _write_download_file(self, contents: Dict):
+    def _write_download_file(self, contents: dict):
         with open(self.file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
@@ -402,6 +419,11 @@ class UniversalTool:
     def set_dpi_awareness():
         if Config.Sys.platform == "windows":
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
+    @staticmethod
+    def msw_set_utf8_encode():
+        if Config.Sys.platform == "windows":
+            subprocess.run("chcp 65001", shell = True)
 
 class FFmpegCheckTool:
     # FFmpeg 检查工具类

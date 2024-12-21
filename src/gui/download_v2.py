@@ -14,7 +14,7 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog, NotificationMessage
+from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, NotificationMessage
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
@@ -546,12 +546,13 @@ class DownloadUtils:
 
             self.callback.onMergeFinishCallback()
         else:
-            _error_log = ErrorLog()
-            _error_log.log = _process.stdout
-            _error_log.return_code = _process.returncode
-            _error_log.time = UniversalTool.get_current_time()
+            _error_info = {
+                "timestamp": round(time.time()),
+                "return_code": _process.returncode,
+                "log": _process.stdout
+            }
 
-            self.callback.onMergeFailedCallback(_error_log)
+            self.callback.onMergeFailedCallback(_error_info)
 
     def _get_shell_cmd(self):
         def _get_audio_cmd():
@@ -598,7 +599,7 @@ class DownloadUtils:
         return _cmd
 
     def _run_subprocess(self, cmd: str):
-        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
+        return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8", errors = "ignore")
 
     def _get_video_downloader_info(self):
         info = DownloaderInfo()
@@ -1060,7 +1061,7 @@ class DownloadTaskPanel(wx.Panel):
 
         wx.CallAfter(callback)
 
-    def onMergeFailed(self, error_log: ErrorLog):
+    def onMergeFailed(self, error_info: dict):
         def callback():
             # 合成失败回调函数
             self.update_download_status(DownloadStatus.Merge_Failed.value)
@@ -1072,7 +1073,7 @@ class DownloadTaskPanel(wx.Panel):
 
             self.callback.onUpdateTaskCountCallback(message)
         
-        self._error_log = error_log
+        self.download_file_tool.update_error_info(error_info)
 
         wx.CallAfter(callback)
 
@@ -1097,8 +1098,8 @@ class DownloadTaskPanel(wx.Panel):
         FileDirectoryTool.open_file_location(path)
 
     def onShowErrorInfoDialogEVT(self, event):
-        if hasattr(self, "_error_log") and self.task_info.status == DownloadStatus.Merge_Failed.value:
-            dlg = ErrorInfoDialog(self._parent_download_manager, self._error_log)
+        if self.task_info.status == DownloadStatus.Merge_Failed.value:
+            dlg = ErrorInfoDialog(self._parent_download_manager, self.download_file_tool.get_error_info())
             dlg.ShowModal()
 
     def onShowCoverViewerDialogEVT(self, event):
