@@ -15,13 +15,14 @@ from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, ErrorLog, NotificationMessage
-from utils.icon_v2 import IconManager, IconType
+from utils.common.icon_v2 import IconManager, IconType
 from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
+from utils.common.enums import ParseType
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -376,8 +377,8 @@ class DownloadUtils:
                 req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
                 return json.loads(req.text)
         
-            match self.task_info.download_type:
-                case Config.Type.VIDEO:
+            match ParseType(self.task_info.download_type):
+                case ParseType.Video:
                     params = {
                         "bvid": self.task_info.bvid,
                         "cid": self.task_info.cid,
@@ -392,12 +393,15 @@ class DownloadUtils:
 
                     return json_dash["data"]["dash"]
                 
-                case Config.Type.BANGUMI:
+                case ParseType.Bangumi:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
                     json_dash = request_get(url)
 
                     return json_dash["result"]["dash"]
+                
+                case _:
+                    self.callback.onDownloadFailedCallback()
         
         def get_video_available_quality():
             # 获取视频最高清晰度

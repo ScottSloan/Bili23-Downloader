@@ -82,9 +82,6 @@ class Config:
 
     class Type:
         UNDEFINED: int = 0                           # 未定义
-        VIDEO: int = 1                               # 用户投稿视频
-        BANGUMI: int = 2                             # 番组
-        LIVE: int = 3                                # 直播
 
         VIDEO_TYPE_SINGLE: int = 1                   # 单个视频
         VIDEO_TYPE_PAGES: int = 2                    # 分 P 视频

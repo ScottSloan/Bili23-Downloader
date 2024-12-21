@@ -2,7 +2,7 @@ import wx
 import webbrowser
 
 from utils.config import Config
-from utils.icon_v2 import IconManager, IconType
+from utils.common.icon_v2 import IconManager, IconType
 
 from .license import LicenseWindow
 

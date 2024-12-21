@@ -15,8 +15,9 @@ from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
 from utils.common.error import ErrorCallback, ErrorCode
 from utils.common.map import video_quality_mapping, live_quality_mapping
-from utils.icon_v2 import IconManager, IconType
+from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
+from utils.common.enums import ParseType
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
@@ -27,6 +28,7 @@ from gui.settings import SettingWindow
 from gui.login import LoginWindow
 from gui.dialog.converter import ConverterWindow
 from gui.dialog.live import LiveRecordingWindow
+from gui.dialog.option import OptionDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -275,7 +277,6 @@ class MainWindow(Frame):
         self.download_window = DownloadManagerWindow(self)
 
         self.download_window_opened = False
-        self.parse_finish_flag = False
 
         self.init_user_info()
 
@@ -338,28 +339,29 @@ class MainWindow(Frame):
         # 开启解析线程
         self.onRedirect(url)
 
-        self.parse_finish_flag = False
-
     def parseThread(self, url: str):
         def callback():
-            if self.current_parse_type != Config.Type.LIVE:
-                self.parse_finish_flag = True
+            match self.current_parse_type:
+                case ParseType.Video |  ParseType.Bangumi:
+                    self.episode_option_btn.Enable(True)
+                    self.download_option_btn.Enable(True)
+
+                case ParseType.Live:
+                    self.episode_option_btn.Enable(False)
+                    self.download_option_btn.Enable(True)
 
             self.processing_window.Hide()
 
             self.download_btn.Enable(True)
-
-            self.treelist.SetFocus()
             
-            self.treelist.set_list()
-            self.update_video_count_label()
+            self.show_episode_list()
 
         continue_to_parse = True
 
         match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
             case "av" | "BV":
                 # 用户投稿视频
-                self.current_parse_type = Config.Type.VIDEO
+                self.current_parse_type = ParseType.Video
 
                 continue_to_parse = self.video_parser.parse_url(url)
 
@@ -369,7 +371,7 @@ class MainWindow(Frame):
 
             case "ep" | "ss" | "md":
                 # 番组
-                self.current_parse_type = Config.Type.BANGUMI
+                self.current_parse_type = ParseType.Bangumi
 
                 self.bangumi_parser.parse_url(url)
 
@@ -377,7 +379,7 @@ class MainWindow(Frame):
 
             case "live":
                 # 直播
-                self.current_parse_type = Config.Type.LIVE
+                self.current_parse_type = ParseType.Live
 
                 self.live_parser.parse_url(url)
 
@@ -433,7 +435,7 @@ class MainWindow(Frame):
             self.live_parser.get_live_stream(live_qn_id)
 
         # 直播类型视频跳转合成窗口
-        if self.current_parse_type == Config.Type.LIVE:
+        if self.current_parse_type == ParseType.Live:
             if LiveInfo.status == Config.Type.LIVE_STATUS_0:
                 # 未开播，无法解析
                 wx.MessageDialog(self, "直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING).ShowModal()
@@ -479,12 +481,14 @@ class MainWindow(Frame):
         self.download_window.SetFocus()
 
     def setVideoQualityList(self):
-        if self.current_parse_type == Config.Type.VIDEO:
-            video_quality_id_list = VideoInfo.video_quality_id_list
-            video_quality_desc_list = VideoInfo.video_quality_desc_list
-        else:
-            video_quality_id_list = BangumiInfo.video_quality_id_list
-            video_quality_desc_list = BangumiInfo.video_quality_desc_list
+        match self.current_parse_type:
+            case ParseType.Video:
+                video_quality_id_list = VideoInfo.video_quality_id_list
+                video_quality_desc_list = VideoInfo.video_quality_desc_list
+
+            case ParseType.Bangumi:
+                video_quality_id_list = BangumiInfo.video_quality_id_list
+                video_quality_desc_list = BangumiInfo.video_quality_desc_list
 
         # 自动在最前添加自动选项
         video_quality_desc_list.insert(0, "自动")
@@ -523,7 +527,7 @@ class MainWindow(Frame):
             case ErrorCode.VIP_Required:
                 msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号后再试"
             
-                if self.current_parse_type == Config.Type.BANGUMI:
+                if self.current_parse_type == ParseType.Bangumi:
                     if BangumiInfo.payment and Config.User.login:
                         msg = "解析失败：此视频需要付费购买，请确保已经购买此视频后再试"
             
@@ -539,8 +543,6 @@ class MainWindow(Frame):
         self.download_btn.Enable(False)
 
         wx.CallAfter(self.SetFocus)
-
-        self.parse_finish_flag = False
 
         raise Exception
 
@@ -650,21 +652,16 @@ class MainWindow(Frame):
 
             return context_menu
         
-        if self.parse_finish_flag:
-            self.PopupMenu(_get_menu())
+        self.PopupMenu(_get_menu())
 
     def onDownloadOptionEVT(self, event):
         def callback(index: int, enable: bool):
             self.video_quality_choice.SetSelection(index)
             self.video_quality_choice.Enable(enable)
             self.video_quality_lab.Enable(enable)
-
-        # 只有解析成功才会显示音频菜单
-        if self.parse_finish_flag:
-            from gui.dialog.option import OptionDialog
-
-            dlg = OptionDialog(self, callback)
-            dlg.ShowModal()
+        
+        dlg = OptionDialog(self, callback)
+        dlg.ShowModal()
 
     def onEpisodeOptionMenuEVT(self, event):
         def _clear():
@@ -687,10 +684,10 @@ class MainWindow(Frame):
         _clear()
 
         match self.current_parse_type:
-            case Config.Type.VIDEO:
+            case ParseType.Video:
                 self.video_parser.parse_episodes()
 
-            case Config.Type.BANGUMI:
+            case ParseType.Bangumi:
                 self.bangumi_parser.parse_episodes()
 
         self.treelist.set_list()
@@ -703,16 +700,21 @@ class MainWindow(Frame):
             _total = f"(共 {self.treelist._index} 个)"
 
         match self.current_parse_type:
-            case Config.Type.VIDEO:
+            case ParseType.Video:
                 _type = "投稿视频"
 
-            case Config.Type.BANGUMI:
+            case ParseType.Bangumi:
                 _type = BangumiInfo.type_name
 
-            case Config.Type.LIVE:
+            case ParseType.Live:
                 _type = "直播"
         
         self.type_lab.SetLabel(f"{_type} {_total}")
+
+    def show_episode_list(self):
+        self.treelist.set_list()
+
+        self.update_video_count_label()
 
     def show_user_info_thread(self):
         def _process(image: wx.Image):

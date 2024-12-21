@@ -12,7 +12,7 @@ from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
-from utils.icon_v2 import IconManager, IconType
+from utils.common.icon_v2 import IconManager, IconType
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):

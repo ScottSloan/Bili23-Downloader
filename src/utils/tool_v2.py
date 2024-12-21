@@ -10,6 +10,7 @@ from typing import Optional, Callable, List, Dict
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo
+from utils.common.enums import ParseType
 
 class RequestTool:
     # 请求工具类
@@ -260,13 +261,13 @@ class FormatTool:
     @staticmethod
     def format_duration(episode: dict, flag: int):
         match flag:
-            case Config.Type.VIDEO:
+            case ParseType.Video:
                 if "arc" in episode:
                     duration = episode["arc"]["duration"]
                 else:
                     duration = episode["duration"]
 
-            case Config.Type.BANGUMI:
+            case ParseType.Bangumi:
                 if "duration" in episode:
                     duration = episode["duration"] / 1000
                 else:

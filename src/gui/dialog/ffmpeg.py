@@ -1,7 +1,7 @@
 import wx
 
 from utils.tool_v2 import FFmpegCheckTool
-from utils.icon_v2 import IconManager, IconType
+from utils.common.icon_v2 import IconManager, IconType
 from utils.config import Config
 
 class DetectDialog(wx.Dialog):

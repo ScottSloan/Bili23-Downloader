@@ -9,6 +9,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
+from utils.common.enums import ParseType
 
 class VideoInfo:
     url: str = ""
@@ -191,7 +192,7 @@ class VideoParser:
                     "title": page["part"],
                     "cid": page["cid"],
                     "badge": "",
-                    "duration": FormatTool.format_duration(page, Config.Type.VIDEO)
+                    "duration": FormatTool.format_duration(page, ParseType.Video)
                 })
 
         EpisodeInfo.clear_episode_data()

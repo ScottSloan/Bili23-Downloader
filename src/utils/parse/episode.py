@@ -1,5 +1,6 @@
 from utils.config import Config
 from utils.tool_v2 import FormatTool
+from utils.common.enums import ParseType
 
 class EpisodeInfo:
     data: dict = {}
@@ -51,7 +52,7 @@ def video_ugc_season_parser(info_json: dict, cid: int):
             "title": _get_title(episode),
             "cid": episode["cid"],
             "badge": "",
-            "duration": FormatTool.format_duration(episode, Config.Type.VIDEO)
+            "duration": FormatTool.format_duration(episode, ParseType.Video)
         }
 
     def _get_node(title: str, duration: str = ""):
@@ -71,7 +72,7 @@ def video_ugc_season_parser(info_json: dict, cid: int):
                 if episode["cid"] == cid:
                     _in_section = section["episodes"]
             else:
-                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_node(episode["title"], FormatTool.format_duration(episode, Config.Type.VIDEO)))
+                EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_node(episode["title"], FormatTool.format_duration(episode, ParseType.Video)))
 
                 for page in episode["pages"]:
                     EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], _get_entry(page))
@@ -137,7 +138,7 @@ def bangumi_episodes_parser(info_json: dict, ep_id: int):
             "cid": episode["cid"],
             "ep_id": episode["ep_id"],
             "badge": episode["badge"],
-            "duration": FormatTool.format_duration(episode, Config.Type.BANGUMI)
+            "duration": FormatTool.format_duration(episode, ParseType.Bangumi)
         }
 
     if bangumi_main_episodes_parser(info_json):

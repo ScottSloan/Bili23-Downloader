@@ -5,7 +5,7 @@ import wx.dataview
 from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
-from utils.icon_v2 import IconManager, IconType
+from utils.common.icon_v2 import IconManager, IconType
 from utils.tool_v2 import UniversalTool
 from utils.config import Config
 from utils.parse.video import VideoInfo
@@ -14,6 +14,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
+from utils.common.enums import ParseType
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -131,10 +132,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def get_all_checked_item(self, video_quality_id: Optional[int] = None):
         def get_item_info(title: str, cid: int):
             match self._main_window.current_parse_type:
-                case Config.Type.VIDEO:
+                case ParseType.Video:
                     self.get_video_download_info(title, EpisodeInfo.cid_dict.get(cid))
 
-                case Config.Type.BANGUMI:
+                case ParseType.Bangumi:
                     self.get_bangumi_download_info(title, EpisodeInfo.cid_dict.get(cid))
 
         self.video_quality_id = video_quality_id
@@ -194,7 +195,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         cid = entry["cid"]
         referer_url = VideoInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url, bvid, cid))
     
     def get_bangumi_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -208,7 +209,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         referer_url = BangumiInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url, bvid, cid))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):
