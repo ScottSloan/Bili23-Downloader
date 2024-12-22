@@ -8,7 +8,7 @@ from utils.config import Config
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread, ThreadPool
 from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
-from utils.common.map import cdn_mapping
+from utils.common.map import cdn_map
 from utils.common.enums import CDNMode
 
 class Downloader:
@@ -339,5 +339,5 @@ class Downloader:
         def _replace(url: str, cdn: str):
             return re.sub(r'(?<=https://)[^/]+', cdn, url)
 
-        for cdn in cdn_mapping.values():
+        for cdn in cdn_map.values():
             yield [_replace(url, cdn) for url in url_list]

@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
-from utils.common.map import audio_quality_mapping, danmaku_format_mapping, subtitle_format_mapping, video_codec_mapping, get_mapping_index_by_value
+from utils.common.map import audio_quality_map, danmaku_format_map, subtitle_format_map, video_codec_map, get_mapping_index_by_value
 
 class OptionDialog(wx.Dialog):
     def __init__(self, parent, callback):
@@ -53,7 +53,7 @@ class OptionDialog(wx.Dialog):
 
         self.get_danmaku_chk = wx.CheckBox(self, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(self, -1, "弹幕文件格式")
-        self.danmaku_type_choice = wx.Choice(self, -1, choices = list(danmaku_format_mapping.keys()))
+        self.danmaku_type_choice = wx.Choice(self, -1, choices = list(danmaku_format_map.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(30)
@@ -62,7 +62,7 @@ class OptionDialog(wx.Dialog):
 
         self.get_subtitle_chk = wx.CheckBox(self, -1, "下载视频字幕")
         self.subtitle_format_lab = wx.StaticText(self, -1, "字幕文件格式")
-        self.subtitle_format_choice = wx.Choice(self, -1, choices = list(subtitle_format_mapping.keys()))
+        self.subtitle_format_choice = wx.Choice(self, -1, choices = list(subtitle_format_map.keys()))
 
         subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
         subtitle_hbox.AddSpacer(30)
@@ -132,8 +132,8 @@ class OptionDialog(wx.Dialog):
         self.audio_quality_choice.Set(_get_audio_quality_list())
         self.audio_quality_choice.SetSelection(_get_choice_index(AudioInfo.audio_quality_id))
 
-        self.video_codec_choice.Set(list(video_codec_mapping.keys()))
-        self.video_codec_choice.SetSelection(get_mapping_index_by_value(video_codec_mapping, Config.Download.video_codec_id))
+        self.video_codec_choice.Set(list(video_codec_map.keys()))
+        self.video_codec_choice.SetSelection(get_mapping_index_by_value(video_codec_map, Config.Download.video_codec_id))
 
         self.audio_only_chk.SetValue(AudioInfo.download_audio_only)
 
@@ -175,10 +175,10 @@ class OptionDialog(wx.Dialog):
         set_enable(self.get_subtitle_chk.GetValue())
 
     def onConfirmEVT(self, event):
-        AudioInfo.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
+        AudioInfo.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
         AudioInfo.download_audio_only = self.audio_only_chk.GetValue()
 
-        Config.Download.video_codec_id = video_codec_mapping[self.video_codec_choice.GetStringSelection()]
+        Config.Download.video_codec_id = video_codec_map[self.video_codec_choice.GetStringSelection()]
 
         ExtraInfo.get_danmaku = self.get_danmaku_chk.GetValue()
         ExtraInfo.danmaku_type = self.danmaku_type_choice.GetSelection()

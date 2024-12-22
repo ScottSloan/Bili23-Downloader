@@ -1,6 +1,6 @@
 from typing import Any
 
-bangumi_type_mapping = {
+bangumi_type_map = {
     1: "番剧",
     2: "电影",
     3: "纪录片",
@@ -9,7 +9,7 @@ bangumi_type_mapping = {
     7: "综艺"
 }
 
-video_quality_mapping = {
+video_quality_map = {
     "自动": 200,
     "超高清 8K": 127,
     "杜比视界": 126,
@@ -24,7 +24,7 @@ video_quality_mapping = {
     "流畅 360P": 16,
 }
 
-audio_quality_mapping = {
+audio_quality_map = {
     "自动": 30300,
     "Hi-Res 无损": 30251,
     "杜比全景声": 30250,
@@ -33,13 +33,13 @@ audio_quality_mapping = {
     "64K": 30216
 }
 
-video_codec_mapping = {
+video_codec_map = {
     "AVC/H.264": 7,
     "HEVC/H.265": 12,
     "AV1": 13
 }
 
-live_quality_mapping = {
+live_quality_map = {
     "自动": 40000,
     "杜比": 30000,
     "4K": 20000,
@@ -55,19 +55,19 @@ live_status_map = {
     2: "轮播中"
 }
 
-supported_gpu_mapping = {
+supported_gpu_map = {
     "NVIDIA": 1,
     "AMD": 2,
     "Intel": 3
 }
 
-video_sw_encoder_mapping = {
+video_sw_encoder_map = {
     0: "libx264",
     1: "libx265",
     2: "libaom-av1"
 }
 
-video_hw_encoder_mapping = {
+video_hw_encoder_map = {
     0: {
         0: "h264_nvenc",
         1: "hevc_nvenc",
@@ -85,18 +85,18 @@ video_hw_encoder_mapping = {
     }
 }
 
-danmaku_format_mapping = {
+danmaku_format_map = {
     "xml": 0,
     "protobuf": 1
 }
 
-subtitle_format_mapping = {
+subtitle_format_map = {
     "srt": 0,
     "txt": 1,
     "json": 2
 }
 
-download_status_mapping = {
+download_status_map = {
     0: "等待下载",
     1: "正在获取下载信息...",
     2: "暂停中",
@@ -106,7 +106,7 @@ download_status_mapping = {
     6: "视频合成失败"
 }
 
-cdn_mapping = {
+cdn_map = {
     0: "upos-sz-mirror08c.bilivideo.com",
     1: "upos-sz-mirrorcoso1.bilivideo.com",
     2: "upos-sz-mirrorhw.bilivideo.com",

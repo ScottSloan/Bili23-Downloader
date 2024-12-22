@@ -5,7 +5,7 @@ import requests
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 from utils.common.exception import GlobalException
-from utils.common.map import bangumi_type_mapping
+from utils.common.map import bangumi_type_map
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
@@ -149,7 +149,7 @@ class BangumiParser:
 
     def get_bangumi_type(self):
         # 识别番组类型
-        BangumiInfo.type_name = bangumi_type_mapping.get(BangumiInfo.type_id, "未知")
+        BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
 
     def parse_url(self, url: str):
         def worker():

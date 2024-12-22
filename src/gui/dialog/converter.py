@@ -5,7 +5,7 @@ import subprocess
 
 from utils.config import Config
 from utils.common.thread import Thread
-from utils.common.map import video_codec_mapping, supported_gpu_mapping, video_sw_encoder_mapping, video_hw_encoder_mapping
+from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 class ConverterWindow(wx.Dialog):
@@ -32,7 +32,7 @@ class ConverterWindow(wx.Dialog):
         def _get_gpu_list():
             match Config.Sys.platform:
                 case "windows" | "linux":
-                    return list(supported_gpu_mapping.keys())
+                    return list(supported_gpu_map.keys())
                 
                 case "darwin":
                     return ["VideoToolBox"]
@@ -58,7 +58,7 @@ class ConverterWindow(wx.Dialog):
         self.target_format_lab = wx.StaticText(self, -1, "目标格式：---")
 
         target_codec_lab = wx.StaticText(self, -1, "编码器")
-        self.target_codec_choice = wx.Choice(self, -1, choices = list(video_codec_mapping.keys()))
+        self.target_codec_choice = wx.Choice(self, -1, choices = list(video_codec_map.keys()))
 
         target_bitrate_lab = wx.StaticText(self, -1, "比特率")
         self.target_bitrate_box = wx.TextCtrl(self, -1, "1500")
@@ -235,12 +235,12 @@ class ConverterWindow(wx.Dialog):
             if self.hwaccel_chk.GetValue():
                 match Config.Sys.platform:
                     case "windows" | "linux":
-                        return video_hw_encoder_mapping[_target_gpu][_target_encoder]
+                        return video_hw_encoder_map[_target_gpu][_target_encoder]
 
                     case "darwin":
                         return _get_mac_accels()
             else:
-                return video_sw_encoder_mapping[_target_encoder]
+                return video_sw_encoder_map[_target_encoder]
 
         def _reset():
             self.progress_bar.SetValue(0)

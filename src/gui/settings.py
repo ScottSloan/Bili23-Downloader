@@ -11,7 +11,7 @@ from gui.dialog.ffmpeg import DetectDialog
 from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, subtitle_format_mapping, cdn_mapping, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, cdn_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
@@ -123,7 +123,7 @@ class DownloadTab(wx.Panel):
         self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
-        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_mapping.keys()))
+        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_map.keys()))
         self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.video_quality_tip.SetToolTip("说明")
@@ -134,7 +134,7 @@ class DownloadTab(wx.Panel):
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_mapping.keys()))
+        self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_map.keys()))
         self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.audio_quality_tip.SetToolTip("说明")
@@ -185,7 +185,7 @@ class DownloadTab(wx.Panel):
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "CDN")
-        self.custom_cdn_box = wx.ComboBox(self.scrolled_panel, -1, choices = list(cdn_mapping.values()))
+        self.custom_cdn_box = wx.ComboBox(self.scrolled_panel, -1, choices = list(cdn_map.values()))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
@@ -253,10 +253,10 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download_count))
         self.max_download_slider.SetValue(Config.Download.max_download_count)
         
-        self.video_quality_choice.SetSelection(get_mapping_index_by_value(video_quality_mapping, Config.Download.video_quality_id))
-        self.audio_quality_choice.SetSelection(get_mapping_index_by_value(audio_quality_mapping, Config.Download.audio_quality_id))
+        self.video_quality_choice.SetSelection(get_mapping_index_by_value(video_quality_map, Config.Download.video_quality_id))
+        self.audio_quality_choice.SetSelection(get_mapping_index_by_value(audio_quality_map, Config.Download.audio_quality_id))
 
-        self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_mapping, Config.Download.video_codec_id))
+        self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_map, Config.Download.video_codec_id))
 
         self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
@@ -287,9 +287,9 @@ class DownloadTab(wx.Panel):
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
-        Config.Download.video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
-        Config.Download.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
-        Config.Download.video_codec_id = video_codec_mapping[self.codec_choice.GetStringSelection()]
+        Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
+        Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
+        Config.Download.video_codec_id = video_codec_map[self.codec_choice.GetStringSelection()]
         Config.Download.enable_dolby = self.enable_dolby_chk.GetValue()
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
@@ -536,7 +536,7 @@ class ExtraTab(wx.Panel):
 
         self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
-        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_mapping.keys()))
+        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(30)
@@ -545,7 +545,7 @@ class ExtraTab(wx.Panel):
 
         self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
-        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_mapping.keys()))
+        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
 
         subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
         subtitle_hbox.AddSpacer(30)

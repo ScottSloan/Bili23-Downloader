@@ -14,7 +14,7 @@ from utils.auth.login import QRLogin
 from utils.common.thread import Thread
 from utils.tool_v2 import UniversalTool, FFmpegCheckTool
 from utils.common.exception import GlobalExceptionInfo, GlobalException
-from utils.common.map import video_quality_mapping, live_quality_mapping
+from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode
@@ -431,7 +431,7 @@ class MainWindow(Frame):
 
         def _get_live_stram():
             # 获取选定清晰度的直播流
-            live_qn_id = live_quality_mapping[self.video_quality_choice.GetStringSelection()]
+            live_qn_id = live_quality_map[self.video_quality_choice.GetStringSelection()]
 
             if live_qn_id == 40000:
                 live_qn_id = max(LiveInfo.live_quality_id_list)
@@ -454,7 +454,7 @@ class MainWindow(Frame):
 
             return
         
-        video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
+        video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
 
         # 获取要下载的视频列表
         self.treelist.get_all_checked_item(video_quality_id)

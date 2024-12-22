@@ -1,7 +1,6 @@
 import re
 import json
 import requests
-from typing import List, Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
@@ -22,8 +21,8 @@ class LiveInfo:
 
     m3u8_link: str = ""
 
-    live_quality_id_list: List = []
-    live_quality_desc_list: List = []
+    live_quality_id_list: list = []
+    live_quality_desc_list: list = []
 
 class LiveParser:
     def __init__(self, callback: ParseCallback):
@@ -103,7 +102,7 @@ class LiveParser:
         except Exception as e:
             raise GlobalException(e, callback = self.callback.error_callback)
 
-    def check_json(self, json: Dict):
+    def check_json(self, json: dict):
         # 检查接口返回状态码
         status_code = json["code"]
         

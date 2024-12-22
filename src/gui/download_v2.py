@@ -20,7 +20,7 @@ from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
-from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus
 from utils.common.exception import GlobalException, GlobalExceptionInfo
@@ -1121,12 +1121,12 @@ class DownloadTaskPanel(wx.Panel):
 
         match MergeType(self.task_info.video_merge_type):
             case MergeType.Video_And_Audio | MergeType.Only_Video:
-                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_mapping, self.utils.task_info.video_quality_id))
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_mapping, self.utils.task_info.video_codec_id))
+                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.utils.task_info.video_quality_id))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.utils.task_info.video_codec_id))
 
             case MergeType.Only_Audio:
                 self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_mapping, self.utils.task_info.audio_quality_id))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.utils.task_info.audio_quality_id))
 
     def update_download_status(self, status: int):
         def update_btn_icon():
