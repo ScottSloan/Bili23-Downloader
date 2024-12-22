@@ -60,5 +60,9 @@ class DownloadStatus(Enum):
     Alive = [Waiting, Downloading, Pause]
     Alive_Ex = [Waiting, Downloading, Pause, Merge_Failed, Download_Failed]
 
-class _Exception(Enum):
-    VideoMergeError = 150
+class StatusCode(Enum):
+    Success = 0
+    Vip = 600
+    Pay = 601
+    URL = 602
+    Area_Limit = -10403

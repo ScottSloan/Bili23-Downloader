@@ -5,9 +5,10 @@ from typing import List, Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
-from utils.common.exception import ErrorUtils, StatusCode, GlobalException
+from utils.common.exception import GlobalException
 from utils.common.map import live_status_map
 from utils.parse.episode import EpisodeInfo, live_episode_parser
+from utils.common.enums import StatusCode
 
 class LiveInfo:
     title: str = ""
@@ -102,10 +103,9 @@ class LiveParser:
     def check_json(self, json: Dict):
         # 检查接口返回状态码
         status_code = json["code"]
-        error = ErrorUtils()
-
-        if status_code != StatusCode.CODE_0:
-            raise Exception("{} ({})".format(error.getStatusInfo(status_code), status_code))
+        
+        if status_code != StatusCode.Success.value:
+            raise Exception(status_code)
 
     def clear_live_info(self):
         LiveInfo.title = ""

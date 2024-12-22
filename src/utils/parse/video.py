@@ -4,12 +4,12 @@ import requests
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
-from utils.common.exception import ErrorUtils, URLError, ErrorCallback, StatusCode
+from utils.common.exception import ErrorCallback
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, VideoType, EpisodeDisplayType
+from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode
 from utils.common.exception import GlobalException
 
 class VideoInfo:
@@ -57,7 +57,7 @@ class VideoParser:
         aid = re.findall(r"av([0-9]+)", url)
 
         if not aid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         bvid = UniversalTool.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
@@ -66,7 +66,7 @@ class VideoParser:
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         self.set_bvid(bvid[0])
 
@@ -173,10 +173,9 @@ class VideoParser:
     def check_json(self, json: dict):
         # 检查接口返回状态码
         status_code = json["code"]
-        error = ErrorUtils()
 
-        if status_code != StatusCode.CODE_0:
-            raise Exception("{} ({})".format(error.getStatusInfo(status_code), status_code))
+        if status_code != StatusCode.Success.value:
+            raise Exception(status_code)
     
     def parse_episodes(self):
         def pages_parser():

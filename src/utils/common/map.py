@@ -117,6 +117,22 @@ cdn_mapping = {
     7: "upos-sz-mirrorali.bilivideo.com"
 }
 
+status_code_map = {
+    0: "请求成功",
+    1: "未找到该房间",
+    -400: "请求错误",
+    -403: "权限不足",
+    -404: "视频不存在",
+    -10403: "根据版权方要求，您所在的地区无法观看本片",
+    600: "大会员专享限制",
+    601: "应版权方要求本片需购买",
+    602: "无效的链接",
+    62002: "稿件不可见",
+    62004: "稿件审核中",
+    62012: "仅 UP 主自己可见",
+    19002003: "房间信息不存在"
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

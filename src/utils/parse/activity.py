@@ -3,7 +3,7 @@ import json
 import requests
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.common.exception import URLError
+from utils.common.enums import StatusCode
 
 class FestivalInfo:
     url: str = ""
@@ -17,7 +17,7 @@ class FestivalParser:
         aid = re.findall(r'"aid":([0-9]+)', initial_state)
 
         if not aid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         FestivalInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
@@ -25,7 +25,7 @@ class FestivalParser:
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         FestivalInfo.url = f"https://www.bilibili.com/video/{bvid[0]}"
 

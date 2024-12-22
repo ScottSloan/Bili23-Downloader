@@ -1,3 +1,4 @@
+import re
 import sys
 import time
 import inspect
@@ -5,6 +6,7 @@ import threading
 
 from functools import wraps
 from utils.common.data_type import ExceptionInfo
+from utils.common.map import status_code_map
 
 class ErrorCode:
     Invalid_URL = 100                       # URL 无效
@@ -24,12 +26,6 @@ class StatusCode:
     CODE_62004 = 62004                      # 稿件审核中
     CODE_62012 = 62012                      # 仅 UP 主自己可见
     CODE_19002003 = 19002003                # 房间信息不存在
-
-class RequestCode:
-    SSLERROR = 200                          # SSLERROR
-    TimeOut = 201                           # TimeOut
-    TooManyRedirects = 202                  # TooManyRedirects
-    ConnectionError = 203                   # ConnectionError
 
 class ErrorCallback:
     parse_thread_stop_flag: bool = False
@@ -61,6 +57,10 @@ def exception_handler(exc_type, exc_value, exc_tb):
         return_code = ""
         callback = None
 
+    if re.findall(r'^[-+]?[0-9]+$', str(log)):
+        _code = int(str(log))
+        log = "{} ({})".format(status_code_map.get(_code, "未知错误"), _code)
+
     _info = ExceptionInfo()
     _info.timestamp = round(time.time())
     _info.log = log
@@ -80,65 +80,6 @@ def thread_exception_handler(args):
 sys.excepthook = exception_handler
 threading.excepthook = thread_exception_handler
 
-class VIPError(Exception):
-    # 大会员认证异常类
-    pass
-
-class URLError(Exception):
-    pass
-
-class ErrorUtils:
-    def __init__(self):
-        pass
-
-    def getErrorInfo(self, error_code):
-        # 根据错误码获取错误信息
-        match error_code:
-            case RequestCode.SSLERROR:
-                return "SSL 证书错误"
-            
-            case RequestCode.TimeOut:
-                return "连接超时"
-            
-            case RequestCode.TooManyRedirects:
-                return "重定向次数过多"
-            
-            case RequestCode.ConnectionError:
-                return "无法连接到服务器或 DNS 解析失败"
-
-    def getStatusInfo(self, status_code):
-        # 根据状态码获取错误信息
-        match status_code:
-            case StatusCode.CODE_1:
-                return "未找到该房间"
-            
-            case StatusCode.CODE_400:
-                return "请求错误"
-            
-            case StatusCode.CODE_403:
-                return "权限不足"
-            
-            case StatusCode.CODE_404:
-                return "视频不存在"
-            
-            case StatusCode.CODE_10403:
-                return "根据版权方要求，您所在的地区无法观看本片"
-        
-            case StatusCode.CODE_62002:
-                return "稿件不可见"
-            
-            case StatusCode.CODE_62004:
-                return "稿件审核中"
-            
-            case StatusCode.CODE_62012:
-                return "仅 UP 主自己可见"
-            
-            case StatusCode.CODE_19002003:
-                return "房间信息不存在"
-            
-            case _:
-                return "未知错误"
-            
 def process_read_config_exception(f):
     @wraps(f)
     def func(*args, **kwargs):

@@ -1,15 +1,15 @@
 import re
 import json
 import requests
-from typing import Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
-from utils.common.exception import ErrorUtils, VIPError, URLError, StatusCode, GlobalException
+from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_mapping
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
+from utils.common.enums import StatusCode
 
 class BangumiInfo:
     url: str = ""
@@ -54,7 +54,7 @@ class BangumiParser:
         epid = re.findall(r"ep([0-9]+)", url)
 
         if not epid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
@@ -62,7 +62,7 @@ class BangumiParser:
         season_id = re.findall(r"ss([0-9]+)", url)
 
         if not season_id:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
@@ -70,7 +70,7 @@ class BangumiParser:
         mid = re.findall(r"md([0-9]*)", url)
         
         if not mid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
         req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)
@@ -122,7 +122,10 @@ class BangumiParser:
         
         # 检测是否为试看内容
         if "dash" not in info:
-            raise VIPError()
+            if BangumiInfo.payment and Config.User.login:
+                raise Exception(StatusCode.Pay.value)
+            else:
+                raise Exception(StatusCode.Vip.value)
 
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
@@ -174,18 +177,17 @@ class BangumiParser:
         except Exception as e:
             raise GlobalException(e, callback = self.callback)
     
-    def check_json(self, json: Dict):
+    def check_json(self, json: dict):
         # 检查接口返回状态码
         status_code = json["code"]
         message = json["message"]
-        error = ErrorUtils()
 
-        if status_code != StatusCode.CODE_0:
-            if status_code == StatusCode.CODE_10403 and message == "大会员专享限制":
+        if status_code != StatusCode.Success.value:
+            if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
                 # 如果提示大会员专享限制就不用抛出异常，因为和地区限制共用一个状态码 -10403
                 return
             
-            raise Exception("{} ({})".format(error.getStatusInfo(status_code), status_code))
+            raise Exception(status_code)
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()

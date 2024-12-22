@@ -17,7 +17,7 @@ from utils.common.exception import ErrorCallback, ErrorCode, GlobalExceptionInfo
 from utils.common.map import video_quality_mapping, live_quality_mapping
 from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
@@ -404,7 +404,7 @@ class MainWindow(Frame):
                 return
 
             case _:
-                raise GlobalException("无效的链接", callback = self.onParseErrorCallback)
+                raise GlobalException(StatusCode.URL.value, callback = self.onParseErrorCallback)
 
         if continue_to_parse:
             wx.CallAfter(callback)
@@ -698,7 +698,7 @@ class MainWindow(Frame):
 
             info = GlobalExceptionInfo.info
 
-            wx.MessageDialog(self, f"解析失败\n\n在解析链接时遇到问题：{info.log}", "错误", wx.ICON_ERROR).ShowModal()
+            wx.MessageDialog(self, f"解析失败\n\n{info.log}", "错误", wx.ICON_ERROR).ShowModal()
 
         wx.CallAfter(worker)
 
