@@ -672,7 +672,7 @@ class MainWindow(Frame):
 
             info = GlobalExceptionInfo.info
 
-            wx.MessageDialog(self, f"解析失败\n\n{info.log}", "错误", wx.ICON_ERROR).ShowModal()
+            wx.MessageDialog(self, f"解析失败\n\n{info.log}\n\n故障模块：{info.source}", "错误", wx.ICON_ERROR).ShowModal()
 
         wx.CallAfter(worker)
 

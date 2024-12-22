@@ -22,7 +22,14 @@ class GlobalException(Exception):
         self.url = url
 
 def exception_handler(exc_type, exc_value, exc_tb):
-    _frame = exc_tb.tb_frame
+    def get_last_line(exc_tb):
+        while exc_tb:
+            _module_name = inspect.getmodule(exc_tb.tb_frame).__name__
+            _co_name = exc_tb.tb_frame.f_code.co_name
+            _lineno = exc_tb.tb_frame.f_lineno
+            exc_tb = exc_tb.tb_next
+
+        return (_module_name, _co_name, _lineno)
 
     if isinstance(exc_value, GlobalException):
         log = exc_value.log
@@ -40,13 +47,16 @@ def exception_handler(exc_type, exc_value, exc_tb):
         log = "{} ({})".format(status_code_map.get(_code, f"未知错误 ({_code})"), _code)
     else:
         _code = "150"
+        log = f"{log.__class__.__name__}: {log}"
+
+    (_module_name, _co_name, _lineno) = get_last_line(exc_tb)
 
     _info = ExceptionInfo()
     _info.timestamp = round(time.time())
     _info.log = log
     _info.exception_type = exc_type.__name__
     _info.id = str(_code)
-    _info.source = "{} -> {}, Line {}".format(inspect.getmodule(_frame).__name__, _frame.f_code.co_name, _frame.f_lineno)
+    _info.source = "{} -> {}, Line {}".format(_module_name, _co_name, _lineno)
     _info.return_code = return_code
 
     GlobalExceptionInfo.info = _info
