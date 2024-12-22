@@ -59,3 +59,6 @@ class DownloadStatus(Enum):
 
     Alive = [Waiting, Downloading, Pause]
     Alive_Ex = [Waiting, Downloading, Pause, Merge_Failed, Download_Failed]
+
+class Exception(Enum):
+    VideoMergeError = 150

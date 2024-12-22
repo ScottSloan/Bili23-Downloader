@@ -15,7 +15,7 @@ class APP(wx.App):
 
 if __name__ == "__main__":
     UniversalTool.msw_set_utf8_encode()
-    UniversalTool.set_dpi_awareness()
+    UniversalTool.msw_set_dpi_awareness()
 
     app = APP()
 

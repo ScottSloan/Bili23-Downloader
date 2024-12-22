@@ -5,6 +5,7 @@ import re
 import time
 import json
 import wx.adv
+import inspect
 import requests
 import subprocess
 from typing import List, Callable
@@ -22,7 +23,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraInfo, ExtraParser
 from utils.common.map import video_quality_mapping, audio_quality_mapping, video_codec_mapping, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus
+from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus, Exception
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -536,6 +537,8 @@ class DownloadUtils:
 
         get_temp_file_name()
 
+        _frame = inspect.currentframe()
+
         _cmd = self._get_shell_cmd()
 
         _process = self._run_subprocess(_cmd)
@@ -549,6 +552,9 @@ class DownloadUtils:
             _error_info = {
                 "timestamp": round(time.time()),
                 "return_code": _process.returncode,
+                "source": UniversalTool.get_error_info_source(_frame),
+                "error_type": Exception.VideoMergeError.name,
+                "id": Exception.VideoMergeError.value,
                 "log": _process.stdout
             }
 

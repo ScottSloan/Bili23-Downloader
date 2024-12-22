@@ -2,6 +2,7 @@ import os
 import re
 import json
 import ctypes
+import inspect
 import requests
 import subprocess
 import requests.auth
@@ -368,9 +369,17 @@ class UniversalTool:
         return Config.User.face_path
 
     @staticmethod
-    def get_current_time():
+    def get_current_time_str():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
+    
+    @staticmethod
+    def get_time_str_from_timestamp(timestamp: int):
+        return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
 
+    @staticmethod
+    def get_error_info_source(frame):
+        return "{} -> {}, Line {}".format(inspect.getmodule(frame).__name__, frame.f_code.co_name, frame.f_lineno)
+    
     @staticmethod
     def get_legal_name(_name: str):
         return re.sub(r'[/\:*?"<>|]', "", _name)
@@ -416,14 +425,14 @@ class UniversalTool:
                     pass
 
     @staticmethod
-    def set_dpi_awareness():
+    def msw_set_dpi_awareness():
         if Config.Sys.platform == "windows":
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
     @staticmethod
     def msw_set_utf8_encode():
         if Config.Sys.platform == "windows":
-            subprocess.run("chcp 65001", shell = True)
+            subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
 
 class FFmpegCheckTool:
     # FFmpeg 检查工具类
