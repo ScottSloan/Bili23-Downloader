@@ -208,4 +208,8 @@ class ExceptionInfo:
         self.return_code = data.get("return_code")
         self.exception_type = data.get("exception_type")
         self.log = data.get("log")
-    
+
+class ParseCallback:
+    def __init__(self):
+        self.error_callback: Callable = None
+        self.redirect_callback: Callable = None

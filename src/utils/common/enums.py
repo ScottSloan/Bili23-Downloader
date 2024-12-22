@@ -61,8 +61,9 @@ class DownloadStatus(Enum):
     Alive_Ex = [Waiting, Downloading, Pause, Merge_Failed, Download_Failed]
 
 class StatusCode(Enum):
-    Success = 0
-    Vip = 600
-    Pay = 601
-    URL = 602
-    Area_Limit = -10403
+    Success = 0              # 请求成功
+    Vip = 600                # 会员认证
+    Pay = 601                # 付费购买
+    URL = 602                # 无效链接
+    Redirect = 603           # 跳转链接
+    Area_Limit = -10403      # 区域限制

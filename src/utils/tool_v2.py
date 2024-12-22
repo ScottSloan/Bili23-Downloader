@@ -28,12 +28,6 @@ class RequestTool:
                 error_callback()
 
     @staticmethod
-    def get_real_url(url: str):
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-    
-        return req.url
-
-    @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
         headers = {
             "User-Agent": RequestTool.USER_AGENT,

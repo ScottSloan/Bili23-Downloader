@@ -4,13 +4,13 @@ import requests
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
-from utils.common.exception import ErrorCallback
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode
 from utils.common.exception import GlobalException
+from utils.common.data_type import ParseCallback
 
 class VideoInfo:
     url: str = ""
@@ -40,9 +40,8 @@ class VideoInfo:
         VideoInfo.info_json.clear()
 
 class VideoParser:
-    def __init__(self, callback):
+    def __init__(self, callback: ParseCallback):
         self.callback = callback
-        self.continue_to_parse = True
     
     def get_part(self, url: str):
         part = re.findall(r"p=([0-9]+)", url)
@@ -86,10 +85,7 @@ class VideoParser:
         info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
-            # 存在跳转链接
-            ErrorCallback.onRedirect(info["redirect_url"])
-            self.continue_to_parse = False
-            return
+            raise GlobalException(StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = info["redirect_url"])
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
@@ -145,8 +141,6 @@ class VideoParser:
             # 清除当前的视频信息
             self.clear_video_info()
 
-            self.continue_to_parse = True
-
             match UniversalTool.re_find_string(r"av|BV", url):
                 case "av":
                     self.get_aid(url)
@@ -155,17 +149,19 @@ class VideoParser:
                     self.get_bvid(url)
 
             self.get_video_info()
-
-            if self.continue_to_parse:
-                self.get_video_available_media_info()
             
-            return self.continue_to_parse
+            self.get_video_available_media_info()
+
+            return StatusCode.Success.value
         
         try:
             return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback)
+            if not isinstance(e, GlobalException):
+                raise GlobalException(e, callback = self.callback.error_callback)
+            else:
+                raise e
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"

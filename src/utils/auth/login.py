@@ -11,7 +11,7 @@ from Crypto.Cipher import PKCS1_v1_5
 from utils.tools import get_exclimbwuzhi_header, get_login_header
 from utils.tool_v2 import RequestTool
 from utils.config import Config, ConfigUtils
-from utils.common.exception import StatusCode
+from utils.common.enums import StatusCode
 
 class QRLoginInfo:
     url = qrcode_key = None
@@ -272,7 +272,7 @@ class SMSLogin(LoginBase):
         req = self.session.post(url, params = form, headers = get_login_header(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
         data = json.loads(req.text)
 
-        if data["code"]  == StatusCode.CODE_0:
+        if data["code"]  == StatusCode.Success.value:
             # 只有短信发送成功时才设置 captcha_key
             CaptchaInfo.captcha_key = data["data"]["captcha_key"]
 

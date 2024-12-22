@@ -10,6 +10,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
 from utils.common.enums import StatusCode
+from utils.common.data_type import ParseCallback
 
 class BangumiInfo:
     url: str = ""
@@ -47,7 +48,7 @@ class BangumiInfo:
         BangumiInfo.info_json.clear()
 
 class BangumiParser:
-    def __init__(self, callback):
+    def __init__(self, callback: ParseCallback):
         self.callback = callback
     
     def get_epid(self, url: str):
@@ -171,11 +172,13 @@ class BangumiParser:
             self.get_bangumi_info()
             self.get_bangumi_available_media_info()
 
+            return StatusCode.Success.value
+
         try:
-            worker()
+            return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback)
+            raise GlobalException(e, callback = self.callback.error_callback)
     
     def check_json(self, json: dict):
         # 检查接口返回状态码

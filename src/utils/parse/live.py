@@ -9,6 +9,7 @@ from utils.common.exception import GlobalException
 from utils.common.map import live_status_map
 from utils.parse.episode import EpisodeInfo, live_episode_parser
 from utils.common.enums import StatusCode
+from utils.common.data_type import ParseCallback
 
 class LiveInfo:
     title: str = ""
@@ -25,7 +26,7 @@ class LiveInfo:
     live_quality_desc_list: List = []
 
 class LiveParser:
-    def __init__(self, callback):
+    def __init__(self, callback: ParseCallback):
         self.callback = callback
 
     def get_short_id(self, url: str):
@@ -93,12 +94,14 @@ class LiveParser:
             self.get_live_room_info()
 
             self.get_live_available_media_info()
+
+            return StatusCode.Success.value
         
         try:
-            worker()
+            return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback)
+            raise GlobalException(e, callback = self.callback.error_callback)
 
     def check_json(self, json: Dict):
         # 检查接口返回状态码

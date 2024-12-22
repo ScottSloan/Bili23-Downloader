@@ -3,21 +3,22 @@ import os
 import time
 import wx.py
 import requests
-from typing import Optional
 
 from utils.config import Config
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
-from utils.parse.activity import FestivalInfo, FestivalParser
+from utils.parse.activity import ActivityParser
 from utils.parse.live import LiveInfo, LiveParser
+from utils.parse.b23 import B23Parser
 from utils.auth.login import QRLogin
 from utils.common.thread import Thread
-from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
-from utils.common.exception import ErrorCallback, ErrorCode, GlobalExceptionInfo, GlobalException
+from utils.tool_v2 import UniversalTool, FFmpegCheckTool
+from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_mapping, live_quality_mapping
 from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode
+from utils.common.data_type import ParseCallback
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.dialog.about import AboutWindow
@@ -111,8 +112,10 @@ class MainWindow(Frame):
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
         self.episode_option_btn = wx.BitmapButton(self.panel, -1, icon_manager.get_icon_bitmap(IconType.LIST_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.episode_option_btn.Enable(False)
         self.episode_option_btn.SetToolTip("剧集列表显示设置")
         self.download_option_btn = wx.BitmapButton(self.panel, -1, icon_manager.get_icon_bitmap(IconType.SETTING_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.download_option_btn.Enable(False)
         self.download_option_btn.SetToolTip("下载选项")
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
@@ -266,13 +269,15 @@ class MainWindow(Frame):
 
                     webbrowser.open("https://scott-sloan.cn/archives/120/")
 
-        ErrorCallback.onError = self.onError
-        ErrorCallback.onRedirect = self.onRedirect
+        callback = ParseCallback()
+        callback.error_callback = self.onParseErrorCallback
+        callback.redirect_callback = self.onParseRedirectCallback
         
-        self.video_parser = VideoParser(self.onParseErrorCallback)
-        self.bangumi_parser = BangumiParser(self.onParseErrorCallback)
-        self.live_parser = LiveParser(self.onParseErrorCallback)
-        self.activity_parser = FestivalParser(self.onError)
+        self.video_parser = VideoParser(callback)
+        self.bangumi_parser = BangumiParser(callback)
+        self.live_parser = LiveParser(callback)
+        self.activity_parser = ActivityParser(callback)
+        self.b23_parser = B23Parser(callback)
 
         self.download_window = DownloadManagerWindow(self)
 
@@ -337,11 +342,13 @@ class MainWindow(Frame):
         self.processing_window.Show()
 
         self.download_btn.Enable(False)
+        self.episode_option_btn.Enable(False)
+        self.download_option_btn.Enable(False)
 
         # 开启解析线程
-        self.onRedirect(url)
+        self.onParseRedirectCallback(url)
 
-    def parseThread(self, url: str):
+    def parse_url_thread(self, url: str):
         def callback():
             match self.current_parse_type:
                 case ParseType.Video |  ParseType.Bangumi:
@@ -355,62 +362,57 @@ class MainWindow(Frame):
             self.processing_window.Hide()
 
             self.download_btn.Enable(True)
+            self.episode_option_btn.Enable(True)
+            self.download_option_btn.Enable(True)
             
             self.show_episode_list()
 
-        continue_to_parse = True
+        def worker():
+            match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
+                case "av" | "BV":
+                    # 用户投稿视频
+                    self.current_parse_type = ParseType.Video
 
-        match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
-            case "av" | "BV":
-                # 用户投稿视频
-                self.current_parse_type = ParseType.Video
+                    return_code = self.video_parser.parse_url(url)
 
-                continue_to_parse = self.video_parser.parse_url(url)
-
-                if continue_to_parse:
-                    # 当存在跳转链接时，使用新的跳转链接重新开始解析，原先解析线程不继续执行
                     wx.CallAfter(self.setVideoQualityList)
 
-            case "ep" | "ss" | "md":
-                # 番组
-                self.current_parse_type = ParseType.Bangumi
+                case "ep" | "ss" | "md":
+                    # 番组
+                    self.current_parse_type = ParseType.Bangumi
 
-                self.bangumi_parser.parse_url(url)
+                    return_code = self.bangumi_parser.parse_url(url)
 
-                wx.CallAfter(self.setVideoQualityList)
+                    wx.CallAfter(self.setVideoQualityList)
 
-            case "live":
-                # 直播
-                self.current_parse_type = ParseType.Live
+                case "live":
+                    # 直播
+                    self.current_parse_type = ParseType.Live
 
-                self.live_parser.parse_url(url)
+                    return_code = self.live_parser.parse_url(url)
 
-                wx.CallAfter(self.setLiveQualityList)
+                    wx.CallAfter(self.setLiveQualityList)
 
-            case "b23.tv":
-                # 短链接
-                new_url = RequestTool.get_real_url(url)
+                case "b23.tv":
+                    # 短链接
+                    return_code = self.b23_parser.parse_url(url)
 
-                self.parseThread(new_url)
+                case "blackboard" | "festival":
+                    # 活动页链接
+                    return_code = self.activity_parser.parse_url(url)
 
-                return
+                case _:
+                    raise GlobalException(StatusCode.URL.value, callback = self.onParseErrorCallback)
+                
+            return return_code
+                
+        self.current_parse_type = None
 
-            case "blackboard" | "festival":
-                # 活动页链接
-                self.activity_parser.parse_url(url)
-
-                self.parseThread(FestivalInfo.url)
-
-                return
-
-            case _:
-                raise GlobalException(StatusCode.URL.value, callback = self.onParseErrorCallback)
-
-        if continue_to_parse:
+        if worker() == StatusCode.Success.value:
             wx.CallAfter(callback)
 
-    def onRedirect(self, url: str):
-        self.parse_thread = Thread(target = self.parseThread, args = (url, ))
+    def onParseRedirectCallback(self, url: str):
+        self.parse_thread = Thread(target = self.parse_url_thread, args = (url, ))
         self.parse_thread.start()
 
     def onDownloadEVT(self, event):
@@ -516,34 +518,6 @@ class MainWindow(Frame):
         self.video_quality_choice.Set(live_quality_desc_list)
 
         self.video_quality_choice.Select(0)
-
-    def onError(self, error_code: int, error_info: Optional[str] = None):
-        # 匹配不同错误码
-        match error_code:
-            case ErrorCode.Invalid_URL:
-                msg = "解析失败：不受支持的链接"
-            
-            case ErrorCode.Parse_Error:
-                msg = f"解析失败：{error_info}"
-
-            case ErrorCode.VIP_Required:
-                msg = "解析失败：此视频为大会员专享，请确保已经登录大会员账号后再试"
-            
-                if self.current_parse_type == ParseType.Bangumi:
-                    if BangumiInfo.payment and Config.User.login:
-                        msg = "解析失败：此视频需要付费购买，请确保已经购买此视频后再试"
-            
-            case ErrorCode.Request_Error:
-                msg = f"解析失败：{error_info}"
-            
-            case ErrorCode.Unknown_Error:
-                msg = "解析失败：发生未知错误"
-        
-        self.infobar.ShowMessage(msg, flags = wx.ICON_ERROR)
-
-        wx.CallAfter(self.SetFocus)
-
-        raise Exception
 
     def onLoginEVT(self, event):
         def callback():
