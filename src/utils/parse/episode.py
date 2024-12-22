@@ -41,9 +41,10 @@ def video_ugc_season_parser(info_json: dict, cid: int):
         def _get_title(episode: dict):
             if "title" in episode:
                 if Config.Misc.show_episode_full_name:
-                    return episode["page"]["part"]
-                else:
-                    return episode["title"]
+                    if episode["page"]["part"]:
+                        return episode["page"]["part"]
+                
+                return episode["title"]
             else:
                 return episode["part"]
 
@@ -62,6 +63,8 @@ def video_ugc_season_parser(info_json: dict, cid: int):
             "duration": duration,
             "entries": []
         }
+    
+    EpisodeInfo.data["collection_title"] = info_json["ugc_season"]["title"]
 
     for section in info_json["ugc_season"]["sections"]:
         EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_node(section["title"]))

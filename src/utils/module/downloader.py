@@ -10,6 +10,7 @@ from utils.common.thread import Thread, ThreadPool
 from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
 from utils.common.map import cdn_map
 from utils.common.enums import CDNMode
+from utils.common.exception import GlobalException
 
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
@@ -29,8 +30,9 @@ class Downloader:
 
         # 初始化重试计数器
         self.retry_count = 0
-
         self.thread_alive_count = 0
+
+        self._e = None
 
         # 判断是否为断点续传
         if not self.task_info.completed_size:
@@ -90,9 +92,9 @@ class Downloader:
             try:
                 download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
 
-            except Exception:
+            except Exception as e:
+                self._e = e
                 self.onError()
-                return
 
             if self.completed_size:
                 range_list = get_range_list_from_file(download_info.type)
@@ -198,9 +200,10 @@ class Downloader:
 
                         start_time = limit_speed()
 
-        except Exception:
+        except Exception as e:
             # 置错误标志位为 True
             self.error_flag = True
+            self._e = e
 
             # 停止线程
             return
@@ -299,8 +302,11 @@ class Downloader:
         # 关闭线程池和监听线程，停止下载
         self.onStop()
 
-        # 回调 panel 下载失败函数，终止下载
-        self.callback.onErrorCallback()
+        try:
+            raise self._e
+        
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback.onErrorCallback, use_traceback = True)
     
     def get_file_size(self, url_list: list, referer_url: str, path: str):
         def request_head_gen():
@@ -321,9 +327,6 @@ class Downloader:
         if not total_size:
             if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Auto.value:
                 return self.get_file_size(next(self.switch_cdn(url_list)), referer_url, path)
-
-            self.onError()
-            raise Exception
 
         # 判断本地文件是否存在
         if not os.path.exists(path):

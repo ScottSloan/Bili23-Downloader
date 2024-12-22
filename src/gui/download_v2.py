@@ -509,7 +509,11 @@ class DownloadUtils:
             self.callback.onDownloadFailedCallback()
 
     def get_downloader_info_list(self):
-        self.get_video_bangumi_download_url()
+        try:
+            self.get_video_bangumi_download_url()
+
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback.onDownloadFailedCallback, use_traceback = True)
 
         _temp_info = []
 
@@ -1085,6 +1089,8 @@ class DownloadTaskPanel(wx.Panel):
             self.callback.onUpdateTaskCountCallback(message)
             self.callback.onStartNextCallback()
 
+        self.download_file_tool.update_error_info(GlobalExceptionInfo.info.to_dict())
+
         wx.CallAfter(callback)
     
     def onOpenLocation(self):
@@ -1093,7 +1099,7 @@ class DownloadTaskPanel(wx.Panel):
         FileDirectoryTool.open_file_location(path)
 
     def onShowErrorInfoDialogEVT(self, event):
-        if self.task_info.status == DownloadStatus.Merge_Failed.value:
+        if self.task_info.status in [DownloadStatus.Merge_Failed.value , DownloadStatus.Download_Failed.value]:
             dlg = ErrorInfoDialog(self._parent_download_manager, self.download_file_tool.get_error_info())
             dlg.ShowModal()
 
@@ -1178,7 +1184,9 @@ class DownloadTaskPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
-                    self.speed_lab.SetLabel("下载失败")
+                    self.speed_lab.SetLabel("下载失败，点击查看详情")
+
+                    self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
                     self.speed_lab.SetForegroundColour(wx.Colour("red"))
 
                 case DownloadStatus.Complete:

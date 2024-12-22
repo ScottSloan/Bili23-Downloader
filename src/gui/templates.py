@@ -54,6 +54,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 if "entries" in data:
                     self.SetItemText(item, 0, str(data["title"]))
 
+                    if "collection_title" in data and data["collection_title"]:
+                        self.SetItemText(item, 1, data["collection_title"])
+
                     if "duration" in data and data["duration"]:
                         self.SetItemText(item, 3, data["duration"])
 
