@@ -1,6 +1,10 @@
-import requests
+import sys
+import time
+import inspect
+import threading
 
 from functools import wraps
+from utils.common.data_type import ExceptionInfo
 
 class ErrorCode:
     Invalid_URL = 100                       # URL 无效
@@ -34,19 +38,54 @@ class ErrorCallback:
 
     onRedirect = None
 
+class GlobalExceptionInfo:
+    info: ExceptionInfo = None
+
+class GlobalException(Exception):
+    def __init__(self, log = "", return_code = "", callback = None, message = ""):
+        super().__init__(message)
+
+        self.log = log
+        self.return_code = return_code
+        self.callback = callback
+
+def exception_handler(exc_type, exc_value, exc_tb):
+    _frame = exc_tb.tb_frame
+
+    if isinstance(exc_value, GlobalException):
+        log = exc_value.log
+        return_code = exc_value.return_code
+        callback = exc_value.callback
+    else:
+        log = exc_value
+        return_code = ""
+        callback = None
+
+    _info = ExceptionInfo()
+    _info.timestamp = round(time.time())
+    _info.log = log
+    _info.exception_type = exc_type.__name__
+    _info.id = "150"
+    _info.source = "{} -> {}, Line {}".format(inspect.getmodule(_frame).__name__, _frame.f_code.co_name, _frame.f_lineno)
+    _info.return_code = return_code
+
+    GlobalExceptionInfo.info = _info
+
+    if callback:
+        callback()
+
+def thread_exception_handler(args):
+    exception_handler(args.exc_type, args.exc_value, args.exc_traceback)
+
+sys.excepthook = exception_handler
+threading.excepthook = thread_exception_handler
+
 class VIPError(Exception):
     # 大会员认证异常类
     pass
 
 class URLError(Exception):
     pass
-
-class ParseError(Exception):
-    # 解析异常类
-    def __init__(self, message, status_code):
-        self.message, self.status_code = message, status_code
-
-        super().__init__(self.message, self.status_code)
 
 class ErrorUtils:
     def __init__(self):
@@ -109,48 +148,4 @@ def process_read_config_exception(f):
         except Exception:
             ErrorCallback.onReadConfigError()
 
-    return func
-
-def process_exception(f):
-    @wraps(f)
-    def func(*args, **kwargs):
-        error = ErrorUtils()
-
-        try:
-            return f(*args, **kwargs)
-
-        except requests.exceptions.SSLError:
-            error_info = error.getErrorInfo(RequestCode.SSLERROR)
-
-            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
-
-        except requests.exceptions.Timeout:
-            error_info = error.getErrorInfo(RequestCode.TimeOut)
-
-            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
-
-        except requests.exceptions.TooManyRedirects:
-            error_info = error.getErrorInfo(RequestCode.TooManyRedirects)
-
-            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
-
-        except requests.exceptions.ConnectionError:
-            error_info = error.getErrorInfo(RequestCode.ConnectionError)
-
-            ErrorCallback.onError(ErrorCode.Request_Error, error_info)
-
-        except URLError:
-            ErrorCallback.onError(ErrorCode.Invalid_URL)
-
-        except ParseError as e:
-            error_info = f"{e.message} ({e.status_code})"
-
-            ErrorCallback.onError(ErrorCode.Parse_Error, error_info)
-
-        except VIPError:
-            ErrorCallback.onError(ErrorCode.VIP_Required)
-
-        except Exception:
-            ErrorCallback.onError(ErrorCode.Unknown_Error)
-            
     return func

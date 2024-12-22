@@ -4,12 +4,13 @@ import requests
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
-from utils.common.error import process_exception, ParseError, ErrorUtils, URLError, ErrorCallback, StatusCode
+from utils.common.exception import ErrorUtils, URLError, ErrorCallback, StatusCode
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType
+from utils.common.exception import GlobalException
 
 class VideoInfo:
     url: str = ""
@@ -39,7 +40,8 @@ class VideoInfo:
         VideoInfo.info_json.clear()
 
 class VideoParser:
-    def __init__(self):
+    def __init__(self, callback):
+        self.callback = callback
         self.continue_to_parse = True
     
     def get_part(self, url: str):
@@ -51,7 +53,6 @@ class VideoParser:
         else:
             self.part = False
 
-    @process_exception
     def get_aid(self, url: str):
         aid = re.findall(r"av([0-9]+)", url)
 
@@ -61,7 +62,6 @@ class VideoParser:
         bvid = UniversalTool.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
 
-    @process_exception
     def get_bvid(self, url: str):
         bvid = re.findall(r"BV\w+", url)
 
@@ -70,7 +70,6 @@ class VideoParser:
 
         self.set_bvid(bvid[0])
 
-    @process_exception
     def get_video_info(self):
         # 获取视频信息
         params = {
@@ -108,7 +107,6 @@ class VideoParser:
 
         self.parse_episodes()
 
-    @process_exception
     def get_video_available_media_info(self):
         # 获取视频清晰度
         params = {
@@ -140,27 +138,34 @@ class VideoParser:
         ExtraInfo.get_cover = Config.Extra.get_cover
 
     def parse_url(self, url: str):
-        # 先检查是否为分 P 视频
-        self.get_part(url)
+        def worker():
+            # 先检查是否为分 P 视频
+            self.get_part(url)
 
-        # 清除当前的视频信息
-        self.clear_video_info()
+            # 清除当前的视频信息
+            self.clear_video_info()
 
-        self.continue_to_parse = True
+            self.continue_to_parse = True
 
-        match UniversalTool.re_find_string(r"av|BV", url):
-            case "av":
-                self.get_aid(url)
+            match UniversalTool.re_find_string(r"av|BV", url):
+                case "av":
+                    self.get_aid(url)
 
-            case "BV":
-                self.get_bvid(url)
+                case "BV":
+                    self.get_bvid(url)
 
-        self.get_video_info()
+            self.get_video_info()
 
-        if self.continue_to_parse:
-            self.get_video_available_media_info()
+            if self.continue_to_parse:
+                self.get_video_available_media_info()
+            
+            return self.continue_to_parse
+        
+        try:
+            return worker()
 
-        return self.continue_to_parse
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback)
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
@@ -171,8 +176,7 @@ class VideoParser:
         error = ErrorUtils()
 
         if status_code != StatusCode.CODE_0:
-            # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
-            raise ParseError(error.getStatusInfo(status_code), status_code)
+            raise Exception("{} ({})".format(error.getStatusInfo(status_code), status_code))
     
     def parse_episodes(self):
         def pages_parser():

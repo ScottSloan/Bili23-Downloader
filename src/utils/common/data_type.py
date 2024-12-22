@@ -181,3 +181,31 @@ class TreeListItemInfo:
         self.type: str = ""
         self.title: str = ""
         self.cid: int = 0
+
+class ExceptionInfo:
+    def __init__(self):
+        self.timestamp = ""
+        self.source = ""
+        self.id = ""
+        self.return_code = ""
+        self.exception_type = ""
+        self.log = ""
+    
+    def to_dict(self):
+        return {
+            "timestamp": self.timestamp,
+            "source": self.source,
+            "id": self.id,
+            "return_code": self.return_code,
+            "exception_type": self.exception_type,
+            "log": self.log
+        }
+    
+    def from_dict(self, data: dict):
+        self.timestamp = data.get("timestamp")
+        self.source = data.get("source")
+        self.id = data.get("id")
+        self.return_code = data.get("return_code")
+        self.exception_type = data.get("exception_type")
+        self.log = data.get("log")
+    

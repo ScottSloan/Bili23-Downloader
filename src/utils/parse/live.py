@@ -5,7 +5,7 @@ from typing import List, Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
-from utils.common.error import process_exception, ErrorUtils, StatusCode, ParseError
+from utils.common.exception import ErrorUtils, StatusCode, GlobalException
 from utils.common.map import live_status_map
 from utils.parse.episode import EpisodeInfo, live_episode_parser
 
@@ -24,8 +24,8 @@ class LiveInfo:
     live_quality_desc_list: List = []
 
 class LiveParser:
-    def __init__(self):
-        pass
+    def __init__(self, callback):
+        self.callback = callback
 
     def get_short_id(self, url: str):
         short_id = re.findall(r"live.bilibili.com/([0-9]+)", url)
@@ -33,7 +33,6 @@ class LiveParser:
         if short_id:
             LiveInfo.short_id = short_id[0]
 
-    @process_exception
     def get_live_room_info(self):
         # 获取直播间信息
         url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={LiveInfo.short_id}"
@@ -55,7 +54,6 @@ class LiveParser:
 
         live_episode_parser(LiveInfo.title, LiveInfo.status_str)
 
-    @process_exception
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
 
@@ -70,8 +68,7 @@ class LiveParser:
 
         LiveInfo.live_quality_id_list = [entry["qn"] for entry in quality_description]
         LiveInfo.live_quality_desc_list = [entry["desc"] for entry in quality_description]
-    
-    @process_exception
+
     def get_live_stream(self, qn: int):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
@@ -85,15 +82,22 @@ class LiveParser:
         LiveInfo.m3u8_link = info["durl"][0]["url"]
 
     def parse_url(self, url: str):
-        # 清除当前直播信息
-        self.clear_live_info()
+        def worker():
+            # 清除当前直播信息
+            self.clear_live_info()
 
-        # 获取直播间短号
-        self.get_short_id(url)
+            # 获取直播间短号
+            self.get_short_id(url)
 
-        self.get_live_room_info()
+            self.get_live_room_info()
 
-        self.get_live_available_media_info()
+            self.get_live_available_media_info()
+        
+        try:
+            worker()
+
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback)
 
     def check_json(self, json: Dict):
         # 检查接口返回状态码
@@ -101,8 +105,7 @@ class LiveParser:
         error = ErrorUtils()
 
         if status_code != StatusCode.CODE_0:
-            # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
-            raise ParseError(error.getStatusInfo(status_code), status_code)
+            raise Exception("{} ({})".format(error.getStatusInfo(status_code), status_code))
 
     def clear_live_info(self):
         LiveInfo.title = ""

@@ -5,7 +5,7 @@ from typing import Dict
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
-from utils.common.error import process_exception, ErrorUtils, VIPError, ParseError, URLError, StatusCode
+from utils.common.exception import ErrorUtils, VIPError, URLError, StatusCode, GlobalException
 from utils.common.map import bangumi_type_mapping
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
@@ -47,10 +47,9 @@ class BangumiInfo:
         BangumiInfo.info_json.clear()
 
 class BangumiParser:
-    def __init__(self):
-        pass
+    def __init__(self, callback):
+        self.callback = callback
     
-    @process_exception
     def get_epid(self, url: str):
         epid = re.findall(r"ep([0-9]+)", url)
 
@@ -59,7 +58,6 @@ class BangumiParser:
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
-    @process_exception
     def get_season_id(self, url: str):
         season_id = re.findall(r"ss([0-9]+)", url)
 
@@ -68,7 +66,6 @@ class BangumiParser:
 
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
-    @process_exception
     def get_mid(self, url: str):
         mid = re.findall(r"md([0-9]*)", url)
         
@@ -83,7 +80,6 @@ class BangumiParser:
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
         self.url_type, self.url_type_value = "season_id", BangumiInfo.season_id
 
-    @process_exception
     def get_bangumi_info(self):
         # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
@@ -114,7 +110,6 @@ class BangumiParser:
 
         self.get_bangumi_type()
     
-    @process_exception
     def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
@@ -140,7 +135,6 @@ class BangumiParser:
         ExtraInfo.subtitle_type = Config.Extra.subtitle_type
         ExtraInfo.get_cover = Config.Extra.get_cover
 
-    @process_exception
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
@@ -154,24 +148,31 @@ class BangumiParser:
         BangumiInfo.type_name = bangumi_type_mapping.get(BangumiInfo.type_id, "未知")
 
     def parse_url(self, url: str):
-        # 清除当前的番组信息
-        self.clear_bangumi_info()
+        def worker():
+            # 清除当前的番组信息
+            self.clear_bangumi_info()
 
-        match UniversalTool.re_find_string(r"ep|ss|md", url):
-            case "ep":
-                self.get_epid(url)
+            match UniversalTool.re_find_string(r"ep|ss|md", url):
+                case "ep":
+                    self.get_epid(url)
 
-            case "ss":
-                self.get_season_id(url)
+                case "ss":
+                    self.get_season_id(url)
 
-            case "md":
-                self.get_mid(url)
+                case "md":
+                    self.get_mid(url)
 
-        # 先检查视频是否存在区域限制
-        self.check_bangumi_can_play()
+            # 先检查视频是否存在区域限制
+            self.check_bangumi_can_play()
 
-        self.get_bangumi_info()
-        self.get_bangumi_available_media_info()
+            self.get_bangumi_info()
+            self.get_bangumi_available_media_info()
+
+        try:
+            worker()
+
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback)
     
     def check_json(self, json: Dict):
         # 检查接口返回状态码
@@ -184,8 +185,7 @@ class BangumiParser:
                 # 如果提示大会员专享限制就不用抛出异常，因为和地区限制共用一个状态码 -10403
                 return
             
-            # 如果请求失败，则抛出 ParseError 异常，由 process_exception 进一步处理
-            raise ParseError(error.getStatusInfo(status_code), status_code)
+            raise Exception("{} ({})".format(error.getStatusInfo(status_code), status_code))
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()

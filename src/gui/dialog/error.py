@@ -3,10 +3,11 @@ import wx.adv
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
+from utils.common.exception import GlobalExceptionInfo
 
 class ErrorInfoDialog(wx.Dialog):
-    def __init__(self, parent, error_log: dict):
-        self.error_log = error_log
+    def __init__(self, parent, exception_info = GlobalExceptionInfo.info):
+        self.exception_info = exception_info
 
         wx.Dialog.__init__(self, parent, -1, "错误日志")
 
@@ -32,11 +33,11 @@ class ErrorInfoDialog(wx.Dialog):
 
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
 
-        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.error_log.get("timestamp", ""))))
-        source_lab = wx.StaticText(self, -1, "来源：{}".format(self.error_log.get("source", "")))
-        event_id_lab = wx.StaticText(self, -1, "错误 ID：{}".format(self.error_log.get("id", "")))
-        return_code_lab = wx.StaticText(self, -1, "返回值：{}".format(self.error_log.get("return_code", "")))
-        error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.error_log.get("error_type", "")))
+        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.timestamp)))
+        source_lab = wx.StaticText(self, -1, "来源：{}".format(self.exception_info.source))
+        event_id_lab = wx.StaticText(self, -1, "错误 ID：{}".format(self.exception_info.id))
+        return_code_lab = wx.StaticText(self, -1, "返回值：{}".format(self.exception_info.return_code))
+        error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.exception_type))
 
         box_sizer = wx.FlexGridSizer(3, 2, 0, 75)
         box_sizer.Add(time_lab, 0, wx.ALL, 10)
@@ -54,7 +55,7 @@ class ErrorInfoDialog(wx.Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = wx.TextCtrl(self, -1, self.error_log["log"], size = self.FromDIP((600, 250)), style = wx.TE_MULTILINE)
+        self.log_box = wx.TextCtrl(self, -1, self.exception_info.log, size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE)
         self.log_box.SetFont(font)
 
         self.save_btn = wx.Button(self, -1, "保存到文件", size = _get_scale_size((100, 28)))

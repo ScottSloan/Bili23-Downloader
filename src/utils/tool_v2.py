@@ -2,7 +2,6 @@ import os
 import re
 import json
 import ctypes
-import inspect
 import requests
 import subprocess
 import requests.auth
@@ -10,7 +9,7 @@ from datetime import datetime
 from typing import Optional, Callable, List
 
 from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.data_type import DownloadTaskInfo, ExceptionInfo
 from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
@@ -188,7 +187,7 @@ class DownloadFileTool:
 
         contents["header"] = _header()
         contents["task_info"] = info.to_dict()
-        contents["error_info"] = self.get_error_info()
+        contents["error_info"] = self.get_error_info().to_dict()
 
         if not contents:
             contents["thread_info"] = {}
@@ -233,11 +232,10 @@ class DownloadFileTool:
     def get_error_info(self):
         contents = self._read_download_file_json()
 
-        return contents.get("error_info", {
-            "timestamp": 0,
-            "return_code": 0,
-            "log": ""
-        })
+        info = ExceptionInfo()
+        info.from_dict(contents.get("error_info", {}))
+
+        return info
 
     def _read_download_file_json(self):
         if os.path.exists(self.file_path):
@@ -376,10 +374,6 @@ class UniversalTool:
     def get_time_str_from_timestamp(timestamp: int):
         return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
 
-    @staticmethod
-    def get_error_info_source(frame):
-        return "{} -> {}, Line {}".format(inspect.getmodule(frame).__name__, frame.f_code.co_name, frame.f_lineno)
-    
     @staticmethod
     def get_legal_name(_name: str):
         return re.sub(r'[/\:*?"<>|]', "", _name)

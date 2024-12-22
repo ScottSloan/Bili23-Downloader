@@ -13,7 +13,7 @@ from utils.parse.live import LiveInfo, LiveParser
 from utils.auth.login import QRLogin
 from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, UniversalTool, FFmpegCheckTool
-from utils.common.error import ErrorCallback, ErrorCode
+from utils.common.exception import ErrorCallback, ErrorCode, GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_mapping, live_quality_mapping
 from utils.common.icon_v2 import IconManager, IconType
 from utils.auth.wbi import WbiUtils
@@ -269,9 +269,9 @@ class MainWindow(Frame):
         ErrorCallback.onError = self.onError
         ErrorCallback.onRedirect = self.onRedirect
         
-        self.video_parser = VideoParser()
-        self.bangumi_parser = BangumiParser()
-        self.live_parser = LiveParser()
+        self.video_parser = VideoParser(self.onParseErrorCallback)
+        self.bangumi_parser = BangumiParser(self.onParseErrorCallback)
+        self.live_parser = LiveParser(self.onParseErrorCallback)
         self.activity_parser = FestivalParser(self.onError)
 
         self.download_window = DownloadManagerWindow(self)
@@ -335,6 +335,8 @@ class MainWindow(Frame):
         # 显示加载窗口
         self.processing_window = ProcessingWindow(self)
         self.processing_window.Show()
+
+        self.download_btn.Enable(False)
 
         # 开启解析线程
         self.onRedirect(url)
@@ -402,7 +404,7 @@ class MainWindow(Frame):
                 return
 
             case _:
-                self.onError(ErrorCode.Invalid_URL)
+                raise GlobalException("无效的链接", callback = self.onParseErrorCallback)
 
         if continue_to_parse:
             wx.CallAfter(callback)
@@ -538,9 +540,6 @@ class MainWindow(Frame):
                 msg = "解析失败：发生未知错误"
         
         self.infobar.ShowMessage(msg, flags = wx.ICON_ERROR)
-
-        self.processing_window.Hide()
-        self.download_btn.Enable(False)
 
         wx.CallAfter(self.SetFocus)
 
@@ -693,6 +692,16 @@ class MainWindow(Frame):
         self.treelist.set_list()
         self.update_video_count_label()
     
+    def onParseErrorCallback(self):
+        def worker():
+            self.processing_window.Hide()
+
+            info = GlobalExceptionInfo.info
+
+            wx.MessageDialog(self, f"解析失败\n\n在解析链接时遇到问题：{info.log}", "错误", wx.ICON_ERROR).ShowModal()
+
+        wx.CallAfter(worker)
+
     def update_video_count_label(self, checked: int = 0):
         if checked:
             _total = f"(共 {self.treelist._index} 个，已选择 {checked} 个)"

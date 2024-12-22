@@ -3,7 +3,7 @@ import json
 import requests
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.common.error import URLError
+from utils.common.exception import URLError
 
 class FestivalInfo:
     url: str = ""
