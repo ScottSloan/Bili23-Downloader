@@ -743,7 +743,7 @@ class DownloadTaskPanel(wx.Panel):
                     return wx.NO_BORDER
 
         # 初始化 UI
-        self.icon_manager = IconManager(self.GetDPIScaleFactor())
+        self.icon_manager = IconManager(self)
 
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))

@@ -39,7 +39,7 @@ class DetectDialog(wx.Dialog):
         
         _set_dark_mode()
 
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        icon_manager = IconManager(self)
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 

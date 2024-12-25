@@ -8,7 +8,6 @@ from typing import Callable
 
 from utils.common.data_type import ExceptionInfo
 from utils.common.map import status_code_map
-from utils.config import Config
 
 class GlobalExceptionInfo:
     info: ExceptionInfo = None
@@ -46,6 +45,7 @@ def exception_handler(exc_type, exc_value, exc_tb):
         return_code = ""
         callback = None
         url = None
+        use_traceback = False
 
     if re.findall(r'^[-+]?[0-9]+$', str(log)):
         _code = int(str(log))
@@ -76,8 +76,7 @@ def exception_handler(exc_type, exc_value, exc_tb):
         else:
             callback()
 
-    if Config.Misc.enable_debug:
-        traceback.print_exception(exc_type, exc_value, exc_tb)
+    traceback.print_exception(exc_type, exc_value, exc_tb)
 
 def thread_exception_handler(args):
     exception_handler(args.exc_type, args.exc_value, args.exc_traceback)

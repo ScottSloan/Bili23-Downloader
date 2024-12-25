@@ -49,7 +49,7 @@ class AboutWindow(wx.Dialog):
 
         _set_dark_mode()
 
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        icon_manager = IconManager(self)
 
         logo = wx.StaticBitmap(self, -1, _set_icon_background(icon_manager.get_icon_bitmap(IconType.APP_ICON_DEFAULT)).ConvertToBitmap())
 

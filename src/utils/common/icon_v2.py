@@ -21,8 +21,8 @@ class IconType(Enum):
     INFO_ICON = 18
 
 class IconManager:
-    def __init__(self, DPI_scale_factor: float):
-        self.DPI_scale_factor = DPI_scale_factor
+    def __init__(self, window: wx.Window):
+        self.window, self.DPI_scale_factor = window, window.GetDPIScaleFactor()
 
         if Config.Sys.dark_mode:
             self.dark_mode = True
@@ -76,18 +76,20 @@ class IconManager:
                 base64_string = self._assets_info_icon
             
         img: wx.svg.SVGimage = wx.svg.SVGimage.CreateFromBytes(BytesIO(base64.b64decode(base64_string)).getvalue())
-        
-        return img.ConvertToScaledBitmap(self._get_icon_size())
 
-    def _get_icon_size(self):
+        size = self._get_icon_scale_and_size()
+        
+        return img.ConvertToBitmap(scale = 0.5, width = size.width, height = size.height)
+
+    def _get_icon_scale_and_size(self):
         if self.DPI_scale_factor <= self.DPI_factor_1:
-            return (16, 16)
+            return wx.Size(16, 16)
 
         elif self.DPI_scale_factor <= self.DPI_factor_1_5:
-            return (24, 24)
+            return wx.Size(24, 24)
 
         else:
-            return (32, 32)
+            return wx.Size(32, 32)
 
     @property
     def _assets_app_icon_default(self):
@@ -153,7 +155,7 @@ class IconManager:
     @property
     def _assets_list_icon(self):
         if self.dark_mode:
-            return ""
+            return "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAsMCwyNTYsMjU2Ij4KPGcgZmlsbD0iI2ZmZmZmZiIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgZm9udC1mYW1pbHk9Im5vbmUiIGZvbnQtd2VpZ2h0PSJub25lIiBmb250LXNpemU9Im5vbmUiIHRleHQtYW5jaG9yPSJub25lIiBzdHlsZT0ibWl4LWJsZW5kLW1vZGU6IG5vcm1hbCI+PGcgdHJhbnNmb3JtPSJzY2FsZSg1LjEyLDUuMTIpIj48cGF0aCBkPSJNNCw0Yy0yLjE5OTIyLDAgLTQsMS44MDA3OCAtNCw0YzAsMi4xOTkyMiAxLjgwMDc4LDQgNCw0YzIuMTk5MjIsMCA0LC0xLjgwMDc4IDQsLTRjMCwtMi4xOTkyMiAtMS44MDA3OCwtNCAtNCwtNHpNNCw2YzEuMTE3MTksMCAyLDAuODgyODEgMiwyYzAsMS4xMTcxOSAtMC44ODI4MSwyIC0yLDJjLTEuMTE3MTksMCAtMiwtMC44ODI4MSAtMiwtMmMwLC0xLjExNzE5IDAuODgyODEsLTIgMiwtMnpNMTIsN3YyaDM4di0yek00LDIxYy0yLjE5OTIyLDAgLTQsMS44MDA3OCAtNCw0YzAsMi4xOTkyMiAxLjgwMDc4LDQgNCw0YzIuMTk5MjIsMCA0LC0xLjgwMDc4IDQsLTRjMCwtMi4xOTkyMiAtMS44MDA3OCwtNCAtNCwtNHpNNCwyM2MxLjExNzE5LDAgMiwwLjg4MjgxIDIsMmMwLDEuMTE3MTkgLTAuODgyODEsMiAtMiwyYy0xLjExNzE5LDAgLTIsLTAuODgyODEgLTIsLTJjMCwtMS4xMTcxOSAwLjg4MjgxLC0yIDIsLTJ6TTEyLDI0djJoMzh2LTJ6TTQsMzhjLTIuMTk5MjIsMCAtNCwxLjgwMDc4IC00LDRjMCwyLjE5OTIyIDEuODAwNzgsNCA0LDRjMi4xOTkyMiwwIDQsLTEuODAwNzggNCwtNGMwLC0yLjE5OTIyIC0xLjgwMDc4LC00IC00LC00ek00LDQwYzEuMTE3MTksMCAyLDAuODgyODEgMiwyYzAsMS4xMTcxOSAtMC44ODI4MSwyIC0yLDJjLTEuMTE3MTksMCAtMiwtMC44ODI4MSAtMiwtMmMwLC0xLjExNzE5IDAuODgyODEsLTIgMiwtMnpNMTIsNDF2MmgzOHYtMnoiPjwvcGF0aD48L2c+PC9nPgo8L3N2Zz4="
         else:
             return "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZD0iTSA0IDQgQyAxLjgwMDc4MSA0IDAgNS44MDA3ODEgMCA4IEMgMCAxMC4xOTkyMTkgMS44MDA3ODEgMTIgNCAxMiBDIDYuMTk5MjE5IDEyIDggMTAuMTk5MjE5IDggOCBDIDggNS44MDA3ODEgNi4xOTkyMTkgNCA0IDQgWiBNIDQgNiBDIDUuMTE3MTg4IDYgNiA2Ljg4MjgxMyA2IDggQyA2IDkuMTE3MTg4IDUuMTE3MTg4IDEwIDQgMTAgQyAyLjg4MjgxMyAxMCAyIDkuMTE3MTg4IDIgOCBDIDIgNi44ODI4MTMgMi44ODI4MTMgNiA0IDYgWiBNIDEyIDcgTCAxMiA5IEwgNTAgOSBMIDUwIDcgWiBNIDQgMjEgQyAxLjgwMDc4MSAyMSAwIDIyLjgwMDc4MSAwIDI1IEMgMCAyNy4xOTkyMTkgMS44MDA3ODEgMjkgNCAyOSBDIDYuMTk5MjE5IDI5IDggMjcuMTk5MjE5IDggMjUgQyA4IDIyLjgwMDc4MSA2LjE5OTIxOSAyMSA0IDIxIFogTSA0IDIzIEMgNS4xMTcxODggMjMgNiAyMy44ODI4MTMgNiAyNSBDIDYgMjYuMTE3MTg4IDUuMTE3MTg4IDI3IDQgMjcgQyAyLjg4MjgxMyAyNyAyIDI2LjExNzE4OCAyIDI1IEMgMiAyMy44ODI4MTMgMi44ODI4MTMgMjMgNCAyMyBaIE0gMTIgMjQgTCAxMiAyNiBMIDUwIDI2IEwgNTAgMjQgWiBNIDQgMzggQyAxLjgwMDc4MSAzOCAwIDM5LjgwMDc4MSAwIDQyIEMgMCA0NC4xOTkyMTkgMS44MDA3ODEgNDYgNCA0NiBDIDYuMTk5MjE5IDQ2IDggNDQuMTk5MjE5IDggNDIgQyA4IDM5LjgwMDc4MSA2LjE5OTIxOSAzOCA0IDM4IFogTSA0IDQwIEMgNS4xMTcxODggNDAgNiA0MC44ODI4MTMgNiA0MiBDIDYgNDMuMTE3MTg4IDUuMTE3MTg4IDQ0IDQgNDQgQyAyLjg4MjgxMyA0NCAyIDQzLjExNzE4OCAyIDQyIEMgMiA0MC44ODI4MTMgMi44ODI4MTMgNDAgNCA0MCBaIE0gMTIgNDEgTCAxMiA0MyBMIDUwIDQzIEwgNTAgNDEgWiI+PC9wYXRoPjwvc3ZnPg=="
 

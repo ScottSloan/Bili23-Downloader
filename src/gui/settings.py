@@ -102,7 +102,7 @@ class DownloadTab(wx.Panel):
 
             self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        icon_manager = IconManager(self)
 
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 

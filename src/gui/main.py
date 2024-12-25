@@ -86,7 +86,7 @@ class MainWindow(Frame):
 
         _dark_mode()
 
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        icon_manager = IconManager(self)
 
         # 避免出现 iCCP sRGB 警告
         wx.Image.SetDefaultLoadFlags(0)
