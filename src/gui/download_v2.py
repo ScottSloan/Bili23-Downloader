@@ -229,8 +229,7 @@ class DownloadManagerWindow(Frame):
                     _task_info = DownloadTaskInfo()
                     _task_info.load_from_dict(download_file_tool._read_download_file_json()["task_info"])
 
-                    # 如果下载状态为等待下载，或者正在下载，则更新为暂停中
-                    if _task_info.status in DownloadStatus.Alive.value:
+                    if _task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Downloading.value, DownloadStatus.Merging.value]:
                         _task_info.status = DownloadStatus.Pause.value
 
                     _download_task_info_list.append(_task_info)
