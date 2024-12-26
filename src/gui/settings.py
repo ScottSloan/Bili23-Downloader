@@ -176,6 +176,14 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换音视频流 CDN")
+        self.enable_custom_cdn_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.enable_custom_cdn_tip.SetToolTip("说明")
+
+        enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) & (~wx.TOP), 10)
+
         self.custom_cdn_auto_switch_radio = wx.RadioButton(self.scrolled_panel, -1, "自动切换")
         self.custom_cdn_manual_radio = wx.RadioButton(self.scrolled_panel, -1, "手动设置")
 
@@ -209,7 +217,7 @@ class DownloadTab(wx.Panel):
         vbox.Add(dolby_hbox, 0, wx.EXPAND)
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        vbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), 10)
+        vbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
         vbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
         vbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
@@ -243,6 +251,7 @@ class DownloadTab(wx.Panel):
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
         self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
         self.dolby_tip.Bind(wx.EVT_LEFT_UP, self.onDolbyTipEVT)
+        self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
@@ -385,6 +394,9 @@ class DownloadTab(wx.Panel):
     
     def onDolbyTipEVT(self, event):
         wx.MessageDialog(self, '自动下载杜比选项说明\n\n当上方选择 "自动" 时，若视频支持杜比，则自动下载杜比视界或杜比全景声，否则需要手动选择\n\n开启此项前请先确认设备是否支持杜比', "说明", wx.ICON_INFORMATION).ShowModal()
+
+    def onCustomCDNTipEVT(self, event):
+        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n由于B站同时使用多家CDN（图便宜大厂小厂混用），当接口返回某些不知名小厂提供的CDN加速链接时，就会导致部分视频下载失败。\n\n现在程序默认开启CDN替换功能，将接口返回的所有下载链接自动替换为华为云、腾讯云或者阿里云大厂的CDN，它们的稳定性明显优于小厂。\n当选择自动切换CDN时，能解决部分视频下载失败的问题，但下载速度可能会偏慢，用户可自行Ping测试这些地址，选择延迟最低的一个。\n\n为保证良好的下载体验，不建议用户关闭此选项。", "说明", wx.ICON_INFORMATION).ShowModal()
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):

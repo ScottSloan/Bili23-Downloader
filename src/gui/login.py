@@ -128,7 +128,8 @@ class LoginWindow(wx.Dialog):
                 "login": True,
                 "face_url": info["face_url"],
                 "username": info["username"],
-                "sessdata": info["sessdata"]
+                "sessdata": info["sessdata"],
+                "timestamp": round(time.time())
             }
 
             utils = ConfigUtils()

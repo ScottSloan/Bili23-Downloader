@@ -17,7 +17,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1540
 
-        release_date: str = "2024/12/25"
+        release_date: str = "2024/12/26"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -40,6 +40,7 @@ class Config:
         username: str = ""
         face_url: str = ""
         sessdata: str = ""
+        timestamp: int = 0
 
     class Misc:
         episode_display_mode: int = 1
@@ -73,7 +74,7 @@ class Config:
 
         enable_custom_cdn: bool = True
         custom_cdn_mode: int = 0
-        custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
+        custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
     
     class Merge:
         override_file: bool = False
@@ -206,6 +207,7 @@ class ConfigUtils:
         Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
         Config.User.username = user_config["user"].get("username", Config.User.username)
         Config.User.sessdata = user_config["user"].get("sessdata", Config.User.sessdata)
+        Config.User.timestamp = user_config["user"].get("timestamp", Config.User.timestamp)
 
         _check()
 

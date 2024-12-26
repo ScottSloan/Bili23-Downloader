@@ -93,7 +93,8 @@ class LoginBase:
         return {
             "username": resp["uname"],
             "face_url": resp["face"],
-            "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata
+            "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata,
+            "timestamp": round(time.time())
         }
 
     def access_main_domain(self):
@@ -125,7 +126,8 @@ class LoginBase:
             "login": False,
             "face_url": "",
             "username": "",
-            "sessdata": ""
+            "sessdata": "",
+            "timestamp": 0
         }
 
         utils = ConfigUtils()
