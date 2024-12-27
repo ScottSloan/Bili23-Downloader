@@ -10,6 +10,8 @@ from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.activity import ActivityParser
 from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
+from utils.parse.cheese import CheeseParser
+
 from utils.auth.login import QRLogin
 from utils.common.thread import Thread
 from utils.tool_v2 import UniversalTool, FFmpegCheckTool
@@ -278,6 +280,7 @@ class MainWindow(Frame):
         self.live_parser = LiveParser(callback)
         self.activity_parser = ActivityParser(callback)
         self.b23_parser = B23Parser(callback)
+        self.cheese_parser = CheeseParser(callback)
 
         self.download_window = DownloadManagerWindow(self)
 
@@ -368,7 +371,13 @@ class MainWindow(Frame):
             self.show_episode_list()
 
         def worker():
-            match UniversalTool.re_find_string(r"av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
+            match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
+                case "cheese":
+                    # 课程，都使用 ep, season_id，与番组相同，需要匹配 cheese 特征字
+                    self.current_parse_type = ParseType.Cheese
+
+                    return_code = self.cheese_parser.parse_url(url)
+
                 case "av" | "BV":
                     # 用户投稿视频
                     self.current_parse_type = ParseType.Video

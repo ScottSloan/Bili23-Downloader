@@ -4,6 +4,7 @@ class ParseType(Enum):
     Video = 1             # 投稿视频
     Bangumi = 2           # 番组
     Live = 3              # 直播
+    Cheese = 4            # 课程
 
 class VideoType(Enum):
     Single = 1            # 单个视频

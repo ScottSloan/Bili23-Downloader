@@ -20,6 +20,7 @@ test.py
 test_2.py
 bilidanmu.proto
 config.json
+cheese.json
 
 # commitizen
 cz.json
