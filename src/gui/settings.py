@@ -9,7 +9,7 @@ from gui.templates import ScrolledPanel
 from gui.dialog.ffmpeg import DetectDialog
 
 from utils.config import Config, ConfigUtils
-from utils.tool_v2 import RequestTool, DownloadFileTool
+from utils.tool_v2 import RequestTool, DownloadFileTool, UniversalTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, cdn_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
@@ -939,6 +939,7 @@ class MiscTab(wx.Panel):
         self.browse_player_btn.Bind(wx.EVT_BUTTON, self.onBrowsePlayerEVT)
 
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
+        self.reset_default_btn.Bind(wx.EVT_BUTTON, self.onResetToDefaultEVT)
 
     def init_data(self):
         match EpisodeDisplayType(Config.Misc.episode_display_mode):
@@ -1036,6 +1037,14 @@ class MiscTab(wx.Panel):
             DownloadFileTool._clear_all_files()
 
             # 退出程序
+            exit()
+    
+    def onResetToDefaultEVT(self, event):
+        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n恢复默认设置后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+            UniversalTool.remove_files(os.getcwd(), ["config.json"])
+
             exit()
 
     def onConfirm(self):
