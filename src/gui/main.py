@@ -10,7 +10,7 @@ from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.activity import ActivityParser
 from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
-from utils.parse.cheese import CheeseParser
+from utils.parse.cheese import CheeseInfo, CheeseParser
 
 from utils.auth.login import QRLogin
 from utils.common.thread import Thread
@@ -378,6 +378,8 @@ class MainWindow(Frame):
 
                     return_code = self.cheese_parser.parse_url(url)
 
+                    wx.CallAfter(self.setVideoQualityList)
+
                 case "av" | "BV":
                     # 用户投稿视频
                     self.current_parse_type = ParseType.Video
@@ -502,6 +504,10 @@ class MainWindow(Frame):
             case ParseType.Bangumi:
                 video_quality_id_list = BangumiInfo.video_quality_id_list
                 video_quality_desc_list = BangumiInfo.video_quality_desc_list
+
+            case ParseType.Cheese:
+                video_quality_id_list = CheeseInfo.video_quality_id_list
+                video_quality_desc_list = CheeseInfo.video_quality_desc_list
 
         # 自动在最前添加自动选项
         video_quality_desc_list.insert(0, "自动")

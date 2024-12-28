@@ -8,13 +8,15 @@ from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 from utils.common.icon_v2 import IconManager, IconType
 from utils.tool_v2 import UniversalTool
 from utils.config import Config
+from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
+from utils.common.enums import ParseType, MergeType
+
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo
-from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
-from utils.common.enums import ParseType, MergeType
+from utils.parse.cheese import CheeseInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
@@ -141,6 +143,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 case ParseType.Bangumi:
                     self.get_bangumi_download_info(title, EpisodeInfo.cid_dict.get(cid))
 
+                case ParseType.Cheese:
+                    self.get_cheese_download_info(title, EpisodeInfo.cid_dict.get(cid))
+
         self.video_quality_id = video_quality_id
         self.download_task_info_list = []
 
@@ -157,7 +162,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if cid:
                         get_item_info(title, cid)
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
@@ -169,6 +174,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.referer_url = referer_url
         download_info.bvid = bvid
         download_info.cid = cid
+        download_info.aid = aid
+        download_info.ep_id = ep_id
         download_info.duration = duration
 
         download_info.video_quality_id = self.video_quality_id
@@ -182,6 +189,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.get_danmaku = ExtraInfo.get_danmaku
         download_info.danmaku_type = ExtraInfo.danmaku_type
         download_info.get_cover = ExtraInfo.get_cover
+        download_info.get_subtitle = ExtraInfo.get_subtitle
+        download_info.subtitle_type = ExtraInfo.subtitle_type
 
         return download_info
 
@@ -213,6 +222,17 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         referer_url = BangumiInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url, bvid, cid))
+    
+    def get_cheese_download_info(self, title: str, entry: dict):
+        cover_url = entry["cover"]
+        aid = entry["aid"]
+        cid = entry["cid"]
+        ep_id = entry["id"]
+        duration = entry["duration"]
+
+        referer_url = CheeseInfo.url
+
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):

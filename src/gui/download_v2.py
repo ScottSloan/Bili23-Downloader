@@ -19,7 +19,7 @@ from utils.common.icon_v2 import IconManager, IconType
 from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.module.downloader import Downloader
-from utils.parse.extra import ExtraInfo, ExtraParser
+from utils.parse.extra import ExtraParser
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus
@@ -1048,13 +1048,13 @@ class DownloadTaskPanel(wx.Panel):
             # 下载完成后，才进行下载附加内容
             extra_parser = ExtraParser(self.utils.file_title, self.task_info.bvid, self.task_info.cid, self.task_info.duration)
             
-            if ExtraInfo.get_danmaku:
+            if self.task_info.get_danmaku:
                 extra_parser.get_danmaku()
 
-            if ExtraInfo.get_cover:
+            if self.task_info.get_cover:
                 _get_cover()
 
-            if ExtraInfo.get_subtitle:
+            if self.task_info.get_subtitle:
                 extra_parser.get_subtitle()
 
         wx.CallAfter(callback)

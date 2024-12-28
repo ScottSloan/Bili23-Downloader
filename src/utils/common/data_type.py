@@ -19,7 +19,9 @@ class DownloadTaskInfo:
 
         # 视频 bvid 和 cid 信息
         self.bvid: str = ""
-        self.cid: int = ""
+        self.cid: int = 0
+        self.aid: int = 0
+        self.ep_id: int = 0
 
         # 视频原标题
         self.title: str = ""
@@ -53,6 +55,8 @@ class DownloadTaskInfo:
         self.get_danmaku: bool = False
         self.danmaku_type: int = 0
         self.get_cover: bool = False
+        self.get_subtitle: bool = False
+        self.subtitle_type: int = 0
 
     def to_dict(self):
         return {
@@ -63,6 +67,8 @@ class DownloadTaskInfo:
             "cover_url": self.cover_url,
             "bvid": self.bvid,
             "cid": self.cid,
+            "aid": self.aid,
+            "ep_id": self.ep_id,
             "title": self.title,
             "title_legal": self.title_legal,
             "duration": self.duration,
@@ -78,7 +84,9 @@ class DownloadTaskInfo:
             "video_merge_type": self.video_merge_type,
             "get_danmaku": self.get_danmaku,
             "danmaku_type": self.danmaku_type,
-            "get_cover": self.get_cover
+            "get_cover": self.get_cover,
+            "get_subtitle": self.get_subtitle,
+            "subtitle_type": self.subtitle_type
         }
 
     def load_from_dict(self, data: Dict):
@@ -89,6 +97,8 @@ class DownloadTaskInfo:
         self.cover_url = data["cover_url"]
         self.bvid = data["bvid"]
         self.cid = data["cid"]
+        self.aid = data["aid"]
+        self.ep_id = data["ep_id"]
         self.title = data["title"]
         self.title_legal = data["title_legal"]
         self.duration = data["duration"]
@@ -105,6 +115,8 @@ class DownloadTaskInfo:
         self.get_danmaku = data["get_danmaku"]
         self.danmaku_type = data["danmaku_type"]
         self.get_cover = data["get_cover"]
+        self.get_subtitle = data["get_subtitle"]
+        self.subtitle_type = data["subtitle_type"]
 
 class ThreadInfo:
     # 线程信息
