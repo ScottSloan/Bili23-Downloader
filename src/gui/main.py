@@ -672,6 +672,9 @@ class MainWindow(Frame):
             case ParseType.Bangumi:
                 self.bangumi_parser.parse_episodes()
 
+            case ParseType.Cheese:
+                self.cheese_parser.parse_episodes()
+
         self.treelist.set_list()
         self.update_video_count_label()
     
@@ -700,6 +703,9 @@ class MainWindow(Frame):
 
             case ParseType.Live:
                 _type = "直播"
+            
+            case ParseType.Cheese:
+                _type = "课程"
         
         self.type_lab.SetLabel(f"{_type} {_total}")
 

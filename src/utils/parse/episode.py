@@ -1,6 +1,7 @@
 from utils.config import Config
 from utils.tool_v2 import FormatTool
 from utils.common.enums import ParseType, EpisodeDisplayType
+from utils.common.map import cheese_status_map
 
 class EpisodeInfo:
     data: dict = {}
@@ -155,3 +156,21 @@ def live_episode_parser(title: str, status: str):
         "duration": "--:--",
         "cid": 0
     })
+
+def cheese_episode_parser(info_json: dict, ep_id: int):
+    def _get_entry(episode: dict):
+        return {
+            "title": episode["title"],
+            "cid": episode["cid"],
+            "badge": episode["label"] if "label" in episode else cheese_status_map.get(episode.get("status")),
+            "duration": FormatTool.format_duration(episode, ParseType.Video)
+        }
+    
+    for episode in info_json["episodes"]:
+        if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
+            if ep_id != episode["id"]:
+                continue
+
+        EpisodeInfo.cid_dict[episode["cid"]] = episode
+
+        EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))

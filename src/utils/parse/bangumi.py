@@ -92,13 +92,11 @@ class BangumiParser:
         
         info_result = BangumiInfo.info_json = resp["result"]
 
-        BangumiInfo.url = info_result["episodes"][0]["link"]
-        BangumiInfo.title = info_result["title"]
-
         BangumiInfo.payment = True if "payment" in info_result else False
         
         BangumiInfo.episodes_list = info_result["episodes"]
 
+        BangumiInfo.title = info_result["title"]
         BangumiInfo.url = BangumiInfo.episodes_list[0]["link"]
         BangumiInfo.bvid = BangumiInfo.episodes_list[0]["bvid"]
         BangumiInfo.cid = BangumiInfo.episodes_list[0]["cid"]

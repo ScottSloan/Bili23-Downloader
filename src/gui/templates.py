@@ -45,7 +45,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         
         self.AppendColumn("序号", width = self.FromDIP(85))
         self.AppendColumn("标题", width = self.FromDIP(375))
-        self.AppendColumn("备注", width = self.FromDIP(50))
+        self.AppendColumn("备注", width = self.FromDIP(60))
         self.AppendColumn("时长", width = self.FromDIP(75))
 
     def set_list(self):

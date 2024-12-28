@@ -117,6 +117,12 @@ cdn_map = {
     7: "upos-sz-mirrorali.bilivideo.com"
 }
 
+cheese_status_map = {
+    1: "全集试看",
+    2: "付费",
+    3: "部分试看"
+}
+
 status_code_map = {
     0: "请求成功",
     1: "未找到该房间",
