@@ -119,7 +119,7 @@ class CheeseParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.error_callback)
+            raise GlobalException(e, callback = self.callback.error_callback) from e
     
     def check_json(self, json: dict):
         # 检查接口返回状态码

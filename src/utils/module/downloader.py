@@ -306,7 +306,7 @@ class Downloader:
             raise self._e
         
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.onErrorCallback, use_traceback = True)
+            raise GlobalException(e, callback = self.callback.onErrorCallback) from e
     
     def get_file_size(self, url_list: list, referer_url: str, path: str):
         def request_head_gen():

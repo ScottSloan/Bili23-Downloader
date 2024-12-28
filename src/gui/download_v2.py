@@ -400,6 +400,13 @@ class DownloadUtils:
 
                     return json_dash["result"]["dash"]
                 
+                case ParseType.Cheese:
+                    url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
+
+                    json_dash = request_get(url)
+
+                    return json_dash["data"]["dash"]
+                
                 case _:
                     self.callback.onDownloadFailedCallback()
         
@@ -493,26 +500,23 @@ class DownloadUtils:
                 # 视频不存在音频，标记 flag 为仅下载视频
                 self.task_info.video_merge_type = MergeType.Only_Video.value
 
-        try:
-            json_dash = get_json()
+        
+        json_dash = get_json()
 
-            self._video_download_url_list = self._audio_download_url_list = []
+        self._video_download_url_list = self._audio_download_url_list = []
 
-            get_video_available_quality()
+        get_video_available_quality()
 
-            get_video_available_codec()
+        get_video_available_codec()
 
-            get_audio_available_quality()
-
-        except Exception:
-            self.callback.onDownloadFailedCallback()
+        get_audio_available_quality()
 
     def get_downloader_info_list(self):
         try:
             self.get_video_bangumi_download_url()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.onDownloadFailedCallback, use_traceback = True)
+            raise GlobalException(e, callback = self.callback.onDownloadFailedCallback) from e
 
         _temp_info = []
 

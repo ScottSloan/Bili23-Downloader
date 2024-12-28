@@ -13,39 +13,30 @@ class GlobalExceptionInfo:
     info: ExceptionInfo = None
 
 class GlobalException(Exception):
-    def __init__(self, log: str = "", return_code: str = "", callback: Callable = None, url: str = None, use_traceback: bool = False, message: str = ""):
+    def __init__(self, log: str = "", return_code: str = "", callback: Callable = None, url: str = None, message: str = ""):
         super().__init__(message)
 
         self.log = log
         self.return_code = return_code
         self.callback = callback
         self.url = url
-        self.use_traceback = use_traceback
 
 def exception_handler(exc_type, exc_value, exc_tb):
-    def get_last_line(exc_tb):
-        while exc_tb:
-            _module_name = inspect.getmodule(exc_tb.tb_frame).__name__
-            _co_name = exc_tb.tb_frame.f_code.co_name
-            _lineno = exc_tb.tb_frame.f_lineno
-            exc_tb = exc_tb.tb_next
-
-        return (_module_name, _co_name, _lineno)
-
-    _traceback = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
-
     if isinstance(exc_value, GlobalException):
-        log = exc_value.log
+        if exc_value.__cause__:
+            exc_tb = exc_value.__cause__.__traceback__
+            log = "".join(traceback.format_exception(type(exc_value.__cause__), exc_value.__cause__, exc_tb))
+        else:
+            log = exc_value.log
+
         return_code = exc_value.return_code
         callback = exc_value.callback
         url = exc_value.url
-        use_traceback = exc_value.use_traceback
     else:
         log = exc_value
         return_code = ""
         callback = None
         url = None
-        use_traceback = False
 
     if re.findall(r'^[-+]?[0-9]+$', str(log)):
         _code = int(str(log))
@@ -54,18 +45,12 @@ def exception_handler(exc_type, exc_value, exc_tb):
         _code = "150"
         log = f"{log.__class__.__name__}: {log}"
 
-    (_module_name, _co_name, _lineno) = get_last_line(exc_tb)
-
-    if use_traceback:
-        log = _traceback
-
     _info = ExceptionInfo()
     _info.timestamp = round(time.time())
     _info.log = log
-    _info.traceback = _traceback
     _info.exception_type = exc_type.__name__
     _info.id = str(_code)
-    _info.source = "{} -> {}, Line {}".format(_module_name, _co_name, _lineno)
+    _info.source = "{} -> {}, Line {}".format(inspect.getmodule(exc_tb.tb_frame).__name__, exc_tb.tb_frame.f_code.co_name, exc_tb.tb_frame.f_lineno)
     _info.return_code = return_code
 
     GlobalExceptionInfo.info = _info

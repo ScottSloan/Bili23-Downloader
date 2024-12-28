@@ -24,7 +24,4 @@ class B23Parser:
             return worker()
         
         except Exception as e:
-            if not isinstance(e, GlobalException):
-                raise GlobalException(e, callback = self.callback.error_callback)
-            else:
-                raise e
+            raise GlobalException(e, callback = self.callback.error_callback) from e

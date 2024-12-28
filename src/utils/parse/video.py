@@ -158,10 +158,7 @@ class VideoParser:
             return worker()
 
         except Exception as e:
-            if not isinstance(e, GlobalException):
-                raise GlobalException(e, callback = self.callback.error_callback)
-            else:
-                raise e
+            raise GlobalException(e, callback = self.callback.error_callback) from e
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
