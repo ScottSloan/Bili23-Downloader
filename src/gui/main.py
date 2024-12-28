@@ -4,7 +4,6 @@ import time
 import wx.py
 import requests
 
-from utils.config import Config
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.activity import ActivityParser
@@ -12,6 +11,7 @@ from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 
+from utils.config import Config
 from utils.auth.wbi import WbiUtils
 from utils.auth.login import QRLogin
 from utils.tool_v2 import UniversalTool, FFmpegCheckTool
@@ -228,7 +228,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLoadConverter, id = self.ID_CONVERTER)
         self.Bind(wx.EVT_MENU, self.onAboutEVT, id = self.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.onCheckUpdateEVT, id = self.ID_CHECK_UPDATE)
-        self.Bind(wx.EVT_MENU, self.onLogout, id = self.ID_LOGOUT)
+        self.Bind(wx.EVT_MENU, self.onLogoutEVT, id = self.ID_LOGOUT)
         self.Bind(wx.EVT_MENU, self.onRefreshEVT, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelpEVT, id = self.ID_HELP)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_SINGLE)
@@ -550,8 +550,8 @@ class MainWindow(Frame):
         self.login_window = LoginWindow(self, callback)
         self.login_window.ShowModal()
 
-    def onLogout(self, event):
-        dlg = wx.MessageDialog(self, f'确认注销登录\n\n是否要清除 {Config.User.username} 账号的 Cookie 信息？', "注销", wx.ICON_WARNING | wx.YES_NO)
+    def onLogoutEVT(self, event):
+        dlg = wx.MessageDialog(self, '注销登录\n\n是否要注销登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_YES:
             session = requests.sessions.Session()

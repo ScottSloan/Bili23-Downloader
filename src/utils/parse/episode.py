@@ -162,9 +162,18 @@ def cheese_episode_parser(info_json: dict, ep_id: int):
         return {
             "title": episode["title"],
             "cid": episode["cid"],
-            "badge": episode["label"] if "label" in episode else cheese_status_map.get(episode.get("status")),
+            "badge": _get_label(episode),
             "duration": FormatTool.format_duration(episode, ParseType.Video)
         }
+    
+    def _get_label(episode: dict):
+        if episode["status"] != 1:
+            if "label" in episode:
+                return episode["label"]
+            else:
+                return cheese_status_map.get(episode.get("status"))
+        else:
+            return ""
     
     for episode in info_json["episodes"]:
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
