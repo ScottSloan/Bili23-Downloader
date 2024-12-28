@@ -13,8 +13,8 @@ class GlobalExceptionInfo:
     info: ExceptionInfo = None
 
 class GlobalException(Exception):
-    def __init__(self, log: str = "", return_code: str = "", callback: Callable = None, url: str = None, message: str = ""):
-        super().__init__(message)
+    def __init__(self, log: str = "", return_code: str = "", callback: Callable = None, url: str = None):
+        super().__init__(log)
 
         self.log = log
         self.return_code = return_code
@@ -22,44 +22,67 @@ class GlobalException(Exception):
         self.url = url
 
 def exception_handler(exc_type, exc_value, exc_tb):
-    if isinstance(exc_value, GlobalException):
-        if exc_value.__cause__:
-            exc_tb = exc_value.__cause__.__traceback__
-            log = "".join(traceback.format_exception(type(exc_value.__cause__), exc_value.__cause__, exc_tb))
-        else:
-            log = exc_value.log
-
+    def _global_exception(exc_value: GlobalException):
         return_code = exc_value.return_code
         callback = exc_value.callback
         url = exc_value.url
-    else:
-        log = exc_value
-        return_code = ""
-        callback = None
-        url = None
 
-    if re.findall(r'^[-+]?[0-9]+$', str(log)):
-        _code = int(str(log))
-        log = "{} ({})".format(status_code_map.get(_code, f"未知错误 ({_code})"), _code)
-    else:
-        _code = "150"
-        log = f"{log.__class__.__name__}: {log}"
+        if exc_value.__cause__:
+            log = _get_traceback_string(exc_value.__cause__)
+            _traceback = exc_value.__cause__.__traceback__
+            _exception_type = type(exc_value.__cause__).__name__
 
-    _info = ExceptionInfo()
-    _info.timestamp = round(time.time())
-    _info.log = log
-    _info.exception_type = exc_type.__name__
-    _info.id = str(_code)
-    _info.source = "{} -> {}, Line {}".format(inspect.getmodule(exc_tb.tb_frame).__name__, exc_tb.tb_frame.f_code.co_name, exc_tb.tb_frame.f_lineno)
-    _info.return_code = return_code
+            id, short_log = _get_error_id_and_short_log(exc_value.__cause__)
 
-    GlobalExceptionInfo.info = _info
-
-    if callback:
-        if url:
-            callback(url)
         else:
-            callback()
+            log = _get_traceback_string(exc_value)
+            _traceback = exc_tb
+            _exception_type = exc_type.__name__
+
+            id, short_log = _get_error_id_and_short_log(exc_value.log)
+
+        GlobalExceptionInfo.info = _get_exception_info(log, return_code, _traceback, id, short_log, _exception_type)
+
+        if callback:
+            if url:
+                callback(url)
+            else:
+                callback()
+    
+    def _other_exception(exc_value):
+        return_code = ""
+
+        id, short_log = _get_error_id_and_short_log(exc_value)
+        
+        GlobalExceptionInfo.info = _get_exception_info(exc_value, return_code, exc_tb, id, short_log, exc_type.__name__)
+
+    def _get_traceback_string(exc_value: BaseException):
+        return "".join(traceback.format_exception(type(exc_value), exc_value, exc_value.__traceback__))
+    
+    def _get_error_id_and_short_log(log: str):
+        if re.findall(r'^[-+]?[0-9]+$', str(log)):
+            id = int(str(log))
+            return str(id), "{} ({})".format(status_code_map.get(id, f"未知错误 ({id})"), id)
+        else:
+            return "150", f"{log.__class__.__name__}: {log}"
+    
+    def _get_exception_info(log: str, return_code: str, exc_tb, id: str, short_log: str, exception_type: str):
+        info = ExceptionInfo()
+        info.timestamp = round(time.time())
+        info.log = log
+        info.short_log = short_log
+        info.exception_type = exception_type
+        info.id = id
+        info.source = "{} -> {}, Line {}".format(inspect.getmodule(exc_tb.tb_frame).__name__, exc_tb.tb_frame.f_code.co_name, exc_tb.tb_frame.f_lineno)
+        info.return_code = return_code
+
+        return info
+
+    if isinstance(exc_value, GlobalException):
+        _global_exception(exc_value)
+
+    else:
+        _other_exception(exc_value)
 
     traceback.print_exception(exc_type, exc_value, exc_tb)
 

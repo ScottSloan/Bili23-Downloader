@@ -55,7 +55,7 @@ class ErrorInfoDialog(wx.Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = wx.TextCtrl(self, -1, self.exception_info.log, size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE)
+        self.log_box = wx.TextCtrl(self, -1, str(self.exception_info.log), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE)
         self.log_box.SetFont(font)
 
         self.save_btn = wx.Button(self, -1, "保存到文件", size = _get_scale_size((100, 28)))

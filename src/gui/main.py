@@ -12,26 +12,27 @@ from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 
+from utils.auth.wbi import WbiUtils
 from utils.auth.login import QRLogin
-from utils.common.thread import Thread
 from utils.tool_v2 import UniversalTool, FFmpegCheckTool
+from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
-from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode
 from utils.common.data_type import ParseCallback
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
-from gui.dialog.about import AboutWindow
-from gui.dialog.processing import ProcessingWindow
 from gui.download_v2 import DownloadManagerWindow
-from gui.dialog.update import UpdateWindow
 from gui.settings import SettingWindow
 from gui.login import LoginWindow
+from gui.dialog.about import AboutWindow
+from gui.dialog.processing import ProcessingWindow
+from gui.dialog.update import UpdateWindow
 from gui.dialog.converter import ConverterWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.option import OptionDialog
+from gui.dialog.error import ErrorInfoDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -690,7 +691,12 @@ class MainWindow(Frame):
 
             info = GlobalExceptionInfo.info
 
-            wx.MessageDialog(self, f"解析失败\n\n{info.log}\n\n故障模块：{info.source}", "错误", wx.ICON_ERROR).ShowModal()
+            dlg = wx.MessageDialog(self, f"解析失败\n\n{info.short_log}\n\n故障模块：{info.source}", "错误", wx.ICON_ERROR | wx.YES_NO)
+            dlg.SetYesNoLabels("详细信息", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)
+                dlg.ShowModal()
 
         wx.CallAfter(worker)
 

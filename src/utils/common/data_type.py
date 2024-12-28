@@ -202,6 +202,7 @@ class ExceptionInfo:
         self.return_code: str = ""
         self.exception_type: str = ""
         self.log: str = ""
+        self.short_log: str = ""
     
     def to_dict(self):
         return {
@@ -211,6 +212,7 @@ class ExceptionInfo:
             "return_code": self.return_code,
             "exception_type": self.exception_type,
             "log": self.log,
+            "short_log": self.short_log
         }
     
     def from_dict(self, data: dict):
@@ -220,6 +222,7 @@ class ExceptionInfo:
         self.return_code = data.get("return_code")
         self.exception_type = data.get("exception_type")
         self.log = data.get("log")
+        self.short_log = data.get("short_log")
 
 class ParseCallback:
     def __init__(self):
