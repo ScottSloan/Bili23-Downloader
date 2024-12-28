@@ -35,7 +35,11 @@ def exception_handler(exc_type, exc_value, exc_tb):
             id, short_log = _get_error_id_and_short_log(exc_value.__cause__)
 
         else:
-            log = _get_traceback_string(exc_value)
+            if return_code:
+                log = exc_value.log
+            else:
+                log = _get_traceback_string(exc_value)
+            
             _traceback = exc_tb
             _exception_type = exc_type.__name__
 
@@ -77,7 +81,7 @@ def exception_handler(exc_type, exc_value, exc_tb):
         info.return_code = return_code
 
         return info
-
+    
     if isinstance(exc_value, GlobalException):
         _global_exception(exc_value)
 

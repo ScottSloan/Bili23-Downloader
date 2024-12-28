@@ -1,4 +1,6 @@
+import os
 import wx
+import json
 import wx.adv
 
 from utils.config import Config
@@ -83,4 +85,20 @@ class ErrorInfoDialog(wx.Dialog):
         self.save_btn.Bind(wx.EVT_BUTTON, self.onSaveJsonEVT)
 
     def onSaveJsonEVT(self, event):
-        pass
+        dialog = wx.FileDialog(self, "保存错误日志", os.getcwd(), wildcard = "错误日志|*.json", style = wx.FD_SAVE)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            contens = json.dumps(self.get_error_log(), ensure_ascii = False, indent = 4)
+
+            with open(dialog.GetPath(), "w", encoding = "utf-8") as f:
+                f.write(contens)
+    
+    def get_error_log(self):
+        return {
+            "记录时间": UniversalTool.get_time_str_from_timestamp(self.exception_info.timestamp),
+            "详细日志": self.exception_info.log,
+            "来源": self.exception_info.source,
+            "错误 ID": self.exception_info.id,
+            "异常类型": self.exception_info.exception_type,
+            "返回值": self.exception_info.return_code
+        }
