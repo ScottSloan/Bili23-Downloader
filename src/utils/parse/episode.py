@@ -167,13 +167,13 @@ def cheese_episode_parser(info_json: dict, ep_id: int):
         }
     
     def _get_label(episode: dict):
-        if episode["status"] != 1:
-            if "label" in episode:
-                return episode["label"]
-            else:
-                return cheese_status_map.get(episode.get("status"))
+        if "label" in episode:
+            return episode["label"]
         else:
-            return ""
+            if episode["status"] != 1:
+                return cheese_status_map.get(episode.get("status"))
+            else:
+                return ""
     
     for episode in info_json["episodes"]:
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:

@@ -28,7 +28,7 @@ Bili23 Downloader GUI
 #### **支持输入的 URL 链接**
 | 类型 | 支持的功能 | 示例 |
 | ---- | ---- | ---- |
-| 用户投稿视频 （含分P，合集视频） | 解析下载 | https://www.bilibili.com/video/BV1t94y1C7fp |
+| 用户投稿视频（含分P，合集视频） | 解析下载 | https://www.bilibili.com/video/BV1t94y1C7fp |
 | 剧集（含番剧、电影、纪录片、国创、电视剧、综艺） | 解析下载 | https://www.bilibili.com/bangumi/play/ss45574 |
 | 课程 | 解析下载 | https://www.bilibili.com/cheese/play/ep69165 |
 | 直播 | m3u8直链解析、录制 | https://live.bilibili.com/1 |
@@ -58,7 +58,7 @@ Bili23 Downloader GUI
 程序支持多线程下载（最多 8 线程）、并行下载（上限为 8 个，支持动态调整）、断点续传、下载限速、出错重试等功能。
 
 # 更新日志
-### **Version 1.54 (2024/12/28)**
+### **Version 1.54 (2024/12/30)**
 Version 1.54.0 Beta5 发布
 
 本次更新内容：
