@@ -613,9 +613,9 @@ class MainWindow(Frame):
         def _get_menu():
             context_menu = wx.Menu()
 
-            single_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_SINGLE, "获取单个视频", kind = wx.ITEM_RADIO)
-            in_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_IN_SECTION, "获取视频所在的合集", kind = wx.ITEM_RADIO)
-            all_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_ALL_SECTIONS, "获取全部相关视频", kind = wx.ITEM_RADIO)
+            single_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_SINGLE, "显示单个视频", kind = wx.ITEM_RADIO)
+            in_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_IN_SECTION, "显示视频所在的合集", kind = wx.ITEM_RADIO)
+            all_section_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_ALL_SECTIONS, "显示全部相关视频", kind = wx.ITEM_RADIO)
 
             show_episode_full_name = wx.MenuItem(context_menu, self.ID_EPISODE_FULL_NAME, "显示完整剧集名称", kind = wx.ITEM_CHECK)
 

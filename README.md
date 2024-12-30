@@ -23,7 +23,7 @@ Bili23 Downloader GUI
 本页面仅简要展示，完整的使用说明请移步至 [Bili23 Downloader 使用说明](https://www.scott-sloan.cn/archives/12/)。
 
 ### **主界面**
-[![pAlhXgU.png](https://s21.ax1x.com/2024/09/27/pAlhXgU.png)](https://imgse.com/i/pAlhXgU)
+[![pAxOkb6.png](https://s21.ax1x.com/2024/12/30/pAxOkb6.png)](https://imgse.com/i/pAxOkb6)
 
 #### **支持输入的 URL 链接**
 | 类型 | 支持的功能 | 示例 |
@@ -50,7 +50,11 @@ Bili23 Downloader GUI
 
 解析完成后，点击右上角小齿轮图标可自定义清晰度和音质等设置。
 
-[![pA4xzQJ.png](https://s21.ax1x.com/2024/11/28/pA4xzQJ.png)](https://imgse.com/i/pA4xzQJ)
+[![pAxXee0.png](https://s21.ax1x.com/2024/12/30/pAxXee0.png)](https://imgse.com/i/pAxXee0)
+
+点击列表图标可切换剧集列表显示方式。
+
+[![pAxXRk8.png](https://s21.ax1x.com/2024/12/30/pAxXRk8.png)](https://imgse.com/i/pAxXRk8)
 
 ### **下载**
 [![pAl4IxO.png](https://s21.ax1x.com/2024/09/27/pAl4IxO.png)](https://imgse.com/i/pAl4IxO)
