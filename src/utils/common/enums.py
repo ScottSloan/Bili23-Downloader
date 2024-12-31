@@ -23,9 +23,9 @@ class EpisodeDisplayType(Enum):
     All = 3               # 获取全部相关视频
 
 class LiveStatus(Enum):
-    Not_Started = 1       # 未开播
-    Live = 2              # 直播中
-    Replay = 3            # 轮播中
+    Not_Started = 0       # 未开播
+    Live = 1              # 直播中
+    Replay = 2            # 轮播中
 
 class ProxyMode(Enum):
     Disable = 0           # 不使用
