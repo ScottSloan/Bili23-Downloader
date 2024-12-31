@@ -12,12 +12,12 @@ class Config:
         name: str = "Bili23 Downloader"
 
         version: str = "1.54.0"
-        version_code: int = 1540
+        version_code: int = 1541
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1541
 
-        release_date: str = "2024/12/30"
+        release_date: str = "2025/01/01"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 

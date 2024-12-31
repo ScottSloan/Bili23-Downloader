@@ -64,7 +64,7 @@ class AboutWindow(wx.Dialog):
 
         desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片 等资源")
 
-        date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date}")
+        date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date} ({Config.APP.version_code})")
 
         copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
 
