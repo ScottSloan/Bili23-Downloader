@@ -1,12 +1,12 @@
 [project]
 name = "bili23-downloader"
-version = "1.53.0"
+version = "1.54.0"
 description = "跨平台的 B 站视频下载工具，支持 Windows、Linux、macOS 三平台，下载 B 站视频/番剧/电影/纪录片 等资源  "
 readme = "README.md"
 license = "MIT License"
 requires-python = ">=3.9"
 dependencies = [
-    "qrcode[pil]>=7.3.1",
+    "qrcode[pil]==7.4.2",
     "requests>=2.30.0",
     "wxpython>=4.2.0",
     "pycryptodome>=3.21.0",

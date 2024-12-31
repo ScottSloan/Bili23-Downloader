@@ -1,9 +1,8 @@
-import io
 import wx
 import webbrowser
 
 from utils.config import Config
-from utils.icon_v2 import IconManager, APP_ICON_DEFAULT
+from utils.common.icon_v2 import IconManager, IconType
 
 from .license import LicenseWindow
 
@@ -50,10 +49,9 @@ class AboutWindow(wx.Dialog):
 
         _set_dark_mode()
 
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        icon_manager = IconManager(self)
 
-        app_icon = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_DEFAULT)), wx.BITMAP_TYPE_JPEG)
-        logo = wx.StaticBitmap(self, -1, _set_icon_background(app_icon).ConvertToBitmap())
+        logo = wx.StaticBitmap(self, -1, _set_icon_background(icon_manager.get_icon_bitmap(IconType.APP_ICON_DEFAULT)).ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
@@ -64,11 +62,11 @@ class AboutWindow(wx.Dialog):
         version_lab = wx.StaticText(self, -1, f"{Config.APP.version}")
         version_lab.SetFont(font)
 
-        desc_lab = wx.StaticText(self, -1, "下载 bilibili 视频/番剧/电影/纪录片 等资源")
+        desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片 等资源")
 
-        date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date}")
+        date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date} ({Config.APP.version_code})")
 
-        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2024 Scott Sloan")
+        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
 
         copyright_hbox = wx.BoxSizer(wx.HORIZONTAL)
         copyright_hbox.AddSpacer(25)

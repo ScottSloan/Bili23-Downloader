@@ -31,7 +31,7 @@ def get_login_header():
     }
 
 def get_login_cookies():
-    from utils.login import LoginCookies
+    from utils.auth.login import LoginCookies
 
     cookie_dict = {
         "buvid3": LoginCookies.buvid3,

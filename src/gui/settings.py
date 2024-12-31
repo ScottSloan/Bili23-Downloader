@@ -8,10 +8,12 @@ from gui.templates import ScrolledPanel
 
 from gui.dialog.ffmpeg import DetectDialog
 
-from utils.config import Config, conf
-from utils.tool_v2 import RequestTool, DownloadFileTool
-from utils.thread import Thread
-from utils.mapping import video_quality_mapping, audio_quality_mapping, video_codec_mapping, danmaku_format_mapping, get_mapping_index_by_value
+from utils.config import Config, ConfigUtils
+from utils.tool_v2 import RequestTool, DownloadFileTool, UniversalTool
+from utils.common.thread import Thread
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, cdn_map, get_mapping_index_by_value
+from utils.common.icon_v2 import IconManager, IconType
+from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
 class SettingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -100,6 +102,8 @@ class DownloadTab(wx.Panel):
 
             self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
+        icon_manager = IconManager(self)
+
         self.download_box = wx.StaticBox(self, -1, "下载设置")
 
         self.scrolled_panel = ScrolledPanel(self.download_box, _get_panel_size())
@@ -119,8 +123,8 @@ class DownloadTab(wx.Panel):
         self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
-        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_mapping.keys()))
-        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_map.keys()))
+        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.video_quality_tip.SetToolTip("说明")
 
@@ -130,8 +134,8 @@ class DownloadTab(wx.Panel):
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_mapping.keys()))
-        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_map.keys()))
+        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.audio_quality_tip.SetToolTip("说明")
 
@@ -142,7 +146,7 @@ class DownloadTab(wx.Panel):
 
         codec_lab = wx.StaticText(self.scrolled_panel, -1, "视频编码格式")
         self.codec_choice = wx.Choice(self.scrolled_panel, -1, choices = ["AVC/H.264", "HEVC/H.265", "AV1"])
-        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.codec_tip.SetToolTip("说明")
 
@@ -152,7 +156,7 @@ class DownloadTab(wx.Panel):
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.enable_dolby_chk = wx.CheckBox(self.scrolled_panel, -1, '自动下载杜比视界或杜比全景声')
-        self.dolby_tip = wx.StaticBitmap(self.scrolled_panel, -1, wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))))
+        self.dolby_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.dolby_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.dolby_tip.SetToolTip("说明")
 
@@ -171,6 +175,31 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换音视频流 CDN")
+        self.enable_custom_cdn_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.enable_custom_cdn_tip.SetToolTip("说明")
+
+        enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) & (~wx.TOP), 10)
+
+        self.custom_cdn_auto_switch_radio = wx.RadioButton(self.scrolled_panel, -1, "自动切换")
+        self.custom_cdn_manual_radio = wx.RadioButton(self.scrolled_panel, -1, "手动设置")
+
+        custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        custom_cdn_mode_hbox.AddSpacer(30)
+        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+
+        self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "CDN")
+        self.custom_cdn_box = wx.ComboBox(self.scrolled_panel, -1, choices = list(cdn_map.values()))
+
+        custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        custom_cdn_hbox.AddSpacer(30)
+        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        custom_cdn_hbox.Add(self.custom_cdn_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.add_number_chk = wx.CheckBox(self.scrolled_panel, -1, "批量下载视频时自动添加序号")
         self.delete_history_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后清除本地下载记录")
         self.show_toast_chk = wx.CheckBox(self.scrolled_panel, -1, "允许弹出通知提示")
@@ -188,6 +217,9 @@ class DownloadTab(wx.Panel):
         vbox.Add(dolby_hbox, 0, wx.EXPAND)
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
+        vbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
+        vbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
+        vbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
@@ -211,11 +243,15 @@ class DownloadTab(wx.Panel):
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
+        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onChangeCustomCDNEVT)
+        self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
+        self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
 
         self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
         self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
         self.dolby_tip.Bind(wx.EVT_LEFT_UP, self.onDolbyTipEVT)
+        self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
@@ -226,20 +262,30 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download_count))
         self.max_download_slider.SetValue(Config.Download.max_download_count)
         
-        self.video_quality_choice.SetSelection(get_mapping_index_by_value(video_quality_mapping, Config.Download.video_quality_id))
-        self.audio_quality_choice.SetSelection(get_mapping_index_by_value(audio_quality_mapping, Config.Download.audio_quality_id))
+        self.video_quality_choice.SetSelection(get_mapping_index_by_value(video_quality_map, Config.Download.video_quality_id))
+        self.audio_quality_choice.SetSelection(get_mapping_index_by_value(audio_quality_map, Config.Download.audio_quality_id))
 
-        self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_mapping, Config.Download.video_codec_id))
+        self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_map, Config.Download.video_codec_id))
 
         self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
-        self.speed_limit_chk.SetValue(Config.Download.speed_limit)
+        self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
+        self.enable_custom_cdn_chk.SetValue(Config.Download.enable_custom_cdn)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
-        self.show_toast_chk.SetValue(Config.Download.show_notification)
+        self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
+        self.custom_cdn_box.SetValue(Config.Download.custom_cdn)
+
+        match CDNMode(Config.Download.custom_cdn_mode):
+            case CDNMode.Auto:
+                self.custom_cdn_auto_switch_radio.SetValue(True)
+
+            case CDNMode.Custom:
+                self.custom_cdn_manual_radio.SetValue(True)
 
         self.onChangeSpeedLimitEVT(0)
+        self.onChangeCustomCDNEVT(0)
 
     def save(self):
         def _update_download_window():
@@ -247,35 +293,46 @@ class DownloadTab(wx.Panel):
 
             self._main_window.download_window.onChangeMaxDownloaderEVT(None)
 
-        default_path = os.path.join(os.getcwd(), "download")
-
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
-        Config.Download.video_quality_id = video_quality_mapping[self.video_quality_choice.GetStringSelection()]
-        Config.Download.audio_quality_id = audio_quality_mapping[self.audio_quality_choice.GetStringSelection()]
-        Config.Download.video_codec_id = video_codec_mapping[self.codec_choice.GetStringSelection()]
+        Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
+        Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
+        Config.Download.video_codec_id = video_codec_map[self.codec_choice.GetStringSelection()]
         Config.Download.enable_dolby = self.enable_dolby_chk.GetValue()
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
-        Config.Download.show_notification = self.show_toast_chk.GetValue()
-        Config.Download.speed_limit = self.speed_limit_chk.GetValue()
+        Config.Download.enable_notification = self.show_toast_chk.GetValue()
+        Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
+        Config.Download.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
+        Config.Download.custom_cdn = self.custom_cdn_box.GetValue()
 
-        conf.config.set("download", "path", Config.Download.path if self.path_box.GetValue() != default_path else "")
-        conf.config.set("download", "max_thread", str(Config.Download.max_thread_count))
-        conf.config.set("download", "max_download", str(Config.Download.max_download_count))
-        conf.config.set("download", "video_quality", str(Config.Download.video_quality_id))
-        conf.config.set("download", "audio_quality", str(Config.Download.audio_quality_id))
-        conf.config.set("download", "video_codec", Config.Download.video_codec_id)
-        conf.config.set("download", "enable_dolby", str(int(Config.Download.enable_dolby)))
-        conf.config.set("download", "add_number", str(int(Config.Download.add_number)))
-        conf.config.set("download", "delete_history", str(int(Config.Download.delete_history)))
-        conf.config.set("download", "show_notification", str(int(Config.Download.show_notification)))
-        conf.config.set("download", "speed_limit", str(int(Config.Download.speed_limit)))
-        conf.config.set("download", "speed_limit_in_mb", str(Config.Download.speed_limit_in_mb))
+        if self.custom_cdn_auto_switch_radio.GetValue():
+            Config.Download.custom_cdn_mode = 0
+        else:
+            Config.Download.custom_cdn_mode = 1
 
-        conf.config_save()
+        kwargs = {
+            "path": Config.Download.path,
+            "max_download_count": Config.Download.max_download_count,
+            "max_thread_count": Config.Download.max_thread_count,
+            "video_quality_id": Config.Download.video_quality_id,
+            "audio_quality_id": Config.Download.audio_quality_id,
+            "video_codec_id": Config.Download.video_codec_id,
+            "enable_dolby": Config.Download.enable_dolby,
+            "enable_notification": Config.Download.enable_notification,
+            "delete_history": Config.Download.delete_history,
+            "add_number": Config.Download.add_number,
+            "enable_speed_limit": Config.Download.enable_speed_limit,
+            "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
+            "enable_custom_cdn": Config.Download.enable_custom_cdn,
+            "custom_cdn": Config.Download.custom_cdn,
+            "custom_cdn_mode": Config.Download.custom_cdn_mode
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 更新下载窗口中并行下载数信息
         _update_download_window()
@@ -305,22 +362,29 @@ class DownloadTab(wx.Panel):
         self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
 
     def onChangeSpeedLimitEVT(self, event):
-        if self.speed_limit_chk.GetValue():
-            self.speed_limit_box.Enable(True)
+        self.speed_limit_box.Enable(self.speed_limit_chk.GetValue())
+        self.speed_limit_lab.Enable(self.speed_limit_chk.GetValue())
+        self.speed_limit_unit_lab.Enable(self.speed_limit_chk.GetValue())
+        
+    def onChangeCustomCDNEVT(self, event):
+        self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
+        self.custom_cdn_manual_radio.Enable(self.enable_custom_cdn_chk.GetValue())
 
-            self.speed_limit_lab.Enable(True)
-            self.speed_limit_unit_lab.Enable(True)
+        if self.enable_custom_cdn_chk.GetValue():
+            self.onChangeCustomCDNModeEVT(0)
         else:
-            self.speed_limit_box.Enable(False)
+            self.custom_cdn_lab.Enable(False)
+            self.custom_cdn_box.Enable(False)
 
-            self.speed_limit_lab.Enable(False)
-            self.speed_limit_unit_lab.Enable(False)
+    def onChangeCustomCDNModeEVT(self, event):
+        self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
+        self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
 
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
     
     def onVideoQualityTipEVT(self, event):
-        wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度\n\n若需要自动下载杜比视频，请开启下方的选项", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onAudioQualityTipEVT(self, event):
         wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质", "说明", wx.ICON_INFORMATION).ShowModal()
@@ -330,6 +394,9 @@ class DownloadTab(wx.Panel):
     
     def onDolbyTipEVT(self, event):
         wx.MessageDialog(self, '自动下载杜比选项说明\n\n当上方选择 "自动" 时，若视频支持杜比，则自动下载杜比视界或杜比全景声，否则需要手动选择\n\n开启此项前请先确认设备是否支持杜比', "说明", wx.ICON_INFORMATION).ShowModal()
+
+    def onCustomCDNTipEVT(self, event):
+        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n由于B站同时使用多家CDN（图便宜大厂小厂混用），当接口返回某些不知名小厂提供的CDN加速链接时，就会导致部分视频下载失败。\n\n现在程序默认开启CDN替换功能，将接口返回的所有下载链接自动替换为华为云、腾讯云或者阿里云大厂的CDN，它们的稳定性明显优于小厂。\n当选择自动切换CDN时，能解决部分视频下载失败的问题，但下载速度可能会偏慢，用户可自行Ping测试这些地址，选择延迟最低的一个。\n\n为保证良好的下载体验，不建议用户关闭此选项。", "说明", wx.ICON_INFORMATION).ShowModal()
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):
@@ -417,10 +484,15 @@ class MergeTab(wx.Panel):
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
         Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
-        conf.config.set("merge", "ffmpeg_path", Config.FFmpeg.path)
-        conf.config.set("merge", "override_file", str(int(Config.Merge.override_file)))
-        conf.config.set("merge", "m4a_to_mp3", str(int(Config.Merge.m4a_to_mp3)))
-        conf.config.set("merge", "auto_clean", str(int(Config.Merge.auto_clean)))
+        kwargs = {
+            "ffmpeg_path": Config.FFmpeg.path,
+            "override_file": Config.Merge.override_file,
+            "m4a_to_mp3": Config.Merge.m4a_to_mp3,
+            "auto_clean": Config.Merge.auto_clean
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
@@ -476,18 +548,29 @@ class ExtraTab(wx.Panel):
 
         self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
-        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_mapping.keys()))
+        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(30)
         danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
+        self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
+        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
+
+        subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        subtitle_hbox.AddSpacer(30)
+        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(danmaku_hbox, 0, wx.EXPAND)
+        vbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(subtitle_hbox, 0, wx.EXPAND)
         vbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
 
         extra_sbox = wx.StaticBoxSizer(extra_box)
@@ -499,25 +582,36 @@ class ExtraTab(wx.Panel):
         self.SetSizer(extra_vbox)
     
     def init_data(self):
-        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku)
-        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_format)
-        self.get_cover_chk.SetValue(Config.Extra.download_cover)
+        self.get_danmaku_chk.SetValue(Config.Extra.get_danmaku)
+        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_type)
+        self.get_subtitle_chk.SetValue(Config.Extra.get_subtitle)
+        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_type)
+        self.get_cover_chk.SetValue(Config.Extra.get_cover)
 
-        self.onChangeDanmakuEVT(None)
+        self.onChangeDanmakuEVT(0)
+        self.onChangeSubtitleEVT(0)
 
     def Bind_EVT(self):
         self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
+        self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSubtitleEVT)
 
     def save(self):
-        Config.Extra.download_danmaku = self.get_danmaku_chk.GetValue()
-        Config.Extra.danmaku_format = self.danmaku_format_choice.GetSelection()
-        Config.Extra.download_cover = self.get_cover_chk.GetValue()
-        
-        conf.config.set("extra", "download_danmaku", str(int(Config.Extra.download_danmaku)))
-        conf.config.set("extra", "danmaku_format", str(Config.Extra.danmaku_format))
-        conf.config.set("extra", "download_cover", str(int(Config.Extra.download_cover)))
+        Config.Extra.get_danmaku = self.get_danmaku_chk.GetValue()
+        Config.Extra.danmaku_type = self.danmaku_format_choice.GetSelection()
+        Config.Extra.get_subtitle = self.get_subtitle_chk.GetValue()
+        Config.Extra.subtitle_type = self.subtitle_format_choice.GetSelection()
+        Config.Extra.get_cover = self.get_cover_chk.GetValue()
 
-        conf.config_save()
+        kwargs = {
+            "get_danmaku": Config.Extra.get_danmaku,
+            "danmaku_type": Config.Extra.danmaku_type,
+            "get_subtitle": Config.Extra.get_subtitle,
+            "subtitle_type": Config.Extra.subtitle_type,
+            "get_cover": Config.Extra.get_cover
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
 
     def onChangeDanmakuEVT(self, event):
         def set_enable(enable: bool):
@@ -526,11 +620,18 @@ class ExtraTab(wx.Panel):
 
         set_enable(self.get_danmaku_chk.GetValue())
 
+    def onChangeSubtitleEVT(self, event):
+        def set_enable(enable: bool):
+            self.subtitle_format_choice.Enable(enable)
+            self.subtitle_format_lab.Enable(enable)
+
+        set_enable(self.get_subtitle_chk.GetValue())
+
     def onConfirm(self):
         self.save()
 
         return True
-    
+
 class ProxyTab(wx.Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
@@ -608,54 +709,54 @@ class ProxyTab(wx.Panel):
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestEVT)
 
     def init_data(self):
-        match Config.Proxy.proxy_mode:
-            case Config.Type.PROXY_DISABLE:
+        match ProxyMode(Config.Proxy.proxy_mode):
+            case ProxyMode.Disable:
                 self.proxy_disable_radio.SetValue(True)
 
-            case Config.Type.PROXY_FOLLOW:
+            case ProxyMode.Follow:
                 self.proxy_follow_radio.SetValue(True)
 
-            case Config.Type.PROXY_CUSTOM:
+            case ProxyMode.Custom:
                 self.proxy_custom_radio.SetValue(True)
 
-        self.ip_box.SetValue(Config.Proxy.proxy_ip_addr)
-        self.port_box.SetValue(Config.Proxy.proxy_port)
+        self.ip_box.SetValue(Config.Proxy.proxy_ip)
+        self.port_box.SetValue(str(Config.Proxy.proxy_port) if Config.Proxy.proxy_port is not None else "")
     
-        self.auth_chk.SetValue(Config.Proxy.auth_enable)
-        self.uname_box.SetValue(Config.Proxy.auth_uname)
-        self.passwd_box.SetValue(Config.Proxy.auth_passwd)
+        self.auth_chk.SetValue(Config.Proxy.enable_auth)
+        self.uname_box.SetValue(Config.Proxy.auth_username)
+        self.passwd_box.SetValue(Config.Proxy.auth_password)
 
         self.onChangeProxyModeEVT(None)
         self.onChangeAuthEVT(None)
 
     def save(self):
         if self.proxy_disable_radio.GetValue():
-            proxy = Config.Type.PROXY_DISABLE
+            proxy = ProxyMode.Disable.value
 
         elif self.proxy_follow_radio.GetValue():
-            proxy = Config.Type.PROXY_FOLLOW
+            proxy = ProxyMode.Follow.value
 
         else:
-            proxy = Config.Type.PROXY_CUSTOM
+            proxy = ProxyMode.Custom.value
 
         Config.Proxy.proxy_mode = proxy
+        Config.Proxy.proxy_ip = self.ip_box.GetValue()
+        Config.Proxy.proxy_port = int(self.port_box.GetValue()) if self.port_box.GetValue() != "" else None
+        Config.Proxy.enable_auth = self.auth_chk.GetValue()
+        Config.Proxy.auth_username = self.uname_box.GetValue()
+        Config.Proxy.auth_password = self.passwd_box.GetValue()
 
-        Config.Proxy.proxy_ip_addr = self.ip_box.GetValue()
-        Config.Proxy.proxy_port = self.port_box.GetValue()
+        kwargs = {
+            "proxy_mode": Config.Proxy.proxy_mode,
+            "proxy_ip": Config.Proxy.proxy_ip,
+            "proxy_port": Config.Proxy.proxy_port,
+            "enable_auth": Config.Proxy.enable_auth,
+            "auth_username": Config.Proxy.auth_username,
+            "auth_password": Config.Proxy.auth_password
+        }
 
-        Config.Proxy.auth_enable = self.auth_chk.GetValue()
-        Config.Proxy.auth_uname = self.uname_box.GetValue()
-        Config.Proxy.auth_passwd = self.passwd_box.GetValue()
-
-        conf.config.set("proxy", "proxy_mode", str(Config.Proxy.proxy_mode))
-        conf.config.set("proxy", "ip_addr", Config.Proxy.proxy_ip_addr)
-        conf.config.set("proxy", "port", Config.Proxy.proxy_port)
-
-        conf.config.set("proxy", "auth_enable", str(int(Config.Proxy.auth_enable)))
-        conf.config.set("proxy", "uname", Config.Proxy.auth_uname)
-        conf.config.set("proxy", "passwd", Config.Proxy.auth_passwd)
-
-        conf.config_save()
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
 
     def onChangeProxyModeEVT(self, event):
         def set_enable(enable: bool):
@@ -676,10 +777,7 @@ class ProxyTab(wx.Panel):
             self.uname_box.Enable(enable)
             self.passwd_box.Enable(enable)
 
-        if self.auth_chk.GetValue():
-            set_enable(True)
-        else:
-            set_enable(False)
+        set_enable(self.auth_chk.GetValue())
  
     def onTestEVT(self, event):
         def test():
@@ -759,9 +857,9 @@ class MiscTab(wx.Panel):
         
         sections_box = wx.StaticBox(self.scrolled_panel, -1, "剧集列表显示设置")
 
-        self.episodes_single_choice = wx.RadioButton(sections_box, -1, "仅获取单个视频")
-        self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "获取视频所在合集")
-        self.episodes_all_sections_choice = wx.RadioButton(sections_box, -1, "获取全部相关视频 (包括花絮、PV、OP、ED 等)")
+        self.episodes_single_choice = wx.RadioButton(sections_box, -1, "显示单个视频")
+        self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "显示视频所在的合集")
+        self.episodes_all_sections_choice = wx.RadioButton(sections_box, -1, "显示全部相关视频 (包括花絮、PV、OP、ED 等)")
 
         self.show_episode_full_name = wx.CheckBox(sections_box, -1, "显示完整剧集名称")
         self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
@@ -806,11 +904,16 @@ class MiscTab(wx.Panel):
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
         self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = _get_scale_size((100, 28)))
+        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = _get_scale_size((100, 28)))
+        
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
+        btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
         misc_vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
-        misc_vbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
+        misc_vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         misc_sbox = wx.StaticBoxSizer(misc_box)
         misc_sbox.Add(misc_vbox, 0, wx.EXPAND)
@@ -836,62 +939,66 @@ class MiscTab(wx.Panel):
         self.browse_player_btn.Bind(wx.EVT_BUTTON, self.onBrowsePlayerEVT)
 
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
+        self.reset_default_btn.Bind(wx.EVT_BUTTON, self.onResetToDefaultEVT)
 
     def init_data(self):
-        match Config.Misc.episode_display_mode:
-            case Config.Type.EPISODES_SINGLE:
+        match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            case EpisodeDisplayType.Single:
                 self.episodes_single_choice.SetValue(True)
 
-            case Config.Type.EPISODES_IN_SECTION:
+            case EpisodeDisplayType.In_Section:
                 self.episodes_in_section_choice.SetValue(True)
                 
-            case Config.Type.EPISODES_ALL_SECTIONS:
+            case EpisodeDisplayType.All:
                 self.episodes_all_sections_choice.SetValue(True)
 
-        match Config.Misc.player_preference:
-            case Config.Type.PLAYER_PREFERENCE_DEFAULT:
+        match PlayerMode(Config.Misc.player_preference):
+            case PlayerMode.Default:
                 self.player_default_rdbtn.SetValue(True)
 
-            case Config.Type.PLAYER_PREFERENCE_CUSTOM:
+            case PlayerMode.Custom:
                 self.player_custom_rdbtn.SetValue(True)
 
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.player_path_box.SetValue(Config.Misc.player_path)
-        self.check_update_chk.SetValue(Config.Misc.check_update)
-        self.debug_chk.SetValue(Config.Misc.debug)
+        self.check_update_chk.SetValue(Config.Misc.auto_check_update)
+        self.debug_chk.SetValue(Config.Misc.enable_debug)
 
         self.onChangePlayerPreferenceEVT(None)
 
     def save(self):
         if self.episodes_single_choice.GetValue():
-            Config.Misc.episode_display_mode = Config.Type.EPISODES_SINGLE
+            Config.Misc.episode_display_mode = EpisodeDisplayType.Single.value
 
         elif self.episodes_in_section_choice.GetValue():
-            Config.Misc.episode_display_mode = Config.Type.EPISODES_IN_SECTION
+            Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
 
         else:
-            Config.Misc.episode_display_mode = Config.Type.EPISODES_ALL_SECTIONS
+            Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
         if self.player_default_rdbtn.GetValue():
-            Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_DEFAULT
+            Config.Misc.player_preference = PlayerMode.Default.value
         else:
-            Config.Misc.player_preference = Config.Type.PLAYER_PREFERENCE_CUSTOM
+            Config.Misc.player_preference = PlayerMode.Custom.value
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.player_path_box.GetValue()
-        Config.Misc.check_update = self.check_update_chk.GetValue()
-        Config.Misc.debug = self.debug_chk.GetValue()
+        Config.Misc.auto_check_update = self.check_update_chk.GetValue()
+        Config.Misc.enable_debug = self.debug_chk.GetValue()
 
-        conf.config.set("misc", "auto_select", str(int(Config.Misc.auto_select)))
-        conf.config.set("misc", "show_episode_full_name", str(int(Config.Misc.show_episode_full_name)))
-        conf.config.set("misc", "episode_display_mode", str(int(Config.Misc.episode_display_mode)))
-        conf.config.set("misc", "player_preference", str(Config.Misc.player_preference))
-        conf.config.set("misc", "player_path", Config.Misc.player_path)
-        conf.config.set("misc", "check_update", str(int(Config.Misc.check_update)))
-        conf.config.set("misc", "debug", str(int(Config.Misc.debug)))
+        kwargs = {
+            "episode_display_mode": Config.Misc.episode_display_mode,
+            "show_episode_full_name": Config.Misc.show_episode_full_name,
+            "auto_select": Config.Misc.auto_select,
+            "player_preference": Config.Misc.player_preference,
+            "player_path": Config.Misc.player_path,
+            "auto_check_update": Config.Misc.auto_check_update,
+            "enable_debug": Config.Misc.enable_debug
+        }
 
-        conf.config_save()
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
         self._main_window.init_menubar()
@@ -924,11 +1031,20 @@ class MiscTab(wx.Panel):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            conf.clear_config()
+            utils = ConfigUtils()
+            utils.clear_config()
 
             DownloadFileTool._clear_all_files()
 
             # 退出程序
+            exit()
+    
+    def onResetToDefaultEVT(self, event):
+        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n恢复默认设置后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+            UniversalTool.remove_files(os.getcwd(), ["config.json"])
+
             exit()
 
     def onConfirm(self):

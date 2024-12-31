@@ -1,12 +1,16 @@
 import os
+import re
 import time
 import requests
 from typing import List
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, DownloadFileTool
-from utils.thread import Thread, ThreadPool
-from utils.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
+from utils.common.thread import Thread, ThreadPool
+from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
+from utils.common.map import cdn_map
+from utils.common.enums import CDNMode
+from utils.common.exception import GlobalException
 
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
@@ -26,8 +30,9 @@ class Downloader:
 
         # 初始化重试计数器
         self.retry_count = 0
-
         self.thread_alive_count = 0
+
+        self._e = None
 
         # 判断是否为断点续传
         if not self.task_info.completed_size:
@@ -84,7 +89,12 @@ class Downloader:
 
             file_path = os.path.join(Config.Download.path, download_info.file_name)
 
-            download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
+            try:
+                download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
+
+            except Exception as e:
+                self._e = e
+                self.onError()
 
             if self.completed_size:
                 range_list = get_range_list_from_file(download_info.type)
@@ -146,7 +156,7 @@ class Downloader:
 
     def range_download(self, info: RangeDownloadInfo):
         def limit_speed():
-            if Config.Download.speed_limit:
+            if Config.Download.enable_speed_limit:
                 # 计算执行时间
                 limit_bytes = Config.Download.speed_limit_in_mb * 1024 * 1024
 
@@ -190,9 +200,10 @@ class Downloader:
 
                         start_time = limit_speed()
 
-        except Exception:
+        except Exception as e:
             # 置错误标志位为 True
             self.error_flag = True
+            self._e = e
 
             # 停止线程
             return
@@ -244,7 +255,6 @@ class Downloader:
              # 检测停止标志位
             if self.listen_stop_flag:
                 update_download_file_info()
-
                 break
             
             # 检测错误标志位，回调下载失败函数
@@ -292,32 +302,31 @@ class Downloader:
         # 关闭线程池和监听线程，停止下载
         self.onStop()
 
-        # 回调 panel 下载失败函数，终止下载
-        self.callback.onErrorCallback()
+        try:
+            raise self._e
+        
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback.onErrorCallback) from e
     
     def get_file_size(self, url_list: list, referer_url: str, path: str):
-        def request_head(url: str, referer_url: str):
-            req = self.session.head(url, headers = RequestTool.get_headers(referer_url))
-
-            return req.headers
+        def request_head_gen():
+            for url in url_list:
+                req = self.session.head(url, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+                yield url, req.headers
         
-        _url_flag = False
+        total_size = None
 
-        for url in url_list:
-            headers = request_head(url, referer_url)
-            
+        for url, headers in request_head_gen():
             # 检测 headers 是否包含 Content-Length，不包含的链接属于无效链接
             if "Content-Length" in headers:
-                _url_flag = True
                 total_size = int(headers["Content-Length"])
 
-                break
+                if total_size:
+                    break
 
-        if not _url_flag:
-            # 如果没有可用的下载链接，抛出异常
-            self.onError()
-
-            return
+        if not total_size:
+            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Auto.value:
+                return self.get_file_size(next(self.switch_cdn(url_list)), referer_url, path)
 
         # 判断本地文件是否存在
         if not os.path.exists(path):
@@ -328,3 +337,10 @@ class Downloader:
         
         # 返回可以正常下载的链接
         return (url, total_size)
+
+    def switch_cdn(self, url_list: list):
+        def _replace(url: str, cdn: str):
+            return re.sub(r'(?<=https://)[^/]+', cdn, url)
+
+        for cdn in cdn_map.values():
+            yield [_replace(url, cdn) for url in url_list]

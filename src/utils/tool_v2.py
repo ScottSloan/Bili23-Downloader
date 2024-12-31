@@ -1,16 +1,16 @@
 import os
 import re
-import time
 import json
-import random
+import ctypes
 import requests
 import subprocess
 import requests.auth
 from datetime import datetime
-from typing import Optional, Callable, List, Dict
+from typing import Optional, Callable, List
 
 from utils.config import Config
-from utils.data_type import DownloadTaskInfo
+from utils.common.data_type import DownloadTaskInfo, ExceptionInfo
+from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
     # 请求工具类
@@ -26,12 +26,6 @@ class RequestTool:
         except Exception:
             if error_callback is not None:
                 error_callback()
-
-    @staticmethod
-    def get_real_url(url: str):
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-    
-        return req.url
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
@@ -53,23 +47,23 @@ class RequestTool:
 
     @staticmethod
     def get_proxies():
-        match Config.Proxy.proxy_mode:
-            case Config.Type.PROXY_DISABLE:
+        match ProxyMode(Config.Proxy.proxy_mode):
+            case ProxyMode.Disable:
                 return {}
             
-            case Config.Type.PROXY_FOLLOW:
+            case ProxyMode.Follow:
                 return None
             
-            case Config.Type.PROXY_CUSTOM:
+            case ProxyMode.Custom:
                 return {
-                    "http": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}",
-                    "https": f"{Config.Proxy.proxy_ip_addr}:{Config.Proxy.proxy_port}"
+                    "http": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}",
+                    "https": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}"
                 }
     
     @staticmethod
     def get_auth():
-        if Config.Proxy.auth_enable:
-            return requests.auth.HTTPProxyAuth(Config.Proxy.auth_uname, Config.Proxy.auth_passwd)
+        if Config.Proxy.enable_auth:
+            return requests.auth.HTTPProxyAuth(Config.Proxy.auth_username, Config.Proxy.auth_password)
         else:
             return None
     
@@ -134,8 +128,6 @@ class FileDirectoryTool:
             
             return pidl
         
-        import ctypes
-    
         class ITEMIDLIST(ctypes.Structure):
             _fields_ = [("mkid", ctypes.c_byte)]
 
@@ -152,7 +144,6 @@ class FileDirectoryTool:
 
     @staticmethod
     def _msw_AssocQueryStringW(file_ext: str):
-        import ctypes
         from ctypes import wintypes
 
         buffer = ctypes.create_unicode_buffer(512)
@@ -184,14 +175,14 @@ class DownloadFileTool:
             return {
                 "min_version": Config.APP._task_file_min_version_code
             }
-        
+
         # 保存断点续传信息，适用于初次添加下载任务
         contents = self._read_download_file_json()
 
         contents["header"] = _header()
         contents["task_info"] = info.to_dict()
+        contents["error_info"] = self.get_error_info().to_dict()
 
-        # 检查是否已断点续传信息
         if not contents:
             contents["thread_info"] = {}
 
@@ -211,11 +202,19 @@ class DownloadFileTool:
 
             self._write_download_file(contents)
 
-    def update_thread_info(self, thread_info: Dict):
+    def update_thread_info(self, thread_info: dict):
         contents = self._read_download_file_json()
 
         if contents is not None:
             contents["thread_info"] = thread_info
+
+            self._write_download_file(contents)
+
+    def update_error_info(self, error_info: dict):
+        contents = self._read_download_file_json()
+
+        if contents is not None:
+            contents["error_info"] = error_info
 
             self._write_download_file(contents)
 
@@ -224,6 +223,14 @@ class DownloadFileTool:
 
         return contents.get("thread_info", {})
     
+    def get_error_info(self):
+        contents = self._read_download_file_json()
+
+        info = ExceptionInfo()
+        info.from_dict(contents.get("error_info", {}))
+
+        return info
+
     def _read_download_file_json(self):
         if os.path.exists(self.file_path):
             with open(self.file_path, "r", encoding = "utf-8") as f:
@@ -233,7 +240,7 @@ class DownloadFileTool:
                 except Exception:
                     return {}
 
-    def _write_download_file(self, contents: Dict):
+    def _write_download_file(self, contents: dict):
         with open(self.file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
@@ -262,18 +269,15 @@ class DownloadFileTool:
 class FormatTool:
     # 格式化数据类
     @staticmethod
-    def format_duration(episode: Dict, flag: int):
+    def format_duration(episode: dict, flag: int):
         match flag:
-            case Config.Type.DURATION_VIDEO_SECTIONS:
-                # 合集视频
-                duration = episode["arc"]["duration"]
+            case ParseType.Video:
+                if "arc" in episode:
+                    duration = episode["arc"]["duration"]
+                else:
+                    duration = episode["duration"]
 
-            case Config.Type.DURATION_VIDEO_OTHERS:
-                # 非合集视频
-                duration = episode["duration"]
-
-            case Config.Type.DURATION_BANGUMI:
-                # 番组
+            case ParseType.Bangumi:
                 if "duration" in episode:
                     duration = episode["duration"] / 1000
                 else:
@@ -314,11 +318,11 @@ class FormatTool:
             return "{:.1f} KB".format(size / 1024)
 
     @staticmethod
-    def format_bangumi_title(episode: Dict):
+    def format_bangumi_title(episode: dict, main_episode: bool = False):
         from utils.parse.bangumi import BangumiInfo
 
-        if BangumiInfo.type_id == 2:
-            return "{} - {}".format(BangumiInfo.title, episode["title"])
+        if BangumiInfo.type_id == 2 and main_episode:
+            return f"《{BangumiInfo.title}》{episode['title']}"
         
         else:
             if "share_copy" in episode:
@@ -326,10 +330,10 @@ class FormatTool:
                     return episode["share_copy"]
                 
                 else:
-                    if "long_title" in episode:
-                        if episode["long_title"]:
-                            return episode["long_title"]
-                    
+                    for key in ["show_title", "long_title"]:
+                        if key in episode and episode[key]:
+                            return episode[key]
+
                     return episode["share_copy"]
 
             else:
@@ -342,17 +346,14 @@ class UniversalTool:
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
         req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
-        req.encoding = "utf-8"
 
-        update_json = json.loads(req.text)
-
-        Config.Temp.update_json = update_json
+        Config.Temp.update_json = json.loads(req.text)
 
     @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
-            content = RequestTool.request(Config.User.face)
+            content = RequestTool.request(Config.User.face_url)
 
             with open(Config.User.face_path, "wb") as f:
                 f.write(content)
@@ -360,29 +361,16 @@ class UniversalTool:
         return Config.User.face_path
 
     @staticmethod
-    def get_system_encoding():
-        match Config.Sys.platform:
-            case "windows":
-                return "cp936"
-            
-            case "linux" | "darwin":
-                return "utf-8"
-
-    @staticmethod
-    def get_current_time():
+    def get_current_time_str():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
+    
+    @staticmethod
+    def get_time_str_from_timestamp(timestamp: int):
+        return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
 
     @staticmethod
     def get_legal_name(_name: str):
         return re.sub(r'[/\:*?"<>|]', "", _name)
-
-    @staticmethod
-    def get_random_id():
-        return random.randint(10000000, 99999999)
-    
-    @staticmethod
-    def get_timestamp():
-        return int(round(time.time() * 1000000))
 
     @staticmethod
     def re_find_string(_pattern: str, _string: str):
@@ -425,12 +413,14 @@ class UniversalTool:
                     pass
 
     @staticmethod
-    def set_dpi_awareness():
-        import ctypes
-
-        # Windows 环境下，启用高 DPI 适配
+    def msw_set_dpi_awareness():
         if Config.Sys.platform == "windows":
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
+    @staticmethod
+    def msw_set_utf8_encode():
+        if Config.Sys.platform == "windows":
+            subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
 
 class FFmpegCheckTool:
     # FFmpeg 检查工具类

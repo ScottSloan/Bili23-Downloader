@@ -10,8 +10,8 @@ from Crypto.Cipher import PKCS1_v1_5
 
 from utils.tools import get_exclimbwuzhi_header, get_login_header
 from utils.tool_v2 import RequestTool
-from utils.config import Config, conf
-from utils.error import StatusCode
+from utils.config import Config, ConfigUtils
+from utils.common.enums import StatusCode
 
 class QRLoginInfo:
     url = qrcode_key = None
@@ -91,9 +91,10 @@ class LoginBase:
         resp = json.loads(req.text)["data"]
                 
         return {
-            "uname": resp["uname"],
-            "face": resp["face"],
-            "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata
+            "username": resp["uname"],
+            "face_url": resp["face"],
+            "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata,
+            "timestamp": round(time.time())
         }
 
     def access_main_domain(self):
@@ -119,9 +120,18 @@ class LoginBase:
 
     def logout(self):
         Config.User.login = False
-        Config.User.face = Config.User.uname = Config.User.sessdata = ""
+        Config.User.face_url = Config.User.username = Config.User.sessdata = ""
 
-        conf.save_all_user_config()
+        kwargs = {
+            "login": False,
+            "face_url": "",
+            "username": "",
+            "sessdata": "",
+            "timestamp": 0
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
     
     def generate_uuid(self):
         t = self.get_timestamp() % 100000
@@ -264,7 +274,7 @@ class SMSLogin(LoginBase):
         req = self.session.post(url, params = form, headers = get_login_header(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
         data = json.loads(req.text)
 
-        if data["code"]  == StatusCode.CODE_0:
+        if data["code"]  == StatusCode.Success.value:
             # 只有短信发送成功时才设置 captcha_key
             CaptchaInfo.captcha_key = data["data"]["captcha_key"]
 

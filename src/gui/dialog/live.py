@@ -6,8 +6,9 @@ from typing import List
 
 from utils.parse.live import LiveInfo
 from utils.config import Config
-from utils.thread import Thread
+from utils.common.thread import Thread
 from utils.tool_v2 import FormatTool, FileDirectoryTool
+from utils.common.enums import PlayerMode
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
@@ -65,7 +66,7 @@ class LiveRecordingWindow(wx.Dialog):
         self.status_lab.SetFont(font)
         self.duration_lab = wx.StaticText(self, -1, "时长：00:00:00.00")
         self.duration_lab.SetFont(font)
-        self.size_lab = wx.StaticText(self, -1, "大小：0 KB")
+        self.size_lab = wx.StaticText(self, -1, "大小：0 MB")
         self.size_lab.SetFont(font)
         self.speed_lab = wx.StaticText(self, -1, "速度：0.0x")
         self.speed_lab.SetFont(font)
@@ -150,13 +151,13 @@ class LiveRecordingWindow(wx.Dialog):
         FileDirectoryTool.open_file_location(path)
 
     def onPlayStreamEVT(self, event):
-        match Config.Misc.player_preference:
-            case Config.Type.PLAYER_PREFERENCE_DEFAULT:
+        match PlayerMode(Config.Misc.player_preference):
+            case PlayerMode.Default:
                 # 寻找关联的播放器
                 result = FileDirectoryTool.get_file_ext_associated_app(".mp4")
 
                 if not result[0]:
-                    wx.MessageDialog(self, "无法获取默认播放器\n\n无法获取系统默认播放器，请手动设置\n\n请使用支持播放 m3u8 视频流的播放器（如 VLC、PotPlayer、MPV等），Windows 默认的媒体播放器不支持播放，请知悉", "警告", wx.ICON_WARNING).ShowModal()
+                    wx.MessageDialog(self, "无法获取默认播放器\n\n无法获取系统默认播放器，请手动设置\n\n请使用支持播放 m3u8 视频流的播放器，如 VLC、PotPlayer、MPV等\nWindows 默认的媒体播放器不支持播放，请知悉", "警告", wx.ICON_WARNING).ShowModal()
                     return
 
                 match Config.Sys.platform:
@@ -166,7 +167,7 @@ class LiveRecordingWindow(wx.Dialog):
                     case "linux":
                         cmd = result[1].replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
             
-            case Config.Type.PLAYER_PREFERENCE_CUSTOM:
+            case PlayerMode.Custom:
                 cmd = f'"{Config.Misc.player_path}" "{self.m3u8_link_box.GetValue()}"'
 
         subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True)
@@ -256,7 +257,7 @@ class LiveRecordingWindow(wx.Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]))}")
+            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]) * 1024)}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")

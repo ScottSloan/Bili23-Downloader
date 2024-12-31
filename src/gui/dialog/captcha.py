@@ -5,7 +5,7 @@ import json
 import base64
 
 from utils.captcha import CaptchaPage
-from utils.login import CaptchaUtils, CaptchaInfo
+from utils.auth.login import CaptchaUtils, CaptchaInfo
 from utils.config import Config
 
 class CaptchaWindow(wx.Dialog):

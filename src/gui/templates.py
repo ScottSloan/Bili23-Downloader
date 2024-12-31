@@ -1,26 +1,30 @@
-import io
 import wx
+import time
+import random
 import wx.dataview
 from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
-from utils.icon_v2 import IconManager, APP_ICON_SMALL
-from utils.tool_v2 import FormatTool, UniversalTool
+from utils.common.icon_v2 import IconManager, IconType
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
+from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
+from utils.common.enums import ParseType, MergeType
+
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
-from utils.parse.live import LiveInfo
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
-from utils.data_type import DownloadTaskInfo
+from utils.parse.episode import EpisodeInfo
+from utils.parse.cheese import CheeseInfo
 
 class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, -1, title, style = style)
 
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        icon_manager = IconManager(self)
 
-        self.SetIcon(wx.Icon(wx.Image(io.BytesIO(icon_manager.get_icon_bytes(APP_ICON_SMALL))).ConvertToBitmap()))
+        self.SetIcon(wx.Icon(icon_manager.get_icon_bitmap(IconType.APP_ICON_SMALL)))
 
         self.panel = wx.Panel(self)
 
@@ -38,72 +42,73 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
 
     def init_list(self):
-        self.parent_items = []
-
         self.ClearColumns()
         self.DeleteAllItems()
         
         self.AppendColumn("序号", width = self.FromDIP(85))
         self.AppendColumn("标题", width = self.FromDIP(375))
-        self.AppendColumn("备注", width = self.FromDIP(50))
+        self.AppendColumn("备注", width = self.FromDIP(75))
         self.AppendColumn("时长", width = self.FromDIP(75))
 
-    def set_list(self, video_list: dict):
-        root = self.GetRootItem()
-        self.all_list_items = []
+    def set_list(self):
+        def _gen(data: list | dict, node):
+            def set_item(data: dict):
+                if "entries" in data:
+                    self.SetItemText(item, 0, str(data["title"]))
 
-        for i in video_list:
-            rootitem = self.AppendItem(root, i)
-            
-            self.all_list_items.append(rootitem)
+                    if "collection_title" in data and data["collection_title"]:
+                        self.SetItemText(item, 1, data["collection_title"])
 
-            for n in video_list[i]:
-                childitem = self.AppendItem(rootitem, n[0])
+                    if "duration" in data and data["duration"]:
+                        self.SetItemText(item, 3, data["duration"])
+
+                    self.SetItemData(item, _get_item_data("node", data["title"]))
+                else:
+                    self._index += 1
+
+                    self.SetItemText(item, 0, str(self._index))
+                    self.SetItemText(item, 1, data["title"])
+                    self.SetItemText(item, 2, data["badge"])
+                    self.SetItemText(item, 3, data["duration"])
+                    
+                    self.SetItemData(item, _get_item_data("item", data["title"], data["cid"]))
+
+                    _column_width = self.WidthFor(data["title"])
+
+                    if _column_width > self._title_longest_width:
+                        self._title_longest_width = _column_width
 
                 if Config.Misc.auto_select:
-                    self.CheckItem(childitem, state = wx.CHK_CHECKED)
+                    self.CheckItem(item, wx.CHK_CHECKED)
 
-                self.all_list_items.append(childitem)
+                self.Expand(node)
 
-                for i in [1, 2, 3]:
-                    self.SetItemText(childitem, i, n[i])
+            if isinstance(data, list):
+                for entry in data:
+                    _gen(entry, node)
 
-            if Config.Misc.auto_select:
-                self.CheckItem(rootitem, state = wx.CHK_CHECKED)
+            elif isinstance(data, dict):
+                item = self.AppendItem(node, "")
                 
-            self.Expand(rootitem)
+                set_item(data)
 
-    def set_video_list(self):
-        video_list = {}
-        
-        if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
-            for key, value in VideoInfo.sections.items():
-                video_list[key] = [[str(index + 1), episode["arc"]["title"], "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_SECTIONS)] for index, episode in enumerate(value)]
+                for value in data.values():
+                    _gen(value, item)
 
-                self.parent_items.append(key)
-        else:
-            self.parent_items.append("视频")
-            video_list["视频"] = [[str(index + 1), episode["part"] if VideoInfo.type == 2 else VideoInfo.title, "", FormatTool.format_duration(episode, Config.Type.DURATION_VIDEO_OTHERS)] for index, episode in enumerate(VideoInfo.pages_list)]
+        def _get_item_data(type: str, title: str, cid: int = 0):
+            data = TreeListItemInfo()
+            data.type = type
+            data.title = title
+            data.cid = cid
 
-        self.set_list(video_list)
-    
-    def set_bangumi_list(self):
-        bangumi_list = {}
+            return data
 
-        for key, value in BangumiInfo.sections.items():
-            bangumi_list[key] = [[str(index + 1), FormatTool.format_bangumi_title(episode), episode["badge"], FormatTool.format_duration(episode, Config.Type.DURATION_BANGUMI)] for index, episode in enumerate(value)]
+        self._index, self._title_longest_width = 0, 0
 
-            self.parent_items.append(key)
+        _gen(EpisodeInfo.data, self.GetRootItem())
 
-        self.set_list(bangumi_list)
-
-    def set_live_list(self):
-        live_list = {}
-        
-        live_list["直播"] = [["1", LiveInfo.title, LiveInfo.status_str, "--:--:--"]]
-        self.parent_items.append("直播")
-
-        self.set_list(live_list)
+        if self._title_longest_width > self.FromDIP(375):
+            self.SetColumnWidth(1, self._title_longest_width + 15)
 
     def onCheckItem(self, event):
         item = event.GetItem()
@@ -112,31 +117,56 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
+
+        self._main_window.update_video_count_label(self.get_checked_item_count())
+
+    def get_checked_item_count(self):
+        _count = 0
+
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    _count += 1
+
+        return _count
     
-    def get_all_selected_item(self, video_quality_id: Optional[int] = None):
-        self.download_task_info_list = []
+    def get_all_checked_item(self, video_quality_id: Optional[int] = None):
+        def get_item_info(title: str, cid: int):
+            match self._main_window.current_parse_type:
+                case ParseType.Video:
+                    self.get_video_download_info(title, EpisodeInfo.cid_dict.get(cid))
+
+                case ParseType.Bangumi:
+                    self.get_bangumi_download_info(title, EpisodeInfo.cid_dict.get(cid))
+
+                case ParseType.Cheese:
+                    self.get_cheese_download_info(title, EpisodeInfo.cid_dict.get(cid))
+
         self.video_quality_id = video_quality_id
-        
-        for i in self.all_list_items:
-            text = self.GetItemText(i, 0)
-            state = bool(self.GetCheckedState(i))
-            
-            if text not in self.parent_items and state:
-                item_title = self.GetItemText(i, 1)
-                parent = self.GetItemText(self.GetItemParent(i), 0)
+        self.download_task_info_list = []
 
-                match self._main_window.current_parse_type:
-                    case Config.Type.VIDEO:
-                        self.get_video_download_info(item_title, parent, int(text))
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
-                    case Config.Type.BANGUMI:
-                        self.get_bangumi_download_info(parent, int(text))
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    title = self.GetItemData(item).title
+                    cid = self.GetItemData(item).cid
+                    
+                    if cid:
+                        get_item_info(title, cid)
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None):
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
-        download_info.id = UniversalTool.get_random_id()
-        download_info.timestamp = UniversalTool.get_timestamp()
+        download_info.id = random.randint(10000000, 99999999)
+        download_info.timestamp = int(round(time.time() * 1000000))
 
         download_info.title = title
         download_info.title_legal = UniversalTool.get_legal_name(title)
@@ -144,69 +174,65 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.referer_url = referer_url
         download_info.bvid = bvid
         download_info.cid = cid
+        download_info.aid = aid
+        download_info.ep_id = ep_id
         download_info.duration = duration
 
         download_info.video_quality_id = self.video_quality_id
         download_info.audio_quality_id = AudioInfo.audio_quality_id
 
         if AudioInfo.download_audio_only:
-            download_info.video_merge_type = Config.Type.MERGE_TYPE_AUDIO
+            download_info.video_merge_type = MergeType.Only_Audio.value
 
         download_info.download_type = download_type
 
         download_info.get_danmaku = ExtraInfo.get_danmaku
         download_info.danmaku_type = ExtraInfo.danmaku_type
         download_info.get_cover = ExtraInfo.get_cover
+        download_info.get_subtitle = ExtraInfo.get_subtitle
+        download_info.subtitle_type = ExtraInfo.subtitle_type
 
         return download_info
 
-    def get_video_download_info(self, item_title: str, parent: str, index: int):
-        if VideoInfo.type == Config.Type.VIDEO_TYPE_SECTIONS:
-            # 合集
-            index = [index for index, value in enumerate(VideoInfo.sections[parent]) if value["arc"]["title"] == item_title][0]
-
-            info_entry = VideoInfo.sections[parent][index]
-
-            title = info_entry["arc"]["title"]
-            cover_url = info_entry["arc"]["pic"]
-            bvid = info_entry["bvid"]
-            cid = info_entry["cid"]
-            duration = info_entry["arc"]["duration"]
-
+    def get_video_download_info(self, title: str, entry: dict):
+        if "arc" in entry:
+            cover_url = entry["arc"]["pic"]
+            duration = entry["arc"]["duration"]
+            bvid = entry["bvid"]
         else:
-            # 分 P 或单个视频
-            info_entry = VideoInfo.pages_list[index - 1]
-
-            # 分 P 视频显示每一个标题
-            title = info_entry["part"] if VideoInfo.type == 2 else VideoInfo.title
-
-            # 不再以第一帧作为封面
             cover_url = VideoInfo.cover
-                
             bvid = VideoInfo.bvid
-            cid = info_entry["cid"]
-            duration = info_entry["duration"]
+            duration = entry["duration"]
 
+        cid = entry["cid"]
         referer_url = VideoInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.VIDEO, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url, bvid, cid))
     
-    def get_bangumi_download_info(self, parent: str, index: int):
-        info_entry = BangumiInfo.sections[parent][index - 1]
+    def get_bangumi_download_info(self, title: str, entry: dict):
+        cover_url = entry["cover"]
+        bvid = entry["bvid"]
+        cid = entry["cid"]
 
-        title = info_entry["share_copy"] if BangumiInfo.type_id != 2 else FormatTool.format_bangumi_title(info_entry)
-        cover_url = info_entry["cover"]
-        bvid = info_entry["bvid"]
-        cid = info_entry["cid"]
-
-        if "duration" in info_entry:
-            duration = info_entry["duration"] / 1000
+        if "duration" in entry:
+            duration = entry["duration"] / 1000
         else:
-            duration = 1
+            duration = 0
 
         referer_url = BangumiInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, Config.Type.BANGUMI, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url, bvid, cid))
+    
+    def get_cheese_download_info(self, title: str, entry: dict):
+        cover_url = entry["cover"]
+        aid = entry["aid"]
+        cid = entry["cid"]
+        ep_id = entry["id"]
+        duration = entry["duration"]
+
+        referer_url = CheeseInfo.url
+
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):

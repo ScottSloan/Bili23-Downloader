@@ -1,17 +1,19 @@
 import wx
 import time
 import requests
-from typing import Dict
+from typing import Dict, Callable
 from io import BytesIO
 
-from utils.login import QRLogin, PasswordLogin, SMSLogin
-from utils.config import Config, conf
-from utils.thread import Thread
+from utils.auth.login import QRLogin, PasswordLogin, SMSLogin
+from utils.config import Config, ConfigUtils
+from utils.common.thread import Thread
 
 from gui.dialog.captcha import CaptchaWindow
 
 class LoginWindow(wx.Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
+        self.callback = callback
+
         wx.Dialog.__init__(self, parent, -1, "登录")
         
         self.init_utils()
@@ -116,41 +118,44 @@ class LoginWindow(wx.Dialog):
         event.Skip()
 
     def onTimer(self, event):
+        def _success(info):
+            Config.User.login = True
+            Config.User.face_url = info["face_url"]
+            Config.User.username = info["username"]
+            Config.User.sessdata = info["sessdata"]
+
+            kwargs = {
+                "login": True,
+                "face_url": info["face_url"],
+                "username": info["username"],
+                "sessdata": info["sessdata"],
+                "timestamp": round(time.time())
+            }
+
+            utils = ConfigUtils()
+            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+
+            wx.CallAfter(self.callback)
+
+        def _refresh():
+            self.login.init_qrcode()
+
+            self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
+            self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
+
+            self.Layout()
+
         match self.login.check_scan()["code"]:
             case 0:
-                user_info = self.login.get_user_info()
-                
-                self.login_success(user_info)
+                info = self.login.get_user_info()
+                _success(info)
 
             case 86090:
                 self.lab.SetLabel("请在设备侧确认登录")
                 self.Layout()
 
             case 86038:
-                wx.CallAfter(self.refresh_qrcode)
-
-    def refresh_qrcode(self):
-        self.login = QRLogin(self.session)
-        self.login.init_qrcode()
-
-        self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
-        self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
-
-        self.Layout()
-
-    def save_user_info(self, user_info: Dict):
-        Config.User.login = True
-
-        Config.User.face = user_info["face"]
-        Config.User.uname = user_info["uname"]
-        Config.User.sessdata = user_info["sessdata"]
-
-        conf.save_all_user_config()
-
-    def login_success(self, user_info):
-        self.save_user_info(user_info)
-
-        wx.CallAfter(self.GetParent().onLoginSuccess)
+                wx.CallAfter(_refresh)
     
     def onSwitchPasswordLogin(self, event):
         def _set_dark_mode():

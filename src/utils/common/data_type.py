@@ -1,10 +1,10 @@
 from typing import Callable, List, Dict
 
+from utils.common.enums import DownloadStatus
+
 class DownloadTaskInfo:
     # 下载任务信息
     def __init__(self):
-        from utils.config import Config
-
         # id，区分不同下载任务的唯一标识符
         self.id: int = 0
         # 序号，从 1 开始，0 为空
@@ -19,7 +19,9 @@ class DownloadTaskInfo:
 
         # 视频 bvid 和 cid 信息
         self.bvid: str = ""
-        self.cid: int = ""
+        self.cid: int = 0
+        self.aid: int = 0
+        self.ep_id: int = 0
 
         # 视频原标题
         self.title: str = ""
@@ -36,16 +38,16 @@ class DownloadTaskInfo:
         # 已下载完成的大小，单位字节
         self.completed_size: int = 0
         # 下载状态
-        self.status: int = Config.Type.DOWNLOAD_STATUS_WAITING
+        self.status: int = DownloadStatus.Waiting.value
 
         # 媒体信息，0 表示未定义
-        self.video_quality_id: int = Config.Type.UNDEFINED
-        self.audio_quality_id: int = Config.Type.UNDEFINED
-        self.video_codec_id: int = Config.Type.UNDEFINED
+        self.video_quality_id: int = 0
+        self.audio_quality_id: int = 0
+        self.video_codec_id: int = 0
         self.audio_type: str = ""
 
-        # 下载类型，1 为用户投稿视频，2 为番组
-        self.download_type: int = Config.Type.UNDEFINED
+        # 下载类型，1 为投稿视频，2 为番组
+        self.download_type: int = 0
         # 视频合成类型
         self.video_merge_type: int = 0
 
@@ -53,6 +55,8 @@ class DownloadTaskInfo:
         self.get_danmaku: bool = False
         self.danmaku_type: int = 0
         self.get_cover: bool = False
+        self.get_subtitle: bool = False
+        self.subtitle_type: int = 0
 
     def to_dict(self):
         return {
@@ -63,6 +67,8 @@ class DownloadTaskInfo:
             "cover_url": self.cover_url,
             "bvid": self.bvid,
             "cid": self.cid,
+            "aid": self.aid,
+            "ep_id": self.ep_id,
             "title": self.title,
             "title_legal": self.title_legal,
             "duration": self.duration,
@@ -78,7 +84,9 @@ class DownloadTaskInfo:
             "video_merge_type": self.video_merge_type,
             "get_danmaku": self.get_danmaku,
             "danmaku_type": self.danmaku_type,
-            "get_cover": self.get_cover
+            "get_cover": self.get_cover,
+            "get_subtitle": self.get_subtitle,
+            "subtitle_type": self.subtitle_type
         }
 
     def load_from_dict(self, data: Dict):
@@ -89,6 +97,8 @@ class DownloadTaskInfo:
         self.cover_url = data["cover_url"]
         self.bvid = data["bvid"]
         self.cid = data["cid"]
+        self.aid = data["aid"]
+        self.ep_id = data["ep_id"]
         self.title = data["title"]
         self.title_legal = data["title_legal"]
         self.duration = data["duration"]
@@ -105,6 +115,8 @@ class DownloadTaskInfo:
         self.get_danmaku = data["get_danmaku"]
         self.danmaku_type = data["danmaku_type"]
         self.get_cover = data["get_cover"]
+        self.get_subtitle = data["get_subtitle"]
+        self.subtitle_type = data["subtitle_type"]
 
 class ThreadInfo:
     # 线程信息
@@ -170,14 +182,49 @@ class TaskPanelCallback:
         self.onStopCallbacak: Callable = None
         self.onUpdateTaskCountCallback: Callable = None
 
-class ErrorLog:
-    def __init__(self):
-        self.log: str = ""
-        self.time: str = ""
-        self.return_code: int = 0
-
 class NotificationMessage:
     def __init__(self):
         self.video_title: str = ""
         self.status: int = 0
         self.video_merge_type: int = 0
+
+class TreeListItemInfo:
+    def __init__(self):
+        self.type: str = ""
+        self.title: str = ""
+        self.cid: int = 0
+
+class ExceptionInfo:
+    def __init__(self):
+        self.timestamp: str = ""
+        self.source: str = ""
+        self.id: str = ""
+        self.return_code: str = ""
+        self.exception_type: str = ""
+        self.log: str = ""
+        self.short_log: str = ""
+    
+    def to_dict(self):
+        return {
+            "timestamp": self.timestamp,
+            "source": self.source,
+            "id": self.id,
+            "return_code": self.return_code,
+            "exception_type": self.exception_type,
+            "log": self.log,
+            "short_log": self.short_log
+        }
+    
+    def from_dict(self, data: dict):
+        self.timestamp = data.get("timestamp")
+        self.source = data.get("source")
+        self.id = data.get("id")
+        self.return_code = data.get("return_code")
+        self.exception_type = data.get("exception_type")
+        self.log = data.get("log")
+        self.short_log = data.get("short_log")
+
+class ParseCallback:
+    def __init__(self):
+        self.error_callback: Callable = None
+        self.redirect_callback: Callable = None

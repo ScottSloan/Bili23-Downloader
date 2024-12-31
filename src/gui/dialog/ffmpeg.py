@@ -1,8 +1,7 @@
 import wx
-import io
 
 from utils.tool_v2 import FFmpegCheckTool
-from utils.icon_v2 import IconManager, REFRESH_ICON
+from utils.common.icon_v2 import IconManager, IconType
 from utils.config import Config
 
 class DetectDialog(wx.Dialog):
@@ -18,10 +17,9 @@ class DetectDialog(wx.Dialog):
         self.init_utils()
 
     def init_UI(self):
-        def _refresh_icon():
-            _image = wx.Image(io.BytesIO(icon_manager.get_icon_bytes(REFRESH_ICON)))
-
-            return _image.ConvertToBitmap()
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
         
         def _get_scale_button_size():
             match Config.Sys.platform:
@@ -39,11 +37,13 @@ class DetectDialog(wx.Dialog):
                 case "linux":
                     return wx.NO_BORDER
         
-        icon_manager = IconManager(self.GetDPIScaleFactor())
+        _set_dark_mode()
+
+        icon_manager = IconManager(self)
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = wx.BitmapButton(self, -1, _refresh_icon(), size = _get_scale_button_size(), style = _get_style())
+        self.refresh_btn = wx.BitmapButton(self, -1, icon_manager.get_icon_bitmap(IconType.REFRESH_ICON), size = _get_scale_button_size(), style = _get_style())
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -75,9 +75,17 @@ class DetectDialog(wx.Dialog):
         vbox.Add(self.env_path_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.cwd_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.cwd_path_lab, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
-        self.SetSizerAndFit(vbox)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddSpacer(30)
+        hbox.Add(vbox, 0, wx.EXPAND)
+        hbox.AddSpacer(30)
+
+        dlg_vbox = wx.BoxSizer(wx.VERTICAL)
+        dlg_vbox.Add(hbox, 0, wx.EXPAND)
+        dlg_vbox.Add(bottom_hbox, 0, wx.EXPAND)
+
+        self.SetSizerAndFit(dlg_vbox)
 
     def init_utils(self):
         cwd_path = FFmpegCheckTool._get_ffmpeg_cwd_path()

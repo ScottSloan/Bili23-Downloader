@@ -1,6 +1,6 @@
 # from . import bilidanmu_pb2 as Danmaku
 from google.protobuf.json_format import MessageToDict
-import bilidanmu_pb2 as Danmaku
+import utils.module.bilidanmu_pb2 as Danmaku
 import datetime
 
 class BiliProtoAss:

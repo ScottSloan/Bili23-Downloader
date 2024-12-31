@@ -3,31 +3,33 @@ import json
 import requests
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.error import URLError
+from utils.common.enums import StatusCode
+from utils.common.exception import GlobalException
+from utils.common.data_type import ParseCallback
 
-class FestivalInfo:
+class ActivityInfo:
     url: str = ""
 
-class FestivalParser:
-    def __init__(self, onError):
-        self.onError = onError
+class ActivityParser:
+    def __init__(self, callback: ParseCallback):
+        self.callback = callback
 
     def get_aid(self, initial_state):
         # 其他类型的视频则提供 aid，取第 1 个即可
         aid = re.findall(r'"aid":([0-9]+)', initial_state)
 
         if not aid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
-        FestivalInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
+        ActivityInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
     def get_bvid(self, url: str):
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            raise URLError()
+            raise Exception(StatusCode.URL.value)
 
-        FestivalInfo.url = f"https://www.bilibili.com/video/{bvid[0]}"
+        ActivityInfo.url = f"https://www.bilibili.com/video/{bvid[0]}"
 
     def get_initial_state(self, url: str):
         # 活动页链接不会包含 BV 号，ep 号等关键信息，故采用网页解析方式获取视频数据
@@ -49,7 +51,7 @@ class FestivalParser:
             # 直接查找跳转链接
             jump_url = re.findall(r"https://www.bilibili.com/bangumi/play/ss[0-9]+", initial_state)
 
-            FestivalInfo.url = jump_url[0]
+            ActivityInfo.url = jump_url[0]
 
             return
 
@@ -60,7 +62,7 @@ class FestivalParser:
             # 找到当前视频的 bvid
             bvid = info_json["videoInfo"]["bvid"]
 
-            FestivalInfo.url = f"https://www.bilibili.com/video/{bvid}"
+            ActivityInfo.url = f"https://www.bilibili.com/video/{bvid}"
 
             return
 
@@ -68,12 +70,21 @@ class FestivalParser:
             self.get_aid(initial_state)
 
     def parse_url(self, url: str):
-        match UniversalTool.re_find_string(r"BV", url):
-            case "BV":
-                # 判断视频链接是否包含 BV 号
-                self.get_bvid(url)
+        def worker():
+            match UniversalTool.re_find_string(r"BV", url):
+                case "BV":
+                    # 判断视频链接是否包含 BV 号
+                    self.get_bvid(url)
 
-            case _:
-                initial_state = self.get_initial_state(url)
+                case _:
+                    initial_state = self.get_initial_state(url)
 
-                self.get_real_url(initial_state)
+                    self.get_real_url(initial_state)
+
+            raise GlobalException(StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = ActivityInfo.url)
+        
+        try:
+            return worker()
+        
+        except Exception as e:
+            raise GlobalException(e, callback = self.callback.error_callback) from e
