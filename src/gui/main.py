@@ -452,7 +452,6 @@ class MainWindow(Frame):
 
         # 直播类型视频跳转合成窗口
         if self.current_parse_type == ParseType.Live:
-            print(LiveInfo.status)
             if LiveInfo.status == LiveStatus.Not_Started.value:
                 # 未开播，无法解析
                 wx.MessageDialog(self, "直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING).ShowModal()
