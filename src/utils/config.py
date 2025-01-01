@@ -11,8 +11,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.54.0"
-        version_code: int = 1541
+        version: str = "1.55.0"
+        version_code: int = 1550
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1541
@@ -43,7 +43,7 @@ class Config:
         timestamp: int = 0
 
     class Misc:
-        episode_display_mode: int = 1
+        episode_display_mode: int = 2
 
         show_episode_full_name: bool = True
         auto_select: bool = False

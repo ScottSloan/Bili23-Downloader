@@ -149,6 +149,7 @@ class OptionDialog(wx.Dialog):
 
         self.add_number_chk.SetValue(Config.Download.add_number)
 
+        self.onCheckAudioOnlyEVT(0)
         self.onCheckDanmakuEVT(0)
         self.onCheckSubtitleEVT(0)
 
