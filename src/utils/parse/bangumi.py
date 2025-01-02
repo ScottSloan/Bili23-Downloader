@@ -2,7 +2,7 @@ import re
 import json
 import requests
 
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 from utils.config import Config
 
 from utils.common.exception import GlobalException
@@ -24,6 +24,14 @@ class BangumiInfo:
 
     title: str = ""
     cover: str = ""
+    views: str = ""
+    danmakus: str = ""
+    followers: str = ""
+    styles: str = ""
+    year: str = ""
+    new_ep: str = ""
+    actors: str = ""
+    evaluate: str = ""
 
     type_id: int = 0
     type_name: str = ""
@@ -40,7 +48,7 @@ class BangumiInfo:
 
     @staticmethod
     def clear_bangumi_info():
-        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = ""
+        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = BangumiInfo.views = BangumiInfo.danmakus = BangumiInfo.followers = BangumiInfo.styles = BangumiInfo.year = BangumiInfo.new_ep = BangumiInfo.actors = BangumiInfo.evaluate = ""
         BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = BangumiInfo.stream_type = 0
 
         BangumiInfo.payment = False
@@ -108,6 +116,16 @@ class BangumiParser:
         BangumiInfo.mid = info_result["media_id"]
 
         BangumiInfo.type_id = info_result["type"]
+
+        BangumiInfo.cover = info_result["cover"]
+        BangumiInfo.views = info_result["icon_font"]["text"]
+        BangumiInfo.danmakus = FormatTool.format_data_count(info_result["stat"]["danmakus"])
+        BangumiInfo.followers = info_result["stat"]["follow_text"]
+        BangumiInfo.styles = " / ".join(info_result["styles"])
+        BangumiInfo.year = ""
+        BangumiInfo.new_ep = info_result["new_ep"]["desc"]
+        BangumiInfo.actors = info_result["actors"].replace("\n", " ")
+        BangumiInfo.evaluate = info_result["evaluate"]
 
         self.parse_episodes()
 

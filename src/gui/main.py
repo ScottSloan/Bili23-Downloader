@@ -34,6 +34,7 @@ from gui.dialog.converter import ConverterWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.option import OptionDialog
 from gui.dialog.error import ErrorInfoDialog
+from gui.dialog.detail import DetailDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -112,6 +113,9 @@ class MainWindow(Frame):
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.type_lab = wx.StaticText(self.panel, -1, "")
+        self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.detail_icon.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
@@ -123,6 +127,7 @@ class MainWindow(Frame):
         self.download_option_btn.SetToolTip("下载选项")
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.detail_icon, 0, wx.ALIGN_CENTER)
         video_info_hbox.AddStretchSpacer()
         video_info_hbox.Add(self.video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
@@ -222,6 +227,8 @@ class MainWindow(Frame):
 
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
+
+        self.detail_icon.Bind(wx.EVT_LEFT_DOWN, self.onVideoDetailEVT)
 
         self.Bind(wx.EVT_MENU, self.onLoginEVT, id = self.ID_LOGIN)
         self.Bind(wx.EVT_MENU, self.onDebugEVT, id = self.ID_DEBUG)
@@ -359,6 +366,8 @@ class MainWindow(Frame):
         self.download_btn.Enable(False)
         self.episode_option_btn.Enable(False)
         self.download_option_btn.Enable(False)
+
+        self.detail_icon.Hide()
 
         # 开启解析线程
         self.onParseRedirectCallback(url)
@@ -757,6 +766,10 @@ class MainWindow(Frame):
             case self.ID_EPISODE_LIST_COLLAPSE:
                 self.treelist.collapse_current_item()
 
+    def onVideoDetailEVT(self, event):
+        dialog = DetailDialog(self)
+        dialog.ShowModal()
+
     def update_video_count_label(self, checked: int = 0):
         if checked:
             _total = f"(共 {self.treelist._index} 个，已选择 {checked} 个)"
@@ -777,6 +790,9 @@ class MainWindow(Frame):
                 _type = "课程"
         
         self.type_lab.SetLabel(f"{_type} {_total}")
+        self.detail_icon.Show(True)
+
+        self.panel.Layout()
 
     def show_episode_list(self):
         self.treelist.set_list()
