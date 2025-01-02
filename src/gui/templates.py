@@ -110,6 +110,28 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self._title_longest_width > self.FromDIP(375):
             self.SetColumnWidth(1, self._title_longest_width + 15)
 
+    def is_current_item_checked(self):
+        match self.GetCheckedState(self.GetSelection()):
+            case wx.CHK_CHECKED | wx.CHK_UNDETERMINED:
+                return True
+            
+            case wx.CHK_UNCHECKED:
+                return False
+
+    def check_current_item(self):
+        item = self.GetSelection()
+
+        match self.GetCheckedState(item):
+            case wx.CHK_CHECKED | wx.CHK_UNDETERMINED:
+                state = wx.CHK_UNCHECKED
+            
+            case wx.CHK_UNCHECKED:
+                state = wx.CHK_CHECKED
+
+        self.CheckItemRecursively(item, state)
+
+        self.UpdateItemParentStateRecursively(item)
+
     def onCheckItem(self, event):
         item = event.GetItem()
 

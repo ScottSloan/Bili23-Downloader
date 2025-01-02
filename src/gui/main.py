@@ -239,7 +239,10 @@ class MainWindow(Frame):
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
-        self.treelist.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onEpisodeListRightClickEVT)
+        self.treelist.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onEpisodeRightClickEVT)
+
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_TITLE)
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_CHECK)
 
     def init_utils(self):
         def worker():
@@ -315,6 +318,7 @@ class MainWindow(Frame):
         self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
 
         self.ID_EPISODE_LIST_COPY_TITLE = wx.NewIdRef()
+        self.ID_EPISODE_LIST_CHECK = wx.NewIdRef()
 
     def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
@@ -712,18 +716,34 @@ class MainWindow(Frame):
 
         wx.CallAfter(worker)
 
-    def onEpisodeListRightClickEVT(self, event):
+    def onEpisodeRightClickEVT(self, event):
         def _get_menu():
             context_menu = wx.Menu()
 
             copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题")
+            check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择" if self.treelist.is_current_item_checked() else "选择")
 
             context_menu.Append(copy_title_menuitem)
+            context_menu.AppendSeparator()
+            context_menu.Append(check_menuitem)
 
             return context_menu
         
         if self.treelist.GetSelection().IsOk():
             self.treelist.PopupMenu(_get_menu())
+
+    def onEpisodeContextMenuEVT(self, event):
+        def _copy_title():
+            text = self.treelist.GetItemText(self.treelist.GetSelection(), 1)
+
+            wx.TheClipboard.SetData(wx.TextDataObject(text))
+
+        match event.GetId():
+            case self.ID_EPISODE_LIST_COPY_TITLE:
+                _copy_title()
+
+            case self.ID_EPISODE_LIST_CHECK:
+                self.treelist.check_current_item()
 
     def update_video_count_label(self, checked: int = 0):
         if checked:
