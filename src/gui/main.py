@@ -243,6 +243,7 @@ class MainWindow(Frame):
 
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_TITLE)
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_CHECK)
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COLLAPSE)
 
     def init_utils(self):
         def worker():
@@ -319,6 +320,7 @@ class MainWindow(Frame):
 
         self.ID_EPISODE_LIST_COPY_TITLE = wx.NewIdRef()
         self.ID_EPISODE_LIST_CHECK = wx.NewIdRef()
+        self.ID_EPISODE_LIST_COLLAPSE = wx.NewIdRef()
 
     def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
@@ -722,10 +724,17 @@ class MainWindow(Frame):
 
             copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题")
             check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择" if self.treelist.is_current_item_checked() else "选择")
+            collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开" if self.treelist.is_current_item_collapsed() else "折叠")
+            
+            if self.treelist.is_current_item_node():
+                copy_title_menuitem.Enable(False)
+            else:
+                collapse_menuitem.Enable(False)
 
             context_menu.Append(copy_title_menuitem)
             context_menu.AppendSeparator()
             context_menu.Append(check_menuitem)
+            context_menu.Append(collapse_menuitem)
 
             return context_menu
         
@@ -744,6 +753,9 @@ class MainWindow(Frame):
 
             case self.ID_EPISODE_LIST_CHECK:
                 self.treelist.check_current_item()
+
+            case self.ID_EPISODE_LIST_COLLAPSE:
+                self.treelist.collapse_current_item()
 
     def update_video_count_label(self, checked: int = 0):
         if checked:

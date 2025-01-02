@@ -118,6 +118,16 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             case wx.CHK_UNCHECKED:
                 return False
 
+    def is_current_item_collapsed(self):
+        item = self.GetSelection()
+
+        return not self.IsExpanded(item)
+    
+    def is_current_item_node(self):
+        item = self.GetSelection()
+
+        return self.GetItemData(item).type == "node"
+
     def check_current_item(self):
         item = self.GetSelection()
 
@@ -131,6 +141,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.CheckItemRecursively(item, state)
 
         self.UpdateItemParentStateRecursively(item)
+    
+    def collapse_current_item(self):
+        item = self.GetSelection()
+
+        if self.IsExpanded(item):
+            self.Collapse(item)
+        else:
+            self.Expand(item)
 
     def onCheckItem(self, event):
         item = event.GetItem()
