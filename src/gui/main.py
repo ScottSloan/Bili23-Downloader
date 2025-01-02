@@ -377,7 +377,7 @@ class MainWindow(Frame):
             self.show_episode_list()
 
         def worker():
-            match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
+            match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
                 case "cheese":
                     # 课程，都使用 ep, season_id，与番组相同，需要匹配 cheese 特征字
                     self.current_parse_type = ParseType.Cheese
@@ -410,7 +410,7 @@ class MainWindow(Frame):
 
                     wx.CallAfter(self.setLiveQualityList)
 
-                case "b23.tv":
+                case "b23.tv" | "bili2233.cn":
                     # 短链接
                     return_code = self.b23_parser.parse_url(url)
 

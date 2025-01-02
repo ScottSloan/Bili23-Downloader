@@ -158,6 +158,9 @@ class VideoParser:
         
         try:
             return worker()
+        
+        except GlobalException as e:
+            raise e
 
         except Exception as e:
             raise GlobalException(e, callback = self.callback.error_callback) from e
