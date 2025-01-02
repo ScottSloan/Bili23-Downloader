@@ -1,13 +1,15 @@
 import wx
 
 from utils.config import Config
+from utils.common.map import audio_quality_map, danmaku_format_map, subtitle_format_map, video_codec_map, get_mapping_index_by_value
+from utils.common.enums import StreamType
+
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
-from utils.common.map import audio_quality_map, danmaku_format_map, subtitle_format_map, video_codec_map, get_mapping_index_by_value
 
 class OptionDialog(wx.Dialog):
-    def __init__(self, parent, callback):
-        self.callback = callback
+    def __init__(self, parent, stream_type: int, callback):
+        self.stream_type, self.callback = stream_type, callback
 
         wx.Dialog.__init__(self, parent, -1, "下载选项")
 
@@ -132,8 +134,12 @@ class OptionDialog(wx.Dialog):
         self.audio_quality_choice.Set(_get_audio_quality_list())
         self.audio_quality_choice.SetSelection(_get_choice_index(AudioInfo.audio_quality_id))
 
-        self.video_codec_choice.Set(list(video_codec_map.keys()))
-        self.video_codec_choice.SetSelection(get_mapping_index_by_value(video_codec_map, Config.Download.video_codec_id))
+        if self.stream_type == StreamType.Dash.value:
+            self.video_codec_choice.Set(list(video_codec_map.keys()))
+            self.video_codec_choice.SetSelection(get_mapping_index_by_value(video_codec_map, Config.Download.video_codec_id))
+        else:
+            self.video_codec_choice.Set([list(video_codec_map.keys())[0]])
+            self.video_codec_choice.SetSelection(0)
 
         self.audio_only_chk.SetValue(AudioInfo.download_audio_only)
 

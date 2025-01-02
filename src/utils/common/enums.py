@@ -49,6 +49,10 @@ class CDNMode(Enum):
     Auto = 0              # 自动切换
     Custom = 1            # 手动设置
 
+class StreamType(Enum):
+    Dash = 0              # dash 流
+    Flv = 1               # flv 流
+
 class DownloadStatus(Enum):
     Waiting = 0           # 等待下载
     Downloading = 1       # 下载中

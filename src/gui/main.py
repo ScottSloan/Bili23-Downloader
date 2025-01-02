@@ -1,6 +1,7 @@
 import wx
 import os
 import time
+import wx.dataview
 import wx.py
 import requests
 
@@ -238,6 +239,8 @@ class MainWindow(Frame):
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
+        self.treelist.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onEpisodeListRightClickEVT)
+
     def init_utils(self):
         def worker():
             def _check_update():
@@ -310,6 +313,8 @@ class MainWindow(Frame):
         self.ID_EPISODE_IN_SECTION = wx.NewIdRef()
         self.ID_EPISODE_ALL_SECTIONS = wx.NewIdRef()
         self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
+
+        self.ID_EPISODE_LIST_COPY_TITLE = wx.NewIdRef()
 
     def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
@@ -649,7 +654,14 @@ class MainWindow(Frame):
             self.video_quality_choice.Enable(enable)
             self.video_quality_lab.Enable(enable)
         
-        dlg = OptionDialog(self, callback)
+        match self.current_parse_type:
+            case ParseType.Video:
+                stream_type = VideoInfo.stream_type
+
+            case ParseType.Bangumi:
+                stream_type = BangumiInfo.stream_type
+
+        dlg = OptionDialog(self, stream_type, callback)
         dlg.ShowModal()
 
     def onEpisodeOptionMenuEVT(self, event):
@@ -699,6 +711,19 @@ class MainWindow(Frame):
                 dlg.ShowModal()
 
         wx.CallAfter(worker)
+
+    def onEpisodeListRightClickEVT(self, event):
+        def _get_menu():
+            context_menu = wx.Menu()
+
+            copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题")
+
+            context_menu.Append(copy_title_menuitem)
+
+            return context_menu
+        
+        if self.treelist.GetSelection().IsOk():
+            self.treelist.PopupMenu(_get_menu())
 
     def update_video_count_label(self, checked: int = 0):
         if checked:

@@ -4,13 +4,15 @@ import requests
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
+
 from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_map
+from utils.common.enums import StatusCode, StreamType
+from utils.common.data_type import ParseCallback
+
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
-from utils.common.enums import StatusCode
-from utils.common.data_type import ParseCallback
 
 class BangumiInfo:
     url: str = ""
@@ -28,6 +30,8 @@ class BangumiInfo:
 
     payment: bool = False
 
+    stream_type: int = 0
+
     episodes_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
@@ -37,7 +41,7 @@ class BangumiInfo:
     @staticmethod
     def clear_bangumi_info():
         BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = ""
-        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = 0
+        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = BangumiInfo.stream_type = 0
 
         BangumiInfo.payment = False
 
@@ -110,7 +114,7 @@ class BangumiParser:
         self.get_bangumi_type()
     
     def get_bangumi_available_media_info(self):
-        url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
+        url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
 
         req = requests.get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)
@@ -119,17 +123,24 @@ class BangumiParser:
             
         info = resp["result"]
         
-        # 检测是否为试看内容
-        if "dash" not in info:
-            if BangumiInfo.payment and Config.User.login:
-                raise Exception(StatusCode.Pay.value)
-            else:
-                raise Exception(StatusCode.Vip.value)
+        if info["type"] == "FLV":
+            AudioInfo.get_audio_quality_list({})
 
+            BangumiInfo.stream_type = StreamType.Flv.value
+        else:
+            # 检测是否为试看内容
+            if "dash" not in info:
+                if BangumiInfo.payment and Config.User.login:
+                    raise Exception(StatusCode.Pay.value)
+                else:
+                    raise Exception(StatusCode.Vip.value)
+                
+            AudioInfo.get_audio_quality_list(info["dash"])
+
+            BangumiInfo.stream_type = StreamType.Dash.value
+                
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
-
-        AudioInfo.get_audio_quality_list(info["dash"])
 
         ExtraInfo.get_danmaku = Config.Extra.get_danmaku
         ExtraInfo.danmaku_type = Config.Extra.danmaku_type

@@ -22,6 +22,8 @@ class VideoInfo:
     cover: str = ""
     type: int = 0
 
+    stream_type: int = 0
+
     pages_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
@@ -31,7 +33,7 @@ class VideoInfo:
     @staticmethod
     def clear_video_info():
         VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
-        VideoInfo.cid = VideoInfo.type = 0
+        VideoInfo.cid = VideoInfo.type = VideoInfo.stream_type = 0
 
         VideoInfo.pages_list.clear()
         VideoInfo.video_quality_id_list.clear()
