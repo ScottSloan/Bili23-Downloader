@@ -61,8 +61,11 @@ class BangumiPage(wx.Panel):
         self.title_lab.SetFont(font)
 
         views_lab = wx.StaticText(self, -1, f"{BangumiInfo.views}播放")
+        views_lab.SetForegroundColour(wx.Colour(97, 102, 109))
         danmakus_lab = wx.StaticText(self, -1, f"{BangumiInfo.danmakus}弹幕")
+        danmakus_lab.SetForegroundColour(wx.Colour(97, 102, 109))
         followers_lab = wx.StaticText(self, -1, BangumiInfo.followers)
+        followers_lab.SetForegroundColour(wx.Colour(97, 102, 109))
 
         view_hbox = wx.BoxSizer(wx.HORIZONTAL)
         view_hbox.Add(views_lab, 0, wx.ALL, 10)
@@ -70,9 +73,13 @@ class BangumiPage(wx.Panel):
         view_hbox.Add(followers_lab, 0, wx.ALL, 10)
 
         tag_lab = wx.StaticText(self, -1, BangumiInfo.styles)
-        year_lab = wx.StaticText(self, -1)
+        tag_lab.SetForegroundColour(wx.Colour(97, 102, 109))
+        year_lab = wx.StaticText(self, -1, "2023")
+        year_lab.SetForegroundColour(wx.Colour(97, 102, 109))
         new_ep_lab = wx.StaticText(self, -1, BangumiInfo.new_ep)
+        new_ep_lab.SetForegroundColour(wx.Colour(97, 102, 109))
         bvid_lab = wx.StaticText(self, -1, BangumiInfo.bvid)
+        bvid_lab.SetForegroundColour(wx.Colour(97, 102, 109))
 
         tag_hbox = wx.BoxSizer(wx.HORIZONTAL)
         tag_hbox.Add(tag_lab, 0, wx.ALL, 10)
@@ -81,6 +88,7 @@ class BangumiPage(wx.Panel):
         tag_hbox.Add(bvid_lab, 0, wx.ALL, 10)
 
         actors_lab = wx.StaticText(self, -1, f"声优：{BangumiInfo.actors}")
+        actors_lab.SetForegroundColour(wx.Colour(97, 102, 109))
 
         desc_lab = wx.StaticText(self, -1, f"简介：{BangumiInfo.evaluate}")
 
@@ -92,7 +100,14 @@ class BangumiPage(wx.Panel):
         right_vbox.Add(desc_lab, 0, wx.ALL & (~wx.TOP), 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddSpacer(15)
         hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
         hbox.Add(right_vbox, 0, wx.EXPAND)
+        hbox.AddSpacer(15)
 
-        self.SetSizerAndFit(hbox)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddSpacer(15)
+        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.AddSpacer(15)
+
+        self.SetSizerAndFit(vbox)

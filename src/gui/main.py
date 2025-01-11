@@ -1,6 +1,5 @@
 import wx
 import os
-import time
 import wx.dataview
 import wx.py
 import requests
@@ -115,6 +114,7 @@ class MainWindow(Frame):
         self.type_lab = wx.StaticText(self.panel, -1, "")
         self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = _get_button_scale_size(), style = _get_style())
         self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.detail_icon.SetToolTip("查看详细信息")
         self.detail_icon.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
@@ -457,8 +457,6 @@ class MainWindow(Frame):
                 self.onOpenDownloadMgrEVT(0)
 
         def worker():
-            time.sleep(0.1)
-
             wx.CallAfter(self.download_window.add_download_task_panel, self.treelist.download_task_info_list, add_download_task_callback, True)
 
         def _get_live_stram():

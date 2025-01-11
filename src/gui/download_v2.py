@@ -200,7 +200,7 @@ class DownloadManagerWindow(Frame):
 
     def init_utils(self):
         # 记录下载任务的 cid 列表
-        self._temp_cid_list = []
+        self._temp_cid_list = set()
 
         # 读取断点续传信息
         self.load_download_task()
@@ -269,17 +269,9 @@ class DownloadManagerWindow(Frame):
             if multiple_flag:
                 info.index = index + 1
 
-            task_panel_callback = TaskPanelCallback()
-            task_panel_callback.onStartNextCallback = self.start_download
-            task_panel_callback.onStopCallbacak = stop_download_callback
-            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
-
             item = DownloadTaskPanel(self.download_task_list_panel, info, task_panel_callback)
 
-            # 添加进 cid 列表记录
-            self._temp_cid_list.append(info.cid)
-
-            return  (item, 0, wx.EXPAND)
+            return (item, 0, wx.EXPAND)
 
         def stop_download_callback(cid: int):
             # 停止下载回调函数
@@ -293,6 +285,11 @@ class DownloadManagerWindow(Frame):
         # 批量下载标识符
         multiple_flag = len(download_task_info_list) > 1
 
+        task_panel_callback = TaskPanelCallback()
+        task_panel_callback.onStartNextCallback = self.start_download
+        task_panel_callback.onStopCallbacak = stop_download_callback
+        task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+
         # 暂时停止 UI 更新
         self.download_task_list_panel.Freeze()
 
@@ -301,6 +298,8 @@ class DownloadManagerWindow(Frame):
             if info.cid not in self._temp_cid_list:
                 info.timestamp += index
                 task_panel_list.append(worker(info, multiple_flag, index))
+
+                self._temp_cid_list.add(info.cid)
 
         self.download_task_list_panel.sizer.AddMany(task_panel_list)
 
