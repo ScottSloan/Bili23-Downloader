@@ -30,6 +30,7 @@ class Downloader:
 
         # 初始化重试计数器
         self.retry_count = 0
+        self.error_retry_count = 0
         self.thread_alive_count = 0
 
         self._e = None
@@ -301,6 +302,14 @@ class Downloader:
     def onError(self):
         # 关闭线程池和监听线程，停止下载
         self.onStop()
+
+        if self.error_retry_count <= 5:
+            self.error_retry_count += 1
+            self.error_flag = False
+            
+            self.onResume()
+
+            return
 
         try:
             raise self._e
