@@ -1,8 +1,10 @@
 import wx
 import io
+import wx.html
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool
+from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 
 class DetailDialog(wx.Dialog):
@@ -16,12 +18,25 @@ class DetailDialog(wx.Dialog):
     def init_UI(self):
         self.note = wx.Simplebook(self, -1)
 
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.note, 1, wx.EXPAND)
+
+        self.SetSizer(vbox)
+    
+    def set_video_page(self):
+        self.note.AddPage(VideoPage(self.note), "video")
+
+        self.fit_window()
+
+    def set_bangumi_page(self):
         self.note.AddPage(BangumiPage(self.note), "bangumi")
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.note, 0, wx.EXPAND)
+        self.fit_window()
 
-        self.SetSizerAndFit(vbox)
+    def fit_window(self):
+        self.Fit()
+
+        self.CenterOnParent()
 
 class VideoPage(wx.Panel):
     def __init__(self, parent):
@@ -30,7 +45,32 @@ class VideoPage(wx.Panel):
         self.init_UI()
     
     def init_UI(self):
-        pass
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
+        font: wx.Font = self.GetFont()
+
+        html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 250)))
+
+        title_div = f"""<font size="5" face="{font.GetFaceName()}">{VideoInfo.title}</font>"""
+        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: rgba(97, 102, 109, 1);">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
+        desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()};">{VideoInfo.desc}</span></div>"""
+        tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: rgba(241, 242, 243, 1); color: rgba(97, 102, 109, 1);">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
+        tag_div = """<div id="tag">{}</div>""".format("".join(tag_span))
+
+        body = "<br>".join([title_div, views_div, desc_div, tag_div])
+
+        html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddSpacer(15)
+        vbox.Add(html_page, 1, wx.ALL | wx.EXPAND, 10)
+        vbox.AddSpacer(15)
+
+        self.SetSizerAndFit(vbox)
 
 class BangumiPage(wx.Panel):
     def __init__(self, parent):
@@ -53,61 +93,33 @@ class BangumiPage(wx.Panel):
         _set_dark_mode()
 
         font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(font.GetFractionalPointSize() + 3)
 
-        self.cover_bmp = wx.StaticBitmap(self, -1, get_cover().ConvertToBitmap())
+        cover_bmp = wx.StaticBitmap(self, -1, get_cover().ConvertToBitmap())
 
-        self.title_lab = wx.StaticText(self, -1, BangumiInfo.title)
-        self.title_lab.SetFont(font)
+        html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 300)))
 
-        views_lab = wx.StaticText(self, -1, f"{BangumiInfo.views}播放")
-        views_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-        danmakus_lab = wx.StaticText(self, -1, f"{BangumiInfo.danmakus}弹幕")
-        danmakus_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-        followers_lab = wx.StaticText(self, -1, BangumiInfo.followers)
-        followers_lab.SetForegroundColour(wx.Colour(97, 102, 109))
+        title_div = f"""<font size="5" face="{font.GetFaceName()}">{BangumiInfo.title}</font>"""
+        views_div = f"""<div id="views"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()};">{BangumiInfo.views}播放&nbsp&nbsp·&nbsp {BangumiInfo.danmakus}弹幕&nbsp&nbsp·&nbsp {BangumiInfo.followers}</span></div>"""
+        tag_div = f"""<div id="tag"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()};">{BangumiInfo.styles}&nbsp&nbsp·&nbsp&nbsp{BangumiInfo.new_ep}&nbsp&nbsp·&nbsp {BangumiInfo.bvid}</span></div>"""
+        actors_div = f"""<div id="actors"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()}">演员：{BangumiInfo.actors}</span></div>"""
+        desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}">简介：{BangumiInfo.evaluate}</span></div>"""
 
-        view_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        view_hbox.Add(views_lab, 0, wx.ALL, 10)
-        view_hbox.Add(danmakus_lab, 0, wx.ALL, 10)
-        view_hbox.Add(followers_lab, 0, wx.ALL, 10)
+        body = "<br>".join([title_div, views_div, tag_div, actors_div, desc_div])
 
-        tag_lab = wx.StaticText(self, -1, BangumiInfo.styles)
-        tag_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-        year_lab = wx.StaticText(self, -1, "2023")
-        year_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-        new_ep_lab = wx.StaticText(self, -1, BangumiInfo.new_ep)
-        new_ep_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-        bvid_lab = wx.StaticText(self, -1, BangumiInfo.bvid)
-        bvid_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-
-        tag_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        tag_hbox.Add(tag_lab, 0, wx.ALL, 10)
-        tag_hbox.Add(year_lab, 0, wx.ALL, 10)
-        tag_hbox.Add(new_ep_lab, 0, wx.ALL, 10)
-        tag_hbox.Add(bvid_lab, 0, wx.ALL, 10)
-
-        actors_lab = wx.StaticText(self, -1, f"声优：{BangumiInfo.actors}")
-        actors_lab.SetForegroundColour(wx.Colour(97, 102, 109))
-
-        desc_lab = wx.StaticText(self, -1, f"简介：{BangumiInfo.evaluate}")
+        html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
-        right_vbox.Add(self.title_lab, 0, wx.ALL, 10)
-        right_vbox.Add(view_hbox, 0, wx.EXPAND)
-        right_vbox.Add(tag_hbox, 0, wx.EXPAND)
-        right_vbox.Add(actors_lab, 0, wx.ALL, 10)
-        right_vbox.Add(desc_lab, 0, wx.ALL & (~wx.TOP), 10)
+        right_vbox.Add(html_page, 1, wx.ALL | wx.EXPAND, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(15)
-        hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
-        hbox.Add(right_vbox, 0, wx.EXPAND)
+        hbox.Add(cover_bmp, 0, wx.ALL, 10)
+        hbox.Add(right_vbox, 1, wx.EXPAND)
         hbox.AddSpacer(15)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.AddSpacer(15)
-        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.Add(hbox, 1, wx.EXPAND)
         vbox.AddSpacer(15)
 
         self.SetSizerAndFit(vbox)

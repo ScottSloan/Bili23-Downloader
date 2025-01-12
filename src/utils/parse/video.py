@@ -20,6 +20,11 @@ class VideoInfo:
 
     title: str = ""
     cover: str = ""
+    views: str = ""
+    danmakus: str = ""
+    pubtime: str = ""
+    desc: str = ""
+    tag_list: list = []
     type: int = 0
 
     stream_type: int = 0
@@ -32,9 +37,10 @@ class VideoInfo:
 
     @staticmethod
     def clear_video_info():
-        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
+        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = VideoInfo.desc = VideoInfo.views = VideoInfo.danmakus = VideoInfo.pubtime = ""
         VideoInfo.cid = VideoInfo.type = VideoInfo.stream_type = 0
 
+        VideoInfo.tag_list.clear()
         VideoInfo.pages_list.clear()
         VideoInfo.video_quality_id_list.clear()
         VideoInfo.video_quality_desc_list.clear()
@@ -94,6 +100,11 @@ class VideoParser:
         VideoInfo.aid = info["aid"]
         VideoInfo.pages_list = info["pages"]
 
+        VideoInfo.desc = info["desc"]
+        VideoInfo.views = FormatTool.format_data_count(info["stat"]["view"])
+        VideoInfo.danmakus = FormatTool.format_data_count(info["stat"]["danmaku"])
+        VideoInfo.pubtime = UniversalTool.get_time_str_from_timestamp(info["pubdate"])
+
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
             if hasattr(self, "part_num"):
@@ -103,7 +114,17 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
+        self.get_video_tag()
+
         self.parse_episodes()
+
+    def get_video_tag(self):
+        url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
+        
+        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        resp = json.loads(req.text)
+
+        VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
 
     def get_video_available_media_info(self):
         # 获取视频清晰度

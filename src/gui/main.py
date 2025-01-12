@@ -766,6 +766,14 @@ class MainWindow(Frame):
 
     def onVideoDetailEVT(self, event):
         dialog = DetailDialog(self)
+
+        match self.current_parse_type:
+            case ParseType.Video:
+                dialog.set_video_page()
+
+            case ParseType.Bangumi:
+                dialog.set_bangumi_page()
+
         dialog.ShowModal()
 
     def update_video_count_label(self, checked: int = 0):
