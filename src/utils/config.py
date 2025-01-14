@@ -15,9 +15,9 @@ class Config:
         version_code: int = 1550
 
         # 断点续传文件最低支持版本号
-        _task_file_min_version_code: int = 1541
+        _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/01/12"
+        release_date: str = "2025/01/14"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 

@@ -499,7 +499,6 @@ class DownloadUtils:
                 # 视频不存在音频，标记 flag 为仅下载视频
                 self.task_info.video_merge_type = MergeType.Only_Video.value
 
-        
         json_dash = get_json()
 
         self._video_download_url_list = self._audio_download_url_list = []
@@ -510,25 +509,25 @@ class DownloadUtils:
 
         get_audio_available_quality()
 
-    def get_downloader_info_list(self):
+    def get_downloader_info_list(self, item_flag: list, callback: Callable):
         try:
             self.get_video_bangumi_download_url()
 
         except Exception as e:
             raise GlobalException(e, callback = self.callback.onDownloadFailedCallback) from e
+        
+        if not item_flag:
+            item_flag = self._get_item_flag()
+
+            callback(item_flag)
 
         _temp_info = []
 
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio:
-                _temp_info.append(self._get_video_downloader_info())
-                _temp_info.append(self._get_audio_downloader_info())
+        if "video" in item_flag:
+            _temp_info.append(self._get_video_downloader_info())
 
-            case MergeType.Only_Video:
-                _temp_info.append(self._get_video_downloader_info())
-            
-            case MergeType.Only_Audio:
-                _temp_info.append(self._get_audio_downloader_info())
+        if "audio" in item_flag:
+            _temp_info.append(self._get_audio_downloader_info())
 
         return _temp_info
 
@@ -679,6 +678,17 @@ class DownloadUtils:
                 highest_audio_quality = entry["id"]
 
         return highest_audio_quality
+
+    def _get_item_flag(self):
+        match MergeType(self.task_info.video_merge_type):
+            case MergeType.Video_And_Audio:
+                return ["video", "audio"]
+
+            case MergeType.Only_Video:
+                return ["video"]
+            
+            case MergeType.Only_Audio:
+                return ["audio"]
 
     @property
     def file_title(self):
@@ -1111,8 +1121,17 @@ class DownloadTaskPanel(wx.Panel):
 
     def start_download(self):
         def worker():
+            def update_item_flag_callback(item_flag):
+                kwargs = {
+                    "item_flag": item_flag
+                }
+
+                self.task_info.item_flag = item_flag
+
+                self.download_file_tool.update_task_info_kwargs(**kwargs)
+
             # 开始下载
-            downloader_info_list = self.utils.get_downloader_info_list()
+            downloader_info_list = self.utils.get_downloader_info_list(self.task_info.item_flag, update_item_flag_callback)
 
             self.downloader.start_download(downloader_info_list)
 

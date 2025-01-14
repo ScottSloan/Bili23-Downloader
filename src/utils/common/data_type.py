@@ -35,8 +35,10 @@ class DownloadTaskInfo:
         self.progress: int = 0
         # 总大小，单位字节
         self.total_size: int = 0
-        # 已下载完成的大小，单位字节
+        # 已下载完成的总大小，单位字节
         self.completed_size: int = 0
+        # 已下载完成的当前任务大小
+        self.current_completed_size: int = 0
         # 下载状态
         self.status: int = DownloadStatus.Waiting.value
 
@@ -45,6 +47,9 @@ class DownloadTaskInfo:
         self.audio_quality_id: int = 0
         self.video_codec_id: int = 0
         self.audio_type: str = ""
+
+        # 下载项目标识
+        self.item_flag: list = None
 
         # 下载类型，1 为投稿视频，2 为番组
         self.download_type: int = 0
@@ -75,11 +80,13 @@ class DownloadTaskInfo:
             "progress": self.progress,
             "total_size": self.total_size,
             "completed_size": self.completed_size,
+            "current_completed_size": self.current_completed_size,
             "status": self.status,
             "video_quality_id": self.video_quality_id,
             "audio_quality_id": self.audio_quality_id,
             "video_codec_id": self.video_codec_id,
             "audio_type": self.audio_type,
+            "item_flag": self.item_flag,
             "download_type": self.download_type,
             "video_merge_type": self.video_merge_type,
             "get_danmaku": self.get_danmaku,
@@ -105,11 +112,13 @@ class DownloadTaskInfo:
         self.progress = data["progress"]
         self.total_size = data["total_size"]
         self.completed_size = data["completed_size"]
+        self.current_completed_size = data["current_completed_size"]
         self.status = data["status"]
         self.video_quality_id = data["video_quality_id"]
         self.audio_quality_id = data["audio_quality_id"]
         self.video_codec_id = data["video_codec_id"]
         self.audio_type = data["audio_type"]
+        self.item_flag = data["item_flag"]
         self.download_type = data["download_type"]
         self.video_merge_type = data["video_merge_type"]
         self.get_danmaku = data["get_danmaku"]
