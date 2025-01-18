@@ -7,11 +7,12 @@ from requests.auth import HTTPProxyAuth
 from gui.templates import ScrolledPanel
 
 from gui.dialog.ffmpeg import DetectDialog
+from gui.dialog.cdn import ChangeCDNDialog
 
 from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool, UniversalTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, cdn_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
@@ -343,6 +344,14 @@ class AdvancedTab(wx.Panel):
         self.init_data()
 
     def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         icon_manager = IconManager(self)
 
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
@@ -365,17 +374,24 @@ class AdvancedTab(wx.Panel):
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN")
-        self.custom_cdn_box = wx.ComboBox(cdn_box, -1, choices = list(cdn_map.values()))
+        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((240, 24)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
         custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         custom_cdn_hbox.Add(self.custom_cdn_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN", size = _get_scale_size((90, 28)))
+
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_hbox.AddStretchSpacer()
+        btn_hbox.Add(self.change_cdn_btn, 0, wx.ALL & (~wx.TOP), 10)
+
         cdn_vbox = wx.BoxSizer(wx.VERTICAL)
         cdn_vbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
         cdn_vbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
         cdn_vbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
+        cdn_vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         cdn_sbox = wx.StaticBoxSizer(cdn_box)
         cdn_sbox.Add(cdn_vbox, 0, wx.EXPAND)
@@ -386,11 +402,13 @@ class AdvancedTab(wx.Panel):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onChangeCustomCDNEVT)
+        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableCustomCDNEVT)
         self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
         self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
 
         self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
+
+        self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
 
     def init_data(self):
         self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
@@ -403,7 +421,7 @@ class AdvancedTab(wx.Panel):
             case CDNMode.Custom:
                 self.custom_cdn_manual_radio.SetValue(True)
 
-        self.onChangeCustomCDNEVT(0)
+        self.onEnableCustomCDNEVT(0)
 
     def save(self):
         Config.Advanced.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
@@ -428,7 +446,7 @@ class AdvancedTab(wx.Panel):
 
         return True
 
-    def onChangeCustomCDNEVT(self, event):
+    def onEnableCustomCDNEVT(self, event):
         self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
         self.custom_cdn_manual_radio.Enable(self.enable_custom_cdn_chk.GetValue())
 
@@ -437,13 +455,21 @@ class AdvancedTab(wx.Panel):
         else:
             self.custom_cdn_lab.Enable(False)
             self.custom_cdn_box.Enable(False)
+            self.change_cdn_btn.Enable(False)
 
     def onChangeCustomCDNModeEVT(self, event):
         self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
         self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
+        self.change_cdn_btn.Enable(self.custom_cdn_manual_radio.GetValue())
 
     def onCustomCDNTipEVT(self, event):
         wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n由于B站同时使用多家CDN（图便宜大厂小厂混用），当接口返回某些不知名小厂提供的CDN加速链接时，就会导致部分视频下载失败。\n\n现在程序默认开启CDN替换功能，将接口返回的所有下载链接自动替换为华为云、腾讯云或者阿里云大厂的CDN，它们的稳定性明显优于小厂。\n当选择自动切换CDN时，能解决部分视频下载失败的问题，但下载速度可能会偏慢，用户可自行Ping测试这些地址，选择延迟最低的一个。\n\n为保证良好的下载体验，不建议用户关闭此选项。", "说明", wx.ICON_INFORMATION).ShowModal()
+
+    def onChangeCDNEVT(self, event):
+        dlg = ChangeCDNDialog(self)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.custom_cdn_box.SetValue(dlg.get_cdn())
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):

@@ -402,4 +402,4 @@ class Downloader:
             return re.sub(r'(?<=https://)[^/]+', cdn, url)
 
         for cdn in cdn_map.values():
-            yield [_replace(url, cdn) for url in url_list]
+            yield [_replace(url, cdn["cdn"]) for url in url_list]

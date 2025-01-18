@@ -21,6 +21,14 @@ class DetectDialog(wx.Dialog):
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
         
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         def _get_scale_button_size():
             match Config.Sys.platform:
                 case "windows":
@@ -61,8 +69,8 @@ class DetectDialog(wx.Dialog):
         self.cwd_chk.Enable(False)
         self.cwd_path_lab.Enable(False)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
