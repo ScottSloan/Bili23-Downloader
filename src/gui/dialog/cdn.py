@@ -1,4 +1,7 @@
+import re
 import wx
+import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
 from utils.config import Config
 from utils.common.map import cdn_map
@@ -24,7 +27,18 @@ class ChangeCDNDialog(wx.Dialog):
                 case "linux" | "darwin":
                     return wx.DefaultSize
 
-        self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((600, 250)), style = wx.LC_REPORT)
+        cdn_lab = wx.StaticText(self, -1, "CDN 列表")
+
+        self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.cdn_list.EnableCheckBoxes(True)
+
+        self.ping_btn = wx.Button(self, -1, "Ping 测试", size = _get_scale_size((100, 28)))
+
+        action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        action_hbox.AddStretchSpacer()
+        action_hbox.Add(self.ping_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+
+        bottom_line = wx.StaticLine(self, -1)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
@@ -35,28 +49,36 @@ class ChangeCDNDialog(wx.Dialog):
         bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(cdn_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(self.cdn_list, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(action_hbox, 0, wx.EXPAND)
+        vbox.Add(bottom_line, 0, wx.ALL | wx.EXPAND, 10)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
+        self.cdn_list.Bind(wx.EVT_LIST_ITEM_CHECKED, self.onCheckEVT)
+        self.cdn_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivateEVT)
+
+        self.ping_btn.Bind(wx.EVT_BUTTON, self.onPingTestEVT)
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
 
     def init_utils(self):
-        self.init_listctrl()
+        def init_listctrl():
+            self.cdn_list.AppendColumn("序号", width = self.FromDIP(50))
+            self.cdn_list.AppendColumn("CDN", width = self.FromDIP(280))
+            self.cdn_list.AppendColumn("提供商", width = self.FromDIP(140))
+            self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 
-        self.init_cdn_list()
-    
-    def init_listctrl(self):
-        self.cdn_list.AppendColumn("序号", width = self.FromDIP(50))
-        self.cdn_list.AppendColumn("CDN", width = self.FromDIP(280))
-        self.cdn_list.AppendColumn("提供商", width = self.FromDIP(140))
-        self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
+        def init_cdn_list():
+            for key, value in cdn_map.items():
+                self.cdn_list.Append([str(key + 1), value["cdn"], value["provider"], "未知"])
 
-    def init_cdn_list(self):
-        for key, value in cdn_map.items():
-            self.cdn_list.Append([str(key + 1), value["cdn"], value["provider"]])
+        init_listctrl()
+        init_cdn_list()
+
+        self._last_index = -1
 
     def get_cdn(self):
         return self.cdn_list.GetItemText(self.cdn_list.GetFocusedItem(), 1)
@@ -67,3 +89,42 @@ class ChangeCDNDialog(wx.Dialog):
             return
 
         event.Skip()
+    
+    def onPingTestEVT(self, event):
+        def worker(index: int, cdn: str):
+            def update(value):
+                self.cdn_list.SetItem(index, 3, value)
+            
+            wx.CallAfter(update, "正在检测...")
+
+            process = subprocess.run(f"ping {cdn}", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
+            latency = re.findall(r"Average = ([0-9]*)", process.stdout)
+
+            if latency:
+                result = f"{latency}ms"
+            else:
+                result = "请求超时"
+
+            wx.CallAfter(update, result)
+
+        thread_pool = ThreadPoolExecutor(max_workers = 5)
+
+        for i in range(self.cdn_list.GetItemCount()):
+            item: wx.ListItem = self.cdn_list.GetItem(i, 1)
+
+            thread_pool.submit(worker, i, item.GetText())
+    
+    def onCheckEVT(self, event: wx.ListEvent):
+        index = event.GetIndex()
+
+        if self._last_index != -1:
+            self.cdn_list.CheckItem(self._last_index, False)
+
+        self.cdn_list.Select(index)
+
+        self._last_index = index
+
+    def onItemActivateEVT(self, event: wx.ListEvent):
+        index = event.GetIndex()
+
+        self.cdn_list.CheckItem(index)
