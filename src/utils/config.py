@@ -17,7 +17,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/01/16"
+        release_date: str = "2025/01/18"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -71,10 +71,6 @@ class Config:
 
         enable_speed_limit: bool = False
         speed_limit_in_mb: int = 10
-
-        enable_custom_cdn: bool = True
-        custom_cdn_mode: int = 0
-        custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
     
     class Merge:
         override_file: bool = False
@@ -105,6 +101,11 @@ class Config:
 
         wbi_key: str = ""
 
+    class Advanced:
+        enable_custom_cdn: bool = True
+        custom_cdn_mode: int = 0
+        custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
+
 class ConfigUtils:
     def __init__(self):
         pass
@@ -127,7 +128,7 @@ class ConfigUtils:
                 self._write_config_json(Config.User.user_config_path, user_config)
 
         def _after_read():
-            for node_name in ["download", "merge", "extra", "proxy", "misc"]:
+            for node_name in ["download", "advanced","merge", "extra", "proxy", "misc"]:
                 if node_name not in app_config:
                     app_config[node_name] = {}
             
@@ -168,9 +169,11 @@ class ConfigUtils:
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
         Config.Download.speed_limit_in_mb = app_config["download"].get("speed_limit_in_mb", Config.Download.speed_limit_in_mb)
-        Config.Download.enable_custom_cdn = app_config["download"].get("enable_custom_cdn", Config.Download.enable_custom_cdn)
-        Config.Download.custom_cdn = app_config["download"].get("custom_cdn", Config.Download.custom_cdn)
-        Config.Download.custom_cdn_mode = app_config["download"].get("custom_cdn_mode", Config.Download.custom_cdn_mode)
+
+        # advanced
+        Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
+        Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
+        Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
@@ -213,6 +216,9 @@ class ConfigUtils:
 
     def update_config_kwargs(self, file_path: str, category: str, **kwargs):
         config = self._read_config_json(file_path)
+
+        if category not in config:
+            config[category] = {}
 
         for key, value in kwargs.items():
             config[category][key] = value

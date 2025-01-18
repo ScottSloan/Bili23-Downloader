@@ -639,8 +639,8 @@ class DownloadUtils:
 
     def _get_all_available_download_url_list(self, entry: dict):
         def _replace(url: str):
-            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Custom:
-                return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url) 
+            if Config.Advanced.enable_custom_cdn and Config.Advanced.custom_cdn_mode == CDNMode.Custom:
+                return re.sub(r'(?<=https://)[^/]+', Config.Advanced.custom_cdn, url) 
             else:
                 return url
 
