@@ -106,6 +106,8 @@ class Config:
         custom_cdn_mode: int = 0
         custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
 
+        download_error_retry_count: int = 5
+
 class ConfigUtils:
     def __init__(self):
         pass
@@ -174,6 +176,7 @@ class ConfigUtils:
         Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
         Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
+        Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)

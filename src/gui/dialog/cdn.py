@@ -81,10 +81,10 @@ class ChangeCDNDialog(wx.Dialog):
         self._last_index = -1
 
     def get_cdn(self):
-        return self.cdn_list.GetItemText(self.cdn_list.GetFocusedItem(), 1)
+        return self.cdn_list.GetItemText(self._last_index, 1)
 
     def onConfirm(self, event):
-        if self.cdn_list.GetFocusedItem() == -1:
+        if self._last_index == -1 or not self.cdn_list.IsItemChecked(self._last_index):
             wx.MessageDialog(self, "请选择 CDN\n\n请选择需要替换的 CDN", "警告", wx.ICON_WARNING).ShowModal()
             return
 
@@ -101,7 +101,7 @@ class ChangeCDNDialog(wx.Dialog):
             latency = re.findall(r"Average = ([0-9]*)", process.stdout)
 
             if latency:
-                result = f"{latency}ms"
+                result = f"{latency[0]}ms"
             else:
                 result = "请求超时"
 
@@ -117,7 +117,7 @@ class ChangeCDNDialog(wx.Dialog):
     def onCheckEVT(self, event: wx.ListEvent):
         index = event.GetIndex()
 
-        if self._last_index != -1:
+        if self._last_index != -1 and self._last_index != index:
             self.cdn_list.CheckItem(self._last_index, False)
 
         self.cdn_list.Select(index)
