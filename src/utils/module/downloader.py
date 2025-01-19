@@ -367,11 +367,6 @@ class Downloader:
             raise GlobalException(e, callback = self.callback.onErrorCallback) from e
     
     def get_file_size(self, url_list: list, referer_url: str, path: str = None):
-        def request_head_gen():
-            for url in url_list:
-                req = self.session.head(url, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-                yield url, req.headers
-        
         def truncate_file():
             if path:
                 # 判断本地文件是否存在
@@ -380,26 +375,30 @@ class Downloader:
                         # 使用 seek 方法，移动文件指针，快速有效，完美解决大文件创建耗时的问题
                         f.seek(total_size - 1)
                         f.write(b"\0")
+        
+        def get_cdn_list():
+            if Config.Advanced.enable_custom_cdn:
+                match CDNMode(Config.Advanced.custom_cdn_mode):
+                    case CDNMode.Auto:
+                        return [entry["cdn"] for entry in cdn_map.values()]
+                    
+                    case CDNMode.Custom:
+                        return [Config.Advanced.custom_cdn]
+            else:
+                return [None]
 
-        def get_total_size():
-            for url, headers in request_head_gen():
-                # 检测 headers 是否包含 Content-Length，不包含的链接属于无效链接
-                if "Content-Length" in headers:
-                    yield url, int(headers["Content-Length"])
-
-        for url, total_size in get_total_size():
-            if not total_size:
-                if Config.Advanced.enable_custom_cdn and Config.Advanced.custom_cdn_mode == CDNMode.Auto.value:
-                    return self.get_file_size(next(self.switch_cdn(url_list)), referer_url, path)
-            
-            truncate_file()
-            
-            # 返回可以正常下载的链接
-            return url, total_size
-
-    def switch_cdn(self, url_list: list):
-        def _replace(url: str, cdn: str):
+        def switch_cdn(url: str, cdn: str):
             return re.sub(r'(?<=https://)[^/]+', cdn, url)
+    
+        for url in url_list:
+            for cdn in get_cdn_list():
+                url_with_cdn = switch_cdn(url, cdn)
 
-        for cdn in cdn_map.values():
-            yield [_replace(url, cdn["cdn"]) for url in url_list]
+                req = self.session.head(url_with_cdn, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+
+                if "Content-Length" in req.headers:
+                    total_size = int(req.headers["Content-Length"])
+
+                    truncate_file()
+
+                    return url_with_cdn, total_size
