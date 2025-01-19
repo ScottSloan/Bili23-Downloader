@@ -490,7 +490,7 @@ class MainWindow(Frame):
         self.treelist.get_all_checked_item(video_quality_id)
 
         if not len(self.treelist.download_task_info_list):
-            self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
+            wx.MessageDialog(self, "下载失败\n\n请选择要下载的视频", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         # 显示加载窗口
@@ -556,8 +556,6 @@ class MainWindow(Frame):
     def onLoginEVT(self, event):
         def callback():
             self.init_user_info()
-        
-            self.infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
 
             self.init_menubar()
 
@@ -581,8 +579,6 @@ class MainWindow(Frame):
             self.uname_lab.SetLabel("登录")
 
             self.userinfo_hbox.Layout()
-
-            self.infobar.ShowMessage("提示：您已注销登录", flags = wx.ICON_INFORMATION)
 
     def onRefreshEVT(self, event):
         login = QRLogin(requests.Session())

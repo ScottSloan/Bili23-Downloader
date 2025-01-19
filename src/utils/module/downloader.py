@@ -353,7 +353,7 @@ class Downloader:
         # 关闭线程池和监听线程，停止下载
         self.onStop()
 
-        if self.error_retry_count <= 5:
+        if self.error_retry_count <= Config.Advanced.download_error_retry_count:
             self.error_retry_count += 1
             
             self.onResume()

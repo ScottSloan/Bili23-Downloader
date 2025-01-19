@@ -41,7 +41,7 @@ class ChangeCDNDialog(wx.Dialog):
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.Add(custom_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        action_hbox.Add(self.custom_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        action_hbox.Add(self.custom_box, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         action_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
         action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
         action_hbox.AddStretchSpacer()
@@ -77,7 +77,7 @@ class ChangeCDNDialog(wx.Dialog):
 
     def init_utils(self):
         def init_listctrl():
-            self.cdn_list.AppendColumn("序号", width = self.FromDIP(50))
+            self.cdn_list.AppendColumn("序号", width = self.FromDIP(75))
             self.cdn_list.AppendColumn("CDN", width = self.FromDIP(280))
             self.cdn_list.AppendColumn("提供商", width = self.FromDIP(140))
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
@@ -106,10 +106,31 @@ class ChangeCDNDialog(wx.Dialog):
             def update(value):
                 self.cdn_list.SetItem(index, 3, value)
             
+            def get_ping_cmd() -> str:
+                match Config.Sys.platform:
+                    case "windows":
+                        return f"ping {cdn}"
+                    
+                    case "linux" | "darwin":
+                        return f"ping {cdn} -c 4"
+
+            def get_latency():
+                match Config.Sys.platform:
+                    case "windows":
+                        return re.findall(r"Average = ([0-9]*)", process.stdout)
+                    
+                    case "linux" | "darwin":
+                        _temp = re.findall(r"time=([0-9]*)", process.stdout)
+
+                        if _temp:
+                            return [int(sum(list(map(int, _temp))) / len(_temp))]
+                        else:
+                            return None
+                    
             wx.CallAfter(update, "正在检测...")
 
-            process = subprocess.run(f"ping {cdn}", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
-            latency = re.findall(r"Average = ([0-9]*)", process.stdout)
+            process = subprocess.run(get_ping_cmd(), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
+            latency = get_latency()
 
             if latency:
                 result = f"{latency[0]}ms"
