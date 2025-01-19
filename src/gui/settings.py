@@ -371,6 +371,7 @@ class AdvancedTab(wx.Panel):
         custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_mode_hbox.AddSpacer(30)
         custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        custom_cdn_mode_hbox.AddSpacer(20)
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN")

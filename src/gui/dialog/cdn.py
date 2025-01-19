@@ -32,9 +32,18 @@ class ChangeCDNDialog(wx.Dialog):
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.cdn_list.EnableCheckBoxes(True)
 
+        custom_lab = wx.StaticText(self, -1, "自定义")
+        self.custom_box = wx.TextCtrl(self, -1, size = _get_scale_size((240, 24)))
+        self.add_btn = wx.Button(self, -1, "添加", size = _get_scale_size((80, 28)))
+        self.delete_btn = wx.Button(self, -1, "删除", size = _get_scale_size((80, 28)))
+
         self.ping_btn = wx.Button(self, -1, "Ping 测试", size = _get_scale_size((100, 28)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        action_hbox.Add(custom_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        action_hbox.Add(self.custom_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        action_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
+        action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
         action_hbox.AddStretchSpacer()
         action_hbox.Add(self.ping_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
 
@@ -62,6 +71,8 @@ class ChangeCDNDialog(wx.Dialog):
         self.cdn_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivateEVT)
 
         self.ping_btn.Bind(wx.EVT_BUTTON, self.onPingTestEVT)
+        self.add_btn.Bind(wx.EVT_BUTTON, self.onAddCDNEVT)
+        self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteCDNEVT)
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
 
     def init_utils(self):
@@ -85,7 +96,7 @@ class ChangeCDNDialog(wx.Dialog):
 
     def onConfirm(self, event):
         if self._last_index == -1 or not self.cdn_list.IsItemChecked(self._last_index):
-            wx.MessageDialog(self, "请选择 CDN\n\n请选择需要替换的 CDN", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "更改失败\n\n请选择需要更改的 CDN", "警告", wx.ICON_WARNING).ShowModal()
             return
 
         event.Skip()
@@ -128,3 +139,47 @@ class ChangeCDNDialog(wx.Dialog):
         index = event.GetIndex()
 
         self.cdn_list.CheckItem(index)
+
+    def onAddCDNEVT(self, event):
+        if not self.custom_box.GetValue():
+            wx.MessageDialog(self, "添加失败\n\n请输入要添加的 CDN", "警告", wx.ICON_WARNING).ShowModal()
+            self.custom_box.SetFocus()
+            return
+
+        for i in range(self.cdn_list.GetItemCount()):
+            item: wx.ListItem = self.cdn_list.GetItem(i, 1)
+
+            if item.GetText() == self.custom_box.GetValue():
+                wx.MessageDialog(self, "添加失败\n\n已存在相同的 CDN，无法重复添加", "警告", wx.ICON_WARNING).ShowModal()
+                self.custom_box.SetFocus()
+                return
+            
+        self.cdn_list.SetFocus()
+        
+        index = self.cdn_list.Append(["-", self.custom_box.GetValue(), "自定义", "未知"])
+
+        self.cdn_list.Focus(index)
+        self.cdn_list.Select(index)
+
+        self.update_index()
+    
+    def onDeleteCDNEVT(self, event):
+        if self._last_index == -1 or not self.cdn_list.IsItemChecked(self._last_index):
+            wx.MessageDialog(self, "删除失败\n\n请选择要删除的 CDN", "警告", wx.ICON_WARNING).ShowModal()
+            self.cdn_list.SetFocus()
+            return
+        
+        if self.cdn_list.GetItem(self._last_index, 2).GetText() != "自定义":
+            wx.MessageDialog(self, "删除失败\n\n仅支持删除自定义的 CDN", "警告", wx.ICON_WARNING).ShowModal()
+            self.cdn_list.SetFocus()
+            return
+
+        self.cdn_list.DeleteItem(self._last_index)
+
+        self._last_index = -1
+
+        self.update_index()
+
+    def update_index(self):
+        for i in range(self.cdn_list.GetItemCount()):
+            self.cdn_list.SetItem(i, 0, str(i + 1))
