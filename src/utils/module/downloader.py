@@ -256,9 +256,14 @@ class Downloader:
                 self.onResume()
 
         def update_download_file_info():
+            self.task_info.progress = info["progress"]
+            self.task_info.completed_size = self.completed_size
+            self.task_info.current_completed_size = self.current_completed_size
+
             kwargs = {
                 "progress": info["progress"],
-                "completed_size": self.completed_size
+                "completed_size": self.completed_size,
+                "current_completed_size": self.current_completed_size
             }
 
             self.file_tool.update_task_info_kwargs(**kwargs)
@@ -280,7 +285,7 @@ class Downloader:
 
             retry()
 
-             # 检测停止标志位
+            # 检测停止标志位
             if self.listen_stop_flag:
                 update_download_file_info()
                 break

@@ -41,7 +41,7 @@ class ChangeCDNDialog(wx.Dialog):
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.Add(custom_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        action_hbox.Add(self.custom_box, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        action_hbox.Add(self.custom_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         action_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
         action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
         action_hbox.AddStretchSpacer()

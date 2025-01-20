@@ -1021,9 +1021,6 @@ class DownloadTaskPanel(wx.Panel):
                 self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
 
             self.video_size_lab.SetLabel("{}/{}".format(FormatTool.format_size(info["completed_size"]), FormatTool.format_size(self.task_info.total_size)))
-                
-            self.task_info.progress = info["progress"]
-            self.task_info.completed_size = info["completed_size"]
         
         wx.CallAfter(callback)
 
