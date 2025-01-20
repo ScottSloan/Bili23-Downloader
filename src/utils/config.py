@@ -17,7 +17,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/01/19"
+        release_date: str = "2025/01/21"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -106,7 +106,8 @@ class Config:
         custom_cdn_mode: int = 0
         custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
 
-        download_error_retry_count: int = 5
+        download_error_retry_count: int = 3
+        download_suspend_retry_interval: int = 3
 
 class ConfigUtils:
     def __init__(self):
@@ -177,6 +178,7 @@ class ConfigUtils:
         Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
+        Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)

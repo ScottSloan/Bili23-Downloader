@@ -399,15 +399,25 @@ class AdvancedTab(wx.Panel):
 
         retry_box = wx.StaticBox(self, -1, "出错重试设置")
 
-        retry_lab = wx.StaticText(self, -1, "下载出错重试次数")
-        self.retry_box = wx.SpinCtrl(self, -1, min = 1, max = 10)
+        download_error_retry_lab = wx.StaticText(self, -1, "下载出错重试次数")
+        self.download_error_retry_box = wx.SpinCtrl(self, -1, min = 1, max = 15)
 
-        retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        retry_hbox.Add(retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        retry_hbox.Add(self.retry_box, 0, wx.ALL & (~wx.LEFT), 10)
+        download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        download_error_retry_hbox.Add(download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), 10)
+
+        download_suspend_retry_lab = wx.StaticText(self, -1, "下载停滞时自动重启下载间隔")
+        self.download_suspend_retry_box = wx.SpinCtrl(self, -1, min = 2, max = 15)
+        download_suspend_retry_unit_lab = wx.StaticText(self, -1, "秒")
+
+        download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        download_suspend_retry_hbox.Add(download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        download_suspend_retry_hbox.Add(download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         retry_vbox = wx.BoxSizer(wx.VERTICAL)
-        retry_vbox.Add(retry_hbox, 0, wx.EXPAND)
+        retry_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
+        retry_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
 
         retry_sbox = wx.StaticBoxSizer(retry_box)
         retry_sbox.Add(retry_vbox, 0, wx.EXPAND)
@@ -431,7 +441,8 @@ class AdvancedTab(wx.Panel):
         self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
         self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
 
-        self.retry_box.SetValue(Config.Advanced.download_error_retry_count)
+        self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
+        self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
 
         match CDNMode(Config.Advanced.custom_cdn_mode):
             case CDNMode.Auto:
@@ -445,7 +456,8 @@ class AdvancedTab(wx.Panel):
     def save(self):
         Config.Advanced.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
-        Config.Advanced.download_error_retry_count = self.retry_box.GetValue()
+        Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
+        Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
 
         if self.custom_cdn_auto_switch_radio.GetValue():
             Config.Advanced.custom_cdn_mode = 0
@@ -456,7 +468,8 @@ class AdvancedTab(wx.Panel):
             "enable_custom_cdn": Config.Advanced.enable_custom_cdn,
             "custom_cdn": Config.Advanced.custom_cdn,
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
-            "download_error_retry_count": Config.Advanced.download_error_retry_count
+            "download_error_retry_count": Config.Advanced.download_error_retry_count,
+            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval
         }
 
         utils = ConfigUtils()
