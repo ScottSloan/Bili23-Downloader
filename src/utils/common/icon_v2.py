@@ -78,8 +78,13 @@ class IconManager:
         img: wx.svg.SVGimage = wx.svg.SVGimage.CreateFromBytes(BytesIO(base64.b64decode(base64_string)).getvalue())
 
         size = self._get_icon_scale_and_size()
+
+        sx = size.width / img.width
+        sy = size.height / img.height
+
+        scale = min(sx, sy)
         
-        return img.ConvertToBitmap(scale = 0.5, width = size.width, height = size.height)
+        return img.ConvertToBitmap(scale = scale, width = size.width, height = size.height)
 
     def _get_icon_scale_and_size(self):
         if self.DPI_scale_factor <= self.DPI_factor_1:
