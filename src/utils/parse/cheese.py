@@ -20,6 +20,9 @@ class CheeseInfo:
 
     title: str = ""
     subtitle: str = ""
+    views: str = ""
+    release: str = ""
+    expiry: str = ""
 
     episodes_list: list = []
     video_quality_id_list: list = []
@@ -29,7 +32,7 @@ class CheeseInfo:
 
     @staticmethod
     def clear_cheese_info():
-        CheeseInfo.url = CheeseInfo.title = CheeseInfo.subtitle = ""
+        CheeseInfo.url = CheeseInfo.title = CheeseInfo.subtitle = CheeseInfo.views = CheeseInfo.release = CheeseInfo.expiry = ""
         CheeseInfo.aid = CheeseInfo.epid = CheeseInfo.cid = CheeseInfo.season_id = 0
 
         CheeseInfo.episodes_list.clear()
@@ -71,6 +74,9 @@ class CheeseParser:
         CheeseInfo.url = info_data["share_url"]
         CheeseInfo.title = info_data["title"]
         CheeseInfo.subtitle = info_data["subtitle"]
+        CheeseInfo.views = info_data["stat"]["play_desc"]
+        CheeseInfo.release = info_data["release_info"]
+        CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
 
         CheeseInfo.episodes_list = info_data["episodes"]
         CheeseInfo.epid = CheeseInfo.episodes_list[0]["id"]

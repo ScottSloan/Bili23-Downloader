@@ -4,8 +4,11 @@ import wx.html
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool
+from utils.common.enums import ParseType
+
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
+from utils.parse.cheese import CheeseInfo
 
 class DetailDialog(wx.Dialog):
     def __init__(self, parent):
@@ -23,17 +26,19 @@ class DetailDialog(wx.Dialog):
 
         self.SetSizer(vbox)
     
-    def set_video_page(self):
-        self.note.AddPage(VideoPage(self.note), "video")
+    def set_page(self, parse_type: ParseType):
+        match parse_type:
+            case ParseType.Video:
+                page = VideoPage(self.note)
+            
+            case ParseType.Bangumi:
+                page = BangumiPage(self.note)
 
-        self.fit_window()
+            case ParseType.Cheese:
+                page = CheesePage(self.note)
 
-    def set_bangumi_page(self):
-        self.note.AddPage(BangumiPage(self.note), "bangumi")
+        self.note.AddPage(page, "page")
 
-        self.fit_window()
-
-    def fit_window(self):
         self.Fit()
 
         self.CenterOnParent()
@@ -50,11 +55,14 @@ class DetailPage(wx.Panel):
 
         self.Bind(wx.EVT_MENU, self.onCopy, id = self.ID_COPY)
 
+        if not Config.Sys.dark_mode:
+            self.SetBackgroundColour("white")
+
     def onContextMenu(self, event):
         def get_menu():
             menu = wx.Menu()
 
-            copy_menuitem = wx.MenuItem(menu, self.ID_COPY, "复制所选内容(C)")
+            copy_menuitem = wx.MenuItem(menu, self.ID_COPY, "复制所选内容(&C)")
 
             menu.Append(copy_menuitem)
 
@@ -75,12 +83,6 @@ class VideoPage(DetailPage):
         self.init_UI()
     
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
-        _set_dark_mode()
-
         font: wx.Font = self.GetFont()
 
         title_div = f"""<font size="5" face="{font.GetFaceName()}">{VideoInfo.title}</font>"""
@@ -107,18 +109,12 @@ class BangumiPage(DetailPage):
         self.init_UI()
     
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
         def get_cover():
             contents = RequestTool.request(BangumiInfo.cover)
 
             temp_image = wx.Image(io.BytesIO(contents))
 
             return temp_image.Scale(self.FromDIP(165), self.FromDIP(221), wx.IMAGE_QUALITY_HIGH)
-
-        _set_dark_mode()
 
         font: wx.Font = self.GetFont()
 
@@ -146,6 +142,30 @@ class BangumiPage(DetailPage):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.AddSpacer(15)
         vbox.Add(hbox, 1, wx.EXPAND)
+        vbox.AddSpacer(15)
+
+        self.SetSizerAndFit(vbox)
+
+class CheesePage(DetailPage):
+    def __init__(self, parent):
+        DetailPage.__init__(self, parent)
+
+        self.init_UI()
+    
+    def init_UI(self):
+        font: wx.Font = self.GetFont()
+
+        title_div = f"""<font size="5" face="{font.GetFaceName()}">{CheeseInfo.title}</font>"""
+        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: rgba(97, 102, 109, 1);">{CheeseInfo.views}播放&nbsp&nbsp {CheeseInfo.release}&nbsp&nbsp {CheeseInfo.expiry}</span></div>"""
+        subtitle_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()};">{CheeseInfo.subtitle}</span></div>"""
+
+        body = "<br>".join([title_div, views_div, subtitle_div])
+
+        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddSpacer(15)
+        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
         vbox.AddSpacer(15)
 
         self.SetSizerAndFit(vbox)

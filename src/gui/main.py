@@ -725,9 +725,9 @@ class MainWindow(Frame):
         def _get_menu():
             context_menu = wx.Menu()
 
-            copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题")
-            check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择" if self.treelist.is_current_item_checked() else "选择")
-            collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开" if self.treelist.is_current_item_collapsed() else "折叠")
+            copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题(&C)")
+            check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择(&U)" if self.treelist.is_current_item_checked() else "选择(&S)")
+            collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开(&E)" if self.treelist.is_current_item_collapsed() else "折叠(&O)")
             
             if self.treelist.is_current_item_node():
                 copy_title_menuitem.Enable(False)
@@ -763,12 +763,7 @@ class MainWindow(Frame):
     def onVideoDetailEVT(self, event):
         dialog = DetailDialog(self)
 
-        match self.current_parse_type:
-            case ParseType.Video:
-                dialog.set_video_page()
-
-            case ParseType.Bangumi:
-                dialog.set_bangumi_page()
+        dialog.set_page(self.current_parse_type)
 
         dialog.ShowModal()
 
