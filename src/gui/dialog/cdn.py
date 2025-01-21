@@ -84,17 +84,17 @@ class ChangeCDNDialog(wx.Dialog):
 
         def init_cdn_list():
             for key, value in cdn_map.items():
-                self.cdn_list.Append([str(key + 1), value["cdn"], value["provider"], "未知"])
+                index = self.cdn_list.Append([str(key + 1), value["cdn"], value["provider"], "未知"])
 
-            for cdn in Config.Advanced.custom_cdn_list:
-                self.cdn_list.Append(["-", cdn, "自定义", "未知"])
+                if value["cdn"] == Config.Advanced.custom_cdn:
+                    self.cdn_list.CheckItem(index)
 
             self.update_index()
 
+        self._last_index = -1
+
         init_listctrl()
         init_cdn_list()
-
-        self._last_index = -1
 
     def get_cdn(self):
         return self.cdn_list.GetItemText(self._last_index, 1)
@@ -197,9 +197,9 @@ class ChangeCDNDialog(wx.Dialog):
             self.cdn_list.SetFocus()
             return
         
-        cdn = self.cdn_list.GetItem(self._last_index, 1).GetText()
+        cdn = self.cdn_list.GetItemText(self._last_index, 1)
         
-        if self.cdn_list.GetItem(self._last_index, 2).GetText() != "自定义":
+        if self.cdn_list.GetItemText(self._last_index, 2) != "自定义":
             wx.MessageDialog(self, "删除失败\n\n仅支持删除自定义的 CDN", "警告", wx.ICON_WARNING).ShowModal()
             self.cdn_list.SetFocus()
             return

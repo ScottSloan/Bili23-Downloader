@@ -3,6 +3,8 @@ import json
 import platform
 from typing import Dict
 
+from utils.common.map import cdn_map
+
 class Config:
     class Sys:
         platform: str = platform.system().lower()
@@ -115,6 +117,15 @@ class ConfigUtils:
         pass
 
     def load_config(self):
+        def _after_load():
+            _check()
+
+            for index, cdn in enumerate(Config.Advanced.custom_cdn_list):
+                cdn_map[index + len(cdn_map) + 1] = {
+                    "cdn": cdn,
+                    "provider": "自定义"
+                }
+
         def _check():
             if not os.path.exists(Config.Download.path):
                 os.makedirs(Config.Download.path)
@@ -219,7 +230,7 @@ class ConfigUtils:
         Config.User.sessdata = user_config["user"].get("sessdata", Config.User.sessdata)
         Config.User.timestamp = user_config["user"].get("timestamp", Config.User.timestamp)
 
-        _check()
+        _after_load()
 
     def update_config_kwargs(self, file_path: str, category: str, **kwargs):
         config = self._read_config_json(file_path)

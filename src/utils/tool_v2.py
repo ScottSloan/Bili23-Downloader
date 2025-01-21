@@ -198,7 +198,8 @@ class DownloadFileTool:
 
         if contents is not None:
             for key, value in kwargs.items():
-                contents["task_info"][key] = value
+                if "task_info" in contents:
+                    contents["task_info"][key] = value
 
             self._write_download_file(contents)
 

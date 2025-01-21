@@ -251,10 +251,8 @@ class Downloader:
                 self.retry_count += 1
 
             if self.retry_count == Config.Advanced.download_suspend_retry_interval:
-                self.onStop()
-
-                self.onResume()
-
+                self.onError()
+                
         def update_download_file_info():
             self.task_info.progress = info["progress"]
             self.task_info.completed_size = self.completed_size
@@ -403,7 +401,7 @@ class Downloader:
 
                 if "Content-Length" in req.headers:
                     total_size = int(req.headers["Content-Length"])
-
+                    
                     if total_size:
                         truncate_file()
 
