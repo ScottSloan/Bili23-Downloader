@@ -6,7 +6,6 @@ from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 from utils.common.enums import ParseType, MergeType
@@ -209,7 +208,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.timestamp = int(round(time.time() * 1000000))
 
         download_info.title = title
-        download_info.title_legal = UniversalTool.get_legal_name(title)
         download_info.cover_url = cover_url
         download_info.referer_url = referer_url
         download_info.bvid = bvid

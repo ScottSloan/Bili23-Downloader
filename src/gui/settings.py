@@ -468,6 +468,7 @@ class AdvancedTab(wx.Panel):
             "enable_custom_cdn": Config.Advanced.enable_custom_cdn,
             "custom_cdn": Config.Advanced.custom_cdn,
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
+            "custom_cdn_list": Config.Advanced.custom_cdn_list,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
             "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval
         }

@@ -9,6 +9,8 @@ class DownloadTaskInfo:
         self.id: int = 0
         # 序号，从 1 开始，0 为空
         self.index: int = 0
+        # 补零序号
+        self.index_with_zero: str = ""
         # 时间戳
         self.timestamp: int = 0
         
@@ -25,8 +27,6 @@ class DownloadTaskInfo:
 
         # 视频原标题
         self.title: str = ""
-        # 去除特殊符号的视频标题，可作为文件名
-        self.title_legal: str = ""
 
         # 视频时长
         self.duration: int = 0
@@ -67,6 +67,7 @@ class DownloadTaskInfo:
         return {
             "id": self.id,
             "index": self.index,
+            "index_with_zero": self.index_with_zero,
             "timestamp": self.timestamp,
             "referer_url": self.referer_url,
             "cover_url": self.cover_url,
@@ -75,7 +76,6 @@ class DownloadTaskInfo:
             "aid": self.aid,
             "ep_id": self.ep_id,
             "title": self.title,
-            "title_legal": self.title_legal,
             "duration": self.duration,
             "progress": self.progress,
             "total_size": self.total_size,
@@ -99,6 +99,7 @@ class DownloadTaskInfo:
     def load_from_dict(self, data: Dict):
         self.id = data["id"]
         self.index = data["index"]
+        self.index_with_zero = data["index_with_zero"]
         self.timestamp = data["timestamp"]
         self.referer_url = data["referer_url"]
         self.cover_url = data["cover_url"]
@@ -107,7 +108,6 @@ class DownloadTaskInfo:
         self.aid = data["aid"]
         self.ep_id = data["ep_id"]
         self.title = data["title"]
-        self.title_legal = data["title_legal"]
         self.duration = data["duration"]
         self.progress = data["progress"]
         self.total_size = data["total_size"]

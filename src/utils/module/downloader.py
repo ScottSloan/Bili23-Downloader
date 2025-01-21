@@ -404,6 +404,7 @@ class Downloader:
                 if "Content-Length" in req.headers:
                     total_size = int(req.headers["Content-Length"])
 
-                    truncate_file()
+                    if total_size:
+                        truncate_file()
 
-                    return url_with_cdn, total_size
+                        return url_with_cdn, total_size

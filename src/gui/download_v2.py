@@ -252,7 +252,7 @@ class DownloadManagerWindow(Frame):
         children: List[DownloadTaskPanel] = self.download_task_list_panel.GetChildren()
         
         return children
-    
+
     def get_download_task_count(self, condition: List[int]):
         # 统计正在下载的任务数
         _count = 0
@@ -265,9 +265,10 @@ class DownloadManagerWindow(Frame):
         return _count
 
     def add_download_task_panel(self, download_task_info_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
-        def worker(info: DownloadTaskInfo, multiple_flag: bool, index: int):
+        def worker(info: DownloadTaskInfo, multiple_flag: bool, index_with_zero: str):
             if multiple_flag:
-                info.index = index + 1
+                info.index = self._temp_index
+                info.index_with_zero = index_with_zero
 
             item = DownloadTaskPanel(self.download_task_list_panel, info, task_panel_callback)
 
@@ -293,11 +294,14 @@ class DownloadManagerWindow(Frame):
         # 暂时停止 UI 更新
         self.download_task_list_panel.Freeze()
 
+        self._temp_index = 0
+        
         for index, info in enumerate(download_task_info_list):
             # 检查 cid 列表是否已包含，防止重复下载
             if info.cid not in self._temp_cid_list:
                 info.timestamp += index
-                task_panel_list.append(worker(info, multiple_flag, index))
+                self._temp_index += 1
+                task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(download_task_info_list))))))
 
                 self._temp_cid_list.add(info.cid)
 
@@ -693,9 +697,9 @@ class DownloadUtils:
     @property
     def file_title(self):
         if self.task_info.index:
-            return f"{self.task_info.index} - {self.task_info.title_legal}"
+            return f"{self.task_info.index_with_zero} - {UniversalTool.get_legal_name(self.task_info.title)}"
         else:
-            return self.task_info.title_legal
+            return UniversalTool.get_legal_name(self.task_info.title)
 
     @property
     def full_file_name(self):

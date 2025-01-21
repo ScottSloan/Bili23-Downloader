@@ -105,6 +105,7 @@ class Config:
         enable_custom_cdn: bool = True
         custom_cdn_mode: int = 0
         custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
+        custom_cdn_list: list = []
 
         download_error_retry_count: int = 3
         download_suspend_retry_interval: int = 3
@@ -177,6 +178,7 @@ class ConfigUtils:
         Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
         Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
+        Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
 
