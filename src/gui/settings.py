@@ -397,7 +397,7 @@ class AdvancedTab(wx.Panel):
         cdn_sbox = wx.StaticBoxSizer(cdn_box)
         cdn_sbox.Add(cdn_vbox, 1, wx.EXPAND)
 
-        retry_box = wx.StaticBox(self, -1, "出错重试设置")
+        retry_box = wx.StaticBox(self, -1, "下载重试设置")
 
         download_error_retry_lab = wx.StaticText(self, -1, "下载出错重试次数")
         self.download_error_retry_box = wx.SpinCtrl(self, -1, min = 1, max = 15)
@@ -755,6 +755,7 @@ class ProxyTab(wx.Panel):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
 
         proxy_tip = wx.StaticText(proxy_box, -1, "代理选项")
+        proxy_warning_tip = wx.StaticText(proxy_box, -1, '注意：使用代理时，请在高级选项卡中\n手动关闭"替换音视频流 CDN"选项')
         
         self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, "不使用代理")
         self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, "跟随系统")
@@ -794,6 +795,7 @@ class ProxyTab(wx.Panel):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(proxy_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(proxy_warning_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(proxy_hbox, 0, wx.EXPAND)
         vbox.Add(bag_box)
         vbox.Add(self.test_btn, 0, wx.ALL, 10)

@@ -38,9 +38,39 @@ class DetailDialog(wx.Dialog):
 
         self.CenterOnParent()
 
-class VideoPage(wx.Panel):
+class DetailPage(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
+
+        self.html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 300)))
+
+        self.ID_COPY = wx.NewIdRef()
+
+        self.html_page.Bind(wx.EVT_RIGHT_DOWN, self.onContextMenu)
+
+        self.Bind(wx.EVT_MENU, self.onCopy, id = self.ID_COPY)
+
+    def onContextMenu(self, event):
+        def get_menu():
+            menu = wx.Menu()
+
+            copy_menuitem = wx.MenuItem(menu, self.ID_COPY, "复制所选内容(C)")
+
+            menu.Append(copy_menuitem)
+
+            return menu
+
+        self.html_page.PopupMenu(get_menu())
+
+    def onCopy(self, event):
+        text = self.html_page.SelectionToText()
+
+        if text:
+            wx.TheClipboard.SetData(wx.TextDataObject(text))
+
+class VideoPage(DetailPage):
+    def __init__(self, parent):
+        DetailPage.__init__(self, parent)
 
         self.init_UI()
     
@@ -53,8 +83,6 @@ class VideoPage(wx.Panel):
 
         font: wx.Font = self.GetFont()
 
-        html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 250)))
-
         title_div = f"""<font size="5" face="{font.GetFaceName()}">{VideoInfo.title}</font>"""
         views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: rgba(97, 102, 109, 1);">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
         desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()};">{VideoInfo.desc}</span></div>"""
@@ -63,18 +91,18 @@ class VideoPage(wx.Panel):
 
         body = "<br>".join([title_div, views_div, desc_div, tag_div])
 
-        html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.AddSpacer(15)
-        vbox.Add(html_page, 1, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
         vbox.AddSpacer(15)
 
         self.SetSizerAndFit(vbox)
 
-class BangumiPage(wx.Panel):
+class BangumiPage(DetailPage):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        DetailPage.__init__(self, parent)
 
         self.init_UI()
     
@@ -96,8 +124,6 @@ class BangumiPage(wx.Panel):
 
         cover_bmp = wx.StaticBitmap(self, -1, get_cover().ConvertToBitmap())
 
-        html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 300)))
-
         title_div = f"""<font size="5" face="{font.GetFaceName()}">{BangumiInfo.title}</font>"""
         views_div = f"""<div id="views"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()};">{BangumiInfo.views}播放&nbsp&nbsp·&nbsp {BangumiInfo.danmakus}弹幕&nbsp&nbsp·&nbsp {BangumiInfo.followers}</span></div>"""
         tag_div = f"""<div id="tag"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()};">{BangumiInfo.styles}&nbsp&nbsp·&nbsp&nbsp{BangumiInfo.new_ep}&nbsp&nbsp·&nbsp {BangumiInfo.bvid}</span></div>"""
@@ -106,10 +132,10 @@ class BangumiPage(wx.Panel):
 
         body = "<br>".join([title_div, views_div, tag_div, actors_div, desc_div])
 
-        html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
-        right_vbox.Add(html_page, 1, wx.ALL | wx.EXPAND, 10)
+        right_vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(15)

@@ -250,7 +250,7 @@ class Downloader:
             if info["speed"] <= 0:
                 self.retry_count += 1
 
-            if self.retry_count == 5:
+            if self.retry_count == Config.Advanced.download_suspend_retry_interval:
                 self.onStop()
 
                 self.onResume()
