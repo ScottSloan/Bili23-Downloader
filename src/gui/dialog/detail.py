@@ -76,6 +76,35 @@ class DetailPage(wx.Panel):
         if text:
             wx.TheClipboard.SetData(wx.TextDataObject(text))
 
+    def set_page(self, body: str):
+        color: wx.Colour = self.GetParent().GetBackgroundColour()
+        
+        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="background-color: rgba({color.GetRed()},{color.GetGreen()},{color.GetBlue()},1);">{body}</body></html>""")
+    
+    def get_text_color(self):
+        if Config.Sys.dark_mode:
+            return "rgba(255, 255, 255, 1)"
+        else:
+            return "rgba(0, 0, 0, 1)"
+        
+    def get_tag_background_color(self):
+        if Config.Sys.dark_mode:
+            return "rgba(55, 55, 55, 1)"
+        else:
+            return "rgba(241, 242, 243, 1)"
+    
+    def get_tag_color(self):
+        if Config.Sys.dark_mode:
+            return "rgba(255, 255, 255, 1)"
+        else:
+            return "rgba(97, 102, 109, 1)"
+        
+    def get_views_color(self):
+        if Config.Sys.dark_mode:
+            return "rgba(255, 255, 255, 1)"
+        else:
+            return "rgba(97, 102, 109, 1)"
+
 class VideoPage(DetailPage):
     def __init__(self, parent):
         DetailPage.__init__(self, parent)
@@ -85,15 +114,15 @@ class VideoPage(DetailPage):
     def init_UI(self):
         font: wx.Font = self.GetFont()
 
-        title_div = f"""<font size="5" face="{font.GetFaceName()}">{VideoInfo.title}</font>"""
-        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: rgba(97, 102, 109, 1);">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
-        desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()};">{VideoInfo.desc}</span></div>"""
-        tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: rgba(241, 242, 243, 1); color: rgba(97, 102, 109, 1);">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
+        title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{VideoInfo.title}</font>"""
+        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: {self.get_views_color()};">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
+        desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}; color: {self.get_text_color()};">{VideoInfo.desc}</span></div>"""
+        tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: {self.get_tag_background_color()}; color: {self.get_tag_color()};">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
         tag_div = """<div id="tag">{}</div>""".format("".join(tag_span))
 
         body = "<br>".join([title_div, views_div, desc_div, tag_div])
 
-        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+        self.set_page(body)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.AddSpacer(15)
@@ -120,15 +149,15 @@ class BangumiPage(DetailPage):
 
         cover_bmp = wx.StaticBitmap(self, -1, get_cover().ConvertToBitmap())
 
-        title_div = f"""<font size="5" face="{font.GetFaceName()}">{BangumiInfo.title}</font>"""
-        views_div = f"""<div id="views"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()};">{BangumiInfo.views}播放&nbsp&nbsp·&nbsp {BangumiInfo.danmakus}弹幕&nbsp&nbsp·&nbsp {BangumiInfo.followers}</span></div>"""
-        tag_div = f"""<div id="tag"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()};">{BangumiInfo.styles}&nbsp&nbsp·&nbsp&nbsp{BangumiInfo.new_ep}&nbsp&nbsp·&nbsp {BangumiInfo.bvid}</span></div>"""
-        actors_div = f"""<div id="actors"><span style="color: rgba(97, 102, 109, 1); font-family: {font.GetFaceName()}">演员：{BangumiInfo.actors}</span></div>"""
-        desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}">简介：{BangumiInfo.evaluate}</span></div>"""
+        title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{BangumiInfo.title}</font>"""
+        views_div = f"""<div id="views"><span style="color: {self.get_views_color()}; font-family: {font.GetFaceName()};">{BangumiInfo.views}播放&nbsp&nbsp·&nbsp {BangumiInfo.danmakus}弹幕&nbsp&nbsp·&nbsp {BangumiInfo.followers}</span></div>"""
+        tag_div = f"""<div id="tag"><span style="color: {self.get_views_color()}; font-family: {font.GetFaceName()};">{BangumiInfo.styles}&nbsp&nbsp·&nbsp&nbsp{BangumiInfo.new_ep}&nbsp&nbsp·&nbsp {BangumiInfo.bvid}</span></div>"""
+        actors_div = f"""<div id="actors"><span style="color: {self.get_views_color()}; font-family: {font.GetFaceName()}">演员：{BangumiInfo.actors}</span></div>"""
+        desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}; color: {self.get_text_color()};">简介：{BangumiInfo.evaluate}</span></div>"""
 
         body = "<br>".join([title_div, views_div, tag_div, actors_div, desc_div])
 
-        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+        self.set_page(body)
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
         right_vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
@@ -155,13 +184,13 @@ class CheesePage(DetailPage):
     def init_UI(self):
         font: wx.Font = self.GetFont()
 
-        title_div = f"""<font size="5" face="{font.GetFaceName()}">{CheeseInfo.title}</font>"""
-        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: rgba(97, 102, 109, 1);">{CheeseInfo.views}播放&nbsp&nbsp {CheeseInfo.release}&nbsp&nbsp {CheeseInfo.expiry}</span></div>"""
-        subtitle_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()};">{CheeseInfo.subtitle}</span></div>"""
+        title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{CheeseInfo.title}</font>"""
+        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: {self.get_views_color()};">{CheeseInfo.views}播放&nbsp&nbsp {CheeseInfo.release}&nbsp&nbsp {CheeseInfo.expiry}</span></div>"""
+        subtitle_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}; color: {self.get_text_color()};">{CheeseInfo.subtitle}</span></div>"""
 
         body = "<br>".join([title_div, views_div, subtitle_div])
 
-        self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{body}</body></html>""")
+        self.set_page(body)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.AddSpacer(15)
