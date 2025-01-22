@@ -517,8 +517,10 @@ class DownloadUtils:
                 self.task_info.video_merge_type = MergeType.Only_Video.value
 
         def get_all_flv_download_url():
+            self.task_info.video_count = len(json_dash)
+
             for entry in json_dash:
-                self._flv_download_url_list.append(entry)
+                self._flv_download_url_list.append(self._get_all_available_download_url_list(entry))
 
         json_dash = get_json()
 
@@ -526,14 +528,14 @@ class DownloadUtils:
 
         check_stream_type()
 
-    def get_downloader_info_list(self, item_flag: list, callback: Callable):
+    def get_downloader_info_list(self, callback: Callable):
         try:
             self.get_video_bangumi_download_url()
 
         except Exception as e:
             raise GlobalException(e, callback = self.callback.onDownloadFailedCallback) from e
         
-        if not item_flag:
+        if not self.task_info.item_flag:
             self.task_info.item_flag = self._get_item_flag()
 
             callback()
@@ -542,27 +544,22 @@ class DownloadUtils:
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
-                if "video" in item_flag:
+                if "video" in self.task_info.item_flag:
                     _temp_info.append(self._get_video_downloader_info())
 
-                if "audio" in item_flag:
+                if "audio" in self.task_info.item_flag:
                     _temp_info.append(self._get_audio_downloader_info())
             
             case StreamType.Flv:
                 for index, entry in enumerate(self._flv_download_url_list):
-                    _temp_info.append(self._get_flv_downloader_info(index, entry))
+                    _temp_info.append(self._get_flv_downloader_info(index + 1, entry))
 
         return _temp_info
 
     def merge_video(self):
-        def get_temp_file_name():
-            self._temp_audio_file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
-
         def clear_files():
             if Config.Merge.auto_clean:
                 self._clear_file()
-        
-        get_temp_file_name()
 
         _cmd = self._get_shell_cmd()
 
@@ -577,21 +574,41 @@ class DownloadUtils:
             raise GlobalException(log = _process.stdout, return_code = _process.returncode, callback = self.callback.onMergeFailedCallback)
 
     def _get_shell_cmd(self):
-        def _get_audio_cmd():
-            match self.task_info.audio_type:
-                case "m4a" | "ec3":
-                    if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
-                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
-                    else:
-                        return f'{_rename_cmd} "{self._temp_audio_file_name}" {_extra}"{self.full_file_name}"'
-                
-                case "flac":
-                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
-        
         def override_file(_file_name_list):
             # 覆盖文件
             if Config.Merge.override_file:
                 UniversalTool.remove_files(Config.Download.path, _file_name_list)
+
+        def _dash():
+            def _get_audio_cmd():
+                match self.task_info.audio_type:
+                    case "m4a" | "ec3":
+                        if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
+                            return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
+                        else:
+                            return f'{_rename_cmd} "{self._temp_audio_file_name}" {_extra}"{self.full_file_name}"'
+                    
+                    case "flac":
+                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
+            
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio:
+                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
+
+                case MergeType.Only_Video:
+                    return f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
+
+                case MergeType.Only_Audio:
+                    return _get_audio_cmd()
+
+        def _flv():
+            def _generate_flv_list_txt():
+                with open(os.path.join(Config.Download.path, self._temp_flv_list_name), "w", encoding = "utf-8") as f:
+                    f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.video_count)]))
+            
+            _generate_flv_list_txt()
+
+            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i {self._temp_flv_list_name} -c copy {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
 
         match Config.Sys.platform:
             case "windows":
@@ -606,19 +623,14 @@ class DownloadUtils:
                 _rename_cmd = "mv"
                 _extra = ""
 
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio:
-                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
-
-            case MergeType.Only_Video:
-                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
-
-            case MergeType.Only_Audio:
-                _cmd = _get_audio_cmd()
-
         override_file([self.full_file_name])
 
-        return _cmd
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return _dash()
+            
+            case StreamType.Flv:
+                return _flv()
 
     def _run_subprocess(self, cmd: str):
         return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8", errors = "ignore")
@@ -712,7 +724,7 @@ class DownloadUtils:
                     return ["audio"]
         
         def _flv():
-            return [f"flv_{index}" for index in range(len(self._flv_download_url_list))]
+            return [f"flv_{index + 1}" for index in range(len(self._flv_download_url_list))]
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
@@ -722,7 +734,14 @@ class DownloadUtils:
                 return _flv()
 
     def _clear_file(self):
-        UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name])
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                files = [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name]
+            
+            case StreamType.Flv:
+                files = [f"flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.video_count)] + [self._temp_flv_list_name]
+
+        UniversalTool.remove_files(Config.Download.path, files)
 
     @property
     def file_title(self):
@@ -733,15 +752,26 @@ class DownloadUtils:
 
     @property
     def full_file_name(self):
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio | MergeType.Only_Video:
-                return f"{self.file_title}.mp4"
+        def _dash():
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio | MergeType.Only_Video:
+                    return f"{self.file_title}.mp4"
 
-            case MergeType.Only_Audio:
-                if self.task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
-                    return f"{self.file_title}.mp3"
-                else:
-                    return f"{self.file_title}.{self.task_info.audio_type}"
+                case MergeType.Only_Audio:
+                    if self.task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
+                        return f"{self.file_title}.mp3"
+                    else:
+                        return f"{self.file_title}.{self.task_info.audio_type}"
+
+        def _flv():
+            return f"{self.file_title}.flv"
+        
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return _dash()
+            
+            case StreamType.Flv:
+                return _flv()
 
     @property
     def _temp_video_file_name(self):
@@ -753,7 +783,16 @@ class DownloadUtils:
 
     @property
     def _temp_out_file_name(self):
-        return f"out_{self.task_info.id}.mp4"
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return f"out_{self.task_info.id}.mp4"
+            
+            case StreamType.Flv:
+                return f"out_{self.task_info.id}.flv"
+
+    @property
+    def _temp_flv_list_name(self):
+        return f"flv_list_{self.task_info.id}.txt"
 
 class DownloadTaskPanel(wx.Panel):
     def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
@@ -1159,13 +1198,14 @@ class DownloadTaskPanel(wx.Panel):
         def worker():
             def update_item_flag_callback():
                 kwargs = {
-                    "item_flag": self.task_info.item_flag
+                    "item_flag": self.task_info.item_flag,
+                    "video_count": self.task_info.video_count
                 }
 
                 self.download_file_tool.update_task_info_kwargs(**kwargs)
 
             # 开始下载
-            downloader_info_list = self.utils.get_downloader_info_list(self.task_info.item_flag, update_item_flag_callback)
+            downloader_info_list = self.utils.get_downloader_info_list(update_item_flag_callback)
 
             self.downloader.start_download(downloader_info_list)
 
@@ -1175,19 +1215,27 @@ class DownloadTaskPanel(wx.Panel):
         Thread(target = worker).start()
 
     def show_media_info(self):
+        def _dash():
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio | MergeType.Only_Video:
+                    self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
+                    self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
+
+                case MergeType.Only_Audio:
+                    self.video_quality_lab.SetLabel("音频")
+                    self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
+
         if self.task_info.progress == 100:
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
         else:
             self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
 
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio | MergeType.Only_Video:
-                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                _dash()
 
-            case MergeType.Only_Audio:
-                self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
+            case StreamType.Flv:
+                pass
 
     def update_download_status(self, status: int):
         def update_btn_icon():

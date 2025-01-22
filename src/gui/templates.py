@@ -223,6 +223,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             download_info.video_merge_type = MergeType.Only_Audio.value
 
         download_info.download_type = download_type
+        download_info.stream_type = stream_type
 
         download_info.get_danmaku = ExtraInfo.get_danmaku
         download_info.danmaku_type = ExtraInfo.danmaku_type

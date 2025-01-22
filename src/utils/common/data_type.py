@@ -57,6 +57,8 @@ class DownloadTaskInfo:
         self.stream_type: int = 0
         # 视频合成类型
         self.video_merge_type: int = 0
+        # 视频个数，仅 flv 有效
+        self.video_count: int = 0
 
         # 附加内容选项
         self.get_danmaku: bool = False
@@ -92,6 +94,7 @@ class DownloadTaskInfo:
             "download_type": self.download_type,
             "stream_type": self.stream_type,
             "video_merge_type": self.video_merge_type,
+            "video_count": self.video_count,
             "get_danmaku": self.get_danmaku,
             "danmaku_type": self.danmaku_type,
             "get_cover": self.get_cover,
@@ -124,6 +127,7 @@ class DownloadTaskInfo:
         self.item_flag = data["item_flag"]
         self.download_type = data["download_type"]
         self.video_merge_type = data["video_merge_type"]
+        self.video_count = data["video_count"]
         self.stream_type = data["stream_type"]
         self.get_danmaku = data["get_danmaku"]
         self.danmaku_type = data["danmaku_type"]

@@ -153,4 +153,3 @@ class CheeseParser:
         AudioInfo.clear_audio_info()
 
         ExtraInfo.clear_extra_info()
-    
