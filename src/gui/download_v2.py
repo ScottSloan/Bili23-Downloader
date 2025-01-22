@@ -21,7 +21,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraParser
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID
+from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 class DownloadManagerWindow(Frame):
@@ -400,7 +400,10 @@ class DownloadUtils:
 
                     json_dash = request_get(url)
 
-                    return json_dash["result"]["dash"]
+                    if self.task_info.stream_type == StreamType.Dash.value:
+                        return json_dash["result"]["dash"]
+                    else:
+                        return json_dash["result"]["durl"]
                 
                 case ParseType.Cheese:
                     url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
@@ -412,6 +415,18 @@ class DownloadUtils:
                 case _:
                     self.callback.onDownloadFailedCallback()
         
+        def check_stream_type():
+            match StreamType(self.task_info.stream_type):
+                case StreamType.Dash:
+                    get_video_available_quality()
+
+                    get_video_available_codec()
+
+                    get_audio_available_quality()
+
+                case StreamType.Flv:
+                    get_all_flv_download_url()
+
         def get_video_available_quality():
             # 获取视频最高清晰度
             
@@ -501,15 +516,15 @@ class DownloadUtils:
                 # 视频不存在音频，标记 flag 为仅下载视频
                 self.task_info.video_merge_type = MergeType.Only_Video.value
 
+        def get_all_flv_download_url():
+            for entry in json_dash:
+                self._flv_download_url_list.append(entry)
+
         json_dash = get_json()
 
-        self._video_download_url_list = self._audio_download_url_list = []
+        self._video_download_url_list = self._audio_download_url_list = self._flv_download_url_list = []
 
-        get_video_available_quality()
-
-        get_video_available_codec()
-
-        get_audio_available_quality()
+        check_stream_type()
 
     def get_downloader_info_list(self, item_flag: list, callback: Callable):
         try:
@@ -519,28 +534,33 @@ class DownloadUtils:
             raise GlobalException(e, callback = self.callback.onDownloadFailedCallback) from e
         
         if not item_flag:
-            item_flag = self._get_item_flag()
+            self.task_info.item_flag = self._get_item_flag()
 
-            callback(item_flag)
+            callback()
 
         _temp_info = []
 
-        if "video" in item_flag:
-            _temp_info.append(self._get_video_downloader_info())
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                if "video" in item_flag:
+                    _temp_info.append(self._get_video_downloader_info())
 
-        if "audio" in item_flag:
-            _temp_info.append(self._get_audio_downloader_info())
+                if "audio" in item_flag:
+                    _temp_info.append(self._get_audio_downloader_info())
+            
+            case StreamType.Flv:
+                for index, entry in enumerate(self._flv_download_url_list):
+                    _temp_info.append(self._get_flv_downloader_info(index, entry))
 
         return _temp_info
 
     def merge_video(self):
         def get_temp_file_name():
-            self._temp_video_file_name = f"video_{self.task_info.id}.m4s"
             self._temp_audio_file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
         def clear_files():
             if Config.Merge.auto_clean:
-                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name])
+                self._clear_file()
         
         get_temp_file_name()
 
@@ -609,8 +629,6 @@ class DownloadUtils:
         info.type = "video"
         info.file_name = f"video_{self.task_info.id}.m4s"
 
-        self._temp_video_file_name = info.file_name
-
         return info.to_dict()
 
     def _get_audio_downloader_info(self):
@@ -619,10 +637,16 @@ class DownloadUtils:
         info.type = "audio"
         info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
-        self._temp_audio_file_name = info.file_name
+        return info.to_dict()
+    
+    def _get_flv_downloader_info(self, index: int, entry: list):
+        info = DownloaderInfo()
+        info.url_list = entry
+        info.type = f"flv_{index}"
+        info.file_name = f"flv_{self.task_info.id}_part{index}.flv"
 
         return info.to_dict()
-        
+
     def _get_default_audio_download_url(self, data: List[dict]):
         highest_audio_quality = self._get_highest_audio_quality(data)
 
@@ -649,7 +673,7 @@ class DownloadUtils:
                     yield v
 
         # 取视频音频的所有下载链接
-        return [i for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url"] if n in entry])]
+        return [i for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in entry])]
 
     def _get_highest_video_quality(self, data: List[dict], without_dolby: bool = False):
         # 默认为 360P
@@ -676,15 +700,29 @@ class DownloadUtils:
         return highest_audio_quality
 
     def _get_item_flag(self):
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio:
-                return ["video", "audio"]
+        def _dash():
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio:
+                    return ["video", "audio"]
 
-            case MergeType.Only_Video:
-                return ["video"]
+                case MergeType.Only_Video:
+                    return ["video"]
+                
+                case MergeType.Only_Audio:
+                    return ["audio"]
+        
+        def _flv():
+            return [f"flv_{index}" for index in range(len(self._flv_download_url_list))]
+
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return _dash()
             
-            case MergeType.Only_Audio:
-                return ["audio"]
+            case StreamType.Flv:
+                return _flv()
+
+    def _clear_file(self):
+        UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name])
 
     @property
     def file_title(self):
@@ -704,6 +742,14 @@ class DownloadUtils:
                     return f"{self.file_title}.mp3"
                 else:
                     return f"{self.file_title}.{self.task_info.audio_type}"
+
+    @property
+    def _temp_video_file_name(self):
+        return f"video_{self.task_info.id}.m4s"
+    
+    @property
+    def _temp_audio_file_name(self):
+        return f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
     @property
     def _temp_out_file_name(self):
@@ -967,8 +1013,7 @@ class DownloadTaskPanel(wx.Panel):
             # 清除本地残留文件
             time.sleep(2.5)
 
-            if hasattr(self.utils, "_temp_video_file_name"):
-                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name, self.utils._temp_out_file_name])
+            self.utils._clear_file()
 
         # 停止下载，删除下载任务
         self.downloader.onStop()
@@ -1112,12 +1157,10 @@ class DownloadTaskPanel(wx.Panel):
 
     def start_download(self):
         def worker():
-            def update_item_flag_callback(item_flag):
+            def update_item_flag_callback():
                 kwargs = {
-                    "item_flag": item_flag
+                    "item_flag": self.task_info.item_flag
                 }
-
-                self.task_info.item_flag = item_flag
 
                 self.download_file_tool.update_task_info_kwargs(**kwargs)
 

@@ -53,6 +53,8 @@ class DownloadTaskInfo:
 
         # 下载类型，1 为投稿视频，2 为番组
         self.download_type: int = 0
+        # 视频流类型
+        self.stream_type: int = 0
         # 视频合成类型
         self.video_merge_type: int = 0
 
@@ -88,6 +90,7 @@ class DownloadTaskInfo:
             "audio_type": self.audio_type,
             "item_flag": self.item_flag,
             "download_type": self.download_type,
+            "stream_type": self.stream_type,
             "video_merge_type": self.video_merge_type,
             "get_danmaku": self.get_danmaku,
             "danmaku_type": self.danmaku_type,
@@ -121,6 +124,7 @@ class DownloadTaskInfo:
         self.item_flag = data["item_flag"]
         self.download_type = data["download_type"]
         self.video_merge_type = data["video_merge_type"]
+        self.stream_type = data["stream_type"]
         self.get_danmaku = data["get_danmaku"]
         self.danmaku_type = data["danmaku_type"]
         self.get_cover = data["get_cover"]

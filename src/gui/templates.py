@@ -201,7 +201,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if cid:
                         get_item_info(title, cid)
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, stream_type: str, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
@@ -244,8 +244,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         cid = entry["cid"]
         referer_url = VideoInfo.url
+        stream_type = VideoInfo.stream_type
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, stream_type, cover_url = cover_url, bvid = bvid, cid = cid))
     
     def get_bangumi_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -258,8 +259,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             duration = 0
 
         referer_url = BangumiInfo.url
+        stream_type = BangumiInfo.stream_type
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, stream_type, cover_url = cover_url, bvid = bvid, cid = cid))
     
     def get_cheese_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -269,8 +271,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         duration = entry["duration"]
 
         referer_url = CheeseInfo.url
+        stream_type = CheeseInfo.stream_type
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, stream_type, cover_url, cid = cid, aid = aid, ep_id = ep_id))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):

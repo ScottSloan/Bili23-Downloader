@@ -2,7 +2,7 @@ import re
 import json
 import requests
 
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
@@ -23,6 +23,8 @@ class CheeseInfo:
     views: str = ""
     release: str = ""
     expiry: str = ""
+
+    stream_type: str = ""
 
     episodes_list: list = []
     video_quality_id_list: list = []
@@ -95,6 +97,7 @@ class CheeseParser:
 
         CheeseInfo.video_quality_id_list = info["accept_quality"]
         CheeseInfo.video_quality_desc_list = info["accept_description"]
+        CheeseInfo.stream_type = StreamType.Dash.value
 
         AudioInfo.get_audio_quality_list(info["dash"])
 
