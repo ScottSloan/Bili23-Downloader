@@ -1,7 +1,6 @@
 import io
 import os
 import wx
-import re
 import time
 import json
 import wx.adv
@@ -22,7 +21,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraParser
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus
+from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 class DownloadManagerWindow(Frame):
@@ -416,17 +415,16 @@ class DownloadUtils:
         def get_video_available_quality():
             # 获取视频最高清晰度
             
-            if self.task_info.video_quality_id == 200:
+            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
                 highest_video_quality_id = self._get_highest_video_quality(json_dash["video"], without_dolby = not Config.Download.enable_dolby)
 
                 self.task_info.video_quality_id = highest_video_quality_id
             else:
                 highest_video_quality_id = self._get_highest_video_quality(json_dash["video"])
+
                 if highest_video_quality_id < self.task_info.video_quality_id:
                     # 当视频不存在选取的清晰度时，选取最高可用的清晰度
                     self.task_info.video_quality_id = highest_video_quality_id
-                else:
-                    self.task_info.video_quality_id = self.task_info.video_quality_id
 
         def get_video_available_codec():
             def get_codec_index(data: List[dict]):
@@ -464,7 +462,7 @@ class DownloadUtils:
                                 self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
 
                                 self.task_info.audio_type = "flac"
-                                self.task_info.audio_quality_id = 30251
+                                self.task_info.audio_quality_id = AudioQualityID._Hi_Res.value
 
             def _get_dolby(_json_dash: dict):
                 # 杜比全景声
@@ -477,20 +475,20 @@ class DownloadUtils:
                                 self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
 
                                 self.task_info.audio_type = "ec3"
-                                self.task_info.audio_quality_id = 30250
+                                self.task_info.audio_quality_id = AudioQualityID._Dolby_Atoms.value
                                     
             if json_dash["audio"]:
-                match self.task_info.audio_quality_id:
-                    case 30300:
+                match AudioQualityID(self.task_info.audio_quality_id):
+                    case AudioQualityID._Auto:
                         _get_flac(json_dash)
 
                         if Config.Download.enable_dolby:
                             _get_dolby(json_dash)
 
-                    case 30251:
+                    case AudioQualityID._Hi_Res:
                         _get_flac(json_dash)
 
-                    case 30250:
+                    case AudioQualityID._Dolby_Atoms:
                         _get_dolby(json_dash)
 
                     case _:
@@ -628,7 +626,7 @@ class DownloadUtils:
     def _get_default_audio_download_url(self, data: List[dict]):
         highest_audio_quality = self._get_highest_audio_quality(data)
 
-        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == 30300:
+        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == AudioQualityID._Auto.value:
             # 当视频不存在选取的音质时，选取最高可用的音质
             audio_quality = highest_audio_quality
         else:
@@ -642,12 +640,6 @@ class DownloadUtils:
         self.task_info.audio_quality_id = audio_quality
 
     def _get_all_available_download_url_list(self, entry: dict):
-        def _replace(url: str):
-            if Config.Advanced.enable_custom_cdn and Config.Advanced.custom_cdn_mode == CDNMode.Custom:
-                return re.sub(r'(?<=https://)[^/]+', Config.Advanced.custom_cdn, url) 
-            else:
-                return url
-
         def _gen(x: list):
             for v in x:
                 if isinstance(v, list):
@@ -657,15 +649,15 @@ class DownloadUtils:
                     yield v
 
         # 取视频音频的所有下载链接
-        return [_replace(i) for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url"] if n in entry])]
+        return [i for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url"] if n in entry])]
 
     def _get_highest_video_quality(self, data: List[dict], without_dolby: bool = False):
         # 默认为 360P
-        highest_video_quality_id = 16
+        highest_video_quality_id = VideoQualityID._360P.value
 
         for entry in data:
             # 遍历列表，选取其中最高的清晰度
-            if without_dolby and entry["id"] == 126:
+            if without_dolby and entry["id"] == VideoQualityID._Dolby_Vision.value:
                 continue
 
             if entry["id"] > highest_video_quality_id:
@@ -675,7 +667,7 @@ class DownloadUtils:
 
     def _get_highest_audio_quality(self, data: List[dict]):
         # 默认为 64K
-        highest_audio_quality = 30216
+        highest_audio_quality = AudioQualityID._64K.value
 
         for entry in data:
             if entry["id"] > highest_audio_quality:
@@ -993,22 +985,20 @@ class DownloadTaskPanel(wx.Panel):
 
         Thread(target = worker).start()
 
-    def onStart(self, total_size: int):
+    def onStart(self):
         def callback():
         # 开始下载回调函数
-            self.task_info.total_size = total_size
-
             self.speed_lab.SetLabel("")
             
             self.show_media_info()
 
             kwargs = {
-                "total_size": total_size,
-                "video_quality_id": self.utils.task_info.video_quality_id,
-                "video_codec_id": self.utils.task_info.video_codec_id,
-                "audio_quality_id": self.utils.task_info.audio_quality_id,
-                "audio_type": self.utils.task_info.audio_type,
-                "video_merge_type": self.utils.task_info.video_merge_type
+                "total_size": self.task_info.total_size,
+                "video_quality_id": self.task_info.video_quality_id,
+                "video_codec_id": self.task_info.video_codec_id,
+                "audio_quality_id": self.task_info.audio_quality_id,
+                "audio_type": self.task_info.audio_type,
+                "video_merge_type": self.task_info.video_merge_type
             }
 
             self.download_file_tool.update_task_info_kwargs(**kwargs)
@@ -1149,12 +1139,12 @@ class DownloadTaskPanel(wx.Panel):
 
         match MergeType(self.task_info.video_merge_type):
             case MergeType.Video_And_Audio | MergeType.Only_Video:
-                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.utils.task_info.video_quality_id))
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.utils.task_info.video_codec_id))
+                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
 
             case MergeType.Only_Audio:
                 self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.utils.task_info.audio_quality_id))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
 
     def update_download_status(self, status: int):
         def update_btn_icon():

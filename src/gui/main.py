@@ -19,7 +19,7 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode, VideoQualityID
 from utils.common.data_type import ParseCallback
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
@@ -532,7 +532,7 @@ class MainWindow(Frame):
         video_quality_desc_list.insert(0, "自动")
         self.video_quality_choice.Set(video_quality_desc_list)
 
-        if Config.Download.video_quality_id == 200:
+        if Config.Download.video_quality_id == VideoQualityID._Auto.value:
             index = 0
 
         else:

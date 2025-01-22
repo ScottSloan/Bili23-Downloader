@@ -170,7 +170,7 @@ class Downloader:
 
             if not self.completed_size:
                 # 回调 onStart，UI 更新下载信息
-                self.callback.onStartCallback(self.task_info.total_size)
+                self.callback.onStartCallback()
         
         try:
             worker()
@@ -332,9 +332,10 @@ class Downloader:
             self.file_tool.update_task_info_kwargs(**kwargs)
 
         def update_item_flag():
-            entry = self._downloader_info_list[0]
-            self.task_info.item_flag.remove(entry["type"])
-            self._downloader_info_list.remove(entry)
+            if self._downloader_info_list:
+                entry = self._downloader_info_list[0]
+                self.task_info.item_flag.remove(entry["type"])
+                self._downloader_info_list.remove(entry)
 
         update_item_flag()
 

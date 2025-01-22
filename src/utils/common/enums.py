@@ -72,3 +72,24 @@ class StatusCode(Enum):
     URL = 602                # 无效链接
     Redirect = 603           # 跳转链接
     Area_Limit = -10403      # 区域限制
+
+class VideoQualityID(Enum):
+    _360P = 16
+    _480P = 32
+    _720P = 64
+    _1080P = 80
+    _1080P_P = 112
+    _1080P_60 = 116
+    _4K = 120
+    _HDR = 125
+    _Dolby_Vision = 126
+    _8K = 127
+    _Auto = 200
+
+class AudioQualityID(Enum):
+    _64K = 30216
+    _132K = 30232
+    _192K = 30280
+    _Dolby_Atoms = 30250
+    _Hi_Res = 30251
+    _Auto = 30300
