@@ -393,7 +393,10 @@ class DownloadUtils:
 
                     json_dash = request_get(url)
 
-                    return json_dash["data"]["dash"]
+                    if self.task_info.stream_type == StreamType.Dash.value:
+                        return json_dash["data"]["dash"]
+                    else:
+                        return json_dash["data"]["durl"]
                 
                 case ParseType.Bangumi:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
@@ -1225,6 +1228,9 @@ class DownloadTaskPanel(wx.Panel):
                     self.video_quality_lab.SetLabel("音频")
                     self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
 
+        def _flv():
+            self.video_codec_lab.SetLabel("FLV")
+
         if self.task_info.progress == 100:
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
         else:
@@ -1235,7 +1241,7 @@ class DownloadTaskPanel(wx.Panel):
                 _dash()
 
             case StreamType.Flv:
-                pass
+                _flv()
 
     def update_download_status(self, status: int):
         def update_btn_icon():

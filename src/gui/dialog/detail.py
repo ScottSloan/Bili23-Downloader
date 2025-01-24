@@ -19,6 +19,12 @@ class DetailDialog(wx.Dialog):
         self.CenterOnParent()
         
     def init_UI(self):
+        def _set_dark_mode():
+            if not Config.Sys.dark_mode:
+                self.SetBackgroundColour("white")
+
+        _set_dark_mode()
+
         self.note = wx.Simplebook(self, -1)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -55,9 +61,6 @@ class DetailPage(wx.Panel):
 
         self.Bind(wx.EVT_MENU, self.onCopy, id = self.ID_COPY)
 
-        if not Config.Sys.dark_mode:
-            self.SetBackgroundColour("white")
-
     def onContextMenu(self, event):
         def get_menu():
             menu = wx.Menu()
@@ -77,7 +80,10 @@ class DetailPage(wx.Panel):
             wx.TheClipboard.SetData(wx.TextDataObject(text))
 
     def set_page(self, body: str):
-        color: wx.Colour = self.GetParent().GetBackgroundColour()
+        if Config.Sys.dark_mode:
+            color: wx.Colour = self.GetParent().GetBackgroundColour()
+        else:
+            color = wx.Colour("white")
         
         self.html_page.SetPage(f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="background-color: rgba({color.GetRed()},{color.GetGreen()},{color.GetBlue()},1);">{body}</body></html>""")
     

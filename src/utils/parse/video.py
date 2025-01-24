@@ -8,7 +8,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode
+from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 
@@ -141,14 +141,24 @@ class VideoParser:
         req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
         resp = json.loads(req.text)
 
+        with open("video.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
+
         self.check_json(resp)
 
         info = resp["data"]
 
+        if info["format"] == "flv720":
+            AudioInfo.get_audio_quality_list({})
+
+            VideoInfo.stream_type = StreamType.Flv.value
+        else:
+            AudioInfo.get_audio_quality_list(info["dash"])
+
+            VideoInfo.stream_type = StreamType.Dash.value
+
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]
-
-        AudioInfo.get_audio_quality_list(info["dash"])
 
         ExtraInfo.get_danmaku = Config.Extra.get_danmaku
         ExtraInfo.danmaku_type = Config.Extra.danmaku_type
