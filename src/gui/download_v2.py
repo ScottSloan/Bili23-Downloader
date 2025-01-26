@@ -401,7 +401,7 @@ class DownloadUtils:
                     return json_dash["data"][param_a]
                 
                 case ParseType.Bangumi:
-                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
+                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
 
                     json_dash = request_get(url)
 
@@ -1228,6 +1228,7 @@ class DownloadTaskPanel(wx.Panel):
                     self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
 
         def _flv():
+            self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
             self.video_codec_lab.SetLabel("FLV")
 
         if self.task_info.progress == 100:
