@@ -378,7 +378,12 @@ class DownloadUtils:
             def request_get(url: str):
                 req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
                 return json.loads(req.text)
-        
+
+            if self.task_info.stream_type == StreamType.Dash.value:
+                param_a = "dash"
+            else:
+                param_a = "durl"
+
             match ParseType(self.task_info.download_type):
                 case ParseType.Video:
                     params = {
@@ -393,27 +398,21 @@ class DownloadUtils:
 
                     json_dash = request_get(url)
 
-                    if self.task_info.stream_type == StreamType.Dash.value:
-                        return json_dash["data"]["dash"]
-                    else:
-                        return json_dash["data"]["durl"]
+                    return json_dash["data"][param_a]
                 
                 case ParseType.Bangumi:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
 
                     json_dash = request_get(url)
 
-                    if self.task_info.stream_type == StreamType.Dash.value:
-                        return json_dash["result"]["dash"]
-                    else:
-                        return json_dash["result"]["durl"]
+                    return json_dash["result"][param_a]
                 
                 case ParseType.Cheese:
                     url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
 
                     json_dash = request_get(url)
 
-                    return json_dash["data"]["dash"]
+                    return json_dash["data"][param_a]
                 
                 case _:
                     self.callback.onDownloadFailedCallback()
