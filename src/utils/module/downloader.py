@@ -37,6 +37,7 @@ class Downloader:
         self.current_total_size = 0
 
         self._e = None
+        self._temp_prefer_cdn = None
         self._downloader_info_list = []
         self.thread_info = {}
 
@@ -384,7 +385,12 @@ class Downloader:
             if Config.Advanced.enable_custom_cdn:
                 match CDNMode(Config.Advanced.custom_cdn_mode):
                     case CDNMode.Auto:
-                        return [entry["cdn"] for entry in cdn_map.values()]
+                        _temp_cdn_list = [entry["cdn"] for entry in cdn_map.values()]
+
+                        if self._temp_prefer_cdn:
+                            _temp_cdn_list.insert(0, self._temp_prefer_cdn) 
+
+                        return _temp_cdn_list
                     
                     case CDNMode.Custom:
                         return [Config.Advanced.custom_cdn]
@@ -392,18 +398,24 @@ class Downloader:
                 return [None]
 
         def switch_cdn(url: str, cdn: str):
-            return re.sub(r'(?<=https://)[^/]+', cdn, url)
+            if cdn:
+                return re.sub(r'(?<=https://)[^/]+', cdn, url)
+            
+        def request_head(url: str, cdn: str):
+            url_with_cdn = switch_cdn(url, cdn)
+            
+            return url_with_cdn, self.session.head(url_with_cdn, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
     
         for url in url_list:
             for cdn in get_cdn_list():
-                url_with_cdn = switch_cdn(url, cdn)
-
-                req = self.session.head(url_with_cdn, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+                url_with_cdn, req = request_head(url, cdn)
 
                 if "Content-Length" in req.headers:
                     total_size = int(req.headers["Content-Length"])
                     
                     if total_size:
+                        self._temp_prefer_cdn = cdn
+
                         truncate_file()
 
                         return url_with_cdn, total_size

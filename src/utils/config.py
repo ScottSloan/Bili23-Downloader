@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/01/26"
+        release_date: str = "2025/01/27"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -121,9 +121,10 @@ class ConfigUtils:
             _check()
 
             for index, cdn in enumerate(Config.Advanced.custom_cdn_list):
-                cdn_map[index + len(cdn_map) + 1] = {
+                cdn_map[index + len(cdn_map)] = {
                     "cdn": cdn,
-                    "provider": "自定义"
+                    "provider": "自定义",
+                    "order": index + len(cdn_map) + 1
                 }
 
         def _check():

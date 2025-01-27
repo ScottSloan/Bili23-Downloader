@@ -396,23 +396,29 @@ class DownloadUtils:
 
                     url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-                    json_dash = request_get(url)
+                    _json = request_get(url)
 
-                    return json_dash["data"][param_a]
+                    self._temp_download_json = _json["data"]
+
+                    return self._temp_download_json[param_a]
                 
                 case ParseType.Bangumi:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
 
-                    json_dash = request_get(url)
+                    _json = request_get(url)
 
-                    return json_dash["result"][param_a]
+                    self._temp_download_json = _json["result"]
+
+                    return self._temp_download_json[param_a]
                 
                 case ParseType.Cheese:
                     url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
 
-                    json_dash = request_get(url)
+                    _json = request_get(url)
 
-                    return json_dash["data"][param_a]
+                    self._temp_download_json = _json["data"]
+
+                    return self._temp_download_json[param_a]
                 
                 case _:
                     self.callback.onDownloadFailedCallback()
@@ -519,10 +525,22 @@ class DownloadUtils:
                 self.task_info.video_merge_type = MergeType.Only_Video.value
 
         def get_all_flv_download_url():
+            highest_quality_id = self._temp_download_json["accept_quality"][0]
+
+            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
+                self.task_info.video_quality_id = highest_quality_id
+            else:
+                if highest_quality_id < self.task_info.video_quality_id:
+                    self.task_info.video_quality_id = highest_quality_id
+
+            self.task_info.video_quality_id = self._temp_download_json["quality"]
+
             self.task_info.video_count = len(json_dash)
 
             for entry in json_dash:
                 self._flv_download_url_list.append(self._get_all_available_download_url_list(entry))
+
+        self._temp_download_json = {}
 
         json_dash = get_json()
 
