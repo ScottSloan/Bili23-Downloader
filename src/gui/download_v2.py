@@ -1,7 +1,6 @@
 import io
 import os
 import wx
-import re
 import time
 import json
 import wx.adv
@@ -22,7 +21,7 @@ from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraParser
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType, CDNMode, DownloadStatus
+from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 class DownloadManagerWindow(Frame):
@@ -200,7 +199,7 @@ class DownloadManagerWindow(Frame):
 
     def init_utils(self):
         # 记录下载任务的 cid 列表
-        self._temp_cid_list = []
+        self._temp_cid_list = set()
 
         # 读取断点续传信息
         self.load_download_task()
@@ -252,7 +251,7 @@ class DownloadManagerWindow(Frame):
         children: List[DownloadTaskPanel] = self.download_task_list_panel.GetChildren()
         
         return children
-    
+
     def get_download_task_count(self, condition: List[int]):
         # 统计正在下载的任务数
         _count = 0
@@ -265,21 +264,14 @@ class DownloadManagerWindow(Frame):
         return _count
 
     def add_download_task_panel(self, download_task_info_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
-        def worker(info: DownloadTaskInfo, multiple_flag: bool, index: int):
+        def worker(info: DownloadTaskInfo, multiple_flag: bool, index_with_zero: str):
             if multiple_flag:
-                info.index = index + 1
-
-            task_panel_callback = TaskPanelCallback()
-            task_panel_callback.onStartNextCallback = self.start_download
-            task_panel_callback.onStopCallbacak = stop_download_callback
-            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+                info.index = self._temp_index
+                info.index_with_zero = index_with_zero
 
             item = DownloadTaskPanel(self.download_task_list_panel, info, task_panel_callback)
 
-            # 添加进 cid 列表记录
-            self._temp_cid_list.append(info.cid)
-
-            return  (item, 0, wx.EXPAND)
+            return (item, 0, wx.EXPAND)
 
         def stop_download_callback(cid: int):
             # 停止下载回调函数
@@ -293,14 +285,24 @@ class DownloadManagerWindow(Frame):
         # 批量下载标识符
         multiple_flag = len(download_task_info_list) > 1
 
+        task_panel_callback = TaskPanelCallback()
+        task_panel_callback.onStartNextCallback = self.start_download
+        task_panel_callback.onStopCallbacak = stop_download_callback
+        task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+
         # 暂时停止 UI 更新
         self.download_task_list_panel.Freeze()
 
+        self._temp_index = 0
+        
         for index, info in enumerate(download_task_info_list):
             # 检查 cid 列表是否已包含，防止重复下载
             if info.cid not in self._temp_cid_list:
                 info.timestamp += index
-                task_panel_list.append(worker(info, multiple_flag, index))
+                self._temp_index += 1
+                task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(download_task_info_list))))))
+
+                self._temp_cid_list.add(info.cid)
 
         self.download_task_list_panel.sizer.AddMany(task_panel_list)
 
@@ -376,7 +378,12 @@ class DownloadUtils:
             def request_get(url: str):
                 req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
                 return json.loads(req.text)
-        
+
+            if self.task_info.stream_type == StreamType.Dash.value:
+                param_a = "dash"
+            else:
+                param_a = "durl"
+
             match ParseType(self.task_info.download_type):
                 case ParseType.Video:
                     params = {
@@ -389,41 +396,58 @@ class DownloadUtils:
 
                     url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-                    json_dash = request_get(url)
+                    _json = request_get(url)
 
-                    return json_dash["data"]["dash"]
+                    self._temp_download_json = _json["data"]
+
+                    return self._temp_download_json[param_a]
                 
                 case ParseType.Bangumi:
-                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn=0&fnver=0&fnval=12240&fourk=1"
+                    url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
 
-                    json_dash = request_get(url)
+                    _json = request_get(url)
 
-                    return json_dash["result"]["dash"]
+                    self._temp_download_json = _json["result"]
+
+                    return self._temp_download_json[param_a]
                 
                 case ParseType.Cheese:
                     url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
 
-                    json_dash = request_get(url)
+                    _json = request_get(url)
 
-                    return json_dash["data"]["dash"]
+                    self._temp_download_json = _json["data"]
+
+                    return self._temp_download_json[param_a]
                 
                 case _:
                     self.callback.onDownloadFailedCallback()
         
+        def check_stream_type():
+            match StreamType(self.task_info.stream_type):
+                case StreamType.Dash:
+                    get_video_available_quality()
+
+                    get_video_available_codec()
+
+                    get_audio_available_quality()
+
+                case StreamType.Flv:
+                    get_all_flv_download_url()
+
         def get_video_available_quality():
             # 获取视频最高清晰度
             
-            if self.task_info.video_quality_id == 200:
+            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
                 highest_video_quality_id = self._get_highest_video_quality(json_dash["video"], without_dolby = not Config.Download.enable_dolby)
 
                 self.task_info.video_quality_id = highest_video_quality_id
             else:
                 highest_video_quality_id = self._get_highest_video_quality(json_dash["video"])
+
                 if highest_video_quality_id < self.task_info.video_quality_id:
                     # 当视频不存在选取的清晰度时，选取最高可用的清晰度
                     self.task_info.video_quality_id = highest_video_quality_id
-                else:
-                    self.task_info.video_quality_id = self.task_info.video_quality_id
 
         def get_video_available_codec():
             def get_codec_index(data: List[dict]):
@@ -461,7 +485,7 @@ class DownloadUtils:
                                 self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
 
                                 self.task_info.audio_type = "flac"
-                                self.task_info.audio_quality_id = 30251
+                                self.task_info.audio_quality_id = AudioQualityID._Hi_Res.value
 
             def _get_dolby(_json_dash: dict):
                 # 杜比全景声
@@ -474,20 +498,20 @@ class DownloadUtils:
                                 self._audio_download_url_list = self._get_all_available_download_url_list(audio_node)
 
                                 self.task_info.audio_type = "ec3"
-                                self.task_info.audio_quality_id = 30250
+                                self.task_info.audio_quality_id = AudioQualityID._Dolby_Atoms.value
                                     
             if json_dash["audio"]:
-                match self.task_info.audio_quality_id:
-                    case 30300:
+                match AudioQualityID(self.task_info.audio_quality_id):
+                    case AudioQualityID._Auto:
                         _get_flac(json_dash)
 
                         if Config.Download.enable_dolby:
                             _get_dolby(json_dash)
 
-                    case 30251:
+                    case AudioQualityID._Hi_Res:
                         _get_flac(json_dash)
 
-                    case 30250:
+                    case AudioQualityID._Dolby_Atoms:
                         _get_dolby(json_dash)
 
                     case _:
@@ -500,49 +524,72 @@ class DownloadUtils:
                 # 视频不存在音频，标记 flag 为仅下载视频
                 self.task_info.video_merge_type = MergeType.Only_Video.value
 
-        
+        def get_all_flv_download_url():
+            highest_quality_id = self._temp_download_json["accept_quality"][0]
+
+            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
+                self.task_info.video_quality_id = highest_quality_id
+            else:
+                if highest_quality_id < self.task_info.video_quality_id:
+                    self.task_info.video_quality_id = highest_quality_id
+
+            self.task_info.video_quality_id = self._temp_download_json["quality"]
+
+            self.task_info.video_count = len(json_dash)
+
+            for entry in json_dash:
+                self._flv_download_url_list.append(self._get_all_available_download_url_list(entry))
+
+        self._temp_download_json = {}
+
         json_dash = get_json()
 
-        self._video_download_url_list = self._audio_download_url_list = []
+        self._video_download_url_list = self._audio_download_url_list = self._flv_download_url_list = []
 
-        get_video_available_quality()
+        check_stream_type()
 
-        get_video_available_codec()
+    def get_downloader_info_list(self, callback: Callable):
+        def _dash():
+            if "video" in self.task_info.item_flag:
+                _temp_info.append(self._get_video_downloader_info())
 
-        get_audio_available_quality()
+            if "audio" in self.task_info.item_flag:
+                _temp_info.append(self._get_audio_downloader_info())
+        
+        def _flv():
+            for index, entry in enumerate(self._flv_download_url_list):
+                if f"flv_{index + 1}" in self.task_info.item_flag:
+                    _temp_info.append(self._get_flv_downloader_info(index + 1, entry))
+        
+        def check_item_flag():
+            if not self.task_info.item_flag:
+                self.task_info.item_flag = self._get_item_flag()
 
-    def get_downloader_info_list(self):
+                callback()
+
         try:
             self.get_video_bangumi_download_url()
 
         except Exception as e:
             raise GlobalException(e, callback = self.callback.onDownloadFailedCallback) from e
+        
+        check_item_flag()
 
         _temp_info = []
 
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio:
-                _temp_info.append(self._get_video_downloader_info())
-                _temp_info.append(self._get_audio_downloader_info())
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                _dash()
 
-            case MergeType.Only_Video:
-                _temp_info.append(self._get_video_downloader_info())
-            
-            case MergeType.Only_Audio:
-                _temp_info.append(self._get_audio_downloader_info())
+            case StreamType.Flv:
+                _flv()
 
         return _temp_info
 
     def merge_video(self):
-        def get_temp_file_name():
-            self._temp_video_file_name = f"video_{self.task_info.id}.m4s"
-            self._temp_audio_file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
-
         def clear_files():
             if Config.Merge.auto_clean:
-                UniversalTool.remove_files(Config.Download.path, [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name])
-        
-        get_temp_file_name()
+                self._clear_file()
 
         _cmd = self._get_shell_cmd()
 
@@ -557,21 +604,41 @@ class DownloadUtils:
             raise GlobalException(log = _process.stdout, return_code = _process.returncode, callback = self.callback.onMergeFailedCallback)
 
     def _get_shell_cmd(self):
-        def _get_audio_cmd():
-            match self.task_info.audio_type:
-                case "m4a" | "ec3":
-                    if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
-                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
-                    else:
-                        return f'{_rename_cmd} "{self._temp_audio_file_name}" {_extra}"{self.full_file_name}"'
-                
-                case "flac":
-                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
-        
         def override_file(_file_name_list):
             # 覆盖文件
             if Config.Merge.override_file:
                 UniversalTool.remove_files(Config.Download.path, _file_name_list)
+
+        def _dash():
+            def _get_audio_cmd():
+                match self.task_info.audio_type:
+                    case "m4a" | "ec3":
+                        if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
+                            return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
+                        else:
+                            return f'{_rename_cmd} "{self._temp_audio_file_name}" {_extra}"{self.full_file_name}"'
+                    
+                    case "flac":
+                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
+            
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio:
+                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
+
+                case MergeType.Only_Video:
+                    return f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
+
+                case MergeType.Only_Audio:
+                    return _get_audio_cmd()
+
+        def _flv():
+            def _generate_flv_list_txt():
+                with open(os.path.join(Config.Download.path, self._temp_flv_list_name), "w", encoding = "utf-8") as f:
+                    f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.video_count)]))
+            
+            _generate_flv_list_txt()
+
+            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i {self._temp_flv_list_name} -c copy {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
 
         match Config.Sys.platform:
             case "windows":
@@ -586,19 +653,14 @@ class DownloadUtils:
                 _rename_cmd = "mv"
                 _extra = ""
 
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio:
-                _cmd = f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
-
-            case MergeType.Only_Video:
-                _cmd = f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
-
-            case MergeType.Only_Audio:
-                _cmd = _get_audio_cmd()
-
         override_file([self.full_file_name])
 
-        return _cmd
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return _dash()
+            
+            case StreamType.Flv:
+                return _flv()
 
     def _run_subprocess(self, cmd: str):
         return subprocess.run(cmd, cwd = Config.Download.path, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8", errors = "ignore")
@@ -609,8 +671,6 @@ class DownloadUtils:
         info.type = "video"
         info.file_name = f"video_{self.task_info.id}.m4s"
 
-        self._temp_video_file_name = info.file_name
-
         return info.to_dict()
 
     def _get_audio_downloader_info(self):
@@ -619,14 +679,20 @@ class DownloadUtils:
         info.type = "audio"
         info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
-        self._temp_audio_file_name = info.file_name
+        return info.to_dict()
+    
+    def _get_flv_downloader_info(self, index: int, entry: list):
+        info = DownloaderInfo()
+        info.url_list = entry
+        info.type = f"flv_{index}"
+        info.file_name = f"flv_{self.task_info.id}_part{index}.flv"
 
         return info.to_dict()
-        
+
     def _get_default_audio_download_url(self, data: List[dict]):
         highest_audio_quality = self._get_highest_audio_quality(data)
 
-        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == 30300:
+        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == AudioQualityID._Auto.value:
             # 当视频不存在选取的音质时，选取最高可用的音质
             audio_quality = highest_audio_quality
         else:
@@ -640,12 +706,6 @@ class DownloadUtils:
         self.task_info.audio_quality_id = audio_quality
 
     def _get_all_available_download_url_list(self, entry: dict):
-        def _replace(url: str):
-            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Custom:
-                return re.sub(r'(?<=https://)[^/]+', Config.Download.custom_cdn, url) 
-            else:
-                return url
-
         def _gen(x: list):
             for v in x:
                 if isinstance(v, list):
@@ -655,15 +715,15 @@ class DownloadUtils:
                     yield v
 
         # 取视频音频的所有下载链接
-        return [_replace(i) for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url"] if n in entry])]
+        return [i for i in _gen([entry[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in entry])]
 
     def _get_highest_video_quality(self, data: List[dict], without_dolby: bool = False):
         # 默认为 360P
-        highest_video_quality_id = 16
+        highest_video_quality_id = VideoQualityID._360P.value
 
         for entry in data:
             # 遍历列表，选取其中最高的清晰度
-            if without_dolby and entry["id"] == 126:
+            if without_dolby and entry["id"] == VideoQualityID._Dolby_Vision.value:
                 continue
 
             if entry["id"] > highest_video_quality_id:
@@ -673,7 +733,7 @@ class DownloadUtils:
 
     def _get_highest_audio_quality(self, data: List[dict]):
         # 默认为 64K
-        highest_audio_quality = 30216
+        highest_audio_quality = AudioQualityID._64K.value
 
         for entry in data:
             if entry["id"] > highest_audio_quality:
@@ -681,28 +741,88 @@ class DownloadUtils:
 
         return highest_audio_quality
 
+    def _get_item_flag(self):
+        def _dash():
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio:
+                    return ["video", "audio"]
+
+                case MergeType.Only_Video:
+                    return ["video"]
+                
+                case MergeType.Only_Audio:
+                    return ["audio"]
+        
+        def _flv():
+            return [f"flv_{index + 1}" for index in range(len(self._flv_download_url_list))]
+
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return _dash()
+            
+            case StreamType.Flv:
+                return _flv()
+
+    def _clear_file(self):
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                files = [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name]
+            
+            case StreamType.Flv:
+                files = [f"flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.video_count)] + [self._temp_flv_list_name]
+
+        UniversalTool.remove_files(Config.Download.path, files)
+
     @property
     def file_title(self):
         if self.task_info.index:
-            return f"{self.task_info.index} - {self.task_info.title_legal}"
+            return f"{self.task_info.index_with_zero} - {UniversalTool.get_legal_name(self.task_info.title)}"
         else:
-            return self.task_info.title_legal
+            return UniversalTool.get_legal_name(self.task_info.title)
 
     @property
     def full_file_name(self):
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio | MergeType.Only_Video:
-                return f"{self.file_title}.mp4"
+        def _dash():
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio | MergeType.Only_Video:
+                    return f"{self.file_title}.mp4"
 
-            case MergeType.Only_Audio:
-                if self.task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
-                    return f"{self.file_title}.mp3"
-                else:
-                    return f"{self.file_title}.{self.task_info.audio_type}"
+                case MergeType.Only_Audio:
+                    if self.task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
+                        return f"{self.file_title}.mp3"
+                    else:
+                        return f"{self.file_title}.{self.task_info.audio_type}"
+
+        def _flv():
+            return f"{self.file_title}.flv"
+        
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return _dash()
+            
+            case StreamType.Flv:
+                return _flv()
+
+    @property
+    def _temp_video_file_name(self):
+        return f"video_{self.task_info.id}.m4s"
+    
+    @property
+    def _temp_audio_file_name(self):
+        return f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
     @property
     def _temp_out_file_name(self):
-        return f"out_{self.task_info.id}.mp4"
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                return f"out_{self.task_info.id}.mp4"
+            
+            case StreamType.Flv:
+                return f"out_{self.task_info.id}.flv"
+
+    @property
+    def _temp_flv_list_name(self):
+        return f"flv_list_{self.task_info.id}.txt"
 
 class DownloadTaskPanel(wx.Panel):
     def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
@@ -962,8 +1082,7 @@ class DownloadTaskPanel(wx.Panel):
             # 清除本地残留文件
             time.sleep(2.5)
 
-            if hasattr(self.utils, "_temp_video_file_name"):
-                UniversalTool.remove_files(Config.Download.path, [self.utils._temp_video_file_name, self.utils._temp_audio_file_name, self.utils._temp_out_file_name])
+            self.utils._clear_file()
 
         # 停止下载，删除下载任务
         self.downloader.onStop()
@@ -980,22 +1099,20 @@ class DownloadTaskPanel(wx.Panel):
 
         Thread(target = worker).start()
 
-    def onStart(self, total_size: int):
+    def onStart(self):
         def callback():
         # 开始下载回调函数
-            self.task_info.total_size = total_size
-
             self.speed_lab.SetLabel("")
             
             self.show_media_info()
 
             kwargs = {
-                "total_size": total_size,
-                "video_quality_id": self.utils.task_info.video_quality_id,
-                "video_codec_id": self.utils.task_info.video_codec_id,
-                "audio_quality_id": self.utils.task_info.audio_quality_id,
-                "audio_type": self.utils.task_info.audio_type,
-                "video_merge_type": self.utils.task_info.video_merge_type
+                "total_size": self.task_info.total_size,
+                "video_quality_id": self.task_info.video_quality_id,
+                "video_codec_id": self.task_info.video_codec_id,
+                "audio_quality_id": self.task_info.audio_quality_id,
+                "audio_type": self.task_info.audio_type,
+                "video_merge_type": self.task_info.video_merge_type
             }
 
             self.download_file_tool.update_task_info_kwargs(**kwargs)
@@ -1012,9 +1129,6 @@ class DownloadTaskPanel(wx.Panel):
                 self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
 
             self.video_size_lab.SetLabel("{}/{}".format(FormatTool.format_size(info["completed_size"]), FormatTool.format_size(self.task_info.total_size)))
-                
-            self.task_info.progress = info["progress"]
-            self.task_info.completed_size = info["completed_size"]
         
         wx.CallAfter(callback)
 
@@ -1112,8 +1226,16 @@ class DownloadTaskPanel(wx.Panel):
 
     def start_download(self):
         def worker():
+            def update_item_flag_callback():
+                kwargs = {
+                    "item_flag": self.task_info.item_flag,
+                    "video_count": self.task_info.video_count
+                }
+
+                self.download_file_tool.update_task_info_kwargs(**kwargs)
+
             # 开始下载
-            downloader_info_list = self.utils.get_downloader_info_list()
+            downloader_info_list = self.utils.get_downloader_info_list(update_item_flag_callback)
 
             self.downloader.start_download(downloader_info_list)
 
@@ -1123,19 +1245,31 @@ class DownloadTaskPanel(wx.Panel):
         Thread(target = worker).start()
 
     def show_media_info(self):
+        def _dash():
+            match MergeType(self.task_info.video_merge_type):
+                case MergeType.Video_And_Audio | MergeType.Only_Video:
+                    self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
+                    self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
+
+                case MergeType.Only_Audio:
+                    self.video_quality_lab.SetLabel("音频")
+                    self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
+
+        def _flv():
+            self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
+            self.video_codec_lab.SetLabel("FLV")
+
         if self.task_info.progress == 100:
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
         else:
             self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
 
-        match MergeType(self.task_info.video_merge_type):
-            case MergeType.Video_And_Audio | MergeType.Only_Video:
-                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.utils.task_info.video_quality_id))
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.utils.task_info.video_codec_id))
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                _dash()
 
-            case MergeType.Only_Audio:
-                self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.utils.task_info.audio_quality_id))
+            case StreamType.Flv:
+                _flv()
 
     def update_download_status(self, status: int):
         def update_btn_icon():

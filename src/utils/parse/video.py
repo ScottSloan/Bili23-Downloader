@@ -8,7 +8,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode
+from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 
@@ -20,7 +20,14 @@ class VideoInfo:
 
     title: str = ""
     cover: str = ""
+    views: str = ""
+    danmakus: str = ""
+    pubtime: str = ""
+    desc: str = ""
+    tag_list: list = []
     type: int = 0
+
+    stream_type: int = 0
 
     pages_list: list = []
     video_quality_id_list: list = []
@@ -30,9 +37,10 @@ class VideoInfo:
 
     @staticmethod
     def clear_video_info():
-        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = ""
-        VideoInfo.cid = VideoInfo.type = 0
+        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = VideoInfo.desc = VideoInfo.views = VideoInfo.danmakus = VideoInfo.pubtime = ""
+        VideoInfo.cid = VideoInfo.type = VideoInfo.stream_type = 0
 
+        VideoInfo.tag_list.clear()
         VideoInfo.pages_list.clear()
         VideoInfo.video_quality_id_list.clear()
         VideoInfo.video_quality_desc_list.clear()
@@ -92,6 +100,11 @@ class VideoParser:
         VideoInfo.aid = info["aid"]
         VideoInfo.pages_list = info["pages"]
 
+        VideoInfo.desc = info["desc"]
+        VideoInfo.views = FormatTool.format_data_count(info["stat"]["view"])
+        VideoInfo.danmakus = FormatTool.format_data_count(info["stat"]["danmaku"])
+        VideoInfo.pubtime = UniversalTool.get_time_str_from_timestamp(info["pubdate"])
+
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
             if hasattr(self, "part_num"):
@@ -101,7 +114,17 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
+        self.get_video_tag()
+
         self.parse_episodes()
+
+    def get_video_tag(self):
+        url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
+        
+        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        resp = json.loads(req.text)
+
+        VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
 
     def get_video_available_media_info(self):
         # 获取视频清晰度
@@ -122,10 +145,17 @@ class VideoParser:
 
         info = resp["data"]
 
+        if "dash" in info:
+            AudioInfo.get_audio_quality_list(info["dash"])
+
+            VideoInfo.stream_type = StreamType.Dash.value
+        else:
+            AudioInfo.get_audio_quality_list({})
+
+            VideoInfo.stream_type = StreamType.Flv.value
+
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]
-
-        AudioInfo.get_audio_quality_list(info["dash"])
 
         ExtraInfo.get_danmaku = Config.Extra.get_danmaku
         ExtraInfo.danmaku_type = Config.Extra.danmaku_type
@@ -156,6 +186,9 @@ class VideoParser:
         
         try:
             return worker()
+        
+        except GlobalException as e:
+            raise e
 
         except Exception as e:
             raise GlobalException(e, callback = self.callback.error_callback) from e

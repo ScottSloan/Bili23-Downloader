@@ -1,6 +1,6 @@
 import wx
 import os
-import time
+import wx.dataview
 import wx.py
 import requests
 
@@ -19,7 +19,7 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode, VideoQualityID
 from utils.common.data_type import ParseCallback
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
@@ -33,6 +33,7 @@ from gui.dialog.converter import ConverterWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.option import OptionDialog
 from gui.dialog.error import ErrorInfoDialog
+from gui.dialog.detail import DetailDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -111,6 +112,10 @@ class MainWindow(Frame):
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         self.type_lab = wx.StaticText(self.panel, -1, "")
+        self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.detail_icon.SetToolTip("查看详细信息")
+        self.detail_icon.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
@@ -122,6 +127,7 @@ class MainWindow(Frame):
         self.download_option_btn.SetToolTip("下载选项")
 
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.detail_icon, 0, wx.ALIGN_CENTER)
         video_info_hbox.AddStretchSpacer()
         video_info_hbox.Add(self.video_quality_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.video_quality_choice, 0, wx.RIGHT | wx.ALIGN_CENTER, 10)
@@ -222,6 +228,8 @@ class MainWindow(Frame):
         self.face.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
 
+        self.detail_icon.Bind(wx.EVT_LEFT_DOWN, self.onVideoDetailEVT)
+
         self.Bind(wx.EVT_MENU, self.onLoginEVT, id = self.ID_LOGIN)
         self.Bind(wx.EVT_MENU, self.onDebugEVT, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onSettingEVT, id = self.ID_SETTINGS)
@@ -237,6 +245,12 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_FULL_NAME)
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+        self.treelist.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onEpisodeRightClickEVT)
+
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_TITLE)
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_CHECK)
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COLLAPSE)
 
     def init_utils(self):
         def worker():
@@ -311,6 +325,10 @@ class MainWindow(Frame):
         self.ID_EPISODE_ALL_SECTIONS = wx.NewIdRef()
         self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
 
+        self.ID_EPISODE_LIST_COPY_TITLE = wx.NewIdRef()
+        self.ID_EPISODE_LIST_CHECK = wx.NewIdRef()
+        self.ID_EPISODE_LIST_COLLAPSE = wx.NewIdRef()
+
     def onCloseEVT(self, event):
         if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
@@ -349,6 +367,8 @@ class MainWindow(Frame):
         self.episode_option_btn.Enable(False)
         self.download_option_btn.Enable(False)
 
+        self.detail_icon.Hide()
+
         # 开启解析线程
         self.onParseRedirectCallback(url)
 
@@ -372,7 +392,7 @@ class MainWindow(Frame):
             self.show_episode_list()
 
         def worker():
-            match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|blackboard|festival", url):
+            match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
                 case "cheese":
                     # 课程，都使用 ep, season_id，与番组相同，需要匹配 cheese 特征字
                     self.current_parse_type = ParseType.Cheese
@@ -405,7 +425,7 @@ class MainWindow(Frame):
 
                     wx.CallAfter(self.setLiveQualityList)
 
-                case "b23.tv":
+                case "b23.tv" | "bili2233.cn":
                     # 短链接
                     return_code = self.b23_parser.parse_url(url)
 
@@ -437,8 +457,6 @@ class MainWindow(Frame):
                 self.onOpenDownloadMgrEVT(0)
 
         def worker():
-            time.sleep(0.1)
-
             wx.CallAfter(self.download_window.add_download_task_panel, self.treelist.download_task_info_list, add_download_task_callback, True)
 
         def _get_live_stram():
@@ -472,7 +490,7 @@ class MainWindow(Frame):
         self.treelist.get_all_checked_item(video_quality_id)
 
         if not len(self.treelist.download_task_info_list):
-            self.infobar.ShowMessage("下载失败：请选择要下载的视频", flags = wx.ICON_ERROR)
+            wx.MessageDialog(self, "下载失败\n\n请选择要下载的视频", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         # 显示加载窗口
@@ -514,7 +532,7 @@ class MainWindow(Frame):
         video_quality_desc_list.insert(0, "自动")
         self.video_quality_choice.Set(video_quality_desc_list)
 
-        if Config.Download.video_quality_id == 200:
+        if Config.Download.video_quality_id == VideoQualityID._Auto.value:
             index = 0
 
         else:
@@ -538,8 +556,6 @@ class MainWindow(Frame):
     def onLoginEVT(self, event):
         def callback():
             self.init_user_info()
-        
-            self.infobar.ShowMessage("提示：登录成功", flags = wx.ICON_INFORMATION)
 
             self.init_menubar()
 
@@ -563,8 +579,6 @@ class MainWindow(Frame):
             self.uname_lab.SetLabel("登录")
 
             self.userinfo_hbox.Layout()
-
-            self.infobar.ShowMessage("提示：您已注销登录", flags = wx.ICON_INFORMATION)
 
     def onRefreshEVT(self, event):
         login = QRLogin(requests.Session())
@@ -649,7 +663,14 @@ class MainWindow(Frame):
             self.video_quality_choice.Enable(enable)
             self.video_quality_lab.Enable(enable)
         
-        dlg = OptionDialog(self, callback)
+        match self.current_parse_type:
+            case ParseType.Video:
+                stream_type = VideoInfo.stream_type
+
+            case ParseType.Bangumi:
+                stream_type = BangumiInfo.stream_type
+
+        dlg = OptionDialog(self, stream_type, callback)
         dlg.ShowModal()
 
     def onEpisodeOptionMenuEVT(self, event):
@@ -700,6 +721,52 @@ class MainWindow(Frame):
 
         wx.CallAfter(worker)
 
+    def onEpisodeRightClickEVT(self, event):
+        def _get_menu():
+            context_menu = wx.Menu()
+
+            copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题(&C)")
+            check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择(&U)" if self.treelist.is_current_item_checked() else "选择(&S)")
+            collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开(&E)" if self.treelist.is_current_item_collapsed() else "折叠(&O)")
+            
+            if self.treelist.is_current_item_node():
+                copy_title_menuitem.Enable(False)
+            else:
+                collapse_menuitem.Enable(False)
+
+            context_menu.Append(copy_title_menuitem)
+            context_menu.AppendSeparator()
+            context_menu.Append(check_menuitem)
+            context_menu.Append(collapse_menuitem)
+
+            return context_menu
+        
+        if self.treelist.GetSelection().IsOk():
+            self.treelist.PopupMenu(_get_menu())
+
+    def onEpisodeContextMenuEVT(self, event):
+        def _copy_title():
+            text = self.treelist.GetItemText(self.treelist.GetSelection(), 1)
+
+            wx.TheClipboard.SetData(wx.TextDataObject(text))
+
+        match event.GetId():
+            case self.ID_EPISODE_LIST_COPY_TITLE:
+                _copy_title()
+
+            case self.ID_EPISODE_LIST_CHECK:
+                self.treelist.check_current_item()
+
+            case self.ID_EPISODE_LIST_COLLAPSE:
+                self.treelist.collapse_current_item()
+
+    def onVideoDetailEVT(self, event):
+        dialog = DetailDialog(self)
+
+        dialog.set_page(self.current_parse_type)
+
+        dialog.ShowModal()
+
     def update_video_count_label(self, checked: int = 0):
         if checked:
             _total = f"(共 {self.treelist._index} 个，已选择 {checked} 个)"
@@ -720,6 +787,9 @@ class MainWindow(Frame):
                 _type = "课程"
         
         self.type_lab.SetLabel(f"{_type} {_total}")
+        self.detail_icon.Show(True)
+
+        self.panel.Layout()
 
     def show_episode_list(self):
         self.treelist.set_list()

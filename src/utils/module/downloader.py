@@ -6,6 +6,7 @@ from typing import List
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, DownloadFileTool
+
 from utils.common.thread import Thread, ThreadPool
 from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, ThreadInfo, DownloaderInfo, RangeDownloadInfo
 from utils.common.map import cdn_map
@@ -30,23 +31,27 @@ class Downloader:
 
         # 初始化重试计数器
         self.retry_count = 0
+        self.error_retry_count = 0
         self.thread_alive_count = 0
 
+        self.current_total_size = 0
+
         self._e = None
+        self._temp_prefer_cdn = None
+        self._downloader_info_list = []
+        self.thread_info = {}
 
         # 判断是否为断点续传
         if not self.task_info.completed_size:
             self.completed_size = 0
-
-            self.thread_info = {}
+            self.current_completed_size = 0
         else:
             self.completed_size = self.task_info.completed_size
-
-            self.thread_info = self.file_tool.get_thread_info()
+            self.current_completed_size = self.task_info.current_completed_size
 
     def start_download(self, downloader_info_list: List[dict]):
         def add_url(download_info: DownloaderInfo):
-            def get_range_list(file_size: int, thread_count: int):
+            def _get_range_list(file_size: int, thread_count: int):
                 # 计算分片下载区间
                 piece_size = int(file_size / thread_count)
                 _range_list = []
@@ -59,7 +64,7 @@ class Downloader:
 
                 return _range_list
 
-            def get_range_list_from_file(type: str):
+            def _get_range_list_from_file(type: str):
                 # 从文件读取分片下载区间
                 _range_list = []
 
@@ -86,21 +91,22 @@ class Downloader:
                     return 1
                 else:
                     return Config.Download.max_thread_count
+            
+            def get_range_list_ex(_file_size: int):
+                if self.current_completed_size:
+                    self.thread_info = self.file_tool.get_thread_info()
+
+                    return _get_range_list_from_file(download_info.type)
+                else:
+                    self.thread_info = {}
+
+                    return _get_range_list(_file_size, _get_thread_count(_file_size))
 
             file_path = os.path.join(Config.Download.path, download_info.file_name)
 
-            try:
-                download_url, file_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
+            download_url, self.current_total_size = self.get_file_size(download_info.url_list, self.task_info.referer_url, file_path)
 
-            except Exception as e:
-                self._e = e
-                self.onError()
-
-            if self.completed_size:
-                range_list = get_range_list_from_file(download_info.type)
-            else:
-                range_list = get_range_list(file_size, _get_thread_count(file_size))
-                self.task_info.total_size += file_size
+            range_list = get_range_list_ex(self.current_total_size)
 
             self.thread_alive_count += len(range_list)
 
@@ -120,6 +126,14 @@ class Downloader:
 
                     self.ThreadPool.submit(self.range_download, args = (_range_info, ))
 
+        def get_total_size():
+            # 获取总大小
+            if not self.task_info.total_size:
+                for entry in self._downloader_info_list:
+                    (url, size) = self.get_file_size(entry["url_list"], self.task_info.referer_url)
+
+                    self.task_info.total_size += size
+
         def reset():
             # 创建监听线程
             self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
@@ -137,22 +151,34 @@ class Downloader:
 
             self.retry_count = 0
 
-        reset()
+        def worker():
+            reset()
 
-        # 添加下载链接
-        for entry in downloader_info_list:
+            self._downloader_info_list = downloader_info_list
+
+            get_total_size()
+
+            entry = self._downloader_info_list[0]
+
             _info = DownloaderInfo()
             _info.load_from_dict(entry)
 
             add_url(_info)
 
-        # 开启线程池和监听线程
-        self.ThreadPool.start()
-        self.listen_thread.start()
+            # 开启线程池和监听线程
+            self.ThreadPool.start()
+            self.listen_thread.start()
 
-        if not self.completed_size:
-            # 回调 onStart，UI 更新下载信息
-            self.callback.onStartCallback(self.task_info.total_size)
+            if not self.completed_size:
+                # 回调 onStart，UI 更新下载信息
+                self.callback.onStartCallback()
+        
+        try:
+            worker()
+
+        except Exception as e:
+            self._e = e
+            self.onError()
 
     def range_download(self, info: RangeDownloadInfo):
         def limit_speed():
@@ -170,7 +196,7 @@ class Downloader:
                     return time.time()
 
         def check_flag():
-            if self.completed_size >= self.task_info.total_size:
+            if self.current_completed_size >= self.current_total_size:
                 # 下载完成，置标志位为 True
                 self.range_thread_stop_flag = True
                 self.finish_flag = True
@@ -194,6 +220,8 @@ class Downloader:
                         f.flush()
 
                         self.completed_size += len(chunk)
+                        self.current_completed_size += len(chunk)
+
                         self.thread_info[info.type][info.index]["range"][0] += len(chunk)
 
                         check_flag()
@@ -210,7 +238,7 @@ class Downloader:
         
         self.thread_alive_count -= 1
 
-    def onListen(self):
+    def onListen(self): 
         def get_progress_info():
             # 记录下载信息
             return {
@@ -223,21 +251,25 @@ class Downloader:
             if info["speed"] <= 0:
                 self.retry_count += 1
 
-            if self.retry_count == 5:
-                self.onStop()
-
-                # self.restart()
-
+            if self.retry_count == Config.Advanced.download_suspend_retry_interval:
+                self.onError()
+                
         def update_download_file_info():
+            self.task_info.progress = info["progress"]
+            self.task_info.completed_size = self.completed_size
+            self.task_info.current_completed_size = self.current_completed_size
+
             kwargs = {
                 "progress": info["progress"],
-                "completed_size": self.completed_size
+                "completed_size": self.completed_size,
+                "current_completed_size": self.current_completed_size
             }
 
             self.file_tool.update_task_info_kwargs(**kwargs)
             self.file_tool.update_thread_info(self.thread_info)
 
         def update():
+            # 更新下载进度到文件，并回调UI更新进度
             update_download_file_info()
 
             self.callback.onDownloadCallback(info)
@@ -252,7 +284,7 @@ class Downloader:
 
             retry()
 
-             # 检测停止标志位
+            # 检测停止标志位
             if self.listen_stop_flag:
                 update_download_file_info()
                 break
@@ -278,7 +310,7 @@ class Downloader:
 
     def onResume(self):
         # 恢复下载
-        self.start_download()
+        self.start_download(self._downloader_info_list)
 
         # 启动监听线程
         self.listen_thread = Thread(target = self.onListen, name = "ListenThread")
@@ -293,14 +325,45 @@ class Downloader:
         self.session.close()
 
     def onFinished(self):
-        # 下载完成，回调 onMerge 进行合成
-        self.listen_stop_flag = True
+        def update_download_file_info():
+            kwargs = {
+                "item_flag": self.task_info.item_flag
+            }
 
-        self.callback.onMergeCallback()
+            self.file_tool.update_task_info_kwargs(**kwargs)
+
+        def update_item_flag():
+            if self._downloader_info_list:
+                entry = self._downloader_info_list[0]
+                self.task_info.item_flag.remove(entry["type"])
+                self._downloader_info_list.remove(entry)
+
+        update_item_flag()
+
+        update_download_file_info()
+
+        if self.task_info.item_flag:
+            # 如果还存在下载项目，则继续下载
+            self.current_completed_size = 0
+            
+            self.start_download(self._downloader_info_list)
+        
+        if self.completed_size >= self.task_info.total_size:
+            # 下载完成，回调 onMerge 进行合成
+            self.listen_stop_flag = True
+
+            self.callback.onMergeCallback()
     
     def onError(self):
         # 关闭线程池和监听线程，停止下载
         self.onStop()
+
+        if self.error_retry_count <= Config.Advanced.download_error_retry_count:
+            self.error_retry_count += 1
+            
+            self.onResume()
+
+            return
 
         try:
             raise self._e
@@ -308,39 +371,51 @@ class Downloader:
         except Exception as e:
             raise GlobalException(e, callback = self.callback.onErrorCallback) from e
     
-    def get_file_size(self, url_list: list, referer_url: str, path: str):
-        def request_head_gen():
-            for url in url_list:
-                req = self.session.head(url, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-                yield url, req.headers
+    def get_file_size(self, url_list: list, referer_url: str, path: str = None):
+        def truncate_file():
+            if path:
+                # 判断本地文件是否存在
+                if not os.path.exists(path):
+                    with open(path, "wb") as f:
+                        # 使用 seek 方法，移动文件指针，快速有效，完美解决大文件创建耗时的问题
+                        f.seek(total_size - 1)
+                        f.write(b"\0")
         
-        total_size = None
+        def get_cdn_list():
+            if Config.Advanced.enable_custom_cdn:
+                match CDNMode(Config.Advanced.custom_cdn_mode):
+                    case CDNMode.Auto:
+                        _temp_cdn_list = [entry["cdn"] for entry in cdn_map.values()]
 
-        for url, headers in request_head_gen():
-            # 检测 headers 是否包含 Content-Length，不包含的链接属于无效链接
-            if "Content-Length" in headers:
-                total_size = int(headers["Content-Length"])
+                        if self._temp_prefer_cdn:
+                            _temp_cdn_list.insert(0, self._temp_prefer_cdn) 
 
-                if total_size:
-                    break
+                        return _temp_cdn_list
+                    
+                    case CDNMode.Custom:
+                        return [Config.Advanced.custom_cdn]
+            else:
+                return [None]
 
-        if not total_size:
-            if Config.Download.enable_custom_cdn and Config.Download.custom_cdn_mode == CDNMode.Auto.value:
-                return self.get_file_size(next(self.switch_cdn(url_list)), referer_url, path)
+        def switch_cdn(url: str, cdn: str):
+            if cdn:
+                return re.sub(r'(?<=https://)[^/]+', cdn, url)
+            
+        def request_head(url: str, cdn: str):
+            url_with_cdn = switch_cdn(url, cdn)
+            
+            return url_with_cdn, self.session.head(url_with_cdn, headers = RequestTool.get_headers(referer_url), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+    
+        for url in url_list:
+            for cdn in get_cdn_list():
+                url_with_cdn, req = request_head(url, cdn)
 
-        # 判断本地文件是否存在
-        if not os.path.exists(path):
-            with open(path, "wb") as f:
-                # 使用 seek 方法，移动文件指针，快速有效，完美解决大文件创建耗时的问题
-                f.seek(total_size - 1)
-                f.write(b"\0")
-        
-        # 返回可以正常下载的链接
-        return (url, total_size)
+                if "Content-Length" in req.headers:
+                    total_size = int(req.headers["Content-Length"])
+                    
+                    if total_size:
+                        self._temp_prefer_cdn = cdn
 
-    def switch_cdn(self, url_list: list):
-        def _replace(url: str, cdn: str):
-            return re.sub(r'(?<=https://)[^/]+', cdn, url)
+                        truncate_file()
 
-        for cdn in cdn_map.values():
-            yield [_replace(url, cdn) for url in url_list]
+                        return url_with_cdn, total_size

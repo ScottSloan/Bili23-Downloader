@@ -107,14 +107,101 @@ download_status_map = {
 }
 
 cdn_map = {
-    0: "upos-sz-mirror08c.bilivideo.com",
-    1: "upos-sz-mirrorcoso1.bilivideo.com",
-    2: "upos-sz-mirrorhw.bilivideo.com",
-    3: "upos-sz-mirrorcos.bilivideo.com",
-    4: "upos-sz-mirrorcosb.bilivideo.com",
-    5: "upos-sz-mirrorbos.bilivideo.com",
-    6: "upos-sz-mirrorhwb.bilivideo.com",
-    7: "upos-sz-mirrorali.bilivideo.com"
+    0: {
+        "cdn": "upos-sz-mirror08c.bilivideo.com",
+        "provider": "华为云",
+        "order": 1
+    },
+    1: {
+        "cdn": "upos-sz-mirrorhw.bilivideo.com",
+        "provider": "华为云",
+        "order": 2
+    },
+    2: {
+        "cdn": "upos-sz-mirrorhwb.bilivideo.com",
+        "provider": "华为云",
+        "order": 7
+    },
+    3: {
+        "cdn": "upos-sz-mirror08h.bilivideo.com",
+        "provider": "华为云",
+        "order": 8
+    },
+    4: {
+        "cdn": "upos-sz-mirrorhwdisp.bilivideo.com",
+        "provider": "华为云",
+        "order": 9
+    },
+    5: {
+        "cdn": "upos-sz-mirror08ct.bilivideo.com",
+        "provider": "华为云",
+        "order": 10
+    },
+    6: {
+        "cdn": "upos-sz-mirrorhwo1.bilivideo.com",
+        "provider": "华为云",
+        "order": 11
+    },
+    7: {
+        "cdn": "upos-sz-mirrorcoso1.bilivideo.com",
+        "provider": "腾讯云",
+        "order": 3
+    },
+    8: {
+        "cdn": "upos-sz-mirrorcos.bilivideo.com",
+        "provider": "腾讯云",
+        "order": 4
+    },
+    9: {
+        "cdn": "upos-sz-mirrorcosb.bilivideo.com",
+        "provider": "腾讯云",
+        "order": 12
+    },
+    10: {
+        "cdn": "upos-sz-mirrorcosdisp.bilivideo.com",
+        "provider": "腾讯云",
+        "order": 13
+    },
+    11: {
+        "cdn": "upos-sz-mirrorali.bilivideo.com",
+        "provider": "阿里云",
+        "order": 5
+    },
+    12: {
+        "cdn": "upos-sz-mirrorali02.bilivideo.com",
+        "provider": "阿里云",
+        "order": 6
+    },
+    13: {
+        "cdn": "upos-sz-mirroralib.bilivideo.com",
+        "provider": "阿里云",
+        "order": 14
+    },
+    14: {
+        "cdn": "upos-sz-mirroraliov.bilivideo.com",
+        "provider": "阿里云（海外）",
+        "order": 15
+    },
+    15: {
+        "cdn": "upos-sz-mirroralibstar1.bilivideo.com",
+        "provider": "阿里云（海外）",
+        "order": 16
+    },
+    16: {
+        "cdn": "upos-sz-mirrorcosov.bilivideo.com",
+        "provider": "腾讯云（海外）",
+        "order": 17
+    },
+    17: {
+        "cdn": "upos-hz-mirrorakam.akamaized.net",
+        "provider": "Akamai（海外）",
+        "order": 18
+    },
+    18: {
+        "cdn": "upos-sz-mirrorcf1ov.bilivideo.com",
+        "provider": "Cloudflare（海外）",
+        "order": 19
+    },
 }
 
 cheese_status_map = {

@@ -2,7 +2,7 @@ import re
 import json
 import requests
 
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
@@ -20,6 +20,11 @@ class CheeseInfo:
 
     title: str = ""
     subtitle: str = ""
+    views: str = ""
+    release: str = ""
+    expiry: str = ""
+
+    stream_type: str = ""
 
     episodes_list: list = []
     video_quality_id_list: list = []
@@ -29,7 +34,7 @@ class CheeseInfo:
 
     @staticmethod
     def clear_cheese_info():
-        CheeseInfo.url = CheeseInfo.title = CheeseInfo.subtitle = ""
+        CheeseInfo.url = CheeseInfo.title = CheeseInfo.subtitle = CheeseInfo.views = CheeseInfo.release = CheeseInfo.expiry = ""
         CheeseInfo.aid = CheeseInfo.epid = CheeseInfo.cid = CheeseInfo.season_id = 0
 
         CheeseInfo.episodes_list.clear()
@@ -71,6 +76,9 @@ class CheeseParser:
         CheeseInfo.url = info_data["share_url"]
         CheeseInfo.title = info_data["title"]
         CheeseInfo.subtitle = info_data["subtitle"]
+        CheeseInfo.views = info_data["stat"]["play_desc"]
+        CheeseInfo.release = info_data["release_info"]
+        CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
 
         CheeseInfo.episodes_list = info_data["episodes"]
         CheeseInfo.epid = CheeseInfo.episodes_list[0]["id"]
@@ -89,6 +97,7 @@ class CheeseParser:
 
         CheeseInfo.video_quality_id_list = info["accept_quality"]
         CheeseInfo.video_quality_desc_list = info["accept_description"]
+        CheeseInfo.stream_type = StreamType.Dash.value
 
         AudioInfo.get_audio_quality_list(info["dash"])
 
@@ -144,4 +153,3 @@ class CheeseParser:
         AudioInfo.clear_audio_info()
 
         ExtraInfo.clear_extra_info()
-    

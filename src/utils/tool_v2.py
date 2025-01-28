@@ -198,7 +198,8 @@ class DownloadFileTool:
 
         if contents is not None:
             for key, value in kwargs.items():
-                contents["task_info"][key] = value
+                if "task_info" in contents:
+                    contents["task_info"][key] = value
 
             self._write_download_file(contents)
 
@@ -339,6 +340,16 @@ class FormatTool:
             else:
                 return episode["report"]["ep_title"]
 
+    @staticmethod
+    def format_data_count(data: int):
+        if data >= 1e8:
+            return f"{data / 1e8:.1f}亿"
+        
+        elif data >= 1e4:
+            return f"{data / 1e4:.1f}万"
+        
+        else:
+            return str(data)
 class UniversalTool:
     # 通用工具类
     @staticmethod

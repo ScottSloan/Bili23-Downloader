@@ -7,11 +7,12 @@ from requests.auth import HTTPProxyAuth
 from gui.templates import ScrolledPanel
 
 from gui.dialog.ffmpeg import DetectDialog
+from gui.dialog.cdn import ChangeCDNDialog
 
 from utils.config import Config, ConfigUtils
 from utils.tool_v2 import RequestTool, DownloadFileTool, UniversalTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, cdn_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
@@ -37,6 +38,7 @@ class SettingWindow(wx.Dialog):
         self.note = wx.Notebook(self, -1)
 
         self.note.AddPage(DownloadTab(self.note, self.GetParent()), "下载")
+        self.note.AddPage(AdvancedTab(self.note, self.GetParent()), "高级")
         self.note.AddPage(MergeTab(self.note, self.GetParent()), "合成")
         self.note.AddPage(ExtraTab(self.note, self.GetParent()), "附加内容")
         self.note.AddPage(ProxyTab(self.note, self.GetParent()), "代理")
@@ -175,31 +177,6 @@ class DownloadTab(wx.Panel):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.enable_custom_cdn_chk = wx.CheckBox(self.scrolled_panel, -1, "替换音视频流 CDN")
-        self.enable_custom_cdn_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
-        self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.enable_custom_cdn_tip.SetToolTip("说明")
-
-        enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), 10)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) & (~wx.TOP), 10)
-
-        self.custom_cdn_auto_switch_radio = wx.RadioButton(self.scrolled_panel, -1, "自动切换")
-        self.custom_cdn_manual_radio = wx.RadioButton(self.scrolled_panel, -1, "手动设置")
-
-        custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        custom_cdn_mode_hbox.AddSpacer(30)
-        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-
-        self.custom_cdn_lab = wx.StaticText(self.scrolled_panel, -1, "CDN")
-        self.custom_cdn_box = wx.ComboBox(self.scrolled_panel, -1, choices = list(cdn_map.values()))
-
-        custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        custom_cdn_hbox.AddSpacer(30)
-        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        custom_cdn_hbox.Add(self.custom_cdn_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-
         self.add_number_chk = wx.CheckBox(self.scrolled_panel, -1, "批量下载视频时自动添加序号")
         self.delete_history_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后清除本地下载记录")
         self.show_toast_chk = wx.CheckBox(self.scrolled_panel, -1, "允许弹出通知提示")
@@ -217,9 +194,6 @@ class DownloadTab(wx.Panel):
         vbox.Add(dolby_hbox, 0, wx.EXPAND)
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        vbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
-        vbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
-        vbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
         vbox.Add(self.show_toast_chk, 0, wx.ALL, 10)
@@ -243,15 +217,11 @@ class DownloadTab(wx.Panel):
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
-        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onChangeCustomCDNEVT)
-        self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
-        self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
 
         self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
         self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
         self.dolby_tip.Bind(wx.EVT_LEFT_UP, self.onDolbyTipEVT)
-        self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
@@ -269,23 +239,13 @@ class DownloadTab(wx.Panel):
 
         self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
-        self.enable_custom_cdn_chk.SetValue(Config.Download.enable_custom_cdn)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
-        self.custom_cdn_box.SetValue(Config.Download.custom_cdn)
-
-        match CDNMode(Config.Download.custom_cdn_mode):
-            case CDNMode.Auto:
-                self.custom_cdn_auto_switch_radio.SetValue(True)
-
-            case CDNMode.Custom:
-                self.custom_cdn_manual_radio.SetValue(True)
 
         self.onChangeSpeedLimitEVT(0)
-        self.onChangeCustomCDNEVT(0)
 
     def save(self):
         def _update_download_window():
@@ -305,13 +265,6 @@ class DownloadTab(wx.Panel):
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
-        Config.Download.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
-        Config.Download.custom_cdn = self.custom_cdn_box.GetValue()
-
-        if self.custom_cdn_auto_switch_radio.GetValue():
-            Config.Download.custom_cdn_mode = 0
-        else:
-            Config.Download.custom_cdn_mode = 1
 
         kwargs = {
             "path": Config.Download.path,
@@ -326,9 +279,6 @@ class DownloadTab(wx.Panel):
             "add_number": Config.Download.add_number,
             "enable_speed_limit": Config.Download.enable_speed_limit,
             "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
-            "enable_custom_cdn": Config.Download.enable_custom_cdn,
-            "custom_cdn": Config.Download.custom_cdn,
-            "custom_cdn_mode": Config.Download.custom_cdn_mode
         }
 
         utils = ConfigUtils()
@@ -365,20 +315,6 @@ class DownloadTab(wx.Panel):
         self.speed_limit_box.Enable(self.speed_limit_chk.GetValue())
         self.speed_limit_lab.Enable(self.speed_limit_chk.GetValue())
         self.speed_limit_unit_lab.Enable(self.speed_limit_chk.GetValue())
-        
-    def onChangeCustomCDNEVT(self, event):
-        self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
-        self.custom_cdn_manual_radio.Enable(self.enable_custom_cdn_chk.GetValue())
-
-        if self.enable_custom_cdn_chk.GetValue():
-            self.onChangeCustomCDNModeEVT(0)
-        else:
-            self.custom_cdn_lab.Enable(False)
-            self.custom_cdn_box.Enable(False)
-
-    def onChangeCustomCDNModeEVT(self, event):
-        self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
-        self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
 
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
@@ -395,8 +331,180 @@ class DownloadTab(wx.Panel):
     def onDolbyTipEVT(self, event):
         wx.MessageDialog(self, '自动下载杜比选项说明\n\n当上方选择 "自动" 时，若视频支持杜比，则自动下载杜比视界或杜比全景声，否则需要手动选择\n\n开启此项前请先确认设备是否支持杜比', "说明", wx.ICON_INFORMATION).ShowModal()
 
+class AdvancedTab(wx.Panel):
+    def __init__(self, parent, _main_window):
+        self._main_window = _main_window
+
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+        self.init_data()
+
+    def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
+        icon_manager = IconManager(self)
+
+        cdn_box = wx.StaticBox(self, -1, "CDN 设置")
+
+        self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN")
+        self.enable_custom_cdn_tip = wx.StaticBitmap(cdn_box, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.enable_custom_cdn_tip.SetToolTip("说明")
+
+        enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM), 10)
+
+        self.custom_cdn_auto_switch_radio = wx.RadioButton(cdn_box, -1, "自动切换")
+        self.custom_cdn_manual_radio = wx.RadioButton(cdn_box, -1, "手动设置")
+
+        custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        custom_cdn_mode_hbox.AddSpacer(30)
+        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        custom_cdn_mode_hbox.AddSpacer(20)
+        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+
+        self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN")
+        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((240, 24)))
+
+        custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        custom_cdn_hbox.AddSpacer(30)
+        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
+        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN", size = _get_scale_size((90, 28)))
+
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_hbox.AddStretchSpacer()
+        btn_hbox.Add(self.change_cdn_btn, 0, wx.ALL & (~wx.TOP), 10)
+
+        cdn_vbox = wx.BoxSizer(wx.VERTICAL)
+        cdn_vbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
+        cdn_vbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
+        cdn_vbox.Add(custom_cdn_hbox, 1, wx.EXPAND)
+        cdn_vbox.Add(btn_hbox, 0, wx.EXPAND)
+
+        cdn_sbox = wx.StaticBoxSizer(cdn_box)
+        cdn_sbox.Add(cdn_vbox, 1, wx.EXPAND)
+
+        retry_box = wx.StaticBox(self, -1, "下载重试设置")
+
+        download_error_retry_lab = wx.StaticText(self, -1, "下载出错重试次数")
+        self.download_error_retry_box = wx.SpinCtrl(self, -1, min = 1, max = 15)
+
+        download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        download_error_retry_hbox.Add(download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), 10)
+
+        download_suspend_retry_lab = wx.StaticText(self, -1, "下载停滞时自动重启下载间隔")
+        self.download_suspend_retry_box = wx.SpinCtrl(self, -1, min = 2, max = 15)
+        download_suspend_retry_unit_lab = wx.StaticText(self, -1, "秒")
+
+        download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        download_suspend_retry_hbox.Add(download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        download_suspend_retry_hbox.Add(download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
+        retry_vbox = wx.BoxSizer(wx.VERTICAL)
+        retry_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
+        retry_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
+
+        retry_sbox = wx.StaticBoxSizer(retry_box)
+        retry_sbox.Add(retry_vbox, 0, wx.EXPAND)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(retry_sbox, 0, wx.ALL | wx.EXPAND, 10)
+
+        self.SetSizerAndFit(vbox)
+
+    def Bind_EVT(self):
+        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableCustomCDNEVT)
+        self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
+        self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
+
+        self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
+
+        self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
+
+    def init_data(self):
+        self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
+        self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
+
+        self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
+        self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
+
+        match CDNMode(Config.Advanced.custom_cdn_mode):
+            case CDNMode.Auto:
+                self.custom_cdn_auto_switch_radio.SetValue(True)
+
+            case CDNMode.Custom:
+                self.custom_cdn_manual_radio.SetValue(True)
+
+        self.onEnableCustomCDNEVT(0)
+
+    def save(self):
+        Config.Advanced.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
+        Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
+        Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
+        Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
+
+        if self.custom_cdn_auto_switch_radio.GetValue():
+            Config.Advanced.custom_cdn_mode = 0
+        else:
+            Config.Advanced.custom_cdn_mode = 1
+
+        kwargs = {
+            "enable_custom_cdn": Config.Advanced.enable_custom_cdn,
+            "custom_cdn": Config.Advanced.custom_cdn,
+            "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
+            "custom_cdn_list": Config.Advanced.custom_cdn_list,
+            "download_error_retry_count": Config.Advanced.download_error_retry_count,
+            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
+    
+    def onConfirm(self):
+        self.save()
+
+        return True
+
+    def onEnableCustomCDNEVT(self, event):
+        self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
+        self.custom_cdn_manual_radio.Enable(self.enable_custom_cdn_chk.GetValue())
+
+        if self.enable_custom_cdn_chk.GetValue():
+            self.onChangeCustomCDNModeEVT(0)
+        else:
+            self.custom_cdn_lab.Enable(False)
+            self.custom_cdn_box.Enable(False)
+            self.change_cdn_btn.Enable(False)
+
+    def onChangeCustomCDNModeEVT(self, event):
+        self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
+        self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
+        self.change_cdn_btn.Enable(self.custom_cdn_manual_radio.GetValue())
+
     def onCustomCDNTipEVT(self, event):
-        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n由于B站同时使用多家CDN（图便宜大厂小厂混用），当接口返回某些不知名小厂提供的CDN加速链接时，就会导致部分视频下载失败。\n\n现在程序默认开启CDN替换功能，将接口返回的所有下载链接自动替换为华为云、腾讯云或者阿里云大厂的CDN，它们的稳定性明显优于小厂。\n当选择自动切换CDN时，能解决部分视频下载失败的问题，但下载速度可能会偏慢，用户可自行Ping测试这些地址，选择延迟最低的一个。\n\n为保证良好的下载体验，不建议用户关闭此选项。", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n推荐用户开启此功能，解决因部分 CDN 不稳定而导致下载速度慢甚至下载失败的问题。\n\n请注意，当使用代理时，请关闭此功能", "说明", wx.ICON_INFORMATION).ShowModal()
+
+    def onChangeCDNEVT(self, event):
+        dlg = ChangeCDNDialog(self)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.custom_cdn_box.SetValue(dlg.get_cdn())
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):
@@ -648,6 +756,7 @@ class ProxyTab(wx.Panel):
         proxy_box = wx.StaticBox(self, -1, "代理设置")
 
         proxy_tip = wx.StaticText(proxy_box, -1, "代理选项")
+        proxy_warning_tip = wx.StaticText(proxy_box, -1, '注意：使用代理时，请在高级选项卡中\n手动关闭"替换音视频流 CDN"选项')
         
         self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, "不使用代理")
         self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, "跟随系统")
@@ -687,6 +796,7 @@ class ProxyTab(wx.Panel):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(proxy_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
+        vbox.Add(proxy_warning_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(proxy_hbox, 0, wx.EXPAND)
         vbox.Add(bag_box)
         vbox.Add(self.test_btn, 0, wx.ALL, 10)
@@ -925,10 +1035,10 @@ class MiscTab(wx.Panel):
 
         self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
+        misc_vbox_ = wx.BoxSizer(wx.VERTICAL)
+        misc_vbox_.Add(self.scrolled_panel, 1, wx.EXPAND)
 
-        self.SetSizer(vbox)
+        self.SetSizer(misc_vbox_)
 
         _layout()
 

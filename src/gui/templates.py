@@ -6,7 +6,6 @@ from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 from utils.common.enums import ParseType, MergeType
@@ -110,6 +109,46 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self._title_longest_width > self.FromDIP(375):
             self.SetColumnWidth(1, self._title_longest_width + 15)
 
+    def is_current_item_checked(self):
+        match self.GetCheckedState(self.GetSelection()):
+            case wx.CHK_CHECKED | wx.CHK_UNDETERMINED:
+                return True
+            
+            case wx.CHK_UNCHECKED:
+                return False
+
+    def is_current_item_collapsed(self):
+        item = self.GetSelection()
+
+        return not self.IsExpanded(item)
+    
+    def is_current_item_node(self):
+        item = self.GetSelection()
+
+        return self.GetItemData(item).type == "node"
+
+    def check_current_item(self):
+        item = self.GetSelection()
+
+        match self.GetCheckedState(item):
+            case wx.CHK_CHECKED | wx.CHK_UNDETERMINED:
+                state = wx.CHK_UNCHECKED
+            
+            case wx.CHK_UNCHECKED:
+                state = wx.CHK_CHECKED
+
+        self.CheckItemRecursively(item, state)
+
+        self.UpdateItemParentStateRecursively(item)
+    
+    def collapse_current_item(self):
+        item = self.GetSelection()
+
+        if self.IsExpanded(item):
+            self.Collapse(item)
+        else:
+            self.Expand(item)
+
     def onCheckItem(self, event):
         item = event.GetItem()
 
@@ -162,14 +201,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if cid:
                         get_item_info(title, cid)
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, stream_type: str, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
         download_info.timestamp = int(round(time.time() * 1000000))
 
         download_info.title = title
-        download_info.title_legal = UniversalTool.get_legal_name(title)
         download_info.cover_url = cover_url
         download_info.referer_url = referer_url
         download_info.bvid = bvid
@@ -185,6 +223,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             download_info.video_merge_type = MergeType.Only_Audio.value
 
         download_info.download_type = download_type
+        download_info.stream_type = stream_type
 
         download_info.get_danmaku = ExtraInfo.get_danmaku
         download_info.danmaku_type = ExtraInfo.danmaku_type
@@ -206,8 +245,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         cid = entry["cid"]
         referer_url = VideoInfo.url
+        stream_type = VideoInfo.stream_type
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, stream_type, cover_url = cover_url, bvid = bvid, cid = cid))
     
     def get_bangumi_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -220,8 +260,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             duration = 0
 
         referer_url = BangumiInfo.url
+        stream_type = BangumiInfo.stream_type
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url, bvid, cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, stream_type, cover_url = cover_url, bvid = bvid, cid = cid))
     
     def get_cheese_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -231,8 +272,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         duration = entry["duration"]
 
         referer_url = CheeseInfo.url
+        stream_type = CheeseInfo.stream_type
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, stream_type, cover_url, cid = cid, aid = aid, ep_id = ep_id))
 
 class ScrolledPanel(_ScrolledPanel):
     def __init__(self, parent, size):
