@@ -145,14 +145,14 @@ class VideoParser:
 
         info = resp["data"]
 
-        if info["format"] == "flv720":
-            AudioInfo.get_audio_quality_list({})
-
-            VideoInfo.stream_type = StreamType.Flv.value
-        else:
+        if "dash" in info:
             AudioInfo.get_audio_quality_list(info["dash"])
 
             VideoInfo.stream_type = StreamType.Dash.value
+        else:
+            AudioInfo.get_audio_quality_list({})
+
+            VideoInfo.stream_type = StreamType.Flv.value
 
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]

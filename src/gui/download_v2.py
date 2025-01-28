@@ -549,30 +549,40 @@ class DownloadUtils:
         check_stream_type()
 
     def get_downloader_info_list(self, callback: Callable):
+        def _dash():
+            if "video" in self.task_info.item_flag:
+                _temp_info.append(self._get_video_downloader_info())
+
+            if "audio" in self.task_info.item_flag:
+                _temp_info.append(self._get_audio_downloader_info())
+        
+        def _flv():
+            for index, entry in enumerate(self._flv_download_url_list):
+                if f"flv_{index + 1}" in self.task_info.item_flag:
+                    _temp_info.append(self._get_flv_downloader_info(index + 1, entry))
+        
+        def check_item_flag():
+            if not self.task_info.item_flag:
+                self.task_info.item_flag = self._get_item_flag()
+
+                callback()
+
         try:
             self.get_video_bangumi_download_url()
 
         except Exception as e:
             raise GlobalException(e, callback = self.callback.onDownloadFailedCallback) from e
         
-        if not self.task_info.item_flag:
-            self.task_info.item_flag = self._get_item_flag()
-
-            callback()
+        check_item_flag()
 
         _temp_info = []
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
-                if "video" in self.task_info.item_flag:
-                    _temp_info.append(self._get_video_downloader_info())
+                _dash()
 
-                if "audio" in self.task_info.item_flag:
-                    _temp_info.append(self._get_audio_downloader_info())
-            
             case StreamType.Flv:
-                for index, entry in enumerate(self._flv_download_url_list):
-                    _temp_info.append(self._get_flv_downloader_info(index + 1, entry))
+                _flv()
 
         return _temp_info
 
