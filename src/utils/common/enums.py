@@ -39,7 +39,8 @@ class DanmakuType(Enum):
 class SubtitleType(Enum):
     SRT = 0               # SRT 格式
     TXT = 1               # TXT 格式
-    JSON = 2              # JSON 格式
+    LRC = 2               # LRC 格式
+    JSON = 3              # JSON 格式
 
 class PlayerMode(Enum):
     Default = 0           # 系统默认

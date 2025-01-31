@@ -109,6 +109,23 @@ class ExtraParser:
 
             _save(_temp, f"{self.title}_{lan}.txt")
         
+        def _to_lrc(subtitle_json: dict, lan: str):
+            def _format_timestamp(_from: float):
+                min = int(_from // 60)
+                sec = _from % 60
+
+                return f"{min:02}:{sec:04.1f}"
+
+            _temp = ""
+
+            for entry in subtitle_json["body"]:
+                timestamp = _format_timestamp(entry["from"])
+                content = entry["content"]
+
+                _temp += f"[{timestamp}]{content}\n"
+
+            _save(_temp, f"{self.title}_{lan}.lrc")
+
         def _to_json(subtitle_json: dict, lan: str):
             _temp = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
 
@@ -145,6 +162,9 @@ class ExtraParser:
 
                 case SubtitleType.TXT:
                     _to_txt(subtitle_json, lan)
+
+                case SubtitleType.LRC:
+                    _to_lrc(subtitle_json, lan)
 
                 case SubtitleType.JSON:
                     _to_json(subtitle_json, lan)

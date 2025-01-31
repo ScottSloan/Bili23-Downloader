@@ -93,7 +93,8 @@ danmaku_format_map = {
 subtitle_format_map = {
     "srt": 0,
     "txt": 1,
-    "json": 2
+    "lrc": 2,
+    "json": 3
 }
 
 download_status_map = {
