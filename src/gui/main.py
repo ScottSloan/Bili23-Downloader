@@ -26,6 +26,7 @@ from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.download_v2 import DownloadManagerWindow
 from gui.settings import SettingWindow
 from gui.login import LoginWindow
+
 from gui.dialog.about import AboutWindow
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.update import UpdateWindow
@@ -34,6 +35,7 @@ from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.option import OptionDialog
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
+from gui.dialog.edit_title import EditTitleDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -111,6 +113,7 @@ class MainWindow(Frame):
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
+        self.processing_icon = wx.ActivityIndicator(self.panel, -1)
         self.type_lab = wx.StaticText(self.panel, -1, "")
         self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = _get_button_scale_size(), style = _get_style())
         self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
@@ -126,6 +129,7 @@ class MainWindow(Frame):
         self.download_option_btn.Enable(False)
         self.download_option_btn.SetToolTip("下载选项")
 
+        video_info_hbox.Add(self.processing_icon, 0, wx.ALL, 10)
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.detail_icon, 0, wx.ALIGN_CENTER)
         video_info_hbox.AddStretchSpacer()
@@ -249,6 +253,8 @@ class MainWindow(Frame):
         self.treelist.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onEpisodeRightClickEVT)
 
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_TITLE)
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_URL)
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_EDIT_TITLE)
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_CHECK)
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COLLAPSE)
 
@@ -262,7 +268,8 @@ class MainWindow(Frame):
                         if Config.Temp.update_json["version_code"] > Config.APP.version_code:
                             self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
 
-                    except Exception:
+                    except Exception as e:
+                        print(e)
                         self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
 
             def _get_wbi_key():
@@ -326,6 +333,8 @@ class MainWindow(Frame):
         self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
 
         self.ID_EPISODE_LIST_COPY_TITLE = wx.NewIdRef()
+        self.ID_EPISODE_LIST_COPY_URL = wx.NewIdRef()
+        self.ID_EPISODE_LIST_EDIT_TITLE = wx.NewIdRef()
         self.ID_EPISODE_LIST_CHECK = wx.NewIdRef()
         self.ID_EPISODE_LIST_COLLAPSE = wx.NewIdRef()
 
@@ -726,8 +735,10 @@ class MainWindow(Frame):
             context_menu = wx.Menu()
 
             copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题(&C)")
-            check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择(&U)" if self.treelist.is_current_item_checked() else "选择(&S)")
-            collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开(&E)" if self.treelist.is_current_item_collapsed() else "折叠(&O)")
+            copy_url_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_URL, "复制链接(&U)")
+            edit_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_EDIT_TITLE, "修改标题(&E)")
+            check_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_CHECK, "取消选择(&N)" if self.treelist.is_current_item_checked() else "选择(&S)")
+            collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开(&X)" if self.treelist.is_current_item_collapsed() else "折叠(&O)")
             
             if self.treelist.is_current_item_node():
                 copy_title_menuitem.Enable(False)
@@ -735,6 +746,9 @@ class MainWindow(Frame):
                 collapse_menuitem.Enable(False)
 
             context_menu.Append(copy_title_menuitem)
+            context_menu.Append(copy_url_menuitem)
+            context_menu.AppendSeparator()
+            context_menu.Append(edit_title_menuitem)
             context_menu.AppendSeparator()
             context_menu.Append(check_menuitem)
             context_menu.Append(collapse_menuitem)
@@ -750,9 +764,26 @@ class MainWindow(Frame):
 
             wx.TheClipboard.SetData(wx.TextDataObject(text))
 
+        def _copy_url():
+            pass
+
+        def _edit_title():
+            text = self.treelist.GetItemText(self.treelist.GetSelection(), 1)
+
+            dialog = EditTitleDialog(self, text)
+
+            if dialog.ShowModal() == wx.ID_YES:
+                pass
+
         match event.GetId():
             case self.ID_EPISODE_LIST_COPY_TITLE:
                 _copy_title()
+
+            case self.ID_EPISODE_LIST_COPY_URL:
+                _copy_url()
+
+            case self.ID_EPISODE_LIST_EDIT_TITLE:
+                _edit_title()
 
             case self.ID_EPISODE_LIST_CHECK:
                 self.treelist.check_current_item()

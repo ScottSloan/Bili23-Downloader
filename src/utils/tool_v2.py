@@ -356,7 +356,7 @@ class UniversalTool:
     def get_update_json():
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 8)
 
         Config.Temp.update_json = json.loads(req.text)
 
