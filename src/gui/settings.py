@@ -397,34 +397,37 @@ class AdvancedTab(wx.Panel):
         cdn_sbox = wx.StaticBoxSizer(cdn_box)
         cdn_sbox.Add(cdn_vbox, 1, wx.EXPAND)
 
-        retry_box = wx.StaticBox(self, -1, "下载重试设置")
+        advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
-        download_error_retry_lab = wx.StaticText(self, -1, "下载出错重试次数")
-        self.download_error_retry_box = wx.SpinCtrl(self, -1, min = 1, max = 15)
+        download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "下载出错重试次数")
+        self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
         download_error_retry_hbox.Add(download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), 10)
 
-        download_suspend_retry_lab = wx.StaticText(self, -1, "下载停滞时自动重启下载间隔")
-        self.download_suspend_retry_box = wx.SpinCtrl(self, -1, min = 2, max = 15)
-        download_suspend_retry_unit_lab = wx.StaticText(self, -1, "秒")
+        download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "下载停滞时自动重启下载间隔")
+        self.download_suspend_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 2, max = 15)
+        download_suspend_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "秒")
 
         download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
         download_suspend_retry_hbox.Add(download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         download_suspend_retry_hbox.Add(download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        retry_vbox = wx.BoxSizer(wx.VERTICAL)
-        retry_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
-        retry_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
+        self.always_use_http_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTP 协议发起请求而非 HTTPS")
 
-        retry_sbox = wx.StaticBoxSizer(retry_box)
-        retry_sbox.Add(retry_vbox, 0, wx.EXPAND)
+        advanced_download_vbox = wx.BoxSizer(wx.VERTICAL)
+        advanced_download_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
+        advanced_download_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
+        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL, 10)
+
+        advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box)
+        advanced_download_sbox.Add(advanced_download_vbox, 0, wx.EXPAND)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        vbox.Add(retry_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(advanced_download_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
         self.SetSizerAndFit(vbox)
 

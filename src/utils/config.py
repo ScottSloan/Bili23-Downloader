@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/02/02"
+        release_date: str = "2025/02/10"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -111,6 +111,7 @@ class Config:
 
         download_error_retry_count: int = 3
         download_suspend_retry_interval: int = 3
+        always_use_http_protocol: bool = True
 
 class ConfigUtils:
     def __init__(self):
