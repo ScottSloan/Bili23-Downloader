@@ -194,6 +194,7 @@ class ConfigUtils:
         Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
+        Config.Advanced.always_use_http_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_http_protocol)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)

@@ -446,6 +446,7 @@ class AdvancedTab(wx.Panel):
 
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
+        self.always_use_http_protocol_chk.SetValue(Config.Advanced.always_use_http_protocol)
 
         match CDNMode(Config.Advanced.custom_cdn_mode):
             case CDNMode.Auto:
@@ -461,6 +462,7 @@ class AdvancedTab(wx.Panel):
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
+        Config.Advanced.always_use_http_protocol = self.always_use_http_protocol_chk.GetValue()
 
         if self.custom_cdn_auto_switch_radio.GetValue():
             Config.Advanced.custom_cdn_mode = 0
@@ -473,7 +475,8 @@ class AdvancedTab(wx.Panel):
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
             "custom_cdn_list": Config.Advanced.custom_cdn_list,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
-            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval
+            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval,
+            "always_use_http_protocol": Config.Advanced.always_use_http_protocol
         }
 
         utils = ConfigUtils()

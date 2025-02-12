@@ -394,23 +394,19 @@ class UniversalTool:
     
     @staticmethod
     def aid_to_bvid(_aid: int):
-        table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
-        map = {}
+        XOR_CODE = 23442827791579
+        MAX_AID = 1 << 51
+        ALPHABET = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf"
+        ENCODE_MAP = 8, 7, 0, 5, 1, 3, 2, 4, 6
 
-        s = [11, 10, 3, 8, 4, 6]
-        xor = 177451812
-        add = 8728348608
+        bvid = [""] * 9
+        tmp = (MAX_AID | _aid) ^ XOR_CODE
 
-        for i in range(58):
-            map[table[i]] = i
+        for i in range(len(ENCODE_MAP)):
+            bvid[ENCODE_MAP[i]] = ALPHABET[tmp % len(ALPHABET)]
+            tmp //= len(ALPHABET)
 
-        _aid = (_aid ^ xor) + add
-        r = list("BV1  4 1 7  ")
-
-        for i in range(6):
-            r[s[i]] = table[_aid // 58 ** i % 58]
-
-        return "".join(r)
+        return "BV1" + "".join(bvid)
 
     @staticmethod
     def remove_files(directory: str, file_name_list: List[str]):
