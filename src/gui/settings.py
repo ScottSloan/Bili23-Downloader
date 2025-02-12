@@ -1016,6 +1016,8 @@ class MiscTab(wx.Panel):
         player_sbox.Add(player_vbox, 1, wx.EXPAND)
 
         misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
+
+        self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
@@ -1027,7 +1029,8 @@ class MiscTab(wx.Panel):
         btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
-        misc_vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
+        misc_vbox.Add(self.show_user_info_chk, 0, wx.ALL, 10)
+        misc_vbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), 10)
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
         misc_vbox.Add(btn_hbox, 0, wx.EXPAND)
 
@@ -1078,6 +1081,7 @@ class MiscTab(wx.Panel):
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.player_path_box.SetValue(Config.Misc.player_path)
+        self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
         self.check_update_chk.SetValue(Config.Misc.auto_check_update)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
 
@@ -1100,6 +1104,7 @@ class MiscTab(wx.Panel):
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.player_path_box.GetValue()
+        Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.auto_check_update = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
@@ -1109,6 +1114,7 @@ class MiscTab(wx.Panel):
             "auto_select": Config.Misc.auto_select,
             "player_preference": Config.Misc.player_preference,
             "player_path": Config.Misc.player_path,
+            "show_user_info": Config.Misc.show_user_info,
             "auto_check_update": Config.Misc.auto_check_update,
             "enable_debug": Config.Misc.enable_debug
         }

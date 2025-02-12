@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/02/10"
+        release_date: str = "2025/02/12"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -51,6 +51,7 @@ class Config:
         auto_select: bool = False
         enable_debug: bool = False
         auto_check_update: bool = True
+        show_user_info: bool = True
 
         player_preference: int = 0
         player_path: str = ""
@@ -223,6 +224,7 @@ class ConfigUtils:
         Config.Misc.auto_select = app_config["misc"].get("auto_select", Config.Misc.auto_select)
         Config.Misc.player_preference = app_config["misc"].get("player_preference", Config.Misc.player_preference)
         Config.Misc.player_path = app_config["misc"].get("player_path", Config.Misc.player_path)
+        Config.Misc.show_user_info = app_config["misc"].get("show_user_info", Config.Misc.show_user_info)
         Config.Misc.auto_check_update = app_config["misc"].get("auto_check_update", Config.Misc.auto_check_update)
         Config.Misc.enable_debug = app_config["misc"].get("enable_debug", Config.Misc.enable_debug)
 

@@ -147,7 +147,7 @@ class MainWindow(Frame):
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
         self.face.Cursor = wx.Cursor(wx.CURSOR_HAND)
-        self.uname_lab = wx.StaticText(self.panel, -1, "登录", style = wx.ST_ELLIPSIZE_END)
+        self.uname_lab = wx.StaticText(self.panel, -1, "未登录", style = wx.ST_ELLIPSIZE_END)
         self.uname_lab.Cursor = wx.Cursor(wx.CURSOR_HAND)
         self.uname_lab_ex = wx.StaticText(self.panel, -1, "", size = self.FromDIP((1, 32)))
 
@@ -208,13 +208,17 @@ class MainWindow(Frame):
         self.SetMenuBar(menu_bar)
 
     def init_user_info(self):
-        # 如果用户已登录，则获取用户信息
-        if Config.User.login:
-            thread = Thread(target = self.show_user_info_thread)
-            thread.daemon = True
+        if Config.Misc.show_user_info:
+            # 如果用户已登录，则获取用户信息
+            if Config.User.login:
+                thread = Thread(target = self.show_user_info_thread)
+                thread.daemon = True
 
-            thread.start()
+                thread.start()
+            else:
+                self.face.Hide()
         else:
+            self.uname_lab.Hide()
             self.face.Hide()
 
         # 调整用户信息 UI
