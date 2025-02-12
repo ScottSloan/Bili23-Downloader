@@ -1,6 +1,5 @@
 import re
 import json
-import requests
 
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 from utils.config import Config
@@ -85,7 +84,7 @@ class BangumiParser:
         if not mid:
             raise Exception(StatusCode.URL.value)
 
-        req = requests.get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -97,7 +96,7 @@ class BangumiParser:
         # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -134,7 +133,7 @@ class BangumiParser:
     def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
 
-        req = requests.get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -169,7 +168,7 @@ class BangumiParser:
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)

@@ -964,7 +964,7 @@ class DownloadTaskPanel(wx.Panel):
             
             scale = self.FromDIP((112, 63))
 
-            self._cover_raw_contents = RequestTool.request(self.task_info.cover_url)
+            self._cover_raw_contents = RequestTool.request(self.task_info.cover_url).content
 
             # 获取封面数据并保存为 wx.Image 对象
             temp_image = wx.Image(io.BytesIO(self._cover_raw_contents))

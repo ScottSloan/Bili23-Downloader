@@ -6,7 +6,7 @@ import requests
 import subprocess
 import requests.auth
 from datetime import datetime
-from typing import Optional, Callable, List
+from typing import Optional, List
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo, ExceptionInfo
@@ -14,18 +14,14 @@ from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
     # 请求工具类
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @staticmethod
-    def request(url: str, error_callback: Optional[Callable] = None):
-        try:
-            req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+    def request(url: str, headers = None):
+        if not headers:
+            headers = RequestTool.get_headers()
 
-            return req.content
-
-        except Exception:
-            if error_callback is not None:
-                error_callback()
+        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
@@ -67,6 +63,13 @@ class RequestTool:
         else:
             return None
     
+    @staticmethod
+    def replace_protocol(url: str):
+        if Config.Advanced.always_use_http_protocol:
+            return url.replace("https://", "http://")
+        
+        return url
+
 class FileDirectoryTool:
     # 文件目录工具类
     @staticmethod
@@ -350,21 +353,20 @@ class FormatTool:
         
         else:
             return str(data)
+
 class UniversalTool:
     # 通用工具类
     @staticmethod
     def get_update_json():
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 8)
-
-        Config.Temp.update_json = json.loads(req.text)
+        Config.Temp.update_json = json.loads(RequestTool.request(url).text)
 
     @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
-            content = RequestTool.request(Config.User.face_url)
+            content = RequestTool.request(Config.User.face_url).content
 
             with open(Config.User.face_path, "wb") as f:
                 f.write(content)

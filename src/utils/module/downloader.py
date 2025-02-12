@@ -203,7 +203,7 @@ class Downloader:
 
         # 分片下载
         try:
-            req = self.session.get(info.url, headers = RequestTool.get_headers(info.referer_url, Config.User.sessdata, info.range), stream = True, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+            req = self.session.get(RequestTool.replace_protocol(info.url), headers = RequestTool.get_headers(info.referer_url, Config.User.sessdata, info.range), stream = True, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
             
             with open(info.file_path, "rb+") as f:
                 start_time = time.time()

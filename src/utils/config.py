@@ -112,7 +112,7 @@ class Config:
 
         download_error_retry_count: int = 3
         download_suspend_retry_interval: int = 3
-        always_use_http_protocol: bool = True
+        always_use_http_protocol: bool = False
 
 class ConfigUtils:
     def __init__(self):
