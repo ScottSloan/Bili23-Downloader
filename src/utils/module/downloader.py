@@ -400,6 +400,8 @@ class Downloader:
         def switch_cdn(url: str, cdn: str):
             if cdn:
                 return re.sub(r'(?<=https://)[^/]+', cdn, url)
+            else:
+                return url
             
         def request_head(url: str, cdn: str):
             url_with_cdn = switch_cdn(url, cdn)

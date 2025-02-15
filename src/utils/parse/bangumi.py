@@ -84,7 +84,7 @@ class BangumiParser:
         if not mid:
             raise Exception(StatusCode.URL.value)
 
-        req = RequestTool.request(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
+        req = RequestTool.request(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)
