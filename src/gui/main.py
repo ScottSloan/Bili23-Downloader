@@ -10,6 +10,7 @@ from utils.parse.activity import ActivityParser
 from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
 from utils.parse.cheese import CheeseInfo, CheeseParser
+from utils.parse.episode import EpisodeInfo
 
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
@@ -19,7 +20,7 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode, VideoQualityID
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode, VideoQualityID, VideoType
 from utils.common.data_type import ParseCallback
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
@@ -765,7 +766,31 @@ class MainWindow(Frame):
             wx.TheClipboard.SetData(wx.TextDataObject(text))
 
         def _copy_url():
-            pass
+            def _type_video():
+                match VideoInfo.type:
+                    case VideoType.Single:
+                        return VideoInfo.url
+
+                    case VideoType.Part:
+                        return f"{VideoInfo.url}?p={episode_info['page']}"
+
+                    case VideoType.Collection:
+                        return f"https://www.bilibili.com/video/{episode_info['bvid']}"
+
+            def _type_bangumi():
+                return f"https://www.bilibili.com/bangumi/play/ep{episode_info['ep_id']}"
+
+            cid = self.treelist.GetItemData(self.treelist.GetSelection()).cid
+            episode_info = EpisodeInfo.cid_dict.get(cid)
+
+            match self.current_parse_type:
+                case ParseType.Video:
+                    url = _type_video()
+
+                case ParseType.Bangumi:
+                    url = _type_bangumi()
+            
+            wx.TheClipboard.SetData(wx.TextDataObject(url))
 
         def _edit_title():
             text = self.treelist.GetItemText(self.treelist.GetSelection(), 1)
