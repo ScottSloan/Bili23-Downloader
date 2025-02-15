@@ -1,6 +1,5 @@
 import re
 import json
-import requests
 
 from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
@@ -66,7 +65,7 @@ class CheeseParser:
     def get_cheese_info(self):
         url = f"https://api.bilibili.com/pugv/view/web/season?{self.url_type}={self.url_type_value}"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -88,7 +87,7 @@ class CheeseParser:
     def get_cheese_available_media_info(self):
         url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.epid}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         self.check_json(resp)

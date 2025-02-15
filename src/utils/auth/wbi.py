@@ -1,5 +1,4 @@
 import time
-import requests
 import urllib.parse
 from hashlib import md5
 from functools import reduce
@@ -17,8 +16,8 @@ mixinKeyEncTab = [
 class WbiUtils:
     @staticmethod
     def getWbiKeys():
-        resp = requests.get('https://api.bilibili.com/x/web-interface/nav', headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com"), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-        json_content = resp.json()
+        req = RequestTool.request("https://api.bilibili.com/x/web-interface/nav", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com"))
+        json_content = req.json()
 
         img_url: str = json_content['data']['wbi_img']['img_url']
         sub_url: str = json_content['data']['wbi_img']['sub_url']

@@ -585,7 +585,7 @@ class MainWindow(Frame):
             login.logout()
 
             self.face.Hide()
-            self.uname_lab.SetLabel("登录")
+            self.uname_lab.SetLabel("未登录")
 
             self.userinfo_hbox.Layout()
 

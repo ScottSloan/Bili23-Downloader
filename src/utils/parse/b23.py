@@ -1,5 +1,3 @@
-import requests
-
 from utils.common.data_type import ParseCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
@@ -10,7 +8,7 @@ class B23Parser:
         self.callback = callback
 
     def get_redirect_url(self, url: str):
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = RequestTool.request(url, headers = RequestTool.get_headers())
     
         return req.url
 
