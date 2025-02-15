@@ -780,6 +780,12 @@ class MainWindow(Frame):
             def _type_bangumi():
                 return f"https://www.bilibili.com/bangumi/play/ep{episode_info['ep_id']}"
 
+            def _type_live():
+                return f"https://live.bilibili.com/{LiveInfo.room_id}"
+
+            def _type_cheese():
+                return f"https://www.bilibili.com/cheese/play/ep{episode_info['id']}"
+
             cid = self.treelist.GetItemData(self.treelist.GetSelection()).cid
             episode_info = EpisodeInfo.cid_dict.get(cid)
 
@@ -789,6 +795,12 @@ class MainWindow(Frame):
 
                 case ParseType.Bangumi:
                     url = _type_bangumi()
+
+                case ParseType.Live:
+                    url = _type_live()
+
+                case ParseType.Cheese:
+                    url = _type_cheese()
             
             wx.TheClipboard.SetData(wx.TextDataObject(url))
 
@@ -817,11 +829,14 @@ class MainWindow(Frame):
                 self.treelist.collapse_current_item()
 
     def onVideoDetailEVT(self, event):
-        dialog = DetailDialog(self)
+        if self.current_parse_type != ParseType.Live:
+            dialog = DetailDialog(self)
 
-        dialog.set_page(self.current_parse_type)
+            dialog.set_page(self.current_parse_type)
 
-        dialog.ShowModal()
+            dialog.ShowModal()
+        else:
+            wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
 
     def updateVideoCountLabel(self, checked: int = 0):
         if checked:
