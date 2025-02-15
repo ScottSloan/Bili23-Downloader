@@ -113,7 +113,8 @@ class MainWindow(Frame):
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.processing_icon = wx.ActivityIndicator(self.panel, -1)
+        self.processing_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.LOADING_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
         self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = _get_button_scale_size(), style = _get_style())
         self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
@@ -129,7 +130,7 @@ class MainWindow(Frame):
         self.download_option_btn.Enable(False)
         self.download_option_btn.SetToolTip("下载选项")
 
-        video_info_hbox.Add(self.processing_icon, 0, wx.ALL, 10)
+        video_info_hbox.Add(self.processing_icon, 0, wx.LEFT, 10)
         video_info_hbox.Add(self.type_lab, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER, 10)
         video_info_hbox.Add(self.detail_icon, 0, wx.ALIGN_CENTER)
         video_info_hbox.AddStretchSpacer()
@@ -211,7 +212,7 @@ class MainWindow(Frame):
         if Config.Misc.show_user_info:
             # 如果用户已登录，则获取用户信息
             if Config.User.login:
-                thread = Thread(target = self.show_user_info_thread)
+                thread = Thread(target = self.showUserInfoThread)
                 thread.daemon = True
 
                 thread.start()
@@ -373,8 +374,7 @@ class MainWindow(Frame):
         url = self.url_box.GetValue()
 
         # 显示加载窗口
-        self.processing_window = ProcessingWindow(self)
-        self.processing_window.Show()
+        self._onLoading(True)
 
         self.download_btn.Enable(False)
         self.episode_option_btn.Enable(False)
@@ -396,13 +396,13 @@ class MainWindow(Frame):
                     self.episode_option_btn.Enable(False)
                     self.download_option_btn.Enable(True)
 
-            self.processing_window.Hide()
+            self._onLoading(False)
 
             self.download_btn.Enable(True)
             self.episode_option_btn.Enable(True)
             self.download_option_btn.Enable(True)
             
-            self.show_episode_list()
+            self.showEpisodeList()
 
         def worker():
             match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
@@ -462,12 +462,8 @@ class MainWindow(Frame):
 
     def onDownloadEVT(self, event):
         def add_download_task_callback():
-            if hasattr(self, "processing_window"):
-                # 关闭加载窗口
-                self.processing_window.Hide()
-
-                # 显示下载窗口
-                self.onOpenDownloadMgrEVT(0)
+            # 显示下载窗口
+            self.onOpenDownloadMgrEVT(0)
 
         def worker():
             wx.CallAfter(self.download_window.add_download_task_panel, self.treelist.download_task_info_list, add_download_task_callback, True)
@@ -603,7 +599,7 @@ class MainWindow(Frame):
         os.remove(Config.User.face_path)
 
         # 刷新用户信息后重新显示
-        Thread(target = self.show_user_info_thread).start()
+        Thread(target = self.showUserInfoThread).start()
 
     def onShowUserMenuEVT(self, event):
         def _get_menu():
@@ -717,11 +713,11 @@ class MainWindow(Frame):
                 self.cheese_parser.parse_episodes()
 
         self.treelist.set_list()
-        self.update_video_count_label()
+        self.updateVideoCountLabel()
     
     def onParseErrorCallback(self):
         def worker():
-            self.processing_window.Hide()
+            self._onLoading(False)
 
             info = GlobalExceptionInfo.info
 
@@ -802,7 +798,7 @@ class MainWindow(Frame):
 
         dialog.ShowModal()
 
-    def update_video_count_label(self, checked: int = 0):
+    def updateVideoCountLabel(self, checked: int = 0):
         if checked:
             _total = f"(共 {self.treelist._index} 个，已选择 {checked} 个)"
         else:
@@ -826,12 +822,12 @@ class MainWindow(Frame):
 
         self.panel.Layout()
 
-    def show_episode_list(self):
+    def showEpisodeList(self):
         self.treelist.set_list()
 
-        self.update_video_count_label()
+        self.updateVideoCountLabel()
 
-    def show_user_info_thread(self):
+    def showUserInfoThread(self):
         def _process(image: wx.Image):
             width, height = image.GetSize()
             diameter = min(width, height)
@@ -886,3 +882,19 @@ class MainWindow(Frame):
 
     def showInfobarMessage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
+    
+    def _onLoading(self, state: bool):
+        self.processing_icon.Show(state)
+
+        self.url_box.Enable(not state)
+        self.get_btn.Enable(not state)
+        self.treelist.Enable(not state)
+
+        if state:
+            tip = "正在解析中..."
+        else:
+            tip = ""
+            
+        self.type_lab.SetLabel(tip)
+
+        self.panel.Layout()
