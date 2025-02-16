@@ -21,7 +21,7 @@ from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode, VideoQualityID, VideoType
-from utils.common.data_type import ParseCallback
+from utils.common.data_type import ParseCallback, TreeListItemInfo
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.download_v2 import DownloadManagerWindow
@@ -464,6 +464,7 @@ class MainWindow(Frame):
     def onDownloadEVT(self, event):
         def add_download_task_callback():
             # 显示下载窗口
+            self.processing_window.Hide()
             self.onOpenDownloadMgrEVT(0)
 
         def worker():
@@ -743,6 +744,8 @@ class MainWindow(Frame):
             
             if self.treelist.is_current_item_node():
                 copy_title_menuitem.Enable(False)
+                copy_url_menuitem.Enable(False)
+                edit_title_menuitem.Enable(False)
             else:
                 collapse_menuitem.Enable(False)
 
@@ -805,12 +808,19 @@ class MainWindow(Frame):
             wx.TheClipboard.SetData(wx.TextDataObject(url))
 
         def _edit_title():
-            text = self.treelist.GetItemText(self.treelist.GetSelection(), 1)
+            item = self.treelist.GetSelection()
+            text = self.treelist.GetItemText(item, 1)
 
             dialog = EditTitleDialog(self, text)
 
-            if dialog.ShowModal() == wx.ID_YES:
-                pass
+            if dialog.ShowModal() == wx.ID_OK:
+                title = dialog.title_box.GetValue()
+                item_info: TreeListItemInfo = self.treelist.GetItemData(item)
+
+                item_info.title = title
+
+                self.treelist.SetItemText(item, 1, title)
+                self.treelist.SetItemData(item, item_info)
 
         match event.GetId():
             case self.ID_EPISODE_LIST_COPY_TITLE:

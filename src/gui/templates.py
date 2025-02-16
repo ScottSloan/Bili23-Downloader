@@ -157,7 +157,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self._main_window.update_video_count_label(self.get_checked_item_count())
+        self._main_window.updateVideoCountLabel(self.get_checked_item_count())
 
     def get_checked_item_count(self):
         _count = 0
