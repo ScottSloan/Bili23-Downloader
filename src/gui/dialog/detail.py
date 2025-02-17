@@ -145,7 +145,7 @@ class BangumiPage(DetailPage):
     
     def init_UI(self):
         def get_cover():
-            contents = RequestTool.request(BangumiInfo.cover).content
+            contents = RequestTool.request_get(BangumiInfo.cover).content
 
             temp_image = wx.Image(io.BytesIO(contents))
 

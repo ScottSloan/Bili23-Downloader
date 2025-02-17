@@ -33,7 +33,7 @@ class ActivityParser:
     def get_initial_state(self, url: str):
         # 活动页链接不会包含 BV 号，ep 号等关键信息，故采用网页解析方式获取视频数据
 
-        req = RequestTool.request(url, headers = RequestTool.get_headers())
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers())
 
         if "window.__initialState" in req.text:
             initial_state_info = re.findall(r"window.__initialState = (.*?);", req.text)

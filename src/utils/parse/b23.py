@@ -8,7 +8,7 @@ class B23Parser:
         self.callback = callback
 
     def get_redirect_url(self, url: str):
-        req = RequestTool.request(url, headers = RequestTool.get_headers())
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers())
     
         return req.url
 

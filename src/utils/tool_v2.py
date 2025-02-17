@@ -17,11 +17,18 @@ class RequestTool:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @staticmethod
-    def request(url: str, headers = None):
+    def request_get(url: str, headers = None):
         if not headers:
             headers = RequestTool.get_headers()
 
         return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+    
+    @staticmethod
+    def request_post(url: str, headers = None, params = None):
+        if not headers:
+            headers = RequestTool.get_headers()
+        
+        return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
@@ -46,8 +53,6 @@ class RequestTool:
             _cookie["bili_ticket"] = Config.Auth.ticket
 
         headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
-
-        print(headers)
 
         return headers
 
@@ -370,13 +375,13 @@ class UniversalTool:
     def get_update_json():
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
-        Config.Temp.update_json = json.loads(RequestTool.request(url).text)
+        Config.Temp.update_json = json.loads(RequestTool.request_get(url).text)
 
     @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
-            content = RequestTool.request(Config.User.face_url).content
+            content = RequestTool.request_get(Config.User.face_url).content
 
             with open(Config.User.face_path, "wb") as f:
                 f.write(content)

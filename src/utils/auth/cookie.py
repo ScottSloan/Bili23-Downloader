@@ -2,7 +2,6 @@ import json
 import hmac
 import time
 import hashlib
-import requests
 
 from utils.tool_v2 import RequestTool
 from utils.config import Config
@@ -14,7 +13,7 @@ class CookieUtils:
     def checkCookieInfo():
         url = "https://passport.bilibili.com/x/passport-login/web/cookie/info"
 
-        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
         resp = json.loads(req.text)
 
         return resp["data"]["refresh"]
@@ -38,7 +37,7 @@ class CookieUtils:
             "csrf": ""
         }
 
-        req = requests.post(url, headers = RequestTool.get_headers(), params = params)
+        req = RequestTool.request_post(url, headers = RequestTool.get_headers(), params = params)
         data = json.loads(req.text)
 
         img_url: str = data['data']['nav']['img']
