@@ -18,7 +18,7 @@ if __name__ == "__main__":
     UniversalTool.msw_set_utf8_encode()
     UniversalTool.msw_set_dpi_awareness()
 
-    CookieUtils.gen_bili_ticket()
+    CookieUtils.init_cookie_params()
 
     app = APP()
 

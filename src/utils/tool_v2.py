@@ -17,11 +17,17 @@ class RequestTool:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @staticmethod
-    def request_get(url: str, headers = None):
+    def request_get(url: str, headers = None, proxies = None, auth = None):
         if not headers:
             headers = RequestTool.get_headers()
 
-        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        if not proxies:
+            proxies = RequestTool.get_proxies()
+
+        if not auth:
+            auth = RequestTool.get_auth()
+
+        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth)
     
     @staticmethod
     def request_post(url: str, headers = None, params = None):
@@ -32,6 +38,14 @@ class RequestTool:
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
+        def cookie():
+            if Config.Auth.buvid3:
+                _cookie["buvid3"] = Config.Auth.buvid3
+                _cookie["b_nut"] = Config.Auth.b_nut
+            
+            if Config.Auth.ticket:
+                _cookie["bili_ticket"] = Config.Auth.ticket
+
         headers = {
             "User-Agent": RequestTool.USER_AGENT,
         }
@@ -48,9 +62,8 @@ class RequestTool:
 
         if range:
             headers["Range"] = f"bytes={range[0]}-{range[1]}"
-        
-        if Config.Auth.ticket:
-            _cookie["bili_ticket"] = Config.Auth.ticket
+
+        cookie()
 
         headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
 

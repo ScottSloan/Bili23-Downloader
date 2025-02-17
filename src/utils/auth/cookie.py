@@ -2,6 +2,7 @@ import json
 import hmac
 import time
 import hashlib
+import requests
 
 from utils.tool_v2 import RequestTool
 from utils.config import Config
@@ -18,7 +19,11 @@ class CookieUtils:
 
         return resp["data"]["refresh"]
     
-    @staticmethod
+    def init_cookie_params():
+        CookieUtils.get_buvid3()
+        
+        CookieUtils.gen_bili_ticket()
+    
     def gen_bili_ticket():
         def hmac_sha256(key: str, message: str):
             key = key.encode("utf-8")
@@ -46,3 +51,13 @@ class CookieUtils:
         Config.Auth.ticket = data["data"]["ticket"]
         Config.Auth.img_key = img_url.rsplit('/', 1)[1].split('.')[0]
         Config.Auth.sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
+    
+    def get_buvid3():
+        url = "https://www.bilibili.com"
+
+        req = RequestTool.request_get(url)
+
+        cookie = requests.utils.dict_from_cookiejar(req.cookies)
+
+        Config.Auth.buvid3 = cookie["buvid3"]
+        Config.Auth.b_nut = cookie["b_nut"]

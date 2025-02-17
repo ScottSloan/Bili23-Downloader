@@ -102,6 +102,9 @@ class Config:
         img_key: str = ""
         sub_key: str = ""
 
+        buvid3: str = ""
+        buvid4: str = ""
+        b_nut: str = ""
         ticket: str = ""
 
     class Advanced:

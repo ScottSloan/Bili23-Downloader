@@ -901,7 +901,7 @@ class ProxyTab(wx.Panel):
                 start_time = time.time()
 
                 url = "https://www.bilibili.com"
-                req = requests.get(url, headers = RequestTool.get_headers(), proxies = proxy, auth = auth, timeout = 5)
+                req = RequestTool.request_get(url, proxies = proxy, auth = _auth)
                 
                 end_time = time.time()
 
@@ -919,12 +919,12 @@ class ProxyTab(wx.Panel):
             proxy = {}
 
         if self.auth_chk.GetValue():
-            auth = HTTPProxyAuth(
+            _auth = HTTPProxyAuth(
                 self.uname_box.GetValue(),
                 self.passwd_box.GetValue()
             )
         else:
-            auth = HTTPProxyAuth(None, None)
+            _auth = HTTPProxyAuth(None, None)
 
         Thread(target = test).start()
 
