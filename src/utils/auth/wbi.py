@@ -4,7 +4,6 @@ from hashlib import md5
 from functools import reduce
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool
 
 mixinKeyEncTab = [
     46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
@@ -14,17 +13,6 @@ mixinKeyEncTab = [
 ]
 
 class WbiUtils:
-    @staticmethod
-    def getWbiKeys():
-        req = RequestTool.request("https://api.bilibili.com/x/web-interface/nav", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com"))
-        json_content = req.json()
-
-        img_url: str = json_content['data']['wbi_img']['img_url']
-        sub_url: str = json_content['data']['wbi_img']['sub_url']
-
-        Config.Auth.img_key = img_url.rsplit('/', 1)[1].split('.')[0]
-        Config.Auth.sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
-
     @staticmethod
     def encWbi(params: dict):
         def getMixinKey(orig: str):

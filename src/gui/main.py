@@ -13,7 +13,6 @@ from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.episode import EpisodeInfo
 
 from utils.config import Config
-from utils.auth.wbi import WbiUtils
 from utils.auth.login import QRLogin
 from utils.tool_v2 import UniversalTool, FFmpegCheckTool
 from utils.common.thread import Thread
@@ -274,18 +273,11 @@ class MainWindow(Frame):
                         if Config.Temp.update_json["version_code"] > Config.APP.version_code:
                             self.showInfobarMessage("检查更新：有新的更新可用", wx.ICON_INFORMATION)
 
-                    except Exception as e:
-                        print(e)
+                    except Exception:
                         self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
-
-            def _get_wbi_key():
-                WbiUtils.getWbiKeys()
 
             # 检查更新
             _check_update()
-
-            # 获取 wbi key
-            _get_wbi_key()
 
         def check_ffmpeg():
             FFmpegCheckTool.check_available()

@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/02/16"
+        release_date: str = "2025/02/17"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -102,7 +102,7 @@ class Config:
         img_key: str = ""
         sub_key: str = ""
 
-        wbi_key: str = ""
+        ticket: str = ""
 
     class Advanced:
         enable_custom_cdn: bool = True

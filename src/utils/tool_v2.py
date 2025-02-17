@@ -27,17 +27,27 @@ class RequestTool:
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
         headers = {
             "User-Agent": RequestTool.USER_AGENT,
-            "Cookie": "CURRENT_FNVAL=4048;"
+        }
+
+        _cookie = {
+            "CURRENT_FNVAL": "4048"
         }
 
         if referer_url:
             headers["Referer"] = referer_url
 
         if sessdata:
-            headers["Cookie"] += f"SESSDATA={sessdata}"
+            _cookie["SESSDATA"] = sessdata
 
         if range:
             headers["Range"] = f"bytes={range[0]}-{range[1]}"
+        
+        if Config.Auth.ticket:
+            _cookie["bili_ticket"] = Config.Auth.ticket
+
+        headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
+
+        print(headers)
 
         return headers
 
