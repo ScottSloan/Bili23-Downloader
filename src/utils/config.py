@@ -106,6 +106,8 @@ class Config:
         buvid4: str = ""
         b_nut: str = ""
         ticket: str = ""
+        uuid: str = ""
+        b_lsid: str = ""
 
     class Advanced:
         enable_custom_cdn: bool = True

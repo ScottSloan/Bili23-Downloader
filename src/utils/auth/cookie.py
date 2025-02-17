@@ -1,6 +1,7 @@
 import json
 import hmac
 import time
+import random
 import hashlib
 import requests
 
@@ -20,10 +21,12 @@ class CookieUtils:
         return resp["data"]["refresh"]
     
     def init_cookie_params():
+        CookieUtils.gen_uuid()
+        CookieUtils.gen_b_lsid()
+
         CookieUtils.get_buvid3()
-        
         CookieUtils.gen_bili_ticket()
-    
+
     def gen_bili_ticket():
         def hmac_sha256(key: str, message: str):
             key = key.encode("utf-8")
@@ -61,3 +64,28 @@ class CookieUtils:
 
         Config.Auth.buvid3 = cookie["buvid3"]
         Config.Auth.b_nut = cookie["b_nut"]
+
+    def get_buvid4():
+        pass
+
+    def gen_uuid():
+        t = CookieUtils.get_timestamp() % 100000
+        mp = list("123456789ABCDEF") + ["10"]
+        pck = [8, 4, 4, 4, 12]
+
+        gen_part = lambda x: "".join([random.choice(mp) for _ in range(x)])  # noqa: E731
+
+        Config.Auth.uuid = "-".join([gen_part(l) for l in pck]) + str(t).ljust(5, "0") + "infoc"  # noqa: E741
+
+    def gen_b_lsid():
+        ret = ""
+
+        for _ in range(8):
+            ret += hex(random.randint(0, 15))[2:].upper()
+
+        ret = f"{ret}_{hex(CookieUtils.get_timestamp())[2:].upper()}"
+
+        Config.Auth.b_lsid = ret
+
+    def get_timestamp():
+        return int(time.time() * 1000)

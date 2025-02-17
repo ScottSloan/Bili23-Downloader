@@ -51,7 +51,9 @@ class RequestTool:
         }
 
         _cookie = {
-            "CURRENT_FNVAL": "4048"
+            "CURRENT_FNVAL": "4048",
+            "b_lsid": Config.Auth.b_lsid,
+            "_uuid": Config.Auth.uuid
         }
 
         if referer_url:
@@ -66,6 +68,8 @@ class RequestTool:
         cookie()
 
         headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
+
+        print(headers)
 
         return headers
 
