@@ -4,6 +4,7 @@ import time
 import random
 import hashlib
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 from utils.tool_v2 import RequestTool
 from utils.config import Config
@@ -21,9 +22,10 @@ class CookieUtils:
         CookieUtils.gen_uuid()
         CookieUtils.gen_b_lsid()
 
-        CookieUtils.get_buvid3()
-        CookieUtils.get_bili_ticket()
-        CookieUtils.get_buvid4()
+        thread_pool = ThreadPoolExecutor(max_workers = 3)
+        thread_pool.submit(CookieUtils.get_buvid3)
+        thread_pool.submit(CookieUtils.get_bili_ticket)
+        thread_pool.submit(CookieUtils.get_buvid4)
 
     def get_bili_ticket():
         def hmac_sha256(key: str, message: str):
