@@ -8,9 +8,6 @@ import requests
 from utils.tool_v2 import RequestTool
 from utils.config import Config
 
-class CookieInfo:
-    ticket = ""
-
 class CookieUtils:
     def checkCookieInfo():
         url = "https://passport.bilibili.com/x/passport-login/web/cookie/info"
@@ -25,9 +22,10 @@ class CookieUtils:
         CookieUtils.gen_b_lsid()
 
         CookieUtils.get_buvid3()
-        CookieUtils.gen_bili_ticket()
+        CookieUtils.get_bili_ticket()
+        CookieUtils.get_buvid4()
 
-    def gen_bili_ticket():
+    def get_bili_ticket():
         def hmac_sha256(key: str, message: str):
             key = key.encode("utf-8")
             message = message.encode("utf-8")
@@ -66,7 +64,12 @@ class CookieUtils:
         Config.Auth.b_nut = cookie["b_nut"]
 
     def get_buvid4():
-        pass
+        url = "https://api.bilibili.com/x/frontend/finger/spi"
+
+        req = RequestTool.request_get(url)
+        data = json.loads(req.text)
+
+        Config.Auth.buvid4 = data["data"]["b_4"]
 
     def gen_uuid():
         t = CookieUtils.get_timestamp() % 100000
