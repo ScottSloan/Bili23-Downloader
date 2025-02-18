@@ -31,51 +31,33 @@ class LoginWindow(wx.Dialog):
 
         _set_dark_mode()
 
-        font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
+        # self.note = wx.Simplebook(self, -1)
 
-        scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
-        scan_lab.SetFont(font)
+        # self.note.AddPage(SMSPage(self.note, self.session), "SMS")
 
-        self.qrcode = wx.StaticBitmap(self, -1, wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
+        # font: wx.Font = self.GetFont()
+        # font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
-        font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
+        # self.sms_login_btn = wx.StaticText(self, -1, "短信登录")
+        # self.sms_login_btn.SetFont(font)
+        # self.sms_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
-        self.lab = wx.StaticText(self, -1, "请使用哔哩哔哩客户端扫码登录")
-        self.lab.SetFont(font)
+        # swicher_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        # swicher_hbox.AddStretchSpacer()
+        # swicher_hbox.Add(self.sms_login_btn, 0, wx.ALL, 10)
+        # swicher_hbox.AddStretchSpacer()
 
-        qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
-        qrcode_vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        qrcode_vbox.Add(self.qrcode, 0, wx.EXPAND)
-        qrcode_vbox.Add(self.lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        # note_vbox = wx.BoxSizer(wx.VERTICAL)
+        # note_vbox.AddStretchSpacer()
+        # note_vbox.Add(swicher_hbox, 0, wx.EXPAND)
+        # note_vbox.AddSpacer(10)
+        # note_vbox.Add(self.note, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        # note_vbox.AddStretchSpacer()
 
-        self.note = wx.Simplebook(self, -1)
-
-        self.note.AddPage(SMSPage(self.note, self.session), "SMS")
-
-        font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
-
-        self.sms_login_btn = wx.StaticText(self, -1, "短信登录")
-        self.sms_login_btn.SetFont(font)
-        self.sms_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-
-        swicher_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        swicher_hbox.AddStretchSpacer()
-        swicher_hbox.Add(self.sms_login_btn, 0, wx.ALL, 10)
-        swicher_hbox.AddStretchSpacer()
-
-        note_vbox = wx.BoxSizer(wx.VERTICAL)
-        note_vbox.AddStretchSpacer()
-        note_vbox.Add(swicher_hbox, 0, wx.EXPAND)
-        note_vbox.AddSpacer(10)
-        note_vbox.Add(self.note, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        note_vbox.AddStretchSpacer()
+        qr_page = QRPage(self, self.session)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(qrcode_vbox, 0, wx.EXPAND)
-        hbox.Add(note_vbox, 0, wx.EXPAND)
+        hbox.Add(qr_page, 0, wx.EXPAND)
 
         self.SetSizerAndFit(hbox)
 
@@ -143,10 +125,42 @@ class LoginWindow(wx.Dialog):
             case 86038:
                 wx.CallAfter(_refresh)
 
+
+class QRPage(wx.Panel):
+    def __init__(self, parent, session: requests.sessions.Session):
+        self.login = QRLogin(session)
+        self.login.init_qrcode()
+
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+    def init_UI(self):
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
+
+        scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
+        scan_lab.SetFont(font)
+
+        self.qrcode = wx.StaticBitmap(self, -1, wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
+
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
+
+        self.lab = wx.StaticText(self, -1, "请使用哔哩哔哩客户端扫码登录")
+        self.lab.SetFont(font)
+
+        qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
+        qrcode_vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        qrcode_vbox.Add(self.qrcode, 0, wx.EXPAND)
+        qrcode_vbox.Add(self.lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+
+        self.SetSizer(qrcode_vbox)
+
 class SMSPage(wx.Panel):
-    def __init__(self, parent, session):
+    def __init__(self, parent, session: requests.sessions.Session):
         self.session = session
-        
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()

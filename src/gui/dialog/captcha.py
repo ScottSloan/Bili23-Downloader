@@ -5,7 +5,7 @@ import json
 import base64
 
 from utils.captcha import CaptchaPage
-from utils.auth.login import CaptchaUtils, CaptchaInfo
+from utils.auth.login import CaptchaUtils, LoginInfo
 from utils.config import Config
 
 class CaptchaWindow(wx.Dialog):
@@ -54,7 +54,7 @@ class CaptchaWindow(wx.Dialog):
         self.captcha.get_geetest_challenge_gt()
 
         # 向前端传递 gt 和 challenge
-        self.webview.RunScriptAsync(f"receiveMessage('{CaptchaInfo.gt}','{CaptchaInfo.challenge}')")
+        self.webview.RunScriptAsync(f"receiveMessage('{LoginInfo.gt}','{LoginInfo.challenge}')")
 
     def onMessage(self, event):
         # 接收前端返回的验证结果
@@ -63,8 +63,8 @@ class CaptchaWindow(wx.Dialog):
         data = json.loads(message)
 
         if data["code"] == 200:
-            CaptchaInfo.validate = data["data"]["validate"]
-            CaptchaInfo.seccode = data["data"]["seccode"]
+            LoginInfo.validate = data["data"]["validate"]
+            LoginInfo.seccode = data["data"]["seccode"]
 
             # 验证通过，关闭窗口
             self.webview.Close()
