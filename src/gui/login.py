@@ -4,7 +4,7 @@ import requests
 from typing import Dict, Callable
 from io import BytesIO
 
-from utils.auth.login import QRLogin, PasswordLogin, SMSLogin
+from utils.auth.login import QRLogin, SMSLogin
 from utils.config import Config, ConfigUtils
 from utils.common.thread import Thread
 
@@ -52,19 +52,10 @@ class LoginWindow(wx.Dialog):
 
         self.note = wx.Simplebook(self, -1)
 
-        password_page = PasswordPage(self.note, self.session)
-        password_page.get_finger_spi()
-
-        self.note.AddPage(password_page, "账号密码登录")
-        self.note.AddPage(SMSPage(self.note, self.session), "手机号登录")
+        self.note.AddPage(SMSPage(self.note, self.session), "SMS")
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
-
-        self.password_login_btn = wx.StaticText(self, -1, "密码登录")
-        self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-        self.password_login_btn.SetFont(font)
-        self.password_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.sms_login_btn = wx.StaticText(self, -1, "短信登录")
         self.sms_login_btn.SetFont(font)
@@ -72,8 +63,6 @@ class LoginWindow(wx.Dialog):
 
         swicher_hbox = wx.BoxSizer(wx.HORIZONTAL)
         swicher_hbox.AddStretchSpacer()
-        swicher_hbox.Add(self.password_login_btn, 0, wx.ALL, 10)
-        swicher_hbox.AddSpacer(20)
         swicher_hbox.Add(self.sms_login_btn, 0, wx.ALL, 10)
         swicher_hbox.AddStretchSpacer()
 
@@ -105,9 +94,6 @@ class LoginWindow(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
-
-        self.password_login_btn.Bind(wx.EVT_LEFT_DOWN, self.onSwitchPasswordLogin)
-        self.sms_login_btn.Bind(wx.EVT_LEFT_DOWN, self.onSwitchSMSLogin)
 
     def onClose(self, event):
         # 关闭窗口，停止轮询并关闭 session
@@ -156,178 +142,33 @@ class LoginWindow(wx.Dialog):
 
             case 86038:
                 wx.CallAfter(_refresh)
-    
-    def onSwitchPasswordLogin(self, event):
-        def _set_dark_mode():
-            if Config.Sys.dark_mode:
-                self.sms_login_btn.SetForegroundColour("white")
-            else:
-                self.sms_login_btn.SetForegroundColour("black")
 
-        _set_dark_mode()
-
-        self.password_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-
-        self.note.ChangeSelection(0)
-
-        self.Refresh()
-
-    def onSwitchSMSLogin(self, event):
-        def _set_dark_mode():
-            if Config.Sys.dark_mode:
-                self.password_login_btn.SetForegroundColour("white")
-            else:
-                self.password_login_btn.SetForegroundColour("black")
-
-        _set_dark_mode()
-                
-        self.sms_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
-
-        self.note.ChangeSelection(1)
-
-        self.Refresh()
-
-class LoginPage(wx.Panel):
-    def __init__(self, parent, session: requests.sessions.Session):
+class SMSPage(wx.Panel):
+    def __init__(self, parent, session):
         self.session = session
-
+        
         wx.Panel.__init__(self, parent, -1)
 
-        self._init_UI()
+        self.init_UI()
 
-        self._init_utils()
+        self.Bind_EVT()
 
-    def _init_UI(self):
+        self.init_utils()
+
+    def init_UI(self):
+        def _get_scale_size(_size: tuple):
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP(_size)
+                
+                case "linux" | "darwin":
+                    return wx.DefaultSize
+
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
         
         _set_dark_mode()
-
-    def _init_utils(self):
-        self.isLogin = False
-
-    def check_login_result(self, result: Dict):
-        if result["code"] != 0:
-            wx.MessageDialog(self, f"登录失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
-
-        else:
-            if result["data"]["status"] != 0:
-                wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
-
-                return
-
-            # 登录成功，关闭窗口
-            self.isLogin = True
-
-            user_info = self.login.get_user_info()
-
-            self.GetParent().GetParent().login_success(user_info)
-
-    def get_finger_spi(self):
-        # 开启后台线程，获取指纹 spi 等信息
-        background_thread = Thread(target = self.login.init_finger)
-        background_thread.start()
-
-    def check_captcha(self):
-        # 显示极验 captcha 窗口
-        captcha_window = CaptchaWindow(self)
-        captcha_window.ShowModal()
-
-class PasswordPage(LoginPage):
-    def __init__(self, parent, session):
-        LoginPage.__init__(self, parent, session)
-
-        self.init_UI()
-
-        self.Bind_EVT()
-
-        self.init_utils()
-
-    def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
-        username_lab = wx.StaticText(self, -1, "账号")
-        self.username_box = wx.TextCtrl(self, -1, size = _get_scale_size((200, 26)))
-
-        username_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        username_hbox.Add(username_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        username_hbox.Add(self.username_box, 1, wx.ALL & (~wx.LEFT), 10)
-
-        password_lab = wx.StaticText(self, -1, "密码")
-        self.password_box = wx.TextCtrl(self, -1, size = _get_scale_size((200, 26)), style = wx.TE_PASSWORD)
-
-        password_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        password_hbox.Add(password_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        password_hbox.Add(self.password_box, 1, wx.ALL & (~wx.LEFT), 10)
-
-        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
-
-        login_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        login_hbox.AddStretchSpacer()
-        login_hbox.Add(self.login_btn, 0, wx.ALL, 10)
-        login_hbox.AddStretchSpacer()
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(username_hbox, 0, wx.EXPAND)
-        vbox.Add(password_hbox, 0, wx.EXPAND)
-        vbox.Add(login_hbox, 0, wx.EXPAND)
-
-        self.SetSizerAndFit(vbox)
-
-    def Bind_EVT(self):
-        self.login_btn.Bind(wx.EVT_BUTTON, self.onLogin)
-
-    def init_utils(self):
-        self.login = PasswordLogin(self.session)
-
-    def onLogin(self, event):
-        if not self.username_box.GetValue():
-            wx.MessageDialog(self, "登录失败\n\n账号不能为空", "警告", wx.ICON_WARNING).ShowModal()
-            return
-        
-        if not self.password_box.GetValue():
-            wx.MessageDialog(self, "登录失败\n\n密码不能为空", "警告", wx.ICON_WARNING).ShowModal()
-            return
-        
-        self.check_captcha()
-
-        # 获取公钥
-        self.login.get_public_key()
-
-        # 将密码进行加盐加密
-        password_encrypt = self.login.encrypt_password(self.password_box.GetValue())
-        username = self.username_box.GetValue()
-
-        # 进行登录操作
-        result = self.login.login(username, password_encrypt)
-
-        self.check_login_result(result)
-
-class SMSPage(LoginPage):
-    def __init__(self, parent, session):
-        LoginPage.__init__(self, parent, session)
-
-        self.init_UI()
-
-        self.Bind_EVT()
-
-        self.init_utils()
-
-    def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
 
         country_lab = wx.StaticText(self, -1, "区号")
         self.country_choice = wx.Choice(self, -1)
@@ -444,3 +285,25 @@ class SMSPage(LoginPage):
         result = self.login.login(tel, code, cid)
 
         self.check_login_result(result)
+
+    def check_captcha(self):
+        # 显示极验 captcha 窗口
+        captcha_window = CaptchaWindow(self)
+        captcha_window.ShowModal()
+
+    def check_login_result(self, result: Dict):
+        if result["code"] != 0:
+            wx.MessageDialog(self, f"登录失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
+
+        else:
+            if result["data"]["status"] != 0:
+                wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
+
+                return
+
+            # 登录成功，关闭窗口
+            self.isLogin = True
+
+            user_info = self.login.get_user_info()
+
+            self.GetParent().GetParent().login_success(user_info)

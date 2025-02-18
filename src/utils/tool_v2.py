@@ -72,8 +72,6 @@ class RequestTool:
 
         headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
 
-        print(headers)
-
         return headers
 
     @staticmethod
