@@ -4,10 +4,11 @@ import time
 import random
 import hashlib
 import requests
-from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from utils.tool_v2 import RequestTool
-from utils.config import Config
+from utils.config import Config, utils
 
 class CookieUtils:
     def checkCookieInfo():
@@ -19,13 +20,41 @@ class CookieUtils:
         return resp["data"]["refresh"]
     
     def init_cookie_params():
-        CookieUtils.gen_uuid()
-        CookieUtils.gen_b_lsid()
+        def _generate():
+            Config.Auth.c_time = int(time.time())
 
-        thread_pool = ThreadPoolExecutor(max_workers = 3)
-        thread_pool.submit(CookieUtils.get_buvid3)
-        thread_pool.submit(CookieUtils.get_bili_ticket)
-        thread_pool.submit(CookieUtils.get_buvid4)
+            CookieUtils.gen_uuid()
+            CookieUtils.gen_b_lsid()
+
+            task = []
+
+            thread_pool = ThreadPoolExecutor(max_workers = 3)
+            task.append(thread_pool.submit(CookieUtils.get_buvid3))
+            task.append(thread_pool.submit(CookieUtils.get_bili_ticket))
+            task.append(thread_pool.submit(CookieUtils.get_buvid4))
+
+            wait(task)
+
+            kwargs = {
+                "c_time": Config.Auth.c_time,
+                "buvid3": Config.Auth.buvid3,
+                "buvid4": Config.Auth.buvid4,
+                "b_nut": Config.Auth.b_nut,
+                "bili_ticket": Config.Auth.bili_ticket,
+                "uuid": Config.Auth.uuid,
+                "b_lsid": Config.Auth.b_lsid
+            }
+
+            utils.update_config_kwargs(Config.User.user_config_path, "cookie_params", **kwargs)
+
+        if Config.Auth.c_time:
+            today = datetime.now().date()
+            timestamp = datetime.fromtimestamp(int(Config.Auth.c_time)).date()
+
+            if not (today == timestamp):
+                _generate()
+        else:
+            _generate()
 
     def get_bili_ticket():
         def hmac_sha256(key: str, message: str):
@@ -51,7 +80,7 @@ class CookieUtils:
         img_url: str = data['data']['nav']['img']
         sub_url: str = data['data']['nav']['sub']
 
-        Config.Auth.ticket = data["data"]["ticket"]
+        Config.Auth.bili_ticket = data["data"]["ticket"]
         Config.Auth.img_key = img_url.rsplit('/', 1)[1].split('.')[0]
         Config.Auth.sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
     

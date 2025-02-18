@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/02/17"
+        release_date: str = "2025/02/18"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -42,7 +42,7 @@ class Config:
         username: str = ""
         face_url: str = ""
         sessdata: str = ""
-        timestamp: int = 0
+        login_time: int = 0
 
     class Misc:
         episode_display_mode: int = 2
@@ -102,10 +102,11 @@ class Config:
         img_key: str = ""
         sub_key: str = ""
 
+        c_time: int = 0
         buvid3: str = ""
         buvid4: str = ""
         b_nut: str = ""
-        ticket: str = ""
+        bili_ticket: str = ""
         uuid: str = ""
         b_lsid: str = ""
 
@@ -238,7 +239,16 @@ class ConfigUtils:
         Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
         Config.User.username = user_config["user"].get("username", Config.User.username)
         Config.User.sessdata = user_config["user"].get("sessdata", Config.User.sessdata)
-        Config.User.timestamp = user_config["user"].get("timestamp", Config.User.timestamp)
+        Config.User.login_time = user_config["user"].get("login_time", Config.User.login_time)
+
+        # auth
+        Config.Auth.c_time = user_config["cookie_params"].get("c_time", Config.Auth.c_time)
+        Config.Auth.buvid3 = user_config["cookie_params"].get("buvid3", Config.Auth.buvid3)
+        Config.Auth.buvid4 = user_config["cookie_params"].get("buvid4", Config.Auth.buvid4)
+        Config.Auth.b_nut = user_config["cookie_params"].get("b_nut", Config.Auth.b_nut)
+        Config.Auth.bili_ticket = user_config["cookie_params"].get("bili_ticket", Config.Auth.bili_ticket)
+        Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)
+        Config.Auth.b_lsid = user_config["cookie_params"].get("b_lsid", Config.Auth.b_lsid)
 
         _after_load()
 

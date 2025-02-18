@@ -43,8 +43,8 @@ class RequestTool:
                 _cookie["buvid3"] = Config.Auth.buvid3
                 _cookie["b_nut"] = Config.Auth.b_nut
             
-            if Config.Auth.ticket:
-                _cookie["bili_ticket"] = Config.Auth.ticket
+            if Config.Auth.bili_ticket:
+                _cookie["bili_ticket"] = Config.Auth.bili_ticket
 
             if Config.Auth.buvid4:
                 _cookie["buvid4"] = Config.Auth.buvid4
@@ -71,6 +71,8 @@ class RequestTool:
         cookie()
 
         headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
+
+        print(headers)
 
         return headers
 

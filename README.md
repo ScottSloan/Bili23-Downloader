@@ -62,7 +62,7 @@ Bili23 Downloader GUI
 程序支持多线程下载（最多 8 线程）、并行下载（上限为 8 个，支持动态调整）、断点续传、下载限速、出错重试等功能。
 
 # 更新日志
-### **Version 1.56 (2025/02/17)**
+### **Version 1.56 (2025/02/18)**
 Version 1.56.0 Beta2 发布
 
 本次更新内容：
@@ -91,6 +91,6 @@ wbi 签名以及部分接口参考 [SocialSisterYi/bilibili-API-collect](https:/
 编译版提供的 FFmpeg 来源于 [gyan.dev](https://www.gyan.dev/ffmpeg/builds/)  
 
 # 联系方式
-- QQ: 2592111619
+若遇到问题，请在 GitHub 中提出 issue。
 - Email: scottsloan@petalmail.com
 - Blog: [沧笙踏歌](https://www.scott-sloan.cn)
