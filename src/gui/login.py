@@ -1,8 +1,8 @@
 import wx
 import time
 import requests
-from typing import Dict, Callable
 from io import BytesIO
+from typing import Dict, Callable
 
 from utils.auth.login import QRLogin, SMSLogin
 from utils.config import Config, ConfigUtils
@@ -54,86 +54,37 @@ class LoginWindow(wx.Dialog):
         # note_vbox.Add(self.note, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         # note_vbox.AddStretchSpacer()
 
-        qr_page = QRPage(self, self.session)
+        self.qr_page = QRPage(self, self.session)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(qr_page, 0, wx.EXPAND)
+        hbox.Add(self.qr_page, 0, wx.EXPAND)
 
         self.SetSizerAndFit(hbox)
 
     def init_utils(self):
-        # 共用一个 session
         self.session = requests.sessions.Session()
-
-        self.login = QRLogin(self.session)
-        self.login.init_qrcode()
-
-        # 开启轮询，获取扫码状态
-        self.timer = wx.Timer(self, -1)
-        self.timer.Start(1000)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
-
     def onClose(self, event):
-        # 关闭窗口，停止轮询并关闭 session
-        self.timer.Stop()
-
         self.session.close()
+
+        self.qr_page.onClose()
 
         event.Skip()
 
-    def onTimer(self, event):
-        def _success(info):
-            Config.User.login = True
-            Config.User.face_url = info["face_url"]
-            Config.User.username = info["username"]
-            Config.User.sessdata = info["sessdata"]
-
-            kwargs = {
-                "login": True,
-                "face_url": info["face_url"],
-                "username": info["username"],
-                "sessdata": info["sessdata"],
-                "timestamp": round(time.time())
-            }
-
-            utils = ConfigUtils()
-            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
-
-            wx.CallAfter(self.callback)
-
-        def _refresh():
-            self.login.init_qrcode()
-
-            self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
-            self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
-
-            self.Layout()
-
-        match self.login.check_scan()["code"]:
-            case 0:
-                info = self.login.get_user_info()
-                _success(info)
-
-            case 86090:
-                self.lab.SetLabel("请在设备侧确认登录")
-                self.Layout()
-
-            case 86038:
-                wx.CallAfter(_refresh)
-
-
 class QRPage(wx.Panel):
     def __init__(self, parent, session: requests.sessions.Session):
-        self.login = QRLogin(session)
-        self.login.init_qrcode()
+        self.session = session
 
         wx.Panel.__init__(self, parent, -1)
 
+        self.init_utils()
+
         self.init_UI()
+
+        self.Bind_EVT()
 
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -156,6 +107,59 @@ class QRPage(wx.Panel):
         qrcode_vbox.Add(self.lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         self.SetSizer(qrcode_vbox)
+    
+    def init_utils(self):
+        self.login = QRLogin(self.session)
+        self.login.init_qrcode()
+
+        self.timer = wx.Timer(self, -1)
+        self.timer.Start(1000)
+
+    def Bind_EVT(self):
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
+
+    def onTimer(self, event):
+        def _success(info):
+            Config.User.login = True
+            Config.User.face_url = info["face_url"]
+            Config.User.username = info["username"]
+            Config.User.sessdata = info["sessdata"]
+
+            kwargs = {
+                "login": True,
+                "face_url": info["face_url"],
+                "username": info["username"],
+                "sessdata": info["sessdata"],
+                "timestamp": round(time.time())
+            }
+
+            utils = ConfigUtils()
+            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+
+            wx.CallAfter(self.GetParent().callback)
+
+        def _refresh():
+            self.login.init_qrcode()
+
+            self.lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
+            self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
+
+            self.Layout()
+
+        match self.login.check_scan()["code"]:
+            case 0:
+                info = self.login.get_user_info()
+                _success(info)
+
+            case 86090:
+                self.lab.SetLabel("请在设备侧确认登录")
+                self.Layout()
+
+            case 86038:
+                wx.CallAfter(_refresh)
+    
+    def onClose(self):
+        self.timer.Stop()
 
 class SMSPage(wx.Panel):
     def __init__(self, parent, session: requests.sessions.Session):
