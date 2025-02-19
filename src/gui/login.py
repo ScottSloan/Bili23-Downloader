@@ -36,7 +36,7 @@ class LoginWindow(wx.Dialog):
         self.sms_page = SMSPage(self, self.session)
 
         line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
-        line.SetForegroundColour(self.qr_page.getLabelColor())
+        line.SetBackgroundColour("red")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(90)
@@ -193,28 +193,6 @@ class QRPage(LoginPage):
         self.Bind_EVT()
 
     def init_UI(self):
-        def _onLoadQRCode():
-            bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
-            dc = wx.MemoryDC(bmp)
-            dc.SetTextForeground(font_color)
-            dc.SetFont(font)
-
-            text = "正在加载"
-            width, height = dc.GetTextExtent(text)
-
-            x = (self.FromDIP(150) - width) // 2
-            y = (self.FromDIP(150) - height) // 2
-
-            dc.Clear()
-            dc.DrawText(text, x, y)
-
-            dc.SetPen(wx.Pen(self.getBorderColor(), width = 1))
-            dc.SetBrush(wx.TRANSPARENT_BRUSH)
-
-            dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
-
-            return bmp
-
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
@@ -224,7 +202,7 @@ class QRPage(LoginPage):
         scan_lab.SetFont(font)
         scan_lab.SetForegroundColour(font_color)
 
-        self.qrcode = wx.StaticBitmap(self, -1, _onLoadQRCode(), size = self.FromDIP((150, 150)))
+        self.qrcode = wx.StaticBitmap(self, -1, self.setQRCodeText("正在加载"), size = self.FromDIP((150, 150)))
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
@@ -275,6 +253,10 @@ class QRPage(LoginPage):
 
             self.Layout()
 
+        def _outdated():
+            self.qrcode.SetBitmap(self.setQRCodeText("二维码已过期，点击刷新"))
+            self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
         match self.login.check_scan()["code"]:
             case 0:
                 info = self.login.get_user_info()
@@ -285,10 +267,35 @@ class QRPage(LoginPage):
                 self.Layout()
 
             case 86038:
-                wx.CallAfter(_refresh)
+                self.timer.Stop()
+                wx.CallAfter(_outdated)
     
     def onClose(self):
         self.timer.Stop()
+
+    def setQRCodeText(self, text: str):
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
+
+        bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
+        dc = wx.MemoryDC(bmp)
+        dc.SetTextForeground(self.getLabelColor())
+        dc.SetFont(font)
+
+        width, height = dc.GetTextExtent(text)
+
+        x = (self.FromDIP(150) - width) // 2
+        y = (self.FromDIP(150) - height) // 2
+
+        dc.Clear()
+        dc.DrawText(text, x, y)
+
+        dc.SetPen(wx.Pen(self.getBorderColor(), width = 1))
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+
+        dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
+
+        return bmp
 
 class SMSPage(LoginPage):
     def __init__(self, parent, session: requests.sessions.Session):
