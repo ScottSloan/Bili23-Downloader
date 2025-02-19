@@ -1,10 +1,11 @@
+import os
 import json
 import time
 import qrcode
 import requests
 from io import BytesIO
 
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config, ConfigUtils
 from utils.common.enums import StatusCode
 
@@ -59,8 +60,7 @@ class LoginBase:
             "biliCSRF": Config.User.bili_jct
         }
 
-        req = self.session.post(url, params = form, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-        print(req.text)
+        self.session.post(url, params = form, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
         Config.User.login = False
         Config.User.face_url = Config.User.username = Config.User.SESSDATA = ""
@@ -78,6 +78,8 @@ class LoginBase:
 
         utils = ConfigUtils()
         utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+
+        UniversalTool.remove_files(os.path.dirname(Config.User.user_config_path), ["face.jpg"])
     
 class QRLogin(LoginBase):
     def __init__(self, session):
