@@ -63,7 +63,10 @@ class RequestTool:
             headers["Referer"] = referer_url
 
         if sessdata:
-            _cookie["SESSDATA"] = sessdata
+            _cookie["SESSDATA"] = Config.User.SESSDATA
+            _cookie["DedeUserID"] = Config.User.DedeUserID
+            _cookie["DedeUserID__ckMd5"] = Config.User.DedeUserID__ckMd5
+            _cookie["bili_jct"] = Config.User.bili_jct
 
         if range:
             headers["Range"] = f"bytes={range[0]}-{range[1]}"
@@ -398,6 +401,7 @@ class UniversalTool:
     @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
+            print("not")
             # 若未缓存头像，则下载头像到本地
             content = RequestTool.request_get(Config.User.face_url).content
 

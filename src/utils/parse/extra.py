@@ -39,7 +39,7 @@ class ExtraParser:
         # 下载 xml 格式弹幕文件
         url = f"https://comment.bilibili.com/{self.cid}.xml"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
         path = os.path.join(Config.Download.path, f"{self.title}.xml")
 
@@ -57,7 +57,7 @@ class ExtraParser:
             # 下载 protobuf 格式弹幕文件
             url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.cid}&segment_index={index}"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+            req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
             path = os.path.join(Config.Download.path, _get_file_name(index, _package_count))
 
@@ -72,7 +72,7 @@ class ExtraParser:
 
     def get_subtitle(self):
         def get_subtitle_json(subtitle_url: str):
-            req = RequestTool.request_get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+            req = RequestTool.request_get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
             return json.loads(req.text)
         
@@ -143,7 +143,7 @@ class ExtraParser:
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         subtitle_list = resp["data"]["subtitle"]["subtitles"]

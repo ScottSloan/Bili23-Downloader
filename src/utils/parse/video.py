@@ -84,7 +84,7 @@ class VideoParser:
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
         
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -120,7 +120,7 @@ class VideoParser:
     def get_video_tag(self):
         url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
         
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
@@ -137,7 +137,7 @@ class VideoParser:
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
         
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)

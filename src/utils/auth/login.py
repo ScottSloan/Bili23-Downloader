@@ -31,7 +31,7 @@ class LoginBase:
 
         # 判断是否刷新用户信息
         if refresh:
-            headers = RequestTool.get_headers(sessdata = Config.User.sessdata)
+            headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA)
 
         else:
             headers = RequestTool.get_headers()
@@ -45,19 +45,34 @@ class LoginBase:
         return {
             "username": resp["uname"],
             "face_url": resp["face"],
-            "sessdata": self.session.cookies["SESSDATA"] if not refresh else Config.User.sessdata,
-            "login_time": round(time.time())
+            "login_time": round(time.time()),
+            "SESSDATA": self.session.cookies["SESSDATA"] if not refresh else Config.User.SESSDATA,
+            "DedeUserID": self.session.cookies["DedeUserID"] if not refresh else Config.User.DedeUserID,
+            "DedeUserID__ckMd5": self.session.cookies["DedeUserID__ckMd5"] if not refresh else Config.User.DedeUserID__ckMd5,
+            "bili_jct": self.session.cookies["bili_jct"] if not refresh else Config.User.bili_jct,
         }
 
     def logout(self):
+        url = "https://passport.bilibili.com/login/exit/v2"
+
+        form = {
+            "biliCSRF": Config.User.bili_jct
+        }
+
+        req = self.session.post(url, params = form, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        print(req.text)
+
         Config.User.login = False
-        Config.User.face_url = Config.User.username = Config.User.sessdata = ""
+        Config.User.face_url = Config.User.username = Config.User.SESSDATA = ""
 
         kwargs = {
             "login": False,
             "face_url": "",
             "username": "",
-            "sessdata": "",
+            "SESSDATA": "",
+            "DedeUserID": "",
+            "DedeUserID__ckMd5": "",
+            "bili_jct": "",
             "timestamp": 0
         }
 

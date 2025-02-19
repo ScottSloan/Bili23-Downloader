@@ -37,7 +37,7 @@ class LiveParser:
         # 获取直播间信息
         url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={LiveInfo.short_id}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -57,7 +57,7 @@ class LiveParser:
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -72,7 +72,7 @@ class LiveParser:
     def get_live_stream(self, qn: int):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)

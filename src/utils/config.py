@@ -41,8 +41,12 @@ class Config:
         login: bool = False
         username: str = ""
         face_url: str = ""
-        sessdata: str = ""
         login_time: int = 0
+
+        SESSDATA: str = ""
+        DedeUserID: str = ""
+        DedeUserID__ckMd5: str = ""
+        bili_jct = ""
 
     class Misc:
         episode_display_mode: int = 2
@@ -241,8 +245,11 @@ class ConfigUtils:
         Config.User.login = user_config["user"].get("login", Config.User.login)
         Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
         Config.User.username = user_config["user"].get("username", Config.User.username)
-        Config.User.sessdata = user_config["user"].get("sessdata", Config.User.sessdata)
         Config.User.login_time = user_config["user"].get("login_time", Config.User.login_time)
+        Config.User.SESSDATA = user_config["user"].get("SESSDATA", Config.User.SESSDATA)
+        Config.User.DedeUserID = user_config["user"].get("DedeUserID", Config.User.DedeUserID)
+        Config.User.DedeUserID__ckMd5 = user_config["user"].get("DedeUserID__ckMd5", Config.User.DedeUserID__ckMd5)
+        Config.User.bili_jct = user_config["user"].get("bili_jct", Config.User.bili_jct)
 
         # auth
         Config.Auth.c_time = user_config["cookie_params"].get("c_time", Config.Auth.c_time)

@@ -376,7 +376,7 @@ class DownloadUtils:
     def get_video_bangumi_download_url(self):
         def get_json():
             def request_get(url: str):
-                req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+                req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
                 return json.loads(req.text)
 
             if self.task_info.stream_type == StreamType.Dash.value:

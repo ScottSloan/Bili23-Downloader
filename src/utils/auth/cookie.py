@@ -14,7 +14,7 @@ class CookieUtils:
     def checkCookieInfo():
         url = "https://passport.bilibili.com/x/passport-login/web/cookie/info"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         return resp["data"]["refresh"]

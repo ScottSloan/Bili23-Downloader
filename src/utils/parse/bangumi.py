@@ -84,7 +84,7 @@ class BangumiParser:
         if not mid:
             raise Exception(StatusCode.URL.value)
 
-        req = RequestTool.request_get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -96,7 +96,7 @@ class BangumiParser:
         # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -133,7 +133,7 @@ class BangumiParser:
     def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -168,7 +168,7 @@ class BangumiParser:
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.sessdata))
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
