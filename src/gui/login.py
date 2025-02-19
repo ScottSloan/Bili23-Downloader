@@ -81,9 +81,30 @@ class LoginWindow(wx.Dialog):
         self.left_bmp.SetBitmap(wx.Image(self._left_mask_pic).Scale(116, 105).ConvertToBitmap())
         self.right_bmp.SetBitmap(wx.Image(self._right_mask_pic).Scale(108, 106).ConvertToBitmap())
 
+        event.Skip()
+
     def onValidateBoxKillFocus(self, event):
         self.left_bmp.SetBitmap(wx.Image(self._left_pic).Scale(106, 105, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
         self.right_bmp.SetBitmap(wx.Image(self._right_pic).Scale(108, 106, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
+
+        event.Skip()
+
+    def onLoginSuccess(self, info: dict):
+        Config.User.login = True
+        Config.User.face_url = info["face_url"]
+        Config.User.username = info["username"]
+        Config.User.sessdata = info["sessdata"]
+
+        kwargs = {
+            "login": Config.User.login,
+            "face_url": Config.User.face_url,
+            "username": Config.User.username,
+            "sessdata": Config.User.sessdata,
+            "timestamp": round(time.time())
+        }
+
+        utils = ConfigUtils()
+        utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
     
     @property
     def _left_pic(self):
@@ -158,22 +179,8 @@ class QRPage(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
 
     def onTimer(self, event):
-        def _success(info):
-            Config.User.login = True
-            Config.User.face_url = info["face_url"]
-            Config.User.username = info["username"]
-            Config.User.sessdata = info["sessdata"]
-
-            kwargs = {
-                "login": Config.User.login,
-                "face_url": Config.User.face_url,
-                "username": Config.User.username,
-                "sessdata": Config.User.sessdata,
-                "timestamp": round(time.time())
-            }
-
-            utils = ConfigUtils()
-            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+        def _success(info: dict):
+            self.GetParent().onLoginSuccess(info)
 
             wx.CallAfter(self.GetParent().callback)
 
@@ -284,6 +291,8 @@ class SMSPage(wx.Panel):
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLogin)
 
     def init_utils(self):
+        self.isLogin = False
+
         self.login = SMSLogin(self.session)
 
         # 获取国际区号列表
@@ -369,6 +378,11 @@ class SMSPage(wx.Panel):
         captcha_window.ShowModal()
 
     def check_login_result(self, result: Dict):
+        def _success(info: dict):
+            self.GetParent().onLoginSuccess(info)
+
+            wx.CallAfter(self.GetParent().callback)
+
         if result["code"] != 0:
             wx.MessageDialog(self, f"登录失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
 
@@ -381,6 +395,5 @@ class SMSPage(wx.Panel):
             # 登录成功，关闭窗口
             self.isLogin = True
 
-            user_info = self.login.get_user_info()
-
-            self.GetParent().GetParent().login_success(user_info)
+            info = self.login.get_user_info()
+            _success(info)
