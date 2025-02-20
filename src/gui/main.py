@@ -191,7 +191,9 @@ class MainWindow(Frame):
         menu_bar.Append(self.tool_menu, "工具(&T)")
         menu_bar.Append(self.help_menu, "帮助(&H)")
 
-        if not Config.User.login:
+        if Config.User.login:
+            self.tool_menu.Append(self.ID_LOGOUT, "退出登录(&L)")
+        else:
             self.tool_menu.Append(self.ID_LOGIN, "登录(&L)")
 
         if Config.Misc.enable_debug:
@@ -570,7 +572,7 @@ class MainWindow(Frame):
         self.login_window.ShowModal()
 
     def onLogoutEVT(self, event):
-        dlg = wx.MessageDialog(self, '注销登录\n\n是否要注销登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, '退出登录\n\n是否要退出登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
         
         if dlg.ShowModal() == wx.ID_YES:
             session = requests.sessions.Session()
@@ -599,8 +601,8 @@ class MainWindow(Frame):
         def _get_menu():
             context_menu = wx.Menu()
 
-            context_menu.Append(self.ID_REFRESH, "刷新")
-            context_menu.Append(self.ID_LOGOUT, "注销")
+            context_menu.Append(self.ID_REFRESH, "刷新(&R)")
+            context_menu.Append(self.ID_LOGOUT, "退出登录(&L)")
 
             return context_menu
 

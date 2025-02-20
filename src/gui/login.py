@@ -243,9 +243,9 @@ class QRPage(LoginPage):
 
     def onTimer(self, event):
         def _success(info: dict):
-            self.setQRCodeTextTip("登录成功")
-
-            time.sleep(1.5)
+            self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
+            
+            time.sleep(2)
 
             self.onLoginSuccess(info)
 

@@ -63,7 +63,7 @@ Bili23 Downloader GUI
 
 # 更新日志
 ### **Version 1.56 (2025/02/20)**
-Version 1.56.0 Beta2 发布
+Version 1.56.0 Beta3 发布
 
 本次更新内容：
 * 右键菜单支持复制链接，修改视频标题
@@ -88,7 +88,7 @@ Version 1.56.0 Beta2 发布
 # 开源许可
 本项目在 **MIT License** 许可协议下进行发布
 
-wbi 签名以及部分接口参考 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)  
+wbi 签名、部分接口以及 buvid3 等参数生成参考 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)  
 编译版提供的 FFmpeg 来源于 [gyan.dev](https://www.gyan.dev/ffmpeg/builds/)  
 
 # 联系方式
