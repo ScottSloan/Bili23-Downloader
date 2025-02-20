@@ -186,6 +186,11 @@ class LoginPage(wx.Panel):
         if not Config.Sys.dark_mode:
             return wx.Colour(227, 229, 231)
 
+    def onLoginSuccess(self, info: dict):
+        self.GetParent().onLoginSuccess(info)
+
+        wx.CallAfter(self.GetParent().callback)
+
 class QRPage(LoginPage):
     def __init__(self, parent, session: requests.sessions.Session):
         self.session = session
@@ -225,41 +230,24 @@ class QRPage(LoginPage):
         self.SetSizer(qrcode_vbox)
     
     def init_utils(self):
-        def _load_qr_code():
-            def worker():
-                self.qrcode.SetBitmap(wx.Image(img).Scale(self.FromDIP(150), self.FromDIP(150)).ConvertToBitmap())
-
-            self.login.init_qrcode()
-
-            img = BytesIO(self.login.get_qrcode())
-
-            wx.CallAfter(worker)
-
         self.login = QRLogin(self.session)
+        self.loadNewQRCode()
         
-        Thread(target = _load_qr_code).start()
-
         self.timer = wx.Timer(self, -1)
         self.timer.Start(1000)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
 
+        self.qrcode.Bind(wx.EVT_LEFT_DOWN, self.onRefreshQRCode)
+
     def onTimer(self, event):
         def _success(info: dict):
             self.setQRCodeTextTip("登录成功")
 
-            self.GetParent().onLoginSuccess(info)
+            time.sleep(1.5)
 
-            wx.CallAfter(self.GetParent().callback)
-
-        def _refresh():
-            self.login.init_qrcode()
-
-            self.scan_tip_lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
-            self.qrcode.SetBitmap(wx.Image(BytesIO(self.login.get_qrcode())).Scale(250, 250).ConvertToBitmap())
-
-            self.Layout()
+            self.onLoginSuccess(info)
 
         def _outdated():
             self.qrcode.SetBitmap(self.setQRCodeTextTip("二维码已过期"))
@@ -278,6 +266,16 @@ class QRPage(LoginPage):
                 self.timer.Stop()
                 wx.CallAfter(_outdated)
     
+    def onRefreshQRCode(self, event):
+        self.timer.Start()
+
+        self.scan_tip_lab.SetLabel("请使用哔哩哔哩客户端扫码登录")
+
+        self.qrcode.SetBitmap(self.setQRCodeTextTip("正在加载"))
+        self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
+
+        self.loadNewQRCode()
+
     def onClose(self):
         self.timer.Stop()
 
@@ -304,6 +302,19 @@ class QRPage(LoginPage):
         dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
 
         return bmp
+
+    def loadNewQRCode(self):
+        def worker():
+            def setbmp():
+                self.qrcode.SetBitmap(wx.Image(img).Scale(self.FromDIP(150), self.FromDIP(150)).ConvertToBitmap())
+
+            self.login.init_qrcode()
+
+            img = BytesIO(self.login.get_qrcode())
+
+            wx.CallAfter(setbmp)
+        
+        Thread(target = worker).start()
 
 class SMSPage(LoginPage):
     def __init__(self, parent, session: requests.sessions.Session):
@@ -478,11 +489,6 @@ class SMSPage(LoginPage):
         captcha_window.ShowModal()
 
     def check_login_result(self, result: Dict):
-        def _success(info: dict):
-            self.GetParent().onLoginSuccess(info)
-
-            wx.CallAfter(self.GetParent().callback)
-
         if result["code"] != 0:
             wx.MessageDialog(self, f"登录失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
 
@@ -496,4 +502,4 @@ class SMSPage(LoginPage):
             self.isLogin = True
 
             info = self.login.get_user_info()
-            _success(info)
+            self.onLoginSuccess(info)
