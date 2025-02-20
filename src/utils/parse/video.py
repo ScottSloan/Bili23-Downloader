@@ -113,8 +113,6 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
-        self.get_video_tag()
-
         self.parse_episodes()
 
     def get_video_tag(self):

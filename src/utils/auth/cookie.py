@@ -52,6 +52,8 @@ class CookieUtils:
         if not Config.Auth.bili_ticket:
             _generate()
 
+        CookieUtils.get_wbi_keys()
+
     def get_bili_ticket():
         def hmac_sha256(key: str, message: str):
             key = key.encode("utf-8")
@@ -73,12 +75,7 @@ class CookieUtils:
         req = RequestTool.request_post(url, headers = RequestTool.get_headers(), params = params)
         data = json.loads(req.text)
 
-        img_url: str = data['data']['nav']['img']
-        sub_url: str = data['data']['nav']['sub']
-
         Config.Auth.bili_ticket = data["data"]["ticket"]
-        Config.Auth.img_key = img_url.rsplit('/', 1)[1].split('.')[0]
-        Config.Auth.sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
     
     def get_buvid3():
         url = "https://www.bilibili.com"
@@ -97,6 +94,18 @@ class CookieUtils:
         data = json.loads(req.text)
 
         Config.Auth.buvid4 = data["data"]["b_4"]
+
+    def get_wbi_keys():
+        url = "https://api.bilibili.com/x/web-interface/nav"
+
+        req = RequestTool.request_get(url)
+        data = json.loads(req.text)
+
+        img_url: str = data["data"]["wbi_img"]["img_url"]
+        sub_url: str = data["data"]["wbi_img"]["sub_url"]
+
+        Config.Auth.img_key = img_url.rsplit('/', 1)[1].split('.')[0]
+        Config.Auth.sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
 
     def gen_uuid():
         t = CookieUtils.get_timestamp() % 100000

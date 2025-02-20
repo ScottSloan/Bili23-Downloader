@@ -117,6 +117,8 @@ class VideoPage(DetailPage):
         DetailPage.__init__(self, parent)
 
         self.init_UI()
+
+        self.init_utils()
     
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -124,10 +126,8 @@ class VideoPage(DetailPage):
         title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{VideoInfo.title}</font>"""
         views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: {self.get_views_color()};">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
         desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}; color: {self.get_text_color()};">{VideoInfo.desc}</span></div>"""
-        tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: {self.get_tag_background_color()}; color: {self.get_tag_color()};">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
-        tag_div = """<div id="tag">{}</div>""".format("".join(tag_span))
 
-        body = "<br>".join([title_div, views_div, desc_div, tag_div])
+        body = "<br>".join([title_div, views_div, desc_div])
 
         self.set_page(body)
 
@@ -137,6 +137,22 @@ class VideoPage(DetailPage):
         vbox.AddSpacer(15)
 
         self.SetSizerAndFit(vbox)
+    
+    def init_utils(self):
+        def worker():
+            def add_tag():
+                font: wx.Font = self.GetFont()
+
+                tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: {self.get_tag_background_color()}; color: {self.get_tag_color()};">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
+                tag_div = """<div id="tag">{}</div>""".format("".join(tag_span))
+
+                self.html_page.AppendToPage(tag_div)
+
+            self.GetParent().GetParent().GetParent().video_parser.get_video_tag()
+
+            wx.CallAfter(add_tag)
+
+        Thread(target = worker).start()
 
 class BangumiPage(DetailPage):
     def __init__(self, parent):
@@ -207,6 +223,7 @@ class BangumiPage(DetailPage):
                 self.cover_bmp.SetBitmap(bmp)
 
             contents = RequestTool.request_get(BangumiInfo.cover).content
+
             wx.CallAfter(set_bmp)
 
         Thread(target = worker).start()
