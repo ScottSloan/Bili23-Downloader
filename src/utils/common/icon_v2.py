@@ -34,12 +34,10 @@ class IconManager:
             case "windows":
                 self.DPI_factor_1 = 1
                 self.DPI_factor_1_5 = 1.5
-                self.DPI_factor_2 = 2
 
             case "linux" | "darwin":
                 self.DPI_factor_1 = 1.5
                 self.DPI_factor_1_5 = 2
-                self.DPI_factor_2 = 3
 
     def get_icon_bitmap(self, icon_id: int):
         match icon_id:
@@ -98,7 +96,7 @@ class IconManager:
             return wx.Size(24, 24)
 
         else:
-            return wx.Size(32, 32)
+            return wx.Size(16, 16)
 
     @property
     def _assets_app_icon_default(self):

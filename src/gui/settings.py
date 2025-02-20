@@ -132,7 +132,7 @@ class DownloadTab(wx.Panel):
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL, 10)
+        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
@@ -154,7 +154,7 @@ class DownloadTab(wx.Panel):
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
+        codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.enable_dolby_chk = wx.CheckBox(self.scrolled_panel, -1, '自动下载杜比视界或杜比全景声')
@@ -163,7 +163,7 @@ class DownloadTab(wx.Panel):
         self.dolby_tip.SetToolTip("说明")
 
         dolby_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        dolby_hbox.Add(self.enable_dolby_chk, 0, wx.ALL, 10)
+        dolby_hbox.Add(self.enable_dolby_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         dolby_hbox.Add(self.dolby_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
@@ -362,8 +362,8 @@ class AdvancedTab(wx.Panel):
         self.enable_custom_cdn_tip.SetToolTip("说明")
 
         enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM), 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_auto_switch_radio = wx.RadioButton(cdn_box, -1, "自动切换")
         self.custom_cdn_manual_radio = wx.RadioButton(cdn_box, -1, "手动设置")
