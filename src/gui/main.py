@@ -383,19 +383,19 @@ class MainWindow(Frame):
     def parse_url_thread(self, url: str):
         def callback():
             match self.current_parse_type:
-                case ParseType.Video |  ParseType.Bangumi:
+                case ParseType.Video |  ParseType.Bangumi | ParseType.Cheese:
                     self.episode_option_btn.Enable(True)
                     self.download_option_btn.Enable(True)
+                    self.download_btn.SetLabel("下载视频")
 
                 case ParseType.Live:
                     self.episode_option_btn.Enable(False)
-                    self.download_option_btn.Enable(True)
+                    self.download_option_btn.Enable(False)
+                    self.download_btn.SetLabel("直播录制")
 
             self._onLoading(False)
 
             self.download_btn.Enable(True)
-            self.episode_option_btn.Enable(True)
-            self.download_option_btn.Enable(True)
             
             self.showEpisodeList()
 
@@ -815,6 +815,9 @@ class MainWindow(Frame):
 
                 self.treelist.SetItemText(item, 1, title)
                 self.treelist.SetItemData(item, item_info)
+
+                if self.current_parse_type == ParseType.Live:
+                    LiveInfo.title = title
 
         match event.GetId():
             case self.ID_EPISODE_LIST_COPY_TITLE:

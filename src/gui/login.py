@@ -305,14 +305,14 @@ class QRPage(LoginPage):
 
     def loadNewQRCode(self):
         def worker():
-            def setbmp():
+            def set_bmp():
                 self.qrcode.SetBitmap(wx.Image(img).Scale(self.FromDIP(150), self.FromDIP(150)).ConvertToBitmap())
 
             self.login.init_qrcode()
 
             img = BytesIO(self.login.get_qrcode())
 
-            wx.CallAfter(setbmp)
+            wx.CallAfter(set_bmp)
         
         Thread(target = worker).start()
 
