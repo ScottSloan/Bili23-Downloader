@@ -30,11 +30,11 @@ class RequestTool:
         return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth)
     
     @staticmethod
-    def request_post(url: str, headers = None, params = None):
+    def request_post(url: str, headers = None, params = None, json = None):
         if not headers:
             headers = RequestTool.get_headers()
         
-        return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, json = json, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
@@ -56,7 +56,8 @@ class RequestTool:
         _cookie = {
             "CURRENT_FNVAL": "4048",
             "b_lsid": Config.Auth.b_lsid,
-            "_uuid": Config.Auth.uuid
+            "_uuid": Config.Auth.uuid,
+            "buvid_fp": Config.Auth.buvid_fp
         }
 
         if referer_url:
@@ -401,7 +402,6 @@ class UniversalTool:
     @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
-            print("not")
             # 若未缓存头像，则下载头像到本地
             content = RequestTool.request_get(Config.User.face_url).content
 

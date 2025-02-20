@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/02/19"
+        release_date: str = "2025/02/20"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -106,9 +106,9 @@ class Config:
         img_key: str = ""
         sub_key: str = ""
 
-        c_time: int = 0
         buvid3: str = ""
         buvid4: str = ""
+        buvid_fp: str = ""
         b_nut: str = ""
         bili_ticket: str = ""
         uuid: str = ""
@@ -252,9 +252,9 @@ class ConfigUtils:
         Config.User.bili_jct = user_config["user"].get("bili_jct", Config.User.bili_jct)
 
         # auth
-        Config.Auth.c_time = user_config["cookie_params"].get("c_time", Config.Auth.c_time)
         Config.Auth.buvid3 = user_config["cookie_params"].get("buvid3", Config.Auth.buvid3)
         Config.Auth.buvid4 = user_config["cookie_params"].get("buvid4", Config.Auth.buvid4)
+        Config.Auth.buvid_fp = user_config["cookie_params"].get("buvid_fp", Config.Auth.buvid_fp)
         Config.Auth.b_nut = user_config["cookie_params"].get("b_nut", Config.Auth.b_nut)
         Config.Auth.bili_ticket = user_config["cookie_params"].get("bili_ticket", Config.Auth.bili_ticket)
         Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)

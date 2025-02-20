@@ -8,6 +8,7 @@ from typing import Dict, Callable
 from utils.auth.login import QRLogin, SMSLogin
 from utils.config import Config, ConfigUtils
 from utils.common.thread import Thread
+from utils.auth.cookie import CookieUtils
 
 from gui.dialog.captcha import CaptchaWindow
 
@@ -63,7 +64,12 @@ class LoginWindow(wx.Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
+        def worker():
+            CookieUtils.exclimbwuzhi(Config.Auth.buvid3)
+
         self.session = requests.sessions.Session()
+
+        Thread(target = worker).start()
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onClose)
@@ -202,7 +208,7 @@ class QRPage(LoginPage):
         scan_lab.SetFont(font)
         scan_lab.SetForegroundColour(font_color)
 
-        self.qrcode = wx.StaticBitmap(self, -1, self.setQRCodeText("正在加载"), size = self.FromDIP((150, 150)))
+        self.qrcode = wx.StaticBitmap(self, -1, self.setQRCodeTextTip("正在加载"), size = self.FromDIP((150, 150)))
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
@@ -241,6 +247,8 @@ class QRPage(LoginPage):
 
     def onTimer(self, event):
         def _success(info: dict):
+            self.setQRCodeTextTip("登录成功")
+
             self.GetParent().onLoginSuccess(info)
 
             wx.CallAfter(self.GetParent().callback)
@@ -254,7 +262,7 @@ class QRPage(LoginPage):
             self.Layout()
 
         def _outdated():
-            self.qrcode.SetBitmap(self.setQRCodeText("二维码已过期，点击刷新"))
+            self.qrcode.SetBitmap(self.setQRCodeTextTip("二维码已过期"))
             self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         match self.login.check_scan()["code"]:
@@ -273,7 +281,7 @@ class QRPage(LoginPage):
     def onClose(self):
         self.timer.Stop()
 
-    def setQRCodeText(self, text: str):
+    def setQRCodeTextTip(self, text: str):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
