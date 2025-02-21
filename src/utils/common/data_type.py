@@ -198,6 +198,7 @@ class TaskPanelCallback:
         self.onStartNextCallback: Callable = None
         self.onStopCallbacak: Callable = None
         self.onUpdateTaskCountCallback: Callable = None
+        self.onLoadMoreTaskCallback: Callable = None
 
 class NotificationMessage:
     def __init__(self):

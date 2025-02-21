@@ -296,12 +296,24 @@ class DownloadManagerWindow(Frame):
                 # 清除 cid 列表中的记录
                 self._temp_cid_list.remove(cid)
 
+            def load_more_callback():
+                if len(self._temp_download_task_info_list) and self.get_download_task_count([DownloadStatus.Waiting.value]) < 1:
+                    wx.CallAfter(self.load_more_download_task_panel)
+
             task_panel_callback = TaskPanelCallback()
             task_panel_callback.onStartNextCallback = self.start_download
             task_panel_callback.onStopCallbacak = stop_download_callback
             task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+            task_panel_callback.onLoadMoreTaskCallback = load_more_callback
 
             return task_panel_callback
+
+        def destory_load_more_panel():
+            for panel in self.get_download_task_panel_list():
+                if isinstance(panel, LoadMoreTaskPanel):
+                    panel.onDestoryPanel()
+
+        destory_load_more_panel()
 
         task_panel_list = []
         self._temp_index = 0
@@ -309,7 +321,7 @@ class DownloadManagerWindow(Frame):
         # 批量下载标识符
         multiple_flag = len(self._temp_download_task_info_list) > 1
 
-        item_threshold = 1
+        item_threshold = 4
 
         temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
         self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
@@ -1168,11 +1180,13 @@ class DownloadTaskPanel(wx.Panel):
         Thread(target = self.utils.merge_video).start()
 
     def onMergeFinish(self):
-        def callback():
+        def worker():
             self.update_download_status(DownloadStatus.Complete.value)
 
             if Config.Download.delete_history:
                 self.download_file_tool.clear_download_info()
+            
+            self.callback.onLoadMoreTaskCallback()
 
             _get_extra()
 
@@ -1195,7 +1209,7 @@ class DownloadTaskPanel(wx.Panel):
             if self.task_info.get_subtitle:
                 extra_parser.get_subtitle()
 
-        wx.CallAfter(callback)
+        wx.CallAfter(worker)
 
     def onMergeFailed(self):
         def callback():
@@ -1400,11 +1414,11 @@ class LoadMoreTaskPanel(wx.Panel):
         self.more_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowMoreEVT)
 
     def onShowMoreEVT(self, event):
-        def _destory():
-            self.Hide()
-
-            self.Destroy()
-        
-        _destory()
+        self.onDestoryPanel()
 
         self.callback()
+
+    def onDestoryPanel(self):
+        self.Hide()
+
+        self.Destroy()
