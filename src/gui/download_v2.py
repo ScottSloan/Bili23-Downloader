@@ -198,6 +198,8 @@ class DownloadManagerWindow(Frame):
         self.download_task_list_panel.Thaw()
 
     def init_utils(self):
+        self._temp_download_task_info_list: List[DownloadTaskInfo] = []
+
         # 记录下载任务的 cid 列表
         self._temp_cid_list = set()
 
@@ -264,57 +266,9 @@ class DownloadManagerWindow(Frame):
         return _count
 
     def add_download_task_panel(self, download_task_info_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
-        def worker(info: DownloadTaskInfo, multiple_flag: bool, index_with_zero: str):
-            if multiple_flag:
-                info.index = self._temp_index
-                info.index_with_zero = index_with_zero
+        self._temp_download_task_info_list.extend(download_task_info_list)
 
-            item = DownloadTaskPanel(self.download_task_list_panel, info, task_panel_callback)
-
-            return (item, 0, wx.EXPAND)
-
-        def stop_download_callback(cid: int):
-            # 停止下载回调函数
-            self.refresh_task_list_panel_ui()
-
-            # 清除 cid 列表中的记录
-            self._temp_cid_list.remove(cid)
-        
-        def get_task_panel_callback():
-            task_panel_callback = TaskPanelCallback()
-            task_panel_callback.onStartNextCallback = self.start_download
-            task_panel_callback.onStopCallbacak = stop_download_callback
-            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
-
-            return task_panel_callback
-
-        task_panel_list = []
-
-        # 批量下载标识符
-        multiple_flag = len(download_task_info_list) > 1
-
-        task_panel_callback = get_task_panel_callback()
-
-        # 暂时停止 UI 更新
-        self.download_task_list_panel.Freeze()
-
-        self._temp_index = 0
-        
-        for index, info in enumerate(download_task_info_list):
-            # 检查 cid 列表是否已包含，防止重复下载
-            if info.cid not in self._temp_cid_list:
-                info.timestamp += index
-                self._temp_index += 1
-                task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(download_task_info_list))))))
-
-                self._temp_cid_list.add(info.cid)
-
-        task_panel_list.append((LoadMoreTaskPanel(self.download_task_list_panel), 0, wx.EXPAND))
-
-        self.download_task_list_panel.sizer.AddMany(task_panel_list)
-
-        # 恢复 UI 更新
-        self.download_task_list_panel.Thaw()
+        self.load_more_download_task_panel()
 
         self.refresh_task_list_panel_ui()
 
@@ -323,6 +277,63 @@ class DownloadManagerWindow(Frame):
 
         if start_download:
             self.start_download()
+
+    def load_more_download_task_panel(self):
+        def worker(info: DownloadTaskInfo, multiple_flag: bool, index_with_zero: str):
+            if multiple_flag:
+                info.index = self._temp_index
+                info.index_with_zero = index_with_zero
+
+            item = DownloadTaskPanel(self.download_task_list_panel, info, get_task_panel_callback())
+
+            return (item, 0, wx.EXPAND)
+        
+        def get_task_panel_callback():
+            def stop_download_callback(cid: int):
+                # 停止下载回调函数
+                self.refresh_task_list_panel_ui()
+
+                # 清除 cid 列表中的记录
+                self._temp_cid_list.remove(cid)
+
+            task_panel_callback = TaskPanelCallback()
+            task_panel_callback.onStartNextCallback = self.start_download
+            task_panel_callback.onStopCallbacak = stop_download_callback
+            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+
+            return task_panel_callback
+
+        task_panel_list = []
+        self._temp_index = 0
+
+        # 批量下载标识符
+        multiple_flag = len(self._temp_download_task_info_list) > 1
+
+        item_threshold = 1
+
+        temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
+        self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
+        
+        for index, info in enumerate(temp_download_task_info_list):
+            # 检查 cid 列表是否已包含，防止重复下载
+            if info.cid not in self._temp_cid_list:
+                info.timestamp += index
+                self._temp_index += 1
+                task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(self._temp_download_task_info_list))))))
+
+                self._temp_cid_list.add(info.cid)
+
+        if len(self._temp_download_task_info_list):
+            panel = LoadMoreTaskPanel(self.download_task_list_panel, len(self._temp_download_task_info_list), self.load_more_download_task_panel)
+            task_panel_list.append((panel, 0, wx.EXPAND))
+
+        self.download_task_list_panel.Freeze()
+
+        self.download_task_list_panel.sizer.AddMany(task_panel_list)
+
+        self.download_task_list_panel.Thaw()
+
+        self.refresh_task_list_panel_ui()
 
     def update_task_count_label(self, message: NotificationMessage = None, stop_by_manual: bool = False):
         def _show_notification():
@@ -1362,7 +1373,9 @@ class DownloadTaskPanel(wx.Panel):
         self.download_file_tool.update_task_info_kwargs(**kwargs)
 
 class LoadMoreTaskPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, left: int, callback: Callable):
+        self.left, self.callback = left, callback
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -1370,7 +1383,7 @@ class LoadMoreTaskPanel(wx.Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        self.more_lab = wx.StaticText(self, -1, "显示更多项目(20+)")
+        self.more_lab = wx.StaticText(self, -1, f"显示更多项目({self.left}+)")
         self.more_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
         
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -1393,3 +1406,5 @@ class LoadMoreTaskPanel(wx.Panel):
             self.Destroy()
         
         _destory()
+
+        self.callback()
