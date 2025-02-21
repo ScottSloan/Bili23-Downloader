@@ -117,7 +117,7 @@ class Config:
     class Advanced:
         enable_custom_cdn: bool = True
         custom_cdn_mode: int = 0
-        custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
+        custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
         custom_cdn_list: list = []
 
         download_error_retry_count: int = 3

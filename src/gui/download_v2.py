@@ -280,15 +280,20 @@ class DownloadManagerWindow(Frame):
             # 清除 cid 列表中的记录
             self._temp_cid_list.remove(cid)
         
+        def get_task_panel_callback():
+            task_panel_callback = TaskPanelCallback()
+            task_panel_callback.onStartNextCallback = self.start_download
+            task_panel_callback.onStopCallbacak = stop_download_callback
+            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+
+            return task_panel_callback
+
         task_panel_list = []
 
         # 批量下载标识符
         multiple_flag = len(download_task_info_list) > 1
 
-        task_panel_callback = TaskPanelCallback()
-        task_panel_callback.onStartNextCallback = self.start_download
-        task_panel_callback.onStopCallbacak = stop_download_callback
-        task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+        task_panel_callback = get_task_panel_callback()
 
         # 暂时停止 UI 更新
         self.download_task_list_panel.Freeze()
@@ -303,6 +308,8 @@ class DownloadManagerWindow(Frame):
                 task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(download_task_info_list))))))
 
                 self._temp_cid_list.add(info.cid)
+
+        task_panel_list.append((LoadMoreTaskPanel(self.download_task_list_panel), 0, wx.EXPAND))
 
         self.download_task_list_panel.sizer.AddMany(task_panel_list)
 
@@ -870,6 +877,7 @@ class DownloadTaskPanel(wx.Panel):
         self.icon_manager = IconManager(self)
 
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover_bmp.SetToolTip("查看封面")
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.title_lab = wx.StaticText(self, -1, self.task_info.title, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
@@ -1123,6 +1131,7 @@ class DownloadTaskPanel(wx.Panel):
         def callback():
             # 更新下载进度回调函数
             self.progress_bar.SetValue(info["progress"])
+            self.progress_bar.SetToolTip(f"{info['progress']}%")
 
             if self.task_info.status == DownloadStatus.Downloading.value:
                 # 只有在下载状态时才更新下载速度
@@ -1351,3 +1360,36 @@ class DownloadTaskPanel(wx.Panel):
 
         # 同步更新到文件
         self.download_file_tool.update_task_info_kwargs(**kwargs)
+
+class LoadMoreTaskPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+    def init_UI(self):
+        self.more_lab = wx.StaticText(self, -1, "显示更多项目(20+)")
+        self.more_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+        
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddStretchSpacer()
+        hbox.Add(self.more_lab, 0, wx.ALL, 10)
+        hbox.AddStretchSpacer()
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox, 0, wx.EXPAND)
+
+        self.SetSizer(vbox)
+
+    def Bind_EVT(self):
+        self.more_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowMoreEVT)
+
+    def onShowMoreEVT(self, event):
+        def _destory():
+            self.Hide()
+
+            self.Destroy()
+        
+        _destory()
