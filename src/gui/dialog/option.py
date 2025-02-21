@@ -126,7 +126,10 @@ class OptionDialog(wx.Dialog):
             if AudioInfo.audio_quality_id == 30300:
                 return 0
             else:
-                return AudioInfo.audio_quality_id_list.index(_audio_quality_id) + 1
+                if _audio_quality_id in AudioInfo.audio_quality_id_list:
+                    return AudioInfo.audio_quality_id_list.index(_audio_quality_id) + 1
+                else:
+                    return 1
             
         self.video_quality_choice.Set(self.GetParent().video_quality_choice.GetItems())
         self.video_quality_choice.SetSelection(self.GetParent().video_quality_choice.GetSelection())

@@ -692,7 +692,7 @@ class DownloadUtils:
     def _get_default_audio_download_url(self, data: List[dict]):
         highest_audio_quality = self._get_highest_audio_quality(data)
 
-        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == AudioQualityID._Auto.value:
+        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == AudioQualityID._Auto.value or self.task_info.audio_quality_id in [AudioQualityID._Hi_Res.value, AudioQualityID._Dolby_Atoms.value]:
             # 当视频不存在选取的音质时，选取最高可用的音质
             audio_quality = highest_audio_quality
         else:
