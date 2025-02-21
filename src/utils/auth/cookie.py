@@ -5,7 +5,7 @@ import time
 import random
 import struct
 import hashlib
-import requests
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from utils.tool_v2 import RequestTool
@@ -21,17 +21,16 @@ class CookieUtils:
         return resp["data"]["refresh"]
     
     def init_cookie_params():
-        def _generate():
+        def _generate_cookie_params():
             CookieUtils.gen_uuid()
             CookieUtils.gen_b_lsid()
             CookieUtils.gen_buvid_fp()
 
             task = []
 
-            thread_pool = ThreadPoolExecutor(max_workers = 3)
-            task.append(thread_pool.submit(CookieUtils.get_buvid3))
+            thread_pool = ThreadPoolExecutor(max_workers = 2)
+            task.append(thread_pool.submit(CookieUtils.get_buvid3_buvid4))
             task.append(thread_pool.submit(CookieUtils.get_bili_ticket))
-            task.append(thread_pool.submit(CookieUtils.get_buvid4))
 
             wait(task)
 
@@ -40,7 +39,7 @@ class CookieUtils:
             kwargs = {
                 "buvid3": Config.Auth.buvid3,
                 "buvid4": Config.Auth.buvid4,
-                "buvid_fp": Config.Auth.buvid_fp,
+                "buvid_fp": "20dcd229181e846ea1c7b4fb797068b1",
                 "b_nut": Config.Auth.b_nut,
                 "bili_ticket": Config.Auth.bili_ticket,
                 "uuid": Config.Auth.uuid,
@@ -48,9 +47,31 @@ class CookieUtils:
             }
 
             utils.update_config_kwargs(Config.User.user_config_path, "cookie_params", **kwargs)
+        
+        def _reset_user_params():
+            Config.User.login = False
+            Config.User.SESSDATA = Config.User.bili_jct = Config.User.DedeUserID = Config.User.DedeUserID__ckMd5 = ""
 
-        if not Config.Auth.bili_ticket:
-            _generate()
+            kwargs = {
+                "login": Config.User.login,
+                "SESSDATA": Config.User.SESSDATA,
+                "bili_jct": Config.User.bili_jct,
+                "DedeUserID": Config.User.DedeUserID,
+                "DefeUserID_ckMd5": Config.User.DedeUserID__ckMd5
+            }
+
+            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+
+        def is_valid(params: list):
+            return any([not bool(i) for i in params])
+        
+        _cookie_params = [Config.Auth.buvid3, Config.Auth.buvid4, Config.Auth.buvid_fp, Config.Auth.b_nut, Config.Auth.bili_ticket, Config.Auth.b_lsid, Config.Auth.uuid]
+        if is_valid(_cookie_params):
+            _generate_cookie_params()
+
+        _user_params = [Config.User.SESSDATA, Config.User.bili_jct, Config.User.DedeUserID, Config.User.DedeUserID__ckMd5]
+        if is_valid(_user_params):
+            _reset_user_params()
 
         CookieUtils.get_wbi_keys()
 
@@ -77,23 +98,15 @@ class CookieUtils:
 
         Config.Auth.bili_ticket = data["data"]["ticket"]
     
-    def get_buvid3():
-        url = "https://www.bilibili.com"
-
-        req = RequestTool.request_get(url)
-
-        cookie = requests.utils.dict_from_cookiejar(req.cookies)
-
-        Config.Auth.buvid3 = cookie["buvid3"]
-        Config.Auth.b_nut = cookie["b_nut"]
-
-    def get_buvid4():
+    def get_buvid3_buvid4():
         url = "https://api.bilibili.com/x/frontend/finger/spi"
 
         req = RequestTool.request_get(url)
         data = json.loads(req.text)
 
+        Config.Auth.buvid3 = data["data"]["b_3"]
         Config.Auth.buvid4 = data["data"]["b_4"]
+        Config.Auth.b_nut = int(datetime.timestamp(datetime.now()))
 
     def get_wbi_keys():
         url = "https://api.bilibili.com/x/web-interface/nav"
