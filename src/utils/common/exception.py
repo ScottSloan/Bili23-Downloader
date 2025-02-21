@@ -1,10 +1,10 @@
 import re
 import sys
-import time
 import inspect
 import threading
 import traceback
 from typing import Callable
+from datetime import datetime
 
 from utils.common.data_type import ExceptionInfo
 from utils.common.map import status_code_map
@@ -72,7 +72,7 @@ def exception_handler(exc_type, exc_value, exc_tb):
     
     def _get_exception_info(log: str, return_code: str, exc_tb, id: str, short_log: str, exception_type: str):
         info = ExceptionInfo()
-        info.timestamp = round(time.time())
+        info.timestamp = int(datetime.timestamp(datetime.now()))
         info.log = log
         info.short_log = short_log
         info.exception_type = exception_type

@@ -1,9 +1,9 @@
 import os
 import json
-import time
 import qrcode
 import requests
 from io import BytesIO
+from datetime import datetime
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config, ConfigUtils
@@ -46,7 +46,7 @@ class LoginBase:
         return {
             "username": resp["uname"],
             "face_url": resp["face"],
-            "login_time": round(time.time()),
+            "login_time": int(datetime.timestamp(datetime.now())),
             "SESSDATA": self.session.cookies["SESSDATA"] if not refresh else Config.User.SESSDATA,
             "DedeUserID": self.session.cookies["DedeUserID"] if not refresh else Config.User.DedeUserID,
             "DedeUserID__ckMd5": self.session.cookies["DedeUserID__ckMd5"] if not refresh else Config.User.DedeUserID__ckMd5,
