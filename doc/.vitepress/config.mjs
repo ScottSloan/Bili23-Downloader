@@ -8,14 +8,21 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: '首页', link: '/' },
-      { text: '文档', link: '/doc' }
+      { text: '文档', link: '/doc' },
+      { text: '博客', link: 'https://scott-sloan.cn'}
     ],
 
     sidebar: [
       {
-        text: 'Examples',
+        text: '简介',
+        item: [
+          { text: 'Bili23 Downloader 简介', link: '/intro-bili23'}
+        ]
+      },
+      {
+        text: '安装',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
+          { text: 'Install', link: '/markdown-examples' },
           { text: 'Runtime API Examples', link: '/api-examples' }
         ]
       }
