@@ -14,7 +14,7 @@ from utils.parse.episode import EpisodeInfo
 
 from utils.config import Config
 from utils.auth.login import QRLogin
-from utils.tool_v2 import UniversalTool, FFmpegCheckTool
+from utils.tool_v2 import UniversalTool, FFmpegCheckTool, RequestTool
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
@@ -36,6 +36,7 @@ from gui.dialog.option import OptionDialog
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.edit_title import EditTitleDialog
+from gui.dialog.cover import CoverViewerDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -259,6 +260,7 @@ class MainWindow(Frame):
 
         self.treelist.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onEpisodeRightClickEVT)
 
+        self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_VIEW_COVER)
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_TITLE)
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_COPY_URL)
         self.treelist.Bind(wx.EVT_MENU, self.onEpisodeContextMenuEVT, id = self.ID_EPISODE_LIST_EDIT_TITLE)
@@ -335,6 +337,7 @@ class MainWindow(Frame):
         self.ID_EPISODE_ALL_SECTIONS = wx.NewIdRef()
         self.ID_EPISODE_FULL_NAME = wx.NewIdRef()
 
+        self.ID_EPISODE_LIST_VIEW_COVER = wx.NewIdRef()
         self.ID_EPISODE_LIST_COPY_TITLE = wx.NewIdRef()
         self.ID_EPISODE_LIST_COPY_URL = wx.NewIdRef()
         self.ID_EPISODE_LIST_EDIT_TITLE = wx.NewIdRef()
@@ -733,6 +736,7 @@ class MainWindow(Frame):
         def _get_menu():
             context_menu = wx.Menu()
 
+            view_cover_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_VIEW_COVER, "查看封面(&V)")
             copy_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_TITLE, "复制标题(&C)")
             copy_url_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COPY_URL, "复制链接(&U)")
             edit_title_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_EDIT_TITLE, "修改标题(&E)")
@@ -740,12 +744,15 @@ class MainWindow(Frame):
             collapse_menuitem = wx.MenuItem(context_menu, self.ID_EPISODE_LIST_COLLAPSE, "展开(&X)" if self.treelist.is_current_item_collapsed() else "折叠(&O)")
             
             if self.treelist.is_current_item_node():
+                view_cover_menuitem.Enable(False)
                 copy_title_menuitem.Enable(False)
                 copy_url_menuitem.Enable(False)
                 edit_title_menuitem.Enable(False)
             else:
                 collapse_menuitem.Enable(False)
 
+            context_menu.Append(view_cover_menuitem)
+            context_menu.AppendSeparator()
             context_menu.Append(copy_title_menuitem)
             context_menu.Append(copy_url_menuitem)
             context_menu.AppendSeparator()
@@ -760,6 +767,43 @@ class MainWindow(Frame):
             self.treelist.PopupMenu(_get_menu())
 
     def onEpisodeContextMenuEVT(self, event):
+        def _view_cover():
+            def _video():
+                if "arc" in episode_info:
+                    return episode_info["arc"]["pic"]
+                else:
+                    return VideoInfo.cover
+
+            def _bangumi():
+                return episode_info["cover"]
+
+            def _cheese():
+                return episode_info["cover"]
+
+            def worker():
+                def callback():
+                    dlg = CoverViewerDialog(self, contents)
+                    dlg.Show()
+
+                contents = RequestTool.request_get(url).content
+
+                wx.CallAfter(callback)
+
+            cid = self.treelist.GetItemData(self.treelist.GetSelection()).cid
+            episode_info = EpisodeInfo.cid_dict.get(cid)
+
+            match self.current_parse_type:
+                case ParseType.Video:
+                    url = _video()
+
+                case ParseType.Bangumi:
+                    url = _bangumi()
+
+                case ParseType.Cheese:
+                    url = _cheese()
+
+            Thread(target = worker).start()
+
         def _copy_title():
             text = self.treelist.GetItemText(self.treelist.GetSelection(), 1)
 
@@ -823,6 +867,9 @@ class MainWindow(Frame):
                     LiveInfo.title = title
 
         match event.GetId():
+            case self.ID_EPISODE_LIST_VIEW_COVER:
+                _view_cover()
+
             case self.ID_EPISODE_LIST_COPY_TITLE:
                 _copy_title()
 

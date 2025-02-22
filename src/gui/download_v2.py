@@ -331,7 +331,7 @@ class DownloadManagerWindow(Frame):
 
         task_panel_list = []
 
-        item_threshold = 4
+        item_threshold = 50
 
         temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
         self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
