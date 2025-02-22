@@ -9,21 +9,21 @@ export default defineConfig({
     nav: [
       { text: '首页', link: '/' },
       { text: '文档', link: '/doc' },
-      { text: '博客', link: 'https://scott-sloan.cn'}
+      { text: '博客', link: 'https://www.scott-sloan.cn'}
     ],
 
     sidebar: [
       {
         text: '简介',
-        item: [
+        items: [
           { text: 'Bili23 Downloader 简介', link: '/intro-bili23'}
         ]
       },
       {
         text: '安装',
         items: [
-          { text: 'Install', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
+          { text: '安装主程序', link: '/install-main' },
+          { text: '安装 FFmpeg', link: '/install-ffmpeg' }
         ]
       }
     ],

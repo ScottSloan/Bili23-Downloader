@@ -1,3 +1,0 @@
-requests>=2.30.0
-wxPython>=4.2.0
-qrcode[pil]==7.4.2
