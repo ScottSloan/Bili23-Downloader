@@ -2,8 +2,10 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  lang: "zh-CN",
   title: "Bili23 Downloader",
   description: "一个 B 站视频下载工具",
+  lastUpdated: true,
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -84,6 +86,10 @@ export default defineConfig({
                 link: '/doc/history/log_1520'
               },
               {
+                text: '1.51.1',
+                link: '/doc/history/log_1511'
+              },
+              {
                 text: '1.51.0',
                 link: '/doc/history/log_1510'
               },
@@ -97,8 +103,108 @@ export default defineConfig({
             text: '1.40',
             collapsed: true,
             items: [
+              {
+                text: '1.45.0',
+                link: '/doc/history/log_1450'
+              },
+              {
+                text: '1.44.0',
+                link: '/doc/history/log_1440'
+              },
+              {
+                text: '1.43.0',
+                link: '/doc/history/log_1430'
+              },
+              {
+                text: '1.42.0',
+                link: '/doc/history/log_1420'
+              },
+              {
+                text: '1.41.0',
+                link: '/doc/history/log_1410'
+              },
+              {
+                text: '1.40.0',
+                link: '/doc/history/log_1400'
+              }
+            ]
+          },
+          {
+            text: '1.30',
+            collapsed: true,
+            items: [
+              {
+                text: '1.36.0',
+                link: '/doc/history/log_1360'
+              },
+              {
+                text: '1.35.0',
+                link: '/doc/history/log_1350'
+              },
+              {
+                text: '1.34.0',
+                link: '/doc/history/log_1340'
+              },
+              {
+                text: '1.33.0',
+                link: '/doc/history/log_1330'
+              },
+              {
+                text: '1.32.0',
+                link: '/doc/history/log_1320'
+              },
+              {
+                text: '1.31.0',
+                link: '/doc/history/log_1310'
+              },
+              {
+                text: '1.30.0',
+                link: '/doc/history/log_1300'
+              }
+            ]
+          },
+          {
+            text: '1.20',
+            collapsed: true,
+            items: [
+              {
+                text: '1.21.0',
+                link: '/doc/history/log_1210'
+              },
+              {
+                text: '1.20.0',
+                link: '/doc/history/log_1200'
+              }
+            ]
+          },
+          {
+            text: '1.10',
+            collapsed: true,
+            items: [
+              {
+                text: '1.14.0',
+                link: '/doc/history/log_1140'
+              },
+              {
+                text: '1.13.1',
+                link: '/doc/history/log_1131'
+              },
+              {
+                text: '1.13.0',
+                link: '/doc/history/log_1130'
+              },
+              {
+                text: '1.12.0',
+                link: '/doc/history/log_1120'
+              },
             ]
           }
+        ]
+      },
+      {
+        text: '常见问题',
+        items: [
+
         ]
       }
     ],
