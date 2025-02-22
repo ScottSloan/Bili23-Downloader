@@ -293,9 +293,12 @@ class MainWindow(Frame):
 
                     webbrowser.open("https://scott-sloan.cn/archives/120/")
 
+        def redirect_callback(url: str):
+            Thread(target = self.parse_url_thread, args = (url, )).start()
+
         callback = ParseCallback()
         callback.error_callback = self.onParseErrorCallback
-        callback.redirect_callback = self.onParseRedirectCallback
+        callback.redirect_callback = redirect_callback
         
         self.video_parser = VideoParser(callback)
         self.bangumi_parser = BangumiParser(callback)
@@ -364,6 +367,10 @@ class MainWindow(Frame):
 
             self.type_lab.SetLabel("")
 
+        if not self.url_box.GetValue():
+            wx.MessageDialog(self, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
         _clear()
 
         url = self.url_box.GetValue()
@@ -378,7 +385,7 @@ class MainWindow(Frame):
         self.detail_icon.Hide()
 
         # 开启解析线程
-        self.onParseRedirectCallback(url)
+        Thread(target = self.parse_url_thread, args = (url, )).start()
 
     def parse_url_thread(self, url: str):
         def callback():
@@ -450,10 +457,6 @@ class MainWindow(Frame):
 
         if worker() == StatusCode.Success.value:
             wx.CallAfter(callback)
-
-    def onParseRedirectCallback(self, url: str):
-        self.parse_thread = Thread(target = self.parse_url_thread, args = (url, ))
-        self.parse_thread.start()
 
     def onDownloadEVT(self, event):
         def add_download_task_callback():
