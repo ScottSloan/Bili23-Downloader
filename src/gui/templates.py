@@ -1,5 +1,4 @@
 import wx
-import time
 import random
 import wx.dataview
 from typing import Optional
@@ -205,7 +204,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
-        download_info.timestamp = int(round(time.time() * 1000000))
 
         download_info.title = title
         download_info.cover_url = cover_url

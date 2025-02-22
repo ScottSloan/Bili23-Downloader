@@ -146,6 +146,8 @@ class DownloadManagerWindow(Frame):
 
         self.download_task_list_panel.Thaw()
 
+        self._temp_download_task_info_list.clear()
+
     def onChangeMaxDownloaderEVT(self, event):
         def _update_config():
             from utils.config import ConfigUtils
@@ -236,7 +238,7 @@ class DownloadManagerWindow(Frame):
                     _download_task_info_list.append(_task_info)
 
         # 根据时间戳排序
-        _download_task_info_list.sort(key = lambda _timestamp: _task_info.timestamp, reverse = False)
+        _download_task_info_list.sort(key = lambda x: x.timestamp, reverse = False)
 
         wx.CallAfter(self.add_download_task_panel, _download_task_info_list, empty_callback, False)
 
@@ -266,6 +268,22 @@ class DownloadManagerWindow(Frame):
         return _count
 
     def add_download_task_panel(self, download_task_info_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
+        # 批量下载标识符
+        multiple_flag = len(download_task_info_list) > 1
+
+        # 创建下载信息文件
+        for index, entry in enumerate(download_task_info_list):
+            if not entry.timestamp:
+                entry.timestamp = int(round(time.time() * 1000000)) + index
+
+            if multiple_flag:
+                entry.index = index + 1
+                entry.index_with_zero = str(index + 1).zfill(len(str(len(download_task_info_list))))
+            
+            download_file_tool = DownloadFileTool(entry.id)
+            download_file_tool.save_download_info(entry)
+
+        # 加入待下载列表
         self._temp_download_task_info_list.extend(download_task_info_list)
 
         self.load_more_download_task_panel()
@@ -279,11 +297,7 @@ class DownloadManagerWindow(Frame):
             self.start_download()
 
     def load_more_download_task_panel(self):
-        def worker(info: DownloadTaskInfo, multiple_flag: bool, index_with_zero: str):
-            if multiple_flag:
-                info.index = self._temp_index
-                info.index_with_zero = index_with_zero
-
+        def worker(info: DownloadTaskInfo):
             item = DownloadTaskPanel(self.download_task_list_panel, info, get_task_panel_callback())
 
             return (item, 0, wx.EXPAND)
@@ -316,22 +330,16 @@ class DownloadManagerWindow(Frame):
         destory_load_more_panel()
 
         task_panel_list = []
-        self._temp_index = 0
-
-        # 批量下载标识符
-        multiple_flag = len(self._temp_download_task_info_list) > 1
 
         item_threshold = 4
 
         temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
         self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
         
-        for index, info in enumerate(temp_download_task_info_list):
+        for info in temp_download_task_info_list:
             # 检查 cid 列表是否已包含，防止重复下载
             if info.cid not in self._temp_cid_list:
-                info.timestamp += index
-                self._temp_index += 1
-                task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(self._temp_download_task_info_list))))))
+                task_panel_list.append(worker(info))
 
                 self._temp_cid_list.add(info.cid)
 
@@ -1039,9 +1047,8 @@ class DownloadTaskPanel(wx.Panel):
         if self.task_info.cover_url:
             Thread(target = show_cover).start()
 
-        # 初始化断点续传工具类，并保存信息
+        # 初始化断点续传工具类
         self.download_file_tool = DownloadFileTool(self.task_info.id)
-        self.download_file_tool.save_download_info(self.task_info)
         
         self.downloader = Downloader(self.task_info, self.download_file_tool, get_downloader_callback())
 
