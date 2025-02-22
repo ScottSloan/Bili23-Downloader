@@ -2,9 +2,10 @@
 程序依赖 FFmpeg 实现音视频合成，格式转换，直播录制等功能，缺少时将影响正常使用。
 
 ## Windows 
+Windows 用户需手动下载，并创建环境变量。  
 
-[官网下载](https://ffmpeg.org/)
-[蓝奏云](https://wwx.lanzout.com/iW4GP2azpdzg) 密码：e82q
+[官网下载](https://ffmpeg.org/)  
+[蓝奏云](https://wwx.lanzout.com/iW4GP2azpdzg) 密码：e82q  
 
 ## Linux
 在终端中执行以下命令：

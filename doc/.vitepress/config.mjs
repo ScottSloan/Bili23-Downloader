@@ -22,15 +22,23 @@ export default defineConfig({
       {
         text: '安装',
         items: [
-          { text: '安装主程序', link: '/doc/install-main' },
-          { text: '安装 FFmpeg', link: '/doc/install-ffmpeg' }
+          { text: '安装主程序', link: '/doc/install/main' },
+          { text: '安装 FFmpeg', link: '/doc/install/ffmpeg' }
         ]
       },
       {
         text: '使用',
         items: [
-          { text: '解析流程', link: '/doc/use-process'},
-          { text: '支持链接', link: '/doc/use-url'}
+          { text: '基础使用', link: '/doc/use/basic'},
+          { text: '支持的链接', link: '/doc/use/url'}
+        ]
+      },
+      {
+        text: '更新记录',
+        items: [
+          { text: '1.55.0', link: '/doc/history/log_1550'},
+          { text: '1.54.0', link: '/doc/history/log_1540'},
+          { text: '1.53.0', link: '/doc/history/log_1530'}
         ]
       }
     ],
