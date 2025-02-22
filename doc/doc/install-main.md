@@ -6,6 +6,7 @@
 [蓝奏云](https://wwx.lanzout.com/iJNAV2m5jdna)
 
 下载完成后，将压缩包解压，以管理员身份运行 GUI.exe，即可开始使用。
+若出现应用程序错误等问题，请尝试修复 DirectX 和 C++ 运行库。
 
 ## 方式二：手动安装
 此方式同时适用于 Windows/Linux/macOS 平台用户。

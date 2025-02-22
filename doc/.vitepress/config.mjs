@@ -16,14 +16,21 @@ export default defineConfig({
       {
         text: '简介',
         items: [
-          { text: 'Bili23 Downloader 简介', link: '/intro-bili23'}
+          { text: 'Bili23 Downloader 简介', link: '/doc/intro-bili23'}
         ]
       },
       {
         text: '安装',
         items: [
-          { text: '安装主程序', link: '/install-main' },
-          { text: '安装 FFmpeg', link: '/install-ffmpeg' }
+          { text: '安装主程序', link: '/doc/install-main' },
+          { text: '安装 FFmpeg', link: '/doc/install-ffmpeg' }
+        ]
+      },
+      {
+        text: '使用',
+        items: [
+          { text: '解析流程', link: '/doc/use-process'},
+          { text: '支持链接', link: '/doc/use-url'}
         ]
       }
     ],
