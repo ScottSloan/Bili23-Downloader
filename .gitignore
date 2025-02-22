@@ -33,7 +33,6 @@ cz.toml
 uv.toml
 
 # npm构建文件
-package-lock.json
 node_modules
 doc/.vitepress/cache
 doc/.vitepress/dist
