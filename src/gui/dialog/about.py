@@ -73,15 +73,15 @@ class AboutWindow(wx.Dialog):
         copyright_hbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP), 10)
         copyright_hbox.AddSpacer(25)
 
-        self.website_link = wx.StaticText(self, -1, "项目地址")
-        self.website_link.SetForegroundColour(wx.Colour(0, 102, 209))
-        self.website_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.website_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
+        self.github_link = wx.StaticText(self, -1, "GitHub 主页")
+        self.github_link.SetForegroundColour(wx.Colour(0, 102, 209))
+        self.github_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.github_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
 
-        self.blog_link = wx.StaticText(self, -1, "个人博客")
-        self.blog_link.SetForegroundColour(wx.Colour(0, 102, 209))
-        self.blog_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.blog_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
+        self.home_link = wx.StaticText(self, -1, "项目官网")
+        self.home_link.SetForegroundColour(wx.Colour(0, 102, 209))
+        self.home_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.home_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
 
         self.license_btn = wx.Button(self, -1, "授权", size = _get_scale_size((80, 26)))
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 26)))
@@ -99,15 +99,15 @@ class AboutWindow(wx.Dialog):
         about_vbox.Add(date_lab, 0, wx.ALL | wx.CENTER, 10)
         about_vbox.AddSpacer(20)
         about_vbox.Add(copyright_hbox, 0, wx.EXPAND)
-        about_vbox.Add(self.website_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
-        about_vbox.Add(self.blog_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
+        about_vbox.Add(self.home_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
+        about_vbox.Add(self.github_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
         about_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(about_vbox)
 
     def Bind_EVT(self):
-        self.website_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenWebsite)
-        self.blog_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenBlog)
+        self.github_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenGithubLink)
+        self.home_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenHomeLink)
 
         self.license_btn.Bind(wx.EVT_BUTTON, self.onShowLicense)
 
@@ -115,8 +115,8 @@ class AboutWindow(wx.Dialog):
         license_window = LicenseWindow(self)
         license_window.ShowModal()
 
-    def onOpenWebsite(self, event):
+    def onOpenGithubLink(self, event):
         webbrowser.open("https://www.github.com/ScottSloan/Bili23-Downloader")
 
-    def onOpenBlog(self, event):
-        webbrowser.open("https://www.scott-sloan.cn")
+    def onOpenHomeLink(self, event):
+        webbrowser.open("https://bili23.scott-sloan.cn/")

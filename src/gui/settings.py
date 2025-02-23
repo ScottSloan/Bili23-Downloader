@@ -638,7 +638,7 @@ class MergeTab(wx.Panel):
     def onTutorial(self, event):
         import webbrowser
 
-        webbrowser.open("https://scott-sloan.cn/archives/120/")
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
     def onConfirm(self):
         self.save()

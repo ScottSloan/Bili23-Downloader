@@ -19,7 +19,7 @@ class MergeType(Enum):
 
 class EpisodeDisplayType(Enum):
     Single = 1            # 获取单个视频
-    In_Section = 2        # 获取视频所在的合集
+    In_Section = 2        # 获取视频所在的列表
     All = 3               # 获取全部相关视频
 
 class LiveStatus(Enum):
