@@ -2,7 +2,6 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  lang: "zh-CN",
   title: "Bili23 Downloader",
   description: "一个 B 站视频下载工具",
   lastUpdated: true,
@@ -215,6 +214,15 @@ export default defineConfig({
 
     search: {
       provider: 'local'
-    }
+    },
+
+    docFooter: {
+      prev: '上一页',
+      next: '下一页'
+    },
+    
+    returnToTopLabel: '回到顶部',
+    sidebarMenuLabel: '菜单',
+    outlineTitle: '目录'
   }
 })
