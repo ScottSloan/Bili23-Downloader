@@ -14,7 +14,7 @@ export default defineConfig({
       },
       {
         text: '文档',
-        link: '/doc/intro'
+        link: '/doc'
       },
       {
         text: '博客',
@@ -28,7 +28,7 @@ export default defineConfig({
         items: [
           {
             text: 'Bili23 Downloader 简介',
-            link: '/doc/intro'
+            link: '/doc'
           }
         ]
       },
