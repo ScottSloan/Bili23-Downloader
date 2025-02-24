@@ -293,7 +293,7 @@ class MainWindow(Frame):
                 if dlg.ShowModal() == wx.ID_YES:
                     import webbrowser
 
-                    webbrowser.open("https://scott-sloan.cn/archives/120/")
+                    webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
         def redirect_callback(url: str):
             Thread(target = self.parse_url_thread, args = (url, )).start()

@@ -37,7 +37,6 @@ class Downloader:
         self.current_total_size = 0
 
         self._e = None
-        self._temp_prefer_cdn = None
         self._downloader_info_list = []
         self.thread_info = {}
 
@@ -158,7 +157,13 @@ class Downloader:
 
             get_total_size()
 
-            entry = self._downloader_info_list[0]
+            entry = self._downloader_info_list[:1]
+
+            if not entry:
+                self.onFinished()
+                return
+            else:
+                entry = entry[0]
 
             _info = DownloaderInfo()
             _info.load_from_dict(entry)
@@ -334,9 +339,10 @@ class Downloader:
 
         def update_item_flag():
             if self._downloader_info_list:
-                entry = self._downloader_info_list[0]
+                entry = self._downloader_info_list[:1]
+
                 self.task_info.item_flag.remove(entry["type"])
-                self._downloader_info_list.remove(entry)
+                self._downloader_info_list = self._downloader_info_list[1:]
 
         update_item_flag()
 
@@ -387,9 +393,6 @@ class Downloader:
                     case CDNMode.Auto:
                         _temp_cdn_list = [entry["cdn"] for entry in cdn_map.values()]
 
-                        if self._temp_prefer_cdn:
-                            _temp_cdn_list.insert(0, self._temp_prefer_cdn) 
-
                         return _temp_cdn_list
                     
                     case CDNMode.Custom:
@@ -416,8 +419,6 @@ class Downloader:
                     total_size = int(req.headers["Content-Length"])
                     
                     if total_size:
-                        self._temp_prefer_cdn = cdn
-
                         truncate_file()
 
                         return url_with_cdn, total_size
