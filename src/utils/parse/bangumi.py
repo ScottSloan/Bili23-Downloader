@@ -139,22 +139,22 @@ class BangumiParser:
         self.check_json(resp)
             
         info = resp["result"]
-        
-        if info["type"] == "FLV":
-            AudioInfo.get_audio_quality_list({})
 
-            BangumiInfo.stream_type = StreamType.Flv.value
-        else:
-            # 检测是否为试看内容
-            if "dash" not in info:
-                if BangumiInfo.payment and Config.User.login:
-                    raise Exception(StatusCode.Pay.value)
-                else:
-                    raise Exception(StatusCode.Vip.value)
-                
+        if "dash" in info:
             AudioInfo.get_audio_quality_list(info["dash"])
 
             BangumiInfo.stream_type = StreamType.Dash.value
+        
+        elif "durl" in info:
+            AudioInfo.get_audio_quality_list({})
+
+            BangumiInfo.stream_type = StreamType.Flv.value
+        
+        else:
+            if BangumiInfo.payment and Config.User.login:
+                raise Exception(StatusCode.Pay.value)
+            else:
+                raise Exception(StatusCode.Vip.value)
                 
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]

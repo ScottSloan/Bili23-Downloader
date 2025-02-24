@@ -96,9 +96,16 @@ class CheeseParser:
 
         CheeseInfo.video_quality_id_list = info["accept_quality"]
         CheeseInfo.video_quality_desc_list = info["accept_description"]
-        CheeseInfo.stream_type = StreamType.Dash.value
+        
+        if "dash" in info:
+            AudioInfo.get_audio_quality_list(info["dash"])
 
-        AudioInfo.get_audio_quality_list(info["dash"])
+            CheeseInfo.stream_type = StreamType.Dash.value
+
+        elif "durl" in info:
+            AudioInfo.get_audio_quality_list({})
+
+            CheeseInfo.stream_type = StreamType.Flv.value
 
         ExtraInfo.get_danmaku = Config.Extra.get_danmaku
         ExtraInfo.danmaku_type = Config.Extra.danmaku_type

@@ -421,10 +421,12 @@ class DownloadUtils:
             def get_dash_durl_part(_json_data: dict):
                 if "dash" in _json_data:
                     self.task_info.stream_type = StreamType.Dash.value
+
                     return _json_data["dash"]
                 
-                if "durl" in _json_data:
+                elif "durl" in _json_data:
                     self.task_info.stream_type = StreamType.Flv.value
+                    
                     return _json_data["durl"]
 
             match ParseType(self.task_info.download_type):

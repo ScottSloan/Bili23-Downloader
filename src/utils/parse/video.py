@@ -146,7 +146,8 @@ class VideoParser:
             AudioInfo.get_audio_quality_list(info["dash"])
 
             VideoInfo.stream_type = StreamType.Dash.value
-        else:
+            
+        elif "durl" in info:
             AudioInfo.get_audio_quality_list({})
 
             VideoInfo.stream_type = StreamType.Flv.value
