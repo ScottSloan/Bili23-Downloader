@@ -1159,7 +1159,8 @@ class DownloadTaskPanel(wx.Panel):
                 "video_codec_id": self.task_info.video_codec_id,
                 "audio_quality_id": self.task_info.audio_quality_id,
                 "audio_type": self.task_info.audio_type,
-                "video_merge_type": self.task_info.video_merge_type
+                "video_merge_type": self.task_info.video_merge_type,
+                "stream_type": self.task_info.stream_type
             }
 
             self.download_file_tool.update_task_info_kwargs(**kwargs)

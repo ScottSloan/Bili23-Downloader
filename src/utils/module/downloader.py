@@ -391,9 +391,9 @@ class Downloader:
             if Config.Advanced.enable_custom_cdn:
                 match CDNMode(Config.Advanced.custom_cdn_mode):
                     case CDNMode.Auto:
-                        _temp_cdn_list = [entry["cdn"] for entry in cdn_map.values()]
+                        _temp_cdn_map_list = sorted(list(cdn_map.values()), key = lambda x: x["order"], reverse = False)
 
-                        return _temp_cdn_list
+                        return [entry["cdn"] for entry in _temp_cdn_map_list]
                     
                     case CDNMode.Custom:
                         return [Config.Advanced.custom_cdn]
@@ -417,7 +417,7 @@ class Downloader:
 
                 if "Content-Length" in req.headers:
                     total_size = int(req.headers["Content-Length"])
-                    
+
                     if total_size:
                         truncate_file()
 

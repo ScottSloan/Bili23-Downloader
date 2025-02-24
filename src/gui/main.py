@@ -681,6 +681,9 @@ class MainWindow(Frame):
             case ParseType.Bangumi:
                 stream_type = BangumiInfo.stream_type
 
+            case ParseType.Cheese:
+                stream_type = CheeseInfo.stream_type
+
         dlg = OptionDialog(self, stream_type, callback)
         dlg.ShowModal()
 
