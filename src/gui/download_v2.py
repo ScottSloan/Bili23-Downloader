@@ -22,7 +22,7 @@ from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, Downloa
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
-from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType
+from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 class DownloadManagerWindow(Frame):
@@ -426,7 +426,7 @@ class DownloadUtils:
                 
                 elif "durl" in _json_data:
                     self.task_info.stream_type = StreamType.Flv.value
-                    
+
                     return _json_data["durl"]
 
             match ParseType(self.task_info.download_type):
@@ -480,6 +480,8 @@ class DownloadUtils:
                 case StreamType.Flv:
                     get_all_flv_download_url()
 
+                    self.task_info.video_codec_id = VideoCodecID.AVC.value
+
         def get_video_available_quality():
             # 获取视频最高清晰度
             
@@ -514,7 +516,7 @@ class DownloadUtils:
             else:
                 # 不支持选定编码，自动切换到 H264
                 durl_json = temp_video_durl_list[0]
-                self.task_info.video_codec_id = 7
+                self.task_info.video_codec_id = VideoCodecID.AVC.value
 
             self._video_download_url_list = self._get_all_available_download_url_list(durl_json)
 
@@ -1305,7 +1307,7 @@ class DownloadTaskPanel(wx.Panel):
 
         def _flv():
             self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
-            self.video_codec_lab.SetLabel("FLV")
+            self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
 
         if self.task_info.progress == 100:
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))

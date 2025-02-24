@@ -94,3 +94,8 @@ class AudioQualityID(Enum):
     _Dolby_Atoms = 30250
     _Hi_Res = 30251
     _Auto = 30300
+
+class VideoCodecID(Enum):
+    AVC = 7
+    HEVC = 12
+    AV1 = 13
