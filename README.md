@@ -3,9 +3,11 @@
 
 ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) 
 
+[项目官网](https://bili23.scott-sloan.cn/)
+
 Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows、Linux、macOS 三平台，能够下载 B 站视频/番剧/电影/纪录片等资源。
 
-程序特性
+## 程序特性
 * 跨平台(Windows/Linux/macOS)
 * 提供 GUI 图形界面
 * 简洁易用，适配高分屏缩放

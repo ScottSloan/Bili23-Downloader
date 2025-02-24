@@ -356,7 +356,7 @@ class AdvancedTab(wx.Panel):
 
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
-        self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN")
+        self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
         self.enable_custom_cdn_tip = wx.StaticBitmap(cdn_box, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.enable_custom_cdn_tip.SetToolTip("说明")
@@ -374,15 +374,15 @@ class AdvancedTab(wx.Panel):
         custom_cdn_mode_hbox.AddSpacer(20)
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
-        self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN")
-        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((240, 24)))
+        self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN host")
+        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((220, 24)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
         custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN", size = _get_scale_size((90, 28)))
+        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN host", size = _get_scale_size((100, 28)))
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.AddStretchSpacer()
@@ -504,7 +504,7 @@ class AdvancedTab(wx.Panel):
         self.change_cdn_btn.Enable(self.custom_cdn_manual_radio.GetValue())
 
     def onCustomCDNTipEVT(self, event):
-        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n推荐用户开启此功能，解决因部分 CDN 不稳定而导致下载速度慢甚至下载失败的问题。\n\n请注意，当使用代理时，请关闭此功能", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n因 B 站默认分配的 CDN 线路不稳定，容易导致下载失败，因此建议开启此功能。\n\n请注意，当使用代理时，请关闭此功能。", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onChangeCDNEVT(self, event):
         dlg = ChangeCDNDialog(self)
