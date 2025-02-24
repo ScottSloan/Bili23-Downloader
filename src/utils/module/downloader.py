@@ -339,7 +339,7 @@ class Downloader:
 
         def update_item_flag():
             if self._downloader_info_list:
-                entry = self._downloader_info_list[:1]
+                entry = self._downloader_info_list[:1][0]
 
                 self.task_info.item_flag.remove(entry["type"])
                 self._downloader_info_list = self._downloader_info_list[1:]

@@ -13,14 +13,15 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
 from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, NotificationMessage
-from utils.common.icon_v2 import IconManager, IconType
-from utils.common.thread import Thread
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraParser
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
+
+from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, NotificationMessage
+from utils.common.icon_v2 import IconManager, IconType
+from utils.common.thread import Thread
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
@@ -417,10 +418,14 @@ class DownloadUtils:
                 req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
                 return json.loads(req.text)
 
-            if self.task_info.stream_type == StreamType.Dash.value:
-                param_a = "dash"
-            else:
-                param_a = "durl"
+            def get_dash_durl_part(_json_data: dict):
+                if "dash" in _json_data:
+                    self.task_info.stream_type = StreamType.Dash.value
+                    return _json_data["dash"]
+                
+                if "durl" in _json_data:
+                    self.task_info.stream_type = StreamType.Flv.value
+                    return _json_data["durl"]
 
             match ParseType(self.task_info.download_type):
                 case ParseType.Video:
@@ -438,7 +443,7 @@ class DownloadUtils:
 
                     self._temp_download_json = _json["data"]
 
-                    return self._temp_download_json[param_a]
+                    return get_dash_durl_part(self._temp_download_json)
                 
                 case ParseType.Bangumi:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
@@ -447,7 +452,7 @@ class DownloadUtils:
 
                     self._temp_download_json = _json["result"]
 
-                    return self._temp_download_json[param_a]
+                    return get_dash_durl_part(self._temp_download_json)
                 
                 case ParseType.Cheese:
                     url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
@@ -456,7 +461,7 @@ class DownloadUtils:
 
                     self._temp_download_json = _json["data"]
 
-                    return self._temp_download_json[param_a]
+                    return get_dash_durl_part(self._temp_download_json)
                 
                 case _:
                     self.callback.onDownloadFailedCallback()
