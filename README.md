@@ -25,7 +25,7 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/intro.html)。
 
 ## 更新日志
-### **Version 1.56 (2025/02/24)**
+### **Version 1.56 (2025/02/25)**
 Version 1.56.0 Beta4 发布
 
 本次更新内容：

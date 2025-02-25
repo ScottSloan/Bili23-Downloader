@@ -137,17 +137,13 @@ class DownloadManagerWindow(Frame):
 
     def onStopAllEVT(self, event):
         # 取消全部下载任务
-        self.download_task_list_panel.Freeze()
+        self.stop_specific_tasks_in_gui_list(DownloadStatus.Alive_Ex.value)
 
-        for panel in self.get_download_task_panel_list():
-            if isinstance(panel, DownloadTaskPanel):
-                # EX 列表还包含了下载失败和合成失败两种情况，当前正在合成的视频或者正在转换的音频暂不支持取消
-                if panel.task_info.status in DownloadStatus.Alive_Ex.value:
-                    panel.onStopEVT(event)
+        self.stop_specific_tasks_in_temp_list(DownloadStatus.Alive_Ex.value)
 
-        self.download_task_list_panel.Thaw()
+        self._temp_download_task_info_list = [entry for entry in self._temp_download_task_info_list if entry.status not in DownloadStatus.Alive_Ex.value]
 
-        self._temp_download_task_info_list.clear()
+        self.load_more_download_task_panel()
 
     def onChangeMaxDownloaderEVT(self, event):
         def _update_config():
@@ -191,14 +187,32 @@ class DownloadManagerWindow(Frame):
     
     def onClearHistoryEVT(self, event):
         # 清除已完成的下载记录
+        self.stop_specific_tasks_in_gui_list([DownloadStatus.Complete.value])
+
+        self.stop_specific_tasks_in_temp_list([DownloadStatus.Complete.value])
+
+        self.load_more_download_task_panel()
+    
+    def stop_specific_tasks_in_gui_list(self, status: List[int]):
         self.download_task_list_panel.Freeze()
 
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status == DownloadStatus.Complete.value:
-                    panel.onStopEVT(event)
+                if panel.task_info.status in status:
+                    panel.onStopEVT(0)
 
         self.download_task_list_panel.Thaw()
+
+    def stop_specific_tasks_in_temp_list(self, status: List[int]):
+        _temp_list = []
+
+        for entry in self._temp_download_task_info_list:
+            if entry.status in status:
+                DownloadFileTool._clear_specific_file(entry.id)
+            else:
+                _temp_list.append(entry)
+        
+        self._temp_download_task_info_list = _temp_list
 
     def init_utils(self):
         self._temp_download_task_info_list: List[DownloadTaskInfo] = []

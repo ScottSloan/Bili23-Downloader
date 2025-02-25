@@ -306,6 +306,13 @@ class DownloadFileTool:
             if os.path.isfile(file_path):
                 if file.startswith("info_") and file.endswith(".json"):
                     os.remove(file_path)
+    
+    @staticmethod
+    def _clear_specific_file(id: int):
+        file_path = os.path.join(Config.User.download_file_directory, f"info_{id}.json")
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 class FormatTool:
     # 格式化数据类
