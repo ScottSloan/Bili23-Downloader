@@ -308,7 +308,7 @@ class DownloadManagerWindow(Frame):
         if start_download:
             self.start_download()
 
-    def load_more_download_task_panel(self):
+    def load_more_download_task_panel(self, manual: bool = False):
         def worker(info: DownloadTaskInfo):
             item = DownloadTaskPanel(self.download_task_list_panel, info, get_task_panel_callback())
 
@@ -343,13 +343,15 @@ class DownloadManagerWindow(Frame):
 
         task_panel_list = []
 
-        item_threshold = 3
+        item_threshold = 50
 
         # 未完成下载的排在前面，然后按时间戳排列
         self._temp_download_task_info_list.sort(key = lambda x: (x.status == DownloadStatus.Complete.value, x.timestamp))
         
         temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
         self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
+
+        temp_download_task_info_list.sort(key = lambda x: (x.status != DownloadStatus.Complete.value, x.timestamp))
         
         for info in temp_download_task_info_list:
             # 检查 cid 列表是否已包含，防止重复下载
@@ -1461,7 +1463,7 @@ class LoadMoreTaskPanel(wx.Panel):
     def onShowMoreEVT(self, event):
         self.onDestoryPanel()
 
-        self.callback()
+        self.callback(manual = True)
 
     def onDestoryPanel(self):
         self.Hide()
