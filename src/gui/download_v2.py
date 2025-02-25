@@ -960,8 +960,13 @@ class DownloadTaskPanel(wx.Panel):
 
                 y_offset = (height - new_height) // 2
 
-                return _image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
-            
+                if y_offset >= 0:
+                    return _image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
+                else:
+                    new_width = int(height * (16 / 9))
+                    x_offset = (width - new_width) // 2
+                    return _image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
+                    
             scale = self.FromDIP((112, 63))
 
             self._cover_raw_contents = RequestTool.request(self.task_info.cover_url)
