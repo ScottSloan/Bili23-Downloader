@@ -372,6 +372,8 @@ class Downloader:
             return
 
         try:
+            print(self._e)
+            
             raise self._e
         
         except Exception as e:

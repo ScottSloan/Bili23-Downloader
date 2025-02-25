@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import time
+import shutil
 import requests
 from requests.auth import HTTPProxyAuth
 from gui.templates import ScrolledPanel
@@ -9,8 +10,8 @@ from gui.templates import ScrolledPanel
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
 
-from utils.config import Config, ConfigUtils
-from utils.tool_v2 import RequestTool, DownloadFileTool, UniversalTool
+from utils.config import Config, config_utils
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
@@ -281,8 +282,7 @@ class DownloadTab(wx.Panel):
             "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 更新下载窗口中并行下载数信息
         _update_download_window()
@@ -479,8 +479,7 @@ class AdvancedTab(wx.Panel):
             "always_use_http_protocol": Config.Advanced.always_use_http_protocol
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
     
     def onConfirm(self):
         self.save()
@@ -605,8 +604,7 @@ class MergeTab(wx.Panel):
             "auto_clean": Config.Merge.auto_clean
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
@@ -724,8 +722,7 @@ class ExtraTab(wx.Panel):
             "get_cover": Config.Extra.get_cover
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
 
     def onChangeDanmakuEVT(self, event):
         def set_enable(enable: bool):
@@ -871,8 +868,7 @@ class ProxyTab(wx.Panel):
             "auth_password": Config.Proxy.auth_password
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
 
     def onChangeProxyModeEVT(self, event):
         def set_enable(enable: bool):
@@ -1119,8 +1115,7 @@ class MiscTab(wx.Panel):
             "enable_debug": Config.Misc.enable_debug
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
         self._main_window.init_menubar()
@@ -1153,12 +1148,10 @@ class MiscTab(wx.Panel):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            utils = ConfigUtils()
-            utils.clear_config()
+            config_utils.clear_config()
 
-            DownloadFileTool._clear_all_files()
+            shutil.rmtree(Config.User.directory)
 
-            # 退出程序
             exit()
     
     def onResetToDefaultEVT(self, event):

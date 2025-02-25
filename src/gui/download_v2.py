@@ -12,7 +12,7 @@ from gui.templates import Frame, ScrolledPanel
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
-from utils.config import Config
+from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraParser
@@ -147,16 +147,13 @@ class DownloadManagerWindow(Frame):
 
     def onChangeMaxDownloaderEVT(self, event):
         def _update_config():
-            from utils.config import ConfigUtils
-
             Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
 
             kwargs = {
                 "max_download_count": Config.Download.max_download_count
             }
-
-            utils = ConfigUtils()
-            utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+            
+            config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 动态调整并行下载数
         _update_config()

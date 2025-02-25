@@ -273,11 +273,11 @@ class ConfigUtils:
 
         self._write_config_json(file_path, config)
 
+    @staticmethod
     def clear_config():
         from utils.tool_v2 import UniversalTool
 
         UniversalTool.remove_files(os.getcwd(), ["config.json"])
-        UniversalTool.remove_files(Config.User.directory, ["user.json"])
 
     def _read_config_json(self, file_path: str):
         try:
@@ -290,5 +290,5 @@ class ConfigUtils:
         with open(file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
-utils = ConfigUtils()
-utils.load_config()
+config_utils = ConfigUtils()
+config_utils.load_config()

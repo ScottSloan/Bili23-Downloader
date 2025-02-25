@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import Dict, Callable
 
 from utils.auth.login import QRLogin, SMSLogin
-from utils.config import Config, ConfigUtils
+from utils.config import Config, config_utils
 from utils.common.thread import Thread
 from utils.auth.cookie import CookieUtils
 
@@ -139,8 +139,7 @@ class LoginWindow(wx.Dialog):
             "bili_jct": Config.User.bili_jct
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+        config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
         
     @property
     def _left_pic(self):

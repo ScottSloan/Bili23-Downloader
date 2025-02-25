@@ -9,7 +9,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from utils.tool_v2 import RequestTool
-from utils.config import Config, utils
+from utils.config import Config, config_utils
 
 class CookieUtils:
     def checkCookieInfo():
@@ -46,7 +46,7 @@ class CookieUtils:
                 "b_lsid": Config.Auth.b_lsid
             }
 
-            utils.update_config_kwargs(Config.User.user_config_path, "cookie_params", **kwargs)
+            config_utils.update_config_kwargs(Config.User.user_config_path, "cookie_params", **kwargs)
         
         def _reset_user_params():
             Config.User.login = False
@@ -60,7 +60,7 @@ class CookieUtils:
                 "DefeUserID_ckMd5": Config.User.DedeUserID__ckMd5
             }
 
-            utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+            config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
 
         def is_valid(params: list):
             return any([not bool(i) for i in params])
