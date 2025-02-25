@@ -62,7 +62,7 @@ class AboutWindow(wx.Dialog):
         version_lab = wx.StaticText(self, -1, f"{Config.APP.version}")
         version_lab.SetFont(font)
 
-        desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片 等资源")
+        desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片等资源")
 
         date_lab = wx.StaticText(self, -1, f"发布日期：{Config.APP.release_date} ({Config.APP.version_code})")
 

@@ -343,8 +343,11 @@ class DownloadManagerWindow(Frame):
 
         task_panel_list = []
 
-        item_threshold = 50
+        item_threshold = 3
 
+        # 未完成下载的排在前面，然后按时间戳排列
+        self._temp_download_task_info_list.sort(key = lambda x: (x.status == DownloadStatus.Complete.value, x.timestamp))
+        
         temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
         self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
         
@@ -401,7 +404,16 @@ class DownloadManagerWindow(Frame):
             notification = wx.adv.NotificationMessage(_title, _message,  parent = self, flags = wx.ICON_ERROR)
             notification.Show()
 
-        count = self.get_download_task_count(DownloadStatus.Alive.value)
+        def _get_on_download_task_count():
+            count = self.get_download_task_count(DownloadStatus.Alive.value)
+
+            for entry in self._temp_download_task_info_list:
+                if entry.status in DownloadStatus.Alive.value:
+                    count += 1
+
+            return count
+
+        count = _get_on_download_task_count()
 
         if count:
             _label = f"{count} 个任务正在下载"
