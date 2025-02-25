@@ -189,8 +189,6 @@ class Downloader:
         def limit_speed():
             if Config.Download.enable_speed_limit:
                 # 计算执行时间
-                speed_bps = Config.Download.speed_mbps * 1024 * 1024
-
                 elapsed_time = time.time() - start_time
                 expected_time = self.current_completed_size / speed_bps
 
@@ -209,9 +207,15 @@ class Downloader:
             req = self.session.get(RequestTool.replace_protocol(info.url), headers = RequestTool.get_headers(info.referer_url, Config.User.SESSDATA, info.range), stream = True, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
             
             with open(info.file_path, "rb+") as f:
-                start_time = time.time()
+                speed_bps = Config.Download.speed_mbps * 1024 * 1024
                 chunk_size = 1024
                 f.seek(info.range[0])
+
+                start_time = time.time()
+
+                if self.current_completed_size:
+                    # 断点续传时补偿 start_time
+                    start_time -= self.current_completed_size / speed_bps
 
                 for chunk in req.iter_content(chunk_size = chunk_size):
                     if chunk:
