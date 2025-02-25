@@ -8,7 +8,7 @@ from utils.common.map import cdn_map
 
 class ChangeCDNDialog(wx.Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "更改 CDN")
+        wx.Dialog.__init__(self, parent, -1, "更改 CDN host")
 
         self.init_UI()
 
@@ -27,7 +27,7 @@ class ChangeCDNDialog(wx.Dialog):
                 case "linux" | "darwin":
                     return wx.DefaultSize
 
-        cdn_lab = wx.StaticText(self, -1, "CDN 列表")
+        cdn_lab = wx.StaticText(self, -1, "CDN host 列表")
 
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.cdn_list.EnableCheckBoxes(True)
@@ -78,7 +78,7 @@ class ChangeCDNDialog(wx.Dialog):
     def init_utils(self):
         def init_listctrl():
             self.cdn_list.AppendColumn("序号", width = self.FromDIP(75))
-            self.cdn_list.AppendColumn("CDN", width = self.FromDIP(280))
+            self.cdn_list.AppendColumn("CDN host", width = self.FromDIP(280))
             self.cdn_list.AppendColumn("提供商", width = self.FromDIP(140))
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 

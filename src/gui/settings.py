@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import time
+import shutil
 import requests
 from requests.auth import HTTPProxyAuth
 from gui.templates import ScrolledPanel
@@ -9,8 +10,8 @@ from gui.templates import ScrolledPanel
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
 
-from utils.config import Config, ConfigUtils
-from utils.tool_v2 import RequestTool, DownloadFileTool, UniversalTool
+from utils.config import Config, config_utils
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
@@ -132,7 +133,7 @@ class DownloadTab(wx.Panel):
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL, 10)
+        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
@@ -154,7 +155,7 @@ class DownloadTab(wx.Panel):
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        codec_hbox.Add(self.codec_choice, 0, wx.ALL, 10)
+        codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.enable_dolby_chk = wx.CheckBox(self.scrolled_panel, -1, '自动下载杜比视界或杜比全景声')
@@ -163,7 +164,7 @@ class DownloadTab(wx.Panel):
         self.dolby_tip.SetToolTip("说明")
 
         dolby_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        dolby_hbox.Add(self.enable_dolby_chk, 0, wx.ALL, 10)
+        dolby_hbox.Add(self.enable_dolby_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         dolby_hbox.Add(self.dolby_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
@@ -243,7 +244,7 @@ class DownloadTab(wx.Panel):
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
-        self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
+        self.speed_limit_box.SetValue(str(Config.Download.speed_mbps))
 
         self.onChangeSpeedLimitEVT(0)
 
@@ -264,7 +265,7 @@ class DownloadTab(wx.Panel):
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
-        Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
+        Config.Download.speed_mbps = int(self.speed_limit_box.GetValue())
 
         kwargs = {
             "path": Config.Download.path,
@@ -278,11 +279,10 @@ class DownloadTab(wx.Panel):
             "delete_history": Config.Download.delete_history,
             "add_number": Config.Download.add_number,
             "enable_speed_limit": Config.Download.enable_speed_limit,
-            "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
+            "speed_mbps": Config.Download.speed_mbps,
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 更新下载窗口中并行下载数信息
         _update_download_window()
@@ -356,14 +356,14 @@ class AdvancedTab(wx.Panel):
 
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
-        self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN")
+        self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
         self.enable_custom_cdn_tip = wx.StaticBitmap(cdn_box, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
         self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.enable_custom_cdn_tip.SetToolTip("说明")
 
         enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM), 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_auto_switch_radio = wx.RadioButton(cdn_box, -1, "自动切换")
         self.custom_cdn_manual_radio = wx.RadioButton(cdn_box, -1, "手动设置")
@@ -374,15 +374,15 @@ class AdvancedTab(wx.Panel):
         custom_cdn_mode_hbox.AddSpacer(20)
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
-        self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN")
-        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((240, 24)))
+        self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN host")
+        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((220, 24)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
         custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN", size = _get_scale_size((90, 28)))
+        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN host", size = _get_scale_size((100, 28)))
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.AddStretchSpacer()
@@ -397,34 +397,37 @@ class AdvancedTab(wx.Panel):
         cdn_sbox = wx.StaticBoxSizer(cdn_box)
         cdn_sbox.Add(cdn_vbox, 1, wx.EXPAND)
 
-        retry_box = wx.StaticBox(self, -1, "下载重试设置")
+        advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
-        download_error_retry_lab = wx.StaticText(self, -1, "下载出错重试次数")
-        self.download_error_retry_box = wx.SpinCtrl(self, -1, min = 1, max = 15)
+        download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "下载出错重试次数")
+        self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
         download_error_retry_hbox.Add(download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), 10)
 
-        download_suspend_retry_lab = wx.StaticText(self, -1, "下载停滞时自动重启下载间隔")
-        self.download_suspend_retry_box = wx.SpinCtrl(self, -1, min = 2, max = 15)
-        download_suspend_retry_unit_lab = wx.StaticText(self, -1, "秒")
+        download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "下载停滞时自动重启下载间隔")
+        self.download_suspend_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 2, max = 15)
+        download_suspend_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "秒")
 
         download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
         download_suspend_retry_hbox.Add(download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         download_suspend_retry_hbox.Add(download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        retry_vbox = wx.BoxSizer(wx.VERTICAL)
-        retry_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
-        retry_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
+        self.always_use_http_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTP 协议发起请求而非 HTTPS")
 
-        retry_sbox = wx.StaticBoxSizer(retry_box)
-        retry_sbox.Add(retry_vbox, 0, wx.EXPAND)
+        advanced_download_vbox = wx.BoxSizer(wx.VERTICAL)
+        advanced_download_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
+        advanced_download_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
+        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL, 10)
+
+        advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box)
+        advanced_download_sbox.Add(advanced_download_vbox, 0, wx.EXPAND)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        vbox.Add(retry_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(advanced_download_sbox, 0, wx.ALL | wx.EXPAND, 10)
 
         self.SetSizerAndFit(vbox)
 
@@ -443,6 +446,7 @@ class AdvancedTab(wx.Panel):
 
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
+        self.always_use_http_protocol_chk.SetValue(Config.Advanced.always_use_http_protocol)
 
         match CDNMode(Config.Advanced.custom_cdn_mode):
             case CDNMode.Auto:
@@ -458,6 +462,7 @@ class AdvancedTab(wx.Panel):
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
+        Config.Advanced.always_use_http_protocol = self.always_use_http_protocol_chk.GetValue()
 
         if self.custom_cdn_auto_switch_radio.GetValue():
             Config.Advanced.custom_cdn_mode = 0
@@ -470,11 +475,11 @@ class AdvancedTab(wx.Panel):
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
             "custom_cdn_list": Config.Advanced.custom_cdn_list,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
-            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval
+            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval,
+            "always_use_http_protocol": Config.Advanced.always_use_http_protocol
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
     
     def onConfirm(self):
         self.save()
@@ -498,7 +503,7 @@ class AdvancedTab(wx.Panel):
         self.change_cdn_btn.Enable(self.custom_cdn_manual_radio.GetValue())
 
     def onCustomCDNTipEVT(self, event):
-        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n推荐用户开启此功能，解决因部分 CDN 不稳定而导致下载速度慢甚至下载失败的问题。\n\n请注意，当使用代理时，请关闭此功能", "说明", wx.ICON_INFORMATION).ShowModal()
+        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n因 B 站默认分配的 CDN 线路不稳定，容易导致下载失败，因此建议开启此功能。\n\n请注意，当使用代理时，请关闭此功能。", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onChangeCDNEVT(self, event):
         dlg = ChangeCDNDialog(self)
@@ -599,8 +604,7 @@ class MergeTab(wx.Panel):
             "auto_clean": Config.Merge.auto_clean
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
@@ -632,7 +636,7 @@ class MergeTab(wx.Panel):
     def onTutorial(self, event):
         import webbrowser
 
-        webbrowser.open("https://scott-sloan.cn/archives/120/")
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
     def onConfirm(self):
         self.save()
@@ -718,8 +722,7 @@ class ExtraTab(wx.Panel):
             "get_cover": Config.Extra.get_cover
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
 
     def onChangeDanmakuEVT(self, event):
         def set_enable(enable: bool):
@@ -865,8 +868,7 @@ class ProxyTab(wx.Panel):
             "auth_password": Config.Proxy.auth_password
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
 
     def onChangeProxyModeEVT(self, event):
         def set_enable(enable: bool):
@@ -895,7 +897,7 @@ class ProxyTab(wx.Panel):
                 start_time = time.time()
 
                 url = "https://www.bilibili.com"
-                req = requests.get(url, headers = RequestTool.get_headers(), proxies = proxy, auth = auth, timeout = 5)
+                req = RequestTool.request_get(url, proxies = proxy, auth = _auth)
                 
                 end_time = time.time()
 
@@ -913,12 +915,12 @@ class ProxyTab(wx.Panel):
             proxy = {}
 
         if self.auth_chk.GetValue():
-            auth = HTTPProxyAuth(
+            _auth = HTTPProxyAuth(
                 self.uname_box.GetValue(),
                 self.passwd_box.GetValue()
             )
         else:
-            auth = HTTPProxyAuth(None, None)
+            _auth = HTTPProxyAuth(None, None)
 
         Thread(target = test).start()
 
@@ -1010,6 +1012,8 @@ class MiscTab(wx.Panel):
         player_sbox.Add(player_vbox, 1, wx.EXPAND)
 
         misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
+
+        self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
@@ -1021,7 +1025,8 @@ class MiscTab(wx.Panel):
         btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         misc_vbox = wx.BoxSizer(wx.VERTICAL)
-        misc_vbox.Add(self.check_update_chk, 0, wx.ALL, 10)
+        misc_vbox.Add(self.show_user_info_chk, 0, wx.ALL, 10)
+        misc_vbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), 10)
         misc_vbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
         misc_vbox.Add(btn_hbox, 0, wx.EXPAND)
 
@@ -1072,6 +1077,7 @@ class MiscTab(wx.Panel):
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.player_path_box.SetValue(Config.Misc.player_path)
+        self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
         self.check_update_chk.SetValue(Config.Misc.auto_check_update)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
 
@@ -1094,6 +1100,7 @@ class MiscTab(wx.Panel):
 
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.player_path_box.GetValue()
+        Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.auto_check_update = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
@@ -1103,12 +1110,12 @@ class MiscTab(wx.Panel):
             "auto_select": Config.Misc.auto_select,
             "player_preference": Config.Misc.player_preference,
             "player_path": Config.Misc.player_path,
+            "show_user_info": Config.Misc.show_user_info,
             "auto_check_update": Config.Misc.auto_check_update,
             "enable_debug": Config.Misc.enable_debug
         }
 
-        utils = ConfigUtils()
-        utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
         self._main_window.init_menubar()
@@ -1141,12 +1148,10 @@ class MiscTab(wx.Panel):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            utils = ConfigUtils()
-            utils.clear_config()
+            config_utils.clear_config()
 
-            DownloadFileTool._clear_all_files()
+            shutil.rmtree(Config.User.directory)
 
-            # 退出程序
             exit()
     
     def onResetToDefaultEVT(self, event):

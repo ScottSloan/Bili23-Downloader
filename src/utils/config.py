@@ -13,13 +13,13 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.55.0"
-        version_code: int = 1550
+        version: str = "1.56.0"
+        version_code: int = 1560
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/01/28"
+        release_date: str = "2025/02/25"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -41,8 +41,12 @@ class Config:
         login: bool = False
         username: str = ""
         face_url: str = ""
-        sessdata: str = ""
-        timestamp: int = 0
+        login_time: int = 0
+
+        SESSDATA: str = ""
+        DedeUserID: str = ""
+        DedeUserID__ckMd5: str = ""
+        bili_jct = ""
 
     class Misc:
         episode_display_mode: int = 2
@@ -51,6 +55,7 @@ class Config:
         auto_select: bool = False
         enable_debug: bool = False
         auto_check_update: bool = True
+        show_user_info: bool = True
 
         player_preference: int = 0
         player_path: str = ""
@@ -72,7 +77,7 @@ class Config:
         add_number: bool = True
 
         enable_speed_limit: bool = False
-        speed_limit_in_mb: int = 10
+        speed_mbps: int = 10
     
     class Merge:
         override_file: bool = False
@@ -101,16 +106,23 @@ class Config:
         img_key: str = ""
         sub_key: str = ""
 
-        wbi_key: str = ""
+        buvid3: str = ""
+        buvid4: str = ""
+        buvid_fp: str = ""
+        b_nut: str = ""
+        bili_ticket: str = ""
+        uuid: str = ""
+        b_lsid: str = ""
 
     class Advanced:
         enable_custom_cdn: bool = True
         custom_cdn_mode: int = 0
-        custom_cdn: str = "upos-sz-mirrorali.bilivideo.com"
+        custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
         custom_cdn_list: list = []
 
         download_error_retry_count: int = 3
         download_suspend_retry_interval: int = 3
+        always_use_http_protocol: bool = False
 
 class ConfigUtils:
     def __init__(self):
@@ -150,6 +162,9 @@ class ConfigUtils:
             
             if "user" not in user_config:
                 user_config["user"] = {}
+            
+            if "cookie_params" not in user_config:
+                user_config["cookie_params"] = {}
         
         def _init():
             match Config.Sys.platform:
@@ -184,7 +199,7 @@ class ConfigUtils:
         Config.Download.delete_history = app_config["download"].get("delete_history", Config.Download.delete_history)
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
-        Config.Download.speed_limit_in_mb = app_config["download"].get("speed_limit_in_mb", Config.Download.speed_limit_in_mb)
+        Config.Download.speed_mbps = app_config["download"].get("speed_mbps", Config.Download.speed_mbps)
 
         # advanced
         Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
@@ -193,6 +208,7 @@ class ConfigUtils:
         Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
+        Config.Advanced.always_use_http_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_http_protocol)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
@@ -221,6 +237,7 @@ class ConfigUtils:
         Config.Misc.auto_select = app_config["misc"].get("auto_select", Config.Misc.auto_select)
         Config.Misc.player_preference = app_config["misc"].get("player_preference", Config.Misc.player_preference)
         Config.Misc.player_path = app_config["misc"].get("player_path", Config.Misc.player_path)
+        Config.Misc.show_user_info = app_config["misc"].get("show_user_info", Config.Misc.show_user_info)
         Config.Misc.auto_check_update = app_config["misc"].get("auto_check_update", Config.Misc.auto_check_update)
         Config.Misc.enable_debug = app_config["misc"].get("enable_debug", Config.Misc.enable_debug)
 
@@ -228,8 +245,20 @@ class ConfigUtils:
         Config.User.login = user_config["user"].get("login", Config.User.login)
         Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
         Config.User.username = user_config["user"].get("username", Config.User.username)
-        Config.User.sessdata = user_config["user"].get("sessdata", Config.User.sessdata)
-        Config.User.timestamp = user_config["user"].get("timestamp", Config.User.timestamp)
+        Config.User.login_time = user_config["user"].get("login_time", Config.User.login_time)
+        Config.User.SESSDATA = user_config["user"].get("SESSDATA", Config.User.SESSDATA)
+        Config.User.DedeUserID = user_config["user"].get("DedeUserID", Config.User.DedeUserID)
+        Config.User.DedeUserID__ckMd5 = user_config["user"].get("DedeUserID__ckMd5", Config.User.DedeUserID__ckMd5)
+        Config.User.bili_jct = user_config["user"].get("bili_jct", Config.User.bili_jct)
+
+        # auth
+        Config.Auth.buvid3 = user_config["cookie_params"].get("buvid3", Config.Auth.buvid3)
+        Config.Auth.buvid4 = user_config["cookie_params"].get("buvid4", Config.Auth.buvid4)
+        Config.Auth.buvid_fp = user_config["cookie_params"].get("buvid_fp", Config.Auth.buvid_fp)
+        Config.Auth.b_nut = user_config["cookie_params"].get("b_nut", Config.Auth.b_nut)
+        Config.Auth.bili_ticket = user_config["cookie_params"].get("bili_ticket", Config.Auth.bili_ticket)
+        Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)
+        Config.Auth.b_lsid = user_config["cookie_params"].get("b_lsid", Config.Auth.b_lsid)
 
         _after_load()
 
@@ -244,11 +273,11 @@ class ConfigUtils:
 
         self._write_config_json(file_path, config)
 
+    @staticmethod
     def clear_config():
         from utils.tool_v2 import UniversalTool
 
         UniversalTool.remove_files(os.getcwd(), ["config.json"])
-        UniversalTool.remove_files(Config.User.directory, ["user.json"])
 
     def _read_config_json(self, file_path: str):
         try:
@@ -261,5 +290,5 @@ class ConfigUtils:
         with open(file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
-utils = ConfigUtils()
-utils.load_config()
+config_utils = ConfigUtils()
+config_utils.load_config()

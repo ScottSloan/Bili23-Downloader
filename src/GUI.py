@@ -2,6 +2,7 @@ import wx
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
+from utils.auth.cookie import CookieUtils
 
 from gui.main import MainWindow
 
@@ -16,6 +17,8 @@ class APP(wx.App):
 if __name__ == "__main__":
     UniversalTool.msw_set_utf8_encode()
     UniversalTool.msw_set_dpi_awareness()
+
+    CookieUtils.init_cookie_params()
 
     app = APP()
 

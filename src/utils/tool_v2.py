@@ -6,7 +6,7 @@ import requests
 import subprocess
 import requests.auth
 from datetime import datetime
-from typing import Optional, Callable, List
+from typing import Optional, List
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo, ExceptionInfo
@@ -14,34 +14,67 @@ from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
     # 请求工具类
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @staticmethod
-    def request(url: str, error_callback: Optional[Callable] = None):
-        try:
-            req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+    def request_get(url: str, headers = None, proxies = None, auth = None):
+        if not headers:
+            headers = RequestTool.get_headers()
 
-            return req.content
+        if not proxies:
+            proxies = RequestTool.get_proxies()
 
-        except Exception:
-            if error_callback is not None:
-                error_callback()
+        if not auth:
+            auth = RequestTool.get_auth()
+
+        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth)
+    
+    @staticmethod
+    def request_post(url: str, headers = None, params = None, json = None):
+        if not headers:
+            headers = RequestTool.get_headers()
+        
+        return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, json = json, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
+        def cookie():
+            if Config.Auth.buvid3:
+                _cookie["buvid3"] = Config.Auth.buvid3
+                _cookie["b_nut"] = Config.Auth.b_nut
+            
+            if Config.Auth.bili_ticket:
+                _cookie["bili_ticket"] = Config.Auth.bili_ticket
+
+            if Config.Auth.buvid4:
+                _cookie["buvid4"] = Config.Auth.buvid4
+
         headers = {
             "User-Agent": RequestTool.USER_AGENT,
-            "Cookie": "CURRENT_FNVAL=4048;"
+        }
+
+        _cookie = {
+            "CURRENT_FNVAL": "4048",
+            "b_lsid": Config.Auth.b_lsid,
+            "_uuid": Config.Auth.uuid,
+            "buvid_fp": Config.Auth.buvid_fp
         }
 
         if referer_url:
             headers["Referer"] = referer_url
 
         if sessdata:
-            headers["Cookie"] += f"SESSDATA={sessdata}"
+            _cookie["SESSDATA"] = Config.User.SESSDATA
+            _cookie["DedeUserID"] = Config.User.DedeUserID
+            _cookie["DedeUserID__ckMd5"] = Config.User.DedeUserID__ckMd5
+            _cookie["bili_jct"] = Config.User.bili_jct
 
         if range:
             headers["Range"] = f"bytes={range[0]}-{range[1]}"
+
+        cookie()
+
+        headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
 
         return headers
 
@@ -67,6 +100,13 @@ class RequestTool:
         else:
             return None
     
+    @staticmethod
+    def replace_protocol(url: str):
+        if Config.Advanced.always_use_http_protocol:
+            return url.replace("https://", "http://")
+        
+        return url
+
 class FileDirectoryTool:
     # 文件目录工具类
     @staticmethod
@@ -266,6 +306,13 @@ class DownloadFileTool:
             if os.path.isfile(file_path):
                 if file.startswith("info_") and file.endswith(".json"):
                     os.remove(file_path)
+    
+    @staticmethod
+    def _clear_specific_file(id: int):
+        file_path = os.path.join(Config.User.download_file_directory, f"info_{id}.json")
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 class FormatTool:
     # 格式化数据类
@@ -350,21 +397,20 @@ class FormatTool:
         
         else:
             return str(data)
+
 class UniversalTool:
     # 通用工具类
     @staticmethod
     def get_update_json():
         url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
-
-        Config.Temp.update_json = json.loads(req.text)
+        Config.Temp.update_json = json.loads(RequestTool.request_get(url).text)
 
     @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
-            content = RequestTool.request(Config.User.face_url)
+            content = RequestTool.request_get(Config.User.face_url).content
 
             with open(Config.User.face_path, "wb") as f:
                 f.write(content)
@@ -394,23 +440,19 @@ class UniversalTool:
     
     @staticmethod
     def aid_to_bvid(_aid: int):
-        table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
-        map = {}
+        XOR_CODE = 23442827791579
+        MAX_AID = 1 << 51
+        ALPHABET = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf"
+        ENCODE_MAP = 8, 7, 0, 5, 1, 3, 2, 4, 6
 
-        s = [11, 10, 3, 8, 4, 6]
-        xor = 177451812
-        add = 8728348608
+        bvid = [""] * 9
+        tmp = (MAX_AID | _aid) ^ XOR_CODE
 
-        for i in range(58):
-            map[table[i]] = i
+        for i in range(len(ENCODE_MAP)):
+            bvid[ENCODE_MAP[i]] = ALPHABET[tmp % len(ALPHABET)]
+            tmp //= len(ALPHABET)
 
-        _aid = (_aid ^ xor) + add
-        r = list("BV1  4 1 7  ")
-
-        for i in range(6):
-            r[s[i]] = table[_aid // 58 ** i % 58]
-
-        return "".join(r)
+        return "BV1" + "".join(bvid)
 
     @staticmethod
     def remove_files(directory: str, file_name_list: List[str]):

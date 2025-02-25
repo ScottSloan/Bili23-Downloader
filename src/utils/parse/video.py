@@ -1,6 +1,5 @@
 import re
 import json
-import requests
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
@@ -85,7 +84,7 @@ class VideoParser:
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
         
-        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -114,14 +113,12 @@ class VideoParser:
         else:
             VideoInfo.cid = info["cid"]
 
-        self.get_video_tag()
-
         self.parse_episodes()
 
     def get_video_tag(self):
         url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
         
-        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
@@ -137,8 +134,8 @@ class VideoParser:
         }
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
-                
-        req = requests.get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -149,7 +146,8 @@ class VideoParser:
             AudioInfo.get_audio_quality_list(info["dash"])
 
             VideoInfo.stream_type = StreamType.Dash.value
-        else:
+            
+        elif "durl" in info:
             AudioInfo.get_audio_quality_list({})
 
             VideoInfo.stream_type = StreamType.Flv.value

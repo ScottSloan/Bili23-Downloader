@@ -93,7 +93,8 @@ danmaku_format_map = {
 subtitle_format_map = {
     "srt": 0,
     "txt": 1,
-    "json": 2
+    "lrc": 2,
+    "json": 3
 }
 
 download_status_map = {
@@ -115,92 +116,62 @@ cdn_map = {
     1: {
         "cdn": "upos-sz-mirrorhw.bilivideo.com",
         "provider": "华为云",
-        "order": 2
-    },
-    2: {
-        "cdn": "upos-sz-mirrorhwb.bilivideo.com",
-        "provider": "华为云",
-        "order": 7
-    },
-    3: {
-        "cdn": "upos-sz-mirror08h.bilivideo.com",
-        "provider": "华为云",
-        "order": 8
-    },
-    4: {
-        "cdn": "upos-sz-mirrorhwdisp.bilivideo.com",
-        "provider": "华为云",
-        "order": 9
-    },
-    5: {
-        "cdn": "upos-sz-mirror08ct.bilivideo.com",
-        "provider": "华为云",
-        "order": 10
-    },
-    6: {
-        "cdn": "upos-sz-mirrorhwo1.bilivideo.com",
-        "provider": "华为云",
-        "order": 11
-    },
-    7: {
-        "cdn": "upos-sz-mirrorcoso1.bilivideo.com",
-        "provider": "腾讯云",
-        "order": 3
-    },
-    8: {
-        "cdn": "upos-sz-mirrorcos.bilivideo.com",
-        "provider": "腾讯云",
         "order": 4
     },
-    9: {
-        "cdn": "upos-sz-mirrorcosb.bilivideo.com",
-        "provider": "腾讯云",
-        "order": 12
-    },
-    10: {
-        "cdn": "upos-sz-mirrorcosdisp.bilivideo.com",
-        "provider": "腾讯云",
-        "order": 13
-    },
-    11: {
-        "cdn": "upos-sz-mirrorali.bilivideo.com",
-        "provider": "阿里云",
+    2: {
+        "cdn": "upos-sz-mirror08h.bilivideo.com",
+        "provider": "华为云",
         "order": 5
     },
-    12: {
-        "cdn": "upos-sz-mirrorali02.bilivideo.com",
-        "provider": "阿里云",
+    3: {
+        "cdn": "upos-sz-mirrorcoso1.bilivideo.com",
+        "provider": "腾讯云",
+        "order": 2
+    },
+    4: {
+        "cdn": "upos-sz-mirrorcos.bilivideo.com",
+        "provider": "腾讯云",
         "order": 6
     },
-    13: {
+    5: {
+        "cdn": "upos-sz-mirrorcosb.bilivideo.com",
+        "provider": "腾讯云",
+        "order": 7
+    },
+    6: {
+        "cdn": "upos-sz-mirrorali.bilivideo.com",
+        "provider": "阿里云",
+        "order": 3
+    },
+    7: {
+        "cdn": "upos-sz-mirrorali02.bilivideo.com",
+        "provider": "阿里云",
+        "order": 8
+    },
+    8: {
         "cdn": "upos-sz-mirroralib.bilivideo.com",
         "provider": "阿里云",
-        "order": 14
+        "order": 9
     },
-    14: {
+    9: {
         "cdn": "upos-sz-mirroraliov.bilivideo.com",
         "provider": "阿里云（海外）",
-        "order": 15
+        "order": 10
     },
-    15: {
-        "cdn": "upos-sz-mirroralibstar1.bilivideo.com",
-        "provider": "阿里云（海外）",
-        "order": 16
-    },
-    16: {
+    10: {
         "cdn": "upos-sz-mirrorcosov.bilivideo.com",
         "provider": "腾讯云（海外）",
-        "order": 17
+        "order": 11
     },
-    17: {
+    11: {
         "cdn": "upos-hz-mirrorakam.akamaized.net",
         "provider": "Akamai（海外）",
-        "order": 18
+        "order": 12
     },
-    18: {
+    12: {
         "cdn": "upos-sz-mirrorcf1ov.bilivideo.com",
         "provider": "Cloudflare（海外）",
-        "order": 19
+        "order": 13
     },
 }
 

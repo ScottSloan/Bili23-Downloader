@@ -19,7 +19,7 @@ class MergeType(Enum):
 
 class EpisodeDisplayType(Enum):
     Single = 1            # 获取单个视频
-    In_Section = 2        # 获取视频所在的合集
+    In_Section = 2        # 获取视频所在的列表
     All = 3               # 获取全部相关视频
 
 class LiveStatus(Enum):
@@ -39,7 +39,8 @@ class DanmakuType(Enum):
 class SubtitleType(Enum):
     SRT = 0               # SRT 格式
     TXT = 1               # TXT 格式
-    JSON = 2              # JSON 格式
+    LRC = 2               # LRC 格式
+    JSON = 3              # JSON 格式
 
 class PlayerMode(Enum):
     Default = 0           # 系统默认
@@ -93,3 +94,8 @@ class AudioQualityID(Enum):
     _Dolby_Atoms = 30250
     _Hi_Res = 30251
     _Auto = 30300
+
+class VideoCodecID(Enum):
+    AVC = 7
+    HEVC = 12
+    AV1 = 13

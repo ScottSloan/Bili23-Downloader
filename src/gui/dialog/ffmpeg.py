@@ -56,7 +56,7 @@ class DetectDialog(wx.Dialog):
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(select_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.refresh_btn, 0, wx.ALL, 10)
+        top_hbox.Add(self.refresh_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         self.env_chk = wx.RadioButton(self, -1, "环境变量")
         self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((350, 20)), style = wx.ST_ELLIPSIZE_END)

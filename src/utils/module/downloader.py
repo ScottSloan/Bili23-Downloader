@@ -37,7 +37,6 @@ class Downloader:
         self.current_total_size = 0
 
         self._e = None
-        self._temp_prefer_cdn = None
         self._downloader_info_list = []
         self.thread_info = {}
 
@@ -158,7 +157,13 @@ class Downloader:
 
             get_total_size()
 
-            entry = self._downloader_info_list[0]
+            entry = self._downloader_info_list[:1]
+
+            if not entry:
+                self.onFinished()
+                return
+            else:
+                entry = entry[0]
 
             _info = DownloaderInfo()
             _info.load_from_dict(entry)
@@ -184,16 +189,12 @@ class Downloader:
         def limit_speed():
             if Config.Download.enable_speed_limit:
                 # 计算执行时间
-                limit_bytes = Config.Download.speed_limit_in_mb * 1024 * 1024
-
                 elapsed_time = time.time() - start_time
-                expected_time = chunk_size / (limit_bytes / self.thread_alive_count)
+                expected_time = self.current_completed_size / speed_bps
 
-                if elapsed_time < 1:
+                if elapsed_time < expected_time:
                     # 计算应暂停的时间，从而限制下载速度
-                    time.sleep(max(0, expected_time - elapsed_time))
-
-                    return time.time()
+                    time.sleep(expected_time - elapsed_time)
 
         def check_flag():
             if self.current_completed_size >= self.current_total_size:
@@ -203,12 +204,18 @@ class Downloader:
 
         # 分片下载
         try:
-            req = self.session.get(info.url, headers = RequestTool.get_headers(info.referer_url, Config.User.sessdata, info.range), stream = True, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+            req = self.session.get(RequestTool.replace_protocol(info.url), headers = RequestTool.get_headers(info.referer_url, Config.User.SESSDATA, info.range), stream = True, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
             
             with open(info.file_path, "rb+") as f:
-                start_time = time.time()
-                chunk_size = 8192
+                speed_bps = Config.Download.speed_mbps * 1024 * 1024
+                chunk_size = 1024
                 f.seek(info.range[0])
+
+                start_time = time.time()
+
+                if self.current_completed_size:
+                    # 断点续传时补偿 start_time
+                    start_time -= self.current_completed_size / speed_bps
 
                 for chunk in req.iter_content(chunk_size = chunk_size):
                     if chunk:
@@ -226,7 +233,7 @@ class Downloader:
 
                         check_flag()
 
-                        start_time = limit_speed()
+                        limit_speed()
 
         except Exception as e:
             # 置错误标志位为 True
@@ -252,6 +259,8 @@ class Downloader:
                 self.retry_count += 1
 
             if self.retry_count == Config.Advanced.download_suspend_retry_interval:
+                self._e = GlobalException("下载失败超过最大重试次数")
+
                 self.onError()
                 
         def update_download_file_info():
@@ -334,9 +343,10 @@ class Downloader:
 
         def update_item_flag():
             if self._downloader_info_list:
-                entry = self._downloader_info_list[0]
+                entry = self._downloader_info_list[:1][0]
+
                 self.task_info.item_flag.remove(entry["type"])
-                self._downloader_info_list.remove(entry)
+                self._downloader_info_list = self._downloader_info_list[1:]
 
         update_item_flag()
 
@@ -385,12 +395,9 @@ class Downloader:
             if Config.Advanced.enable_custom_cdn:
                 match CDNMode(Config.Advanced.custom_cdn_mode):
                     case CDNMode.Auto:
-                        _temp_cdn_list = [entry["cdn"] for entry in cdn_map.values()]
+                        _temp_cdn_map_list = sorted(list(cdn_map.values()), key = lambda x: x["order"], reverse = False)
 
-                        if self._temp_prefer_cdn:
-                            _temp_cdn_list.insert(0, self._temp_prefer_cdn) 
-
-                        return _temp_cdn_list
+                        return [entry["cdn"] for entry in _temp_cdn_map_list]
                     
                     case CDNMode.Custom:
                         return [Config.Advanced.custom_cdn]
@@ -400,6 +407,8 @@ class Downloader:
         def switch_cdn(url: str, cdn: str):
             if cdn:
                 return re.sub(r'(?<=https://)[^/]+', cdn, url)
+            else:
+                return url
             
         def request_head(url: str, cdn: str):
             url_with_cdn = switch_cdn(url, cdn)
@@ -412,10 +421,8 @@ class Downloader:
 
                 if "Content-Length" in req.headers:
                     total_size = int(req.headers["Content-Length"])
-                    
-                    if total_size:
-                        self._temp_prefer_cdn = cdn
 
+                    if total_size:
                         truncate_file()
 
                         return url_with_cdn, total_size

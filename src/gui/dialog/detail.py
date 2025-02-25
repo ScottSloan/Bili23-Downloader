@@ -5,6 +5,7 @@ import wx.html
 from utils.config import Config
 from utils.tool_v2 import RequestTool
 from utils.common.enums import ParseType
+from utils.common.thread import Thread
 
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -116,6 +117,8 @@ class VideoPage(DetailPage):
         DetailPage.__init__(self, parent)
 
         self.init_UI()
+
+        self.init_utils()
     
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -123,10 +126,8 @@ class VideoPage(DetailPage):
         title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{VideoInfo.title}</font>"""
         views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: {self.get_views_color()};">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
         desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}; color: {self.get_text_color()};">{VideoInfo.desc}</span></div>"""
-        tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: {self.get_tag_background_color()}; color: {self.get_tag_color()};">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
-        tag_div = """<div id="tag">{}</div>""".format("".join(tag_span))
 
-        body = "<br>".join([title_div, views_div, desc_div, tag_div])
+        body = "<br>".join([title_div, views_div, desc_div])
 
         self.set_page(body)
 
@@ -136,24 +137,55 @@ class VideoPage(DetailPage):
         vbox.AddSpacer(15)
 
         self.SetSizerAndFit(vbox)
+    
+    def init_utils(self):
+        def worker():
+            def add_tag():
+                font: wx.Font = self.GetFont()
+
+                tag_span = [f"""<span style="font-family: {font.GetFaceName()}; background-color: {self.get_tag_background_color()}; color: {self.get_tag_color()};">{i}</span><span>&nbsp&nbsp</span>""" for i in VideoInfo.tag_list]
+                tag_div = """<div id="tag">{}</div>""".format("".join(tag_span))
+
+                self.html_page.AppendToPage(tag_div)
+
+            self.GetParent().GetParent().GetParent().video_parser.get_video_tag()
+
+            wx.CallAfter(add_tag)
+
+        Thread(target = worker).start()
 
 class BangumiPage(DetailPage):
     def __init__(self, parent):
         DetailPage.__init__(self, parent)
 
         self.init_UI()
+
+        self.init_utils()
     
     def init_UI(self):
-        def get_cover():
-            contents = RequestTool.request(BangumiInfo.cover)
+        def _img_load():
+            font: wx.Font = self.GetFont()
+            font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
-            temp_image = wx.Image(io.BytesIO(contents))
+            bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
+            dc = wx.MemoryDC(bmp)
 
-            return temp_image.Scale(self.FromDIP(165), self.FromDIP(221), wx.IMAGE_QUALITY_HIGH)
+            dc.SetFont(font)
+
+            text = "正在加载"
+            width, height = dc.GetTextExtent(text)
+
+            x = (self.FromDIP(150) - width) // 2
+            y = (self.FromDIP(150) - height) // 2
+
+            dc.Clear()
+            dc.DrawText(text, x, y)
+
+            return bmp
 
         font: wx.Font = self.GetFont()
 
-        cover_bmp = wx.StaticBitmap(self, -1, get_cover().ConvertToBitmap())
+        self.cover_bmp = wx.StaticBitmap(self, -1, _img_load(), size = self.FromDIP((165, 221)))
 
         title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{BangumiInfo.title}</font>"""
         views_div = f"""<div id="views"><span style="color: {self.get_views_color()}; font-family: {font.GetFaceName()};">{BangumiInfo.views}播放&nbsp&nbsp·&nbsp {BangumiInfo.danmakus}弹幕&nbsp&nbsp·&nbsp {BangumiInfo.followers}</span></div>"""
@@ -170,7 +202,7 @@ class BangumiPage(DetailPage):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(15)
-        hbox.Add(cover_bmp, 0, wx.ALL, 10)
+        hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
         hbox.Add(right_vbox, 1, wx.EXPAND)
         hbox.AddSpacer(15)
 
@@ -180,6 +212,21 @@ class BangumiPage(DetailPage):
         vbox.AddSpacer(15)
 
         self.SetSizerAndFit(vbox)
+    
+    def init_utils(self):
+        def worker():
+            def set_bmp():
+                temp_image = wx.Image(io.BytesIO(contents))
+
+                bmp = temp_image.Scale(self.FromDIP(165), self.FromDIP(221), wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+            
+                self.cover_bmp.SetBitmap(bmp)
+
+            contents = RequestTool.request_get(BangumiInfo.cover).content
+
+            wx.CallAfter(set_bmp)
+
+        Thread(target = worker).start()
 
 class CheesePage(DetailPage):
     def __init__(self, parent):

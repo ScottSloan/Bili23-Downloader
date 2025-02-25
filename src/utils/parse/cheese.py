@@ -1,6 +1,5 @@
 import re
 import json
-import requests
 
 from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
@@ -66,7 +65,7 @@ class CheeseParser:
     def get_cheese_info(self):
         url = f"https://api.bilibili.com/pugv/view/web/season?{self.url_type}={self.url_type_value}"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -88,7 +87,7 @@ class CheeseParser:
     def get_cheese_available_media_info(self):
         url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.epid}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
 
-        req = requests.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth(), timeout = 5)
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -97,9 +96,16 @@ class CheeseParser:
 
         CheeseInfo.video_quality_id_list = info["accept_quality"]
         CheeseInfo.video_quality_desc_list = info["accept_description"]
-        CheeseInfo.stream_type = StreamType.Dash.value
+        
+        if "dash" in info:
+            AudioInfo.get_audio_quality_list(info["dash"])
 
-        AudioInfo.get_audio_quality_list(info["dash"])
+            CheeseInfo.stream_type = StreamType.Dash.value
+
+        elif "durl" in info:
+            AudioInfo.get_audio_quality_list({})
+
+            CheeseInfo.stream_type = StreamType.Flv.value
 
         ExtraInfo.get_danmaku = Config.Extra.get_danmaku
         ExtraInfo.danmaku_type = Config.Extra.danmaku_type

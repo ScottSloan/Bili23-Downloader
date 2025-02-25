@@ -2,7 +2,6 @@ import os
 import json
 import math
 import datetime
-import requests
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool
@@ -40,7 +39,7 @@ class ExtraParser:
         # 下载 xml 格式弹幕文件
         url = f"https://comment.bilibili.com/{self.cid}.xml"
 
-        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
         path = os.path.join(Config.Download.path, f"{self.title}.xml")
 
@@ -58,7 +57,7 @@ class ExtraParser:
             # 下载 protobuf 格式弹幕文件
             url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.cid}&segment_index={index}"
 
-            req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+            req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
             path = os.path.join(Config.Download.path, _get_file_name(index, _package_count))
 
@@ -73,7 +72,7 @@ class ExtraParser:
 
     def get_subtitle(self):
         def get_subtitle_json(subtitle_url: str):
-            req = requests.get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+            req = RequestTool.request_get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
             return json.loads(req.text)
         
@@ -109,6 +108,23 @@ class ExtraParser:
 
             _save(_temp, f"{self.title}_{lan}.txt")
         
+        def _to_lrc(subtitle_json: dict, lan: str):
+            def _format_timestamp(_from: float):
+                min = int(_from // 60)
+                sec = _from % 60
+
+                return f"{min:02}:{sec:04.1f}"
+
+            _temp = ""
+
+            for entry in subtitle_json["body"]:
+                timestamp = _format_timestamp(entry["from"])
+                content = entry["content"]
+
+                _temp += f"[{timestamp}]{content}\n"
+
+            _save(_temp, f"{self.title}_{lan}.lrc")
+
         def _to_json(subtitle_json: dict, lan: str):
             _temp = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
 
@@ -127,7 +143,7 @@ class ExtraParser:
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"
 
-        req = requests.get(url, headers = RequestTool.get_headers(sessdata = Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         subtitle_list = resp["data"]["subtitle"]["subtitles"]
@@ -145,6 +161,9 @@ class ExtraParser:
 
                 case SubtitleType.TXT:
                     _to_txt(subtitle_json, lan)
+
+                case SubtitleType.LRC:
+                    _to_lrc(subtitle_json, lan)
 
                 case SubtitleType.JSON:
                     _to_json(subtitle_json, lan)

@@ -12,16 +12,17 @@ from gui.templates import Frame, ScrolledPanel
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.cover import CoverViewerDialog
 
-from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, NotificationMessage
-from utils.common.icon_v2 import IconManager, IconType
-from utils.common.thread import Thread
+from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool, FileDirectoryTool, DownloadFileTool, FormatTool, UniversalTool
 from utils.module.downloader import Downloader
 from utils.parse.extra import ExtraParser
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.auth.wbi import WbiUtils
-from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType
+
+from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, DownloaderInfo, UtilsCallback, TaskPanelCallback, NotificationMessage
+from utils.common.icon_v2 import IconManager, IconType
+from utils.common.thread import Thread
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
+from utils.common.enums import ParseType, MergeType, DownloadStatus, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 class DownloadManagerWindow(Frame):
@@ -136,28 +137,23 @@ class DownloadManagerWindow(Frame):
 
     def onStopAllEVT(self, event):
         # 取消全部下载任务
-        self.download_task_list_panel.Freeze()
+        self.stop_specific_tasks_in_gui_list(DownloadStatus.Alive_Ex.value)
 
-        for panel in self.get_download_task_panel_list():
-            if isinstance(panel, DownloadTaskPanel):
-                # EX 列表还包含了下载失败和合成失败两种情况，当前正在合成的视频或者正在转换的音频暂不支持取消
-                if panel.task_info.status in DownloadStatus.Alive_Ex.value:
-                    panel.onStopEVT(event)
+        self.stop_specific_tasks_in_temp_list(DownloadStatus.Alive_Ex.value)
 
-        self.download_task_list_panel.Thaw()
+        self._temp_download_task_info_list = [entry for entry in self._temp_download_task_info_list if entry.status not in DownloadStatus.Alive_Ex.value]
+
+        self.load_more_download_task_panel()
 
     def onChangeMaxDownloaderEVT(self, event):
         def _update_config():
-            from utils.config import ConfigUtils
-
             Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
 
             kwargs = {
                 "max_download_count": Config.Download.max_download_count
             }
-
-            utils = ConfigUtils()
-            utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+            
+            config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 动态调整并行下载数
         _update_config()
@@ -188,16 +184,36 @@ class DownloadManagerWindow(Frame):
     
     def onClearHistoryEVT(self, event):
         # 清除已完成的下载记录
+        self.stop_specific_tasks_in_gui_list([DownloadStatus.Complete.value])
+
+        self.stop_specific_tasks_in_temp_list([DownloadStatus.Complete.value])
+
+        self.load_more_download_task_panel()
+    
+    def stop_specific_tasks_in_gui_list(self, status: List[int]):
         self.download_task_list_panel.Freeze()
 
         for panel in self.get_download_task_panel_list():
             if isinstance(panel, DownloadTaskPanel):
-                if panel.task_info.status == DownloadStatus.Complete.value:
-                    panel.onStopEVT(event)
+                if panel.task_info.status in status:
+                    panel.onStopEVT(0)
 
         self.download_task_list_panel.Thaw()
 
+    def stop_specific_tasks_in_temp_list(self, status: List[int]):
+        _temp_list = []
+
+        for entry in self._temp_download_task_info_list:
+            if entry.status in status:
+                DownloadFileTool._clear_specific_file(entry.id)
+            else:
+                _temp_list.append(entry)
+        
+        self._temp_download_task_info_list = _temp_list
+
     def init_utils(self):
+        self._temp_download_task_info_list: List[DownloadTaskInfo] = []
+
         # 记录下载任务的 cid 列表
         self._temp_cid_list = set()
 
@@ -234,7 +250,7 @@ class DownloadManagerWindow(Frame):
                     _download_task_info_list.append(_task_info)
 
         # 根据时间戳排序
-        _download_task_info_list.sort(key = lambda _timestamp: _task_info.timestamp, reverse = False)
+        _download_task_info_list.sort(key = lambda x: x.timestamp, reverse = False)
 
         wx.CallAfter(self.add_download_task_panel, _download_task_info_list, empty_callback, False)
 
@@ -264,50 +280,25 @@ class DownloadManagerWindow(Frame):
         return _count
 
     def add_download_task_panel(self, download_task_info_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
-        def worker(info: DownloadTaskInfo, multiple_flag: bool, index_with_zero: str):
-            if multiple_flag:
-                info.index = self._temp_index
-                info.index_with_zero = index_with_zero
-
-            item = DownloadTaskPanel(self.download_task_list_panel, info, task_panel_callback)
-
-            return (item, 0, wx.EXPAND)
-
-        def stop_download_callback(cid: int):
-            # 停止下载回调函数
-            self.refresh_task_list_panel_ui()
-
-            # 清除 cid 列表中的记录
-            self._temp_cid_list.remove(cid)
-        
-        task_panel_list = []
-
         # 批量下载标识符
         multiple_flag = len(download_task_info_list) > 1
 
-        task_panel_callback = TaskPanelCallback()
-        task_panel_callback.onStartNextCallback = self.start_download
-        task_panel_callback.onStopCallbacak = stop_download_callback
-        task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+        # 创建下载信息文件
+        for index, entry in enumerate(download_task_info_list):
+            if not entry.timestamp:
+                entry.timestamp = int(round(time.time() * 1000000)) + index
 
-        # 暂时停止 UI 更新
-        self.download_task_list_panel.Freeze()
+            if multiple_flag:
+                entry.index = index + 1
+                entry.index_with_zero = str(index + 1).zfill(len(str(len(download_task_info_list))))
+            
+            download_file_tool = DownloadFileTool(entry.id)
+            download_file_tool.save_download_info(entry)
 
-        self._temp_index = 0
-        
-        for index, info in enumerate(download_task_info_list):
-            # 检查 cid 列表是否已包含，防止重复下载
-            if info.cid not in self._temp_cid_list:
-                info.timestamp += index
-                self._temp_index += 1
-                task_panel_list.append(worker(info, multiple_flag, str(self._temp_index).zfill(len(str(len(download_task_info_list))))))
+        # 加入待下载列表
+        self._temp_download_task_info_list.extend(download_task_info_list)
 
-                self._temp_cid_list.add(info.cid)
-
-        self.download_task_list_panel.sizer.AddMany(task_panel_list)
-
-        # 恢复 UI 更新
-        self.download_task_list_panel.Thaw()
+        self.load_more_download_task_panel()
 
         self.refresh_task_list_panel_ui()
 
@@ -316,6 +307,70 @@ class DownloadManagerWindow(Frame):
 
         if start_download:
             self.start_download()
+
+    def load_more_download_task_panel(self):
+        def worker(info: DownloadTaskInfo):
+            item = DownloadTaskPanel(self.download_task_list_panel, info, get_task_panel_callback())
+
+            return (item, 0, wx.EXPAND)
+        
+        def get_task_panel_callback():
+            def stop_download_callback(cid: int):
+                # 停止下载回调函数
+                self.refresh_task_list_panel_ui()
+
+                # 清除 cid 列表中的记录
+                self._temp_cid_list.remove(cid)
+
+            def load_more_callback():
+                if len(self._temp_download_task_info_list) and self.get_download_task_count([DownloadStatus.Waiting.value]) < 1:
+                    wx.CallAfter(self.load_more_download_task_panel)
+
+            task_panel_callback = TaskPanelCallback()
+            task_panel_callback.onStartNextCallback = self.start_download
+            task_panel_callback.onStopCallbacak = stop_download_callback
+            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+            task_panel_callback.onLoadMoreTaskCallback = load_more_callback
+
+            return task_panel_callback
+
+        def destory_load_more_panel():
+            for panel in self.get_download_task_panel_list():
+                if isinstance(panel, LoadMoreTaskPanel):
+                    panel.onDestoryPanel()
+
+        destory_load_more_panel()
+
+        task_panel_list = []
+
+        item_threshold = 50
+
+        # 未完成下载的排在前面，然后按时间戳排列
+        self._temp_download_task_info_list.sort(key = lambda x: (x.status == DownloadStatus.Complete.value, x.timestamp))
+        
+        temp_download_task_info_list = self._temp_download_task_info_list[:item_threshold]
+        self._temp_download_task_info_list = self._temp_download_task_info_list[item_threshold:]
+
+        temp_download_task_info_list.sort(key = lambda x: (x.status != DownloadStatus.Complete.value, x.timestamp))
+        
+        for info in temp_download_task_info_list:
+            # 检查 cid 列表是否已包含，防止重复下载
+            if info.cid not in self._temp_cid_list:
+                task_panel_list.append(worker(info))
+
+                self._temp_cid_list.add(info.cid)
+
+        if len(self._temp_download_task_info_list):
+            panel = LoadMoreTaskPanel(self.download_task_list_panel, len(self._temp_download_task_info_list), self.load_more_download_task_panel)
+            task_panel_list.append((panel, 0, wx.EXPAND))
+
+        self.download_task_list_panel.Freeze()
+
+        self.download_task_list_panel.sizer.AddMany(task_panel_list)
+
+        self.download_task_list_panel.Thaw()
+
+        self.refresh_task_list_panel_ui()
 
     def update_task_count_label(self, message: NotificationMessage = None, stop_by_manual: bool = False):
         def _show_notification():
@@ -351,7 +406,16 @@ class DownloadManagerWindow(Frame):
             notification = wx.adv.NotificationMessage(_title, _message,  parent = self, flags = wx.ICON_ERROR)
             notification.Show()
 
-        count = self.get_download_task_count(DownloadStatus.Alive.value)
+        def _get_on_download_task_count():
+            count = self.get_download_task_count(DownloadStatus.Alive.value)
+
+            for entry in self._temp_download_task_info_list:
+                if entry.status in DownloadStatus.Alive.value:
+                    count += 1
+
+            return count
+
+        count = _get_on_download_task_count()
 
         if count:
             _label = f"{count} 个任务正在下载"
@@ -376,13 +440,19 @@ class DownloadUtils:
     def get_video_bangumi_download_url(self):
         def get_json():
             def request_get(url: str):
-                req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.sessdata), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+                req = requests.get(url, headers = RequestTool.get_headers(self.task_info.referer_url, Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
                 return json.loads(req.text)
 
-            if self.task_info.stream_type == StreamType.Dash.value:
-                param_a = "dash"
-            else:
-                param_a = "durl"
+            def get_dash_durl_part(_json_data: dict):
+                if "dash" in _json_data:
+                    self.task_info.stream_type = StreamType.Dash.value
+
+                    return _json_data["dash"]
+                
+                elif "durl" in _json_data:
+                    self.task_info.stream_type = StreamType.Flv.value
+
+                    return _json_data["durl"]
 
             match ParseType(self.task_info.download_type):
                 case ParseType.Video:
@@ -400,7 +470,7 @@ class DownloadUtils:
 
                     self._temp_download_json = _json["data"]
 
-                    return self._temp_download_json[param_a]
+                    return get_dash_durl_part(self._temp_download_json)
                 
                 case ParseType.Bangumi:
                     url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
@@ -409,7 +479,7 @@ class DownloadUtils:
 
                     self._temp_download_json = _json["result"]
 
-                    return self._temp_download_json[param_a]
+                    return get_dash_durl_part(self._temp_download_json)
                 
                 case ParseType.Cheese:
                     url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
@@ -418,7 +488,7 @@ class DownloadUtils:
 
                     self._temp_download_json = _json["data"]
 
-                    return self._temp_download_json[param_a]
+                    return get_dash_durl_part(self._temp_download_json)
                 
                 case _:
                     self.callback.onDownloadFailedCallback()
@@ -434,6 +504,8 @@ class DownloadUtils:
 
                 case StreamType.Flv:
                     get_all_flv_download_url()
+
+                    self.task_info.video_codec_id = VideoCodecID.AVC.value
 
         def get_video_available_quality():
             # 获取视频最高清晰度
@@ -469,7 +541,7 @@ class DownloadUtils:
             else:
                 # 不支持选定编码，自动切换到 H264
                 durl_json = temp_video_durl_list[0]
-                self.task_info.video_codec_id = 7
+                self.task_info.video_codec_id = VideoCodecID.AVC.value
 
             self._video_download_url_list = self._get_all_available_download_url_list(durl_json)
 
@@ -692,7 +764,7 @@ class DownloadUtils:
     def _get_default_audio_download_url(self, data: List[dict]):
         highest_audio_quality = self._get_highest_audio_quality(data)
 
-        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == AudioQualityID._Auto.value:
+        if highest_audio_quality < self.task_info.audio_quality_id or self.task_info.audio_quality_id == AudioQualityID._Auto.value or self.task_info.audio_quality_id in [AudioQualityID._Hi_Res.value, AudioQualityID._Dolby_Atoms.value]:
             # 当视频不存在选取的音质时，选取最高可用的音质
             audio_quality = highest_audio_quality
         else:
@@ -870,6 +942,7 @@ class DownloadTaskPanel(wx.Panel):
         self.icon_manager = IconManager(self)
 
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover_bmp.SetToolTip("查看封面")
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.title_lab = wx.StaticText(self, -1, self.task_info.title, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
@@ -960,11 +1033,16 @@ class DownloadTaskPanel(wx.Panel):
 
                 y_offset = (height - new_height) // 2
 
-                return _image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
-            
+                if y_offset >= 0:
+                    return _image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
+                else:
+                    new_width = int(height * (16 / 9))
+                    x_offset = (width - new_width) // 2
+                    return _image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
+                    
             scale = self.FromDIP((112, 63))
 
-            self._cover_raw_contents = RequestTool.request(self.task_info.cover_url)
+            self._cover_raw_contents = RequestTool.request_get(self.task_info.cover_url).content
 
             # 获取封面数据并保存为 wx.Image 对象
             temp_image = wx.Image(io.BytesIO(self._cover_raw_contents))
@@ -1008,9 +1086,8 @@ class DownloadTaskPanel(wx.Panel):
         if self.task_info.cover_url:
             Thread(target = show_cover).start()
 
-        # 初始化断点续传工具类，并保存信息
+        # 初始化断点续传工具类
         self.download_file_tool = DownloadFileTool(self.task_info.id)
-        self.download_file_tool.save_download_info(self.task_info)
         
         self.downloader = Downloader(self.task_info, self.download_file_tool, get_downloader_callback())
 
@@ -1112,7 +1189,8 @@ class DownloadTaskPanel(wx.Panel):
                 "video_codec_id": self.task_info.video_codec_id,
                 "audio_quality_id": self.task_info.audio_quality_id,
                 "audio_type": self.task_info.audio_type,
-                "video_merge_type": self.task_info.video_merge_type
+                "video_merge_type": self.task_info.video_merge_type,
+                "stream_type": self.task_info.stream_type
             }
 
             self.download_file_tool.update_task_info_kwargs(**kwargs)
@@ -1123,6 +1201,7 @@ class DownloadTaskPanel(wx.Panel):
         def callback():
             # 更新下载进度回调函数
             self.progress_bar.SetValue(info["progress"])
+            self.progress_bar.SetToolTip(f"{info['progress']}%")
 
             if self.task_info.status == DownloadStatus.Downloading.value:
                 # 只有在下载状态时才更新下载速度
@@ -1148,11 +1227,13 @@ class DownloadTaskPanel(wx.Panel):
         Thread(target = self.utils.merge_video).start()
 
     def onMergeFinish(self):
-        def callback():
+        def worker():
             self.update_download_status(DownloadStatus.Complete.value)
 
             if Config.Download.delete_history:
                 self.download_file_tool.clear_download_info()
+            
+            self.callback.onLoadMoreTaskCallback()
 
             _get_extra()
 
@@ -1175,7 +1256,7 @@ class DownloadTaskPanel(wx.Panel):
             if self.task_info.get_subtitle:
                 extra_parser.get_subtitle()
 
-        wx.CallAfter(callback)
+        wx.CallAfter(worker)
 
     def onMergeFailed(self):
         def callback():
@@ -1257,7 +1338,7 @@ class DownloadTaskPanel(wx.Panel):
 
         def _flv():
             self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
-            self.video_codec_lab.SetLabel("FLV")
+            self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
 
         if self.task_info.progress == 100:
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
@@ -1351,3 +1432,40 @@ class DownloadTaskPanel(wx.Panel):
 
         # 同步更新到文件
         self.download_file_tool.update_task_info_kwargs(**kwargs)
+
+class LoadMoreTaskPanel(wx.Panel):
+    def __init__(self, parent, left: int, callback: Callable):
+        self.left, self.callback = left, callback
+
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+    def init_UI(self):
+        self.more_lab = wx.StaticText(self, -1, f"显示更多项目({self.left}+)")
+        self.more_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+        
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddStretchSpacer()
+        hbox.Add(self.more_lab, 0, wx.ALL, 10)
+        hbox.AddStretchSpacer()
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox, 0, wx.EXPAND)
+
+        self.SetSizer(vbox)
+
+    def Bind_EVT(self):
+        self.more_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowMoreEVT)
+
+    def onShowMoreEVT(self, event):
+        self.onDestoryPanel()
+
+        self.callback()
+
+    def onDestoryPanel(self):
+        self.Hide()
+
+        self.Destroy()
