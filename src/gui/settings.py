@@ -244,7 +244,7 @@ class DownloadTab(wx.Panel):
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
-        self.speed_limit_box.SetValue(str(Config.Download.speed_limit_in_mb))
+        self.speed_limit_box.SetValue(str(Config.Download.speed_mbps))
 
         self.onChangeSpeedLimitEVT(0)
 
@@ -265,7 +265,7 @@ class DownloadTab(wx.Panel):
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
-        Config.Download.speed_limit_in_mb = int(self.speed_limit_box.GetValue())
+        Config.Download.speed_mbps = int(self.speed_limit_box.GetValue())
 
         kwargs = {
             "path": Config.Download.path,
@@ -279,7 +279,7 @@ class DownloadTab(wx.Panel):
             "delete_history": Config.Download.delete_history,
             "add_number": Config.Download.add_number,
             "enable_speed_limit": Config.Download.enable_speed_limit,
-            "speed_limit_in_mb": Config.Download.speed_limit_in_mb,
+            "speed_mbps": Config.Download.speed_mbps,
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)

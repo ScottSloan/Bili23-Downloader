@@ -308,7 +308,7 @@ class DownloadManagerWindow(Frame):
         if start_download:
             self.start_download()
 
-    def load_more_download_task_panel(self, manual: bool = False):
+    def load_more_download_task_panel(self):
         def worker(info: DownloadTaskInfo):
             item = DownloadTaskPanel(self.download_task_list_panel, info, get_task_panel_callback())
 
@@ -1463,7 +1463,7 @@ class LoadMoreTaskPanel(wx.Panel):
     def onShowMoreEVT(self, event):
         self.onDestoryPanel()
 
-        self.callback(manual = True)
+        self.callback()
 
     def onDestoryPanel(self):
         self.Hide()

@@ -189,16 +189,14 @@ class Downloader:
         def limit_speed():
             if Config.Download.enable_speed_limit:
                 # 计算执行时间
-                limit_bytes = Config.Download.speed_limit_in_mb * 1024 * 1024
+                speed_bps = Config.Download.speed_mbps * 1024 * 1024
 
                 elapsed_time = time.time() - start_time
-                expected_time = chunk_size / (limit_bytes / self.thread_alive_count)
+                expected_time = self.current_completed_size / speed_bps
 
-                if elapsed_time < 1:
+                if elapsed_time < expected_time:
                     # 计算应暂停的时间，从而限制下载速度
-                    time.sleep(max(0, expected_time - elapsed_time))
-
-                    return time.time()
+                    time.sleep(expected_time - elapsed_time)
 
         def check_flag():
             if self.current_completed_size >= self.current_total_size:
@@ -212,7 +210,7 @@ class Downloader:
             
             with open(info.file_path, "rb+") as f:
                 start_time = time.time()
-                chunk_size = 8192
+                chunk_size = 1024
                 f.seek(info.range[0])
 
                 for chunk in req.iter_content(chunk_size = chunk_size):
@@ -231,7 +229,7 @@ class Downloader:
 
                         check_flag()
 
-                        start_time = limit_speed()
+                        limit_speed()
 
         except Exception as e:
             # 置错误标志位为 True
@@ -257,6 +255,8 @@ class Downloader:
                 self.retry_count += 1
 
             if self.retry_count == Config.Advanced.download_suspend_retry_interval:
+                self._e = GlobalException("下载失败超过最大重试次数")
+
                 self.onError()
                 
         def update_download_file_info():
@@ -372,8 +372,6 @@ class Downloader:
             return
 
         try:
-            print(self._e)
-            
             raise self._e
         
         except Exception as e:
