@@ -43,7 +43,7 @@ jobs:
     
     - name: Add License
       run: |
-        Rename-Item "out/GUI.dist" "out/Bili23 Downloader"
+        Rename-Item -Path "out/GUI.dist" -NewName "out/Bili23 Downloader"
         Copy-Item ./LICENSE "out/Bili23 Downloader/"
     
     - name: Generate Source Code Artifacts
