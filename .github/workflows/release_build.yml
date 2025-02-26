@@ -81,8 +81,14 @@ jobs:
     
     - name: Print SHA1
       run: |
-        echo Get-FileHash -Path "C:\path\to\your\file.txt" -Algorithm SHA1
-        echo Get-FileHash -Path "C:\path\to\your\file.txt" -Algorithm SHA1
+        $sha1_1 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip" -Algorithm SHA1
+        $sha1_2 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip" -Algorithm SHA1
+
+        echo "win_release"
+        echo $sha1_1
+
+        echo "win_release_ffmpeg"
+        echo $sha1_2
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v2
