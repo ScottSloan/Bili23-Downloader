@@ -61,14 +61,14 @@ jobs:
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_release.zip
         path: |
-          "source/Bili23 Downloader"
+          source/Bili23 Downloader
 
     - name: Upload Artifacts (no_ffmpeg)
       uses: actions/upload-artifact@v4
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
         path: |
-          "out/Bili23 Downloader"
+          out/Bili23 Downloader
       
     - name: Download FFmpeg
       run: |
@@ -82,7 +82,7 @@ jobs:
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         path: |
-          "out/Bili23 Downloader"
+          out/Bili23 Downloader
 
     - name: Compression (with_ffmpeg)
       shell: pwsh
