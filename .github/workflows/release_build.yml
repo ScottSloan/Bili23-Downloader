@@ -84,6 +84,11 @@ jobs:
         path: |
           out/Bili23 Downloader
 
+    - name: Compression (source_code)
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "source/Bili23 Downloader" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_release.zip"
+
     - name: Compression (with_ffmpeg)
       shell: pwsh
       run: |
