@@ -39,19 +39,36 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=${{ steps.get_version.outputs.version }} --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
+        nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=${{ steps.get_version.outputs.version }} --windows-icon-from-ico=icon.ico --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
     
     - name: Add License
       run: |
         Rename-Item "out/GUI.dist" "out/Bili23 Downloader"
         Copy-Item ./LICENSE "out/Bili23 Downloader/"
+    
+    - name: Generate Source Code Artifacts
+      shell: pwsh
+      run: |
+        $new = "source/Bili23 Downloader"
+        New-Item -Path $new -ItemType Directory -Force
+        Copy-Item -Path src -Destination $new -Recurse
+        Copy-Item -Path LICENSE -Destination $new
+        Copy-Item -Path README.md -Destination $new
+        Copy-Item -Path requirements.txt -Destination $new 
+    
+    - name: Upload Artifacts (source_code)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_release.zip
+        path: |
+          "source/Bili23 Downloader"
 
     - name: Upload Artifacts (no_ffmpeg)
       uses: actions/upload-artifact@v4
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
         path: |
-          out/Bili23 Downloader
+          "out/Bili23 Downloader"
       
     - name: Download FFmpeg
       run: |
@@ -65,7 +82,7 @@ jobs:
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         path: |
-          out/Bili23 Downloader
+          "out/Bili23 Downloader"
 
     - name: Compression (with_ffmpeg)
       shell: pwsh
@@ -81,14 +98,18 @@ jobs:
     
     - name: Print SHA1
       run: |
-        $sha1_1 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip" -Algorithm SHA1
-        $sha1_2 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip" -Algorithm SHA1
+        $sha1_1 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_release.zip" -Algorithm SHA1
+        $sha1_2 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip" -Algorithm SHA1
+        $sha1_3 = Get-FileHash -Path "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip" -Algorithm SHA1
 
-        echo "win_release"
+        echo "release"
         echo $sha1_1
 
-        echo "win_release_ffmpeg"
+        echo "win_release"
         echo $sha1_2
+
+        echo "win_release_ffmpeg"
+        echo $sha1_3
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v2
