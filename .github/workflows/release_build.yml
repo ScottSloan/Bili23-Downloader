@@ -64,3 +64,32 @@ jobs:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         path: |
           out/GUI.dist
+
+    - name: Compression (with_ffmpeg)
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "out/GUI.dist" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip"
+
+    - name: Compression (with_ffmpeg)
+      shell: pwsh
+      run: |
+        Remove-Item -Path "out/GUI.dist/ffmpeg.exe"
+
+        Compress-Archive -Path "out/GUI.dist" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip"
+
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
+          Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
+          
+        token: ${{ secrets.RELEASE }}
+        name: 
+        append_body: |
+          The executable file for version ${{ steps.get_version.outputs.tag }}
+        make_latest: true
+        tag_name: ${{ steps.get_version.outputs.tag }}
+        draft: true
+        prerelease: false
+        generate_release_notes: false
