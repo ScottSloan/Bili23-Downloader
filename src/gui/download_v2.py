@@ -328,18 +328,18 @@ class DownloadManagerWindow(Frame):
 
             task_panel_callback = TaskPanelCallback()
             task_panel_callback.onStartNextCallback = self.start_download
-            task_panel_callback.onStopCallbacak = stop_download_callback
+            task_panel_callback.onStopCallback = stop_download_callback
             task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
             task_panel_callback.onLoadMoreTaskCallback = load_more_callback
 
             return task_panel_callback
 
-        def destory_load_more_panel():
+        def destroy_load_more_panel():
             for panel in self.get_download_task_panel_list():
                 if isinstance(panel, LoadMoreTaskPanel):
-                    panel.onDestoryPanel()
+                    panel.onDestroyPanel()
 
-        destory_load_more_panel()
+        destroy_load_more_panel()
 
         task_panel_list = []
 
@@ -1170,7 +1170,7 @@ class DownloadTaskPanel(wx.Panel):
         self.Destroy()
         
         # 回调函数，刷新 UI
-        self.callback.onStopCallbacak(self.task_info.cid)
+        self.callback.onStopCallback(self.task_info.cid)
 
         self.download_file_tool.clear_download_info()
 
@@ -1461,11 +1461,11 @@ class LoadMoreTaskPanel(wx.Panel):
         self.more_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowMoreEVT)
 
     def onShowMoreEVT(self, event):
-        self.onDestoryPanel()
+        self.onDestroyPanel()
 
         self.callback()
 
-    def onDestoryPanel(self):
+    def onDestroyPanel(self):
         self.Hide()
 
         self.Destroy()

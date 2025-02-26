@@ -47,13 +47,19 @@ jobs:
     - name: Upload Artifacts (no_ffmpeg)
       uses: actions/upload-artifact@v4
       with:
-        name: Bili23_Downloader_v${{ steps.get_version.outputs.tag }}_win_x64_release.zip
+        name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
         path: |
           out/GUI.dist
+      
+    - name: Download FFmpeg
+      run: |
+        Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "ffmpeg.zip"
+        Expand-Archive -Path "ffmpeg.zip" -DestinationPath "FFmpeg"
+        Copy-Item FFmpeg/bin/ffmpeg.exe out/GUI.dist/
     
     - name: Upload Artifacts (with_ffmpeg)
       uses: actions/upload-artifact@v4
       with:
-        name: Bili23_Downloader_v${{ steps.get_version.output.tag }}_win_x64_with_ffmpeg_release.zip
+        name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         path: |
           out/GUI.dist

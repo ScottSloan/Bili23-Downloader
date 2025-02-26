@@ -196,7 +196,7 @@ class UtilsCallback:
 class TaskPanelCallback:
     def __init__(self):
         self.onStartNextCallback: Callable = None
-        self.onStopCallbacak: Callable = None
+        self.onStopCallback: Callable = None
         self.onUpdateTaskCountCallback: Callable = None
         self.onLoadMoreTaskCallback: Callable = None
 
