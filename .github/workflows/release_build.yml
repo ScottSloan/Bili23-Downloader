@@ -55,7 +55,8 @@ jobs:
       run: |
         Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "ffmpeg.zip"
         Expand-Archive -Path "ffmpeg.zip" -DestinationPath "FFmpeg"
-        Copy-Item FFmpeg/ffmpeg-7.1-essentials_build/bin/ffmpeg.exe out/GUI.dist/
+        $appExePath = Get-ChildItem -Path $extractedFolder -Recurse | Where-Object { $_.Name -match '^ffmpeg\.exe$' }
+        Copy-Item $appExePath.FullName out/GUI.dist/
     
     - name: Upload Artifacts (with_ffmpeg)
       uses: actions/upload-artifact@v4
