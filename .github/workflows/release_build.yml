@@ -4,7 +4,7 @@ name: Build Windows Release
 on: 
   push:
     tags:
-      - '*'  # 监听所有标签的推送事件
+      - '*'
 
   workflow_dispatch:
 
@@ -43,40 +43,46 @@ jobs:
     
     - name: Add License
       run: |
-        Copy-Item ./LICENSE out/GUI.dist/
+        Rename-Item "out/GUI.dist" "out/Bili23 Downloader"
+        Copy-Item ./LICENSE "out/Bili23 Downloader/"
 
     - name: Upload Artifacts (no_ffmpeg)
       uses: actions/upload-artifact@v4
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
         path: |
-          out/GUI.dist
+          out/Bili23 Downloader
       
     - name: Download FFmpeg
       run: |
         Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "ffmpeg.zip"
         Expand-Archive -Path "ffmpeg.zip" -DestinationPath "FFmpeg"
         $appExePath = Get-ChildItem -Path $extractedFolder -Recurse | Where-Object { $_.Name -match '^ffmpeg\.exe$' }
-        Copy-Item $appExePath.FullName out/GUI.dist/
+        Copy-Item $appExePath.FullName "out/Bili23 Downloader/"
     
     - name: Upload Artifacts (with_ffmpeg)
       uses: actions/upload-artifact@v4
       with:
         name: Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         path: |
-          out/GUI.dist
+          out/Bili23 Downloader
 
     - name: Compression (with_ffmpeg)
       shell: pwsh
       run: |
-        Compress-Archive -Path "out/GUI.dist" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip"
+        Compress-Archive -Path "out/Bili23 Downloader" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip"
 
     - name: Compression (no_ffmpeg)
       shell: pwsh
       run: |
-        Remove-Item -Path "out/GUI.dist/ffmpeg.exe"
+        Remove-Item -Path "out/Bili23 Downloader/ffmpeg.exe"
 
-        Compress-Archive -Path "out/GUI.dist" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip"
+        Compress-Archive -Path "out/Bili23 Downloader" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip"
+    
+    - name: Print SHA1
+      run: |
+        echo Get-FileHash -Path "C:\path\to\your\file.txt" -Algorithm SHA1
+        echo Get-FileHash -Path "C:\path\to\your\file.txt" -Algorithm SHA1
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v2
@@ -85,7 +91,7 @@ jobs:
           Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
           Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         token: ${{ secrets.RELEASE }}
-        name: Bili23 Downloader ${{ steps.get_version.outputs.tag }}
+        name: ${{ steps.get_version.outputs.tag }}
         append_body: |
           The executable file for version ${{ steps.get_version.outputs.tag }}
         make_latest: true

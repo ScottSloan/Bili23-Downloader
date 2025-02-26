@@ -288,7 +288,7 @@ class DownloadManagerWindow(Frame):
             if not entry.timestamp:
                 entry.timestamp = int(round(time.time() * 1000000)) + index
 
-            if multiple_flag:
+            if multiple_flag and Config.Download.add_number:
                 entry.index = index + 1
                 entry.index_with_zero = str(index + 1).zfill(len(str(len(download_task_info_list))))
             
