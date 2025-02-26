@@ -30,7 +30,7 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        $tag = '${{ giithub.ref_name }}'
+        $tag = '${{ github.ref_name }}'
         $tag = $tag -replace '[^0-9.]', ''
         $parts = $tag.Split('.')
         while ($parts.Length -lt 4) {
