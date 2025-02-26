@@ -2,8 +2,9 @@
 name: Build Windows Release
 
 on: 
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*'  # 监听所有标签的推送事件
 
   workflow_dispatch:
 
