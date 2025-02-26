@@ -1,0 +1,48 @@
+
+name: Build Windows Release
+
+on: 
+  release:
+    types: [published]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11 Environment
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nuitka requests wxPython qrcode[pil]==7.4.2
+
+    - name: Build with Nuitka
+      run: |
+        $tag = '${{ giithub.ref_name }}'
+        $tag = $tag -replace '[^0-9.]', ''
+        $parts = $tag.Split('.')
+        while ($parts.Length -lt 4) {
+          $parts += '0'
+        }
+        $tag = $parts -join '.'
+
+        nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=$tag --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.ref_name }}-Build
+        path: |
+          out/GUI.dist
