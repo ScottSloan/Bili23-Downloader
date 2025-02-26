@@ -30,15 +30,10 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        $tag = '${{ github.ref_name }}'
-        $tag = $tag -replace '[^0-9.]', ''
-        $parts = $tag.Split('.')
-        while ($parts.Length -lt 4) {
-          $parts += '0'
-        }
-        $tag = $parts -join '.'
-
-        nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=$tag --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
+        $tag = $(curl -s "https://api.github.com/repos/${{ github.repository }}/tags" | jq -r '.[0].name')
+        $version = ($tag.TrimStart('v').Split('.') | ForEach-Object { $_.PadRight(1, '0') }) -join '.'
+  
+        nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=$version --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
     
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
