@@ -70,7 +70,7 @@ jobs:
       run: |
         Compress-Archive -Path "out/GUI.dist" -DestinationPath "Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip"
 
-    - name: Compression (with_ffmpeg)
+    - name: Compression (no_ffmpeg)
       shell: pwsh
       run: |
         Remove-Item -Path "out/GUI.dist/ffmpeg.exe"
