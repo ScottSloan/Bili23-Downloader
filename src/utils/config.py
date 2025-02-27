@@ -89,6 +89,8 @@ class Config:
 
         update_json = None
 
+        change_log = None
+
     class FFmpeg:
         path: str = ""
         available: bool = False
