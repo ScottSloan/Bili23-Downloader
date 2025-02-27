@@ -75,9 +75,7 @@ class UpdateWindow(wx.Dialog):
 
         self.SetTitle("检查更新")
 
-        tips = "点击更新按钮后，将跳转至版本发布页，请滑动至文章底部查看下载链接。"
-
-        self.changelog.SetValue(data["changelog"] + f"\n\n\n{tips}")
+        self.changelog.SetValue(data["changelog"])
 
         self.detail_lab.SetLabel(f"Version {data['version']}，发布于 {data['date']}，大小 {data['size']}")
 
