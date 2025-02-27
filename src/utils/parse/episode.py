@@ -42,10 +42,12 @@ def video_ugc_season_parser(info_json: dict, cid: int):
         def _get_title(episode: dict):
             if "title" in episode:
                 if Config.Misc.show_episode_full_name:
+                    return episode["title"]
+                else:
                     if episode["page"]["part"]:
                         return episode["page"]["part"]
-                
-                return episode["title"]
+                    else:
+                        return episode["title"]
             else:
                 return episode["part"]
 
