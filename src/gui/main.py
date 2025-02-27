@@ -507,6 +507,9 @@ class MainWindow(Frame):
             wx.MessageDialog(self, "下载失败\n\n请选择要下载的视频", "警告", wx.ICON_WARNING).ShowModal()
             return
         
+        if Config.Download.auto_popup_option_dialog:
+            self.onDownloadOptionEVT(0)
+        
         # 显示加载窗口
         self.processing_window = ProcessingWindow(self)
         self.processing_window.Show()

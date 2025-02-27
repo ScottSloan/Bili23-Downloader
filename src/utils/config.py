@@ -78,6 +78,8 @@ class Config:
 
         enable_speed_limit: bool = False
         speed_mbps: int = 10
+
+        auto_popup_option_dialog: bool = True
     
     class Merge:
         override_file: bool = False
@@ -202,6 +204,7 @@ class ConfigUtils:
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
         Config.Download.speed_mbps = app_config["download"].get("speed_mbps", Config.Download.speed_mbps)
+        Config.Download.auto_popup_option_dialog = app_config["download"].get("auto_popup_option_dialog", Config.Download.auto_popup_option_dialog)
 
         # advanced
         Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
