@@ -120,6 +120,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
+          Bili23_Downloader_${{ steps.get_version.outputs.tag }}_release.zip
           Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_release.zip
           Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         token: ${{ secrets.RELEASE }}
