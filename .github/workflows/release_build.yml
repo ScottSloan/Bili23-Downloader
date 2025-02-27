@@ -125,8 +125,7 @@ jobs:
           Bili23_Downloader_${{ steps.get_version.outputs.tag }}_win_x64_with_ffmpeg_release.zip
         token: ${{ secrets.RELEASE }}
         name: ${{ steps.get_version.outputs.tag }}
-        append_body: |
-          The executable file for version ${{ steps.get_version.outputs.tag }}
+        body_path: CHANGELOG.md
         make_latest: true
         tag_name: ${{ steps.get_version.outputs.tag }}
         draft: true
