@@ -37,6 +37,7 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.edit_title import EditTitleDialog
 from gui.dialog.cover import CoverViewerDialog
+from gui.dialog.changelog import ChangeLogDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -205,6 +206,7 @@ class MainWindow(Frame):
         self.tool_menu.Append(self.ID_SETTINGS, "设置(&S)")
 
         self.help_menu.Append(self.ID_CHECK_UPDATE, "检查更新(&U)")
+        self.help_menu.Append(self.ID_CHANGELOG, "更新日志(&P)")
         self.help_menu.AppendSeparator()
         self.help_menu.Append(self.ID_HELP, "使用帮助(&C)")
         self.help_menu.Append(self.ID_ABOUT, "关于(&A)")
@@ -251,6 +253,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onLogoutEVT, id = self.ID_LOGOUT)
         self.Bind(wx.EVT_MENU, self.onRefreshEVT, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelpEVT, id = self.ID_HELP)
+        self.Bind(wx.EVT_MENU, self.onChangeLogEVT, id = self.ID_CHANGELOG)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_SINGLE)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_IN_SECTION)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_ALL_SECTIONS)
@@ -326,7 +329,7 @@ class MainWindow(Frame):
         self.ID_SETTINGS = wx.NewIdRef()
         self.ID_HELP = wx.NewIdRef()
         self.ID_CHECK_UPDATE = wx.NewIdRef()
-        self.ID_CHANGE_LOG = wx.NewIdRef()
+        self.ID_CHANGELOG = wx.NewIdRef()
         self.ID_ABOUT = wx.NewIdRef()
 
         self.ID_LOGOUT = wx.NewIdRef()
@@ -504,6 +507,9 @@ class MainWindow(Frame):
             wx.MessageDialog(self, "下载失败\n\n请选择要下载的视频", "警告", wx.ICON_WARNING).ShowModal()
             return
         
+        if Config.Download.auto_popup_option_dialog:
+            self.onDownloadOptionEVT(0)
+        
         # 显示加载窗口
         self.processing_window = ProcessingWindow(self)
         self.processing_window.Show()
@@ -631,8 +637,43 @@ class MainWindow(Frame):
         shell.CenterOnParent()
         shell.Show()
 
+    def onChangeLogEVT(self, event):
+        def worker():
+            def show():
+                dialog = ChangeLogDialog(self)
+                dialog.ShowModal()
+
+            if not Config.Temp.change_log:
+                try:
+                    UniversalTool.get_changelog()
+
+                    wx.CallAfter(show)
+                
+                except Exception:
+                    wx.MessageDialog(self, "获取更新日志失败\n\n当前无法获取更新日志，请稍候再试", "获取更新日志", wx.ICON_ERROR).ShowModal()
+
+        Thread(target = worker).start()
+
     def onCheckUpdateEVT(self, event):
-        wx.CallAfter(self.checkUpdateManuallyThread)
+        def worker():
+            def show():
+                update_window = UpdateWindow(self)
+                update_window.ShowWindowModal()
+
+            if not Config.Temp.update_json:
+                try:
+                    UniversalTool.get_update_json()
+                    
+                except Exception:
+                    wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal()
+                    return
+                
+            if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                wx.CallAfter(show)
+            else:
+                wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
+
+        Thread(target = worker).start()
     
     def onEpisodeOptionEVT(self, event):
         def _get_menu():
@@ -961,24 +1002,6 @@ class MainWindow(Frame):
 
         wx.CallAfter(self.userinfo_hbox.Layout)
         wx.CallAfter(self.frame_vbox.Layout)
-                
-    def checkUpdateManuallyThread(self):
-        def show():
-            update_window = UpdateWindow(self)
-            update_window.ShowWindowModal()
-
-        if not Config.Temp.update_json:
-            try:
-                UniversalTool.get_update_json()
-                
-            except Exception:
-                wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal()
-                return
-            
-        if Config.Temp.update_json["version_code"] > Config.APP.version_code:
-            wx.CallAfter(show)
-        else:
-            wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal()
 
     def showInfobarMessage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)

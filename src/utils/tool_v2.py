@@ -407,6 +407,12 @@ class UniversalTool:
         Config.Temp.update_json = json.loads(RequestTool.request_get(url).text)
 
     @staticmethod
+    def get_changelog():
+        url = f"https://api.scott-sloan.cn/Bili23-Downloader/getChangelog?version_code={Config.APP.version_code}"
+
+        Config.Temp.change_log = json.loads(RequestTool.request_get(url).text)
+
+    @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地

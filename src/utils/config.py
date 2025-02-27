@@ -13,13 +13,13 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.56.0"
-        version_code: int = 1560
+        version: str = "1.56.1"
+        version_code: int = 1561
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1550
 
-        release_date: str = "2025/02/25"
+        release_date: str = "2025/02/27"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -78,6 +78,8 @@ class Config:
 
         enable_speed_limit: bool = False
         speed_mbps: int = 10
+
+        auto_popup_option_dialog: bool = True
     
     class Merge:
         override_file: bool = False
@@ -88,6 +90,8 @@ class Config:
         download_window_pos = None
 
         update_json = None
+
+        change_log = None
 
     class FFmpeg:
         path: str = ""
@@ -200,6 +204,7 @@ class ConfigUtils:
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
         Config.Download.speed_mbps = app_config["download"].get("speed_mbps", Config.Download.speed_mbps)
+        Config.Download.auto_popup_option_dialog = app_config["download"].get("auto_popup_option_dialog", Config.Download.auto_popup_option_dialog)
 
         # advanced
         Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
