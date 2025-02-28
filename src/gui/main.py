@@ -44,9 +44,9 @@ class MainWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, Config.APP.name)
 
-        self.click_count = 0
+        self.double_click_lock = 0 # 双击锁，防止双击抬起误触发全选
 
-        self.last_click_time = 0
+        self.last_click_time = 0 # 上一次双击的时间
 
         self.init_UI()
 
@@ -375,14 +375,14 @@ class MainWindow(Frame):
     def onClickEVT(self, event):
         event.Skip() # 保留原有事件
         if int(time.time() * 1000) - self.last_click_time < 500: # 双击和单击的点击间隔小于 500ms，视为三击
-            if self.click_count==0:
+            if self.double_click_lock==0:
                 self.url_box.SelectAll()
-        self.click_count = 0
+        self.double_click_lock = 0
     
     def onDClickEVT(self, event):
         event.Skip() # 保留原有事件
         self.last_click_time = int(time.time() * 1000)
-        self.click_count = 1
+        self.double_click_lock = 1
 
     def onGetEVT(self, event):
         def _clear():
