@@ -728,6 +728,11 @@ class MainWindow(Frame):
         dlg = OptionDialog(self, stream_type, callback)
         dlg.ShowModal()
 
+        if dlg.audio_only_chk.IsChecked():
+            self.download_btn.SetLabel("下载音频")
+        else:
+            self.download_btn.SetLabel("下载视频")
+
     def onEpisodeOptionMenuEVT(self, event):
         def _clear():
             self.treelist.init_list()
