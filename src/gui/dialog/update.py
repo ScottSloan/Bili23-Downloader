@@ -2,6 +2,8 @@ import wx
 
 from utils.config import Config
 
+from gui.templates import TextCtrl
+
 class UpdateWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1)
@@ -35,7 +37,7 @@ class UpdateWindow(wx.Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.changelog = wx.TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE)
+        self.changelog = TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE)
         self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)

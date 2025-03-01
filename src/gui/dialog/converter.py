@@ -8,6 +8,8 @@ from utils.common.thread import Thread
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
+from gui.templates import TextCtrl
+
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "格式转换")
@@ -38,7 +40,7 @@ class ConverterWindow(wx.Dialog):
                     return ["VideoToolBox"]
                 
         input_lab = wx.StaticText(self, -1, "输入")
-        self.input_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
+        self.input_box = TextCtrl(self, -1, size = _get_scale_size((400, 24)))
         self.input_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
         input_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -47,7 +49,7 @@ class ConverterWindow(wx.Dialog):
         input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         output_lab = wx.StaticText(self, -1, "输出")
-        self.output_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
+        self.output_box = TextCtrl(self, -1, size = _get_scale_size((400, 24)))
         self.output_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
         output_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -61,7 +63,7 @@ class ConverterWindow(wx.Dialog):
         self.target_codec_choice = wx.Choice(self, -1, choices = list(video_codec_map.keys()))
 
         target_bitrate_lab = wx.StaticText(self, -1, "比特率")
-        self.target_bitrate_box = wx.TextCtrl(self, -1, "1500")
+        self.target_bitrate_box = TextCtrl(self, -1, "1500")
         target_bitrate_unit_lab = wx.StaticText(self, -1, "kbit/s")
 
         target_params_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -10,6 +10,8 @@ from utils.common.thread import Thread
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 from utils.common.enums import PlayerMode
 
+from gui.templates import TextCtrl
+
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "直播录制")
@@ -38,11 +40,11 @@ class LiveRecordingWindow(wx.Dialog):
         self.title_lab.SetFont(font)
 
         m3u8_link_lab = wx.StaticText(self, -1, "m3u8 链接")
-        self.m3u8_link_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, -1)))
+        self.m3u8_link_box = TextCtrl(self, -1, size = _get_scale_size((400, -1)))
         self.copy_link_btn = wx.Button(self, -1, "复制", size = _get_scale_size((60, 24)))
 
         recording_lab = wx.StaticText(self, -1, "保存位置")
-        self.recording_path_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, -1)))
+        self.recording_path_box = TextCtrl(self, -1, size = _get_scale_size((400, -1)))
         self.browse_path_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
 
         bag_box = wx.FlexGridSizer(2, 3, 0, 0)

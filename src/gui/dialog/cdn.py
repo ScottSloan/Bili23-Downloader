@@ -6,6 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from utils.config import Config
 from utils.common.map import cdn_map
 
+from gui.templates import TextCtrl
+
 class ChangeCDNDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "更改 CDN host")
@@ -33,7 +35,7 @@ class ChangeCDNDialog(wx.Dialog):
         self.cdn_list.EnableCheckBoxes(True)
 
         custom_lab = wx.StaticText(self, -1, "自定义")
-        self.custom_box = wx.TextCtrl(self, -1, size = _get_scale_size((240, 24)))
+        self.custom_box = TextCtrl(self, -1, size = _get_scale_size((240, 24)))
         self.add_btn = wx.Button(self, -1, "添加", size = _get_scale_size((80, 28)))
         self.delete_btn = wx.Button(self, -1, "删除", size = _get_scale_size((80, 28)))
 

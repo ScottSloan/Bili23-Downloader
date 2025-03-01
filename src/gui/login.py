@@ -11,6 +11,7 @@ from utils.common.thread import Thread
 from utils.auth.cookie import CookieUtils
 
 from gui.dialog.captcha import CaptchaWindow
+from gui.templates import TextCtrl
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent, callback: Callable):
@@ -359,12 +360,12 @@ class SMSPage(LoginPage):
         self.country_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = wx.TextCtrl(self, -1, "请输入手机号")
+        self.phone_number_box = TextCtrl(self, -1, "请输入手机号")
         self.phone_number_box.SetForegroundColour(self.getPlaceholderColor())
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = wx.TextCtrl(self, -1, "请输入验证码")
+        self.validate_code_box = TextCtrl(self, -1, "请输入验证码")
         self.validate_code_box.SetForegroundColour(self.getPlaceholderColor())
 
         bag_box = wx.GridBagSizer(3, 3)
