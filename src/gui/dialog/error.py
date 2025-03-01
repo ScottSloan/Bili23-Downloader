@@ -7,6 +7,8 @@ from utils.config import Config
 from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
+from gui.templates import TextCtrl
+
 class ErrorInfoDialog(wx.Dialog):
     def __init__(self, parent, exception_info = GlobalExceptionInfo.info):
         self.exception_info = exception_info
@@ -57,7 +59,7 @@ class ErrorInfoDialog(wx.Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = wx.TextCtrl(self, -1, str(self.exception_info.log), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.log_box = TextCtrl(self, -1, str(self.exception_info.log), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.log_box.SetFont(font)
 
         self.save_btn = wx.Button(self, -1, "保存到文件", size = _get_scale_size((100, 28)))

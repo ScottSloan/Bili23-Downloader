@@ -3,6 +3,8 @@ import base64
 
 from utils.config import Config
 
+from gui.templates import TextCtrl
+
 class LicenseWindow(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "授权")
@@ -20,7 +22,7 @@ class LicenseWindow(wx.Dialog):
                 case "linux" | "darwin":
                     return wx.DefaultSize
                 
-        license_box = wx.TextCtrl(self, -1, base64.b64decode(self._string_base_64), size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        license_box = TextCtrl(self, -1, base64.b64decode(self._string_base_64), size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 28)))
 

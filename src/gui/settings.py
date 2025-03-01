@@ -5,7 +5,7 @@ import time
 import shutil
 import requests
 from requests.auth import HTTPProxyAuth
-from gui.templates import ScrolledPanel
+from gui.templates import ScrolledPanel,TextCtrl
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
@@ -112,7 +112,7 @@ class DownloadTab(wx.Panel):
         self.scrolled_panel = ScrolledPanel(self.download_box, _get_panel_size())
 
         path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
-        self.path_box = wx.TextCtrl(self.scrolled_panel, -1, size = _get_scale_size((220, 24)))
+        self.path_box = TextCtrl(self.scrolled_panel, -1, size = _get_scale_size((220, 24)))
         self.browse_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = _get_scale_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -169,7 +169,7 @@ class DownloadTab(wx.Panel):
 
         self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(self.scrolled_panel, -1, "最高")
-        self.speed_limit_box = wx.TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((50, 25)))
+        self.speed_limit_box = TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((50, 25)))
         self.speed_limit_unit_lab = wx.StaticText(self.scrolled_panel, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -375,7 +375,7 @@ class AdvancedTab(wx.Panel):
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN host")
-        self.custom_cdn_box = wx.TextCtrl(cdn_box, -1, size = _get_scale_size((220, 24)))
+        self.custom_cdn_box = TextCtrl(cdn_box, -1, size = _get_scale_size((220, 24)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
@@ -535,7 +535,7 @@ class MergeTab(wx.Panel):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
         ffmpeg_path_label = wx.StaticText(ffmpeg_box, -1, "FFmpeg 路径")
-        self.path_box = wx.TextCtrl(ffmpeg_box, -1, size = _get_scale_size((220, 24)))
+        self.path_box = TextCtrl(ffmpeg_box, -1, size = _get_scale_size((220, 24)))
         self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = _get_scale_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -771,18 +771,18 @@ class ProxyTab(wx.Panel):
         proxy_hbox.Add(self.proxy_custom_radio, 0, wx.ALL, 10)
         
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
-        self.ip_box = wx.TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
+        self.ip_box = TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
 
         port_lab = wx.StaticText(proxy_box, -1, "端口")
-        self.port_box = wx.TextCtrl(proxy_box, -1, size = self.FromDIP((75, 25)))
+        self.port_box = TextCtrl(proxy_box, -1, size = self.FromDIP((75, 25)))
 
         self.auth_chk = wx.CheckBox(proxy_box, -1, "启用代理身份验证")
         
         uname_lab = wx.StaticText(proxy_box, -1, "用户名")
-        self.uname_box = wx.TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
+        self.uname_box = TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
 
         pwd_lab = wx.StaticText(proxy_box, -1, "密码")
-        self.passwd_box = wx.TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
+        self.passwd_box = TextCtrl(proxy_box, -1, size = self.FromDIP((150, 25)))
 
         self.test_btn = wx.Button(proxy_box, -1, "测试", size = self.FromDIP((80, 30)))
 
@@ -996,7 +996,7 @@ class MiscTab(wx.Panel):
         player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
         player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
 
-        self.player_path_box = wx.TextCtrl(player_box, -1, size = _get_scale_size((220, 24)))
+        self.player_path_box = TextCtrl(player_box, -1, size = _get_scale_size((220, 24)))
         self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = _get_scale_size((60, 24)))
 
         player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)

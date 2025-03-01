@@ -2,6 +2,8 @@ import wx
 
 from utils.config import Config
 
+from gui.templates import TextCtrl
+
 class EditTitleDialog(wx.Dialog):
     def __init__(self, parent, title: str):
         self.title = title
@@ -25,7 +27,7 @@ class EditTitleDialog(wx.Dialog):
 
         title_lab = wx.StaticText(self, -1, "请输入新标题")
 
-        self.title_box = wx.TextCtrl(self, -1, self.title, size = _get_scale_size((350, 24)), style = wx.TE_PROCESS_ENTER)
+        self.title_box = TextCtrl(self, -1, self.title, size = _get_scale_size((350, 24)), style = wx.TE_PROCESS_ENTER)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))

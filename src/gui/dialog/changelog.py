@@ -2,6 +2,8 @@ import wx
 
 from utils.config import Config
 
+from gui.templates import TextCtrl
+
 class ChangeLogDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "当前版本更新日志")
@@ -21,7 +23,7 @@ class ChangeLogDialog(wx.Dialog):
                 case "linux" | "darwin":
                     return wx.DefaultSize
                 
-        changelog_box = wx.TextCtrl(self, -1, Config.Temp.change_log["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        changelog_box = TextCtrl(self, -1, Config.Temp.change_log["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 28)))
 
