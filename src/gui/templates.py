@@ -308,11 +308,12 @@ class TextCtrl(wx.TextCtrl):
 
         if int(time.time() * 1000) - self.last_click_time < 500: # 双击和单击的点击间隔小于 500ms，视为三击
             if self.double_click_lock==0:
-                self.SelectAll()
+                if self.GetSelection()!=(0,-1): # 检查是否已经全选
+                    self.SelectAll()
         self.double_click_lock = 0
     
     def onDClickEVT(self, event):
         event.Skip() # 保留原有事件
-        
+
         self.last_click_time = int(time.time() * 1000)
         self.double_click_lock = 1
