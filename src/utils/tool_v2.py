@@ -398,6 +398,11 @@ class FormatTool:
         else:
             return str(data)
 
+    @staticmethod
+    def format_cut_time(time: str):
+        # 避免中文用户经常误输入
+        return time.replace("：", ":").replace(";",":").replace("；",":")
+
 class UniversalTool:
     # 通用工具类
     @staticmethod

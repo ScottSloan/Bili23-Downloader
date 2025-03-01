@@ -680,22 +680,29 @@ class DownloadUtils:
             # 覆盖文件
             if Config.Merge.override_file:
                 UniversalTool.remove_files(Config.Download.path, _file_name_list)
+        start_time = FormatTool.format_cut_time(Config.Merge.cut_start_time)
+        end_time = FormatTool.format_cut_time(Config.Merge.cut_end_time)
+        time_params = ""
+        if start_time:
+            time_params += f' -ss {start_time}'
+        if end_time:
+            time_params += f' -to {end_time}'
 
         def _dash():
             def _get_audio_cmd():
                 match self.task_info.audio_type:
                     case "m4a" | "ec3":
                         if Config.Merge.m4a_to_mp3 and self.task_info.audio_type == "m4a":
-                            return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 "{self.file_title}.mp3"'
+                            return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a libmp3lame -q:a 0 {time_params} "{self.file_title}.mp3"'
                         else:
                             return f'{_rename_cmd} "{self._temp_audio_file_name}" {_extra}"{self.full_file_name}"'
                     
                     case "flac":
-                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 "{self.file_title}.flac"'
+                        return f'"{Config.FFmpeg.path}" -y -i "{self._temp_audio_file_name}" -c:a flac -q:a 0 {time_params} "{self.file_title}.flac"'
             
             match MergeType(self.task_info.video_merge_type):
                 case MergeType.Video_And_Audio:
-                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
+                    return f'"{Config.FFmpeg.path}" -y -i "{self._temp_video_file_name}" -i "{self._temp_audio_file_name}" -acodec copy -vcodec copy -strict experimental {time_params} {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
 
                 case MergeType.Only_Video:
                     return f'{_rename_cmd} "{self._temp_video_file_name}" {_extra}"{self.full_file_name}"'
@@ -710,7 +717,7 @@ class DownloadUtils:
             
             _generate_flv_list_txt()
 
-            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i {self._temp_flv_list_name} -c copy {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
+            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i {self._temp_flv_list_name} -c copy {time_params} {self._temp_out_file_name} && {_rename_cmd} {self._temp_out_file_name} {_extra}"{self.full_file_name}"'
 
         match Config.Sys.platform:
             case "windows":

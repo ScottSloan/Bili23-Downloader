@@ -49,9 +49,31 @@ class OptionDialog(wx.Dialog):
         flex_box.Add(self.video_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         flex_box.Add(self.video_codec_choice, 0, wx.ALL & (~wx.LEFT), 10)
 
+        self.time_cut_chk = wx.CheckBox(self, -1, "裁剪音视频时间")
+
+        self.start_time_lab = wx.StaticText(self, -1, "开始时间")
+        self.start_time_text = wx.TextCtrl(self, -1)
+        self.start_time_text.SetHint("HH:MM:SS")
+
+        self.end_time_lab = wx.StaticText(self, -1, "结束时间")
+        self.end_time_text = wx.TextCtrl(self, -1)
+        self.end_time_text.SetHint("HH:MM:SS")
+
+        time_cut_grid = wx.FlexGridSizer(2, 2, 0, 0)
+        time_cut_grid.Add(self.start_time_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        time_cut_grid.Add(self.start_time_text, 0, wx.ALL & (~wx.LEFT), 10)
+        time_cut_grid.Add(self.end_time_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        time_cut_grid.Add(self.end_time_text, 0, wx.ALL & (~wx.LEFT), 10)
+
+        time_cut_box = wx.BoxSizer(wx.VERTICAL)
+        time_cut_box.AddSpacer(10)
+        time_cut_box.Add(self.time_cut_chk, 0, wx.LEFT, 10)
+        time_cut_box.Add(time_cut_grid, 0, wx.LEFT, 30)
+
         media_vbox = wx.BoxSizer(wx.VERTICAL)
         media_vbox.Add(flex_box, 0, wx.EXPAND)
         media_vbox.Add(self.audio_only_chk, 0, wx.ALL, 10)
+        media_vbox.Add(time_cut_box, 0, wx.EXPAND)
 
         self.get_danmaku_chk = wx.CheckBox(self, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(self, -1, "弹幕文件格式")
@@ -116,6 +138,7 @@ class OptionDialog(wx.Dialog):
         self.audio_only_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAudioOnlyEVT)
         self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDanmakuEVT)
         self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onCheckSubtitleEVT)
+        self.time_cut_chk.Bind(wx.EVT_CHECKBOX, self.onCheckTimeCutEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -172,6 +195,7 @@ class OptionDialog(wx.Dialog):
         self.onCheckAudioOnlyEVT(0)
         self.onCheckDanmakuEVT(0)
         self.onCheckSubtitleEVT(0)
+        self.onCheckTimeCutEVT(0)
 
     def onCheckAudioOnlyEVT(self, event):
         _enable = not self.audio_only_chk.GetValue()
@@ -195,6 +219,15 @@ class OptionDialog(wx.Dialog):
 
         set_enable(self.get_subtitle_chk.GetValue())
 
+    def onCheckTimeCutEVT(self, event):
+        def set_enable(enable: bool):
+            self.start_time_lab.Enable(enable)
+            self.start_time_text.Enable(enable)
+            self.end_time_lab.Enable(enable)
+            self.end_time_text.Enable(enable)
+
+        set_enable(self.time_cut_chk.GetValue())
+
     def onConfirmEVT(self, event):
         AudioInfo.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
         AudioInfo.download_audio_only = self.audio_only_chk.GetValue()
@@ -208,6 +241,8 @@ class OptionDialog(wx.Dialog):
         ExtraInfo.get_cover = self.get_cover_chk.GetValue()
 
         Config.Download.add_number = self.add_number_chk.GetValue()
+        Config.Merge.cut_start_time = self.start_time_text.GetValue()
+        Config.Merge.cut_end_time = self.end_time_text.GetValue()
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 

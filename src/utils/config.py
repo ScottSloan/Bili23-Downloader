@@ -86,6 +86,9 @@ class Config:
         m4a_to_mp3: bool = True
         auto_clean: bool = True
 
+        cut_start_time: str = ""
+        cut_end_time: str = ""
+
     class Temp:
         download_window_pos = None
 
