@@ -3,6 +3,7 @@ import os
 import wx.dataview
 import wx.py
 import requests
+import time
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -42,6 +43,10 @@ from gui.dialog.changelog import ChangeLogDialog
 class MainWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, Config.APP.name)
+
+        self.double_click_lock = 0 # 双击锁，防止双击抬起误触发全选
+
+        self.last_click_time = 0 # 上一次双击的时间
 
         self.init_UI()
 
@@ -233,6 +238,8 @@ class MainWindow(Frame):
     
     def Bind_EVT(self):
         self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGetEVT)
+        self.url_box.Bind(wx.EVT_LEFT_UP, self.onClickEVT)
+        self.url_box.Bind(wx.EVT_LEFT_DCLICK, self.onDClickEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onGetEVT)
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgrEVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
@@ -364,6 +371,18 @@ class MainWindow(Frame):
     def onAboutEVT(self, event):
         about_window = AboutWindow(self)
         about_window.ShowModal()
+
+    def onClickEVT(self, event):
+        event.Skip() # 保留原有事件
+        if int(time.time() * 1000) - self.last_click_time < 500: # 双击和单击的点击间隔小于 500ms，视为三击
+            if self.double_click_lock==0:
+                self.url_box.SelectAll()
+        self.double_click_lock = 0
+    
+    def onDClickEVT(self, event):
+        event.Skip() # 保留原有事件
+        self.last_click_time = int(time.time() * 1000)
+        self.double_click_lock = 1
 
     def onGetEVT(self, event):
         def _clear():
