@@ -399,7 +399,11 @@ class MainWindow(Frame):
                 case ParseType.Video |  ParseType.Bangumi | ParseType.Cheese:
                     self.episode_option_btn.Enable(True)
                     self.download_option_btn.Enable(True)
-                    self.download_btn.SetLabel("下载视频")
+
+                    if dlg.audio_only_chk.IsChecked():
+                        self.download_btn.SetLabel("下载音频")
+                    else:
+                        self.download_btn.SetLabel("下载视频")
 
                 case ParseType.Live:
                     self.episode_option_btn.Enable(False)
