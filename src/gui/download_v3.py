@@ -3,7 +3,7 @@ import wx
 from utils.common.icon_v2 import IconManager, IconType
 
 from gui.templates import ActionButton, ScrolledPanel
-from gui.download_item_v3 import DownloadTaskItemPanel
+from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
 
 class DownloadManagerWindow(wx.Frame):
     def __init__(self, parent):
@@ -179,6 +179,8 @@ class CompeltedPage(wx.Panel):
 
         self.init_UI()
 
+        self.init_utils()
+
     def init_UI(self):
         self.clear_history_btn = wx.Button(self, -1, "清除下载记录")
 
@@ -197,3 +199,11 @@ class CompeltedPage(wx.Panel):
         vbox.Add(self.scroller, 1, wx.EXPAND)
 
         self.SetSizer(vbox)
+
+    def init_utils(self):
+        empty = EmptyItemPanel(self.scroller)
+    
+        self.scroller.sizer.Add(empty, 1, wx.EXPAND)
+
+        self.scroller.Layout()
+        self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)

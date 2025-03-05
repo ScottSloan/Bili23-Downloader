@@ -4,6 +4,27 @@ from utils.common.icon_v2 import IconManager, IconType
 
 from gui.templates import InfoLabel
 
+class EmptyItemPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+    def init_UI(self):
+        self.empty_lab = wx.StaticText(self, -1, "无项目")
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddStretchSpacer()
+        hbox.Add(self.empty_lab, 0, wx.ALL, 10)
+        hbox.AddStretchSpacer()
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddStretchSpacer(200)
+        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.AddStretchSpacer(200)
+
+        self.SetSizer(vbox)
+
 class DownloadTaskItemPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
@@ -89,12 +110,20 @@ class DownloadTaskItemPanel(wx.Panel):
         self.video_quality_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
         self.video_codec_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
         self.video_size_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
+        self.progress_bar.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
+        self.speed_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
+        self.pause_btn.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
+        self.stop_btn.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
         
         self.cover_bmp.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
         self.title_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
         self.video_quality_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
         self.video_codec_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
         self.video_size_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
+        self.progress_bar.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
+        self.speed_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
+        self.pause_btn.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
+        self.stop_btn.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
 
     def init_utils(self):
         self._children_hover = False
