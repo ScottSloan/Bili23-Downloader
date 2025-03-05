@@ -67,10 +67,15 @@ class Downloader:
                 # 从文件读取分片下载区间
                 _range_list = []
 
-                for value in self.thread_info[type].values():
-                    _range_list.append(value["range"])
+                if type in self.thread_info:
+                    for value in self.thread_info[type].values():
+                        _range_list.append(value["range"])
 
-                return _range_list
+                    return _range_list
+                
+                else:
+                    # 不存在断点续传信息，重新下载
+                    pass
 
             def _get_range_download_info():
                 # 创建 RangeDownloadInfo

@@ -128,6 +128,6 @@ jobs:
         body_path: CHANGELOG.md
         make_latest: true
         tag_name: ${{ steps.get_version.outputs.tag }}
-        draft: true
+        draft: false
         prerelease: false
         generate_release_notes: false

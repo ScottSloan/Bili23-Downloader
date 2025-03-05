@@ -5,6 +5,7 @@ from utils.tool_v2 import UniversalTool
 from utils.auth.cookie import CookieUtils
 
 from gui.main import MainWindow
+from gui.download_v3 import DownloadManagerWindow
 
 class APP(wx.App):
     def __init__(self):
@@ -18,11 +19,14 @@ if __name__ == "__main__":
     UniversalTool.msw_set_utf8_encode()
     UniversalTool.msw_set_dpi_awareness()
 
-    CookieUtils.init_cookie_params()
+    # CookieUtils.init_cookie_params()
 
     app = APP()
 
-    main_window = MainWindow(None)
-    main_window.Show()
+    #main_window = MainWindow(None)
+    #main_window.Show()
+
+    download_window = DownloadManagerWindow(None)
+    download_window.Show()
 
     app.MainLoop()

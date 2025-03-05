@@ -272,7 +272,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
 
 class ScrolledPanel(_ScrolledPanel):
-    def __init__(self, parent, size):
+    def __init__(self, parent, size = wx.DefaultSize):
         _ScrolledPanel.__init__(self, parent, -1, size = size)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -317,3 +317,68 @@ class TextCtrl(wx.TextCtrl):
 
         self.last_click_time = int(time.time() * 1000)
         self.double_click_lock = 1
+
+class ActionButton(wx.Panel):
+    def __init__(self, parent, title):
+        self._title = title
+
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+        self._active = False
+
+    def init_UI(self):
+        self.lab = wx.StaticText(self, -1, self._title)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddSpacer(50)
+        hbox.Add(self.lab, 0, wx.ALL, 10)
+        hbox.AddSpacer(50)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddSpacer(5)
+        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.AddSpacer(5)
+
+        self.SetSizerAndFit(vbox)
+    
+    def Bind_EVT(self):
+        self.Bind(wx.EVT_ENTER_WINDOW, self.onHoverEVT)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.onLeaveEVT)
+        self.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
+    
+    def onHoverEVT(self, event):
+        print("hover")
+        self.SetBackgroundColour(wx.Colour(220, 220, 220))
+
+        self.Refresh()
+
+        event.Skip()
+    
+    def onLeaveEVT(self, event):
+        print("leave")
+        if not self._active:
+            self.SetBackgroundColour("white")
+
+            self.Refresh()
+
+        event.Skip()
+    
+    def onClickEVT(self, event):
+        print("active")
+        self.SetBackgroundColour(wx.Colour(210, 210, 210))
+
+        self.Refresh()
+
+        self._active = True
+
+        event.Skip()
+    
+    def setUnactiveState(self):
+        self._active = False
+        self.SetBackgroundColour("white")
+
+        self.Refresh()
