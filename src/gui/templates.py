@@ -329,13 +329,17 @@ class ActionButton(wx.Panel):
         self.Bind_EVT()
 
         self._active = False
+        self._lab_hover = False
 
     def init_UI(self):
+        self.icon = wx.StaticBitmap(self, -1, size = self.FromDIP((16, 16)))
+
         self.lab = wx.StaticText(self, -1, self._title)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(50)
-        hbox.Add(self.lab, 0, wx.ALL, 10)
+        hbox.Add(self.icon, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        hbox.Add(self.lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         hbox.AddSpacer(50)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -349,36 +353,68 @@ class ActionButton(wx.Panel):
         self.Bind(wx.EVT_ENTER_WINDOW, self.onHoverEVT)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.onLeaveEVT)
         self.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
-    
+
+        self.lab.Bind(wx.EVT_ENTER_WINDOW, self.onLabHoverEVT)
+        self.lab.Bind(wx.EVT_LEAVE_WINDOW, self.onLabLeaveEVT)
+        self.lab.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
+
     def onHoverEVT(self, event):
-        print("hover")
         self.SetBackgroundColour(wx.Colour(220, 220, 220))
 
         self.Refresh()
 
         event.Skip()
+
+    def onLabHoverEVT(self, event):
+        self._lab_hover = True
+
+        event.Skip()
     
     def onLeaveEVT(self, event):
-        print("leave")
-        if not self._active:
+        if not self._active and not self._lab_hover:
             self.SetBackgroundColour("white")
 
             self.Refresh()
 
         event.Skip()
+
+    def onLabLeaveEVT(self, event):
+        self._lab_hover = False
+
+        event.Skip()
     
     def onClickEVT(self, event):
-        print("active")
         self.SetBackgroundColour(wx.Colour(210, 210, 210))
 
         self.Refresh()
 
         self._active = True
 
+        self.onClickCustomEVT()
+
         event.Skip()
     
+    def setActiveState(self):
+        self._active = True
+        self.SetBackgroundColour(wx.Colour(210, 210, 210))
+
+        self.Refresh()
+
     def setUnactiveState(self):
         self._active = False
         self.SetBackgroundColour("white")
 
         self.Refresh()
+
+    def setBitmap(self, bitmap):
+        self.icon.SetBitmap(bitmap)
+
+    def onClickCustomEVT(self):
+        pass
+
+class InfoLabel(wx.StaticText):
+    def __init__(self, parent, label: str = wx.EmptyString, size = wx.DefaultSize):
+        wx.StaticText.__init__(self, parent, -1, label, size = size)
+
+        if not Config.Sys.dark_mode:
+            self.SetForegroundColour(wx.Colour(108, 108, 108))
