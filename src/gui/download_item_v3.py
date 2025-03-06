@@ -1,10 +1,10 @@
 import wx
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadOption
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
-from utils.tool_v2 import FormatTool
+from utils.tool_v2 import FormatTool, DownloadFileTool
 
 from gui.templates import InfoLabel
 
@@ -30,8 +30,8 @@ class EmptyItemPanel(wx.Panel):
         self.SetSizer(vbox)
 
 class DownloadTaskItemPanel(wx.Panel):
-    def __init__(self, parent, info: DownloadTaskInfo):
-        self.task_info = info
+    def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
+        self.task_info, self.callback = info, callback
 
         wx.Panel.__init__(self, parent, -1)
 
@@ -108,12 +108,12 @@ class DownloadTaskItemPanel(wx.Panel):
         self.SetSizer(self.panel_vbox)
 
     def Bind_EVT(self):
-        pass
+        self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
-        self._children_hover = False
-
         self.show_task_info()
+
+        self.file_tool = DownloadFileTool(self.task_info.id)
 
     def show_task_info(self):
         self.title_lab.SetLabel(self.task_info.title)
@@ -130,3 +130,11 @@ class DownloadTaskItemPanel(wx.Panel):
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
         else:
             self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
+    
+    def onStopEVT(self, event):
+        self.Hide()
+        self.Destroy()
+
+        self.file_tool.delete_file()
+
+        self.callback.onUpdateCountTitleCallback()

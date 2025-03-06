@@ -224,9 +224,9 @@ class DownloadFileTool:
 
         self._write_download_file(contents)
 
-    def clear_download_info(self):
+    def delete_file(self):
         # 清除断点续传信息
-        if os.path.exists(self.file_path):
+        if self.file_existence:
             os.remove(self.file_path)
 
     def update_task_info_kwargs(self, **kwargs):

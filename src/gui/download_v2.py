@@ -238,7 +238,7 @@ class DownloadManagerWindow(Frame):
                     
                     # 检查文件兼容性
                     if not download_file_tool._check_compatibility():
-                        download_file_tool.clear_download_info()
+                        download_file_tool.delete_file()
                         continue
 
                     _task_info = DownloadTaskInfo()
@@ -329,7 +329,7 @@ class DownloadManagerWindow(Frame):
             task_panel_callback = TaskPanelCallback()
             task_panel_callback.onStartNextCallback = self.start_download
             task_panel_callback.onStopCallback = stop_download_callback
-            task_panel_callback.onUpdateTaskCountCallback = self.update_task_count_label
+            task_panel_callback.onUpdateCountTitleCallback = self.update_task_count_label
             task_panel_callback.onLoadMoreTaskCallback = load_more_callback
 
             return task_panel_callback
@@ -1172,7 +1172,7 @@ class DownloadTaskPanel(wx.Panel):
         # 回调函数，刷新 UI
         self.callback.onStopCallback(self.task_info.cid)
 
-        self.download_file_tool.clear_download_info()
+        self.download_file_tool.delete_file()
 
         Thread(target = worker).start()
 
@@ -1216,7 +1216,7 @@ class DownloadTaskPanel(wx.Panel):
             # 合成视频回调函数
             self.show_media_info()
 
-            self.callback.onUpdateTaskCountCallback()
+            self.callback.onUpdateCountTitleCallback()
 
             self.callback.onStartNextCallback()
         
@@ -1231,7 +1231,7 @@ class DownloadTaskPanel(wx.Panel):
             self.update_download_status(DownloadStatus.Complete.value)
 
             if Config.Download.delete_history:
-                self.download_file_tool.clear_download_info()
+                self.download_file_tool.delete_file()
             
             self.callback.onLoadMoreTaskCallback()
 
@@ -1268,7 +1268,7 @@ class DownloadTaskPanel(wx.Panel):
             message.status = self.task_info.status
             message.video_merge_type = self.task_info.video_merge_type
 
-            self.callback.onUpdateTaskCountCallback(message)
+            self.callback.onUpdateCountTitleCallback(message)
         
         self.download_file_tool.update_error_info(GlobalExceptionInfo.info.to_dict())
 
@@ -1284,7 +1284,7 @@ class DownloadTaskPanel(wx.Panel):
             message.status = self.task_info.status
             message.video_merge_type = self.task_info.video_merge_type
 
-            self.callback.onUpdateTaskCountCallback(message)
+            self.callback.onUpdateCountTitleCallback(message)
             self.callback.onStartNextCallback()
 
         self.download_file_tool.update_error_info(GlobalExceptionInfo.info.to_dict())

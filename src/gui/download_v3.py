@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Callable
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadStatus
 from utils.tool_v2 import DownloadFileTool
 from utils.config import Config
@@ -176,6 +176,42 @@ class SimplePage(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
+    def load_more_panel_item(self, callback: Callable = None):
+        def get_download_list():
+            # 当前限制每次加载 50 个
+            item_threshold = 50
+
+            temp_download_list = self.temp_download_list[:item_threshold]
+            self.temp_download_list = self.temp_download_list[item_threshold:]
+
+            return temp_download_list
+
+        def get_items():
+            def get_callback():
+                callback = TaskPanelCallback()
+                callback.onUpdateCountTitleCallback = self.refresh_scroller
+
+                return callback
+
+            items = []
+
+            for entry in get_download_list():
+                item = DownloadTaskItemPanel(self.scroller, entry, get_callback())
+                items.append((item, 0, wx.EXPAND))
+            
+            return items
+        
+        # 批量添加下载项
+        self.scroller.Freeze()
+        self.scroller.sizer.AddMany(get_items())
+        self.scroller.Thaw()
+
+        self.refresh_scroller()
+
+        # 回调函数
+        if callback:
+            callback()
+
     def refresh_scroller(self):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
@@ -233,36 +269,6 @@ class DownloadingPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
-
-    def load_more_panel_item(self, callback: Callable = None):
-        def get_download_list():
-            # 当前限制每次加载 50 个
-            item_threshold = 50
-
-            temp_download_list = self.temp_download_list[:item_threshold]
-            self.temp_download_list = self.temp_download_list[item_threshold:]
-
-            return temp_download_list
-
-        def get_items():
-            items = []
-
-            for entry in get_download_list():
-                item = DownloadTaskItemPanel(self.scroller, entry)
-                items.append((item, 0, wx.EXPAND))
-            
-            return items
-        
-        # 批量添加下载项
-        self.scroller.Freeze()
-        self.scroller.sizer.AddMany(get_items())
-        self.scroller.Thaw()
-
-        self.refresh_scroller()
-
-        # 回调函数
-        if callback:
-            callback()
 
     @property
     def scroller_count(self):
