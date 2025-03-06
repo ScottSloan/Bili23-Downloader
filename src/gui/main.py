@@ -23,7 +23,7 @@ from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, Downlo
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 
 from gui.templates import Frame, TreeListCtrl, InfoBar, TextCtrl
-from gui.download_v2 import DownloadManagerWindow
+from gui.download_v3 import DownloadManagerWindow
 from gui.settings import SettingWindow
 from gui.login import LoginWindow
 
@@ -348,11 +348,11 @@ class MainWindow(Frame):
         self.ID_EPISODE_LIST_COLLAPSE = wx.NewIdRef()
 
     def onCloseEVT(self, event):
-        if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
-            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+        # if self.download_window.get_download_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
+        #     dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
 
-            if dlg.ShowModal() == wx.ID_NO:
-                return
+        #     if dlg.ShowModal() == wx.ID_NO:
+        #         return
 
         event.Skip()
 
@@ -471,7 +471,7 @@ class MainWindow(Frame):
             self.onOpenDownloadMgrEVT(0)
 
         def worker():
-            wx.CallAfter(self.download_window.add_download_task_panel, self.treelist.download_task_info_list, add_download_task_callback, True)
+            self.download_window.add_to_download_list(self.treelist.download_task_info_list)
 
         def _get_live_stram():
             # 获取选定清晰度的直播流

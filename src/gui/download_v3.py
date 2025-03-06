@@ -1,6 +1,11 @@
 import wx
+from datetime import datetime
+from typing import List
 
 from utils.common.icon_v2 import IconManager, IconType
+from utils.common.data_type import DownloadTaskInfo
+from utils.tool_v2 import DownloadFileTool
+from utils.config import Config
 
 from gui.templates import ActionButton, ScrolledPanel
 from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
@@ -100,10 +105,39 @@ class DownloadManagerWindow(wx.Frame):
     def Bind_EVT(self):
         self.downloading_page_btn.onClickCustomEVT = self.onDownloadingPageBtnEVT
         self.completed_page_btn.onClickCustomEVT = self.onCompletedPageBtnEVT
+
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
     
     def init_utils(self):
         self.downloading_page_btn.setActiveState()
+    
+    def add_to_download_list(self, download_list: List[DownloadTaskInfo]):
+        def create_local_file():
+            for index, entry in enumerate(download_list):
+                # 记录时间戳
+                if not entry.timestamp:
+                    entry.timestamp = self.get_timestamp() + index
+
+                # 更新序号
+                if len(download_list) and Config.Download.add_number:
+                    entry.index = index
+                    entry.index_with_zero = str(index + 1).zfill(len(str(len(download_list))))
+
+                download_local_file = DownloadFileTool(entry.id)
+                # 如果本地文件不存在，则创建
+                if not download_local_file.file_existence:
+                    download_local_file.save_download_info(entry)
+            
+            self.downloading_page.temp_download_list.extend(download_list)
         
+        create_local_file()
+        
+        # 显示下载项
+        self.downloading_page.load_more_panel_item()
+
+    def onCloseEVT(self, event):
+        self.Hide()
+
     def onDownloadingPageBtnEVT(self):
         self.book.SetSelection(0)
 
@@ -113,6 +147,10 @@ class DownloadManagerWindow(wx.Frame):
         self.book.SetSelection(1)
 
         self.downloading_page_btn.setUnactiveState()
+
+    def get_timestamp(self):
+        timestamp_str = str(datetime.now().timestamp()).replace(".", "")
+        return int(timestamp_str)
 
 class DownloadingPage(wx.Panel):
     def __init__(self, parent):
@@ -151,25 +189,40 @@ class DownloadingPage(wx.Panel):
         self.SetSizer(vbox)
 
     def init_utils(self):
-        test = DownloadTaskItemPanel(self.scroller)
-        test.title_lab.SetLabel("500 ways to thrashing Hanloth")
-        test.video_quality_lab.SetLabel("超高清 8K")
-        test.video_codec_lab.SetLabel("H.264/AVC")
-        test.video_size_lab.SetLabel("605.2 MB/2.3 GB")
-        test.speed_lab.SetLabel("23.3 MB/s")
-        test.progress_bar.SetValue(40)
+        self.temp_download_list: List[DownloadTaskInfo] = []
 
-        trick = DownloadTaskItemPanel(self.scroller)
-        trick.title_lab.SetLabel("Tricking on Hanloth")
-        trick.video_quality_lab.SetLabel("超高清 8K")
-        trick.video_codec_lab.SetLabel("H.264/AVC")
-        trick.video_size_lab.SetLabel("105.2 MB/1.5 GB")
-        trick.speed_lab.SetLabel("18.9 MB/s")
-        trick.progress_bar.SetValue(8)
+    def load_more_panel_item(self):
+        def get_download_list():
+            # 当前限制每次加载 50 个
+            item_threshold = 50
 
-        self.scroller.sizer.Add(test, 0, wx.EXPAND)
-        self.scroller.sizer.Add(trick, 0, wx.EXPAND)
+            temp_download_list = self.temp_download_list[:item_threshold]
+            self.temp_download_list = self.temp_download_list[item_threshold:]
 
+            return temp_download_list
+
+        def get_items():
+            items = []
+
+            for entry in get_download_list():
+                item = DownloadTaskItemPanel(self, entry)
+                items.append((item, 0, wx.EXPAND))
+            
+            return items
+        
+        def worker(items: list):
+            # 批量添加下载项
+            self.scroller.Freeze()
+            self.scroller.sizer.AddMany(items)
+            self.scroller.Thaw()
+
+        items = get_items()
+        
+        wx.CallAfter(worker, items)
+
+        self.refresh_scroller()
+
+    def refresh_scroller(self):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 

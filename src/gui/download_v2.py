@@ -607,7 +607,7 @@ class DownloadUtils:
 
             self.task_info.video_quality_id = self._temp_download_json["quality"]
 
-            self.task_info.video_count = len(json_dash)
+            self.task_info.flv_video_count = len(json_dash)
 
             for entry in json_dash:
                 self._flv_download_url_list.append(self._get_all_available_download_url_list(entry))
@@ -706,7 +706,7 @@ class DownloadUtils:
         def _flv():
             def _generate_flv_list_txt():
                 with open(os.path.join(Config.Download.path, self._temp_flv_list_name), "w", encoding = "utf-8") as f:
-                    f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.video_count)]))
+                    f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.flv_video_count)]))
             
             _generate_flv_list_txt()
 
@@ -841,7 +841,7 @@ class DownloadUtils:
                 files = [self._temp_video_file_name, self._temp_audio_file_name, self._temp_out_file_name]
             
             case StreamType.Flv:
-                files = [f"flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.video_count)] + [self._temp_flv_list_name]
+                files = [f"flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.flv_video_count)] + [self._temp_flv_list_name]
 
         UniversalTool.remove_files(Config.Download.path, files)
 
@@ -1310,7 +1310,7 @@ class DownloadTaskPanel(wx.Panel):
             def update_item_flag_callback():
                 kwargs = {
                     "item_flag": self.task_info.item_flag,
-                    "video_count": self.task_info.video_count
+                    "video_count": self.task_info.flv_video_count
                 }
 
                 self.download_file_tool.update_task_info_kwargs(**kwargs)

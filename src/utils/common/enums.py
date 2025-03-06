@@ -99,3 +99,8 @@ class VideoCodecID(Enum):
     AVC = 7
     HEVC = 12
     AV1 = 13
+
+class DownloadOption(Enum):
+    OnlyVideo = 1
+    OnlyAudio = 2
+    VideoAndAudio = 3

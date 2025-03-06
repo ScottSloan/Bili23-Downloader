@@ -1,6 +1,10 @@
 import wx
 
 from utils.common.icon_v2 import IconManager, IconType
+from utils.common.data_type import DownloadTaskInfo
+from utils.common.enums import DownloadOption
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
+from utils.tool_v2 import FormatTool
 
 from gui.templates import InfoLabel
 
@@ -26,7 +30,9 @@ class EmptyItemPanel(wx.Panel):
         self.SetSizer(vbox)
 
 class DownloadTaskItemPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, info: DownloadTaskInfo):
+        self.task_info = info
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -127,6 +133,24 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def init_utils(self):
         self._children_hover = False
+
+        self.show_task_info()
+
+    def show_task_info(self):
+        self.title_lab.SetLabel(self.task_info.title)
+        self.progress_bar.SetValue(self.task_info.progress)
+
+        if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+            self.video_quality_lab.SetLabel("音频")
+            self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
+        else:
+            self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
+            self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
+        
+        if self.task_info.progress == 100:
+            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
+        else:
+            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
 
     def onItemHoverEVT(self, event):
         self.SetBackgroundColour(wx.Colour(220, 220, 220))

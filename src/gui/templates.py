@@ -384,7 +384,7 @@ class ActionButton(wx.Panel):
         event.Skip()
     
     def onClickEVT(self, event):
-        self.SetBackgroundColour(wx.Colour(220, 220, 220))
+        self.SetBackgroundColour(wx.Colour(210, 210, 210))
 
         self.Refresh()
 
@@ -396,7 +396,7 @@ class ActionButton(wx.Panel):
     
     def setActiveState(self):
         self._active = True
-        self.SetBackgroundColour(wx.Colour(220, 220, 220))
+        self.SetBackgroundColour(wx.Colour(210, 210, 210))
 
         self.Refresh()
 

@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo, ExceptionInfo
+from utils.common.data_type import DownloadTaskInfo
 from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
@@ -196,10 +196,6 @@ class FileDirectoryTool:
 class DownloadFileTool:
     # 断点续传信息工具类
     def __init__(self, _id: Optional[int] = None, file_name: Optional[str] = None):
-        def check():
-            if not os.path.exists(self.file_path):
-                self._write_download_file({})
-
         if file_name:
             _file = file_name
         else:
@@ -207,8 +203,8 @@ class DownloadFileTool:
 
         self.file_path = os.path.join(Config.User.download_file_directory, _file)
 
-        # 检查本地文件是否存在
-        check()
+        if not self.file_existence:
+            self._write_download_file({})
 
     def save_download_info(self, info: DownloadTaskInfo):
         def _header():
@@ -243,34 +239,18 @@ class DownloadFileTool:
 
             self._write_download_file(contents)
 
-    def update_thread_info(self, thread_info: dict):
+    def update_info(self, category: str, info: dict):
         contents = self._read_download_file_json()
 
         if contents is not None:
-            contents["thread_info"] = thread_info
+            contents[category] = info
 
             self._write_download_file(contents)
 
-    def update_error_info(self, error_info: dict):
+    def get_info(self, category: str):
         contents = self._read_download_file_json()
 
-        if contents is not None:
-            contents["error_info"] = error_info
-
-            self._write_download_file(contents)
-
-    def get_thread_info(self):
-        contents = self._read_download_file_json()
-
-        return contents.get("thread_info", {})
-    
-    def get_error_info(self):
-        contents = self._read_download_file_json()
-
-        info = ExceptionInfo()
-        info.from_dict(contents.get("error_info", {}))
-
-        return info
+        return contents.get(category, {})
 
     def _read_download_file_json(self):
         if os.path.exists(self.file_path):
@@ -313,6 +293,10 @@ class DownloadFileTool:
 
         if os.path.exists(file_path):
             os.remove(file_path)
+
+    @property
+    def file_existence(self):
+        return os.path.exists(self.file_path)
 
 class FormatTool:
     # 格式化数据类
