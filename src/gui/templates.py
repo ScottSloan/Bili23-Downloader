@@ -409,6 +409,9 @@ class ActionButton(wx.Panel):
     def setBitmap(self, bitmap):
         self.icon.SetBitmap(bitmap)
 
+    def setTitle(self, title):
+        self.lab.SetLabel(title)
+
     def onClickCustomEVT(self):
         pass
 

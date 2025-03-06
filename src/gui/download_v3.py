@@ -142,25 +142,62 @@ class DownloadManagerWindow(wx.Frame):
     def onDownloadingPageBtnEVT(self):
         self.book.SetSelection(0)
 
+        self.setTitleLabel("正在下载", self.downloading_page.scroller_count)
+
         self.completed_page_btn.setUnactiveState()
 
     def onCompletedPageBtnEVT(self):
         self.book.SetSelection(1)
 
+        self.setTitleLabel("下载完成", self.completed_page.scroller_count)
+
         self.downloading_page_btn.setUnactiveState()
 
-    def setTitleLabel(self, label: str):
-        self.top_title_lab.SetLabel(label)
+    def setTitleLabel(self, name: str, count: int):
+        if count:
+            title = f"{count} 个任务{name}"
+        else:
+            title = "下载管理"
+
+        self.top_title_lab.SetLabel(title)
+
+        if name == "正在下载":
+            self.downloading_page_btn.setTitle(f"正在下载({count})")
+            self.downloading_page_btn.Refresh()
+        else:
+            self.completed_page_btn.setTitle(f"下载完成({count})")
+            self.downloading_page_btn.Refresh()
 
     def get_timestamp(self):
         timestamp_str = str(datetime.now().timestamp()).replace(".", "")
         return int(timestamp_str)
 
-class DownloadingPage(wx.Panel):
-    def __init__(self, parent, callback: Callable):
-        self.callback = callback
-
+class SimplePage(wx.Panel):
+    def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
+
+    def refresh_scroller(self):
+        self.scroller.Layout()
+        self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
+
+        self.callback(self.name, self.scroller_count)
+
+    def get_scroller_task_count(self, condition: List[int]):
+        children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
+        _count = 0
+
+        for panel in children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status in condition:
+                    _count += 1
+
+        return _count
+
+class DownloadingPage(SimplePage):
+    def __init__(self, parent, callback: Callable):
+        self.callback, self.name = callback, "正在下载"
+
+        SimplePage.__init__(self, parent)
 
         self.init_UI()
 
@@ -227,38 +264,15 @@ class DownloadingPage(wx.Panel):
         if callback:
             callback()
 
-    def refresh_scroller(self):
-        def update_downloading_count():
-            count = self.get_scroller_task_count(DownloadStatus.Alive.value)
+    @property
+    def scroller_count(self):
+        return self.get_scroller_task_count(DownloadStatus.Alive.value)
 
-            if count:
-                title = f"{count} 个任务正在下载"
-            else:
-                title = "下载管理"
-
-            self.callback(title)
-
-        self.scroller.Layout()
-        self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
-
-        update_downloading_count()
-
-    def get_scroller_task_count(self, condition: List[int]):
-        children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
-        _count = 0
-
-        for panel in children:
-            if isinstance(panel, DownloadTaskItemPanel):
-                if panel.task_info.status in condition:
-                    _count += 1
-
-        return _count
-
-class CompeltedPage(wx.Panel):
+class CompeltedPage(SimplePage):
     def __init__(self, parent, callback: Callable):
-        self.callback = callback
+        self.callback, self.name = callback, "下载完成"
 
-        wx.Panel.__init__(self, parent, -1)
+        SimplePage.__init__(self, parent)
 
         self.init_UI()
 
@@ -290,3 +304,7 @@ class CompeltedPage(wx.Panel):
 
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
+
+    @property
+    def scroller_count(self):
+        return self.get_scroller_task_count([DownloadStatus.Complete.value])
