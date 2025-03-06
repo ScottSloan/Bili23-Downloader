@@ -465,13 +465,12 @@ class MainWindow(Frame):
             wx.CallAfter(callback)
 
     def onDownloadEVT(self, event):
-        def add_download_task_callback():
-            # 显示下载窗口
-            self.processing_window.Hide()
-            self.onOpenDownloadMgrEVT(0)
-
         def worker():
-            self.download_window.add_to_download_list(self.treelist.download_task_info_list)
+            def callback():
+                self.processing_window.Hide()
+                self.onOpenDownloadMgrEVT(0)
+
+            self.download_window.add_to_download_list(self.treelist.download_task_info_list, callback)
 
         def _get_live_stram():
             # 获取选定清晰度的直播流

@@ -108,28 +108,7 @@ class DownloadTaskItemPanel(wx.Panel):
         self.SetSizer(self.panel_vbox)
 
     def Bind_EVT(self):
-        self.Bind(wx.EVT_ENTER_WINDOW, self.onItemHoverEVT)
-        self.Bind(wx.EVT_LEAVE_WINDOW, self.onItemLeaveEVT)
-
-        self.cover_bmp.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.title_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.video_quality_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.video_codec_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.video_size_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.progress_bar.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.speed_lab.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.pause_btn.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        self.stop_btn.Bind(wx.EVT_ENTER_WINDOW, self.onItemChildrenHoverEVT)
-        
-        self.cover_bmp.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.title_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.video_quality_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.video_codec_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.video_size_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.progress_bar.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.speed_lab.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.pause_btn.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
-        self.stop_btn.Bind(wx.EVT_LEAVE_WINDOW, self.onItemChildrenLeave)
+        pass
 
     def init_utils(self):
         self._children_hover = False
@@ -142,37 +121,12 @@ class DownloadTaskItemPanel(wx.Panel):
 
         if self.task_info.download_option == DownloadOption.OnlyAudio.value:
             self.video_quality_lab.SetLabel("音频")
-            self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id))
+            self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--"))
         else:
-            self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id))
-            self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
+            self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--"))
+            self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--"))
         
         if self.task_info.progress == 100:
             self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
         else:
             self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
-
-    def onItemHoverEVT(self, event):
-        self.SetBackgroundColour(wx.Colour(220, 220, 220))
-
-        self.Refresh()
-
-        event.Skip()
-    
-    def onItemChildrenHoverEVT(self, event):
-        self._children_hover = True
-
-        event.Skip()
-
-    def onItemLeaveEVT(self, event):
-        if not self._children_hover:
-            self.SetBackgroundColour("white")
-
-            self.Refresh()
-
-            event.Skip()
-
-    def onItemChildrenLeave(self, event):
-        self._children_hover = False
-
-        event.Skip()

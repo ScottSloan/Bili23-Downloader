@@ -198,10 +198,10 @@ status_code_map = {
     19002003: "房间信息不存在"
 }
 
-def get_mapping_key_by_value(mapping: dict, value: int):
+def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
-    return mapping_reversed[value]
+    return mapping_reversed.get(value, default)
 
 def get_mapping_index_by_value(mapping: dict, value: Any):
     return list(mapping.values()).index(value)

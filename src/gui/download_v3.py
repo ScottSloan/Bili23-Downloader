@@ -1,9 +1,10 @@
 import wx
 from datetime import datetime
-from typing import List
+from typing import List, Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo
+from utils.common.enums import DownloadStatus
 from utils.tool_v2 import DownloadFileTool
 from utils.config import Config
 
@@ -33,7 +34,7 @@ class DownloadManagerWindow(wx.Frame):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
-        self.top_title_lab = wx.StaticText(top_panel, -1, "2 个任务正在下载")
+        self.top_title_lab = wx.StaticText(top_panel, -1, "下载管理")
         self.top_title_lab.SetFont(font)
 
         top_panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -52,7 +53,7 @@ class DownloadManagerWindow(wx.Frame):
         left_panel = wx.Panel(self, -1)
         left_panel.SetBackgroundColour("white")
 
-        self.downloading_page_btn = ActionButton(left_panel, "正在下载(2)")
+        self.downloading_page_btn = ActionButton(left_panel, "正在下载(0)")
         self.downloading_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.DOWNLOADING_ICON))
         self.completed_page_btn = ActionButton(left_panel, "下载完成(0)")
         self.completed_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.COMPLETED_ICON))
@@ -79,8 +80,8 @@ class DownloadManagerWindow(wx.Frame):
 
         self.book = wx.Simplebook(right_panel, -1)
 
-        self.downloading_page = DownloadingPage(self.book)
-        self.completed_page = CompeltedPage(self.book)
+        self.downloading_page = DownloadingPage(self.book, self.setTitleLabel)
+        self.completed_page = CompeltedPage(self.book, self.setTitleLabel)
 
         self.book.AddPage(self.downloading_page, "downloading_page")
         self.book.AddPage(self.completed_page, "completed_page")
@@ -111,7 +112,7 @@ class DownloadManagerWindow(wx.Frame):
     def init_utils(self):
         self.downloading_page_btn.setActiveState()
     
-    def add_to_download_list(self, download_list: List[DownloadTaskInfo]):
+    def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable):
         def create_local_file():
             for index, entry in enumerate(download_list):
                 # 记录时间戳
@@ -133,7 +134,7 @@ class DownloadManagerWindow(wx.Frame):
         create_local_file()
         
         # 显示下载项
-        self.downloading_page.load_more_panel_item()
+        wx.CallAfter(self.downloading_page.load_more_panel_item, callback)
 
     def onCloseEVT(self, event):
         self.Hide()
@@ -148,12 +149,17 @@ class DownloadManagerWindow(wx.Frame):
 
         self.downloading_page_btn.setUnactiveState()
 
+    def setTitleLabel(self, label: str):
+        self.top_title_lab.SetLabel(label)
+
     def get_timestamp(self):
         timestamp_str = str(datetime.now().timestamp()).replace(".", "")
         return int(timestamp_str)
 
 class DownloadingPage(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
+        self.callback = callback
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
@@ -191,7 +197,7 @@ class DownloadingPage(wx.Panel):
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
 
-    def load_more_panel_item(self):
+    def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 50 个
             item_threshold = 50
@@ -205,29 +211,53 @@ class DownloadingPage(wx.Panel):
             items = []
 
             for entry in get_download_list():
-                item = DownloadTaskItemPanel(self, entry)
+                item = DownloadTaskItemPanel(self.scroller, entry)
                 items.append((item, 0, wx.EXPAND))
             
             return items
         
-        def worker(items: list):
-            # 批量添加下载项
-            self.scroller.Freeze()
-            self.scroller.sizer.AddMany(items)
-            self.scroller.Thaw()
-
-        items = get_items()
-        
-        wx.CallAfter(worker, items)
+        # 批量添加下载项
+        self.scroller.Freeze()
+        self.scroller.sizer.AddMany(get_items())
+        self.scroller.Thaw()
 
         self.refresh_scroller()
 
+        # 回调函数
+        if callback:
+            callback()
+
     def refresh_scroller(self):
+        def update_downloading_count():
+            count = self.get_scroller_task_count(DownloadStatus.Alive.value)
+
+            if count:
+                title = f"{count} 个任务正在下载"
+            else:
+                title = "下载管理"
+
+            self.callback(title)
+
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
+        update_downloading_count()
+
+    def get_scroller_task_count(self, condition: List[int]):
+        children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
+        _count = 0
+
+        for panel in children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status in condition:
+                    _count += 1
+
+        return _count
+
 class CompeltedPage(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
+        self.callback = callback
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
