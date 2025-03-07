@@ -10,7 +10,7 @@ from utils.tool_v2 import DownloadFileTool
 from utils.config import Config
 
 from gui.templates import ActionButton, ScrolledPanel
-from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
+from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(wx.Frame):
     def __init__(self, parent):
@@ -132,16 +132,10 @@ class DownloadManagerWindow(wx.Frame):
             
             self.downloading_page.temp_download_list.extend(download_list)
         
-        def _callback():
-            callback()
-
-            # 显示封面
-            Thread(target = self.downloading_page.show_panel_item_cover).start()
-
         create_local_file()
         
         # 显示下载项
-        wx.CallAfter(self.downloading_page.load_more_panel_item, _callback)
+        wx.CallAfter(self.downloading_page.load_more_panel_item, callback)
 
     def onCloseEVT(self, event):
         self.Hide()
@@ -149,14 +143,14 @@ class DownloadManagerWindow(wx.Frame):
     def onDownloadingPageBtnEVT(self):
         self.book.SetSelection(0)
 
-        self.setTitleLabel("正在下载", self.downloading_page.scroller_count)
+        self.setTitleLabel("正在下载", self.downloading_page.total_count)
 
         self.completed_page_btn.setUnactiveState()
 
     def onCompletedPageBtnEVT(self):
         self.book.SetSelection(1)
 
-        self.setTitleLabel("下载完成", self.completed_page.scroller_count)
+        self.setTitleLabel("下载完成", self.completed_page.total_count)
 
         self.downloading_page_btn.setUnactiveState()
 
@@ -186,7 +180,7 @@ class SimplePage(wx.Panel):
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 50 个
-            item_threshold = 50
+            item_threshold = 1
 
             temp_download_list = self.temp_download_list[:item_threshold]
             self.temp_download_list = self.temp_download_list[item_threshold:]
@@ -205,9 +199,19 @@ class SimplePage(wx.Panel):
             for entry in get_download_list():
                 item = DownloadTaskItemPanel(self.scroller, entry, get_callback(), self.download_window)
                 items.append((item, 0, wx.EXPAND))
+
+            count = len(self.temp_download_list)
+
+            # 显示加载更多
+            if count:
+                item = LoadMoreTaskItemPanel(self.scroller, count, self.load_more_panel_item)
+                items.append((item, 0, wx.EXPAND))
             
             return items
         
+        # 隐藏显示更多项目
+        self.hide_other_item()
+
         # 批量添加下载项
         self.scroller.Freeze()
         self.scroller.sizer.AddMany(get_items())
@@ -215,9 +219,20 @@ class SimplePage(wx.Panel):
 
         self.refresh_scroller()
 
+        # 显示封面
+        Thread(target = self.show_panel_item_cover).start()
+
         # 回调函数
         if callback:
             callback()
+
+    def hide_other_item(self):
+        for panel in self.scroller_children:
+            if isinstance(panel, LoadMoreTaskItemPanel):
+                panel.destroy_panel()
+            
+            if isinstance(panel, EmptyItemPanel):
+                panel.destroy_panel()
 
     def show_panel_item_cover(self):
         for panel in self.scroller_children:
@@ -225,10 +240,14 @@ class SimplePage(wx.Panel):
                 panel.show_cover()
 
     def refresh_scroller(self):
+        if not self.total_count:
+            item = EmptyItemPanel(self.scroller, self.name)
+            self.scroller.sizer.Add(item, 1, wx.EXPAND)
+
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        self.callback(self.name, self.scroller_count)
+        self.callback(self.name, self.total_count)
 
     def get_scroller_task_count(self, condition: List[int]):
         _count = 0
@@ -293,16 +312,38 @@ class DownloadingPage(SimplePage):
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
 
     def onCancelAllEVT(self, event):
-        for panel in self.scroller_children:
-            if isinstance(panel, DownloadTaskItemPanel):
-                if panel.task_info.status in DownloadStatus.Alive_Ex.value:
-                    panel.onStopEVT(0)
+        def clear_scroller():
+            # 取消 scroller 中的任务
+            for panel in self.scroller_children:
+                if isinstance(panel, DownloadTaskItemPanel):
+                    if panel.task_info.status in DownloadStatus.Alive_Ex.value:
+                        panel.onStopEVT(0)
+
+        def clear_temp():
+            # 取消 temp_download_list 中的任务
+            items = []
+
+            for entry in self.temp_download_list:
+                if entry.status in DownloadStatus.Alive_Ex.value:
+                    DownloadFileTool.delete_file_by_id(entry.id)
+                else:
+                    items.append(entry)
+            
+            self.temp_download_list = items
+
+        clear_scroller()
+
+        clear_temp()
 
         self.refresh_scroller()
 
     @property
     def scroller_count(self):
         return self.get_scroller_task_count(DownloadStatus.Alive.value)
+    
+    @property
+    def total_count(self):
+        return self.scroller_count + len(self.temp_download_list)
 
 class CompeltedPage(SimplePage):
     def __init__(self, parent, callback: Callable, download_window):
@@ -334,13 +375,12 @@ class CompeltedPage(SimplePage):
         self.SetSizer(vbox)
 
     def init_utils(self):
-        empty = EmptyItemPanel(self.scroller)
-    
-        self.scroller.sizer.Add(empty, 1, wx.EXPAND)
-
-        self.scroller.Layout()
-        self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
+        self.temp_download_list: List[DownloadTaskInfo] = []
 
     @property
     def scroller_count(self):
         return self.get_scroller_task_count([DownloadStatus.Complete.value])
+    
+    @property
+    def total_count(self):
+        return self.scroller_count + len(self.temp_download_list)

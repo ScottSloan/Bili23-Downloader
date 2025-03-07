@@ -1,5 +1,6 @@
 import wx
 from io import BytesIO
+from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
@@ -11,13 +12,15 @@ from gui.templates import InfoLabel
 from gui.dialog.cover import CoverViewerDialog
 
 class EmptyItemPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, name: str):
+        self.name = name
+
         wx.Panel.__init__(self, parent, -1)
 
         self.init_UI()
 
     def init_UI(self):
-        self.empty_lab = wx.StaticText(self, -1, "无项目")
+        self.empty_lab = wx.StaticText(self, -1, f"没有{self.name}的项目")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddStretchSpacer()
@@ -30,6 +33,46 @@ class EmptyItemPanel(wx.Panel):
         vbox.AddStretchSpacer(200)
 
         self.SetSizer(vbox)
+
+    def destroy_panel(self):
+        self.Hide()
+        self.Destroy()
+
+class LoadMoreTaskItemPanel(wx.Panel):
+    def __init__(self, parent, count: int, callback: Callable):
+        self.count, self.callback = count, callback
+
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+    def init_UI(self):
+        self.more_lab = wx.StaticText(self, -1, f"显示更多项目({self.count}+)")
+        self.more_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+        
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddStretchSpacer()
+        hbox.Add(self.more_lab, 0, wx.ALL, 10)
+        hbox.AddStretchSpacer()
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox, 0, wx.EXPAND)
+
+        self.SetSizer(vbox)
+    
+    def Bind_EVT(self):
+        self.more_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowMoreEVT)
+
+    def onShowMoreEVT(self, event):
+        self.destroy_panel()
+
+        self.callback()
+
+    def destroy_panel(self):
+        self.Hide()
+        self.Destroy()
 
 class DownloadTaskItemPanel(wx.Panel):
     def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback, download_window):

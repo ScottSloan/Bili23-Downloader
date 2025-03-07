@@ -205,7 +205,7 @@ class DownloadManagerWindow(Frame):
 
         for entry in self._temp_download_task_info_list:
             if entry.status in status:
-                DownloadFileTool._clear_specific_file(entry.id)
+                DownloadFileTool.delete_file_by_id(entry.id)
             else:
                 _temp_list.append(entry)
         

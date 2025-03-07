@@ -288,7 +288,7 @@ class DownloadFileTool:
                     os.remove(file_path)
     
     @staticmethod
-    def _clear_specific_file(id: int):
+    def delete_file_by_id(id: int):
         file_path = os.path.join(Config.User.download_file_directory, f"info_{id}.json")
 
         if os.path.exists(file_path):
