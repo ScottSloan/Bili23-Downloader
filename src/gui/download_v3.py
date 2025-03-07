@@ -244,6 +244,9 @@ class SimplePage(wx.Panel):
             item = EmptyItemPanel(self.scroller, self.name)
             self.scroller.sizer.Add(item, 1, wx.EXPAND)
 
+        elif not self.scroller_count:
+            wx.CallAfter(self.load_more_panel_item)
+
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
