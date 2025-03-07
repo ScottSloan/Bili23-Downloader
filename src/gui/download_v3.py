@@ -278,6 +278,7 @@ class SimplePage(wx.Panel):
             callback()
 
     def hide_other_item(self):
+        # 隐藏显示更多和空白占位 Panel
         for panel in self.scroller_children:
             if isinstance(panel, LoadMoreTaskItemPanel):
                 panel.destroy_panel()
@@ -407,6 +408,8 @@ class CompeltedPage(SimplePage):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.init_utils()
 
     def init_UI(self):
@@ -430,6 +433,29 @@ class CompeltedPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
+
+    def Bind_EVT(self):
+        self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearHistoryEVT)
+
+    def onClearHistoryEVT(self):
+        def clear_scroller():
+            for panel in self.scroller_children:
+                if isinstance(panel, DownloadTaskItemPanel):
+                    if panel.task_info.status in [DownloadStatus.Complete.value]:
+                        panel.onStopEVT(0)
+
+        def clear_temp():
+            for entry in self.temp_download_list:
+                if entry.status in [DownloadStatus.Complete.value]:
+                    DownloadFileTool.delete_file_by_id(entry.id)
+
+            self.temp_download_list.clear()
+
+        clear_scroller()
+
+        clear_temp()
+
+        self.refresh_scroller()
 
     @property
     def scroller_count(self):
