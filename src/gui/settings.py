@@ -9,6 +9,7 @@ from gui.templates import ScrolledPanel,TextCtrl
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
+from gui.dialog.file_name import CustomFileNameDialog
 
 from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool, UniversalTool
@@ -399,6 +400,11 @@ class AdvancedTab(wx.Panel):
 
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
+        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名")
+
+        button_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.BOTTOM), 10)
+
         download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "下载出错重试次数")
         self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
 
@@ -418,6 +424,7 @@ class AdvancedTab(wx.Panel):
         self.always_use_http_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTP 协议发起请求而非 HTTPS")
 
         advanced_download_vbox = wx.BoxSizer(wx.VERTICAL)
+        advanced_download_vbox.Add(button_hbox, 0, wx.EXPAND)
         advanced_download_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
         advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL, 10)
@@ -439,6 +446,8 @@ class AdvancedTab(wx.Panel):
         self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
 
         self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
+
+        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
 
     def init_data(self):
         self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
@@ -510,6 +519,12 @@ class AdvancedTab(wx.Panel):
 
         if dlg.ShowModal() == wx.ID_OK:
             self.custom_cdn_box.SetValue(dlg.get_cdn())
+
+    def onCustomFileNameEVT(self, event):
+        dlg = CustomFileNameDialog(self)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            pass
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):

@@ -55,4 +55,3 @@ class EditTitleDialog(wx.Dialog):
             return
         
         event.Skip()
-

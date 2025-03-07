@@ -198,6 +198,18 @@ status_code_map = {
     19002003: "房间信息不存在"
 }
 
+file_name_fields_map = {
+    "date": "日期(date)",
+    "time": "时间(time)",
+    "datetime": "日期和时间(datetime)",
+    "timestamp": "时间戳(timestamp)",
+    "index": "序号(index)",
+    "index_with_zero": "补零序号(index_with_zero)",
+    "title": "视频标题(title)",
+    "bvid": "BV号(bvid)",
+    "cid": "cid号(cid)"
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
