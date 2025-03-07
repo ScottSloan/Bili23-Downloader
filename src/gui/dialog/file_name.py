@@ -113,10 +113,8 @@ class CustomFileNameDialog(wx.Dialog):
 
         if e.startswith("Single") or e.startswith("expected"):
             self.error_lab.SetLabel("字段名必须以 {} 包裹")
-        elif e.startswith("Replacement"):
-            self.error_lab.SetLabel("字段名称错误")
         else:
-            self.error_lab.SetLabel("字段名称错误")
+            self.error_lab.SetLabel("字段名错误")
 
         self.preview_lab.SetLabel("预览：-")
 

@@ -400,34 +400,40 @@ class AdvancedTab(wx.Panel):
 
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
-        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名")
+        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.FromDIP((120, 28)))
 
         button_hbox = wx.BoxSizer(wx.HORIZONTAL)
         button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.BOTTOM), 10)
 
-        download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "下载出错重试次数")
+        self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
+        self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
         self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        download_error_retry_hbox.Add(download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        download_error_retry_hbox.AddSpacer(30)
+        download_error_retry_hbox.Add(self.download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), 10)
 
-        download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "下载停滞时自动重启下载间隔")
+        self.download_suspend_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载停滞时自动重启下载")
+        self.download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "重启间隔")
         self.download_suspend_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 2, max = 15)
-        download_suspend_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "秒")
+        self.download_suspend_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "秒")
 
         download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        download_suspend_retry_hbox.Add(download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        download_suspend_retry_hbox.AddSpacer(30)
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
-        download_suspend_retry_hbox.Add(download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         self.always_use_http_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTP 协议发起请求而非 HTTPS")
 
         advanced_download_vbox = wx.BoxSizer(wx.VERTICAL)
         advanced_download_vbox.Add(button_hbox, 0, wx.EXPAND)
+        advanced_download_vbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         advanced_download_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
+        advanced_download_vbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), 10)
         advanced_download_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL, 10)
+        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box)
         advanced_download_sbox.Add(advanced_download_vbox, 0, wx.EXPAND)
@@ -442,12 +448,13 @@ class AdvancedTab(wx.Panel):
         self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableCustomCDNEVT)
         self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
         self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
+        self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
 
         self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
 
-        self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
-
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
+        self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
+        self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
 
     def init_data(self):
         self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
@@ -465,6 +472,8 @@ class AdvancedTab(wx.Panel):
                 self.custom_cdn_manual_radio.SetValue(True)
 
         self.onEnableCustomCDNEVT(0)
+        self.onChangeRetryEVT(0)
+        self.onChangeRestartEVT(0)
 
     def save(self):
         Config.Advanced.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
@@ -525,6 +534,15 @@ class AdvancedTab(wx.Panel):
 
         if dlg.ShowModal() == wx.ID_OK:
             pass
+    
+    def onChangeRetryEVT(self, event):
+        self.download_error_retry_lab.Enable(self.download_error_retry_chk.GetValue())
+        self.download_error_retry_box.Enable(self.download_error_retry_chk.GetValue())
+
+    def onChangeRestartEVT(self, event):
+        self.download_suspend_retry_lab.Enable(self.download_suspend_retry_chk.GetValue())
+        self.download_suspend_retry_box.Enable(self.download_suspend_retry_chk.GetValue())
+        self.download_suspend_retry_unit_lab.Enable(self.download_suspend_retry_chk.GetValue())
 
 class MergeTab(wx.Panel):
     def __init__(self, parent, _main_window):
