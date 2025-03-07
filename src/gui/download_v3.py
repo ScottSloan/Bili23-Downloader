@@ -1,4 +1,5 @@
 import wx
+import os
 from datetime import datetime
 from typing import List, Callable
 
@@ -112,7 +113,49 @@ class DownloadManagerWindow(wx.Frame):
     
     def init_utils(self):
         self.downloading_page_btn.setActiveState()
+
+        self.load_local_file()
     
+    def load_local_file(self):
+        def callback():
+            pass
+        
+        def filter(task_info: DownloadTaskInfo):
+            # 分为两类
+            if task_info.status == DownloadStatus.Complete.value:
+                completed_temp_donwload_list.append(task_info)
+            else:
+                if task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Downloading.value, DownloadStatus.Merging.value]:
+                        task_info.status = DownloadStatus.Pause.value
+
+                downloading_temp_download_list.append(task_info)
+
+            # 按照时间戳排序
+            downloading_temp_download_list.sort(key = lambda x: x.timestamp, reverse = False)
+            completed_temp_donwload_list.sort(key = lambda x: x.timestamp, reverse = False)
+
+        downloading_temp_download_list = completed_temp_donwload_list = []
+
+        for file_name in os.listdir(Config.User.download_file_directory):
+            file_path = os.path.join(Config.User.download_file_directory, file_name)
+
+            if os.path.isfile(file_path):
+                if file_name.startswith("info") and file_name.endswith("json"):
+                    file_tool = DownloadFileTool(file_name = file_name)
+
+                    # 检查文件兼容性
+                    if not file_tool._check_compatibility():
+                        file_tool.delete_file()
+                        continue
+
+                    task_info = DownloadTaskInfo()
+                    task_info.load_from_dict(file_tool.get_info("task_info"))
+
+                    filter()
+        
+        self.add_to_download_list(downloading_temp_download_list, callback)
+        self.add_to_completed_list(completed_temp_donwload_list)
+
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable):
         def create_local_file():
             for index, entry in enumerate(download_list):
@@ -136,6 +179,14 @@ class DownloadManagerWindow(wx.Frame):
         
         # 显示下载项
         wx.CallAfter(self.downloading_page.load_more_panel_item, callback)
+
+    def add_to_completed_list(self, completed_list: List[DownloadTaskInfo]):
+        def callback():
+            pass
+
+        self.completed_page.temp_download_list.extend(completed_list)
+
+        wx.CallAfter(self.completed_page.load_more_panel_item, callback)
 
     def onCloseEVT(self, event):
         self.Hide()
