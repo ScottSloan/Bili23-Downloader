@@ -8,6 +8,7 @@ from utils.common.map import video_quality_map, audio_quality_map, video_codec_m
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
 
 from gui.templates import InfoLabel
+from gui.dialog.cover import CoverViewerDialog
 
 class EmptyItemPanel(wx.Panel):
     def __init__(self, parent):
@@ -31,8 +32,8 @@ class EmptyItemPanel(wx.Panel):
         self.SetSizer(vbox)
 
 class DownloadTaskItemPanel(wx.Panel):
-    def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback):
-        self.task_info, self.callback = info, callback
+    def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback, download_window):
+        self.task_info, self.callback, self.download_window = info, callback, download_window
 
         wx.Panel.__init__(self, parent, -1)
 
@@ -46,6 +47,8 @@ class DownloadTaskItemPanel(wx.Panel):
         self.icon_manager = IconManager(self)
 
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.cover_bmp.SetToolTip("查看封面")
 
         self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
@@ -109,6 +112,8 @@ class DownloadTaskItemPanel(wx.Panel):
         self.SetSizer(self.panel_vbox)
 
     def Bind_EVT(self):
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
+
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
@@ -172,6 +177,10 @@ class DownloadTaskItemPanel(wx.Panel):
             image: wx.Image = image.Scale(size[0], size[1], wx.IMAGE_QUALITY_HIGH)
 
             wx.CallAfter(setBitmap, image)
+
+    def onViewCoverEVT(self, event):
+        dlg = CoverViewerDialog(self.download_window, self._cover)
+        dlg.Show()
 
     def onStopEVT(self, event):
         self.Hide()

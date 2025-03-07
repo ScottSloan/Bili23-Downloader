@@ -81,8 +81,8 @@ class DownloadManagerWindow(wx.Frame):
 
         self.book = wx.Simplebook(right_panel, -1)
 
-        self.downloading_page = DownloadingPage(self.book, self.setTitleLabel)
-        self.completed_page = CompeltedPage(self.book, self.setTitleLabel)
+        self.downloading_page = DownloadingPage(self.book, self.setTitleLabel, self)
+        self.completed_page = CompeltedPage(self.book, self.setTitleLabel, self)
 
         self.book.AddPage(self.downloading_page, "downloading_page")
         self.book.AddPage(self.completed_page, "completed_page")
@@ -203,7 +203,7 @@ class SimplePage(wx.Panel):
             items = []
 
             for entry in get_download_list():
-                item = DownloadTaskItemPanel(self.scroller, entry, get_callback())
+                item = DownloadTaskItemPanel(self.scroller, entry, get_callback(), self.download_window)
                 items.append((item, 0, wx.EXPAND))
             
             return items
@@ -246,8 +246,8 @@ class SimplePage(wx.Panel):
         return children 
 
 class DownloadingPage(SimplePage):
-    def __init__(self, parent, callback: Callable):
-        self.callback, self.name = callback, "正在下载"
+    def __init__(self, parent, callback: Callable, download_window):
+        self.callback, self.name, self.download_window = callback, "正在下载", download_window
 
         SimplePage.__init__(self, parent)
 
@@ -305,8 +305,8 @@ class DownloadingPage(SimplePage):
         return self.get_scroller_task_count(DownloadStatus.Alive.value)
 
 class CompeltedPage(SimplePage):
-    def __init__(self, parent, callback: Callable):
-        self.callback, self.name = callback, "下载完成"
+    def __init__(self, parent, callback: Callable, download_window):
+        self.callback, self.name, self.download_window = callback, "下载完成", download_window
 
         SimplePage.__init__(self, parent)
 
