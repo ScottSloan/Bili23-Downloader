@@ -206,7 +206,7 @@ class DownloadFileTool:
         if not self.file_existence:
             self._write_download_file({})
 
-    def save_download_info(self, info: DownloadTaskInfo):
+    def create_file(self, info: DownloadTaskInfo):
         def _header():
             return {
                 "min_version": Config.APP._task_file_min_version_code

@@ -5,6 +5,7 @@ from typing import List, Callable
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadStatus
+from utils.common.thread import Thread
 from utils.tool_v2 import DownloadFileTool
 from utils.config import Config
 
@@ -127,14 +128,20 @@ class DownloadManagerWindow(wx.Frame):
                 download_local_file = DownloadFileTool(entry.id)
                 # 如果本地文件不存在，则创建
                 if not download_local_file.file_existence:
-                    download_local_file.save_download_info(entry)
+                    download_local_file.create_file(entry)
             
             self.downloading_page.temp_download_list.extend(download_list)
         
+        def _callback():
+            callback()
+
+            # 显示封面
+            Thread(target = self.downloading_page.show_panel_item_cover).start()
+
         create_local_file()
         
         # 显示下载项
-        wx.CallAfter(self.downloading_page.load_more_panel_item, callback)
+        wx.CallAfter(self.downloading_page.load_more_panel_item, _callback)
 
     def onCloseEVT(self, event):
         self.Hide()
@@ -212,6 +219,11 @@ class SimplePage(wx.Panel):
         if callback:
             callback()
 
+    def show_panel_item_cover(self):
+        for panel in self.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                panel.show_cover()
+
     def refresh_scroller(self):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
@@ -219,15 +231,19 @@ class SimplePage(wx.Panel):
         self.callback(self.name, self.scroller_count)
 
     def get_scroller_task_count(self, condition: List[int]):
-        children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
         _count = 0
 
-        for panel in children:
+        for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 if panel.task_info.status in condition:
                     _count += 1
 
         return _count
+    
+    @property
+    def scroller_children(self):
+        children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
+        return children 
 
 class DownloadingPage(SimplePage):
     def __init__(self, parent, callback: Callable):
@@ -237,11 +253,14 @@ class DownloadingPage(SimplePage):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.init_utils()
     
     def init_UI(self):
         max_download_lab = wx.StaticText(self, -1, "并行下载数")
         self.max_download_choice = wx.Choice(self, -1, choices = [f"{i + 1}" for i in range(8)])
+        self.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
 
         self.start_all_btn = wx.Button(self, -1, "全部开始")
         self.pause_all_btn = wx.Button(self, -1, "全部暂停")
@@ -269,6 +288,17 @@ class DownloadingPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
+
+    def Bind_EVT(self):
+        self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
+
+    def onCancelAllEVT(self, event):
+        for panel in self.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status in DownloadStatus.Alive_Ex.value:
+                    panel.onStopEVT(0)
+
+        self.refresh_scroller()
 
     @property
     def scroller_count(self):

@@ -293,7 +293,7 @@ class DownloadManagerWindow(Frame):
                 entry.index_with_zero = str(index + 1).zfill(len(str(len(download_task_info_list))))
             
             download_file_tool = DownloadFileTool(entry.id)
-            download_file_tool.save_download_info(entry)
+            download_file_tool.create_file(entry)
 
         # 加入待下载列表
         self._temp_download_task_info_list.extend(download_task_info_list)

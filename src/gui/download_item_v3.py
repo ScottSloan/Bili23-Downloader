@@ -1,10 +1,11 @@
 import wx
+from io import BytesIO
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadOption
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
-from utils.tool_v2 import FormatTool, DownloadFileTool
+from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
 
 from gui.templates import InfoLabel
 
@@ -111,6 +112,8 @@ class DownloadTaskItemPanel(wx.Panel):
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
+        self._show_cover = False
+
         self.show_task_info()
 
         self.file_tool = DownloadFileTool(self.task_info.id)
@@ -131,10 +134,50 @@ class DownloadTaskItemPanel(wx.Panel):
         else:
             self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
     
+    def show_cover(self):
+        def is_16_9(image: wx.Image):
+            width, height = image.GetSize()
+
+            return (width / height) == (16 / 9)
+
+        def crop(image: wx.Image):
+            # 将非 16:9 封面调整为 16:9
+                width, height = image.GetSize()
+
+                new_height = int(width * (9 / 16))
+
+                y_offset = (height - new_height) // 2
+
+                if y_offset >= 0:
+                    return image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
+                else:
+                    new_width = int(height * (16 / 9))
+                    x_offset = (width - new_width) // 2
+                    return image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
+
+        def setBitmap(image: wx.Image):
+            self.cover_bmp.SetBitmap(image.ConvertToBitmap())
+
+        if not self._show_cover:
+            self._show_cover = True
+            size = self.FromDIP((112, 63))
+
+            self._cover = RequestTool.request_get(self.task_info.cover_url).content
+
+            image = wx.Image(BytesIO(self._cover))
+
+            if not is_16_9(image):
+                image = crop(image)
+
+            image: wx.Image = image.Scale(size[0], size[1], wx.IMAGE_QUALITY_HIGH)
+
+            wx.CallAfter(setBitmap, image)
+
     def onStopEVT(self, event):
         self.Hide()
         self.Destroy()
 
         self.file_tool.delete_file()
 
-        self.callback.onUpdateCountTitleCallback()
+        if event:
+            self.callback.onUpdateCountTitleCallback()
