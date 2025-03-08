@@ -20,7 +20,7 @@ class DownloadParser:
             elif "durl" in data:
                 self.task_info.stream_type = StreamType.Flv.value
 
-                return data["durl"]
+                return data
 
         def get_video_json():
             params = {
@@ -77,23 +77,26 @@ class DownloadParser:
         return downloader_info
 
     def parse_dash_json(self, data: dict):
-        downloader_info = []
-
-        if not self.task_info.download_items:
-            match DownloadOption(self.task_info.download_option):
-                case DownloadOption.OnlyVideo:
-                    self.task_info.download_items = ["video"]
-
-                case DownloadOption.OnlyAudio:
-                    self.task_info.download_items = ["audio"]
-
-                case DownloadOption.VideoAndAudio:
-                    if "audio" in data:
-                        self.task_info.download_items = ["video", "audio"]
-                    else:
+        def check_download_items():
+            if not self.task_info.download_items:
+                match DownloadOption(self.task_info.download_option):
+                    case DownloadOption.OnlyVideo:
                         self.task_info.download_items = ["video"]
-                        self.task_info.download_option = DownloadOption.OnlyVideo
-                        self.task_info.merge_video_and_audio = False
+
+                    case DownloadOption.OnlyAudio:
+                        self.task_info.download_items = ["audio"]
+
+                    case DownloadOption.VideoAndAudio:
+                        if "audio" in data:
+                            self.task_info.download_items = ["video", "audio"]
+                        else:
+                            self.task_info.download_items = ["video"]
+                            self.task_info.download_option = DownloadOption.OnlyVideo
+                            self.task_info.merge_video_and_audio = False
+        
+        check_download_items()
+
+        downloader_info = []
 
         if "video" in self.task_info.download_items:
             downloader_info.append(self.parse_video_stream(data["video"]))
@@ -104,7 +107,21 @@ class DownloadParser:
         return downloader_info
 
     def parse_flv_json(self, data: dict):
-        pass
+        def check_download_items():
+            if not self.task_info.download_items:
+                self.task_info.download_items = [f"flv_{index + 1}" for index in range(len(data["durl"]))]
+
+        def get_flv_info():
+            self.task_info.audio_quality_id = AudioQualityID._None.value
+            self.task_info.download_option = DownloadOption.OnlyVideo.value
+            self.task_info.merge_video_and_audio = False
+            self.task_info.flv_video_count = len(data["durl"])
+        
+        check_download_items()
+
+        get_flv_info()
+
+        return self.parse_flv_stream(data)
 
     def parse_video_stream(self, data: list):
         def get_video_quality_id(data: list):
@@ -236,6 +253,39 @@ class DownloadParser:
         url_list = get_audio_stream_url_list(data)
 
         return get_audio_downloader_info()
+    
+    def parse_flv_stream(self, data: dict):
+        def get_flv_quality_id():
+            highest_video_quality_id = data["accept_quality"][0]
+
+            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
+                self.task_info.video_quality_id = highest_video_quality_id
+
+            elif highest_video_quality_id < self.task_info.video_quality_id:
+                self.task_info.video_quality_id = highest_video_quality_id
+        
+        def get_flv_downloader_info(index: int):
+            if url_list:
+                info = DownloaderInfo()
+                info.url_list = url_list
+                info.type = f"flv_{index}"
+                info.file_name = f"flv_{self.task_info.id}_part{index}.flv"
+
+                return info.to_dict()
+            else:
+                return None
+
+        get_flv_quality_id()
+
+        downloader_info = []
+
+        for index, entry in enumerate(data["durl"]):
+            if f"flv_{index + 1}" in self.task_info.download_items:
+                url_list = self.get_stream_download_url_list(entry)
+
+                downloader_info.append(get_flv_downloader_info(index + 1))
+
+        return downloader_info
 
     def get_stream_download_url_list(self, data: dict):
         def generator(x: list):
