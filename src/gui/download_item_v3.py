@@ -4,7 +4,7 @@ from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
-from utils.common.enums import DownloadOption
+from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
@@ -184,6 +184,7 @@ class DownloadTaskItemPanel(wx.Panel):
         self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
 
         self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
+        self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
@@ -271,6 +272,17 @@ class DownloadTaskItemPanel(wx.Panel):
         dlg = CoverViewerDialog(self.download_window, self._cover)
         dlg.Show()
 
+    def onPauseEVT(self, event):
+        match DownloadStatus(self.task_info.status):
+            case DownloadStatus.Waiting:
+                self.start_download()
+
+            case DownloadStatus.Downloading:
+                self.pause_download()
+
+            case DownloadStatus.Pause:
+                self.resume_download()
+
     def onStopEVT(self, event):
         self.Hide()
         self.Destroy()
@@ -279,3 +291,31 @@ class DownloadTaskItemPanel(wx.Panel):
 
         if event:
             self.callback.onUpdateCountTitleCallback()
+
+    def start_download(self):
+        self.set_download_status(DownloadStatus.Downloading.value)
+
+    def pause_download(self):
+        self.set_download_status(DownloadStatus.Pause.value)
+
+    def resume_download(self):
+        self.set_download_status(DownloadStatus.Downloading.value)
+
+    def set_download_status(self, status: int):
+        def set_button_icon(status: int):
+            match DownloadStatus(status):
+                case DownloadStatus.Downloading:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+
+                    self.pause_btn.SetToolTip("暂停下载")
+                    self.speed_lab.SetLabel("正在获取下载链接...")
+
+                case DownloadStatus.Pause:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+
+                    self.pause_btn.SetToolTip("继续下载")
+                    self.speed_lab.SetLabel("暂停中")
+            
+        self.task_info.status = status
+
+        set_button_icon(status)

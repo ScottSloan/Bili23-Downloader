@@ -393,6 +393,14 @@ class DownloadingPage(SimplePage):
     def Bind_EVT(self):
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
 
+    def start_download(self):
+        # 开始下载
+        for panel in self.scroller_children():
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
+                    if self.get_scroller_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
+                        panel.onResume()
+
     def onCancelAllEVT(self, event):
         def clear_scroller():
             # 取消 scroller 中的任务
