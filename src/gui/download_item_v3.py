@@ -28,9 +28,34 @@ class EmptyItemPanel(wx.Panel):
         hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddStretchSpacer(200)
+        vbox.AddStretchSpacer()
         vbox.Add(hbox, 0, wx.EXPAND)
-        vbox.AddStretchSpacer(200)
+        vbox.AddStretchSpacer()
+
+        self.SetSizer(vbox)
+
+    def destroy_panel(self):
+        self.Hide()
+        self.Destroy()
+
+class LoadingItemPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        self.init_UI()
+
+    def init_UI(self):
+        self.loading_lab = wx.StaticText(self, -1, "正在加载中，请稍候")
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddStretchSpacer()
+        hbox.Add(self.loading_lab, 0, wx.ALL, 10)
+        hbox.AddStretchSpacer()
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddStretchSpacer()
+        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.AddStretchSpacer()
 
         self.SetSizer(vbox)
 
@@ -155,8 +180,9 @@ class DownloadTaskItemPanel(wx.Panel):
         self.SetSizer(self.panel_vbox)
 
     def Bind_EVT(self):
-        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
 
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
@@ -223,13 +249,16 @@ class DownloadTaskItemPanel(wx.Panel):
 
             wx.CallAfter(setBitmap, image)
 
+    def onDestroyEVT(self, event):
+        self._destroy = True
+
+        event.Skip()
+
     def onViewCoverEVT(self, event):
         dlg = CoverViewerDialog(self.download_window, self._cover)
         dlg.Show()
 
     def onStopEVT(self, event):
-        self._destroy = True
-        
         self.Hide()
         self.Destroy()
 

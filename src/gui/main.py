@@ -19,7 +19,7 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, DownloadStatus, StatusCode, VideoQualityID, VideoType
+from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, StatusCode, VideoQualityID, VideoType
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 
 from gui.templates import Frame, TreeListCtrl, InfoBar, TextCtrl

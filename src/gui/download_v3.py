@@ -11,7 +11,7 @@ from utils.tool_v2 import DownloadFileTool
 from utils.config import Config
 
 from gui.templates import ActionButton, ScrolledPanel
-from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
+from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel, LoadingItemPanel
 
 class DownloadManagerWindow(wx.Frame):
     def __init__(self, parent):
@@ -117,45 +117,51 @@ class DownloadManagerWindow(wx.Frame):
         self.load_local_file()
     
     def load_local_file(self):
-        def callback():
-            pass
-        
-        def filter(task_info: DownloadTaskInfo):
-            # 分为两类
-            if task_info.status in [DownloadStatus.Complete.value]:
-                completed_temp_donwload_list.append(task_info)
-            else:
-                if task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Downloading.value, DownloadStatus.Merging.value]:
-                    task_info.status = DownloadStatus.Pause.value
+        def worker():
+            def filter(task_info: DownloadTaskInfo):
+                # 分为两类
+                if task_info.status in [DownloadStatus.Complete.value]:
+                    completed_temp_donwload_list.append(task_info)
+                else:
+                    if task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Downloading.value, DownloadStatus.Merging.value]:
+                        task_info.status = DownloadStatus.Pause.value
 
-                downloading_temp_download_list.append(task_info)
+                    downloading_temp_download_list.append(task_info)
 
-            # 按照时间戳排序
-            downloading_temp_download_list.sort(key = lambda x: x.timestamp, reverse = False)
-            completed_temp_donwload_list.sort(key = lambda x: x.timestamp, reverse = False)
+                # 按照时间戳排序
+                downloading_temp_download_list.sort(key = lambda x: x.timestamp, reverse = False)
+                completed_temp_donwload_list.sort(key = lambda x: x.timestamp, reverse = False)
 
-        downloading_temp_download_list = []
-        completed_temp_donwload_list = []
+            def download_callback():
+                pass
 
-        for file_name in os.listdir(Config.User.download_file_directory):
-            file_path = os.path.join(Config.User.download_file_directory, file_name)
+            def completed_callback():
+                pass
 
-            if os.path.isfile(file_path):
-                if file_name.startswith("info") and file_name.endswith("json"):
-                    file_tool = DownloadFileTool(file_name = file_name)
+            downloading_temp_download_list: List[DownloadTaskInfo] = []
+            completed_temp_donwload_list: List[DownloadTaskInfo] = []
 
-                    # 检查文件兼容性
-                    if not file_tool._check_compatibility():
-                        file_tool.delete_file()
-                        continue
+            for file_name in os.listdir(Config.User.download_file_directory):
+                file_path = os.path.join(Config.User.download_file_directory, file_name)
 
-                    task_info = DownloadTaskInfo()
-                    task_info.load_from_dict(file_tool.get_info("task_info"))
+                if os.path.isfile(file_path):
+                    if file_name.startswith("info") and file_name.endswith("json"):
+                        file_tool = DownloadFileTool(file_name = file_name)
 
-                    filter(task_info)
-        
-        self.add_to_download_list(downloading_temp_download_list, callback)
-        self.add_to_completed_list(completed_temp_donwload_list)
+                        # 检查文件兼容性
+                        if not file_tool._check_compatibility():
+                            file_tool.delete_file()
+                            continue
+
+                        task_info = DownloadTaskInfo()
+                        task_info.load_from_dict(file_tool.get_info("task_info"))
+
+                        filter(task_info)
+            
+            self.add_to_download_list(downloading_temp_download_list, download_callback)
+            self.add_to_completed_list(completed_temp_donwload_list, completed_callback)
+
+        Thread(target = worker).start()
 
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable):
         def create_local_file():
@@ -186,10 +192,7 @@ class DownloadManagerWindow(wx.Frame):
         # 显示下载项
         wx.CallAfter(self.downloading_page.load_more_panel_item, callback)
 
-    def add_to_completed_list(self, completed_list: List[DownloadTaskInfo]):
-        def callback():
-            pass
-
+    def add_to_completed_list(self, completed_list: List[DownloadTaskInfo], callback: Callable):
         self.completed_page.temp_download_list.extend(completed_list)
 
         wx.CallAfter(self.completed_page.load_more_panel_item, callback, update_title = False)
@@ -233,10 +236,10 @@ class SimplePage(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
-    def load_more_panel_item(self, callback: Callable = None, update_title = True):
+    def load_more_panel_item(self, callback: Callable = None, update_title: bool = True):
         def get_download_list():
-            # 当前限制每次加载 50 个
-            item_threshold = 50
+            # 当前限制每次加载 100 个
+            item_threshold = 100
 
             temp_download_list = self.temp_download_list[:item_threshold]
             self.temp_download_list = self.temp_download_list[item_threshold:]
@@ -273,8 +276,7 @@ class SimplePage(wx.Panel):
         self.scroller.sizer.AddMany(get_items())
         self.scroller.Thaw()
 
-        if update_title:
-            self.refresh_scroller()
+        self.refresh_scroller(update_title)
 
         # 显示封面
         Thread(target = self.show_panel_item_cover).start()
@@ -292,12 +294,22 @@ class SimplePage(wx.Panel):
             elif isinstance(panel, EmptyItemPanel):
                 panel.destroy_panel()
 
+            elif isinstance(panel, LoadingItemPanel):
+                panel.destroy_panel()
+
     def show_panel_item_cover(self):
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 panel.show_cover()
 
-    def refresh_scroller(self):
+    def show_loading_item_panel(self):
+        item = LoadingItemPanel(self.scroller)
+
+        self.scroller.sizer.Add(item, 1, wx.EXPAND)
+
+        self.refresh_scroller()
+
+    def refresh_scroller(self, update_title: bool = True):
         if not self.total_count:
             self.hide_other_item()
 
@@ -310,7 +322,8 @@ class SimplePage(wx.Panel):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        self.callback(self.name, self.total_count)
+        if update_title:
+            self.callback(self.name, self.total_count)
 
     def get_scroller_task_count(self, condition: List[int]):
         _count = 0
@@ -370,6 +383,8 @@ class DownloadingPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
+
+        self.show_loading_item_panel()
 
     def Bind_EVT(self):
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
@@ -441,6 +456,8 @@ class CompeltedPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
+
+        self.show_loading_item_panel()
 
     def Bind_EVT(self):
         self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearHistoryEVT)
