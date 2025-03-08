@@ -38,6 +38,7 @@ from gui.dialog.detail import DetailDialog
 from gui.dialog.edit_title import EditTitleDialog
 from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.changelog import ChangeLogDialog
+from gui.dialog.cut_clip import CutClipDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -197,11 +198,14 @@ class MainWindow(Frame):
             self.tool_menu.Append(self.ID_LOGOUT, "退出登录(&L)")
         else:
             self.tool_menu.Append(self.ID_LOGIN, "登录(&L)")
+        
+        self.tool_menu.AppendSeparator()
 
         if Config.Misc.enable_debug:
             self.tool_menu.Append(self.ID_DEBUG, "调试(&D)")
 
         self.tool_menu.Append(self.ID_CONVERTER, "格式转换(&F)")
+        self.tool_menu.Append(self.ID_CUT_CLIP, "截取片段(&I)")
         self.tool_menu.AppendSeparator()
         self.tool_menu.Append(self.ID_SETTINGS, "设置(&S)")
 
@@ -248,6 +252,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onDebugEVT, id = self.ID_DEBUG)
         self.Bind(wx.EVT_MENU, self.onSettingEVT, id = self.ID_SETTINGS)
         self.Bind(wx.EVT_MENU, self.onLoadConverter, id = self.ID_CONVERTER)
+        self.Bind(wx.EVT_MENU, self.onCutClipEVT, id = self.ID_CUT_CLIP)
         self.Bind(wx.EVT_MENU, self.onAboutEVT, id = self.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.onCheckUpdateEVT, id = self.ID_CHECK_UPDATE)
         self.Bind(wx.EVT_MENU, self.onLogoutEVT, id = self.ID_LOGOUT)
@@ -326,6 +331,7 @@ class MainWindow(Frame):
         self.ID_LOGIN = wx.NewIdRef()
         self.ID_DEBUG = wx.NewIdRef()
         self.ID_CONVERTER = wx.NewIdRef()
+        self.ID_CUT_CLIP = wx.NewIdRef()
         self.ID_SETTINGS = wx.NewIdRef()
         self.ID_HELP = wx.NewIdRef()
         self.ID_CHECK_UPDATE = wx.NewIdRef()
@@ -625,6 +631,10 @@ class MainWindow(Frame):
     def onLoadConverter(self, event):
         converter_window = ConverterWindow(self)
         converter_window.ShowModal()
+
+    def onCutClipEVT(self, event):
+        dlg = CutClipDialog(self)
+        dlg.ShowModal()
 
     def onSettingEVT(self, event):
         setting_window = SettingWindow(self)
