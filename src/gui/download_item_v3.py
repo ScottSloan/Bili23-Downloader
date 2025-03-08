@@ -161,6 +161,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def init_utils(self):
         self._show_cover = False
+        self._destroy = False
 
         self.show_task_info()
 
@@ -204,7 +205,8 @@ class DownloadTaskItemPanel(wx.Panel):
                     return image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
 
         def setBitmap(image: wx.Image):
-            self.cover_bmp.SetBitmap(image.ConvertToBitmap())
+            if not self._destroy:
+                self.cover_bmp.SetBitmap(image.ConvertToBitmap())
 
         if not self._show_cover:
             self._show_cover = True
@@ -226,6 +228,8 @@ class DownloadTaskItemPanel(wx.Panel):
         dlg.Show()
 
     def onStopEVT(self, event):
+        self._destroy = True
+        
         self.Hide()
         self.Destroy()
 

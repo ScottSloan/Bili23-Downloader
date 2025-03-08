@@ -17,7 +17,7 @@ class DownloadManagerWindow(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, -1, "下载管理 V3 Demo")
 
-        self.SetSize(self.FromDIP((910, 550)))
+        self.SetSize(self.FromDIP((930, 550)))
 
         self.init_UI()
 
@@ -122,11 +122,11 @@ class DownloadManagerWindow(wx.Frame):
         
         def filter(task_info: DownloadTaskInfo):
             # 分为两类
-            if task_info.status == DownloadStatus.Complete.value:
+            if task_info.status in [DownloadStatus.Complete.value]:
                 completed_temp_donwload_list.append(task_info)
             else:
                 if task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Downloading.value, DownloadStatus.Merging.value]:
-                        task_info.status = DownloadStatus.Pause.value
+                    task_info.status = DownloadStatus.Pause.value
 
                 downloading_temp_download_list.append(task_info)
 
@@ -134,7 +134,8 @@ class DownloadManagerWindow(wx.Frame):
             downloading_temp_download_list.sort(key = lambda x: x.timestamp, reverse = False)
             completed_temp_donwload_list.sort(key = lambda x: x.timestamp, reverse = False)
 
-        downloading_temp_download_list = completed_temp_donwload_list = []
+        downloading_temp_download_list = []
+        completed_temp_donwload_list = []
 
         for file_name in os.listdir(Config.User.download_file_directory):
             file_path = os.path.join(Config.User.download_file_directory, file_name)
@@ -151,7 +152,7 @@ class DownloadManagerWindow(wx.Frame):
                     task_info = DownloadTaskInfo()
                     task_info.load_from_dict(file_tool.get_info("task_info"))
 
-                    filter()
+                    filter(task_info)
         
         self.add_to_download_list(downloading_temp_download_list, callback)
         self.add_to_completed_list(completed_temp_donwload_list)
@@ -169,9 +170,10 @@ class DownloadManagerWindow(wx.Frame):
                     entry.index_with_zero = str(index + 1).zfill(len(str(len(download_list))))
 
                 download_local_file = DownloadFileTool(entry.id)
-                # 如果本地文件不存在，则创建
-                if not download_local_file.file_existence:
-                    download_local_file.create_file(entry)
+
+                # 如果本地文件为空，则写入内容
+                if not download_local_file.get_info("task_info"):
+                    download_local_file.write_file(entry)
             
             self.downloading_page.temp_download_list.extend(download_list)
         
@@ -231,7 +233,7 @@ class SimplePage(wx.Panel):
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 50 个
-            item_threshold = 1
+            item_threshold = 50
 
             temp_download_list = self.temp_download_list[:item_threshold]
             self.temp_download_list = self.temp_download_list[item_threshold:]
@@ -283,7 +285,7 @@ class SimplePage(wx.Panel):
             if isinstance(panel, LoadMoreTaskItemPanel):
                 panel.destroy_panel()
             
-            if isinstance(panel, EmptyItemPanel):
+            elif isinstance(panel, EmptyItemPanel):
                 panel.destroy_panel()
 
     def show_panel_item_cover(self):
@@ -293,6 +295,8 @@ class SimplePage(wx.Panel):
 
     def refresh_scroller(self):
         if not self.total_count:
+            self.hide_other_item()
+            
             item = EmptyItemPanel(self.scroller, self.name)
             self.scroller.sizer.Add(item, 1, wx.EXPAND)
 

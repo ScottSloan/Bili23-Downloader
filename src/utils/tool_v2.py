@@ -206,7 +206,7 @@ class DownloadFileTool:
         if not self.file_existence:
             self._write_download_file({})
 
-    def create_file(self, info: DownloadTaskInfo):
+    def write_file(self, info: DownloadTaskInfo):
         def _header():
             return {
                 "min_version": Config.APP._task_file_min_version_code
@@ -217,7 +217,6 @@ class DownloadFileTool:
 
         contents["header"] = _header()
         contents["task_info"] = info.to_dict()
-        contents["error_info"] = self.get_error_info().to_dict()
 
         if not contents:
             contents["thread_info"] = {}
@@ -266,9 +265,6 @@ class DownloadFileTool:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
     def _check_compatibility(self):
-        if not self._read_download_file_json():
-            return False
-        
         try:
             if self._read_download_file_json()["header"]["min_version"] < Config.APP._task_file_min_version_code:
                 return False
