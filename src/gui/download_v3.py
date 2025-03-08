@@ -159,15 +159,19 @@ class DownloadManagerWindow(wx.Frame):
 
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable):
         def create_local_file():
+            def update_index():
+                if len(download_list) and Config.Download.add_number:
+                    entry.index = index + 1
+                    entry.index_with_zero = str(index + 1).zfill(len(str(len(download_list))))
+
             for index, entry in enumerate(download_list):
                 # 记录时间戳
                 if not entry.timestamp:
                     entry.timestamp = self.get_timestamp() + index
 
                 # 更新序号
-                if len(download_list) and Config.Download.add_number:
-                    entry.index = index
-                    entry.index_with_zero = str(index + 1).zfill(len(str(len(download_list))))
+                if not entry.index:
+                    update_index()
 
                 download_local_file = DownloadFileTool(entry.id)
 
@@ -188,7 +192,7 @@ class DownloadManagerWindow(wx.Frame):
 
         self.completed_page.temp_download_list.extend(completed_list)
 
-        wx.CallAfter(self.completed_page.load_more_panel_item, callback)
+        wx.CallAfter(self.completed_page.load_more_panel_item, callback, update_title = False)
 
     def onCloseEVT(self, event):
         self.Hide()
@@ -223,14 +227,13 @@ class DownloadManagerWindow(wx.Frame):
             self.downloading_page_btn.Refresh()
 
     def get_timestamp(self):
-        timestamp_str = str(datetime.now().timestamp()).replace(".", "")
-        return int(timestamp_str)
+        return int(datetime.now().timestamp())
 
 class SimplePage(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
-    def load_more_panel_item(self, callback: Callable = None):
+    def load_more_panel_item(self, callback: Callable = None, update_title = True):
         def get_download_list():
             # 当前限制每次加载 50 个
             item_threshold = 50
@@ -270,7 +273,8 @@ class SimplePage(wx.Panel):
         self.scroller.sizer.AddMany(get_items())
         self.scroller.Thaw()
 
-        self.refresh_scroller()
+        if update_title:
+            self.refresh_scroller()
 
         # 显示封面
         Thread(target = self.show_panel_item_cover).start()
@@ -296,7 +300,7 @@ class SimplePage(wx.Panel):
     def refresh_scroller(self):
         if not self.total_count:
             self.hide_other_item()
-            
+
             item = EmptyItemPanel(self.scroller, self.name)
             self.scroller.sizer.Add(item, 1, wx.EXPAND)
 
@@ -441,7 +445,7 @@ class CompeltedPage(SimplePage):
     def Bind_EVT(self):
         self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearHistoryEVT)
 
-    def onClearHistoryEVT(self):
+    def onClearHistoryEVT(self, event):
         def clear_scroller():
             for panel in self.scroller_children:
                 if isinstance(panel, DownloadTaskItemPanel):
