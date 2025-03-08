@@ -327,3 +327,9 @@ class DownloadTaskItemPanel(wx.Panel):
         self.task_info.status = status
 
         set_button_icon(status)
+
+        kwargs = {
+            "status": status
+        }
+
+        self.file_tool.update_task_info_kwargs(**kwargs)

@@ -1,7 +1,7 @@
 import json
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID
+from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool
 from utils.config import Config
@@ -79,11 +79,11 @@ class DownloadParser:
                 downloader_info.append(self.parse_video_stream(data["video"]))
 
             case DownloadOption.OnlyAudio:
-                downloader_info.append(self.parse_audio_stream())
+                downloader_info.append(self.parse_audio_stream(data))
 
             case DownloadOption.VideoAndAudio:
                 downloader_info.append(self.parse_video_stream(data["video"]))
-                downloader_info.append(self.parse_audio_stream())
+                downloader_info.append(self.parse_audio_stream(data))
 
         return downloader_info
 
@@ -91,27 +91,26 @@ class DownloadParser:
         pass
 
     def parse_video_stream(self, data: list):
-        def get_highest_video_quality_id(data: list, dolby: bool = False):
-            highest_video_quality_id = VideoQualityID._360P.value
-
-            for entry in data:
-                # 遍历列表，选取其中最高的清晰度
-                if entry["id"] == VideoQualityID._Dolby_Vision.value and not dolby:
-                    continue
-
-                if entry["id"] > highest_video_quality_id:
-                    highest_video_quality_id = entry["id"]
-
-            return highest_video_quality_id
-
         def get_video_quality_id(data: list):
+            def get_highest_video_quality_id(data: list, dolby: bool = False):
+                highest_video_quality_id = VideoQualityID._360P.value
+
+                for entry in data:
+                    # 遍历列表，选取其中最高的清晰度
+                    if entry["id"] == VideoQualityID._Dolby_Vision.value and not dolby:
+                        continue
+
+                    if entry["id"] > highest_video_quality_id:
+                        highest_video_quality_id = entry["id"]
+
+                return highest_video_quality_id
+
             highest_video_quality_id = get_highest_video_quality_id(data, dolby = Config.Download.enable_dolby)
 
             if self.task_info.video_quality_id == VideoQualityID._Auto.value:
                 self.task_info.video_quality_id = highest_video_quality_id
 
             elif highest_video_quality_id < self.task_info.video_quality_id:
-                # 当视频不存在选取的清晰度时，选取最高可用的清晰度
                 self.task_info.video_quality_id = highest_video_quality_id
 
         def get_video_codec_id(data: list):
@@ -147,9 +146,72 @@ class DownloadParser:
 
         return get_video_downloader_info()
 
-    def parse_audio_stream(self):
-        pass
-    
+    def parse_audio_stream(self, data: dict):
+        def get_audio_quality_id(data: dict):
+            def get_highest_audio_quality_id(data: dict, dolby: bool = False):
+                highest_audio_quality = AudioQualityID._64K.value
+
+                for entry in data["audio"]:
+                    if entry["id"] > highest_audio_quality:
+                        highest_audio_quality = entry["id"]
+
+                if data["dolby"]:
+                    if data["dolby"]["audio"]:
+                        highest_audio_quality = AudioQualityID._Dolby_Atoms.value
+
+                if data["flac"]:
+                    if data["flac"]["audio"]:
+                        highest_audio_quality = AudioQualityID._Hi_Res.value
+
+                return highest_audio_quality
+            
+            highest_audio_quality = get_highest_audio_quality_id(data)
+
+            if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
+                self.task_info.audio_quality_id = highest_audio_quality
+
+            elif highest_audio_quality < self.task_info.video_quality_id:
+                self.task_info.video_quality_id = highest_audio_quality
+
+        def get_audio_stream_url_list(data: dict):
+            def get_hi_res():
+                return self.get_stream_download_url_list(data["flac"]["audio"])
+
+            def get_dolby():
+                return self.get_stream_download_url_list(data["dolby"]["audio"])
+
+            def get_normal():
+                for entry in data["audio"]:
+                    if entry["id"] == self.task_info.audio_quality_id:
+                        return self.get_stream_download_url_list(entry)
+
+            match AudioQualityID(self.task_info.audio_quality_id):
+                case AudioQualityID._Hi_Res:
+                    self.task_info.audio_type = "flac"
+                    return get_hi_res()
+
+                case AudioQualityID._Dolby_Atoms:
+                    self.task_info.audio_type = "ec3"
+                    return get_dolby()
+
+                case _:
+                    self.task_info.audio_type = "m4a"
+                    return get_normal()
+
+        def get_audio_downloader_info():
+            info = DownloaderInfo()
+            info.url_list = url_list
+            info.type = "audio"
+            info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
+
+            return info.to_dict()
+
+        get_audio_quality_id(data)
+
+        url_list = get_audio_stream_url_list(data)
+
+        return get_audio_downloader_info()
+
     def get_stream_download_url_list(self, data: dict):
         def generator(x: list):
             for v in x:

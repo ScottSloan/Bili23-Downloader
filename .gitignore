@@ -13,6 +13,8 @@ download
 video.json
 bangumi.json
 download.json
+download2.json
+download3.json
 ffmpeg.exe
 build.bat
 test.py
