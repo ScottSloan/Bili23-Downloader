@@ -49,7 +49,7 @@ class DownloadTaskInfo:
         self.audio_type: str = ""
 
         # 下载项目标识
-        self.item_flag: list = None
+        self.download_items: list = []
 
         # 下载类型
         self.download_type: int = 0
@@ -92,7 +92,7 @@ class DownloadTaskInfo:
             "audio_quality_id": self.audio_quality_id,
             "video_codec_id": self.video_codec_id,
             "audio_type": self.audio_type,
-            "item_flag": self.item_flag,
+            "download_items": self.download_items,
             "download_type": self.download_type,
             "stream_type": self.stream_type,
             "download_option": self.download_option,
@@ -127,7 +127,7 @@ class DownloadTaskInfo:
         self.audio_quality_id = data["audio_quality_id"]
         self.video_codec_id = data["video_codec_id"]
         self.audio_type = data["audio_type"]
-        self.item_flag = data["item_flag"]
+        self.download_items = data["download_items"]
         self.download_type = data["download_type"]
         self.stream_type = data["stream_type"]
         self.download_option = data["download_option"]

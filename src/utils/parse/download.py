@@ -79,16 +79,27 @@ class DownloadParser:
     def parse_dash_json(self, data: dict):
         downloader_info = []
 
-        match DownloadOption(self.task_info.download_option):
-            case DownloadOption.OnlyVideo:
-                downloader_info.append(self.parse_video_stream(data["video"]))
+        if not self.task_info.download_items:
+            match DownloadOption(self.task_info.download_option):
+                case DownloadOption.OnlyVideo:
+                    self.task_info.download_items = ["video"]
 
-            case DownloadOption.OnlyAudio:
-                downloader_info.append(self.parse_audio_stream(data))
+                case DownloadOption.OnlyAudio:
+                    self.task_info.download_items = ["audio"]
 
-            case DownloadOption.VideoAndAudio:
-                downloader_info.append(self.parse_video_stream(data["video"]))
-                downloader_info.append(self.parse_audio_stream(data))
+                case DownloadOption.VideoAndAudio:
+                    if "audio" in data:
+                        self.task_info.download_items = ["video", "audio"]
+                    else:
+                        self.task_info.download_items = ["video"]
+                        self.task_info.download_option = DownloadOption.OnlyVideo
+                        self.task_info.merge_video_and_audio = False
+
+        if "video" in self.task_info.download_items:
+            downloader_info.append(self.parse_video_stream(data["video"]))
+
+        if "audio" in self.task_info.download_items:
+            downloader_info.append(self.parse_audio_stream(data))
 
         return downloader_info
 
@@ -173,21 +184,14 @@ class DownloadParser:
 
                 return highest_audio_quality
             
-            if "audio" in data:
-                highest_audio_quality = get_highest_audio_quality_id(data, dolby = Config.Download.enable_dolby)
+            highest_audio_quality = get_highest_audio_quality_id(data, dolby = Config.Download.enable_dolby)
 
-                if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
-                    self.task_info.audio_quality_id = highest_audio_quality
+            if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
+                self.task_info.audio_quality_id = highest_audio_quality
 
-                elif highest_audio_quality < self.task_info.video_quality_id:
-                    self.task_info.video_quality_id = highest_audio_quality
-            else:
-                self.task_info.audio_quality_id = AudioQualityID._None.value
-
-                if self.task_info.download_option == DownloadOption.VideoAndAudio.value:
-                    self.task_info.download_option = DownloadOption.OnlyVideo.value
-                    self.task_info.merge_video_and_audio = False
-
+            elif highest_audio_quality < self.task_info.video_quality_id:
+                self.task_info.video_quality_id = highest_audio_quality
+            
         def get_audio_stream_url_list(data: dict):
             def get_hi_res():
                 return self.get_stream_download_url_list(data["flac"]["audio"])
