@@ -6,6 +6,7 @@ from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadOption
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
+from utils.common.cache import DataCache
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
 
 from gui.templates import InfoLabel
@@ -230,6 +231,18 @@ class DownloadTaskItemPanel(wx.Panel):
                     x_offset = (width - new_width) // 2
                     return image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
 
+        def get_bitmap():
+            cache = DataCache.get_cache(self.task_info.cover_url)
+
+            if cache:
+                return cache
+            else:
+                content = RequestTool.request_get(self.task_info.cover_url).content
+
+                DataCache.set_cache(self.task_info.cover_url, content)
+
+                return content
+
         def setBitmap(image: wx.Image):
             if not self._destroy:
                 self.cover_bmp.SetBitmap(image.ConvertToBitmap())
@@ -238,7 +251,7 @@ class DownloadTaskItemPanel(wx.Panel):
             self._show_cover = True
             size = self.FromDIP((112, 63))
 
-            self._cover = RequestTool.request_get(self.task_info.cover_url).content
+            self._cover = get_bitmap()
 
             image = wx.Image(BytesIO(self._cover))
 

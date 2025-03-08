@@ -7,6 +7,7 @@ from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadStatus
 from utils.common.thread import Thread
+from utils.common.cache import DataCache
 from utils.tool_v2 import DownloadFileTool
 from utils.config import Config
 
@@ -301,6 +302,9 @@ class SimplePage(wx.Panel):
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 panel.show_cover()
+
+        # 封面显示完成后，清除图片换成
+        DataCache.clear_cache()
 
     def show_loading_item_panel(self):
         item = LoadingItemPanel(self.scroller)
