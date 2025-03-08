@@ -66,10 +66,15 @@ class DownloadParser:
 
     def parse_download_stream_json(self, data: dict):
         if self.task_info.stream_type == StreamType.Dash.value:
-            return self.parse_dash_json(data)
+            downloader_info = self.parse_dash_json(data)
 
         else:
-            return self.parse_flv_json(data)
+            downloader_info = self.parse_flv_json(data)
+
+        if None in downloader_info:
+            downloader_info.remove(None)
+        
+        return downloader_info
 
     def parse_dash_json(self, data: dict):
         downloader_info = []
@@ -115,13 +120,13 @@ class DownloadParser:
 
         def get_video_codec_id(data: list):
             def check_codec_id():
-                codec_id_list = set()
+                codec_id_list = []
 
                 for entry in data:
                     if entry["id"] == self.task_info.video_quality_id:
-                        codec_id_list.add(entry["codecid"])
+                        codec_id_list.append(entry["codecid"])
 
-                return list(codec_id_list)
+                return codec_id_list
 
             codec_id_list = check_codec_id()
 
@@ -129,12 +134,15 @@ class DownloadParser:
                 self.task_info.video_codec_id = VideoCodecID.AVC.value
 
         def get_video_downloader_info():
-            info = DownloaderInfo()
-            info.url_list = url_list
-            info.type = "video"
-            info.file_name = f"video_{self.task_info.id}.m4s"
+            if url_list:
+                info = DownloaderInfo()
+                info.url_list = url_list
+                info.type = "video"
+                info.file_name = f"video_{self.task_info.id}.m4s"
 
-            return info.to_dict()
+                return info.to_dict()
+            else:
+                return None
 
         get_video_quality_id(data)
 
@@ -156,7 +164,7 @@ class DownloadParser:
                         highest_audio_quality = entry["id"]
 
                 if data["dolby"]:
-                    if data["dolby"]["audio"]:
+                    if data["dolby"]["audio"] and dolby:
                         highest_audio_quality = AudioQualityID._Dolby_Atoms.value
 
                 if data["flac"]:
@@ -165,13 +173,20 @@ class DownloadParser:
 
                 return highest_audio_quality
             
-            highest_audio_quality = get_highest_audio_quality_id(data)
+            if "audio" in data:
+                highest_audio_quality = get_highest_audio_quality_id(data, dolby = Config.Download.enable_dolby)
 
-            if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
-                self.task_info.audio_quality_id = highest_audio_quality
+                if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
+                    self.task_info.audio_quality_id = highest_audio_quality
 
-            elif highest_audio_quality < self.task_info.video_quality_id:
-                self.task_info.video_quality_id = highest_audio_quality
+                elif highest_audio_quality < self.task_info.video_quality_id:
+                    self.task_info.video_quality_id = highest_audio_quality
+            else:
+                self.task_info.audio_quality_id = AudioQualityID._None.value
+
+                if self.task_info.download_option == DownloadOption.VideoAndAudio.value:
+                    self.task_info.download_option = DownloadOption.OnlyVideo.value
+                    self.task_info.merge_video_and_audio = False
 
         def get_audio_stream_url_list(data: dict):
             def get_hi_res():
@@ -186,6 +201,9 @@ class DownloadParser:
                         return self.get_stream_download_url_list(entry)
 
             match AudioQualityID(self.task_info.audio_quality_id):
+                case AudioQualityID._None:
+                    return None
+
                 case AudioQualityID._Hi_Res:
                     self.task_info.audio_type = "flac"
                     return get_hi_res()
@@ -199,12 +217,15 @@ class DownloadParser:
                     return get_normal()
 
         def get_audio_downloader_info():
-            info = DownloaderInfo()
-            info.url_list = url_list
-            info.type = "audio"
-            info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
+            if url_list:
+                info = DownloaderInfo()
+                info.url_list = url_list
+                info.type = "audio"
+                info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
-            return info.to_dict()
+                return info.to_dict()
+            else:
+                return None
 
         get_audio_quality_id(data)
 

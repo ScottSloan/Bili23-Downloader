@@ -88,6 +88,7 @@ class VideoQualityID(Enum):
     _Auto = 200
 
 class AudioQualityID(Enum):
+    _None = 0
     _64K = 30216
     _132K = 30232
     _192K = 30280
