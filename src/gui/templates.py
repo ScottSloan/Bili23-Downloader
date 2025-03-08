@@ -5,10 +5,10 @@ import wx.dataview
 from typing import Optional
 from wx.lib.scrolledpanel import ScrolledPanel as _ScrolledPanel
 
-from utils.common.icon_v2 import IconManager, IconType
 from utils.config import Config
+from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
-from utils.common.enums import ParseType, MergeType
+from utils.common.enums import ParseType, DownloadOption
 
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -202,6 +202,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                         get_item_info(title, cid)
     
     def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
+        def get_download_option():
+            if AudioInfo.download_audio_only:
+                return DownloadOption.OnlyAudio.value
+            else:
+                return DownloadOption.VideoAndAudio.value
+
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
@@ -218,8 +224,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.video_quality_id = self.video_quality_id
         download_info.audio_quality_id = AudioInfo.audio_quality_id
 
-        if AudioInfo.download_audio_only:
-            download_info.video_merge_type = MergeType.Only_Audio.value
+        download_info.download_option = get_download_option()
 
         download_info.download_type = download_type
 

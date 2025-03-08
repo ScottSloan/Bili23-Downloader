@@ -7,6 +7,7 @@ from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
 from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
+from utils.parse.download import DownloadParser
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
 
 from gui.templates import InfoLabel
@@ -295,11 +296,18 @@ class DownloadTaskItemPanel(wx.Panel):
     def start_download(self):
         self.set_download_status(DownloadStatus.Downloading.value)
 
+        download_parser = DownloadParser(self.task_info)
+        download_parser.get_download_url()
+
     def pause_download(self):
         self.set_download_status(DownloadStatus.Pause.value)
 
     def resume_download(self):
-        self.set_download_status(DownloadStatus.Downloading.value)
+        if self.task_info.status != DownloadStatus.Downloading.value:
+            if self.task_info.progress == 100:
+                pass
+            else:
+                self.start_download()
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):

@@ -159,12 +159,12 @@ class DownloadManagerWindow(wx.Frame):
 
                         filter(task_info)
             
-            self.add_to_download_list(downloading_temp_download_list, download_callback)
+            self.add_to_download_list(downloading_temp_download_list, download_callback, start_download = False)
             self.add_to_completed_list(completed_temp_donwload_list, completed_callback)
 
         Thread(target = worker).start()
 
-    def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable):
+    def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool = True):
         def create_local_file():
             def update_index():
                 if len(download_list) and Config.Download.add_number:
@@ -188,10 +188,16 @@ class DownloadManagerWindow(wx.Frame):
             
             self.downloading_page.temp_download_list.extend(download_list)
         
+        def download_callback():
+            callback()
+
+            if start_download:
+                self.downloading_page.start_download()
+
         create_local_file()
         
         # 显示下载项
-        wx.CallAfter(self.downloading_page.load_more_panel_item, callback)
+        wx.CallAfter(self.downloading_page.load_more_panel_item, download_callback)
 
     def add_to_completed_list(self, completed_list: List[DownloadTaskInfo], callback: Callable):
         self.completed_page.temp_download_list.extend(completed_list)
@@ -391,15 +397,19 @@ class DownloadingPage(SimplePage):
         self.show_loading_item_panel()
 
     def Bind_EVT(self):
+        self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAllEVT)
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
 
     def start_download(self):
         # 开始下载
-        for panel in self.scroller_children():
+        for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
                     if self.get_scroller_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
-                        panel.onResume()
+                        panel.resume_download()
+    
+    def onStartAllEVT(self, event):
+        self.start_download()
 
     def onCancelAllEVT(self, event):
         def clear_scroller():
