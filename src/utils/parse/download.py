@@ -301,6 +301,4 @@ class DownloadParser:
     def get_download_url(self):
         data = self.get_download_stream_json()
 
-        downloader_info = self.parse_download_stream_json(data)
-
-        print(downloader_info)
+        return self.parse_download_stream_json(data)

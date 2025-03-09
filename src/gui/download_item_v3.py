@@ -8,6 +8,7 @@ from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
+from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
 
@@ -296,10 +297,17 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def start_download(self):
         def worker():
+            # 获取下载链接
             download_parser = DownloadParser(self.task_info)
-            download_parser.get_download_url()
+            downloader_info = download_parser.get_download_url()
 
             self.file_tool.update_info("task_info", self.task_info.to_dict())
+
+            # 开始下载
+            self.downloader = Downloader(self.task_info, self.file_tool)
+            self.downloader.set_downloader_info(downloader_info)
+
+            self.downloader.start_download()
 
         self.set_download_status(DownloadStatus.Downloading.value)
 

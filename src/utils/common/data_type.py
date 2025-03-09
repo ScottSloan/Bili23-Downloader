@@ -180,7 +180,6 @@ class RangeDownloadInfo:
         self.index: str = ""
         self.type: str = ""
         self.url: str = ""
-        self.referer_url: str = ""
         self.file_path: str = ""
         self.range: List[int] = []
 

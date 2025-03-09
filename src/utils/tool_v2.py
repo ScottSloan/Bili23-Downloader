@@ -17,7 +17,7 @@ class RequestTool:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @staticmethod
-    def request_get(url: str, headers = None, proxies = None, auth = None):
+    def request_get(url: str, headers = None, proxies = None, auth = None, stream = False):
         if not headers:
             headers = RequestTool.get_headers()
 
@@ -27,7 +27,7 @@ class RequestTool:
         if not auth:
             auth = RequestTool.get_auth()
 
-        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth)
+        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream)
     
     @staticmethod
     def request_post(url: str, headers = None, params = None, json = None):
@@ -35,6 +35,12 @@ class RequestTool:
             headers = RequestTool.get_headers()
         
         return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, json = json, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+
+    def request_head(url: str, headers = None):
+        if not headers:
+            headers = RequestTool.get_headers()
+        
+        return requests.head(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
