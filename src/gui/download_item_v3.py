@@ -299,14 +299,14 @@ class DownloadTaskItemPanel(wx.Panel):
             self.callback.onUpdateCountTitleCallback()
 
     def start_download(self):
-        def worker():
-            def get_downloader_callback():
-                downloader_callback = DownloaderCallback()
-                downloader_callback.onStartDownloadCallback = self.onStartDownload
-                downloader_callback.onDownloadingCallback = self.onDownloading
+        def get_downloader_callback():
+            downloader_callback = DownloaderCallback()
+            downloader_callback.onStartDownloadCallback = self.onStartDownload
+            downloader_callback.onDownloadingCallback = self.onDownloading
 
-                return downloader_callback
-            
+            return downloader_callback
+
+        def worker():
             # 获取下载链接
             download_parser = DownloadParser(self.task_info)
             downloader_info = download_parser.get_download_url()
@@ -314,17 +314,20 @@ class DownloadTaskItemPanel(wx.Panel):
             self.file_tool.update_info("task_info", self.task_info.to_dict())
 
             # 开始下载
-            self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
             self.downloader.set_downloader_info(downloader_info)
 
             self.downloader.start_download()
 
         self.set_download_status(DownloadStatus.Downloading.value)
 
+        self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
+
         Thread(target = worker).start()
 
     def pause_download(self):
         self.set_download_status(DownloadStatus.Pause.value)
+
+        self.downloader.stop_download()
 
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:

@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
 from utils.common.thread import Thread
+from utils.module.event import ThreadEvent
 from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
 from utils.config import Config
 
@@ -18,6 +19,7 @@ class Downloader:
 
     def init_utils(self):
         self.lock = threading.Lock()
+        self.stop_event = ThreadEvent()
         self.executor = ThreadPoolExecutor(max_workers = Config.Download.max_thread_count)
 
         self.current_file_size = 0
@@ -64,8 +66,7 @@ class Downloader:
 
             self.callback.onStartDownloadCallback()
 
-            progress_thread = Thread(target = self.progress_tracker)
-            progress_thread.start()
+            Thread(target = self.progress_tracker).start()
 
             with ThreadPoolExecutor() as executor:
                 for index, range in enumerate(ranges):
@@ -73,8 +74,8 @@ class Downloader:
                     range_info = get_range_info(index, file_path, url, range)
 
                     executor.submit(self.download_range, range_info)
-            
-            progress_thread.join()
+
+        self.stop_event.clear()
 
         downloader_info = get_downloader_info()
 
@@ -87,6 +88,9 @@ class Downloader:
 
         worker()
 
+    def stop_download(self):
+        self.stop_event.set()
+
     def download_range(self, info: RangeDownloadInfo):
         try:
             with open(info.file_path, "r+b") as f:
@@ -95,6 +99,7 @@ class Downloader:
                 with RequestTool.request_get(info.url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA, range = info.range), stream = True) as req:
                     for chunk in req.iter_content(chunk_size = 1024):
                         if chunk:
+
                             with self.lock:
                                 f.write(chunk)
 
@@ -103,6 +108,10 @@ class Downloader:
                                 self.task_info.current_downloaded_size += _chunk_size
                                 self.task_info.total_downloaded_size += _chunk_size
                                 self.progress_info[info.index][0] += _chunk_size
+
+                                if self.stop_event.is_set():
+                                    break
+
         except Exception as e:
             print(e)
 
@@ -147,22 +156,23 @@ class Downloader:
                 Thread(target = self.start_download).start()
 
         def update_progress():
-            self.task_info.progress = int(total_progress)
+            if not self.stop_event.is_set():
+                self.task_info.progress = int(total_progress)
 
-            self.file_tool.update_info("task_info", self.task_info.to_dict())
+                self.file_tool.update_info("task_info", self.task_info.to_dict())
 
-            self.callback.onDownloadingCallback(FormatTool.format_speed(speed))
+                self.callback.onDownloadingCallback(FormatTool.format_speed(speed))
 
-        while self.task_info.current_downloaded_size < self.current_file_size:
+        while self.task_info.current_downloaded_size < self.current_file_size and not self.stop_event.is_set():
             temp_downloaded_size = self.task_info.current_downloaded_size
 
             time.sleep(1)
 
-            with self.lock:
-                speed = self.task_info.current_downloaded_size - temp_downloaded_size
-                # current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
-                total_progress = (self.task_info.total_downloaded_size / self.task_info.total_file_size) * 100
+            speed = self.task_info.current_downloaded_size - temp_downloaded_size
+            # current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
+            total_progress = (self.task_info.total_downloaded_size / self.task_info.total_file_size) * 100
 
             update_progress()
         
-        download_finish()
+        if not self.stop_event.is_set():
+            download_finish()
