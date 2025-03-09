@@ -346,13 +346,14 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def onDownloading(self, speed: str):
         def worker():
-            self.progress_bar.SetValue(self.task_info.progress)
-            self.progress_bar.SetToolTip(str(self.task_info.progress))
+            if not self._destroy:
+                self.progress_bar.SetValue(self.task_info.progress)
+                self.progress_bar.SetToolTip(str(self.task_info.progress))
 
-            self.speed_lab.SetLabel(speed)
-            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+                self.speed_lab.SetLabel(speed)
+                self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
 
-            self.Layout()
+                self.Layout()
 
         wx.CallAfter(worker)
 
