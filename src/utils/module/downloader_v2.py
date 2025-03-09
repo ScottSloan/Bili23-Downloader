@@ -3,15 +3,16 @@ import time
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo
+from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
 from utils.common.thread import Thread
-from utils.tool_v2 import DownloadFileTool, RequestTool
+from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
 from utils.config import Config
 
 class Downloader:
-    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool):
+    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
         self.task_info = task_info
         self.file_tool = file_tool
+        self.callback = callback
 
         self.init_utils()
 
@@ -60,6 +61,8 @@ class Downloader:
                 range_info.range = range
 
                 return range_info
+
+            self.callback.onStartDownloadCallback()
 
             progress_thread = Thread(target = self.progress_tracker)
             progress_thread.start()
@@ -143,16 +146,23 @@ class Downloader:
             if self.downloader_info:
                 Thread(target = self.start_download).start()
 
+        def update_progress():
+            self.task_info.progress = int(total_progress)
+
+            self.file_tool.update_info("task_info", self.task_info.to_dict())
+
+            self.callback.onDownloadingCallback(FormatTool.format_speed(speed))
+
         while self.task_info.current_downloaded_size < self.current_file_size:
             temp_downloaded_size = self.task_info.current_downloaded_size
 
             time.sleep(1)
 
             with self.lock:
-                speed = (self.task_info.current_downloaded_size - temp_downloaded_size) / 1024 / 1024
-                current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
+                speed = self.task_info.current_downloaded_size - temp_downloaded_size
+                # current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
                 total_progress = (self.task_info.total_downloaded_size / self.task_info.total_file_size) * 100
 
-            print(f"Current Progress: {current_progress:.2f}%, Total Progress: {total_progress:.2f}%, Speed: {speed:.2f}MB/s")
+            update_progress()
         
         download_finish()

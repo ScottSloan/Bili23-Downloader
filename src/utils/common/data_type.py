@@ -185,8 +185,8 @@ class RangeDownloadInfo:
 
 class DownloaderCallback:
     def __init__(self):
-        self.onStartCallback: Callable = None
-        self.onDownloadCallback: Callable = None
+        self.onStartDownloadCallback: Callable = None
+        self.onDownloadingCallback: Callable = None
         self.onMergeCallback: Callable = None
         self.onErrorCallback: Callable = None
 

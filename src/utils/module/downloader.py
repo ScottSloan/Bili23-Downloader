@@ -181,7 +181,7 @@ class Downloader:
 
             if not self.completed_size:
                 # 回调 onStart，UI 更新下载信息
-                self.callback.onStartCallback()
+                self.callback.onStartDownloadCallback()
         
         try:
             worker()

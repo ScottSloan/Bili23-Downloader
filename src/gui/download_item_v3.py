@@ -3,7 +3,7 @@ from io import BytesIO
 from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback
 from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
@@ -200,7 +200,10 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def show_task_info(self):
         self.title_lab.SetLabel(self.task_info.title)
+        self.title_lab.SetToolTip(self.task_info.title)
+
         self.progress_bar.SetValue(self.task_info.progress)
+        self.progress_bar.SetToolTip(str(self.task_info.progress))
 
         if self.task_info.download_option == DownloadOption.OnlyAudio.value:
             self.video_quality_lab.SetLabel("音频")
@@ -297,6 +300,13 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def start_download(self):
         def worker():
+            def get_downloader_callback():
+                downloader_callback = DownloaderCallback()
+                downloader_callback.onStartDownloadCallback = self.onStartDownload
+                downloader_callback.onDownloadingCallback = self.onDownloading
+
+                return downloader_callback
+            
             # 获取下载链接
             download_parser = DownloadParser(self.task_info)
             downloader_info = download_parser.get_download_url()
@@ -304,7 +314,7 @@ class DownloadTaskItemPanel(wx.Panel):
             self.file_tool.update_info("task_info", self.task_info.to_dict())
 
             # 开始下载
-            self.downloader = Downloader(self.task_info, self.file_tool)
+            self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
             self.downloader.set_downloader_info(downloader_info)
 
             self.downloader.start_download()
@@ -323,6 +333,26 @@ class DownloadTaskItemPanel(wx.Panel):
             else:
                 self.start_download()
 
+    def onStartDownload(self):
+        def worker():
+            self.show_task_info()
+
+            self.Layout()
+
+        wx.CallAfter(worker)
+
+    def onDownloading(self, speed: str):
+        def worker():
+            self.progress_bar.SetValue(self.task_info.progress)
+            self.progress_bar.SetToolTip(str(self.task_info.progress))
+
+            self.speed_lab.SetLabel(speed)
+            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+
+            self.Layout()
+
+        wx.CallAfter(worker)
+
     def set_download_status(self, status: int):
         def set_button_icon(status: int):
             match DownloadStatus(status):
@@ -337,7 +367,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中")
-            
+        
         self.task_info.status = status
 
         set_button_icon(status)

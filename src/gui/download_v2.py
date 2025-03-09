@@ -1064,7 +1064,7 @@ class DownloadTaskPanel(wx.Panel):
         
         def get_downloader_callback():
             _callback = DownloaderCallback()
-            _callback.onStartCallback = self.onStart
+            _callback.onStartDownloadCallback = self.onStart
             _callback.onDownloadCallback = self.onDownload
             _callback.onMergeCallback = self.onMerge
             _callback.onErrorCallback = self.onDownloadFailed
