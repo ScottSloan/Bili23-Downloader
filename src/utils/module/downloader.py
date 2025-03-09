@@ -41,12 +41,12 @@ class Downloader:
         self.thread_info = {}
 
         # 判断是否为断点续传
-        if not self.task_info.completed_size:
+        if not self.task_info.total_downloaded_size:
             self.completed_size = 0
             self.current_completed_size = 0
         else:
-            self.completed_size = self.task_info.completed_size
-            self.current_completed_size = self.task_info.current_completed_size
+            self.completed_size = self.task_info.total_downloaded_size
+            self.current_completed_size = self.task_info.current_downloaded_size
 
     def start_download(self, downloader_info_list: List[dict]):
         def add_url(download_info: DownloaderInfo):
@@ -132,11 +132,11 @@ class Downloader:
 
         def get_total_size():
             # 获取总大小
-            if not self.task_info.total_size:
+            if not self.task_info.total_file_size:
                 for entry in self._downloader_info_list:
                     (url, size) = self.get_file_size(entry["url_list"], self.task_info.referer_url)
 
-                    self.task_info.total_size += size
+                    self.task_info.total_file_size += size
 
         def reset():
             # 创建监听线程
@@ -254,7 +254,7 @@ class Downloader:
         def get_progress_info():
             # 记录下载信息
             return {
-                "progress": int(self.completed_size / self.task_info.total_size * 100),
+                "progress": int(self.completed_size / self.task_info.total_file_size * 100),
                 "speed": self.completed_size - _temp_size,
                 "completed_size": self.completed_size
             }
@@ -270,8 +270,8 @@ class Downloader:
                 
         def update_download_file_info():
             self.task_info.progress = info["progress"]
-            self.task_info.completed_size = self.completed_size
-            self.task_info.current_completed_size = self.current_completed_size
+            self.task_info.total_downloaded_size = self.completed_size
+            self.task_info.current_downloaded_size = self.current_completed_size
 
             kwargs = {
                 "progress": info["progress"],
@@ -363,7 +363,7 @@ class Downloader:
             
             self.start_download(self._downloader_info_list)
         
-        if self.completed_size >= self.task_info.total_size:
+        if self.completed_size >= self.task_info.total_file_size:
             # 下载完成，回调 onMerge 进行合成
             self.listen_stop_flag = True
 

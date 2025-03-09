@@ -210,9 +210,9 @@ class DownloadTaskItemPanel(wx.Panel):
             self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--"))
         
         if self.task_info.progress == 100:
-            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
+            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
         else:
-            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
+            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
     
     def show_cover(self):
         def is_16_9(image: wx.Image):

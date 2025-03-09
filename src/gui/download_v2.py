@@ -1101,7 +1101,7 @@ class DownloadTaskPanel(wx.Panel):
         # 更新下载状态
         self.update_download_status(self.task_info.status)
 
-        if self.task_info.completed_size:
+        if self.task_info.total_downloaded_size:
             # 载入下载进度和下载状态
             self.progress_bar.SetValue(self.task_info.progress)
 
@@ -1184,7 +1184,7 @@ class DownloadTaskPanel(wx.Panel):
             self.show_media_info()
 
             kwargs = {
-                "total_size": self.task_info.total_size,
+                "total_size": self.task_info.total_file_size,
                 "video_quality_id": self.task_info.video_quality_id,
                 "video_codec_id": self.task_info.video_codec_id,
                 "audio_quality_id": self.task_info.audio_quality_id,
@@ -1207,7 +1207,7 @@ class DownloadTaskPanel(wx.Panel):
                 # 只有在下载状态时才更新下载速度
                 self.speed_lab.SetLabel(FormatTool.format_speed(info["speed"]))
 
-            self.video_size_lab.SetLabel("{}/{}".format(FormatTool.format_size(info["completed_size"]), FormatTool.format_size(self.task_info.total_size)))
+            self.video_size_lab.SetLabel("{}/{}".format(FormatTool.format_size(info["completed_size"]), FormatTool.format_size(self.task_info.total_file_size)))
         
         wx.CallAfter(callback)
 
@@ -1341,9 +1341,9 @@ class DownloadTaskPanel(wx.Panel):
             self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id))
 
         if self.task_info.progress == 100:
-            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_size))
+            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
         else:
-            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.completed_size)}/{FormatTool.format_size(self.task_info.total_size)}")
+            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:

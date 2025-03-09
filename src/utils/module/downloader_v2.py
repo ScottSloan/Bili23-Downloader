@@ -19,10 +19,7 @@ class Downloader:
         self.lock = threading.Lock()
         self.executor = ThreadPoolExecutor(max_workers = Config.Download.max_thread_count)
 
-        self.current_downloaded_size = 0
-        self.total_downloaded_size = 0
         self.current_file_size = 0
-        self.total_file_size = 0
 
         self.downloader_info = []
         self.progress_info = {}
@@ -37,13 +34,19 @@ class Downloader:
 
             return downloader_info
         
-        def get_ranges():
-            def get_total_size():
-                pass
+        def get_total_file_size():
+            if not self.task_info.total_file_size:
+                for entry in self.downloader_info:
+                    url = entry["url_list"][:1][0]
+                    file_path = os.path.join(Config.Download.path, entry["file_name"])
 
-            if self.task_info.total_size:
+                    self.task_info.total_file_size += self.get_file_size(url, file_path)
+        
+        def get_ranges():
+            if self.task_info.current_downloaded_size:
                 # 断点续传
                 pass
+
             else:
                 self.current_file_size = self.get_file_size(url, file_path)
                 return self.generate_ranges(self.current_file_size)
@@ -75,6 +78,8 @@ class Downloader:
         url = downloader_info.url_list[:1][0]
         file_path = os.path.join(Config.Download.path, downloader_info.file_name)
 
+        get_total_file_size()
+
         ranges = get_ranges()
 
         worker()
@@ -92,8 +97,8 @@ class Downloader:
 
                                 _chunk_size = len(chunk)
 
-                                self.current_downloaded_size += _chunk_size
-                                self.total_downloaded_size += _chunk_size
+                                self.task_info.current_downloaded_size += _chunk_size
+                                self.task_info.total_downloaded_size += _chunk_size
                                 self.progress_info[info.index][0] += _chunk_size
         except Exception as e:
             print(e)
@@ -133,21 +138,21 @@ class Downloader:
         def download_finish():
             self.downloader_info = self.downloader_info[1:]
 
-            self.current_downloaded_size = 0
+            self.task_info.current_downloaded_size = 0
 
             if self.downloader_info:
                 Thread(target = self.start_download).start()
 
-        while self.current_downloaded_size < self.current_file_size:
-            temp_downloaded_size = self.current_downloaded_size
+        while self.task_info.current_downloaded_size < self.current_file_size:
+            temp_downloaded_size = self.task_info.current_downloaded_size
 
             time.sleep(1)
 
             with self.lock:
-                speed = (self.current_downloaded_size - temp_downloaded_size) / 1024 / 1024
-                current_progress = (self.current_downloaded_size / self.current_file_size) * 100
-                total_progress = (self.total_downloaded_size / self.total_file_size) * 100
+                speed = (self.task_info.current_downloaded_size - temp_downloaded_size) / 1024 / 1024
+                current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
+                total_progress = (self.task_info.total_downloaded_size / self.task_info.total_file_size) * 100
 
-            print(f"Current Progress: {current_progress:.2f}%, Total Progress: {total_progress:.2f}, Speed: {speed:.2f}MB/s")
+            print(f"Current Progress: {current_progress:.2f}%, Total Progress: {total_progress:.2f}%, Speed: {speed:.2f}MB/s")
         
         download_finish()

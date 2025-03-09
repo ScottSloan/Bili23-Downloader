@@ -34,11 +34,11 @@ class DownloadTaskInfo:
         # 下载信息
         self.progress: int = 0
         # 总大小，单位字节
-        self.total_size: int = 0
+        self.total_file_size: int = 0
         # 已下载完成的总大小，单位字节
-        self.completed_size: int = 0
+        self.total_downloaded_size: int = 0
         # 已下载完成的当前任务大小
-        self.current_completed_size: int = 0
+        self.current_downloaded_size: int = 0
         # 下载状态
         self.status: int = DownloadStatus.Waiting.value
 
@@ -84,9 +84,9 @@ class DownloadTaskInfo:
             "title": self.title,
             "duration": self.duration,
             "progress": self.progress,
-            "total_size": self.total_size,
-            "completed_size": self.completed_size,
-            "current_completed_size": self.current_completed_size,
+            "total_file_size": self.total_file_size,
+            "total_downloaded_size": self.total_downloaded_size,
+            "current_downloaded_size": self.current_downloaded_size,
             "status": self.status,
             "video_quality_id": self.video_quality_id,
             "audio_quality_id": self.audio_quality_id,
@@ -119,9 +119,9 @@ class DownloadTaskInfo:
         self.title = data["title"]
         self.duration = data["duration"]
         self.progress = data["progress"]
-        self.total_size = data["total_size"]
-        self.completed_size = data["completed_size"]
-        self.current_completed_size = data["current_completed_size"]
+        self.total_file_size = data["total_file_size"]
+        self.total_downloaded_size = data["total_downloaded_size"]
+        self.current_downloaded_size = data["current_downloaded_size"]
         self.status = data["status"]
         self.video_quality_id = data["video_quality_id"]
         self.audio_quality_id = data["audio_quality_id"]
