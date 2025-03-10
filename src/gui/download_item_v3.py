@@ -194,9 +194,11 @@ class DownloadTaskItemPanel(wx.Panel):
         self._show_cover = False
         self._destroy = False
 
+        self.file_tool = DownloadFileTool(self.task_info.id)
+
         self.show_task_info()
 
-        self.file_tool = DownloadFileTool(self.task_info.id)
+        self.set_download_status(self.task_info.status)
 
     def show_task_info(self):
         self.title_lab.SetLabel(self.task_info.title)
@@ -303,6 +305,7 @@ class DownloadTaskItemPanel(wx.Panel):
             downloader_callback = DownloaderCallback()
             downloader_callback.onStartDownloadCallback = self.onStartDownload
             downloader_callback.onDownloadingCallback = self.onDownloading
+            downloader_callback.onDownloadFinish = self.onDownloadFinish
 
             return downloader_callback
 
@@ -332,9 +335,12 @@ class DownloadTaskItemPanel(wx.Panel):
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:
             if self.task_info.progress == 100:
-                pass
+                self.onDownloadFinish()
             else:
                 self.start_download()
+
+    def merge_video(self):
+        pass
 
     def onStartDownload(self):
         def worker():
@@ -354,6 +360,22 @@ class DownloadTaskItemPanel(wx.Panel):
                 self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
 
                 self.Layout()
+
+        wx.CallAfter(worker)
+
+    def onDownloadFinish(self):
+        def worker():
+            if self.task_info.merge_video_and_audio:
+                self.set_download_status(DownloadStatus.Merging.value)
+
+                self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
+                self.speed_lab.SetLabel("正在合成视频...")
+
+                self.Layout()
+
+                Thread(target = self.merge_video).start()
+            else:
+                pass
 
         wx.CallAfter(worker)
 

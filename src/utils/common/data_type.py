@@ -187,7 +187,7 @@ class DownloaderCallback:
     def __init__(self):
         self.onStartDownloadCallback: Callable = None
         self.onDownloadingCallback: Callable = None
-        self.onMergeCallback: Callable = None
+        self.onDownloadFinish: Callable = None
         self.onErrorCallback: Callable = None
 
 class UtilsCallback:

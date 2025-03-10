@@ -172,6 +172,8 @@ class Downloader:
 
             if self.downloader_info:
                 Thread(target = self.start_download).start()
+            else:
+                self.callback.onDownloadFinish()
 
         def update_progress():
             if not self.stop_event.is_set():
@@ -196,8 +198,5 @@ class Downloader:
 
                 update_progress()
 
-        if self.stop_event.is_set():
-            pass
-            # self.file_tool.update_info("task_info", self.task_info.to_dict())
-        else:
+        if not self.stop_event.is_set():
             download_finish()
