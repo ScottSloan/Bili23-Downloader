@@ -8,32 +8,9 @@ class FFmpeg:
         pass
 
     def detect_location(self):
-        def env():
-            ffmpeg_path = None
-            path_env = os.environ.get("PATH", "")
-
-            for directory in path_env.split(os.pathsep):
-                possible_path = os.path.join(directory, self.ffmpeg_file_name)
-
-                if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
-                    ffmpeg_path = possible_path
-                    break
-
-            return ffmpeg_path
-
-        def cwd():
-            ffmpeg_path = None
-
-            possible_path = os.path.join(os.getcwd(), self.ffmpeg_file_name)
-            
-            if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
-                ffmpeg_path = possible_path
-
-            return ffmpeg_path
-
         if not Config.FFmpeg.path:
-            cwd_path = cwd()
-            env_path = env()
+            cwd_path = self.get_cwd_path()
+            env_path = self.get_env_path()
     
             if cwd_path:
                 Config.FFmpeg.path = cwd_path
@@ -55,6 +32,29 @@ class FFmpeg:
         if output:
             return process.stdout
     
+    def get_env_path(self):
+        ffmpeg_path = None
+        path_env = os.environ.get("PATH", "")
+
+        for directory in path_env.split(os.pathsep):
+            possible_path = os.path.join(directory, self.ffmpeg_file_name)
+
+            if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
+                ffmpeg_path = possible_path
+                break
+
+        return ffmpeg_path
+
+    def get_cwd_path(self):
+        ffmpeg_path = None
+
+        possible_path = os.path.join(os.getcwd(), self.ffmpeg_file_name)
+        
+        if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
+            ffmpeg_path = possible_path
+
+        return ffmpeg_path
+
     @property
     def ffmpeg_file_name(self):
         match Config.Sys.platform:
