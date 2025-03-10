@@ -3,6 +3,7 @@ import subprocess
 
 from utils.common.enums import DownloadOption, StreamType
 from utils.common.data_type import DownloadTaskInfo, Command
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 class FFmpeg:
@@ -28,8 +29,19 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_dash_video(self):
-        pass
+    def merge_dash_video(self, task_info: DownloadTaskInfo):
+        command = self.get_command(task_info)
+
+        print(command)
+
+        resp = self.run_command(command, cwd = Config.Download.path, output = True, return_code = True)
+
+        print(resp[1])
+
+        if not resp[0]:
+            pass
+        else:
+            print("error")
 
     def merge_flv_video(self):
         pass
@@ -55,15 +67,17 @@ class FFmpeg:
                     return f"out_{task_info.id}.flv"
         
         def get_full_file_name():
+            title = UniversalTool.get_legal_name(task_info.title)
+
             match DownloadOption(task_info.download_option):
                 case DownloadOption.VideoAndAudio:
-                    return f"{task_info.title}.mp4"
+                    return f"{title}.mp4"
                 
                 case DownloadOption.OnlyVideo:
-                    return f"{task_info.title}.mp4"
+                    return f"{title}.mp4"
                 
                 case DownloadOption.OnlyAudio:
-                    return f"{task_info.title}.{task_info.audio_type}"
+                    return f"{title}.{task_info.audio_type}"
         
         def get_merge_command():
             return f'"{Config.FFmpeg.path}" -y -i "{get_video_temp_file_name()}" -i "{get_audio_temp_file_name()}" -acodec copy -vcodec copy -strict experimental {get_output_temp_file_name()}'
@@ -111,11 +125,18 @@ class FFmpeg:
         
         return command.format()
     
-    def run_command(self, command: str, output = False):
-        process = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = subprocess.PIPE, text = True, encoding = "utf-8")
+    def run_command(self, command: str, cwd: str = None, output: bool = False, return_code: bool = False):
+
+        process = subprocess.run(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, text = True, encoding = "utf-8")
+
+        if output and return_code:
+            return (process.returncode, process.stdout)
 
         if output:
             return process.stdout
+        
+        if return_code:
+            return process.returncode
     
     def get_env_path(self):
         ffmpeg_path = None

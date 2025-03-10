@@ -260,6 +260,4 @@ class Command:
         self.command.clear()
 
     def format(self):
-        self.command.remove(None)
-
         return " && ".join(self.command)
