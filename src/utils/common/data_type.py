@@ -248,3 +248,18 @@ class ParseCallback:
     def __init__(self):
         self.error_callback: Callable = None
         self.redirect_callback: Callable = None
+
+class Command:
+    def __init__(self):
+        self.command = []
+
+    def add(self, command):
+        self.command.append(command)
+
+    def clear(self):
+        self.command.clear()
+
+    def format(self):
+        self.command.remove(None)
+
+        return " && ".join(self.command)

@@ -105,3 +105,5 @@ class DownloadOption(Enum):
     OnlyVideo = 1
     OnlyAudio = 2
     VideoAndAudio = 3
+    FLV = 4
+    NONE = 5

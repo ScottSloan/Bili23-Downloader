@@ -8,6 +8,8 @@ from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
+
+from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
@@ -340,7 +342,7 @@ class DownloadTaskItemPanel(wx.Panel):
                 self.start_download()
 
     def merge_video(self):
-        pass
+        self.ffmpeg = FFmpeg()
 
     def onStartDownload(self):
         def worker():
