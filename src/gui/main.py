@@ -14,7 +14,8 @@ from utils.parse.episode import EpisodeInfo
 
 from utils.config import Config
 from utils.auth.login import QRLogin
-from utils.tool_v2 import UniversalTool, FFmpegCheckTool, RequestTool
+from utils.tool_v2 import UniversalTool, RequestTool
+from utils.module.ffmpeg import FFmpeg
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.map import video_quality_map, live_quality_map
@@ -277,7 +278,7 @@ class MainWindow(Frame):
 
     def init_utils(self):
         def worker():
-            def _check_update():
+            def check_update():
                 if Config.Misc.auto_check_update:
                     try:
                         UniversalTool.get_update_json()
@@ -288,21 +289,23 @@ class MainWindow(Frame):
                     except Exception:
                         self.showInfobarMessage("检查更新：当前无法检查更新，请稍候再试", wx.ICON_ERROR)
 
-            # 检查更新
-            _check_update()
+            def check_ffmpeg():
+                ffmpeg = FFmpeg()
+                ffmpeg.check_available()
 
-        def check_ffmpeg():
-            FFmpegCheckTool.check_available()
+                if not Config.FFmpeg.available:
+                    dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，视频合成不可用。\n\n若您已确认安装 FFmpeg，请检查（二者其一即可）：\n1.为 FFmpeg 设置环境变量\n2.将 FFmpeg 放置到程序运行目录下\n\n点击下方安装 FFmpeg 按钮，将打开 FFmpeg 安装教程，请按照教程安装。", "警告", wx.ICON_WARNING | wx.YES_NO)
+                    dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
-            if not Config.FFmpeg.available:
-                dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，视频合成不可用。\n\n若您已确认安装 FFmpeg，请检查（二者其一即可）：\n1.为 FFmpeg 设置环境变量\n2.将 FFmpeg 放置到程序运行目录下\n\n点击下方安装 FFmpeg 按钮，将打开 FFmpeg 安装教程，请按照教程安装。", "警告", wx.ICON_WARNING | wx.YES_NO)
-                dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+                    if dlg.ShowModal() == wx.ID_YES:
+                        import webbrowser
 
-                if dlg.ShowModal() == wx.ID_YES:
-                    import webbrowser
+                        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
-                    webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+            check_ffmpeg()
 
+            check_update()
+            
         def redirect_callback(url: str):
             Thread(target = self.parse_url_thread, args = (url, )).start()
 
@@ -324,8 +327,6 @@ class MainWindow(Frame):
         self.init_user_info()
 
         Thread(target = worker).start()
-
-        check_ffmpeg()
 
     def init_ids(self):
         self.ID_LOGIN = wx.NewIdRef()
