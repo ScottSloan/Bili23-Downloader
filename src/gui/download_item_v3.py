@@ -14,7 +14,7 @@ from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
 from utils.config import Config
-from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, UniversalTool, FileDirectoryTool
+from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
 
 from gui.templates import InfoLabel
 from gui.dialog.cover import CoverViewerDialog
@@ -455,6 +455,6 @@ class DownloadTaskItemPanel(wx.Panel):
     
     @property
     def full_file_name(self):
-        title = UniversalTool.get_legal_name(self.task_info.title)
+        file_name = FormatTool.format_title_template(Config.Advanced.file_name_template, self.task_info)
 
-        return f"{title}.{self.task_info.output_type}"
+        return f"{file_name}.{self.task_info.output_type}"

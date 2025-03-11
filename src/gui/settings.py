@@ -251,9 +251,10 @@ class DownloadTab(wx.Panel):
 
     def save(self):
         def _update_download_window():
-            self._main_window.download_window.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
+            pass
+            #self._main_window.download_window.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
 
-            self._main_window.download_window.onChangeMaxDownloaderEVT(None)
+            #self._main_window.download_window.onChangeMaxDownloaderEVT(None)
 
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
@@ -460,6 +461,7 @@ class AdvancedTab(wx.Panel):
         self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
         self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
 
+        self.file_name_template = Config.Advanced.file_name_template
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_http_protocol_chk.SetValue(Config.Advanced.always_use_http_protocol)
@@ -478,6 +480,8 @@ class AdvancedTab(wx.Panel):
     def save(self):
         Config.Advanced.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
+
+        Config.Advanced.file_name_template = self.file_name_template
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_http_protocol = self.always_use_http_protocol_chk.GetValue()
@@ -492,6 +496,7 @@ class AdvancedTab(wx.Panel):
             "custom_cdn": Config.Advanced.custom_cdn,
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
             "custom_cdn_list": Config.Advanced.custom_cdn_list,
+            "file_name_template": Config.Advanced.file_name_template,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
             "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval,
             "always_use_http_protocol": Config.Advanced.always_use_http_protocol
@@ -530,10 +535,10 @@ class AdvancedTab(wx.Panel):
             self.custom_cdn_box.SetValue(dlg.get_cdn())
 
     def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self)
+        dlg = CustomFileNameDialog(self, self.file_name_template)
 
         if dlg.ShowModal() == wx.ID_OK:
-            pass
+            self.file_name_template = dlg.get_template()
     
     def onChangeRetryEVT(self, event):
         self.download_error_retry_lab.Enable(self.download_error_retry_chk.GetValue())

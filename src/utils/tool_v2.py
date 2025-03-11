@@ -384,6 +384,20 @@ class FormatTool:
         else:
             return str(data)
 
+    @staticmethod
+    def format_title_template(template: str, task_info: DownloadTaskInfo):
+        date_field = datetime.now().strftime("%Y-%m-%d")
+        time_field = datetime.now().strftime("%H:%M:%S")
+        datetime_field = f"{date_field} {time_field}"
+        timestamp_field = str(int(datetime.now().timestamp()))
+        title_field = UniversalTool.get_legal_name(task_info.title)
+        bvid_field = task_info.bvid
+        cid_field = task_info.cid
+        index_field = task_info.index
+        index_with_zero_field = task_info.index_with_zero
+
+        return template.format(date = date_field, time = time_field, datetime = datetime_field, timestamp = timestamp_field, index = index_field, index_with_zero = index_with_zero_field, title = title_field, bvid = bvid_field, cid = cid_field)
+
 class UniversalTool:
     # 通用工具类
     @staticmethod

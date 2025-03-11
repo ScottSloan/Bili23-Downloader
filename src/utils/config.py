@@ -124,6 +124,8 @@ class Config:
         custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
         custom_cdn_list: list = []
 
+        file_name_template = "{index_with_zero} - {title}"
+
         download_error_retry_count: int = 3
         download_suspend_retry_interval: int = 3
         always_use_http_protocol: bool = False
@@ -211,6 +213,7 @@ class ConfigUtils:
         Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
         Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
+        Config.Advanced.file_name_template = app_config["advanced"].get("file_name_template", Config.Advanced.file_name_template)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
         Config.Advanced.always_use_http_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_http_protocol)

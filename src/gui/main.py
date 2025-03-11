@@ -147,7 +147,7 @@ class MainWindow(Frame):
         self.treelist.SetSize(self.FromDIP((800, 260)))
 
         self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = _get_scale_size((100, 30)))
-        self.download_btn = wx.Button(self.panel, -1, "下载视频", size = _get_scale_size((100, 30)))
+        self.download_btn = wx.Button(self.panel, -1, "开始下载", size = _get_scale_size((100, 30)))
         self.download_btn.Enable(False)
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
@@ -406,7 +406,7 @@ class MainWindow(Frame):
                 case ParseType.Video |  ParseType.Bangumi | ParseType.Cheese:
                     self.episode_option_btn.Enable(True)
                     self.download_option_btn.Enable(True)
-                    self.download_btn.SetLabel("下载视频")
+                    self.download_btn.SetLabel("开始下载")
 
                 case ParseType.Live:
                     self.episode_option_btn.Enable(False)
@@ -737,11 +737,6 @@ class MainWindow(Frame):
 
         dlg = OptionDialog(self, stream_type, callback)
         dlg.ShowModal()
-
-        if dlg.audio_only_chk.IsChecked():
-            self.download_btn.SetLabel("下载音频")
-        else:
-            self.download_btn.SetLabel("下载视频")
 
     def onEpisodeOptionMenuEVT(self, event):
         def _clear():

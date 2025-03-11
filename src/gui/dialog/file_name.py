@@ -6,7 +6,9 @@ from utils.common.map import file_name_fields_map, get_mapping_key_by_value
 from gui.templates import TextCtrl
 
 class CustomFileNameDialog(wx.Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, template: str):
+        self.template = template
+
         wx.Dialog.__init__(self, parent, -1, "自定义下载文件名")
 
         self.init_UI()
@@ -67,6 +69,8 @@ class CustomFileNameDialog(wx.Dialog):
         self.template_box.Bind(wx.EVT_TEXT, self.onTextEVT)
 
     def init_utils(self):
+        self.template_box.SetValue(self.template)
+
         self.error_icon.Show(False)
         self.Layout()
 
@@ -121,3 +125,6 @@ class CustomFileNameDialog(wx.Dialog):
         self.ok_btn.Enable(False)
 
         self.Layout()
+
+    def get_template(self):
+        return self.template_box.GetValue()
