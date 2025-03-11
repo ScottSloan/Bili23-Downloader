@@ -291,6 +291,7 @@ class DownloadParser:
 
         self.task_info.video_type = "flv"
         self.task_info.output_type = "flv"
+        self.task_info.video_codec_id = VideoCodecID.AVC.value
 
         get_flv_quality_id()
 

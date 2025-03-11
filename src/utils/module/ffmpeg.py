@@ -69,14 +69,14 @@ class FFmpeg:
         match DownloadOption(task_info.download_option):
             case DownloadOption.VideoAndAudio:
                 command.add(get_merge_command())
-                command.add(self.get_rename_command(self.get_output_temp_file_name(), self.full_file_name))
+                command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.full_file_name))
 
             case DownloadOption.OnlyVideo:
                 command.add(self.get_rename_command(get_video_temp_file_name(), self.full_file_name))
             
             case DownloadOption.OnlyAudio:
                 command.add(get_convent_command())
-                command.add(self.get_rename_command(self.get_output_temp_file_name(), self.ffmpeg_file_name))
+                command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.ffmpeg_file_name))
         
         return command.format()
     
@@ -92,7 +92,7 @@ class FFmpeg:
                 f.write("\n".join([f"file flv_{task_info.id}_part{i + 1}.flv" for i in range(task_info.flv_video_count)]))
 
         def get_merge_command():
-            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i {get_list_file_name()} -c copy {self.get_output_temp_file_name(task_info)}"'
+            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i "{get_list_file_name()}" -c copy "{self.get_output_temp_file_name(task_info)}"'
 
         command = Command()
 
@@ -100,7 +100,7 @@ class FFmpeg:
             create_list_file()
 
             command.add(get_merge_command())
-            command.add(self.get_rename_command(self.get_output_temp_file_name(), self.full_file_name))
+            command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.full_file_name))
         else:
             command.add(self.get_rename_command(get_flv_temp_file_name(), self.full_file_name))
 
@@ -125,7 +125,7 @@ class FFmpeg:
 
         return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
     
-    def get_output_temp_file_name(task_info: DownloadTaskInfo):
+    def get_output_temp_file_name(self, task_info: DownloadTaskInfo):
             return f"out_{task_info.id}.{task_info.output_type}"
 
     def run_command(self, command: str, cwd: str = None, output: bool = False, return_code: bool = False):

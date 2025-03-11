@@ -1,10 +1,13 @@
+import re
 import os
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
+from utils.common.enums import CDNMode
 from utils.common.thread import Thread
+from utils.common.map import cdn_map
 from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
 from utils.config import Config
 
@@ -42,23 +45,22 @@ class Downloader:
         def get_total_file_size():
             if not self.task_info.total_file_size:
                 for entry in self.downloader_info:
-                    url = entry["url_list"][:1][0]
                     file_path = os.path.join(Config.Download.path, entry["file_name"])
 
-                    self.task_info.total_file_size += self.get_file_size(url, file_path, create_file = False)
+                    self.task_info.total_file_size += self.get_file_size(entry["url_list"], file_path, create_file = False)[1]
         
         def get_ranges():
-            self.current_file_size = self.get_file_size(url, file_path)
+            url, self.current_file_size = self.get_file_size(downloader_info.url_list, file_path)
 
             if self.task_info.current_downloaded_size:
                 self.progress_info = self.file_tool.get_info("thread_info")
                 self.current_downloaded_size = self.task_info.current_downloaded_size
                 self.total_downloaded_size = self.task_info.total_downloaded_size
     
-                return list(self.progress_info.values())
+                return url, list(self.progress_info.values())
 
             else:
-                return self.generate_ranges(self.current_file_size)
+                return url, self.generate_ranges(self.current_file_size)
 
         def worker():
             def get_range_info(index: int, file_path: str, url: str, range: list):
@@ -89,12 +91,11 @@ class Downloader:
 
         downloader_info = get_downloader_info()
 
-        url = downloader_info.url_list[:1][0]
         file_path = os.path.join(Config.Download.path, downloader_info.file_name)
 
         get_total_file_size()
 
-        ranges = get_ranges()
+        url, ranges = get_ranges()
 
         worker()
 
@@ -128,23 +129,45 @@ class Downloader:
 
         self.thread_alive_num -= 1
 
-    def get_file_size(self, url: str, file_path: str, create_file: bool = True):
+    def get_file_size(self, url_list: list, file_path: str, create_file: bool = True):
         def create_local_file():
             if not os.path.exists(file_path) and create_file:
                 with open(file_path, "wb") as f:
                     f.seek(file_size - 1)
                     f.write(b"\0")
 
-        req = RequestTool.request_head(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url))
+        def get_cdn_list():
+            if Config.Advanced.enable_custom_cdn:
+                match CDNMode(Config.Advanced.custom_cdn_mode):
+                    case CDNMode.Auto:
+                        _temp_cdn_map_list = sorted(list(cdn_map.values()), key = lambda x: x["order"], reverse = False)
 
-        if "Content-Length" in req.headers:
-            file_size = int(req.headers.get("Content-Length"))
+                        return [entry["cdn"] for entry in _temp_cdn_map_list]
+                    
+                    case CDNMode.Custom:
+                        return [Config.Advanced.custom_cdn]
+            else:
+                return [None]
 
-            create_local_file()
-        else:
-            print("Not")
+        def request_head(url: str, cdn: str):
+            if cdn:
+                new_url = re.sub(r'(?<=https://)[^/]+', cdn, url)
+            else:
+                new_url = url
+            
+            return new_url, RequestTool.request_head(new_url, headers = RequestTool.get_headers(self.task_info.referer_url))
 
-        return file_size
+        for url in url_list:
+            for cdn in get_cdn_list():
+                new_url, req = request_head(url, cdn)
+
+                if "Content-Length" in req.headers:
+                    file_size = int(req.headers.get("Content-Length"))
+
+                    if file_size:
+                        create_local_file()
+
+                        return new_url, file_size
     
     def generate_ranges(self, file_size: int):
         num_threads = Config.Download.max_thread_count

@@ -427,9 +427,9 @@ class DownloadTaskItemPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
 
                     if self.task_info.download_option == DownloadOption.OnlyAudio.value:
-                        lab = "正在合成视频..."
+                        lab = "正在转换音频..."
                     else:
-                        lab = "正在转换音频"
+                        lab = "正在合成视频..."
 
                     self.pause_btn.SetToolTip(lab)
                     self.speed_lab.SetLabel(lab)
