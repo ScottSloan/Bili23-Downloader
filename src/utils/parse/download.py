@@ -95,7 +95,7 @@ class DownloadParser:
                             self.task_info.download_items = ["video"]
                             self.task_info.output_type = "mp4"
                             self.task_info.download_option = DownloadOption.OnlyVideo
-                            self.task_info.merge_video_and_audio = False
+                            self.task_info.ffmpeg_merge = False
         
         check_download_items()
 
@@ -117,7 +117,7 @@ class DownloadParser:
         def get_flv_info():
             self.task_info.audio_quality_id = AudioQualityID._None.value
             self.task_info.download_option = DownloadOption.OnlyVideo.value
-            self.task_info.merge_video_and_audio = False
+            self.task_info.ffmpeg_merge = True
             self.task_info.flv_video_count = len(data["durl"])
         
         check_download_items()
@@ -279,7 +279,11 @@ class DownloadParser:
                 info = DownloaderInfo()
                 info.url_list = url_list
                 info.type = f"flv_{index}"
-                info.file_name = f"flv_{self.task_info.id}_part{index}.flv"
+
+                if self.task_info.flv_video_count > 1:
+                    info.file_name = f"flv_{self.task_info.id}_part{index}.flv"
+                else:
+                    info.file_name = f"flv_{self.task_info.id}.flv"
 
                 return info.to_dict()
             else:

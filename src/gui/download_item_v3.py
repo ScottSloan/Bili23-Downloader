@@ -302,6 +302,9 @@ class DownloadTaskItemPanel(wx.Panel):
         self.destroy_panel(event)
 
         self.file_tool.delete_file()
+
+        if hasattr(self, "downloader"):
+            self.downloader.stop_download()
     
     def destroy_panel(self, event = None):
         self.Hide()
@@ -352,7 +355,7 @@ class DownloadTaskItemPanel(wx.Panel):
     def merge_video(self):
         self.ffmpeg = FFmpeg()
 
-        self.ffmpeg.merge_dash_video(self.task_info, self.full_file_name, callback = self.onMergeFinish)
+        self.ffmpeg.merge_video(self.task_info, self.full_file_name, self.onMergeFinish)
 
     def open_file_location(self):
         path = os.path.join(Config.Download.path, self.full_file_name)
@@ -382,7 +385,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def onDownloadFinish(self):
         def worker():
-            if self.task_info.merge_video_and_audio:
+            if self.task_info.ffmpeg_merge:
                 self.set_download_status(DownloadStatus.Merging.value)
 
                 self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))

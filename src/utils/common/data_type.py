@@ -59,8 +59,8 @@ class DownloadTaskInfo:
         self.stream_type: int = 0
         # 下载选项
         self.download_option: List[int] = []
-        # 是否合并音视频
-        self.merge_video_and_audio: bool = False
+        # 是否调用 FFmpeg 合并
+        self.ffmpeg_merge: bool = False
         # flv 视频个数，仅 flv 流时有效
         self.flv_video_count: int = 0
 
@@ -100,7 +100,7 @@ class DownloadTaskInfo:
             "download_type": self.download_type,
             "stream_type": self.stream_type,
             "download_option": self.download_option,
-            "merge_video_and_audio": self.merge_video_and_audio,
+            "ffmpeg_merge": self.ffmpeg_merge,
             "flv_video_count": self.flv_video_count,
             "get_danmaku": self.get_danmaku,
             "danmaku_type": self.danmaku_type,
@@ -137,7 +137,7 @@ class DownloadTaskInfo:
         self.download_type = data["download_type"]
         self.stream_type = data["stream_type"]
         self.download_option = data["download_option"]
-        self.merge_video_and_audio = data["merge_video_and_audio"]
+        self.ffmpeg_merge = data["ffmpeg_merge"]
         self.flv_video_count = data["flv_video_count"]
         self.get_danmaku = data["get_danmaku"]
         self.danmaku_type = data["danmaku_type"]

@@ -2,7 +2,7 @@ import os
 import subprocess
 from typing import Callable
 
-from utils.common.enums import DownloadOption
+from utils.common.enums import DownloadOption, StreamType
 from utils.common.data_type import DownloadTaskInfo, Command
 from utils.config import Config
 
@@ -29,11 +29,16 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_dash_video(self, task_info: DownloadTaskInfo, full_file_name: str, callback: Callable):
+    def merge_video(self, task_info: DownloadTaskInfo, full_file_name: str, callback: Callable):
         self.full_file_name = full_file_name
 
-        command = self.get_command(task_info)
+        match StreamType(task_info.stream_type):
+            case StreamType.Dash:
+                command = self.get_dash_command(task_info)
 
+            case StreamType.Flv:
+                command = self.get_flv_command(task_info)
+        
         resp = self.run_command(command, cwd = Config.Download.path, output = True, return_code = True)
 
         if not resp[0]:
@@ -41,67 +46,89 @@ class FFmpeg:
         else:
             print(resp[1])
 
-    def merge_flv_video(self):
-        pass
-
-    def get_command(self, task_info: DownloadTaskInfo):
+    def get_dash_command(self, task_info: DownloadTaskInfo):
         def get_video_temp_file_name():
             return f"video_{task_info.id}.{task_info.video_type}"
 
         def get_audio_temp_file_name():
             return f"audio_{task_info.id}.{task_info.audio_type}"
-
-        def get_output_temp_file_name():
-            return f"out_{task_info.id}.{task_info.output_type}"
         
         def get_merge_command():
-            return f'"{Config.FFmpeg.path}" -y -i "{get_video_temp_file_name()}" -i "{get_audio_temp_file_name()}" -acodec copy -vcodec copy -strict experimental {get_output_temp_file_name()}'
+            return f'"{Config.FFmpeg.path}" -y -i "{get_video_temp_file_name()}" -i "{get_audio_temp_file_name()}" -acodec copy -vcodec copy -strict experimental {self.get_output_temp_file_name(task_info)}'
 
         def get_convent_command():
             if task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
-                return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a libmp3lame -q:a 0 "{get_output_temp_file_name()}"'
+                return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a libmp3lame -q:a 0 "{self.get_output_temp_file_name(task_info)}"'
             elif task_info.output_type == "flac":
-                return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a flac -q:a 0 "{get_output_temp_file_name()}"'
+                return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a flac -q:a 0 "{self.get_output_temp_file_name(task_info)}"'
             else:
-                return get_rename_command(get_audio_temp_file_name(), get_output_temp_file_name())
-
-        def get_rename_command(src: str, dst: str):
-            def get_sys_rename_command():
-                match Config.Sys.platform:
-                    case "windows":
-                        return "rename"
-
-                    case "linux" | "darwin":
-                        return "mv"
-
-            def get_escape_character():
-                match Config.Sys.platform:
-                    case "windows" | "darwin":
-                        return ""
-                    
-                    case "linux":
-                        return "--"
-
-            return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
+                return self.get_rename_command(get_audio_temp_file_name(), self.get_output_temp_file_name(task_info))
 
         command = Command()
 
         match DownloadOption(task_info.download_option):
             case DownloadOption.VideoAndAudio:
                 command.add(get_merge_command())
-                command.add(get_rename_command(get_output_temp_file_name(), self.full_file_name))
+                command.add(self.get_rename_command(self.get_output_temp_file_name(), self.full_file_name))
 
             case DownloadOption.OnlyVideo:
-                command.add(get_rename_command(get_video_temp_file_name(), self.full_file_name))
+                command.add(self.get_rename_command(get_video_temp_file_name(), self.full_file_name))
             
             case DownloadOption.OnlyAudio:
                 command.add(get_convent_command())
-                command.add(get_rename_command(get_output_temp_file_name(), self.ffmpeg_file_name))
+                command.add(self.get_rename_command(self.get_output_temp_file_name(), self.ffmpeg_file_name))
         
         return command.format()
     
-    def run_command(self, command: str, cwd: str = None, output: bool = False, return_code: bool = False):
+    def get_flv_command(self, task_info: DownloadTaskInfo):
+        def get_flv_temp_file_name():
+            return f"flv_{task_info.id}.flv"
+        
+        def get_list_file_name():
+            return f"flv_list_{task_info.id}.txt"
 
+        def create_list_file():
+            with open(os.path.join(Config.Download.path, get_list_file_name()), "w", encoding = "utf-8") as f:
+                f.write("\n".join([f"file flv_{task_info.id}_part{i + 1}.flv" for i in range(task_info.flv_video_count)]))
+
+        def get_merge_command():
+            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i {get_list_file_name()} -c copy {self.get_output_temp_file_name(task_info)}"'
+
+        command = Command()
+
+        if task_info.flv_video_count > 1:
+            create_list_file()
+
+            command.add(get_merge_command())
+            command.add(self.get_rename_command(self.get_output_temp_file_name(), self.full_file_name))
+        else:
+            command.add(self.get_rename_command(get_flv_temp_file_name(), self.full_file_name))
+
+        return command.format()
+
+    def get_rename_command(self, src: str, dst: str):
+        def get_sys_rename_command():
+            match Config.Sys.platform:
+                case "windows":
+                    return "rename"
+
+                case "linux" | "darwin":
+                    return "mv"
+
+        def get_escape_character():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return ""
+                
+                case "linux":
+                    return "--"
+
+        return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
+    
+    def get_output_temp_file_name(task_info: DownloadTaskInfo):
+            return f"out_{task_info.id}.{task_info.output_type}"
+
+    def run_command(self, command: str, cwd: str = None, output: bool = False, return_code: bool = False):
         process = subprocess.run(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, text = True, encoding = "utf-8")
 
         if output and return_code:
