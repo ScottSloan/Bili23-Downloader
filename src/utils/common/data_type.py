@@ -46,7 +46,9 @@ class DownloadTaskInfo:
         self.video_quality_id: int = 0
         self.audio_quality_id: int = 0
         self.video_codec_id: int = 0
-        self.audio_type: str = ""
+        self.video_type: str = None
+        self.audio_type: str = None
+        self.output_type: str = None
 
         # 下载项目标识
         self.download_items: list = []
@@ -91,7 +93,9 @@ class DownloadTaskInfo:
             "video_quality_id": self.video_quality_id,
             "audio_quality_id": self.audio_quality_id,
             "video_codec_id": self.video_codec_id,
+            "video_type": self.video_type,
             "audio_type": self.audio_type,
+            "output_type": self.output_type,
             "download_items": self.download_items,
             "download_type": self.download_type,
             "stream_type": self.stream_type,
@@ -126,7 +130,9 @@ class DownloadTaskInfo:
         self.video_quality_id = data["video_quality_id"]
         self.audio_quality_id = data["audio_quality_id"]
         self.video_codec_id = data["video_codec_id"]
+        self.video_type = data["video_type"]
         self.audio_type = data["audio_type"]
+        self.output_type = data["output_type"]
         self.download_items = data["download_items"]
         self.download_type = data["download_type"]
         self.stream_type = data["stream_type"]

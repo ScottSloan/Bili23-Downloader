@@ -344,7 +344,7 @@ class DownloadTaskItemPanel(wx.Panel):
     def merge_video(self):
         self.ffmpeg = FFmpeg()
 
-        self.ffmpeg.merge_dash_video(self.task_info)
+        self.ffmpeg.merge_dash_video(self.task_info, callback = self.onMergeFinish)
 
     def onStartDownload(self):
         def worker():
@@ -380,6 +380,12 @@ class DownloadTaskItemPanel(wx.Panel):
                 Thread(target = self.merge_video).start()
             else:
                 pass
+
+        wx.CallAfter(worker)
+
+    def onMergeFinish(self):
+        def worker():
+            self.set_download_status(DownloadStatus.Complete.value)
 
         wx.CallAfter(worker)
 

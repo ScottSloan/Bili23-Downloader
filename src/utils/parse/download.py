@@ -82,6 +82,7 @@ class DownloadParser:
                 match DownloadOption(self.task_info.download_option):
                     case DownloadOption.OnlyVideo:
                         self.task_info.download_items = ["video"]
+                        self.task_info.output_type = "mp4"
 
                     case DownloadOption.OnlyAudio:
                         self.task_info.download_items = ["audio"]
@@ -89,8 +90,10 @@ class DownloadParser:
                     case DownloadOption.VideoAndAudio:
                         if "audio" in data:
                             self.task_info.download_items = ["video", "audio"]
+                            self.task_info.output_type = "mp4"
                         else:
                             self.task_info.download_items = ["video"]
+                            self.task_info.output_type = "mp4"
                             self.task_info.download_option = DownloadOption.OnlyVideo
                             self.task_info.merge_video_and_audio = False
         
@@ -172,6 +175,8 @@ class DownloadParser:
             else:
                 return None
 
+        self.task_info.video_type = "m4s"
+
         get_video_quality_id(data)
 
         get_video_codec_id(data)
@@ -223,19 +228,24 @@ class DownloadParser:
 
             match AudioQualityID(self.task_info.audio_quality_id):
                 case AudioQualityID._None:
-                    return None
+                    stream_info = None
 
                 case AudioQualityID._Hi_Res:
                     self.task_info.audio_type = "flac"
-                    return get_hi_res()
+                    stream_info = get_hi_res()
 
                 case AudioQualityID._Dolby_Atoms:
                     self.task_info.audio_type = "ec3"
-                    return get_dolby()
+                    stream_info = get_dolby()
 
                 case _:
                     self.task_info.audio_type = "m4a"
-                    return get_normal()
+                    stream_info = get_normal()
+            
+            if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                self.task_info.output_type = self.task_info.audio_type
+
+            return stream_info
 
         def get_audio_downloader_info():
             if url_list:
@@ -274,6 +284,9 @@ class DownloadParser:
                 return info.to_dict()
             else:
                 return None
+
+        self.task_info.video_type = "flv"
+        self.task_info.output_type = "flv"
 
         get_flv_quality_id()
 

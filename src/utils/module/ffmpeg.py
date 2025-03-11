@@ -1,7 +1,8 @@
 import os
 import subprocess
+from typing import Callable
 
-from utils.common.enums import DownloadOption, StreamType
+from utils.common.enums import DownloadOption
 from utils.common.data_type import DownloadTaskInfo, Command
 from utils.tool_v2 import UniversalTool
 from utils.config import Config
@@ -29,63 +30,41 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_dash_video(self, task_info: DownloadTaskInfo):
+    def merge_dash_video(self, task_info: DownloadTaskInfo, callback: Callable):
         command = self.get_command(task_info)
-
-        print(command)
 
         resp = self.run_command(command, cwd = Config.Download.path, output = True, return_code = True)
 
-        print(resp[1])
-
         if not resp[0]:
-            pass
+            callback()
         else:
-            print("error")
+            print(resp[1])
 
     def merge_flv_video(self):
         pass
 
     def get_command(self, task_info: DownloadTaskInfo):
         def get_video_temp_file_name():
-            return f"video_{task_info.id}.m4s"
+            return f"video_{task_info.id}.{task_info.video_type}"
 
         def get_audio_temp_file_name():
             return f"audio_{task_info.id}.{task_info.audio_type}"
 
         def get_output_temp_file_name():
-            match StreamType(task_info.stream_type):
-                case StreamType.Dash:
-                    match DownloadOption(task_info.download_option):
-                        case DownloadOption.VideoAndAudio | DownloadOption.OnlyVideo:
-                            return f"out_{task_info.id}.mp4"
-                        
-                        case DownloadOption.OnlyAudio:
-                            return f"out_{task_info.id}.{task_info.audio_type}"
-                
-                case StreamType.Flv:
-                    return f"out_{task_info.id}.flv"
+            return f"out_{task_info.id}.{task_info.output_type}"
         
         def get_full_file_name():
             title = UniversalTool.get_legal_name(task_info.title)
 
-            match DownloadOption(task_info.download_option):
-                case DownloadOption.VideoAndAudio:
-                    return f"{title}.mp4"
-                
-                case DownloadOption.OnlyVideo:
-                    return f"{title}.mp4"
-                
-                case DownloadOption.OnlyAudio:
-                    return f"{title}.{task_info.audio_type}"
+            return f"{title}.{task_info.output_type}"
         
         def get_merge_command():
             return f'"{Config.FFmpeg.path}" -y -i "{get_video_temp_file_name()}" -i "{get_audio_temp_file_name()}" -acodec copy -vcodec copy -strict experimental {get_output_temp_file_name()}'
 
         def get_convent_command():
-            if task_info.audio_type == "m4a" and Config.Merge.m4a_to_mp3:
+            if task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
                 return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a libmp3lame -q:a 0 "{get_output_temp_file_name()}"'
-            elif task_info.audio_type == "flac":
+            elif task_info.output_type == "flac":
                 return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a flac -q:a 0 "{get_output_temp_file_name()}"'
             else:
                 return get_rename_command(get_audio_temp_file_name(), get_output_temp_file_name())
