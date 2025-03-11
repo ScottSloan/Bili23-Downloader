@@ -8,7 +8,7 @@ from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, Download
 from utils.common.enums import DownloadStatus
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
-from utils.tool_v2 import DownloadFileTool
+from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
 from gui.templates import ActionButton, ScrolledPanel
@@ -19,6 +19,7 @@ class DownloadManagerWindow(wx.Frame):
         wx.Frame.__init__(self, parent, -1, "下载管理 V3 Demo")
 
         self.SetSize(self.FromDIP((930, 550)))
+        self.current_page = "正在下载"
 
         self.init_UI()
 
@@ -115,6 +116,8 @@ class DownloadManagerWindow(wx.Frame):
         self.completed_page_btn.onClickCustomEVT = self.onCompletedPageBtnEVT
 
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+        self.open_download_dir_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadDirectoryEVT)
     
     def init_utils(self):
         self.downloading_page_btn.setActiveState()
@@ -206,13 +209,14 @@ class DownloadManagerWindow(wx.Frame):
     def add_to_completed_list(self, completed_list: List[DownloadTaskInfo], callback: Callable):
         self.completed_page.temp_download_list.extend(completed_list)
 
-        wx.CallAfter(self.completed_page.load_more_panel_item, callback, update_title = False)
+        wx.CallAfter(self.completed_page.load_more_panel_item, callback)
 
     def onCloseEVT(self, event):
         self.Hide()
 
     def onDownloadingPageBtnEVT(self):
         self.book.SetSelection(0)
+        self.current_page = "正在下载"
 
         self.setTitleLabel("正在下载", self.downloading_page.total_count)
 
@@ -220,10 +224,14 @@ class DownloadManagerWindow(wx.Frame):
 
     def onCompletedPageBtnEVT(self):
         self.book.SetSelection(1)
+        self.current_page = "下载完成"
 
         self.setTitleLabel("下载完成", self.completed_page.total_count)
 
         self.downloading_page_btn.setUnactiveState()
+
+    def onOpenDownloadDirectoryEVT(self, event):
+        FileDirectoryTool.open_directory(Config.Download.path)
 
     def setTitleLabel(self, name: str, count: int):
         if count:
@@ -231,7 +239,8 @@ class DownloadManagerWindow(wx.Frame):
         else:
             title = "下载管理"
 
-        self.top_title_lab.SetLabel(title)
+        if self.current_page == name:
+            self.top_title_lab.SetLabel(title)
 
         if name == "正在下载":
             self.downloading_page_btn.setTitle(f"正在下载({count})")
@@ -250,7 +259,7 @@ class SimplePage(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, -1)
 
-    def load_more_panel_item(self, callback: Callable = None, update_title: bool = True):
+    def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 100 个
             item_threshold = 100
@@ -291,7 +300,7 @@ class SimplePage(wx.Panel):
         self.scroller.sizer.AddMany(get_items())
         self.scroller.Thaw()
 
-        self.refresh_scroller(update_title)
+        self.refresh_scroller()
 
         # 显示封面
         Thread(target = self.show_panel_item_cover).start()
@@ -327,7 +336,7 @@ class SimplePage(wx.Panel):
 
         self.refresh_scroller()
 
-    def refresh_scroller(self, update_title: bool = True):
+    def refresh_scroller(self):
         if not self.total_count:
             self.hide_other_item()
 
@@ -340,8 +349,7 @@ class SimplePage(wx.Panel):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        if update_title:
-            self.callback.onSetTitleCallback(self.name, self.total_count)
+        self.callback.onSetTitleCallback(self.name, self.total_count)
 
     def get_scroller_task_count(self, condition: List[int]):
         _count = 0

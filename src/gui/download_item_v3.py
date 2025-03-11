@@ -1,3 +1,4 @@
+import os
 import wx
 from io import BytesIO
 from typing import Callable
@@ -12,7 +13,8 @@ from utils.common.thread import Thread
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
-from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
+from utils.config import Config
+from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, UniversalTool, FileDirectoryTool
 
 from gui.templates import InfoLabel
 from gui.dialog.cover import CoverViewerDialog
@@ -293,6 +295,9 @@ class DownloadTaskItemPanel(wx.Panel):
             case DownloadStatus.Pause:
                 self.resume_download()
 
+            case DownloadStatus.Complete:
+                self.open_file_location()
+
     def onStopEVT(self, event):
         self.destroy_panel(event)
 
@@ -347,7 +352,12 @@ class DownloadTaskItemPanel(wx.Panel):
     def merge_video(self):
         self.ffmpeg = FFmpeg()
 
-        self.ffmpeg.merge_dash_video(self.task_info, callback = self.onMergeFinish)
+        self.ffmpeg.merge_dash_video(self.task_info, self.full_file_name, callback = self.onMergeFinish)
+
+    def open_file_location(self):
+        path = os.path.join(Config.Download.path, self.full_file_name)
+
+        FileDirectoryTool.open_file_location(path)
 
     def onStartDownload(self):
         def worker():
@@ -426,3 +436,9 @@ class DownloadTaskItemPanel(wx.Panel):
         }
 
         self.file_tool.update_task_info_kwargs(**kwargs)
+    
+    @property
+    def full_file_name(self):
+        title = UniversalTool.get_legal_name(self.task_info.title)
+
+        return f"{title}.{self.task_info.output_type}"

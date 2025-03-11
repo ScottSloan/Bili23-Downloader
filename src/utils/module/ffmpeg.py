@@ -4,7 +4,6 @@ from typing import Callable
 
 from utils.common.enums import DownloadOption
 from utils.common.data_type import DownloadTaskInfo, Command
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 class FFmpeg:
@@ -30,7 +29,9 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_dash_video(self, task_info: DownloadTaskInfo, callback: Callable):
+    def merge_dash_video(self, task_info: DownloadTaskInfo, full_file_name: str, callback: Callable):
+        self.full_file_name = full_file_name
+
         command = self.get_command(task_info)
 
         resp = self.run_command(command, cwd = Config.Download.path, output = True, return_code = True)
@@ -52,11 +53,6 @@ class FFmpeg:
 
         def get_output_temp_file_name():
             return f"out_{task_info.id}.{task_info.output_type}"
-        
-        def get_full_file_name():
-            title = UniversalTool.get_legal_name(task_info.title)
-
-            return f"{title}.{task_info.output_type}"
         
         def get_merge_command():
             return f'"{Config.FFmpeg.path}" -y -i "{get_video_temp_file_name()}" -i "{get_audio_temp_file_name()}" -acodec copy -vcodec copy -strict experimental {get_output_temp_file_name()}'
@@ -93,14 +89,14 @@ class FFmpeg:
         match DownloadOption(task_info.download_option):
             case DownloadOption.VideoAndAudio:
                 command.add(get_merge_command())
-                command.add(get_rename_command(get_output_temp_file_name(), get_full_file_name()))
+                command.add(get_rename_command(get_output_temp_file_name(), self.full_file_name))
 
             case DownloadOption.OnlyVideo:
-                command.add(get_rename_command(get_video_temp_file_name(), get_full_file_name()))
+                command.add(get_rename_command(get_video_temp_file_name(), self.full_file_name))
             
             case DownloadOption.OnlyAudio:
                 command.add(get_convent_command())
-                command.add(get_rename_command(get_output_temp_file_name(), get_full_file_name()))
+                command.add(get_rename_command(get_output_temp_file_name(), self.ffmpeg_file_name))
         
         return command.format()
     
