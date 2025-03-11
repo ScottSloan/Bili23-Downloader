@@ -386,7 +386,6 @@ class DownloadTaskItemPanel(wx.Panel):
                 self.set_download_status(DownloadStatus.Merging.value)
 
                 self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
-                self.speed_lab.SetLabel("正在合成视频...")
 
                 self.Layout()
 
@@ -420,6 +419,20 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中")
+
+                case DownloadStatus.Merging:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+
+                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                        lab = "正在合成视频..."
+                    else:
+                        lab = "正在转换音频"
+
+                    self.pause_btn.SetToolTip(lab)
+                    self.speed_lab.SetLabel(lab)
+
+                    self.pause_btn.Enable(False)
+                    self.stop_btn.Enable(False)
 
                 case DownloadStatus.Complete:
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.FOLDER_ICON))

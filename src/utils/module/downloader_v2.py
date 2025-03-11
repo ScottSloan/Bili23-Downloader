@@ -45,7 +45,7 @@ class Downloader:
                     url = entry["url_list"][:1][0]
                     file_path = os.path.join(Config.Download.path, entry["file_name"])
 
-                    self.task_info.total_file_size += self.get_file_size(url, file_path)
+                    self.task_info.total_file_size += self.get_file_size(url, file_path, create_file = False)
         
         def get_ranges():
             self.current_file_size = self.get_file_size(url, file_path)
@@ -128,14 +128,14 @@ class Downloader:
 
         self.thread_alive_num -= 1
 
-    def get_file_size(self, url: str, file_path: str):
+    def get_file_size(self, url: str, file_path: str, create_file: bool = True):
         def create_local_file():
-            if not os.path.exists(file_path):
+            if not os.path.exists(file_path) and create_file:
                 with open(file_path, "wb") as f:
                     f.seek(file_size - 1)
                     f.write(b"\0")
 
-        req = RequestTool.request_head(url, RequestTool.get_headers(referer_url = self.task_info.referer_url))
+        req = RequestTool.request_head(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url))
 
         if "Content-Length" in req.headers:
             file_size = int(req.headers.get("Content-Length"))

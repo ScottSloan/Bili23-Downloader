@@ -206,6 +206,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if AudioInfo.download_audio_only:
                 return DownloadOption.OnlyAudio.value
             else:
+                download_info.merge_video_and_audio = True
                 return DownloadOption.VideoAndAudio.value
 
         download_info = DownloadTaskInfo()
