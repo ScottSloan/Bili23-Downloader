@@ -404,7 +404,7 @@ class AdvancedTab(wx.Panel):
         self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.FromDIP((120, 28)))
 
         button_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.BOTTOM), 10)
+        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, 10)
 
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")

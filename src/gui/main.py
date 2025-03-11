@@ -23,7 +23,7 @@ from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, StatusCode, VideoQualityID, VideoType
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 
-from gui.templates import Frame, TreeListCtrl, InfoBar, TextCtrl
+from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.download_v3 import DownloadManagerWindow
 from gui.settings import SettingWindow
 from gui.login import LoginWindow
@@ -107,8 +107,11 @@ class MainWindow(Frame):
 
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        url_lab = wx.StaticText(self.panel, -1, "地址")
-        self.url_box = TextCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
+        url_lab = wx.StaticText(self.panel, -1, "链接")
+        self.url_box = wx.SearchCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
+        self.url_box.ShowSearchButton(False)
+        self.url_box.ShowCancelButton(True)
+        self.url_box.SetDescriptiveText("在此处粘贴链接进行解析")
         self.get_btn = wx.Button(self.panel, -1, "Get")
 
         url_hbox.Add(url_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)

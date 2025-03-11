@@ -29,8 +29,20 @@ class CustomFileNameDialog(wx.Dialog):
         available_hbox.Add(self.available_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         available_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
+        date_format_lab = wx.StaticText(self, -1, "日期格式")
+        self.date_format_box = TextCtrl(self, -1, size = self.FromDIP((150, 24)))
+
+        time_format_lab = wx.StaticText(self, -1, "时间格式")
+        self.time_format_box = TextCtrl(self, -1, size = self.FromDIP((150, 24)))
+
+        datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        datetime_hbox.Add(date_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        datetime_hbox.Add(self.date_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        datetime_hbox.Add(time_format_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        datetime_hbox.Add(self.time_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         template_lab = wx.StaticText(self, -1, "文件名模板")
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((350, 24)))
+        self.template_box = TextCtrl(self, -1, size = self.FromDIP((400, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
         template_hbox.Add(template_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -52,11 +64,12 @@ class CustomFileNameDialog(wx.Dialog):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
-        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
-        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(available_hbox, 0, wx.EXPAND)
+        vbox.Add(datetime_hbox, 0, wx.EXPAND)
         vbox.Add(template_hbox, 0, wx.EXPAND)
         vbox.Add(error_hbox, 0, wx.EXPAND)
         vbox.Add(self.preview_lab, 0, wx.ALL, 10)
@@ -75,8 +88,8 @@ class CustomFileNameDialog(wx.Dialog):
         self.Layout()
 
     def show_preview_file_name(self):
-        date_field = datetime.now().strftime("%Y-%m-%d")
-        time_field = datetime.now().strftime("%H:%M:%S")
+        date_field = datetime.now().strftime("%Y_%m_%d")
+        time_field = datetime.now().strftime("%H_%M_%S")
         datetime_field = f"{date_field} {time_field}"
         timestamp_field = str(int(datetime.now().timestamp()))
         index_field = "1"

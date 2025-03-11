@@ -386,8 +386,8 @@ class FormatTool:
 
     @staticmethod
     def format_title_template(template: str, task_info: DownloadTaskInfo):
-        date_field = datetime.now().strftime("%Y-%m-%d")
-        time_field = datetime.now().strftime("%H:%M:%S")
+        date_field = datetime.now().strftime("%Y_%m_%d")
+        time_field = datetime.now().strftime("%H_%M_%S")
         datetime_field = f"{date_field} {time_field}"
         timestamp_field = str(int(datetime.now().timestamp()))
         title_field = UniversalTool.get_legal_name(task_info.title)
