@@ -294,11 +294,14 @@ class DownloadTaskItemPanel(wx.Panel):
                 self.resume_download()
 
     def onStopEVT(self, event):
-        self.Hide()
-        self.Destroy()
+        self.destroy_panel(event)
 
         self.file_tool.delete_file()
-
+    
+    def destroy_panel(self, event = None):
+        self.Hide()
+        self.Destroy()
+        
         if event:
             self.callback.onUpdateCountTitleCallback()
 
@@ -387,6 +390,10 @@ class DownloadTaskItemPanel(wx.Panel):
         def worker():
             self.set_download_status(DownloadStatus.Complete.value)
 
+            self.destroy_panel(1)
+
+            self.callback.onAddPanelCallback(self.task_info)
+
         wx.CallAfter(worker)
 
     def set_download_status(self, status: int):
@@ -403,6 +410,12 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中")
+
+                case DownloadStatus.Complete:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.FOLDER_ICON))
+
+                    self.pause_btn.SetToolTip("打开文件所在位置")
+                    self.speed_lab.SetLabel("下载完成")
         
         self.task_info.status = status
 

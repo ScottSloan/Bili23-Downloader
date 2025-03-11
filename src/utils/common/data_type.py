@@ -207,6 +207,12 @@ class TaskPanelCallback:
         self.onStartNextCallback: Callable = None
         self.onUpdateCountTitleCallback: Callable = None
         self.onLoadMoreTaskCallback: Callable = None
+        self.onAddPanelCallback: Callable = None
+
+class DownloadPageCallback:
+    def __init__(self):
+        self.onSetTitleCallback = None
+        self.onAddPanelCallback = None
 
 class NotificationMessage:
     def __init__(self):

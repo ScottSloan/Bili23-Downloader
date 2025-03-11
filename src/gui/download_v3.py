@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Callable
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
 from utils.common.enums import DownloadStatus
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
@@ -83,8 +83,12 @@ class DownloadManagerWindow(wx.Frame):
 
         self.book = wx.Simplebook(right_panel, -1)
 
-        self.downloading_page = DownloadingPage(self.book, self.setTitleLabel, self)
-        self.completed_page = CompeltedPage(self.book, self.setTitleLabel, self)
+        callback = DownloadPageCallback()
+        callback.onSetTitleCallback = self.setTitleLabel
+        callback.onAddPanelCallback = self.add_panel_to_completed_page
+
+        self.downloading_page = DownloadingPage(self.book, callback, self)
+        self.completed_page = CompeltedPage(self.book, callback, self)
 
         self.book.AddPage(self.downloading_page, "downloading_page")
         self.book.AddPage(self.completed_page, "completed_page")
@@ -236,6 +240,9 @@ class DownloadManagerWindow(wx.Frame):
             self.completed_page_btn.setTitle(f"下载完成({count})")
             self.downloading_page_btn.Refresh()
 
+    def add_panel_to_completed_page(self, task_info: DownloadTaskInfo):
+        self.completed_page.add_panel(task_info)
+
     def get_timestamp(self):
         return int(datetime.now().timestamp())
 
@@ -257,6 +264,7 @@ class SimplePage(wx.Panel):
             def get_callback():
                 callback = TaskPanelCallback()
                 callback.onUpdateCountTitleCallback = self.refresh_scroller
+                callback.onAddPanelCallback = self.callback.onAddPanelCallback
 
                 return callback
 
@@ -333,7 +341,7 @@ class SimplePage(wx.Panel):
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
         if update_title:
-            self.callback(self.name, self.total_count)
+            self.callback.onSetTitleCallback(self.name, self.total_count)
 
     def get_scroller_task_count(self, condition: List[int]):
         _count = 0
@@ -351,7 +359,7 @@ class SimplePage(wx.Panel):
         return children 
 
 class DownloadingPage(SimplePage):
-    def __init__(self, parent, callback: Callable, download_window):
+    def __init__(self, parent, callback: DownloadPageCallback, download_window):
         self.callback, self.name, self.download_window = callback, "正在下载", download_window
 
         SimplePage.__init__(self, parent)
@@ -446,7 +454,7 @@ class DownloadingPage(SimplePage):
         return self.scroller_count + len(self.temp_download_list)
 
 class CompeltedPage(SimplePage):
-    def __init__(self, parent, callback: Callable, download_window):
+    def __init__(self, parent, callback: DownloadPageCallback, download_window):
         self.callback, self.name, self.download_window = callback, "下载完成", download_window
 
         SimplePage.__init__(self, parent)
@@ -503,6 +511,11 @@ class CompeltedPage(SimplePage):
         clear_temp()
 
         self.refresh_scroller()
+
+    def add_panel(self, task_info: DownloadTaskInfo):
+        self.temp_download_list.append(task_info)
+
+        self.load_more_panel_item()
 
     @property
     def scroller_count(self):
