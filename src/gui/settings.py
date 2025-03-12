@@ -159,15 +159,6 @@ class DownloadTab(wx.Panel):
         codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.enable_dolby_chk = wx.CheckBox(self.scrolled_panel, -1, '自动下载杜比视界或杜比全景声')
-        self.dolby_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
-        self.dolby_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.dolby_tip.SetToolTip("说明")
-
-        dolby_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        dolby_hbox.Add(self.enable_dolby_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        dolby_hbox.Add(self.dolby_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-
         self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(self.scrolled_panel, -1, "最高")
         self.speed_limit_box = TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((50, 25)))
@@ -193,7 +184,6 @@ class DownloadTab(wx.Panel):
         vbox.Add(video_quality_hbox, 0, wx.EXPAND)
         vbox.Add(sound_quality_hbox, 0, wx.EXPAND)
         vbox.Add(codec_hbox, 0, wx.EXPAND)
-        vbox.Add(dolby_hbox, 0, wx.EXPAND)
         vbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
         vbox.Add(speed_limit_hbox, 0, wx.EXPAND)
         vbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
@@ -223,7 +213,6 @@ class DownloadTab(wx.Panel):
         self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
         self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
-        self.dolby_tip.Bind(wx.EVT_LEFT_UP, self.onDolbyTipEVT)
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
@@ -239,7 +228,6 @@ class DownloadTab(wx.Panel):
 
         self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_map, Config.Download.video_codec_id))
 
-        self.enable_dolby_chk.SetValue(Config.Download.enable_dolby)
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
@@ -262,7 +250,6 @@ class DownloadTab(wx.Panel):
         Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
         Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
         Config.Download.video_codec_id = video_codec_map[self.codec_choice.GetStringSelection()]
-        Config.Download.enable_dolby = self.enable_dolby_chk.GetValue()
         Config.Download.add_number = self.add_number_chk.GetValue()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
@@ -276,7 +263,7 @@ class DownloadTab(wx.Panel):
             "video_quality_id": Config.Download.video_quality_id,
             "audio_quality_id": Config.Download.audio_quality_id,
             "video_codec_id": Config.Download.video_codec_id,
-            "enable_dolby": Config.Download.enable_dolby,
+
             "enable_notification": Config.Download.enable_notification,
             "delete_history": Config.Download.delete_history,
             "add_number": Config.Download.add_number,
@@ -330,9 +317,6 @@ class DownloadTab(wx.Panel):
     def onVideoCodecTipEVT(self, event):
         wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认下载 AVC/H.264", "说明", wx.ICON_INFORMATION).ShowModal()
     
-    def onDolbyTipEVT(self, event):
-        wx.MessageDialog(self, '自动下载杜比选项说明\n\n当上方选择 "自动" 时，若视频支持杜比，则自动下载杜比视界或杜比全景声，否则需要手动选择\n\n开启此项前请先确认设备是否支持杜比', "说明", wx.ICON_INFORMATION).ShowModal()
-
 class AdvancedTab(wx.Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window

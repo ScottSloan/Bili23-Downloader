@@ -70,8 +70,6 @@ class Config:
         max_thread_count: int = 2
         max_download_count: int = 1
 
-        enable_dolby: bool = False
-
         enable_notification: bool = False
         delete_history: bool = False
         add_number: bool = True
@@ -200,7 +198,6 @@ class ConfigUtils:
         Config.Download.video_quality_id = app_config["download"].get("video_quality_id", Config.Download.video_quality_id)
         Config.Download.audio_quality_id = app_config["download"].get("audio_quality_id", Config.Download.audio_quality_id)
         Config.Download.video_codec_id = app_config["download"].get("video_codec_id", Config.Download.video_codec_id)
-        Config.Download.enable_dolby = app_config["download"].get("enable_dolby", Config.Download.enable_dolby)
         Config.Download.enable_notification = app_config["download"].get("show_notification", Config.Download.enable_notification)
         Config.Download.delete_history = app_config["download"].get("delete_history", Config.Download.delete_history)
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)

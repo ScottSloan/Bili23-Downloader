@@ -95,7 +95,6 @@ class DownloadParser:
                             self.task_info.download_items = ["video"]
                             self.task_info.output_type = "mp4"
                             self.task_info.download_option = DownloadOption.OnlyVideo
-                            self.task_info.ffmpeg_merge = False
         
         check_download_items()
 
@@ -117,7 +116,6 @@ class DownloadParser:
         def get_flv_info():
             self.task_info.audio_quality_id = AudioQualityID._None.value
             self.task_info.download_option = DownloadOption.OnlyVideo.value
-            self.task_info.ffmpeg_merge = True
             self.task_info.flv_video_count = len(data["durl"])
         
         check_download_items()
@@ -128,20 +126,16 @@ class DownloadParser:
 
     def parse_video_stream(self, data: list):
         def get_video_quality_id(data: list):
-            def get_highest_video_quality_id(data: list, dolby: bool = False):
+            def get_highest_video_quality_id(data: list):
                 highest_video_quality_id = VideoQualityID._360P.value
 
                 for entry in data:
-                    # 遍历列表，选取其中最高的清晰度
-                    if entry["id"] == VideoQualityID._Dolby_Vision.value and not dolby:
-                        continue
-
                     if entry["id"] > highest_video_quality_id:
                         highest_video_quality_id = entry["id"]
 
                 return highest_video_quality_id
 
-            highest_video_quality_id = get_highest_video_quality_id(data, dolby = Config.Download.enable_dolby)
+            highest_video_quality_id = get_highest_video_quality_id(data)
 
             if self.task_info.video_quality_id == VideoQualityID._Auto.value:
                 self.task_info.video_quality_id = highest_video_quality_id
@@ -162,7 +156,7 @@ class DownloadParser:
             codec_id_list = check_codec_id()
 
             if self.task_info.video_codec_id not in codec_id_list:
-                self.task_info.video_codec_id = VideoCodecID.AVC.value
+                self.task_info.video_codec_id = codec_id_list[0]
 
         def get_video_downloader_info():
             if url_list:
@@ -197,7 +191,7 @@ class DownloadParser:
                         highest_audio_quality = entry["id"]
 
                 if data["dolby"]:
-                    if data["dolby"]["audio"] and dolby:
+                    if data["dolby"]["audio"]:
                         highest_audio_quality = AudioQualityID._Dolby_Atoms.value
 
                 if data["flac"]:
@@ -206,7 +200,7 @@ class DownloadParser:
 
                 return highest_audio_quality
             
-            highest_audio_quality = get_highest_audio_quality_id(data, dolby = Config.Download.enable_dolby)
+            highest_audio_quality = get_highest_audio_quality_id(data)
 
             if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
                 self.task_info.audio_quality_id = highest_audio_quality
@@ -219,7 +213,7 @@ class DownloadParser:
                 return self.get_stream_download_url_list(data["flac"]["audio"])
 
             def get_dolby():
-                return self.get_stream_download_url_list(data["dolby"]["audio"])
+                return self.get_stream_download_url_list(data["dolby"]["audio"][0])
 
             def get_normal():
                 for entry in data["audio"]:

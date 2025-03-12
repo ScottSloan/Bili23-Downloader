@@ -58,9 +58,12 @@ class FFmpeg:
 
         def get_convent_command():
             if task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
+                task_info.output_type = "mp3"
                 return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a libmp3lame -q:a 0 "{self.get_output_temp_file_name(task_info)}"'
+            
             elif task_info.output_type == "flac":
                 return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a flac -q:a 0 "{self.get_output_temp_file_name(task_info)}"'
+            
             else:
                 return self.get_rename_command(get_audio_temp_file_name(), self.get_output_temp_file_name(task_info))
 
@@ -76,7 +79,7 @@ class FFmpeg:
             
             case DownloadOption.OnlyAudio:
                 command.add(get_convent_command())
-                command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.ffmpeg_file_name))
+                command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.full_file_name))
         
         return command.format()
     

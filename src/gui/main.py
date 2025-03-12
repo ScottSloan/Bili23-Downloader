@@ -108,7 +108,7 @@ class MainWindow(Frame):
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         url_lab = wx.StaticText(self.panel, -1, "链接")
-        self.url_box = wx.SearchCtrl(self.panel, -1, style = wx.TE_PROCESS_ENTER)
+        self.url_box = wx.SearchCtrl(self.panel, -1)
         self.url_box.ShowSearchButton(False)
         self.url_box.ShowCancelButton(True)
         self.url_box.SetDescriptiveText("在此处粘贴链接进行解析")
@@ -240,7 +240,7 @@ class MainWindow(Frame):
         wx.CallAfter(self.frame_vbox.Layout)   
     
     def Bind_EVT(self):
-        self.url_box.Bind(wx.EVT_TEXT_ENTER, self.onGetEVT)
+        self.url_box.Bind(wx.EVT_SEARCH, self.onGetEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onGetEVT)
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onOpenDownloadMgrEVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)

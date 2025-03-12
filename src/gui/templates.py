@@ -226,8 +226,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.audio_quality_id = AudioInfo.audio_quality_id
 
         download_info.download_option = get_download_option()
-
         download_info.download_type = download_type
+        download_info.ffmpeg_merge = True
 
         download_info.get_danmaku = ExtraInfo.get_danmaku
         download_info.danmaku_type = ExtraInfo.danmaku_type
