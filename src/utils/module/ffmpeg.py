@@ -10,6 +10,9 @@ class FFmpeg:
     def __init__(self):
         pass
 
+    def set_task_info(self, task_info: DownloadTaskInfo):
+        self.task_info = task_info
+
     def detect_location(self):
         if not Config.FFmpeg.path:
             cwd_path = self.get_cwd_path()
@@ -29,15 +32,15 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_video(self, task_info: DownloadTaskInfo, full_file_name: str, callback: Callable):
+    def merge_video(self, full_file_name: str, callback: Callable):
         self.full_file_name = full_file_name
 
-        match StreamType(task_info.stream_type):
+        match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
-                command = self.get_dash_command(task_info)
+                command = self.get_dash_command()
 
             case StreamType.Flv:
-                command = self.get_flv_command(task_info)
+                command = self.get_flv_command()
         
         resp = self.run_command(command, cwd = Config.Download.path, output = True, return_code = True)
 
@@ -46,66 +49,54 @@ class FFmpeg:
         else:
             print(resp[1])
 
-    def get_dash_command(self, task_info: DownloadTaskInfo):
-        def get_video_temp_file_name():
-            return f"video_{task_info.id}.{task_info.video_type}"
-
-        def get_audio_temp_file_name():
-            return f"audio_{task_info.id}.{task_info.audio_type}"
-        
+    def get_dash_command(self):
         def get_merge_command():
-            return f'"{Config.FFmpeg.path}" -y -i "{get_video_temp_file_name()}" -i "{get_audio_temp_file_name()}" -acodec copy -vcodec copy -strict experimental {self.get_output_temp_file_name(task_info)}'
+            return f'"{Config.FFmpeg.path}" -y -i "{self.dash_video_temp_file_name}" -i "{self.dash_audio_temp_file_name}" -acodec copy -vcodec copy -strict experimental {self.output_temp_file_name}'
 
         def get_convent_command():
-            if task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
-                task_info.output_type = "mp3"
-                return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a libmp3lame -q:a 0 "{self.get_output_temp_file_name(task_info)}"'
+            if self.task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
+                self.task_info.output_type = "mp3"
+                return f'"{Config.FFmpeg.path}" -y -i "{self.dash_audio_temp_file_name}" -c:a libmp3lame -q:a 0 "{self.output_temp_file_name}"'
             
-            elif task_info.output_type == "flac":
-                return f'"{Config.FFmpeg.path}" -y -i "{get_audio_temp_file_name()}" -c:a flac -q:a 0 "{self.get_output_temp_file_name(task_info)}"'
+            elif self.task_info.output_type == "flac":
+                return f'"{Config.FFmpeg.path}" -y -i "{self.dash_audio_temp_file_name}" -c:a flac -q:a 0 "{self.output_temp_file_name}"'
             
             else:
-                return self.get_rename_command(get_audio_temp_file_name(), self.get_output_temp_file_name(task_info))
+                return self.get_rename_command(self.dash_audio_temp_file_name, self.output_temp_file_name)
 
         command = Command()
 
-        match DownloadOption(task_info.download_option):
+        match DownloadOption(self.task_info.download_option):
             case DownloadOption.VideoAndAudio:
                 command.add(get_merge_command())
-                command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.full_file_name))
+                command.add(self.get_rename_command(self.output_temp_file_name, self.full_file_name))
 
             case DownloadOption.OnlyVideo:
-                command.add(self.get_rename_command(get_video_temp_file_name(), self.full_file_name))
+                command.add(self.get_rename_command(self.dash_video_temp_file_name, self.full_file_name))
             
             case DownloadOption.OnlyAudio:
                 command.add(get_convent_command())
-                command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.full_file_name))
+                command.add(self.get_rename_command(self.output_temp_file_name, self.full_file_name))
         
         return command.format()
     
-    def get_flv_command(self, task_info: DownloadTaskInfo):
-        def get_flv_temp_file_name():
-            return f"flv_{task_info.id}.flv"
-        
-        def get_list_file_name():
-            return f"flv_list_{task_info.id}.txt"
-
+    def get_flv_command(self):
         def create_list_file():
-            with open(os.path.join(Config.Download.path, get_list_file_name()), "w", encoding = "utf-8") as f:
-                f.write("\n".join([f"file flv_{task_info.id}_part{i + 1}.flv" for i in range(task_info.flv_video_count)]))
+            with open(os.path.join(Config.Download.path, self.flv_list_file_name), "w", encoding = "utf-8") as f:
+                f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.flv_video_count)]))
 
         def get_merge_command():
-            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i "{get_list_file_name()}" -c copy "{self.get_output_temp_file_name(task_info)}"'
+            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i "{self.flv_list_file_name}" -c copy "{self.output_temp_file_name}"'
 
         command = Command()
 
-        if task_info.flv_video_count > 1:
+        if self.task_info.flv_video_count > 1:
             create_list_file()
 
             command.add(get_merge_command())
-            command.add(self.get_rename_command(self.get_output_temp_file_name(task_info), self.full_file_name))
+            command.add(self.get_rename_command(self.output_temp_file_name, self.full_file_name))
         else:
-            command.add(self.get_rename_command(get_flv_temp_file_name(), self.full_file_name))
+            command.add(self.get_rename_command(self.flv_temp_file_name, self.full_file_name))
 
         return command.format()
 
@@ -128,9 +119,6 @@ class FFmpeg:
 
         return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
     
-    def get_output_temp_file_name(self, task_info: DownloadTaskInfo):
-            return f"out_{task_info.id}.{task_info.output_type}"
-
     def run_command(self, command: str, cwd: str = None, output: bool = False, return_code: bool = False):
         process = subprocess.run(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, text = True, encoding = "utf-8")
 
@@ -142,7 +130,7 @@ class FFmpeg:
         
         if return_code:
             return process.returncode
-    
+
     def get_env_path(self):
         ffmpeg_path = None
         path_env = os.environ.get("PATH", "")
@@ -166,6 +154,37 @@ class FFmpeg:
 
         return ffmpeg_path
 
+    def clear_temp_files(self):
+        def clear_dash_temp_files():
+            match DownloadOption(self.task_info.download_option):
+                case DownloadOption.VideoAndAudio:
+                    temp_file_name_list.append(self.dash_video_temp_file_name)
+                    temp_file_name_list.append(self.dash_audio_temp_file_name)
+
+                case DownloadOption.OnlyVideo:
+                    temp_file_name_list.append(self.dash_video_temp_file_name)
+
+                case DownloadOption.OnlyAudio:
+                    temp_file_name_list.append(self.dash_audio_temp_file_name)
+            
+            temp_file_name_list.append(self.output_temp_file_name)
+
+        def clear_flv_temp_files():
+            if self.task_info.flv_video_count > 1:
+                temp_file_name_list.append(self.flv_list_file_name)
+                temp_file_name_list.extend([f"flv_{self.task_info.id}_part{i + 1}" for i in range(self.task_info.flv_video_count)])
+            else:
+                temp_file_name_list.append(self.flv_temp_file_name)
+
+        temp_file_name_list = []
+
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                clear_dash_temp_files()
+
+            case StreamType.Flv:
+                clear_flv_temp_files()
+
     @property
     def ffmpeg_file_name(self):
         match Config.Sys.platform:
@@ -174,3 +193,23 @@ class FFmpeg:
             
             case "linux" | "darwin":
                 return "ffmpeg"
+
+    @property
+    def dash_video_temp_file_name(self):
+        return f"video_{self.task_info.id}.{self.task_info.video_type}"
+    
+    @property
+    def dash_audio_temp_file_name(self):
+        return f"audio_{self.task_info.id}.{self.task_info.audio_type}"
+
+    @property
+    def output_temp_file_name(self):
+        return f"out_{self.task_info.id}.{self.task_info.output_type}"
+
+    @property
+    def flv_temp_file_name(self):
+        return f"flv_{self.task_info.id}.flv"
+    
+    @property
+    def flv_list_file_name(self):
+        return f"flv_list_{self.task_info.id}.txt"

@@ -354,6 +354,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def merge_video(self):
         self.ffmpeg = FFmpeg()
+        self.ffmpeg.set_task_info(self.task_info)
 
         self.ffmpeg.merge_video(self.task_info, self.full_file_name, self.onMergeFinish)
 
