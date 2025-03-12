@@ -107,3 +107,7 @@ class DownloadOption(Enum):
     VideoAndAudio = 3
     FLV = 4
     NONE = 5
+
+class OverrideOption(Enum):
+    Override = 1
+    Rename = 2

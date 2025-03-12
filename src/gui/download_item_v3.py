@@ -358,6 +358,8 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.ffmpeg.merge_video(self.task_info, self.full_file_name, self.onMergeFinish)
 
+        self.ffmpeg.clear_temp_files()
+
     def open_file_location(self):
         path = os.path.join(Config.Download.path, self.full_file_name)
 

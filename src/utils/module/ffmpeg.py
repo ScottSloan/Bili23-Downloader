@@ -1,4 +1,5 @@
 import os
+import time
 import subprocess
 from typing import Callable
 
@@ -155,35 +156,46 @@ class FFmpeg:
         return ffmpeg_path
 
     def clear_temp_files(self):
-        def clear_dash_temp_files():
+        def get_dash_temp_file_list():
             match DownloadOption(self.task_info.download_option):
                 case DownloadOption.VideoAndAudio:
-                    temp_file_name_list.append(self.dash_video_temp_file_name)
-                    temp_file_name_list.append(self.dash_audio_temp_file_name)
+                    temp_file_list.append(self.dash_video_temp_file_name)
+                    temp_file_list.append(self.dash_audio_temp_file_name)
 
                 case DownloadOption.OnlyVideo:
-                    temp_file_name_list.append(self.dash_video_temp_file_name)
+                    temp_file_list.append(self.dash_video_temp_file_name)
 
                 case DownloadOption.OnlyAudio:
-                    temp_file_name_list.append(self.dash_audio_temp_file_name)
+                    temp_file_list.append(self.dash_audio_temp_file_name)
             
-            temp_file_name_list.append(self.output_temp_file_name)
+            temp_file_list.append(self.output_temp_file_name)
 
-        def clear_flv_temp_files():
+        def get_flv_temp_file_list():
             if self.task_info.flv_video_count > 1:
-                temp_file_name_list.append(self.flv_list_file_name)
-                temp_file_name_list.extend([f"flv_{self.task_info.id}_part{i + 1}" for i in range(self.task_info.flv_video_count)])
+                temp_file_list.append(self.flv_list_file_name)
+                temp_file_list.extend([f"flv_{self.task_info.id}_part{i + 1}" for i in range(self.task_info.flv_video_count)])
             else:
-                temp_file_name_list.append(self.flv_temp_file_name)
+                temp_file_list.append(self.flv_temp_file_name)
 
-        temp_file_name_list = []
+        def delete_file(file_list: list):
+            for file in file_list:
+                path = os.path.join(Config.Download.path, file)
+
+                while os.path.exists(path):
+                    os.remove(path)
+
+                    time.sleep(0.1)
+
+        temp_file_list = []
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
-                clear_dash_temp_files()
+                get_dash_temp_file_list()
 
             case StreamType.Flv:
-                clear_flv_temp_files()
+                get_flv_temp_file_list()
+
+        delete_file(temp_file_list)
 
     @property
     def ffmpeg_file_name(self):

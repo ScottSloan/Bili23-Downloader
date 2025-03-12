@@ -80,7 +80,7 @@ class Config:
         auto_popup_option_dialog: bool = True
     
     class Merge:
-        override_file: bool = False
+        override_option: int = 2
         m4a_to_mp3: bool = True
         auto_clean: bool = True
 
@@ -217,7 +217,7 @@ class ConfigUtils:
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
-        Config.Merge.override_file = app_config["merge"].get("override_file", Config.Merge.override_file)
+        Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
         Config.Merge.auto_clean = app_config["merge"].get("auto_clean", Config.Merge.auto_clean)
 

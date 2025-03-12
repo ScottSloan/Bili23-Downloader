@@ -25,14 +25,14 @@ class CustomFileNameDialog(wx.Dialog):
         self.add_btn = wx.Button(self, -1, "添加字段", size = self.FromDIP((80, 28)))
 
         available_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        available_hbox.Add(available_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        available_hbox.Add(self.available_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        available_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        available_hbox.Add(available_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        available_hbox.Add(self.available_choice, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        available_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
-        date_format_lab = wx.StaticText(self, -1, "日期格式")
+        date_format_lab = wx.StaticText(self, -1, "日期字段格式")
         self.date_format_box = TextCtrl(self, -1, size = self.FromDIP((150, 24)))
 
-        time_format_lab = wx.StaticText(self, -1, "时间格式")
+        time_format_lab = wx.StaticText(self, -1, "时间字段格式")
         self.time_format_box = TextCtrl(self, -1, size = self.FromDIP((150, 24)))
 
         datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -42,7 +42,7 @@ class CustomFileNameDialog(wx.Dialog):
         datetime_hbox.Add(self.time_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         template_lab = wx.StaticText(self, -1, "文件名模板")
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((400, 24)))
+        self.template_box = TextCtrl(self, -1, size = self.FromDIP((450, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
         template_hbox.Add(template_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)

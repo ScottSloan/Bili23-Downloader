@@ -14,7 +14,7 @@ from gui.dialog.file_name import CustomFileNameDialog
 from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, override_option_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
@@ -581,14 +581,18 @@ class MergeTab(wx.Panel):
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
 
-        self.override_file_chk = wx.CheckBox(merge_option_box, -1, "存在同名文件时覆盖原文件")
+        override_lab = wx.StaticText(merge_option_box, -1, "存在同名文件时")
+        self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
+
+        override_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, "仅下载音频时将 m4a 音频转换为 mp3 格式")
-        self.auto_clean_chk = wx.CheckBox(merge_option_box, -1, "合成完成后清理文件")
 
         merge_option_vbox = wx.BoxSizer(wx.VERTICAL)
-        merge_option_vbox.Add(self.override_file_chk, 0, wx.ALL, 10)
+        merge_option_vbox.Add(override_hbox, 0, wx.EXPAND)
         merge_option_vbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), 10)
-        merge_option_vbox.Add(self.auto_clean_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box)
         merge_option_sbox.Add(merge_option_vbox, 0, wx.EXPAND)
@@ -609,21 +613,17 @@ class MergeTab(wx.Panel):
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
         
-        self.override_file_chk.SetValue(Config.Merge.override_file)
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
-        self.auto_clean_chk.SetValue(Config.Merge.auto_clean)
 
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()
         Config.Merge.override_file = self.override_file_chk.GetValue()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
-        Config.Merge.auto_clean = self.auto_clean_chk.GetValue()
 
         kwargs = {
             "ffmpeg_path": Config.FFmpeg.path,
             "override_file": Config.Merge.override_file,
             "m4a_to_mp3": Config.Merge.m4a_to_mp3,
-            "auto_clean": Config.Merge.auto_clean
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
