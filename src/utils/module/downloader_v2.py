@@ -30,6 +30,7 @@ class Downloader:
         self.thread_alive_num = 0
 
         self.downloader_info = []
+        self.cache = {}
         self.progress_info = {}
 
     def set_downloader_info(self, downloader_info: DownloaderInfo):
@@ -45,12 +46,26 @@ class Downloader:
         def get_total_file_size():
             if not self.task_info.total_file_size:
                 for entry in self.downloader_info:
-                    file_path = os.path.join(Config.Download.path, entry["file_name"])
+                    file_name = entry["file_name"]
+                    url_list = entry["url_list"]
 
-                    self.task_info.total_file_size += self.get_file_size(entry["url_list"], file_path, create_file = False)[1]
+                    new_url, file_size = self.get_file_size(url_list)
+
+                    self.task_info.total_file_size += file_size
+                    self.cache[file_name] = {
+                        "url": new_url,
+                        "file_size": file_size
+                    }
         
-        def get_ranges():
-            url, self.current_file_size = self.get_file_size(downloader_info.url_list, file_path)
+        def get_ranges(file_name: str):
+            if file_name in self.cache:
+                entry = self.cache[file_name]
+
+                url, self.current_file_size = entry["url"], entry["file_size"]
+            else:
+                url, self.current_file_size = self.get_file_size(downloader_info.url_list)
+            
+            self.create_local_file(file_path, entry["file_size"])
 
             if self.task_info.current_downloaded_size:
                 self.progress_info = self.file_tool.get_info("thread_info")
@@ -95,12 +110,13 @@ class Downloader:
 
         get_total_file_size()
 
-        url, ranges = get_ranges()
+        url, ranges = get_ranges(downloader_info.file_name)
 
         worker()
 
     def stop_download(self):
         self.stop_event.set()
+        self.cache.clear()
 
     def download_range(self, info: RangeDownloadInfo):
         try:
@@ -129,13 +145,7 @@ class Downloader:
 
         self.thread_alive_num -= 1
 
-    def get_file_size(self, url_list: list, file_path: str, create_file: bool = True):
-        def create_local_file():
-            if not os.path.exists(file_path) and create_file:
-                with open(file_path, "wb") as f:
-                    f.seek(file_size - 1)
-                    f.write(b"\0")
-
+    def get_file_size(self, url_list: list):
         def get_cdn_list():
             if Config.Advanced.enable_custom_cdn:
                 match CDNMode(Config.Advanced.custom_cdn_mode):
@@ -165,8 +175,6 @@ class Downloader:
                     file_size = int(req.headers.get("Content-Length"))
 
                     if file_size:
-                        create_local_file()
-
                         return new_url, file_size
     
     def generate_ranges(self, file_size: int):
@@ -181,6 +189,12 @@ class Downloader:
             ranges.append([start, end])
         
         return ranges
+
+    def create_local_file(self, file_path: str, file_size: int):
+        if not os.path.exists(file_path):
+            with open(file_path, "wb") as f:
+                f.seek(file_size - 1)
+                f.write(b"\0")
 
     def progress_tracker(self):
         def download_finish():
