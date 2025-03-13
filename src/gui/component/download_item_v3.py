@@ -130,15 +130,15 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((-1, -1)))
-        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((-1, -1)))
+        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((75, 16)))
+        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((85, 16)))
         self.video_size_lab = InfoLabel(self, "--", size = self.FromDIP((-1, -1)))
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
-        video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
-        video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_quality_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
 
         video_info_vbox = wx.BoxSizer(wx.VERTICAL)
         video_info_vbox.AddSpacer(5)
@@ -192,7 +192,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onViewErrorEVT)
         self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
-        
+
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
@@ -424,6 +424,8 @@ class DownloadTaskItemPanel(wx.Panel):
 
             self.callback.onAddPanelCallback(self.task_info)
 
+            self.callback.onStartNextCallback()
+
         wx.CallAfter(worker)
 
     def onMergeError(self):
@@ -446,6 +448,8 @@ class DownloadTaskItemPanel(wx.Panel):
         self.set_download_status(status)
 
         self.callback.onUpdateCountTitleCallback()
+
+        self.callback.onStartNextCallback()
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):

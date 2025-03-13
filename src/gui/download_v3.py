@@ -16,7 +16,7 @@ from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
 
 class DownloadManagerWindow(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, "下载管理 V3 Demo")
+        wx.Frame.__init__(self, parent, -1, "下载管理")
 
         self.SetSize(self.FromDIP((930, 550)))
         self.current_page = "正在下载"
@@ -87,6 +87,7 @@ class DownloadManagerWindow(wx.Frame):
         callback = DownloadPageCallback()
         callback.onSetTitleCallback = self.setTitleLabel
         callback.onAddPanelCallback = self.add_panel_to_completed_page
+        callback.onStartNextCallback = self.start_download
 
         self.downloading_page = DownloadingPage(self.book, callback, self)
         self.completed_page = CompeltedPage(self.book, callback, self)
@@ -211,6 +212,9 @@ class DownloadManagerWindow(wx.Frame):
 
         wx.CallAfter(self.completed_page.load_more_panel_item, callback)
 
+    def start_download(self):
+        self.downloading_page.start_download()
+
     def onCloseEVT(self, event):
         self.Hide()
 
@@ -274,6 +278,7 @@ class SimplePage(wx.Panel):
                 callback = TaskPanelCallback()
                 callback.onUpdateCountTitleCallback = self.refresh_scroller
                 callback.onAddPanelCallback = self.callback.onAddPanelCallback
+                callback.onStartNextCallback = self.callback.onStartNextCallback
 
                 return callback
 
