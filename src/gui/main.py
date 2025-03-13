@@ -25,8 +25,8 @@ from utils.common.data_type import ParseCallback, TreeListItemInfo
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
 from gui.download_v3 import DownloadManagerWindow
-from gui.settings import SettingWindow
-from gui.login import LoginWindow
+from gui.window.settings import SettingWindow
+from gui.window.login import LoginWindow
 
 from gui.dialog.about import AboutWindow
 from gui.dialog.processing import ProcessingWindow

@@ -389,7 +389,7 @@ class DownloadManagerWindow(Frame):
 
         def _show_notification_failed():
             match DownloadStatus(message.status):
-                case DownloadStatus.Merge_Failed:
+                case DownloadStatus.MergeError:
                     match MergeType(message.video_merge_type):
                         case MergeType.Video_And_Audio | MergeType.Only_Video:
                             _title = "合成失败"
@@ -399,7 +399,7 @@ class DownloadManagerWindow(Frame):
                             _title = "转换失败"
                             _message = f'任务 "{message.video_title}" 转换失败'
 
-                case DownloadStatus.Download_Failed:
+                case DownloadStatus.DownloadError:
                     _title = "下载失败"
                     _message = f'任务 "{message.video_title}" 下载失败'
 
@@ -1130,7 +1130,7 @@ class DownloadTaskPanel(wx.Panel):
                 # 下载完成的任务，打开文件所在位置
                 self.onOpenLocation()
 
-            case DownloadStatus.Download_Failed | DownloadStatus.Merge_Failed:
+            case DownloadStatus.DownloadError | DownloadStatus.MergeError:
                 # 下载失败或合成失败，重试
                 self.onResume()
 
@@ -1261,7 +1261,7 @@ class DownloadTaskPanel(wx.Panel):
     def onMergeFailed(self):
         def callback():
             # 合成失败回调函数
-            self.update_download_status(DownloadStatus.Merge_Failed.value)
+            self.update_download_status(DownloadStatus.MergeError.value)
 
             message = NotificationMessage()
             message.video_title = self.task_info.title
@@ -1277,7 +1277,7 @@ class DownloadTaskPanel(wx.Panel):
     def onDownloadFailed(self):
         def callback():
             # 下载失败回调函数
-            self.update_download_status(DownloadStatus.Download_Failed.value)
+            self.update_download_status(DownloadStatus.DownloadError.value)
 
             message = NotificationMessage()
             message.video_title = self.task_info.title
@@ -1297,7 +1297,7 @@ class DownloadTaskPanel(wx.Panel):
         FileDirectoryTool.open_file_location(path)
 
     def onShowErrorInfoDialogEVT(self, event):
-        if self.task_info.status in [DownloadStatus.Merge_Failed.value , DownloadStatus.Download_Failed.value]:
+        if self.task_info.status in [DownloadStatus.MergeError.value , DownloadStatus.DownloadError.value]:
             dlg = ErrorInfoDialog(self._parent_download_manager, self.download_file_tool.get_error_info())
             dlg.ShowModal()
 
@@ -1380,7 +1380,7 @@ class DownloadTaskPanel(wx.Panel):
                     self.pause_btn.Enable(False)
                     self.stop_btn.Enable(False)
 
-                case DownloadStatus.Merge_Failed:
+                case DownloadStatus.MergeError:
                     # 合成失败，显示重试图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
@@ -1397,7 +1397,7 @@ class DownloadTaskPanel(wx.Panel):
                     self.pause_btn.Enable(True)
                     self.stop_btn.Enable(True)
 
-                case DownloadStatus.Download_Failed:
+                case DownloadStatus.DownloadError:
                     # 下载失败，显示重试图标
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 

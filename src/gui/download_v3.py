@@ -12,7 +12,7 @@ from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
 from gui.templates import ActionButton, ScrolledPanel
-from gui.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel, LoadingItemPanel
+from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel, LoadingItemPanel
 
 class DownloadManagerWindow(wx.Frame):
     def __init__(self, parent):

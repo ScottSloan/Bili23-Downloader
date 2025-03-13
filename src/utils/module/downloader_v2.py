@@ -28,6 +28,7 @@ class Downloader:
         self.current_downloaded_size = 0
         self.total_downloaded_size = 0
         self.thread_alive_num = 0
+        self.retry_count = 0
 
         self.downloader_info = []
         self.cache = {}
@@ -132,6 +133,10 @@ class Downloader:
                                 if self.stop_event.is_set():
                                     break
 
+                                if info.retry:
+                                    self.retry_count -= 1
+                                    info.retry = False
+
                                 f.write(chunk)
 
                                 _chunk_size = len(chunk)
@@ -140,8 +145,12 @@ class Downloader:
                                 self.total_downloaded_size += _chunk_size
                                 self.progress_info[info.index][0] += _chunk_size
 
-        except Exception as e:
-            print(e)
+        except Exception:
+            self.retry_count += 1
+
+            info.range = self.progress_info[info.index]
+            info.retry = True
+            self.executor.submit(self.download_range, info)
 
         self.thread_alive_num -= 1
 
@@ -197,6 +206,12 @@ class Downloader:
                 f.write(b"\0")
 
     def progress_tracker(self):
+        def check_flag():
+            if self.retry_count > Config.Advanced.download_error_retry_count:
+                self.stop_download()
+
+                self.callback.onErrorCallback()
+
         def download_finish():
             item = self.downloader_info[:1][0]["type"]
             self.task_info.download_items.remove(item)
@@ -234,6 +249,8 @@ class Downloader:
                 total_progress = (self.total_downloaded_size / self.task_info.total_file_size) * 100
 
                 update_progress()
+
+            check_flag()
 
         if not self.stop_event.is_set():
             download_finish()

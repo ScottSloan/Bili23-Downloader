@@ -317,6 +317,7 @@ class DownloadTaskItemPanel(wx.Panel):
             downloader_callback.onStartDownloadCallback = self.onStartDownload
             downloader_callback.onDownloadingCallback = self.onDownloading
             downloader_callback.onDownloadFinish = self.onDownloadFinish
+            downloader_callback.onErrorCallback = self.onDownloadError
 
             return downloader_callback
 
@@ -416,7 +417,19 @@ class DownloadTaskItemPanel(wx.Panel):
         wx.CallAfter(worker)
 
     def onMergeError(self):
-        pass
+        def worker():
+            self.set_download_error(DownloadStatus.MergeError.value)
+        
+        wx.CallAfter(worker)
+
+    def onDownloadError(self):
+        def worker():
+            self.set_download_error(DownloadStatus.DownloadError.value)
+
+        wx.CallAfter(worker)
+
+    def set_download_error(self, status: int):
+        self.set_download_status(status)
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):
@@ -452,6 +465,37 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
+
+                case DownloadStatus.MergeError:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
+
+                    self.pause_btn.SetToolTip("重试")
+                    self.pause_btn.Enable(True)
+                    self.stop_btn.Enable(True)
+                    self.speed_lab.SetForegroundColour("red")
+
+                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                        lab = "转换音频"
+                    else:
+                        lab = "合成视频"
+
+                    if hasattr(self, "error_info"):
+                        self.speed_lab.SetLabel(f"{lab}失败，点击查看详情")
+                        self.speed_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+                    else:
+                        self.speed_lab.SetLabel(f"{lab}失败")
+
+                case DownloadStatus.DownloadError:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
+
+                    self.pause_btn.SetToolTip("重试")
+                    self.speed_lab.SetForegroundColour("red")
+
+                    if hasattr(self, "error_info"):
+                        self.speed_lab.SetLabel("下载失败，点击查看详情")
+                        self.speed_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+                    else:
+                        self.speed_lab.SetLabel("下载失败")
         
         self.task_info.status = status
 
