@@ -19,7 +19,7 @@ class Config:
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1600
 
-        release_date: str = "2025-03-12"
+        release_date: str = "2025-03-13"
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -82,7 +82,6 @@ class Config:
     class Merge:
         override_option: int = 2
         m4a_to_mp3: bool = True
-        auto_clean: bool = True
 
     class Temp:
         download_window_pos = None

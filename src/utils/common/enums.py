@@ -11,12 +11,6 @@ class VideoType(Enum):
     Part = 2              # 分 P 视频
     Collection = 3        # 合集
 
-class MergeType(Enum):
-    Video_And_Audio = 0   # 合成视频和音频
-    Only_Video = 1        # 只下载视频
-    Only_Audio = 2        # 只下载音频
-    No_Merge = 3          # 不进行合成操作
-
 class EpisodeDisplayType(Enum):
     Single = 1            # 获取单个视频
     In_Section = 2        # 获取视频所在的列表

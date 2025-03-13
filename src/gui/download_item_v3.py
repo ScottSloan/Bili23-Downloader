@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback
 from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
@@ -209,7 +209,7 @@ class DownloadTaskItemPanel(wx.Panel):
         self.title_lab.SetToolTip(self.task_info.title)
 
         self.progress_bar.SetValue(self.task_info.progress)
-        self.progress_bar.SetToolTip(str(self.task_info.progress))
+        self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 
         if self.task_info.download_option == DownloadOption.OnlyAudio.value:
             self.video_quality_lab.SetLabel("音频")
@@ -353,12 +353,16 @@ class DownloadTaskItemPanel(wx.Panel):
                 self.start_download()
 
     def merge_video(self):
+        def get_callback():
+            callback = MergeCallback()
+            callback.onSuccess = self.onMergeSuccess
+            callback.onError = self.onMergeError
+            return callback
+
         self.ffmpeg = FFmpeg()
         self.ffmpeg.set_task_info(self.task_info)
 
-        self.ffmpeg.merge_video(self.task_info, self.full_file_name, self.onMergeFinish)
-
-        self.ffmpeg.clear_temp_files()
+        self.ffmpeg.merge_video(self.full_file_name, get_callback())
 
     def open_file_location(self):
         path = os.path.join(Config.Download.path, self.full_file_name)
@@ -377,7 +381,7 @@ class DownloadTaskItemPanel(wx.Panel):
         def worker():
             if not self._destroy:
                 self.progress_bar.SetValue(self.task_info.progress)
-                self.progress_bar.SetToolTip(str(self.task_info.progress))
+                self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 
                 self.speed_lab.SetLabel(speed)
                 self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
@@ -401,15 +405,20 @@ class DownloadTaskItemPanel(wx.Panel):
 
         wx.CallAfter(worker)
 
-    def onMergeFinish(self):
+    def onMergeSuccess(self):
         def worker():
             self.set_download_status(DownloadStatus.Complete.value)
 
             self.destroy_panel(1)
 
+            self.ffmpeg.clear_temp_files()
+
             self.callback.onAddPanelCallback(self.task_info)
 
         wx.CallAfter(worker)
+
+    def onMergeError(self):
+        pass
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):

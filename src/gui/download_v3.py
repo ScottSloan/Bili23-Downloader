@@ -174,7 +174,7 @@ class DownloadManagerWindow(wx.Frame):
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool = True):
         def create_local_file():
             def update_index():
-                if len(download_list) and Config.Download.add_number:
+                if len(download_list) > 1 and Config.Download.add_number:
                     entry.index = index + 1
                     entry.index_with_zero = str(index + 1).zfill(len(str(len(download_list))))
 

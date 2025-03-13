@@ -145,24 +145,6 @@ class DownloadTaskInfo:
         self.get_subtitle = data["get_subtitle"]
         self.subtitle_type = data["subtitle_type"]
 
-class ThreadInfo:
-    # 线程信息
-    def __init__(self):
-        # 文件名称
-        self.file_name: str = ""
-        # range 分片信息
-        self.range: List[int] = []
-
-    def to_dict(self):
-        return {
-            "file_name": self.file_name,
-            "range": self.range
-        }
-    
-    def load_from_dict(self, data: Dict):
-        self.file_name = data["file_name"]
-        self.range = data["range"]
-
 class DownloaderInfo:
     def __init__(self):
         self.url_list: List[str] = []
@@ -195,12 +177,6 @@ class DownloaderCallback:
         self.onDownloadingCallback: Callable = None
         self.onDownloadFinish: Callable = None
         self.onErrorCallback: Callable = None
-
-class UtilsCallback:
-    def __init__(self):
-        self.onMergeFinishCallback: Callable = None
-        self.onMergeFailedCallback: Callable = None
-        self.onDownloadFailedCallback: Callable = None
 
 class TaskPanelCallback:
     def __init__(self):
@@ -273,3 +249,8 @@ class Command:
 
     def format(self):
         return " && ".join(self.command)
+
+class MergeCallback:
+    def __init__(self):
+        self.onSuccess = None
+        self.onError = None

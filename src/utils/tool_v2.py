@@ -393,8 +393,10 @@ class FormatTool:
         title_field = UniversalTool.get_legal_name(task_info.title)
         bvid_field = task_info.bvid
         cid_field = task_info.cid
-        index_field = task_info.index
-        index_with_zero_field = task_info.index_with_zero
+
+        if task_info.index:
+            index_field = task_info.index
+            index_with_zero_field = task_info.index_with_zero
 
         return template.format(date = date_field, time = time_field, datetime = datetime_field, timestamp = timestamp_field, index = index_field, index_with_zero = index_with_zero_field, title = title_field, bvid = bvid_field, cid = cid_field)
 

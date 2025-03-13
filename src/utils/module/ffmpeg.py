@@ -1,10 +1,9 @@
 import os
 import time
 import subprocess
-from typing import Callable
 
 from utils.common.enums import DownloadOption, StreamType
-from utils.common.data_type import DownloadTaskInfo, Command
+from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback
 from utils.config import Config
 
 class FFmpeg:
@@ -33,7 +32,7 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_video(self, full_file_name: str, callback: Callable):
+    def merge_video(self, full_file_name: str, callback: MergeCallback):
         self.full_file_name = full_file_name
 
         match StreamType(self.task_info.stream_type):
@@ -46,9 +45,10 @@ class FFmpeg:
         resp = self.run_command(command, cwd = Config.Download.path, output = True, return_code = True)
 
         if not resp[0]:
-            callback()
+            callback.onSuccess()
         else:
             print(resp[1])
+            callback.onError()
 
     def get_dash_command(self):
         def get_merge_command():
