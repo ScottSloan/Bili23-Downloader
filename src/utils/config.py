@@ -80,7 +80,7 @@ class Config:
         auto_popup_option_dialog: bool = True
     
     class Merge:
-        override_option: int = 2
+        override_option: int = 1
         m4a_to_mp3: bool = True
 
     class Temp:
@@ -123,7 +123,9 @@ class Config:
 
         file_name_template = "{index_with_zero} - {title}"
 
+        retry_when_download_error: bool = True
         download_error_retry_count: int = 3
+        retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
         always_use_http_protocol: bool = False
 
@@ -210,7 +212,9 @@ class ConfigUtils:
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
         Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
         Config.Advanced.file_name_template = app_config["advanced"].get("file_name_template", Config.Advanced.file_name_template)
+        Config.Advanced.retry_when_download_error = app_config["advanced"].get("retry_when_download_error", Config.Advanced.retry_when_download_error)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
+        Config.Advanced.retry_when_download_suspend = app_config["advanced"].get("retry_when_download_suspend", Config.Advanced.retry_when_download_suspend)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
         Config.Advanced.always_use_http_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_http_protocol)
 
@@ -218,7 +222,6 @@ class ConfigUtils:
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
         Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
-        Config.Merge.auto_clean = app_config["merge"].get("auto_clean", Config.Merge.auto_clean)
 
         # extra
         Config.Extra.get_danmaku = app_config["extra"].get("get_danmaku", Config.Extra.get_danmaku)

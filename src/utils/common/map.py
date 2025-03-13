@@ -211,8 +211,8 @@ file_name_fields_map = {
 }
 
 override_option_map = {
-    "覆盖文件": 1,
-    "重命名文件": 2
+    "覆盖原文件": 0,
+    "重命名文件": 1
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):

@@ -134,11 +134,9 @@ class DownloadTaskItemPanel(wx.Panel):
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        video_info_hbox.Add(self.video_quality_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        video_info_hbox.AddSpacer(20)
-        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        video_info_hbox.AddSpacer(20)
-        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        video_info_hbox.Add(self.video_quality_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_codec_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_size_lab, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
 
         video_info_vbox = wx.BoxSizer(wx.VERTICAL)
         video_info_vbox.AddSpacer(5)

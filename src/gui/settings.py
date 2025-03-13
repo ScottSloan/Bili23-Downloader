@@ -446,7 +446,9 @@ class AdvancedTab(wx.Panel):
         self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
 
         self.file_name_template = Config.Advanced.file_name_template
+        self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
+        self.download_suspend_retry_chk.SetValue(Config.Advanced.retry_when_download_suspend)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_http_protocol_chk.SetValue(Config.Advanced.always_use_http_protocol)
 
@@ -466,7 +468,9 @@ class AdvancedTab(wx.Panel):
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
 
         Config.Advanced.file_name_template = self.file_name_template
+        Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
+        Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_http_protocol = self.always_use_http_protocol_chk.GetValue()
 
@@ -481,7 +485,9 @@ class AdvancedTab(wx.Panel):
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
             "custom_cdn_list": Config.Advanced.custom_cdn_list,
             "file_name_template": Config.Advanced.file_name_template,
+            "retry_when_download_error": Config.Advanced.retry_when_download_error,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
+            "retry_when_download_suspend": Config.Advanced.retry_when_download_suspend,
             "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval,
             "always_use_http_protocol": Config.Advanced.always_use_http_protocol
         }
@@ -613,16 +619,17 @@ class MergeTab(wx.Panel):
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
         
+        self.override_option_choice.SetSelection(get_mapping_index_by_value(override_option_map, Config.Merge.override_option))
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()
-        Config.Merge.override_file = self.override_file_chk.GetValue()
+        Config.Merge.override_option = self.override_option_choice.GetSelection()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
 
         kwargs = {
             "ffmpeg_path": Config.FFmpeg.path,
-            "override_file": Config.Merge.override_file,
+            "override_option": Config.Merge.override_option,
             "m4a_to_mp3": Config.Merge.m4a_to_mp3,
         }
 

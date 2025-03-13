@@ -11,6 +11,8 @@ class DownloadTaskInfo:
         self.index: int = 0
         # 补零序号
         self.index_with_zero: str = ""
+        # 后缀
+        self.suffix: str = ""
         # 时间戳
         self.timestamp: int = 0
         
@@ -76,6 +78,7 @@ class DownloadTaskInfo:
             "id": self.id,
             "index": self.index,
             "index_with_zero": self.index_with_zero,
+            "suffix": self.suffix,
             "timestamp": self.timestamp,
             "referer_url": self.referer_url,
             "cover_url": self.cover_url,
@@ -110,40 +113,41 @@ class DownloadTaskInfo:
         }
 
     def load_from_dict(self, data: Dict):
-        self.id = data["id"]
-        self.index = data["index"]
-        self.index_with_zero = data["index_with_zero"]
-        self.timestamp = data["timestamp"]
-        self.referer_url = data["referer_url"]
-        self.cover_url = data["cover_url"]
-        self.bvid = data["bvid"]
-        self.cid = data["cid"]
-        self.aid = data["aid"]
-        self.ep_id = data["ep_id"]
-        self.title = data["title"]
-        self.duration = data["duration"]
-        self.progress = data["progress"]
-        self.total_file_size = data["total_file_size"]
-        self.total_downloaded_size = data["total_downloaded_size"]
-        self.current_downloaded_size = data["current_downloaded_size"]
-        self.status = data["status"]
-        self.video_quality_id = data["video_quality_id"]
-        self.audio_quality_id = data["audio_quality_id"]
-        self.video_codec_id = data["video_codec_id"]
-        self.video_type = data["video_type"]
-        self.audio_type = data["audio_type"]
-        self.output_type = data["output_type"]
-        self.download_items = data["download_items"]
-        self.download_type = data["download_type"]
-        self.stream_type = data["stream_type"]
-        self.download_option = data["download_option"]
-        self.ffmpeg_merge = data["ffmpeg_merge"]
-        self.flv_video_count = data["flv_video_count"]
-        self.get_danmaku = data["get_danmaku"]
-        self.danmaku_type = data["danmaku_type"]
-        self.get_cover = data["get_cover"]
-        self.get_subtitle = data["get_subtitle"]
-        self.subtitle_type = data["subtitle_type"]
+        self.id = data.get("id")
+        self.index = data.get("index")
+        self.index_with_zero = data.get("index_with_zero")
+        self.suffix = data.get("suffix")
+        self.timestamp = data.get("timestamp")
+        self.referer_url = data.get("referer_url")
+        self.cover_url = data.get("cover_url")
+        self.bvid = data.get("bvid")
+        self.cid = data.get("cid")
+        self.aid = data.get("aid")
+        self.ep_id = data.get("ep_id")
+        self.title = data.get("title")
+        self.duration = data.get("duration")
+        self.progress = data.get("progress")
+        self.total_file_size = data.get("total_file_size")
+        self.total_downloaded_size = data.get("total_downloaded_size")
+        self.current_downloaded_size = data.get("current_downloaded_size")
+        self.status = data.get("status")
+        self.video_quality_id = data.get("video_quality_id")
+        self.audio_quality_id = data.get("audio_quality_id")
+        self.video_codec_id = data.get("video_codec_id")
+        self.video_type = data.get("video_type")
+        self.audio_type = data.get("audio_type")
+        self.output_type = data.get("output_type")
+        self.download_items = data.get("download_items")
+        self.download_type = data.get("download_type")
+        self.stream_type = data.get("stream_type")
+        self.download_option = data.get("download_option")
+        self.ffmpeg_merge = data.get("ffmpeg_merge")
+        self.flv_video_count = data.get("flv_video_count")
+        self.get_danmaku = data.get("get_danmaku")
+        self.danmaku_type = data.get("danmaku_type")
+        self.get_cover = data.get("get_cover")
+        self.get_subtitle = data.get("get_subtitle")
+        self.subtitle_type = data.get("subtitle_type")
 
 class DownloaderInfo:
     def __init__(self):
@@ -159,9 +163,9 @@ class DownloaderInfo:
         }
     
     def load_from_dict(self, data: Dict):
-        self.url_list = data["url_list"]
-        self.type = data["type"]
-        self.file_name = data["file_name"]
+        self.url_list = data.get("url_list")
+        self.type = data("type")
+        self.file_name = data("file_name")
 
 class RangeDownloadInfo:
     def __init__(self):
