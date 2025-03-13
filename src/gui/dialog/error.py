@@ -11,7 +11,7 @@ from gui.templates import TextCtrl
 
 class ErrorInfoDialog(wx.Dialog):
     def __init__(self, parent, exception_info = GlobalExceptionInfo.info):
-        self.exception_info = exception_info
+        self.exception_info: dict = exception_info
 
         wx.Dialog.__init__(self, parent, -1, "错误日志")
 
@@ -37,18 +37,16 @@ class ErrorInfoDialog(wx.Dialog):
 
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
 
-        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.timestamp)))
-        source_lab = wx.StaticText(self, -1, "来源：{}".format(self.exception_info.source))
-        event_id_lab = wx.StaticText(self, -1, "错误 ID：{}".format(self.exception_info.id))
-        return_code_lab = wx.StaticText(self, -1, "返回值：{}".format(self.exception_info.return_code))
-        error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.exception_type))
+        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp"))))
+        error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.get("exception_name")))
+        error_id_lab = wx.StaticText(self, -1, "错误码：{}".format(self.exception_info.get("code")))
+        message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")))
 
-        box_sizer = wx.FlexGridSizer(3, 2, 0, 75)
+        box_sizer = wx.FlexGridSizer(2, 2, 0, 75)
         box_sizer.Add(time_lab, 0, wx.ALL, 10)
-        box_sizer.Add(source_lab, 0, wx.ALL, 10)
-        box_sizer.Add(event_id_lab, 0, wx.ALL & (~wx.TOP), 10)
-        box_sizer.Add(return_code_lab, 0, wx.ALL & (~wx.TOP), 10)
-        box_sizer.Add(error_type, 0, wx.ALL & (~wx.TOP), 10)
+        box_sizer.Add(error_type, 0, wx.ALL, 10)
+        box_sizer.Add(error_id_lab, 0, wx.ALL & (~wx.TOP), 10)
+        box_sizer.Add(message_lab, 0, wx.ALL & (~wx.TOP), 10)
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(err_icon, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -59,7 +57,7 @@ class ErrorInfoDialog(wx.Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = TextCtrl(self, -1, str(self.exception_info.log), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.log_box = TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.log_box.SetFont(font)
 
         self.save_btn = wx.Button(self, -1, "保存到文件", size = _get_scale_size((100, 28)))
@@ -97,10 +95,9 @@ class ErrorInfoDialog(wx.Dialog):
     
     def get_error_log(self):
         return {
-            "记录时间": UniversalTool.get_time_str_from_timestamp(self.exception_info.timestamp),
-            "详细日志": self.exception_info.log,
-            "来源": self.exception_info.source,
-            "错误 ID": self.exception_info.id,
-            "异常类型": self.exception_info.exception_type,
-            "返回值": self.exception_info.return_code
+            "记录时间": UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp")),
+            "异常类型": self.exception_info.get("exception_name"),
+            "错误码": self.exception_info.get("code"),
+            "描述": self.exception_info.get("message"),
+            "详细日志": self.exception_info.get("stack_trace"),
         }

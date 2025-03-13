@@ -465,7 +465,7 @@ class MainWindow(Frame):
                     return_code = self.activity_parser.parse_url(url)
 
                 case _:
-                    raise GlobalException(StatusCode.URL.value, callback = self.onParseErrorCallback)
+                    raise GlobalException(code = StatusCode.URL.value, callback = self.onParseErrorCallback)
                 
             return return_code
                 
@@ -778,9 +778,7 @@ class MainWindow(Frame):
         def worker():
             self._onLoading(False)
 
-            info = GlobalExceptionInfo.info
-
-            dlg = wx.MessageDialog(self, f"解析失败\n\n{info.short_log}\n\n故障模块：{info.source}", "错误", wx.ICON_ERROR | wx.YES_NO)
+            dlg = wx.MessageDialog(self, f"解析失败\n\n错误码：{GlobalExceptionInfo.info.get('code')}\n描述：{GlobalExceptionInfo.info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
             dlg.SetYesNoLabels("详细信息", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:

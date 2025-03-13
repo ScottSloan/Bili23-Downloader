@@ -418,12 +418,16 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def onMergeError(self):
         def worker():
+
+
             self.set_download_error(DownloadStatus.MergeError.value)
         
         wx.CallAfter(worker)
 
     def onDownloadError(self):
         def worker():
+
+            
             self.set_download_error(DownloadStatus.DownloadError.value)
 
         wx.CallAfter(worker)

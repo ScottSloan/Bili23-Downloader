@@ -28,7 +28,9 @@ class Downloader:
         self.current_downloaded_size = 0
         self.total_downloaded_size = 0
         self.thread_alive_num = 0
+
         self.retry_count = 0
+        self.error_info = None
 
         self.downloader_info = []
         self.cache = {}
@@ -145,7 +147,8 @@ class Downloader:
                                 self.total_downloaded_size += _chunk_size
                                 self.progress_info[info.index][0] += _chunk_size
 
-        except Exception:
+        except Exception as e:
+            self.error_info = e
             self.retry_count += 1
 
             info.range = self.progress_info[info.index]

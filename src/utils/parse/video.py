@@ -2,11 +2,13 @@ import re
 import json
 
 from utils.config import Config
+from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
+
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
-from utils.auth.wbi import WbiUtils
+
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
@@ -63,7 +65,7 @@ class VideoParser:
         aid = re.findall(r"av([0-9]+)", url)
 
         if not aid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         bvid = UniversalTool.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
@@ -72,7 +74,7 @@ class VideoParser:
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.set_bvid(bvid[0])
 
@@ -92,7 +94,7 @@ class VideoParser:
         info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
-            raise GlobalException(StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = info["redirect_url"])
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = info["redirect_url"])
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
@@ -185,11 +187,8 @@ class VideoParser:
         try:
             return worker()
         
-        except GlobalException as e:
-            raise e
-
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.error_callback) from e
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
@@ -199,7 +198,7 @@ class VideoParser:
         status_code = json["code"]
 
         if status_code != StatusCode.Success.value:
-            raise Exception(status_code)
+            raise GlobalException(code = status_code)
     
     def parse_episodes(self):
         def pages_parser():

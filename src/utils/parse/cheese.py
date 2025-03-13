@@ -50,7 +50,7 @@ class CheeseParser:
         epid = re.findall(r"ep([0-9]+)", url)
 
         if not epid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
@@ -58,7 +58,7 @@ class CheeseParser:
         season_id = re.findall(r"ss([0-9]+)", url)
 
         if not season_id:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.url_type, self.url_type_value, CheeseInfo.season_id = "season_id", season_id[0], season_id[0]
 
@@ -134,14 +134,14 @@ class CheeseParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.error_callback) from e
     
     def check_json(self, json: dict):
         # 检查接口返回状态码
         status_code = json["code"]
 
         if status_code != StatusCode.Success.value:
-            raise Exception(status_code)
+            raise GlobalException(code = status_code)
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()
