@@ -337,7 +337,7 @@ class SimplePage(wx.Panel):
         self.refresh_scroller()
 
     def refresh_scroller(self):
-        if not self.total_count:
+        if self.is_scroller_empty:
             self.hide_other_item()
 
             item = EmptyItemPanel(self.scroller, self.name)
@@ -365,6 +365,10 @@ class SimplePage(wx.Panel):
     def scroller_children(self):
         children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
         return children 
+
+    @property
+    def is_scroller_empty(self):
+        return not len(self.scroller_children)
 
 class DownloadingPage(SimplePage):
     def __init__(self, parent, callback: DownloadPageCallback, download_window):

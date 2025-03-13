@@ -9,6 +9,7 @@ from utils.common.enums import DownloadOption, DownloadStatus
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
+from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
@@ -18,6 +19,7 @@ from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirecto
 
 from gui.templates import InfoLabel
 from gui.dialog.cover import CoverViewerDialog
+from gui.dialog.error import ErrorInfoDialog
 
 class EmptyItemPanel(wx.Panel):
     def __init__(self, parent, name: str):
@@ -188,13 +190,16 @@ class DownloadTaskItemPanel(wx.Panel):
     def Bind_EVT(self):
         self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
 
+        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onViewErrorEVT)
         self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
+        
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
         self._show_cover = False
         self._destroy = False
+        self.error_info = None
 
         self.file_tool = DownloadFileTool(self.task_info.id)
 
@@ -282,6 +287,11 @@ class DownloadTaskItemPanel(wx.Panel):
         dlg = CoverViewerDialog(self.download_window, self._cover)
         dlg.Show()
 
+    def onViewErrorEVT(self, event):
+        if self.error_info:
+            dlg = ErrorInfoDialog(self.download_window, self.error_info)
+            dlg.ShowModal()
+
     def onPauseEVT(self, event):
         match DownloadStatus(self.task_info.status):
             case DownloadStatus.Waiting:
@@ -323,7 +333,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
         def worker():
             # 获取下载链接
-            download_parser = DownloadParser(self.task_info)
+            download_parser = DownloadParser(self.task_info, self.onDownloadError)
             downloader_info = download_parser.get_download_url()
 
             self.file_tool.update_info("task_info", self.task_info.to_dict())
@@ -418,7 +428,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def onMergeError(self):
         def worker():
-
+            self.error_info = GlobalExceptionInfo.info
 
             self.set_download_error(DownloadStatus.MergeError.value)
         
@@ -426,14 +436,16 @@ class DownloadTaskItemPanel(wx.Panel):
 
     def onDownloadError(self):
         def worker():
+            self.error_info = GlobalExceptionInfo.info
 
-            
             self.set_download_error(DownloadStatus.DownloadError.value)
 
         wx.CallAfter(worker)
 
     def set_download_error(self, status: int):
         self.set_download_status(status)
+
+        self.callback.onUpdateCountTitleCallback()
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):
@@ -483,7 +495,7 @@ class DownloadTaskItemPanel(wx.Panel):
                     else:
                         lab = "合成视频"
 
-                    if hasattr(self, "error_info"):
+                    if self.error_info:
                         self.speed_lab.SetLabel(f"{lab}失败，点击查看详情")
                         self.speed_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
                     else:
@@ -495,7 +507,7 @@ class DownloadTaskItemPanel(wx.Panel):
                     self.pause_btn.SetToolTip("重试")
                     self.speed_lab.SetForegroundColour("red")
 
-                    if hasattr(self, "error_info"):
+                    if self.error_info:
                         self.speed_lab.SetLabel("下载失败，点击查看详情")
                         self.speed_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
                     else:

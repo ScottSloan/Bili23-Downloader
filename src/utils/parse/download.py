@@ -1,13 +1,16 @@
 import json
+from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
 from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID
+from utils.common.exception import GlobalException
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool
 from utils.config import Config
 
 class DownloadParser:
-    def __init__(self, task_info: DownloadTaskInfo):
+    def __init__(self, task_info: DownloadTaskInfo, callback: Callable):
+        self.callback = callback
         self.task_info = task_info
 
     def get_download_stream_json(self):
@@ -311,6 +314,10 @@ class DownloadParser:
         return [i for i in generator([data[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in data])]
 
     def get_download_url(self):
-        data = self.get_download_stream_json()
+        try:
+            data = self.get_download_stream_json()
 
-        return self.parse_download_stream_json(data)
+            return self.parse_download_stream_json(data)
+        
+        except Exception as e:
+            raise GlobalException(callback = self.callback) from e

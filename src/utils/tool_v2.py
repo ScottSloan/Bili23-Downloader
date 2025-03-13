@@ -397,6 +397,9 @@ class FormatTool:
         if task_info.index:
             index_field = task_info.index
             index_with_zero_field = task_info.index_with_zero
+        else:
+            index_field = ""
+            index_with_zero_field = ""
 
         return template.format(date = date_field, time = time_field, datetime = datetime_field, timestamp = timestamp_field, index = index_field, index_with_zero = index_with_zero_field, title = title_field, bvid = bvid_field, cid = cid_field)
 

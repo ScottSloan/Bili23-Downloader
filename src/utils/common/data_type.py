@@ -164,8 +164,8 @@ class DownloaderInfo:
     
     def load_from_dict(self, data: Dict):
         self.url_list = data.get("url_list")
-        self.type = data("type")
-        self.file_name = data("file_name")
+        self.type = data.get("type")
+        self.file_name = data.get("file_name")
 
 class RangeDownloadInfo:
     def __init__(self):
