@@ -1,10 +1,10 @@
 import os
-import time
 import subprocess
 
 from utils.common.enums import DownloadOption, StreamType, StatusCode
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback
 from utils.common.exception import GlobalException
+from utils.common.thread import Thread
 from utils.config import Config
 
 class FFmpeg:
@@ -182,20 +182,24 @@ class FFmpeg:
                 path = os.path.join(Config.Download.path, file)
 
                 while os.path.exists(path):
-                    os.remove(path)
+                    try:
+                        os.remove(path)
+                    except Exception:
+                        pass
+        
+        def worker():
+            match StreamType(self.task_info.stream_type):
+                case StreamType.Dash:
+                    get_dash_temp_file_list()
 
-                    time.sleep(0.1)
+                case StreamType.Flv:
+                    get_flv_temp_file_list()
 
+            delete_file(temp_file_list)
+        
         temp_file_list = []
-
-        match StreamType(self.task_info.stream_type):
-            case StreamType.Dash:
-                get_dash_temp_file_list()
-
-            case StreamType.Flv:
-                get_flv_temp_file_list()
-
-        delete_file(temp_file_list)
+        
+        Thread(target = worker).start()
 
     @property
     def ffmpeg_file_name(self):

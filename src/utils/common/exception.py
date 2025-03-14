@@ -5,7 +5,6 @@ from typing import Callable
 from datetime import datetime
 
 from utils.common.map import status_code_map
-from utils.common.enums import StatusCode
 
 class GlobalExceptionInfo:
     info = {}
@@ -28,8 +27,7 @@ def exception_handler(exc_type, exc_value: Exception, exc_tb):
         exception = exc_value.__cause__
         stack_trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
 
-        if hasattr(exception, "code") and exception.code != StatusCode.Redirect.value:
-            traceback.print_exception(type(exception), exception, exception.__traceback__)
+        traceback.print_exception(type(exception), exception, exception.__traceback__)
     else:
         exception = exc_value
         stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))

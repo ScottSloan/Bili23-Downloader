@@ -269,10 +269,10 @@ class SimplePage(wx.Panel):
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 100 个
-            item_threshold = 1
+            item_per_time = 100
 
-            temp_download_list = self.temp_download_list[:item_threshold]
-            self.temp_download_list = self.temp_download_list[item_threshold:]
+            temp_download_list = self.temp_download_list[:item_per_time]
+            self.temp_download_list = self.temp_download_list[item_per_time:]
 
             return temp_download_list
 
@@ -421,6 +421,7 @@ class DownloadingPage(SimplePage):
 
     def Bind_EVT(self):
         self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAllEVT)
+        self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
 
     def start_download(self):
@@ -433,6 +434,12 @@ class DownloadingPage(SimplePage):
     
     def onStartAllEVT(self, event):
         self.start_download()
+
+    def onPauseAllEVT(self, event):
+        for panel in self.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status in DownloadStatus.Alive.value:
+                    panel.pause_download()
 
     def onCancelAllEVT(self, event):
         def clear_scroller():

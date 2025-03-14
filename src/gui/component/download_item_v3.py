@@ -186,23 +186,26 @@ class DownloadTaskItemPanel(wx.Panel):
         self.set_download_status(self.task_info.status)
 
     def show_task_info(self):
-        self.title_lab.SetLabel(self.task_info.title)
-        self.title_lab.SetToolTip(self.task_info.title)
+        if not self._destroy:
+            self.title_lab.SetLabel(self.task_info.title)
+            self.title_lab.SetToolTip(self.task_info.title)
 
-        self.progress_bar.SetValue(self.task_info.progress)
-        self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
+            self.progress_bar.SetValue(self.task_info.progress)
+            self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 
-        if self.task_info.download_option == DownloadOption.OnlyAudio.value:
-            self.video_quality_lab.SetLabel("音频")
-            self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--"))
-        else:
-            self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--"))
-            self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--"))
-        
-        if self.task_info.progress == 100:
-            self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
-        else:
-            self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+            if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                self.video_quality_lab.SetLabel("音频")
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--"))
+            else:
+                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--"))
+                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--"))
+            
+            if self.task_info.progress == 100:
+                self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
+            elif self.task_info.total_file_size:
+                self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+            else:
+                self.video_size_lab.SetLabel("")
     
     def show_cover(self):
         def is_16_9(image: wx.Image):
@@ -338,7 +341,8 @@ class DownloadTaskItemPanel(wx.Panel):
     def pause_download(self):
         self.set_download_status(DownloadStatus.Pause.value)
 
-        self.downloader.stop_download()
+        if hasattr(self, "downloader"):
+            self.downloader.stop_download()
 
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:

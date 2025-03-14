@@ -66,10 +66,10 @@ class Downloader:
                 entry = self.cache[file_name]
 
                 url, self.current_file_size = entry["url"], entry["file_size"]
-
-                self.create_local_file(file_path, entry["file_size"])
             else:
                 url, self.current_file_size = self.get_file_size(downloader_info.url_list)
+
+            self.create_local_file(file_path, self.current_file_size)
 
             if self.task_info.current_downloaded_size:
                 self.progress_info = self.file_tool.get_info("thread_info")
@@ -126,6 +126,7 @@ class Downloader:
 
     def stop_download(self):
         self.stop_event.set()
+
         self.cache.clear()
 
     def download_range(self, info: RangeDownloadInfo):
@@ -174,8 +175,12 @@ class Downloader:
             self.error_info = e
             self.retry_count += 1
 
-            if self.retry_count > Config.Advanced.download_error_retry_count or not Config.Advanced.retry_when_download_error:
+            if self.retry_count > Config.Advanced.download_error_retry_count:
                 raise GlobalException(code = StatusCode.MaxRety.value, callback = self.download_error) from e
+            
+            elif not Config.Advanced.retry_when_download_error:
+                raise GlobalException(code = StatusCode.Download.value, callback = self.download_error) from e
+            
             else:
                 info.range = self.progress_info[info.index]
                 info.retry = True

@@ -67,7 +67,8 @@ class StatusCode(Enum):
     URL = 602                # 无效链接
     Redirect = 603           # 跳转链接
     FFmpegCall = 610         # 调用出错
-    MaxRety = 611            # 最大重试
+    Download = 611           # 下载失败
+    MaxRety = 612            # 最大重试
     Area_Limit = -10403      # 区域限制
 
 class VideoQualityID(Enum):
