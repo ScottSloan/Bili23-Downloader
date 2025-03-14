@@ -25,8 +25,6 @@ class Frame(wx.Frame):
 
         self.SetIcon(wx.Icon(icon_manager.get_icon_bitmap(IconType.APP_ICON_SMALL)))
 
-        self.panel = wx.Panel(self)
-
 class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent):
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)

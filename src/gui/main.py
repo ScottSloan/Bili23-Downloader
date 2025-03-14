@@ -24,7 +24,7 @@ from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, Status
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 
 from gui.templates import Frame, TreeListCtrl, InfoBar
-from gui.download_v3 import DownloadManagerWindow
+from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
 from gui.window.login import LoginWindow
 
@@ -102,6 +102,8 @@ class MainWindow(Frame):
         wx.Image.SetDefaultLoadFlags(0)
 
         self.init_ids()
+
+        self.panel = wx.Panel(self, -1)
 
         self.infobar = InfoBar(self.panel)
 

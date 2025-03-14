@@ -11,12 +11,12 @@ from utils.common.cache import DataCache
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
-from gui.templates import ActionButton, ScrolledPanel
+from gui.templates import ActionButton, ScrolledPanel, Frame
 from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel, LoadingItemPanel
 
-class DownloadManagerWindow(wx.Frame):
+class DownloadManagerWindow(Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, "下载管理")
+        Frame.__init__(self, parent, "下载管理")
 
         self.SetSize(self.FromDIP((930, 550)))
         self.current_page = "正在下载"
@@ -266,7 +266,7 @@ class SimplePage(wx.Panel):
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 100 个
-            item_threshold = 100
+            item_threshold = 1
 
             temp_download_list = self.temp_download_list[:item_threshold]
             self.temp_download_list = self.temp_download_list[item_threshold:]

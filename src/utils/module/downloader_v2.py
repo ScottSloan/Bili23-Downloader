@@ -5,7 +5,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
-from utils.common.enums import CDNMode
+from utils.common.enums import CDNMode, StatusCode
 from utils.common.thread import Thread
 from utils.common.map import cdn_map
 from utils.common.exception import GlobalException
@@ -175,7 +175,7 @@ class Downloader:
             self.retry_count += 1
 
             if self.retry_count > Config.Advanced.download_error_retry_count or not Config.Advanced.retry_when_download_error:
-                raise GlobalException(callback = self.download_error) from e
+                raise GlobalException(code = StatusCode.MaxRety.value, callback = self.download_error) from e
             else:
                 info.range = self.progress_info[info.index]
                 info.retry = True
@@ -259,6 +259,19 @@ class Downloader:
 
                 self.callback.onDownloadingCallback(FormatTool.format_speed(speed))
 
+        def check_speed():
+            if not speed and Config.Advanced.retry_when_download_suspend:
+                self.retry_interval += 1
+            
+            if self.retry_interval > Config.Advanced.download_suspend_retry_interval:
+                self.stop_download()
+
+                time.sleep(1)
+
+                self.start_download()
+
+        self.retry_interval = 0
+
         while self.current_downloaded_size < self.current_file_size and not self.stop_event.is_set():
             temp_downloaded_size = self.current_downloaded_size
 
@@ -270,6 +283,8 @@ class Downloader:
                 total_progress = (self.total_downloaded_size / self.task_info.total_file_size) * 100
 
                 update_progress()
+
+                check_speed()
 
         if not self.stop_event.is_set():
             download_finish()
