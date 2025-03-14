@@ -193,11 +193,11 @@ class DownloadParser:
                     if entry["id"] > highest_audio_quality:
                         highest_audio_quality = entry["id"]
 
-                if data["dolby"]:
+                if "dolby" in data and data["dolby"]:
                     if data["dolby"]["audio"]:
                         highest_audio_quality = AudioQualityID._Dolby_Atoms.value
 
-                if data["flac"]:
+                if "flac" in data and data["flac"]:
                     if data["flac"]["audio"]:
                         highest_audio_quality = AudioQualityID._Hi_Res.value
 

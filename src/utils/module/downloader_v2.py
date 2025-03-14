@@ -28,7 +28,6 @@ class Downloader:
         self.current_file_size = 0
         self.current_downloaded_size = 0
         self.total_downloaded_size = 0
-        self.thread_alive_num = 0
 
         self.retry_count = 0
         self.error_info = None
@@ -67,10 +66,10 @@ class Downloader:
                 entry = self.cache[file_name]
 
                 url, self.current_file_size = entry["url"], entry["file_size"]
+
+                self.create_local_file(file_path, entry["file_size"])
             else:
                 url, self.current_file_size = self.get_file_size(downloader_info.url_list)
-            
-            self.create_local_file(file_path, entry["file_size"])
 
             if self.task_info.current_downloaded_size:
                 self.progress_info = self.file_tool.get_info("thread_info")
@@ -92,9 +91,15 @@ class Downloader:
 
                 return range_info
 
+            def update_flag():
+                self.progress_info.clear()
+
+                self.retry_count = 0
+                self.has_stopped = False
+
             self.callback.onStartDownloadCallback()
 
-            self.progress_info.clear()
+            update_flag()
 
             Thread(target = self.progress_tracker).start()
 
@@ -108,8 +113,6 @@ class Downloader:
                         executor.submit(self.download_range, range_info)
 
         self.stop_event.clear()
-        self.retry_count = 0
-        self.has_stopped = False
 
         downloader_info = get_downloader_info()
 
@@ -126,15 +129,33 @@ class Downloader:
         self.cache.clear()
 
     def download_range(self, info: RangeDownloadInfo):
+        def update(chunk_size):
+            self.current_downloaded_size += chunk_size
+            self.total_downloaded_size += chunk_size
+            self.progress_info[info.index][0] += chunk_size
+
+        def speed_limit():
+            if Config.Download.enable_speed_limit:
+                elapsed_time = time.time() - start_time
+                expected_time = self.current_downloaded_size / speed_bps
+
+                if elapsed_time < expected_time:
+                    time.sleep(expected_time - elapsed_time)
+
         try:
             with open(info.file_path, "r+b") as f:
-                self.thread_alive_num += 1
+                speed_bps = Config.Download.speed_mbps * 1024 * 1024
+
                 f.seek(info.range[0])
+
+                start_time = time.time()
+
+                if self.current_downloaded_size:
+                    start_time -= self.current_downloaded_size / speed_bps
 
                 with RequestTool.request_get(info.url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA, range = info.range), stream = True) as req:
                     for chunk in req.iter_content(chunk_size = 1024):
                         if chunk:
-
                             with self.lock:
                                 if self.stop_event.is_set():
                                     break
@@ -145,11 +166,9 @@ class Downloader:
 
                                 f.write(chunk)
 
-                                _chunk_size = len(chunk)
+                                update(len(chunk))
 
-                                self.current_downloaded_size += _chunk_size
-                                self.total_downloaded_size += _chunk_size
-                                self.progress_info[info.index][0] += _chunk_size
+                                speed_limit()
 
         except Exception as e:
             self.error_info = e
@@ -161,8 +180,6 @@ class Downloader:
                 info.range = self.progress_info[info.index]
                 info.retry = True
                 self.executor.submit(self.download_range, info)
-
-        self.thread_alive_num -= 1
 
     def get_file_size(self, url_list: list):
         def get_cdn_list():

@@ -175,6 +175,7 @@ class RangeDownloadInfo:
         self.file_path: str = ""
         self.range: List[int] = []
         self.retry: bool = False
+        self.start_time: float = 0.0
 
 class DownloaderCallback:
     def __init__(self):

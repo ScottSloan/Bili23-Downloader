@@ -203,6 +203,9 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.file_tool = DownloadFileTool(self.task_info.id)
 
+        self.ffmpeg = FFmpeg()
+        self.ffmpeg.set_task_info(self.task_info)
+
         self.show_task_info()
 
         self.set_download_status(self.task_info.status)
@@ -317,6 +320,8 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.file_tool.delete_file()
 
+        self.ffmpeg.clear_temp_files()
+
         if hasattr(self, "downloader"):
             self.downloader.stop_download()
     
@@ -374,9 +379,6 @@ class DownloadTaskItemPanel(wx.Panel):
             callback.onError = self.onMergeError
 
             return callback
-
-        self.ffmpeg = FFmpeg()
-        self.ffmpeg.set_task_info(self.task_info)
 
         self.ffmpeg.merge_video(self.full_file_name, get_callback())
 

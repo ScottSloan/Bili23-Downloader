@@ -1,4 +1,4 @@
-## 1.60.0 (2025-03-13)
+## 1.60.0 (2025-03-14)
 ### 新增
 * 支持编辑框三击全选 by @IvanHanloth (#77)
 * 支持自定义下载文件名 by @ScottSloan
@@ -7,9 +7,9 @@
 * 下载页面调整为"正在下载"和"下载完成"两个分页 by @ScottSloan
 
 ### 优化
-* 优化下载模块，有效避免写入冲突 by @ScottSloan
+* 优化下载模块，避免文件写入冲突 by @ScottSloan
 * 优化出错重试逻辑 by @ScottSloan (#81)
-* 优化重名文件冲突 by @ScottSloan (#84)
+* 优化重名文件覆盖逻辑 by @ScottSloan (#84)
 * 优化主页链接框显示效果，支持一键清空 by @ScottSloan
 * 优化读取大量断点续传文件时的启动速度 by @ScottSloan
 

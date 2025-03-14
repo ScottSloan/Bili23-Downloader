@@ -28,7 +28,7 @@ def exception_handler(exc_type, exc_value: Exception, exc_tb):
         exception = exc_value.__cause__
         stack_trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
 
-        if exception.code != StatusCode.Redirect.value:
+        if hasattr(exception, "code") and exception.code != StatusCode.Redirect.value:
             traceback.print_exception(type(exception), exception, exception.__traceback__)
     else:
         exception = exc_value
