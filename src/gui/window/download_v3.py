@@ -11,7 +11,7 @@ from utils.common.cache import DataCache
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
-from gui.templates import ActionButton, ScrolledPanel, Frame
+from gui.component.templates import ActionButton, ScrolledPanel, Frame
 from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(Frame):
@@ -428,7 +428,10 @@ class DownloadingPage(SimplePage):
         # 开始下载
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
-                if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
+                if panel.task_info.status in [DownloadStatus.Pause.value]:
+                    panel.set_download_status(DownloadStatus.Waiting.value)
+
+                if panel.task_info.status in [DownloadStatus.Waiting.value]:
                     if self.get_scroller_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.resume_download()
     

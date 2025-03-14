@@ -33,6 +33,8 @@ def exception_handler(exc_type, exc_value: Exception, exc_tb):
         stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
 
         traceback.print_exception(exc_type, exc_value, exc_tb)
+    
+    print()
 
     if isinstance(exception, GlobalException):
         if exception.stack_trace:

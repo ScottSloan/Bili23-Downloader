@@ -8,7 +8,7 @@ from utils.common.thread import Thread
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
-from gui.templates import TextCtrl
+from gui.component.templates import TextCtrl
 
 class ConverterWindow(wx.Dialog):
     def __init__(self, parent):

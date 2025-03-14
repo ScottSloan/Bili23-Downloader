@@ -2,7 +2,7 @@ import wx
 import io
 import os
 
-from gui.templates import Frame
+from gui.component.templates import Frame
 
 class CoverViewerDialog(Frame):
     def __init__(self, parent, _cover_raw_contents: bytes):

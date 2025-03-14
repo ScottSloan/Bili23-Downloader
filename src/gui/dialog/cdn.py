@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from utils.config import Config
 from utils.common.map import cdn_map
 
-from gui.templates import TextCtrl
+from gui.component.templates import TextCtrl
 
 class ChangeCDNDialog(wx.Dialog):
     def __init__(self, parent):

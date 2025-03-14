@@ -30,7 +30,6 @@ class Downloader:
         self.total_downloaded_size = 0
 
         self.retry_count = 0
-        self.error_info = None
         self.has_stopped = False
 
         self.downloader_info = []
@@ -161,10 +160,6 @@ class Downloader:
                                 if self.stop_event.is_set():
                                     break
 
-                                if info.retry:
-                                    self.retry_count -= 1
-                                    info.retry = False
-
                                 f.write(chunk)
 
                                 update(len(chunk))
@@ -172,7 +167,6 @@ class Downloader:
                                 speed_limit()
 
         except Exception as e:
-            self.error_info = e
             self.retry_count += 1
 
             if self.retry_count > Config.Advanced.download_error_retry_count:
@@ -181,10 +175,8 @@ class Downloader:
             elif not Config.Advanced.retry_when_download_error:
                 raise GlobalException(code = StatusCode.Download.value, callback = self.download_error) from e
             
-            else:
-                info.range = self.progress_info[info.index]
-                info.retry = True
-                self.executor.submit(self.download_range, info)
+            info.range = self.progress_info[info.index]
+            self.executor.submit(self.download_range, info)
 
     def get_file_size(self, url_list: list):
         def get_cdn_list():
@@ -262,18 +254,24 @@ class Downloader:
                 self.file_tool.update_info("task_info", self.task_info.to_dict())
                 self.file_tool.update_info("thread_info", self.progress_info)
 
-                self.callback.onDownloadingCallback(FormatTool.format_speed(speed))
+                self.callback.onDownloadingCallback(speed_str)
 
         def check_speed():
-            if not speed and Config.Advanced.retry_when_download_suspend:
-                self.retry_interval += 1
-            
-            if self.retry_interval > Config.Advanced.download_suspend_retry_interval:
+            def worker():
                 self.stop_download()
 
                 time.sleep(1)
 
                 self.start_download()
+
+            if speed_str == "0 KB/s" and Config.Advanced.retry_when_download_suspend:
+                self.retry_interval += 1
+            else:
+                self.retry_interval = 0
+            
+            if self.retry_interval > Config.Advanced.download_suspend_retry_interval:
+                if not self.stop_event.is_set():
+                    Thread(target = worker).start()
 
         self.retry_interval = 0
 
@@ -286,6 +284,8 @@ class Downloader:
                 speed = self.current_downloaded_size - temp_downloaded_size
                 # current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
                 total_progress = (self.total_downloaded_size / self.task_info.total_file_size) * 100
+
+                speed_str = FormatTool.format_speed(speed)
 
                 update_progress()
 

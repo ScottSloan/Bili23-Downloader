@@ -17,7 +17,7 @@ from utils.parse.download import DownloadParser
 from utils.config import Config
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
 
-from gui.templates import InfoLabel
+from gui.component.templates import InfoLabel
 from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.error import ErrorInfoDialog
 
@@ -105,8 +105,8 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((90, 16)))
-        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((90, 16)))
+        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((85, 16)))
+        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((85, 16)))
         self.video_size_lab = InfoLabel(self, "--", size = self.FromDIP((-1, -1)))
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -205,7 +205,7 @@ class DownloadTaskItemPanel(wx.Panel):
             elif self.task_info.total_file_size:
                 self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
             else:
-                self.video_size_lab.SetLabel("")
+                self.video_size_lab.SetLabel("--")
     
     def show_cover(self):
         def is_16_9(image: wx.Image):
@@ -442,6 +442,12 @@ class DownloadTaskItemPanel(wx.Panel):
     def set_download_status(self, status: int):
         def set_button_icon(status: int):
             match DownloadStatus(status):
+                case DownloadStatus.Waiting:
+                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+
+                    self.pause_btn.SetToolTip("开始下载")
+                    self.speed_lab.SetLabel("等待下载...")
+
                 case DownloadStatus.Downloading:
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
 
@@ -452,7 +458,7 @@ class DownloadTaskItemPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("继续下载")
-                    self.speed_lab.SetLabel("暂停中")
+                    self.speed_lab.SetLabel("暂停中...")
 
                 case DownloadStatus.Merging:
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
@@ -473,6 +479,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
+                    self.stop_btn.SetToolTip("清除记录")
 
                 case DownloadStatus.MergeError:
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
