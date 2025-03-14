@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 
-from gui.component.templates import TextCtrl
+from gui.component.text_ctrl import TextCtrl
 
 class EditTitleDialog(wx.Dialog):
     def __init__(self, parent, title: str):

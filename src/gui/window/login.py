@@ -11,7 +11,7 @@ from utils.common.thread import Thread
 from utils.auth.cookie import CookieUtils
 
 from gui.dialog.captcha import CaptchaWindow
-from gui.component.templates import TextCtrl
+from gui.component.text_ctrl import TextCtrl
 
 class LoginWindow(wx.Dialog):
     def __init__(self, parent, callback: Callable):

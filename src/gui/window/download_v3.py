@@ -11,7 +11,9 @@ from utils.common.cache import DataCache
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
-from gui.component.templates import ActionButton, ScrolledPanel, Frame
+from gui.component.frame import Frame
+from gui.component.action_button import ActionButton
+from gui.component.scrolled_panel import ScrolledPanel
 from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(Frame):

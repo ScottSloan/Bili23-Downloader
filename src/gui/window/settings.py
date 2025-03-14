@@ -5,7 +5,8 @@ import time
 import shutil
 import requests
 from requests.auth import HTTPProxyAuth
-from gui.component.templates import ScrolledPanel,TextCtrl
+from gui.component.scrolled_panel import ScrolledPanel
+from gui.component.text_ctrl import TextCtrl
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog

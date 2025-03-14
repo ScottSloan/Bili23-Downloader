@@ -17,7 +17,7 @@ from utils.parse.download import DownloadParser
 from utils.config import Config
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
 
-from gui.component.templates import InfoLabel
+from gui.component.info_label import InfoLabel
 from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.error import ErrorInfoDialog
 

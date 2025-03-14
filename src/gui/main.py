@@ -23,8 +23,9 @@ from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import ParseType, EpisodeDisplayType, LiveStatus, StatusCode, VideoQualityID, VideoType
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 
-from gui.component.templates import Frame, InfoBar
-from gui.component.treelist import TreeListCtrl
+from gui.component.frame import Frame
+from gui.component.info_bar import InfoBar
+from gui.component.tree_list import TreeListCtrl
 from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
 from gui.window.login import LoginWindow

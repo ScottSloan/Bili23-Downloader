@@ -1,6 +1,6 @@
 import wx
 
-from gui.component.templates import TextCtrl
+from gui.component.text_ctrl import TextCtrl
 
 class CutClipDialog(wx.Dialog):
     def __init__(self, parent):

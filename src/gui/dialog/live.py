@@ -10,7 +10,7 @@ from utils.common.thread import Thread
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 from utils.common.enums import PlayerMode
 
-from gui.component.templates import TextCtrl
+from gui.component.text_ctrl import TextCtrl
 
 class LiveRecordingWindow(wx.Dialog):
     def __init__(self, parent):

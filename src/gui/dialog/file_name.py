@@ -3,7 +3,7 @@ from datetime import datetime
 
 from utils.common.map import file_name_fields_map, get_mapping_key_by_value
 
-from gui.component.templates import TextCtrl
+from gui.component.text_ctrl import TextCtrl
 
 class CustomFileNameDialog(wx.Dialog):
     def __init__(self, parent, template: str):
