@@ -22,14 +22,14 @@ class CoverViewerDialog(Frame):
         self.onFitSizeEVT(None)
 
     def init_UI(self):
-        panel = wx.Panel(self, -1)
+        self.panel = wx.Panel(self, -1)
 
-        self.cover_bmp = wx.StaticBitmap(panel, -1, bitmap = self.show_cover(self.FromDIP(640)))
+        self.cover_bmp = wx.StaticBitmap(self.panel, -1, bitmap = self.show_cover(self.FromDIP(640)))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.cover_bmp, 1, wx.EXPAND)
 
-        panel.SetSizerAndFit(vbox)
+        self.panel.SetSizerAndFit(vbox)
 
         self.Fit()
         

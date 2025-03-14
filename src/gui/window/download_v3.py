@@ -12,7 +12,7 @@ from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
 from gui.templates import ActionButton, ScrolledPanel, Frame
-from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel, LoadingItemPanel
+from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -213,7 +213,10 @@ class DownloadManagerWindow(Frame):
         wx.CallAfter(self.completed_page.load_more_panel_item, callback)
 
     def start_download(self):
-        self.downloading_page.start_download()
+        if self.downloading_page.temp_download_list and not self.downloading_page.scroller_count:
+            wx.CallAfter(self.downloading_page.load_more_panel_item, self.downloading_page.start_download)
+        else:
+            self.downloading_page.start_download()
 
     def onCloseEVT(self, event):
         self.Hide()
@@ -297,25 +300,23 @@ class SimplePage(wx.Panel):
             
             return items
         
-        # 隐藏显示更多项目
         self.hide_other_item()
 
         items = get_items()
 
         if items:
-            # 批量添加下载项
             self.scroller.Freeze()
             self.scroller.sizer.AddMany(items)
             self.scroller.Thaw()
 
-            self.refresh_scroller()
+        self.refresh_scroller()
 
-            # 显示封面
-            Thread(target = self.show_panel_item_cover).start()
+        # 显示封面
+        Thread(target = self.show_panel_item_cover).start()
 
-            # 回调函数
-            if callback:
-                callback()
+        # 回调函数
+        if callback:
+            callback()
 
     def hide_other_item(self):
         # 隐藏显示更多和空白占位 Panel
@@ -326,9 +327,6 @@ class SimplePage(wx.Panel):
             elif isinstance(panel, EmptyItemPanel):
                 panel.destroy_panel()
 
-            elif isinstance(panel, LoadingItemPanel):
-                panel.destroy_panel()
-
     def show_panel_item_cover(self):
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
@@ -337,22 +335,15 @@ class SimplePage(wx.Panel):
         # 封面显示完成后，清除图片换成
         DataCache.clear_cache()
 
-    def show_loading_item_panel(self):
-        item = LoadingItemPanel(self.scroller)
-
-        self.scroller.sizer.Add(item, 1, wx.EXPAND)
-
-        self.refresh_scroller()
-
     def refresh_scroller(self):
         if self.is_scroller_empty:
-            self.hide_other_item()
+            if self.temp_download_list:
+                wx.CallAfter(self.load_more_panel_item)
+            else:
+                self.hide_other_item()
 
-            item = EmptyItemPanel(self.scroller, self.name)
-            self.scroller.sizer.Add(item, 1, wx.EXPAND)
-
-        elif not self.scroller_count:
-            wx.CallAfter(self.load_more_panel_item)
+                item = EmptyItemPanel(self.scroller, self.name)
+                self.scroller.sizer.Add(item, 1, wx.EXPAND)
 
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
@@ -376,7 +367,13 @@ class SimplePage(wx.Panel):
 
     @property
     def is_scroller_empty(self):
-        return not len(self.scroller_children)
+        count = 0
+
+        for panel in self.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                count += 1
+
+        return not count
 
 class DownloadingPage(SimplePage):
     def __init__(self, parent, callback: DownloadPageCallback, download_window):
@@ -421,8 +418,6 @@ class DownloadingPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
-
-        self.show_loading_item_panel()
 
     def Bind_EVT(self):
         self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAllEVT)
@@ -506,8 +501,6 @@ class CompeltedPage(SimplePage):
 
     def init_utils(self):
         self.temp_download_list: List[DownloadTaskInfo] = []
-
-        self.show_loading_item_panel()
 
     def Bind_EVT(self):
         self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearHistoryEVT)

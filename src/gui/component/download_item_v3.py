@@ -48,31 +48,6 @@ class EmptyItemPanel(wx.Panel):
         self.Hide()
         self.Destroy()
 
-class LoadingItemPanel(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
-
-        self.init_UI()
-
-    def init_UI(self):
-        self.loading_lab = wx.StaticText(self, -1, "正在加载中，请稍候")
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddStretchSpacer()
-        hbox.Add(self.loading_lab, 0, wx.ALL, 10)
-        hbox.AddStretchSpacer()
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddStretchSpacer()
-        vbox.Add(hbox, 0, wx.EXPAND)
-        vbox.AddStretchSpacer()
-
-        self.SetSizer(vbox)
-
-    def destroy_panel(self):
-        self.Hide()
-        self.Destroy()
-
 class LoadMoreTaskItemPanel(wx.Panel):
     def __init__(self, parent, count: int, callback: Callable):
         self.count, self.callback = count, callback
@@ -417,6 +392,8 @@ class DownloadTaskItemPanel(wx.Panel):
 
                 self.Layout()
 
+                self.callback.onStartNextCallback()
+
                 Thread(target = self.merge_video).start()
             else:
                 pass
@@ -432,8 +409,6 @@ class DownloadTaskItemPanel(wx.Panel):
             self.ffmpeg.clear_temp_files()
 
             self.callback.onAddPanelCallback(self.task_info)
-
-            self.callback.onStartNextCallback()
 
         wx.CallAfter(worker)
 
@@ -499,6 +474,8 @@ class DownloadTaskItemPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
+                    self.pause_btn.Enable(True)
+                    self.stop_btn.Enable(True)
                     self.speed_lab.SetForegroundColour("red")
 
                     if self.task_info.download_option == DownloadOption.OnlyAudio.value:
@@ -516,6 +493,8 @@ class DownloadTaskItemPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
+                    self.pause_btn.Enable(True)
+                    self.stop_btn.Enable(True)
                     self.speed_lab.SetForegroundColour("red")
 
                     if self.error_info:
