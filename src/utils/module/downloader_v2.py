@@ -8,6 +8,7 @@ from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, Download
 from utils.common.enums import CDNMode
 from utils.common.thread import Thread
 from utils.common.map import cdn_map
+from utils.common.exception import GlobalException
 from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
 from utils.config import Config
 
@@ -31,6 +32,7 @@ class Downloader:
 
         self.retry_count = 0
         self.error_info = None
+        self.has_stopped = False
 
         self.downloader_info = []
         self.cache = {}
@@ -106,6 +108,8 @@ class Downloader:
                         executor.submit(self.download_range, range_info)
 
         self.stop_event.clear()
+        self.retry_count = 0
+        self.has_stopped = False
 
         downloader_info = get_downloader_info()
 
@@ -151,9 +155,12 @@ class Downloader:
             self.error_info = e
             self.retry_count += 1
 
-            info.range = self.progress_info[info.index]
-            info.retry = True
-            self.executor.submit(self.download_range, info)
+            if self.retry_count > Config.Advanced.download_error_retry_count or not Config.Advanced.retry_when_download_error:
+                raise GlobalException(callback = self.download_error) from e
+            else:
+                info.range = self.progress_info[info.index]
+                info.retry = True
+                self.executor.submit(self.download_range, info)
 
         self.thread_alive_num -= 1
 
@@ -209,12 +216,6 @@ class Downloader:
                 f.write(b"\0")
 
     def progress_tracker(self):
-        def check_flag():
-            if self.retry_count > Config.Advanced.download_error_retry_count:
-                self.stop_download()
-
-                self.callback.onErrorCallback()
-
         def download_finish():
             item = self.downloader_info[:1][0]["type"]
             self.task_info.download_items.remove(item)
@@ -253,7 +254,13 @@ class Downloader:
 
                 update_progress()
 
-            check_flag()
-
         if not self.stop_event.is_set():
             download_finish()
+
+    def download_error(self):
+        if not self.has_stopped:
+            self.has_stopped = True
+
+            self.stop_download()
+
+            self.callback.onErrorCallback()

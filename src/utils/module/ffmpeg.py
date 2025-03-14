@@ -2,8 +2,9 @@ import os
 import time
 import subprocess
 
-from utils.common.enums import DownloadOption, StreamType
+from utils.common.enums import DownloadOption, StreamType, StatusCode
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback
+from utils.common.exception import GlobalException
 from utils.config import Config
 
 class FFmpeg:
@@ -47,8 +48,7 @@ class FFmpeg:
         if not resp[0]:
             callback.onSuccess()
         else:
-            print(resp[1])
-            callback.onError()
+            raise GlobalException(code = StatusCode.FFmpegCall.value, stack_trace = resp[1], callback = callback.onError)
 
     def get_dash_command(self):
         def get_merge_command():

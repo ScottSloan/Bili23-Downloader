@@ -66,6 +66,7 @@ class StatusCode(Enum):
     Pay = 601                # 付费购买
     URL = 602                # 无效链接
     Redirect = 603           # 跳转链接
+    FFmpegCall = 610         # 调用出错
     Area_Limit = -10403      # 区域限制
 
 class VideoQualityID(Enum):

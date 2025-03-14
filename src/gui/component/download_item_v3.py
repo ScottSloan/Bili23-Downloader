@@ -130,15 +130,15 @@ class DownloadTaskItemPanel(wx.Panel):
 
         self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((75, 16)))
-        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((85, 16)))
+        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((90, 16)))
+        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((90, 16)))
         self.video_size_lab = InfoLabel(self, "--", size = self.FromDIP((-1, -1)))
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         video_info_hbox.Add(self.video_quality_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
-        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
-        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
 
         video_info_vbox = wx.BoxSizer(wx.VERTICAL)
         video_info_vbox.AddSpacer(5)
@@ -305,6 +305,12 @@ class DownloadTaskItemPanel(wx.Panel):
 
             case DownloadStatus.Complete:
                 self.open_file_location()
+            
+            case DownloadStatus.MergeError:
+                self.merge_video()
+
+            case DownloadStatus.DownloadError:
+                self.resume_download()
 
     def onStopEVT(self, event):
         self.destroy_panel(event)
@@ -366,6 +372,7 @@ class DownloadTaskItemPanel(wx.Panel):
             callback = MergeCallback()
             callback.onSuccess = self.onMergeSuccess
             callback.onError = self.onMergeError
+
             return callback
 
         self.ffmpeg = FFmpeg()
@@ -490,8 +497,6 @@ class DownloadTaskItemPanel(wx.Panel):
                     self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
-                    self.pause_btn.Enable(True)
-                    self.stop_btn.Enable(True)
                     self.speed_lab.SetForegroundColour("red")
 
                     if self.task_info.download_option == DownloadOption.OnlyAudio.value:
@@ -501,7 +506,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     if self.error_info:
                         self.speed_lab.SetLabel(f"{lab}失败，点击查看详情")
-                        self.speed_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+                        self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
                     else:
                         self.speed_lab.SetLabel(f"{lab}失败")
 
@@ -513,7 +518,7 @@ class DownloadTaskItemPanel(wx.Panel):
 
                     if self.error_info:
                         self.speed_lab.SetLabel("下载失败，点击查看详情")
-                        self.speed_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
+                        self.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
                     else:
                         self.speed_lab.SetLabel("下载失败")
         

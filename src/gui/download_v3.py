@@ -300,19 +300,22 @@ class SimplePage(wx.Panel):
         # 隐藏显示更多项目
         self.hide_other_item()
 
-        # 批量添加下载项
-        self.scroller.Freeze()
-        self.scroller.sizer.AddMany(get_items())
-        self.scroller.Thaw()
+        items = get_items()
 
-        self.refresh_scroller()
+        if items:
+            # 批量添加下载项
+            self.scroller.Freeze()
+            self.scroller.sizer.AddMany(items)
+            self.scroller.Thaw()
 
-        # 显示封面
-        Thread(target = self.show_panel_item_cover).start()
+            self.refresh_scroller()
 
-        # 回调函数
-        if callback:
-            callback()
+            # 显示封面
+            Thread(target = self.show_panel_item_cover).start()
+
+            # 回调函数
+            if callback:
+                callback()
 
     def hide_other_item(self):
         # 隐藏显示更多和空白占位 Panel
