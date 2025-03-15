@@ -7,11 +7,13 @@ from utils.common.enums import StreamType
 from utils.parse.audio import AudioInfo
 from utils.parse.extra import ExtraInfo
 
-class OptionDialog(wx.Dialog):
+from gui.component.dialog import Dialog
+
+class OptionDialog(Dialog):
     def __init__(self, parent, stream_type: int, callback):
         self.stream_type, self.callback = stream_type, callback
 
-        wx.Dialog.__init__(self, parent, -1, "下载选项")
+        Dialog.__init__(self, parent, "下载选项")
 
         self.init_UI()
 
@@ -21,15 +23,7 @@ class OptionDialog(wx.Dialog):
 
         self.CenterOnParent()
 
-    def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-                
+    def init_UI(self): 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
 
@@ -88,8 +82,8 @@ class OptionDialog(wx.Dialog):
         hbox.Add(extra_vbox, 0, wx.EXPAND)
         hbox.AddSpacer(30)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
         self.auto_popup_chk = wx.CheckBox(self, -1, "下载时自动弹出此对话框")
 

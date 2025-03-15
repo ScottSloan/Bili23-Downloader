@@ -12,12 +12,14 @@ from utils.auth.cookie import CookieUtils
 
 from gui.dialog.captcha import CaptchaWindow
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
+from gui.component.panel import Panel
 
-class LoginWindow(wx.Dialog):
+class LoginWindow(Dialog):
     def __init__(self, parent, callback: Callable):
         self.callback = callback
 
-        wx.Dialog.__init__(self, parent, -1, "登录")
+        Dialog.__init__(self, parent, "登录")
         
         self.init_utils()
 
@@ -170,9 +172,9 @@ class LoginWindow(wx.Dialog):
         img = BytesIO(base64.b64decode(b64))
         return wx.Image(img).Scale(self.FromDIP(80), self.FromDIP(80)).ConvertToBitmap()
 
-class LoginPage(wx.Panel):
+class LoginPage(Panel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
     def getLabelColor(self):
         if not Config.Sys.dark_mode:
@@ -329,14 +331,6 @@ class SMSPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
@@ -377,7 +371,7 @@ class SMSPage(LoginPage):
         bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, border = 10)
 
-        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
+        self.login_btn = wx.Button(self, -1, "登录", size = self.get_scaled_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()

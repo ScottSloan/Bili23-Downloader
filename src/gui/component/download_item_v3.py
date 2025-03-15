@@ -18,14 +18,15 @@ from utils.config import Config
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
 
 from gui.component.info_label import InfoLabel
+from gui.component.panel import Panel
 from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.error import ErrorInfoDialog
 
-class EmptyItemPanel(wx.Panel):
+class EmptyItemPanel(Panel):
     def __init__(self, parent, name: str):
         self.name = name
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -48,11 +49,11 @@ class EmptyItemPanel(wx.Panel):
         self.Hide()
         self.Destroy()
 
-class LoadMoreTaskItemPanel(wx.Panel):
+class LoadMoreTaskItemPanel(Panel):
     def __init__(self, parent, count: int, callback: Callable):
         self.count, self.callback = count, callback
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -84,11 +85,11 @@ class LoadMoreTaskItemPanel(wx.Panel):
         self.Hide()
         self.Destroy()
 
-class DownloadTaskItemPanel(wx.Panel):
+class DownloadTaskItemPanel(Panel):
     def __init__(self, parent, info: DownloadTaskInfo, callback: TaskPanelCallback, download_window):
         self.task_info, self.callback, self.download_window = info, callback, download_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 

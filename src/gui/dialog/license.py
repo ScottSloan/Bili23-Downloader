@@ -1,30 +1,21 @@
 import wx
 import base64
 
-from utils.config import Config
-
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
 
-class LicenseWindow(wx.Dialog):
+class LicenseWindow(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "授权")
+        Dialog.__init__(self, parent, "授权")
         
         self.init_UI()
 
         self.CenterOnParent()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-                
         license_box = TextCtrl(self, -1, base64.b64decode(self._string_base_64), size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
-        close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 28)))
+        close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 
         dlg_vbox = wx.BoxSizer(wx.VERTICAL)
         dlg_vbox.Add(license_box, 0, wx.ALL, 10)

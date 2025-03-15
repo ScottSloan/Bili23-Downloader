@@ -11,10 +11,11 @@ from utils.tool_v2 import FormatTool, FileDirectoryTool
 from utils.common.enums import PlayerMode
 
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
 
-class LiveRecordingWindow(wx.Dialog):
+class LiveRecordingWindow(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "直播录制")
+        Dialog.__init__(self, parent, "直播录制")
 
         self.init_UI()
 
@@ -24,15 +25,7 @@ class LiveRecordingWindow(wx.Dialog):
 
         self.init_utils()
 
-    def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-                
+    def init_UI(self):   
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
@@ -40,12 +33,12 @@ class LiveRecordingWindow(wx.Dialog):
         self.title_lab.SetFont(font)
 
         m3u8_link_lab = wx.StaticText(self, -1, "m3u8 链接")
-        self.m3u8_link_box = TextCtrl(self, -1, size = _get_scale_size((400, -1)))
-        self.copy_link_btn = wx.Button(self, -1, "复制", size = _get_scale_size((60, 24)))
+        self.m3u8_link_box = TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
+        self.copy_link_btn = wx.Button(self, -1, "复制", size = self.get_scaled_size((60, 24)))
 
         recording_lab = wx.StaticText(self, -1, "保存位置")
-        self.recording_path_box = TextCtrl(self, -1, size = _get_scale_size((400, -1)))
-        self.browse_path_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
+        self.recording_path_box = TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
+        self.browse_path_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         bag_box = wx.FlexGridSizer(2, 3, 0, 0)
         bag_box.Add(m3u8_link_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -57,9 +50,9 @@ class LiveRecordingWindow(wx.Dialog):
 
         bag_box.AddGrowableCol(1, 1)
 
-        self.start_recording_btn = wx.Button(self, -1, "开始录制", size = _get_scale_size((100, 30)))
-        self.open_player_btn = wx.Button(self, -1, "直接播放", size = _get_scale_size((100, 30)))
-        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = _get_scale_size((100, 30)))
+        self.start_recording_btn = wx.Button(self, -1, "开始录制", size = self.get_scaled_size((100, 30)))
+        self.open_player_btn = wx.Button(self, -1, "直接播放", size = self.get_scaled_size((100, 30)))
+        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.get_scaled_size((100, 30)))
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))

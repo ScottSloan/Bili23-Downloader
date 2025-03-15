@@ -4,12 +4,13 @@ from datetime import datetime
 from utils.common.map import file_name_fields_map, get_mapping_key_by_value
 
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
 
-class CustomFileNameDialog(wx.Dialog):
+class CustomFileNameDialog(Dialog):
     def __init__(self, parent, template: str):
         self.template = template
 
-        wx.Dialog.__init__(self, parent, -1, "自定义下载文件名")
+        Dialog.__init__(self, parent, "自定义下载文件名")
 
         self.init_UI()
 

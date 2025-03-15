@@ -12,6 +12,7 @@ from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config
 
 from gui.component.frame import Frame
+from gui.component.panel import Panel
 from gui.component.action_button import ActionButton
 from gui.component.scrolled_panel import ScrolledPanel
 from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
@@ -264,9 +265,9 @@ class DownloadManagerWindow(Frame):
     def get_timestamp(self):
         return int(datetime.now().timestamp())
 
-class SimplePage(wx.Panel):
+class SimplePage(Panel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():

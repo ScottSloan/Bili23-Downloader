@@ -60,14 +60,6 @@ class MainWindow(Frame):
             if Config.Sys.platform != "windows":
                 Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
 
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-        
         def _get_button_scale_size():
             match Config.Sys.platform:
                 case "windows" | "darwin":
@@ -153,8 +145,8 @@ class MainWindow(Frame):
         self.treelist = TreeListCtrl(self.panel)
         self.treelist.SetSize(self.FromDIP((800, 260)))
 
-        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = _get_scale_size((100, 30)))
-        self.download_btn = wx.Button(self.panel, -1, "开始下载", size = _get_scale_size((100, 30)))
+        self.download_mgr_btn = wx.Button(self.panel, -1, "下载管理", size = self.get_scaled_size((100, 30)))
+        self.download_btn = wx.Button(self.panel, -1, "开始下载", size = self.get_scaled_size((100, 30)))
         self.download_btn.Enable(False)
         
         self.face = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))

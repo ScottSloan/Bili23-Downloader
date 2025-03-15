@@ -1,10 +1,12 @@
 import wx
 
-class ActionButton(wx.Panel):
+from gui.component.panel import Panel
+
+class ActionButton(Panel):
     def __init__(self, parent, title):
         self._title = title
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 

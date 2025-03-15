@@ -7,10 +7,11 @@ from utils.config import Config
 from utils.common.map import cdn_map
 
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
 
-class ChangeCDNDialog(wx.Dialog):
+class ChangeCDNDialog(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "更改 CDN host")
+        Dialog.__init__(self, parent, "更改 CDN host")
 
         self.init_UI()
 
@@ -21,25 +22,17 @@ class ChangeCDNDialog(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
         cdn_lab = wx.StaticText(self, -1, "CDN host 列表")
 
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.cdn_list.EnableCheckBoxes(True)
 
         custom_lab = wx.StaticText(self, -1, "自定义")
-        self.custom_box = TextCtrl(self, -1, size = _get_scale_size((240, 24)))
-        self.add_btn = wx.Button(self, -1, "添加", size = _get_scale_size((80, 28)))
-        self.delete_btn = wx.Button(self, -1, "删除", size = _get_scale_size((80, 28)))
+        self.custom_box = TextCtrl(self, -1, size = self.get_scaled_size((240, 24)))
+        self.add_btn = wx.Button(self, -1, "添加", size = self.get_scaled_size((80, 28)))
+        self.delete_btn = wx.Button(self, -1, "删除", size = self.get_scaled_size((80, 28)))
 
-        self.ping_btn = wx.Button(self, -1, "Ping 测试", size = _get_scale_size((100, 28)))
+        self.ping_btn = wx.Button(self, -1, "Ping 测试", size = self.get_scaled_size((100, 28)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.Add(custom_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
@@ -51,8 +44,8 @@ class ChangeCDNDialog(wx.Dialog):
 
         bottom_line = wx.StaticLine(self, -1)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)

@@ -5,8 +5,11 @@ import time
 import shutil
 import requests
 from requests.auth import HTTPProxyAuth
+
 from gui.component.scrolled_panel import ScrolledPanel
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
+from gui.component.panel import Panel
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
@@ -19,9 +22,9 @@ from utils.common.map import video_quality_map, audio_quality_map, video_codec_m
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
 
-class SettingWindow(wx.Dialog):
+class SettingWindow(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "设置")
+        Dialog.__init__(self, parent, "设置")
 
         self.init_UI()
 
@@ -30,14 +33,6 @@ class SettingWindow(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
         self.note = wx.Notebook(self, -1)
 
         self.note.AddPage(DownloadTab(self.note, self.GetParent()), "下载")
@@ -47,8 +42,8 @@ class SettingWindow(wx.Dialog):
         self.note.AddPage(ProxyTab(self.note, self.GetParent()), "代理")
         self.note.AddPage(MiscTab(self.note, self.GetParent()), "其他")
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -71,11 +66,11 @@ class SettingWindow(wx.Dialog):
             
         event.Skip()
 
-class DownloadTab(wx.Panel):
+class DownloadTab(Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -84,14 +79,6 @@ class DownloadTab(wx.Panel):
         self.init_data()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-        
         def _get_panel_size():
             match Config.Sys.platform:
                 case "windows":
@@ -114,8 +101,8 @@ class DownloadTab(wx.Panel):
         self.scrolled_panel = ScrolledPanel(self.download_box, _get_panel_size())
 
         path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
-        self.path_box = TextCtrl(self.scrolled_panel, -1, size = _get_scale_size((220, 24)))
-        self.browse_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = _get_scale_size((60, 24)))
+        self.path_box = TextCtrl(self.scrolled_panel, -1, size = self.get_scaled_size((220, 24)))
+        self.browse_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -318,11 +305,11 @@ class DownloadTab(wx.Panel):
     def onVideoCodecTipEVT(self, event):
         wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认下载 AVC/H.264", "说明", wx.ICON_INFORMATION).ShowModal()
     
-class AdvancedTab(wx.Panel):
+class AdvancedTab(Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -331,14 +318,6 @@ class AdvancedTab(wx.Panel):
         self.init_data()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
         icon_manager = IconManager(self)
 
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
@@ -362,14 +341,14 @@ class AdvancedTab(wx.Panel):
         custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN host")
-        self.custom_cdn_box = TextCtrl(cdn_box, -1, size = _get_scale_size((220, 24)))
+        self.custom_cdn_box = TextCtrl(cdn_box, -1, size = self.get_scaled_size((220, 24)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.AddSpacer(30)
         custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN host", size = _get_scale_size((100, 28)))
+        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN host", size = self.get_scaled_size((100, 28)))
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.AddStretchSpacer()
@@ -386,7 +365,7 @@ class AdvancedTab(wx.Panel):
 
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
-        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.FromDIP((120, 28)))
+        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
 
         button_hbox = wx.BoxSizer(wx.HORIZONTAL)
         button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, 10)
@@ -540,11 +519,11 @@ class AdvancedTab(wx.Panel):
         self.download_suspend_retry_box.Enable(self.download_suspend_retry_chk.GetValue())
         self.download_suspend_retry_unit_lab.Enable(self.download_suspend_retry_chk.GetValue())
 
-class MergeTab(wx.Panel):
+class MergeTab(Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -553,26 +532,18 @@ class MergeTab(wx.Panel):
         self.init_data()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                    case "windows":
-                        return self.FromDIP(_size)
-                    
-                    case "linux" | "darwin":
-                        return wx.DefaultSize
-
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
         ffmpeg_path_label = wx.StaticText(ffmpeg_box, -1, "FFmpeg 路径")
-        self.path_box = TextCtrl(ffmpeg_box, -1, size = _get_scale_size((220, 24)))
-        self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = _get_scale_size((60, 24)))
+        self.path_box = TextCtrl(ffmpeg_box, -1, size = self.get_scaled_size((220, 24)))
+        self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.auto_detect_btn = wx.Button(ffmpeg_box, -1, "自动检测", size = _get_scale_size((90, 28)))
-        self.tutorial_btn = wx.Button(ffmpeg_box, -1, "安装教程", size = _get_scale_size((90, 28)))
+        self.auto_detect_btn = wx.Button(ffmpeg_box, -1, "自动检测", size = self.get_scaled_size((90, 28)))
+        self.tutorial_btn = wx.Button(ffmpeg_box, -1, "安装教程", size = self.get_scaled_size((90, 28)))
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.Add(self.auto_detect_btn, 0, wx.ALL & (~wx.TOP), 10)
@@ -673,11 +644,11 @@ class MergeTab(wx.Panel):
 
         return True
 
-class ExtraTab(wx.Panel):
+class ExtraTab(Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -773,11 +744,11 @@ class ExtraTab(wx.Panel):
 
         return True
 
-class ProxyTab(wx.Panel):
+class ProxyTab(Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -959,11 +930,11 @@ class ProxyTab(wx.Panel):
 
         return True
 
-class MiscTab(wx.Panel):
+class MiscTab(Panel):
     def __init__(self, parent, _main_window):
         self._main_window = _main_window
 
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.init_UI()
 
@@ -972,14 +943,6 @@ class MiscTab(wx.Panel):
         self.init_data()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
         def _get_panel_size():
             match Config.Sys.platform:
                 case "windows":
@@ -1026,8 +989,8 @@ class MiscTab(wx.Panel):
         player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
         player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
 
-        self.player_path_box = TextCtrl(player_box, -1, size = _get_scale_size((220, 24)))
-        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = _get_scale_size((60, 24)))
+        self.player_path_box = TextCtrl(player_box, -1, size = self.get_scaled_size((220, 24)))
+        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -1047,8 +1010,8 @@ class MiscTab(wx.Panel):
         self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
         self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
-        self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = _get_scale_size((100, 28)))
-        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = _get_scale_size((100, 28)))
+        self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
+        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
         
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)

@@ -1,4 +1,4 @@
-## 1.60.0 (2025-03-14)
+## 1.60.0 (2025-03-15)
 ### 新增
 * 支持编辑框三击全选 by @IvanHanloth (#77)
 * 支持自定义下载文件名 by @ScottSloan
@@ -12,8 +12,9 @@
 * 优化重名文件覆盖逻辑 by @ScottSloan (#84)
 * 优化主页链接框显示效果，支持一键清空 by @ScottSloan
 * 优化读取大量断点续传文件时的启动速度 by @ScottSloan
+* 优化剧集列表自动勾选逻辑 by @ScottSloan (#90)
 
 ### 修复
 * 修复异常显示下载完成的情况 by @ScottSloan (#82)
-* 修复 ChunkedEncodingError 错误 by @ScottSloan (#66)
+* 修复部分情况下载失败的问题 by @ScottSloan (#66)
 * 修复下载后音视频残缺的问题 by @ScottSloan (#87)

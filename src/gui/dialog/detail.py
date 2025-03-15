@@ -11,9 +11,12 @@ from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.cheese import CheeseInfo
 
-class DetailDialog(wx.Dialog):
+from gui.component.dialog import Dialog
+from gui.component.panel import Panel
+
+class DetailDialog(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "详细信息")
+        Dialog.__init__(self, parent, "详细信息")
 
         self.init_UI()
 
@@ -50,9 +53,9 @@ class DetailDialog(wx.Dialog):
 
         self.CenterOnParent()
 
-class DetailPage(wx.Panel):
+class DetailPage(Panel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 300)))
 

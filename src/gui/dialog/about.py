@@ -4,11 +4,12 @@ import webbrowser
 from utils.config import Config
 from utils.common.icon_v2 import IconManager, IconType
 
-from .license import LicenseWindow
+from gui.dialog.license import LicenseWindow
+from gui.component.dialog import Dialog
 
-class AboutWindow(wx.Dialog):
+class AboutWindow(Dialog):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, f"关于 {Config.APP.name}")
+        Dialog.__init__(self, parent, f"关于 {Config.APP.name}")
 
         self.init_UI()
 
@@ -22,14 +23,6 @@ class AboutWindow(wx.Dialog):
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
-
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
 
         def _set_icon_background(image: wx.Image):
             _width, _height = image.GetSize()
@@ -83,8 +76,8 @@ class AboutWindow(wx.Dialog):
         self.home_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.home_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
 
-        self.license_btn = wx.Button(self, -1, "授权", size = _get_scale_size((80, 26)))
-        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 26)))
+        self.license_btn = wx.Button(self, -1, "授权", size = self.get_scaled_size((80, 26)))
+        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 26)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.license_btn, 0, wx.ALL, 10)

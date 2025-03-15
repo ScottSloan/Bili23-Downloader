@@ -1,10 +1,11 @@
 import wx
 
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
 
-class CutClipDialog(wx.Dialog):
+class CutClipDialog(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "截取片段")
+        Dialog.__init__(self, parent, "截取片段")
 
         self.init_UI()
 

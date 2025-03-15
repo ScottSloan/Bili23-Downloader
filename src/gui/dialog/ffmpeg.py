@@ -4,9 +4,11 @@ from utils.module.ffmpeg import FFmpeg
 from utils.common.icon_v2 import IconManager, IconType
 from utils.config import Config
 
-class DetectDialog(wx.Dialog):
+from gui.component.dialog import Dialog
+
+class DetectDialog(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "自动检测")
+        Dialog.__init__(self, parent, "自动检测")
 
         self.init_UI()
 
@@ -20,14 +22,6 @@ class DetectDialog(wx.Dialog):
         def _set_dark_mode():
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
-        
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
 
         def _get_scale_button_size():
             match Config.Sys.platform:
@@ -64,8 +58,8 @@ class DetectDialog(wx.Dialog):
         self.cwd_chk = wx.RadioButton(self, -1, "运行目录")
         self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((350, 20)), style = wx.ST_ELLIPSIZE_END)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)

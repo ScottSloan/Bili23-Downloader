@@ -8,12 +8,13 @@ from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
 from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
 
-class ErrorInfoDialog(wx.Dialog):
+class ErrorInfoDialog(Dialog):
     def __init__(self, parent, exception_info = GlobalExceptionInfo.info):
         self.exception_info: dict = exception_info
 
-        wx.Dialog.__init__(self, parent, -1, "错误日志")
+        Dialog.__init__(self, parent, "错误日志")
 
         self.init_UI()
 
@@ -26,14 +27,6 @@ class ErrorInfoDialog(wx.Dialog):
             if not Config.Sys.dark_mode:
                 self.SetBackgroundColour("white")
                 self.log_box.SetBackgroundColour("white")
-
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
 
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
 
@@ -60,8 +53,8 @@ class ErrorInfoDialog(wx.Dialog):
         self.log_box = TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.log_box.SetFont(font)
 
-        self.save_btn = wx.Button(self, -1, "保存到文件", size = _get_scale_size((100, 28)))
-        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = _get_scale_size((80, 28)))
+        self.save_btn = wx.Button(self, -1, "保存到文件", size = self.get_scaled_size((100, 28)))
+        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
