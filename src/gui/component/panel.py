@@ -13,3 +13,7 @@ class Panel(wx.Panel):
             
             case "linux" | "darwin":
                 return wx.DefaultSize
+    
+    def set_dark_mode(self):
+        if not Config.Sys.dark_mode:
+            self.SetBackgroundColour("white")

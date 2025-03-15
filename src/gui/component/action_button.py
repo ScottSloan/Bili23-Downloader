@@ -1,4 +1,7 @@
 import wx
+import wx.core
+
+from utils.config import Config
 
 from gui.component.panel import Panel
 
@@ -43,9 +46,10 @@ class ActionButton(Panel):
         self.lab.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
 
     def onHoverEVT(self, event):
-        self.SetBackgroundColour(wx.Colour(220, 220, 220))
+        if not self._active:
+            self.set_hover_bgcolor()
 
-        self.Refresh()
+            self.Refresh()
 
         event.Skip()
 
@@ -56,7 +60,7 @@ class ActionButton(Panel):
     
     def onLeaveEVT(self, event):
         if not self._active and not self._lab_hover:
-            self.SetBackgroundColour("white")
+            self.set_unactive_bgcolor()
 
             self.Refresh()
 
@@ -68,7 +72,7 @@ class ActionButton(Panel):
         event.Skip()
     
     def onClickEVT(self, event):
-        self.SetBackgroundColour(wx.Colour(210, 210, 210))
+        self.set_active_bgcolor()
 
         self.Refresh()
 
@@ -80,15 +84,33 @@ class ActionButton(Panel):
     
     def setActiveState(self):
         self._active = True
-        self.SetBackgroundColour(wx.Colour(210, 210, 210))
+        self.set_active_bgcolor()
 
         self.Refresh()
 
     def setUnactiveState(self):
         self._active = False
-        self.SetBackgroundColour("white")
+        self.set_unactive_bgcolor()
 
         self.Refresh()
+
+    def set_active_bgcolor(self):
+        if Config.Sys.dark_mode:
+            self.SetBackgroundColour(wx.Colour(21, 21, 21))
+        else:
+            self.SetBackgroundColour(wx.Colour(210, 210, 210))
+
+    def set_unactive_bgcolor(self):
+        if Config.Sys.dark_mode:
+            self.SetBackgroundColour(wx.Colour(44, 44, 44))
+        else:
+            self.SetBackgroundColour("white")
+
+    def set_hover_bgcolor(self):
+        if Config.Sys.dark_mode:
+            self.SetBackgroundColour(wx.Colour(60, 60, 60))
+        else:
+            self.SetBackgroundColour(wx.Colour(220, 220, 220))
 
     def setBitmap(self, bitmap):
         self.icon.SetBitmap(bitmap)

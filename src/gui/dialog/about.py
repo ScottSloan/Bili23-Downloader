@@ -11,6 +11,8 @@ class AboutWindow(Dialog):
     def __init__(self, parent):
         Dialog.__init__(self, parent, f"关于 {Config.APP.name}")
 
+        self._enale_dark_mode = True
+
         self.init_UI()
 
         self.Bind_EVT()
@@ -20,10 +22,6 @@ class AboutWindow(Dialog):
         wx.Bell()
     
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
         def _set_icon_background(image: wx.Image):
             _width, _height = image.GetSize()
 
@@ -40,7 +38,7 @@ class AboutWindow(Dialog):
 
             return image
 
-        _set_dark_mode()
+        self.set_dark_mode()
 
         icon_manager = IconManager(self)
 

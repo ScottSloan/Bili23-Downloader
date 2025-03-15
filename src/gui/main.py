@@ -26,6 +26,7 @@ from utils.common.data_type import ParseCallback, TreeListItemInfo
 from gui.component.frame import Frame
 from gui.component.info_bar import InfoBar
 from gui.component.tree_list import TreeListCtrl
+from gui.component.panel import Panel
 from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
 from gui.window.login import LoginWindow
@@ -97,7 +98,7 @@ class MainWindow(Frame):
 
         self.init_ids()
 
-        self.panel = wx.Panel(self, -1)
+        self.panel = Panel(self)
 
         self.infobar = InfoBar(self.panel)
 

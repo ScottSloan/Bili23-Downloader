@@ -23,11 +23,7 @@ class DetailDialog(Dialog):
         self.CenterOnParent()
         
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
-        _set_dark_mode()
+        self.set_dark_mode()
 
         self.note = wx.Simplebook(self, -1)
 

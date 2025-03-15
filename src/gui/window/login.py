@@ -30,17 +30,12 @@ class LoginWindow(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
-        _set_dark_mode()
+        self.set_dark_mode()
 
         self.qr_page = QRPage(self, self.session)
         self.sms_page = SMSPage(self, self.session)
 
         line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
-        line.SetBackgroundColour("red")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(90)
@@ -331,11 +326,7 @@ class SMSPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-        
-        _set_dark_mode()
+        self.set_dark_mode()
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))

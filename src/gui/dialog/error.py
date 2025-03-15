@@ -3,7 +3,6 @@ import wx
 import json
 import wx.adv
 
-from utils.config import Config
 from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
@@ -23,11 +22,6 @@ class ErrorInfoDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-                self.log_box.SetBackgroundColour("white")
-
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
 
         time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp"))))
@@ -72,7 +66,7 @@ class ErrorInfoDialog(Dialog):
 
         self.SetSizerAndFit(vbox)
 
-        _set_dark_mode()
+        self.set_dark_mode()
 
     def Bind_EVT(self):
         self.save_btn.Bind(wx.EVT_BUTTON, self.onSaveJsonEVT)
@@ -94,3 +88,8 @@ class ErrorInfoDialog(Dialog):
             "描述": self.exception_info.get("message"),
             "详细日志": self.exception_info.get("stack_trace"),
         }
+    
+    def set_dark_mode(self):
+        super().set_dark_mode()
+
+        self.log_box.SetBackgroundColour("white")

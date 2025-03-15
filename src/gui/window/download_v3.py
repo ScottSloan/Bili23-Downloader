@@ -35,8 +35,8 @@ class DownloadManagerWindow(Frame):
     def init_UI(self):
         icon_manager = IconManager(self)
 
-        top_panel = wx.Panel(self, -1)
-        top_panel.SetBackgroundColour("white")
+        top_panel = Panel(self)
+        top_panel.set_dark_mode()
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
@@ -57,8 +57,8 @@ class DownloadManagerWindow(Frame):
 
         top_separate_line = wx.StaticLine(self, -1)
 
-        left_panel = wx.Panel(self, -1)
-        left_panel.SetBackgroundColour("white")
+        left_panel = Panel(self)
+        left_panel.set_dark_mode()
 
         self.downloading_page_btn = ActionButton(left_panel, "正在下载(0)")
         self.downloading_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.DOWNLOADING_ICON))
@@ -82,8 +82,8 @@ class DownloadManagerWindow(Frame):
 
         middle_separate_line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
 
-        right_panel = wx.Panel(self, -1)
-        right_panel.SetBackgroundColour("white")
+        right_panel = Panel(self)
+        right_panel.set_dark_mode()
 
         self.book = wx.Simplebook(right_panel, -1)
 
@@ -391,6 +391,8 @@ class DownloadingPage(SimplePage):
         self.init_utils()
     
     def init_UI(self):
+        self.set_dark_mode()
+
         max_download_lab = wx.StaticText(self, -1, "并行下载数")
         self.max_download_choice = wx.Choice(self, -1, choices = [f"{i + 1}" for i in range(8)])
         self.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
@@ -410,7 +412,7 @@ class DownloadingPage(SimplePage):
         top_separate_line = wx.StaticLine(self, -1)
 
         self.scroller = ScrolledPanel(self)
-        self.scroller.SetBackgroundColour("white")
+        self.scroller.set_dark_mode()
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)
@@ -494,6 +496,8 @@ class CompeltedPage(SimplePage):
         self.init_utils()
 
     def init_UI(self):
+        self.set_dark_mode()
+
         self.clear_history_btn = wx.Button(self, -1, "清除下载记录")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -503,7 +507,7 @@ class CompeltedPage(SimplePage):
         top_separate_line = wx.StaticLine(self, -1)
 
         self.scroller = ScrolledPanel(self)
-        self.scroller.SetBackgroundColour("white")
+        self.scroller.set_dark_mode()
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)

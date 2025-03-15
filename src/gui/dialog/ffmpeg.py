@@ -19,10 +19,6 @@ class DetectDialog(Dialog):
         self.init_utils()
 
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
         def _get_scale_button_size():
             match Config.Sys.platform:
                 case "windows":
@@ -39,7 +35,7 @@ class DetectDialog(Dialog):
                 case "linux":
                     return wx.NO_BORDER
         
-        _set_dark_mode()
+        self.set_dark_mode()
 
         icon_manager = IconManager(self)
 

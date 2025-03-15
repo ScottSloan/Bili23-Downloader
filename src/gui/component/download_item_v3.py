@@ -31,6 +31,8 @@ class EmptyItemPanel(Panel):
         self.init_UI()
 
     def init_UI(self):
+        self.set_dark_mode()
+        
         self.empty_lab = wx.StaticText(self, -1, f"没有{self.name}的项目")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -60,6 +62,8 @@ class LoadMoreTaskItemPanel(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
+        self.set_dark_mode()
+
         self.more_lab = wx.StaticText(self, -1, f"显示更多项目({self.count}+)")
         self.more_lab.SetCursor(wx.Cursor(wx.Cursor(wx.CURSOR_HAND)))
         
@@ -98,6 +102,8 @@ class DownloadTaskItemPanel(Panel):
         self.init_utils()
 
     def init_UI(self):
+        self.set_dark_mode()
+
         self.icon_manager = IconManager(self)
 
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))

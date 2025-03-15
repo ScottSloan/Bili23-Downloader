@@ -3,6 +3,7 @@ import io
 import os
 
 from gui.component.frame import Frame
+from gui.component.panel import Panel
 
 class CoverViewerDialog(Frame):
     def __init__(self, parent, _cover_raw_contents: bytes):
@@ -22,7 +23,7 @@ class CoverViewerDialog(Frame):
         self.onFitSizeEVT(None)
 
     def init_UI(self):
-        self.panel = wx.Panel(self, -1)
+        self.panel = Panel(self)
 
         self.cover_bmp = wx.StaticBitmap(self.panel, -1, bitmap = self.show_cover(self.FromDIP(640)))
 

@@ -20,11 +20,6 @@ class UpdateWindow(Dialog):
         wx.Bell()
 
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-                self.changelog.SetBackgroundColour("white")
-
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
@@ -61,7 +56,7 @@ class UpdateWindow(Dialog):
 
         self.SetSizerAndFit(update_vbox)
 
-        _set_dark_mode()
+        self.set_dark_mode()
     
     def Bind_EVT(self):
         self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)
@@ -85,3 +80,8 @@ class UpdateWindow(Dialog):
         self.update_btn.Show(True)
 
         self.Layout()
+
+    def set_dark_mode(self):
+        super().set_dark_mode()
+
+        self.changelog.SetBackgroundColour("white")
