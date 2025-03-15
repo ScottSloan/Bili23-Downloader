@@ -440,19 +440,21 @@ class DownloadingPage(SimplePage):
         self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onCancelAllEVT)
 
-    def start_download(self):
+        self.max_download_choice.Bind(wx.EVT_CHOICE, self.onMaxDownloadChangeEVT)
+
+    def start_download(self, start_all: bool = False):
         # 开始下载
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
-                if panel.task_info.status in [DownloadStatus.Pause.value]:
+                if panel.task_info.status == DownloadStatus.Pause.value and start_all:
                     panel.set_download_status(DownloadStatus.Waiting.value)
 
-                if panel.task_info.status in [DownloadStatus.Waiting.value]:
+                if panel.task_info.status == DownloadStatus.Waiting.value:
                     if self.get_scroller_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.resume_download()
     
     def onStartAllEVT(self, event):
-        self.start_download()
+        self.start_download(start_all = True)
 
     def onPauseAllEVT(self, event):
         for panel in self.scroller_children:
@@ -486,6 +488,22 @@ class DownloadingPage(SimplePage):
 
         self.refresh_scroller()
 
+    def onMaxDownloadChangeEVT(self, event):
+        Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
+
+        count = 0
+
+        for panel in self.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if self.get_scroller_task_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
+                    if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
+                        panel.resume_download()
+                else:
+                    if panel.task_info.status == DownloadStatus.Downloading.value:
+                        count += 1
+
+                        if count > Config.Download.max_download_count:
+                            panel.pause_download(set_waiting_status = True)
     @property
     def scroller_count(self):
         return self.get_scroller_task_count(DownloadStatus.Alive.value)

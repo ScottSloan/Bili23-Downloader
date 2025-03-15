@@ -27,19 +27,7 @@ class IconManager:
     def __init__(self, window: wx.Window):
         self.window, self.DPI_scale_factor = window, window.GetDPIScaleFactor()
 
-        if Config.Sys.dark_mode:
-            self.dark_mode = True
-        else:
-            self.dark_mode = False
-
-        match Config.Sys.platform:
-            case "windows":
-                self.DPI_factor_1 = 1
-                self.DPI_factor_1_5 = 1.5
-
-            case "linux" | "darwin":
-                self.DPI_factor_1 = 1.5
-                self.DPI_factor_1_5 = 2
+        self.dark_mode = Config.Sys.dark_mode
 
     def get_icon_bitmap(self, icon_id: int):
         match icon_id:
@@ -97,10 +85,10 @@ class IconManager:
         return img.ConvertToBitmap(scale = scale, width = size.width, height = size.height)
 
     def _get_icon_scale_and_size(self):
-        if self.DPI_scale_factor <= self.DPI_factor_1:
+        if self.DPI_scale_factor <= 1:
             return wx.Size(16, 16)
 
-        elif self.DPI_scale_factor <= self.DPI_factor_1_5:
+        elif self.DPI_scale_factor <= 1.5:
             return wx.Size(24, 24)
 
         else:

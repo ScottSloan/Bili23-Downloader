@@ -6,10 +6,10 @@ class BitmapButton(wx.BitmapButton):
     def __init__(self, parent, bitmap):
         def get_bitmap_button_style():
             match Config.Sys.platform:
-                case "windows" | "darwin":
+                case "windows":
                     return 0
                 
-                case "linux":
+                case "linux" | "darwin":
                     return wx.NO_BORDER
 
         wx.BitmapButton.__init__(self, parent, -1, bitmap = bitmap, size = parent.FromDIP((24, 24)), style = get_bitmap_button_style())

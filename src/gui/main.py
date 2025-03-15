@@ -522,6 +522,7 @@ class MainWindow(Frame):
                 self.download_window_opened = True
 
         self.download_window.SetFocus()
+        self.download_window.onDownloadingPageBtnEVT()
 
     def setVideoQualityList(self):
         match self.current_parse_type:

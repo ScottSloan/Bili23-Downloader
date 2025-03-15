@@ -178,8 +178,6 @@ class DownloadTaskItemPanel(Panel):
 
         self.SetSizer(self.panel_vbox)
 
-        print(self.progress_bar.GetSize())
-
     def Bind_EVT(self):
         self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
 
@@ -356,8 +354,11 @@ class DownloadTaskItemPanel(Panel):
 
         Thread(target = worker).start()
 
-    def pause_download(self):
-        self.set_download_status(DownloadStatus.Pause.value)
+    def pause_download(self, set_waiting_status: bool = False):
+        if set_waiting_status:
+            self.set_download_status(DownloadStatus.Waiting.value)
+        else:
+            self.set_download_status(DownloadStatus.Pause.value)
 
         if hasattr(self, "downloader"):
             self.downloader.stop_download()
