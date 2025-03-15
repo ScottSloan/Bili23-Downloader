@@ -19,7 +19,7 @@ class ActionButton(Panel):
         self._lab_hover = False
 
     def init_UI(self):
-        self.icon = wx.StaticBitmap(self, -1, size = self.FromDIP((16, 16)))
+        self.icon = wx.StaticBitmap(self, -1, size = self.FromDIP((20, 20)))
 
         self.lab = wx.StaticText(self, -1, self._title)
 
@@ -102,7 +102,7 @@ class ActionButton(Panel):
 
     def set_unactive_bgcolor(self):
         if Config.Sys.dark_mode:
-            self.SetBackgroundColour(wx.Colour(44, 44, 44))
+            self.SetBackgroundColour(wx.SystemSettings.GetColour(getattr(wx, "SYS_COLOUR_FRAMEBK")))
         else:
             self.SetBackgroundColour("white")
 

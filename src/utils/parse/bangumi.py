@@ -159,11 +159,11 @@ class BangumiParser:
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
 
-        ExtraInfo.get_danmaku = Config.Extra.get_danmaku
-        ExtraInfo.danmaku_type = Config.Extra.danmaku_type
-        ExtraInfo.get_subtitle = Config.Extra.get_subtitle
-        ExtraInfo.subtitle_type = Config.Extra.subtitle_type
-        ExtraInfo.get_cover = Config.Extra.get_cover
+        ExtraInfo.download_danmaku_file = Config.Extra.get_danmaku
+        ExtraInfo.danmaku_file_type = Config.Extra.danmaku_type
+        ExtraInfo.download_subtitle_file = Config.Extra.get_subtitle
+        ExtraInfo.subtitle_file_type = Config.Extra.subtitle_type
+        ExtraInfo.download_cover_file = Config.Extra.get_cover
 
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"

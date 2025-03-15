@@ -27,7 +27,7 @@ class DownloadTaskInfo:
         self.aid: int = 0
         self.ep_id: int = 0
 
-        # 视频原标题
+        # 视频标题
         self.title: str = ""
 
         # 视频时长
@@ -67,11 +67,7 @@ class DownloadTaskInfo:
         self.flv_video_count: int = 0
 
         # 附加内容选项
-        self.get_danmaku: bool = False
-        self.danmaku_type: int = 0
-        self.get_cover: bool = False
-        self.get_subtitle: bool = False
-        self.subtitle_type: int = 0
+        self.extra_option: dict = {}
 
     def to_dict(self):
         return {
@@ -105,11 +101,7 @@ class DownloadTaskInfo:
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
             "flv_video_count": self.flv_video_count,
-            "get_danmaku": self.get_danmaku,
-            "danmaku_type": self.danmaku_type,
-            "get_cover": self.get_cover,
-            "get_subtitle": self.get_subtitle,
-            "subtitle_type": self.subtitle_type
+            "extra_option": self.extra_option
         }
 
     def load_from_dict(self, data: Dict):
@@ -143,11 +135,7 @@ class DownloadTaskInfo:
         self.download_option = data.get("download_option")
         self.ffmpeg_merge = data.get("ffmpeg_merge")
         self.flv_video_count = data.get("flv_video_count")
-        self.get_danmaku = data.get("get_danmaku")
-        self.danmaku_type = data.get("danmaku_type")
-        self.get_cover = data.get("get_cover")
-        self.get_subtitle = data.get("get_subtitle")
-        self.subtitle_type = data.get("subtitle_type")
+        self.extra_option = data.get("extra_option")
 
 class DownloaderInfo:
     def __init__(self):
@@ -259,3 +247,20 @@ class MergeCallback:
     def __init__(self):
         self.onSuccess = None
         self.onError = None
+
+class ExtraOption:
+    def __init__(self):
+        self.download_danmaku_file: bool = False
+        self.danmaku_file_type: int = 0
+
+        self.download_subtitle_file: bool = False
+        self.subtitle_file_type: int = 0
+
+        self.download_cover_file: bool = False
+    
+    def load_from_dict(self, data: dict):
+        self.download_danmaku_file = data.get("download_danmaku_file", self.download_danmaku_file)
+        self.danmaku_file_type = data.get("danmaku_file_type", self.danmaku_file_type)
+        self.download_subtitle_file = data.get("download_subtitle_file", self.download_subtitle_file)
+        self.subtitle_file_type = data.get("subtitle_file_type", self.subtitle_file_type)
+        self.download_cover_file = data.get("download_cover_file", self.download_cover_file)

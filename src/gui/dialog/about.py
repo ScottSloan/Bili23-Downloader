@@ -22,11 +22,11 @@ class AboutWindow(Dialog):
         wx.Bell()
     
     def init_UI(self):
-        def _set_icon_background(image: wx.Image):
+        def set_icon_background(image: wx.Image):
             _width, _height = image.GetSize()
 
             if Config.Sys.dark_mode:
-                color = self.GetBackgroundColour()
+                color = wx.SystemSettings.GetColour(getattr(wx, "SYS_COLOUR_FRAMEBK"))
 
                 for x in range(_width):
                     for y in range(_height):
@@ -42,7 +42,7 @@ class AboutWindow(Dialog):
 
         icon_manager = IconManager(self)
 
-        logo = wx.StaticBitmap(self, -1, _set_icon_background(icon_manager.get_icon_bitmap(IconType.APP_ICON_DEFAULT)).ConvertToBitmap())
+        logo = wx.StaticBitmap(self, -1, set_icon_background(icon_manager.get_icon_bitmap(IconType.APP_ICON_DEFAULT)).ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))

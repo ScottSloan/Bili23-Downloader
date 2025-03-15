@@ -154,11 +154,11 @@ class OptionDialog(Dialog):
             self.audio_only_chk.Enable(False)
             self.audio_only_chk.SetValue(False)
 
-        self.get_danmaku_chk.SetValue(ExtraInfo.get_danmaku)
-        self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_type)
-        self.get_subtitle_chk.SetValue(ExtraInfo.get_subtitle)
-        self.subtitle_format_choice.SetSelection(ExtraInfo.subtitle_type)
-        self.get_cover_chk.SetValue(ExtraInfo.get_cover)
+        self.get_danmaku_chk.SetValue(ExtraInfo.download_danmaku_file)
+        self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_file_type)
+        self.get_subtitle_chk.SetValue(ExtraInfo.download_subtitle_file)
+        self.subtitle_format_choice.SetSelection(ExtraInfo.subtitle_file_type)
+        self.get_cover_chk.SetValue(ExtraInfo.download_cover_file)
 
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.auto_popup_chk.SetValue(Config.Download.auto_popup_option_dialog)
@@ -195,11 +195,11 @@ class OptionDialog(Dialog):
 
         Config.Download.video_codec_id = video_codec_map[self.video_codec_choice.GetStringSelection()]
 
-        ExtraInfo.get_danmaku = self.get_danmaku_chk.GetValue()
-        ExtraInfo.danmaku_type = self.danmaku_type_choice.GetSelection()
-        ExtraInfo.get_subtitle = self.get_subtitle_chk.GetValue()
-        ExtraInfo.subtitle_type = self.subtitle_format_choice.GetSelection()
-        ExtraInfo.get_cover = self.get_cover_chk.GetValue()
+        ExtraInfo.download_danmaku_file = self.get_danmaku_chk.GetValue()
+        ExtraInfo.danmaku_file_type = self.danmaku_type_choice.GetSelection()
+        ExtraInfo.download_subtitle_file = self.get_subtitle_chk.GetValue()
+        ExtraInfo.subtitle_file_type = self.subtitle_format_choice.GetSelection()
+        ExtraInfo.download_cover_file = self.get_cover_chk.GetValue()
 
         Config.Download.add_number = self.add_number_chk.GetValue()
 

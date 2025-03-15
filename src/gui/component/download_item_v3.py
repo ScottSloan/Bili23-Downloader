@@ -5,7 +5,7 @@ from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback
-from utils.common.enums import DownloadOption, DownloadStatus
+from utils.common.enums import DownloadOption, DownloadStatus, ParseType
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
@@ -202,6 +202,34 @@ class DownloadTaskItemPanel(Panel):
         self.set_download_status(self.task_info.status)
 
     def show_task_info(self):
+        def get_video_quality_label():
+            match ParseType(self.task_info.download_type):
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                        return "音频"
+                    else:
+                        return get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--")
+
+                case ParseType.Danmaku:
+                    return "弹幕"
+                
+                case ParseType.Subtitle:
+                    return "字幕"
+                
+                case ParseType.Cover:
+                    return "封面"
+                
+        def get_video_codec_label():
+            match ParseType(self.task_info.download_type):
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                        return get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--")
+                    else:
+                        return get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--")
+                
+                case ParseType.Danmaku | ParseType.Subtitle | ParseType.Cover:
+                    return "--"
+
         if not self._destroy:
             self.title_lab.SetLabel(self.task_info.title)
             self.title_lab.SetToolTip(self.task_info.title)
@@ -209,12 +237,8 @@ class DownloadTaskItemPanel(Panel):
             self.progress_bar.SetValue(self.task_info.progress)
             self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 
-            if self.task_info.download_option == DownloadOption.OnlyAudio.value:
-                self.video_quality_lab.SetLabel("音频")
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--"))
-            else:
-                self.video_quality_lab.SetLabel(get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--"))
-                self.video_codec_lab.SetLabel(get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--"))
+            self.video_quality_lab.SetLabel(get_video_quality_label())
+            self.video_codec_lab.SetLabel(get_video_codec_label())
             
             if self.task_info.progress == 100:
                 self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
@@ -336,7 +360,7 @@ class DownloadTaskItemPanel(Panel):
 
             return downloader_callback
 
-        def worker():
+        def video_audio_download_worker():
             # 获取下载链接
             download_parser = DownloadParser(self.task_info, self.onDownloadError)
             downloader_info = download_parser.get_download_url()
@@ -348,11 +372,21 @@ class DownloadTaskItemPanel(Panel):
 
             self.downloader.start_download()
 
+        def extra_download_worker():
+            pass
+
         self.set_download_status(DownloadStatus.Downloading.value)
 
         self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
 
-        Thread(target = worker).start()
+        match ParseType(self.task_info.download_type):
+            case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                target = video_audio_download_worker
+
+            case ParseType.Danmaku | ParseType.Subtitle | ParseType.Cover:
+                target = extra_download_worker
+
+        Thread(target = target).start()
 
     def pause_download(self, set_waiting_status: bool = False):
         if set_waiting_status:

@@ -5,6 +5,9 @@ class ParseType(Enum):
     Bangumi = 2              # 番组
     Live = 3                 # 直播
     Cheese = 4               # 课程
+    Danmaku = 20             # 弹幕
+    Subtitle = 21            # 字幕
+    Cover = 22               # 封面
 
 class VideoType(Enum):
     Single = 1               # 单个视频

@@ -188,13 +188,29 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if cid:
                         get_item_info(title, cid)
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: Optional[int] = 0, cover_url: Optional[str] = "", bvid: Optional[str] = "", cid: Optional[int] = 0, aid: Optional[int] = 0, ep_id: Optional[int] = 0):
         def get_download_option():
             if AudioInfo.download_audio_only:
                 return DownloadOption.OnlyAudio.value
             else:
                 download_info.ffmpeg_merge = True
                 return DownloadOption.VideoAndAudio.value
+
+        def get_ffmpeg_merge():
+            match ParseType(download_type):
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    return True
+                
+                case ParseType.Danmaku | ParseType.Subtitle | ParseType.Cover:
+                    return False
+                
+        def get_extra_option():
+            match ParseType(download_type):
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    return {}
+                
+                case ParseType.Danmaku | ParseType.Subtitle | ParseType.Cover:
+                    return ExtraInfo.to_dict()
 
         download_info = DownloadTaskInfo()
 
@@ -214,13 +230,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         download_info.download_option = get_download_option()
         download_info.download_type = download_type
-        download_info.ffmpeg_merge = True
+        download_info.ffmpeg_merge = get_ffmpeg_merge()
 
-        download_info.get_danmaku = ExtraInfo.get_danmaku
-        download_info.danmaku_type = ExtraInfo.danmaku_type
-        download_info.get_cover = ExtraInfo.get_cover
-        download_info.get_subtitle = ExtraInfo.get_subtitle
-        download_info.subtitle_type = ExtraInfo.subtitle_type
+        download_info.extra_option = get_extra_option()
 
         return download_info
 
@@ -238,7 +250,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         referer_url = VideoInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))
-    
+
+        self.get_extra_download_info(referer_url, title, cover_url, bvid = bvid, cid = cid)
+
     def get_bangumi_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
         bvid = entry["bvid"]
@@ -252,6 +266,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         referer_url = BangumiInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))
+
+        self.get_extra_download_info(referer_url, title, cover_url, bvid = bvid, cid = cid)
     
     def get_cheese_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -263,3 +279,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         referer_url = CheeseInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
+
+        self.get_extra_download_info(referer_url, title, cover_url, cid = cid, aid = aid, ep_id = ep_id)
+
+    def get_extra_download_info(self, referer_url: str, title: str, cover_url: str, bvid: Optional[str] = "", cid: Optional[int] = 0, aid: Optional[int] = 0, ep_id: Optional[int] = 0):
+        if ExtraInfo.download_danmaku_file:
+            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Danmaku.value, title, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id))
+            
+        if ExtraInfo.download_subtitle_file:
+            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Subtitle.value, title, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id))
+
+        if ExtraInfo.download_cover_file:
+            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cover.value, title, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id))

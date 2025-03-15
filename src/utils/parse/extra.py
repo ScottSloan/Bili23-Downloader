@@ -9,18 +9,28 @@ from utils.auth.wbi import WbiUtils
 from utils.common.enums import DanmakuType, SubtitleType
 
 class ExtraInfo:
-    get_danmaku: bool = False
-    danmaku_type: int = 0
+    download_danmaku_file: bool = False
+    danmaku_file_type: int = 0
 
-    get_subtitle: bool = False
-    subtitle_type: int = 0
+    download_subtitle_file: bool = False
+    subtitle_file_type: int = 0
 
-    get_cover: bool = False
+    download_cover_file: bool = False
 
     @staticmethod
     def clear_extra_info():
-        ExtraInfo.get_danmaku = ExtraInfo.get_subtitle = ExtraInfo.get_cover = False
-        ExtraInfo.danmaku_type = ExtraInfo.subtitle_type = 0
+        ExtraInfo.download_danmaku_file = ExtraInfo.download_subtitle_file = ExtraInfo.download_cover_file = False
+        ExtraInfo.danmaku_file_type = ExtraInfo.subtitle_file_type = 0
+
+    @staticmethod
+    def to_dict():
+        return {
+            "download_danmaku_file": ExtraInfo.download_danmaku_file,
+            "danmaku_file_type": ExtraInfo.danmaku_file_type,
+            "download_subtitle_file": ExtraInfo.download_subtitle_file,
+            "subtitle_file_type": ExtraInfo.subtitle_file_type,
+            "download_cover_file": ExtraInfo.download_cover_file
+        }
 
 class ExtraParser:
     def __init__(self, title: str, bvid: str, cid: int, duration: int):
@@ -28,7 +38,7 @@ class ExtraParser:
 
     def get_danmaku(self):
         # 下载弹幕文件
-        match DanmakuType(ExtraInfo.danmaku_type):
+        match DanmakuType(ExtraInfo.danmaku_file_type):
             case DanmakuType.XML:
                 self.get_danmaku_xml()
 
@@ -155,7 +165,7 @@ class ExtraParser:
 
             subtitle_json = get_subtitle_json(subtitle_url)
 
-            match SubtitleType(ExtraInfo.subtitle_type):
+            match SubtitleType(ExtraInfo.subtitle_file_type):
                 case SubtitleType.SRT:
                     _to_srt(subtitle_json, lan)
 
