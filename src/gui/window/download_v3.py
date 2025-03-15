@@ -19,9 +19,20 @@ from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
+        def get_window_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((930, 550))
+                
+                case "darwin":
+                    return self.FromDIP((1000, 600))
+                
+                case "linux":
+                    return self.FromDIP((1070, 650))
+
         Frame.__init__(self, parent, "下载管理")
 
-        self.SetSize(self.FromDIP((930, 550)))
+        self.SetSize(get_window_size())
         self.current_page = "正在下载"
 
         self.init_UI()

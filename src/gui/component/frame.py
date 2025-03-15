@@ -13,8 +13,8 @@ class Frame(wx.Frame):
 
     def get_scaled_size(self, size: tuple):
         match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
+            case "windows":
+                return self.FromDIP(size)
+            
+            case "linux" | "darwin":
+                return wx.DefaultSize

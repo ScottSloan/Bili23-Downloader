@@ -39,6 +39,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def set_list(self):
         def _gen(data: list | dict, node):
             def set_item(data: dict):
+                def get_item_data(type: str, title: str, cid: int = 0):
+                    data = TreeListItemInfo()
+                    data.type = type
+                    data.title = title
+                    data.cid = cid
+
+                    return data
+
                 if "entries" in data:
                     self.SetItemText(item, 0, str(data["title"]))
 
@@ -48,7 +56,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if "duration" in data and data["duration"]:
                         self.SetItemText(item, 3, data["duration"])
 
-                    self.SetItemData(item, _get_item_data("node", data["title"]))
+                    self.SetItemData(item, get_item_data("node", data["title"]))
                 else:
                     self._index += 1
 
@@ -57,7 +65,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     self.SetItemText(item, 2, data["badge"])
                     self.SetItemText(item, 3, data["duration"])
                     
-                    self.SetItemData(item, _get_item_data("item", data["title"], data["cid"]))
+                    self.SetItemData(item, get_item_data("item", data["title"], data["cid"]))
 
                     _column_width = self.WidthFor(data["title"])
 
@@ -80,14 +88,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                 for value in data.values():
                     _gen(value, item)
-
-        def _get_item_data(type: str, title: str, cid: int = 0):
-            data = TreeListItemInfo()
-            data.type = type
-            data.title = title
-            data.cid = cid
-
-            return data
 
         self._index, self._title_longest_width = 0, 0
 

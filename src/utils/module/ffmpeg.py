@@ -116,7 +116,7 @@ class FFmpeg:
                     return ""
                 
                 case "linux":
-                    return "--"
+                    return "-- "
 
         return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
     

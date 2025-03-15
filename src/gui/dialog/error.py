@@ -3,6 +3,7 @@ import wx
 import json
 import wx.adv
 
+from utils.config import Config
 from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
@@ -90,6 +91,6 @@ class ErrorInfoDialog(Dialog):
         }
     
     def set_dark_mode(self):
-        super().set_dark_mode()
-
-        self.log_box.SetBackgroundColour("white")
+        if not Config.Sys.dark_mode:
+            self.SetBackgroundColour("white")
+            self.log_box.SetBackgroundColour("white")

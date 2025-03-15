@@ -82,6 +82,6 @@ class UpdateWindow(Dialog):
         self.Layout()
 
     def set_dark_mode(self):
-        super().set_dark_mode()
-
-        self.changelog.SetBackgroundColour("white")
+        if not Config.Sys.dark_mode:
+            self.SetBackgroundColour("white")
+            self.changelog.SetBackgroundColour("white")

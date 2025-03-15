@@ -27,6 +27,7 @@ from gui.component.frame import Frame
 from gui.component.info_bar import InfoBar
 from gui.component.tree_list import TreeListCtrl
 from gui.component.panel import Panel
+from gui.component.bitmap_button import BitmapButton
 from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
 from gui.window.login import LoginWindow
@@ -46,7 +47,17 @@ from gui.dialog.cut_clip import CutClipDialog
 
 class MainWindow(Frame):
     def __init__(self, parent):
+        def set_window_size():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    self.SetSize(self.FromDIP((800, 450)))
+
+                case "linux":
+                    self.SetClientSize(self.FromDIP((880, 450)))
+
         Frame.__init__(self, parent, Config.APP.name)
+
+        set_window_size()
 
         self.init_UI()
 
@@ -57,39 +68,16 @@ class MainWindow(Frame):
         self.CenterOnParent()
     
     def init_UI(self):
-        def _dark_mode():
+        def set_dark_mode():
             if Config.Sys.platform != "windows":
                 Config.Sys.dark_mode = wx.SystemSettings.GetAppearance().IsDark()
-
-        def _get_button_scale_size():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
-                    return self.FromDIP((24, 24))
-                
-                case "linux":
-                    return self.FromDIP((32, 32))
-
-        def _set_window_size():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
-                    self.SetSize(self.FromDIP((800, 450)))
-                case "linux":
-                    self.SetClientSize(self.FromDIP((880, 450)))
-
-        def _get_style():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
-                    return 0
-                
-                case "linux":
-                    return wx.NO_BORDER
 
         def _set_button_variant():
             if Config.Sys.platform == "darwin":
                 self.download_mgr_btn.SetWindowVariant(wx.WINDOW_VARIANT_LARGE)
                 self.download_btn.SetWindowVariant(wx.WINDOW_VARIANT_LARGE)
 
-        _dark_mode()
+        set_dark_mode()
 
         icon_manager = IconManager(self)
 
@@ -117,20 +105,20 @@ class MainWindow(Frame):
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.processing_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.LOADING_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.processing_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.LOADING_ICON), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON), size = self.FromDIP((24, 24)))
         self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.detail_icon.SetToolTip("查看详细信息")
         self.detail_icon.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
 
-        self.episode_option_btn = wx.BitmapButton(self.panel, -1, icon_manager.get_icon_bitmap(IconType.LIST_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.episode_option_btn = BitmapButton(self.panel, icon_manager.get_icon_bitmap(IconType.LIST_ICON))
         self.episode_option_btn.Enable(False)
         self.episode_option_btn.SetToolTip("剧集列表显示设置")
-        self.download_option_btn = wx.BitmapButton(self.panel, -1, icon_manager.get_icon_bitmap(IconType.SETTING_ICON), size = _get_button_scale_size(), style = _get_style())
+        self.download_option_btn = BitmapButton(self.panel, icon_manager.get_icon_bitmap(IconType.SETTING_ICON))
         self.download_option_btn.Enable(False)
         self.download_option_btn.SetToolTip("下载选项")
 
@@ -181,8 +169,6 @@ class MainWindow(Frame):
         self.panel.SetSizerAndFit(self.frame_vbox)
 
         self.init_menubar()
-
-        _set_window_size()
 
         _set_button_variant()
 

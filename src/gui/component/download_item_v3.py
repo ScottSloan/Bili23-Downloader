@@ -19,6 +19,7 @@ from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirecto
 
 from gui.component.info_label import InfoLabel
 from gui.component.panel import Panel
+from gui.component.bitmap_button import BitmapButton
 from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.error import ErrorInfoDialog
 
@@ -32,7 +33,7 @@ class EmptyItemPanel(Panel):
 
     def init_UI(self):
         self.set_dark_mode()
-        
+
         self.empty_lab = wx.StaticText(self, -1, f"没有{self.name}的项目")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -102,6 +103,14 @@ class DownloadTaskItemPanel(Panel):
         self.init_utils()
 
     def init_UI(self):
+        def get_progress_bar_size():
+            match Config.Sys.platform:
+                case "windows" | "darwin":
+                    return self.FromDIP((196, 16))
+                
+                case "linux":
+                    return self.FromDIP((196, 4))
+
         self.set_dark_mode()
 
         self.icon_manager = IconManager(self)
@@ -129,7 +138,7 @@ class DownloadTaskItemPanel(Panel):
         video_info_vbox.Add(video_info_hbox, 0, wx.EXPAND)
         video_info_vbox.AddSpacer(5)
 
-        self.progress_bar = wx.Gauge(self, -1, 100, size = (-1, -1), style = wx.GA_SMOOTH)
+        self.progress_bar = wx.Gauge(self, -1, 100, size = get_progress_bar_size(), style = wx.GA_SMOOTH)
 
         progress_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
         progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
@@ -146,10 +155,10 @@ class DownloadTaskItemPanel(Panel):
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(5)
 
-        self.pause_btn = wx.BitmapButton(self, -1, self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON), size = self.FromDIP((24, 24)))
+        self.pause_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = wx.BitmapButton(self, -1, self.icon_manager.get_icon_bitmap(IconType.DELETE_ICON), size = self.FromDIP((24, 24)))
+        self.stop_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.DELETE_ICON))
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -168,6 +177,8 @@ class DownloadTaskItemPanel(Panel):
         self.panel_vbox.Add(bottom_border, 0, wx.EXPAND)
 
         self.SetSizer(self.panel_vbox)
+
+        print(self.progress_bar.GetSize())
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
