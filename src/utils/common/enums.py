@@ -107,5 +107,5 @@ class DownloadOption(Enum):
     NONE = 5
 
 class OverrideOption(Enum):
-    Override = 1
-    Rename = 2
+    Override = 0
+    Rename = 1

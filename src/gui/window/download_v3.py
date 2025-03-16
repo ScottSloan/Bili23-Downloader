@@ -189,16 +189,22 @@ class DownloadManagerWindow(Frame):
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool = True):
         def create_local_file():
             def get_video_count():
-                return len([1 for temp_entry in download_list if ParseType(temp_entry.download_type) in [ParseType.Video, ParseType.Bangumi, ParseType.Cheese]])
+                count = 0
+
+                for temp_entry in download_list:
+                    if ParseType(temp_entry.download_type) in [ParseType.Video, ParseType.Bangumi, ParseType.Cheese]:
+                        count += 1
+
+                return count
 
             index = 0
             last_cid = None
             video_count = get_video_count()
 
-            for entry in download_list:
+            for list_index, entry in enumerate(download_list):
                 # 记录时间戳
                 if not entry.timestamp:
-                    entry.timestamp = self.get_timestamp() + index
+                    entry.timestamp = self.get_timestamp() + list_index
 
                 if last_cid != entry.cid:
                     index += 1

@@ -4,7 +4,7 @@ import math
 import datetime
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, FormatTool
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import DanmakuType, SubtitleType
 from utils.common.data_type import DownloadTaskInfo
@@ -43,6 +43,7 @@ class ExtraParser:
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
+        self.file_name = FormatTool.format_title_template(Config.Advanced.file_name_template, self.task_info)
 
         self.danmaku_file_type = task_info.extra_option.get("danmaku_file_type")
         self.subtitle_file_type = task_info.extra_option.get("subtitle_file_type")
@@ -62,16 +63,16 @@ class ExtraParser:
 
         req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
-        file_name = f"{self.task_info.title}.xml"
-        self.write_to_file(file_name, req.content)
+        file_name = f"{self.file_name}.xml"
+        self.write_to_file(file_name, req.content, mode = "wb")
 
     def convert_danmaku_to_protobuf(self):
         def get_protobuf(index: int, _package_count: int):
             def get_file_name(index: int, _package_count: int):
                 if _package_count == 1:
-                    return f"{self.task_info.title}.protobuf"
+                    return f"{self.file_name}.protobuf"
                 else:
-                    return f"{self.task_info.title}_part{index}.protobuf"
+                    return f"{self.file_name}_part{index}.protobuf"
             
             # 下载 protobuf 格式弹幕文件
             url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.task_info.cid}&segment_index={index}"
@@ -145,7 +146,7 @@ class ExtraParser:
 
             contents += f"{id}\n{timestamp}\n{content}\n\n"
 
-        file_name = f"{self.task_info.title}_{lan}.srt"
+        file_name = f"{self.file_name}_{lan}.srt"
         self.write_to_file(file_name, contents)
 
     def convert_subtitle_to_txt(self, subtitle_json: dict, lan: str):
@@ -156,7 +157,7 @@ class ExtraParser:
 
             contents += f"{content}\n"
 
-        file_name = f"{self.task_info.title}_{lan}.txt"
+        file_name = f"{self.file_name}_{lan}.txt"
         self.write_to_file(file_name, contents)
 
     def convert_subtitle_to_lrc(self, subtitle_json: dict, lan: str):
@@ -174,23 +175,28 @@ class ExtraParser:
 
             contents += f"[{timestamp}]{content}\n"
 
-        file_name = f"{self.task_info.title}_{lan}.lrc"
+        file_name = f"{self.file_name}_{lan}.lrc"
         self.write_to_file(file_name, contents)
 
     def convert_subtitle_to_json(self, subtitle_json: dict, lan: str):
         contents = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
 
-        file_name = f"{self.task_info.title}_{lan}.json"
+        file_name = f"{self.file_name}_{lan}.json"
         self.write_to_file(file_name, contents)
 
     def download_cover_file(self):
         req = RequestTool.request_get(self.task_info.cover_url)
 
         file_name = f"{self.task_info.title}.jpg"
-        self.write_to_file(file_name, req.content)
+        self.write_to_file(file_name, req.content, mode = "wb")
 
     def write_to_file(self, file_name: str, contents: str, mode: str = "w"):
         path = os.path.join(Config.Download.path, file_name)
 
-        with open(path, mode, encoding = "utf-8") as f:
+        if mode == "w":
+            encoding = "utf-8"
+        else:
+            encoding = None
+
+        with open(path, mode, encoding = encoding) as f:
             f.write(contents)

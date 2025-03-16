@@ -406,9 +406,23 @@ class DownloadTaskItemPanel(Panel):
 
     def merge_video(self):
         def get_callback():
+            def onAddSuffix():
+                self.task_info.suffix = "_1"
+
+                kwargs = {
+                    "suffix": self.task_info.suffix
+                }
+
+                self.file_tool.update_task_info_kwargs(**kwargs)
+
+            def onGetFullFileName():
+                return self.full_file_name
+            
             callback = MergeCallback()
             callback.onSuccess = self.onMergeSuccess
             callback.onError = self.onMergeError
+            callback.onAddSuffix = onAddSuffix
+            callback.onGetFullFileName = onGetFullFileName
 
             return callback
 
@@ -429,7 +443,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.task_info.progress = 100
         self.task_info.status = DownloadStatus.Complete.value
-        
+
         self.file_tool.update_info("task_info", self.task_info.to_dict())
 
         self.onMergeSuccess()
@@ -607,5 +621,5 @@ class DownloadTaskItemPanel(Panel):
     @property
     def full_file_name(self):
         file_name = FormatTool.format_title_template(Config.Advanced.file_name_template, self.task_info)
-
-        return f"{file_name}.{self.task_info.output_type}"
+    
+        return f"{file_name}{self.task_info.suffix}.{self.task_info.output_type}"

@@ -12,7 +12,7 @@ class DownloadTaskInfo:
         # 补零序号
         self.index_with_zero: str = None
         # 后缀
-        self.suffix: str = None
+        self.suffix: str = ""
         # 时间戳
         self.timestamp: int = 0
         
@@ -50,7 +50,7 @@ class DownloadTaskInfo:
         self.video_codec_id: int = None
         self.video_type: str = None
         self.audio_type: str = None
-        self.output_type: str = None
+        self.output_type: str = ""
 
         # 下载项目标识
         self.download_items: list = []
@@ -217,3 +217,5 @@ class MergeCallback:
     def __init__(self):
         self.onSuccess = None
         self.onError = None
+        self.onAddSuffix = None
+        self.onGetFullFileName = None

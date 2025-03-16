@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from utils.common.enums import DownloadOption, StreamType, StatusCode
+from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
@@ -34,7 +34,20 @@ class FFmpeg:
             Config.FFmpeg.available = True
 
     def merge_video(self, full_file_name: str, callback: MergeCallback):
-        self.full_file_name = full_file_name
+        def check_file_exist():
+            path = os.path.join(Config.Download.path, full_file_name)
+
+            if os.path.exists(path):
+                match OverrideOption(Config.Merge.override_option):
+                    case OverrideOption.Rename:
+                        callback.onAddSuffix()
+
+                    case OverrideOption.Override:
+                        self.delete_specific_file(path)
+
+        check_file_exist()
+    
+        self.full_file_name = callback.onGetFullFileName()
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
@@ -181,11 +194,7 @@ class FFmpeg:
             for file in file_list:
                 path = os.path.join(Config.Download.path, file)
 
-                while os.path.exists(path):
-                    try:
-                        os.remove(path)
-                    except Exception:
-                        pass
+                self.delete_specific_file(path)
         
         def worker():
             match StreamType(self.task_info.stream_type):
@@ -200,6 +209,13 @@ class FFmpeg:
         temp_file_list = []
         
         Thread(target = worker).start()
+
+    def delete_specific_file(self, path: str):
+        while os.path.exists(path):
+            try:
+                os.remove(path)
+            except Exception:
+                pass
 
     @property
     def ffmpeg_file_name(self):
