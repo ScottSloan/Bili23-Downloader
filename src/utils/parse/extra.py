@@ -7,6 +7,7 @@ from utils.config import Config
 from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
 from utils.common.enums import DanmakuType, SubtitleType
+from utils.common.data_type import DownloadTaskInfo
 
 class ExtraInfo:
     download_danmaku_file: bool = False
@@ -19,8 +20,12 @@ class ExtraInfo:
 
     @staticmethod
     def clear_extra_info():
-        ExtraInfo.download_danmaku_file = ExtraInfo.download_subtitle_file = ExtraInfo.download_cover_file = False
-        ExtraInfo.danmaku_file_type = ExtraInfo.subtitle_file_type = 0
+        ExtraInfo.download_danmaku_file = False
+        ExtraInfo.download_subtitle_file = False
+        ExtraInfo.download_cover_file = False
+
+        ExtraInfo.danmaku_file_type = 0
+        ExtraInfo.subtitle_file_type = 0
 
     @staticmethod
     def to_dict():
@@ -33,122 +38,64 @@ class ExtraInfo:
         }
 
 class ExtraParser:
-    def __init__(self, title: str, bvid: str, cid: int, duration: int):
-        self.title, self.bvid, self.cid, self.duration = title, bvid, cid, duration
+    def __init__(self):
+        pass
 
-    def get_danmaku(self):
+    def set_task_info(self, task_info: DownloadTaskInfo):
+        self.task_info = task_info
+
+        self.danmaku_file_type = task_info.extra_option.get("danmaku_file_type")
+        self.subtitle_file_type = task_info.extra_option.get("subtitle_file_type")
+
+    def download_danmaku_file(self):
         # 下载弹幕文件
-        match DanmakuType(ExtraInfo.danmaku_file_type):
+        match DanmakuType(self.danmaku_file_type):
             case DanmakuType.XML:
-                self.get_danmaku_xml()
+                self.convert_danmaku_to_xml()
 
             case DanmakuType.Protobuf:
-                self.get_danmaku_protobuf()
+                self.convert_danmaku_to_protobuf()
 
-    def get_danmaku_xml(self):
+    def convert_danmaku_to_xml(self):
         # 下载 xml 格式弹幕文件
-        url = f"https://comment.bilibili.com/{self.cid}.xml"
+        url = f"https://comment.bilibili.com/{self.task_info.cid}.xml"
 
         req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
-        path = os.path.join(Config.Download.path, f"{self.title}.xml")
+        file_name = f"{self.task_info.title}.xml"
+        self.write_to_file(file_name, req.content)
 
-        with open (path, "wb") as f:
-            f.write(req.content)
-
-    def get_danmaku_protobuf(self):
-        def _get_protobuf(index: int, _package_count: int):
-            def _get_file_name(index: int, _package_count: int):
+    def convert_danmaku_to_protobuf(self):
+        def get_protobuf(index: int, _package_count: int):
+            def get_file_name(index: int, _package_count: int):
                 if _package_count == 1:
-                    return f"{self.title}.protobuf"
+                    return f"{self.task_info.title}.protobuf"
                 else:
-                    return f"{self.title}_part{index}.protobuf"
+                    return f"{self.task_info.title}_part{index}.protobuf"
             
             # 下载 protobuf 格式弹幕文件
-            url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.cid}&segment_index={index}"
+            url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.task_info.cid}&segment_index={index}"
 
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
-            path = os.path.join(Config.Download.path, _get_file_name(index, _package_count))
-
-            with open(path, "wb") as f:
-                f.write(req.content)
+            file_name = get_file_name(index, _package_count)
+            self.write_to_file(file_name, req.content, mode = "wb")
 
         # protobuf 每 6min 分一包，向上取整下载全部分包
-        _package_count = math.ceil(self.duration / 360)
+        _package_count = math.ceil(self.task_info.duration / 360)
 
         for i in range(_package_count):
-            _get_protobuf(i + 1)
+            get_protobuf(i + 1)
 
-    def get_subtitle(self):
+    def download_subtitle_file(self):
         def get_subtitle_json(subtitle_url: str):
             req = RequestTool.request_get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
             return json.loads(req.text)
-        
-        def _to_srt(subtitle_json: dict, lan: str):
-            def _format_timestamp(_from: float, _to: float):
-                def _get_timestamp(t: float):
-                    ms = int((t - int(t)) * 1000)
-
-                    _t = str(datetime.timedelta(seconds = int(t))).split('.')[0]
-
-                    return f"{_t},{ms:03d}"
-
-                return f"{_get_timestamp(_from)} --> {_get_timestamp(_to)}"
-
-            _temp = ""
-
-            for index, entry in enumerate(subtitle_json["body"]):
-                id = index + 1
-                timestamp = _format_timestamp(entry["from"], entry["to"])
-                content = entry["content"]
-
-                _temp += f"{id}\n{timestamp}\n{content}\n\n"
-
-            _save(_temp, f"{self.title}_{lan}.srt")
-
-        def _to_txt(subtitle_json: dict, lan: str):
-            _temp = ""
-
-            for entry in subtitle_json["body"]:
-                content = entry["content"]
-
-                _temp += f"{content}\n"
-
-            _save(_temp, f"{self.title}_{lan}.txt")
-        
-        def _to_lrc(subtitle_json: dict, lan: str):
-            def _format_timestamp(_from: float):
-                min = int(_from // 60)
-                sec = _from % 60
-
-                return f"{min:02}:{sec:04.1f}"
-
-            _temp = ""
-
-            for entry in subtitle_json["body"]:
-                timestamp = _format_timestamp(entry["from"])
-                content = entry["content"]
-
-                _temp += f"[{timestamp}]{content}\n"
-
-            _save(_temp, f"{self.title}_{lan}.lrc")
-
-        def _to_json(subtitle_json: dict, lan: str):
-            _temp = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
-
-            _save(_temp, f"{self.title}_{lan}.json")
-
-        def _save(_temp: str, file_name: str):
-            path = os.path.join(Config.Download.path, file_name)
-
-            with open(path, "w", encoding = "utf-8") as f:
-                f.write(_temp)
 
         params = {
-            "bvid": self.bvid,
-            "cid": self.cid
+            "bvid": self.task_info.bvid,
+            "cid": self.task_info.cid
         }
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"
@@ -165,15 +112,85 @@ class ExtraParser:
 
             subtitle_json = get_subtitle_json(subtitle_url)
 
-            match SubtitleType(ExtraInfo.subtitle_file_type):
+            match SubtitleType(self.subtitle_file_type):
                 case SubtitleType.SRT:
-                    _to_srt(subtitle_json, lan)
+                    self.convert_subtitle_to_srt(subtitle_json, lan)
 
                 case SubtitleType.TXT:
-                    _to_txt(subtitle_json, lan)
+                    self.convert_subtitle_to_txt(subtitle_json, lan)
 
                 case SubtitleType.LRC:
-                    _to_lrc(subtitle_json, lan)
+                    self.convert_subtitle_to_lrc(subtitle_json, lan)
 
                 case SubtitleType.JSON:
-                    _to_json(subtitle_json, lan)
+                    self.convert_subtitle_to_json(subtitle_json, lan)
+
+    def convert_subtitle_to_srt(self, subtitle_json: dict, lan: str):
+        def format_timestamp(_from: float, _to: float):
+            def get_timestamp(t: float):
+                ms = int((t - int(t)) * 1000)
+
+                t = str(datetime.timedelta(seconds = int(t))).split('.')[0]
+
+                return f"{t},{ms:03d}"
+
+            return f"{get_timestamp(_from)} --> {get_timestamp(_to)}"
+
+        contents = ""
+
+        for index, entry in enumerate(subtitle_json["body"]):
+            id = index + 1
+            timestamp = format_timestamp(entry["from"], entry["to"])
+            content = entry["content"]
+
+            contents += f"{id}\n{timestamp}\n{content}\n\n"
+
+        file_name = f"{self.task_info.title}_{lan}.srt"
+        self.write_to_file(file_name, contents)
+
+    def convert_subtitle_to_txt(self, subtitle_json: dict, lan: str):
+        contents = ""
+
+        for entry in subtitle_json["body"]:
+            content = entry["content"]
+
+            contents += f"{content}\n"
+
+        file_name = f"{self.task_info.title}_{lan}.txt"
+        self.write_to_file(file_name, contents)
+
+    def convert_subtitle_to_lrc(self, subtitle_json: dict, lan: str):
+        def _format_timestamp(from_time: float):
+            min = int(from_time // 60)
+            sec = from_time % 60
+
+            return f"{min:02}:{sec:04.1f}"
+
+        contents = ""
+
+        for entry in subtitle_json["body"]:
+            timestamp = _format_timestamp(entry["from"])
+            content = entry["content"]
+
+            contents += f"[{timestamp}]{content}\n"
+
+        file_name = f"{self.task_info.title}_{lan}.lrc"
+        self.write_to_file(file_name, contents)
+
+    def convert_subtitle_to_json(self, subtitle_json: dict, lan: str):
+        contents = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
+
+        file_name = f"{self.task_info.title}_{lan}.json"
+        self.write_to_file(file_name, contents)
+
+    def download_cover_file(self):
+        req = RequestTool.request_get(self.task_info.cover_url)
+
+        file_name = f"{self.task_info.title}.jpg"
+        self.write_to_file(file_name, req.content)
+
+    def write_to_file(self, file_name: str, contents: str, mode: str = "w"):
+        path = os.path.join(Config.Download.path, file_name)
+
+        with open(path, mode, encoding = "utf-8") as f:
+            f.write(contents)

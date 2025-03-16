@@ -5,7 +5,7 @@ from typing import List, Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
-from utils.common.enums import DownloadStatus
+from utils.common.enums import DownloadStatus, ParseType
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
@@ -188,19 +188,25 @@ class DownloadManagerWindow(Frame):
 
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool = True):
         def create_local_file():
-            def update_index():
-                if len(download_list) > 1 and Config.Download.add_number:
-                    entry.index = index + 1
-                    entry.index_with_zero = str(index + 1).zfill(len(str(len(download_list))))
+            def get_video_count():
+                return len([1 for temp_entry in download_list if ParseType(temp_entry.download_type) in [ParseType.Video, ParseType.Bangumi, ParseType.Cheese]])
 
-            for index, entry in enumerate(download_list):
+            index = 0
+            last_cid = None
+            video_count = get_video_count()
+
+            for entry in download_list:
                 # 记录时间戳
                 if not entry.timestamp:
                     entry.timestamp = self.get_timestamp() + index
 
-                # 更新序号
-                if not entry.index:
-                    update_index()
+                if last_cid != entry.cid:
+                    index += 1
+                    last_cid = entry.cid
+
+                if video_count > 1 and Config.Download.add_number:
+                    entry.index = index
+                    entry.index_with_zero = str(index).zfill(len(str(len(download_list))))
 
                 download_local_file = DownloadFileTool(entry.id)
 
@@ -504,6 +510,7 @@ class DownloadingPage(SimplePage):
 
                         if count > Config.Download.max_download_count:
                             panel.pause_download(set_waiting_status = True)
+    
     @property
     def scroller_count(self):
         return self.get_scroller_task_count(DownloadStatus.Alive.value)

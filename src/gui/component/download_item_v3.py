@@ -14,6 +14,7 @@ from utils.common.exception import GlobalExceptionInfo
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
+from utils.parse.extra import ExtraParser
 from utils.config import Config
 from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
 
@@ -340,7 +341,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.file_tool.delete_file()
 
-        self.ffmpeg.clear_temp_files()
+        self.clear_temp_files()
 
         if hasattr(self, "downloader"):
             self.downloader.stop_download()
@@ -374,9 +375,6 @@ class DownloadTaskItemPanel(Panel):
 
             self.downloader.start_download()
 
-        def extra_download_worker():
-            pass
-
         self.set_download_status(DownloadStatus.Downloading.value)
 
         self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
@@ -386,7 +384,7 @@ class DownloadTaskItemPanel(Panel):
                 target = video_audio_download_worker
 
             case ParseType.Extra:
-                target = extra_download_worker
+                target = self.download_extra
 
         Thread(target = target).start()
 
@@ -415,6 +413,28 @@ class DownloadTaskItemPanel(Panel):
             return callback
 
         self.ffmpeg.merge_video(self.full_file_name, get_callback())
+
+    def download_extra(self):
+        extra_parser = ExtraParser()
+        extra_parser.set_task_info(self.task_info)
+
+        if self.task_info.extra_option.get("download_danmaku_file"):
+            extra_parser.download_danmaku_file()
+
+        if self.task_info.extra_option.get("download_subtitle_file"):
+            extra_parser.download_subtitle_file()
+
+        if self.task_info.extra_option.get("download_cover_file"):
+            extra_parser.download_cover_file()
+
+        self.task_info.progress = 100
+        self.task_info.status = DownloadStatus.Complete.value
+        
+        self.file_tool.update_info("task_info", self.task_info.to_dict())
+
+        self.onMergeSuccess()
+
+        self.callback.onStartNextCallback()
 
     def open_file_location(self):
         path = os.path.join(Config.Download.path, self.full_file_name)
@@ -465,7 +485,7 @@ class DownloadTaskItemPanel(Panel):
 
             self.destroy_panel(1)
 
-            self.ffmpeg.clear_temp_files()
+            self.clear_temp_files()
 
             self.callback.onAddPanelCallback(self.task_info)
 
@@ -486,6 +506,11 @@ class DownloadTaskItemPanel(Panel):
             self.set_download_error(DownloadStatus.DownloadError.value)
 
         wx.CallAfter(worker)
+
+    def clear_temp_files(self):
+        match ParseType(self.task_info.download_type):
+            case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                self.ffmpeg.clear_temp_files()
 
     def set_download_error(self, status: int):
         self.set_download_status(status)
