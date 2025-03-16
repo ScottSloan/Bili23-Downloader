@@ -6,32 +6,32 @@ class DownloadTaskInfo:
     # 下载任务信息
     def __init__(self):
         # id，区分不同下载任务的唯一标识符
-        self.id: int = 0
+        self.id: int = None
         # 序号，从 1 开始，0 为空
-        self.index: int = 0
+        self.index: int = None
         # 补零序号
-        self.index_with_zero: str = ""
+        self.index_with_zero: str = None
         # 后缀
-        self.suffix: str = ""
+        self.suffix: str = None
         # 时间戳
         self.timestamp: int = 0
         
         # Referer URL
-        self.referer_url: str = ""
+        self.referer_url: str = None
         # 视频封面链接
-        self.cover_url = ""
+        self.cover_url: str = None
 
         # 视频 bvid 和 cid 信息
-        self.bvid: str = ""
-        self.cid: int = 0
-        self.aid: int = 0
-        self.ep_id: int = 0
+        self.bvid: str = None
+        self.cid: int = None
+        self.aid: int = None
+        self.ep_id: int = None
 
         # 视频标题
-        self.title: str = ""
+        self.title: str = None
 
         # 视频时长
-        self.duration: int = 0
+        self.duration: int = None
 
         # 下载信息
         self.progress: int = 0
@@ -45,9 +45,9 @@ class DownloadTaskInfo:
         self.status: int = DownloadStatus.Waiting.value
 
         # 媒体信息，0 表示未定义
-        self.video_quality_id: int = 0
-        self.audio_quality_id: int = 0
-        self.video_codec_id: int = 0
+        self.video_quality_id: int = None
+        self.audio_quality_id: int = None
+        self.video_codec_id: int = None
         self.video_type: str = None
         self.audio_type: str = None
         self.output_type: str = None
@@ -58,16 +58,16 @@ class DownloadTaskInfo:
         # 下载类型
         self.download_type: int = 0
         # 视频流类型
-        self.stream_type: int = 0
+        self.stream_type: int = None
         # 下载选项
         self.download_option: List[int] = []
         # 是否调用 FFmpeg 合并
         self.ffmpeg_merge: bool = False
         # flv 视频个数，仅 flv 流时有效
-        self.flv_video_count: int = 0
+        self.flv_video_count: int = None
 
         # 附加内容选项
-        self.extra_option: dict = {}
+        self.extra_option: dict = None
 
     def to_dict(self):
         return {
@@ -195,36 +195,6 @@ class TreeListItemInfo:
         self.title: str = ""
         self.cid: int = 0
 
-class ExceptionInfo:
-    def __init__(self):
-        self.timestamp: str = ""
-        self.source: str = ""
-        self.id: str = ""
-        self.return_code: str = ""
-        self.exception_type: str = ""
-        self.log: str = ""
-        self.short_log: str = ""
-    
-    def to_dict(self):
-        return {
-            "timestamp": self.timestamp,
-            "source": self.source,
-            "id": self.id,
-            "return_code": self.return_code,
-            "exception_type": self.exception_type,
-            "log": self.log,
-            "short_log": self.short_log
-        }
-    
-    def from_dict(self, data: dict):
-        self.timestamp = data.get("timestamp")
-        self.source = data.get("source")
-        self.id = data.get("id")
-        self.return_code = data.get("return_code")
-        self.exception_type = data.get("exception_type")
-        self.log = data.get("log")
-        self.short_log = data.get("short_log")
-
 class ParseCallback:
     def __init__(self):
         self.error_callback: Callable = None
@@ -247,20 +217,3 @@ class MergeCallback:
     def __init__(self):
         self.onSuccess = None
         self.onError = None
-
-class ExtraOption:
-    def __init__(self):
-        self.download_danmaku_file: bool = False
-        self.danmaku_file_type: int = 0
-
-        self.download_subtitle_file: bool = False
-        self.subtitle_file_type: int = 0
-
-        self.download_cover_file: bool = False
-    
-    def load_from_dict(self, data: dict):
-        self.download_danmaku_file = data.get("download_danmaku_file", self.download_danmaku_file)
-        self.danmaku_file_type = data.get("danmaku_file_type", self.danmaku_file_type)
-        self.download_subtitle_file = data.get("download_subtitle_file", self.download_subtitle_file)
-        self.subtitle_file_type = data.get("subtitle_file_type", self.subtitle_file_type)
-        self.download_cover_file = data.get("download_cover_file", self.download_cover_file)

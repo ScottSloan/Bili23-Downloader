@@ -6,7 +6,7 @@ from typing import Callable
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback
 from utils.common.enums import DownloadOption, DownloadStatus, ParseType
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
@@ -210,14 +210,14 @@ class DownloadTaskItemPanel(Panel):
                     else:
                         return get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--")
 
-                case ParseType.Danmaku:
-                    return "弹幕"
-                
-                case ParseType.Subtitle:
-                    return "字幕"
-                
-                case ParseType.Cover:
-                    return "封面"
+                case ParseType.Extra:
+                    temp = []
+
+                    for key, value in extra_map.items():                    
+                        if self.task_info.extra_option.get(key):
+                            temp.append(value)
+
+                    return " ".join(temp)
                 
         def get_video_codec_label():
             match ParseType(self.task_info.download_type):
@@ -227,8 +227,8 @@ class DownloadTaskItemPanel(Panel):
                     else:
                         return get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--")
                 
-                case ParseType.Danmaku | ParseType.Subtitle | ParseType.Cover:
-                    return "--"
+                case ParseType.Extra:
+                    return ""
 
         if not self._destroy:
             self.title_lab.SetLabel(self.task_info.title)
@@ -246,6 +246,8 @@ class DownloadTaskItemPanel(Panel):
                 self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
             else:
                 self.video_size_lab.SetLabel("--")
+
+            self.Layout()
     
     def show_cover(self):
         def is_16_9(image: wx.Image):
@@ -383,7 +385,7 @@ class DownloadTaskItemPanel(Panel):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 target = video_audio_download_worker
 
-            case ParseType.Danmaku | ParseType.Subtitle | ParseType.Cover:
+            case ParseType.Extra:
                 target = extra_download_worker
 
         Thread(target = target).start()

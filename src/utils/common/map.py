@@ -218,6 +218,12 @@ override_option_map = {
     "重命名文件": 1
 }
 
+extra_map = {
+    "download_danmaku_file": "弹幕",
+    "download_subtitle_file": "字幕",
+    "download_cover_file": "封面"
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
