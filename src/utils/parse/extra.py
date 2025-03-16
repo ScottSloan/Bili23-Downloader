@@ -187,7 +187,7 @@ class ExtraParser:
     def download_cover_file(self):
         req = RequestTool.request_get(self.task_info.cover_url)
 
-        file_name = f"{self.task_info.title}.jpg"
+        file_name = f"{self.file_name}.jpg"
         self.write_to_file(file_name, req.content, mode = "wb")
 
     def write_to_file(self, file_name: str, contents: str, mode: str = "w"):

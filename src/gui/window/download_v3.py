@@ -197,12 +197,16 @@ class DownloadManagerWindow(Frame):
 
                 return count
 
+            def update_index():
+                if video_count > 1 and Config.Download.add_number:
+                    entry.index = index
+                    entry.index_with_zero = str(index).zfill(len(str(len(download_list))))
+
             index = 0
             last_cid = None
             video_count = get_video_count()
 
             for list_index, entry in enumerate(download_list):
-                # 记录时间戳
                 if not entry.timestamp:
                     entry.timestamp = self.get_timestamp() + list_index
 
@@ -210,9 +214,7 @@ class DownloadManagerWindow(Frame):
                     index += 1
                     last_cid = entry.cid
 
-                if video_count > 1 and Config.Download.add_number:
-                    entry.index = index
-                    entry.index_with_zero = str(index).zfill(len(str(len(download_list))))
+                update_index()
 
                 download_local_file = DownloadFileTool(entry.id)
 

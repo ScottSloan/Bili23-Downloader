@@ -524,7 +524,8 @@ class DownloadTaskItemPanel(Panel):
     def clear_temp_files(self):
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                self.ffmpeg.clear_temp_files()
+                if self.task_info.total_file_size:
+                    self.ffmpeg.clear_temp_files()
 
     def set_download_error(self, status: int):
         self.set_download_status(status)
