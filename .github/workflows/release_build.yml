@@ -37,6 +37,13 @@ jobs:
         Write-Output "tag=$tag" >> $env:GITHUB_OUTPUT
         Write-Output "version=$version" >> $env:GITHUB_OUTPUT
 
+    - name: Generate Compile Data
+      run: |
+        $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $commit = git rev-parse dev
+        $content = "date = ""$date""" + "`n" + "commit = ""$commit"""
+        Set-Content -Path "src/utils/common/compile_data.py" -Value $content
+
     - name: Build with Nuitka
       run: |
         nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=${{ steps.get_version.outputs.version }} --windows-icon-from-ico=icon.ico --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
