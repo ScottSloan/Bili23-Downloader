@@ -10,7 +10,6 @@ from utils.common.enums import StatusCode, StreamType
 from utils.common.data_type import ParseCallback
 
 from utils.parse.audio import AudioInfo
-from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
 
 class BangumiInfo:
@@ -159,12 +158,6 @@ class BangumiParser:
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
 
-        ExtraInfo.download_danmaku_file = Config.Extra.get_danmaku
-        ExtraInfo.danmaku_file_type = Config.Extra.danmaku_type
-        ExtraInfo.download_subtitle_file = Config.Extra.get_subtitle
-        ExtraInfo.subtitle_file_type = Config.Extra.subtitle_type
-        ExtraInfo.download_cover_file = Config.Extra.get_cover
-
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
@@ -234,6 +227,3 @@ class BangumiParser:
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
-
-        # 重置附加内容信息
-        ExtraInfo.clear_extra_info()

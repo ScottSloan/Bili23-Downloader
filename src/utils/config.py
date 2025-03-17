@@ -95,13 +95,13 @@ class Config:
         available: bool = False
 
     class Extra:
-        get_danmaku = False
-        danmaku_type = 0
+        download_danmaku_file = False
+        danmaku_file_type = 0
 
-        get_subtitle = False
-        subtitle_type = 0
+        download_subtitle_file = False
+        subtitle_file_type = 0
 
-        get_cover = False
+        download_cover_file = False
 
     class Auth:
         img_key: str = ""
@@ -224,11 +224,11 @@ class ConfigUtils:
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
 
         # extra
-        Config.Extra.get_danmaku = app_config["extra"].get("get_danmaku", Config.Extra.get_danmaku)
-        Config.Extra.danmaku_type = app_config["extra"].get("danmaku_type", Config.Extra.danmaku_type)
-        Config.Extra.get_subtitle = app_config["extra"].get("get_subtitle", Config.Extra.get_subtitle)
-        Config.Extra.subtitle_type = app_config["extra"].get("subtitle_type", Config.Extra.subtitle_type)
-        Config.Extra.get_cover = app_config["extra"].get("get_cover", Config.Extra.get_cover)
+        Config.Extra.download_danmaku_file = app_config["extra"].get("download_danmaku_file", Config.Extra.download_danmaku_file)
+        Config.Extra.danmaku_file_type = app_config["extra"].get("danmaku_file_type", Config.Extra.danmaku_file_type)
+        Config.Extra.download_subtitle_file = app_config["extra"].get("download_subtitle_file", Config.Extra.download_subtitle_file)
+        Config.Extra.subtitle_file_type = app_config["extra"].get("subtitle_file_type", Config.Extra.subtitle_file_type)
+        Config.Extra.download_cover_file = app_config["extra"].get("download_cover_file", Config.Extra.download_cover_file)
 
         # proxy
         Config.Proxy.proxy_mode = app_config["proxy"].get("proxy_mode", Config.Proxy.proxy_mode)

@@ -10,7 +10,6 @@ from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.audio import AudioInfo
-from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo
 from utils.parse.cheese import CheeseInfo
 
@@ -285,5 +284,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.get_extra_download_info(referer_url, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id)
 
     def get_extra_download_info(self, referer_url: str, title: str, duration: int, cover_url: str, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
-        if ExtraInfo.download_danmaku_file or ExtraInfo.download_subtitle_file or ExtraInfo.download_cover_file:
-            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Extra.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id, extra_option = ExtraInfo.to_dict()))
+        if Config.Extra.download_danmaku_file or Config.Extra.download_subtitle_file or Config.Extra.download_cover_file:
+            kwargs = {
+                "download_danmaku_file": Config.Extra.download_danmaku_file,
+                "danmaku_file_type": Config.Extra.danmaku_file_type,
+                "download_subtitle_file": Config.Extra.download_subtitle_file,
+                "subtitle_file_type": Config.Extra.subtitle_file_type,
+                "download_cover_file": Config.Extra.download_cover_file
+            }
+
+            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Extra.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id, extra_option = kwargs))

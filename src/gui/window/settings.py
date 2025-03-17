@@ -695,11 +695,11 @@ class ExtraTab(Panel):
         self.SetSizer(extra_vbox)
     
     def init_data(self):
-        self.get_danmaku_chk.SetValue(Config.Extra.get_danmaku)
-        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_type)
-        self.get_subtitle_chk.SetValue(Config.Extra.get_subtitle)
-        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_type)
-        self.get_cover_chk.SetValue(Config.Extra.get_cover)
+        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku_file)
+        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_file_type)
+        self.get_subtitle_chk.SetValue(Config.Extra.download_subtitle_file)
+        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_file_type)
+        self.get_cover_chk.SetValue(Config.Extra.download_cover_file)
 
         self.onChangeDanmakuEVT(0)
         self.onChangeSubtitleEVT(0)
@@ -709,18 +709,18 @@ class ExtraTab(Panel):
         self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSubtitleEVT)
 
     def save(self):
-        Config.Extra.get_danmaku = self.get_danmaku_chk.GetValue()
-        Config.Extra.danmaku_type = self.danmaku_format_choice.GetSelection()
-        Config.Extra.get_subtitle = self.get_subtitle_chk.GetValue()
-        Config.Extra.subtitle_type = self.subtitle_format_choice.GetSelection()
-        Config.Extra.get_cover = self.get_cover_chk.GetValue()
+        Config.Extra.download_danmaku_file = self.get_danmaku_chk.GetValue()
+        Config.Extra.danmaku_file_type = self.danmaku_format_choice.GetSelection()
+        Config.Extra.download_subtitle_file = self.get_subtitle_chk.GetValue()
+        Config.Extra.subtitle_file_type = self.subtitle_format_choice.GetSelection()
+        Config.Extra.download_cover_file = self.get_cover_chk.GetValue()
 
         kwargs = {
-            "get_danmaku": Config.Extra.get_danmaku,
-            "danmaku_type": Config.Extra.danmaku_type,
-            "get_subtitle": Config.Extra.get_subtitle,
-            "subtitle_type": Config.Extra.subtitle_type,
-            "get_cover": Config.Extra.get_cover
+            "get_danmaku": Config.Extra.download_danmaku_file,
+            "danmaku_type": Config.Extra.danmaku_file_type,
+            "get_subtitle": Config.Extra.download_subtitle_file,
+            "subtitle_type": Config.Extra.subtitle_file_type,
+            "get_cover": Config.Extra.download_cover_file
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)

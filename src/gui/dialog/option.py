@@ -5,7 +5,6 @@ from utils.common.map import audio_quality_map, danmaku_format_map, subtitle_for
 from utils.common.enums import StreamType
 
 from utils.parse.audio import AudioInfo
-from utils.parse.extra import ExtraInfo
 
 from gui.component.dialog import Dialog
 
@@ -154,11 +153,11 @@ class OptionDialog(Dialog):
             self.audio_only_chk.Enable(False)
             self.audio_only_chk.SetValue(False)
 
-        self.get_danmaku_chk.SetValue(ExtraInfo.download_danmaku_file)
-        self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_file_type)
-        self.get_subtitle_chk.SetValue(ExtraInfo.download_subtitle_file)
-        self.subtitle_format_choice.SetSelection(ExtraInfo.subtitle_file_type)
-        self.get_cover_chk.SetValue(ExtraInfo.download_cover_file)
+        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku_file)
+        self.danmaku_type_choice.SetSelection(Config.Extra.danmaku_file_type)
+        self.get_subtitle_chk.SetValue(Config.Extra.download_subtitle_file)
+        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_file_type)
+        self.get_cover_chk.SetValue(Config.Extra.download_cover_file)
 
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.auto_popup_chk.SetValue(Config.Download.auto_popup_option_dialog)
@@ -195,11 +194,11 @@ class OptionDialog(Dialog):
 
         Config.Download.video_codec_id = video_codec_map[self.video_codec_choice.GetStringSelection()]
 
-        ExtraInfo.download_danmaku_file = self.get_danmaku_chk.GetValue()
-        ExtraInfo.danmaku_file_type = self.danmaku_type_choice.GetSelection()
-        ExtraInfo.download_subtitle_file = self.get_subtitle_chk.GetValue()
-        ExtraInfo.subtitle_file_type = self.subtitle_format_choice.GetSelection()
-        ExtraInfo.download_cover_file = self.get_cover_chk.GetValue()
+        Config.Extra.download_danmaku_file = self.get_danmaku_chk.GetValue()
+        Config.Extra.danmaku_file_type = self.danmaku_type_choice.GetSelection()
+        Config.Extra.download_subtitle_file = self.get_subtitle_chk.GetValue()
+        Config.Extra.subtitle_file_type = self.subtitle_format_choice.GetSelection()
+        Config.Extra.download_cover_file = self.get_cover_chk.GetValue()
 
         Config.Download.add_number = self.add_number_chk.GetValue()
 

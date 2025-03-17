@@ -6,7 +6,6 @@ from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 
 from utils.parse.audio import AudioInfo
-from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
 
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
@@ -157,12 +156,6 @@ class VideoParser:
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]
 
-        ExtraInfo.download_danmaku_file = Config.Extra.get_danmaku
-        ExtraInfo.danmaku_file_type = Config.Extra.danmaku_type
-        ExtraInfo.download_subtitle_file = Config.Extra.get_subtitle
-        ExtraInfo.subtitle_file_type = Config.Extra.subtitle_type
-        ExtraInfo.download_cover_file = Config.Extra.get_cover
-
     def parse_url(self, url: str):
         def worker():
             # 先检查是否为分 P 视频
@@ -241,6 +234,3 @@ class VideoParser:
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
-
-        # 重置附加内容信息
-        ExtraInfo.clear_extra_info()

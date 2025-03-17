@@ -9,34 +9,6 @@ from utils.auth.wbi import WbiUtils
 from utils.common.enums import DanmakuType, SubtitleType
 from utils.common.data_type import DownloadTaskInfo
 
-class ExtraInfo:
-    download_danmaku_file: bool = False
-    danmaku_file_type: int = 0
-
-    download_subtitle_file: bool = False
-    subtitle_file_type: int = 0
-
-    download_cover_file: bool = False
-
-    @staticmethod
-    def clear_extra_info():
-        ExtraInfo.download_danmaku_file = False
-        ExtraInfo.download_subtitle_file = False
-        ExtraInfo.download_cover_file = False
-
-        ExtraInfo.danmaku_file_type = 0
-        ExtraInfo.subtitle_file_type = 0
-
-    @staticmethod
-    def to_dict():
-        return {
-            "download_danmaku_file": ExtraInfo.download_danmaku_file,
-            "danmaku_file_type": ExtraInfo.danmaku_file_type,
-            "download_subtitle_file": ExtraInfo.download_subtitle_file,
-            "subtitle_file_type": ExtraInfo.subtitle_file_type,
-            "download_cover_file": ExtraInfo.download_cover_file
-        }
-
 class ExtraParser:
     def __init__(self):
         pass

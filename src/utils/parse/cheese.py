@@ -6,7 +6,6 @@ from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.parse.episode import EpisodeInfo, cheese_episode_parser
-from utils.parse.extra import ExtraInfo
 from utils.parse.audio import AudioInfo
 from utils.config import Config
 
@@ -107,12 +106,6 @@ class CheeseParser:
 
             CheeseInfo.stream_type = StreamType.Flv.value
 
-        ExtraInfo.download_danmaku_file = Config.Extra.get_danmaku
-        ExtraInfo.danmaku_file_type = Config.Extra.danmaku_type
-        ExtraInfo.download_subtitle_file = Config.Extra.get_subtitle
-        ExtraInfo.subtitle_file_type = Config.Extra.subtitle_type
-        ExtraInfo.download_cover_file = Config.Extra.get_cover
-
     def parse_url(self, url: str):
         def worker():
             self.clear_cheese_info()
@@ -157,5 +150,3 @@ class CheeseParser:
         CheeseInfo.clear_cheese_info()
 
         AudioInfo.clear_audio_info()
-
-        ExtraInfo.clear_extra_info()
