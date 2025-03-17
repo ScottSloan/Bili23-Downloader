@@ -109,10 +109,10 @@ class DownloadTab(Panel):
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         
         self.max_thread_lab = wx.StaticText(self.scrolled_panel, -1, "多线程数：1")
-        self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
+        self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 10)
 
         self.max_download_lab = wx.StaticText(self.scrolled_panel, -1, "并行下载数：1")
-        self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 8)
+        self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 10)
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
         self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_map.keys()))
@@ -426,6 +426,9 @@ class AdvancedTab(Panel):
         self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
 
         self.file_name_template = Config.Advanced.file_name_template
+        self.date_format = Config.Advanced.date_format
+        self.time_format = Config.Advanced.time_format
+
         self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
         self.download_suspend_retry_chk.SetValue(Config.Advanced.retry_when_download_suspend)
@@ -448,6 +451,9 @@ class AdvancedTab(Panel):
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
 
         Config.Advanced.file_name_template = self.file_name_template
+        Config.Advanced.date_format = self.date_format
+        Config.Advanced.time_format = self.time_format
+
         Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
         Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
@@ -465,6 +471,8 @@ class AdvancedTab(Panel):
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
             "custom_cdn_list": Config.Advanced.custom_cdn_list,
             "file_name_template": Config.Advanced.file_name_template,
+            "date_format": Config.Advanced.date_format,
+            "time_format": Config.Advanced.time_format,
             "retry_when_download_error": Config.Advanced.retry_when_download_error,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
             "retry_when_download_suspend": Config.Advanced.retry_when_download_suspend,
@@ -505,10 +513,12 @@ class AdvancedTab(Panel):
             self.custom_cdn_box.SetValue(dlg.get_cdn())
 
     def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self, self.file_name_template)
+        dlg = CustomFileNameDialog(self, self.file_name_template, self.date_format, self.time_format)
 
         if dlg.ShowModal() == wx.ID_OK:
-            self.file_name_template = dlg.get_template()
+            self.file_name_template = dlg.template_box.GetValue()
+            self.date_format = dlg.date_format_box.GetValue()
+            self.time_format = dlg.time_format_box.GetValue()
     
     def onChangeRetryEVT(self, event):
         self.download_error_retry_lab.Enable(self.download_error_retry_chk.GetValue())

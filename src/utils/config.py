@@ -119,7 +119,9 @@ class Config:
         custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
         custom_cdn_list: list = []
 
-        file_name_template = "{index_with_zero} - {title}"
+        file_name_template = "{number_with_zero} - {title}"
+        date_format = "%Y-%m-%d"
+        time_format = "%H-%M-%S"
 
         retry_when_download_error: bool = True
         download_error_retry_count: int = 3
@@ -210,6 +212,8 @@ class ConfigUtils:
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
         Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
         Config.Advanced.file_name_template = app_config["advanced"].get("file_name_template", Config.Advanced.file_name_template)
+        Config.Advanced.date_format = app_config["advanced"].get("date_format", Config.Advanced.date_format)
+        Config.Advanced.time_format = app_config["advanced"].get("time_format", Config.Advanced.time_format)
         Config.Advanced.retry_when_download_error = app_config["advanced"].get("retry_when_download_error", Config.Advanced.retry_when_download_error)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.retry_when_download_suspend = app_config["advanced"].get("retry_when_download_suspend", Config.Advanced.retry_when_download_suspend)

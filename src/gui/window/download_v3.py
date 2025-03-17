@@ -419,7 +419,7 @@ class DownloadingPage(SimplePage):
         self.set_dark_mode()
 
         max_download_lab = wx.StaticText(self, -1, "并行下载数")
-        self.max_download_choice = wx.Choice(self, -1, choices = [f"{i + 1}" for i in range(8)])
+        self.max_download_choice = wx.Choice(self, -1, choices = [f"{i + 1}" for i in range(10)])
         self.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
 
         self.start_all_btn = wx.Button(self, -1, "全部开始")

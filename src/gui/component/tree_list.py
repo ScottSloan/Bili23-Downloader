@@ -36,7 +36,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("时长", width = self.FromDIP(75))
 
     def set_list(self):
-        def _gen(data: list | dict, node):
+        def traverse_item(data: list | dict, node):
             def set_item(data: dict):
                 def get_item_data(type: str, title: str, cid: int = 0):
                     data = TreeListItemInfo()
@@ -71,14 +71,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if _column_width > self._title_longest_width:
                         self._title_longest_width = _column_width
 
-                if Config.Misc.auto_select:
+                if Config.Misc.auto_select or self._item_count == 1:
                     self.CheckItem(item, wx.CHK_CHECKED)
 
                 self.Expand(node)
 
             if isinstance(data, list):
                 for entry in data:
-                    _gen(entry, node)
+                    traverse_item(entry, node)
 
             elif isinstance(data, dict):
                 item = self.AppendItem(node, "")
@@ -86,11 +86,30 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 set_item(data)
 
                 for value in data.values():
-                    _gen(value, item)
+                    traverse_item(value, item)
 
-        self._index, self._title_longest_width = 0, 0
+        def get_item_count():
+            def traverse(data: list | dict):
+                if isinstance(data, list):
+                    for entry in data:
+                        traverse(entry)
+                
+                elif isinstance(data, dict):
+                    if "cid" in data:
+                        self._item_count += 1
 
-        _gen(EpisodeInfo.data, self.GetRootItem())
+                    for value in data.values():
+                        traverse(value)
+            
+            traverse(EpisodeInfo.data)
+            
+        self._index = 0
+        self._title_longest_width = 0
+        self._item_count = 0
+
+        get_item_count()
+
+        traverse_item(EpisodeInfo.data, self.GetRootItem())
 
         if self._title_longest_width > self.FromDIP(375):
             self.SetColumnWidth(1, self._title_longest_width + 15)
