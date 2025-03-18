@@ -13,7 +13,7 @@ from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
-from utils.module.file_name import FileNameManager
+from utils.common.file_name import FileNameManager
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser

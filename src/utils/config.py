@@ -39,7 +39,7 @@ class Config:
         login: bool = False
         username: str = ""
         face_url: str = ""
-        login_time: int = 0
+        login_expires: int = 0
 
         SESSDATA: str = ""
         DedeUserID: str = ""
@@ -82,11 +82,11 @@ class Config:
         m4a_to_mp3: bool = True
 
     class Temp:
-        download_window_pos = None
+        update_json: dict = None
 
-        update_json = None
+        change_log: str = None
 
-        change_log = None
+        need_login: bool = False
 
     class FFmpeg:
         path: str = ""
@@ -257,7 +257,7 @@ class ConfigUtils:
         Config.User.login = user_config["user"].get("login", Config.User.login)
         Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
         Config.User.username = user_config["user"].get("username", Config.User.username)
-        Config.User.login_time = user_config["user"].get("login_time", Config.User.login_time)
+        Config.User.login_expires = user_config["user"].get("login_expires", Config.User.login_expires)
         Config.User.SESSDATA = user_config["user"].get("SESSDATA", Config.User.SESSDATA)
         Config.User.DedeUserID = user_config["user"].get("DedeUserID", Config.User.DedeUserID)
         Config.User.DedeUserID__ckMd5 = user_config["user"].get("DedeUserID__ckMd5", Config.User.DedeUserID__ckMd5)

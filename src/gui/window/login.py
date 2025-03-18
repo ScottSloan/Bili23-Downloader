@@ -11,7 +11,6 @@ from utils.common.thread import Thread
 from utils.auth.cookie import CookieUtils
 
 from gui.dialog.captcha import CaptchaWindow
-from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 from gui.component.panel import Panel
 
@@ -63,7 +62,8 @@ class LoginWindow(Dialog):
 
     def init_utils(self):
         def worker():
-            CookieUtils.exclimbwuzhi(Config.Auth.buvid3)
+            cookie_utils = CookieUtils()
+            cookie_utils.exclimbwuzhi(Config.Auth.buvid3)
 
         self.session = requests.sessions.Session()
 
@@ -71,9 +71,6 @@ class LoginWindow(Dialog):
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onClose)
-
-        self.sms_page.phone_number_box.Bind(wx.EVT_SET_FOCUS, self.onPhoneBoxSetFocus)
-        self.sms_page.phone_number_box.Bind(wx.EVT_KILL_FOCUS, self.onPhoneBoxKillFocus)
 
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocus)
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocus)
@@ -85,23 +82,7 @@ class LoginWindow(Dialog):
 
         event.Skip()
 
-    def onPhoneBoxSetFocus(self, event):
-        if self.sms_page.phone_number_box.GetValue() == "请输入手机号":
-            self.sms_page.phone_number_box.SetValue("")
-
-        event.Skip()
-
-    def onPhoneBoxKillFocus(self, event):
-        if not self.sms_page.phone_number_box.GetValue():
-            self.sms_page.phone_number_box.SetValue("请输入手机号")
-            self.sms_page.phone_number_box.SetForegroundColour(self.sms_page.getPlaceholderColor())
-
-        event.Skip()
-
     def onValidateBoxSetFocus(self, event):
-        if self.sms_page.validate_code_box.GetValue() == "请输入验证码":
-            self.sms_page.validate_code_box.SetValue("")
-        
         self.left_bmp.SetBitmap(self._left_mask_pic)
         self.right_bmp.SetBitmap(self._right_mask_pic)
 
@@ -110,10 +91,6 @@ class LoginWindow(Dialog):
     def onValidateBoxKillFocus(self, event):
         self.left_bmp.SetBitmap(self._left_pic)
         self.right_bmp.SetBitmap(self._right_pic)
-
-        if not self.sms_page.validate_code_box.GetValue():
-            self.sms_page.validate_code_box.SetValue("请输入验证码")
-            self.sms_page.validate_code_box.SetForegroundColour(self.sms_page.getPlaceholderColor())
 
         event.Skip()
 
@@ -345,13 +322,15 @@ class SMSPage(LoginPage):
         self.country_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = TextCtrl(self, -1, "请输入手机号")
-        self.phone_number_box.SetForegroundColour(self.getPlaceholderColor())
+        self.phone_number_box = wx.SearchCtrl(self, -1)
+        self.phone_number_box.ShowSearchButton(False)
+        self.phone_number_box.SetDescriptiveText("请输入手机号")
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = TextCtrl(self, -1, "请输入验证码")
-        self.validate_code_box.SetForegroundColour(self.getPlaceholderColor())
+        self.validate_code_box = wx.SearchCtrl(self, -1)
+        self.validate_code_box.ShowSearchButton(False)
+        self.validate_code_box.SetDescriptiveText("请输入验证码")
 
         bag_box = wx.GridBagSizer(3, 3)
         bag_box.Add(country_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
@@ -372,7 +351,7 @@ class SMSPage(LoginPage):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(swicher_hbox, 0, wx.EXPAND)
         vbox.AddSpacer(10)
-        vbox.Add(bag_box)
+        vbox.Add(bag_box, 0, wx.EXPAND)
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         page_vbox = wx.BoxSizer(wx.VERTICAL)

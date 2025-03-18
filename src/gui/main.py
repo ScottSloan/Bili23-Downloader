@@ -288,6 +288,12 @@ class MainWindow(Frame):
 
                         webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
+            def check_login():
+                if Config.Temp.need_login:
+                    wx.MessageDialog(self, "登录状态失效\n\n账号登录状态已失效，请重新登录", "警告", wx.ICON_WARNING).ShowModal()
+
+            check_login()
+            
             check_ffmpeg()
 
             check_update()

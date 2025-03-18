@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 
 from utils.common.data_type import DownloadTaskInfo
-from utils.module.file_name import FileNameManager
+from utils.common.file_name import FileNameManager
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
