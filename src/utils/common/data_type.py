@@ -7,10 +7,10 @@ class DownloadTaskInfo:
     def __init__(self):
         # id，区分不同下载任务的唯一标识符
         self.id: int = None
-        # 序号，从 1 开始，0 为空
-        self.index: int = None
+        # 序号，从 1 开始
+        self.number: int = 0
         # 补零序号
-        self.index_with_zero: str = None
+        self.number_with_zero: str = ""
         # 后缀
         self.suffix: str = ""
         # 时间戳
@@ -72,8 +72,8 @@ class DownloadTaskInfo:
     def to_dict(self):
         return {
             "id": self.id,
-            "index": self.index,
-            "index_with_zero": self.index_with_zero,
+            "index": self.number,
+            "index_with_zero": self.number_with_zero,
             "suffix": self.suffix,
             "timestamp": self.timestamp,
             "referer_url": self.referer_url,
@@ -106,8 +106,8 @@ class DownloadTaskInfo:
 
     def load_from_dict(self, data: Dict):
         self.id = data.get("id")
-        self.index = data.get("index")
-        self.index_with_zero = data.get("index_with_zero")
+        self.number = data.get("index")
+        self.number_with_zero = data.get("index_with_zero")
         self.suffix = data.get("suffix")
         self.timestamp = data.get("timestamp")
         self.referer_url = data.get("referer_url")

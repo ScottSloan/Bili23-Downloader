@@ -3,7 +3,7 @@ import webbrowser
 
 from utils.config import Config
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.compile_data import date
+from utils.common.compile_data import date, compile
 
 from gui.dialog.license import LicenseWindow
 from gui.component.dialog import Dialog
@@ -56,7 +56,7 @@ class AboutWindow(Dialog):
 
         desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片等资源")
 
-        date_lab = wx.StaticText(self, -1, f"构建时间：{date}")
+        date_lab = wx.StaticText(self, -1, f"构建日期：{date}" if compile else f"发布日期：{date}")
 
         copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
 

@@ -41,7 +41,7 @@ jobs:
       run: |
         $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $commit = git rev-parse dev
-        $content = "date = ""$date""" + "`n" + "commit = ""$commit"""
+        $content = "date = ""$date""" + "`n" + "commit = ""$commit""" + "`n" + "compile = True"
         Set-Content -Path "src/utils/common/compile_data.py" -Value $content
 
     - name: Build with Nuitka

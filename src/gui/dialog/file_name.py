@@ -2,14 +2,18 @@ import wx
 import re
 from datetime import datetime
 
+from utils.common.data_type import DownloadTaskInfo
+from utils.module.file_name import FileNameManager
+
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class CustomFileNameDialog(Dialog):
-    def __init__(self, parent, template: str, date_format: str, time_format: str):
+    def __init__(self, parent, template: str, date_format: str, time_format: str, auto_adjust: bool):
         self.template = template
         self.date_format = date_format
         self.time_format = time_format
+        self.auto_adjust = auto_adjust
 
         Dialog.__init__(self, parent, "自定义下载文件名")
 
@@ -51,6 +55,9 @@ class CustomFileNameDialog(Dialog):
         time_format_lab = wx.StaticText(self, -1, "时间格式")
         self.time_format_box = TextCtrl(self, -1, self.time_format, size = self.FromDIP((150, 24)))
 
+        self.auto_adjust_chk = wx.CheckBox(self, -1, "当出现空字段时，自动调整该字段前后的显示效果")
+        self.auto_adjust_chk.SetValue(self.auto_adjust)
+
         datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)
         datetime_hbox.Add(date_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         datetime_hbox.Add(self.date_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
@@ -71,6 +78,7 @@ class CustomFileNameDialog(Dialog):
         vbox.Add(self.preview_lab, 0, wx.ALL & (~wx.TOP), 10)
         vbox.Add(fields_vbox, 0, wx.EXPAND)
         vbox.Add(datetime_hbox, 0, wx.EXPAND)
+        vbox.Add(self.auto_adjust_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -81,6 +89,7 @@ class CustomFileNameDialog(Dialog):
         self.time_format_box.Bind(wx.EVT_TEXT, self.onTimeTextEVT)
 
         self.fields_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
+        self.auto_adjust_chk.Bind(wx.EVT_CHECKBOX, self.onAutoAdjustEVT)
 
     def init_utils(self):
         def init_fields_list_column():
@@ -175,23 +184,21 @@ class CustomFileNameDialog(Dialog):
         
         if self.check_legal(self.time_format_box.GetValue()):
             raise NameError("time")
+        
+        task_info = DownloadTaskInfo()
+        task_info.number = 0
+        task_info.number_with_zero = "01"
+        task_info.title = "《孤独摇滚》第1话 孤独的转机"
+        task_info.aid = 944573356
+        task_info.bvid = "BV1yW4y1j7Ft"
+        task_info.cid = 875212290
+        task_info.video_quality_id = 120
+        task_info.audio_quality_id = 30251
+        task_info.video_codec_id = 12
+        task_info.duration = 256
 
-        date_field = datetime.now().strftime(self.date_format_box.GetValue())
-        time_field = datetime.now().strftime(self.time_format_box.GetValue())
-        timestamp_field = str(int(datetime.now().timestamp()))
-        number_field = "1"
-        number_with_zero_field = "01"
-        title_field = "《孤独摇滚》第1话 孤独的转机"
-        aid_field = "944573356"
-        bvid_field = "BV1yW4y1j7Ft"
-        cid_field = "875212290"
-        video_quality_field = "超清 4K"
-        audio_quality_field = "Hi-Res 无损"
-        video_codec_field = "HEVC/H.265"
-        duration_field = "256"
-
-        template = str(self.template_box.GetValue())
-        preview = template.format(date = date_field, time = time_field, timestamp = timestamp_field, number = number_field, number_with_zero = number_with_zero_field, title = title_field, aid = aid_field, bvid = bvid_field, cid = cid_field, video_quality = video_quality_field, audio_quality = audio_quality_field, video_codec = video_codec_field, duration = duration_field)
+        file_name_mgr = FileNameManager(task_info)
+        preview = file_name_mgr.get_full_file_name(self.template_box.GetValue(), self.auto_adjust_chk.GetValue())
         
         self.preview_lab.SetLabel(f"预览：{preview}")
 
@@ -226,6 +233,9 @@ class CustomFileNameDialog(Dialog):
         field_name = self.fields_list.GetItemText(self.fields_list.GetFocusedItem(), 0)
 
         self.template_box.AppendText(field_name)        
+
+    def onAutoAdjustEVT(self, event):
+        self.onTemplateTextEVT(event)
 
     def check_legal(self, file_name):
         forbidden_chars = r'[<>:"/\\|?*\x00-\x1F]'
@@ -273,6 +283,3 @@ class CustomFileNameDialog(Dialog):
         self.preview_lab.SetLabel("预览：-")
 
         self.ok_btn.Enable(False)
-
-    def get_template(self):
-        return self.template_box.GetValue()

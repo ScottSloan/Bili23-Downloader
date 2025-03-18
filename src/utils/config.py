@@ -122,6 +122,7 @@ class Config:
         file_name_template = "{number_with_zero} - {title}"
         date_format = "%Y-%m-%d"
         time_format = "%H-%M-%S"
+        auto_adjust_field = True
 
         retry_when_download_error: bool = True
         download_error_retry_count: int = 3
@@ -214,6 +215,7 @@ class ConfigUtils:
         Config.Advanced.file_name_template = app_config["advanced"].get("file_name_template", Config.Advanced.file_name_template)
         Config.Advanced.date_format = app_config["advanced"].get("date_format", Config.Advanced.date_format)
         Config.Advanced.time_format = app_config["advanced"].get("time_format", Config.Advanced.time_format)
+        Config.Advanced.auto_adjust_field = app_config["advanced"].get("auto_adjust_field", Config.Advanced.auto_adjust_field)
         Config.Advanced.retry_when_download_error = app_config["advanced"].get("retry_when_download_error", Config.Advanced.retry_when_download_error)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.retry_when_download_suspend = app_config["advanced"].get("retry_when_download_suspend", Config.Advanced.retry_when_download_suspend)

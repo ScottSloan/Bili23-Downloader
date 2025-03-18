@@ -13,6 +13,8 @@ from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
+from utils.module.file_name import FileNameManager
+
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser
 from utils.config import Config
@@ -621,6 +623,8 @@ class DownloadTaskItemPanel(Panel):
     
     @property
     def full_file_name(self):
-        file_name = FormatTool.format_title_template(Config.Advanced.file_name_template, self.task_info)
+        file_name_mgr = FileNameManager(self.task_info)
+
+        file_name = file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
     
         return f"{file_name}{self.task_info.suffix}.{self.task_info.output_type}"
