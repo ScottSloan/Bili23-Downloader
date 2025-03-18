@@ -97,7 +97,8 @@ class CookieUtils:
             "SESSDATA": Config.User.SESSDATA,
             "bili_jct": Config.User.bili_jct,
             "DedeUserID": Config.User.DedeUserID,
-            "DedeUserID_ckMd5": Config.User.DedeUserID__ckMd5
+            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
+            "login_expires": Config.User.login_expires
         }
 
         self.update_cookie_params(kwargs, category = "user")
@@ -276,7 +277,7 @@ class CookieUtils:
     def check_timestamp_expires(self, timestamp: int):
         time_diff = datetime.now() - datetime.fromtimestamp(timestamp)
 
-        return time_diff.seconds > 0
+        return time_diff.total_seconds() > 0
 
     def get_timestamp(self):
         return int(datetime.timestamp(datetime.now()))

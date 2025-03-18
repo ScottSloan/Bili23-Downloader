@@ -3,7 +3,7 @@ import json
 import qrcode
 import requests
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config, config_utils
@@ -29,7 +29,6 @@ class LoginBase:
     def get_user_info(self, refresh = False):
         url = "https://api.bilibili.com/x/web-interface/nav"
 
-        # 判断是否刷新用户信息
         if refresh:
             headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA)
 
@@ -45,7 +44,7 @@ class LoginBase:
         return {
             "username": resp["uname"],
             "face_url": resp["face"],
-            "login_expires": int(datetime.timestamp(datetime.now())),
+            "login_expires": int((datetime.now() + timedelta(days = 365)).timestamp()),
             "SESSDATA": self.session.cookies["SESSDATA"] if not refresh else Config.User.SESSDATA,
             "DedeUserID": self.session.cookies["DedeUserID"] if not refresh else Config.User.DedeUserID,
             "DedeUserID__ckMd5": self.session.cookies["DedeUserID__ckMd5"] if not refresh else Config.User.DedeUserID__ckMd5,

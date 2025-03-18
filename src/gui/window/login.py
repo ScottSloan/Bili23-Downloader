@@ -4,6 +4,7 @@ import base64
 import requests
 from io import BytesIO
 from typing import Dict, Callable
+from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
 from utils.config import Config, config_utils
@@ -107,7 +108,7 @@ class LoginWindow(Dialog):
             "login": Config.User.login,
             "face_url": Config.User.face_url,
             "username": Config.User.username,
-            "timestamp": round(time.time()),
+            "login_expires": int((datetime.now() + timedelta(days = 365)).timestamp()),
             "SESSDATA": Config.User.SESSDATA,
             "DedeUserID": Config.User.DedeUserID,
             "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
@@ -219,7 +220,7 @@ class QRPage(LoginPage):
         def _success(info: dict):
             self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
             
-            time.sleep(2)
+            time.sleep(1.5)
 
             self.onLoginSuccess(info)
 
