@@ -88,6 +88,9 @@ class VideoParser:
         req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
+        with open("video.json", "w", encoding = "utf-8") as f:
+            f.write(req.text)
+
         self.check_json(resp)
 
         info = VideoInfo.info_json = resp["data"]
@@ -186,12 +189,12 @@ class VideoParser:
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 
-    def check_json(self, json: dict):
+    def check_json(self, data: dict):
         # 检查接口返回状态码
-        status_code = json["code"]
+        status_code = data["code"]
 
         if status_code != StatusCode.Success.value:
-            raise GlobalException(code = status_code)
+            raise GlobalException(message = data["message"], code = status_code)
     
     def parse_episodes(self):
         def pages_parser():

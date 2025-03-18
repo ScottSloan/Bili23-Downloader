@@ -55,7 +55,7 @@ class CustomFileNameDialog(Dialog):
         time_format_lab = wx.StaticText(self, -1, "时间格式")
         self.time_format_box = TextCtrl(self, -1, self.time_format, size = self.FromDIP((150, 24)))
 
-        self.auto_adjust_chk = wx.CheckBox(self, -1, "当出现空字段时，自动调整该字段前后的显示效果")
+        self.auto_adjust_chk = wx.CheckBox(self, -1, "自动调整空字段前后的显示效果")
         self.auto_adjust_chk.SetValue(self.auto_adjust)
 
         datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -199,17 +199,17 @@ class BangumiParser:
         except Exception as e:
             raise GlobalException(callback = self.callback.error_callback) from e
     
-    def check_json(self, json: dict):
+    def check_json(self, data: dict):
         # 检查接口返回状态码
-        status_code = json["code"]
-        message = json["message"]
+        status_code = data["code"]
+        message = data["message"]
 
         if status_code != StatusCode.Success.value:
             if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
                 # 如果提示大会员专享限制就不用抛出异常，因为和地区限制共用一个状态码 -10403
                 return
             
-            raise GlobalException(code = status_code)
+            raise GlobalException(message = message, code = status_code)
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()

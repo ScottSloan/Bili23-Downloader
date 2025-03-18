@@ -21,3 +21,5 @@
 * 修复部分情况下载失败的问题 by @ScottSloan (#66)
 * 修复下载后音视频残缺的问题 by @ScottSloan (#87)
 * 修复部分情况下无法下载弹幕、字幕和封面文件的问题 by @ScottSloan (#89)
+* 修复下载选项窗口取消自动弹出无效的问题 by @ScottSloan
+* 修复 bili_ticket 不会自动刷新而导致接口返回请求频繁的问题 by @ScottSloan 

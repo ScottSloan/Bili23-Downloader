@@ -260,21 +260,24 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if "arc" in entry:
             cover_url = entry["arc"]["pic"]
             duration = entry["arc"]["duration"]
+            cid = entry["cid"]
             bvid = entry["bvid"]
         else:
             cover_url = VideoInfo.cover
+            cid = VideoInfo.cid
             bvid = VideoInfo.bvid
             duration = entry["duration"]
 
-        cid = entry["cid"]
+        aid = entry["aid"]
         referer_url = VideoInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))
 
-        self.get_extra_download_info(referer_url, title, duration, cover_url, bvid = bvid, cid = cid)
+        self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid)
 
     def get_bangumi_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
+        aid = entry["aid"]
         bvid = entry["bvid"]
         cid = entry["cid"]
 
@@ -287,7 +290,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))
 
-        self.get_extra_download_info(referer_url, title, duration, cover_url, bvid = bvid, cid = cid)
+        self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid)
     
     def get_cheese_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]

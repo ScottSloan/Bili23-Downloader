@@ -11,8 +11,10 @@ class GlobalExceptionInfo:
 
 class GlobalException(Exception):
     def __init__(self, message: str = None, code: int = None, stack_trace: str = None, callback: Callable = None, url: str = None):
-        if not message and code:
-            message = status_code_map.get(code)
+        if code:
+            code_map_message = status_code_map.get(code)
+            if code_map_message:
+                message = code_map_message
 
         super().__init__(message)
 

@@ -110,6 +110,7 @@ class Config:
         buvid_fp: str = ""
         b_nut: str = ""
         bili_ticket: str = ""
+        bili_ticket_expires: int = 0
         uuid: str = ""
         b_lsid: str = ""
 
@@ -268,8 +269,8 @@ class ConfigUtils:
         Config.Auth.buvid_fp = user_config["cookie_params"].get("buvid_fp", Config.Auth.buvid_fp)
         Config.Auth.b_nut = user_config["cookie_params"].get("b_nut", Config.Auth.b_nut)
         Config.Auth.bili_ticket = user_config["cookie_params"].get("bili_ticket", Config.Auth.bili_ticket)
+        Config.Auth.bili_ticket_expires = user_config["cookie_params"].get("bili_ticket_expires", Config.Auth.bili_ticket_expires)
         Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)
-        Config.Auth.b_lsid = user_config["cookie_params"].get("b_lsid", Config.Auth.b_lsid)
 
         _after_load()
 

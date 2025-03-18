@@ -101,12 +101,12 @@ class LiveParser:
         except Exception as e:
             raise GlobalException(callback = self.callback.error_callback) from e
 
-    def check_json(self, json: dict):
+    def check_json(self, data: dict):
         # 检查接口返回状态码
-        status_code = json["code"]
+        status_code = data["code"]
         
         if status_code != StatusCode.Success.value:
-            raise GlobalException(code = status_code)
+            raise GlobalException(message = data["message"], code = status_code)
 
     def clear_live_info(self):
         LiveInfo.title = ""
