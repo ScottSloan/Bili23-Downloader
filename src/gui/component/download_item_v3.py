@@ -135,7 +135,7 @@ class DownloadTaskItemPanel(Panel):
         video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
 
         video_info_vbox = wx.BoxSizer(wx.VERTICAL)
-        video_info_vbox.AddSpacer(self.FromDIP(8))
+        video_info_vbox.AddSpacer(self.FromDIP(10))
         video_info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.EXPAND, 10)
         video_info_vbox.AddStretchSpacer()
         video_info_vbox.Add(video_info_hbox, 0, wx.EXPAND)
@@ -152,7 +152,7 @@ class DownloadTaskItemPanel(Panel):
         speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         progress_bar_vbox = wx.BoxSizer(wx.VERTICAL)
-        progress_bar_vbox.AddSpacer(self.FromDIP(8 if Config.Sys.platform != "linux" else 16))
+        progress_bar_vbox.AddSpacer(self.FromDIP(10 if Config.Sys.platform != "linux" else 20))
         progress_bar_vbox.Add(progress_bar_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddStretchSpacer()
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)

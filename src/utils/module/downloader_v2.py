@@ -2,11 +2,10 @@ import re
 import os
 import time
 import threading
-from concurrent.futures import ThreadPoolExecutor
 
 from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
 from utils.common.enums import CDNMode, StatusCode
-from utils.common.thread import Thread
+from utils.common.thread import Thread, DaemonThreadPoolExecutor
 from utils.common.map import cdn_map
 from utils.common.exception import GlobalException
 from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
@@ -23,7 +22,7 @@ class Downloader:
     def init_utils(self):
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
-        self.executor = ThreadPoolExecutor(max_workers = Config.Download.max_thread_count)
+        self.executor = DaemonThreadPoolExecutor()
 
         self.current_file_size = 0
         self.current_downloaded_size = 0
@@ -102,14 +101,14 @@ class Downloader:
 
             Thread(target = self.progress_tracker).start()
 
-            with ThreadPoolExecutor() as executor:
+            with DaemonThreadPoolExecutor(max_workers = Config.Download.max_thread_count) as self.executor:
                 for index, range in enumerate(ranges):
                     if range[0] < range[1]:
                         self.progress_info[index] = range
 
                         range_info = get_range_info(index, file_path, url, range)
 
-                        executor.submit(self.download_range, range_info)
+                        self.executor.submit(self.download_range, range_info)
 
         self.stop_event.clear()
 

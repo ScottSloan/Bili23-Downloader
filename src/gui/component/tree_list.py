@@ -272,7 +272,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         referer_url = VideoInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, aid = aid, bvid = bvid, cid = cid))
 
         self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid)
 
@@ -289,7 +289,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         referer_url = BangumiInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url = cover_url, aid = aid, bvid = bvid, cid = cid))
 
         self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid)
     
