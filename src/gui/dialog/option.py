@@ -111,8 +111,9 @@ class OptionDialog(Dialog):
         self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onCheckSubtitleEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCloseEVT)
 
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
     def init_utils(self):
         def _get_audio_quality_list():
@@ -206,7 +207,7 @@ class OptionDialog(Dialog):
 
         event.Skip()
 
-    def onClose(self, event):
+    def onCloseEVT(self, event):
         Config.Download.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
 
         kwargs = {
@@ -215,4 +216,7 @@ class OptionDialog(Dialog):
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
+        event.Skip()
+
+    def onCanelEVT(self, event):
         event.Skip()

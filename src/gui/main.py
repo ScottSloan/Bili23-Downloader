@@ -292,7 +292,7 @@ class MainWindow(Frame):
                 if Config.Temp.need_login:
                     wx.MessageDialog(self, "登录状态失效\n\n账号登录状态已失效，请重新登录", "警告", wx.ICON_WARNING).ShowModal()
 
-            check_login()
+            wx.CallAfter(check_login)
             
             check_ffmpeg()
 
@@ -506,7 +506,8 @@ class MainWindow(Frame):
             return
         
         if Config.Download.auto_popup_option_dialog:
-            self.onDownloadOptionEVT(0)
+            if self.onDownloadOptionEVT(0) == wx.ID_CANCEL:
+                return
         
         # 显示加载窗口
         self.processing_window = ProcessingWindow(self)
@@ -729,7 +730,7 @@ class MainWindow(Frame):
                 stream_type = CheeseInfo.stream_type
 
         dlg = OptionDialog(self, stream_type, callback)
-        dlg.ShowModal()
+        return dlg.ShowModal()
 
     def onEpisodeOptionMenuEVT(self, event):
         def _clear():

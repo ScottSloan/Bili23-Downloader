@@ -153,10 +153,6 @@ class LoginPage(Panel):
         if not Config.Sys.dark_mode:
             return wx.Colour(80, 80, 80)
     
-    def getPlaceholderColor(self):
-        if not Config.Sys.dark_mode:
-            return wx.Colour(120, 120, 120)
-    
     def getBorderColor(self):
         if not Config.Sys.dark_mode:
             return wx.Colour(227, 229, 231)
@@ -220,7 +216,7 @@ class QRPage(LoginPage):
         def _success(info: dict):
             self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
             
-            time.sleep(1.5)
+            time.sleep(1)
 
             self.onLoginSuccess(info)
 

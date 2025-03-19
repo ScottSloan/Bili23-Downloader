@@ -260,15 +260,16 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if "arc" in entry:
             cover_url = entry["arc"]["pic"]
             duration = entry["arc"]["duration"]
+            aid = entry["aid"]
             cid = entry["cid"]
             bvid = entry["bvid"]
         else:
             cover_url = VideoInfo.cover
+            aid = VideoInfo.aid
             cid = VideoInfo.cid
             bvid = VideoInfo.bvid
             duration = entry["duration"]
 
-        aid = entry["aid"]
         referer_url = VideoInfo.url
 
         self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid))

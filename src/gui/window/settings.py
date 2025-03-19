@@ -398,7 +398,7 @@ class AdvancedTab(Panel):
         advanced_download_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_vbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), 10)
         advanced_download_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL & (~wx.TOP), 10)
+        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL, 10)
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box)
         advanced_download_sbox.Add(advanced_download_vbox, 0, wx.EXPAND)
