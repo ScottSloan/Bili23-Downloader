@@ -68,7 +68,7 @@ class SettingWindow(Dialog):
 
 class DownloadTab(Panel):
     def __init__(self, parent, _main_window):
-        self._main_window = _main_window
+        self.main_window = _main_window
 
         Panel.__init__(self, parent)
 
@@ -226,11 +226,10 @@ class DownloadTab(Panel):
         self.onChangeSpeedLimitEVT(0)
 
     def save(self):
-        def _update_download_window():
-            pass
-            #self._main_window.download_window.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
+        def update_download_window():
+            self.main_window.download_window.downloading_page.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
 
-            #self._main_window.download_window.onChangeMaxDownloaderEVT(None)
+            self.main_window.download_window.downloading_page.onMaxDownloadChangeEVT(None)
 
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
@@ -262,7 +261,7 @@ class DownloadTab(Panel):
         config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 更新下载窗口中并行下载数信息
-        _update_download_window()
+        update_download_window()
         
     def onConfirm(self):
         if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):
@@ -390,7 +389,7 @@ class AdvancedTab(Panel):
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
         download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.always_use_http_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTP 协议发起请求而非 HTTPS")
+        self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
 
         advanced_download_vbox = wx.BoxSizer(wx.VERTICAL)
         advanced_download_vbox.Add(button_hbox, 0, wx.EXPAND)
@@ -398,7 +397,7 @@ class AdvancedTab(Panel):
         advanced_download_vbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_vbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), 10)
         advanced_download_vbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_vbox.Add(self.always_use_http_protocol_chk, 0, wx.ALL, 10)
+        advanced_download_vbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL, 10)
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box)
         advanced_download_sbox.Add(advanced_download_vbox, 0, wx.EXPAND)
@@ -434,7 +433,7 @@ class AdvancedTab(Panel):
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
         self.download_suspend_retry_chk.SetValue(Config.Advanced.retry_when_download_suspend)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
-        self.always_use_http_protocol_chk.SetValue(Config.Advanced.always_use_http_protocol)
+        self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
 
         match CDNMode(Config.Advanced.custom_cdn_mode):
             case CDNMode.Auto:
@@ -460,7 +459,7 @@ class AdvancedTab(Panel):
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
         Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
-        Config.Advanced.always_use_http_protocol = self.always_use_http_protocol_chk.GetValue()
+        Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
 
         if self.custom_cdn_auto_switch_radio.GetValue():
             Config.Advanced.custom_cdn_mode = 0
@@ -479,7 +478,7 @@ class AdvancedTab(Panel):
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
             "retry_when_download_suspend": Config.Advanced.retry_when_download_suspend,
             "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval,
-            "always_use_http_protocol": Config.Advanced.always_use_http_protocol
+            "always_use_https_protocol": Config.Advanced.always_use_https_protocol
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)

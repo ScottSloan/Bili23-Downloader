@@ -108,7 +108,7 @@ class RequestTool:
     
     @staticmethod
     def replace_protocol(url: str):
-        if Config.Advanced.always_use_http_protocol:
+        if not Config.Advanced.always_use_https_protocol:
             return url.replace("https://", "http://")
         
         return url

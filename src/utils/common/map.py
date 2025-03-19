@@ -39,6 +39,12 @@ video_codec_map = {
     "AV1": 13
 }
 
+video_codec_short_map = {
+    "H264": 7,
+    "H265": 12,
+    "AV1": 13
+}
+
 live_quality_map = {
     "自动": 40000,
     "杜比": 30000,

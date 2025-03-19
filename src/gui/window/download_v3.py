@@ -9,7 +9,7 @@ from utils.common.enums import DownloadStatus, ParseType
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
-from utils.config import Config
+from utils.config import Config, config_utils
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -518,6 +518,12 @@ class DownloadingPage(SimplePage):
 
                         if count > Config.Download.max_download_count:
                             panel.pause_download(set_waiting_status = True)
+        
+        kwargs = {
+            "max_download_count": Config.Download.max_download_count
+        }
+
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
     
     @property
     def scroller_count(self):

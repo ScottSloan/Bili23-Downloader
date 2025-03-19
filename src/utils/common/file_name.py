@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
 from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
@@ -40,7 +40,7 @@ class FileNameManager:
             "cid": self.task_info.cid,
             "video_quality": get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id),
             "audio_quality": get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id),
-            "video_codec": get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id),
+            "video_codec": get_mapping_key_by_value(video_codec_short_map, self.task_info.video_codec_id),
             "duration": self.task_info.duration
         }
 

@@ -129,7 +129,7 @@ class Config:
         download_error_retry_count: int = 3
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
-        always_use_http_protocol: bool = False
+        always_use_https_protocol: bool = True
 
 class ConfigUtils:
     def __init__(self):
@@ -221,7 +221,7 @@ class ConfigUtils:
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
         Config.Advanced.retry_when_download_suspend = app_config["advanced"].get("retry_when_download_suspend", Config.Advanced.retry_when_download_suspend)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
-        Config.Advanced.always_use_http_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_http_protocol)
+        Config.Advanced.always_use_https_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_https_protocol)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)

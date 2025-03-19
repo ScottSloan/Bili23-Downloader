@@ -157,7 +157,7 @@ class CustomFileNameDialog(Dialog):
                 {
                     "name": "{video_codec}",
                     "description": "视频编码",
-                    "example": "HEVC/H.265"
+                    "example": "H265"
                 },
                 {
                     "name": "{duration}",
