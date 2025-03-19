@@ -33,17 +33,23 @@ class FFmpeg:
         if "ffmpeg version" in self.run_command(cmd, output = True):
             Config.FFmpeg.available = True
 
-    def merge_video(self, full_file_name: str, callback: MergeCallback):
+    def merge_video(self, callback: MergeCallback):
         def check_file_exist():
-            path = os.path.join(Config.Download.path, full_file_name)
+            index = 0
+            path = os.path.join(Config.Download.path, callback.onGetFullFileName())
 
-            if os.path.exists(path):
+            while os.path.exists(path):
                 match OverrideOption(Config.Merge.override_option):
                     case OverrideOption.Rename:
-                        callback.onAddSuffix()
+                        index += 1
+
+                        self.task_info.suffix = f"_{index}"
+                        path = os.path.join(Config.Download.path, callback.onGetFullFileName())
 
                     case OverrideOption.Override:
                         self.delete_specific_file(path)
+            
+            callback.onSaveSuffix()
 
         check_file_exist()
     

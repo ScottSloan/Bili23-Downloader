@@ -22,7 +22,10 @@ class DownloadManagerWindow(Frame):
         def get_window_size():
             match Config.Sys.platform:
                 case "windows":
-                    return self.FromDIP((930, 550))
+                    if self.GetDPIScaleFactor() >= 1.5:
+                        return self.FromDIP((930, 550))
+                    else:
+                        return self.FromDIP((960, 580))
                 
                 case "darwin":
                     return self.FromDIP((1000, 600))
@@ -56,13 +59,13 @@ class DownloadManagerWindow(Frame):
         self.top_title_lab.SetFont(font)
 
         top_panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_panel_hbox.AddSpacer(20)
+        top_panel_hbox.AddSpacer(self.FromDIP(13))
         top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         top_panel_vbox = wx.BoxSizer(wx.VERTICAL)
-        top_panel_vbox.AddSpacer(10)
+        top_panel_vbox.AddSpacer(self.FromDIP(6))
         top_panel_vbox.Add(top_panel_hbox, 0, wx.EXPAND)
-        top_panel_vbox.AddSpacer(10)
+        top_panel_vbox.AddSpacer(self.FromDIP(6))
 
         top_panel.SetSizerAndFit(top_panel_vbox)
 

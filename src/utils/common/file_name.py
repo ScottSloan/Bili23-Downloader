@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from utils.common.data_type import DownloadTaskInfo
@@ -17,6 +18,14 @@ class FileNameManager:
 
         return template.format(**fields_dict)
     
+    def check_file_name_legnth(self, file_name: str):
+        filename, ext = os.path.splitext(os.path.basename(file_name))
+
+        if len(file_name) > 255:
+            filename = filename[:255 - len(ext)]
+        
+        return filename + ext
+
     def check_field_empty(self, template: str, fields_dict: dict):
         for key, value in fields_dict.items():
             if not value:

@@ -186,6 +186,11 @@ class QRPage(LoginPage):
 
         self.qrcode = wx.StaticBitmap(self, -1, self.setQRCodeTextTip("正在加载"), size = self.FromDIP((150, 150)))
 
+        qrcode_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        qrcode_hbox.AddStretchSpacer()
+        qrcode_hbox.Add(self.qrcode, 0, wx.EXPAND)
+        qrcode_hbox.AddStretchSpacer()
+
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
@@ -195,7 +200,7 @@ class QRPage(LoginPage):
 
         qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
         qrcode_vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        qrcode_vbox.Add(self.qrcode, 0, wx.EXPAND)
+        qrcode_vbox.Add(qrcode_hbox, 0, wx.EXPAND)
         qrcode_vbox.Add(self.scan_tip_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         self.SetSizer(qrcode_vbox)
@@ -319,24 +324,24 @@ class SMSPage(LoginPage):
         self.country_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = wx.SearchCtrl(self, -1)
+        self.phone_number_box = wx.SearchCtrl(self, -1, size = self.FromDIP((150, 25)))
         self.phone_number_box.ShowSearchButton(False)
         self.phone_number_box.SetDescriptiveText("请输入手机号")
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = wx.SearchCtrl(self, -1)
+        self.validate_code_box = wx.SearchCtrl(self, -1, size = self.FromDIP((250, 25)))
         self.validate_code_box.ShowSearchButton(False)
         self.validate_code_box.SetDescriptiveText("请输入验证码")
 
         bag_box = wx.GridBagSizer(3, 3)
         bag_box.Add(country_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.country_choice, pos = (0, 1), span = (0, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
+        bag_box.Add(self.country_choice, pos = (0, 1), span = (0, 2), flag = wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(phone_number_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(self.phone_number_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.get_validate_code_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
+        bag_box.Add(self.get_validate_code_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
         bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, border = 10)
+        bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
 
         self.login_btn = wx.Button(self, -1, "登录", size = self.get_scaled_size((120, 30)))
 

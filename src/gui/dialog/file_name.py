@@ -37,7 +37,7 @@ class CustomFileNameDialog(Dialog):
         self.error_lab.SetForegroundColour(wx.Colour(250, 42, 45))
 
         error_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        error_hbox.AddSpacer(template_lab.GetSize()[0])
+        error_hbox.AddSpacer(template_lab.GetSize()[0] + self.FromDIP(20))
         error_hbox.Add(self.error_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
 
         self.preview_lab = wx.StaticText(self, -1, "预览：")
@@ -199,6 +199,9 @@ class CustomFileNameDialog(Dialog):
 
         file_name_mgr = FileNameManager(task_info)
         preview = file_name_mgr.get_full_file_name(self.template_box.GetValue(), self.auto_adjust_chk.GetValue())
+
+        if len(preview) > 255:
+            raise ValueError("max length")
         
         self.preview_lab.SetLabel(f"预览：{preview}")
 
@@ -271,6 +274,9 @@ class CustomFileNameDialog(Dialog):
                     
                     case "Invalid format string":
                         info = "日期时间格式无效"
+
+                    case "max length":
+                        info = "文件名长度超过 255"
 
                     case _:
                         info = str(e)

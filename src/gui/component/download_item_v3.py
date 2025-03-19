@@ -130,33 +130,33 @@ class DownloadTaskItemPanel(Panel):
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        video_info_hbox.Add(self.video_quality_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
-        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
-        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_quality_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_codec_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
+        video_info_hbox.Add(self.video_size_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, 10)
 
         video_info_vbox = wx.BoxSizer(wx.VERTICAL)
-        video_info_vbox.AddSpacer(5)
-        video_info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, 10)
+        video_info_vbox.AddSpacer(self.FromDIP(8))
+        video_info_vbox.Add(self.title_lab, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.EXPAND, 10)
         video_info_vbox.AddStretchSpacer()
         video_info_vbox.Add(video_info_hbox, 0, wx.EXPAND)
-        video_info_vbox.AddSpacer(5)
+        video_info_vbox.AddSpacer(self.FromDIP(8))
 
         self.progress_bar = wx.Gauge(self, -1, 100, size = get_progress_bar_size(), style = wx.GA_SMOOTH)
 
         progress_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
 
         self.speed_lab = InfoLabel(self, "等待下载...", size = self.FromDIP((-1, -1)))
 
         speed_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         progress_bar_vbox = wx.BoxSizer(wx.VERTICAL)
-        progress_bar_vbox.AddSpacer(5)
+        progress_bar_vbox.AddSpacer(self.FromDIP(8 if Config.Sys.platform != "linux" else 16))
         progress_bar_vbox.Add(progress_bar_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddStretchSpacer()
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
-        progress_bar_vbox.AddSpacer(5)
+        progress_bar_vbox.AddSpacer(self.FromDIP(8))
 
         self.pause_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
         self.pause_btn.SetToolTip("开始下载")
@@ -165,7 +165,7 @@ class DownloadTaskItemPanel(Panel):
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        panel_hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
+        panel_hbox.Add(self.cover_bmp, 0, wx.ALL, self.FromDIP(6))
         panel_hbox.Add(video_info_vbox, 0, wx.EXPAND)
         panel_hbox.AddStretchSpacer()
         panel_hbox.Add(progress_bar_vbox, 0, wx.EXPAND)
@@ -408,9 +408,7 @@ class DownloadTaskItemPanel(Panel):
 
     def merge_video(self):
         def get_callback():
-            def onAddSuffix():
-                self.task_info.suffix = "_1"
-
+            def onSaveSuffix():
                 kwargs = {
                     "suffix": self.task_info.suffix
                 }
@@ -423,12 +421,12 @@ class DownloadTaskItemPanel(Panel):
             callback = MergeCallback()
             callback.onSuccess = self.onMergeSuccess
             callback.onError = self.onMergeError
-            callback.onAddSuffix = onAddSuffix
+            callback.onSaveSuffix = onSaveSuffix
             callback.onGetFullFileName = onGetFullFileName
 
             return callback
 
-        self.ffmpeg.merge_video(self.full_file_name, get_callback())
+        self.ffmpeg.merge_video(get_callback())
 
     def download_extra(self):
         extra_parser = ExtraParser()
@@ -626,5 +624,5 @@ class DownloadTaskItemPanel(Panel):
         file_name_mgr = FileNameManager(self.task_info)
 
         file_name = file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
-    
-        return f"{file_name}{self.task_info.suffix}.{self.task_info.output_type}"
+
+        return file_name_mgr.check_file_name_legnth(f"{file_name}{self.task_info.suffix}.{self.task_info.output_type}")

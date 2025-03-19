@@ -24,15 +24,15 @@ class ActionButton(Panel):
         self.lab = wx.StaticText(self, -1, self._title)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(50)
+        hbox.AddSpacer(self.FromDIP(33))
         hbox.Add(self.icon, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         hbox.Add(self.lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        hbox.AddSpacer(50)
+        hbox.AddSpacer(self.FromDIP(33))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(5)
+        vbox.AddSpacer(self.FromDIP(3))
         vbox.Add(hbox, 0, wx.EXPAND)
-        vbox.AddSpacer(5)
+        vbox.AddSpacer(self.FromDIP(3))
 
         self.SetSizerAndFit(vbox)
     

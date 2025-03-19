@@ -217,5 +217,5 @@ class MergeCallback:
     def __init__(self):
         self.onSuccess = None
         self.onError = None
-        self.onAddSuffix = None
+        self.onSaveSuffix = None
         self.onGetFullFileName = None
