@@ -8,6 +8,8 @@ from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, Download
 from utils.common.enums import DownloadStatus, ParseType
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
+
+from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
 from utils.config import Config, config_utils
 
@@ -277,6 +279,8 @@ class DownloadManagerWindow(Frame):
         else:
             title = "下载管理"
 
+            self.RequestUserAttention(wx.USER_ATTENTION_ERROR)
+
         if self.current_page == name:
             self.top_title_lab.SetLabel(title)
 
@@ -366,7 +370,7 @@ class SimplePage(Panel):
         # 封面显示完成后，清除图片换成
         DataCache.clear_cache()
 
-    def refresh_scroller(self):
+    def refresh_scroller(self, show_toast: bool = False):
         if self.is_scroller_empty:
             if self.temp_download_list:
                 wx.CallAfter(self.load_more_panel_item)
@@ -380,6 +384,11 @@ class SimplePage(Panel):
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
         self.callback.onSetTitleCallback(self.name, self.total_count)
+
+        if self.name == "正在下载":
+            if not self.total_count and show_toast:
+                notification = NotificationManager(self)
+                notification.show_toast("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
 
     def get_scroller_task_count(self, condition: List[int]):
         _count = 0

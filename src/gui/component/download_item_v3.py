@@ -353,7 +353,7 @@ class DownloadTaskItemPanel(Panel):
         self.Destroy()
         
         if event:
-            self.callback.onUpdateCountTitleCallback()
+            self.callback.onUpdateCountTitleCallback(show_toast = True)
 
     def start_download(self):
         def get_downloader_callback():

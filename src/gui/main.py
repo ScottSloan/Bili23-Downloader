@@ -1,8 +1,9 @@
 import wx
 import os
-import wx.dataview
 import wx.py
 import requests
+import webbrowser
+import wx.dataview
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -200,6 +201,7 @@ class MainWindow(Frame):
         self.help_menu.Append(self.ID_CHANGELOG, "更新日志(&P)")
         self.help_menu.AppendSeparator()
         self.help_menu.Append(self.ID_HELP, "使用帮助(&C)")
+        self.help_menu.Append(self.ID_FEEDBACK, "意见反馈(&B)")
         self.help_menu.Append(self.ID_ABOUT, "关于(&A)")
 
         self.SetMenuBar(menu_bar)
@@ -246,6 +248,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onRefreshEVT, id = self.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.onHelpEVT, id = self.ID_HELP)
         self.Bind(wx.EVT_MENU, self.onChangeLogEVT, id = self.ID_CHANGELOG)
+        self.Bind(wx.EVT_MENU, self.onFeedBackEVT, id = self.ID_FEEDBACK)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_SINGLE)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_IN_SECTION)
         self.Bind(wx.EVT_MENU, self.onEpisodeOptionMenuEVT, id = self.ID_EPISODE_ALL_SECTIONS)
@@ -329,6 +332,7 @@ class MainWindow(Frame):
         self.ID_HELP = wx.NewIdRef()
         self.ID_CHECK_UPDATE = wx.NewIdRef()
         self.ID_CHANGELOG = wx.NewIdRef()
+        self.ID_FEEDBACK = wx.NewIdRef()
         self.ID_ABOUT = wx.NewIdRef()
 
         self.ID_LOGOUT = wx.NewIdRef()
@@ -657,6 +661,9 @@ class MainWindow(Frame):
                     wx.MessageDialog(self, "获取更新日志失败\n\n当前无法获取更新日志，请稍候再试", "获取更新日志", wx.ICON_ERROR).ShowModal()
 
         Thread(target = worker).start()
+
+    def onFeedBackEVT(self, event):
+        webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader/issues")
 
     def onCheckUpdateEVT(self, event):
         def worker():

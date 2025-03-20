@@ -39,7 +39,10 @@ jobs:
 
     - name: Generate Compile Data
       run: |
-        $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $currentDate = Get-Date
+        $timezone = [System.TimeZoneInfo]::FindSystemTimeZoneById("China Standard Time")
+        $convertedDate = [System.TimeZoneInfo]::ConvertTime($currentDate, $timezone)
+        $date = $convertedDate.ToString("yyyy-MM-dd HH:mm:ss")
         $commit = git rev-parse dev
         $content = "date = ""$date""" + "`n" + "commit = ""$commit""" + "`n" + "compile = True"
         Set-Content -Path "src/utils/common/compile_data.py" -Value $content
