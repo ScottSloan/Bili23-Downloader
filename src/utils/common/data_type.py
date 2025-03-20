@@ -219,3 +219,15 @@ class MergeCallback:
         self.onError = None
         self.onSaveSuffix = None
         self.onGetFullFileName = None
+
+class CutInfo:
+    def __init__(self):
+        self.input_path: str = ""
+        self.output_path: str = ""
+        self.start_time: str = ""
+        self.end_time: str = ""
+
+class CutCallback:
+    def __init__(self):
+        self.onSuccess = None
+        self.onError = None

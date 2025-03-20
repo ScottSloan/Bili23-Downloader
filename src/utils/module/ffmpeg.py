@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption
-from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback
+from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
 from utils.config import Config
@@ -13,6 +13,9 @@ class FFmpeg:
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
+
+    def set_cut_info(self, cut_info: CutInfo):
+        self.cut_info = cut_info
 
     def detect_location(self):
         if not Config.FFmpeg.path:
@@ -68,6 +71,16 @@ class FFmpeg:
             callback.onSuccess()
         else:
             raise GlobalException(code = StatusCode.FFmpegCall.value, stack_trace = resp[1], callback = callback.onError)
+    
+    def cut_clip(self, callback: CutCallback):
+        command = self.get_cut_command()
+
+        resp = self.run_command(command, output = True, return_code = True)
+
+        if not resp[0]:
+            callback.onSuccess()
+        else:
+            raise GlobalException(code = StatusCode.FFmpegCall.value, stack_trace = resp[1], callback = callback.onError)
 
     def get_dash_command(self):
         def get_merge_command():
@@ -117,6 +130,13 @@ class FFmpeg:
             command.add(self.get_rename_command(self.output_temp_file_name, self.full_file_name))
         else:
             command.add(self.get_rename_command(self.flv_temp_file_name, self.full_file_name))
+
+        return command.format()
+
+    def get_cut_command(self):
+        command = Command()
+
+        command.add(f'"{Config.FFmpeg.path}" -ss {self.cut_info.start_time} -to {self.cut_info.end_time} -i "{self.cut_info.input_path}" -acodec copy -vcodec copy "{self.cut_info.output_path}"')
 
         return command.format()
 

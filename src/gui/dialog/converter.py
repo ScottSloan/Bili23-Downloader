@@ -162,30 +162,24 @@ class ConverterWindow(Dialog):
         self.setStatus(True)
 
     def onBrowseInputEVT(self, event):
-        dlg = wx.FileDialog(self, "选择输入文件", style = wx.FD_OPEN, wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
+        dlg = wx.FileDialog(self, "选择输入文件", style = wx.FD_OPEN, wildcard = "所有文件|*.*")
 
         if dlg.ShowModal() == wx.ID_OK:
-            save_path = dlg.GetPath()
-
-            if save_path == self.output_box.GetValue():
-                wx.MessageDialog(self, "文件已存在\n\n无法覆盖原文件，请指定新的文件名", "警告", wx.ICON_WARNING).ShowModal()
-                return
-            
-            self.input_box.SetValue(save_path)
+            self.input_box.SetValue(dlg.GetPath())
 
         dlg.Destroy()
 
     def onBrowseOutputEVT(self, event):
-        def _get_new_file_name(_file_name: str):
-            _new_file_name = list(_file_name)
-            _new_file_name.insert(_file_name.rfind("."), "_out")
+        def get_new_file_name(_file_name: str):
+            new_name = list(_file_name)
+            new_name.insert(_file_name.rfind("."), "_out")
 
-            return "".join(_new_file_name)
+            return "".join(new_name)
 
         input_path = self.input_box.GetValue()
-        file = _get_new_file_name(os.path.basename(input_path))
+        file = get_new_file_name(os.path.basename(input_path))
 
-        dlg = wx.FileDialog(self, "保存输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
+        dlg = wx.FileDialog(self, "保存输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "所有文件|*.*")
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()

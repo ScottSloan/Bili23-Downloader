@@ -348,12 +348,12 @@ class DownloadTaskItemPanel(Panel):
         if hasattr(self, "downloader"):
             self.downloader.stop_download()
     
-    def destroy_panel(self, event = None):
+    def destroy_panel(self, event = None, show_toast: bool= False):
         self.Hide()
         self.Destroy()
         
         if event:
-            self.callback.onUpdateCountTitleCallback(show_toast = True)
+            self.callback.onUpdateCountTitleCallback(show_toast = show_toast)
 
     def start_download(self):
         def get_downloader_callback():
@@ -497,7 +497,7 @@ class DownloadTaskItemPanel(Panel):
         def worker():
             self.set_download_status(DownloadStatus.Complete.value)
 
-            self.destroy_panel(1)
+            self.destroy_panel(1, show_toast = True)
 
             self.clear_temp_files()
 
