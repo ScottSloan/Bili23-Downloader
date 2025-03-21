@@ -141,3 +141,4 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: false
+        discussion_category_name: announcements
