@@ -88,9 +88,6 @@ class VideoParser:
         req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
-        with open("video.json", "w", encoding = "utf-8") as f:
-            f.write(req.text)
-
         self.check_json(resp)
 
         info = VideoInfo.info_json = resp["data"]

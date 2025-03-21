@@ -80,7 +80,8 @@ class ActionButton(Panel):
 
         self.onClickCustomEVT()
 
-        event.Skip()
+        if event:
+            event.Skip()
     
     def setActiveState(self):
         self._active = True

@@ -279,8 +279,6 @@ class DownloadManagerWindow(Frame):
         else:
             title = "下载管理"
 
-            self.RequestUserAttention(wx.USER_ATTENTION_ERROR)
-
         if self.current_page == name:
             self.top_title_lab.SetLabel(title)
 
