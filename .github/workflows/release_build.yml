@@ -43,8 +43,7 @@ jobs:
         $timezone = [System.TimeZoneInfo]::FindSystemTimeZoneById("China Standard Time")
         $convertedDate = [System.TimeZoneInfo]::ConvertTime($currentDate, $timezone)
         $date = $convertedDate.ToString("yyyy-MM-dd HH:mm:ss")
-        $commit = git rev-parse main
-        $content = "date = ""$date""" + "`n" + "commit = ""$commit""" + "`n" + "compile = True"
+        $content = "date = ""$date""" + "`n" + "compile = True"
         Set-Content -Path "src/utils/common/compile_data.py" -Value $content
 
     - name: Build with Nuitka
