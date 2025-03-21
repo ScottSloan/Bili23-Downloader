@@ -35,7 +35,15 @@ class SettingWindow(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        self.note = wx.Notebook(self, -1)
+        def get_notebook_size():
+            match Config.Sys.platform:
+                case "windows":
+                    return self.FromDIP((315, 400))
+                
+                case "linux" | "darwin":
+                    return self.FromDIP((360, 470))
+                
+        self.note = wx.Notebook(self, -1, size = get_notebook_size())
 
         self.note.AddPage(DownloadTab(self.note, self.GetParent()), "下载")
         self.note.AddPage(AdvancedTab(self.note, self.GetParent()), "高级")
@@ -976,12 +984,12 @@ class MiscTab(Panel):
         
         sections_box = wx.StaticBox(self.scrolled_panel, -1, "剧集列表显示设置")
 
-        self.episodes_single_choice = wx.RadioButton(sections_box, -1, "显示单个视频")
-        self.episodes_in_section_choice = wx.RadioButton(sections_box, -1, "显示视频所在的合集")
-        self.episodes_all_sections_choice = wx.RadioButton(sections_box, -1, "显示全部相关视频 (包括花絮、PV、OP、ED 等)")
+        self.episodes_single_choice = wx.RadioButton(self.scrolled_panel, -1, "显示单个视频")
+        self.episodes_in_section_choice = wx.RadioButton(self.scrolled_panel, -1, "显示视频所在的合集")
+        self.episodes_all_sections_choice = wx.RadioButton(self.scrolled_panel, -1, "显示全部相关视频 (包括 PV、OP、ED 等)")
 
-        self.show_episode_full_name = wx.CheckBox(sections_box, -1, "显示完整剧集名称")
-        self.auto_select_chk = wx.CheckBox(sections_box, -1, "自动勾选全部视频")
+        self.show_episode_full_name = wx.CheckBox(self.scrolled_panel, -1, "显示完整剧集名称")
+        self.auto_select_chk = wx.CheckBox(self.scrolled_panel, -1, "自动勾选全部视频")
 
         sections_vbox = wx.BoxSizer(wx.VERTICAL)
         sections_vbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
@@ -995,16 +1003,16 @@ class MiscTab(Panel):
 
         player_box = wx.StaticBox(self.scrolled_panel, -1, "播放器设置")
 
-        path_lab = wx.StaticText(player_box, -1, "播放器路径")
-        self.player_default_rdbtn = wx.RadioButton(player_box, -1, "系统默认")
-        self.player_custom_rdbtn = wx.RadioButton(player_box, -1, "手动设置")
+        path_lab = wx.StaticText(self.scrolled_panel, -1, "播放器路径")
+        self.player_default_rdbtn = wx.RadioButton(self.scrolled_panel, -1, "系统默认")
+        self.player_custom_rdbtn = wx.RadioButton(self.scrolled_panel, -1, "手动设置")
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
         player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
 
-        self.player_path_box = TextCtrl(player_box, -1)
-        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+        self.player_path_box = TextCtrl(self.scrolled_panel, -1)
+        self.browse_player_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -1020,12 +1028,12 @@ class MiscTab(Panel):
 
         misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
 
-        self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
-        self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
-        self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
+        self.show_user_info_chk = wx.CheckBox(self.scrolled_panel, -1, "在主界面显示用户头像和昵称")
+        self.check_update_chk = wx.CheckBox(self.scrolled_panel, -1, "自动检查更新")
+        self.debug_chk = wx.CheckBox(self.scrolled_panel, -1, "启用调试模式")
 
-        self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
-        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
+        self.clear_userdata_btn = wx.Button(self.scrolled_panel, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
+        self.reset_default_btn = wx.Button(self.scrolled_panel, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
         
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
@@ -1047,10 +1055,10 @@ class MiscTab(Panel):
 
         self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
 
-        misc_vbox_ = wx.BoxSizer(wx.VERTICAL)
-        misc_vbox_.Add(self.scrolled_panel, 1, wx.EXPAND)
+        _misc_vbox = wx.BoxSizer(wx.VERTICAL)
+        _misc_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
 
-        self.SetSizer(misc_vbox_)
+        self.SetSizer(_misc_vbox)
 
         layout()
 
