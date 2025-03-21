@@ -10,7 +10,6 @@ from utils.common.enums import StatusCode, StreamType
 from utils.common.data_type import ParseCallback
 
 from utils.parse.audio import AudioInfo
-from utils.parse.extra import ExtraInfo
 from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
 
 class BangumiInfo:
@@ -66,7 +65,7 @@ class BangumiParser:
         epid = re.findall(r"ep([0-9]+)", url)
 
         if not epid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
@@ -74,7 +73,7 @@ class BangumiParser:
         season_id = re.findall(r"ss([0-9]+)", url)
 
         if not season_id:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
@@ -82,7 +81,7 @@ class BangumiParser:
         mid = re.findall(r"md([0-9]*)", url)
         
         if not mid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         req = RequestTool.request_get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
@@ -152,18 +151,12 @@ class BangumiParser:
         
         else:
             if BangumiInfo.payment and Config.User.login:
-                raise Exception(StatusCode.Pay.value)
+                raise GlobalException(code = StatusCode.Pay.value)
             else:
-                raise Exception(StatusCode.Vip.value)
+                raise GlobalException(code = StatusCode.Vip.value)
                 
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
-
-        ExtraInfo.get_danmaku = Config.Extra.get_danmaku
-        ExtraInfo.danmaku_type = Config.Extra.danmaku_type
-        ExtraInfo.get_subtitle = Config.Extra.get_subtitle
-        ExtraInfo.subtitle_type = Config.Extra.subtitle_type
-        ExtraInfo.get_cover = Config.Extra.get_cover
 
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
@@ -204,19 +197,19 @@ class BangumiParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.error_callback) from e
     
-    def check_json(self, json: dict):
+    def check_json(self, data: dict):
         # 检查接口返回状态码
-        status_code = json["code"]
-        message = json["message"]
+        status_code = data["code"]
+        message = data["message"]
 
         if status_code != StatusCode.Success.value:
             if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
                 # 如果提示大会员专享限制就不用抛出异常，因为和地区限制共用一个状态码 -10403
                 return
             
-            raise Exception(status_code)
+            raise GlobalException(message = message, code = status_code)
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()
@@ -234,6 +227,3 @@ class BangumiParser:
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
-
-        # 重置附加内容信息
-        ExtraInfo.clear_extra_info()

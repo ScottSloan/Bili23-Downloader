@@ -5,13 +5,14 @@ from utils.common.map import audio_quality_map, danmaku_format_map, subtitle_for
 from utils.common.enums import StreamType
 
 from utils.parse.audio import AudioInfo
-from utils.parse.extra import ExtraInfo
 
-class OptionDialog(wx.Dialog):
+from gui.component.dialog import Dialog
+
+class OptionDialog(Dialog):
     def __init__(self, parent, stream_type: int, callback):
         self.stream_type, self.callback = stream_type, callback
 
-        wx.Dialog.__init__(self, parent, -1, "下载选项")
+        Dialog.__init__(self, parent, "下载选项")
 
         self.init_UI()
 
@@ -21,15 +22,7 @@ class OptionDialog(wx.Dialog):
 
         self.CenterOnParent()
 
-    def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-                
+    def init_UI(self): 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
 
@@ -88,8 +81,8 @@ class OptionDialog(wx.Dialog):
         hbox.Add(extra_vbox, 0, wx.EXPAND)
         hbox.AddSpacer(30)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = _get_scale_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = _get_scale_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
         self.auto_popup_chk = wx.CheckBox(self, -1, "下载时自动弹出此对话框")
 
@@ -116,10 +109,9 @@ class OptionDialog(wx.Dialog):
         self.audio_only_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAudioOnlyEVT)
         self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDanmakuEVT)
         self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onCheckSubtitleEVT)
+        self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onAutoPopupEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
-
-        self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def init_utils(self):
         def _get_audio_quality_list():
@@ -160,11 +152,11 @@ class OptionDialog(wx.Dialog):
             self.audio_only_chk.Enable(False)
             self.audio_only_chk.SetValue(False)
 
-        self.get_danmaku_chk.SetValue(ExtraInfo.get_danmaku)
-        self.danmaku_type_choice.SetSelection(ExtraInfo.danmaku_type)
-        self.get_subtitle_chk.SetValue(ExtraInfo.get_subtitle)
-        self.subtitle_format_choice.SetSelection(ExtraInfo.subtitle_type)
-        self.get_cover_chk.SetValue(ExtraInfo.get_cover)
+        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku_file)
+        self.danmaku_type_choice.SetSelection(Config.Extra.danmaku_file_type)
+        self.get_subtitle_chk.SetValue(Config.Extra.download_subtitle_file)
+        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_file_type)
+        self.get_cover_chk.SetValue(Config.Extra.download_cover_file)
 
         self.add_number_chk.SetValue(Config.Download.add_number)
         self.auto_popup_chk.SetValue(Config.Download.auto_popup_option_dialog)
@@ -201,11 +193,11 @@ class OptionDialog(wx.Dialog):
 
         Config.Download.video_codec_id = video_codec_map[self.video_codec_choice.GetStringSelection()]
 
-        ExtraInfo.get_danmaku = self.get_danmaku_chk.GetValue()
-        ExtraInfo.danmaku_type = self.danmaku_type_choice.GetSelection()
-        ExtraInfo.get_subtitle = self.get_subtitle_chk.GetValue()
-        ExtraInfo.subtitle_type = self.subtitle_format_choice.GetSelection()
-        ExtraInfo.get_cover = self.get_cover_chk.GetValue()
+        Config.Extra.download_danmaku_file = self.get_danmaku_chk.GetValue()
+        Config.Extra.danmaku_file_type = self.danmaku_type_choice.GetSelection()
+        Config.Extra.download_subtitle_file = self.get_subtitle_chk.GetValue()
+        Config.Extra.subtitle_file_type = self.subtitle_format_choice.GetSelection()
+        Config.Extra.download_cover_file = self.get_cover_chk.GetValue()
 
         Config.Download.add_number = self.add_number_chk.GetValue()
 
@@ -213,7 +205,7 @@ class OptionDialog(wx.Dialog):
 
         event.Skip()
 
-    def onClose(self, event):
+    def onAutoPopupEVT(self, event):
         Config.Download.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
 
         kwargs = {
@@ -221,5 +213,3 @@ class OptionDialog(wx.Dialog):
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
-
-        event.Skip()

@@ -4,6 +4,7 @@ import base64
 import requests
 from io import BytesIO
 from typing import Dict, Callable
+from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
 from utils.config import Config, config_utils
@@ -11,12 +12,14 @@ from utils.common.thread import Thread
 from utils.auth.cookie import CookieUtils
 
 from gui.dialog.captcha import CaptchaWindow
+from gui.component.dialog import Dialog
+from gui.component.panel import Panel
 
-class LoginWindow(wx.Dialog):
+class LoginWindow(Dialog):
     def __init__(self, parent, callback: Callable):
         self.callback = callback
 
-        wx.Dialog.__init__(self, parent, -1, "登录")
+        Dialog.__init__(self, parent, "登录")
         
         self.init_utils()
 
@@ -27,17 +30,12 @@ class LoginWindow(wx.Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
-        _set_dark_mode()
+        self.set_dark_mode()
 
         self.qr_page = QRPage(self, self.session)
         self.sms_page = SMSPage(self, self.session)
 
         line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
-        line.SetBackgroundColour("red")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(90)
@@ -65,7 +63,8 @@ class LoginWindow(wx.Dialog):
 
     def init_utils(self):
         def worker():
-            CookieUtils.exclimbwuzhi(Config.Auth.buvid3)
+            cookie_utils = CookieUtils()
+            cookie_utils.exclimbwuzhi(Config.Auth.buvid3)
 
         self.session = requests.sessions.Session()
 
@@ -73,9 +72,6 @@ class LoginWindow(wx.Dialog):
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onClose)
-
-        self.sms_page.phone_number_box.Bind(wx.EVT_SET_FOCUS, self.onPhoneBoxSetFocus)
-        self.sms_page.phone_number_box.Bind(wx.EVT_KILL_FOCUS, self.onPhoneBoxKillFocus)
 
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocus)
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocus)
@@ -87,23 +83,7 @@ class LoginWindow(wx.Dialog):
 
         event.Skip()
 
-    def onPhoneBoxSetFocus(self, event):
-        if self.sms_page.phone_number_box.GetValue() == "请输入手机号":
-            self.sms_page.phone_number_box.SetValue("")
-
-        event.Skip()
-
-    def onPhoneBoxKillFocus(self, event):
-        if not self.sms_page.phone_number_box.GetValue():
-            self.sms_page.phone_number_box.SetValue("请输入手机号")
-            self.sms_page.phone_number_box.SetForegroundColour(self.sms_page.getPlaceholderColor())
-
-        event.Skip()
-
     def onValidateBoxSetFocus(self, event):
-        if self.sms_page.validate_code_box.GetValue() == "请输入验证码":
-            self.sms_page.validate_code_box.SetValue("")
-        
         self.left_bmp.SetBitmap(self._left_mask_pic)
         self.right_bmp.SetBitmap(self._right_mask_pic)
 
@@ -112,10 +92,6 @@ class LoginWindow(wx.Dialog):
     def onValidateBoxKillFocus(self, event):
         self.left_bmp.SetBitmap(self._left_pic)
         self.right_bmp.SetBitmap(self._right_pic)
-
-        if not self.sms_page.validate_code_box.GetValue():
-            self.sms_page.validate_code_box.SetValue("请输入验证码")
-            self.sms_page.validate_code_box.SetForegroundColour(self.sms_page.getPlaceholderColor())
 
         event.Skip()
 
@@ -132,7 +108,7 @@ class LoginWindow(wx.Dialog):
             "login": Config.User.login,
             "face_url": Config.User.face_url,
             "username": Config.User.username,
-            "timestamp": round(time.time()),
+            "login_expires": int((datetime.now() + timedelta(days = 365)).timestamp()),
             "SESSDATA": Config.User.SESSDATA,
             "DedeUserID": Config.User.DedeUserID,
             "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
@@ -169,17 +145,13 @@ class LoginWindow(wx.Dialog):
         img = BytesIO(base64.b64decode(b64))
         return wx.Image(img).Scale(self.FromDIP(80), self.FromDIP(80)).ConvertToBitmap()
 
-class LoginPage(wx.Panel):
+class LoginPage(Panel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
     def getLabelColor(self):
         if not Config.Sys.dark_mode:
             return wx.Colour(80, 80, 80)
-    
-    def getPlaceholderColor(self):
-        if not Config.Sys.dark_mode:
-            return wx.Colour(120, 120, 120)
     
     def getBorderColor(self):
         if not Config.Sys.dark_mode:
@@ -214,6 +186,11 @@ class QRPage(LoginPage):
 
         self.qrcode = wx.StaticBitmap(self, -1, self.setQRCodeTextTip("正在加载"), size = self.FromDIP((150, 150)))
 
+        qrcode_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        qrcode_hbox.AddStretchSpacer()
+        qrcode_hbox.Add(self.qrcode, 0, wx.EXPAND)
+        qrcode_hbox.AddStretchSpacer()
+
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
@@ -223,7 +200,7 @@ class QRPage(LoginPage):
 
         qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
         qrcode_vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        qrcode_vbox.Add(self.qrcode, 0, wx.EXPAND)
+        qrcode_vbox.Add(qrcode_hbox, 0, wx.EXPAND)
         qrcode_vbox.Add(self.scan_tip_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         self.SetSizer(qrcode_vbox)
@@ -244,7 +221,7 @@ class QRPage(LoginPage):
         def _success(info: dict):
             self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
             
-            time.sleep(2)
+            time.sleep(1)
 
             self.onLoginSuccess(info)
 
@@ -328,19 +305,7 @@ class SMSPage(LoginPage):
         self.init_utils()
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-        
-        _set_dark_mode()
+        self.set_dark_mode()
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
@@ -356,27 +321,33 @@ class SMSPage(LoginPage):
         swicher_hbox.AddStretchSpacer()
 
         country_lab = wx.StaticText(self, -1, "区号")
-        self.country_choice = wx.Choice(self, -1)
+        self.country_id_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = wx.TextCtrl(self, -1, "请输入手机号")
-        self.phone_number_box.SetForegroundColour(self.getPlaceholderColor())
+        self.phone_number_box = wx.SearchCtrl(self, -1, size = self.FromDIP((150, 16)))
+        self.phone_number_box.ShowSearchButton(False)
+        self.phone_number_box.SetDescriptiveText("请输入手机号")
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
+        phone_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        phone_hbox.Add(self.phone_number_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, 10)
+        phone_hbox.Add(self.get_validate_code_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+
         validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = wx.TextCtrl(self, -1, "请输入验证码")
-        self.validate_code_box.SetForegroundColour(self.getPlaceholderColor())
+        self.validate_code_box = wx.SearchCtrl(self, -1)
+        self.validate_code_box.ShowSearchButton(False)
+        self.validate_code_box.SetDescriptiveText("请输入验证码")
 
-        bag_box = wx.GridBagSizer(3, 3)
-        bag_box.Add(country_lab, pos = (0, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.country_choice, pos = (0, 1), span = (0, 2), flag = wx.ALL & (~wx.LEFT), border = 10)
-        bag_box.Add(phone_number_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.phone_number_box, pos = (1, 1), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.get_validate_code_btn, pos = (1, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP), border = 10)
-        bag_box.Add(validate_code_lab, pos = (2, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        bag_box.Add(self.validate_code_box, pos = (2, 1), span = (2, 2), flag = wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, border = 10)
+        flex_sizer = wx.FlexGridSizer(3, 2, 0, 0)
 
-        self.login_btn = wx.Button(self, -1, "登录", size = _get_scale_size((120, 30)))
+        flex_sizer.Add(country_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        flex_sizer.Add(self.country_id_choice, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        flex_sizer.Add(phone_number_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        flex_sizer.Add(phone_hbox, 0, wx.EXPAND)
+        flex_sizer.Add(validate_code_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        flex_sizer.Add(self.validate_code_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, 10)
+
+        self.login_btn = wx.Button(self, -1, "登录", size = self.get_scaled_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()
@@ -386,7 +357,7 @@ class SMSPage(LoginPage):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(swicher_hbox, 0, wx.EXPAND)
         vbox.AddSpacer(10)
-        vbox.Add(bag_box)
+        vbox.Add(flex_sizer, 0, wx.EXPAND)
         vbox.Add(login_hbox, 0, wx.EXPAND)
 
         page_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -416,8 +387,8 @@ class SMSPage(LoginPage):
         self.country_id_list = [entry["country_code"] for entry in country_data_list]
         country_list = [f"+{entry['country_code']} - {entry['cname']}" for entry in country_data_list]
 
-        self.country_choice.Set(country_list)
-        self.country_choice.SetSelection(0)
+        self.country_id_choice.Set(country_list)
+        self.country_id_choice.SetSelection(0)
 
     def onGetValidateCode(self, event):
         if not self.phone_number_box.GetValue():
@@ -426,7 +397,7 @@ class SMSPage(LoginPage):
         
         self.check_captcha()
 
-        cid = self.country_id_list[self.country_choice.GetSelection()]
+        cid = self.country_id_list[self.country_id_choice.GetSelection()]
         tel = int(self.phone_number_box.GetValue())
 
         # 发送短信验证码
@@ -476,7 +447,7 @@ class SMSPage(LoginPage):
 
         tel = int(self.phone_number_box.GetValue())
         code = int(self.validate_code_box.GetValue())
-        cid = self.country_id_list[self.country_choice.GetSelection()]
+        cid = self.country_id_list[self.country_id_choice.GetSelection()]
 
         result = self.login.login(tel, code, cid)
 

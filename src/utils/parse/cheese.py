@@ -6,7 +6,6 @@ from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.parse.episode import EpisodeInfo, cheese_episode_parser
-from utils.parse.extra import ExtraInfo
 from utils.parse.audio import AudioInfo
 from utils.config import Config
 
@@ -50,7 +49,7 @@ class CheeseParser:
         epid = re.findall(r"ep([0-9]+)", url)
 
         if not epid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
@@ -58,7 +57,7 @@ class CheeseParser:
         season_id = re.findall(r"ss([0-9]+)", url)
 
         if not season_id:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         self.url_type, self.url_type_value, CheeseInfo.season_id = "season_id", season_id[0], season_id[0]
 
@@ -107,12 +106,6 @@ class CheeseParser:
 
             CheeseInfo.stream_type = StreamType.Flv.value
 
-        ExtraInfo.get_danmaku = Config.Extra.get_danmaku
-        ExtraInfo.danmaku_type = Config.Extra.danmaku_type
-        ExtraInfo.get_subtitle = Config.Extra.get_subtitle
-        ExtraInfo.subtitle_type = Config.Extra.subtitle_type
-        ExtraInfo.get_cover = Config.Extra.get_cover
-
     def parse_url(self, url: str):
         def worker():
             self.clear_cheese_info()
@@ -134,14 +127,14 @@ class CheeseParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.error_callback) from e
     
-    def check_json(self, json: dict):
+    def check_json(self, data: dict):
         # 检查接口返回状态码
-        status_code = json["code"]
+        status_code = data["code"]
 
         if status_code != StatusCode.Success.value:
-            raise Exception(status_code)
+            raise GlobalException(message = data["message"], code = status_code)
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()
@@ -157,5 +150,3 @@ class CheeseParser:
         CheeseInfo.clear_cheese_info()
 
         AudioInfo.clear_audio_info()
-
-        ExtraInfo.clear_extra_info()

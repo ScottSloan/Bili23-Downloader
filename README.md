@@ -1,5 +1,5 @@
 # Bili23-Downloader
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/deploy.yml)
+![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/release_build.yml)
 
 ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) 
 
@@ -25,29 +25,32 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/waht-is-bili23-downloader.html)。
 
 ## 更新日志
-### 1.56.1 (2025-02-27)
+### 1.60.0 (2025-03-21)
+#### 新增
+* 支持编辑框三击全选
+* 支持自定义下载文件名
+* 支持截取视频/音频片段
+* 支持独立设置下载出错重试和自动重启下载选项
+* 支持用户登录状态检测
+* 下载页面调整为"正在下载"和"下载完成"两个分页
 
-* 支持查看当前版本的更新日志
-* 下载视频时自动弹出下载选项，引导用户自定义下载设置
-* 修复取消自动添加序号无效的问题
-* 优化部分页面显示效果
+#### 优化
+* 优化页面布局细节
+* 优化下载模块，文件避免写入冲突
+* 优化出错重试逻辑
+* 优化重名文件覆盖逻辑
+* 优化主页链接框显示效果，支持一键清空
+* 优化读取大量断点续传文件时的启动速度
+* 优化剧集列表自动勾选逻辑
+* 优化弹幕、字幕和封面文件下载体验
 
-### 1.56.0 (2025-02-25)
-
-* 提供全新的说明文档
-* 右键菜单支持复制链接，修改视频标题，查看封面
-* 支持下载 lrc 格式字幕
-* 支持始终使用 HTTP 协议而非 HTTPS 发起请求
-* 支持下载付费视频 6 分钟试看部分
-* 下载列表采用懒加载方式，解决下载数目过多时导致的崩溃问题
-* 优化登录页面布局
-* 优化图标缩放效果
-* 添加 bili_ticket、buvid3、buvid4 等参数，减少风控风险
-* 修复投稿视频 av 号无法解析的问题
-* 修复修改默认下载音频选项后视频下载失败的问题
-* 修复无法使用验证码登录的问题
-* 修复部分情况下点击下载视频无反应的问题
-* 修复部分情况下视频封面无法以 16:9 显示的问题
+#### 修复
+* 修复异常显示下载完成的情况
+* 修复部分情况下载失败的问题
+* 修复下载后音视频残缺的问题
+* 修复部分情况下无法下载弹幕、字幕和封面文件的问题
+* 修复下载选项窗口取消自动弹出无效的问题
+* 修复 bili_ticket 不会自动刷新而导致接口返回请求频繁的问题
 
 ## 免责声明
 本项目仅供个人学习与研究用途，任何通过本项目下载的内容仅限于个人使用，用户自行承担使用本项目可能带来的所有风险。

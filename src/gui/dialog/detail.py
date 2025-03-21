@@ -11,20 +11,19 @@ from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.cheese import CheeseInfo
 
-class DetailDialog(wx.Dialog):
+from gui.component.dialog import Dialog
+from gui.component.panel import Panel
+
+class DetailDialog(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "详细信息")
+        Dialog.__init__(self, parent, "详细信息")
 
         self.init_UI()
 
         self.CenterOnParent()
         
     def init_UI(self):
-        def _set_dark_mode():
-            if not Config.Sys.dark_mode:
-                self.SetBackgroundColour("white")
-
-        _set_dark_mode()
+        self.set_dark_mode()
 
         self.note = wx.Simplebook(self, -1)
 
@@ -50,9 +49,9 @@ class DetailDialog(wx.Dialog):
 
         self.CenterOnParent()
 
-class DetailPage(wx.Panel):
+class DetailPage(Panel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        Panel.__init__(self, parent)
 
         self.html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 300)))
 

@@ -1,6 +1,6 @@
 import ctypes
 import threading
-from typing import List
+from concurrent.futures import ThreadPoolExecutor
 
 class Thread(threading.Thread):
     def __init__(self, target = None, args = (), kwargs = None, name = "", daemon = True):
@@ -12,26 +12,8 @@ class Thread(threading.Thread):
     
     def start(self):
         threading.Thread.start(self)
-    
-class ThreadPool:
-    def __init__(self):
-        self.thread_list: List[Thread] = []
 
-    def submit(self, target, args):
-        new = Thread(target = target, args = args)
-        
-        self.thread_list.append(new)
-
-    def start(self):
-        for thread in self.thread_list:
-            thread.start()
-
-    def stop(self):
-        for thread in self.thread_list:
-            thread.stop()
-        
-        self.thread_list.clear()
-
-    def wait(self):
-        for thread in self.thread_list:
-            thread.join()
+class DaemonThreadPoolExecutor(ThreadPoolExecutor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._thread_factory = lambda: threading.Thread(daemon = True)

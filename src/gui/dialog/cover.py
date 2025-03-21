@@ -2,13 +2,14 @@ import wx
 import io
 import os
 
-from gui.templates import Frame
+from gui.component.frame import Frame
+from gui.component.panel import Panel
 
 class CoverViewerDialog(Frame):
     def __init__(self, parent, _cover_raw_contents: bytes):
         self._cover_raw_contents = _cover_raw_contents
 
-        Frame.__init__(self, parent, "封面")
+        Frame.__init__(self, parent, "视频封面")
 
         self.init_utils()
 
@@ -22,6 +23,8 @@ class CoverViewerDialog(Frame):
         self.onFitSizeEVT(None)
 
     def init_UI(self):
+        self.panel = Panel(self)
+
         self.cover_bmp = wx.StaticBitmap(self.panel, -1, bitmap = self.show_cover(self.FromDIP(640)))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -62,7 +65,7 @@ class CoverViewerDialog(Frame):
         self.status_bar.SetStatusWidths([250, 250])
 
         self.status_bar.SetStatusText("Ready", 0)
-        self.status_bar.SetStatusText(f"原图：{_size[0]}x{_size[1]}", 1)
+        self.status_bar.SetStatusText(f"原图尺寸：{_size[0]}x{_size[1]}", 1)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onSaveEVT, id = self.ID_SAVE)
@@ -96,7 +99,7 @@ class CoverViewerDialog(Frame):
 
         self.cover_bmp.SetBitmap(temp_bmp)
 
-        self.status_bar.SetStatusText(f"尺寸：{_size[0]}x{_size[1]}", 0)
+        self.status_bar.SetStatusText(f"缩放尺寸：{_size[0]}x{_size[1]}", 0)
 
     def onFitSizeEVT(self, event):
         self.SetSize(self.cover_bmp.GetSize()[0], self.cover_bmp.GetSize()[1] + (self.GetSize()[1] - self.GetClientSize()[1]))

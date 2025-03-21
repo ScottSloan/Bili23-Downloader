@@ -37,6 +37,16 @@ jobs:
         Write-Output "tag=$tag" >> $env:GITHUB_OUTPUT
         Write-Output "version=$version" >> $env:GITHUB_OUTPUT
 
+    - name: Generate Compile Data
+      run: |
+        $currentDate = Get-Date
+        $timezone = [System.TimeZoneInfo]::FindSystemTimeZoneById("China Standard Time")
+        $convertedDate = [System.TimeZoneInfo]::ConvertTime($currentDate, $timezone)
+        $date = $convertedDate.ToString("yyyy-MM-dd HH:mm:ss")
+        $commit = git rev-parse dev
+        $content = "date = ""$date""" + "`n" + "commit = ""$commit""" + "`n" + "compile = True"
+        Set-Content -Path "src/utils/common/compile_data.py" -Value $content
+
     - name: Build with Nuitka
       run: |
         nuitka --standalone --nofollow-import-to=numpy,PIL --windows-console-mode=disable --windows-file-version=${{ steps.get_version.outputs.version }} --windows-icon-from-ico=icon.ico --product-name="Bili23 Downloader" --company-name="Scott Sloan" --file-description="Bili23 Downloader" --copyright="Copyright (C) 2022-2025 Scott Sloan" --show-progress --mingw64 --assume-yes-for-downloads --output-dir=out src/GUI.py
@@ -128,6 +138,6 @@ jobs:
         body_path: CHANGELOG.md
         make_latest: true
         tag_name: ${{ steps.get_version.outputs.tag }}
-        draft: true
+        draft: false
         prerelease: false
         generate_release_notes: false

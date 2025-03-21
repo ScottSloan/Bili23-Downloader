@@ -8,9 +8,12 @@ from utils.common.thread import Thread
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
-class ConverterWindow(wx.Dialog):
+from gui.component.text_ctrl import TextCtrl
+from gui.component.dialog import Dialog
+
+class ConverterWindow(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "格式转换")
+        Dialog.__init__(self, parent, "格式转换")
 
         self.init_UI()
 
@@ -21,14 +24,6 @@ class ConverterWindow(wx.Dialog):
         self.start = False
 
     def init_UI(self):
-        def _get_scale_size(_size: tuple):
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP(_size)
-                
-                case "linux" | "darwin":
-                    return wx.DefaultSize
-                
         def _get_gpu_list():
             match Config.Sys.platform:
                 case "windows" | "linux":
@@ -38,8 +33,8 @@ class ConverterWindow(wx.Dialog):
                     return ["VideoToolBox"]
                 
         input_lab = wx.StaticText(self, -1, "输入")
-        self.input_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
-        self.input_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
+        self.input_box = TextCtrl(self, -1, size = self.get_scaled_size((400, 24)))
+        self.input_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         input_hbox = wx.BoxSizer(wx.HORIZONTAL)
         input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -47,8 +42,8 @@ class ConverterWindow(wx.Dialog):
         input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
 
         output_lab = wx.StaticText(self, -1, "输出")
-        self.output_box = wx.TextCtrl(self, -1, size = _get_scale_size((400, 24)))
-        self.output_browse_btn = wx.Button(self, -1, "浏览", size = _get_scale_size((60, 24)))
+        self.output_box = TextCtrl(self, -1, size = self.get_scaled_size((400, 24)))
+        self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         output_hbox = wx.BoxSizer(wx.HORIZONTAL)
         output_hbox.Add(output_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -61,7 +56,7 @@ class ConverterWindow(wx.Dialog):
         self.target_codec_choice = wx.Choice(self, -1, choices = list(video_codec_map.keys()))
 
         target_bitrate_lab = wx.StaticText(self, -1, "比特率")
-        self.target_bitrate_box = wx.TextCtrl(self, -1, "1500")
+        self.target_bitrate_box = TextCtrl(self, -1, "1500")
         target_bitrate_unit_lab = wx.StaticText(self, -1, "kbit/s")
 
         target_params_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -106,8 +101,8 @@ class ConverterWindow(wx.Dialog):
 
         self.progress_bar = wx.Gauge(self, -1, style = wx.GA_PROGRESS | wx.GA_SMOOTH)
 
-        self.start_convert_btn = wx.Button(self, -1, "开始转换", size = _get_scale_size((100, 30)))
-        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = _get_scale_size((100, 30)))
+        self.start_convert_btn = wx.Button(self, -1, "开始转换", size = self.get_scaled_size((100, 30)))
+        self.open_directory_btn = wx.Button(self, -1, "打开所在位置", size = self.get_scaled_size((100, 30)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.AddStretchSpacer()
@@ -167,30 +162,24 @@ class ConverterWindow(wx.Dialog):
         self.setStatus(True)
 
     def onBrowseInputEVT(self, event):
-        dlg = wx.FileDialog(self, "选择输入文件", style = wx.FD_OPEN, wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
+        dlg = wx.FileDialog(self, "选择输入文件", style = wx.FD_OPEN, wildcard = "所有文件|*.*")
 
         if dlg.ShowModal() == wx.ID_OK:
-            save_path = dlg.GetPath()
-
-            if save_path == self.output_box.GetValue():
-                wx.MessageDialog(self, "文件已存在\n\n无法覆盖原文件，请指定新的文件名", "警告", wx.ICON_WARNING).ShowModal()
-                return
-            
-            self.input_box.SetValue(save_path)
+            self.input_box.SetValue(dlg.GetPath())
 
         dlg.Destroy()
 
     def onBrowseOutputEVT(self, event):
-        def _get_new_file_name(_file_name: str):
-            _new_file_name = list(_file_name)
-            _new_file_name.insert(_file_name.rfind("."), "_out")
+        def get_new_file_name(_file_name: str):
+            new_name = list(_file_name)
+            new_name.insert(_file_name.rfind("."), "_out")
 
-            return "".join(_new_file_name)
+            return "".join(new_name)
 
         input_path = self.input_box.GetValue()
-        file = _get_new_file_name(os.path.basename(input_path))
+        file = get_new_file_name(os.path.basename(input_path))
 
-        dlg = wx.FileDialog(self, "保存输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "视频文件|*.3gp;*.asf;*.avi;*.dat;*.flv;*.m4v;*.mkv;*.mov;*.mp4;*.mpg;*.mpeg;*.ogg;*.rm;*.rmvb;*.vob;*.wmv")
+        dlg = wx.FileDialog(self, "保存输出文件", style = wx.FD_SAVE, defaultFile = file, defaultDir = os.path.dirname(input_path), wildcard = "所有文件|*.*")
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()

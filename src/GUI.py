@@ -14,11 +14,15 @@ class APP(wx.App):
         self.locale = wx.Locale(wx.LANGUAGE_CHINESE_SIMPLIFIED)
         self.SetAppName(Config.APP.name)
 
-if __name__ == "__main__":
+def init():
     UniversalTool.msw_set_utf8_encode()
     UniversalTool.msw_set_dpi_awareness()
 
-    CookieUtils.init_cookie_params()
+    cookie_utils = CookieUtils()
+    cookie_utils.init_cookie_params()
+
+if __name__ == "__main__":
+    init()
 
     app = APP()
 

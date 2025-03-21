@@ -13,13 +13,11 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.56.1"
-        version_code: int = 1561
+        version: str = "1.60.0"
+        version_code: int = 1600
 
         # 断点续传文件最低支持版本号
-        _task_file_min_version_code: int = 1550
-
-        release_date: str = "2025/02/27"
+        _task_file_min_version_code: int = 1600
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -41,7 +39,7 @@ class Config:
         login: bool = False
         username: str = ""
         face_url: str = ""
-        login_time: int = 0
+        login_expires: int = 0
 
         SESSDATA: str = ""
         DedeUserID: str = ""
@@ -70,8 +68,6 @@ class Config:
         max_thread_count: int = 2
         max_download_count: int = 1
 
-        enable_dolby: bool = False
-
         enable_notification: bool = False
         delete_history: bool = False
         add_number: bool = True
@@ -82,29 +78,28 @@ class Config:
         auto_popup_option_dialog: bool = True
     
     class Merge:
-        override_file: bool = False
+        override_option: int = 1
         m4a_to_mp3: bool = True
-        auto_clean: bool = True
 
     class Temp:
-        download_window_pos = None
+        update_json: dict = None
 
-        update_json = None
+        change_log: str = None
 
-        change_log = None
+        need_login: bool = False
 
     class FFmpeg:
         path: str = ""
         available: bool = False
 
     class Extra:
-        get_danmaku = False
-        danmaku_type = 0
+        download_danmaku_file = False
+        danmaku_file_type = 0
 
-        get_subtitle = False
-        subtitle_type = 0
+        download_subtitle_file = False
+        subtitle_file_type = 0
 
-        get_cover = False
+        download_cover_file = False
 
     class Auth:
         img_key: str = ""
@@ -115,6 +110,7 @@ class Config:
         buvid_fp: str = ""
         b_nut: str = ""
         bili_ticket: str = ""
+        bili_ticket_expires: int = 0
         uuid: str = ""
         b_lsid: str = ""
 
@@ -124,9 +120,16 @@ class Config:
         custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
         custom_cdn_list: list = []
 
+        file_name_template = "{number_with_zero} - {title}"
+        date_format = "%Y-%m-%d"
+        time_format = "%H-%M-%S"
+        auto_adjust_field = True
+
+        retry_when_download_error: bool = True
         download_error_retry_count: int = 3
+        retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
-        always_use_http_protocol: bool = False
+        always_use_https_protocol: bool = True
 
 class ConfigUtils:
     def __init__(self):
@@ -198,7 +201,6 @@ class ConfigUtils:
         Config.Download.video_quality_id = app_config["download"].get("video_quality_id", Config.Download.video_quality_id)
         Config.Download.audio_quality_id = app_config["download"].get("audio_quality_id", Config.Download.audio_quality_id)
         Config.Download.video_codec_id = app_config["download"].get("video_codec_id", Config.Download.video_codec_id)
-        Config.Download.enable_dolby = app_config["download"].get("enable_dolby", Config.Download.enable_dolby)
         Config.Download.enable_notification = app_config["download"].get("show_notification", Config.Download.enable_notification)
         Config.Download.delete_history = app_config["download"].get("delete_history", Config.Download.delete_history)
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
@@ -211,22 +213,27 @@ class ConfigUtils:
         Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
         Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
         Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
+        Config.Advanced.file_name_template = app_config["advanced"].get("file_name_template", Config.Advanced.file_name_template)
+        Config.Advanced.date_format = app_config["advanced"].get("date_format", Config.Advanced.date_format)
+        Config.Advanced.time_format = app_config["advanced"].get("time_format", Config.Advanced.time_format)
+        Config.Advanced.auto_adjust_field = app_config["advanced"].get("auto_adjust_field", Config.Advanced.auto_adjust_field)
+        Config.Advanced.retry_when_download_error = app_config["advanced"].get("retry_when_download_error", Config.Advanced.retry_when_download_error)
         Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
+        Config.Advanced.retry_when_download_suspend = app_config["advanced"].get("retry_when_download_suspend", Config.Advanced.retry_when_download_suspend)
         Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
-        Config.Advanced.always_use_http_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_http_protocol)
+        Config.Advanced.always_use_https_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_https_protocol)
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
-        Config.Merge.override_file = app_config["merge"].get("override_file", Config.Merge.override_file)
+        Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
-        Config.Merge.auto_clean = app_config["merge"].get("auto_clean", Config.Merge.auto_clean)
 
         # extra
-        Config.Extra.get_danmaku = app_config["extra"].get("get_danmaku", Config.Extra.get_danmaku)
-        Config.Extra.danmaku_type = app_config["extra"].get("danmaku_type", Config.Extra.danmaku_type)
-        Config.Extra.get_subtitle = app_config["extra"].get("get_subtitle", Config.Extra.get_subtitle)
-        Config.Extra.subtitle_type = app_config["extra"].get("subtitle_type", Config.Extra.subtitle_type)
-        Config.Extra.get_cover = app_config["extra"].get("get_cover", Config.Extra.get_cover)
+        Config.Extra.download_danmaku_file = app_config["extra"].get("download_danmaku_file", Config.Extra.download_danmaku_file)
+        Config.Extra.danmaku_file_type = app_config["extra"].get("danmaku_file_type", Config.Extra.danmaku_file_type)
+        Config.Extra.download_subtitle_file = app_config["extra"].get("download_subtitle_file", Config.Extra.download_subtitle_file)
+        Config.Extra.subtitle_file_type = app_config["extra"].get("subtitle_file_type", Config.Extra.subtitle_file_type)
+        Config.Extra.download_cover_file = app_config["extra"].get("download_cover_file", Config.Extra.download_cover_file)
 
         # proxy
         Config.Proxy.proxy_mode = app_config["proxy"].get("proxy_mode", Config.Proxy.proxy_mode)
@@ -250,7 +257,7 @@ class ConfigUtils:
         Config.User.login = user_config["user"].get("login", Config.User.login)
         Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
         Config.User.username = user_config["user"].get("username", Config.User.username)
-        Config.User.login_time = user_config["user"].get("login_time", Config.User.login_time)
+        Config.User.login_expires = user_config["user"].get("login_expires", Config.User.login_expires)
         Config.User.SESSDATA = user_config["user"].get("SESSDATA", Config.User.SESSDATA)
         Config.User.DedeUserID = user_config["user"].get("DedeUserID", Config.User.DedeUserID)
         Config.User.DedeUserID__ckMd5 = user_config["user"].get("DedeUserID__ckMd5", Config.User.DedeUserID__ckMd5)
@@ -262,8 +269,8 @@ class ConfigUtils:
         Config.Auth.buvid_fp = user_config["cookie_params"].get("buvid_fp", Config.Auth.buvid_fp)
         Config.Auth.b_nut = user_config["cookie_params"].get("b_nut", Config.Auth.b_nut)
         Config.Auth.bili_ticket = user_config["cookie_params"].get("bili_ticket", Config.Auth.bili_ticket)
+        Config.Auth.bili_ticket_expires = user_config["cookie_params"].get("bili_ticket_expires", Config.Auth.bili_ticket_expires)
         Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)
-        Config.Auth.b_lsid = user_config["cookie_params"].get("b_lsid", Config.Auth.b_lsid)
 
         _after_load()
 

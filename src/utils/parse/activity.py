@@ -18,7 +18,7 @@ class ActivityParser:
         aid = re.findall(r'"aid":([0-9]+)', initial_state)
 
         if not aid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         ActivityInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
@@ -26,7 +26,7 @@ class ActivityParser:
         bvid = re.findall(r"BV\w+", url)
 
         if not bvid:
-            raise Exception(StatusCode.URL.value)
+            raise GlobalException(code = StatusCode.URL.value)
 
         ActivityInfo.url = f"https://www.bilibili.com/video/{bvid[0]}"
 
@@ -80,13 +80,10 @@ class ActivityParser:
 
                     self.get_real_url(initial_state)
 
-            raise GlobalException(StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = ActivityInfo.url)
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = ActivityInfo.url)
         
         try:
             return worker()
-        
-        except GlobalException as e:
-            raise e
-        
+
         except Exception as e:
-            raise GlobalException(e, callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.error_callback) from e

@@ -12,7 +12,10 @@ download
 # 配置文件
 video.json
 bangumi.json
+live.json
 download.json
+download2.json
+download3.json
 ffmpeg.exe
 build.bat
 test.py

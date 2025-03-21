@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo, ExceptionInfo
+from utils.common.data_type import DownloadTaskInfo
 from utils.common.enums import ParseType, ProxyMode
 
 class RequestTool:
@@ -17,7 +17,7 @@ class RequestTool:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @staticmethod
-    def request_get(url: str, headers = None, proxies = None, auth = None):
+    def request_get(url: str, headers = None, proxies = None, auth = None, stream = False):
         if not headers:
             headers = RequestTool.get_headers()
 
@@ -27,7 +27,7 @@ class RequestTool:
         if not auth:
             auth = RequestTool.get_auth()
 
-        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth)
+        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream)
     
     @staticmethod
     def request_post(url: str, headers = None, params = None, json = None):
@@ -35,6 +35,12 @@ class RequestTool:
             headers = RequestTool.get_headers()
         
         return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, json = json, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+
+    def request_head(url: str, headers = None):
+        if not headers:
+            headers = RequestTool.get_headers()
+        
+        return requests.head(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
     @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
@@ -102,7 +108,7 @@ class RequestTool:
     
     @staticmethod
     def replace_protocol(url: str):
-        if Config.Advanced.always_use_http_protocol:
+        if not Config.Advanced.always_use_https_protocol:
             return url.replace("https://", "http://")
         
         return url
@@ -196,10 +202,6 @@ class FileDirectoryTool:
 class DownloadFileTool:
     # 断点续传信息工具类
     def __init__(self, _id: Optional[int] = None, file_name: Optional[str] = None):
-        def check():
-            if not os.path.exists(self.file_path):
-                self._write_download_file({})
-
         if file_name:
             _file = file_name
         else:
@@ -207,10 +209,10 @@ class DownloadFileTool:
 
         self.file_path = os.path.join(Config.User.download_file_directory, _file)
 
-        # 检查本地文件是否存在
-        check()
+        if not self.file_existence:
+            self._write_download_file({})
 
-    def save_download_info(self, info: DownloadTaskInfo):
+    def write_file(self, info: DownloadTaskInfo):
         def _header():
             return {
                 "min_version": Config.APP._task_file_min_version_code
@@ -221,16 +223,15 @@ class DownloadFileTool:
 
         contents["header"] = _header()
         contents["task_info"] = info.to_dict()
-        contents["error_info"] = self.get_error_info().to_dict()
 
         if not contents:
             contents["thread_info"] = {}
 
         self._write_download_file(contents)
 
-    def clear_download_info(self):
+    def delete_file(self):
         # 清除断点续传信息
-        if os.path.exists(self.file_path):
+        if self.file_existence:
             os.remove(self.file_path)
 
     def update_task_info_kwargs(self, **kwargs):
@@ -243,34 +244,18 @@ class DownloadFileTool:
 
             self._write_download_file(contents)
 
-    def update_thread_info(self, thread_info: dict):
+    def update_info(self, category: str, info: dict):
         contents = self._read_download_file_json()
 
         if contents is not None:
-            contents["thread_info"] = thread_info
+            contents[category] = info
 
             self._write_download_file(contents)
 
-    def update_error_info(self, error_info: dict):
+    def get_info(self, category: str):
         contents = self._read_download_file_json()
 
-        if contents is not None:
-            contents["error_info"] = error_info
-
-            self._write_download_file(contents)
-
-    def get_thread_info(self):
-        contents = self._read_download_file_json()
-
-        return contents.get("thread_info", {})
-    
-    def get_error_info(self):
-        contents = self._read_download_file_json()
-
-        info = ExceptionInfo()
-        info.from_dict(contents.get("error_info", {}))
-
-        return info
+        return contents.get(category, {})
 
     def _read_download_file_json(self):
         if os.path.exists(self.file_path):
@@ -286,9 +271,6 @@ class DownloadFileTool:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
     def _check_compatibility(self):
-        if not self._read_download_file_json():
-            return False
-        
         try:
             if self._read_download_file_json()["header"]["min_version"] < Config.APP._task_file_min_version_code:
                 return False
@@ -308,11 +290,15 @@ class DownloadFileTool:
                     os.remove(file_path)
     
     @staticmethod
-    def _clear_specific_file(id: int):
+    def delete_file_by_id(id: int):
         file_path = os.path.join(Config.User.download_file_directory, f"info_{id}.json")
 
         if os.path.exists(file_path):
             os.remove(file_path)
+
+    @property
+    def file_existence(self):
+        return os.path.exists(self.file_path)
 
 class FormatTool:
     # 格式化数据类
@@ -480,73 +466,3 @@ class UniversalTool:
     def msw_set_utf8_encode():
         if Config.Sys.platform == "windows":
             subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
-
-class FFmpegCheckTool:
-    # FFmpeg 检查工具类
-    @staticmethod
-    def get_path():
-        if not Config.FFmpeg.path:
-            # 若未指定 FFmpeg 路径，则自动检测 FFmpeg
-            
-            cwd_path = FFmpegCheckTool._get_ffmpeg_cwd_path()
-            env_path = FFmpegCheckTool._get_ffmpeg_env_path()
-
-            if cwd_path:
-                # 优先使用运行目录下的 FFmpeg
-                Config.FFmpeg.path = cwd_path
-
-            if env_path and not cwd_path:
-                # 使用环境变量中的 FFmpeg
-                Config.FFmpeg.path = env_path
-    
-    @staticmethod
-    def check_available():
-        FFmpegCheckTool.get_path()
-
-        cmd = f'"{Config.FFmpeg.path}" -version'
-
-        _process = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = True)
-
-        if "ffmpeg version" in _process.stdout:
-            Config.FFmpeg.available = True
-
-    @staticmethod
-    def _get_ffmpeg_env_path():
-        # 从 PATH 环境变量中获取 ffmpeg 的路径
-        ffmpeg_path = None
-        path_env = os.environ.get("PATH", "")
-        
-        match Config.Sys.platform:
-            case "windows":
-                file_name = "ffmpeg.exe"
-
-            case "linux" | "darwin":
-                file_name = "ffmpeg"
-
-        # 将 PATH 环境变量中的路径分割成各个目录
-        for directory in path_env.split(os.pathsep):
-            possible_path = os.path.join(directory, file_name)
-
-            if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
-                ffmpeg_path = possible_path
-                break
-
-        return ffmpeg_path
-    
-    @staticmethod
-    def _get_ffmpeg_cwd_path():
-        # 从运行目录中获取 ffmpeg 路径
-        ffmpeg_path = None
-
-        match Config.Sys.platform:
-            case "windows":
-                file_name = "ffmpeg.exe"
-            case "linux" | "darwin":
-                file_name = "ffmpeg"
-        
-        possible_path = os.path.join(os.getcwd(), file_name)
-        
-        if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
-            ffmpeg_path = possible_path
-
-        return ffmpeg_path

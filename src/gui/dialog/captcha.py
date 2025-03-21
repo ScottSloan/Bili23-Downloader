@@ -4,13 +4,15 @@ import wx.html2
 import json
 import base64
 
-from utils.captcha import CaptchaPage
+from utils.auth.captcha import CaptchaPage
 from utils.auth.login import CaptchaUtils, LoginInfo
 from utils.config import Config
 
-class CaptchaWindow(wx.Dialog):
+from gui.component.dialog import Dialog
+
+class CaptchaWindow(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "请完成验证")
+        Dialog.__init__(self, parent, "请完成验证")
 
         self.init_UI()
 

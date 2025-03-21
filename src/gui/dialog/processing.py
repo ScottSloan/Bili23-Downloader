@@ -1,8 +1,10 @@
 import wx
 
-class ProcessingWindow(wx.Dialog):
+from gui.component.dialog import Dialog
+
+class ProcessingWindow(Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "处理中")
+        Dialog.__init__(self, parent, "处理中")
 
         self.SetSize(self.FromDIP((200, 80)))
 

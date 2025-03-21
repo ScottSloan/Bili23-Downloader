@@ -39,6 +39,12 @@ video_codec_map = {
     "AV1": 13
 }
 
+video_codec_short_map = {
+    "H264": 7,
+    "H265": 12,
+    "AV1": 13
+}
+
 live_quality_map = {
     "自动": 40000,
     "杜比": 30000,
@@ -187,21 +193,36 @@ status_code_map = {
     -400: "请求错误",
     -403: "权限不足",
     -404: "视频不存在",
+    -509: "请求过于频繁，请稍后再试",
     -10403: "根据版权方要求，您所在的地区无法观看本片",
     600: "大会员专享限制",
     601: "应版权方要求本片需购买",
     602: "无效的链接",
     603: "跳转链接",
+    610: "调用 FFmpeg 时出错",
+    611: "下载时出现问题",
+    612: "下载失败达到最大重试次数",
     62002: "稿件不可见",
     62004: "稿件审核中",
     62012: "仅 UP 主自己可见",
     19002003: "房间信息不存在"
 }
 
-def get_mapping_key_by_value(mapping: dict, value: int):
+override_option_map = {
+    "覆盖原文件": 0,
+    "重命名文件": 1
+}
+
+extra_map = {
+    "download_danmaku_file": "弹幕",
+    "download_subtitle_file": "字幕",
+    "download_cover_file": "封面"
+}
+
+def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
-    return mapping_reversed[value]
+    return mapping_reversed.get(value, default)
 
 def get_mapping_index_by_value(mapping: dict, value: Any):
     return list(mapping.values()).index(value)
