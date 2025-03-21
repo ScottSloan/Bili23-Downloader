@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
 from utils.common.enums import DownloadOption, DownloadStatus, ParseType
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
@@ -429,26 +429,17 @@ class DownloadTaskItemPanel(Panel):
         self.ffmpeg.merge_video(get_callback())
 
     def download_extra(self):
+        def get_callback():
+            callback = ExtraCallback()
+            callback.onSuccess = self.onDownloadExtraSuccess
+            callback.onError = self.onDownloadError
+
+            return callback
+    
         extra_parser = ExtraParser()
         extra_parser.set_task_info(self.task_info)
 
-        if self.task_info.extra_option.get("download_danmaku_file"):
-            extra_parser.download_danmaku_file()
-
-        if self.task_info.extra_option.get("download_subtitle_file"):
-            extra_parser.download_subtitle_file()
-
-        if self.task_info.extra_option.get("download_cover_file"):
-            extra_parser.download_cover_file()
-
-        self.task_info.progress = 100
-        self.task_info.status = DownloadStatus.Complete.value
-
-        self.file_tool.update_info("task_info", self.task_info.to_dict())
-
-        self.onMergeSuccess()
-
-        self.callback.onStartNextCallback()
+        extra_parser.download_extra(get_callback())
 
     def open_file_location(self):
         path = os.path.join(Config.Download.path, self.full_file_name)
@@ -520,6 +511,16 @@ class DownloadTaskItemPanel(Panel):
             self.set_download_error(DownloadStatus.DownloadError.value)
 
         wx.CallAfter(worker)
+
+    def onDownloadExtraSuccess(self):
+        self.task_info.progress = 100
+        self.task_info.status = DownloadStatus.Complete.value
+
+        self.file_tool.update_info("task_info", self.task_info.to_dict())
+
+        self.onMergeSuccess()
+
+        self.callback.onStartNextCallback()
 
     def clear_temp_files(self):
         match ParseType(self.task_info.download_type):

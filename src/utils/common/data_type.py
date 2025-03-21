@@ -215,10 +215,10 @@ class Command:
 
 class MergeCallback:
     def __init__(self):
-        self.onSuccess = None
-        self.onError = None
-        self.onSaveSuffix = None
-        self.onGetFullFileName = None
+        self.onSuccess: Callable = None
+        self.onError: Callable = None
+        self.onSaveSuffix: Callable = None
+        self.onGetFullFileName: Callable = None
 
 class CutInfo:
     def __init__(self):
@@ -229,5 +229,10 @@ class CutInfo:
 
 class CutCallback:
     def __init__(self):
-        self.onSuccess = None
-        self.onError = None
+        self.onSuccess: Callable = None
+        self.onError: Callable = None
+
+class ExtraCallback:
+    def __init__(self):
+        self.onSuccess: Callable = None
+        self.onError: Callable = None

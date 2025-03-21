@@ -4,10 +4,14 @@ import math
 import datetime
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool, FormatTool
+from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
+
+from utils.common.file_name import FileNameManager
 from utils.common.enums import DanmakuType, SubtitleType
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.data_type import DownloadTaskInfo, ExtraCallback
+from utils.common.exception import GlobalException
+from utils.common.enums import StatusCode
 
 class ExtraParser:
     def __init__(self):
@@ -15,10 +19,29 @@ class ExtraParser:
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
-        self.file_name = FormatTool.format_title_template(Config.Advanced.file_name_template, self.task_info)
+        file_name_mgr = FileNameManager(task_info)
+        self.file_name = file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
 
         self.danmaku_file_type = task_info.extra_option.get("danmaku_file_type")
         self.subtitle_file_type = task_info.extra_option.get("subtitle_file_type")
+
+    def download_extra(self, callback: ExtraCallback):
+        try:
+            if self.task_info.extra_option.get("download_danmaku_file"):
+                self.download_danmaku_file()
+
+            if self.task_info.extra_option.get("download_subtitle_file"):
+                self.download_subtitle_file()
+
+            if self.task_info.extra_option.get("download_cover_file"):
+                self.download_cover_file()
+
+            self.task_info.total_downloaded_size = self.task_info.total_file_size
+
+            callback.onSuccess()
+
+        except Exception as e:
+            raise GlobalException(StatusCode.Download.value, callback = callback.onError) from e
 
     def download_danmaku_file(self):
         # 下载弹幕文件
@@ -172,3 +195,5 @@ class ExtraParser:
 
         with open(path, mode, encoding = encoding) as f:
             f.write(contents)
+
+        self.task_info.total_file_size += os.path.getsize(path)

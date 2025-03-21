@@ -384,7 +384,7 @@ class SimplePage(Panel):
         self.callback.onSetTitleCallback(self.name, self.total_count)
 
         if self.name == "正在下载":
-            if not self.total_count and show_toast:
+            if not self.total_count and show_toast and Config.Download.enable_notification:
                 notification = NotificationManager(self)
                 notification.show_toast("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
 
