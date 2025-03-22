@@ -1,7 +1,7 @@
 name: 🐛 创建错误报告
 description: 此处只受理 Bug 报告
 title: "[Bug] 描述问题的标题"
-label: 故障(bug)
+labels: 故障(bug)
 body:
   - type: markdown
     attributes:
