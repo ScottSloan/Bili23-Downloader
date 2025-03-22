@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📄 官方文档
+    url: https://bili23.scott-slan.cn/
+    about: 在创建 Issue 之前，请仔细查阅 Bili23 Downloader 使用手册以确保正确使用。
