@@ -4,7 +4,7 @@ import wx.dataview
 from typing import Optional
 
 from utils.config import Config
-from utils.common.enums import ParseType, DownloadOption
+from utils.common.enums import ParseType, DownloadOption, VideoType
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 
 from utils.parse.video import VideoInfo
@@ -257,18 +257,27 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return download_info
 
     def get_video_download_info(self, title: str, entry: dict):
-        if "arc" in entry:
-            cover_url = entry["arc"]["pic"]
-            duration = entry["arc"]["duration"]
-            aid = entry["aid"]
-            cid = entry["cid"]
-            bvid = entry["bvid"]
-        else:
-            cover_url = VideoInfo.cover
-            aid = VideoInfo.aid
-            cid = VideoInfo.cid
-            bvid = VideoInfo.bvid
-            duration = entry["duration"]
+        match VideoType(VideoInfo.type):
+            case VideoType.Single:
+                cover_url = VideoInfo.cover
+                aid = VideoInfo.aid
+                cid = VideoInfo.cid
+                bvid = VideoInfo.bvid
+                duration = entry["duration"]
+
+            case VideoType.Part:
+                cover_url = VideoInfo.cover
+                aid = VideoInfo.aid
+                cid = entry["cid"]
+                bvid = VideoInfo.bvid
+                duration = entry["duration"]
+
+            case VideoType.Collection:
+                cover_url = entry["arc"]["pic"]
+                duration = entry["arc"]["duration"]
+                aid = entry["aid"]
+                cid = entry["cid"]
+                bvid = entry["bvid"]
 
         referer_url = VideoInfo.url
 
