@@ -18,7 +18,8 @@ body:
   - type: input
     attributes:
       label: 系统环境
-      placeholder: 在哪个平台（Windows/Linux/macOS）上运行？如果是直接使用python运行，则尽量同时提供Python版本
+      description: 在哪个平台（Windows/Linux/MacOS）上运行？如果是直接使用python运行，则尽量同时提供Python版本
+      placeholder: 如：Windows 11 Python 3.11.9
     validations:
       required: true
   - type: input
@@ -48,4 +49,4 @@ body:
   - type: input
     attributes:
       label: 链接
-      placeholder: 如果是解析、下载失败的问题，请附上链接。
+      description: 如果是解析、下载失败的问题，请附上链接。
