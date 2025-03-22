@@ -2,7 +2,7 @@
 name: Bug report
 about: 创建错误报告
 title: "[Bug]"
-labels: bug
+labels: 故障(bug)
 assignees: ''
 
 ---
