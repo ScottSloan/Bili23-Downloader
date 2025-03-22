@@ -1,0 +1,51 @@
+name: 🐛 创建错误报告
+description: 此处只受理 Bug 报告
+title: "[Bug] 描述问题的标题"
+labels: 故障(bug)
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > 💡 请务必遵循标题格式。例如：[Bug] 链接无法下载
+  - type: checkboxes
+    attributes:
+      label: 议题条件
+      description: 在你开始之前，请花几分钟时间确保你已如实完成以下工作，以便让我们更高效地沟通。
+      options:
+        - label: 我确认即使在最新正式版中存在该问题。
+          required: true
+        - label: 我确认已在 [Issues](/ScottSloan/Bili23-Downloader/issues) 进行搜索并确认没有人反馈过相同的Bug。
+          required: true
+  - type: input
+    attributes:
+      label: 系统环境
+      description: 在哪个平台（Windows/Linux/MacOS）上运行？如果是直接使用python运行，则尽量同时提供Python版本
+      placeholder: 如：Windows 11 Python 3.11.9
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: 使用版本
+      description: 请提供您当前使用的 Bili23 Downloader 版本号。
+      placeholder: 如：v1.60.0
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 问题描述
+      description: 请提供详细的问题描述和操作步骤等信息，以便我们也能够更轻松地将问题复现。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 错误日志
+      description: 如果有错误日志，请提供以便更好地定位问题。
+      render: auto
+  - type: textarea
+    attributes:
+      label: 截图补充
+      description: 如上述仍然无法准确地表述问题，可提供必要的截图（可直接粘贴上传）
+  - type: input
+    attributes:
+      label: 链接
+      description: 如果是解析、下载失败的问题，请附上链接。

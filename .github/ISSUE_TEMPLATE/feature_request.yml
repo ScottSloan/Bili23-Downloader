@@ -1,0 +1,28 @@
+name: ✨ 提出建议
+description: 此处支持提出建议、请求新功能
+title: "[Feature] 简要描述你的建议或请求"
+labels: 需求建议(enhancement)
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > 💡 请务必遵循标题格式。例如：[Feature] 希望支持下载音频
+  - type: checkboxes
+    attributes:
+      label: 议题条件
+      description: 在你开始之前，请花几分钟时间确保你已如实完成以下工作，以便让我们更高效地沟通。
+      options:
+        - label: 我确认即使在最新正式版中也没有提供该功能。
+          required: true
+        - label: 我确认已在 [Issues](/ScottSloan/Bili23-Downloader/issues) 进行搜索并确认没有人提交过相同的请求。
+          required: true
+  - type: textarea
+    attributes:
+      label: 详细描述
+      description: 请详细描述你的建议或需求。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 其他
+      description: 如上述仍然无法准确地表述问题，可提供必要的截图（可直接粘贴上传）
