@@ -2,7 +2,7 @@
 name: Ask Question
 about: 提问有关项目的问题
 title: "[QUESTION]"
-labels: question
+labels: 提问(question)
 assignees: ''
 
 ---
