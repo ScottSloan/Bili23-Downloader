@@ -82,6 +82,10 @@ def video_ugc_season_parser(info_json: dict, cid: int):
                 EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_node(episode["title"], FormatTool.format_duration(episode, ParseType.Video)))
 
                 for page in episode["pages"]:
+                    page["cover_url"] = episode["arc"]["pic"]
+                    page["aid"] = episode["aid"]
+                    page["bvid"] = episode["bvid"]
+
                     EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], _get_entry(page))
 
                     if episode["cid"] == cid:

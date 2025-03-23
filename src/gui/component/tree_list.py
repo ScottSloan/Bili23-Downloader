@@ -257,6 +257,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return download_info
 
     def get_video_download_info(self, title: str, entry: dict):
+        print(entry)
         match VideoType(VideoInfo.type):
             case VideoType.Single:
                 cover_url = VideoInfo.cover
@@ -273,11 +274,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 duration = entry["duration"]
 
             case VideoType.Collection:
-                cover_url = entry["arc"]["pic"]
-                duration = entry["arc"]["duration"]
-                aid = entry["aid"]
-                cid = entry["cid"]
-                bvid = entry["bvid"]
+                if "arc" in entry:
+                    cover_url = entry["arc"]["pic"]
+                    duration = entry["arc"]["duration"]
+                    aid = entry["aid"]
+                    cid = entry["cid"]
+                    bvid = entry["bvid"]
+                else:
+                    cover_url = entry["cover_url"]
+                    duration = entry["duration"]
+                    aid = entry["aid"]
+                    cid = entry["cid"]
+                    bvid = entry["bvid"]
 
         referer_url = VideoInfo.url
 

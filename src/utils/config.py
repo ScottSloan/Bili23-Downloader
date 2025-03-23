@@ -13,8 +13,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.60.1"
-        version_code: int = 1610
+        version: str = "1.61.0"
+        version_code: int = 1611
 
         # 断点续传文件最低支持版本号
         _task_file_min_version_code: int = 1600
