@@ -20,7 +20,7 @@ from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, danmaku_format_map, subtitle_format_map, override_option_map, get_mapping_index_by_value
 from utils.common.icon_v2 import IconManager, IconType
-from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode
+from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode, Platform
 
 from utils.module.notification import NotificationManager
 
@@ -36,11 +36,11 @@ class SettingWindow(Dialog):
 
     def init_UI(self):
         def get_notebook_size():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     return self.FromDIP((315, 400))
                 
-                case "linux" | "darwin":
+                case Platform.Linux | Platform.macOS:
                     return self.FromDIP((360, 470))
                 
         self.note = wx.Notebook(self, -1, size = get_notebook_size())
@@ -639,12 +639,12 @@ class MergeTab(Panel):
         default_dir = os.path.dirname(self.path_box.GetValue())
 
         # 根据不同平台选取不同后缀名文件
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 defaultFile = "ffmpeg.exe"
                 wildcard = "FFmpeg|ffmpeg.exe"
 
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 defaultFile = "ffmpeg"
                 wildcard = "FFmpeg|*"
 
@@ -1137,11 +1137,11 @@ class MiscTab(Panel):
 
     def onBrowsePlayerEVT(self, event):
         # 根据不同平台选取不同后缀名文件
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 wildcard = "可执行文件(*.exe)|*.exe"
 
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 wildcard = "可执行文件|*"
 
         dialog = wx.FileDialog(self, "选择播放器路径", os.getcwd(), wildcard = wildcard, style = wx.FD_OPEN)

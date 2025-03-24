@@ -10,7 +10,7 @@ from typing import Optional, List
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType, ProxyMode
+from utils.common.enums import ParseType, ProxyMode, Platform
 
 class RequestTool:
     # 请求工具类
@@ -117,26 +117,26 @@ class FileDirectoryTool:
     # 文件目录工具类
     @staticmethod
     def open_directory(directory: str):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 os.startfile(directory)
 
-            case "linux":
+            case Platform.Linux:
                 subprocess.Popen(f'xdg-open "{directory}"', shell = True)
 
-            case "darwin":
+            case Platform.macOS:
                 subprocess.Popen(f'open "{directory}"', shell = True)
 
     @staticmethod
     def open_file_location(path: str):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 FileDirectoryTool._msw_SHOpenFolderAndSelectItems(path)
 
-            case "linux":
+            case Platform.Linux:
                 subprocess.Popen(f'xdg-open "{Config.Download.path}"', shell = True)
 
-            case "darwin":
+            case Platform.macOS:
                 subprocess.Popen(f'open -R "{path}"', shell = True)
     
     @staticmethod
@@ -150,8 +150,8 @@ class FileDirectoryTool:
 
             return _exec.stdout.read().replace("\n", "")
 
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 result, buffer = FileDirectoryTool._msw_AssocQueryStringW(file_ext)
 
                 if result == 0:
@@ -159,10 +159,10 @@ class FileDirectoryTool:
                 else:
                     return (False, "")
 
-            case "linux":
+            case Platform.Linux:
                 return (True, _linux())
 
-            case "darwin":
+            case Platform.macOS:
                 # macOS 不支持获取默认程序
                 return (False, "")
 
@@ -459,10 +459,10 @@ class UniversalTool:
 
     @staticmethod
     def msw_set_dpi_awareness():
-        if Config.Sys.platform == "windows":
+        if Config.Sys.platform == Platform.Windows.value:
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
     @staticmethod
     def msw_set_utf8_encode():
-        if Config.Sys.platform == "windows":
+        if Config.Sys.platform == Platform.Windows.value:
             subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)

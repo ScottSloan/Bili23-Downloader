@@ -4,10 +4,11 @@ import re
 import subprocess
 from typing import List
 
-from utils.parse.live import LiveInfo
 from utils.config import Config
-from utils.common.thread import Thread
+from utils.parse.live import LiveInfo
 from utils.tool_v2 import FormatTool, FileDirectoryTool
+from utils.common.enums import Platform
+from utils.common.thread import Thread
 from utils.common.enums import PlayerMode
 
 from gui.component.text_ctrl import TextCtrl
@@ -155,11 +156,11 @@ class LiveRecordingWindow(Dialog):
                     wx.MessageDialog(self, "无法获取默认播放器\n\n无法获取系统默认播放器，请手动设置\n\n请使用支持播放 m3u8 视频流的播放器，如 VLC、PotPlayer、MPV等\nWindows 默认的媒体播放器不支持播放，请知悉", "警告", wx.ICON_WARNING).ShowModal()
                     return
 
-                match Config.Sys.platform:
-                    case "windows":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
                         cmd = result[1].replace("%1", self.m3u8_link_box.GetValue())
 
-                    case "linux":
+                    case Platform.Linux:
                         cmd = result[1].replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
             
             case PlayerMode.Custom:

@@ -5,15 +5,15 @@ from typing import Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
-from utils.common.enums import DownloadOption, DownloadStatus, ParseType
+from utils.common.enums import DownloadOption, DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
+from utils.common.file_name import FileNameManager
 
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
-from utils.common.file_name import FileNameManager
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser
@@ -107,11 +107,11 @@ class DownloadTaskItemPanel(Panel):
 
     def init_UI(self):
         def get_progress_bar_size():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.macOS:
                     return self.FromDIP((196, 16))
                 
-                case "linux":
+                case Platform.Linux:
                     return self.FromDIP((196, 4))
 
         self.set_dark_mode()
@@ -152,7 +152,7 @@ class DownloadTaskItemPanel(Panel):
         speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         progress_bar_vbox = wx.BoxSizer(wx.VERTICAL)
-        progress_bar_vbox.AddSpacer(self.FromDIP(10 if Config.Sys.platform != "linux" else 20))
+        progress_bar_vbox.AddSpacer(self.FromDIP(10 if Config.Sys.platform != Platform.Linux.value else 20))
         progress_bar_vbox.Add(progress_bar_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddStretchSpacer()
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)

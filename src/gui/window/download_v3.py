@@ -5,7 +5,7 @@ from typing import List, Callable
 
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
-from utils.common.enums import DownloadStatus, ParseType
+from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
 
@@ -22,17 +22,17 @@ from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
         def get_window_size():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     if self.GetDPIScaleFactor() >= 1.5:
                         return self.FromDIP((930, 550))
                     else:
                         return self.FromDIP((960, 580))
                 
-                case "darwin":
+                case Platform.macOS:
                     return self.FromDIP((1000, 600))
                 
-                case "linux":
+                case Platform.Linux:
                     return self.FromDIP((1070, 650))
 
         Frame.__init__(self, parent, "下载管理")

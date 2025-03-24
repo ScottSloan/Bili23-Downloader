@@ -109,3 +109,8 @@ class DownloadOption(Enum):
 class OverrideOption(Enum):
     Override = 0
     Rename = 1
+
+class Platform(Enum):
+    Windows = "windows"
+    Linux = "linux"
+    macOS = "darwin"

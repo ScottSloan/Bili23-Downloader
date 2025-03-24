@@ -3,6 +3,7 @@ import json
 import platform
 from typing import Dict
 
+from utils.common.enums import Platform
 from utils.common.map import cdn_map
 
 class Config:
@@ -174,11 +175,11 @@ class ConfigUtils:
                 user_config["cookie_params"] = {}
         
         def _init():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
 
-                case "linux" | "darwin":
+                case Platform.Linux | Platform.macOS:
                     Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
 
             Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")

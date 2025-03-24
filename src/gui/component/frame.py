@@ -1,6 +1,7 @@
 import wx
 
 from utils.common.icon_v2 import IconManager, IconType
+from utils.common.enums import Platform
 from utils.config import Config
 
 class Frame(wx.Frame):
@@ -12,9 +13,9 @@ class Frame(wx.Frame):
         self.SetIcon(wx.Icon(icon_manager.get_icon_bitmap(IconType.APP_ICON_SMALL)))
 
     def get_scaled_size(self, size: tuple):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 return self.FromDIP(size)
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 return wx.DefaultSize

@@ -3,9 +3,10 @@ import re
 import os
 import subprocess
 
-from utils.config import Config
 from utils.common.thread import Thread
+from utils.common.enums import Platform
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
+from utils.config import Config
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 from gui.component.text_ctrl import TextCtrl
@@ -25,11 +26,11 @@ class ConverterWindow(Dialog):
 
     def init_UI(self):
         def _get_gpu_list():
-            match Config.Sys.platform:
-                case "windows" | "linux":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.Linux:
                     return list(supported_gpu_map.keys())
                 
-                case "darwin":
+                case Platform.macOS:
                     return ["VideoToolBox"]
                 
         input_lab = wx.StaticText(self, -1, "输入")
@@ -222,11 +223,11 @@ class ConverterWindow(Dialog):
             _target_encoder = self.target_codec_choice.GetSelection()
 
             if self.hwaccel_chk.GetValue():
-                match Config.Sys.platform:
-                    case "windows" | "linux":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows | Platform.Linux:
                         return video_hw_encoder_map[_target_gpu][_target_encoder]
 
-                    case "darwin":
+                    case Platform.macOS:
                         return _get_mac_accels()
             else:
                 return video_sw_encoder_map[_target_encoder]

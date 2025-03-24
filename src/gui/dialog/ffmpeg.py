@@ -1,10 +1,11 @@
 import wx
 
 from utils.module.ffmpeg import FFmpeg
-from utils.common.icon_v2 import IconManager, IconType
 from utils.config import Config
+from utils.common.icon_v2 import IconManager, IconType
 
 from gui.component.dialog import Dialog
+from gui.component.bitmap_button import BitmapButton
 
 class DetectDialog(Dialog):
     def __init__(self, parent):
@@ -19,29 +20,13 @@ class DetectDialog(Dialog):
         self.init_utils()
 
     def init_UI(self):
-        def _get_scale_button_size():
-            match Config.Sys.platform:
-                case "windows":
-                    return self.FromDIP((24, 24))
-                
-                case "linux" | "darwin":
-                    return self.FromDIP((32, 32))
-                
-        def _get_style():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
-                    return 0
-                
-                case "linux":
-                    return wx.NO_BORDER
-        
         self.set_dark_mode()
 
         icon_manager = IconManager(self)
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = wx.BitmapButton(self, -1, icon_manager.get_icon_bitmap(IconType.REFRESH_ICON), size = _get_scale_button_size(), style = _get_style())
+        self.refresh_btn = BitmapButton(self, -1, icon_manager.get_icon_bitmap(IconType.REFRESH_ICON), size = self.get_scaled_size((24, 24)))
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)

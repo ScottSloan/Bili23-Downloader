@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption
+from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption, Platform
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
@@ -142,19 +142,19 @@ class FFmpeg:
 
     def get_rename_command(self, src: str, dst: str):
         def get_sys_rename_command():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Linux:
                     return "rename"
 
-                case "linux" | "darwin":
+                case Platform.Linux | Platform.macOS:
                     return "mv"
 
         def get_escape_character():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.macOS:
                     return ""
                 
-                case "linux":
+                case Platform.Linux:
                     return "-- "
 
         return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
@@ -245,11 +245,11 @@ class FFmpeg:
 
     @property
     def ffmpeg_file_name(self):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 return "ffmpeg.exe"
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 return "ffmpeg"
 
     @property

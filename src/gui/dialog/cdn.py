@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from utils.config import Config
 from utils.common.map import cdn_map
+from utils.common.enums import Platform
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -107,19 +108,19 @@ class ChangeCDNDialog(Dialog):
                 self.cdn_list.SetItem(index, 3, value)
             
             def get_ping_cmd() -> str:
-                match Config.Sys.platform:
-                    case "windows":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
                         return f"ping {cdn}"
                     
-                    case "linux" | "darwin":
+                    case Platform.Linux | Platform.macOS:
                         return f"ping {cdn} -c 4"
 
             def get_latency():
-                match Config.Sys.platform:
-                    case "windows":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
                         return re.findall(r"Average = ([0-9]*)", process.stdout)
                     
-                    case "linux" | "darwin":
+                    case Platform.Linux | Platform.macOS:
                         _temp = re.findall(r"time=([0-9]*)", process.stdout)
 
                         if _temp:

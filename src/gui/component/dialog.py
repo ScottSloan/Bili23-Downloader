@@ -1,17 +1,18 @@
 import wx
 
 from utils.config import Config
+from utils.common.enums import Platform
 
 class Dialog(wx.Dialog):
     def __init__(self, parent, title):
         wx.Dialog.__init__(self, parent, -1, title)
 
     def get_scaled_size(self, size: tuple):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 return self.FromDIP(size)
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 return wx.DefaultSize
     
     def set_dark_mode(self):
