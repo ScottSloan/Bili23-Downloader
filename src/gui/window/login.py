@@ -14,6 +14,7 @@ from utils.auth.cookie import CookieUtils
 from gui.dialog.captcha import CaptchaWindow
 from gui.component.dialog import Dialog
 from gui.component.panel import Panel
+from gui.component.search_ctrl import SearchCtrl
 
 class LoginWindow(Dialog):
     def __init__(self, parent, callback: Callable):
@@ -324,9 +325,7 @@ class SMSPage(LoginPage):
         self.country_id_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = wx.SearchCtrl(self, -1, size = self.FromDIP((150, 16)))
-        self.phone_number_box.ShowSearchButton(False)
-        self.phone_number_box.SetDescriptiveText("请输入手机号")
+        self.phone_number_box = SearchCtrl(self, "请输入手机号", size = self.FromDIP((150, 16)))
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         phone_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -334,9 +333,7 @@ class SMSPage(LoginPage):
         phone_hbox.Add(self.get_validate_code_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
         validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = wx.SearchCtrl(self, -1)
-        self.validate_code_box.ShowSearchButton(False)
-        self.validate_code_box.SetDescriptiveText("请输入验证码")
+        self.validate_code_box = SearchCtrl(self, "请输入验证码")
 
         flex_sizer = wx.FlexGridSizer(3, 2, 0, 0)
 

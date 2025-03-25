@@ -4,7 +4,7 @@ import wx.dataview
 from typing import Optional
 
 from utils.config import Config
-from utils.common.enums import ParseType, DownloadOption, VideoType
+from utils.common.enums import ParseType, DownloadOption, VideoType, Platform
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 
 from utils.parse.video import VideoInfo
@@ -15,7 +15,17 @@ from utils.parse.cheese import CheeseInfo
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent):
+        def get_list_size():
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
+                    return self.FromDIP((775, 300))
+                
+                case Platform.Linux | Platform.macOS:
+                    return self.FromDIP((775, 350))
+                
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
+
+        self.SetSize(get_list_size())
 
         self.Bind_EVT()
 

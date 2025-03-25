@@ -651,7 +651,7 @@ class MainWindow(Frame):
                 dialog = ChangeLogDialog(self)
                 dialog.ShowModal()
 
-            if not Config.Temp.change_log:
+            if not Config.Temp.changelog:
                 try:
                     UniversalTool.get_changelog()
 

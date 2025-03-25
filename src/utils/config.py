@@ -85,7 +85,7 @@ class Config:
     class Temp:
         update_json: dict = None
 
-        change_log: str = None
+        changelog: str = None
 
         need_login: bool = False
 

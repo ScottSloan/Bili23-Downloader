@@ -16,7 +16,7 @@ class ChangeLogDialog(Dialog):
         wx.Bell()
 
     def init_UI(self):
-        changelog_box = TextCtrl(self, -1, Config.Temp.change_log["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        changelog_box = TextCtrl(self, -1, Config.Temp.changelog["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 
