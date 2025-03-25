@@ -305,8 +305,8 @@ class MainWindow(Frame):
             Thread(target = self.parse_url_thread, args = (url, )).start()
 
         callback = ParseCallback()
-        callback.error_callback = self.onParseErrorCallback
-        callback.redirect_callback = redirect_callback
+        callback.onError = self.onParseErrorCallback
+        callback.onRedirect = redirect_callback
         
         self.video_parser = VideoParser(callback)
         self.bangumi_parser = BangumiParser(callback)
@@ -950,9 +950,9 @@ class MainWindow(Frame):
 
     def updateVideoCountLabel(self, checked: int = 0):
         if checked:
-            _total = f"(共 {self.treelist._index} 个，已选择 {checked} 个)"
+            _total = f"(共 {self.treelist.count} 个，已选择 {checked} 个)"
         else:
-            _total = f"(共 {self.treelist._index} 个)"
+            _total = f"(共 {self.treelist.count} 个)"
 
         match self.current_parse_type:
             case ParseType.Video:

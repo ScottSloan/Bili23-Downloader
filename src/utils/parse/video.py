@@ -93,7 +93,7 @@ class VideoParser:
         info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = info["redirect_url"])
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = info["redirect_url"])
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
@@ -181,7 +181,7 @@ class VideoParser:
             return worker()
         
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"

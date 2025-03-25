@@ -16,10 +16,10 @@ class B23Parser:
         def worker():
             new_url = self.get_redirect_url(url)
 
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = new_url)
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = new_url)
 
         try:
             return worker()
         
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e

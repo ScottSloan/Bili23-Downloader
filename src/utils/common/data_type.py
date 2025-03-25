@@ -197,8 +197,8 @@ class TreeListItemInfo:
 
 class ParseCallback:
     def __init__(self):
-        self.error_callback: Callable = None
-        self.redirect_callback: Callable = None
+        self.onError: Callable = None
+        self.onRedirect: Callable = None
 
 class Command:
     def __init__(self):

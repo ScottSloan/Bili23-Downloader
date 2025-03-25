@@ -99,7 +99,7 @@ class LiveParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e
 
     def check_json(self, data: dict):
         # 检查接口返回状态码

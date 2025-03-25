@@ -114,3 +114,8 @@ class Platform(Enum):
     Windows = "windows"
     Linux = "linux"
     macOS = "darwin"
+
+class ParseStatus(Enum):
+    Finish = 0
+    Parsing = 1
+    Error = 2

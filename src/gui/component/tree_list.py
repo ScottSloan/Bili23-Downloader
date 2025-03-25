@@ -1,7 +1,7 @@
 import wx
 import random
 import wx.dataview
-from typing import Optional
+from typing import Optional, Callable
 
 from utils.config import Config
 from utils.common.enums import ParseType, DownloadOption, VideoType, Platform
@@ -14,7 +14,7 @@ from utils.parse.episode import EpisodeInfo
 from utils.parse.cheese import CheeseInfo
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
         def get_list_size():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
@@ -22,7 +22,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 
                 case Platform.Linux | Platform.macOS:
                     return self.FromDIP((775, 350))
-                
+        
+        self.callback = callback
+
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
         self.SetSize(get_list_size())
@@ -31,7 +33,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.init_list()
 
-        self._main_window = self.GetParent().GetParent()
+        self.main_window_parent = self.GetParent().GetParent()
     
     def Bind_EVT(self):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
@@ -67,9 +69,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                     self.SetItemData(item, get_item_data("node", data["title"]))
                 else:
-                    self._index += 1
+                    self.count += 1
 
-                    self.SetItemText(item, 0, str(self._index))
+                    self.SetItemText(item, 0, str(self.count))
                     self.SetItemText(item, 1, data["title"])
                     self.SetItemText(item, 2, data["badge"])
                     self.SetItemText(item, 3, data["duration"])
@@ -78,10 +80,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                     _column_width = self.WidthFor(data["title"])
 
-                    if _column_width > self._title_longest_width:
-                        self._title_longest_width = _column_width
+                    if _column_width > self.title_longest_width:
+                        self.title_longest_width = _column_width
 
-                if Config.Misc.auto_select or self._item_count == 1:
+                if Config.Misc.auto_select or self.item_count == 1:
                     self.CheckItem(item, wx.CHK_CHECKED)
 
                 self.Expand(node)
@@ -106,23 +108,25 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 
                 elif isinstance(data, dict):
                     if "cid" in data:
-                        self._item_count += 1
+                        self.item_count += 1
 
                     for value in data.values():
                         traverse(value)
             
             traverse(EpisodeInfo.data)
-            
-        self._index = 0
-        self._title_longest_width = 0
-        self._item_count = 0
+        
+        self.init_list()
+
+        self.count = 0
+        self.title_longest_width = 0
+        self.item_count = 0
 
         get_item_count()
 
         traverse_item(EpisodeInfo.data, self.GetRootItem())
 
-        if self._title_longest_width > self.FromDIP(375):
-            self.SetColumnWidth(1, self._title_longest_width + 15)
+        if self.title_longest_width > self.FromDIP(375):
+            self.SetColumnWidth(1, self.title_longest_width + 15)
 
     def is_current_item_checked(self):
         match self.GetCheckedState(self.GetSelection()):
@@ -172,7 +176,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self._main_window.updateVideoCountLabel(self.get_checked_item_count())
+        self.callback(self.get_checked_item_count())
 
     def get_checked_item_count(self):
         _count = 0
@@ -190,7 +194,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     
     def get_all_checked_item(self, video_quality_id: Optional[int] = None):
         def get_item_info(title: str, cid: int):
-            match self._main_window.current_parse_type:
+            match self.main_window_parent.current_parse_type:
                 case ParseType.Video:
                     self.get_video_download_info(title, EpisodeInfo.cid_dict.get(cid))
 
