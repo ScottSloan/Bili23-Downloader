@@ -1,7 +1,6 @@
 import wx
 import time
 import base64
-import requests
 from io import BytesIO
 from typing import Dict, Callable
 from datetime import datetime, timedelta
@@ -33,8 +32,8 @@ class LoginWindow(Dialog):
     def init_UI(self):
         self.set_dark_mode()
 
-        self.qr_page = QRPage(self, self.session)
-        self.sms_page = SMSPage(self, self.session)
+        self.qr_page = QRPage(self)
+        self.sms_page = SMSPage(self)
 
         line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
 
@@ -67,8 +66,6 @@ class LoginWindow(Dialog):
             cookie_utils = CookieUtils()
             cookie_utils.exclimbwuzhi(Config.Auth.buvid3)
 
-        self.session = requests.sessions.Session()
-
         Thread(target = worker).start()
 
     def Bind_EVT(self):
@@ -78,9 +75,8 @@ class LoginWindow(Dialog):
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocus)
 
     def onClose(self, event):
-        self.session.close()
-
         self.qr_page.onClose()
+        self.sms_page.onClose()
 
         event.Skip()
 
@@ -164,9 +160,7 @@ class LoginPage(Panel):
         wx.CallAfter(self.GetParent().callback)
 
 class QRPage(LoginPage):
-    def __init__(self, parent, session: requests.sessions.Session):
-        self.session = session
-
+    def __init__(self, parent):
         LoginPage.__init__(self, parent)
 
         self.init_utils()
@@ -207,7 +201,8 @@ class QRPage(LoginPage):
         self.SetSizer(qrcode_vbox)
     
     def init_utils(self):
-        self.login = QRLogin(self.session)
+        self.login = QRLogin()
+        self.login.init_session()
         self.loadNewQRCode()
         
         self.timer = wx.Timer(self, -1)
@@ -256,6 +251,8 @@ class QRPage(LoginPage):
     def onClose(self):
         self.timer.Stop()
 
+        self.login.session.close()
+
     def setQRCodeTextTip(self, text: str):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
@@ -294,9 +291,7 @@ class QRPage(LoginPage):
         Thread(target = worker).start()
 
 class SMSPage(LoginPage):
-    def __init__(self, parent, session: requests.sessions.Session):
-        self.session = session
-
+    def __init__(self, parent):
         LoginPage.__init__(self, parent)
 
         self.init_UI()
@@ -371,9 +366,9 @@ class SMSPage(LoginPage):
     def init_utils(self):
         self.isLogin = False
 
-        self.login = SMSLogin(self.session)
+        self.login = SMSLogin()
+        self.login.init_session()
 
-        # 获取国际区号列表
         data = self.login.get_country_list()
 
         self.set_country_list(data)
@@ -449,6 +444,9 @@ class SMSPage(LoginPage):
         result = self.login.login(tel, code, cid)
 
         self.check_login_result(result)
+
+    def onClose(self):
+        self.login.session.close()
 
     def check_captcha(self):
         # 显示极验 captcha 窗口

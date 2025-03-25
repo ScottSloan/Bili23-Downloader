@@ -5,7 +5,7 @@ from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
-from utils.parse.episode import EpisodeInfo, cheese_episode_parser
+from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.audio import AudioInfo
 from utils.config import Config
 
@@ -144,7 +144,7 @@ class CheeseParser:
         else:
             ep_id = int(self.url_type_value)
 
-        cheese_episode_parser(CheeseInfo.info_json, ep_id)
+        EpisodeManager.cheese_episode_parser(CheeseInfo.info_json, ep_id)
 
     def clear_cheese_info(self):
         CheeseInfo.clear_cheese_info()

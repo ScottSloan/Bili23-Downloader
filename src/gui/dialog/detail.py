@@ -15,12 +15,14 @@ from gui.component.dialog import Dialog
 from gui.component.panel import Panel
 
 class DetailDialog(Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, parse_type: ParseType):
+        self.parse_type = parse_type
+
         Dialog.__init__(self, parent, "详细信息")
 
         self.init_UI()
 
-        self.CenterOnParent()
+        self.set_page()
         
     def init_UI(self):
         self.set_dark_mode()
@@ -32,8 +34,8 @@ class DetailDialog(Dialog):
 
         self.SetSizer(vbox)
     
-    def set_page(self, parse_type: ParseType):
-        match parse_type:
+    def set_page(self):
+        match self.parse_type:
             case ParseType.Video:
                 page = VideoPage(self.note)
             

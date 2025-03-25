@@ -6,7 +6,7 @@ from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
+from utils.parse.episode import EpisodeInfo, EpisodeManager
 
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
@@ -224,7 +224,7 @@ class VideoParser:
                 if "ugc_season" in VideoInfo.info_json:
                     VideoInfo.type = VideoType.Collection
 
-                    video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
+                    EpisodeManager.video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
                 else:
                     pages_parser()
 

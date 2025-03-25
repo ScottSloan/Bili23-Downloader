@@ -179,7 +179,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.callback(self.get_checked_item_count())
 
     def get_checked_item_count(self):
-        _count = 0
+        count = 0
 
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
@@ -188,9 +188,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             if item.IsOk():
                 if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    _count += 1
+                    count += 1
 
-        return _count
+        return count
     
     def get_all_checked_item(self, video_quality_id: Optional[int] = None):
         def get_item_info(title: str, cid: int):

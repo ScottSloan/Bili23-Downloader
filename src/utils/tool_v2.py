@@ -1,4 +1,5 @@
 import os
+import wx
 import re
 import json
 import ctypes
@@ -16,7 +17,6 @@ class RequestTool:
     # 请求工具类
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
-    @staticmethod
     def request_get(url: str, headers = None, proxies = None, auth = None, stream = False):
         if not headers:
             headers = RequestTool.get_headers()
@@ -29,7 +29,6 @@ class RequestTool:
 
         return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream)
     
-    @staticmethod
     def request_post(url: str, headers = None, params = None, json = None):
         if not headers:
             headers = RequestTool.get_headers()
@@ -42,7 +41,6 @@ class RequestTool:
         
         return requests.head(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
-    @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
         def cookie():
             if Config.Auth.buvid3:
@@ -84,7 +82,6 @@ class RequestTool:
 
         return headers
 
-    @staticmethod
     def get_proxies():
         match ProxyMode(Config.Proxy.proxy_mode):
             case ProxyMode.Disable:
@@ -99,14 +96,12 @@ class RequestTool:
                     "https": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}"
                 }
     
-    @staticmethod
     def get_auth():
         if Config.Proxy.enable_auth:
             return requests.auth.HTTPProxyAuth(Config.Proxy.auth_username, Config.Proxy.auth_password)
         else:
             return None
     
-    @staticmethod
     def replace_protocol(url: str):
         if not Config.Advanced.always_use_https_protocol:
             return url.replace("https://", "http://")
@@ -115,7 +110,6 @@ class RequestTool:
 
 class FileDirectoryTool:
     # 文件目录工具类
-    @staticmethod
     def open_directory(directory: str):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
@@ -127,7 +121,6 @@ class FileDirectoryTool:
             case Platform.macOS:
                 subprocess.Popen(f'open "{directory}"', shell = True)
 
-    @staticmethod
     def open_file_location(path: str):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
@@ -139,7 +132,6 @@ class FileDirectoryTool:
             case Platform.macOS:
                 subprocess.Popen(f'open -R "{path}"', shell = True)
     
-    @staticmethod
     def get_file_ext_associated_app(file_ext: str):
         def _linux():
             _desktop = subprocess.Popen("xdg-mime query default video/mp4", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
@@ -166,7 +158,6 @@ class FileDirectoryTool:
                 # macOS 不支持获取默认程序
                 return (False, "")
 
-    @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):
         def get_pidl(path):
             pidl = ctypes.POINTER(ITEMIDLIST)()
@@ -188,7 +179,6 @@ class FileDirectoryTool:
         finally:
             ctypes.windll.ole32.CoUninitialize()
 
-    @staticmethod
     def _msw_AssocQueryStringW(file_ext: str):
         from ctypes import wintypes
 
@@ -302,7 +292,6 @@ class DownloadFileTool:
 
 class FormatTool:
     # 格式化数据类
-    @staticmethod
     def format_duration(episode: dict, flag: int):
         match flag:
             case ParseType.Video:
@@ -323,7 +312,6 @@ class FormatTool:
         
         return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
 
-    @staticmethod
     def format_speed(speed: int):
         if speed > 1024 * 1024 * 1024:
             return "{:.1f} GB/s".format(speed / 1024 / 1024 / 1024)
@@ -337,7 +325,6 @@ class FormatTool:
         else:
             return "0 KB/s"
 
-    @staticmethod
     def format_size(size: int):
         if not size:
             return "0 MB"
@@ -351,7 +338,6 @@ class FormatTool:
         else:
             return "{:.1f} KB".format(size / 1024)
 
-    @staticmethod
     def format_bangumi_title(episode: dict, main_episode: bool = False):
         from utils.parse.bangumi import BangumiInfo
 
@@ -373,7 +359,6 @@ class FormatTool:
             else:
                 return episode["report"]["ep_title"]
 
-    @staticmethod
     def format_data_count(data: int):
         if data >= 1e8:
             return f"{data / 1e8:.1f}亿"
@@ -386,7 +371,6 @@ class FormatTool:
 
 class UniversalTool:
     # 通用工具类
-    @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
@@ -397,19 +381,35 @@ class UniversalTool:
 
         return Config.User.face_path
 
-    @staticmethod
+    def get_user_round_face(image):
+        width, height = image.GetSize()
+        diameter = min(width, height)
+        
+        image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
+        
+        circle_image = wx.Image(diameter, diameter)
+        circle_image.InitAlpha()
+        
+        for x in range(diameter):
+            for y in range(diameter):
+                dist = ((x - diameter / 2) ** 2 + (y - diameter / 2) ** 2) ** 0.5
+                if dist <= diameter / 2:
+                    circle_image.SetRGB(x, y, image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y))
+                    circle_image.SetAlpha(x, y, 255)
+                else:
+                    circle_image.SetAlpha(x, y, 0)
+        
+        return circle_image
+
     def get_current_time_str():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
     
-    @staticmethod
     def get_time_str_from_timestamp(timestamp: int):
         return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
 
-    @staticmethod
     def get_legal_name(_name: str):
         return re.sub(r'[/\:*?"<>|]', "", _name)
 
-    @staticmethod
     def re_find_string(_pattern: str, _string: str):
         find = re.findall(_pattern, _string)
     
@@ -418,7 +418,6 @@ class UniversalTool:
         else:
             return None
     
-    @staticmethod
     def aid_to_bvid(_aid: int):
         XOR_CODE = 23442827791579
         MAX_AID = 1 << 51
@@ -434,7 +433,6 @@ class UniversalTool:
 
         return "BV1" + "".join(bvid)
 
-    @staticmethod
     def remove_files(directory: str, file_name_list: List[str]):
         for i in file_name_list:
             _path = os.path.join(directory, i)
@@ -445,12 +443,10 @@ class UniversalTool:
                 except Exception:
                     pass
 
-    @staticmethod
     def msw_set_dpi_awareness():
         if Config.Sys.platform == Platform.Windows.value:
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
-    @staticmethod
     def msw_set_utf8_encode():
         if Config.Sys.platform == Platform.Windows.value:
             subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)

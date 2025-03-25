@@ -22,9 +22,12 @@ class LoginInfo:
 
     captcha_key: str = ""
 
-class LoginBase:
-    def __init__(self, session: requests.sessions.Session):
-        self.session = session
+class Login:
+    def __init__(self):
+        pass
+
+    def init_session(self):
+        self.session = requests.sessions.Session()
 
     def get_user_info(self, refresh = False):
         url = "https://api.bilibili.com/x/web-interface/nav"
@@ -61,16 +64,21 @@ class LoginBase:
         self.session.post(url, params = form, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
         Config.User.login = False
-        Config.User.face_url = Config.User.username = Config.User.SESSDATA = ""
+        Config.User.face_url = ""
+        Config.User.username = ""
+        Config.User.SESSDATA = ""
+        Config.User.DedeUserID = ""
+        Config.User.DedeUserID__ckMd5 = ""
+        Config.User.bili_jct = ""
 
         kwargs = {
-            "login": False,
-            "face_url": "",
-            "username": "",
-            "SESSDATA": "",
-            "DedeUserID": "",
-            "DedeUserID__ckMd5": "",
-            "bili_jct": "",
+            "login": Config.User.login,
+            "face_url": Config.User.face_url,
+            "username": Config.User.username,
+            "SESSDATA": Config.User.SESSDATA,
+            "DedeUserID": Config.User.DedeUserID,
+            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
+            "bili_jct": Config.User.bili_jct,
             "login_expires": 0
         }
 
@@ -78,9 +86,9 @@ class LoginBase:
 
         UniversalTool.remove_files(os.path.dirname(Config.User.user_config_path), ["face.jpg"])
 
-class QRLogin(LoginBase):
-    def __init__(self, session):
-        LoginBase.__init__(self, session)
+class QRLogin(Login):
+    def __init__(self):
+        Login.__init__(self)
 
     def init_qrcode(self):
         url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
@@ -108,9 +116,9 @@ class QRLogin(LoginBase):
             "message": req_json["data"]["message"],
             "code": req_json["data"]["code"]}
 
-class SMSLogin(LoginBase):
-    def __init__(self, session):
-        LoginBase.__init__(self, session)
+class SMSLogin(Login):
+    def __init__(self):
+        Login.__init__(self)
 
     def get_country_list(self):
         url = "https://passport.bilibili.com/x/passport-login/web/country"

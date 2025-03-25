@@ -1,14 +1,17 @@
 import wx
 import webbrowser
+import wx.dataview
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
+from utils.auth.login import QRLogin
+
 from utils.common.thread import Thread
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.update import Update
 from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType
 from utils.common.data_type import ParseCallback
-from utils.common.exception import GlobalException
+from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -20,12 +23,15 @@ from utils.parse.activity import ActivityInfo, ActivityParser
 from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
 from gui.window.debug import DebugWindow
+from gui.window.login import LoginWindow
 
 from gui.dialog.about import AboutWindow
 from gui.dialog.changelog import ChangeLogDialog
 from gui.dialog.update import UpdateWindow
 from gui.dialog.converter import ConverterWindow
 from gui.dialog.cut_clip import CutClipDialog
+from gui.dialog.error import ErrorInfoDialog
+from gui.dialog.detail import DetailDialog
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -66,6 +72,7 @@ class MainWindow(Frame):
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
         self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_mgr.get_icon_bitmap(IconType.INFO_ICON), size = self.FromDIP((24, 24)))
+        self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.detail_icon.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
@@ -86,11 +93,18 @@ class MainWindow(Frame):
 
         self.episode_list = TreeListCtrl(self.panel, self.update_checked_count)
 
+        self.face_icon = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
+        self.face_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.face_icon.Hide()
+        self.uname_lab = wx.StaticText(self.panel, -1, "未登录", style = wx.ELLIPSIZE_END)
+        self.uname_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.download_mgr_btn = Button(self.panel, "下载管理", size = self.get_scaled_size((100, 30)))
         self.download_btn = Button(self.panel, "开始下载", size = self.get_scaled_size((100, 30)))
         self.download_btn.Enable(False)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_hbox.Add(self.face_icon, 0, wx.ALL & (~wx.RIGHT), 10)
+        bottom_hbox.Add(self.uname_lab, 1, wx.ALL | wx.ALIGN_CENTER, 10)
         bottom_hbox.AddStretchSpacer()
         bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL, 10)
         bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT), 10)
@@ -108,6 +122,7 @@ class MainWindow(Frame):
         self.init_menubar()
 
     def init_id(self):
+        self.ID_REFRESH_MENU = wx.NewIdRef()
         self.ID_LOGIN_MENU = wx.NewIdRef()
         self.ID_LOGOUT_MENU = wx.NewIdRef()
         self.ID_DEBUG_MENU = wx.NewIdRef()
@@ -125,6 +140,13 @@ class MainWindow(Frame):
         self.ID_EPISODE_IN_SECTION_MENU = wx.NewIdRef()
         self.ID_EPISODE_ALL_SECTIONS_MENU = wx.NewIdRef()
         self.ID_EPISODE_FULL_NAME_MENU = wx.NewIdRef()
+
+        self.ID_EPISODE_LIST_VIEW_COVER_MENU = wx.NewIdRef()
+        self.ID_EPISODE_LIST_COPY_TITLE_MENU = wx.NewIdRef()
+        self.ID_EPISODE_LIST_COPY_URL_MENU = wx.NewIdRef()
+        self.ID_EPISODE_LIST_EDIT_TITLE_MENU = wx.NewIdRef()
+        self.ID_EPISODE_LIST_CHECK_MENU = wx.NewIdRef()
+        self.ID_EPISODE_LIST_COLLAPSE_MENU = wx.NewIdRef()
 
     def init_menubar(self):
         menu_bar = wx.MenuBar()
@@ -171,8 +193,21 @@ class MainWindow(Frame):
         self.episode_option_btn.Bind(wx.EVT_BUTTON, self.onShowEpisodeOptionMenuEVT)
         self.download_option_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadOptionDlgEVT)
 
+        self.face_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
+        self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
+
+        self.detail_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowDetailInfoDlgEVT)
+
+        self.episode_list.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onShowEpisodeListMenuEVT)
+        self.episode_list.Bind(wx.EVT_MENU, self.onEpisodeListMenuEVT)
+
     def init_utils(self):
         self.download_window = DownloadManagerWindow(self)
+
+        self.show_user_info()
+
+    def onCloseEVT(self, event):
+        pass
 
     def onMenuEVT(self, event):
         def show_episode_list():
@@ -190,10 +225,15 @@ class MainWindow(Frame):
 
         match event.GetId():
             case self.ID_LOGIN_MENU:
-                pass
+                self.show_login_window()
 
             case self.ID_LOGOUT_MENU:
-                pass
+                dlg = wx.MessageDialog(self, '退出登录\n\n是否要退出登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
+
+                if dlg.ShowModal() == wx.ID_YES:
+                    QRLogin().logout()
+
+                    self.show_user_info()
 
             case self.ID_DEBUG_MENU:
                 DebugWindow(self).Show()
@@ -268,6 +308,8 @@ class MainWindow(Frame):
             wx.MessageDialog(self, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING).ShowModal()
             return
         
+        self.episode_list.init_list()
+        
         self.set_parse_status(ParseStatus.Parsing.value)
         
         Thread(target = self.parse_url_thread, args = (url, )).start()
@@ -318,6 +360,104 @@ class MainWindow(Frame):
 
     def onShowDownloadOptionDlgEVT(self, event):
         pass
+    
+    def onShowUserMenuEVT(self, event):
+        if Config.User.login:
+            menu = wx.Menu()
+
+            menu.Append(self.ID_REFRESH_MENU, "刷新(&R)")
+            menu.Append(self.ID_LOGOUT_MENU, "注销(&L)")
+
+            self.PopupMenu(menu)
+        else:
+            self.show_login_window()
+
+    def onShowDetailInfoDlgEVT(self, event):
+        match self.current_parse_type:
+            case ParseType.Live:
+                wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
+
+            case _:
+                DetailDialog(self, self.current_parse_type).ShowModal()
+    
+    def onShowEpisodeListMenuEVT(self, event):
+        menu = wx.Menu()
+
+        view_cover_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_VIEW_COVER_MENU, "查看封面(&V)")
+        copy_title_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COPY_TITLE_MENU, "复制标题(&C)")
+        copy_url_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COPY_URL_MENU, "复制链接(&U)")
+        edit_title_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_EDIT_TITLE_MENU, "修改标题(&E)")
+        check_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_CHECK_MENU, "取消选择(&N)" if self.episode_list.is_current_item_checked() else "选择(&S)")
+        collapse_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COLLAPSE_MENU, "展开(&X)" if self.episode_list.is_current_item_collapsed() else "折叠(&O)")
+
+        if self.episode_list.is_current_item_node():
+            view_cover_menuitem.Enable(False)
+            copy_title_menuitem.Enable(False)
+            copy_url_menuitem.Enable(False)
+            edit_title_menuitem.Enable(False)
+        else:
+            collapse_menuitem.Enable(False)
+
+        menu.Append(view_cover_menuitem)
+        menu.AppendSeparator()
+        menu.Append(copy_title_menuitem)
+        menu.Append(copy_url_menuitem)
+        menu.AppendSeparator()
+        menu.Append(edit_title_menuitem)
+        menu.AppendSeparator()
+        menu.Append(check_menuitem)
+        menu.Append(collapse_menuitem)
+
+        if self.episode_list.GetSelection().IsOk():
+            self.episode_list.PopupMenu(menu)
+
+    def onEpisodeListMenuEVT(self, event):
+        match event.GetId():
+            case self.ID_EPISODE_LIST_VIEW_COVER_MENU:
+                pass
+
+            case self.ID_EPISODE_LIST_COPY_TITLE_MENU:
+                text = self.episode_list.GetItemText(self.treelist.GetSelection(), 1)
+
+                wx.TheClipboard.SetData(wx.TextDataObject(text))
+
+            case self.ID_EPISODE_LIST_COPY_URL_MENU:
+                pass
+
+            case self.ID_EPISODE_LIST_EDIT_TITLE_MENU:
+                pass
+
+    def show_user_info(self):
+        def worker():
+            def show():
+                self.face_icon.Show()
+                self.face_icon.SetBitmap(UniversalTool.get_user_round_face(image).ConvertToBitmap())
+                self.uname_lab.SetLabel(Config.User.username)
+
+                self.panel.Layout()
+
+            scaled_size = self.FromDIP((32, 32))
+
+            image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
+
+            wx.CallAfter(show)
+
+        if Config.Misc.show_user_info:
+            if Config.User.login:
+                Thread(target = worker).start()
+        else:
+            self.uname_lab.Hide()
+            self.face_icon.Hide()
+        
+        self.panel.Layout()
+
+    def show_login_window(self):
+        def callback():
+            self.init_menubar()
+
+            self.show_user_info()
+
+        LoginWindow(self, callback).ShowModal()
 
     def parse_url_thread(self, url: str):
         def worker():
@@ -396,10 +536,19 @@ class MainWindow(Frame):
         self.panel.Layout()
 
     def onErrorCallback(self):
+        def worker():
+            dlg = wx.MessageDialog(self, f"解析失败\n\n错误码：{GlobalExceptionInfo.info.get('code')}\n描述：{GlobalExceptionInfo.info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
+            dlg.SetYesNoLabels("详细信息", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                ErrorInfoDialog(self, GlobalExceptionInfo.info).ShowModal()
+
         self.set_parse_status(ParseStatus.Error)
 
-    def onRedirectCallback(self):
-        pass
+        wx.CallAfter(worker)
+
+    def onRedirectCallback(self, url: str):
+        Thread(target = self.parse_url_thread, args = (url, )).start()
 
     def set_parse_status(self, status: int):
         def set_enable_status(enable: bool):
