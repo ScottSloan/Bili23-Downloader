@@ -76,6 +76,8 @@ class Config:
         enable_speed_limit: bool = False
         speed_mbps: int = 10
 
+        stream_download_option: int = 3
+        use_ffmpeg_merge: bool = True
         auto_popup_option_dialog: bool = True
     
     class Merge:

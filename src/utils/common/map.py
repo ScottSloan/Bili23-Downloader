@@ -39,6 +39,12 @@ video_codec_map = {
     "AV1": 13
 }
 
+video_codec_preference_map = {
+    "AVC/H.264 优先": 7,
+    "HEVC/H.265 优先": 12,
+    "AV1 优先": 13
+}
+
 video_codec_short_map = {
     "H264": 7,
     "H265": 12,

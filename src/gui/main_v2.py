@@ -9,7 +9,7 @@ from utils.auth.login import QRLogin
 from utils.common.thread import Thread
 from utils.common.icon_v2 import IconManager, IconType
 from utils.common.update import Update
-from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus
+from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
@@ -39,6 +39,7 @@ from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.option import OptionDialog
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
+from gui.dialog.download_option_v2 import DownloadOptionDialog
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -194,6 +195,7 @@ class MainWindow(Frame):
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onMenuEVT)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
         self.url_box.Bind(wx.EVT_SEARCH, self.onGetEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onGetEVT)
@@ -218,7 +220,13 @@ class MainWindow(Frame):
         self.show_user_info()
 
     def onCloseEVT(self, event):
-        pass
+        if self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
+            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+
+            if dlg.ShowModal() == wx.ID_NO:
+                return
+        
+        event.Skip()
 
     def onMenuEVT(self, event):
         def show_episode_list():
@@ -247,7 +255,12 @@ class MainWindow(Frame):
                     self.show_user_info()
 
             case self.ID_REFRESH_MENU:
-                pass
+                def worker():
+                    QRLogin().refresh()
+
+                    self.show_user_info()
+
+                Thread(target = worker).start()
 
             case self.ID_DEBUG_MENU:
                 DebugWindow(self).Show()
@@ -423,7 +436,8 @@ class MainWindow(Frame):
             self.video_quality_choice.Enable(enable)
             self.video_quality_lab.Enable(enable)
 
-        return OptionDialog(self, get_stream_type(), callback).ShowModal()
+        return DownloadOptionDialog(self).ShowModal()
+        # return OptionDialog(self, get_stream_type(), callback).ShowModal()
 
     def onShowUserMenuEVT(self, event):
         if Config.User.login:
@@ -552,18 +566,18 @@ class MainWindow(Frame):
         def get_video_quality_list():
             match self.current_parse_type:
                 case ParseType.Video:
-                    video_quality_id_list = VideoInfo.video_quality_id_list
-                    video_quality_desc_list = VideoInfo.video_quality_desc_list
+                    video_quality_id_list = VideoInfo.video_quality_id_list.copy()
+                    video_quality_desc_list = VideoInfo.video_quality_desc_list.copy()
                 
                 case ParseType.Bangumi:
-                    video_quality_id_list = BangumiInfo.video_quality_id_list
-                    video_quality_desc_list = BangumiInfo.video_quality_desc_list
+                    video_quality_id_list = BangumiInfo.video_quality_id_list.copy()
+                    video_quality_desc_list = BangumiInfo.video_quality_desc_list.copy()
                 
                 case ParseType.Cheese:
-                    video_quality_id_list = CheeseInfo.video_quality_id_list
-                    video_quality_desc_list = CheeseInfo.video_quality_desc_list
+                    video_quality_id_list = CheeseInfo.video_quality_id_list.copy()
+                    video_quality_desc_list = CheeseInfo.video_quality_desc_list.copy()
 
-            video_quality_id_list.insert(0, 200)
+            video_quality_id_list.insert(0, VideoQualityID._Auto.value)
             video_quality_desc_list.insert(0, "自动")
 
             return video_quality_id_list, video_quality_desc_list

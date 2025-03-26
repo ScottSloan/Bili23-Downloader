@@ -115,7 +115,7 @@ class OptionDialog(Dialog):
 
     def init_utils(self):
         def _get_audio_quality_list():
-            audio_quality_desc_list = AudioInfo.aduio_quality_desc_list.copy()
+            audio_quality_desc_list = AudioInfo.audio_quality_desc_list.copy()
 
             if AudioInfo.Availability.audio:
                 audio_quality_desc_list.insert(0, "自动")

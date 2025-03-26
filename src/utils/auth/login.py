@@ -54,7 +54,19 @@ class Login:
             "bili_jct": self.session.cookies["bili_jct"] if not refresh else Config.User.bili_jct,
         }
 
+    def refresh(self):
+        self.init_session()
+
+        user_info = self.get_user_info(refresh = True)
+
+        Config.User.face_url = user_info["face_url"]
+        Config.User.username = user_info["username"]
+
+        os.remove(Config.User.face_path)
+
     def logout(self):
+        self.init_session()
+
         url = "https://passport.bilibili.com/login/exit/v2"
 
         form = {
