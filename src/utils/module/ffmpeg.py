@@ -143,7 +143,7 @@ class FFmpeg:
     def get_rename_command(self, src: str, dst: str):
         def get_sys_rename_command():
             match Platform(Config.Sys.platform):
-                case Platform.Linux:
+                case Platform.Windows:
                     return "rename"
 
                 case Platform.Linux | Platform.macOS:

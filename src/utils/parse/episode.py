@@ -1,6 +1,6 @@
 from utils.config import Config
 from utils.tool_v2 import FormatTool
-from utils.common.enums import ParseType, EpisodeDisplayType
+from utils.common.enums import ParseType, EpisodeDisplayType, VideoType
 from utils.common.map import cheese_status_map
 
 class EpisodeInfo:
@@ -188,3 +188,35 @@ class EpisodeManager:
             EpisodeInfo.cid_dict[episode["cid"]] = episode
 
             EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))
+
+    def get_episode_url(cid: int, parse_type: ParseType):
+        episode_info = EpisodeInfo.cid_dict.get(cid)
+
+        match parse_type:
+            case ParseType.Video:
+                def video():
+                    from utils.parse.video import VideoInfo
+
+                    match VideoInfo.type:
+                        case VideoType.Single:
+                            return VideoInfo.url
+
+                        case VideoType.Part:
+                            return f"{VideoInfo.url}?p={episode_info['page']}"
+
+                        case VideoType.Collection:
+                            return f"https://www.bilibili.com/video/{episode_info['bvid']}"
+
+                return video()
+            
+            case ParseType.Bangumi:
+                return f"https://www.bilibili.com/bangumi/play/ep{episode_info['ep_id']}"
+        
+            case ParseType.Live:
+                from utils.parse.live import LiveInfo
+
+                return f"https://live.bilibili.com/{LiveInfo.room_id}"
+            
+            case ParseType.Cheese:
+                return f"https://www.bilibili.com/cheese/play/ep{episode_info['id']}"
+

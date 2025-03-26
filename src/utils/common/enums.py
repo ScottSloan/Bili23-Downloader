@@ -119,3 +119,12 @@ class ParseStatus(Enum):
     Finish = 0
     Parsing = 1
     Error = 2
+
+class LiveQualityID(Enum):
+    _Auto = 40000
+    _Dolby_Vision = 30000
+    _4K = 20000
+    _1080P = 10000
+    _blue_ray = 400
+    _hd = 150
+    _sd = 80
