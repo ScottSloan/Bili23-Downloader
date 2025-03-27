@@ -36,7 +36,6 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.edit_title import EditTitleDialog
 from gui.dialog.cover import CoverViewerDialog
-from gui.dialog.option import OptionDialog
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
@@ -420,24 +419,12 @@ class MainWindow(Frame):
         self.PopupMenu(menu)
 
     def onShowDownloadOptionDlgEVT(self, event):
-        def get_stream_type():
-            match self.current_parse_type:
-                case ParseType.Video:
-                    return VideoInfo.stream_type
-                
-                case ParseType.Bangumi:
-                    return BangumiInfo.stream_type
-                
-                case ParseType.Cheese:
-                    return CheeseInfo.stream_type
-
         def callback(index: int, enable: bool):
             self.video_quality_choice.SetSelection(index)
             self.video_quality_choice.Enable(enable)
             self.video_quality_lab.Enable(enable)
 
-        return DownloadOptionDialog(self).ShowModal()
-        # return OptionDialog(self, get_stream_type(), callback).ShowModal()
+        return DownloadOptionDialog(self, callback).ShowModal()
 
     def onShowUserMenuEVT(self, event):
         if Config.User.login:
@@ -805,3 +792,15 @@ class MainWindow(Frame):
     @property
     def live_quality_id(self):
         return live_quality_map.get(self.video_quality_choice.GetStringSelection())
+    
+    @property
+    def stream_type(self):
+        match self.current_parse_type:
+            case ParseType.Video:
+                return VideoInfo.stream_type
+            
+            case ParseType.Bangumi:
+                return BangumiInfo.stream_type
+            
+            case ParseType.Cheese:
+                return CheeseInfo.stream_type

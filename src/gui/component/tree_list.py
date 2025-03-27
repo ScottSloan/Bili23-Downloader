@@ -221,13 +221,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                         get_item_info(title, cid)
     
     def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None, extra_option: Optional[dict] = None):
-        def get_download_option():
-            if AudioInfo.download_audio_only:
-                return DownloadOption.OnlyAudio.value
-            else:
-                download_info.ffmpeg_merge = True
-                return DownloadOption.VideoAndAudio.value
-
         def get_ffmpeg_merge():
             match ParseType(download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -262,7 +255,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.video_quality_id = get_video_quality_id()
         download_info.audio_quality_id = get_audio_quality_id()
 
-        download_info.download_option = get_download_option()
+        download_info.download_option = Config.Download.stream_download_option
         download_info.download_type = download_type
         download_info.ffmpeg_merge = get_ffmpeg_merge()
 

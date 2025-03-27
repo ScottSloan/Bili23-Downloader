@@ -8,8 +8,8 @@ from utils.common.thread import Thread
 from utils.config import Config
 
 class FFmpeg:
-    def __init__(self):
-        pass
+    def __init__(self, parent = None):
+        self.parent = parent
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
@@ -39,7 +39,7 @@ class FFmpeg:
     def merge_video(self, callback: MergeCallback):
         def check_file_exist():
             index = 0
-            path = os.path.join(Config.Download.path, callback.onGetFullFileName())
+            path = os.path.join(Config.Download.path, self.full_file_name)
 
             while os.path.exists(path):
                 match OverrideOption(Config.Merge.override_option):
@@ -47,7 +47,7 @@ class FFmpeg:
                         index += 1
 
                         self.task_info.suffix = f"_{index}"
-                        path = os.path.join(Config.Download.path, callback.onGetFullFileName())
+                        path = os.path.join(Config.Download.path, self.full_file_name)
 
                     case OverrideOption.Override:
                         self.delete_specific_file(path)
@@ -55,8 +55,6 @@ class FFmpeg:
             callback.onSaveSuffix()
 
         check_file_exist()
-    
-        self.full_file_name = callback.onGetFullFileName()
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
@@ -242,6 +240,10 @@ class FFmpeg:
                 os.remove(path)
             except Exception:
                 pass
+    
+    @property
+    def full_file_name(self):
+        return self.parent.full_file_name
 
     @property
     def ffmpeg_file_name(self):

@@ -20,13 +20,11 @@ class DetectDialog(Dialog):
         self.init_utils()
 
     def init_UI(self):
-        self.set_dark_mode()
-
         icon_manager = IconManager(self)
 
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = BitmapButton(self, -1, icon_manager.get_icon_bitmap(IconType.REFRESH_ICON), size = self.get_scaled_size((24, 24)))
+        self.refresh_btn = BitmapButton(self, icon_manager.get_icon_bitmap(IconType.REFRESH_ICON))
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)

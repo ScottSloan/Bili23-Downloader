@@ -218,7 +218,6 @@ class MergeCallback:
         self.onSuccess: Callable = None
         self.onError: Callable = None
         self.onSaveSuffix: Callable = None
-        self.onGetFullFileName: Callable = None
 
 class CutInfo:
     def __init__(self):

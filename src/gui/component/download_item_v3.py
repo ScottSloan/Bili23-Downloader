@@ -197,7 +197,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.file_tool = DownloadFileTool(self.task_info.id)
 
-        self.ffmpeg = FFmpeg()
+        self.ffmpeg = FFmpeg(self)
         self.ffmpeg.set_task_info(self.task_info)
 
         self.show_task_info()
@@ -415,14 +415,10 @@ class DownloadTaskItemPanel(Panel):
 
                 self.file_tool.update_task_info_kwargs(**kwargs)
 
-            def onGetFullFileName():
-                return self.full_file_name
-            
             callback = MergeCallback()
             callback.onSuccess = self.onMergeSuccess
             callback.onError = self.onMergeError
             callback.onSaveSuffix = onSaveSuffix
-            callback.onGetFullFileName = onGetFullFileName
 
             return callback
 

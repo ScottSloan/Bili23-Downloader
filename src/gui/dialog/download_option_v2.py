@@ -1,6 +1,7 @@
 import wx
+from typing import Callable
 
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
+from utils.common.map import audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
 from utils.common.enums import AudioQualityID, DownloadOption
 from utils.config import Config, config_utils
 
@@ -9,10 +10,11 @@ from utils.parse.audio import AudioInfo
 from gui.component.dialog import Dialog
 
 class DownloadOptionDialog(Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
         from gui.main_v2 import MainWindow
 
         self.parent: MainWindow = parent
+        self.callback = callback
 
         Dialog.__init__(self, parent, "下载选项")
 
@@ -56,15 +58,12 @@ class DownloadOptionDialog(Dialog):
         self.download_both_radio = wx.RadioButton(media_box, -1, "下载视频和音频")
         self.use_ffmpeg_chk = wx.CheckBox(media_box, -1, "使用 FFmpeg 合并视频和音频")
 
-        download_vbox = wx.BoxSizer(wx.VERTICAL)
-        download_vbox.Add(self.download_none_radio, 0, wx.ALL, 10)
-        download_vbox.Add(self.download_video_radio, 0, wx.ALL & (~wx.TOP), 10)
-        download_vbox.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP), 10)
-        download_vbox.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP), 10)
-        download_vbox.Add(self.use_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), 10)
-
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
-        media_sbox.Add(download_vbox, 0, wx.EXPAND)
+        media_sbox.Add(self.download_none_radio, 0, wx.ALL, 10)
+        media_sbox.Add(self.download_video_radio, 0, wx.ALL & (~wx.TOP), 10)
+        media_sbox.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP), 10)
+        media_sbox.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP), 10)
+        media_sbox.Add(self.use_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         left_vbox = wx.BoxSizer(wx.VERTICAL)
         left_vbox.Add(flex_grid_box, 0, wx.EXPAND)
@@ -80,6 +79,7 @@ class DownloadOptionDialog(Dialog):
         danmaku_hbox.AddSpacer(self.FromDIP(20))
         danmaku_hbox.Add(self.danmaku_file_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_file_type_choice, 0, wx.ALL & (~wx.LEFT), 10)
+        danmaku_hbox.AddSpacer(self.FromDIP(20))
 
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
@@ -89,34 +89,29 @@ class DownloadOptionDialog(Dialog):
         subtitle_hbox.AddSpacer(self.FromDIP(20))
         subtitle_hbox.Add(self.subtitle_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
         subtitle_hbox.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        subtitle_hbox.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
-        extra_vbox = wx.BoxSizer(wx.VERTICAL)
-        extra_vbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
-        extra_vbox.Add(danmaku_hbox, 0, wx.EXPAND)
-        extra_vbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), 10)
-        extra_vbox.Add(subtitle_hbox, 0, wx.EXPAND)
-        extra_vbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), 10)
-
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
-        extra_sbox.Add(extra_vbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), 10)
+        extra_sbox.Add(subtitle_hbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         other_box = wx.StaticBox(self, -1, "其他选项")
         
         self.auto_popup_chk = wx.CheckBox(other_box, -1, "下载时自动弹出")
         self.auto_add_number_chk = wx.CheckBox(other_box, -1, "批量下载视频时自动添加序号")
 
-        other_vbox = wx.BoxSizer(wx.VERTICAL)
-        other_vbox.Add(self.auto_popup_chk, 0, wx.ALL, 10)
-        other_vbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
-
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
-        other_sbox.Add(other_vbox, 0, wx.EXPAND)
+        other_sbox.Add(self.auto_popup_chk, 0, wx.ALL, 10)
+        other_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
         right_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        right_vbox.Add(other_sbox, 1, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
+        right_vbox.Add(other_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(left_vbox, 0, wx.EXPAND)
