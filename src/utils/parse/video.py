@@ -34,11 +34,22 @@ class VideoInfo:
     video_quality_desc_list: list = []
 
     info_json: dict = {}
+    download_json: dict = {}
 
     @staticmethod
     def clear_video_info():
-        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = VideoInfo.desc = VideoInfo.views = VideoInfo.danmakus = VideoInfo.pubtime = ""
-        VideoInfo.cid = VideoInfo.type = VideoInfo.stream_type = 0
+        VideoInfo.url = ""
+        VideoInfo.aid = 0
+        VideoInfo.bvid = ""
+        VideoInfo.title = ""
+        VideoInfo.cover = ""
+        VideoInfo.desc = ""
+        VideoInfo.views = 0
+        VideoInfo.danmakus = 0
+        VideoInfo.pubtime = 0
+        VideoInfo.cid = 0
+        VideoInfo.type = 0
+        VideoInfo.stream_type = 0
 
         VideoInfo.tag_list.clear()
         VideoInfo.pages_list.clear()
@@ -46,6 +57,7 @@ class VideoInfo:
         VideoInfo.video_quality_desc_list.clear()
 
         VideoInfo.info_json.clear()
+        VideoInfo.download_json.clear()
 
 class VideoParser:
     def __init__(self, callback: ParseCallback):
@@ -141,7 +153,7 @@ class VideoParser:
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = VideoInfo.download_json = resp["data"]
 
         if "dash" in info:
             AudioInfo.get_audio_quality_list(info["dash"])

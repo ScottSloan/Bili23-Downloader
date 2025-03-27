@@ -238,7 +238,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             match ParseType(download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                     return AudioInfo.audio_quality_id
-                
+        
+        def get_video_codec_id():
+            match ParseType(download_type):
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    return Config.Download.video_codec_id
+
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
@@ -254,6 +259,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         download_info.video_quality_id = get_video_quality_id()
         download_info.audio_quality_id = get_audio_quality_id()
+        download_info.video_codec_id = Config.Download.video_codec_id
 
         download_info.download_option = Config.Download.stream_download_option
         download_info.download_type = download_type

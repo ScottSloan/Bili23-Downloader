@@ -1,13 +1,16 @@
 import wx
 from typing import Callable
 
-from utils.common.map import audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value
 from utils.common.enums import AudioQualityID, DownloadOption
 from utils.config import Config, config_utils
+from utils.tool_v2 import FormatTool
 
 from utils.parse.audio import AudioInfo
+from utils.parse.preview import Preview
 
 from gui.component.dialog import Dialog
+from gui.component.info_label import InfoLabel
 
 class DownloadOptionDialog(Dialog):
     def __init__(self, parent, callback: Callable):
@@ -27,17 +30,19 @@ class DownloadOptionDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
+        label_color = wx.Colour(64, 64, 64)
+
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
-        self.video_quality_info_lab = wx.StaticText(self, -1, "约 356.5 MB")
+        self.video_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((80, 16)), color = label_color)
 
         self.audio_quality_lab = wx.StaticText(self, -1, "音质")
         self.audio_quality_choice = wx.Choice(self, -1)
-        self.audio_quality_info_lab = wx.StaticText(self, -1, "约 18.6 MB")
+        self.audio_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((80, 16)), color = label_color)
 
         self.video_codec_lab = wx.StaticText(self, -1, "编码格式")
         self.video_codec_choice = wx.Choice(self, -1)
-        self.video_codec_info_lab = wx.StaticText(self, -1)
+        self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((80, 16)), color = label_color)
 
         flex_grid_box = wx.FlexGridSizer(3, 3, 0, 0)
         flex_grid_box.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
@@ -50,20 +55,23 @@ class DownloadOptionDialog(Dialog):
         flex_grid_box.Add(self.video_codec_choice, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), 10)
         flex_grid_box.Add(self.video_codec_info_lab, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
 
-        media_box = wx.StaticBox(self, -1, "音视频下载选项")
+        media_box = wx.StaticBox(self, -1, "媒体下载选项")
 
         self.download_none_radio = wx.RadioButton(media_box, -1, "不下载")
         self.download_video_radio = wx.RadioButton(media_box, -1, "仅下载视频")
         self.download_audio_radio = wx.RadioButton(media_box, -1, "仅下载音频")
         self.download_both_radio = wx.RadioButton(media_box, -1, "下载视频和音频")
-        self.use_ffmpeg_chk = wx.CheckBox(media_box, -1, "使用 FFmpeg 合并视频和音频")
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
-        media_sbox.Add(self.download_none_radio, 0, wx.ALL, 10)
-        media_sbox.Add(self.download_video_radio, 0, wx.ALL & (~wx.TOP), 10)
-        media_sbox.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP), 10)
-        media_sbox.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP), 10)
-        media_sbox.Add(self.use_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), 10)
+        media_sbox.AddStretchSpacer()
+        media_sbox.Add(self.download_none_radio, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+        media_sbox.AddStretchSpacer()
+        media_sbox.Add(self.download_video_radio, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+        media_sbox.AddStretchSpacer()
+        media_sbox.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+        media_sbox.AddStretchSpacer()
+        media_sbox.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+        media_sbox.AddStretchSpacer()
 
         left_vbox = wx.BoxSizer(wx.VERTICAL)
         left_vbox.Add(flex_grid_box, 0, wx.EXPAND)
@@ -79,7 +87,7 @@ class DownloadOptionDialog(Dialog):
         danmaku_hbox.AddSpacer(self.FromDIP(20))
         danmaku_hbox.Add(self.danmaku_file_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         danmaku_hbox.Add(self.danmaku_file_type_choice, 0, wx.ALL & (~wx.LEFT), 10)
-        danmaku_hbox.AddSpacer(self.FromDIP(20))
+        danmaku_hbox.AddSpacer(self.FromDIP(60))
 
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
@@ -132,6 +140,9 @@ class DownloadOptionDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
+        self.video_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
+        self.audio_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeAudioQualityEVT)
+
         self.download_none_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
         self.download_video_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
         self.download_audio_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
@@ -200,7 +211,11 @@ class DownloadOptionDialog(Dialog):
         self.auto_add_number_chk.SetValue(Config.Download.add_number)
     
     def onChangeVideoQualityEVT(self, event):
-        pass
+        preview = Preview(self.parent.current_parse_type)
+
+        size = preview.get_video_stream_size(self.video_quality_id, self.video_codec_id)
+
+        self.video_quality_info_lab.SetLabel(f"约 {FormatTool.format_size(size)}")
 
     def onChangeAudioQualityEVT(self, event):
         pass
@@ -220,33 +235,21 @@ class DownloadOptionDialog(Dialog):
             self.audio_quality_choice.Enable(enable)
             self.audio_quality_info_lab.Enable(enable)
 
-        def set_use_ffmpeg_enable(enable: bool):
-            self.use_ffmpeg_chk.Enable(enable)
-            self.use_ffmpeg_chk.SetValue(enable)
-
         if self.download_none_radio.GetValue():
             set_video_quality_enable(False)
             set_audio_quality_enable(False)
-
-            set_use_ffmpeg_enable(False)
         
         if self.download_video_radio.GetValue():
             set_video_quality_enable(True)
             set_audio_quality_enable(False)
 
-            set_use_ffmpeg_enable(False)
-
         if self.download_audio_radio.GetValue():
             set_video_quality_enable(False)
             set_audio_quality_enable(True)
-
-            set_use_ffmpeg_enable(False)
         
         if self.download_both_radio.GetValue():
             set_video_quality_enable(True)
             set_audio_quality_enable(True)
-
-            set_use_ffmpeg_enable(True)
 
     def onCheckDownloadDanmakuEVT(self, event):
         self.danmaku_file_type_lab.Enable(self.download_danmaku_file_chk.GetValue())
@@ -279,10 +282,8 @@ class DownloadOptionDialog(Dialog):
             if self.download_both_radio.GetValue():
                 Config.Download.stream_download_option = DownloadOption.VideoAndAudio.value
 
-            Config.Download.use_ffmpeg_merge = self.use_ffmpeg_chk.GetValue()
-
         AudioInfo.audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetStringSelection())
-        Config.Download.video_codec_id = video_codec_preference_map.get(self.video_codec_choice.GetStringSelection())
+        Config.Download.video_codec_id = self.video_codec_id
 
         set_stream_download_option()
 
@@ -294,4 +295,21 @@ class DownloadOptionDialog(Dialog):
 
         Config.Download.add_number = self.auto_add_number_chk.GetValue()
 
+        self.callback()
+
         event.Skip()
+
+    @property
+    def video_quality_id(self):
+        selection = self.video_quality_choice.GetSelection()
+
+        if not selection:
+            index = 1
+        else:
+            index = selection
+        
+        return video_quality_map.get(self.video_quality_choice.GetString(index))
+    
+    @property
+    def video_codec_id(self):
+        return video_codec_preference_map.get(self.video_codec_choice.GetStringSelection())

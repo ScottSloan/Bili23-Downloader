@@ -26,7 +26,6 @@ class BangumiInfo:
     danmakus: str = ""
     followers: str = ""
     styles: str = ""
-    year: str = ""
     new_ep: str = ""
     actors: str = ""
     evaluate: str = ""
@@ -43,11 +42,28 @@ class BangumiInfo:
     video_quality_desc_list: list = []
 
     info_json: dict = {}
+    download_json: dict = {}
 
     @staticmethod
     def clear_bangumi_info():
-        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = BangumiInfo.views = BangumiInfo.danmakus = BangumiInfo.followers = BangumiInfo.styles = BangumiInfo.year = BangumiInfo.new_ep = BangumiInfo.actors = BangumiInfo.evaluate = ""
-        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = BangumiInfo.stream_type = 0
+        BangumiInfo.url = ""
+        BangumiInfo.bvid = ""
+        BangumiInfo.title = ""
+        BangumiInfo.cover = ""
+        BangumiInfo.type_name = ""
+        BangumiInfo.views = 0
+        BangumiInfo.danmakus = 0
+        BangumiInfo.followers = 0
+        BangumiInfo.styles = 0
+        BangumiInfo.new_ep = ""
+        BangumiInfo.actors = ""
+        BangumiInfo.evaluate = ""
+        BangumiInfo.epid = 0
+        BangumiInfo.cid = 0
+        BangumiInfo.season_id = 0
+        BangumiInfo.mid = 0
+        BangumiInfo.type_id = 0
+        BangumiInfo.stream_type = 0
 
         BangumiInfo.payment = False
 
@@ -56,6 +72,7 @@ class BangumiInfo:
         BangumiInfo.video_quality_desc_list.clear()
 
         BangumiInfo.info_json.clear()
+        BangumiInfo.download_json.clear()
 
 class BangumiParser:
     def __init__(self, callback: ParseCallback):
@@ -120,7 +137,6 @@ class BangumiParser:
         BangumiInfo.danmakus = FormatTool.format_data_count(info_result["stat"]["danmakus"])
         BangumiInfo.followers = info_result["stat"]["follow_text"]
         BangumiInfo.styles = " / ".join(info_result["styles"])
-        BangumiInfo.year = ""
         BangumiInfo.new_ep = info_result["new_ep"]["desc"]
         BangumiInfo.actors = info_result["actors"].replace("\n", " ")
         BangumiInfo.evaluate = info_result["evaluate"]

@@ -29,17 +29,27 @@ class CheeseInfo:
     video_quality_desc_list: list = []
 
     info_json: dict = {}
+    download_json: dict = {}
 
     @staticmethod
     def clear_cheese_info():
-        CheeseInfo.url = CheeseInfo.title = CheeseInfo.subtitle = CheeseInfo.views = CheeseInfo.release = CheeseInfo.expiry = ""
-        CheeseInfo.aid = CheeseInfo.epid = CheeseInfo.cid = CheeseInfo.season_id = 0
+        CheeseInfo.url = ""
+        CheeseInfo.title = ""
+        CheeseInfo.subtitle = ""
+        CheeseInfo.views = 0
+        CheeseInfo.release = ""
+        CheeseInfo.expiry = ""
+        CheeseInfo.aid = 0
+        CheeseInfo.epid = 0
+        CheeseInfo.cid = 0
+        CheeseInfo.season_id = 0
 
         CheeseInfo.episodes_list.clear()
         CheeseInfo.video_quality_id_list.clear()
         CheeseInfo.video_quality_desc_list.clear()
 
         CheeseInfo.info_json.clear()
+        CheeseInfo.download_json.clear()
 
 class CheeseParser:
     def __init__(self, callback: ParseCallback):
