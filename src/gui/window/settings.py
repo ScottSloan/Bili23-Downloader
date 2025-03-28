@@ -19,7 +19,7 @@ from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, get_mapping_index_by_value
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode, Platform
 
 from utils.module.notification import NotificationManager
@@ -94,8 +94,6 @@ class DownloadTab(Panel):
 
             self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        icon_manager = IconManager(self)
-
         self.scrolled_panel = ScrolledPanel(self)
 
         self.download_box = wx.StaticBox(self.scrolled_panel, -1, "下载设置")
@@ -116,7 +114,7 @@ class DownloadTab(Panel):
 
         video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
         self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_map.keys()))
-        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.video_quality_tip.SetToolTip("说明")
 
@@ -127,7 +125,7 @@ class DownloadTab(Panel):
 
         audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
         self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_map.keys()))
-        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.audio_quality_tip.SetToolTip("说明")
 
@@ -138,7 +136,7 @@ class DownloadTab(Panel):
 
         codec_lab = wx.StaticText(self.scrolled_panel, -1, "视频编码格式")
         self.codec_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_codec_preference_map.keys()))
-        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.codec_tip.SetToolTip("说明")
 
@@ -327,12 +325,10 @@ class AdvancedTab(Panel):
         self.init_data()
 
     def init_UI(self):
-        icon_manager = IconManager(self)
-
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
         self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
-        self.enable_custom_cdn_tip = wx.StaticBitmap(cdn_box, -1, icon_manager.get_icon_bitmap(IconType.INFO_ICON))
+        self.enable_custom_cdn_tip = wx.StaticBitmap(cdn_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.enable_custom_cdn_tip.SetToolTip("说明")
 

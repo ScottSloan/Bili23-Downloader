@@ -7,9 +7,10 @@ from utils.tool_v2 import UniversalTool, RequestTool
 from utils.auth.login import QRLogin
 
 from utils.common.thread import Thread
-from utils.common.icon_v2 import IconManager, IconType
+
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.update import Update
-from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID
+from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID, Platform
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
@@ -52,6 +53,8 @@ class MainWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, Config.APP.name)
 
+        self.get_sys_settings()
+
         self.init_UI()
 
         self.Bind_EVT()
@@ -62,8 +65,6 @@ class MainWindow(Frame):
 
     def init_UI(self):
         self.init_id()
-
-        icon_mgr = IconManager(self)
 
         self.panel = Panel(self)
 
@@ -78,17 +79,17 @@ class MainWindow(Frame):
         url_hbox.Add(self.url_box, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, 10)
         url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
-        self.processing_icon = wx.StaticBitmap(self.panel, -1, icon_mgr.get_icon_bitmap(IconType.LOADING_ICON), size = self.FromDIP((24, 24)))
+        self.processing_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.LOADING_ICON), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        self.detail_icon = wx.StaticBitmap(self.panel, -1, icon_mgr.get_icon_bitmap(IconType.INFO_ICON), size = self.FromDIP((24, 24)))
+        self.detail_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON), size = self.FromDIP((24, 24)))
         self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.detail_icon.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
-        self.episode_option_btn = BitmapButton(self.panel, icon_mgr.get_icon_bitmap(IconType.LIST_ICON))
+        self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.LIST_ICON))
         self.episode_option_btn.Enable(False)
-        self.download_option_btn = BitmapButton(self.panel, icon_mgr.get_icon_bitmap(IconType.SETTING_ICON))
+        self.download_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.SETTING_ICON))
         self.download_option_btn.Enable(False)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -774,8 +775,12 @@ class MainWindow(Frame):
 
         self.panel.Layout()
     
-    def showInfobarMessage(self, message: str, flag: int):
+    def show_info_barM_essage(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
+    
+    def get_sys_settings(self):
+        Config.Sys.dark_mode = False if Config.Sys.platform == Platform.Windows.value else wx.SystemSettings.GetAppearance().IsDark()
+        Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
 
     @property
     def parse_callback(self):

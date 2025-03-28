@@ -3,7 +3,7 @@ import wx
 from io import BytesIO
 from typing import Callable
 
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
 from utils.common.enums import DownloadOption, DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
@@ -116,8 +116,6 @@ class DownloadTaskItemPanel(Panel):
 
         self.set_dark_mode()
 
-        self.icon_manager = IconManager(self)
-
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.cover_bmp.SetToolTip("查看封面")
@@ -158,10 +156,10 @@ class DownloadTaskItemPanel(Panel):
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(self.FromDIP(8))
 
-        self.pause_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+        self.pause_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.RESUME_ICON))
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.DELETE_ICON))
+        self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.DELETE_ICON))
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -535,25 +533,25 @@ class DownloadTaskItemPanel(Panel):
         def set_button_icon(status: int):
             match DownloadStatus(status):
                 case DownloadStatus.Waiting:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("开始下载")
                     self.speed_lab.SetLabel("等待下载...")
 
                 case DownloadStatus.Downloading:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载链接...")
 
                 case DownloadStatus.Pause:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中...")
 
                 case DownloadStatus.Merging:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
 
                     if self.task_info.download_option == DownloadOption.OnlyAudio.value:
                         lab = "正在转换音频..."
@@ -567,14 +565,14 @@ class DownloadTaskItemPanel(Panel):
                     self.stop_btn.Enable(False)
 
                 case DownloadStatus.Complete:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.FOLDER_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.FOLDER_ICON))
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
                     self.stop_btn.SetToolTip("清除记录")
 
                 case DownloadStatus.MergeError:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
                     self.pause_btn.Enable(True)
@@ -593,7 +591,7 @@ class DownloadTaskItemPanel(Panel):
                         self.speed_lab.SetLabel(f"{lab}失败")
 
                 case DownloadStatus.DownloadError:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
                     self.pause_btn.Enable(True)

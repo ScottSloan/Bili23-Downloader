@@ -10,6 +10,7 @@ class Config:
     class Sys:
         platform: str = platform.system().lower()
         dark_mode: bool = False
+        dpi_scale_factor: float = 1
 
     class APP:
         name: str = "Bili23 Downloader"
@@ -77,7 +78,6 @@ class Config:
         speed_mbps: int = 10
 
         stream_download_option: int = 3
-        use_ffmpeg_merge: bool = True
         auto_popup_option_dialog: bool = True
     
     class Merge:

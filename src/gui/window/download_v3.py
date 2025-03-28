@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import List, Callable
 
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
 from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.thread import Thread
@@ -49,8 +49,6 @@ class DownloadManagerWindow(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
-        icon_manager = IconManager(self)
-
         top_panel = Panel(self)
         top_panel.set_dark_mode()
 
@@ -77,9 +75,9 @@ class DownloadManagerWindow(Frame):
         left_panel.set_dark_mode()
 
         self.downloading_page_btn = ActionButton(left_panel, "正在下载(0)")
-        self.downloading_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.DOWNLOADING_ICON))
+        self.downloading_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.DOWNLOADING_ICON))
         self.completed_page_btn = ActionButton(left_panel, "下载完成(0)")
-        self.completed_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.COMPLETED_ICON))
+        self.completed_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.COMPLETED_ICON))
 
         self.open_download_dir_btn = wx.Button(left_panel, -1, "打开下载目录", size = self.FromDIP((120, 28)))
 
