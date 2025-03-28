@@ -96,25 +96,25 @@ class DownloadTab(Panel):
 
         self.scrolled_panel = ScrolledPanel(self)
 
-        self.download_box = wx.StaticBox(self.scrolled_panel, -1, "下载设置")
+        download_box = wx.StaticBox(self.scrolled_panel, -1, "下载设置")
 
-        path_lab = wx.StaticText(self.scrolled_panel, -1, "下载目录")
-        self.path_box = TextCtrl(self.scrolled_panel, -1)
-        self.browse_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = self.get_scaled_size((60, 24)))
+        path_lab = wx.StaticText(download_box, -1, "下载目录")
+        self.path_box = TextCtrl(download_box, -1)
+        self.browse_btn = wx.Button(download_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
         
-        self.max_thread_lab = wx.StaticText(self.scrolled_panel, -1, "多线程数：1")
-        self.max_thread_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 10)
+        self.max_thread_lab = wx.StaticText(download_box, -1, "多线程数：1")
+        self.max_thread_slider = wx.Slider(download_box, -1, 1, 1, 10)
 
-        self.max_download_lab = wx.StaticText(self.scrolled_panel, -1, "并行下载数：1")
-        self.max_download_slider = wx.Slider(self.scrolled_panel, -1, 1, 1, 10)
+        self.max_download_lab = wx.StaticText(download_box, -1, "并行下载数：1")
+        self.max_download_slider = wx.Slider(download_box, -1, 1, 1, 10)
 
-        video_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载清晰度")
-        self.video_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_quality_map.keys()))
-        self.video_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
+        video_lab = wx.StaticText(download_box, -1, "默认下载清晰度")
+        self.video_quality_choice = wx.Choice(download_box, -1, choices = list(video_quality_map.keys()))
+        self.video_quality_tip = wx.StaticBitmap(download_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.video_quality_tip.SetToolTip("说明")
 
@@ -123,9 +123,9 @@ class DownloadTab(Panel):
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        audio_lab = wx.StaticText(self.scrolled_panel, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(self.scrolled_panel, -1, choices = list(audio_quality_map.keys()))
-        self.audio_quality_tip = wx.StaticBitmap(self.scrolled_panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
+        audio_lab = wx.StaticText(download_box, -1, "默认下载音质")
+        self.audio_quality_choice = wx.Choice(download_box, -1, choices = list(audio_quality_map.keys()))
+        self.audio_quality_tip = wx.StaticBitmap(download_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.audio_quality_tip.SetToolTip("说明")
 
@@ -134,9 +134,9 @@ class DownloadTab(Panel):
         sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        codec_lab = wx.StaticText(self.scrolled_panel, -1, "视频编码格式")
-        self.codec_choice = wx.Choice(self.scrolled_panel, -1, choices = list(video_codec_preference_map.keys()))
-        self.codec_tip = wx.StaticBitmap(self.scrolled_panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
+        codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
+        self.codec_choice = wx.Choice(download_box, -1, choices = list(video_codec_preference_map.keys()))
+        self.codec_tip = wx.StaticBitmap(download_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
         self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.codec_tip.SetToolTip("说明")
 
@@ -145,10 +145,10 @@ class DownloadTab(Panel):
         codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.speed_limit_chk = wx.CheckBox(self.scrolled_panel, -1, "对单个下载任务进行限速")
-        self.speed_limit_lab = wx.StaticText(self.scrolled_panel, -1, "最高")
-        self.speed_limit_box = TextCtrl(self.scrolled_panel, -1, size = self.FromDIP((50, 25)))
-        self.speed_limit_unit_lab = wx.StaticText(self.scrolled_panel, -1, "MB/s")
+        self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
+        self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
+        self.speed_limit_box = TextCtrl(download_box, -1, size = self.FromDIP((50, 25)))
+        self.speed_limit_unit_lab = wx.StaticText(download_box, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
         speed_limit_hbox.AddSpacer(30)
@@ -156,17 +156,17 @@ class DownloadTab(Panel):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        self.add_number_chk = wx.CheckBox(self.scrolled_panel, -1, "批量下载视频时自动添加序号")
-        self.delete_history_chk = wx.CheckBox(self.scrolled_panel, -1, "下载完成后清除本地下载记录")
+        self.add_number_chk = wx.CheckBox(download_box, -1, "批量下载视频时自动添加序号")
+        self.delete_history_chk = wx.CheckBox(download_box, -1, "下载完成后清除本地下载记录")
 
-        self.show_toast_chk = wx.CheckBox(self.scrolled_panel, -1, "允许弹出通知提示")
-        self.test_btn = wx.Button(self.scrolled_panel, -1, "测试", size = self.get_scaled_size((60, 24)))
+        self.show_toast_chk = wx.CheckBox(download_box, -1, "允许弹出通知提示")
+        self.test_btn = wx.Button(download_box, -1, "测试", size = self.get_scaled_size((60, 24)))
 
         toast_hbox = wx.BoxSizer(wx.HORIZONTAL)
         toast_hbox.Add(self.show_toast_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         toast_hbox.Add(self.test_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
 
-        download_sbox = wx.StaticBoxSizer(self.download_box, wx.VERTICAL)
+        download_sbox = wx.StaticBoxSizer(download_box, wx.VERTICAL)
         download_sbox.Add(path_lab, 0, wx.ALL, 10)
         download_sbox.Add(path_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.max_thread_lab, 0, wx.ALL & (~wx.TOP), 10)
@@ -959,12 +959,12 @@ class MiscTab(Panel):
         
         episodes_box = wx.StaticBox(self.scrolled_panel, -1, "剧集列表显示设置")
 
-        self.episodes_single_choice = wx.RadioButton(self.scrolled_panel, -1, "显示单个视频")
-        self.episodes_in_section_choice = wx.RadioButton(self.scrolled_panel, -1, "显示视频所在的合集")
-        self.episodes_all_sections_choice = wx.RadioButton(self.scrolled_panel, -1, "显示全部相关视频 (包括 PV、OP、ED 等)")
+        self.episodes_single_choice = wx.RadioButton(episodes_box, -1, "显示单个视频")
+        self.episodes_in_section_choice = wx.RadioButton(episodes_box, -1, "显示视频所在的合集")
+        self.episodes_all_sections_choice = wx.RadioButton(episodes_box, -1, "显示全部相关视频 (包括 PV、OP、ED 等)")
 
-        self.show_episode_full_name = wx.CheckBox(self.scrolled_panel, -1, "显示完整剧集名称")
-        self.auto_select_chk = wx.CheckBox(self.scrolled_panel, -1, "自动勾选全部视频")
+        self.show_episode_full_name = wx.CheckBox(episodes_box, -1, "显示完整剧集名称")
+        self.auto_select_chk = wx.CheckBox(episodes_box, -1, "自动勾选全部视频")
 
         episodes_sbox = wx.StaticBoxSizer(episodes_box, wx.VERTICAL)
         episodes_sbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
@@ -975,16 +975,16 @@ class MiscTab(Panel):
 
         player_box = wx.StaticBox(self.scrolled_panel, -1, "播放器设置")
 
-        path_lab = wx.StaticText(self.scrolled_panel, -1, "播放器路径")
-        self.player_default_rdbtn = wx.RadioButton(self.scrolled_panel, -1, "系统默认")
-        self.player_custom_rdbtn = wx.RadioButton(self.scrolled_panel, -1, "手动设置")
+        path_lab = wx.StaticText(player_box, -1, "播放器路径")
+        self.player_default_rdbtn = wx.RadioButton(player_box, -1, "系统默认")
+        self.player_custom_rdbtn = wx.RadioButton(player_box, -1, "手动设置")
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
         player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
 
-        self.player_path_box = TextCtrl(self.scrolled_panel, -1)
-        self.browse_player_btn = wx.Button(self.scrolled_panel, -1, "浏览", size = self.get_scaled_size((60, 24)))
+        self.player_path_box = TextCtrl(player_box, -1)
+        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
@@ -997,12 +997,12 @@ class MiscTab(Panel):
 
         misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
 
-        self.show_user_info_chk = wx.CheckBox(self.scrolled_panel, -1, "在主界面显示用户头像和昵称")
-        self.check_update_chk = wx.CheckBox(self.scrolled_panel, -1, "自动检查更新")
-        self.debug_chk = wx.CheckBox(self.scrolled_panel, -1, "启用调试模式")
+        self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
+        self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
+        self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
 
-        self.clear_userdata_btn = wx.Button(self.scrolled_panel, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
-        self.reset_default_btn = wx.Button(self.scrolled_panel, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
+        self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
+        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
         
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)

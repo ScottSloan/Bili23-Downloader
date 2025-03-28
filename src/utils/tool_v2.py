@@ -369,6 +369,13 @@ class FormatTool:
         else:
             return str(data)
 
+    def format_bandwidth(bandwidth: int):
+        if bandwidth > 1024 * 1024:
+            return "{:.1f} mbps".format(bandwidth / 1024 / 1024)
+        
+        else:
+            return "{:.1f} kbps".format(bandwidth / 1024)
+
 class UniversalTool:
     # 通用工具类
     def get_user_face():

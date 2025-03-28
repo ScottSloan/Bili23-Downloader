@@ -1,4 +1,4 @@
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, VideoQualityID, AudioQualityID
 from utils.tool_v2 import RequestTool
 
 from utils.parse.video import VideoInfo
@@ -9,10 +9,13 @@ from utils.module.cdn import CDN
 
 class Preview:
     def __init__(self, parse_type: ParseType):
-        self.parse_type = parse_type
+        self.download_json = self.get_download_json(parse_type)
 
-    def get_download_json(self):
-        match self.parse_type:
+        self.video_size_cache = {}
+        self.audio_size_cache = {}
+
+    def get_download_json(self, parse_type: ParseType):
+        match parse_type:
             case ParseType.Video:
                 return VideoInfo.download_json
 
@@ -22,20 +25,131 @@ class Preview:
             case ParseType.Cheese:
                 return CheeseInfo.download_json
 
-    def get_video_stream_size(self, video_quality_id: int, video_codec_id: int):
+    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int):
         def get_url_list():
-            download_json = self.get_download_json()
-
-            for entry in download_json["dash"]["video"]:
+            for entry in self.download_json["dash"]["video"]:
                 if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
-                    return self.get_stream_download_url_list(entry)
+                    frame_rate = entry["frame_rate"]
+                    bandwidth = entry["bandwidth"]
 
+                    return self.get_stream_download_url_list(entry), frame_rate, bandwidth
+        
+        video_quality_id = self.get_video_quality_id(video_quality_id, self.download_json["dash"]["video"])
+        video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.download_json["dash"]["video"])
+
+        key = f"{video_quality_id} - {video_codec_id}"
+
+        if key not in self.video_size_cache:
+            (url_list, frame_rate, bandwidth) = get_url_list()
+
+            self.video_size_cache[key] = {
+                "video_quality_id": video_quality_id,
+                "video_codec_id": video_codec_id,
+                "frame_rate": frame_rate,
+                "bandwidth": bandwidth,
+                "size": self.get_file_size(url_list)
+            }
+
+        return self.video_size_cache.get(key)
+
+    def get_audio_stream_size(self, audio_quality_id: int):
+        def get_url_list():
+            for entry in self.download_json["dash"]["audio"]:
+                if entry["id"] == audio_quality_id:
+                    bandwidth = entry["bandwidth"]
+
+                    return self.get_stream_download_url_list(entry), bandwidth
+
+        audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
+        
+        if audio_quality_id not in self.audio_size_cache:
+            (url_list, bandwidth) = get_url_list()
+
+            self.audio_size_cache[audio_quality_id] = {
+                "audio_quality_id": audio_quality_id,
+                "bandwidth": bandwidth,
+                "size": self.get_file_size(url_list)
+            }     
+
+        return self.audio_size_cache.get(audio_quality_id)
+    
+    def get_video_stream_codec(self, video_quality_id: int, video_codec_id: int):
+        for entry in self.download_json["dash"]["video"]:
+            if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
+                return video_codec_id
+    
+    def get_video_quality_id(self, video_quality_id: int, data: list):
+        def get_highest_video_quality_id(data: list):
+            highest_video_quality_id = VideoQualityID._360P.value
+
+            for entry in data:
+                if entry["id"] > highest_video_quality_id:
+                    highest_video_quality_id = entry["id"]
+
+            return highest_video_quality_id
+
+        highest_video_quality_id = get_highest_video_quality_id(data)
+
+        if video_quality_id == VideoQualityID._Auto.value:
+            video_quality_id = highest_video_quality_id
+
+        elif highest_video_quality_id < video_quality_id:
+            video_quality_id = highest_video_quality_id
+
+        return video_quality_id
+
+    def get_audio_quality_id(self, audio_quality_id: int, data: list):
+        def get_highest_audio_quality_id(data: dict):
+            highest_audio_quality = AudioQualityID._64K.value
+
+            for entry in data["audio"]:
+                if entry["id"] > highest_audio_quality:
+                    highest_audio_quality = entry["id"]
+
+            if "dolby" in data and data["dolby"]:
+                if data["dolby"]["audio"]:
+                    highest_audio_quality = AudioQualityID._Dolby_Atoms.value
+
+            if "flac" in data and data["flac"]:
+                if data["flac"]["audio"]:
+                    highest_audio_quality = AudioQualityID._Hi_Res.value
+
+            return highest_audio_quality
+        
+        highest_audio_quality = get_highest_audio_quality_id(data)
+
+        if audio_quality_id == AudioQualityID._Auto.value:
+            audio_quality_id = highest_audio_quality
+
+        elif highest_audio_quality < audio_quality_id:
+            audio_quality_id = highest_audio_quality
+
+        return audio_quality_id
+
+    def get_video_codec_id(self, video_quality_id: int, video_codec_id: int, data: list):
+        def check_codec_id():
+            codec_id_list = []
+
+            for entry in data:
+                if entry["id"] == video_quality_id:
+                    codec_id_list.append(entry["codecid"])
+
+            return codec_id_list
+
+        codec_id_list = check_codec_id()
+
+        if video_codec_id not in codec_id_list:
+            video_codec_id = codec_id_list[0]
+        
+        return video_codec_id
+
+    def get_file_size(self, url_list: list):
         def request_head(url: str, cdn: str):
             return RequestTool.request_head(CDN.replace_cdn(url, cdn), headers = RequestTool.get_headers("https://www.bilibili.com"))
 
         cdn_list = CDN.get_cdn_list()
 
-        for url in get_url_list():
+        for url in url_list:
             for cdn in cdn_list:
                 req = request_head(url, cdn)
 
