@@ -141,13 +141,18 @@ class CustomFileNameDialog(Dialog):
                 },
                 {
                     "name": "{tname}",
-                    "description": "所属分区（仅投稿视频有效）",
+                    "description": "分区（仅投稿视频有效）",
                     "example": "综合"
                 },
                 {
                     "name": "{tname_v2}",
-                    "description": "所属分区 v2（仅投稿视频有效）",
+                    "description": "分区 v2（仅投稿视频有效）",
                     "example": "动漫剪辑"
+                },
+                {
+                    "name": "{area}",
+                    "description": "地区（仅剧集类视频有效）",
+                    "example": "中国大陆"
                 },
                 {
                     "name": "{title}",
@@ -232,6 +237,11 @@ class CustomFileNameDialog(Dialog):
         task_info.video_codec_id = 12
         task_info.duration = 256
         task_info.pubtime = 1667061000
+        task_info.area = "中国大陆"
+        task_info.tname_info = {
+            "tname": "综合",
+            "tname_v2": "动漫剪辑"
+        }
         task_info.up_info = {
             "up_name": "哔哩哔哩番剧",
             "up_mid": 928123

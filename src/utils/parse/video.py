@@ -55,6 +55,8 @@ class VideoInfo:
         VideoInfo.type = 0
         VideoInfo.stream_type = 0
         VideoInfo.pubtime = 0
+        VideoInfo.tname = ""
+        VideoInfo.tname_v2 = ""
         VideoInfo.up_name = ""
         VideoInfo.up_mid = 0
 

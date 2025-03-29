@@ -41,6 +41,7 @@ class BangumiInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
+    area: str = ""
     up_name: str = ""
     up_mid: int = 0
 
@@ -67,6 +68,7 @@ class BangumiInfo:
         BangumiInfo.mid = 0
         BangumiInfo.type_id = 0
         BangumiInfo.stream_type = 0
+        BangumiInfo.area = ""
         BangumiInfo.up_name = ""
         BangumiInfo.up_mid = 0
 
@@ -145,6 +147,10 @@ class BangumiParser:
         BangumiInfo.new_ep = info_result["new_ep"]["desc"]
         BangumiInfo.actors = info_result["actors"].replace("\n", " ")
         BangumiInfo.evaluate = info_result["evaluate"]
+
+        BangumiInfo.area = info_result["areas"][0]["name"]
+        BangumiInfo.up_name = info_result["up_info"]["uname"]
+        BangumiInfo.up_mid = info_result["up_info"]["mid"]
 
         self.parse_episodes()
 

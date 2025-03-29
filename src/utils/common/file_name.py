@@ -46,6 +46,9 @@ class FileNameManager:
             "pubtimestamp": self.task_info.pubtime,
             "number": self.task_info.number,
             "number_with_zero": self.task_info.number_with_zero,
+            "tname": self.task_info.tname_info.get("tname"),
+            "tname_v2": self.task_info.tname_info.get("tname_v2"),
+            "area": self.task_info.area,
             "title": UniversalTool.get_legal_name(self.task_info.title),
             "aid": self.task_info.aid,
             "bvid": self.task_info.bvid,
@@ -72,7 +75,7 @@ class FileNameManager:
             end = after_target_field_index
         
         else:
-            start = before_target_field_index
+            start = before_target_field_index + 1
             end = len(string)
 
         return string[start:end]

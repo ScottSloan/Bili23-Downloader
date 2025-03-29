@@ -244,6 +244,21 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                     return Config.Download.video_codec_id
 
+        def get_tname_info():
+            if download_type == ParseType.Video.value:
+                return {
+                    "tname": VideoInfo.tname,
+                    "tname_v2": VideoInfo.tname_v2
+                }
+            else:
+                return {}
+
+        def get_area():
+            if download_type == ParseType.Bangumi.value:
+                return BangumiInfo.area
+            else:
+                return ""
+
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
@@ -268,6 +283,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.extra_option = extra_option
 
         download_info.pubtime = pubtime
+        download_info.area = get_area()
+        download_info.tname_info = get_tname_info()
         download_info.up_info = up_info
 
         return download_info
@@ -336,12 +353,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         cid = entry["cid"]
         ep_id = entry["id"]
         duration = entry["duration"]
+        pubtime = entry["release_date"]
 
         referer_url = CheeseInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id, up_info = self.get_up_info(ParseType.Cheese.value)))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id, pubtime = pubtime, up_info = self.get_up_info(ParseType.Cheese.value)))
 
-        self.get_extra_download_info(referer_url, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id, up_info = self.get_up_info(ParseType.Cheese.value))
+        self.get_extra_download_info(referer_url, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id, pubtime = pubtime, up_info = self.get_up_info(ParseType.Cheese.value))
 
     def get_extra_download_info(self, referer_url: str, title: str, duration: int, cover_url: str, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None, pubtime: Optional[int] = None, up_info: Optional[dict] = None):
         if Config.Extra.download_danmaku_file or Config.Extra.download_subtitle_file or Config.Extra.download_cover_file:

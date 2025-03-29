@@ -71,8 +71,12 @@ class DownloadTaskInfo:
 
         # 视频发布时间戳
         self.pubtime: int = 0
+        # 地区
+        self.area: str = ""
+        # 分区信息
+        self.tname_info: dict = {}
         # UP 主信息
-        self.up_info: dict = None
+        self.up_info: dict = {}
 
     def to_dict(self):
         return {
@@ -108,6 +112,8 @@ class DownloadTaskInfo:
             "flv_video_count": self.flv_video_count,
             "extra_option": self.extra_option,
             "pubtime": self.pubtime,
+            "area": self.area,
+            "tname_info": self.tname_info,
             "up_info": self.up_info,
         }
 
@@ -144,6 +150,8 @@ class DownloadTaskInfo:
         self.flv_video_count = data.get("flv_video_count")
         self.extra_option = data.get("extra_option")
         self.pubtime = data.get("pubtime")
+        self.area = data.get("area")
+        self.tname_info = data.get("tname_info")
         self.up_info = data.get("up_info")
 
 class DownloaderInfo:

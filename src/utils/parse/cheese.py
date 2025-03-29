@@ -96,6 +96,9 @@ class CheeseParser:
         CheeseInfo.episodes_list = info_data["episodes"]
         CheeseInfo.epid = CheeseInfo.episodes_list[0]["id"]
 
+        CheeseInfo.up_name = info_data["up_info"]["uname"]
+        CheeseInfo.up_mid = info_data["up_info"]["mid"]
+
         self.parse_episodes()
 
     def get_cheese_available_media_info(self):
