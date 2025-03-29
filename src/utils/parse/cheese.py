@@ -5,7 +5,7 @@ from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
-from utils.parse.episode import EpisodeInfo, cheese_episode_parser
+from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.audio import AudioInfo
 from utils.config import Config
 
@@ -28,18 +28,33 @@ class CheeseInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
+    up_name: str = ""
+    up_mid: int = 0
+
     info_json: dict = {}
+    download_json: dict = {}
 
     @staticmethod
     def clear_cheese_info():
-        CheeseInfo.url = CheeseInfo.title = CheeseInfo.subtitle = CheeseInfo.views = CheeseInfo.release = CheeseInfo.expiry = ""
-        CheeseInfo.aid = CheeseInfo.epid = CheeseInfo.cid = CheeseInfo.season_id = 0
+        CheeseInfo.url = ""
+        CheeseInfo.title = ""
+        CheeseInfo.subtitle = ""
+        CheeseInfo.views = 0
+        CheeseInfo.release = ""
+        CheeseInfo.expiry = ""
+        CheeseInfo.aid = 0
+        CheeseInfo.epid = 0
+        CheeseInfo.cid = 0
+        CheeseInfo.season_id = 0
+        CheeseInfo.up_name = ""
+        CheeseInfo.up_mid = 0
 
         CheeseInfo.episodes_list.clear()
         CheeseInfo.video_quality_id_list.clear()
         CheeseInfo.video_quality_desc_list.clear()
 
         CheeseInfo.info_json.clear()
+        CheeseInfo.download_json.clear()
 
 class CheeseParser:
     def __init__(self, callback: ParseCallback):
@@ -81,6 +96,9 @@ class CheeseParser:
         CheeseInfo.episodes_list = info_data["episodes"]
         CheeseInfo.epid = CheeseInfo.episodes_list[0]["id"]
 
+        CheeseInfo.up_name = info_data["up_info"]["uname"]
+        CheeseInfo.up_mid = info_data["up_info"]["mid"]
+
         self.parse_episodes()
 
     def get_cheese_available_media_info(self):
@@ -91,7 +109,7 @@ class CheeseParser:
 
         self.check_json(resp)
 
-        info = resp["data"]
+        CheeseInfo.download_json = info = resp["data"]
 
         CheeseInfo.video_quality_id_list = info["accept_quality"]
         CheeseInfo.video_quality_desc_list = info["accept_description"]
@@ -127,7 +145,7 @@ class CheeseParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e
     
     def check_json(self, data: dict):
         # 检查接口返回状态码
@@ -144,7 +162,7 @@ class CheeseParser:
         else:
             ep_id = int(self.url_type_value)
 
-        cheese_episode_parser(CheeseInfo.info_json, ep_id)
+        EpisodeManager.cheese_episode_parser(CheeseInfo.info_json, ep_id)
 
     def clear_cheese_info(self):
         CheeseInfo.clear_cheese_info()

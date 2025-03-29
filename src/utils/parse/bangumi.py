@@ -10,7 +10,7 @@ from utils.common.enums import StatusCode, StreamType
 from utils.common.data_type import ParseCallback
 
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo, bangumi_episodes_parser
+from utils.parse.episode import EpisodeInfo, EpisodeManager
 
 class BangumiInfo:
     url: str = ""
@@ -26,7 +26,6 @@ class BangumiInfo:
     danmakus: str = ""
     followers: str = ""
     styles: str = ""
-    year: str = ""
     new_ep: str = ""
     actors: str = ""
     evaluate: str = ""
@@ -42,12 +41,36 @@ class BangumiInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
+    area: str = ""
+    up_name: str = ""
+    up_mid: int = 0
+
     info_json: dict = {}
+    download_json: dict = {}
 
     @staticmethod
     def clear_bangumi_info():
-        BangumiInfo.url = BangumiInfo.bvid = BangumiInfo.title = BangumiInfo.cover = BangumiInfo.type_name = BangumiInfo.views = BangumiInfo.danmakus = BangumiInfo.followers = BangumiInfo.styles = BangumiInfo.year = BangumiInfo.new_ep = BangumiInfo.actors = BangumiInfo.evaluate = ""
-        BangumiInfo.epid = BangumiInfo.cid = BangumiInfo.season_id = BangumiInfo.mid = BangumiInfo.type_id = BangumiInfo.stream_type = 0
+        BangumiInfo.url = ""
+        BangumiInfo.bvid = ""
+        BangumiInfo.title = ""
+        BangumiInfo.cover = ""
+        BangumiInfo.type_name = ""
+        BangumiInfo.views = 0
+        BangumiInfo.danmakus = 0
+        BangumiInfo.followers = 0
+        BangumiInfo.styles = 0
+        BangumiInfo.new_ep = ""
+        BangumiInfo.actors = ""
+        BangumiInfo.evaluate = ""
+        BangumiInfo.epid = 0
+        BangumiInfo.cid = 0
+        BangumiInfo.season_id = 0
+        BangumiInfo.mid = 0
+        BangumiInfo.type_id = 0
+        BangumiInfo.stream_type = 0
+        BangumiInfo.area = ""
+        BangumiInfo.up_name = ""
+        BangumiInfo.up_mid = 0
 
         BangumiInfo.payment = False
 
@@ -56,6 +79,7 @@ class BangumiInfo:
         BangumiInfo.video_quality_desc_list.clear()
 
         BangumiInfo.info_json.clear()
+        BangumiInfo.download_json.clear()
 
 class BangumiParser:
     def __init__(self, callback: ParseCallback):
@@ -120,10 +144,13 @@ class BangumiParser:
         BangumiInfo.danmakus = FormatTool.format_data_count(info_result["stat"]["danmakus"])
         BangumiInfo.followers = info_result["stat"]["follow_text"]
         BangumiInfo.styles = " / ".join(info_result["styles"])
-        BangumiInfo.year = ""
         BangumiInfo.new_ep = info_result["new_ep"]["desc"]
         BangumiInfo.actors = info_result["actors"].replace("\n", " ")
         BangumiInfo.evaluate = info_result["evaluate"]
+
+        BangumiInfo.area = info_result["areas"][0]["name"]
+        BangumiInfo.up_name = info_result["up_info"]["uname"]
+        BangumiInfo.up_mid = info_result["up_info"]["mid"]
 
         self.parse_episodes()
 
@@ -136,8 +163,8 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
-            
-        info = resp["result"]
+
+        BangumiInfo.download_json = info = resp["result"]
 
         if "dash" in info:
             AudioInfo.get_audio_quality_list(info["dash"])
@@ -197,7 +224,7 @@ class BangumiParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e
     
     def check_json(self, data: dict):
         # 检查接口返回状态码
@@ -219,7 +246,7 @@ class BangumiParser:
         else:
             ep_id = int(self.url_type_value)
 
-        bangumi_episodes_parser(BangumiInfo.info_json, ep_id)
+        EpisodeManager.bangumi_episodes_parser(BangumiInfo.info_json, ep_id)
 
     def clear_bangumi_info(self):
         # 清除番组信息

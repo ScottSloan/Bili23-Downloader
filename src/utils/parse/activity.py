@@ -80,10 +80,10 @@ class ActivityParser:
 
                     self.get_real_url(initial_state)
 
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = ActivityInfo.url)
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = ActivityInfo.url)
         
         try:
             return worker()
 
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e

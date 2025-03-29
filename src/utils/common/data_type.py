@@ -69,6 +69,15 @@ class DownloadTaskInfo:
         # 附加内容选项
         self.extra_option: dict = None
 
+        # 视频发布时间戳
+        self.pubtime: int = 0
+        # 地区
+        self.area: str = ""
+        # 分区信息
+        self.tname_info: dict = {}
+        # UP 主信息
+        self.up_info: dict = {}
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -101,7 +110,11 @@ class DownloadTaskInfo:
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
             "flv_video_count": self.flv_video_count,
-            "extra_option": self.extra_option
+            "extra_option": self.extra_option,
+            "pubtime": self.pubtime,
+            "area": self.area,
+            "tname_info": self.tname_info,
+            "up_info": self.up_info,
         }
 
     def load_from_dict(self, data: Dict):
@@ -136,6 +149,10 @@ class DownloadTaskInfo:
         self.ffmpeg_merge = data.get("ffmpeg_merge")
         self.flv_video_count = data.get("flv_video_count")
         self.extra_option = data.get("extra_option")
+        self.pubtime = data.get("pubtime")
+        self.area = data.get("area")
+        self.tname_info = data.get("tname_info")
+        self.up_info = data.get("up_info")
 
 class DownloaderInfo:
     def __init__(self):
@@ -197,8 +214,8 @@ class TreeListItemInfo:
 
 class ParseCallback:
     def __init__(self):
-        self.error_callback: Callable = None
-        self.redirect_callback: Callable = None
+        self.onError: Callable = None
+        self.onRedirect: Callable = None
 
 class Command:
     def __init__(self):
@@ -218,7 +235,6 @@ class MergeCallback:
         self.onSuccess: Callable = None
         self.onError: Callable = None
         self.onSaveSuffix: Callable = None
-        self.onGetFullFileName: Callable = None
 
 class CutInfo:
     def __init__(self):

@@ -6,6 +6,7 @@ import base64
 
 from utils.auth.captcha import CaptchaPage
 from utils.auth.login import CaptchaUtils, LoginInfo
+from utils.common.enums import Platform
 from utils.config import Config
 
 from gui.component.dialog import Dialog
@@ -76,12 +77,12 @@ class CaptchaWindow(Dialog):
 
     def get_webview_backend(self):
         # 根据不同平台，使用不同的 webview
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 # Windows 下使用 Edge Webview2 (需要系统安装)
                 backend = wx.html2.WebViewBackendEdge
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 # Linux 和 macOS 使用 Webkit
                 backend = wx.html2.WebViewBackendWebKit
 
@@ -89,11 +90,11 @@ class CaptchaWindow(Dialog):
     
     def check_webview_backend(self, backend):
         if not wx.html2.WebView.IsBackendAvailable(backend):
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     msg = "Windows 平台：请安装 Microsoft Edge WebView2 Runtime"
 
-                case "linux":
+                case Platform.Linux:
                     msg = "Linux 平台：请安装 WebKitGTK+，例如 Ubuntu 执行 sudo apt install libwebkit2gtk-4.0-dev 进行安装"
 
             # macOS 系统使用的是 Apple WKWebView，系统自带。

@@ -1,5 +1,6 @@
 import wx
 
+from utils.common.enums import Platform
 from utils.config import Config
 
 class Panel(wx.Panel):
@@ -7,11 +8,11 @@ class Panel(wx.Panel):
         wx.Panel.__init__(self, parent, -1)
 
     def get_scaled_size(self, size: tuple):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 return self.FromDIP(size)
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 return wx.DefaultSize
     
     def set_dark_mode(self):

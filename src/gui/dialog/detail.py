@@ -3,7 +3,7 @@ import io
 import wx.html
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool
+from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.enums import ParseType
 from utils.common.thread import Thread
 
@@ -15,12 +15,14 @@ from gui.component.dialog import Dialog
 from gui.component.panel import Panel
 
 class DetailDialog(Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, parse_type: ParseType):
+        self.parse_type = parse_type
+
         Dialog.__init__(self, parent, "详细信息")
 
         self.init_UI()
 
-        self.CenterOnParent()
+        self.set_page()
         
     def init_UI(self):
         self.set_dark_mode()
@@ -32,8 +34,8 @@ class DetailDialog(Dialog):
 
         self.SetSizer(vbox)
     
-    def set_page(self, parse_type: ParseType):
-        match parse_type:
+    def set_page(self):
+        match self.parse_type:
             case ParseType.Video:
                 page = VideoPage(self.note)
             
@@ -123,7 +125,7 @@ class VideoPage(DetailPage):
         font: wx.Font = self.GetFont()
 
         title_div = f"""<font size="5" face="{font.GetFaceName()}" style="color: {self.get_text_color()};">{VideoInfo.title}</font>"""
-        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: {self.get_views_color()};">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {VideoInfo.pubtime}</span></div>"""
+        views_div = f"""<div id="views"><span style="font-family: {font.GetFaceName()}; color: {self.get_views_color()};">{VideoInfo.views}播放&nbsp&nbsp {VideoInfo.danmakus}弹幕&nbsp&nbsp {UniversalTool.get_time_str_from_timestamp(VideoInfo.pubtime)}</span></div>"""
         desc_div = f"""<div id="desc"><span style="font-family: {font.GetFaceName()}; color: {self.get_text_color()};">{VideoInfo.desc}</span></div>"""
 
         body = "<br>".join([title_div, views_div, desc_div])
@@ -131,9 +133,9 @@ class VideoPage(DetailPage):
         self.set_page(body)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(15)
-        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
+        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(vbox)
     
@@ -197,18 +199,18 @@ class BangumiPage(DetailPage):
         self.set_page(body)
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
-        right_vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
+        right_vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(15)
-        hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
+        hbox.AddSpacer(self.FromDIP(10))
+        hbox.Add(self.cover_bmp, 0, wx.ALL, self.FromDIP(6))
         hbox.Add(right_vbox, 1, wx.EXPAND)
-        hbox.AddSpacer(15)
+        hbox.AddSpacer(self.FromDIP(10))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
         vbox.Add(hbox, 1, wx.EXPAND)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(vbox)
     
@@ -245,8 +247,8 @@ class CheesePage(DetailPage):
         self.set_page(body)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(15)
-        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
+        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(vbox)

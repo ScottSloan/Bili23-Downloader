@@ -30,15 +30,15 @@ class CustomFileNameDialog(Dialog):
         self.template_box = TextCtrl(self, -1, size = self.FromDIP((550, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        template_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        template_hbox.Add(self.template_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        template_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        template_hbox.Add(self.template_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.error_lab = wx.StaticText(self, -1)
         self.error_lab.SetForegroundColour(wx.Colour(250, 42, 45))
 
         error_hbox = wx.BoxSizer(wx.HORIZONTAL)
         error_hbox.AddSpacer(template_lab.GetSize()[0] + self.FromDIP(20))
-        error_hbox.Add(self.error_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
+        error_hbox.Add(self.error_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
 
         self.preview_lab = wx.StaticText(self, -1, "预览：")
 
@@ -46,8 +46,8 @@ class CustomFileNameDialog(Dialog):
         self.fields_list = wx.ListCtrl(self, -1, style = wx.LC_REPORT)
         
         fields_vbox = wx.BoxSizer(wx.VERTICAL)
-        fields_vbox.Add(fields_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
-        fields_vbox.Add(self.fields_list, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, 10)
+        fields_vbox.Add(fields_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        fields_vbox.Add(self.fields_list, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
 
         date_format_lab = wx.StaticText(self, -1, "日期格式")
         self.date_format_box = TextCtrl(self, -1, self.date_format, size = self.FromDIP((150, 24)))
@@ -59,26 +59,26 @@ class CustomFileNameDialog(Dialog):
         self.auto_adjust_chk.SetValue(self.auto_adjust)
 
         datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        datetime_hbox.Add(date_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        datetime_hbox.Add(self.date_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        datetime_hbox.Add(time_format_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        datetime_hbox.Add(self.time_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        datetime_hbox.Add(date_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        datetime_hbox.Add(self.date_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        datetime_hbox.Add(time_format_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        datetime_hbox.Add(self.time_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
-        bottom_hbox.Add(self.ok_btn, 0, wx.ALL, 10)
-        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(template_hbox, 0, wx.EXPAND)
         vbox.Add(error_hbox, 0, wx.EXPAND)
-        vbox.Add(self.preview_lab, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.preview_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(fields_vbox, 0, wx.EXPAND)
         vbox.Add(datetime_hbox, 0, wx.EXPAND)
-        vbox.Add(self.auto_adjust_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+        vbox.Add(self.auto_adjust_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -93,9 +93,9 @@ class CustomFileNameDialog(Dialog):
 
     def init_utils(self):
         def init_fields_list_column():
-            self.fields_list.AppendColumn("字段名称", width = 200)
-            self.fields_list.AppendColumn("说明", width = 350)
-            self.fields_list.AppendColumn("示例", width = 300)
+            self.fields_list.AppendColumn("字段名称", width = self.FromDIP(133))
+            self.fields_list.AppendColumn("说明", width = self.FromDIP(233))
+            self.fields_list.AppendColumn("示例", width = self.FromDIP(200))
         
         def init_field_list_content():
             content = [
@@ -115,6 +115,21 @@ class CustomFileNameDialog(Dialog):
                     "example": str(int(datetime.now().timestamp()))
                 },
                 {
+                    "name": "{pubdate}",
+                    "description": "视频发布日期",
+                    "example": datetime.fromtimestamp(1667061000).strftime(self.date_format_box.GetValue())
+                },
+                {
+                    "name": "{pubtime}",
+                    "description": "视频发布时间",
+                    "example": datetime.fromtimestamp(1667061000).strftime(self.time_format_box.GetValue())
+                },
+                {
+                    "name": "{pubtimestamp}",
+                    "description": "视频发布时间戳",
+                    "example": "1667061000"
+                },
+                {
                     "name": "{number}",
                     "description": "从 1 开始的序号",
                     "example": "1"
@@ -123,6 +138,21 @@ class CustomFileNameDialog(Dialog):
                     "name": "{number_with_zero}",
                     "description": "从 1 开始的序号，在前方自动补零",
                     "example": "01、001"
+                },
+                {
+                    "name": "{tname}",
+                    "description": "分区（仅投稿视频有效）",
+                    "example": "综合"
+                },
+                {
+                    "name": "{tname_v2}",
+                    "description": "分区 v2（仅投稿视频有效）",
+                    "example": "动漫剪辑"
+                },
+                {
+                    "name": "{area}",
+                    "description": "地区（仅剧集类视频有效）",
+                    "example": "中国大陆"
                 },
                 {
                     "name": "{title}",
@@ -164,6 +194,16 @@ class CustomFileNameDialog(Dialog):
                     "description": "视频时长，单位为秒",
                     "example": "256"
                 },
+                {
+                    "name": "{up_name}",
+                    "description": "UP 主名称",
+                    "example": "哔哩哔哩番剧"
+                },
+                {
+                    "name": "{up_mid}",
+                    "description": "UP 主 mid",
+                    "example": "928123"
+                }
             ]
 
             for entry in content:
@@ -196,6 +236,16 @@ class CustomFileNameDialog(Dialog):
         task_info.audio_quality_id = 30251
         task_info.video_codec_id = 12
         task_info.duration = 256
+        task_info.pubtime = 1667061000
+        task_info.area = "中国大陆"
+        task_info.tname_info = {
+            "tname": "综合",
+            "tname_v2": "动漫剪辑"
+        }
+        task_info.up_info = {
+            "up_name": "哔哩哔哩番剧",
+            "up_mid": 928123
+        }
 
         file_name_mgr = FileNameManager(task_info)
         preview = file_name_mgr.get_full_file_name(self.template_box.GetValue(), self.auto_adjust_chk.GetValue())

@@ -1,10 +1,10 @@
 import wx
 import random
 import wx.dataview
-from typing import Optional
+from typing import Optional, Callable
 
 from utils.config import Config
-from utils.common.enums import ParseType, DownloadOption, VideoType
+from utils.common.enums import ParseType, DownloadOption, VideoType, Platform
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 
 from utils.parse.video import VideoInfo
@@ -14,14 +14,26 @@ from utils.parse.episode import EpisodeInfo
 from utils.parse.cheese import CheeseInfo
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
-    def __init__(self, parent):
+    def __init__(self, parent, callback: Callable):
+        def get_list_size():
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
+                    return self.FromDIP((775, 300))
+                
+                case Platform.Linux | Platform.macOS:
+                    return self.FromDIP((775, 350))
+        
+        self.callback = callback
+
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
+
+        self.SetSize(get_list_size())
 
         self.Bind_EVT()
 
         self.init_list()
 
-        self._main_window = self.GetParent().GetParent()
+        self.main_window_parent = self.GetParent().GetParent()
     
     def Bind_EVT(self):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CHECKED, self.onCheckItem)
@@ -57,9 +69,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                     self.SetItemData(item, get_item_data("node", data["title"]))
                 else:
-                    self._index += 1
+                    self.count += 1
 
-                    self.SetItemText(item, 0, str(self._index))
+                    self.SetItemText(item, 0, str(self.count))
                     self.SetItemText(item, 1, data["title"])
                     self.SetItemText(item, 2, data["badge"])
                     self.SetItemText(item, 3, data["duration"])
@@ -68,10 +80,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                     _column_width = self.WidthFor(data["title"])
 
-                    if _column_width > self._title_longest_width:
-                        self._title_longest_width = _column_width
+                    if _column_width > self.title_longest_width:
+                        self.title_longest_width = _column_width
 
-                if Config.Misc.auto_select or self._item_count == 1:
+                if Config.Misc.auto_select or self.item_count == 1:
                     self.CheckItem(item, wx.CHK_CHECKED)
 
                 self.Expand(node)
@@ -96,23 +108,25 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 
                 elif isinstance(data, dict):
                     if "cid" in data:
-                        self._item_count += 1
+                        self.item_count += 1
 
                     for value in data.values():
                         traverse(value)
             
             traverse(EpisodeInfo.data)
-            
-        self._index = 0
-        self._title_longest_width = 0
-        self._item_count = 0
+        
+        self.init_list()
+
+        self.count = 0
+        self.title_longest_width = 0
+        self.item_count = 0
 
         get_item_count()
 
         traverse_item(EpisodeInfo.data, self.GetRootItem())
 
-        if self._title_longest_width > self.FromDIP(375):
-            self.SetColumnWidth(1, self._title_longest_width + 15)
+        if self.title_longest_width > self.FromDIP(375):
+            self.SetColumnWidth(1, self.title_longest_width + 15)
 
     def is_current_item_checked(self):
         match self.GetCheckedState(self.GetSelection()):
@@ -162,10 +176,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self._main_window.updateVideoCountLabel(self.get_checked_item_count())
+        self.callback(self.get_checked_item_count())
 
     def get_checked_item_count(self):
-        _count = 0
+        count = 0
 
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
@@ -174,13 +188,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             if item.IsOk():
                 if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    _count += 1
+                    count += 1
 
-        return _count
+        return count
     
     def get_all_checked_item(self, video_quality_id: Optional[int] = None):
         def get_item_info(title: str, cid: int):
-            match self._main_window.current_parse_type:
+            match self.main_window_parent.current_parse_type:
                 case ParseType.Video:
                     self.get_video_download_info(title, EpisodeInfo.cid_dict.get(cid))
 
@@ -206,14 +220,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     if cid:
                         get_item_info(title, cid)
     
-    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None, extra_option: Optional[dict] = None):
-        def get_download_option():
-            if AudioInfo.download_audio_only:
-                return DownloadOption.OnlyAudio.value
-            else:
-                download_info.ffmpeg_merge = True
-                return DownloadOption.VideoAndAudio.value
-
+    def format_info_entry(self, referer_url: str, download_type: int, title: str, duration: int, cover_url: Optional[str] = None, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None, extra_option: Optional[dict] = None, pubtime: Optional[int] = None, up_info: Optional[dict] = None):
         def get_ffmpeg_merge():
             match ParseType(download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -231,7 +238,27 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             match ParseType(download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                     return AudioInfo.audio_quality_id
-                
+        
+        def get_video_codec_id():
+            match ParseType(download_type):
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    return Config.Download.video_codec_id
+
+        def get_tname_info():
+            if download_type == ParseType.Video.value:
+                return {
+                    "tname": VideoInfo.tname,
+                    "tname_v2": VideoInfo.tname_v2
+                }
+            else:
+                return {}
+
+        def get_area():
+            if download_type == ParseType.Bangumi.value:
+                return BangumiInfo.area
+            else:
+                return ""
+
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
@@ -247,12 +274,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         download_info.video_quality_id = get_video_quality_id()
         download_info.audio_quality_id = get_audio_quality_id()
+        download_info.video_codec_id = get_video_codec_id()
 
-        download_info.download_option = get_download_option()
+        download_info.download_option = Config.Download.stream_download_option
         download_info.download_type = download_type
         download_info.ffmpeg_merge = get_ffmpeg_merge()
 
         download_info.extra_option = extra_option
+
+        download_info.pubtime = pubtime
+        download_info.area = get_area()
+        download_info.tname_info = get_tname_info()
+        download_info.up_info = up_info
 
         return download_info
 
@@ -260,36 +293,48 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         match VideoType(VideoInfo.type):
             case VideoType.Single:
                 cover_url = VideoInfo.cover
+                duration = entry["duration"]
                 aid = VideoInfo.aid
                 cid = VideoInfo.cid
                 bvid = VideoInfo.bvid
-                duration = entry["duration"]
+                pubtime = VideoInfo.pubtime
 
             case VideoType.Part:
                 cover_url = VideoInfo.cover
+                duration = entry["duration"]
                 aid = VideoInfo.aid
                 cid = entry["cid"]
                 bvid = VideoInfo.bvid
-                duration = entry["duration"]
+                pubtime = VideoInfo.pubtime
 
             case VideoType.Collection:
-                cover_url = entry["arc"]["pic"]
-                duration = entry["arc"]["duration"]
-                aid = entry["aid"]
-                cid = entry["cid"]
-                bvid = entry["bvid"]
+                if "arc" in entry:
+                    cover_url = entry["arc"]["pic"]
+                    duration = entry["arc"]["duration"]
+                    aid = entry["aid"]
+                    cid = entry["cid"]
+                    bvid = entry["bvid"]
+                    pubtime = entry["arc"]["pubdate"]
+                else:
+                    cover_url = entry["cover_url"]
+                    duration = entry["duration"]
+                    aid = entry["aid"]
+                    cid = entry["cid"]
+                    bvid = entry["bvid"]
+                    pubtime = entry["pubtime"]
 
         referer_url = VideoInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, aid = aid, bvid = bvid, cid = cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Video.value, title, duration, cover_url = cover_url, aid = aid, bvid = bvid, cid = cid, pubtime = pubtime, up_info = self.get_up_info(ParseType.Video.value)))
 
-        self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid)
+        self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid, pubtime = pubtime, up_info = self.get_up_info(ParseType.Video.value))
 
     def get_bangumi_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
         aid = entry["aid"]
         bvid = entry["bvid"]
         cid = entry["cid"]
+        pubtime = entry["pub_time"]
 
         if "duration" in entry:
             duration = entry["duration"] / 1000
@@ -298,9 +343,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         referer_url = BangumiInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url = cover_url, aid = aid, bvid = bvid, cid = cid))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Bangumi.value, title, duration, cover_url = cover_url, aid = aid, bvid = bvid, cid = cid, pubtime = pubtime, up_info = self.get_up_info(ParseType.Bangumi.value)))
 
-        self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid)
+        self.get_extra_download_info(referer_url, title, duration, cover_url, aid = aid, bvid = bvid, cid = cid, pubtime = pubtime, up_info = self.get_up_info(ParseType.Bangumi.value))
     
     def get_cheese_download_info(self, title: str, entry: dict):
         cover_url = entry["cover"]
@@ -308,14 +353,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         cid = entry["cid"]
         ep_id = entry["id"]
         duration = entry["duration"]
+        pubtime = entry["release_date"]
 
         referer_url = CheeseInfo.url
 
-        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id))
+        self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Cheese.value, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id, pubtime = pubtime, up_info = self.get_up_info(ParseType.Cheese.value)))
 
-        self.get_extra_download_info(referer_url, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id)
+        self.get_extra_download_info(referer_url, title, duration, cover_url, cid = cid, aid = aid, ep_id = ep_id, pubtime = pubtime, up_info = self.get_up_info(ParseType.Cheese.value))
 
-    def get_extra_download_info(self, referer_url: str, title: str, duration: int, cover_url: str, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None):
+    def get_extra_download_info(self, referer_url: str, title: str, duration: int, cover_url: str, bvid: Optional[str] = None, cid: Optional[int] = None, aid: Optional[int] = None, ep_id: Optional[int] = None, pubtime: Optional[int] = None, up_info: Optional[dict] = None):
         if Config.Extra.download_danmaku_file or Config.Extra.download_subtitle_file or Config.Extra.download_cover_file:
             kwargs = {
                 "download_danmaku_file": Config.Extra.download_danmaku_file,
@@ -325,4 +371,26 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 "download_cover_file": Config.Extra.download_cover_file
             }
 
-            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Extra.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id, extra_option = kwargs))
+            self.download_task_info_list.append(self.format_info_entry(referer_url, ParseType.Extra.value, title, duration, cover_url = cover_url, bvid = bvid, cid = cid, aid = aid, ep_id = ep_id, extra_option = kwargs, pubtime = pubtime, up_info = up_info))
+    
+    def get_up_info(self, download_type: ParseType):
+        match ParseType(download_type):
+            case ParseType.Video:
+                up_name = VideoInfo.up_name
+                up_mid = VideoInfo.up_mid
+            
+            case ParseType.Bangumi:
+                up_name = BangumiInfo.up_name
+                up_mid = BangumiInfo.up_mid
+            
+            case ParseType.Cheese:
+                up_name = CheeseInfo.up_name
+                up_mid = CheeseInfo.up_mid
+            
+            case _:
+                return None
+            
+        return {
+            "up_name": up_name,
+            "up_mid": up_mid
+        }

@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from utils.config import Config
 from utils.common.map import cdn_map
+from utils.common.enums import Platform
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -35,12 +36,12 @@ class ChangeCDNDialog(Dialog):
         self.ping_btn = wx.Button(self, -1, "Ping 测试", size = self.get_scaled_size((100, 28)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        action_hbox.Add(custom_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        action_hbox.Add(self.custom_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        action_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
-        action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), 10)
+        action_hbox.Add(custom_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        action_hbox.Add(self.custom_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        action_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
+        action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
         action_hbox.AddStretchSpacer()
-        action_hbox.Add(self.ping_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), 10)
+        action_hbox.Add(self.ping_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
 
         bottom_line = wx.StaticLine(self, -1)
 
@@ -49,14 +50,14 @@ class ChangeCDNDialog(Dialog):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
-        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
-        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(cdn_lab, 0, wx.ALL & (~wx.BOTTOM), 10)
-        vbox.Add(self.cdn_list, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(cdn_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        vbox.Add(self.cdn_list, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(action_hbox, 0, wx.EXPAND)
-        vbox.Add(bottom_line, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(bottom_line, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -107,19 +108,19 @@ class ChangeCDNDialog(Dialog):
                 self.cdn_list.SetItem(index, 3, value)
             
             def get_ping_cmd() -> str:
-                match Config.Sys.platform:
-                    case "windows":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
                         return f"ping {cdn}"
                     
-                    case "linux" | "darwin":
+                    case Platform.Linux | Platform.macOS:
                         return f"ping {cdn} -c 4"
 
             def get_latency():
-                match Config.Sys.platform:
-                    case "windows":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
                         return re.findall(r"Average = ([0-9]*)", process.stdout)
                     
-                    case "linux" | "darwin":
+                    case Platform.Linux | Platform.macOS:
                         _temp = re.findall(r"time=([0-9]*)", process.stdout)
 
                         if _temp:

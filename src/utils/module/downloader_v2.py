@@ -8,6 +8,9 @@ from utils.common.enums import CDNMode, StatusCode
 from utils.common.thread import Thread, DaemonThreadPoolExecutor
 from utils.common.map import cdn_map
 from utils.common.exception import GlobalException
+
+from utils.module.cdn import CDN
+
 from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
 from utils.config import Config
 
@@ -178,29 +181,13 @@ class Downloader:
             self.executor.submit(self.download_range, info)
 
     def get_file_size(self, url_list: list):
-        def get_cdn_list():
-            if Config.Advanced.enable_custom_cdn:
-                match CDNMode(Config.Advanced.custom_cdn_mode):
-                    case CDNMode.Auto:
-                        _temp_cdn_map_list = sorted(list(cdn_map.values()), key = lambda x: x["order"], reverse = False)
-
-                        return [entry["cdn"] for entry in _temp_cdn_map_list]
-                    
-                    case CDNMode.Custom:
-                        return [Config.Advanced.custom_cdn]
-            else:
-                return [None]
-
         def request_head(url: str, cdn: str):
-            if cdn:
-                new_url = re.sub(r'(?<=https://)[^/]+', cdn, url)
-            else:
-                new_url = url
+            new_url = CDN.replace_cdn(url, cdn)
             
             return new_url, RequestTool.request_head(new_url, headers = RequestTool.get_headers(self.task_info.referer_url))
 
         for url in url_list:
-            for cdn in get_cdn_list():
+            for cdn in CDN.get_cdn_list():
                 new_url, req = request_head(url, cdn)
 
                 if "Content-Length" in req.headers:

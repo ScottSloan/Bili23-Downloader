@@ -18,7 +18,7 @@ class ProcessingWindow(Dialog):
         self.processing_label = wx.StaticText(self, -1, "正在处理中，请稍候")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(self.processing_label, 0, wx.ALL | wx.CENTER, 10)
+        hbox.Add(self.processing_label, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
 
         self.SetSizerAndFit(hbox)
         

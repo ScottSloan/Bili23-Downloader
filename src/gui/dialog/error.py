@@ -31,14 +31,14 @@ class ErrorInfoDialog(Dialog):
         message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")))
 
         box_sizer = wx.FlexGridSizer(2, 2, 0, 75)
-        box_sizer.Add(time_lab, 0, wx.ALL, 10)
-        box_sizer.Add(error_type, 0, wx.ALL, 10)
-        box_sizer.Add(error_id_lab, 0, wx.ALL & (~wx.TOP), 10)
-        box_sizer.Add(message_lab, 0, wx.ALL & (~wx.TOP), 10)
+        box_sizer.Add(time_lab, 0, wx.ALL, self.FromDIP(6))
+        box_sizer.Add(error_type, 0, wx.ALL, self.FromDIP(6))
+        box_sizer.Add(error_id_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        box_sizer.Add(message_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_hbox.Add(err_icon, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(box_sizer, 0, wx.ALL | wx.EXPAND, 10)
+        top_hbox.Add(err_icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(box_sizer, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         top_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
@@ -55,8 +55,8 @@ class ErrorInfoDialog(Dialog):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.save_btn, 0, wx.ALL, 10)
-        bottom_hbox.Add(self.close_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.save_btn, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(self.close_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)

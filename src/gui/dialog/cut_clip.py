@@ -27,42 +27,42 @@ class CutClipDialog(Dialog):
         self.input_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         input_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        input_hbox.Add(self.input_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        input_hbox.Add(self.input_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         output_lab = wx.StaticText(self, -1, "输出")
         self.output_box = TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
         self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         output_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        output_hbox.Add(output_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        output_hbox.Add(self.output_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        output_hbox.Add(output_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        output_hbox.Add(self.output_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         start_lab = wx.StaticText(self, -1, "开始时间")
         self.start_box = masked.TimeCtrl(self, -1, "00:00:00", size = self.get_scaled_size((100, 24)))
         self.start_box.SetOwnFont(self.GetFont())
 
         start_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        start_hbox.Add(start_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        start_hbox.Add(self.start_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        start_hbox.Add(start_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        start_hbox.Add(self.start_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         end_lab = wx.StaticText(self, -1, "结束时间")
         self.end_box = masked.TimeCtrl(self, -1, "00:00:10", size = self.get_scaled_size((100, 24)))
         self.end_box.SetOwnFont(self.GetFont())
 
         end_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        end_hbox.Add(end_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        end_hbox.Add(self.end_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        end_hbox.Add(end_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        end_hbox.Add(self.end_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.open_location_btn = wx.Button(self, -1, "打开所在位置", size = self.FromDIP((100, 30)))
         self.cut_btn = wx.Button(self, -1, "开始截取", size = self.FromDIP((100, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.open_location_btn, 0, wx.ALL, 10)
-        bottom_hbox.Add(self.cut_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.open_location_btn, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(self.cut_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(input_hbox, 0, wx.EXPAND)

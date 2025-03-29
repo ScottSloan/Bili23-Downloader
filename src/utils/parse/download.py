@@ -186,7 +186,7 @@ class DownloadParser:
 
     def parse_audio_stream(self, data: dict):
         def get_audio_quality_id(data: dict):
-            def get_highest_audio_quality_id(data: dict, dolby: bool = False):
+            def get_highest_audio_quality_id(data: dict):
                 highest_audio_quality = AudioQualityID._64K.value
 
                 for entry in data["audio"]:
@@ -208,8 +208,8 @@ class DownloadParser:
             if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
                 self.task_info.audio_quality_id = highest_audio_quality
 
-            elif highest_audio_quality < self.task_info.video_quality_id:
-                self.task_info.video_quality_id = highest_audio_quality
+            elif highest_audio_quality < self.task_info.audio_quality_id:
+                self.task_info.audio_quality_id = highest_audio_quality
             
         def get_audio_stream_url_list(data: dict):
             def get_hi_res():

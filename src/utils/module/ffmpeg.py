@@ -1,15 +1,15 @@
 import os
 import subprocess
 
-from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption
+from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption, Platform
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
 from utils.config import Config
 
 class FFmpeg:
-    def __init__(self):
-        pass
+    def __init__(self, parent = None):
+        self.parent = parent
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
@@ -39,7 +39,7 @@ class FFmpeg:
     def merge_video(self, callback: MergeCallback):
         def check_file_exist():
             index = 0
-            path = os.path.join(Config.Download.path, callback.onGetFullFileName())
+            path = os.path.join(Config.Download.path, self.full_file_name)
 
             while os.path.exists(path):
                 match OverrideOption(Config.Merge.override_option):
@@ -47,7 +47,7 @@ class FFmpeg:
                         index += 1
 
                         self.task_info.suffix = f"_{index}"
-                        path = os.path.join(Config.Download.path, callback.onGetFullFileName())
+                        path = os.path.join(Config.Download.path, self.full_file_name)
 
                     case OverrideOption.Override:
                         self.delete_specific_file(path)
@@ -55,8 +55,6 @@ class FFmpeg:
             callback.onSaveSuffix()
 
         check_file_exist()
-    
-        self.full_file_name = callback.onGetFullFileName()
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
@@ -142,19 +140,19 @@ class FFmpeg:
 
     def get_rename_command(self, src: str, dst: str):
         def get_sys_rename_command():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     return "rename"
 
-                case "linux" | "darwin":
+                case Platform.Linux | Platform.macOS:
                     return "mv"
 
         def get_escape_character():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.macOS:
                     return ""
                 
-                case "linux":
+                case Platform.Linux:
                     return "-- "
 
         return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
@@ -242,14 +240,18 @@ class FFmpeg:
                 os.remove(path)
             except Exception:
                 pass
+    
+    @property
+    def full_file_name(self):
+        return self.parent.full_file_name
 
     @property
     def ffmpeg_file_name(self):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 return "ffmpeg.exe"
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 return "ffmpeg"
 
     @property

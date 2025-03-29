@@ -3,9 +3,9 @@ import os
 from datetime import datetime
 from typing import List, Callable
 
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
-from utils.common.enums import DownloadStatus, ParseType
+from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
 
@@ -22,17 +22,17 @@ from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
         def get_window_size():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     if self.GetDPIScaleFactor() >= 1.5:
                         return self.FromDIP((930, 550))
                     else:
                         return self.FromDIP((960, 580))
                 
-                case "darwin":
+                case Platform.macOS:
                     return self.FromDIP((1000, 600))
                 
-                case "linux":
+                case Platform.Linux:
                     return self.FromDIP((1070, 650))
 
         Frame.__init__(self, parent, "下载管理")
@@ -49,8 +49,6 @@ class DownloadManagerWindow(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
-        icon_manager = IconManager(self)
-
         top_panel = Panel(self)
         top_panel.set_dark_mode()
 
@@ -62,7 +60,7 @@ class DownloadManagerWindow(Frame):
 
         top_panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_panel_hbox.AddSpacer(self.FromDIP(13))
-        top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_panel_vbox = wx.BoxSizer(wx.VERTICAL)
         top_panel_vbox.AddSpacer(self.FromDIP(6))
@@ -77,15 +75,15 @@ class DownloadManagerWindow(Frame):
         left_panel.set_dark_mode()
 
         self.downloading_page_btn = ActionButton(left_panel, "正在下载(0)")
-        self.downloading_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.DOWNLOADING_ICON))
+        self.downloading_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.DOWNLOADING_ICON))
         self.completed_page_btn = ActionButton(left_panel, "下载完成(0)")
-        self.completed_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.COMPLETED_ICON))
+        self.completed_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.COMPLETED_ICON))
 
         self.open_download_dir_btn = wx.Button(left_panel, -1, "打开下载目录", size = self.FromDIP((120, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.open_download_dir_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.open_download_dir_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
 
         left_panel_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -437,12 +435,12 @@ class DownloadingPage(SimplePage):
         self.cancel_all_btn = wx.Button(self, -1, "全部取消")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddStretchSpacer()
-        top_hbox.Add(self.start_all_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.cancel_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(self.start_all_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.cancel_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_separate_line = wx.StaticLine(self, -1)
 
@@ -562,7 +560,7 @@ class CompeltedPage(SimplePage):
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.AddStretchSpacer()
-        top_hbox.Add(self.clear_history_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(self.clear_history_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_separate_line = wx.StaticLine(self, -1)
 

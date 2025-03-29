@@ -41,8 +41,14 @@ class FileNameManager:
             "date": datetime.now().strftime(Config.Advanced.date_format),
             "time": datetime.now().strftime(Config.Advanced.time_format),
             "timestamp": str(int(datetime.now().timestamp())),
+            "pubdate": datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.date_format),
+            "pubtime": datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.time_format),
+            "pubtimestamp": self.task_info.pubtime,
             "number": self.task_info.number,
             "number_with_zero": self.task_info.number_with_zero,
+            "tname": self.task_info.tname_info.get("tname"),
+            "tname_v2": self.task_info.tname_info.get("tname_v2"),
+            "area": self.task_info.area,
             "title": UniversalTool.get_legal_name(self.task_info.title),
             "aid": self.task_info.aid,
             "bvid": self.task_info.bvid,
@@ -50,7 +56,9 @@ class FileNameManager:
             "video_quality": get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id),
             "audio_quality": get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id),
             "video_codec": get_mapping_key_by_value(video_codec_short_map, self.task_info.video_codec_id),
-            "duration": self.task_info.duration
+            "duration": self.task_info.duration,
+            "up_name": self.task_info.up_info.get("up_name"),
+            "up_mid": self.task_info.up_info.get("up_mid")
         }
 
     def find_field(self, string: str, field: str):
@@ -67,7 +75,7 @@ class FileNameManager:
             end = after_target_field_index
         
         else:
-            start = before_target_field_index
+            start = before_target_field_index + 1
             end = len(string)
 
         return string[start:end]

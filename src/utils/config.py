@@ -3,21 +3,23 @@ import json
 import platform
 from typing import Dict
 
+from utils.common.enums import Platform
 from utils.common.map import cdn_map
 
 class Config:
     class Sys:
         platform: str = platform.system().lower()
         dark_mode: bool = False
+        dpi_scale_factor: float = 1
 
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.60.1"
-        version_code: int = 1610
+        version: str = "1.61.0"
+        version_code: int = 1611
 
         # 断点续传文件最低支持版本号
-        _task_file_min_version_code: int = 1600
+        _task_file_min_version_code: int = 1611
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -75,6 +77,7 @@ class Config:
         enable_speed_limit: bool = False
         speed_mbps: int = 10
 
+        stream_download_option: int = 3
         auto_popup_option_dialog: bool = True
     
     class Merge:
@@ -84,13 +87,15 @@ class Config:
     class Temp:
         update_json: dict = None
 
-        change_log: str = None
+        changelog: str = None
 
         need_login: bool = False
 
     class FFmpeg:
         path: str = ""
         available: bool = False
+
+        check_available = True
 
     class Extra:
         download_danmaku_file = False
@@ -174,11 +179,11 @@ class ConfigUtils:
                 user_config["cookie_params"] = {}
         
         def _init():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
 
-                case "linux" | "darwin":
+                case Platform.Linux | Platform.macOS:
                     Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
 
             Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
@@ -225,6 +230,7 @@ class ConfigUtils:
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
+        Config.FFmpeg.check_available = app_config["merge"].get("check_ffmpeg_available", Config.FFmpeg.check_available)
         Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
 
