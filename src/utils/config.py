@@ -95,6 +95,8 @@ class Config:
         path: str = ""
         available: bool = False
 
+        check_available = True
+
     class Extra:
         download_danmaku_file = False
         danmaku_file_type = 0
@@ -228,6 +230,7 @@ class ConfigUtils:
 
         # merge
         Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
+        Config.FFmpeg.check_available = app_config["merge"].get("check_ffmpeg_available", Config.FFmpeg.check_available)
         Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
 

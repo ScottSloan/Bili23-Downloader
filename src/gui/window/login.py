@@ -41,13 +41,13 @@ class LoginWindow(Dialog):
         line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(90)
+        hbox.AddSpacer(self.FromDIP(60))
         hbox.Add(self.qr_page, 0, wx.EXPAND)
-        hbox.AddSpacer(45)
+        hbox.AddSpacer(self.FromDIP(30))
         hbox.Add(line, 0, wx.EXPAND)
-        hbox.AddSpacer(45)
+        hbox.AddSpacer(self.FromDIP(30))
         hbox.Add(self.sms_page, 0, wx.EXPAND)
-        hbox.AddSpacer(105)
+        hbox.AddSpacer(self.FromDIP(70))
 
         self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.LeftGirl))
         self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.RightGirl))
@@ -58,7 +58,7 @@ class LoginWindow(Dialog):
         bottom_hbox.Add(self.right_bmp, 0, wx.EXPAND)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(25)
+        vbox.AddSpacer(self.FromDIP(16))
         vbox.Add(hbox, 0, wx.EXPAND)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
@@ -169,9 +169,9 @@ class QRPage(LoginPage):
         self.scan_tip_lab.SetForegroundColour(font_color)
 
         qrcode_vbox = wx.BoxSizer(wx.VERTICAL)
-        qrcode_vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        qrcode_vbox.Add(scan_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         qrcode_vbox.Add(qrcode_hbox, 0, wx.EXPAND)
-        qrcode_vbox.Add(self.scan_tip_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        qrcode_vbox.Add(self.scan_tip_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.SetSizer(qrcode_vbox)
     
@@ -295,7 +295,7 @@ class SMSPage(LoginPage):
 
         swicher_hbox = wx.BoxSizer(wx.HORIZONTAL)
         swicher_hbox.AddStretchSpacer()
-        swicher_hbox.Add(self.sms_login_btn, 0, wx.ALL, 10)
+        swicher_hbox.Add(self.sms_login_btn, 0, wx.ALL, self.FromDIP(6))
         swicher_hbox.AddStretchSpacer()
 
         country_lab = wx.StaticText(self, -1, "区号")
@@ -306,31 +306,31 @@ class SMSPage(LoginPage):
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         phone_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        phone_hbox.Add(self.phone_number_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, 10)
-        phone_hbox.Add(self.get_validate_code_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        phone_hbox.Add(self.phone_number_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+        phone_hbox.Add(self.get_validate_code_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         validate_code_lab = wx.StaticText(self, -1, "验证码")
         self.validate_code_box = SearchCtrl(self, "请输入验证码")
 
         flex_sizer = wx.FlexGridSizer(3, 2, 0, 0)
 
-        flex_sizer.Add(country_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        flex_sizer.Add(self.country_id_choice, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        flex_sizer.Add(phone_number_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
+        flex_sizer.Add(country_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_sizer.Add(self.country_id_choice, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_sizer.Add(phone_number_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_sizer.Add(phone_hbox, 0, wx.EXPAND)
-        flex_sizer.Add(validate_code_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        flex_sizer.Add(self.validate_code_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, 10)
+        flex_sizer.Add(validate_code_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_sizer.Add(self.validate_code_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
 
         self.login_btn = wx.Button(self, -1, "登录", size = self.get_scaled_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()
-        login_hbox.Add(self.login_btn, 0, wx.ALL, 10)
+        login_hbox.Add(self.login_btn, 0, wx.ALL, self.FromDIP(6))
         login_hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(swicher_hbox, 0, wx.EXPAND)
-        vbox.AddSpacer(10)
+        vbox.AddSpacer(self.FromDIP(6))
         vbox.Add(flex_sizer, 0, wx.EXPAND)
         vbox.Add(login_hbox, 0, wx.EXPAND)
 

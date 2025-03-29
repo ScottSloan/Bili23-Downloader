@@ -16,7 +16,7 @@ class Update:
         except Exception:
             pass
 
-    def get_update():
+    def get_update_json():
         try:
             url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 

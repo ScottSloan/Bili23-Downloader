@@ -21,7 +21,7 @@ class ChangeLogDialog(Dialog):
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 
         dlg_vbox = wx.BoxSizer(wx.VERTICAL)
-        dlg_vbox.Add(changelog_box, 0, wx.ALL, 10)
-        dlg_vbox.Add(close_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_RIGHT, 10)
+        dlg_vbox.Add(changelog_box, 0, wx.ALL, self.FromDIP(6))
+        dlg_vbox.Add(close_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_RIGHT, self.FromDIP(6))
 
         self.SetSizerAndFit(dlg_vbox)

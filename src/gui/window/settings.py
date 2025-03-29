@@ -57,11 +57,11 @@ class SettingWindow(Dialog):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
-        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
-        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.note, 0, wx.EXPAND | wx.ALL, 10)
+        vbox.Add(self.note, 0, wx.EXPAND | wx.ALL, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -103,8 +103,8 @@ class DownloadTab(Panel):
         self.browse_btn = wx.Button(download_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
-        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         
         self.max_thread_lab = wx.StaticText(download_box, -1, "多线程数：1")
         self.max_thread_slider = wx.Slider(download_box, -1, 1, 1, 10)
@@ -119,9 +119,9 @@ class DownloadTab(Panel):
         self.video_quality_tip.SetToolTip("说明")
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         audio_lab = wx.StaticText(download_box, -1, "默认下载音质")
         self.audio_quality_choice = wx.Choice(download_box, -1, choices = list(audio_quality_map.keys()))
@@ -130,9 +130,9 @@ class DownloadTab(Panel):
         self.audio_quality_tip.SetToolTip("说明")
 
         sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(download_box, -1, choices = list(video_codec_preference_map.keys()))
@@ -141,9 +141,9 @@ class DownloadTab(Panel):
         self.codec_tip.SetToolTip("说明")
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
@@ -151,10 +151,10 @@ class DownloadTab(Panel):
         self.speed_limit_unit_lab = wx.StaticText(download_box, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        speed_limit_hbox.AddSpacer(30)
-        speed_limit_hbox.Add(self.speed_limit_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), 10)
-        speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        speed_limit_hbox.AddSpacer(self.FromDIP(20))
+        speed_limit_hbox.Add(self.speed_limit_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.add_number_chk = wx.CheckBox(download_box, -1, "批量下载视频时自动添加序号")
         self.delete_history_chk = wx.CheckBox(download_box, -1, "下载完成后清除本地下载记录")
@@ -163,26 +163,26 @@ class DownloadTab(Panel):
         self.test_btn = wx.Button(download_box, -1, "测试", size = self.get_scaled_size((60, 24)))
 
         toast_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        toast_hbox.Add(self.show_toast_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        toast_hbox.Add(self.test_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        toast_hbox.Add(self.show_toast_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        toast_hbox.Add(self.test_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         download_sbox = wx.StaticBoxSizer(download_box, wx.VERTICAL)
-        download_sbox.Add(path_lab, 0, wx.ALL, 10)
+        download_sbox.Add(path_lab, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(path_hbox, 0, wx.EXPAND)
-        download_sbox.Add(self.max_thread_lab, 0, wx.ALL & (~wx.TOP), 10)
-        download_sbox.Add(self.max_thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
-        download_sbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), 10)
-        download_sbox.Add(self.max_download_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
+        download_sbox.Add(self.max_thread_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        download_sbox.Add(self.max_thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
+        download_sbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        download_sbox.Add(self.max_download_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(video_quality_hbox, 0, wx.EXPAND)
         download_sbox.Add(sound_quality_hbox, 0, wx.EXPAND)
         download_sbox.Add(codec_hbox, 0, wx.EXPAND)
-        download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        download_sbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), 10)
-        download_sbox.Add(self.delete_history_chk, 0, wx.ALL, 10)
+        download_sbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        download_sbox.Add(self.delete_history_chk, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(toast_hbox, 0, wx.EXPAND)
 
-        self.scrolled_panel.sizer.Add(download_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        self.scrolled_panel.sizer.Add(download_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         download_vbox = wx.BoxSizer(wx.VERTICAL)
         download_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
@@ -333,31 +333,31 @@ class AdvancedTab(Panel):
         self.enable_custom_cdn_tip.SetToolTip("说明")
 
         enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.custom_cdn_auto_switch_radio = wx.RadioButton(cdn_box, -1, "自动切换")
         self.custom_cdn_manual_radio = wx.RadioButton(cdn_box, -1, "手动设置")
 
         custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        custom_cdn_mode_hbox.AddSpacer(30)
-        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        custom_cdn_mode_hbox.AddSpacer(20)
-        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        custom_cdn_mode_hbox.AddSpacer(self.FromDIP(20))
+        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        custom_cdn_mode_hbox.AddSpacer(self.FromDIP(13))
+        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN host")
         self.custom_cdn_box = TextCtrl(cdn_box, -1)
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        custom_cdn_hbox.AddSpacer(30)
-        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
+        custom_cdn_hbox.AddSpacer(self.FromDIP(20))
+        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
 
         self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN host", size = self.get_scaled_size((100, 28)))
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.AddStretchSpacer()
-        btn_hbox.Add(self.change_cdn_btn, 0, wx.ALL & (~wx.TOP), 10)
+        btn_hbox.Add(self.change_cdn_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         cdn_sbox = wx.StaticBoxSizer(cdn_box, wx.VERTICAL)
         cdn_sbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
@@ -370,16 +370,16 @@ class AdvancedTab(Panel):
         self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
 
         button_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, 10)
+        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, self.FromDIP(6))
 
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
         self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        download_error_retry_hbox.AddSpacer(30)
-        download_error_retry_hbox.Add(self.download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), 10)
+        download_error_retry_hbox.AddSpacer(self.FromDIP(20))
+        download_error_retry_hbox.Add(self.download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.download_suspend_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载停滞时自动重启下载")
         self.download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "重启间隔")
@@ -387,24 +387,24 @@ class AdvancedTab(Panel):
         self.download_suspend_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "秒")
 
         download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        download_suspend_retry_hbox.AddSpacer(30)
-        download_suspend_retry_hbox.Add(self.download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
-        download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        download_suspend_retry_hbox.AddSpacer(self.FromDIP(20))
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
         advanced_download_sbox.Add(button_hbox, 0, wx.EXPAND)
-        advanced_download_sbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        advanced_download_sbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         advanced_download_sbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
-        advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), 10)
+        advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL, 10)
+        advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        vbox.Add(advanced_download_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(advanced_download_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.SetSizerAndFit(vbox)
 
@@ -551,8 +551,8 @@ class MergeTab(Panel):
         self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.auto_detect_btn = wx.Button(ffmpeg_box, -1, "自动检测", size = self.get_scaled_size((90, 28)))
         self.tutorial_btn = wx.Button(ffmpeg_box, -1, "安装教程", size = self.get_scaled_size((90, 28)))
@@ -560,13 +560,13 @@ class MergeTab(Panel):
         self.check_ffmpeg_chk = wx.CheckBox(ffmpeg_box, -1, "启动时自动检查 FFmpeg 可用性")
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        btn_hbox.Add(self.auto_detect_btn, 0, wx.ALL & (~wx.TOP), 10)
-        btn_hbox.Add(self.tutorial_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        btn_hbox.Add(self.auto_detect_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        btn_hbox.Add(self.tutorial_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         ffmpeg_sbox = wx.StaticBoxSizer(ffmpeg_box, wx.VERTICAL)
-        ffmpeg_sbox.Add(ffmpeg_path_label, 0, wx.ALL, 10)
+        ffmpeg_sbox.Add(ffmpeg_path_label, 0, wx.ALL, self.FromDIP(6))
         ffmpeg_sbox.Add(path_hbox, 0, wx.EXPAND)
-        ffmpeg_sbox.Add(self.check_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), 10)
+        ffmpeg_sbox.Add(self.check_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         ffmpeg_sbox.Add(btn_hbox, 0, wx.EXPAND)
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
@@ -575,18 +575,18 @@ class MergeTab(Panel):
         self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
 
         override_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, "仅下载音频时将 m4a 音频转换为 mp3 格式")
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box, wx.VERTICAL)
         merge_option_sbox.Add(override_hbox, 0, wx.EXPAND)
-        merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), 10)
+        merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
-        merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        merge_vbox.Add(merge_option_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
+        merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        merge_vbox.Add(merge_option_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
         self.SetSizer(merge_vbox)
     
@@ -599,17 +599,20 @@ class MergeTab(Panel):
 
     def init_data(self):
         self.path_box.SetValue(Config.FFmpeg.path)
+        self.check_ffmpeg_chk.SetValue(Config.FFmpeg.check_available)
         
         self.override_option_choice.SetSelection(get_mapping_index_by_value(override_option_map, Config.Merge.override_option))
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
         Config.FFmpeg.path = self.path_box.GetValue()
+        Config.FFmpeg.check_available = self.check_ffmpeg_chk.GetValue()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
 
         kwargs = {
             "ffmpeg_path": Config.FFmpeg.path,
+            "check_ffmpeg_available": Config.FFmpeg.check_available,
             "override_option": Config.Merge.override_option,
             "m4a_to_mp3": Config.Merge.m4a_to_mp3,
         }
@@ -673,30 +676,30 @@ class ExtraTab(Panel):
         self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        danmaku_hbox.AddSpacer(30)
-        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        danmaku_hbox.AddSpacer(self.FromDIP(20))
+        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
         self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
 
         subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        subtitle_hbox.AddSpacer(30)
-        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        subtitle_hbox.AddSpacer(self.FromDIP(20))
+        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
-        extra_sbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        extra_sbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
-        extra_sbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), 10)
+        extra_sbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(subtitle_hbox, 0, wx.EXPAND)
-        extra_sbox.Add(self.get_cover_chk, 0, wx.ALL, 10)
+        extra_sbox.Add(self.get_cover_chk, 0, wx.ALL, self.FromDIP(6))
 
         extra_vbox = wx.BoxSizer(wx.VERTICAL)
-        extra_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        extra_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.SetSizer(extra_vbox)
     
@@ -773,9 +776,9 @@ class ProxyTab(Panel):
         self.proxy_custom_radio = wx.RadioButton(proxy_box, -1, "手动设置")
 
         proxy_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        proxy_hbox.Add(self.proxy_disable_radio, 0, wx.ALL, 10)
-        proxy_hbox.Add(self.proxy_follow_radio, 0, wx.ALL, 10)
-        proxy_hbox.Add(self.proxy_custom_radio, 0, wx.ALL, 10)
+        proxy_hbox.Add(self.proxy_disable_radio, 0, wx.ALL, self.FromDIP(6))
+        proxy_hbox.Add(self.proxy_follow_radio, 0, wx.ALL, self.FromDIP(6))
+        proxy_hbox.Add(self.proxy_custom_radio, 0, wx.ALL, self.FromDIP(6))
         
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
         self.ip_box = TextCtrl(proxy_box, -1)
@@ -790,15 +793,15 @@ class ProxyTab(Panel):
         self.passwd_box = TextCtrl(proxy_box)
 
         flex_sizer = wx.GridBagSizer(0, 0)
-        flex_sizer.Add(ip_lab, pos = (0, 0), flag =  wx.ALL | wx.ALIGN_CENTER, border = 10)
-        flex_sizer.Add(self.ip_box, pos = (0, 1), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = 10)
-        flex_sizer.Add(port_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        flex_sizer.Add(self.port_box, pos = (1, 1), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = 10)
-        flex_sizer.Add(self.auth_chk, pos = (2, 0), span = (1, 2), flag = wx.ALL, border = 10)
-        flex_sizer.Add(uname_lab, pos = (3, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = 10)
-        flex_sizer.Add(self.uname_box, pos = (3, 1), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = 10)
-        flex_sizer.Add(pwd_lab, pos = (4, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = 10)
-        flex_sizer.Add(self.passwd_box, pos = (4, 1), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = 10)
+        flex_sizer.Add(ip_lab, pos = (0, 0), flag =  wx.ALL | wx.ALIGN_CENTER, border = self.FromDIP(6))
+        flex_sizer.Add(self.ip_box, pos = (0, 1), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
+        flex_sizer.Add(port_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = self.FromDIP(6))
+        flex_sizer.Add(self.port_box, pos = (1, 1), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
+        flex_sizer.Add(self.auth_chk, pos = (2, 0), span = (1, 2), flag = wx.ALL, border = self.FromDIP(6))
+        flex_sizer.Add(uname_lab, pos = (3, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = self.FromDIP(6))
+        flex_sizer.Add(self.uname_box, pos = (3, 1), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
+        flex_sizer.Add(pwd_lab, pos = (4, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = self.FromDIP(6))
+        flex_sizer.Add(self.passwd_box, pos = (4, 1), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
 
         flex_sizer.AddGrowableCol(1)
         flex_sizer.AddGrowableRow(0)
@@ -809,14 +812,14 @@ class ProxyTab(Panel):
         self.test_btn = wx.Button(proxy_box, -1, "测试", size = self.get_scaled_size((80, 30)))
 
         proxy_sbox = wx.StaticBoxSizer(proxy_box, wx.VERTICAL)
-        proxy_sbox.Add(proxy_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
-        proxy_sbox.Add(proxy_warning_tip, 0, wx.ALL & (~wx.BOTTOM), 10)
+        proxy_sbox.Add(proxy_tip, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        proxy_sbox.Add(proxy_warning_tip, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         proxy_sbox.Add(proxy_hbox, 0, wx.EXPAND)
         proxy_sbox.Add(flex_sizer, 0, wx.EXPAND)
-        proxy_sbox.Add(self.test_btn, 0, wx.ALL, 10)
+        proxy_sbox.Add(self.test_btn, 0, wx.ALL, self.FromDIP(6))
 
         proxy_vbox = wx.BoxSizer(wx.VERTICAL)
-        proxy_vbox.Add(proxy_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        proxy_vbox.Add(proxy_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.SetSizer(proxy_vbox)
     
@@ -967,11 +970,11 @@ class MiscTab(Panel):
         self.auto_select_chk = wx.CheckBox(episodes_box, -1, "自动勾选全部视频")
 
         episodes_sbox = wx.StaticBoxSizer(episodes_box, wx.VERTICAL)
-        episodes_sbox.Add(self.episodes_single_choice, 0, wx.ALL, 10)
-        episodes_sbox.Add(self.episodes_in_section_choice, 0, wx.ALL & (~wx.TOP), 10)
-        episodes_sbox.Add(self.episodes_all_sections_choice, 0, wx.ALL & (~wx.TOP), 10)
-        episodes_sbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), 10)
-        episodes_sbox.Add(self.auto_select_chk, 0, wx.ALL, 10)
+        episodes_sbox.Add(self.episodes_single_choice, 0, wx.ALL, self.FromDIP(6))
+        episodes_sbox.Add(self.episodes_in_section_choice, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        episodes_sbox.Add(self.episodes_all_sections_choice, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        episodes_sbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        episodes_sbox.Add(self.auto_select_chk, 0, wx.ALL, self.FromDIP(6))
 
         player_box = wx.StaticBox(self.scrolled_panel, -1, "播放器设置")
 
@@ -980,18 +983,18 @@ class MiscTab(Panel):
         self.player_custom_rdbtn = wx.RadioButton(player_box, -1, "手动设置")
 
         player_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
-        player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), 10)
+        player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         self.player_path_box = TextCtrl(player_box, -1)
         self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, 10)
-        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         
         player_sbox = wx.StaticBoxSizer(player_box, wx.VERTICAL)
-        player_sbox.Add(path_lab, 0, wx.ALL, 10)
+        player_sbox.Add(path_lab, 0, wx.ALL, self.FromDIP(6))
         player_sbox.Add(player_hbox, 0, wx.EXPAND)
         player_sbox.Add(player_path_hbox, 1, wx.EXPAND)
 
@@ -1005,19 +1008,19 @@ class MiscTab(Panel):
         self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
         
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, 10)
-        btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, self.FromDIP(6))
+        btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         misc_sbox = wx.StaticBoxSizer(misc_box, wx.VERTICAL)
-        misc_sbox.Add(self.show_user_info_chk, 0, wx.ALL, 10)
-        misc_sbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), 10)
-        misc_sbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), 10)
+        misc_sbox.Add(self.show_user_info_chk, 0, wx.ALL, self.FromDIP(6))
+        misc_sbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        misc_sbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), self.FromDIP(6))
         misc_sbox.Add(btn_hbox, 0, wx.EXPAND)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, 10)
-        vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
 

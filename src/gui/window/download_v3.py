@@ -60,7 +60,7 @@ class DownloadManagerWindow(Frame):
 
         top_panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_panel_hbox.AddSpacer(self.FromDIP(13))
-        top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_panel_vbox = wx.BoxSizer(wx.VERTICAL)
         top_panel_vbox.AddSpacer(self.FromDIP(6))
@@ -83,7 +83,7 @@ class DownloadManagerWindow(Frame):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.open_download_dir_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.open_download_dir_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
 
         left_panel_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -435,12 +435,12 @@ class DownloadingPage(SimplePage):
         self.cancel_all_btn = wx.Button(self, -1, "全部取消")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddStretchSpacer()
-        top_hbox.Add(self.start_all_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.cancel_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(self.start_all_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.cancel_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_separate_line = wx.StaticLine(self, -1)
 
@@ -560,7 +560,7 @@ class CompeltedPage(SimplePage):
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.AddStretchSpacer()
-        top_hbox.Add(self.clear_history_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(self.clear_history_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_separate_line = wx.StaticLine(self, -1)
 

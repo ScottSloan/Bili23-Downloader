@@ -25,13 +25,13 @@ class EditTitleDialog(Dialog):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
-        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
-        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
 
-        vbox.Add(title_lab, 0, wx.ALL, 10)
-        vbox.Add(self.title_box, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, 10)
+        vbox.Add(title_lab, 0, wx.ALL, self.FromDIP(6))
+        vbox.Add(self.title_box, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)

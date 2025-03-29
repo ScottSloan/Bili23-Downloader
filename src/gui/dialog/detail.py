@@ -133,9 +133,9 @@ class VideoPage(DetailPage):
         self.set_page(body)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(15)
-        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
+        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(vbox)
     
@@ -199,18 +199,18 @@ class BangumiPage(DetailPage):
         self.set_page(body)
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
-        right_vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
+        right_vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(15)
-        hbox.Add(self.cover_bmp, 0, wx.ALL, 10)
+        hbox.AddSpacer(self.FromDIP(10))
+        hbox.Add(self.cover_bmp, 0, wx.ALL, self.FromDIP(6))
         hbox.Add(right_vbox, 1, wx.EXPAND)
-        hbox.AddSpacer(15)
+        hbox.AddSpacer(self.FromDIP(10))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
         vbox.Add(hbox, 1, wx.EXPAND)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(vbox)
     
@@ -247,8 +247,8 @@ class CheesePage(DetailPage):
         self.set_page(body)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(15)
-        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, 10)
-        vbox.AddSpacer(15)
+        vbox.AddSpacer(self.FromDIP(10))
+        vbox.Add(self.html_page, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(vbox)

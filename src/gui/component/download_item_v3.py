@@ -169,7 +169,7 @@ class DownloadTaskItemPanel(Panel):
         panel_hbox.Add(progress_bar_vbox, 0, wx.EXPAND)
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
-        panel_hbox.AddSpacer(10)
+        panel_hbox.AddSpacer(self.FromDIP(6))
 
         bottom_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 

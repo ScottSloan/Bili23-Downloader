@@ -26,40 +26,32 @@ class DetectDialog(Dialog):
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_hbox.Add(select_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.refresh_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(select_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.refresh_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.env_chk = wx.RadioButton(self, -1, "环境变量")
-        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((350, 20)), style = wx.ST_ELLIPSIZE_END)
+        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((450, 20)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
         self.cwd_chk = wx.RadioButton(self, -1, "运行目录")
-        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((350, 20)), style = wx.ST_ELLIPSIZE_END)
+        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((450, 20)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
-        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), 10)
-        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)
-        vbox.Add(self.env_chk, 0, wx.ALL, 10)
-        vbox.Add(self.env_path_lab, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.cwd_chk, 0, wx.ALL & (~wx.TOP), 10)
-        vbox.Add(self.cwd_path_lab, 0, wx.ALL & (~wx.TOP), 10)
+        vbox.Add(self.env_chk, 0, wx.ALL, self.FromDIP(6))
+        vbox.Add(self.env_path_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        vbox.Add(self.cwd_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        vbox.Add(self.cwd_path_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.AddSpacer(30)
-        hbox.Add(vbox, 0, wx.EXPAND)
-        hbox.AddSpacer(30)
-
-        dlg_vbox = wx.BoxSizer(wx.VERTICAL)
-        dlg_vbox.Add(hbox, 0, wx.EXPAND)
-        dlg_vbox.Add(bottom_hbox, 0, wx.EXPAND)
-
-        self.SetSizerAndFit(dlg_vbox)
+        self.SetSizerAndFit(vbox)
 
     def init_utils(self):
         self.ffmpeg = FFmpeg()

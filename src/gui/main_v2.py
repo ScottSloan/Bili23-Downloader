@@ -5,9 +5,9 @@ import wx.dataview
 from utils.config import Config
 from utils.tool_v2 import UniversalTool, RequestTool
 from utils.auth.login import QRLogin
+from utils.module.ffmpeg import FFmpeg
 
 from utils.common.thread import Thread
-
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.update import Update
 from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID, Platform
@@ -75,9 +75,9 @@ class MainWindow(Frame):
         self.get_btn = wx.Button(self.panel, -1, "Get")
 
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        url_hbox.Add(url_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
-        url_hbox.Add(self.url_box, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, 10)
-        url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
+        url_hbox.Add(url_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        url_hbox.Add(self.url_box, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
+        url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.processing_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.LOADING_ICON), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
@@ -93,14 +93,14 @@ class MainWindow(Frame):
         self.download_option_btn.Enable(False)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT), 10)
-        info_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        info_hbox.Add(self.detail_icon, 0, wx.ALL & (~wx.LEFT), 10)
+        info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT), self.FromDIP(6))
+        info_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.Add(self.detail_icon, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         info_hbox.AddStretchSpacer()
-        info_hbox.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), 10)
-        info_hbox.Add(self.episode_option_btn, 0, wx.ALL & (~wx.LEFT), 10)
-        info_hbox.Add(self.download_option_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        info_hbox.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        info_hbox.Add(self.episode_option_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        info_hbox.Add(self.download_option_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.episode_list = TreeListCtrl(self.panel, self.update_checked_count)
 
@@ -114,17 +114,17 @@ class MainWindow(Frame):
         self.download_btn.Enable(False)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        bottom_hbox.Add(self.face_icon, 0, wx.ALL & (~wx.RIGHT), 10)
-        bottom_hbox.Add(self.uname_lab, 1, wx.ALL | wx.ALIGN_CENTER, 10)
+        bottom_hbox.Add(self.face_icon, 0, wx.ALL & (~wx.RIGHT), self.FromDIP(6))
+        bottom_hbox.Add(self.uname_lab, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL, 10)
-        bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.infobar, 0, wx.EXPAND)
         vbox.Add(url_hbox, 0, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
-        vbox.Add(self.episode_list, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, 10)
+        vbox.Add(self.episode_list, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.panel.SetSizerAndFit(vbox)
@@ -219,6 +219,10 @@ class MainWindow(Frame):
 
         self.show_user_info()
 
+        wx.CallAfter(self.check_ffmpeg_available)
+
+        Thread(target = self.check_update).start()
+
     def onCloseEVT(self, event):
         if self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
             dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
@@ -279,15 +283,15 @@ class MainWindow(Frame):
                     def callback():
                         UpdateWindow(self).ShowModal()
 
-                    Update.get_update()
+                    Update.get_update_json()
 
                     if Config.Temp.update_json:
                         if Config.Temp.update_json["version_code"] > Config.APP.version_code:
                             wx.CallAfter(callback)
                         else:
-                            wx.CallAfter(wx.MessageDialog(self, "当前没有可用的更新", "检查更新", wx.ICON_INFORMATION).ShowModal)
+                            wx.CallAfter(wx.MessageDialog(self, "当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION).ShowModal)
                     else:
-                        wx.CallAfter(wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试", "检查更新", wx.ICON_ERROR).ShowModal)
+                        wx.CallAfter(wx.MessageDialog(self, "检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", wx.ICON_ERROR).ShowModal)
 
                 Thread(target = check_update_thread).start()
 
@@ -611,6 +615,27 @@ class MainWindow(Frame):
         
         self.panel.Layout()
 
+    def check_ffmpeg_available(self):
+        ffmpeg = FFmpeg()
+        ffmpeg.check_available()
+
+        if Config.FFmpeg.check_available and not Config.FFmpeg.available:
+            dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合成、裁切和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+
+    def check_update(self):
+        if Config.Misc.auto_check_update:
+            Update.get_update_json()
+
+            if Config.Temp.update_json:
+                if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                    self.show_info_bar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
+            else:
+                self.show_info_bar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
+
     def show_login_window(self):
         def callback():
             self.init_menubar()
@@ -775,7 +800,7 @@ class MainWindow(Frame):
 
         self.panel.Layout()
     
-    def show_info_barM_essage(self, message: str, flag: int):
+    def show_info_bar_message(self, message: str, flag: int):
         wx.CallAfter(self.infobar.ShowMessage, message, flag)
     
     def get_sys_settings(self):
