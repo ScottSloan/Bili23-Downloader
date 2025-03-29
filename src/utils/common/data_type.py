@@ -69,6 +69,11 @@ class DownloadTaskInfo:
         # 附加内容选项
         self.extra_option: dict = None
 
+        # 视频发布时间戳
+        self.pubtime: int = 0
+        # UP 主信息
+        self.up_info: dict = None
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -101,7 +106,9 @@ class DownloadTaskInfo:
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
             "flv_video_count": self.flv_video_count,
-            "extra_option": self.extra_option
+            "extra_option": self.extra_option,
+            "pubtime": self.pubtime,
+            "up_info": self.up_info,
         }
 
     def load_from_dict(self, data: Dict):
@@ -136,6 +143,8 @@ class DownloadTaskInfo:
         self.ffmpeg_merge = data.get("ffmpeg_merge")
         self.flv_video_count = data.get("flv_video_count")
         self.extra_option = data.get("extra_option")
+        self.pubtime = data.get("pubtime")
+        self.up_info = data.get("up_info")
 
 class DownloaderInfo:
     def __init__(self):

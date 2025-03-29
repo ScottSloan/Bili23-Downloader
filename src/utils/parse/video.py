@@ -22,7 +22,6 @@ class VideoInfo:
     cover: str = ""
     views: str = ""
     danmakus: str = ""
-    pubtime: str = ""
     desc: str = ""
     tag_list: list = []
     type: int = 0
@@ -32,6 +31,12 @@ class VideoInfo:
     pages_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
+
+    pubtime: int = 0
+    tname: str = ""
+    tname_v2: str = ""
+    up_name: str = ""
+    up_mid: int = 0
 
     info_json: dict = {}
     download_json: dict = {}
@@ -46,10 +51,12 @@ class VideoInfo:
         VideoInfo.desc = ""
         VideoInfo.views = 0
         VideoInfo.danmakus = 0
-        VideoInfo.pubtime = 0
         VideoInfo.cid = 0
         VideoInfo.type = 0
         VideoInfo.stream_type = 0
+        VideoInfo.pubtime = 0
+        VideoInfo.up_name = ""
+        VideoInfo.up_mid = 0
 
         VideoInfo.tag_list.clear()
         VideoInfo.pages_list.clear()
@@ -115,7 +122,12 @@ class VideoParser:
         VideoInfo.desc = info["desc"]
         VideoInfo.views = FormatTool.format_data_count(info["stat"]["view"])
         VideoInfo.danmakus = FormatTool.format_data_count(info["stat"]["danmaku"])
-        VideoInfo.pubtime = UniversalTool.get_time_str_from_timestamp(info["pubdate"])
+
+        VideoInfo.pubtime = info["pubdate"]
+        VideoInfo.tname = info["tname"]
+        VideoInfo.tname_v2 = info["tname_v2"]
+        VideoInfo.up_name = info["owner"]["name"]
+        VideoInfo.up_mid = info["owner"]["mid"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:

@@ -41,6 +41,9 @@ class BangumiInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
+    up_name: str = ""
+    up_mid: int = 0
+
     info_json: dict = {}
     download_json: dict = {}
 
@@ -64,6 +67,8 @@ class BangumiInfo:
         BangumiInfo.mid = 0
         BangumiInfo.type_id = 0
         BangumiInfo.stream_type = 0
+        BangumiInfo.up_name = ""
+        BangumiInfo.up_mid = 0
 
         BangumiInfo.payment = False
 
@@ -152,8 +157,8 @@ class BangumiParser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
-            
-        info = resp["result"]
+
+        BangumiInfo.download_json = info = resp["result"]
 
         if "dash" in info:
             AudioInfo.get_audio_quality_list(info["dash"])

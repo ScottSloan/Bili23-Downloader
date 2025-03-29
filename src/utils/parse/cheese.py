@@ -28,6 +28,9 @@ class CheeseInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
+    up_name: str = ""
+    up_mid: int = 0
+
     info_json: dict = {}
     download_json: dict = {}
 
@@ -43,6 +46,8 @@ class CheeseInfo:
         CheeseInfo.epid = 0
         CheeseInfo.cid = 0
         CheeseInfo.season_id = 0
+        CheeseInfo.up_name = ""
+        CheeseInfo.up_mid = 0
 
         CheeseInfo.episodes_list.clear()
         CheeseInfo.video_quality_id_list.clear()
@@ -101,7 +106,7 @@ class CheeseParser:
 
         self.check_json(resp)
 
-        info = resp["data"]
+        CheeseInfo.download_json = info = resp["data"]
 
         CheeseInfo.video_quality_id_list = info["accept_quality"]
         CheeseInfo.video_quality_desc_list = info["accept_description"]

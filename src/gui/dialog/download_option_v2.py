@@ -165,7 +165,7 @@ class DownloadOptionDialog(Dialog):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
 
-        self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
+        self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 

@@ -84,6 +84,7 @@ class EpisodeManager:
                         page["cover_url"] = episode["arc"]["pic"]
                         page["aid"] = episode["aid"]
                         page["bvid"] = episode["bvid"]
+                        page["pubtime"] = episode["arc"]["pubdate"]
 
                         EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], _get_entry(page))
 

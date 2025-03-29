@@ -376,7 +376,7 @@ class MainWindow(Frame):
                     return
                 
                 if Config.Download.auto_popup_option_dialog:
-                    if self.onShowDownloadOptionDlgEVT(event) == wx.ID_OK:
+                    if self.onShowDownloadOptionDlgEVT(event) == wx.ID_CANCEL:
                         return
 
                 self.processing_window = ProcessingWindow(self)

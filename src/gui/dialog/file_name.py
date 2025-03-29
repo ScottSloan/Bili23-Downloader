@@ -115,6 +115,21 @@ class CustomFileNameDialog(Dialog):
                     "example": str(int(datetime.now().timestamp()))
                 },
                 {
+                    "name": "{pubdate}",
+                    "description": "视频发布日期",
+                    "example": datetime.fromtimestamp(1667061000).strftime(self.date_format_box.GetValue())
+                },
+                {
+                    "name": "{pubtime}",
+                    "description": "视频发布时间",
+                    "example": datetime.fromtimestamp(1667061000).strftime(self.time_format_box.GetValue())
+                },
+                {
+                    "name": "{pubtimestamp}",
+                    "description": "视频发布时间戳",
+                    "example": "1667061000"
+                },
+                {
                     "name": "{number}",
                     "description": "从 1 开始的序号",
                     "example": "1"
@@ -123,6 +138,16 @@ class CustomFileNameDialog(Dialog):
                     "name": "{number_with_zero}",
                     "description": "从 1 开始的序号，在前方自动补零",
                     "example": "01、001"
+                },
+                {
+                    "name": "{tname}",
+                    "description": "所属分区（仅投稿视频有效）",
+                    "example": "综合"
+                },
+                {
+                    "name": "{tname_v2}",
+                    "description": "所属分区 v2（仅投稿视频有效）",
+                    "example": "动漫剪辑"
                 },
                 {
                     "name": "{title}",
@@ -164,6 +189,16 @@ class CustomFileNameDialog(Dialog):
                     "description": "视频时长，单位为秒",
                     "example": "256"
                 },
+                {
+                    "name": "{up_name}",
+                    "description": "UP 主名称",
+                    "example": "哔哩哔哩番剧"
+                },
+                {
+                    "name": "{up_mid}",
+                    "description": "UP 主 mid",
+                    "example": "928123"
+                }
             ]
 
             for entry in content:
@@ -196,6 +231,11 @@ class CustomFileNameDialog(Dialog):
         task_info.audio_quality_id = 30251
         task_info.video_codec_id = 12
         task_info.duration = 256
+        task_info.pubtime = 1667061000
+        task_info.up_info = {
+            "up_name": "哔哩哔哩番剧",
+            "up_mid": 928123
+        }
 
         file_name_mgr = FileNameManager(task_info)
         preview = file_name_mgr.get_full_file_name(self.template_box.GetValue(), self.auto_adjust_chk.GetValue())
