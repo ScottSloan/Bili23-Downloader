@@ -369,7 +369,7 @@ class MainWindow(Frame):
                     self.processing_window.Hide()
                     self.onOpenDownloadMgrEVT(event)
 
-                self.episode_list.get_all_checked_item(self.video_quality_id)
+                self.episode_list.get_all_checked_item()
 
                 if not len(self.episode_list.download_task_info_list):
                     wx.MessageDialog(self, "下载失败\n\n请选择要下载的项目", "警告", wx.ICON_WARNING).ShowModal()
