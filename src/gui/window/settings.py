@@ -107,12 +107,12 @@ class BasicTab(Tab):
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
 
         self.auto_popup_option_chk = wx.CheckBox(basic_box, 0, "下载前自动弹出下载选项对话框")
-        self.auto_show_download_window = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
+        self.auto_show_download_window_chk = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, 10)
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL & (~wx.TOP), 10)
-        basic_sbox.Add(self.auto_show_download_window, 0, wx.ALL & (~wx.TOP), 10)
+        basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), 10)
 
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
 
@@ -156,6 +156,7 @@ class BasicTab(Tab):
     def init_data(self):
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
+        self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
 
         self.get_danmaku_chk.SetValue(Config.Basic.download_danmaku_file)
         self.danmaku_format_choice.SetSelection(Config.Basic.danmaku_file_type)
@@ -169,6 +170,7 @@ class BasicTab(Tab):
     def save(self):
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
+        Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
 
         Config.Basic.download_danmaku_file = self.get_danmaku_chk.GetValue()
         Config.Basic.danmaku_file_type = self.danmaku_format_choice.GetSelection()
@@ -179,6 +181,7 @@ class BasicTab(Tab):
         kwargs = {
             "listen_clipboard": Config.Basic.listen_clipboard,
             "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog,
+            "auto_show_download_window": Config.Basic.auto_show_download_window,
             "get_danmaku": Config.Basic.download_danmaku_file,
             "danmaku_type": Config.Basic.danmaku_file_type,
             "get_subtitle": Config.Basic.download_subtitle_file,

@@ -26,6 +26,7 @@ class Config:
     class Basic:
         listen_clipboard: bool = True
         auto_popup_option_dialog: bool = True
+        auto_show_download_window: bool = True
 
         download_danmaku_file = False
         danmaku_file_type = 0

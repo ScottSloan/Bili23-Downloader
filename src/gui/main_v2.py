@@ -377,10 +377,12 @@ class MainWindow(Frame):
             self.download_window.CenterOnParent()
         
         elif self.download_window.IsIconized():
-            self.download_window.Iconize(False)
+            if Config.Basic.auto_show_download_window:
+                self.download_window.Iconize(False)
         
-        self.download_window.SetFocus()
-        self.download_window.downloading_page_btn.onClickEVT(event)
+        if Config.Basic.auto_show_download_window:
+            self.download_window.SetFocus()
+            self.download_window.downloading_page_btn.onClickEVT(event)
 
     def onDownloadEVT(self, event):
         match self.current_parse_type:
