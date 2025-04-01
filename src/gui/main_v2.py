@@ -1,3 +1,4 @@
+import re
 import wx
 import webbrowser
 import wx.dataview
@@ -133,6 +134,8 @@ class MainWindow(Frame):
 
         self.init_menubar()
 
+        self.clipboard_timer = wx.Timer(self, -1)
+
     def init_id(self):
         self.ID_REFRESH_MENU = wx.NewIdRef()
         self.ID_LOGIN_MENU = wx.NewIdRef()
@@ -214,14 +217,27 @@ class MainWindow(Frame):
         self.episode_list.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onShowEpisodeListMenuEVT)
         self.episode_list.Bind(wx.EVT_MENU, self.onEpisodeListMenuEVT)
 
+        self.Bind(wx.EVT_TIMER, self.read_clip_board, self.clipboard_timer)
+
     def init_utils(self):
+        def start_thread():
+            wx.CallAfter(self.check_ffmpeg_available)
+
+            Thread(target = self.check_update).start()
+
+        def init_timer():
+            if Config.Basic.listen_clipboard:
+                self.clipboard_timer.Start(1000)
+
         self.download_window = DownloadManagerWindow(self)
+
+        self.current_parse_url = ""
 
         self.show_user_info()
 
-        wx.CallAfter(self.check_ffmpeg_available)
+        init_timer()
 
-        Thread(target = self.check_update).start()
+        start_thread()
 
     def onCloseEVT(self, event):
         if self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
@@ -229,6 +245,8 @@ class MainWindow(Frame):
 
             if dlg.ShowModal() == wx.ID_NO:
                 return
+            
+        self.clipboard_timer.Stop()
         
         event.Skip()
 
@@ -345,6 +363,8 @@ class MainWindow(Frame):
             wx.MessageDialog(self, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING).ShowModal()
             return
         
+        self.current_parse_url = url
+        
         self.episode_list.init_list()
         
         self.set_parse_status(ParseStatus.Parsing.value)
@@ -375,7 +395,7 @@ class MainWindow(Frame):
                     wx.MessageDialog(self, "下载失败\n\n请选择要下载的项目", "警告", wx.ICON_WARNING).ShowModal()
                     return
                 
-                if Config.Download.auto_popup_option_dialog:
+                if Config.Basic.auto_popup_option_dialog:
                     if self.onShowDownloadOptionDlgEVT(event) == wx.ID_CANCEL:
                         return
 
@@ -806,6 +826,20 @@ class MainWindow(Frame):
     def get_sys_settings(self):
         Config.Sys.dark_mode = False if Config.Sys.platform == Platform.Windows.value else wx.SystemSettings.GetAppearance().IsDark()
         Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
+
+    def read_clip_board(self, event):
+        def is_valid_url(url: str):
+            return re.findall(r"https:\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
+
+        text = wx.TextDataObject()
+        
+        if wx.TheClipboard.GetData(text):
+            url: str = text.GetText()
+            if is_valid_url(url):
+                if url != self.current_parse_url:
+                    self.url_box.SetValue(url)
+
+                    wx.CallAfter(self.onGetEVT, event)
 
     @property
     def parse_callback(self):

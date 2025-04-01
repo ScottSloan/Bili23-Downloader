@@ -1,9 +1,11 @@
 import wx
 import os
 import re
+import sys
 import time
 import shutil
 import requests
+import subprocess
 from requests.auth import HTTPProxyAuth
 
 from gui.component.scrolled_panel import ScrolledPanel
@@ -45,12 +47,12 @@ class SettingWindow(Dialog):
                 
         self.note = wx.Notebook(self, -1, size = get_notebook_size())
 
-        self.note.AddPage(DownloadTab(self.note, self.GetParent()), "下载")
-        self.note.AddPage(AdvancedTab(self.note, self.GetParent()), "高级")
-        self.note.AddPage(MergeTab(self.note, self.GetParent()), "合成")
-        self.note.AddPage(ExtraTab(self.note, self.GetParent()), "附加内容")
-        self.note.AddPage(ProxyTab(self.note, self.GetParent()), "代理")
-        self.note.AddPage(MiscTab(self.note, self.GetParent()), "其他")
+        self.note.AddPage(BasicTab(self.note), "基本")
+        self.note.AddPage(DownloadTab(self.note), "下载")
+        self.note.AddPage(AdvancedTab(self.note), "高级")
+        self.note.AddPage(MergeTab(self.note), "合成")
+        self.note.AddPage(ProxyTab(self.note), "代理")
+        self.note.AddPage(MiscTab(self.note), "其他")
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
@@ -76,11 +78,133 @@ class SettingWindow(Dialog):
             
         event.Skip()
 
-class DownloadTab(Panel):
-    def __init__(self, parent, _main_window):
-        self.main_window = _main_window
+class Tab(Panel):
+    def __init__(self, parent):
+        from gui.main_v2 import MainWindow
 
         Panel.__init__(self, parent)
+
+        self.parent: MainWindow = parent.GetParent().GetParent()
+
+    def onConfirm(self):
+        self.save()
+
+        return True
+
+class BasicTab(Tab):
+    def __init__(self, parent):
+        Tab.__init__(self, parent)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+        self.init_data()
+
+    def init_UI(self):
+        basic_box = wx.StaticBox(self, -1, "基本设置")
+
+        self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
+
+        self.auto_popup_option_chk = wx.CheckBox(basic_box, 0, "下载前自动弹出下载选项对话框")
+        self.auto_show_download_window = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
+
+        basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
+        basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, 10)
+        basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL & (~wx.TOP), 10)
+        basic_sbox.Add(self.auto_show_download_window, 0, wx.ALL & (~wx.TOP), 10)
+
+        extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
+
+        self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
+        self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
+        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
+
+        danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        danmaku_hbox.AddSpacer(self.FromDIP(20))
+        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
+        self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
+        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
+
+        subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        subtitle_hbox.AddSpacer(self.FromDIP(20))
+        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
+
+        extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
+        extra_sbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        extra_sbox.Add(subtitle_hbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.get_cover_chk, 0, wx.ALL, self.FromDIP(6))
+        
+        basic_vbox = wx.BoxSizer(wx.VERTICAL)
+        basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, 10)
+        basic_vbox.Add(extra_sbox, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
+
+        self.SetSizer(basic_vbox)
+
+    def Bind_EVT(self):
+        self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
+        self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSubtitleEVT)
+
+    def init_data(self):
+        self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
+        self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
+
+        self.get_danmaku_chk.SetValue(Config.Basic.download_danmaku_file)
+        self.danmaku_format_choice.SetSelection(Config.Basic.danmaku_file_type)
+        self.get_subtitle_chk.SetValue(Config.Basic.download_subtitle_file)
+        self.subtitle_format_choice.SetSelection(Config.Basic.subtitle_file_type)
+        self.get_cover_chk.SetValue(Config.Basic.download_cover_file)
+
+        self.onChangeDanmakuEVT(0)
+        self.onChangeSubtitleEVT(0)
+
+    def save(self):
+        Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
+        Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
+
+        Config.Basic.download_danmaku_file = self.get_danmaku_chk.GetValue()
+        Config.Basic.danmaku_file_type = self.danmaku_format_choice.GetSelection()
+        Config.Basic.download_subtitle_file = self.get_subtitle_chk.GetValue()
+        Config.Basic.subtitle_file_type = self.subtitle_format_choice.GetSelection()
+        Config.Basic.download_cover_file = self.get_cover_chk.GetValue()
+
+        kwargs = {
+            "listen_clipboard": Config.Basic.listen_clipboard,
+            "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog,
+            "get_danmaku": Config.Basic.download_danmaku_file,
+            "danmaku_type": Config.Basic.danmaku_file_type,
+            "get_subtitle": Config.Basic.download_subtitle_file,
+            "subtitle_type": Config.Basic.subtitle_file_type,
+            "get_cover": Config.Basic.download_cover_file
+        }
+
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
+
+    def onChangeDanmakuEVT(self, event):
+        def set_enable(enable: bool):
+            self.danmaku_format_choice.Enable(enable)
+            self.danmaku_format_lab.Enable(enable)
+
+        set_enable(self.get_danmaku_chk.GetValue())
+
+    def onChangeSubtitleEVT(self, event):
+        def set_enable(enable: bool):
+            self.subtitle_format_choice.Enable(enable)
+            self.subtitle_format_lab.Enable(enable)
+
+        set_enable(self.get_subtitle_chk.GetValue())
+
+class DownloadTab(Tab):
+    def __init__(self, parent):
+        Tab.__init__(self, parent)
 
         self.init_UI()
 
@@ -230,9 +354,9 @@ class DownloadTab(Panel):
 
     def save(self):
         def update_download_window():
-            self.main_window.download_window.downloading_page.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
+            self.parent.download_window.downloading_page.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
 
-            self.main_window.download_window.downloading_page.onMaxDownloadChangeEVT(None)
+            self.parent.download_window.downloading_page.onMaxDownloadChangeEVT(None)
 
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
@@ -312,11 +436,9 @@ class DownloadTab(Panel):
 
         notification.show_toast("测试通知", "这是一则测试通知", wx.ICON_INFORMATION)
 
-class AdvancedTab(Panel):
-    def __init__(self, parent, _main_window):
-        self._main_window = _main_window
-
-        Panel.__init__(self, parent)
+class AdvancedTab(Tab):
+    def __init__(self, parent, ):
+        Tab.__init__(self, parent)
 
         self.init_UI()
 
@@ -482,11 +604,6 @@ class AdvancedTab(Panel):
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
-    
-    def onConfirm(self):
-        self.save()
-
-        return True
 
     def onEnableCustomCDNEVT(self, event):
         self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
@@ -531,11 +648,9 @@ class AdvancedTab(Panel):
         self.download_suspend_retry_box.Enable(self.download_suspend_retry_chk.GetValue())
         self.download_suspend_retry_unit_lab.Enable(self.download_suspend_retry_chk.GetValue())
 
-class MergeTab(Panel):
-    def __init__(self, parent, _main_window):
-        self._main_window = _main_window
-
-        Panel.__init__(self, parent)
+class MergeTab(Tab):
+    def __init__(self, parent):
+        Tab.__init__(self, parent)
 
         self.init_UI()
 
@@ -651,113 +766,9 @@ class MergeTab(Panel):
 
         webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
-    def onConfirm(self):
-        self.save()
-
-        return True
-
-class ExtraTab(Panel):
-    def __init__(self, parent, _main_window):
-        self._main_window = _main_window
-
-        Panel.__init__(self, parent)
-
-        self.init_UI()
-
-        self.Bind_EVT()
-
-        self.init_data()
-
-    def init_UI(self):
-        extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
-
-        self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
-        self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
-        self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
-
-        danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        danmaku_hbox.AddSpacer(self.FromDIP(20))
-        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-
-        self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
-        self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
-        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
-
-        subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        subtitle_hbox.AddSpacer(self.FromDIP(20))
-        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-
-        self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
-
-        extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
-        extra_sbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
-        extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
-        extra_sbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
-        extra_sbox.Add(subtitle_hbox, 0, wx.EXPAND)
-        extra_sbox.Add(self.get_cover_chk, 0, wx.ALL, self.FromDIP(6))
-
-        extra_vbox = wx.BoxSizer(wx.VERTICAL)
-        extra_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
-
-        self.SetSizer(extra_vbox)
-    
-    def init_data(self):
-        self.get_danmaku_chk.SetValue(Config.Extra.download_danmaku_file)
-        self.danmaku_format_choice.SetSelection(Config.Extra.danmaku_file_type)
-        self.get_subtitle_chk.SetValue(Config.Extra.download_subtitle_file)
-        self.subtitle_format_choice.SetSelection(Config.Extra.subtitle_file_type)
-        self.get_cover_chk.SetValue(Config.Extra.download_cover_file)
-
-        self.onChangeDanmakuEVT(0)
-        self.onChangeSubtitleEVT(0)
-
-    def Bind_EVT(self):
-        self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
-        self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSubtitleEVT)
-
-    def save(self):
-        Config.Extra.download_danmaku_file = self.get_danmaku_chk.GetValue()
-        Config.Extra.danmaku_file_type = self.danmaku_format_choice.GetSelection()
-        Config.Extra.download_subtitle_file = self.get_subtitle_chk.GetValue()
-        Config.Extra.subtitle_file_type = self.subtitle_format_choice.GetSelection()
-        Config.Extra.download_cover_file = self.get_cover_chk.GetValue()
-
-        kwargs = {
-            "get_danmaku": Config.Extra.download_danmaku_file,
-            "danmaku_type": Config.Extra.danmaku_file_type,
-            "get_subtitle": Config.Extra.download_subtitle_file,
-            "subtitle_type": Config.Extra.subtitle_file_type,
-            "get_cover": Config.Extra.download_cover_file
-        }
-
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "extra", **kwargs)
-
-    def onChangeDanmakuEVT(self, event):
-        def set_enable(enable: bool):
-            self.danmaku_format_choice.Enable(enable)
-            self.danmaku_format_lab.Enable(enable)
-
-        set_enable(self.get_danmaku_chk.GetValue())
-
-    def onChangeSubtitleEVT(self, event):
-        def set_enable(enable: bool):
-            self.subtitle_format_choice.Enable(enable)
-            self.subtitle_format_lab.Enable(enable)
-
-        set_enable(self.get_subtitle_chk.GetValue())
-
-    def onConfirm(self):
-        self.save()
-
-        return True
-
-class ProxyTab(Panel):
-    def __init__(self, parent, _main_window):
-        self._main_window = _main_window
-
-        Panel.__init__(self, parent)
+class ProxyTab(Tab):
+    def __init__(self, parent):
+        Tab.__init__(self, parent)
 
         self.init_UI()
 
@@ -935,16 +946,9 @@ class ProxyTab(Panel):
 
         Thread(target = test).start()
 
-    def onConfirm(self):
-        self.save()
-
-        return True
-
-class MiscTab(Panel):
-    def __init__(self, parent, _main_window):
-        self._main_window = _main_window
-
-        Panel.__init__(self, parent)
+class MiscTab(Tab):
+    def __init__(self, parent):
+        Tab.__init__(self, parent)
 
         self.init_UI()
 
@@ -1102,7 +1106,7 @@ class MiscTab(Panel):
         config_utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
-        self._main_window.init_menubar()
+        self.parent.init_menubar()
 
     def onBrowsePlayerEVT(self, event):
         # 根据不同平台选取不同后缀名文件
@@ -1129,24 +1133,27 @@ class MiscTab(Panel):
             set_enable(True)
 
     def onClearUserDataEVT(self, event):
-        dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n清除后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             config_utils.clear_config()
 
             shutil.rmtree(Config.User.directory)
 
-            exit()
+            self.restart()
     
     def onResetToDefaultEVT(self, event):
-        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n恢复默认设置后，程序将自动退出，请重新启动", "警告", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             UniversalTool.remove_files(os.getcwd(), ["config.json"])
 
-            exit()
+            self.restart()
 
-    def onConfirm(self):
-        self.save()
+    def restart(self):
+        python = sys.executable
+        script = sys.argv[0]
 
-        return True
+        subprocess.Popen([python, script])
+
+        sys.exit()

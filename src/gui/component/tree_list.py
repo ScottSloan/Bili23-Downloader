@@ -381,15 +381,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def add_extra_type_to_list(self, info: dict):
         info["download_type"] = ParseType.Extra.value
         info["extra_option"] = {
-            "download_danmaku_file": Config.Extra.download_danmaku_file,
-            "danmaku_file_type": Config.Extra.danmaku_file_type,
-            "download_subtitle_file": Config.Extra.download_subtitle_file,
-            "subtitle_file_type": Config.Extra.subtitle_file_type,
-            "download_cover_file": Config.Extra.download_cover_file
+            "download_danmaku_file": Config.Basic.download_danmaku_file,
+            "danmaku_file_type": Config.Basic.danmaku_file_type,
+            "download_subtitle_file": Config.Basic.download_subtitle_file,
+            "subtitle_file_type": Config.Basic.subtitle_file_type,
+            "download_cover_file": Config.Basic.download_cover_file
         }
         
         self.download_task_info_list.append(self.format_info_entry(info))
 
     @property
     def download_extra(self):
-        return Config.Extra.download_danmaku_file or Config.Extra.download_subtitle_file or Config.Extra.download_cover_file
+        return Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file

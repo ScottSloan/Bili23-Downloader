@@ -220,13 +220,13 @@ class DownloadOptionDialog(Dialog):
 
         set_stream_download_option()
 
-        self.download_danmaku_file_chk.SetValue(Config.Extra.download_danmaku_file)
-        self.danmaku_file_type_choice.Select(Config.Extra.danmaku_file_type)
-        self.download_subtitle_file_chk.SetValue(Config.Extra.download_subtitle_file)
-        self.subtitle_file_type_choice.Select(Config.Extra.subtitle_file_type)
-        self.download_cover_file_chk.SetValue(Config.Extra.download_cover_file)
+        self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
+        self.danmaku_file_type_choice.Select(Config.Basic.danmaku_file_type)
+        self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
+        self.subtitle_file_type_choice.Select(Config.Basic.subtitle_file_type)
+        self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
 
-        self.auto_popup_chk.SetValue(Config.Download.auto_popup_option_dialog)
+        self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_add_number_chk.SetValue(Config.Download.add_number)
     
     def onChangeVideoQualityCodecEVT(self, event):
@@ -297,13 +297,13 @@ class DownloadOptionDialog(Dialog):
         self.subtitle_file_lan_type_btn.Enable(enable)
 
     def onCheckAutoPopupEVT(self, event):
-        Config.Download.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
+        Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
 
         kwargs = {
-            "auto_popup_option_dialog": Config.Download.auto_popup_option_dialog
+            "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+        config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
 
     def onConfirmEVT(self, event):
         def set_stream_download_option():
@@ -324,11 +324,11 @@ class DownloadOptionDialog(Dialog):
 
         set_stream_download_option()
 
-        Config.Extra.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
-        Config.Extra.danmaku_file_type = self.danmaku_file_type_choice.GetSelection()
-        Config.Extra.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
-        Config.Extra.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
-        Config.Extra.download_cover_file = self.download_cover_file_chk.GetValue()
+        Config.Basic.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
+        Config.Basic.danmaku_file_type = self.danmaku_file_type_choice.GetSelection()
+        Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
+        Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
+        Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
 
         Config.Download.add_number = self.auto_add_number_chk.GetValue()
 

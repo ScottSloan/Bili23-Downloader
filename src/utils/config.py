@@ -23,6 +23,18 @@ class Config:
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
+    class Basic:
+        listen_clipboard: bool = True
+        auto_popup_option_dialog: bool = True
+
+        download_danmaku_file = False
+        danmaku_file_type = 0
+
+        download_subtitle_file = False
+        subtitle_file_type = 0
+
+        download_cover_file = False
+
     class Proxy:
         proxy_mode: int = 1
         enable_auth: bool = False
@@ -78,7 +90,6 @@ class Config:
         speed_mbps: int = 10
 
         stream_download_option: int = 3
-        auto_popup_option_dialog: bool = True
     
     class Merge:
         override_option: int = 1
@@ -96,15 +107,6 @@ class Config:
         available: bool = False
 
         check_available = True
-
-    class Extra:
-        download_danmaku_file = False
-        danmaku_file_type = 0
-
-        download_subtitle_file = False
-        subtitle_file_type = 0
-
-        download_cover_file = False
 
     class Auth:
         img_key: str = ""
@@ -141,8 +143,8 @@ class ConfigUtils:
         pass
 
     def load_config(self):
-        def _after_load():
-            _check()
+        def after_load_config():
+            create_files()
 
             for index, cdn in enumerate(Config.Advanced.custom_cdn_list):
                 cdn_map[index + len(cdn_map)] = {
@@ -151,7 +153,7 @@ class ConfigUtils:
                     "order": index + len(cdn_map) + 1
                 }
 
-        def _check():
+        def create_files():
             if not os.path.exists(Config.Download.path):
                 os.makedirs(Config.Download.path)
 
@@ -167,8 +169,8 @@ class ConfigUtils:
             if not os.path.exists(Config.User.user_config_path):
                 self._write_config_json(Config.User.user_config_path, user_config)
 
-        def _after_read():
-            for node_name in ["download", "advanced","merge", "extra", "proxy", "misc"]:
+        def check_config_node_name():
+            for node_name in ["basic", "download", "advanced","merge", "extra", "proxy", "misc"]:
                 if node_name not in app_config:
                     app_config[node_name] = {}
             
@@ -178,7 +180,7 @@ class ConfigUtils:
             if "cookie_params" not in user_config:
                 user_config["cookie_params"] = {}
         
-        def _init():
+        def init_path():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
                     Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
@@ -192,12 +194,16 @@ class ConfigUtils:
 
             Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         
-        _init()
+        init_path()
 
         app_config: Dict[str, dict] = self._read_config_json(Config.APP.app_config_path)
         user_config: Dict[str, dict] = self._read_config_json(Config.User.user_config_path)
 
-        _after_read()
+        check_config_node_name()
+
+        # basic
+        Config.Basic.listen_clipboard = app_config["basic"].get("listen_clipboard", Config.Basic.listen_clipboard)
+        Config.Basic.auto_popup_option_dialog = app_config["basic"].get("auto_popup_option_dialog", Config.Basic.auto_popup_option_dialog)
         
         # download
         Config.Download.path = app_config["download"].get("path", Config.Download.path)
@@ -211,7 +217,6 @@ class ConfigUtils:
         Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
         Config.Download.speed_mbps = app_config["download"].get("speed_mbps", Config.Download.speed_mbps)
-        Config.Download.auto_popup_option_dialog = app_config["download"].get("auto_popup_option_dialog", Config.Download.auto_popup_option_dialog)
 
         # advanced
         Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
@@ -235,11 +240,11 @@ class ConfigUtils:
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
 
         # extra
-        Config.Extra.download_danmaku_file = app_config["extra"].get("download_danmaku_file", Config.Extra.download_danmaku_file)
-        Config.Extra.danmaku_file_type = app_config["extra"].get("danmaku_file_type", Config.Extra.danmaku_file_type)
-        Config.Extra.download_subtitle_file = app_config["extra"].get("download_subtitle_file", Config.Extra.download_subtitle_file)
-        Config.Extra.subtitle_file_type = app_config["extra"].get("subtitle_file_type", Config.Extra.subtitle_file_type)
-        Config.Extra.download_cover_file = app_config["extra"].get("download_cover_file", Config.Extra.download_cover_file)
+        Config.Basic.download_danmaku_file = app_config["extra"].get("download_danmaku_file", Config.Basic.download_danmaku_file)
+        Config.Basic.danmaku_file_type = app_config["extra"].get("danmaku_file_type", Config.Basic.danmaku_file_type)
+        Config.Basic.download_subtitle_file = app_config["extra"].get("download_subtitle_file", Config.Basic.download_subtitle_file)
+        Config.Basic.subtitle_file_type = app_config["extra"].get("subtitle_file_type", Config.Basic.subtitle_file_type)
+        Config.Basic.download_cover_file = app_config["extra"].get("download_cover_file", Config.Basic.download_cover_file)
 
         # proxy
         Config.Proxy.proxy_mode = app_config["proxy"].get("proxy_mode", Config.Proxy.proxy_mode)
@@ -278,7 +283,7 @@ class ConfigUtils:
         Config.Auth.bili_ticket_expires = user_config["cookie_params"].get("bili_ticket_expires", Config.Auth.bili_ticket_expires)
         Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)
 
-        _after_load()
+        after_load_config()
 
     def update_config_kwargs(self, file_path: str, category: str, **kwargs):
         config = self._read_config_json(file_path)
