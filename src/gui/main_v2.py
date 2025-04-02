@@ -41,6 +41,7 @@ from gui.dialog.cover import CoverViewerDialog
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
+from gui.dialog.duplicate import DuplicateDialog
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -400,6 +401,9 @@ class MainWindow(Frame):
                 if Config.Basic.auto_popup_option_dialog:
                     if self.onShowDownloadOptionDlgEVT(event) == wx.ID_CANCEL:
                         return
+                    
+                #duplicate_dialog = DuplicateDialog(self)
+                #duplicate_dialog.ShowModal()
 
                 self.processing_window = ProcessingWindow(self)
                 self.processing_window.Show()
