@@ -392,18 +392,23 @@ class MainWindow(Frame):
                     self.processing_window.Hide()
                     self.onOpenDownloadMgrEVT(event)
 
-                self.episode_list.get_all_checked_item()
+                self.episode_list.get_all_checked_item(check = True)
 
                 if not len(self.episode_list.download_task_info_list):
-                    wx.MessageDialog(self, "下载失败\n\n请选择要下载的项目", "警告", wx.ICON_WARNING).ShowModal()
+                    wx.MessageDialog(self, "下载失败\n\n请选择要下载的项目。", "警告", wx.ICON_WARNING).ShowModal()
                     return
                 
                 if Config.Basic.auto_popup_option_dialog:
-                    if self.onShowDownloadOptionDlgEVT(event) == wx.ID_CANCEL:
+                    if self.onShowDownloadOptionDlgEVT(event) != wx.ID_OK:
                         return
                     
-                #duplicate_dialog = DuplicateDialog(self)
-                #duplicate_dialog.ShowModal()
+                self.episode_list.get_all_checked_item()
+                    
+                duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.get_download_task_cid_list())
+
+                if duplicate_episode_list:
+                    if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
+                        return
 
                 self.processing_window = ProcessingWindow(self)
                 self.processing_window.Show()

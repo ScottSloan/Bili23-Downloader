@@ -225,6 +225,14 @@ extra_map = {
     "download_cover_file": "封面"
 }
 
+download_type_map = {
+    1: "投稿视频",
+    2: "剧集",
+    3: "直播",
+    4: "课程",
+    5: "弹幕、字幕或封面"
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

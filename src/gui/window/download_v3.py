@@ -8,6 +8,7 @@ from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, Download
 from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
+from utils.common.map import download_type_map
 
 from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
@@ -289,6 +290,23 @@ class DownloadManagerWindow(Frame):
 
     def add_panel_to_completed_page(self, task_info: DownloadTaskInfo):
         self.completed_page.add_panel(task_info)
+
+    def find_duplicate_tasks(self, episode_cid_list: dict):
+        duplicate_episode_list = {}
+
+        for panel in self.downloading_page.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                cid = panel.task_info.cid
+                title = panel.task_info.title
+                type = panel.task_info.download_type
+
+                if cid in episode_cid_list:
+                    duplicate_episode_list[cid] = {
+                        "title": title,
+                        "type": download_type_map.get(type)
+                    }
+
+        return duplicate_episode_list
 
     def get_timestamp(self):
         return int(datetime.now().timestamp())

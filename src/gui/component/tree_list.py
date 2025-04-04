@@ -193,7 +193,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         return count
     
-    def get_all_checked_item(self):
+    def get_all_checked_item(self, check = False):
         def get_download_info(title: str, cid: int):
             base_info = self.get_base_download_info(title, EpisodeInfo.cid_dict.get(cid))
 
@@ -216,7 +216,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     cid = self.GetItemData(item).cid
                     
                     if cid:
-                        get_download_info(title, cid)
+                        if check:
+                            self.download_task_info_list.append(cid)
+                        else:
+                            get_download_info(title, cid)
     
     def format_info_entry(self, base_info: dict):
         download_info = DownloadTaskInfo()
@@ -389,6 +392,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         }
         
         self.download_task_info_list.append(self.format_info_entry(info))
+
+    def get_download_task_cid_list(self):
+        return [task_info.cid for task_info in self.download_task_info_list]
 
     @property
     def download_extra(self):
