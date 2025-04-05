@@ -110,9 +110,9 @@ class BasicTab(Tab):
         self.auto_show_download_window_chk = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
-        basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, 10)
-        basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL & (~wx.TOP), 10)
-        basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), 10)
+        basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
+        basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
 
@@ -144,8 +144,8 @@ class BasicTab(Tab):
         extra_sbox.Add(self.get_cover_chk, 0, wx.ALL, self.FromDIP(6))
         
         basic_vbox = wx.BoxSizer(wx.VERTICAL)
-        basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, 10)
-        basic_vbox.Add(extra_sbox, 0, wx.EXPAND | wx.ALL & (~wx.TOP), 10)
+        basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, self.FromDIP(6))
+        basic_vbox.Add(extra_sbox, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         self.SetSizer(basic_vbox)
 

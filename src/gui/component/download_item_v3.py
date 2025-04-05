@@ -41,7 +41,7 @@ class EmptyItemPanel(Panel):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddStretchSpacer()
-        hbox.Add(self.empty_lab, 0, wx.ALL, 10)
+        hbox.Add(self.empty_lab, 0, wx.ALL, self.FromDIP(6))
         hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -73,7 +73,7 @@ class LoadMoreTaskItemPanel(Panel):
         
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddStretchSpacer()
-        hbox.Add(self.more_lab, 0, wx.ALL, 10)
+        hbox.Add(self.more_lab, 0, wx.ALL, self.FromDIP(6))
         hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)

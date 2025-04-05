@@ -291,20 +291,20 @@ class DownloadManagerWindow(Frame):
     def add_panel_to_completed_page(self, task_info: DownloadTaskInfo):
         self.completed_page.add_panel(task_info)
 
-    def find_duplicate_tasks(self, episode_cid_list: dict):
+    def find_duplicate_tasks(self, episode_list: dict):
         duplicate_episode_list = {}
 
         for panel in self.downloading_page.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
-                cid = panel.task_info.cid
-                title = panel.task_info.title
                 type = panel.task_info.download_type
 
-                if cid in episode_cid_list:
-                    duplicate_episode_list[cid] = {
-                        "title": title,
-                        "type": download_type_map.get(type)
-                    }
+                for info in episode_list:
+                    if panel.task_info.cid == info.cid and type == info.download_type:
+                        duplicate_episode_list[panel.task_info.id] = {
+                            "list_number": panel.task_info.list_number,
+                            "title": panel.task_info.title,
+                            "type": download_type_map.get(type)
+                        }
 
         return duplicate_episode_list
 

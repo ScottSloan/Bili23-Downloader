@@ -11,6 +11,8 @@ class DownloadTaskInfo:
         self.number: int = 0
         # 补零序号
         self.number_with_zero: str = ""
+        # 列表中的序号
+        self.list_number: int = 0
         # 后缀
         self.suffix: str = ""
         # 时间戳
@@ -81,8 +83,9 @@ class DownloadTaskInfo:
     def to_dict(self):
         return {
             "id": self.id,
-            "index": self.number,
-            "index_with_zero": self.number_with_zero,
+            "number": self.number,
+            "number_with_zero": self.number_with_zero,
+            "list_number": self.list_number,
             "suffix": self.suffix,
             "timestamp": self.timestamp,
             "referer_url": self.referer_url,
@@ -119,8 +122,9 @@ class DownloadTaskInfo:
 
     def load_from_dict(self, data: Dict):
         self.id = data.get("id")
-        self.number = data.get("index")
-        self.number_with_zero = data.get("index_with_zero")
+        self.number = data.get("number")
+        self.number_with_zero = data.get("number_with_zero")
+        self.list_number = data.get("list_number")
         self.suffix = data.get("suffix")
         self.timestamp = data.get("timestamp")
         self.referer_url = data.get("referer_url")
@@ -208,6 +212,7 @@ class NotificationMessage:
 
 class TreeListItemInfo:
     def __init__(self):
+        self.list_number: int = 0
         self.type: str = ""
         self.title: str = ""
         self.cid: int = 0

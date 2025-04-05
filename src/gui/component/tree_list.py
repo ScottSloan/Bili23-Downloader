@@ -1,7 +1,7 @@
 import wx
 import random
 import wx.dataview
-from typing import Optional, Callable
+from typing import Callable
 
 from utils.config import Config
 from utils.common.enums import ParseType, DownloadOption, VideoType, Platform
@@ -53,6 +53,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             def set_item(data: dict):
                 def get_item_data(type: str, title: str, cid: int = 0):
                     data = TreeListItemInfo()
+                    data.list_number = self.count
                     data.type = type
                     data.title = title
                     data.cid = cid
@@ -193,9 +194,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         return count
     
-    def get_all_checked_item(self, check = False):
-        def get_download_info(title: str, cid: int):
-            base_info = self.get_base_download_info(title, EpisodeInfo.cid_dict.get(cid))
+    def get_all_checked_item(self):
+        def get_download_info(list_number: int, title: str, cid: int):
+            base_info = self.get_base_download_info(list_number, title, EpisodeInfo.cid_dict.get(cid))
 
             if Config.Download.stream_download_option != DownloadOption.NONE.value:
                 self.add_video_type_to_list(base_info)
@@ -212,19 +213,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             if item.IsOk():
                 if self.GetItemData(item).type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    list_number = self.GetItemData(item).list_number
                     title = self.GetItemData(item).title
                     cid = self.GetItemData(item).cid
                     
                     if cid:
-                        if check:
-                            self.download_task_info_list.append(cid)
-                        else:
-                            get_download_info(title, cid)
+                        get_download_info(list_number, title, cid)
     
     def format_info_entry(self, base_info: dict):
         download_info = DownloadTaskInfo()
 
         download_info.id = random.randint(10000000, 99999999)
+        download_info.list_number = base_info.get("list_number")
         download_info.title = base_info.get("title")
         download_info.cover_url = base_info.get("cover_url")
         download_info.referer_url = base_info.get("referer_url")
@@ -251,7 +251,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         return download_info
 
-    def get_base_download_info(self, title: str, entry: dict):
+    def get_base_download_info(self, list_number: int, title: str, entry: dict):
         match self.parent.current_parse_type:
             case ParseType.Video:
                 info = self.get_video_download_info(title, entry)
@@ -262,6 +262,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             case ParseType.Cheese:
                 info = self.get_cheese_download_info(title, entry)
 
+        info["list_number"] = list_number
         info["download_option"] = Config.Download.stream_download_option
                 
         return info
@@ -392,9 +393,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         }
         
         self.download_task_info_list.append(self.format_info_entry(info))
-
-    def get_download_task_cid_list(self):
-        return [task_info.cid for task_info in self.download_task_info_list]
 
     @property
     def download_extra(self):

@@ -17,7 +17,7 @@ class DuplicateDialog(Dialog):
         wx.Bell()
 
     def init_UI(self):
-        tip_lab = wx.StaticText(self, -1, "以下项目已在下载列表中，是否仍要继续下载？\n重名文件将根据设置进行覆盖或重命名。")
+        tip_lab = wx.StaticText(self, -1, "以下项目已在下载列表中，是否仍要继续下载？\n重复的项目将根据设置进行覆盖或重命名。")
 
         self.episode_list = wx.ListCtrl(self, -1, size = self.FromDIP((550, 200)), style = wx.LC_REPORT)
 
@@ -30,7 +30,7 @@ class DuplicateDialog(Dialog):
         bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(tip_lab, 0, wx.ALL, 10)
+        vbox.Add(tip_lab, 0, wx.ALL, self.FromDIP(6))
         vbox.Add(self.episode_list, 1, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
@@ -48,5 +48,5 @@ class DuplicateDialog(Dialog):
         self.Fit()
 
     def init_list_data(self):
-        for index, entry in enumerate(self.duplicate_episode_list.values()):
-            self.episode_list.Append([str(index + 1), entry["title"], entry["type"]])
+        for entry in self.duplicate_episode_list.values():
+            self.episode_list.Append([entry["list_number"], entry["title"], entry["type"]])

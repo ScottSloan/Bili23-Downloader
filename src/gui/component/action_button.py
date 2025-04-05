@@ -25,8 +25,8 @@ class ActionButton(Panel):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(self.FromDIP(33))
-        hbox.Add(self.icon, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        hbox.Add(self.lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        hbox.Add(self.icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        hbox.Add(self.lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         hbox.AddSpacer(self.FromDIP(33))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
