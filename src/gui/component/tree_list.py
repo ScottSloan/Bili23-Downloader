@@ -313,7 +313,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "download_type": ParseType.Video.value,
             "tname_info": {
                 "tname": VideoInfo.tname,
-                "tname_v2": VideoInfo.tname_v2
+                "subtname": VideoInfo.subtname
             },
             "up_info": {
                 "up_name": VideoInfo.up_name,

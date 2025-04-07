@@ -38,16 +38,14 @@ class FileNameManager:
 
     def get_fields_dict(self):
         return {
-            "date": datetime.now().strftime(Config.Advanced.date_format),
-            "time": datetime.now().strftime(Config.Advanced.time_format),
+            "datetime": datetime.now().strftime(Config.Advanced.datetime_format),
             "timestamp": str(int(datetime.now().timestamp())),
-            "pubdate": datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.date_format),
-            "pubtime": datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.time_format),
+            "pubdatetime": datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.datetime_format),
             "pubtimestamp": self.task_info.pubtime,
             "number": self.task_info.number,
             "number_with_zero": self.task_info.number_with_zero,
             "tname": self.task_info.tname_info.get("tname"),
-            "tname_v2": self.task_info.tname_info.get("tname_v2"),
+            "subtname": self.task_info.tname_info.get("subtname"),
             "area": self.task_info.area,
             "title": UniversalTool.get_legal_name(self.task_info.title),
             "aid": self.task_info.aid,

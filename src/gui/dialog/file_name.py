@@ -9,10 +9,9 @@ from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class CustomFileNameDialog(Dialog):
-    def __init__(self, parent, template: str, date_format: str, time_format: str, auto_adjust: bool):
+    def __init__(self, parent, template: str, datetime_format: str, auto_adjust: bool):
         self.template = template
-        self.date_format = date_format
-        self.time_format = time_format
+        self.datetime_format = datetime_format
         self.auto_adjust = auto_adjust
 
         Dialog.__init__(self, parent, "自定义下载文件名")
@@ -49,21 +48,16 @@ class CustomFileNameDialog(Dialog):
         fields_vbox.Add(fields_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         fields_vbox.Add(self.fields_list, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
 
-        date_format_lab = wx.StaticText(self, -1, "日期格式")
-        self.date_format_box = TextCtrl(self, -1, self.date_format, size = self.FromDIP((150, 24)))
-
-        time_format_lab = wx.StaticText(self, -1, "时间格式")
-        self.time_format_box = TextCtrl(self, -1, self.time_format, size = self.FromDIP((150, 24)))
+        datetime_format_lab = wx.StaticText(self, -1, "日期和时间格式")
+        self.datetime_format_box = TextCtrl(self, -1, self.datetime_format, size = self.FromDIP((200, 24)))
 
         self.auto_adjust_chk = wx.CheckBox(self, -1, "自动调整空字段前后的显示效果")
         self.auto_adjust_chk.SetValue(self.auto_adjust)
 
         datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        datetime_hbox.Add(date_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        datetime_hbox.Add(self.date_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        datetime_hbox.Add(time_format_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        datetime_hbox.Add(self.time_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-
+        datetime_hbox.Add(datetime_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        datetime_hbox.Add(self.datetime_format_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
 
@@ -85,8 +79,7 @@ class CustomFileNameDialog(Dialog):
 
     def Bind_EVT(self):
         self.template_box.Bind(wx.EVT_TEXT, self.onTemplateTextEVT)
-        self.date_format_box.Bind(wx.EVT_TEXT, self.onDateTextEVT)
-        self.time_format_box.Bind(wx.EVT_TEXT, self.onTimeTextEVT)
+        self.datetime_format_box.Bind(wx.EVT_TEXT, self.onDateTextEVT)
 
         self.fields_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
         self.auto_adjust_chk.Bind(wx.EVT_CHECKBOX, self.onAutoAdjustEVT)
@@ -100,14 +93,9 @@ class CustomFileNameDialog(Dialog):
         def init_field_list_content():
             content = [
                 {
-                    "name": "{date}",
-                    "description": "日期",
-                    "example": datetime.now().strftime(self.date_format_box.GetValue())
-                },
-                {
-                    "name": "{time}",
-                    "description": "时间",
-                    "example": datetime.now().strftime(self.time_format_box.GetValue())
+                    "name": "{datetime}",
+                    "description": "日期和时间",
+                    "example": datetime.now().strftime(self.datetime_format_box.GetValue())
                 },
                 {
                     "name": "{timestamp}",
@@ -115,18 +103,13 @@ class CustomFileNameDialog(Dialog):
                     "example": str(int(datetime.now().timestamp()))
                 },
                 {
-                    "name": "{pubdate}",
-                    "description": "视频发布日期",
-                    "example": datetime.fromtimestamp(1667061000).strftime(self.date_format_box.GetValue())
-                },
-                {
-                    "name": "{pubtime}",
-                    "description": "视频发布时间",
-                    "example": datetime.fromtimestamp(1667061000).strftime(self.time_format_box.GetValue())
+                    "name": "{pubdatetime}",
+                    "description": "视频发布的日期和时间",
+                    "example": datetime.fromtimestamp(1667061000).strftime(self.datetime_format_box.GetValue())
                 },
                 {
                     "name": "{pubtimestamp}",
-                    "description": "视频发布时间戳",
+                    "description": "视频发布的时间戳",
                     "example": "1667061000"
                 },
                 {
@@ -145,8 +128,8 @@ class CustomFileNameDialog(Dialog):
                     "example": "综合"
                 },
                 {
-                    "name": "{tname_v2}",
-                    "description": "分区 v2（仅投稿视频有效）",
+                    "name": "{subtname}",
+                    "description": "子分区（仅投稿视频有效）",
                     "example": "动漫剪辑"
                 },
                 {
@@ -219,11 +202,8 @@ class CustomFileNameDialog(Dialog):
         if self.check_legal(self.template_box.GetValue()):
             raise NameError("template")
         
-        if self.check_legal(self.date_format_box.GetValue()):
-            raise NameError("date")
-        
-        if self.check_legal(self.time_format_box.GetValue()):
-            raise NameError("time")
+        if self.check_legal(self.datetime_format_box.GetValue()):
+            raise NameError("datetime")
         
         task_info = DownloadTaskInfo()
         task_info.number = 0
@@ -240,7 +220,7 @@ class CustomFileNameDialog(Dialog):
         task_info.area = "中国大陆"
         task_info.tname_info = {
             "tname": "综合",
-            "tname_v2": "动漫剪辑"
+            "subtname": "动漫剪辑"
         }
         task_info.up_info = {
             "up_name": "哔哩哔哩番剧",
@@ -252,6 +232,8 @@ class CustomFileNameDialog(Dialog):
 
         if len(preview) > 255:
             raise ValueError("max length")
+        
+        datetime.now().strftime(self.datetime_format_box.GetValue())
         
         self.preview_lab.SetLabel(f"预览：{preview}")
 
@@ -271,14 +253,7 @@ class CustomFileNameDialog(Dialog):
     def onDateTextEVT(self, event):
         self.onTemplateTextEVT(event)
 
-        self.fields_list.SetItem(0, 2, datetime.now().strftime(self.date_format_box.GetValue()))
-
-        event.Skip()
-
-    def onTimeTextEVT(self, event):
-        self.onTemplateTextEVT(event)
-
-        self.fields_list.SetItem(1, 2, datetime.now().strftime(self.time_format_box.GetValue()))
+        self.fields_list.SetItem(0, 2, datetime.now().strftime(self.datetime_format_box.GetValue()))
 
         event.Skip()
 
@@ -309,10 +284,7 @@ class CustomFileNameDialog(Dialog):
                         info = '文件名不得包含 < > : " / \\ | ? * 之中任何一个字符'
                     
                     case "date":
-                        info = '日期格式错误，不得包含 < > : " / \\ | ? * 之中任何一个字符'
-                    
-                    case "time":
-                        info = '时间格式错误，不得包含 < > : " / \\ | ? * 之中任何一个字符'
+                        info = '日期和时间格式错误，不得包含 < > : " / \\ | ? * 之中任何一个字符'
                     
                     case _:
                         info = str(e)
@@ -323,7 +295,7 @@ class CustomFileNameDialog(Dialog):
                         info = "字段名必须以 {} 包裹"
                     
                     case "Invalid format string":
-                        info = "日期时间格式无效"
+                        info = "日期和时间格式无效"
 
                     case "max length":
                         info = "文件名长度超过 255"

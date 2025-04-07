@@ -34,7 +34,7 @@ class VideoInfo:
 
     pubtime: int = 0
     tname: str = ""
-    tname_v2: str = ""
+    subtname: str = ""
     up_name: str = ""
     up_mid: int = 0
 
@@ -56,7 +56,7 @@ class VideoInfo:
         VideoInfo.stream_type = 0
         VideoInfo.pubtime = 0
         VideoInfo.tname = ""
-        VideoInfo.tname_v2 = ""
+        VideoInfo.subtname = ""
         VideoInfo.up_name = ""
         VideoInfo.up_mid = 0
 
@@ -127,7 +127,7 @@ class VideoParser:
 
         VideoInfo.pubtime = info["pubdate"]
         VideoInfo.tname = info["tname"]
-        VideoInfo.tname_v2 = info["tname_v2"]
+        VideoInfo.subtname = info["tname_v2"]
         VideoInfo.up_name = info["owner"]["name"]
         VideoInfo.up_mid = info["owner"]["mid"]
 

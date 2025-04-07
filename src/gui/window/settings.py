@@ -550,8 +550,7 @@ class AdvancedTab(Tab):
         self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
 
         self.file_name_template = Config.Advanced.file_name_template
-        self.date_format = Config.Advanced.date_format
-        self.time_format = Config.Advanced.time_format
+        self.datetime_format = Config.Advanced.datetime_format
         self.auto_adjust = Config.Advanced.auto_adjust_field
 
         self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
@@ -576,8 +575,7 @@ class AdvancedTab(Tab):
         Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
 
         Config.Advanced.file_name_template = self.file_name_template
-        Config.Advanced.date_format = self.date_format
-        Config.Advanced.time_format = self.time_format
+        Config.Advanced.datetime_format = self.datetime_format
         Config.Advanced.auto_adjust_field = self.auto_adjust
 
         Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
@@ -597,8 +595,7 @@ class AdvancedTab(Tab):
             "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
             "custom_cdn_list": Config.Advanced.custom_cdn_list,
             "file_name_template": Config.Advanced.file_name_template,
-            "date_format": Config.Advanced.date_format,
-            "time_format": Config.Advanced.time_format,
+            "datetime_format": Config.Advanced.datetime_format,
             "retry_when_download_error": Config.Advanced.retry_when_download_error,
             "download_error_retry_count": Config.Advanced.download_error_retry_count,
             "retry_when_download_suspend": Config.Advanced.retry_when_download_suspend,
@@ -634,12 +631,11 @@ class AdvancedTab(Tab):
             self.custom_cdn_box.SetValue(dlg.get_cdn())
 
     def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self, self.file_name_template, self.date_format, self.time_format, self.auto_adjust)
+        dlg = CustomFileNameDialog(self, self.file_name_template, self.datetime_format, self.auto_adjust)
 
         if dlg.ShowModal() == wx.ID_OK:
             self.file_name_template = dlg.template_box.GetValue()
-            self.date_format = dlg.date_format_box.GetValue()
-            self.time_format = dlg.time_format_box.GetValue()
+            self.datetime_format = dlg.datetime_format_box.GetValue()
             self.auto_adjust = dlg.auto_adjust_chk.GetValue()
     
     def onChangeRetryEVT(self, event):
