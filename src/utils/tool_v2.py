@@ -330,7 +330,7 @@ class FormatTool:
             return "0 MB"
         
         elif size > 1024 * 1024 * 1024:
-            return "{:.1f} GB".format(size / 1024 / 1024 / 1024)
+            return "{:.2f} GB".format(size / 1024 / 1024 / 1024)
         
         elif size > 1024 * 1024:
             return "{:.1f} MB".format(size / 1024 / 1024)

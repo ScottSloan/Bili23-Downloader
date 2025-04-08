@@ -2,7 +2,7 @@ import wx
 from typing import Callable
 
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value, get_mapping_key_by_value
-from utils.common.enums import AudioQualityID, DownloadOption
+from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID
 from utils.config import Config, config_utils
 from utils.tool_v2 import FormatTool
 from utils.common.thread import Thread
@@ -35,29 +35,50 @@ class DownloadOptionDialog(Dialog):
 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
-        self.video_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((300, 16)), color = label_color)
+        self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.video_quality_warn_icon.Hide()
+        self.video_quality_warn_icon.SetToolTip("当前所选的清晰度与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
+        self.video_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
+
+        video_quality_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_quality_info_hbox.Add(self.video_quality_warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_info_hbox.Add(self.video_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.audio_quality_lab = wx.StaticText(self, -1, "音质")
         self.audio_quality_choice = wx.Choice(self, -1)
-        self.audio_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((300, 16)), color = label_color)
+        self.audio_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.audio_quality_warn_icon.Hide()
+        self.audio_quality_warn_icon.SetToolTip("当前所选的音质与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
+        self.audio_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
+
+        audio_quality_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        audio_quality_info_hbox.Add(self.audio_quality_warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_quality_info_hbox.Add(self.audio_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_codec_lab = wx.StaticText(self, -1, "编码格式")
         self.video_codec_choice = wx.Choice(self, -1)
-        self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((300, 16)), color = label_color)
+        self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.video_codec_warn_icon.Hide()
+        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n这表示视频无此编码，默认将使用 H.264 替代。")
+        self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
+
+        video_codec_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_codec_info_hbox.Add(self.video_codec_warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_codec_info_hbox.Add(self.video_codec_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         flex_grid_box = wx.FlexGridSizer(6, 2, 0, 0)
         flex_grid_box.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_grid_box.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         flex_grid_box.AddStretchSpacer()
-        flex_grid_box.Add(self.video_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_grid_box.Add(video_quality_info_hbox, 0, wx.EXPAND)
         flex_grid_box.Add(self.audio_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_grid_box.Add(self.audio_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         flex_grid_box.AddStretchSpacer()
-        flex_grid_box.Add(self.audio_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_grid_box.Add(audio_quality_info_hbox, 0, wx.EXPAND)
         flex_grid_box.Add(self.video_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_grid_box.Add(self.video_codec_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         flex_grid_box.AddStretchSpacer()
-        flex_grid_box.Add(self.video_codec_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_grid_box.Add(video_codec_info_hbox, 0, wx.EXPAND)
 
         media_box = wx.StaticBox(self, -1, "媒体下载选项")
 
@@ -66,15 +87,11 @@ class DownloadOptionDialog(Dialog):
         self.download_audio_radio = wx.RadioButton(media_box, -1, "仅下载音频")
         self.download_both_radio = wx.RadioButton(media_box, -1, "下载视频和音频")
 
-        media_grid_box = wx.FlexGridSizer(2, 4, 0, 0)
+        media_grid_box = wx.FlexGridSizer(2, 2, 0, self.FromDIP(50))
         media_grid_box.Add(self.download_none_radio, 0, wx.ALL, self.FromDIP(6))
-        media_grid_box.AddSpacer(self.FromDIP(30))
         media_grid_box.Add(self.download_video_radio, 0, wx.ALL, self.FromDIP(6))
-        media_grid_box.AddSpacer(self.FromDIP(30))
         media_grid_box.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        media_grid_box.AddSpacer(self.FromDIP(30))
         media_grid_box.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        media_grid_box.AddSpacer(self.FromDIP(30))
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
         media_sbox.Add(media_grid_box, 0, wx.EXPAND)
@@ -99,18 +116,18 @@ class DownloadOptionDialog(Dialog):
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
         self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
-        self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
-        self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
+        #self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
+        #self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
 
-        subtitle_grid_box = wx.FlexGridSizer(2, 4, 0, 0)
+        subtitle_grid_box = wx.FlexGridSizer(1, 4, 0, 0)
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
         subtitle_grid_box.Add(self.subtitle_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         subtitle_grid_box.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
-        subtitle_grid_box.AddSpacer(self.FromDIP(20))
-        subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
-        subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        #subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        #subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        #subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        #subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
@@ -132,6 +149,7 @@ class DownloadOptionDialog(Dialog):
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
         right_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        right_vbox.AddStretchSpacer()
         right_vbox.Add(other_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -231,10 +249,30 @@ class DownloadOptionDialog(Dialog):
     
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
+            def check():
+                if self.video_quality_id == VideoQualityID._Auto.value:
+                    video_quality_id = video_quality_map.get(self.video_quality_choice.GetString(1))
+                else:
+                    video_quality_id = self.video_quality_id
+
+                if info["video_quality_id"] != video_quality_id:
+                    self.video_quality_warn_icon.Show()
+                else:
+                    self.video_quality_warn_icon.Hide()
+
+                if info["video_codec_id"] != self.video_codec_id:
+                    self.video_codec_warn_icon.Show()
+                else:
+                    self.video_codec_warn_icon.Hide()
+
+                self.Layout()
+            
             info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
 
             wx.CallAfter(self.video_quality_info_lab.SetLabel, "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info['size'])))
             wx.CallAfter(self.video_codec_info_lab.SetLabel, get_mapping_key_by_value(video_codec_map, info["video_codec_id"]))
+
+            check()
 
         self.video_quality_info_lab.SetLabel("正在检测...")
         self.video_codec_info_lab.SetLabel("正在检测...")
@@ -243,9 +281,24 @@ class DownloadOptionDialog(Dialog):
 
     def onChangeAudioQualityEVT(self, event):
         def worker():
+            def check():
+                if self.audio_quality_id == AudioQualityID._Auto.value:
+                    audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetString(1))
+                else:
+                    audio_quality_id = self.audio_quality_id
+
+                if info["audio_quality_id"] != audio_quality_id:
+                    self.audio_quality_warn_icon.Show()
+                else:
+                    self.audio_quality_warn_icon.Hide()
+
+                self.Layout()
+
             info = self.preview.get_audio_stream_size(self.audio_quality_id)
 
             wx.CallAfter(self.audio_quality_info_lab.SetLabel, "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"])))
+
+            check()
 
         self.audio_quality_info_lab.SetLabel("正在检测...")
 
@@ -293,8 +346,8 @@ class DownloadOptionDialog(Dialog):
 
         self.subtitle_file_type_lab.Enable(enable)
         self.subtitle_file_type_choice.Enable(enable)
-        self.subtitle_file_lan_type_lab.Enable(enable)
-        self.subtitle_file_lan_type_btn.Enable(enable)
+        #self.subtitle_file_lan_type_lab.Enable(enable)
+        #self.subtitle_file_lan_type_btn.Enable(enable)
 
     def onCheckAutoPopupEVT(self, event):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
