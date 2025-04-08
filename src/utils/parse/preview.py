@@ -53,17 +53,30 @@ class Preview:
         return self.video_size_cache.get(key)
 
     def get_audio_stream_size(self, audio_quality_id: int):
-        def get_url_list():
-            for entry in self.download_json["dash"]["audio"]:
-                if entry["id"] == audio_quality_id:
-                    bandwidth = entry["bandwidth"]
+        def get_url_list(data: dict):
+            match AudioQualityID(audio_quality_id):
+                case AudioQualityID._Dolby_Atoms:
+                    data_node = data["dolby"]["audio"]
+                    bandwidth = data_node["bandwidth"]
 
-                    return self.get_stream_download_url_list(entry), bandwidth
+                case AudioQualityID._Hi_Res:
+                    data_node = data["flac"]["audio"]
+                    bandwidth = data_node["bandwidth"]
+                
+                case _:
+                    for entry in data["audio"]:
+                        if entry["id"] == audio_quality_id:
+                            data_node = entry
+
+                            bandwidth = entry["bandwidth"]
+                            break
+
+            return self.get_stream_download_url_list(data_node), bandwidth
 
         audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
         
         if audio_quality_id not in self.audio_size_cache:
-            (url_list, bandwidth) = get_url_list()
+            (url_list, bandwidth) = get_url_list(self.download_json["dash"])
 
             self.audio_size_cache[audio_quality_id] = {
                 "audio_quality_id": audio_quality_id,
@@ -78,7 +91,8 @@ class Preview:
             if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
                 return video_codec_id
     
-    def get_video_quality_id(self, video_quality_id: int, data: list):
+    @staticmethod
+    def get_video_quality_id(video_quality_id: int, data: list):
         def get_highest_video_quality_id(data: list):
             highest_video_quality_id = VideoQualityID._360P.value
 
@@ -98,7 +112,8 @@ class Preview:
 
         return video_quality_id
 
-    def get_audio_quality_id(self, audio_quality_id: int, data: list):
+    @staticmethod
+    def get_audio_quality_id(audio_quality_id: int, data: dict):
         def get_highest_audio_quality_id(data: dict):
             highest_audio_quality = AudioQualityID._64K.value
 
@@ -118,15 +133,22 @@ class Preview:
         
         highest_audio_quality = get_highest_audio_quality_id(data)
 
-        if audio_quality_id == AudioQualityID._Auto.value:
-            audio_quality_id = highest_audio_quality
+        match AudioQualityID(audio_quality_id):
+            case AudioQualityID._Auto:
+                audio_quality_id = highest_audio_quality
 
-        elif highest_audio_quality < audio_quality_id:
-            audio_quality_id = highest_audio_quality
+            case AudioQualityID._Dolby_Atoms | AudioQualityID._Hi_Res:
+                if highest_audio_quality != audio_quality_id:
+                    audio_quality_id = highest_audio_quality
+
+            case AudioQualityID._192K | AudioQualityID._132K | AudioQualityID._64K:
+                if AudioQualityID(highest_audio_quality) not in [AudioQualityID._Dolby_Atoms, AudioQualityID._Hi_Res] and highest_audio_quality < audio_quality_id:
+                    audio_quality_id = highest_audio_quality
 
         return audio_quality_id
 
-    def get_video_codec_id(self, video_quality_id: int, video_codec_id: int, data: list):
+    @staticmethod
+    def get_video_codec_id(video_quality_id: int, video_codec_id: int, data: list):
         def check_codec_id():
             codec_id_list = []
 
