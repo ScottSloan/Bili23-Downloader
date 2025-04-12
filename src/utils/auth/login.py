@@ -96,7 +96,7 @@ class Login:
 
         config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
 
-        UniversalTool.remove_files(os.path.dirname(Config.User.user_config_path), ["face.jpg"])
+        UniversalTool.remove_files([UniversalTool.get_file_path(os.path.dirname(Config.User.user_config_path), "face.jpg")])
 
 class QRLogin(Login):
     def __init__(self):

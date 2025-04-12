@@ -10,9 +10,6 @@ class MD5Verify:
             return re.findall(r'\w+', etag)[0]
         
     def verify_md5(md5_value: str, file_path: str):
-        if not md5_value:
-            return False
-        
         md5 = hashlib.md5()
 
         with open(file_path, 'rb') as f:

@@ -10,7 +10,7 @@ from utils.common.exception import GlobalException
 from utils.module.cdn import CDN
 from utils.module.md5_verify import MD5Verify
 
-from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
+from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool, UniversalTool
 from utils.config import Config
 
 class Downloader:
@@ -117,7 +117,7 @@ class Downloader:
 
         downloader_info = get_downloader_info()
 
-        file_path = os.path.join(Config.Download.path, downloader_info.file_name)
+        file_path = self.get_file_path(downloader_info.file_name)
 
         get_total_file_size()
 
@@ -218,17 +218,25 @@ class Downloader:
 
     def progress_tracker(self):
         def download_finish():
+            def remove_current_entry():
+                self.task_info.download_items.remove(entry["type"])
+
+                self.downloader_info = self.downloader_info[1:]
+
+                self.current_downloaded_size = 0
+
             # 下载完成，进行 md5 校验
             entry = self.downloader_info[:1][0]
+            file_name = entry["file_name"]
             cache = self.cache.get(entry["file_name"])
 
-            print(MD5Verify.verify_md5(cache["md5"], os.path.join(Config.Download.path, entry["file_name"])))
-
-            self.task_info.download_items.remove(entry["type"])
-
-            self.downloader_info = self.downloader_info[1:]
-
-            self.current_downloaded_size = 0
+            if cache["md5"]:
+                if MD5Verify.verify_md5(cache["md5"], self.get_file_path(file_name)):
+                    # md5 校验通过，移除当前项的下载信息
+                    remove_current_entry()
+                else:
+                    # md5 校验不通过，重新下载该文件
+                    UniversalTool.remove_files([self.get_file_path(file_name)])
 
             update_progress()
 
@@ -293,3 +301,6 @@ class Downloader:
             self.stop_download()
 
             self.callback.onErrorCallback()
+
+    def get_file_path(self, file_name: str):
+        return UniversalTool.get_file_path(Config.Download.path, file_name)

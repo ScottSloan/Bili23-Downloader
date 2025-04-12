@@ -12,6 +12,7 @@ from typing import Optional, List
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.enums import ParseType, ProxyMode, Platform
+from utils.common.thread import Thread
 
 class RequestTool:
     # 请求工具类
@@ -440,15 +441,19 @@ class UniversalTool:
 
         return "BV1" + "".join(bvid)
 
-    def remove_files(directory: str, file_name_list: List[str]):
-        for i in file_name_list:
-            _path = os.path.join(directory, i)
-            
-            if os.path.exists(_path):
-                try:
-                    os.remove(_path)
-                except Exception:
-                    pass
+    def remove_files(path_list: List):
+        def worker():
+            for path in path_list:
+                while os.path.exists(path):
+                    try:
+                        os.remove(path)
+                    except Exception:
+                        pass
+
+        Thread(target = worker).start()
+
+    def get_file_path(directory: str, file_name: str):
+        return os.path.join(directory, file_name)
 
     def msw_set_dpi_awareness():
         if Config.Sys.platform == Platform.Windows.value:

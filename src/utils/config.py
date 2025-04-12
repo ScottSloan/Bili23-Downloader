@@ -299,7 +299,7 @@ class ConfigUtils:
     def clear_config():
         from utils.tool_v2 import UniversalTool
 
-        UniversalTool.remove_files(os.getcwd(), ["config.json"])
+        UniversalTool.remove_files([UniversalTool.get_file_path(os.getcwd(), "config.json")])
 
     def _read_config_json(self, file_path: str):
         try:

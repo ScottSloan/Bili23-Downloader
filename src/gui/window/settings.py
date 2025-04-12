@@ -1145,7 +1145,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            UniversalTool.remove_files(os.getcwd(), ["config.json"])
+            config_utils.clear_config()
 
             self.restart()
 
