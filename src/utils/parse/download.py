@@ -149,22 +149,22 @@ class DownloadParser:
 
         for entry in data:
             if entry["id"] == self.task_info.video_quality_id and entry["codecid"] == self.task_info.video_codec_id:
-                url_list = self.get_stream_download_url_list(entry)
+                url_list = Preview.get_stream_download_url_list(entry)
 
         return get_video_downloader_info()
 
     def parse_audio_stream(self, data: dict):
         def get_audio_stream_url_list(data: dict):
             def get_hi_res():
-                return self.get_stream_download_url_list(data["flac"]["audio"])
+                return Preview.get_stream_download_url_list(data["flac"]["audio"])
 
             def get_dolby():
-                return self.get_stream_download_url_list(data["dolby"]["audio"][0])
+                return Preview.get_stream_download_url_list(data["dolby"]["audio"][0])
 
             def get_normal():
                 for entry in data["audio"]:
                     if entry["id"] == self.task_info.audio_quality_id:
-                        return self.get_stream_download_url_list(entry)
+                        return Preview.get_stream_download_url_list(entry)
 
             match AudioQualityID(self.task_info.audio_quality_id):
                 case AudioQualityID._None:
@@ -239,22 +239,11 @@ class DownloadParser:
 
         for index, entry in enumerate(data["durl"]):
             if f"flv_{index + 1}" in self.task_info.download_items:
-                url_list = self.get_stream_download_url_list(entry)
+                url_list = Preview.get_stream_download_url_list(entry)
 
                 downloader_info.append(get_flv_downloader_info(index + 1))
 
         return downloader_info
-
-    def get_stream_download_url_list(self, data: dict):
-        def generator(x: list):
-            for v in x:
-                if isinstance(v, list):
-                    for y in v:
-                        yield y
-                else:
-                    yield v
-
-        return [i for i in generator([data[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in data])]
 
     def get_download_url(self):
         try:

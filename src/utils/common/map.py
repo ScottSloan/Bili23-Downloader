@@ -120,6 +120,11 @@ download_status_map = {
 }
 
 cdn_map = {
+    111: {
+        "cdn": "upos-sz-estgoss.bilivideo.com",
+        "provider": "?",
+        "order": 15
+    },
     0: {
         "cdn": "upos-sz-mirror08c.bilivideo.com",
         "provider": "华为云",
@@ -153,12 +158,12 @@ cdn_map = {
     6: {
         "cdn": "upos-sz-mirrorali.bilivideo.com",
         "provider": "阿里云",
-        "order": 3
+        "order": 8
     },
     7: {
         "cdn": "upos-sz-mirrorali02.bilivideo.com",
         "provider": "阿里云",
-        "order": 8
+        "order": 3
     },
     8: {
         "cdn": "upos-sz-mirroralib.bilivideo.com",

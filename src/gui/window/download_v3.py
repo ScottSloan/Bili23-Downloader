@@ -318,7 +318,7 @@ class SimplePage(Panel):
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 100 个
-            item_per_time = 100
+            item_per_time = 1
 
             temp_download_list = self.temp_download_list[:item_per_time]
             self.temp_download_list = self.temp_download_list[item_per_time:]

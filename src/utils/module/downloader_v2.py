@@ -1,15 +1,14 @@
-import re
 import os
 import time
 import threading
 
 from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
-from utils.common.enums import CDNMode, StatusCode
+from utils.common.enums import StatusCode
 from utils.common.thread import Thread, DaemonThreadPoolExecutor
-from utils.common.map import cdn_map
 from utils.common.exception import GlobalException
 
 from utils.module.cdn import CDN
+from utils.module.md5_verify import MD5Verify
 
 from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
 from utils.config import Config
@@ -54,11 +53,12 @@ class Downloader:
                     file_name = entry["file_name"]
                     url_list = entry["url_list"]
 
-                    new_url, file_size = self.get_file_size(url_list)
+                    new_url, etag, file_size = self.get_file_size(url_list)
 
                     self.task_info.total_file_size += file_size
                     self.cache[file_name] = {
                         "url": new_url,
+                        "md5": MD5Verify.get_md5_from_etag(etag),
                         "file_size": file_size
                     }
         
@@ -68,7 +68,7 @@ class Downloader:
 
                 url, self.current_file_size = entry["url"], entry["file_size"]
             else:
-                url, self.current_file_size = self.get_file_size(downloader_info.url_list)
+                url, etag, self.current_file_size = self.get_file_size(downloader_info.url_list)
 
             self.create_local_file(file_path, self.current_file_size)
 
@@ -192,9 +192,10 @@ class Downloader:
 
                 if "Content-Length" in req.headers:
                     file_size = int(req.headers.get("Content-Length"))
+                    etag = req.headers.get("Etag")
 
                     if file_size:
-                        return new_url, file_size
+                        return new_url, etag, file_size
     
     def generate_ranges(self, file_size: int):
         num_threads = Config.Download.max_thread_count
@@ -217,8 +218,13 @@ class Downloader:
 
     def progress_tracker(self):
         def download_finish():
-            item = self.downloader_info[:1][0]["type"]
-            self.task_info.download_items.remove(item)
+            # 下载完成，进行 md5 校验
+            entry = self.downloader_info[:1][0]
+            cache = self.cache.get(entry["file_name"])
+
+            print(MD5Verify.verify_md5(cache["md5"], os.path.join(Config.Download.path, entry["file_name"])))
+
+            self.task_info.download_items.remove(entry["type"])
 
             self.downloader_info = self.downloader_info[1:]
 

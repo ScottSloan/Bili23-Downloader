@@ -181,7 +181,8 @@ class Preview:
                     if file_size:
                         return file_size
 
-    def get_stream_download_url_list(self, data: dict):
+    @staticmethod
+    def get_stream_download_url_list(data: dict):
         def generator(x: list):
             for v in x:
                 if isinstance(v, list):
