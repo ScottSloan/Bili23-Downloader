@@ -2,7 +2,7 @@ import wx
 from typing import Callable
 
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value, get_mapping_key_by_value
-from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID
+from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
 from utils.config import Config, config_utils
 from utils.tool_v2 import FormatTool
 from utils.common.thread import Thread
@@ -59,7 +59,7 @@ class DownloadOptionDialog(Dialog):
         self.video_codec_choice = wx.Choice(self, -1)
         self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_codec_warn_icon.Hide()
-        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n这表示视频无此编码，默认将使用 AVC/H.264 替代。")
+        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n这表示视频无此编码，默认将使用 AVC/H.264 替代。\nHDR 视频仅支持 H.265 编码。")
         self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
 
         video_codec_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -194,7 +194,7 @@ class DownloadOptionDialog(Dialog):
         self.onCheckDownloadDanmakuEVT(0)
         self.onCheckDownloadSubtitleEVT(0)
 
-        self.preview = Preview(self.parent.current_parse_type)
+        self.preview = Preview(self.parent.current_parse_type, self.parent.stream_type)
 
         self.onChangeVideoQualityCodecEVT(0)
         self.onChangeAudioQualityEVT(0)
@@ -267,9 +267,17 @@ class DownloadOptionDialog(Dialog):
 
                 self.Layout()
             
+            def get_video_quality_info_label():
+                match StreamType(self.parent.stream_type):
+                    case StreamType.Dash:
+                        return "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                    
+                    case StreamType.Flv:
+                        return "[{}]   [{}]   [FLV]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatTool.format_size(info["size"]))
+                    
             info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
 
-            wx.CallAfter(self.video_quality_info_lab.SetLabel, "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info['size'])))
+            wx.CallAfter(self.video_quality_info_lab.SetLabel, get_video_quality_info_label())
             wx.CallAfter(self.video_codec_info_lab.SetLabel, get_mapping_key_by_value(video_codec_map, info["video_codec_id"]))
 
             check()
@@ -294,9 +302,17 @@ class DownloadOptionDialog(Dialog):
 
                 self.Layout()
 
+            def get_audio_quality_info_label():
+                match StreamType(self.parent.stream_type):
+                    case StreamType.Dash:
+                        return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                    
+                    case StreamType.Flv:
+                        return "检测到 FLV 视频流，不支持自定义下载音质"
+
             info = self.preview.get_audio_stream_size(self.audio_quality_id)
 
-            wx.CallAfter(self.audio_quality_info_lab.SetLabel, "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"])))
+            wx.CallAfter(self.audio_quality_info_lab.SetLabel, get_audio_quality_info_label())
 
             check()
 

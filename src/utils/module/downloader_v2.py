@@ -223,8 +223,6 @@ class Downloader:
 
                 self.downloader_info = self.downloader_info[1:]
 
-                self.current_downloaded_size = 0
-
             # 下载完成，进行 md5 校验
             entry = self.downloader_info[:1][0]
             file_name = entry["file_name"]
@@ -238,8 +236,15 @@ class Downloader:
                     # md5 校验不通过，重新下载该文件
                     UniversalTool.remove_files([self.get_file_path(file_name)])
 
-            update_progress()
+                    self.total_downloaded_size -= self.current_file_size
 
+            else:
+                remove_current_entry()
+
+            self.current_downloaded_size = 0
+
+            update_progress()
+                
             if self.downloader_info:
                 Thread(target = self.start_download).start()
             else:

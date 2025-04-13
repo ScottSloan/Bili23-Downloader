@@ -206,7 +206,7 @@ class DownloadFileTool:
     def write_file(self, info: DownloadTaskInfo):
         def _header():
             return {
-                "min_version": Config.APP._task_file_min_version_code
+                "min_version": Config.APP.task_file_min_version_code
             }
 
         # 保存断点续传信息，适用于初次添加下载任务
@@ -263,7 +263,7 @@ class DownloadFileTool:
 
     def _check_compatibility(self):
         try:
-            if self._read_download_file_json()["header"]["min_version"] < Config.APP._task_file_min_version_code:
+            if self._read_download_file_json()["header"]["min_version"] < Config.APP.task_file_min_version_code:
                 return False
 
         except Exception:

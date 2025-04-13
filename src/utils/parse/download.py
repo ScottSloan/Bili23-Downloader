@@ -144,8 +144,8 @@ class DownloadParser:
 
         self.task_info.video_type = "m4s"
 
-        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
-        self.task_info.video_codec_id = Preview.get_video_codec_id(self.task_info.video_quality_id, self.task_info.video_codec_id, data)
+        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, self.task_info.stream_type, data)
+        self.task_info.video_codec_id = Preview.get_video_codec_id(self.task_info.video_quality_id, self.task_info.video_codec_id, self.task_info.stream_type, data)
 
         for entry in data:
             if entry["id"] == self.task_info.video_quality_id and entry["codecid"] == self.task_info.video_codec_id:

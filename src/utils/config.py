@@ -19,7 +19,8 @@ class Config:
         version_code: int = 1611
 
         # 断点续传文件最低支持版本号
-        _task_file_min_version_code: int = 1611
+        task_file_min_version_code: int = 1611
+        config_file_min_version_code: int = 1611
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -144,6 +145,22 @@ class ConfigUtils:
 
     def load_config(self):
         def after_load_config():
+            def create_files():
+                if not os.path.exists(Config.Download.path):
+                    os.makedirs(Config.Download.path)
+
+                if not os.path.exists(Config.User.directory):
+                    os.makedirs(Config.User.directory)
+
+                if not os.path.exists(Config.User.download_file_directory):
+                    os.makedirs(Config.User.download_file_directory)
+
+                if not os.path.exists(Config.APP.app_config_path):
+                    self.write_config_json(Config.APP.app_config_path, app_config)
+
+                if not os.path.exists(Config.User.user_config_path):
+                    self.write_config_json(Config.User.user_config_path, user_config)
+
             create_files()
 
             for index, cdn in enumerate(Config.Advanced.custom_cdn_list):
@@ -153,34 +170,34 @@ class ConfigUtils:
                     "order": index + len(cdn_map) + 1
                 }
 
-        def create_files():
-            if not os.path.exists(Config.Download.path):
-                os.makedirs(Config.Download.path)
+        def after_read_config():
+            def check_config_version():
+                if "header" in app_config:
+                    if app_config.get("header").get("min_version", 0) < Config.APP.config_file_min_version_code:
+                        self.clear_config()
 
-            if not os.path.exists(Config.User.directory):
-                os.makedirs(Config.User.directory)
+                        self.load_config()
 
-            if not os.path.exists(Config.User.download_file_directory):
-                os.makedirs(Config.User.download_file_directory)
+                        return
 
-            if not os.path.exists(Config.APP.app_config_path):
-                self._write_config_json(Config.APP.app_config_path, app_config)
+            def check_config_node_name():
+                for node_name in ["header", "basic", "download", "advanced","merge", "extra", "proxy", "misc"]:
+                    if node_name not in app_config:
+                        app_config[node_name] = {}
 
-            if not os.path.exists(Config.User.user_config_path):
-                self._write_config_json(Config.User.user_config_path, user_config)
+                        if node_name == "header":
+                            app_config[node_name]["min_version"] = Config.APP.config_file_min_version_code
+                            app_config[node_name]["platform"] = Config.Sys.platform
 
-        def check_config_node_name():
-            for node_name in ["basic", "download", "advanced","merge", "extra", "proxy", "misc"]:
-                if node_name not in app_config:
-                    app_config[node_name] = {}
-            
-            if "user" not in user_config:
-                user_config["user"] = {}
-            
-            if "cookie_params" not in user_config:
-                user_config["cookie_params"] = {}
+                for node_name in ["user", "cookie_params"]:
+                    if node_name not in user_config:
+                        user_config[node_name] = {}
+
+            check_config_node_name()
+
+            check_config_version()
         
-        def init_path():
+        def get_path():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
                     Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
@@ -194,12 +211,12 @@ class ConfigUtils:
 
             Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         
-        init_path()
+        get_path()
 
-        app_config: Dict[str, dict] = self._read_config_json(Config.APP.app_config_path)
-        user_config: Dict[str, dict] = self._read_config_json(Config.User.user_config_path)
+        app_config: Dict[str, dict] = self.read_config_json(Config.APP.app_config_path)
+        user_config: Dict[str, dict] = self.read_config_json(Config.User.user_config_path)
 
-        check_config_node_name()
+        after_read_config()
 
         # basic
         Config.Basic.listen_clipboard = app_config["basic"].get("listen_clipboard", Config.Basic.listen_clipboard)
@@ -285,7 +302,7 @@ class ConfigUtils:
         after_load_config()
 
     def update_config_kwargs(self, file_path: str, category: str, **kwargs):
-        config = self._read_config_json(file_path)
+        config = self.read_config_json(file_path)
 
         if category not in config:
             config[category] = {}
@@ -293,7 +310,7 @@ class ConfigUtils:
         for key, value in kwargs.items():
             config[category][key] = value
 
-        self._write_config_json(file_path, config)
+        self.write_config_json(file_path, config)
 
     @staticmethod
     def clear_config():
@@ -301,14 +318,15 @@ class ConfigUtils:
 
         UniversalTool.remove_files([UniversalTool.get_file_path(os.getcwd(), "config.json")])
 
-    def _read_config_json(self, file_path: str):
+    def read_config_json(self, file_path: str):
         try:
             with open(file_path, "r", encoding = "utf-8") as f:
                 return json.loads(f.read())
+
         except Exception:
                 return {}
 
-    def _write_config_json(self, file_path: str, contents: dict):
+    def write_config_json(self, file_path: str, contents: dict):
         with open(file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
