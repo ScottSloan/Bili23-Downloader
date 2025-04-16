@@ -6,6 +6,7 @@ from utils.tool_v2 import RequestTool
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.cheese import CheeseInfo
+from utils.parse.audio import AudioInfo
 
 from utils.module.cdn import CDN
 
@@ -98,9 +99,10 @@ class Preview:
             return self.get_stream_download_url_list(data_node), bandwidth
 
         if self.stream_type == StreamType.Flv.value:
-            return {
-                "flv": True
-            }
+            return
+        
+        if not AudioInfo.Availability.audio:
+            return
 
         audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
         
@@ -108,7 +110,6 @@ class Preview:
             (url_list, bandwidth) = get_url_list(self.download_json["dash"])
 
             self.audio_size_cache[audio_quality_id] = {
-                "flv": False,
                 "audio_quality_id": audio_quality_id,
                 "bandwidth": bandwidth,
                 "size": self.get_file_size(url_list)

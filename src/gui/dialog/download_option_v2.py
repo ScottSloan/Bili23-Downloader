@@ -33,6 +33,8 @@ class DownloadOptionDialog(Dialog):
     def init_UI(self):
         label_color = wx.Colour(64, 64, 64)
 
+        self.stream_type_lab = wx.StaticText(self, -1, "当前视频流格式：")
+
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
         self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
@@ -97,6 +99,7 @@ class DownloadOptionDialog(Dialog):
         media_sbox.Add(media_grid_box, 0, wx.EXPAND)
 
         left_vbox = wx.BoxSizer(wx.VERTICAL)
+        left_vbox.Add(self.stream_type_lab, 0, wx.ALL, 10)
         left_vbox.Add(flex_grid_box, 0, wx.EXPAND)
         left_vbox.AddStretchSpacer()
         left_vbox.Add(media_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -188,6 +191,18 @@ class DownloadOptionDialog(Dialog):
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
     def init_utils(self):
+        def get_stream_type():
+            match StreamType(self.parent.stream_type):
+                case StreamType.Dash:
+                    lab = "DASH"
+
+                case StreamType.Flv:
+                    lab = "FLV"
+            
+            self.stream_type_lab.SetLabel(f"当前视频流格式：{lab}")
+
+        get_stream_type()
+
         self.load_download_option()
 
         self.onChangeStreamDownloadOptionEVT(0)
@@ -273,7 +288,7 @@ class DownloadOptionDialog(Dialog):
                         return "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
                     
                     case StreamType.Flv:
-                        return "[{}]   [{}]   [FLV]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatTool.format_size(info["size"]))
+                        return "[{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatTool.format_size(info["size"]))
                     
             info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
 
@@ -303,18 +318,34 @@ class DownloadOptionDialog(Dialog):
                 self.Layout()
 
             def get_audio_quality_info_label():
+                def disable_download_audio_option():
+                    self.audio_quality_choice.Enable(False)
+                    self.download_both_radio.SetValue(True)
+
+                    self.download_video_radio.Enable(False)
+                    self.download_audio_radio.Enable(False)
+
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
-                        return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                        if AudioInfo.Availability.audio:
+                            check()
+
+                            return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                        else:
+                            disable_download_audio_option()
+                            self.download_both_radio.SetLabel("下载视频")
+
+                            return "此视频无音轨"
                     
                     case StreamType.Flv:
-                        return "检测到 FLV 视频流，不支持自定义下载音质"
+                        disable_download_audio_option()
+                        self.download_both_radio.SetLabel("下载 FLV 视频")
+
+                        return "FLV 视频流不支持自定义下载音质"
 
             info = self.preview.get_audio_stream_size(self.audio_quality_id)
 
             wx.CallAfter(self.audio_quality_info_lab.SetLabel, get_audio_quality_info_label())
-
-            check()
 
         self.audio_quality_info_lab.SetLabel("正在检测...")
 

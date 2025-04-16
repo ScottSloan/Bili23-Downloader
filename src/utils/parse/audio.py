@@ -16,7 +16,7 @@ class AudioInfo:
     audio_quality_desc_list = []
 
     def get_audio_quality_list(json_dash: dict):
-        def _get_audio_availability():
+        def get_audio_availability():
             # 检测 Hi-Res 无损是否可用
             if "flac" in json_dash:
                 if json_dash["flac"]:
@@ -46,7 +46,7 @@ class AudioInfo:
             else:
                 AudioInfo.Availability.audio = False
         
-        def _get_list():
+        def get_list():
             if AudioInfo.Availability.hires:
                 AudioInfo.audio_quality_id_list.append(30251)
                 AudioInfo.audio_quality_desc_list.append("Hi-Res 无损")
@@ -69,15 +69,20 @@ class AudioInfo:
 
         from utils.config import Config
 
-        _get_audio_availability()
+        get_audio_availability()
 
-        _get_list()
+        get_list()
 
         AudioInfo.audio_quality_id = Config.Download.audio_quality_id
 
     @staticmethod
     def clear_audio_info():
-        AudioInfo.Availability.audio = AudioInfo.Availability.hires = AudioInfo.Availability.dolby = AudioInfo.Availability._192K = AudioInfo.Availability._132K = AudioInfo.Availability._64K = False
+        AudioInfo.Availability.audio = False
+        AudioInfo.Availability.hires = False
+        AudioInfo.Availability.dolby = False
+        AudioInfo.Availability._192K = False
+        AudioInfo.Availability._132K = False
+        AudioInfo.Availability._64K = False
         AudioInfo.audio_quality_id = 0
 
         AudioInfo.audio_quality_id_list.clear()
