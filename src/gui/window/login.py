@@ -1,6 +1,5 @@
 import wx
 import time
-import base64
 from io import BytesIO
 from typing import Dict, Callable
 from datetime import datetime, timedelta
@@ -11,6 +10,7 @@ from utils.auth.cookie import CookieUtils
 
 from utils.common.thread import Thread
 from utils.common.pic import Pic, PicID
+from utils.common.enums import Platform
 
 from gui.dialog.captcha import CaptchaWindow
 
@@ -24,11 +24,11 @@ class LoginWindow(Dialog):
 
         Dialog.__init__(self, parent, "登录")
         
-        self.init_utils()
-
         self.init_UI()
 
         self.Bind_EVT()
+
+        self.init_utils()
 
         self.CenterOnParent()
 
@@ -71,7 +71,7 @@ class LoginWindow(Dialog):
 
         Thread(target = worker).start()
 
-    def Bind_EVT(self):
+    def Bind_EVT(self):        
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocusEVT)
@@ -138,11 +138,11 @@ class QRPage(LoginPage):
     def __init__(self, parent):
         LoginPage.__init__(self, parent)
 
-        self.init_utils()
-
         self.init_UI()
 
         self.Bind_EVT()
+
+        self.init_utils()
 
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -173,14 +173,16 @@ class QRPage(LoginPage):
         qrcode_vbox.Add(qrcode_hbox, 0, wx.EXPAND)
         qrcode_vbox.Add(self.scan_tip_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        self.timer = wx.Timer(self, -1)
+
         self.SetSizer(qrcode_vbox)
     
     def init_utils(self):
         self.login = QRLogin()
         self.login.init_session()
+
         self.loadNewQRCode()
         
-        self.timer = wx.Timer(self, -1)
         self.timer.Start(1000)
 
     def Bind_EVT(self):
@@ -189,21 +191,21 @@ class QRPage(LoginPage):
         self.qrcode.Bind(wx.EVT_LEFT_DOWN, self.onRefreshQRCode)
 
     def onTimer(self, event):
-        def _success(info: dict):
+        def success(info: dict):
             self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
             
             time.sleep(1)
 
             self.onLoginSuccess(info)
 
-        def _outdated():
+        def outdated():
             self.qrcode.SetBitmap(self.setQRCodeTextTip("二维码已过期"))
             self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         match self.login.check_scan()["code"]:
             case 0:
                 info = self.login.get_user_info()
-                _success(info)
+                success(info)
 
             case 86090:
                 self.scan_tip_lab.SetLabel("请在设备侧确认登录")
@@ -211,7 +213,7 @@ class QRPage(LoginPage):
 
             case 86038:
                 self.timer.Stop()
-                wx.CallAfter(_outdated)
+                wx.CallAfter(outdated)
     
     def onRefreshQRCode(self, event):
         self.timer.Start()
@@ -255,10 +257,15 @@ class QRPage(LoginPage):
     def loadNewQRCode(self):
         def worker():
             def set_bmp():
-                if self.GetDPIScaleFactor() <= 1.5:
-                    scale_size = self.FromDIP((150, 150))
-                else:
-                    scale_size = self.FromDIP((75, 75))
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
+                        if self.GetDPIScaleFactor() <= 1.5:
+                            scale_size = self.FromDIP((150, 150))
+                        else:
+                            scale_size = self.FromDIP((75, 75))
+
+                    case Platform.Linux | Platform.macOS:
+                        scale_size = self.FromDIP((150, 150))
 
                 qrcode: wx.Image = wx.Image(img).Scale(scale_size[0], scale_size[1], wx.IMAGE_QUALITY_HIGH)
 

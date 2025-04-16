@@ -53,7 +53,17 @@ from gui.component.info_bar import InfoBar
 
 class MainWindow(Frame):
     def __init__(self, parent):
+        def set_window_size():
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.macOS:
+                    self.SetSize(self.FromDIP((800, 450)))
+
+                case Platform.Linux:
+                    self.SetSize(self.FromDIP((900, 550)))
+
         Frame.__init__(self, parent, Config.APP.name)
+
+        set_window_size()
 
         self.get_sys_settings()
 
@@ -95,14 +105,14 @@ class MainWindow(Frame):
         self.download_option_btn.Enable(False)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT), self.FromDIP(6))
+        info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        info_hbox.Add(self.detail_icon, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        info_hbox.Add(self.detail_icon, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.AddStretchSpacer()
         info_hbox.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        info_hbox.Add(self.episode_option_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        info_hbox.Add(self.download_option_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.Add(self.episode_option_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.Add(self.download_option_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.episode_list = TreeListCtrl(self.panel, self.update_checked_count)
 
@@ -129,9 +139,7 @@ class MainWindow(Frame):
         vbox.Add(self.episode_list, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
-        self.panel.SetSizerAndFit(vbox)
-
-        self.Fit()
+        self.panel.SetSizer(vbox)
 
         self.init_menubar()
 
@@ -671,7 +679,8 @@ class MainWindow(Frame):
 
             self.show_user_info()
 
-        LoginWindow(self, callback).ShowModal()
+        login_window = LoginWindow(self, callback)
+        login_window.ShowModal()
 
     def parse_url_thread(self, url: str):
         def worker():
@@ -841,14 +850,17 @@ class MainWindow(Frame):
             return re.findall(r"https:\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
 
         text = wx.TextDataObject()
-        
-        if wx.TheClipboard.GetData(text):
-            url: str = text.GetText()
-            if is_valid_url(url):
-                if url != self.current_parse_url:
-                    self.url_box.SetValue(url)
 
-                    wx.CallAfter(self.onGetEVT, event)
+        if wx.TheClipboard.Open():
+            if wx.TheClipboard.GetData(text):
+                url: str = text.GetText()
+                if is_valid_url(url):
+                    if url != self.current_parse_url:
+                        self.url_box.SetValue(url)
+
+                        wx.CallAfter(self.onGetEVT, event)
+
+            wx.TheClipboard.Close()
 
     @property
     def parse_callback(self):

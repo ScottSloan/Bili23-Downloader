@@ -7,7 +7,7 @@ class Dialog(wx.Dialog):
     def __init__(self, parent, title):
         wx.Dialog.__init__(self, parent, -1, title)
         
-        self.Bind(wx.EVT_CLOSE,self.onCloseEVT)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
     def get_scaled_size(self, size: tuple):
         match Platform(Config.Sys.platform):
@@ -21,5 +21,8 @@ class Dialog(wx.Dialog):
         if not Config.Sys.dark_mode:
             self.SetBackgroundColour("white")
 
-    def onCloseEVT(self, event):
-        self.Destroy()
+    def onCloseEVT(self, event: wx.CloseEvent):
+        if event.CanVeto():
+            event.Skip()
+        else:
+            self.Destroy()
