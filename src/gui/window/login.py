@@ -12,8 +12,6 @@ from utils.common.thread import Thread
 from utils.common.pic import Pic, PicID
 from utils.common.enums import Platform
 
-from gui.dialog.captcha import CaptchaWindow
-
 from gui.component.dialog import Dialog
 from gui.component.panel import Panel
 from gui.component.search_ctrl import SearchCtrl
@@ -322,7 +320,7 @@ class SMSPage(LoginPage):
         flex_sizer = wx.FlexGridSizer(3, 2, 0, 0)
 
         flex_sizer.Add(country_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        flex_sizer.Add(self.country_id_choice, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_sizer.Add(self.country_id_choice, 0,wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_sizer.Add(phone_number_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_sizer.Add(phone_hbox, 0, wx.EXPAND)
         flex_sizer.Add(validate_code_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -438,6 +436,8 @@ class SMSPage(LoginPage):
         self.login.session.close()
 
     def check_captcha(self):
+        from gui.dialog.captcha import CaptchaWindow
+
         # 显示极验 captcha 窗口
         captcha_window = CaptchaWindow(self)
         captcha_window.ShowModal()

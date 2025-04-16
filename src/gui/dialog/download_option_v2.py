@@ -1,7 +1,7 @@
 import wx
 from typing import Callable
 
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, get_mapping_index_by_value, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
 from utils.config import Config, config_utils
 from utils.tool_v2 import FormatTool
@@ -144,11 +144,20 @@ class DownloadOptionDialog(Dialog):
         other_box = wx.StaticBox(self, -1, "其他选项")
         
         self.auto_popup_chk = wx.CheckBox(other_box, -1, "下载时自动弹出")
-        self.auto_add_number_chk = wx.CheckBox(other_box, -1, "批量下载视频时自动添加序号")
+        self.auto_add_number_chk = wx.CheckBox(other_box, -1, "自动添加序号")
+        self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
+        self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
+
+        number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        number_type_hbox.AddSpacer(self.FromDIP(20))
+        number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.AddSpacer(self.FromDIP(60))
 
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_sbox.Add(self.auto_popup_chk, 0, wx.ALL, self.FromDIP(6))
-        other_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        other_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        other_sbox.Add(number_type_hbox, 0, wx.EXPAND)
 
         right_vbox = wx.BoxSizer(wx.VERTICAL)
         right_vbox.Add(extra_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -187,6 +196,7 @@ class DownloadOptionDialog(Dialog):
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
 
         self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
+        self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -213,6 +223,8 @@ class DownloadOptionDialog(Dialog):
 
         self.onChangeVideoQualityCodecEVT(0)
         self.onChangeAudioQualityEVT(0)
+
+        self.onCheckAutoAddNumberEVT(0)
 
     def load_download_option(self):
         def set_audio_quality_list():
@@ -260,7 +272,8 @@ class DownloadOptionDialog(Dialog):
         self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
 
         self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
-        self.auto_add_number_chk.SetValue(Config.Download.add_number)
+        self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
+        self.number_type_choice.SetSelection(Config.Download.number_type)
     
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
@@ -405,6 +418,12 @@ class DownloadOptionDialog(Dialog):
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
 
+    def onCheckAutoAddNumberEVT(self, event):
+        enable = self.auto_add_number_chk.GetValue()
+
+        self.number_type_lab.Enable(enable)
+        self.number_type_choice.Enable(enable)
+
     def onConfirmEVT(self, event):
         def set_stream_download_option():
             if self.download_none_radio.GetValue():
@@ -430,7 +449,7 @@ class DownloadOptionDialog(Dialog):
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
 
-        Config.Download.add_number = self.auto_add_number_chk.GetValue()
+        Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 

@@ -202,7 +202,7 @@ class DownloadManagerWindow(Frame):
                 return count
 
             def update_index():
-                if video_count > 1 and Config.Download.add_number:
+                if video_count > 1 and Config.Download.auto_add_number:
                     entry.number = index
                     entry.number_with_zero = str(index).zfill(len(str(len(download_list))))
 

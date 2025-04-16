@@ -238,6 +238,11 @@ download_type_map = {
     5: "弹幕、字幕或封面"
 }
 
+number_type_map = {
+    "从 1 开始": 0,
+    "连贯递增": 1
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

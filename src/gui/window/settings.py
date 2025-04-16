@@ -347,7 +347,7 @@ class DownloadTab(Tab):
         self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
-        self.add_number_chk.SetValue(Config.Download.add_number)
+        self.add_number_chk.SetValue(Config.Download.auto_add_number)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
@@ -367,7 +367,7 @@ class DownloadTab(Tab):
         Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
         Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
         Config.Download.video_codec_id = video_codec_preference_map[self.codec_choice.GetStringSelection()]
-        Config.Download.add_number = self.add_number_chk.GetValue()
+        Config.Download.auto_add_number = self.add_number_chk.GetValue()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
@@ -383,7 +383,7 @@ class DownloadTab(Tab):
 
             "enable_notification": Config.Download.enable_notification,
             "delete_history": Config.Download.delete_history,
-            "add_number": Config.Download.add_number,
+            "auto_add_number": Config.Download.auto_add_number,
             "enable_speed_limit": Config.Download.enable_speed_limit,
             "speed_mbps": Config.Download.speed_mbps,
         }

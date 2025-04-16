@@ -86,7 +86,8 @@ class Config:
 
         enable_notification: bool = False
         delete_history: bool = False
-        add_number: bool = True
+        auto_add_number: bool = True
+        number_type: int = 1
 
         enable_speed_limit: bool = False
         speed_mbps: int = 10
@@ -231,7 +232,7 @@ class ConfigUtils:
         Config.Download.video_codec_id = app_config["download"].get("video_codec_id", Config.Download.video_codec_id)
         Config.Download.enable_notification = app_config["download"].get("show_notification", Config.Download.enable_notification)
         Config.Download.delete_history = app_config["download"].get("delete_history", Config.Download.delete_history)
-        Config.Download.add_number = app_config["download"].get("add_number", Config.Download.add_number)
+        Config.Download.auto_add_number = app_config["download"].get("auto_add_number", Config.Download.auto_add_number)
         Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
         Config.Download.speed_mbps = app_config["download"].get("speed_mbps", Config.Download.speed_mbps)
 
