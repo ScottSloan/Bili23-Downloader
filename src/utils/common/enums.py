@@ -128,3 +128,7 @@ class LiveQualityID(Enum):
     _blue_ray = 400
     _hd = 150
     _sd = 80
+
+class NumberType(Enum):
+    From_1 = 0
+    Coherent = 1

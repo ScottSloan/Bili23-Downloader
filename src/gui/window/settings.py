@@ -20,7 +20,7 @@ from gui.dialog.file_name import CustomFileNameDialog
 from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, get_mapping_index_by_value
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode, Platform
 
@@ -283,7 +283,15 @@ class DownloadTab(Tab):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.add_number_chk = wx.CheckBox(download_box, -1, "批量下载视频时自动添加序号")
+        self.auto_add_number_chk = wx.CheckBox(download_box, -1, "自动添加序号")
+        self.number_type_lab = wx.StaticText(download_box, -1, "序号类型")
+        self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
+
+        number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        number_type_hbox.AddSpacer(self.FromDIP(20))
+        number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+
         self.delete_history_chk = wx.CheckBox(download_box, -1, "下载完成后清除本地下载记录")
 
         self.show_toast_chk = wx.CheckBox(download_box, -1, "允许弹出通知提示")
@@ -305,7 +313,8 @@ class DownloadTab(Tab):
         download_sbox.Add(codec_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        download_sbox.Add(self.add_number_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        download_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        download_sbox.Add(number_type_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.delete_history_chk, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(toast_hbox, 0, wx.EXPAND)
 
@@ -330,6 +339,8 @@ class DownloadTab(Tab):
         self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
         self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
 
+        self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
+
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestToastEVT)
 
     def init_data(self):
@@ -347,13 +358,15 @@ class DownloadTab(Tab):
         self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
-        self.add_number_chk.SetValue(Config.Download.auto_add_number)
+        self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
+        self.number_type_choice.SetSelection(Config.Download.number_type)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
         self.speed_limit_box.SetValue(str(Config.Download.speed_mbps))
 
         self.onChangeSpeedLimitEVT(0)
+        self.onCheckAutoAddNumberEVT(0)
 
     def save(self):
         def update_download_window():
@@ -367,7 +380,8 @@ class DownloadTab(Tab):
         Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
         Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
         Config.Download.video_codec_id = video_codec_preference_map[self.codec_choice.GetStringSelection()]
-        Config.Download.auto_add_number = self.add_number_chk.GetValue()
+        Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
+        Config.Download.number_type = self.number_type_choice.GetSelection()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
@@ -380,10 +394,10 @@ class DownloadTab(Tab):
             "video_quality_id": Config.Download.video_quality_id,
             "audio_quality_id": Config.Download.audio_quality_id,
             "video_codec_id": Config.Download.video_codec_id,
-
             "enable_notification": Config.Download.enable_notification,
             "delete_history": Config.Download.delete_history,
             "auto_add_number": Config.Download.auto_add_number,
+            "number_type": Config.Download.number_type,
             "enable_speed_limit": Config.Download.enable_speed_limit,
             "speed_mbps": Config.Download.speed_mbps,
         }
@@ -438,6 +452,12 @@ class DownloadTab(Tab):
         notification = NotificationManager(self)
 
         notification.show_toast("测试通知", "这是一则测试通知", wx.ICON_INFORMATION)
+
+    def onCheckAutoAddNumberEVT(self, event):
+        enable = self.auto_add_number_chk.GetValue()
+
+        self.number_type_lab.Enable(enable)
+        self.number_type_choice.Enable(enable)
 
 class AdvancedTab(Tab):
     def __init__(self, parent, ):

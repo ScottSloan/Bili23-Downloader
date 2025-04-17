@@ -5,7 +5,7 @@ from typing import List, Callable
 
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
-from utils.common.enums import DownloadStatus, ParseType, Platform
+from utils.common.enums import DownloadStatus, Platform, NumberType
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
 from utils.common.map import download_type_map
@@ -142,6 +142,8 @@ class DownloadManagerWindow(Frame):
         self.downloading_page_btn.setActiveState()
 
         self.load_local_file()
+
+        self.index = 0
     
     def load_local_file(self):
         def worker():
@@ -192,38 +194,30 @@ class DownloadManagerWindow(Frame):
 
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool = True):
         def create_local_file():
-            def get_video_count():
-                count = 0
-
-                for temp_entry in download_list:
-                    if ParseType(temp_entry.download_type) in [ParseType.Video, ParseType.Bangumi, ParseType.Cheese]:
-                        count += 1
-
-                return count
-
             def update_index():
-                if video_count > 1 and Config.Download.auto_add_number:
-                    entry.number = index
-                    entry.number_with_zero = str(index).zfill(len(str(len(download_list))))
+                if Config.Download.auto_add_number:
+                    entry.number = self.index
+                    entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
 
-            index = 0
+            if Config.Download.number_type == NumberType.From_1.value:
+                self.index = 0
+
             last_cid = None
-            video_count = get_video_count()
 
-            for list_index, entry in enumerate(download_list):
+            for index, entry in enumerate(download_list):
                 if not entry.timestamp:
-                    entry.timestamp = self.get_timestamp() + list_index
-
-                if last_cid != entry.cid:
-                    index += 1
-                    last_cid = entry.cid
-
-                update_index()
+                    entry.timestamp = self.get_timestamp() + index
 
                 download_local_file = DownloadFileTool(entry.id)
 
                 # 如果本地文件为空，则写入内容
                 if not download_local_file.get_info("task_info"):
+                    if last_cid != entry.cid:
+                        self.index += 1
+                        last_cid = entry.cid
+
+                    update_index()
+
                     download_local_file.write_file(entry)
             
             self.downloading_page.temp_download_list.extend(download_list)
@@ -318,7 +312,7 @@ class SimplePage(Panel):
     def load_more_panel_item(self, callback: Callable = None):
         def get_download_list():
             # 当前限制每次加载 100 个
-            item_per_time = 1
+            item_per_time = 100
 
             temp_download_list = self.temp_download_list[:item_per_time]
             self.temp_download_list = self.temp_download_list[item_per_time:]

@@ -450,6 +450,7 @@ class DownloadOptionDialog(Dialog):
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
 
         Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
+        Config.Download.number_type = self.number_type_choice.GetSelection()
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 
