@@ -94,13 +94,13 @@ class DownloadParser:
                         self.task_info.download_items = ["audio"]
 
                     case DownloadOption.VideoAndAudio:
-                        if "audio" in data:
+                        if data["audio"]:
                             self.task_info.download_items = ["video", "audio"]
                             self.task_info.output_type = "mp4"
                         else:
                             self.task_info.download_items = ["video"]
                             self.task_info.output_type = "mp4"
-                            self.task_info.download_option = DownloadOption.OnlyVideo
+                            self.task_info.download_option = DownloadOption.OnlyVideo.value
         
         check_download_items()
 
