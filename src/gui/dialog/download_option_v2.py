@@ -149,7 +149,7 @@ class DownloadOptionDialog(Dialog):
         self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(other_box)
-        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置")
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n\n请注意：自定义文件字段需添加 {number} 才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))
@@ -198,6 +198,7 @@ class DownloadOptionDialog(Dialog):
 
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
+        self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKBtnEVT)
 
         self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
@@ -418,11 +419,15 @@ class DownloadOptionDialog(Dialog):
             set_video_quality_enable(True)
             set_audio_quality_enable(True)
 
+        self.onEnableOKBtnEVT(event)
+
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()
 
         self.danmaku_file_type_lab.Enable(enable)
         self.danmaku_file_type_choice.Enable(enable)
+
+        self.onEnableOKBtnEVT(event)
 
     def onCheckDownloadSubtitleEVT(self, event):
         enable = self.download_subtitle_file_chk.GetValue()
@@ -431,6 +436,8 @@ class DownloadOptionDialog(Dialog):
         self.subtitle_file_type_choice.Enable(enable)
         #self.subtitle_file_lan_type_lab.Enable(enable)
         #self.subtitle_file_lan_type_btn.Enable(enable)
+
+        self.onEnableOKBtnEVT(event)
 
     def onCheckAutoPopupEVT(self, event):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
@@ -446,6 +453,11 @@ class DownloadOptionDialog(Dialog):
 
         self.number_type_lab.Enable(enable)
         self.number_type_choice.Enable(enable)
+
+    def onEnableOKBtnEVT(self, event):
+        enable = not self.download_none_radio.GetValue() or (self.download_danmaku_file_chk.GetValue() or self.download_subtitle_file_chk.GetValue() or self.download_cover_file_chk.GetValue())
+        
+        self.ok_btn.Enable(enable)
 
     def onConfirmEVT(self, event):
         def set_stream_download_option():

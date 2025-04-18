@@ -25,7 +25,7 @@ class ChangeCDNDialog(Dialog):
     def init_UI(self):
         cdn_lab = wx.StaticText(self, -1, "CDN host 列表")
 
-        self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((670, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.cdn_list.EnableCheckBoxes(True)
 
         custom_lab = wx.StaticText(self, -1, "自定义")
@@ -73,19 +73,16 @@ class ChangeCDNDialog(Dialog):
 
     def init_utils(self):
         def init_listctrl():
-            self.cdn_list.AppendColumn("序号", width = self.FromDIP(75))
-            self.cdn_list.AppendColumn("CDN host", width = self.FromDIP(280))
-            self.cdn_list.AppendColumn("提供商", width = self.FromDIP(140))
+            self.cdn_list.AppendColumn("CDN host", width = self.FromDIP(350))
+            self.cdn_list.AppendColumn("优先级", width = self.FromDIP(120))
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 
         def init_cdn_list():
-            for key, value in cdn_map.items():
-                index = self.cdn_list.Append([str(key + 1), value["cdn"], value["provider"], "未知"])
+            for entry in cdn_map:
+                index = self.cdn_list.Append([entry["cdn"], str(entry["order"]), "未检测"])
 
-                if value["cdn"] == Config.Advanced.custom_cdn:
+                if entry["cdn"] == Config.Advanced.custom_cdn:
                     self.cdn_list.CheckItem(index)
-
-            self.update_index()
 
         self._last_index = -1
 
@@ -178,14 +175,12 @@ class ChangeCDNDialog(Dialog):
             
         self.cdn_list.SetFocus()
         
-        index = self.cdn_list.Append(["-", self.custom_box.GetValue(), "自定义", "未知"])
+        index = self.cdn_list.Append([self.custom_box.GetValue(), str(self.cdn_list.GetItemCount() + 1), "未检测"])
 
         Config.Advanced.custom_cdn_list.append(self.custom_box.GetValue())
 
         self.cdn_list.Focus(index)
         self.cdn_list.Select(index)
-
-        self.update_index()
     
     def onDeleteCDNEVT(self, event):
         if self._last_index == -1 or not self.cdn_list.IsItemChecked(self._last_index):
@@ -194,20 +189,9 @@ class ChangeCDNDialog(Dialog):
             return
         
         cdn = self.cdn_list.GetItemText(self._last_index, 1)
-        
-        if self.cdn_list.GetItemText(self._last_index, 2) != "自定义":
-            wx.MessageDialog(self, "删除失败\n\n仅支持删除自定义的 CDN", "警告", wx.ICON_WARNING).ShowModal()
-            self.cdn_list.SetFocus()
-            return
 
         self.cdn_list.DeleteItem(self._last_index)
 
         Config.Advanced.custom_cdn_list.remove(cdn)
 
         self._last_index = -1
-
-        self.update_index()
-
-    def update_index(self):
-        for i in range(self.cdn_list.GetItemCount()):
-            self.cdn_list.SetItem(i, 0, str(i + 1))

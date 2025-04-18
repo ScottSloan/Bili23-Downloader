@@ -131,7 +131,7 @@ class Config:
         custom_cdn_list: list = []
 
         file_name_template = "{number_with_zero} - {title}"
-        datetime_format = "%Y-%m-%d_%H-%M-%S"
+        datetime_format = "%Y-%m-%d %H-%M-%S"
         auto_adjust_field = True
 
         retry_when_download_error: bool = True
@@ -165,11 +165,12 @@ class ConfigUtils:
             create_files()
 
             for index, cdn in enumerate(Config.Advanced.custom_cdn_list):
-                cdn_map[index + len(cdn_map)] = {
+                cdn_map.append({
                     "cdn": cdn,
-                    "provider": "自定义",
                     "order": index + len(cdn_map) + 1
-                }
+                })
+
+            cdn_map.sort(key = lambda x: x["order"], reverse = False)
 
         def after_read_config():
             def check_config_version():

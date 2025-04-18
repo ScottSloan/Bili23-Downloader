@@ -119,78 +119,64 @@ download_status_map = {
     6: "视频合成失败"
 }
 
-cdn_map = {
-    111: {
+cdn_map = [
+    {
         "cdn": "upos-sz-estgoss.bilivideo.com",
-        "provider": "?",
-        "order": 15
-    },
-    0: {
-        "cdn": "upos-sz-mirror08c.bilivideo.com",
-        "provider": "华为云",
         "order": 1
     },
-    1: {
-        "cdn": "upos-sz-mirrorhw.bilivideo.com",
-        "provider": "华为云",
-        "order": 4
-    },
-    2: {
-        "cdn": "upos-sz-mirror08h.bilivideo.com",
-        "provider": "华为云",
-        "order": 5
-    },
-    3: {
-        "cdn": "upos-sz-mirrorcoso1.bilivideo.com",
-        "provider": "腾讯云",
+    {
+        "cdn": "upos-sz-mirror08c.bilivideo.com",
         "order": 2
     },
-    4: {
-        "cdn": "upos-sz-mirrorcos.bilivideo.com",
-        "provider": "腾讯云",
+    {
+        "cdn": "upos-sz-mirrorhw.bilivideo.com",
+        "order": 5
+    },
+    {
+        "cdn": "upos-sz-mirror08h.bilivideo.com",
         "order": 6
     },
-    5: {
-        "cdn": "upos-sz-mirrorcosb.bilivideo.com",
-        "provider": "腾讯云",
-        "order": 7
-    },
-    6: {
-        "cdn": "upos-sz-mirrorali.bilivideo.com",
-        "provider": "阿里云",
-        "order": 8
-    },
-    7: {
-        "cdn": "upos-sz-mirrorali02.bilivideo.com",
-        "provider": "阿里云",
+    {
+        "cdn": "upos-sz-mirrorcoso1.bilivideo.com",
         "order": 3
     },
-    8: {
-        "cdn": "upos-sz-mirroralib.bilivideo.com",
-        "provider": "阿里云",
+    {
+        "cdn": "upos-sz-mirrorcos.bilivideo.com",
+        "order": 7
+    },
+    {
+        "cdn": "upos-sz-mirrorcosb.bilivideo.com",
+        "order": 8
+    },
+    {
+        "cdn": "upos-sz-mirrorali.bilivideo.com",
         "order": 9
     },
-    9: {
-        "cdn": "upos-sz-mirroraliov.bilivideo.com",
-        "provider": "阿里云（海外）",
+    {
+        "cdn": "upos-sz-mirrorali02.bilivideo.com",
+        "order": 4
+    },
+    {
+        "cdn": "upos-sz-mirroralib.bilivideo.com",
         "order": 10
     },
-    10: {
-        "cdn": "upos-sz-mirrorcosov.bilivideo.com",
-        "provider": "腾讯云（海外）",
+    {
+        "cdn": "upos-sz-mirroraliov.bilivideo.com",
         "order": 11
     },
-    11: {
-        "cdn": "upos-hz-mirrorakam.akamaized.net",
-        "provider": "Akamai（海外）",
+    {
+        "cdn": "upos-sz-mirrorcosov.bilivideo.com",
         "order": 12
     },
-    12: {
-        "cdn": "upos-sz-mirrorcf1ov.bilivideo.com",
-        "provider": "Cloudflare（海外）",
+    {
+        "cdn": "upos-hz-mirrorakam.akamaized.net",
         "order": 13
     },
-}
+    {
+        "cdn": "upos-sz-mirrorcf1ov.bilivideo.com",
+        "order": 14
+    },
+]
 
 cheese_status_map = {
     1: "全集试看",

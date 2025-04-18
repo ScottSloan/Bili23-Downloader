@@ -26,7 +26,7 @@ class CustomFileNameDialog(Dialog):
 
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板")
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((550, 24)))
+        self.template_box = TextCtrl(self, -1, size = self.FromDIP((600, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
         template_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -86,8 +86,8 @@ class CustomFileNameDialog(Dialog):
 
     def init_utils(self):
         def init_fields_list_column():
-            self.fields_list.AppendColumn("字段名称", width = self.FromDIP(133))
-            self.fields_list.AppendColumn("说明", width = self.FromDIP(233))
+            self.fields_list.AppendColumn("字段名称", width = self.FromDIP(166))
+            self.fields_list.AppendColumn("说明", width = self.FromDIP(266))
             self.fields_list.AppendColumn("示例", width = self.FromDIP(200))
         
         def init_field_list_content():
@@ -114,12 +114,12 @@ class CustomFileNameDialog(Dialog):
                 },
                 {
                     "name": "{number}",
-                    "description": "从 1 开始的序号",
+                    "description": "序号",
                     "example": "1"
                 },
                 {
                     "name": "{number_with_zero}",
-                    "description": "从 1 开始的序号，在前方自动补零",
+                    "description": "补零序号",
                     "example": "01、001"
                 },
                 {
@@ -135,7 +135,7 @@ class CustomFileNameDialog(Dialog):
                 {
                     "name": "{area}",
                     "description": "地区（仅剧集类视频有效）",
-                    "example": "中国大陆"
+                    "example": "日本"
                 },
                 {
                     "name": "{title}",

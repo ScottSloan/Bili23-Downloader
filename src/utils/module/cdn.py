@@ -9,9 +9,7 @@ class CDN:
         if Config.Advanced.enable_custom_cdn:
             match CDNMode(Config.Advanced.custom_cdn_mode):
                 case CDNMode.Auto:
-                    _temp_cdn_map_list = sorted(list(cdn_map.values()), key = lambda x: x["order"], reverse = False)
-
-                    return [entry["cdn"] for entry in _temp_cdn_map_list]
+                    return [entry["cdn"] for entry in cdn_map]
                 
                 case CDNMode.Custom:
                     return [Config.Advanced.custom_cdn]
