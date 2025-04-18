@@ -73,6 +73,7 @@ class StatusCode(Enum):
     Area_Limit = -10403      # 区域限制
 
 class VideoQualityID(Enum):
+    _None = 0
     _360P = 16
     _480P = 32
     _720P = 64
@@ -109,3 +110,26 @@ class DownloadOption(Enum):
 class OverrideOption(Enum):
     Override = 0
     Rename = 1
+
+class Platform(Enum):
+    Windows = "windows"
+    Linux = "linux"
+    macOS = "darwin"
+
+class ParseStatus(Enum):
+    Finish = 0
+    Parsing = 1
+    Error = 2
+
+class LiveQualityID(Enum):
+    _Auto = 40000
+    _Dolby_Vision = 30000
+    _4K = 20000
+    _1080P = 10000
+    _blue_ray = 400
+    _hd = 150
+    _sd = 80
+
+class NumberType(Enum):
+    From_1 = 0
+    Coherent = 1

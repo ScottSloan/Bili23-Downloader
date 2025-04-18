@@ -5,8 +5,8 @@ from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 from utils.common.exception import GlobalException
 from utils.common.map import live_status_map
-from utils.parse.episode import EpisodeInfo, live_episode_parser
-from utils.common.enums import StatusCode
+from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.common.enums import StatusCode, LiveQualityID
 from utils.common.data_type import ParseCallback
 
 class LiveInfo:
@@ -52,7 +52,7 @@ class LiveParser:
 
         EpisodeInfo.clear_episode_data("直播")
 
-        live_episode_parser(LiveInfo.title, LiveInfo.status_str)
+        EpisodeManager.live_episode_parser(LiveInfo.title, LiveInfo.status_str)
 
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
@@ -70,6 +70,9 @@ class LiveParser:
         LiveInfo.live_quality_desc_list = [entry["desc"] for entry in quality_description]
 
     def get_live_stream(self, qn: int):
+        if qn == LiveQualityID._Auto.value:
+            qn = max(LiveInfo.live_quality_id_list)
+
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
         req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
@@ -99,7 +102,7 @@ class LiveParser:
             return worker()
 
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e
 
     def check_json(self, data: dict):
         # 检查接口返回状态码

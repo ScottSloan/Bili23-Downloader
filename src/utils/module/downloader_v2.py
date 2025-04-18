@@ -1,14 +1,16 @@
-import re
 import os
 import time
 import threading
 
 from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, DownloaderInfo, DownloaderCallback
-from utils.common.enums import CDNMode, StatusCode
+from utils.common.enums import StatusCode
 from utils.common.thread import Thread, DaemonThreadPoolExecutor
-from utils.common.map import cdn_map
 from utils.common.exception import GlobalException
-from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool
+
+from utils.module.cdn import CDN
+from utils.module.md5_verify import MD5Verify
+
+from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool, UniversalTool
 from utils.config import Config
 
 class Downloader:
@@ -51,11 +53,12 @@ class Downloader:
                     file_name = entry["file_name"]
                     url_list = entry["url_list"]
 
-                    new_url, file_size = self.get_file_size(url_list)
+                    new_url, etag, file_size = self.get_file_size(url_list)
 
                     self.task_info.total_file_size += file_size
                     self.cache[file_name] = {
                         "url": new_url,
+                        "md5": MD5Verify.get_md5_from_etag(etag),
                         "file_size": file_size
                     }
         
@@ -65,7 +68,7 @@ class Downloader:
 
                 url, self.current_file_size = entry["url"], entry["file_size"]
             else:
-                url, self.current_file_size = self.get_file_size(downloader_info.url_list)
+                url, etag, self.current_file_size = self.get_file_size(downloader_info.url_list)
 
             self.create_local_file(file_path, self.current_file_size)
 
@@ -114,7 +117,7 @@ class Downloader:
 
         downloader_info = get_downloader_info()
 
-        file_path = os.path.join(Config.Download.path, downloader_info.file_name)
+        file_path = self.get_file_path(downloader_info.file_name)
 
         get_total_file_size()
 
@@ -178,36 +181,21 @@ class Downloader:
             self.executor.submit(self.download_range, info)
 
     def get_file_size(self, url_list: list):
-        def get_cdn_list():
-            if Config.Advanced.enable_custom_cdn:
-                match CDNMode(Config.Advanced.custom_cdn_mode):
-                    case CDNMode.Auto:
-                        _temp_cdn_map_list = sorted(list(cdn_map.values()), key = lambda x: x["order"], reverse = False)
-
-                        return [entry["cdn"] for entry in _temp_cdn_map_list]
-                    
-                    case CDNMode.Custom:
-                        return [Config.Advanced.custom_cdn]
-            else:
-                return [None]
-
         def request_head(url: str, cdn: str):
-            if cdn:
-                new_url = re.sub(r'(?<=https://)[^/]+', cdn, url)
-            else:
-                new_url = url
+            new_url = CDN.replace_cdn(url, cdn)
             
             return new_url, RequestTool.request_head(new_url, headers = RequestTool.get_headers(self.task_info.referer_url))
 
         for url in url_list:
-            for cdn in get_cdn_list():
+            for cdn in CDN.get_cdn_list():
                 new_url, req = request_head(url, cdn)
 
                 if "Content-Length" in req.headers:
                     file_size = int(req.headers.get("Content-Length"))
+                    etag = req.headers.get("Etag")
 
                     if file_size:
-                        return new_url, file_size
+                        return new_url, etag, file_size
     
     def generate_ranges(self, file_size: int):
         num_threads = Config.Download.max_thread_count
@@ -230,15 +218,33 @@ class Downloader:
 
     def progress_tracker(self):
         def download_finish():
-            item = self.downloader_info[:1][0]["type"]
-            self.task_info.download_items.remove(item)
+            def remove_current_entry():
+                self.task_info.download_items.remove(entry["type"])
 
-            self.downloader_info = self.downloader_info[1:]
+                self.downloader_info = self.downloader_info[1:]
+
+            # 下载完成，进行 md5 校验
+            entry = self.downloader_info[:1][0]
+            file_name = entry["file_name"]
+            cache = self.cache.get(entry["file_name"])
+
+            if cache["md5"]:
+                if MD5Verify.verify_md5(cache["md5"], self.get_file_path(file_name)):
+                    # md5 校验通过，移除当前项的下载信息
+                    remove_current_entry()
+                else:
+                    # md5 校验不通过，重新下载该文件
+                    UniversalTool.remove_files([self.get_file_path(file_name)])
+
+                    self.total_downloaded_size -= self.current_file_size
+
+            else:
+                remove_current_entry()
 
             self.current_downloaded_size = 0
 
             update_progress()
-
+                
             if self.downloader_info:
                 Thread(target = self.start_download).start()
             else:
@@ -300,3 +306,6 @@ class Downloader:
             self.stop_download()
 
             self.callback.onErrorCallback()
+
+    def get_file_path(self, file_name: str):
+        return UniversalTool.get_file_path(Config.Download.path, file_name)

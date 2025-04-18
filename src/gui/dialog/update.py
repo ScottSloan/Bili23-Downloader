@@ -43,14 +43,14 @@ class UpdateWindow(Dialog):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.update_btn, 0, wx.ALL, 10)
-        bottom_hbox.Add(self.ignore_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bottom_hbox.Add(self.update_btn, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(self.ignore_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         update_vbox = wx.BoxSizer(wx.VERTICAL)
-        update_vbox.Add(title_lab, 0, wx.ALL, 10)
-        update_vbox.Add(self.detail_lab, 0, wx.ALL & (~wx.TOP), 10)
+        update_vbox.Add(title_lab, 0, wx.ALL, self.FromDIP(6))
+        update_vbox.Add(self.detail_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         update_vbox.Add(top_border, 0, wx.EXPAND)
-        update_vbox.Add(self.changelog, 1, wx.ALL | wx.EXPAND, 10)
+        update_vbox.Add(self.changelog, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
         update_vbox.Add(bottom_border, 0, wx.EXPAND)
         update_vbox.Add(bottom_hbox, 0, wx.EXPAND, 0)
 

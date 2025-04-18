@@ -4,6 +4,9 @@ from typing import Callable
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
 from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID
 from utils.common.exception import GlobalException
+
+from utils.parse.preview import Preview
+
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool
 from utils.config import Config
@@ -91,13 +94,13 @@ class DownloadParser:
                         self.task_info.download_items = ["audio"]
 
                     case DownloadOption.VideoAndAudio:
-                        if "audio" in data:
+                        if data["audio"]:
                             self.task_info.download_items = ["video", "audio"]
                             self.task_info.output_type = "mp4"
                         else:
                             self.task_info.download_items = ["video"]
                             self.task_info.output_type = "mp4"
-                            self.task_info.download_option = DownloadOption.OnlyVideo
+                            self.task_info.download_option = DownloadOption.OnlyVideo.value
         
         check_download_items()
 
@@ -128,39 +131,6 @@ class DownloadParser:
         return self.parse_flv_stream(data)
 
     def parse_video_stream(self, data: list):
-        def get_video_quality_id(data: list):
-            def get_highest_video_quality_id(data: list):
-                highest_video_quality_id = VideoQualityID._360P.value
-
-                for entry in data:
-                    if entry["id"] > highest_video_quality_id:
-                        highest_video_quality_id = entry["id"]
-
-                return highest_video_quality_id
-
-            highest_video_quality_id = get_highest_video_quality_id(data)
-
-            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
-                self.task_info.video_quality_id = highest_video_quality_id
-
-            elif highest_video_quality_id < self.task_info.video_quality_id:
-                self.task_info.video_quality_id = highest_video_quality_id
-
-        def get_video_codec_id(data: list):
-            def check_codec_id():
-                codec_id_list = []
-
-                for entry in data:
-                    if entry["id"] == self.task_info.video_quality_id:
-                        codec_id_list.append(entry["codecid"])
-
-                return codec_id_list
-
-            codec_id_list = check_codec_id()
-
-            if self.task_info.video_codec_id not in codec_id_list:
-                self.task_info.video_codec_id = codec_id_list[0]
-
         def get_video_downloader_info():
             if url_list:
                 info = DownloaderInfo()
@@ -174,54 +144,27 @@ class DownloadParser:
 
         self.task_info.video_type = "m4s"
 
-        get_video_quality_id(data)
-
-        get_video_codec_id(data)
+        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, self.task_info.stream_type, data)
+        self.task_info.video_codec_id = Preview.get_video_codec_id(self.task_info.video_quality_id, self.task_info.video_codec_id, self.task_info.stream_type, data)
 
         for entry in data:
             if entry["id"] == self.task_info.video_quality_id and entry["codecid"] == self.task_info.video_codec_id:
-                url_list = self.get_stream_download_url_list(entry)
+                url_list = Preview.get_stream_download_url_list(entry)
 
         return get_video_downloader_info()
 
     def parse_audio_stream(self, data: dict):
-        def get_audio_quality_id(data: dict):
-            def get_highest_audio_quality_id(data: dict, dolby: bool = False):
-                highest_audio_quality = AudioQualityID._64K.value
-
-                for entry in data["audio"]:
-                    if entry["id"] > highest_audio_quality:
-                        highest_audio_quality = entry["id"]
-
-                if "dolby" in data and data["dolby"]:
-                    if data["dolby"]["audio"]:
-                        highest_audio_quality = AudioQualityID._Dolby_Atoms.value
-
-                if "flac" in data and data["flac"]:
-                    if data["flac"]["audio"]:
-                        highest_audio_quality = AudioQualityID._Hi_Res.value
-
-                return highest_audio_quality
-            
-            highest_audio_quality = get_highest_audio_quality_id(data)
-
-            if self.task_info.audio_quality_id == AudioQualityID._Auto.value:
-                self.task_info.audio_quality_id = highest_audio_quality
-
-            elif highest_audio_quality < self.task_info.video_quality_id:
-                self.task_info.video_quality_id = highest_audio_quality
-            
         def get_audio_stream_url_list(data: dict):
             def get_hi_res():
-                return self.get_stream_download_url_list(data["flac"]["audio"])
+                return Preview.get_stream_download_url_list(data["flac"]["audio"])
 
             def get_dolby():
-                return self.get_stream_download_url_list(data["dolby"]["audio"][0])
+                return Preview.get_stream_download_url_list(data["dolby"]["audio"][0])
 
             def get_normal():
                 for entry in data["audio"]:
                     if entry["id"] == self.task_info.audio_quality_id:
-                        return self.get_stream_download_url_list(entry)
+                        return Preview.get_stream_download_url_list(entry)
 
             match AudioQualityID(self.task_info.audio_quality_id):
                 case AudioQualityID._None:
@@ -255,7 +198,7 @@ class DownloadParser:
             else:
                 return None
 
-        get_audio_quality_id(data)
+        self.task_info.audio_quality_id = Preview.get_audio_quality_id(self.task_info.audio_quality_id, data)
 
         url_list = get_audio_stream_url_list(data)
 
@@ -296,22 +239,11 @@ class DownloadParser:
 
         for index, entry in enumerate(data["durl"]):
             if f"flv_{index + 1}" in self.task_info.download_items:
-                url_list = self.get_stream_download_url_list(entry)
+                url_list = Preview.get_stream_download_url_list(entry)
 
                 downloader_info.append(get_flv_downloader_info(index + 1))
 
         return downloader_info
-
-    def get_stream_download_url_list(self, data: dict):
-        def generator(x: list):
-            for v in x:
-                if isinstance(v, list):
-                    for y in v:
-                        yield y
-                else:
-                    yield v
-
-        return [i for i in generator([data[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in data])]
 
     def get_download_url(self):
         try:

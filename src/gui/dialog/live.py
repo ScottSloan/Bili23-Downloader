@@ -4,10 +4,11 @@ import re
 import subprocess
 from typing import List
 
-from utils.parse.live import LiveInfo
 from utils.config import Config
-from utils.common.thread import Thread
+from utils.parse.live import LiveInfo
 from utils.tool_v2 import FormatTool, FileDirectoryTool
+from utils.common.enums import Platform
+from utils.common.thread import Thread
 from utils.common.enums import PlayerMode
 
 from gui.component.text_ctrl import TextCtrl
@@ -41,12 +42,12 @@ class LiveRecordingWindow(Dialog):
         self.browse_path_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         bag_box = wx.FlexGridSizer(2, 3, 0, 0)
-        bag_box.Add(m3u8_link_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        bag_box.Add(self.m3u8_link_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
-        bag_box.Add(self.copy_link_btn, 0, wx.ALL & (~wx.LEFT), 10)
-        bag_box.Add(recording_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        bag_box.Add(self.recording_path_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, 10)
-        bag_box.Add(self.browse_path_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        bag_box.Add(m3u8_link_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        bag_box.Add(self.m3u8_link_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+        bag_box.Add(self.copy_link_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        bag_box.Add(recording_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        bag_box.Add(self.recording_path_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+        bag_box.Add(self.browse_path_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         bag_box.AddGrowableCol(1, 1)
 
@@ -67,22 +68,22 @@ class LiveRecordingWindow(Dialog):
         self.speed_lab.SetFont(font)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        info_hbox.Add(self.status_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.duration_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.speed_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
+        info_hbox.Add(self.status_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.duration_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.speed_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.AddStretchSpacer()
-        action_hbox.Add(self.open_directory_btn, 0, wx.ALL, 10)
-        action_hbox.Add(self.open_player_btn, 0, wx.ALL & (~wx.LEFT), 10)
-        action_hbox.Add(self.start_recording_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        action_hbox.Add(self.open_directory_btn, 0, wx.ALL, self.FromDIP(6))
+        action_hbox.Add(self.open_player_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        action_hbox.Add(self.start_recording_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.title_lab, 0, wx.ALL, 10)
+        vbox.Add(self.title_lab, 0, wx.ALL, self.FromDIP(6))
         vbox.Add(bag_box, 1, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
-        vbox.AddSpacer(10)
+        vbox.AddSpacer(self.FromDIP(6))
         vbox.Add(action_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -155,11 +156,11 @@ class LiveRecordingWindow(Dialog):
                     wx.MessageDialog(self, "无法获取默认播放器\n\n无法获取系统默认播放器，请手动设置\n\n请使用支持播放 m3u8 视频流的播放器，如 VLC、PotPlayer、MPV等\nWindows 默认的媒体播放器不支持播放，请知悉", "警告", wx.ICON_WARNING).ShowModal()
                     return
 
-                match Config.Sys.platform:
-                    case "windows":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
                         cmd = result[1].replace("%1", self.m3u8_link_box.GetValue())
 
-                    case "linux":
+                    case Platform.Linux:
                         cmd = result[1].replace("%U", f'"{self.m3u8_link_box.GetValue()}"')
             
             case PlayerMode.Custom:

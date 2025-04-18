@@ -13,9 +13,7 @@ download
 video.json
 bangumi.json
 live.json
-download.json
-download2.json
-download3.json
+download*.json
 ffmpeg.exe
 build.bat
 test.py
@@ -35,3 +33,4 @@ cz.toml
 uv.toml
 
 .DS_Store
+example.md

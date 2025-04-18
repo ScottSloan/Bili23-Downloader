@@ -11,6 +11,8 @@ class DownloadTaskInfo:
         self.number: int = 0
         # 补零序号
         self.number_with_zero: str = ""
+        # 列表中的序号
+        self.list_number: int = 0
         # 后缀
         self.suffix: str = ""
         # 时间戳
@@ -69,11 +71,21 @@ class DownloadTaskInfo:
         # 附加内容选项
         self.extra_option: dict = None
 
+        # 视频发布时间戳
+        self.pubtime: int = 0
+        # 地区
+        self.area: str = ""
+        # 分区信息
+        self.tname_info: dict = {}
+        # UP 主信息
+        self.up_info: dict = {}
+
     def to_dict(self):
         return {
             "id": self.id,
-            "index": self.number,
-            "index_with_zero": self.number_with_zero,
+            "number": self.number,
+            "number_with_zero": self.number_with_zero,
+            "list_number": self.list_number,
             "suffix": self.suffix,
             "timestamp": self.timestamp,
             "referer_url": self.referer_url,
@@ -101,13 +113,18 @@ class DownloadTaskInfo:
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
             "flv_video_count": self.flv_video_count,
-            "extra_option": self.extra_option
+            "extra_option": self.extra_option,
+            "pubtime": self.pubtime,
+            "area": self.area,
+            "tname_info": self.tname_info,
+            "up_info": self.up_info,
         }
 
     def load_from_dict(self, data: Dict):
         self.id = data.get("id")
-        self.number = data.get("index")
-        self.number_with_zero = data.get("index_with_zero")
+        self.number = data.get("number")
+        self.number_with_zero = data.get("number_with_zero")
+        self.list_number = data.get("list_number")
         self.suffix = data.get("suffix")
         self.timestamp = data.get("timestamp")
         self.referer_url = data.get("referer_url")
@@ -136,6 +153,10 @@ class DownloadTaskInfo:
         self.ffmpeg_merge = data.get("ffmpeg_merge")
         self.flv_video_count = data.get("flv_video_count")
         self.extra_option = data.get("extra_option")
+        self.pubtime = data.get("pubtime")
+        self.area = data.get("area")
+        self.tname_info = data.get("tname_info")
+        self.up_info = data.get("up_info")
 
 class DownloaderInfo:
     def __init__(self):
@@ -191,14 +212,15 @@ class NotificationMessage:
 
 class TreeListItemInfo:
     def __init__(self):
+        self.list_number: int = 0
         self.type: str = ""
         self.title: str = ""
         self.cid: int = 0
 
 class ParseCallback:
     def __init__(self):
-        self.error_callback: Callable = None
-        self.redirect_callback: Callable = None
+        self.onError: Callable = None
+        self.onRedirect: Callable = None
 
 class Command:
     def __init__(self):
@@ -218,7 +240,6 @@ class MergeCallback:
         self.onSuccess: Callable = None
         self.onError: Callable = None
         self.onSaveSuffix: Callable = None
-        self.onGetFullFileName: Callable = None
 
 class CutInfo:
     def __init__(self):

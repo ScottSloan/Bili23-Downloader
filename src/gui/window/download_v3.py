@@ -3,11 +3,12 @@ import os
 from datetime import datetime
 from typing import List, Callable
 
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
-from utils.common.enums import DownloadStatus, ParseType
+from utils.common.enums import DownloadStatus, Platform, NumberType
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
+from utils.common.map import download_type_map
 
 from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
@@ -22,17 +23,17 @@ from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
         def get_window_size():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     if self.GetDPIScaleFactor() >= 1.5:
                         return self.FromDIP((930, 550))
                     else:
                         return self.FromDIP((960, 580))
                 
-                case "darwin":
+                case Platform.macOS:
                     return self.FromDIP((1000, 600))
                 
-                case "linux":
+                case Platform.Linux:
                     return self.FromDIP((1070, 650))
 
         Frame.__init__(self, parent, "下载管理")
@@ -49,8 +50,6 @@ class DownloadManagerWindow(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
-        icon_manager = IconManager(self)
-
         top_panel = Panel(self)
         top_panel.set_dark_mode()
 
@@ -62,7 +61,7 @@ class DownloadManagerWindow(Frame):
 
         top_panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_panel_hbox.AddSpacer(self.FromDIP(13))
-        top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_panel_hbox.Add(self.top_title_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_panel_vbox = wx.BoxSizer(wx.VERTICAL)
         top_panel_vbox.AddSpacer(self.FromDIP(6))
@@ -77,15 +76,15 @@ class DownloadManagerWindow(Frame):
         left_panel.set_dark_mode()
 
         self.downloading_page_btn = ActionButton(left_panel, "正在下载(0)")
-        self.downloading_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.DOWNLOADING_ICON))
+        self.downloading_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.DOWNLOADING_ICON))
         self.completed_page_btn = ActionButton(left_panel, "下载完成(0)")
-        self.completed_page_btn.setBitmap(icon_manager.get_icon_bitmap(IconType.COMPLETED_ICON))
+        self.completed_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.COMPLETED_ICON))
 
         self.open_download_dir_btn = wx.Button(left_panel, -1, "打开下载目录", size = self.FromDIP((120, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.open_download_dir_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.open_download_dir_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
 
         left_panel_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -143,6 +142,8 @@ class DownloadManagerWindow(Frame):
         self.downloading_page_btn.setActiveState()
 
         self.load_local_file()
+
+        self.index = 0
     
     def load_local_file(self):
         def worker():
@@ -193,38 +194,30 @@ class DownloadManagerWindow(Frame):
 
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool = True):
         def create_local_file():
-            def get_video_count():
-                count = 0
-
-                for temp_entry in download_list:
-                    if ParseType(temp_entry.download_type) in [ParseType.Video, ParseType.Bangumi, ParseType.Cheese]:
-                        count += 1
-
-                return count
-
             def update_index():
-                if video_count > 1 and Config.Download.add_number:
-                    entry.number = index
-                    entry.number_with_zero = str(index).zfill(len(str(len(download_list))))
+                if Config.Download.auto_add_number:
+                    entry.number = self.index
+                    entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
 
-            index = 0
+            if Config.Download.number_type == NumberType.From_1.value:
+                self.index = 0
+
             last_cid = None
-            video_count = get_video_count()
 
-            for list_index, entry in enumerate(download_list):
+            for index, entry in enumerate(download_list):
                 if not entry.timestamp:
-                    entry.timestamp = self.get_timestamp() + list_index
-
-                if last_cid != entry.cid:
-                    index += 1
-                    last_cid = entry.cid
-
-                update_index()
+                    entry.timestamp = self.get_timestamp() + index
 
                 download_local_file = DownloadFileTool(entry.id)
 
                 # 如果本地文件为空，则写入内容
                 if not download_local_file.get_info("task_info"):
+                    if last_cid != entry.cid:
+                        self.index += 1
+                        last_cid = entry.cid
+
+                    update_index()
+
                     download_local_file.write_file(entry)
             
             self.downloading_page.temp_download_list.extend(download_list)
@@ -291,6 +284,23 @@ class DownloadManagerWindow(Frame):
 
     def add_panel_to_completed_page(self, task_info: DownloadTaskInfo):
         self.completed_page.add_panel(task_info)
+
+    def find_duplicate_tasks(self, episode_list: dict):
+        duplicate_episode_list = {}
+
+        for panel in self.downloading_page.scroller_children:
+            if isinstance(panel, DownloadTaskItemPanel):
+                type = panel.task_info.download_type
+
+                for info in episode_list:
+                    if panel.task_info.cid == info.cid and type == info.download_type:
+                        duplicate_episode_list[panel.task_info.id] = {
+                            "list_number": panel.task_info.list_number,
+                            "title": panel.task_info.title,
+                            "type": download_type_map.get(type)
+                        }
+
+        return duplicate_episode_list
 
     def get_timestamp(self):
         return int(datetime.now().timestamp())
@@ -437,12 +447,12 @@ class DownloadingPage(SimplePage):
         self.cancel_all_btn = wx.Button(self, -1, "全部取消")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.max_download_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddStretchSpacer()
-        top_hbox.Add(self.start_all_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        top_hbox.Add(self.cancel_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(self.start_all_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.pause_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.cancel_all_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_separate_line = wx.StaticLine(self, -1)
 
@@ -562,7 +572,7 @@ class CompeltedPage(SimplePage):
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.AddStretchSpacer()
-        top_hbox.Add(self.clear_history_btn, 0, wx.ALL | wx.ALIGN_CENTER, 10)
+        top_hbox.Add(self.clear_history_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         top_separate_line = wx.StaticLine(self, -1)
 

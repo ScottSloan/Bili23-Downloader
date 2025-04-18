@@ -3,17 +3,17 @@ import wx
 from io import BytesIO
 from typing import Callable
 
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
-from utils.common.enums import DownloadOption, DownloadStatus, ParseType
+from utils.common.enums import DownloadOption, DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
+from utils.common.file_name import FileNameManager
 
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
-from utils.common.file_name import FileNameManager
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser
@@ -41,7 +41,7 @@ class EmptyItemPanel(Panel):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddStretchSpacer()
-        hbox.Add(self.empty_lab, 0, wx.ALL, 10)
+        hbox.Add(self.empty_lab, 0, wx.ALL, self.FromDIP(6))
         hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -73,7 +73,7 @@ class LoadMoreTaskItemPanel(Panel):
         
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddStretchSpacer()
-        hbox.Add(self.more_lab, 0, wx.ALL, 10)
+        hbox.Add(self.more_lab, 0, wx.ALL, self.FromDIP(6))
         hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -107,16 +107,14 @@ class DownloadTaskItemPanel(Panel):
 
     def init_UI(self):
         def get_progress_bar_size():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.macOS:
                     return self.FromDIP((196, 16))
                 
-                case "linux":
+                case Platform.Linux:
                     return self.FromDIP((196, 4))
 
         self.set_dark_mode()
-
-        self.icon_manager = IconManager(self)
 
         self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
@@ -152,16 +150,16 @@ class DownloadTaskItemPanel(Panel):
         speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
 
         progress_bar_vbox = wx.BoxSizer(wx.VERTICAL)
-        progress_bar_vbox.AddSpacer(self.FromDIP(10 if Config.Sys.platform != "linux" else 20))
+        progress_bar_vbox.AddSpacer(self.FromDIP(10 if Config.Sys.platform != Platform.Linux.value else 20))
         progress_bar_vbox.Add(progress_bar_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddStretchSpacer()
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(self.FromDIP(8))
 
-        self.pause_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+        self.pause_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.RESUME_ICON))
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = BitmapButton(self, self.icon_manager.get_icon_bitmap(IconType.DELETE_ICON))
+        self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.DELETE_ICON))
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -171,7 +169,7 @@ class DownloadTaskItemPanel(Panel):
         panel_hbox.Add(progress_bar_vbox, 0, wx.EXPAND)
         panel_hbox.Add(self.pause_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
         panel_hbox.Add(self.stop_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
-        panel_hbox.AddSpacer(10)
+        panel_hbox.AddSpacer(self.FromDIP(6))
 
         bottom_border = wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL)
 
@@ -197,7 +195,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.file_tool = DownloadFileTool(self.task_info.id)
 
-        self.ffmpeg = FFmpeg()
+        self.ffmpeg = FFmpeg(self)
         self.ffmpeg.set_task_info(self.task_info)
 
         self.show_task_info()
@@ -415,14 +413,10 @@ class DownloadTaskItemPanel(Panel):
 
                 self.file_tool.update_task_info_kwargs(**kwargs)
 
-            def onGetFullFileName():
-                return self.full_file_name
-            
             callback = MergeCallback()
             callback.onSuccess = self.onMergeSuccess
             callback.onError = self.onMergeError
             callback.onSaveSuffix = onSaveSuffix
-            callback.onGetFullFileName = onGetFullFileName
 
             return callback
 
@@ -539,25 +533,25 @@ class DownloadTaskItemPanel(Panel):
         def set_button_icon(status: int):
             match DownloadStatus(status):
                 case DownloadStatus.Waiting:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("开始下载")
                     self.speed_lab.SetLabel("等待下载...")
 
                 case DownloadStatus.Downloading:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载链接...")
 
                 case DownloadStatus.Pause:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RESUME_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中...")
 
                 case DownloadStatus.Merging:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.PAUSE_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
 
                     if self.task_info.download_option == DownloadOption.OnlyAudio.value:
                         lab = "正在转换音频..."
@@ -571,14 +565,14 @@ class DownloadTaskItemPanel(Panel):
                     self.stop_btn.Enable(False)
 
                 case DownloadStatus.Complete:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.FOLDER_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.FOLDER_ICON))
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
                     self.stop_btn.SetToolTip("清除记录")
 
                 case DownloadStatus.MergeError:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
                     self.pause_btn.Enable(True)
@@ -597,7 +591,7 @@ class DownloadTaskItemPanel(Panel):
                         self.speed_lab.SetLabel(f"{lab}失败")
 
                 case DownloadStatus.DownloadError:
-                    self.pause_btn.SetBitmap(self.icon_manager.get_icon_bitmap(IconType.RETRY_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RETRY_ICON))
 
                     self.pause_btn.SetToolTip("重试")
                     self.pause_btn.Enable(True)

@@ -3,9 +3,10 @@ import re
 import os
 import subprocess
 
-from utils.config import Config
 from utils.common.thread import Thread
+from utils.common.enums import Platform
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
+from utils.config import Config
 from utils.tool_v2 import FormatTool, FileDirectoryTool
 
 from gui.component.text_ctrl import TextCtrl
@@ -25,11 +26,11 @@ class ConverterWindow(Dialog):
 
     def init_UI(self):
         def _get_gpu_list():
-            match Config.Sys.platform:
-                case "windows" | "linux":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.Linux:
                     return list(supported_gpu_map.keys())
                 
-                case "darwin":
+                case Platform.macOS:
                     return ["VideoToolBox"]
                 
         input_lab = wx.StaticText(self, -1, "输入")
@@ -37,18 +38,18 @@ class ConverterWindow(Dialog):
         self.input_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         input_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        input_hbox.Add(self.input_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        input_hbox.Add(input_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        input_hbox.Add(self.input_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        input_hbox.Add(self.input_browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         output_lab = wx.StaticText(self, -1, "输出")
         self.output_box = TextCtrl(self, -1, size = self.get_scaled_size((400, 24)))
         self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         output_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        output_hbox.Add(output_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        output_hbox.Add(output_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         self.target_format_lab = wx.StaticText(self, -1, "目标格式：---")
 
@@ -60,13 +61,13 @@ class ConverterWindow(Dialog):
         target_bitrate_unit_lab = wx.StaticText(self, -1, "kbit/s")
 
         target_params_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        target_params_hbox.Add(self.target_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        target_params_hbox.AddSpacer(20)
-        target_params_hbox.Add(target_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        target_params_hbox.Add(self.target_codec_choice, 0, wx.ALL & (~wx.LEFT), 10)
-        target_params_hbox.Add(target_bitrate_lab, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        target_params_hbox.Add(target_bitrate_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        target_params_hbox.Add(self.target_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        target_params_hbox.AddSpacer(self.FromDIP(13))
+        target_params_hbox.Add(target_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        target_params_hbox.Add(self.target_codec_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        target_params_hbox.Add(target_bitrate_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        target_params_hbox.Add(self.target_bitrate_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        target_params_hbox.Add(target_bitrate_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.hwaccel_chk = wx.CheckBox(self, -1, "启用硬件加速")
 
@@ -74,9 +75,9 @@ class ConverterWindow(Dialog):
         self.gpu_choice = wx.Choice(self, -1, choices = _get_gpu_list())
 
         extra_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        extra_hbox.Add(self.hwaccel_chk, 0, wx.ALL | wx.ALIGN_CENTER, 10)
-        extra_hbox.Add(gpu_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
-        extra_hbox.Add(self.gpu_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, 10)
+        extra_hbox.Add(self.hwaccel_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        extra_hbox.Add(gpu_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        extra_hbox.Add(self.gpu_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         font: wx.Font = self.GetFont()
         font.SetPointSize(int(font.GetFractionalPointSize() + 1))
@@ -93,11 +94,11 @@ class ConverterWindow(Dialog):
         self.speed_lab.SetFont(font)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        info_hbox.Add(self.progress_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.frame_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.duration_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
-        info_hbox.Add(self.speed_lab, 1, wx.ALL & (~wx.BOTTOM), 10)
+        info_hbox.Add(self.progress_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.frame_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.duration_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.size_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        info_hbox.Add(self.speed_lab, 1, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
 
         self.progress_bar = wx.Gauge(self, -1, style = wx.GA_PROGRESS | wx.GA_SMOOTH)
 
@@ -106,8 +107,8 @@ class ConverterWindow(Dialog):
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.AddStretchSpacer()
-        action_hbox.Add(self.open_directory_btn, 0, wx.ALL, 10)
-        action_hbox.Add(self.start_convert_btn, 0, wx.ALL & (~wx.LEFT), 10)
+        action_hbox.Add(self.open_directory_btn, 0, wx.ALL, self.FromDIP(6))
+        action_hbox.Add(self.start_convert_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(input_hbox, 0, wx.EXPAND)
@@ -115,7 +116,7 @@ class ConverterWindow(Dialog):
         vbox.Add(target_params_hbox, 0, wx.EXPAND)
         vbox.Add(extra_hbox, 0, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
-        vbox.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, 10)
+        vbox.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(action_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -222,11 +223,11 @@ class ConverterWindow(Dialog):
             _target_encoder = self.target_codec_choice.GetSelection()
 
             if self.hwaccel_chk.GetValue():
-                match Config.Sys.platform:
-                    case "windows" | "linux":
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows | Platform.Linux:
                         return video_hw_encoder_map[_target_gpu][_target_encoder]
 
-                    case "darwin":
+                    case Platform.macOS:
                         return _get_mac_accels()
             else:
                 return video_sw_encoder_map[_target_encoder]

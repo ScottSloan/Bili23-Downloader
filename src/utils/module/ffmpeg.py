@@ -1,15 +1,17 @@
 import os
 import subprocess
 
-from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption
+from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption, Platform
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
+
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 class FFmpeg:
-    def __init__(self):
-        pass
+    def __init__(self, parent = None):
+        self.parent = parent
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
@@ -39,7 +41,7 @@ class FFmpeg:
     def merge_video(self, callback: MergeCallback):
         def check_file_exist():
             index = 0
-            path = os.path.join(Config.Download.path, callback.onGetFullFileName())
+            path = self.get_file_path(self.full_file_name)
 
             while os.path.exists(path):
                 match OverrideOption(Config.Merge.override_option):
@@ -47,16 +49,13 @@ class FFmpeg:
                         index += 1
 
                         self.task_info.suffix = f"_{index}"
-                        path = os.path.join(Config.Download.path, callback.onGetFullFileName())
 
                     case OverrideOption.Override:
-                        self.delete_specific_file(path)
+                        UniversalTool.remove_files([path])
             
             callback.onSaveSuffix()
 
         check_file_exist()
-    
-        self.full_file_name = callback.onGetFullFileName()
 
         match StreamType(self.task_info.stream_type):
             case StreamType.Dash:
@@ -115,7 +114,7 @@ class FFmpeg:
     
     def get_flv_command(self):
         def create_list_file():
-            with open(os.path.join(Config.Download.path, self.flv_list_file_name), "w", encoding = "utf-8") as f:
+            with open(self.get_file_path(self.flv_list_file_name), "w", encoding = "utf-8") as f:
                 f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.flv_video_count)]))
 
         def get_merge_command():
@@ -142,19 +141,19 @@ class FFmpeg:
 
     def get_rename_command(self, src: str, dst: str):
         def get_sys_rename_command():
-            match Config.Sys.platform:
-                case "windows":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows:
                     return "rename"
 
-                case "linux" | "darwin":
+                case Platform.Linux | Platform.macOS:
                     return "mv"
 
         def get_escape_character():
-            match Config.Sys.platform:
-                case "windows" | "darwin":
+            match Platform(Config.Sys.platform):
+                case Platform.Windows | Platform.macOS:
                     return ""
                 
-                case "linux":
+                case Platform.Linux:
                     return "-- "
 
         return f'{get_sys_rename_command()} "{src}" {get_escape_character()}"{dst}"'
@@ -176,7 +175,7 @@ class FFmpeg:
         path_env = os.environ.get("PATH", "")
 
         for directory in path_env.split(os.pathsep):
-            possible_path = os.path.join(directory, self.ffmpeg_file_name)
+            possible_path = UniversalTool.get_file_path(directory, self.ffmpeg_file_name)
 
             if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
                 ffmpeg_path = possible_path
@@ -187,7 +186,7 @@ class FFmpeg:
     def get_cwd_path(self):
         ffmpeg_path = None
 
-        possible_path = os.path.join(os.getcwd(), self.ffmpeg_file_name)
+        possible_path = UniversalTool.get_file_path(os.getcwd(), self.ffmpeg_file_name)
         
         if os.path.isfile(possible_path) and os.access(possible_path, os.X_OK):
             ffmpeg_path = possible_path
@@ -198,30 +197,24 @@ class FFmpeg:
         def get_dash_temp_file_list():
             match DownloadOption(self.task_info.download_option):
                 case DownloadOption.VideoAndAudio:
-                    temp_file_list.append(self.dash_video_temp_file_name)
-                    temp_file_list.append(self.dash_audio_temp_file_name)
+                    temp_file_list.append(self.get_file_path(self.dash_video_temp_file_name))
+                    temp_file_list.append(self.get_file_path(self.dash_audio_temp_file_name))
 
                 case DownloadOption.OnlyVideo:
-                    temp_file_list.append(self.dash_video_temp_file_name)
+                    temp_file_list.append(self.get_file_path(self.dash_video_temp_file_name))
 
                 case DownloadOption.OnlyAudio:
-                    temp_file_list.append(self.dash_audio_temp_file_name)
+                    temp_file_list.append(self.get_file_path(self.dash_audio_temp_file_name))
             
             temp_file_list.append(self.output_temp_file_name)
 
         def get_flv_temp_file_list():
             if self.task_info.flv_video_count > 1:
-                temp_file_list.append(self.flv_list_file_name)
-                temp_file_list.extend([f"flv_{self.task_info.id}_part{i + 1}" for i in range(self.task_info.flv_video_count)])
+                temp_file_list.append(self.get_file_path(self.flv_list_file_name))
+                temp_file_list.extend([self.get_file_path(f"flv_{self.task_info.id}_part{i + 1}") for i in range(self.task_info.flv_video_count)])
             else:
-                temp_file_list.append(self.flv_temp_file_name)
+                temp_file_list.append(self.get_file_path(self.flv_temp_file_name))
 
-        def delete_file(file_list: list):
-            for file in file_list:
-                path = os.path.join(Config.Download.path, file)
-
-                self.delete_specific_file(path)
-        
         def worker():
             match StreamType(self.task_info.stream_type):
                 case StreamType.Dash:
@@ -230,26 +223,26 @@ class FFmpeg:
                 case StreamType.Flv:
                     get_flv_temp_file_list()
 
-            delete_file(temp_file_list)
+            UniversalTool.remove_files(temp_file_list)
         
         temp_file_list = []
         
         Thread(target = worker).start()
 
-    def delete_specific_file(self, path: str):
-        while os.path.exists(path):
-            try:
-                os.remove(path)
-            except Exception:
-                pass
+    def get_file_path(self, file_name: str):
+        return UniversalTool.get_file_path(Config.Download.path, file_name)
+    
+    @property
+    def full_file_name(self):
+        return self.parent.full_file_name
 
     @property
     def ffmpeg_file_name(self):
-        match Config.Sys.platform:
-            case "windows":
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
                 return "ffmpeg.exe"
             
-            case "linux" | "darwin":
+            case Platform.Linux | Platform.macOS:
                 return "ffmpeg"
 
     @property

@@ -2,7 +2,7 @@ import wx
 import webbrowser
 
 from utils.config import Config
-from utils.common.icon_v2 import IconManager, IconType
+from utils.common.icon_v3 import Icon, IconID
 from utils.common.compile_data import date, compile
 
 from gui.dialog.license import LicenseWindow
@@ -41,9 +41,7 @@ class AboutWindow(Dialog):
 
         self.set_dark_mode()
 
-        icon_manager = IconManager(self)
-
-        logo = wx.StaticBitmap(self, -1, set_icon_background(icon_manager.get_icon_bitmap(IconType.APP_ICON_DEFAULT)).ConvertToBitmap())
+        logo = wx.StaticBitmap(self, -1, set_icon_background(Icon.get_icon_bitmap(IconID.APP_ICON_DEFAULT)).ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
@@ -61,9 +59,9 @@ class AboutWindow(Dialog):
         copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
 
         copyright_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        copyright_hbox.AddSpacer(25)
-        copyright_hbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP), 10)
-        copyright_hbox.AddSpacer(25)
+        copyright_hbox.AddSpacer(self.FromDIP(16))
+        copyright_hbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        copyright_hbox.AddSpacer(self.FromDIP(16))
 
         self.github_link = wx.StaticText(self, -1, "GitHub 主页")
         self.github_link.SetForegroundColour(wx.Colour(0, 102, 209))
@@ -79,20 +77,20 @@ class AboutWindow(Dialog):
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 26)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        bottom_hbox.Add(self.license_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.license_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.close_btn, 0, wx.ALL, 10)
+        bottom_hbox.Add(self.close_btn, 0, wx.ALL, self.FromDIP(6))
 
         about_vbox = wx.BoxSizer(wx.VERTICAL)
-        about_vbox.Add(logo, 0, wx.ALL | wx.CENTER, 10)
-        about_vbox.Add(app_name_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.CENTER, 10)
-        about_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
-        about_vbox.Add(desc_lab, 0, wx.ALL | wx.CENTER, 10)
-        about_vbox.Add(date_lab, 0, wx.ALL | wx.CENTER, 10)
-        about_vbox.AddSpacer(20)
+        about_vbox.Add(logo, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
+        about_vbox.Add(app_name_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.CENTER, self.FromDIP(6))
+        about_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
+        about_vbox.Add(desc_lab, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
+        about_vbox.Add(date_lab, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
+        about_vbox.AddSpacer(self.FromDIP(13))
         about_vbox.Add(copyright_hbox, 0, wx.CENTER)
-        about_vbox.Add(self.home_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
-        about_vbox.Add(self.github_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, 10)
+        about_vbox.Add(self.home_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
+        about_vbox.Add(self.github_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
         about_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(about_vbox)

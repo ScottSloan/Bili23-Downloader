@@ -6,7 +6,7 @@ from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo, video_ugc_season_parser
+from utils.parse.episode import EpisodeInfo, EpisodeManager
 
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
@@ -22,7 +22,6 @@ class VideoInfo:
     cover: str = ""
     views: str = ""
     danmakus: str = ""
-    pubtime: str = ""
     desc: str = ""
     tag_list: list = []
     type: int = 0
@@ -33,12 +32,33 @@ class VideoInfo:
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
+    pubtime: int = 0
+    tname: str = ""
+    subtname: str = ""
+    up_name: str = ""
+    up_mid: int = 0
+
     info_json: dict = {}
+    download_json: dict = {}
 
     @staticmethod
     def clear_video_info():
-        VideoInfo.url = VideoInfo.aid = VideoInfo.bvid = VideoInfo.title = VideoInfo.cover = VideoInfo.desc = VideoInfo.views = VideoInfo.danmakus = VideoInfo.pubtime = ""
-        VideoInfo.cid = VideoInfo.type = VideoInfo.stream_type = 0
+        VideoInfo.url = ""
+        VideoInfo.aid = 0
+        VideoInfo.bvid = ""
+        VideoInfo.title = ""
+        VideoInfo.cover = ""
+        VideoInfo.desc = ""
+        VideoInfo.views = 0
+        VideoInfo.danmakus = 0
+        VideoInfo.cid = 0
+        VideoInfo.type = 0
+        VideoInfo.stream_type = 0
+        VideoInfo.pubtime = 0
+        VideoInfo.tname = ""
+        VideoInfo.subtname = ""
+        VideoInfo.up_name = ""
+        VideoInfo.up_mid = 0
 
         VideoInfo.tag_list.clear()
         VideoInfo.pages_list.clear()
@@ -46,6 +66,7 @@ class VideoInfo:
         VideoInfo.video_quality_desc_list.clear()
 
         VideoInfo.info_json.clear()
+        VideoInfo.download_json.clear()
 
 class VideoParser:
     def __init__(self, callback: ParseCallback):
@@ -93,7 +114,7 @@ class VideoParser:
         info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.redirect_callback, url = info["redirect_url"])
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = info["redirect_url"])
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
@@ -103,7 +124,12 @@ class VideoParser:
         VideoInfo.desc = info["desc"]
         VideoInfo.views = FormatTool.format_data_count(info["stat"]["view"])
         VideoInfo.danmakus = FormatTool.format_data_count(info["stat"]["danmaku"])
-        VideoInfo.pubtime = UniversalTool.get_time_str_from_timestamp(info["pubdate"])
+
+        VideoInfo.pubtime = info["pubdate"]
+        VideoInfo.tname = info["tname"]
+        VideoInfo.subtname = info["tname_v2"]
+        VideoInfo.up_name = info["owner"]["name"]
+        VideoInfo.up_mid = info["owner"]["mid"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
@@ -141,7 +167,7 @@ class VideoParser:
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = VideoInfo.download_json = resp["data"]
 
         if "dash" in info:
             AudioInfo.get_audio_quality_list(info["dash"])
@@ -181,7 +207,7 @@ class VideoParser:
             return worker()
         
         except Exception as e:
-            raise GlobalException(callback = self.callback.error_callback) from e
+            raise GlobalException(callback = self.callback.onError) from e
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
@@ -224,7 +250,7 @@ class VideoParser:
                 if "ugc_season" in VideoInfo.info_json:
                     VideoInfo.type = VideoType.Collection
 
-                    video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
+                    EpisodeManager.video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
                 else:
                     pages_parser()
 
