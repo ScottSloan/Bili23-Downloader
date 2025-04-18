@@ -12,13 +12,14 @@ from gui.component.scrolled_panel import ScrolledPanel
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 from gui.component.panel import Panel
+from gui.component.tooltip import ToolTip
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
 from gui.dialog.file_name import CustomFileNameDialog
 
 from utils.config import Config, config_utils
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, get_mapping_index_by_value
 from utils.common.icon_v3 import Icon, IconID
@@ -241,9 +242,8 @@ class DownloadTab(Tab):
 
         video_lab = wx.StaticText(download_box, -1, "默认下载清晰度")
         self.video_quality_choice = wx.Choice(download_box, -1, choices = list(video_quality_map.keys()))
-        self.video_quality_tip = wx.StaticBitmap(download_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
-        self.video_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.video_quality_tip.SetToolTip("说明")
+        self.video_quality_tip = ToolTip(download_box)
+        self.video_quality_tip.set_tooltip("指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度")
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -252,9 +252,8 @@ class DownloadTab(Tab):
 
         audio_lab = wx.StaticText(download_box, -1, "默认下载音质")
         self.audio_quality_choice = wx.Choice(download_box, -1, choices = list(audio_quality_map.keys()))
-        self.audio_quality_tip = wx.StaticBitmap(download_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
-        self.audio_quality_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.audio_quality_tip.SetToolTip("说明")
+        self.audio_quality_tip = ToolTip(download_box)
+        self.audio_quality_tip.set_tooltip("指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质")
 
         sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -263,9 +262,8 @@ class DownloadTab(Tab):
 
         codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(download_box, -1, choices = list(video_codec_preference_map.keys()))
-        self.codec_tip = wx.StaticBitmap(download_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
-        self.codec_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.codec_tip.SetToolTip("说明")
+        self.codec_tip = ToolTip(download_box)
+        self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认下载 AVC/H.264")
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -286,11 +284,14 @@ class DownloadTab(Tab):
         self.auto_add_number_chk = wx.CheckBox(download_box, -1, "自动添加序号")
         self.number_type_lab = wx.StaticText(download_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
+        number_type_tip = ToolTip(download_box)
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))
         number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(number_type_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.delete_history_chk = wx.CheckBox(download_box, -1, "下载完成后清除本地下载记录")
 
@@ -334,10 +335,6 @@ class DownloadTab(Tab):
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
-
-        self.video_quality_tip.Bind(wx.EVT_LEFT_UP, self.onVideoQualityTipEVT)
-        self.audio_quality_tip.Bind(wx.EVT_LEFT_UP, self.onAudioQualityTipEVT)
-        self.codec_tip.Bind(wx.EVT_LEFT_UP, self.onVideoCodecTipEVT)
 
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
 
@@ -438,15 +435,6 @@ class DownloadTab(Tab):
 
     def isValidSpeedLimit(self, speed):
         return bool(re.fullmatch(r'[1-9]\d*', speed))
-    
-    def onVideoQualityTipEVT(self, event):
-        wx.MessageDialog(self, "默认下载清晰度选项说明\n\n指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度\n\n若需要自动下载杜比视频，请开启下方的选项", "说明", wx.ICON_INFORMATION).ShowModal()
-
-    def onAudioQualityTipEVT(self, event):
-        wx.MessageDialog(self, "默认下载音质选项说明\n\n指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质", "说明", wx.ICON_INFORMATION).ShowModal()
-
-    def onVideoCodecTipEVT(self, event):
-        wx.MessageDialog(self, "视频编码格式选项说明\n\n指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认下载 AVC/H.264", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onTestToastEVT(self, event):
         notification = NotificationManager(self)
@@ -473,9 +461,8 @@ class AdvancedTab(Tab):
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
         self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
-        self.enable_custom_cdn_tip = wx.StaticBitmap(cdn_box, -1, Icon.get_icon_bitmap(IconID.INFO_ICON))
-        self.enable_custom_cdn_tip.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.enable_custom_cdn_tip.SetToolTip("说明")
+        self.enable_custom_cdn_tip = ToolTip(cdn_box)
+        self.enable_custom_cdn_tip.set_tooltip("因 B 站分配的 CDN 线路不稳定，容易导致下载失败，开启此选项后，将自动替换下载链接中的 CDN host\n\n请注意：使用代理时，请手动关闭此选项")
 
         enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -559,8 +546,6 @@ class AdvancedTab(Tab):
         self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
         self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
 
-        self.enable_custom_cdn_tip.Bind(wx.EVT_LEFT_UP, self.onCustomCDNTipEVT)
-
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
@@ -640,9 +625,6 @@ class AdvancedTab(Tab):
         self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
         self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
         self.change_cdn_btn.Enable(self.custom_cdn_manual_radio.GetValue())
-
-    def onCustomCDNTipEVT(self, event):
-        wx.MessageDialog(self, "替换音视频流 CDN 说明\n\n因 B 站默认分配的 CDN 线路不稳定，容易导致下载失败，因此建议开启此功能。\n\n请注意，当使用代理时，请关闭此功能。", "说明", wx.ICON_INFORMATION).ShowModal()
 
     def onChangeCDNEVT(self, event):
         dlg = ChangeCDNDialog(self)

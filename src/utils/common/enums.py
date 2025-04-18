@@ -73,6 +73,7 @@ class StatusCode(Enum):
     Area_Limit = -10403      # 区域限制
 
 class VideoQualityID(Enum):
+    _None = 0
     _360P = 16
     _480P = 32
     _720P = 64

@@ -12,6 +12,7 @@ from utils.parse.preview import Preview
 
 from gui.component.dialog import Dialog
 from gui.component.info_label import InfoLabel
+from gui.component.tooltip import ToolTip
 
 class DownloadOptionDialog(Dialog):
     def __init__(self, parent, callback: Callable):
@@ -147,11 +148,14 @@ class DownloadOptionDialog(Dialog):
         self.auto_add_number_chk = wx.CheckBox(other_box, -1, "自动添加序号")
         self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
+        number_type_tip = ToolTip(other_box)
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))
         number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(number_type_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.AddSpacer(self.FromDIP(60))
 
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
@@ -278,6 +282,9 @@ class DownloadOptionDialog(Dialog):
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
             def get_video_quality_info_label():
+                if not info:
+                    return "未知"
+
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
                         return "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
@@ -288,7 +295,10 @@ class DownloadOptionDialog(Dialog):
             def callback():
                 def check():
                     if self.video_quality_id == VideoQualityID._Auto.value:
-                        video_quality_id = video_quality_map.get(self.video_quality_choice.GetString(1))
+                        if info:
+                            video_quality_id = video_quality_map.get(self.video_quality_choice.GetString(1))
+                        else:
+                            video_quality_id = VideoQualityID._None.value
                     else:
                         video_quality_id = self.video_quality_id
 
@@ -326,7 +336,10 @@ class DownloadOptionDialog(Dialog):
             def get_audio_quality_info_label():
                 def check():
                     if self.audio_quality_id == AudioQualityID._Auto.value:
-                        audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetString(1))
+                        if self.audio_quality_choice.GetCount() > 1:
+                            audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetString(1))
+                        else:
+                            audio_quality_id = AudioQualityID._None.value
                     else:
                         audio_quality_id = self.audio_quality_id
 
@@ -351,7 +364,10 @@ class DownloadOptionDialog(Dialog):
                         if AudioInfo.Availability.audio:
                             wx.CallAfter(check)
 
-                            return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                            if info:
+                                return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                            else:
+                                return "未知"
                         else:
                             wx.CallAfter(disable_download_audio_option, "下载视频")
 

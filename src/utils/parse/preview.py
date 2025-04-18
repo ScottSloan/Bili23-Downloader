@@ -65,15 +65,19 @@ class Preview:
         key = f"{video_quality_id} - {video_codec_id}"
 
         if key not in self.video_size_cache:
-            (url_list, frame_rate, bandwidth) = get_url_list()
+            try:
+                (url_list, frame_rate, bandwidth) = get_url_list()
 
-            self.video_size_cache[key] = {
-                "video_quality_id": video_quality_id,
-                "video_codec_id": video_codec_id,
-                "frame_rate": frame_rate,
-                "bandwidth": bandwidth,
-                "size": get_file_size()
-            }
+                self.video_size_cache[key] = {
+                    "video_quality_id": video_quality_id,
+                    "video_codec_id": video_codec_id,
+                    "frame_rate": frame_rate,
+                    "bandwidth": bandwidth,
+                    "size": get_file_size()
+                }
+
+            except Exception:
+                return
 
         return self.video_size_cache.get(key)
 
