@@ -26,7 +26,7 @@ class CaptchaWindow(Dialog):
         
     def init_UI(self):
         # 检查 webview 可用性
-        backend = self.check_webview_backend(backend)
+        backend = self.check_webview_backend()
         
         self.webview: wx.html2.WebView = wx.html2.WebView.New(self, -1, backend = backend)
 

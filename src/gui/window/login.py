@@ -115,6 +115,8 @@ class LoginWindow(Dialog):
 
         config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
 
+        self.Close()
+
 class LoginPage(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -445,15 +447,14 @@ class SMSPage(LoginPage):
     def check_login_result(self, result: Dict):
         if result["code"] != 0:
             wx.MessageDialog(self, f"登录失败\n\n{result['message']} ({result['code']})", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        elif result["data"]["status"] != 0:
+            wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
+            return
 
-        else:
-            if result["data"]["status"] != 0:
-                wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
+        # 登录成功，关闭窗口
+        self.isLogin = True
 
-                return
-
-            # 登录成功，关闭窗口
-            self.isLogin = True
-
-            info = self.login.get_user_info()
-            self.onLoginSuccess(info)
+        info = self.login.get_user_info()
+        self.onLoginSuccess(info)
