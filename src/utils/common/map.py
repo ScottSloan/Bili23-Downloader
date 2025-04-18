@@ -239,7 +239,7 @@ download_type_map = {
 }
 
 number_type_map = {
-    "从 1 开始": 0,
+    "总是从 1 开始": 0,
     "连贯递增": 1
 }
 

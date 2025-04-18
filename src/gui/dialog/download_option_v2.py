@@ -143,7 +143,7 @@ class DownloadOptionDialog(Dialog):
 
         other_box = wx.StaticBox(self, -1, "其他选项")
         
-        self.auto_popup_chk = wx.CheckBox(other_box, -1, "下载时自动弹出")
+        self.auto_popup_chk = wx.CheckBox(other_box, -1, "下载时自动弹出此对话框")
         self.auto_add_number_chk = wx.CheckBox(other_box, -1, "自动添加序号")
         self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
@@ -277,24 +277,6 @@ class DownloadOptionDialog(Dialog):
     
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
-            def check():
-                if self.video_quality_id == VideoQualityID._Auto.value:
-                    video_quality_id = video_quality_map.get(self.video_quality_choice.GetString(1))
-                else:
-                    video_quality_id = self.video_quality_id
-
-                if info["video_quality_id"] != video_quality_id:
-                    self.video_quality_warn_icon.Show()
-                else:
-                    self.video_quality_warn_icon.Hide()
-
-                if info["video_codec_id"] != self.video_codec_id:
-                    self.video_codec_warn_icon.Show()
-                else:
-                    self.video_codec_warn_icon.Hide()
-
-                self.Layout()
-            
             def get_video_quality_info_label():
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
@@ -302,13 +284,37 @@ class DownloadOptionDialog(Dialog):
                     
                     case StreamType.Flv:
                         return "[{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatTool.format_size(info["size"]))
-                    
+            
+            def callback():
+                def check():
+                    if self.video_quality_id == VideoQualityID._Auto.value:
+                        video_quality_id = video_quality_map.get(self.video_quality_choice.GetString(1))
+                    else:
+                        video_quality_id = self.video_quality_id
+
+                    if info["video_quality_id"] != video_quality_id:
+                        self.video_quality_warn_icon.Show()
+                    else:
+                        self.video_quality_warn_icon.Hide()
+
+                    if info["video_codec_id"] != self.video_codec_id:
+                        self.video_codec_warn_icon.Show()
+                    else:
+                        self.video_codec_warn_icon.Hide()
+
+                    self.Layout()
+
+                self.video_quality_info_lab.SetLabel(video_quality_info_label)
+                self.video_codec_info_lab.SetLabel(video_codec_info_label)
+
+                check()
+
             info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
 
-            wx.CallAfter(self.video_quality_info_lab.SetLabel, get_video_quality_info_label())
-            wx.CallAfter(self.video_codec_info_lab.SetLabel, get_mapping_key_by_value(video_codec_map, info["video_codec_id"]))
+            video_quality_info_label = get_video_quality_info_label()
+            video_codec_info_label = get_mapping_key_by_value(video_codec_map, info["video_codec_id"])
 
-            check()
+            wx.CallAfter(callback)
 
         self.video_quality_info_lab.SetLabel("正在检测...")
         self.video_codec_info_lab.SetLabel("正在检测...")
@@ -317,48 +323,49 @@ class DownloadOptionDialog(Dialog):
 
     def onChangeAudioQualityEVT(self, event):
         def worker():
-            def check():
-                if self.audio_quality_id == AudioQualityID._Auto.value:
-                    audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetString(1))
-                else:
-                    audio_quality_id = self.audio_quality_id
-
-                if info["audio_quality_id"] != audio_quality_id:
-                    self.audio_quality_warn_icon.Show()
-                else:
-                    self.audio_quality_warn_icon.Hide()
-
-                self.Layout()
-
             def get_audio_quality_info_label():
-                def disable_download_audio_option():
+                def check():
+                    if self.audio_quality_id == AudioQualityID._Auto.value:
+                        audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetString(1))
+                    else:
+                        audio_quality_id = self.audio_quality_id
+
+                    if info["audio_quality_id"] != audio_quality_id:
+                        self.audio_quality_warn_icon.Show()
+                    else:
+                        self.audio_quality_warn_icon.Hide()
+
+                    self.Layout()
+
+                def disable_download_audio_option(label: str):
                     self.audio_quality_choice.Enable(False)
                     self.download_both_radio.SetValue(True)
 
                     self.download_video_radio.Enable(False)
                     self.download_audio_radio.Enable(False)
 
+                    self.download_both_radio.SetLabel(label)
+
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
                         if AudioInfo.Availability.audio:
-                            check()
+                            wx.CallAfter(check)
 
                             return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
                         else:
-                            disable_download_audio_option()
-                            self.download_both_radio.SetLabel("下载视频")
+                            wx.CallAfter(disable_download_audio_option, "下载视频")
 
                             return "此视频无音轨"
                     
                     case StreamType.Flv:
-                        disable_download_audio_option()
-                        self.download_both_radio.SetLabel("下载 FLV 视频")
+                        wx.CallAfter(disable_download_audio_option, "下载 FLV 视频")
 
                         return "FLV 视频流不支持自定义下载音质"
 
             info = self.preview.get_audio_stream_size(self.audio_quality_id)
 
-            wx.CallAfter(self.audio_quality_info_lab.SetLabel, get_audio_quality_info_label())
+            audio_info_label = get_audio_quality_info_label()
+            wx.CallAfter(self.audio_quality_info_lab.SetLabel, audio_info_label)
 
         self.audio_quality_info_lab.SetLabel("正在检测...")
 
