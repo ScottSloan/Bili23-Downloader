@@ -35,10 +35,10 @@ class EpisodeManager:
                 EpisodeInfo.clear_episode_data()
 
                 for episode in _in_section:
-                    EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))
+                    EpisodeInfo.add_item(EpisodeInfo.data, "视频", get_entry(episode))
 
-        def _get_entry(episode: dict):
-            def _get_title(episode: dict):
+        def get_entry(episode: dict):
+            def get_title(episode: dict):
                 if "title" in episode:
                     if Config.Misc.show_episode_full_name:
                         return episode["title"]
@@ -50,35 +50,43 @@ class EpisodeManager:
                 else:
                     return episode["part"]
 
+            def get_badge():
+                if VideoInfo.is_upower_exclusive:
+                    return "充电专属"
+                else:
+                    return ""
+
             EpisodeInfo.cid_dict[episode["cid"]] = episode
 
             return {
-                "title": _get_title(episode),
+                "title": get_title(episode),
                 "cid": episode["cid"],
-                "badge": "",
+                "badge": get_badge(),
                 "duration": FormatTool.format_duration(episode, ParseType.Video)
             }
 
-        def _get_node(title: str, duration: str = ""):
+        def get_node(title: str, duration: str = ""):
             return {
                 "title": title,
                 "duration": duration,
                 "entries": []
             }
         
+        from utils.parse.video import VideoInfo
+        
         EpisodeInfo.data["collection_title"] = info_json["ugc_season"]["title"]
 
         for section in info_json["ugc_season"]["sections"]:
-            EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_node(section["title"]))
+            EpisodeInfo.add_item(EpisodeInfo.data, "视频", get_node(section["title"]))
 
             for episode in section["episodes"]:
                 if len(episode["pages"]) == 1:
-                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_entry(episode))
+                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], get_entry(episode))
 
                     if episode["cid"] == cid:
                         _in_section = section["episodes"]
                 else:
-                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], _get_node(episode["title"], FormatTool.format_duration(episode, ParseType.Video)))
+                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], get_node(episode["title"], FormatTool.format_duration(episode, ParseType.Video)))
 
                     for page in episode["pages"]:
                         page["cover_url"] = episode["arc"]["pic"]
@@ -86,7 +94,7 @@ class EpisodeManager:
                         page["bvid"] = episode["bvid"]
                         page["pubtime"] = episode["arc"]["pubdate"]
 
-                        EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], _get_entry(page))
+                        EpisodeInfo.add_item(EpisodeInfo.data, episode["title"], get_entry(page))
 
                         if episode["cid"] == cid:
                             _in_section = episode["pages"]

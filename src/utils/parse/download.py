@@ -2,7 +2,7 @@ import json
 from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID
+from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID, StatusCode
 from utils.common.exception import GlobalException
 
 from utils.parse.preview import Preview
@@ -42,6 +42,8 @@ class DownloadParser:
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
+            self.check_json(data)
+
             return check_stream_type(data["data"])
 
         def get_bangumi_json():
@@ -50,6 +52,8 @@ class DownloadParser:
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
+            self.check_json(data)
+
             return check_stream_type(data["result"])
 
         def get_cheese_json():
@@ -57,6 +61,8 @@ class DownloadParser:
 
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
+
+            self.check_json(data)
 
             return check_stream_type(data["data"])
 
@@ -253,3 +259,9 @@ class DownloadParser:
         
         except Exception as e:
             raise GlobalException(callback = self.callback) from e
+    
+    def check_json(self, data: dict):
+        status_code = data["code"]
+
+        if status_code != StatusCode.Success.value:
+            raise GlobalException(message = data["message"], code = status_code)

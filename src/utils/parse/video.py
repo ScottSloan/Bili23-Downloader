@@ -28,6 +28,8 @@ class VideoInfo:
 
     stream_type: int = 0
 
+    is_upower_exclusive: bool = False
+
     pages_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
@@ -131,6 +133,8 @@ class VideoParser:
         VideoInfo.up_name = info["owner"]["name"]
         VideoInfo.up_mid = info["owner"]["mid"]
 
+        VideoInfo.is_upower_exclusive = info["is_upower_exclusive"]
+
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
             if hasattr(self, "part_num"):
@@ -221,6 +225,12 @@ class VideoParser:
     
     def parse_episodes(self):
         def pages_parser():
+            def get_badge():
+                if VideoInfo.is_upower_exclusive:
+                    return "充电专属"
+                else:
+                    return ""
+
             if len(VideoInfo.pages_list) == 1:
                 VideoInfo.type = VideoType.Single
             else:
@@ -236,7 +246,7 @@ class VideoParser:
                 EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
                     "title": page["part"] if VideoInfo.type == VideoType.Part else VideoInfo.title,
                     "cid": page["cid"],
-                    "badge": "",
+                    "badge": get_badge(),
                     "duration": FormatTool.format_duration(page, ParseType.Video)
                 })
 
