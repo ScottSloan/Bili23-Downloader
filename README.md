@@ -1,7 +1,7 @@
 # Bili23-Downloader
 ![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/release_build.yml)
 
-![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.2-green?style=flat) 
+![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.3-green?style=flat) 
 
 [项目官网](https://bili23.scott-sloan.cn/)
 
@@ -25,26 +25,11 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/waht-is-bili23-downloader.html)。
 
 ## 更新日志
-### 1.61.0 (2025-04-18)
-#### 新增
-* 支持查看当前视频的大小，编码，码率等信息
-* 支持监听剪切板，自动解析视频
-* 支持单独下载视频弹幕、字幕和封面
-* 支持更多自定义字段（发布时间，分区等）
-* 支持下载完成后进行文件 MD5 校验，避免合成失败
-* 支持修改自动添加的序号类型
-
-#### 优化
-* 优化对话框创建逻辑，避免重复创建消耗额外内存
-* 优化界面在不同缩放倍数下的显示效果
-* 优化 webview 加载逻辑，避免无法打开登录窗口
-* 优化重复下载提示
-* 优化工具条提示
-
-#### 修复
-* 修复视频只能下载 H.264 编码的问题
-* 修复合集中的分 P 视频无法下载的问题
-* 修复高缩放倍数下二维码显示不完整的问题
+### 1.61.1 (2025-04-22)
+### 修复
+* 修复编译版程序闪退的问题 (#122)
+* 修复下载弹幕、字幕和封面设置项保存无法生效的问题
+* 修复配置文件不兼容导致无法合成视频的问题
 
 ## 免责声明
 本项目仅供个人学习与研究用途，任何通过本项目下载的内容仅限于个人使用，用户自行承担使用本项目可能带来的所有风险。

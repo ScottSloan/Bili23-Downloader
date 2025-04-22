@@ -183,11 +183,11 @@ class BasicTab(Tab):
             "listen_clipboard": Config.Basic.listen_clipboard,
             "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog,
             "auto_show_download_window": Config.Basic.auto_show_download_window,
-            "get_danmaku": Config.Basic.download_danmaku_file,
-            "danmaku_type": Config.Basic.danmaku_file_type,
-            "get_subtitle": Config.Basic.download_subtitle_file,
-            "subtitle_type": Config.Basic.subtitle_file_type,
-            "get_cover": Config.Basic.download_cover_file
+            "download_danmaku_file": Config.Basic.download_danmaku_file,
+            "danmaku_file_type": Config.Basic.danmaku_file_type,
+            "download_subtitle_file": Config.Basic.download_subtitle_file,
+            "subtitle_file_type": Config.Basic.subtitle_file_type,
+            "download_cover_file": Config.Basic.download_cover_file
         }
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
@@ -1137,7 +1137,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            config_utils.clear_config()
+            config_utils.remove_config_file()
 
             shutil.rmtree(Config.User.directory)
 
@@ -1147,7 +1147,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            config_utils.clear_config()
+            config_utils.remove_config_file()
 
             self.restart()
 
