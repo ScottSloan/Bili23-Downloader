@@ -15,8 +15,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.61.0"
-        version_code: int = 1611
+        version: str = "1.61.1"
+        version_code: int = 1612
 
         # 断点续传文件最低支持版本号
         task_file_min_version_code: int = 1611
@@ -174,13 +174,12 @@ class ConfigUtils:
 
         def after_read_config():
             def check_config_version():
-                if "header" in app_config:
-                    if app_config.get("header").get("min_version", 0) < Config.APP.config_file_min_version_code:
-                        self.clear_config()
+                min_version = app_config.get("header", {"min_version": 0}).get("min_version", 0)
+                
+                if min_version < Config.APP.config_file_min_version_code:
+                    self.remove_config_file()
 
-                        self.load_config()
-
-                        return
+                    app_config.clear()
 
             def check_config_node_name():
                 for node_name in ["header", "basic", "download", "advanced","merge", "extra", "proxy", "misc"]:
@@ -195,9 +194,9 @@ class ConfigUtils:
                     if node_name not in user_config:
                         user_config[node_name] = {}
 
-            check_config_node_name()
-
             check_config_version()
+
+            check_config_node_name()
         
         def get_path():
             match Platform(Config.Sys.platform):
@@ -223,6 +222,12 @@ class ConfigUtils:
         # basic
         Config.Basic.listen_clipboard = app_config["basic"].get("listen_clipboard", Config.Basic.listen_clipboard)
         Config.Basic.auto_popup_option_dialog = app_config["basic"].get("auto_popup_option_dialog", Config.Basic.auto_popup_option_dialog)
+        Config.Basic.auto_show_download_window = app_config["basic"].get("auto_show_download_window", Config.Basic.auto_show_download_window)
+        Config.Basic.download_danmaku_file = app_config["basic"].get("download_danmaku_file", Config.Basic.download_danmaku_file)
+        Config.Basic.danmaku_file_type = app_config["basic"].get("danmaku_file_type", Config.Basic.danmaku_file_type)
+        Config.Basic.download_subtitle_file = app_config["basic"].get("download_subtitle_file", Config.Basic.download_subtitle_file)
+        Config.Basic.subtitle_file_type = app_config["basic"].get("subtitle_file_type", Config.Basic.subtitle_file_type)
+        Config.Basic.download_cover_file = app_config["basic"].get("download_cover_file", Config.Basic.download_cover_file)
         
         # download
         Config.Download.path = app_config["download"].get("path", Config.Download.path)
@@ -256,13 +261,6 @@ class ConfigUtils:
         Config.FFmpeg.check_available = app_config["merge"].get("check_ffmpeg_available", Config.FFmpeg.check_available)
         Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
         Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
-
-        # extra
-        Config.Basic.download_danmaku_file = app_config["extra"].get("download_danmaku_file", Config.Basic.download_danmaku_file)
-        Config.Basic.danmaku_file_type = app_config["extra"].get("danmaku_file_type", Config.Basic.danmaku_file_type)
-        Config.Basic.download_subtitle_file = app_config["extra"].get("download_subtitle_file", Config.Basic.download_subtitle_file)
-        Config.Basic.subtitle_file_type = app_config["extra"].get("subtitle_file_type", Config.Basic.subtitle_file_type)
-        Config.Basic.download_cover_file = app_config["extra"].get("download_cover_file", Config.Basic.download_cover_file)
 
         # proxy
         Config.Proxy.proxy_mode = app_config["proxy"].get("proxy_mode", Config.Proxy.proxy_mode)
@@ -315,7 +313,7 @@ class ConfigUtils:
         self.write_config_json(file_path, config)
 
     @staticmethod
-    def clear_config():
+    def remove_config_file():
         from utils.tool_v2 import UniversalTool
 
         UniversalTool.remove_files([UniversalTool.get_file_path(os.getcwd(), "config.json")])
