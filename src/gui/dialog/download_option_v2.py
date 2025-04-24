@@ -120,18 +120,18 @@ class DownloadOptionDialog(Dialog):
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
         self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
-        #self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
-        #self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
+        self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
+        self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
 
-        subtitle_grid_box = wx.FlexGridSizer(1, 4, 0, 0)
+        subtitle_grid_box = wx.FlexGridSizer(2, 4, 0, 0)
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
         subtitle_grid_box.Add(self.subtitle_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         subtitle_grid_box.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
-        #subtitle_grid_box.AddSpacer(self.FromDIP(20))
-        #subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        #subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
-        #subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
@@ -434,8 +434,8 @@ class DownloadOptionDialog(Dialog):
 
         self.subtitle_file_type_lab.Enable(enable)
         self.subtitle_file_type_choice.Enable(enable)
-        #self.subtitle_file_lan_type_lab.Enable(enable)
-        #self.subtitle_file_lan_type_btn.Enable(enable)
+        self.subtitle_file_lan_type_lab.Enable(enable)
+        self.subtitle_file_lan_type_btn.Enable(enable)
 
         self.onEnableOKBtnEVT(event)
 

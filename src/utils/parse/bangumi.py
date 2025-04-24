@@ -149,8 +149,10 @@ class BangumiParser:
         BangumiInfo.evaluate = info_result["evaluate"]
 
         BangumiInfo.area = info_result["areas"][0]["name"]
-        BangumiInfo.up_name = info_result["up_info"]["uname"]
-        BangumiInfo.up_mid = info_result["up_info"]["mid"]
+
+        if "up_info" in info_result:
+            BangumiInfo.up_name = info_result["up_info"]["uname"]
+            BangumiInfo.up_mid = info_result["up_info"]["mid"]
 
         self.parse_episodes()
 

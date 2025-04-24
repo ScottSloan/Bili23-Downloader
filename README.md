@@ -1,5 +1,5 @@
 # Bili23-Downloader
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/release_build.yml)
+![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml)
 
 ![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.3-green?style=flat) 
 
@@ -25,11 +25,9 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/waht-is-bili23-downloader.html)。
 
 ## 更新日志
-### 1.61.1 (2025-04-22)
-### 修复
-* 修复编译版程序闪退的问题 (#122)
-* 修复下载弹幕、字幕和封面设置项保存无法生效的问题
-* 修复配置文件不兼容导致无法合成视频的问题
+### 1.62.0 (2025-04-22)
+### 新增
+* 支持对充电专属视频的识别
 
 ## 免责声明
 本项目仅供个人学习与研究用途，任何通过本项目下载的内容仅限于个人使用，用户自行承担使用本项目可能带来的所有风险。
