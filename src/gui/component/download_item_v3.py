@@ -189,8 +189,8 @@ class DownloadTaskItemPanel(Panel):
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
-        self._show_cover = False
-        self._destroy = False
+        self.flag_show_cover = False
+        self.flag_destroy = False
         self.error_info = None
 
         self.file_tool = DownloadFileTool(self.task_info.id)
@@ -231,7 +231,7 @@ class DownloadTaskItemPanel(Panel):
                 case ParseType.Extra:
                     return ""
 
-        if not self._destroy:
+        if not self.flag_destroy:
             self.title_lab.SetLabel(self.task_info.title)
             self.title_lab.SetToolTip(self.task_info.title)
 
@@ -284,11 +284,11 @@ class DownloadTaskItemPanel(Panel):
                 return content
 
         def setBitmap(image: wx.Image):
-            if not self._destroy:
+            if not self.flag_destroy:
                 self.cover_bmp.SetBitmap(image.ConvertToBitmap())
 
-        if not self._show_cover:
-            self._show_cover = True
+        if not self.flag_show_cover:
+            self.flag_show_cover = True
             size = self.FromDIP((112, 63))
 
             self._cover = get_bitmap()
@@ -303,7 +303,7 @@ class DownloadTaskItemPanel(Panel):
             wx.CallAfter(setBitmap, image)
 
     def onDestroyEVT(self, event):
-        self._destroy = True
+        self.flag_destroy = True
 
         event.Skip()
 
@@ -450,7 +450,7 @@ class DownloadTaskItemPanel(Panel):
 
     def onDownloading(self, speed: str):
         def worker():
-            if not self._destroy:
+            if not self.flag_destroy:
                 self.progress_bar.SetValue(self.task_info.progress)
                 self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 

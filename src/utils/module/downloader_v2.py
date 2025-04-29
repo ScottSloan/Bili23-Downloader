@@ -114,16 +114,18 @@ class Downloader:
                         self.executor.submit(self.download_range, range_info)
 
         self.stop_event.clear()
-
         downloader_info = get_downloader_info()
-
         file_path = self.get_file_path(downloader_info.file_name)
 
-        get_total_file_size()
+        try:
+            get_total_file_size()
 
-        url, ranges = get_ranges(downloader_info.file_name)
+            url, ranges = get_ranges(downloader_info.file_name)
 
-        worker()
+            worker()
+
+        except Exception as e:
+            raise GlobalException(code = StatusCode.Download.value, callback = self.download_error) from e
 
     def stop_download(self):
         self.stop_event.set()
@@ -188,7 +190,7 @@ class Downloader:
 
         for url in url_list:
             for cdn in CDN.get_cdn_list():
-                new_url, req = request_head(url, cdn)
+                (new_url, req) = request_head(url, cdn)
 
                 if "Content-Length" in req.headers:
                     file_size = int(req.headers.get("Content-Length"))
