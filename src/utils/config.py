@@ -15,8 +15,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.61.1"
-        version_code: int = 1612
+        version: str = "1.62.0"
+        version_code: int = 1620
 
         # 断点续传文件最低支持版本号
         task_file_min_version_code: int = 1611
@@ -26,6 +26,7 @@ class Config:
 
     class Basic:
         listen_clipboard: bool = True
+        taskbar_icon: bool = True
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
 
@@ -221,6 +222,7 @@ class ConfigUtils:
 
         # basic
         Config.Basic.listen_clipboard = app_config["basic"].get("listen_clipboard", Config.Basic.listen_clipboard)
+        Config.Basic.taskbar_icon = app_config["basic"].get("taskbar_icon", Config.Basic.taskbar_icon)
         Config.Basic.auto_popup_option_dialog = app_config["basic"].get("auto_popup_option_dialog", Config.Basic.auto_popup_option_dialog)
         Config.Basic.auto_show_download_window = app_config["basic"].get("auto_show_download_window", Config.Basic.auto_show_download_window)
         Config.Basic.download_danmaku_file = app_config["basic"].get("download_danmaku_file", Config.Basic.download_danmaku_file)

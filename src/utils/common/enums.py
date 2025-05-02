@@ -133,3 +133,4 @@ class LiveQualityID(Enum):
 class NumberType(Enum):
     From_1 = 0
     Coherent = 1
+    Episode_List = 2

@@ -106,13 +106,15 @@ class BasicTab(Tab):
         basic_box = wx.StaticBox(self, -1, "基本设置")
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
+        self.taskbar_icon_chk = wx.CheckBox(basic_box, -1, "显示托盘图标")
 
         self.auto_popup_option_chk = wx.CheckBox(basic_box, 0, "下载前自动弹出下载选项对话框")
         self.auto_show_download_window_chk = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
-        basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_sbox.Add(self.taskbar_icon_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
@@ -156,6 +158,7 @@ class BasicTab(Tab):
 
     def init_data(self):
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
+        self.taskbar_icon_chk.SetValue(Config.Basic.taskbar_icon)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
 
@@ -170,6 +173,7 @@ class BasicTab(Tab):
 
     def save(self):
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
+        Config.Basic.taskbar_icon = self.taskbar_icon_chk.GetValue()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
 
@@ -181,6 +185,7 @@ class BasicTab(Tab):
 
         kwargs = {
             "listen_clipboard": Config.Basic.listen_clipboard,
+            "taskbar_icon": Config.Basic.taskbar_icon,
             "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog,
             "auto_show_download_window": Config.Basic.auto_show_download_window,
             "download_danmaku_file": Config.Basic.download_danmaku_file,

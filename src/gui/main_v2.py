@@ -50,6 +50,7 @@ from gui.component.tree_list import TreeListCtrl
 from gui.component.button import Button
 from gui.component.bitmap_button import BitmapButton
 from gui.component.info_bar import InfoBar
+from gui.component.taskbar_icon import TaskBarIcon
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -144,6 +145,8 @@ class MainWindow(Frame):
         self.init_menubar()
 
         self.clipboard_timer = wx.Timer(self, -1)
+
+        self.taskbar_icon = TaskBarIcon(self)
 
     def init_id(self):
         self.ID_REFRESH_MENU = wx.NewIdRef()
@@ -256,6 +259,8 @@ class MainWindow(Frame):
                 return
             
         self.clipboard_timer.Stop()
+
+        self.taskbar_icon.Destroy()
         
         event.Skip()
 
@@ -390,8 +395,8 @@ class MainWindow(Frame):
                 self.download_window.Iconize(False)
         
         if Config.Basic.auto_show_download_window:
-            self.download_window.SetFocus()
             self.download_window.downloading_page_btn.onClickEVT(event)
+            self.download_window.Raise()
 
     def onDownloadEVT(self, event):
         match self.current_parse_type:

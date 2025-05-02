@@ -226,7 +226,8 @@ download_type_map = {
 
 number_type_map = {
     "总是从 1 开始": 0,
-    "连贯递增": 1
+    "连贯递增": 1,
+    "使用剧集列表序号": 2
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
