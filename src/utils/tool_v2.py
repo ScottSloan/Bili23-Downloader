@@ -9,15 +9,16 @@ import requests.auth
 from datetime import datetime
 from typing import Optional, List
 
-from utils.config import Config
-from utils.common.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType, ProxyMode, Platform
-from utils.common.thread import Thread
+from .config import Config
+from .common.data_type import DownloadTaskInfo
+from .common.enums import ParseType, ProxyMode, Platform
+from .common.thread import Thread
 
 class RequestTool:
     # 请求工具类
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
+    @staticmethod
     def request_get(url: str, headers = None, proxies = None, auth = None, stream = False):
         if not headers:
             headers = RequestTool.get_headers()
@@ -29,19 +30,22 @@ class RequestTool:
             auth = RequestTool.get_auth()
 
         return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream)
-    
+
+    @staticmethod
     def request_post(url: str, headers = None, params = None, json = None):
         if not headers:
             headers = RequestTool.get_headers()
         
         return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, json = json, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
+    @staticmethod
     def request_head(url: str, headers = None):
         if not headers:
             headers = RequestTool.get_headers()
         
         return requests.head(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
+    @staticmethod
     def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
         def cookie():
             if Config.Auth.buvid3:
@@ -83,6 +87,7 @@ class RequestTool:
 
         return headers
 
+    @staticmethod
     def get_proxies():
         match ProxyMode(Config.Proxy.proxy_mode):
             case ProxyMode.Disable:
@@ -96,13 +101,15 @@ class RequestTool:
                     "http": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}",
                     "https": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}"
                 }
-    
+
+    @staticmethod
     def get_auth():
         if Config.Proxy.enable_auth:
             return requests.auth.HTTPProxyAuth(Config.Proxy.auth_username, Config.Proxy.auth_password)
         else:
             return None
-    
+
+    @staticmethod
     def replace_protocol(url: str):
         if not Config.Advanced.always_use_https_protocol:
             return url.replace("https://", "http://")
@@ -111,6 +118,7 @@ class RequestTool:
 
 class FileDirectoryTool:
     # 文件目录工具类
+    @staticmethod
     def open_directory(directory: str):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
@@ -122,6 +130,7 @@ class FileDirectoryTool:
             case Platform.macOS:
                 subprocess.Popen(f'open "{directory}"', shell = True)
 
+    @staticmethod
     def open_file_location(path: str):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
@@ -132,7 +141,8 @@ class FileDirectoryTool:
 
             case Platform.macOS:
                 subprocess.Popen(f'open -R "{path}"', shell = True)
-    
+
+    @staticmethod
     def get_file_ext_associated_app(file_ext: str):
         def _linux():
             _desktop = subprocess.Popen("xdg-mime query default video/mp4", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
@@ -159,6 +169,7 @@ class FileDirectoryTool:
                 # macOS 不支持获取默认程序
                 return (False, "")
 
+    @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):
         def get_pidl(path):
             pidl = ctypes.POINTER(ITEMIDLIST)()
@@ -180,6 +191,7 @@ class FileDirectoryTool:
         finally:
             ctypes.windll.ole32.CoUninitialize()
 
+    @staticmethod
     def _msw_AssocQueryStringW(file_ext: str):
         from ctypes import wintypes
 
@@ -379,6 +391,7 @@ class FormatTool:
 
 class UniversalTool:
     # 通用工具类
+    @staticmethod
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
@@ -389,6 +402,7 @@ class UniversalTool:
 
         return Config.User.face_path
 
+    @staticmethod
     def get_user_round_face(image):
         width, height = image.GetSize()
         diameter = min(width, height)
@@ -409,15 +423,19 @@ class UniversalTool:
         
         return circle_image
 
+    @staticmethod
     def get_current_time_str():
         return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
-    
+
+    @staticmethod
     def get_time_str_from_timestamp(timestamp: int):
         return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
 
+    @staticmethod
     def get_legal_name(_name: str):
         return re.sub(r'[/\:*?"<>|]', "", _name)
 
+    @staticmethod
     def re_find_string(_pattern: str, _string: str):
         find = re.findall(_pattern, _string)
     
@@ -425,7 +443,8 @@ class UniversalTool:
             return find[0]
         else:
             return None
-    
+
+    @staticmethod
     def aid_to_bvid(_aid: int):
         XOR_CODE = 23442827791579
         MAX_AID = 1 << 51
@@ -441,6 +460,7 @@ class UniversalTool:
 
         return "BV1" + "".join(bvid)
 
+    @staticmethod
     def remove_files(path_list: List):
         def worker():
             for path in path_list:
@@ -452,13 +472,16 @@ class UniversalTool:
 
         Thread(target = worker).start()
 
+    @staticmethod
     def get_file_path(directory: str, file_name: str):
         return os.path.join(directory, file_name)
 
+    @staticmethod
     def msw_set_dpi_awareness():
         if Config.Sys.platform == Platform.Windows.value:
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
+    @staticmethod
     def msw_set_utf8_encode():
         if Config.Sys.platform == Platform.Windows.value:
             subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
