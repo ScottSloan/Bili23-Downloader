@@ -17,6 +17,7 @@ from gui.component.tooltip import ToolTip
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.cdn import ChangeCDNDialog
 from gui.dialog.file_name import CustomFileNameDialog
+from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
 from utils.config import Config, config_utils
 from utils.tool_v2 import RequestTool
@@ -119,32 +120,40 @@ class BasicTab(Tab):
 
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
 
-        self.get_danmaku_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
+        self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
         self.danmaku_format_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(self.FromDIP(20))
-        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_hbox.Add(self.danmaku_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_hbox.Add(self.danmaku_format_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_hbox.AddSpacer(self.FromDIP(20))
 
-        self.get_subtitle_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
-        self.subtitle_format_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
-        self.subtitle_format_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
+        self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
+        self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
+        self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
+        self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
+        self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
 
-        subtitle_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        subtitle_hbox.AddSpacer(self.FromDIP(20))
-        subtitle_hbox.Add(self.subtitle_format_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        subtitle_hbox.Add(self.subtitle_format_choice, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_grid_box = wx.FlexGridSizer(2, 4, 0, 0)
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.Add(self.subtitle_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_grid_box.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
-        self.get_cover_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
+        self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
-        extra_sbox.Add(self.get_danmaku_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
-        extra_sbox.Add(self.get_subtitle_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
-        extra_sbox.Add(subtitle_hbox, 0, wx.EXPAND)
-        extra_sbox.Add(self.get_cover_chk, 0, wx.ALL, self.FromDIP(6))
+        extra_sbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
+        extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         
         basic_vbox = wx.BoxSizer(wx.VERTICAL)
         basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, self.FromDIP(6))
@@ -153,8 +162,10 @@ class BasicTab(Tab):
         self.SetSizer(basic_vbox)
 
     def Bind_EVT(self):
-        self.get_danmaku_chk.Bind(wx.EVT_CHECKBOX, self.onChangeDanmakuEVT)
-        self.get_subtitle_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSubtitleEVT)
+        self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
+        self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
+
+        self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
     def init_data(self):
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
@@ -162,14 +173,14 @@ class BasicTab(Tab):
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
 
-        self.get_danmaku_chk.SetValue(Config.Basic.download_danmaku_file)
+        self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
         self.danmaku_format_choice.SetSelection(Config.Basic.danmaku_file_type)
-        self.get_subtitle_chk.SetValue(Config.Basic.download_subtitle_file)
-        self.subtitle_format_choice.SetSelection(Config.Basic.subtitle_file_type)
-        self.get_cover_chk.SetValue(Config.Basic.download_cover_file)
+        self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
+        self.subtitle_file_type_choice.SetSelection(Config.Basic.subtitle_file_type)
+        self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
 
-        self.onChangeDanmakuEVT(0)
-        self.onChangeSubtitleEVT(0)
+        self.onCheckDownloadDanmakuEVT(0)
+        self.onCheckDownloadSubtitleEVT(0)
 
     def save(self):
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
@@ -177,11 +188,11 @@ class BasicTab(Tab):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
 
-        Config.Basic.download_danmaku_file = self.get_danmaku_chk.GetValue()
+        Config.Basic.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
         Config.Basic.danmaku_file_type = self.danmaku_format_choice.GetSelection()
-        Config.Basic.download_subtitle_file = self.get_subtitle_chk.GetValue()
-        Config.Basic.subtitle_file_type = self.subtitle_format_choice.GetSelection()
-        Config.Basic.download_cover_file = self.get_cover_chk.GetValue()
+        Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
+        Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
+        Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
 
         kwargs = {
             "listen_clipboard": Config.Basic.listen_clipboard,
@@ -197,19 +208,23 @@ class BasicTab(Tab):
 
         config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
 
-    def onChangeDanmakuEVT(self, event):
-        def set_enable(enable: bool):
-            self.danmaku_format_choice.Enable(enable)
-            self.danmaku_format_lab.Enable(enable)
+    def onCheckDownloadDanmakuEVT(self, event):
+        enable = self.download_danmaku_file_chk.GetValue()
+        
+        self.danmaku_format_choice.Enable(enable)
+        self.danmaku_format_lab.Enable(enable)
 
-        set_enable(self.get_danmaku_chk.GetValue())
+    def onCheckDownloadSubtitleEVT(self, event):
+        enable = self.download_subtitle_file_chk.GetValue()
 
-    def onChangeSubtitleEVT(self, event):
-        def set_enable(enable: bool):
-            self.subtitle_format_choice.Enable(enable)
-            self.subtitle_format_lab.Enable(enable)
+        self.subtitle_file_type_choice.Enable(enable)
+        self.subtitle_file_type_lab.Enable(enable)
+        self.subtitle_file_lan_type_lab.Enable(enable)
+        self.subtitle_file_lan_type_btn.Enable(enable)
 
-        set_enable(self.get_subtitle_chk.GetValue())
+    def onCustomSubtitleLanEVT(self, event):
+        dlg = CustomLanDialog(self)
+        dlg.ShowModal()
 
 class DownloadTab(Tab):
     def __init__(self, parent):

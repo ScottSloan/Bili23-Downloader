@@ -10,6 +10,8 @@ from utils.common.thread import Thread
 from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
 
+from gui.dialog.custom_subtitle_lan import CustomLanDialog
+
 from gui.component.dialog import Dialog
 from gui.component.info_label import InfoLabel
 from gui.component.tooltip import ToolTip
@@ -199,6 +201,8 @@ class DownloadOptionDialog(Dialog):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
         self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKBtnEVT)
+
+        self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
         self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
@@ -438,6 +442,10 @@ class DownloadOptionDialog(Dialog):
         self.subtitle_file_lan_type_btn.Enable(enable)
 
         self.onEnableOKBtnEVT(event)
+
+    def onCustomSubtitleLanEVT(self, event):
+        dlg = CustomLanDialog(self)
+        dlg.ShowModal()
 
     def onCheckAutoPopupEVT(self, event):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
