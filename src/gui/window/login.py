@@ -122,11 +122,15 @@ class LoginPage(Panel):
         Panel.__init__(self, parent)
 
     def getLabelColor(self):
-        if not Config.Sys.dark_mode:
+        if Config.Sys.dark_mode:
+            return wx.Colour("white")
+        else:
             return wx.Colour(80, 80, 80)
     
     def getBorderColor(self):
-        if not Config.Sys.dark_mode:
+        if Config.Sys.dark_mode:
+            return wx.Colour("white")
+        else:
             return wx.Colour(227, 229, 231)
 
     def onLoginSuccess(self, info: dict):

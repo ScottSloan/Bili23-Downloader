@@ -56,7 +56,7 @@ class CustomLanDialog(Dialog):
             for lan in Config.Basic.subtitle_lan_type:
                 self.lan_box.Check(list(self.lan_list.values()).index(lan), True)
 
-        self.onChangeOptionEVT(0)
+            self.onChangeOptionEVT(0)
 
         Thread(target = worker).start()
 
