@@ -638,8 +638,9 @@ class MainWindow(Frame):
                 self.panel.Layout()
 
             scaled_size = self.FromDIP((32, 32))
+            user_face = UniversalTool.get_user_face()
 
-            image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
+            image = wx.Image(user_face, wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
 
             wx.CallAfter(show)
 

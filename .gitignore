@@ -5,6 +5,7 @@ config.ini
 
 # 虚拟环境
 .venv
+venv
 
 # 下载目录
 download
@@ -34,3 +35,4 @@ uv.toml
 
 .DS_Store
 example.md
+.idea
