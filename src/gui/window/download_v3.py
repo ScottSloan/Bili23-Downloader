@@ -196,8 +196,14 @@ class DownloadManagerWindow(Frame):
         def create_local_file():
             def update_index():
                 if Config.Download.auto_add_number:
-                    entry.number = self.index
-                    entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
+                    match NumberType(Config.Download.number_type):
+                        case NumberType.From_1 | NumberType.Coherent:
+                            entry.number = self.index
+                            entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
+
+                        case NumberType.Episode_List:
+                            entry.number = entry.list_number
+                            entry.number_with_zero = entry.list_number
 
             if Config.Download.number_type == NumberType.From_1.value:
                 self.index = 0
@@ -213,8 +219,8 @@ class DownloadManagerWindow(Frame):
                 # 如果本地文件为空，则写入内容
                 if not download_local_file.get_info("task_info"):
                     if last_cid != entry.cid:
-                        self.index += 1
                         last_cid = entry.cid
+                        self.index += 1
 
                     update_index()
 

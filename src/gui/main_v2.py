@@ -146,7 +146,8 @@ class MainWindow(Frame):
 
         self.clipboard_timer = wx.Timer(self, -1)
 
-        self.taskbar_icon = TaskBarIcon(self)
+        if Config.Basic.taskbar_icon:
+            self.taskbar_icon = TaskBarIcon(self)
 
     def init_id(self):
         self.ID_REFRESH_MENU = wx.NewIdRef()
@@ -260,7 +261,8 @@ class MainWindow(Frame):
             
         self.clipboard_timer.Stop()
 
-        self.taskbar_icon.Destroy()
+        if Config.Basic.taskbar_icon:
+            self.taskbar_icon.Destroy()
         
         event.Skip()
 
@@ -376,9 +378,7 @@ class MainWindow(Frame):
         if not url:
             wx.MessageDialog(self, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING).ShowModal()
             return
-        
-        self.current_parse_url = url
-        
+                
         self.episode_list.init_list()
         
         self.set_parse_status(ParseStatus.Parsing.value)
@@ -742,6 +742,8 @@ class MainWindow(Frame):
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onErrorCallback)
         
         if return_code == StatusCode.Success.value:
+            self.current_parse_url = url
+
             wx.CallAfter(worker)
     
     def show_episode_list(self):
