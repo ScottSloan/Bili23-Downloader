@@ -30,13 +30,13 @@ class Config:
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
 
-        download_danmaku_file = False
-        danmaku_file_type = 0
-
-        download_subtitle_file = False
-        subtitle_file_type = 0
-
-        download_cover_file = False
+        download_danmaku_file: bool = False
+        danmaku_file_type: int = 0
+        download_subtitle_file: bool = False
+        subtitle_file_type: int = 0
+        subtitle_lan_custom: bool = False
+        subtitle_lan_type: list = []
+        download_cover_file: bool = False
 
     class Proxy:
         proxy_mode: int = 1
@@ -229,6 +229,8 @@ class ConfigUtils:
         Config.Basic.danmaku_file_type = app_config["basic"].get("danmaku_file_type", Config.Basic.danmaku_file_type)
         Config.Basic.download_subtitle_file = app_config["basic"].get("download_subtitle_file", Config.Basic.download_subtitle_file)
         Config.Basic.subtitle_file_type = app_config["basic"].get("subtitle_file_type", Config.Basic.subtitle_file_type)
+        Config.Basic.subtitle_lan_custom = app_config["basic"].get("subtitle_lan_custom", Config.Basic.subtitle_lan_custom)
+        Config.Basic.subtitle_lan_type = app_config["basic"].get("subtitle_lan_type", Config.Basic.subtitle_lan_type)
         Config.Basic.download_cover_file = app_config["basic"].get("download_cover_file", Config.Basic.download_cover_file)
         
         # download

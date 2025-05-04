@@ -2,6 +2,7 @@ import wx
 import json
 
 from utils.tool_v2 import RequestTool
+from utils.config import Config
 from utils.common.thread import Thread
 
 from gui.component.dialog import Dialog
@@ -46,7 +47,14 @@ class CustomLanDialog(Dialog):
         def worker():
             self.get_lan_list()
 
-            wx.CallAfter(self.lan_box.Set, list(self.lan_list.keys()))
+            wx.CallAfter(init_data)
+
+        def init_data():
+            self.custom_radio.SetValue(Config.Basic.subtitle_lan_custom)
+            self.lan_box.Set(list(self.lan_list.keys()))
+
+            for lan in Config.Basic.subtitle_lan_type:
+                self.lan_box.Check(list(self.lan_list.values()).index(lan), True)
 
         self.onChangeOptionEVT(0)
 
@@ -69,3 +77,5 @@ class CustomLanDialog(Dialog):
 
         self.lan_list = {entry["doc_zh"]: entry["lan"] for entry in data}
 
+    def get_selected_lan_list(self):
+        return [list(self.lan_list.values())[index] for index in self.lan_box.GetCheckedItems()]

@@ -203,6 +203,8 @@ class BasicTab(Tab):
             "danmaku_file_type": Config.Basic.danmaku_file_type,
             "download_subtitle_file": Config.Basic.download_subtitle_file,
             "subtitle_file_type": Config.Basic.subtitle_file_type,
+            "subtitle_lan_custom": Config.Basic.subtitle_lan_custom,
+            "subtitle_lan_type": Config.Basic.subtitle_lan_type,
             "download_cover_file": Config.Basic.download_cover_file
         }
 
@@ -224,7 +226,10 @@ class BasicTab(Tab):
 
     def onCustomSubtitleLanEVT(self, event):
         dlg = CustomLanDialog(self)
-        dlg.ShowModal()
+
+        if dlg.ShowModal() == wx.ID_OK:
+            Config.Basic.subtitle_lan_custom = dlg.custom_radio.GetValue()
+            Config.Basic.subtitle_lan_type = dlg.get_selected_lan_list()
 
 class DownloadTab(Tab):
     def __init__(self, parent):
