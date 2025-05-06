@@ -1,5 +1,4 @@
 import wx
-import os
 
 from gui.component.webview import Webview
 
@@ -13,20 +12,24 @@ class GraphWindow(Dialog):
 
         self.SetSize(self.FromDIP((700, 400)))
 
+        self.Bind_EVT()
+
         self.CenterOnParent()
 
     def init_UI(self):
         self.webview = Webview(self)
 
-        self.webview.browser.SetPage(self.get_page(), "")
+        self.webview.browser.SetPage(self.webview.get_page("graph.html"), "")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
 
-    def get_page(self):
-        path = os.path.join(os.getcwd(), "src", "static", "graph.html")
+    def Bind_EVT(self):
+        self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)
 
-        with open(path, "r", encoding = "utf-8") as f:
-            return f.read()
+    def onLoadedEVT(self, event):
+        from utils.parse.interact_video import InteractVideoInfo
+
+        self.webview.browser.RunScriptAsync(f"initGraph({InteractVideoInfo.graph_data})")

@@ -101,9 +101,6 @@ class EpisodeManager:
                 
         episode_display_in_section()
     
-    def video_interactive_parser(graph_version: int):
-        pass 
-
     def bangumi_episodes_parser(info_json: dict, ep_id: int):
         def bangumi_main_episodes_parser(info_json: dict):
             EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
@@ -231,4 +228,3 @@ class EpisodeManager:
             
             case ParseType.Cheese:
                 return f"https://www.bilibili.com/cheese/play/ep{episode_info['id']}"
-
