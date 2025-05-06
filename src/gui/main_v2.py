@@ -245,6 +245,7 @@ class MainWindow(Frame):
         self.download_window = DownloadManagerWindow(self)
 
         self.current_parse_url = ""
+        self.in_parsing = False
 
         self.show_user_info()
 
@@ -382,6 +383,7 @@ class MainWindow(Frame):
         self.episode_list.init_list()
         
         self.set_parse_status(ParseStatus.Parsing.value)
+        self.in_parsing = True
         
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
@@ -758,7 +760,10 @@ class MainWindow(Frame):
 
         match self.current_parse_type:
             case ParseType.Video:
-                type = "投稿视频"
+                if VideoInfo.is_interactive:
+                    type = "互动视频"
+                else:
+                    type = "投稿视频"
 
             case ParseType.Bangumi:
                 type = BangumiInfo.type_name
@@ -780,6 +785,9 @@ class MainWindow(Frame):
 
             if dlg.ShowModal() == wx.ID_YES:
                 ErrorInfoDialog(self, GlobalExceptionInfo.info).ShowModal()
+
+        self.current_parse_url = self.url_box.GetValue()
+        self.in_parsing = False
 
         self.set_parse_status(ParseStatus.Error)
 
@@ -861,7 +869,7 @@ class MainWindow(Frame):
         if wx.TheClipboard.Open():
             if wx.TheClipboard.GetData(text):
                 url: str = text.GetText()
-                if is_valid_url(url):
+                if is_valid_url(url) and not self.in_parsing:
                     if url != self.current_parse_url:
                         self.url_box.SetValue(url)
 

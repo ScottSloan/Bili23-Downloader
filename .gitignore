@@ -21,6 +21,8 @@ test_2.py
 bilidanmu.proto
 config.json
 cheese.json
+choices.json
+node.json
 
 # commitizen
 cz.json

@@ -1,4 +1,5 @@
 import re
+import time
 import json
 
 from utils.config import Config
@@ -7,6 +8,7 @@ from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 
 from utils.parse.audio import AudioInfo
 from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
@@ -17,6 +19,7 @@ class VideoInfo:
     aid: str = ""
     bvid: str = ""
     cid: int = 0
+    graph_version: int = 0
 
     title: str = ""
     cover: str = ""
@@ -29,6 +32,7 @@ class VideoInfo:
     stream_type: int = 0
 
     is_upower_exclusive: bool = False
+    is_interactive: bool = False
 
     pages_list: list = []
     video_quality_id_list: list = []
@@ -48,6 +52,7 @@ class VideoInfo:
         VideoInfo.url = ""
         VideoInfo.aid = 0
         VideoInfo.bvid = ""
+        VideoInfo.graph_version = 0
         VideoInfo.title = ""
         VideoInfo.cover = ""
         VideoInfo.desc = ""
@@ -61,6 +66,9 @@ class VideoInfo:
         VideoInfo.subtname = ""
         VideoInfo.up_name = ""
         VideoInfo.up_mid = 0
+
+        VideoInfo.is_upower_exclusive = False
+        VideoInfo.is_interactive = False
 
         VideoInfo.tag_list.clear()
         VideoInfo.pages_list.clear()
@@ -133,6 +141,7 @@ class VideoParser:
         VideoInfo.up_name = info["owner"]["name"]
         VideoInfo.up_mid = info["owner"]["mid"]
 
+        VideoInfo.is_interactive = "stein_guide_cid" in info
         VideoInfo.is_upower_exclusive = info["is_upower_exclusive"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
@@ -143,6 +152,16 @@ class VideoParser:
                 VideoInfo.cid = info["pages"][0]["cid"]
         else:
             VideoInfo.cid = info["cid"]
+
+        # 判断是否为互动视频
+        if VideoInfo.is_interactive:
+            self.interact_video_parser = InteractVideoParser()
+            InteractVideoInfo.aid = VideoInfo.aid
+            InteractVideoInfo.cid = VideoInfo.cid
+            InteractVideoInfo.bvid = VideoInfo.bvid
+            InteractVideoInfo.url = VideoInfo.url
+
+            self.interact_video_parser.get_video_interactive_graph_version()
 
         self.parse_episodes()
 
@@ -250,6 +269,25 @@ class VideoParser:
                     "duration": FormatTool.format_duration(page, ParseType.Video)
                 })
 
+        def interact_parser():
+            def get_page():
+                return {
+                    "ctime": None,
+                    "part": node.title,
+                    "cid": node.cid
+                }
+            
+            self.interact_video_parser.parse_interactive_video_episodes()
+
+            VideoInfo.pages_list.clear()
+
+            for node in InteractVideoInfo.node_list:
+                VideoInfo.pages_list.append(get_page())
+
+                EpisodeInfo.cid_dict[node.cid] = get_page()
+
+            pages_parser()
+
         EpisodeInfo.clear_episode_data()
 
         match EpisodeDisplayType(Config.Misc.episode_display_mode):
@@ -257,12 +295,17 @@ class VideoParser:
                 pages_parser()
 
             case EpisodeDisplayType.In_Section | EpisodeDisplayType.All:
-                if "ugc_season" in VideoInfo.info_json:
-                    VideoInfo.type = VideoType.Collection
+                if VideoInfo.is_interactive:
+                    interact_parser()
 
-                    EpisodeManager.video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
+                    EpisodeManager.video_interactive_parser(VideoInfo.graph_version)
                 else:
-                    pages_parser()
+                    if "ugc_season" in VideoInfo.info_json:
+                        VideoInfo.type = VideoType.Collection
+
+                        EpisodeManager.video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
+                    else:
+                        pages_parser()
 
     def clear_video_info(self):
         # 清除视频信息

@@ -100,6 +100,9 @@ class EpisodeManager:
                             _in_section = episode["pages"]
                 
         episode_display_in_section()
+    
+    def video_interactive_parser(graph_version: int):
+        pass 
 
     def bangumi_episodes_parser(info_json: dict, ep_id: int):
         def bangumi_main_episodes_parser(info_json: dict):

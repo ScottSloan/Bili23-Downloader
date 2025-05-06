@@ -11,6 +11,7 @@ class VideoType(Enum):
     Single = 1               # 单个视频
     Part = 2                 # 分 P 视频
     Collection = 3           # 合集
+    Interactive = 4          # 互动视频
 
 class EpisodeDisplayType(Enum):
     Single = 1               # 获取单个视频
@@ -73,43 +74,43 @@ class StatusCode(Enum):
     Area_Limit = -10403      # 区域限制
 
 class VideoQualityID(Enum):
-    _None = 0
-    _360P = 16
-    _480P = 32
-    _720P = 64
-    _1080P = 80
-    _1080P_P = 112
-    _1080P_60 = 116
-    _4K = 120
-    _HDR = 125
-    _Dolby_Vision = 126
-    _8K = 127
-    _Auto = 200
+    _None = 0                # 无视频
+    _360P = 16               # 360P
+    _480P = 32               # 480P
+    _720P = 64               # 720P
+    _1080P = 80              # 1080P
+    _1080P_P = 112           # 1080P 高码率
+    _1080P_60 = 116          # 1080P 60帧
+    _4K = 120                # 4K
+    _HDR = 125               # HDR
+    _Dolby_Vision = 126      # 杜比视界
+    _8K = 127                # 8K
+    _Auto = 200              # 自动
 
 class AudioQualityID(Enum):
-    _None = 0
-    _64K = 30216
-    _132K = 30232
-    _192K = 30280
-    _Dolby_Atoms = 30250
-    _Hi_Res = 30251
-    _Auto = 30300
+    _None = 0              # 无音频
+    _64K = 30216           # 64K
+    _132K = 30232          # 132K
+    _192K = 30280          # 192K
+    _Dolby_Atoms = 30250   # 杜比全景声
+    _Hi_Res = 30251        # Hi-Res 无损
+    _Auto = 30300          # 自动
 
 class VideoCodecID(Enum):
-    AVC = 7
-    HEVC = 12
-    AV1 = 13
+    AVC = 7                # H264
+    HEVC = 12              # H265
+    AV1 = 13               # AV1
 
 class DownloadOption(Enum):
-    OnlyVideo = 1
-    OnlyAudio = 2
-    VideoAndAudio = 3
-    FLV = 4
-    NONE = 5
+    OnlyVideo = 1          # 仅下载视频
+    OnlyAudio = 2          # 仅下载音频
+    VideoAndAudio = 3      # 下载音频和视频
+    FLV = 4                # FLV
+    NONE = 5               # 不下载
 
 class OverrideOption(Enum):
-    Override = 0
-    Rename = 1
+    Override = 0           # 覆盖文件
+    Rename = 1             # 重命名
 
 class Platform(Enum):
     Windows = "windows"
@@ -134,3 +135,8 @@ class NumberType(Enum):
     From_1 = 0
     Coherent = 1
     Episode_List = 2
+
+class ProcessingType(Enum):
+    Normal = 1
+    Parse = 2
+    Interact = 3
