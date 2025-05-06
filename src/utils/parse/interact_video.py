@@ -1,6 +1,6 @@
 import json
 import time
-from typing import List
+from typing import List, Callable
 
 from utils.config import Config
 from utils.tool_v2 import RequestTool
@@ -82,8 +82,8 @@ class InteractVideoInfo:
         }
 
 class InteractVideoParser:
-    def __init__(self):
-        pass
+    def __init__(self, callback: Callable):
+        self.callback = callback
 
     def get_video_interactive_graph_version(self):
         # 获取互动视频剧情图
@@ -118,6 +118,8 @@ class InteractVideoParser:
         # edge_info.edge_id = info["edge_id"]
 
         InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"]["questions"][0]["choices"])
+
+        self.callback(info["title"])
 
         return InteractVideoInfo.get_option()
     

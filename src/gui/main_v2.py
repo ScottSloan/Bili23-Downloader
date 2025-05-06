@@ -11,7 +11,7 @@ from utils.module.ffmpeg import FFmpeg
 from utils.common.thread import Thread
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.update import Update
-from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID, Platform
+from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID, Platform, ProcessingType
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
@@ -423,7 +423,7 @@ class MainWindow(Frame):
                     if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
                         return
 
-                self.processing_window = ProcessingWindow(self)
+                self.processing_window = ProcessingWindow(self, ProcessingType.Normal)
                 self.processing_window.Show()
                 
                 Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, callback, )).start()
@@ -819,7 +819,6 @@ class MainWindow(Frame):
                     self.download_btn.SetLabel("直播录制")
 
         match ParseStatus(status):
-            
             case ParseStatus.Parsing:
                 self.processing_icon.Show(True)
 
@@ -829,6 +828,9 @@ class MainWindow(Frame):
 
                 set_enable_status(False)
                 self.video_quality_choice.Clear()
+
+                self.processing_window = ProcessingWindow(self, ProcessingType.Parse)
+                self.processing_window.Show()
             
             case ParseStatus.Finish:
                 self.processing_icon.Hide()
@@ -840,6 +842,8 @@ class MainWindow(Frame):
                 set_enable_status(True)
                 set_download_btn_label()
 
+                self.processing_window.Hide()
+
             case ParseStatus.Error:
                 self.processing_icon.Hide()
 
@@ -850,6 +854,8 @@ class MainWindow(Frame):
                 self.url_box.Enable(True)
                 self.get_btn.Enable(True)
                 self.episode_list.Enable(True)
+
+                self.processing_window.Hide()
 
         self.panel.Layout()
     
@@ -877,11 +883,19 @@ class MainWindow(Frame):
 
             wx.TheClipboard.Close()
 
+    def interact_video_detected(self):
+        def worker():
+            self.processing_window.change_type(ProcessingType.Interact)
+
+        wx.CallAfter(worker)
+
     @property
     def parse_callback(self):
         callback = ParseCallback()
         callback.onError = self.onErrorCallback
         callback.onRedirect = self.onRedirectCallback
+        callback.onInteract = self.interact_video_detected
+        callback.onInteractUpdate = self.processing_window.onUpdateNode
 
         return callback
     

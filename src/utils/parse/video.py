@@ -155,13 +155,16 @@ class VideoParser:
 
         # 判断是否为互动视频
         if VideoInfo.is_interactive:
-            self.interact_video_parser = InteractVideoParser()
+            self.interact_video_parser = InteractVideoParser(self.callback.onInteractUpdate)
+
             InteractVideoInfo.aid = VideoInfo.aid
             InteractVideoInfo.cid = VideoInfo.cid
             InteractVideoInfo.bvid = VideoInfo.bvid
             InteractVideoInfo.url = VideoInfo.url
 
             self.interact_video_parser.get_video_interactive_graph_version()
+
+            self.callback.onInteract()
 
         self.parse_episodes()
 
