@@ -494,7 +494,7 @@ class MainWindow(Frame):
 
             case _:
                 if VideoInfo.is_interactive:
-                    GraphWindow(self).ShowModal()
+                    GraphWindow(self).Show()
                 else:
                     DetailDialog(self, self.current_parse_type).ShowModal()
     
