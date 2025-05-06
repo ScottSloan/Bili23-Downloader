@@ -19,7 +19,6 @@ class VideoInfo:
     aid: str = ""
     bvid: str = ""
     cid: int = 0
-    graph_version: int = 0
 
     title: str = ""
     cover: str = ""
@@ -52,7 +51,6 @@ class VideoInfo:
         VideoInfo.url = ""
         VideoInfo.aid = 0
         VideoInfo.bvid = ""
-        VideoInfo.graph_version = 0
         VideoInfo.title = ""
         VideoInfo.cover = ""
         VideoInfo.desc = ""
@@ -301,7 +299,6 @@ class VideoParser:
                 if VideoInfo.is_interactive:
                     interact_parser()
 
-                    EpisodeManager.video_interactive_parser(VideoInfo.graph_version)
                 else:
                     if "ugc_season" in VideoInfo.info_json:
                         VideoInfo.type = VideoType.Collection

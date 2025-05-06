@@ -46,6 +46,8 @@ class InteractVideoInfo:
 
     node_list: List[Node] = []
 
+    graph_data: dict = {}
+
     @staticmethod
     def add_to_node_list(cid: int, title: str, options: dict):
         if not InteractVideoInfo.check_node_exists(cid):
@@ -131,8 +133,10 @@ class InteractVideoParser:
             
             time.sleep(0.5)
 
-        with open("node.json", "w", encoding = "utf-8") as f:
-            f.write(json.dumps(InteractVideoInfo.nodes_to_dict(), ensure_ascii = False, indent = 2))
+        InteractVideoInfo.graph_data = json.dumps(InteractVideoInfo.nodes_to_dict(), ensure_ascii = False, indent = 2)
+
+        # with open("node.json", "w", encoding = "utf-8") as f:
+        #     f.write(json.dumps(InteractVideoInfo.nodes_to_dict(), ensure_ascii = False, indent = 2))
 
     def check_json(self, data: dict):
         # 检查接口返回状态码

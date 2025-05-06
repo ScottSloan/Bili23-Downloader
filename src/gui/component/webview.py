@@ -32,11 +32,11 @@ class Webview:
 
         return backend
     
-    def get_page(self):
-        path = os.path.join(os.getcwd(), "src", "static", "graph.html")
+    def get_page(self, file: str):
+        path = os.path.join(os.getcwd(), "src", "static", file)
 
         if not os.path.exists(path):
-            path = os.path.join(os.getcwd(), "static", "graph.html")
+            path = os.path.join(os.getcwd(), "static", file)
 
         with open(path, "r", encoding = "utf-8") as f:
             return f.read()

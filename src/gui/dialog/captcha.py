@@ -1,8 +1,7 @@
 import wx
 import json
-import base64
 
-from utils.auth.captcha import CaptchaPage
+
 from utils.auth.login import CaptchaUtils, LoginInfo
 
 from gui.component.dialog import Dialog
@@ -25,7 +24,7 @@ class CaptchaWindow(Dialog):
     def init_UI(self):
         self.webview = Webview(self)
 
-        self.webview.browser.SetPage(base64.b64decode(CaptchaPage.html).decode("utf-8"), "")
+        self.webview.browser.SetPage(self.webview.get_page("captcha.html"), "")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview, 1, wx.ALL | wx.EXPAND)
@@ -33,9 +32,9 @@ class CaptchaWindow(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self.onMessage)
+        self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self.onMessageEVT)
 
-        self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoaded)
+        self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)
 
     def init_utils(self):
         self.captcha = CaptchaUtils()
@@ -43,14 +42,14 @@ class CaptchaWindow(Dialog):
         # 设置 MessageHandler，便于接收从前端返回的验证结果
         self.webview.browser.AddScriptMessageHandler("MainApplication")
 
-    def onLoaded(self, event):
+    def onLoadedEVT(self, event):
         # 获取极验 captcha 的 gt 和 challenge
         self.captcha.get_geetest_challenge_gt()
 
         # 向前端传递 gt 和 challenge
         self.webview.browser.RunScriptAsync(f"receiveMessage('{LoginInfo.gt}','{LoginInfo.challenge}')")
 
-    def onMessage(self, event):
+    def onMessageEVT(self, event):
         # 接收前端返回的验证结果
         message = event.GetString()
 
