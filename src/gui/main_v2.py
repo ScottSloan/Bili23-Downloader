@@ -42,6 +42,7 @@ from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
 from gui.dialog.duplicate import DuplicateDialog
+from gui.dialog.graph import GraphWindow
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -492,7 +493,10 @@ class MainWindow(Frame):
                 wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
 
             case _:
-                DetailDialog(self, self.current_parse_type).ShowModal()
+                if VideoInfo.is_interactive:
+                    GraphWindow(self).ShowModal()
+                else:
+                    DetailDialog(self, self.current_parse_type).ShowModal()
     
     def onShowEpisodeListMenuEVT(self, event):
         menu = wx.Menu()
