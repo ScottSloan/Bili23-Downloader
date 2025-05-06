@@ -80,7 +80,8 @@ class InteractVideoInfo:
     @staticmethod
     def nodes_to_dict():
         return {
-            "nodes": [node.to_dict() for node in InteractVideoInfo.node_list]
+            "nodes": [node.to_dict() for node in InteractVideoInfo.node_list],
+            "init": InteractVideoInfo.cid
         }
 
 class InteractVideoParser:

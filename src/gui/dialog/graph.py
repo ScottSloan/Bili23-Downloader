@@ -2,11 +2,11 @@ import wx
 
 from gui.component.webview import Webview
 
-from gui.component.dialog import Dialog
+from gui.component.frame import Frame
 
-class GraphWindow(Dialog):
+class GraphWindow(Frame):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "Graph")
+        Frame.__init__(self, parent, "Graph")
 
         self.init_UI()
 
