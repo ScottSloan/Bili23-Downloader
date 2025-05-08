@@ -43,6 +43,7 @@ class InteractVideoInfo:
     cid: int = 0
     bvid: str = ""
     url: str = ""
+    title: str = ""
     graph_version: int = 0
 
     node_list: List[Node] = []
@@ -95,6 +96,7 @@ class InteractVideoInfo:
         InteractVideoInfo.cid = 0
         InteractVideoInfo.bvid = ""
         InteractVideoInfo.url = ""
+        InteractVideoInfo.title = ""
         InteractVideoInfo.graph_version = 0
 
         InteractVideoInfo.node_list.clear()

@@ -6,6 +6,8 @@ from utils.config import Config
 
 class Webview:
     def __init__(self, parent):
+        self.parent = parent
+
         backend = self.check_webview_backend()
 
         self.browser = wx.html2.WebView = wx.html2.WebView.New(parent, -1, backend = backend)
@@ -33,10 +35,16 @@ class Webview:
         return backend
     
     def get_page(self, file: str):
-        path = os.path.join(os.getcwd(), "src", "static", file)
+        def get_file_path(*paths):
+            return os.path.join(os.getcwd(), *paths)
+        
+        possible_paths = [get_file_path("src", "static", file), get_file_path("static", file)]
 
-        if not os.path.exists(path):
-            path = os.path.join(os.getcwd(), "static", file)
+        for path in possible_paths:
+            if os.path.exists(path):
+                with open(path, "r", encoding = "utf-8") as f:
+                    return f.read()
+                
+        wx.MessageDialog(self.parent, "文件不存在\n\nHTML 静态文件不存在，无法调用 Webview 显示。", "警告", wx.ICON_WARNING).ShowModal()
 
-        with open(path, "r", encoding = "utf-8") as f:
-            return f.read()
+        self.parent.Destroy()

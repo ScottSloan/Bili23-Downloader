@@ -7,7 +7,7 @@ from gui.component.frame import Frame
 
 class GraphWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "剧情树")
+        Frame.__init__(self, parent, f"Graph Viewer")
 
         self.init_UI()
 
@@ -32,7 +32,7 @@ class GraphWindow(Frame):
         self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)
 
     def onLoadedEVT(self, event):
-        self.webview.browser.RunScriptAsync(f"initGraph('{self.get_graphviz_dot()}')")
+        self.webview.browser.RunScriptAsync(f"initGraph('{self.get_graphviz_dot()}'); setTitle('{InteractVideoInfo.title}');")
 
     def get_graphviz_dot(self):
         fontname = self.GetFont().GetFaceName()

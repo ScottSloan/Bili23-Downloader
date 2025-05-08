@@ -386,8 +386,9 @@ class MainWindow(Frame):
                 
         self.episode_list.init_list()
         
-        self.set_parse_status(ParseStatus.Parsing.value)
         self.in_parsing = True
+
+        self.set_parse_status(ParseStatus.Parsing.value)
         
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
@@ -427,10 +428,10 @@ class MainWindow(Frame):
                     if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
                         return
 
-                self.processing_window = ProcessingWindow(self, ProcessingType.Normal)
-                self.processing_window.Show()
-                
                 Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, callback, )).start()
+
+                self.processing_window = ProcessingWindow(self, ProcessingType.Normal)
+                self.processing_window.ShowModal()
 
             case ParseType.Live:
                 if LiveInfo.status == LiveStatus.Not_Started.value:
@@ -702,6 +703,7 @@ class MainWindow(Frame):
 
             self.show_episode_list()
 
+        wx.CallAfter(self.processing_window.ShowModal)
         self.current_parse_type = None
         
         match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
@@ -837,7 +839,6 @@ class MainWindow(Frame):
                 self.video_quality_choice.Clear()
 
                 self.processing_window = ProcessingWindow(self, ProcessingType.Parse)
-                self.processing_window.Show()
             
             case ParseStatus.Finish:
                 self.processing_icon.Hide()

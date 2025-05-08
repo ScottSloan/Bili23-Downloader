@@ -159,6 +159,7 @@ class VideoParser:
             InteractVideoInfo.cid = VideoInfo.cid
             InteractVideoInfo.bvid = VideoInfo.bvid
             InteractVideoInfo.url = VideoInfo.url
+            InteractVideoInfo.title = VideoInfo.title
 
             self.interact_video_parser.get_video_interactive_graph_version()
 
