@@ -1,12 +1,13 @@
 import wx
 
-from gui.component.webview import Webview
+from utils.parse.interact_video import InteractVideoInfo
 
+from gui.component.webview import Webview
 from gui.component.frame import Frame
 
 class GraphWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "Graph")
+        Frame.__init__(self, parent, "剧情树")
 
         self.init_UI()
 
@@ -20,6 +21,7 @@ class GraphWindow(Frame):
         self.webview = Webview(self)
 
         self.webview.browser.SetPage(self.webview.get_page("graph.html"), "")
+        self.webview.browser.EnableAccessToDevTools(True)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)
@@ -30,6 +32,28 @@ class GraphWindow(Frame):
         self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)
 
     def onLoadedEVT(self, event):
-        from utils.parse.interact_video import InteractVideoInfo
+        self.webview.browser.RunScriptAsync(f"initGraph('{self.get_graphviz_dot()}')")
 
-        self.webview.browser.RunScriptAsync(f"initGraph({InteractVideoInfo.graph_data})")
+    def get_graphviz_dot(self):
+        fontname = self.GetFont().GetFaceName()
+
+        dot = [
+            "rankdir=LR;",
+            f'node [shape = box, fontname = "{fontname}", width=1.5, height = 0.5];',
+            f'edge [fontname="{fontname}"];'
+        ]
+
+        node_name = {}
+
+        for node in InteractVideoInfo.node_list:
+            node_name[node.cid] = node.title
+
+            for option in node.options:
+                dot.append(f'{node.cid} -> {option.target_node_cid} [label = "{option.name}"];')
+
+        result = "".join(dot)
+
+        for key, value in node_name.items():
+            result = result.replace(str(key), value)
+
+        return "digraph {" + result + "}"

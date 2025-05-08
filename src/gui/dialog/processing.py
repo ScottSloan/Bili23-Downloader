@@ -48,7 +48,7 @@ class ProcessingWindow(Dialog):
                 return "正在解析中，请稍候"
             
             case ProcessingType.Interact:
-                return "正在探查所有分支，请稍候"
+                return "正在探查所有节点，请稍候"
     
     def change_type(self, type: ProcessingType):
         self.type = type

@@ -46,8 +46,6 @@ class InteractVideoInfo:
 
     node_list: List[Node] = []
 
-    graph_data: dict = {}
-
     @staticmethod
     def add_to_node_list(cid: int, title: str, options: dict):
         if not InteractVideoInfo.check_node_exists(cid):
@@ -79,17 +77,18 @@ class InteractVideoInfo:
                 
     @staticmethod
     def nodes_to_dict():
-        return {
+        nodes_dict = {
             "nodes": [node.to_dict() for node in InteractVideoInfo.node_list],
-            "init": InteractVideoInfo.cid
         }
+    
+        return json.dumps(nodes_dict, ensure_ascii = False, indent = 2)
 
 class InteractVideoParser:
     def __init__(self, callback: Callable):
         self.callback = callback
 
     def get_video_interactive_graph_version(self):
-        # 获取互动视频剧情图
+        # 获取互动视频 graph_version
         params = {
             "aid": InteractVideoInfo.aid,
             "cid": InteractVideoInfo.cid
@@ -118,8 +117,6 @@ class InteractVideoParser:
 
         info = resp["data"]
 
-        # edge_info.edge_id = info["edge_id"]
-
         InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"]["questions"][0]["choices"])
 
         self.callback(info["title"])
@@ -132,12 +129,9 @@ class InteractVideoParser:
         while option:
             option = self.get_video_interactive_edge_info(option.target_node_cid, option.edge_id)
             
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         InteractVideoInfo.graph_data = json.dumps(InteractVideoInfo.nodes_to_dict(), ensure_ascii = False, indent = 2)
-
-        # with open("node.json", "w", encoding = "utf-8") as f:
-        #     f.write(json.dumps(InteractVideoInfo.nodes_to_dict(), ensure_ascii = False, indent = 2))
 
     def check_json(self, data: dict):
         # 检查接口返回状态码

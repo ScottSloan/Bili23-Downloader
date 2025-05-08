@@ -22,7 +22,9 @@ class Dialog(wx.Dialog):
             self.SetBackgroundColour("white")
 
     def onCloseEVT(self, event: wx.CloseEvent):
-        if event.CanVeto():
-            event.Skip()
-        else:
-            self.Destroy()
+        match Platform(Config.Sys.platform):
+            case Platform.Windows | Platform.Linux:
+                self.Destroy()
+
+            case Platform.macOS:
+                event.Skip()

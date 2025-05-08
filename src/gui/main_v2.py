@@ -43,6 +43,7 @@ from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
 from gui.dialog.duplicate import DuplicateDialog
 from gui.dialog.graph import GraphWindow
+from gui.dialog.interact_video import InteractVideoDialog
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -244,6 +245,8 @@ class MainWindow(Frame):
                 self.clipboard_timer.Start(1000)
 
         self.download_window = DownloadManagerWindow(self)
+        #inter = InteractVideoDialog(self)
+        #inter.ShowModal()
 
         self.current_parse_url = ""
         self.in_parsing = False
@@ -405,7 +408,7 @@ class MainWindow(Frame):
         match self.current_parse_type:
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 def callback():
-                    self.processing_window.Hide()
+                    self.processing_window.Close()
                     self.onOpenDownloadMgrEVT(event)
 
                 if not self.episode_list.get_checked_item_count():
@@ -846,7 +849,7 @@ class MainWindow(Frame):
                 set_enable_status(True)
                 set_download_btn_label()
 
-                self.processing_window.Hide()
+                self.processing_window.Close()
 
             case ParseStatus.Error:
                 self.processing_icon.Hide()
@@ -859,7 +862,7 @@ class MainWindow(Frame):
                 self.get_btn.Enable(True)
                 self.episode_list.Enable(True)
 
-                self.processing_window.Hide()
+                self.processing_window.Close()
 
         self.panel.Layout()
     

@@ -11,7 +11,6 @@ class VideoType(Enum):
     Single = 1               # 单个视频
     Part = 2                 # 分 P 视频
     Collection = 3           # 合集
-    Interactive = 4          # 互动视频
 
 class EpisodeDisplayType(Enum):
     Single = 1               # 获取单个视频
@@ -88,29 +87,29 @@ class VideoQualityID(Enum):
     _Auto = 200              # 自动
 
 class AudioQualityID(Enum):
-    _None = 0              # 无音频
-    _64K = 30216           # 64K
-    _132K = 30232          # 132K
-    _192K = 30280          # 192K
-    _Dolby_Atoms = 30250   # 杜比全景声
-    _Hi_Res = 30251        # Hi-Res 无损
-    _Auto = 30300          # 自动
+    _None = 0                # 无音频
+    _64K = 30216             # 64K
+    _132K = 30232            # 132K
+    _192K = 30280            # 192K
+    _Dolby_Atoms = 30250     # 杜比全景声
+    _Hi_Res = 30251          # Hi-Res 无损
+    _Auto = 30300            # 自动
 
 class VideoCodecID(Enum):
-    AVC = 7                # H264
-    HEVC = 12              # H265
-    AV1 = 13               # AV1
+    AVC = 7                  # H264
+    HEVC = 12                # H265
+    AV1 = 13                 # AV1
 
 class DownloadOption(Enum):
-    OnlyVideo = 1          # 仅下载视频
-    OnlyAudio = 2          # 仅下载音频
-    VideoAndAudio = 3      # 下载音频和视频
-    FLV = 4                # FLV
-    NONE = 5               # 不下载
+    OnlyVideo = 1            # 仅下载视频
+    OnlyAudio = 2            # 仅下载音频
+    VideoAndAudio = 3        # 下载音频和视频
+    FLV = 4                  # FLV
+    NONE = 5                 # 不下载
 
 class OverrideOption(Enum):
-    Override = 0           # 覆盖文件
-    Rename = 1             # 重命名
+    Override = 0             # 覆盖文件
+    Rename = 1               # 重命名
 
 class Platform(Enum):
     Windows = "windows"
