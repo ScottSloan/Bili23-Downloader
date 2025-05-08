@@ -310,6 +310,7 @@ class VideoParser:
     def clear_video_info(self):
         # 清除视频信息
         VideoInfo.clear_video_info()
+        InteractVideoInfo.clear_video_info()
 
         # 重置音质信息
         AudioInfo.clear_audio_info()

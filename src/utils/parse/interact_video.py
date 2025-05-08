@@ -27,6 +27,7 @@ class Option:
         self.edge_id: int = edge_id
         self.name: str = name
         self.target_node_cid: int = None
+        self.show: bool = True
         self.accessed: bool = False
 
     def to_dict(self):
@@ -48,16 +49,19 @@ class InteractVideoInfo:
 
     @staticmethod
     def add_to_node_list(cid: int, title: str, options: dict):
-        if not InteractVideoInfo.check_node_exists(cid):
-            node = Node(cid, title)
+        node = Node(cid, title)
 
-            for entry in options:
+        if "questions" in options:
+            question = options["questions"][0]
+
+            for entry in question["choices"]:
                 option = Option(entry["id"], entry["option"])
                 option.target_node_cid = entry["cid"]
+                option.show = question["pause_video"]
 
                 node.options.append(option)
 
-            InteractVideoInfo.node_list.append(node)
+        InteractVideoInfo.node_list.append(node)
     
     @staticmethod
     def check_node_exists(cid: int):
@@ -73,7 +77,9 @@ class InteractVideoInfo:
             for option in node.options:
                 if not option.accessed:
                     option.accessed = True
-                    return option
+
+                    if not InteractVideoInfo.check_node_exists(option.target_node_cid):
+                        return option
                 
     @staticmethod
     def nodes_to_dict():
@@ -82,6 +88,16 @@ class InteractVideoInfo:
         }
     
         return json.dumps(nodes_dict, ensure_ascii = False, indent = 2)
+
+    @staticmethod
+    def clear_video_info():
+        InteractVideoInfo.aid = 0
+        InteractVideoInfo.cid = 0
+        InteractVideoInfo.bvid = ""
+        InteractVideoInfo.url = ""
+        InteractVideoInfo.graph_version = 0
+
+        InteractVideoInfo.node_list.clear()
 
 class InteractVideoParser:
     def __init__(self, callback: Callable):
@@ -117,7 +133,7 @@ class InteractVideoParser:
 
         info = resp["data"]
 
-        InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"]["questions"][0]["choices"])
+        InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"])
 
         self.callback(info["title"])
 
@@ -130,8 +146,6 @@ class InteractVideoParser:
             option = self.get_video_interactive_edge_info(option.target_node_cid, option.edge_id)
             
             time.sleep(0.1)
-
-        InteractVideoInfo.graph_data = json.dumps(InteractVideoInfo.nodes_to_dict(), ensure_ascii = False, indent = 2)
 
     def check_json(self, data: dict):
         # 检查接口返回状态码

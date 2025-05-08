@@ -49,7 +49,12 @@ class GraphWindow(Frame):
             node_name[node.cid] = node.title
 
             for option in node.options:
-                dot.append(f'{node.cid} -> {option.target_node_cid} [label = "{option.name}"];')
+                if option.show:
+                    label = f' [label = "{option.name}"];'
+                else:
+                    label = ''
+
+                dot.append(f'"{node.cid}" -> "{option.target_node_cid}"{label}')
 
         result = "".join(dot)
 
