@@ -31,8 +31,6 @@ class FFmpeg:
                 Config.FFmpeg.path = env_path
 
     def check_available(self):
-        self.detect_location()
-
         cmd = f""""{Config.FFmpeg.path}" -version"""
 
         if "ffmpeg version" in self.run_command(cmd, output = True):

@@ -288,7 +288,7 @@ class DownloadTab(Tab):
         codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(download_box, -1, choices = list(video_codec_preference_map.keys()))
         self.codec_tip = ToolTip(download_box)
-        self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认下载 AVC/H.264")
+        self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认使用 AVC/H.264 编码\n\nHDR 视频仅支持 HEVC/H.265 编码")
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -310,7 +310,7 @@ class DownloadTab(Tab):
         self.number_type_lab = wx.StaticText(download_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(download_box)
-        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置")
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名需添加 {number} 或者 {number_with_zero} 字段才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))

@@ -236,9 +236,16 @@ class MainWindow(Frame):
 
     def init_utils(self):
         def start_thread():
-            wx.CallAfter(self.check_ffmpeg_available)
+            ffmpeg = FFmpeg()
+            ffmpeg.detect_location()
 
-            Thread(target = self.check_update).start()
+            if Config.FFmpeg.check_available:
+                Thread(target = self.check_ffmpeg_available).start()
+
+            if Config.Misc.auto_check_update:
+                Thread(target = self.check_update).start()
+
+            Thread(target = self.show_user_info).start()
 
         def init_timer():
             if Config.Basic.listen_clipboard:
@@ -251,18 +258,23 @@ class MainWindow(Frame):
         self.current_parse_url = ""
         self.in_parsing = False
 
-        self.show_user_info()
-
         init_timer()
 
         start_thread()
 
     def onCloseEVT(self, event):
-        if self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
-            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+        if  self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
+            dlg = wx.MessageDialog(self, "退出程序\n\n当前存在未下载完成的任务，确定要退出程序吗？", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+            
+            dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
 
-            if dlg.ShowModal() == wx.ID_NO:
-                return
+            match dlg.ShowModal():
+                case wx.ID_YES:
+                    self.Iconize(True)
+                    return
+
+                case wx.ID_CANCEL:
+                    return
             
         self.clipboard_timer.Stop()
 
@@ -644,28 +656,27 @@ class MainWindow(Frame):
         self.video_quality_choice.Select(0)
 
     def show_user_info(self):
-        def worker():
-            def show():
-                self.face_icon.Show()
-                self.face_icon.SetBitmap(UniversalTool.get_user_round_face(image).ConvertToBitmap())
-                self.uname_lab.SetLabel(Config.User.username)
+        def show_face():
+            self.face_icon.Show()
+            self.face_icon.SetBitmap(UniversalTool.get_user_round_face(image).ConvertToBitmap())
+            self.uname_lab.SetLabel(Config.User.username)
 
-                self.panel.Layout()
+            self.panel.Layout()
 
-            scaled_size = self.FromDIP((32, 32))
+        def hide_face():
+            self.uname_lab.Hide()
+            self.face_icon.Hide()
 
-            image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
-
-            wx.CallAfter(show)
+            self.panel.Layout()
 
         if Config.Misc.show_user_info:
             if Config.User.login:
-                Thread(target = worker).start()
+                scaled_size = self.FromDIP((32, 32))
+                image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
+
+                wx.CallAfter(show_face)
         else:
-            self.uname_lab.Hide()
-            self.face_icon.Hide()
-        
-        self.panel.Layout()
+            wx.CallAfter(hide_face)
 
     def check_ffmpeg_available(self):
         ffmpeg = FFmpeg()
@@ -679,14 +690,13 @@ class MainWindow(Frame):
                 webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
     def check_update(self):
-        if Config.Misc.auto_check_update:
-            Update.get_update_json()
+        Update.get_update_json()
 
-            if Config.Temp.update_json:
-                if Config.Temp.update_json["version_code"] > Config.APP.version_code:
-                    self.show_info_bar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
-            else:
-                self.show_info_bar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
+        if Config.Temp.update_json:
+            if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                self.show_info_bar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
+        else:
+            self.show_info_bar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
 
     def show_login_window(self):
         def callback():
@@ -851,6 +861,8 @@ class MainWindow(Frame):
                 set_download_btn_label()
 
                 self.processing_window.Close()
+
+                self.in_parsing = False
 
             case ParseStatus.Error:
                 self.processing_icon.Hide()
