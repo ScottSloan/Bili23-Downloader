@@ -11,9 +11,11 @@ class GraphWindow(Frame):
 
         self.init_UI()
 
-        self.SetSize(self.FromDIP((700, 400)))
+        self.SetSize(self.FromDIP((960, 540)))
 
         self.Bind_EVT()
+
+        self.init_utils()
 
         self.CenterOnParent()
 
@@ -29,10 +31,21 @@ class GraphWindow(Frame):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
+        self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self.onMessageEVT)
+
         self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)
+
+    def init_utils(self):
+        self.webview.browser.AddScriptMessageHandler("MainApplication")
 
     def onLoadedEVT(self, event):
         self.webview.browser.RunScriptAsync(f"initGraph('{self.get_graphviz_dot()}'); setTitle('{InteractVideoInfo.title}');")
+
+    def onMessageEVT(self, event):
+        msg = event.GetString()
+
+        if msg == "fullscreen":
+            self.Maximize(not self.IsMaximized())
 
     def get_graphviz_dot(self):
         fontname = self.GetFont().GetFaceName()

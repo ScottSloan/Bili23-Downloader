@@ -64,7 +64,11 @@
                 padding-right: 8px;
             }
 
-            #btn {
+            #title {
+                color: #262626;
+            }
+
+            .btn {
                 transition: all 0.1s ease-in-out;
                 padding: 0 8px;
                 margin-top: 4px;
@@ -79,44 +83,88 @@
                 border-radius: 2px;
             }
 
-            #btn:hover {
+            .btn:hover {
                 background: rgb(234, 234, 234);
             }
 
-            #btn:active {
+            .btn:active {
                 background: rgb(239, 239, 239);
+            }
+
+            .c100 {
+                width: 20px;
+                height: 20px;
+            }
+
+            .c101 {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            #seperator {
+                margin: 0 4px;
+                width: 1px;
+                height: 16px;
+                background: rgb(182, 182, 182);
+            }
+
+            #tip {
+                left: 1%;
+                bottom: 1%;
+                position: fixed;
+                color: #262626;
             }
         </style>
     </head>
     <body>
         <div id="toolbar">
             <div id="toolbar-container">
-                <label id="title"></label>
-                <button id="btn" class="fullscreen" title="全屏">
-                    <svg width="20" height="20" viewBox="0 0 20 20" class=""><path d="M10.5 3h6.04l.09.02.06.02.08.04.05.04.06.06.03.04.04.07.03.08.02.08V9.5a.5.5 0 01-1 .09V4.7L4.7 16h4.8a.5.5 0 01.5.41v.09a.5.5 0 01-.41.5H3.41l-.1-.04-.08-.04-.05-.04-.06-.06-.03-.04-.04-.07-.03-.08v-.03a.5.5 0 01-.02-.1v.07-6.07a.5.5 0 011-.09v4.89L15.3 4h-4.8a.5.5 0 01-.5-.41V3.5c0-.28.22-.5.5-.5z" fill-rule="nonzero"></path></svg>
-                </button>
+                <div>
+                    <span id="title"></span>
+                </div>
+
+                <div class="c101">
+                    <button id="save" class="btn" title="保存">
+                        <span class="c100">
+                            <svg width="20" height="20" viewBox="0 0 20 20" class=""><path d="M3 5c0-1.1.9-2 2-2h8.38a2 2 0 011.41.59l1.62 1.62A2 2 0 0117 6.62V15a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v10a1 1 0 001 1v-4.5c0-.83.67-1.5 1.5-1.5h7c.83 0 1.5.67 1.5 1.5V16a1 1 0 001-1V6.62a1 1 0 00-.3-.7L14.1 4.28a1 1 0 00-.71-.29H13v2.5c0 .83-.67 1.5-1.5 1.5h-4A1.5 1.5 0 016 6.5V4H5zm2 0v2.5c0 .28.22.5.5.5h4a.5.5 0 00.5-.5V4H7zm7 12v-4.5a.5.5 0 00-.5-.5h-7a.5.5 0 00-.5.5V16h8z"></path></svg>
+                        </span>
+                    </button>
+
+                    <div id="seperator"></div>
+
+                    <button id="fullscreen" class="btn" title="全屏">
+                        <span class="c100">
+                            <svg width="20" height="20" viewBox="0 0 20 20" class=""><path d="M10.5 3h6.04l.09.02.06.02.08.04.05.04.06.06.03.04.04.07.03.08.02.08V9.5a.5.5 0 01-1 .09V4.7L4.7 16h4.8a.5.5 0 01.5.41v.09a.5.5 0 01-.41.5H3.41l-.1-.04-.08-.04-.05-.04-.06-.06-.03-.04-.04-.07-.03-.08v-.03a.5.5 0 01-.02-.1v.07-6.07a.5.5 0 011-.09v4.89L15.3 4h-4.8a.5.5 0 01-.5-.41V3.5c0-.28.22-.5.5-.5z" fill-rule="nonzero"></path></svg>
+                        </span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <div id="container">
         </div>
 
+        <div id="tip">由 Bili23 Downloader 生成</div>
+
         <script>
+            var svgClone = null;
+
             function initGraph(dot) {
                 Viz.instance().then(function (viz) {
-                    let options = {
+                    const options = {
                         format: "svg",
                         engine: "dot"
                     };
         
-                    let result = null;
-                    let container = document.getElementById("container");
-        
-                    result = viz.renderSVGElement(dot, options);
-        
-                    container.appendChild(result);
+                    const container = document.getElementById("container");
+                    const svgElement = viz.renderSVGElement(dot, options);
+                    
+                    container.appendChild(svgElement);
 
-                    let svgZoom = svgPanZoom(result, {
+                    svgClone = svgElement.cloneNode(true);
+
+                    const svgZoom = svgPanZoom(svgElement, {
                         zoomEnabled: true,
                         controlIconsEnabled: true,
                         fit: true,
@@ -136,8 +184,58 @@
                 document.getElementById("title").textContent = title;
             }
 
-            
-        </script>
+            document.getElementById("fullscreen").onclick = function() {
+                window.MainApplication.postMessage("fullscreen");
+            }
 
+            document.getElementById("save").onclick = function() {
+                const graphRect = document.getElementById("graph0").getBoundingClientRect();
+                const scale = window.devicePixelRatio || 1;
+                const originalViewBox = svgClone.getAttribute("viewBox");
+
+                svgClone.setAttribute("viewBox", originalViewBox);
+                svgClone.setAttribute("width", graphRect.width);
+                svgClone.setAttribute("height", graphRect.height);
+
+                const data = new XMLSerializer().serializeToString(svgClone);
+                const svgBlob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+                const svgUrl = URL.createObjectURL(svgBlob);
+
+                const img = new Image();
+
+                img.onload = async() => {
+                    const canvas = document.createElement("canvas");
+                    const [_, __, vbWidth, vbHeight] = originalViewBox.split(/\s+|,/);
+
+                    canvas.width = vbWidth * scale;
+                    canvas.height = vbHeight * scale;
+
+                    const ctx = canvas.getContext("2d");
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(img, 0, 0, vbWidth, vbHeight);
+
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "bottom";
+                    
+                    const margin = 10 * scale;
+
+                    ctx.fillText("由 Bili23 Downloader 生成", margin, vbHeight - margin);
+
+                    const a = document.createElement("a");
+                    const url = canvas.toDataURL("image/png", 1.0);
+                    a.download = "graph.png";
+                    a.href = url;
+                    a.click();
+
+                    URL.revokeObjectURL(svgUrl);
+                };
+                img.src = svgUrl;
+            }
+
+            //initGraph("digraph {a -> b}");
+
+            //setTitle("【互动视频】测试视频");
+        </script>
     </body>
 </html>
