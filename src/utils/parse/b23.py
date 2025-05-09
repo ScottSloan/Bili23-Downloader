@@ -1,10 +1,15 @@
 from utils.common.data_type import ParseCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
+
+from utils.parse.parser import Parser
+
 from utils.tool_v2 import RequestTool
 
-class B23Parser:
+class B23Parser(Parser):
     def __init__(self, callback: ParseCallback):
+        super().__init__()
+        
         self.callback = callback
 
     def get_redirect_url(self, url: str):

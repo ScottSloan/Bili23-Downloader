@@ -6,19 +6,22 @@ from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 
+from utils.parse.parser import Parser
+
 class ActivityInfo:
     url: str = ""
 
-class ActivityParser:
+class ActivityParser(Parser):
     def __init__(self, callback: ParseCallback):
+        super().__init__()
+        
         self.callback = callback
 
     def get_aid(self, initial_state):
         # 其他类型的视频则提供 aid，取第 1 个即可
         aid = re.findall(r'"aid":([0-9]+)', initial_state)
 
-        if not aid:
-            raise GlobalException(code = StatusCode.URL.value)
+        self.check_value(aid)
 
         ActivityInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
@@ -52,9 +55,7 @@ class ActivityParser:
 
             ActivityInfo.url = jump_url[0]
 
-            return
-
-        if "videoInfo" in initial_state:
+        elif "videoInfo" in initial_state:
             # 解析网页中的json信息
             info_json = json.loads(initial_state)
 
@@ -63,9 +64,7 @@ class ActivityParser:
 
             ActivityInfo.url = f"https://www.bilibili.com/video/{bvid}"
 
-            return
-
-        if "aid" in initial_state:
+        elif "aid" in initial_state:
             self.get_aid(initial_state)
 
     def parse_url(self, url: str):

@@ -1,13 +1,16 @@
 import re
 import json
 
-from utils.common.enums import StatusCode, StreamType
 from utils.tool_v2 import RequestTool, UniversalTool
+from utils.config import Config
+
+from utils.common.enums import StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
+
 from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.audio import AudioInfo
-from utils.config import Config
+from utils.parse.parser import Parser
 
 class CheeseInfo:
     url: str = ""
@@ -34,55 +37,52 @@ class CheeseInfo:
     info_json: dict = {}
     download_json: dict = {}
 
-    @staticmethod
-    def clear_cheese_info():
-        CheeseInfo.url = ""
-        CheeseInfo.title = ""
-        CheeseInfo.subtitle = ""
-        CheeseInfo.views = 0
-        CheeseInfo.release = ""
-        CheeseInfo.expiry = ""
-        CheeseInfo.aid = 0
-        CheeseInfo.epid = 0
-        CheeseInfo.cid = 0
-        CheeseInfo.season_id = 0
-        CheeseInfo.up_name = ""
-        CheeseInfo.up_mid = 0
+    @classmethod
+    def clear_cheese_info(cls):
+        cls.url = ""
+        cls.title = ""
+        cls.subtitle = ""
+        cls.views = 0
+        cls.release = ""
+        cls.expiry = ""
+        cls.aid = 0
+        cls.epid = 0
+        cls.cid = 0
+        cls.season_id = 0
+        cls.up_name = ""
+        cls.up_mid = 0
 
-        CheeseInfo.episodes_list.clear()
-        CheeseInfo.video_quality_id_list.clear()
-        CheeseInfo.video_quality_desc_list.clear()
+        cls.episodes_list.clear()
+        cls.video_quality_id_list.clear()
+        cls.video_quality_desc_list.clear()
 
-        CheeseInfo.info_json.clear()
-        CheeseInfo.download_json.clear()
+        cls.info_json.clear()
+        cls.download_json.clear()
 
-class CheeseParser:
+class CheeseParser(Parser):
     def __init__(self, callback: ParseCallback):
+        super().__init__()
+
         self.callback = callback
 
     def get_epid(self, url: str):
         epid = re.findall(r"ep([0-9]+)", url)
 
-        if not epid:
-            raise GlobalException(code = StatusCode.URL.value)
+        self.check_value(epid)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
     def get_season_id(self, url: str):
         season_id = re.findall(r"ss([0-9]+)", url)
 
-        if not season_id:
-            raise GlobalException(code = StatusCode.URL.value)
+        self.check_value(season_id)
 
         self.url_type, self.url_type_value, CheeseInfo.season_id = "season_id", season_id[0], season_id[0]
 
     def get_cheese_info(self):
         url = f"https://api.bilibili.com/pugv/view/web/season?{self.url_type}={self.url_type_value}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
-
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
         info_data = CheeseInfo.info_json = resp["data"]
 
@@ -104,10 +104,7 @@ class CheeseParser:
     def get_cheese_available_media_info(self):
         url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.epid}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
-
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
 
         CheeseInfo.download_json = info = resp["data"]
 
@@ -146,13 +143,6 @@ class CheeseParser:
 
         except Exception as e:
             raise GlobalException(callback = self.callback.onError) from e
-    
-    def check_json(self, data: dict):
-        # 检查接口返回状态码
-        status_code = data["code"]
-
-        if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code)
 
     def parse_episodes(self):
         EpisodeInfo.clear_episode_data()

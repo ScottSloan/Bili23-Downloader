@@ -13,9 +13,11 @@ from utils.common.data_type import DownloadTaskInfo, ExtraCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
 
-class ExtraParser:
+from utils.parse.parser import Parser
+
+class ExtraParser(Parser):
     def __init__(self):
-        pass
+        super().__init__()
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info

@@ -6,8 +6,7 @@ from utils.config import Config
 from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
 
-from utils.common.enums import StatusCode
-from utils.common.exception import GlobalException
+from utils.parse.parser import Parser
 
 class Node:
     def __init__(self, cid: int, title: str):
@@ -48,8 +47,8 @@ class InteractVideoInfo:
 
     node_list: List[Node] = []
 
-    @staticmethod
-    def add_to_node_list(cid: int, title: str, options: dict):
+    @classmethod
+    def add_to_node_list(cls, cid: int, title: str, options: dict):
         node = Node(cid, title)
 
         if "questions" in options:
@@ -62,47 +61,49 @@ class InteractVideoInfo:
 
                 node.options.append(option)
 
-        InteractVideoInfo.node_list.append(node)
+        cls.node_list.append(node)
     
-    @staticmethod
-    def check_node_exists(cid: int):
-        for node in InteractVideoInfo.node_list:
+    @classmethod
+    def check_node_exists(cls, cid: int):
+        for node in cls.node_list:
             if node.cid == cid:
                 return True
             
         return False
 
-    @staticmethod
-    def get_option():
-        for node in InteractVideoInfo.node_list:
+    @classmethod
+    def get_option(cls):
+        for node in cls.node_list:
             for option in node.options:
                 if not option.accessed:
                     option.accessed = True
 
-                    if not InteractVideoInfo.check_node_exists(option.target_node_cid):
+                    if not cls.check_node_exists(option.target_node_cid):
                         return option
                 
-    @staticmethod
-    def nodes_to_dict():
+    @classmethod
+    def nodes_to_dict(cls):
         nodes_dict = {
-            "nodes": [node.to_dict() for node in InteractVideoInfo.node_list],
+            "nodes": [node.to_dict() for node in cls.node_list],
         }
     
         return json.dumps(nodes_dict, ensure_ascii = False, indent = 2)
 
-    @staticmethod
-    def clear_video_info():
-        InteractVideoInfo.aid = 0
-        InteractVideoInfo.cid = 0
-        InteractVideoInfo.bvid = ""
-        InteractVideoInfo.url = ""
-        InteractVideoInfo.title = ""
-        InteractVideoInfo.graph_version = 0
+    @classmethod
+    def clear_video_info(cls):
+        cls.aid = 0
+        cls.cid = 0
+        cls.bvid = ""
+        cls.url = ""
+        cls.title = ""
+        cls.graph_version = 0
 
-        InteractVideoInfo.node_list.clear()
+        cls.node_list.clear()
 
-class InteractVideoParser:
+class InteractVideoParser(Parser):
     def __init__(self, callback: Callable):
+        super().__init__()
+
         self.callback = callback
 
     def get_video_interactive_graph_version(self):
@@ -148,10 +149,3 @@ class InteractVideoParser:
             option = self.get_video_interactive_edge_info(option.target_node_cid, option.edge_id)
             
             time.sleep(0.1)
-
-    def check_json(self, data: dict):
-        # 检查接口返回状态码
-        status_code = data["code"]
-
-        if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code)

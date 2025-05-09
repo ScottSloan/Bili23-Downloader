@@ -6,13 +6,16 @@ from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQuali
 from utils.common.exception import GlobalException
 
 from utils.parse.preview import Preview
+from utils.parse.parser import Parser
 
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool
 from utils.config import Config
 
-class DownloadParser:
+class DownloadParser(Parser):
     def __init__(self, task_info: DownloadTaskInfo, callback: Callable):
+        super().__init__()
+
         self.callback = callback
         self.task_info = task_info
 
@@ -259,9 +262,3 @@ class DownloadParser:
         
         except Exception as e:
             raise GlobalException(callback = self.callback) from e
-    
-    def check_json(self, data: dict):
-        status_code = data["code"]
-
-        if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code)

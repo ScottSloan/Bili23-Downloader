@@ -7,26 +7,28 @@ class EpisodeInfo:
     data: dict = {}
     cid_dict: dict = {}
 
-    def clear_episode_data(title: str = "视频"):
-        EpisodeInfo.data = {
+    @classmethod
+    def clear_episode_data(cls, title: str = "视频"):
+        cls.data = {
             "title": title,
             "entries": []
         }
         
-        EpisodeInfo.cid_dict.clear()
+        cls.cid_dict.clear()
 
-    def add_item(data: list | dict, parent: str, entry_data: dict):
+    @classmethod
+    def add_item(cls, data: list | dict, parent: str, entry_data: dict):
         if isinstance(data, dict):
             if data["title"] == parent:
                 if "entries" in data:
                     data["entries"].append(entry_data)
             else:
                 if "entries" in data:
-                    EpisodeInfo.add_item(data["entries"], parent, entry_data)
+                    cls.add_item(data["entries"], parent, entry_data)
 
         elif isinstance(data, list):
             for entry in data:
-                EpisodeInfo.add_item(entry, parent, entry_data)
+                cls.add_item(entry, parent, entry_data)
 
 class EpisodeManager:
     def video_ugc_season_parser(info_json: dict, cid: int):

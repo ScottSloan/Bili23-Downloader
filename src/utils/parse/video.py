@@ -1,11 +1,11 @@
 import re
-import time
 import json
 
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 
+from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
 from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
@@ -46,38 +46,41 @@ class VideoInfo:
     info_json: dict = {}
     download_json: dict = {}
 
-    @staticmethod
-    def clear_video_info():
-        VideoInfo.url = ""
-        VideoInfo.aid = 0
-        VideoInfo.bvid = ""
-        VideoInfo.title = ""
-        VideoInfo.cover = ""
-        VideoInfo.desc = ""
-        VideoInfo.views = 0
-        VideoInfo.danmakus = 0
-        VideoInfo.cid = 0
-        VideoInfo.type = 0
-        VideoInfo.stream_type = 0
-        VideoInfo.pubtime = 0
-        VideoInfo.tname = ""
-        VideoInfo.subtname = ""
-        VideoInfo.up_name = ""
-        VideoInfo.up_mid = 0
+    @classmethod
+    def clear_video_info(cls):
+        cls.url = ""
+        cls.bvid = ""
+        cls.aid = 0
+        cls.bvid = ""
+        cls.title = ""
+        cls.cover = ""
+        cls.desc = ""
+        cls.views = 0
+        cls.danmakus = 0
+        cls.cid = 0
+        cls.type = 0
+        cls.stream_type = 0
+        cls.pubtime = 0
+        cls.tname = ""
+        cls.subtname = ""
+        cls.up_name = ""
+        cls.up_mid = 0
 
-        VideoInfo.is_upower_exclusive = False
-        VideoInfo.is_interactive = False
+        cls.is_upower_exclusive = False
+        cls.is_interactive = False
 
-        VideoInfo.tag_list.clear()
-        VideoInfo.pages_list.clear()
-        VideoInfo.video_quality_id_list.clear()
-        VideoInfo.video_quality_desc_list.clear()
+        cls.tag_list.clear()
+        cls.pages_list.clear()
+        cls.video_quality_id_list.clear()
+        cls.video_quality_desc_list.clear()
 
-        VideoInfo.info_json.clear()
-        VideoInfo.download_json.clear()
+        cls.info_json.clear()
+        cls.download_json.clear()
 
-class VideoParser:
+class VideoParser(Parser):
     def __init__(self, callback: ParseCallback):
+        super().__init__()
+
         self.callback = callback
     
     def get_part(self, url: str):
@@ -92,8 +95,7 @@ class VideoParser:
     def get_aid(self, url: str):
         aid = re.findall(r"av([0-9]+)", url)
 
-        if not aid:
-            raise GlobalException(code = StatusCode.URL.value)
+        self.check_value(aid)
 
         bvid = UniversalTool.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
@@ -101,8 +103,7 @@ class VideoParser:
     def get_bvid(self, url: str):
         bvid = re.findall(r"BV\w+", url)
 
-        if not bvid:
-            raise GlobalException(code = StatusCode.URL.value)
+        self.check_value(bvid)
 
         self.set_bvid(bvid[0])
 
@@ -113,11 +114,8 @@ class VideoParser:
         }
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
-        
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
 
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
         info = VideoInfo.info_json = resp["data"]
 
@@ -170,8 +168,7 @@ class VideoParser:
     def get_video_tag(self):
         url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
         
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
         VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
 
@@ -187,10 +184,7 @@ class VideoParser:
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
         
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
-
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
         info = VideoInfo.download_json = resp["data"]
 
@@ -237,13 +231,6 @@ class VideoParser:
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 
-    def check_json(self, data: dict):
-        # 检查接口返回状态码
-        status_code = data["code"]
-
-        if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code)
-    
     def parse_episodes(self):
         def pages_parser():
             def get_badge():
