@@ -1,6 +1,3 @@
-import re
-import json
-
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 
@@ -66,16 +63,12 @@ class CheeseParser(Parser):
         self.callback = callback
 
     def get_epid(self, url: str):
-        epid = re.findall(r"ep([0-9]+)", url)
-
-        self.check_value(epid)
+        epid = self.re_find_str(r"ep([0-9]+)", url)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
     def get_season_id(self, url: str):
-        season_id = re.findall(r"ss([0-9]+)", url)
-
-        self.check_value(season_id)
+        season_id = self.re_find_str(r"ss([0-9]+)", url)
 
         self.url_type, self.url_type_value, CheeseInfo.season_id = "season_id", season_id[0], season_id[0]
 

@@ -1,6 +1,3 @@
-import re
-import json
-
 from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
 from utils.common.exception import GlobalException
@@ -45,9 +42,7 @@ class LiveParser(Parser):
         self.callback = callback
 
     def get_short_id(self, url: str):
-        short_id = re.findall(r"live.bilibili.com/([0-9]+)", url)
-
-        self.check_value(short_id)
+        short_id = self.re_find_str(r"live.bilibili.com/([0-9]+)", url)
 
         LiveInfo.short_id = short_id[0]
 

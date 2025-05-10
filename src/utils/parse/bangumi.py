@@ -1,6 +1,3 @@
-import re
-import json
-
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 from utils.config import Config
 
@@ -89,27 +86,21 @@ class BangumiParser(Parser):
         self.callback = callback
     
     def get_epid(self, url: str):
-        epid = re.findall(r"ep([0-9]+)", url)
-
-        self.check_value(epid)
+        epid = self.re_find_str(r"ep([0-9]+)", url)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
     def get_season_id(self, url: str):
-        season_id = re.findall(r"ss([0-9]+)", url)
-
-        self.check_value(season_id)
+        season_id = self.re_find_str(r"ss([0-9]+)", url)
 
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
     def get_mid(self, url: str):
-        mid = re.findall(r"md([0-9]*)", url)
-
-        self.check_value(mid)
+        mid = self.re_find_str(r"md([0-9]*)", str)
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
         self.url_type, self.url_type_value = "season_id", BangumiInfo.season_id
@@ -118,7 +109,7 @@ class BangumiParser(Parser):
         # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
         info_result = BangumiInfo.info_json = resp["result"]
 
@@ -157,7 +148,7 @@ class BangumiParser(Parser):
     def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         BangumiInfo.download_json = info = resp["result"]
 
@@ -183,10 +174,9 @@ class BangumiParser(Parser):
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        self.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
+        self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
     def get_bangumi_type(self):
-        # 识别番组类型
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
 
     def parse_url(self, url: str):

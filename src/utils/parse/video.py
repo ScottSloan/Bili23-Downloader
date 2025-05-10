@@ -1,6 +1,3 @@
-import re
-import json
-
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
@@ -84,7 +81,7 @@ class VideoParser(Parser):
         self.callback = callback
     
     def get_part(self, url: str):
-        part = re.findall(r"p=([0-9]+)", url)
+        part = self.re_find_str(r"p=([0-9]+)", url, check = False)
 
         if part:
             self.part = True
@@ -93,17 +90,13 @@ class VideoParser(Parser):
             self.part = False
 
     def get_aid(self, url: str):
-        aid = re.findall(r"av([0-9]+)", url)
-
-        self.check_value(aid)
+        aid = self.re_find_str(r"av([0-9]+)", url)
 
         bvid = UniversalTool.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
 
     def get_bvid(self, url: str):
-        bvid = re.findall(r"BV\w+", url)
-
-        self.check_value(bvid)
+        bvid = self.re_find_str(r"BV\w+", url)
 
         self.set_bvid(bvid[0])
 

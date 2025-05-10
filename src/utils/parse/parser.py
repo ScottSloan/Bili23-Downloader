@@ -1,3 +1,4 @@
+import re
 import json
 
 from utils.common.enums import StatusCode
@@ -6,9 +7,16 @@ from utils.tool_v2 import RequestTool
 
 class Parser:
     def __init__(self):
-        pass
+        self.bilibili_url = "https://www.bilibili.com"
 
-    def request_get(self, url: str, headers: dict):
+    def re_find_str(self, pattern: str, string: str, check: bool = True):
+        result = re.findall(pattern, string)
+    
+        self.check_value(result) if check else 0
+
+        return result
+
+    def request_get(self, url: str, headers: dict) -> dict:
         req = RequestTool.request_get(url, headers)
         resp = json.loads(req.text)
 
