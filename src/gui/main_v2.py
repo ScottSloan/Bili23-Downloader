@@ -256,6 +256,7 @@ class MainWindow(Frame):
         #inter.ShowModal()
 
         self.current_parse_url = ""
+        self.error_url_list = []
         self.status = ParseStatus.Finish.value
 
         init_timer()
@@ -805,6 +806,8 @@ class MainWindow(Frame):
             if dlg.ShowModal() == wx.ID_YES:
                 ErrorInfoDialog(self, GlobalExceptionInfo.info).ShowModal()
 
+        self.error_url_list.append(self.current_parse_url)
+
         self.CallAfter(worker)
 
     def onRedirectCallback(self, url: str):
@@ -887,7 +890,7 @@ class MainWindow(Frame):
         def is_valid_url(url: str):
             return re.findall(r"https:\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
 
-        if self.status != ParseStatus.Parsing:
+        if self.status == ParseStatus.Parsing:
             return
 
         text = wx.TextDataObject()
@@ -896,7 +899,7 @@ class MainWindow(Frame):
             if wx.TheClipboard.GetData(text):
                 url: str = text.GetText()
                 if is_valid_url(url):
-                    if url != self.current_parse_url:
+                    if url != self.current_parse_url and url not in self.error_url_list:
                         self.url_box.SetValue(url)
 
                         wx.CallAfter(self.onGetEVT, event)
