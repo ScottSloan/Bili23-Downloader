@@ -256,7 +256,7 @@ class MainWindow(Frame):
         #inter.ShowModal()
 
         self.current_parse_url = ""
-        self.in_parsing = False
+        self.status = ParseStatus.Finish.value
 
         init_timer()
 
@@ -391,18 +391,21 @@ class MainWindow(Frame):
 
     def onGetEVT(self, event):
         url = self.url_box.GetValue()
+        self.current_parse_url = self.url_box.GetValue()
 
         if not url:
+            self.status = ParseStatus.Error
             wx.MessageDialog(self, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING).ShowModal()
+
             return
                 
+        self.set_parse_status(ParseStatus.Parsing)
+
         self.episode_list.init_list()
         
-        self.in_parsing = True
-
-        self.set_parse_status(ParseStatus.Parsing.value)
-        
         Thread(target = self.parse_url_thread, args = (url, )).start()
+
+        self.processing_window.ShowModal()
 
     def onOpenDownloadMgrEVT(self, event):
         if not self.download_window.IsShown():
@@ -709,12 +712,16 @@ class MainWindow(Frame):
 
     def parse_url_thread(self, url: str):
         def worker():
-            self.set_parse_status(ParseStatus.Finish.value)
+            self.set_parse_status(ParseStatus.Finish)
+
+            match self.current_parse_type:
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    self.set_video_quality_list()
+
+                case ParseType.Live:
+                    self.set_live_quality_list()
 
             self.show_episode_list()
-
-        wx.CallAfter(self.processing_window.ShowModal)
-        self.current_parse_type = None
         
         match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
             case "cheese":
@@ -723,15 +730,11 @@ class MainWindow(Frame):
 
                 return_code = self.cheese_parser.parse_url(url)
 
-                wx.CallAfter(self.set_video_quality_list)
-
             case "av" | "BV":
                 self.current_parse_type = ParseType.Video
                 self.video_parser = VideoParser(self.parse_callback)
 
                 return_code = self.video_parser.parse_url(url)
-
-                wx.CallAfter(self.set_video_quality_list)
 
             case "ep" | "ss" | "md":
                 self.current_parse_type = ParseType.Bangumi
@@ -739,15 +742,11 @@ class MainWindow(Frame):
 
                 return_code = self.bangumi_parser.parse_url(url)
 
-                wx.CallAfter(self.set_video_quality_list)
-
             case "live":
                 self.current_parse_type = ParseType.Live
                 self.live_parser = LiveParser(self.parse_callback)
 
                 return_code = self.live_parser.parse_url(url)
-
-                wx.CallAfter(self.set_live_quality_list)
 
             case "b23.tv" | "bili2233.cn":
                 self.b23_parser = B23Parser(self.parse_callback)
@@ -760,12 +759,11 @@ class MainWindow(Frame):
                 return_code = self.activity_parser.parse_url(url)
             
             case _:
+                self.current_parse_type = None
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onErrorCallback)
         
         if return_code == StatusCode.Success.value:
-            self.current_parse_url = url
-
-            wx.CallAfter(worker)
+            self.CallAfter(worker)
     
     def show_episode_list(self):
         self.episode_list.set_list()
@@ -799,23 +797,20 @@ class MainWindow(Frame):
 
     def onErrorCallback(self):
         def worker():
+            self.set_parse_status(ParseStatus.Error)
+
             dlg = wx.MessageDialog(self, f"解析失败\n\n错误码：{GlobalExceptionInfo.info.get('code')}\n描述：{GlobalExceptionInfo.info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
             dlg.SetYesNoLabels("详细信息", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:
                 ErrorInfoDialog(self, GlobalExceptionInfo.info).ShowModal()
 
-        self.current_parse_url = self.url_box.GetValue()
-        self.in_parsing = False
-
-        self.set_parse_status(ParseStatus.Error)
-
-        wx.CallAfter(worker)
+        self.CallAfter(worker)
 
     def onRedirectCallback(self, url: str):
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
-    def set_parse_status(self, status: int):
+    def set_parse_status(self, status: ParseStatus):
         def set_enable_status(enable: bool):
             self.url_box.Enable(enable)
             self.get_btn.Enable(enable)
@@ -837,7 +832,9 @@ class MainWindow(Frame):
                     self.download_option_btn.Enable(False)
                     self.download_btn.SetLabel("直播录制")
 
-        match ParseStatus(status):
+        self.status = status
+
+        match status:
             case ParseStatus.Parsing:
                 self.processing_icon.Show(True)
 
@@ -862,7 +859,7 @@ class MainWindow(Frame):
 
                 self.processing_window.Close()
 
-                self.in_parsing = False
+                self.status = False
 
             case ParseStatus.Error:
                 self.processing_icon.Hide()
@@ -890,12 +887,15 @@ class MainWindow(Frame):
         def is_valid_url(url: str):
             return re.findall(r"https:\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
 
+        if self.status != ParseStatus.Parsing:
+            return
+
         text = wx.TextDataObject()
 
         if wx.TheClipboard.Open():
             if wx.TheClipboard.GetData(text):
                 url: str = text.GetText()
-                if is_valid_url(url) and not self.in_parsing:
+                if is_valid_url(url):
                     if url != self.current_parse_url:
                         self.url_box.SetValue(url)
 
@@ -906,6 +906,14 @@ class MainWindow(Frame):
     def interact_video_detected(self):
         def worker():
             self.processing_window.change_type(ProcessingType.Interact)
+
+        wx.CallAfter(worker)
+
+    def CallAfter(self, func):
+        def worker():
+            self.processing_window.Close()
+
+            func()
 
         wx.CallAfter(worker)
 

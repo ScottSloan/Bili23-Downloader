@@ -57,6 +57,7 @@ class DownloadStatus(Enum):
     Complete = 4             # 下载完成
     DownloadError = 5        # 下载失败
     MergeError = 6           # 合成失败
+    Invalid = 7              # 视频失效
 
     Alive = [Waiting, Downloading, Pause]
     Alive_Ex = [Waiting, Downloading, Pause, MergeError, DownloadError]
