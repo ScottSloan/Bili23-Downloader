@@ -4,7 +4,93 @@ import platform
 from typing import Dict
 
 from utils.common.enums import Platform
-from utils.common.map import cdn_map
+
+app_config_group = {
+    "Basic": [
+        "listen_clipboard",
+        "exit_option",
+        "auto_popup_option_dialog",
+        "auto_show_download_window",
+        "download_danmaku_file",
+        "danmaku_file_type",
+        "download_subtitle_file",
+        "subtitle_file_type",
+        "subtitle_lan_custom",
+        "subtitle_lan_type",
+        "download_cover_file"
+    ],
+    "Download": [
+        "path",
+        "max_download_count",
+        "max_thread_count",
+        "video_quality_id",
+        "audio_quality_id",
+        "video_codec_id",
+        "enable_notification",
+        "delete_history",
+        "auto_add_number",
+        "enable_speed_limit",
+        "speed_mbps"
+    ],
+    "Advanced": [
+        "enable_switch_cdn",
+        "cdn_list",
+        "file_name_template",
+        "datetime_format",
+        "auto_adjust_field",
+        "retry_when_download_error",
+        "download_error_retry_count",
+        "retry_when_download_suspend",
+        "download_suspend_retry_interval",
+        "always_use_https_protocol"
+    ],
+    "Merge": [
+        "ffmpeg_path",
+        "ffmpeg_check_available_when_lauch",
+        "override_option",
+        "m4a_to_mp3"
+    ],
+    "Proxy": [
+        "proxy_mode",
+        "proxy_ip",
+        "proxy_port",
+        "enable_auth",
+        "auth_username",
+        "auth_password"
+    ],
+    "Misc": [
+        "episode_display_mode",
+        "show_episode_full_name",
+        "auto_select",
+        "player_preference",
+        "player_path",
+        "show_user_info",
+        "check_update_when_lauch",
+        "enable_debug"
+    ],
+}
+
+user_config_group = {
+    "User": [
+        "login",
+        "face_url",
+        "username",
+        "login_expires",
+        "SESSDATA",
+        "DedeUserID",
+        "DedeUserID__ckMd5",
+        "bili_jct"
+    ],
+    "Auth": [
+        "buvid3",
+        "buvid4",
+        "buvid_fp",
+        "b_nut",
+        "bili_ticket",
+        "bili_ticket_expires",
+        "uuid"
+    ]
+}
 
 class Config:
     class Sys:
@@ -69,7 +155,7 @@ class Config:
         show_episode_full_name: bool = True
         auto_select: bool = False
         enable_debug: bool = False
-        auto_check_update: bool = True
+        check_update_when_lauch: bool = True
         show_user_info: bool = True
 
         player_preference: int = 0
@@ -96,6 +182,10 @@ class Config:
         stream_download_option: int = 3
     
     class Merge:
+        ffmpeg_path: str = ""
+        ffmpeg_available: bool = False
+        ffmpeg_check_available_when_lauch: bool = True
+
         override_option: int = 1
         m4a_to_mp3: bool = True
 
@@ -105,12 +195,6 @@ class Config:
         changelog: str = None
 
         need_login: bool = False
-
-    class FFmpeg:
-        path: str = ""
-        available: bool = False
-
-        check_available = True
 
     class Auth:
         img_key: str = ""
@@ -126,10 +210,9 @@ class Config:
         b_lsid: str = ""
 
     class Advanced:
-        enable_custom_cdn: bool = True
-        custom_cdn_mode: int = 0
+        enable_switch_cdn: bool = True
         custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
-        custom_cdn_list: list = []
+        cdn_list: list = []
 
         file_name_template = "{number_with_zero} - {title}"
         datetime_format = "%Y-%m-%d %H-%M-%S"
@@ -145,57 +228,43 @@ class ConfigMgr:
     @classmethod
     def load_config(cls):
         def after_load_config():
-            def create_files():
-                if not os.path.exists(Config.Download.path):
-                    os.makedirs(Config.Download.path)
+            def create_folder(path_list: list):
+                for path in path_list:
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+            
+            def create_config(config_list: list):
+                for entry in config_list:
+                    if not os.path.exists(entry["path"]):
+                        cls.write_config_json(entry["path"], entry["config"])
 
-                if not os.path.exists(Config.User.directory):
-                    os.makedirs(Config.User.directory)
+            create_folder([Config.Download.path, Config.User.directory, Config.User.download_file_directory])
 
-                if not os.path.exists(Config.User.download_file_directory):
-                    os.makedirs(Config.User.download_file_directory)
+            create_config([{"path": Config.APP.app_config_path, "config": app_config}, {"path": Config.User.user_config_path, "config": user_config}])
 
-                if not os.path.exists(Config.APP.app_config_path):
-                    cls.write_config_json(Config.APP.app_config_path, app_config)
-
-                if not os.path.exists(Config.User.user_config_path):
-                    cls.write_config_json(Config.User.user_config_path, user_config)
-
-            create_files()
-
-            for index, cdn in enumerate(Config.Advanced.custom_cdn_list):
-                cdn_map.append({
-                    "cdn": cdn,
-                    "order": index + len(cdn_map) + 1
-                })
-
-            cdn_map.sort(key = lambda x: x["order"], reverse = False)
-
-        def after_read_config():
-            def check_config_version():
-                min_version = app_config.get("header", {"min_version": 0}).get("min_version", 0)
+        def check_config():
+            def check_config_version(config: Dict[str, dict], file_path: str):
+                min_version = config.get("header", {"min_version": 0}).get("min_version", 0)
                 
                 if min_version < Config.APP.config_file_min_version_code:
-                    cls.remove_config_file()
+                    cls.remove_config_file(file_path)
 
-                    app_config.clear()
+                    config.clear()
 
-            def check_config_node_name():
-                for node_name in ["header", "basic", "download", "advanced","merge", "extra", "proxy", "misc"]:
-                    if node_name not in app_config:
-                        app_config[node_name] = {}
+            def check_config_node_name(config: Dict[str, dict], node_name_list: list):
+                for node_name in node_name_list:
+                    if node_name not in config:
+                        config[node_name] = {}
 
                         if node_name == "header":
-                            app_config[node_name]["min_version"] = Config.APP.config_file_min_version_code
-                            app_config[node_name]["platform"] = Config.Sys.platform
+                            config[node_name]["min_version"] = Config.APP.config_file_min_version_code
+                            config[node_name]["platform"] = Config.Sys.platform
 
-                for node_name in ["user", "cookie_params"]:
-                    if node_name not in user_config:
-                        user_config[node_name] = {}
+            check_config_version(app_config, Config.APP.app_config_path)
+            check_config_version(user_config, Config.User.user_config_path)
 
-            check_config_version()
-
-            check_config_node_name()
+            check_config_node_name(app_config, ["header", "basic", "download", "advanced", "merge", "extra", "proxy", "misc"])
+            check_config_node_name(user_config, ["header", "user", "auth"])
         
         def get_path():
             match Platform(Config.Sys.platform):
@@ -216,110 +285,46 @@ class ConfigMgr:
         app_config: Dict[str, dict] = cls.read_config_json(Config.APP.app_config_path)
         user_config: Dict[str, dict] = cls.read_config_json(Config.User.user_config_path)
 
-        after_read_config()
+        check_config()
 
-        # basic
-        Config.Basic.listen_clipboard = app_config["basic"].get("listen_clipboard", Config.Basic.listen_clipboard)
-        Config.Basic.exit_option = app_config["basic"].get("exit_option", Config.Basic.exit_option)
-        Config.Basic.auto_popup_option_dialog = app_config["basic"].get("auto_popup_option_dialog", Config.Basic.auto_popup_option_dialog)
-        Config.Basic.auto_show_download_window = app_config["basic"].get("auto_show_download_window", Config.Basic.auto_show_download_window)
-        Config.Basic.download_danmaku_file = app_config["basic"].get("download_danmaku_file", Config.Basic.download_danmaku_file)
-        Config.Basic.danmaku_file_type = app_config["basic"].get("danmaku_file_type", Config.Basic.danmaku_file_type)
-        Config.Basic.download_subtitle_file = app_config["basic"].get("download_subtitle_file", Config.Basic.download_subtitle_file)
-        Config.Basic.subtitle_file_type = app_config["basic"].get("subtitle_file_type", Config.Basic.subtitle_file_type)
-        Config.Basic.subtitle_lan_custom = app_config["basic"].get("subtitle_lan_custom", Config.Basic.subtitle_lan_custom)
-        Config.Basic.subtitle_lan_type = app_config["basic"].get("subtitle_lan_type", Config.Basic.subtitle_lan_type)
-        Config.Basic.download_cover_file = app_config["basic"].get("download_cover_file", Config.Basic.download_cover_file)
-        
-        # download
-        Config.Download.path = app_config["download"].get("path", Config.Download.path)
-        Config.Download.max_download_count = app_config["download"].get("max_download_count", Config.Download.max_download_count)
-        Config.Download.max_thread_count = app_config["download"].get("max_thread_count", Config.Download.max_thread_count)
-        Config.Download.video_quality_id = app_config["download"].get("video_quality_id", Config.Download.video_quality_id)
-        Config.Download.audio_quality_id = app_config["download"].get("audio_quality_id", Config.Download.audio_quality_id)
-        Config.Download.video_codec_id = app_config["download"].get("video_codec_id", Config.Download.video_codec_id)
-        Config.Download.enable_notification = app_config["download"].get("show_notification", Config.Download.enable_notification)
-        Config.Download.delete_history = app_config["download"].get("delete_history", Config.Download.delete_history)
-        Config.Download.auto_add_number = app_config["download"].get("auto_add_number", Config.Download.auto_add_number)
-        Config.Download.enable_speed_limit = app_config["download"].get("enable_speed_limit", Config.Download.enable_speed_limit)
-        Config.Download.speed_mbps = app_config["download"].get("speed_mbps", Config.Download.speed_mbps)
-
-        # advanced
-        Config.Advanced.enable_custom_cdn = app_config["advanced"].get("enable_custom_cdn", Config.Advanced.enable_custom_cdn)
-        Config.Advanced.custom_cdn = app_config["advanced"].get("custom_cdn", Config.Advanced.custom_cdn)
-        Config.Advanced.custom_cdn_mode = app_config["advanced"].get("custom_cdn_mode", Config.Advanced.custom_cdn_mode)
-        Config.Advanced.custom_cdn_list = app_config["advanced"].get("custom_cdn_list", Config.Advanced.custom_cdn_list)
-        Config.Advanced.file_name_template = app_config["advanced"].get("file_name_template", Config.Advanced.file_name_template)
-        Config.Advanced.datetime_format = app_config["advanced"].get("datetime_format", Config.Advanced.datetime_format)
-        Config.Advanced.auto_adjust_field = app_config["advanced"].get("auto_adjust_field", Config.Advanced.auto_adjust_field)
-        Config.Advanced.retry_when_download_error = app_config["advanced"].get("retry_when_download_error", Config.Advanced.retry_when_download_error)
-        Config.Advanced.download_error_retry_count = app_config["advanced"].get("download_error_retry_count", Config.Advanced.download_error_retry_count)
-        Config.Advanced.retry_when_download_suspend = app_config["advanced"].get("retry_when_download_suspend", Config.Advanced.retry_when_download_suspend)
-        Config.Advanced.download_suspend_retry_interval = app_config["advanced"].get("download_suspend_retry_interval", Config.Advanced.download_suspend_retry_interval)
-        Config.Advanced.always_use_https_protocol = app_config["advanced"].get("always_use_http_protocol", Config.Advanced.always_use_https_protocol)
-
-        # merge
-        Config.FFmpeg.path = app_config["merge"].get("ffmpeg_path", Config.FFmpeg.path)
-        Config.FFmpeg.check_available = app_config["merge"].get("check_ffmpeg_available", Config.FFmpeg.check_available)
-        Config.Merge.override_option = app_config["merge"].get("override_option", Config.Merge.override_option)
-        Config.Merge.m4a_to_mp3 = app_config["merge"].get("m4a_to_mp3", Config.Merge.m4a_to_mp3)
-
-        # proxy
-        Config.Proxy.proxy_mode = app_config["proxy"].get("proxy_mode", Config.Proxy.proxy_mode)
-        Config.Proxy.proxy_ip = app_config["proxy"].get("proxy_ip", Config.Proxy.proxy_ip)
-        Config.Proxy.proxy_port = app_config["proxy"].get("proxy_port", Config.Proxy.proxy_port)
-        Config.Proxy.enable_auth = app_config["proxy"].get("enable_auth", Config.Proxy.enable_auth)
-        Config.Proxy.auth_username = app_config["proxy"].get("auth_username", Config.Proxy.auth_username)
-        Config.Proxy.auth_password = app_config["proxy"].get("auth_password", Config.Proxy.auth_password)
-
-        # misc
-        Config.Misc.episode_display_mode = app_config["misc"].get("episode_display_mode", Config.Misc.episode_display_mode)
-        Config.Misc.show_episode_full_name = app_config["misc"].get("show_episode_full_name", Config.Misc.show_episode_full_name)
-        Config.Misc.auto_select = app_config["misc"].get("auto_select", Config.Misc.auto_select)
-        Config.Misc.player_preference = app_config["misc"].get("player_preference", Config.Misc.player_preference)
-        Config.Misc.player_path = app_config["misc"].get("player_path", Config.Misc.player_path)
-        Config.Misc.show_user_info = app_config["misc"].get("show_user_info", Config.Misc.show_user_info)
-        Config.Misc.auto_check_update = app_config["misc"].get("auto_check_update", Config.Misc.auto_check_update)
-        Config.Misc.enable_debug = app_config["misc"].get("enable_debug", Config.Misc.enable_debug)
-
-        # user
-        Config.User.login = user_config["user"].get("login", Config.User.login)
-        Config.User.face_url = user_config["user"].get("face_url", Config.User.face_url)
-        Config.User.username = user_config["user"].get("username", Config.User.username)
-        Config.User.login_expires = user_config["user"].get("login_expires", Config.User.login_expires)
-        Config.User.SESSDATA = user_config["user"].get("SESSDATA", Config.User.SESSDATA)
-        Config.User.DedeUserID = user_config["user"].get("DedeUserID", Config.User.DedeUserID)
-        Config.User.DedeUserID__ckMd5 = user_config["user"].get("DedeUserID__ckMd5", Config.User.DedeUserID__ckMd5)
-        Config.User.bili_jct = user_config["user"].get("bili_jct", Config.User.bili_jct)
-
-        # auth
-        Config.Auth.buvid3 = user_config["cookie_params"].get("buvid3", Config.Auth.buvid3)
-        Config.Auth.buvid4 = user_config["cookie_params"].get("buvid4", Config.Auth.buvid4)
-        Config.Auth.buvid_fp = user_config["cookie_params"].get("buvid_fp", Config.Auth.buvid_fp)
-        Config.Auth.b_nut = user_config["cookie_params"].get("b_nut", Config.Auth.b_nut)
-        Config.Auth.bili_ticket = user_config["cookie_params"].get("bili_ticket", Config.Auth.bili_ticket)
-        Config.Auth.bili_ticket_expires = user_config["cookie_params"].get("bili_ticket_expires", Config.Auth.bili_ticket_expires)
-        Config.Auth.uuid = user_config["cookie_params"].get("uuid", Config.Auth.uuid)
+        cls.read_config_group(Config, app_config, app_config_group)
+        cls.read_config_group(Config, user_config, user_config_group)
 
         after_load_config()
 
     @classmethod
-    def update_config_kwargs(cls, file_path: str, category: str, **kwargs):
+    def update_config_kwargs(cls, file_path: str, section: str, **kwargs):
         config = cls.read_config_json(file_path)
 
-        if category not in config:
-            config[category] = {}
+        if section not in config:
+            config[section] = {}
 
         for key, value in kwargs.items():
-            config[category][key] = value
+            config[section][key] = value
 
         cls.write_config_json(file_path, config)
 
     @staticmethod
-    def remove_config_file():
+    def read_config_group(object, config: Dict[str, dict], config_group: Dict[str, list]):
+        for section, name_list in config_group.items():
+            for name in name_list:
+                setattr(getattr(object, section), name, config.get(section.lower()).get(name, getattr(getattr(object, section), name)))
+
+    @classmethod
+    def save_config_group(cls, object, config_group: Dict[str, list], config_file_path: str):
+        config = cls.read_config_json(config_file_path)
+
+        for section, name_list in config_group.items():
+            for name in name_list:
+                config[section.lower()][name] = getattr(getattr(object, section), name)
+
+        cls.write_config_json(config_file_path, config)
+
+    @staticmethod
+    def remove_config_file(file_path: str):
         from utils.tool_v2 import UniversalTool
 
-        UniversalTool.remove_files([UniversalTool.get_file_path(os.getcwd(), "config.json")])
+        UniversalTool.remove_files([file_path])
 
     @staticmethod
     def read_config_json(file_path: str):

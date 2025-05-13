@@ -80,7 +80,7 @@ class CookieUtils:
 
         self.update_cookie_params(kwargs)
 
-    def update_cookie_params(self, kwargs: dict, category: str = "cookie_params"):
+    def update_cookie_params(self, kwargs: dict, category: str = "auth"):
         ConfigMgr.update_config_kwargs(Config.User.user_config_path, category, **kwargs)
 
     def reset_user_params(self):

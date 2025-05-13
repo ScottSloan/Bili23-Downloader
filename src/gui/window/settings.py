@@ -15,7 +15,7 @@ from gui.component.panel import Panel
 from gui.component.tooltip import ToolTip
 
 from gui.dialog.ffmpeg import DetectDialog
-from gui.dialog.cdn import ChangeCDNDialog
+from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
@@ -23,7 +23,7 @@ from utils.config import Config, ConfigMgr
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
-from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode, Platform
+from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, Platform
 
 from utils.module.notification import NotificationManager
 
@@ -76,7 +76,7 @@ class SettingWindow(Dialog):
         for i in range(0, self.note.GetPageCount()):
             if not self.note.GetPage(i).onConfirm():
                 return
-            
+
         event.Skip()
 
 class Tab(Panel):
@@ -197,22 +197,6 @@ class BasicTab(Tab):
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
-
-        kwargs = {
-            "listen_clipboard": Config.Basic.listen_clipboard,
-            "exit_option": Config.Basic.exit_option,
-            "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog,
-            "auto_show_download_window": Config.Basic.auto_show_download_window,
-            "download_danmaku_file": Config.Basic.download_danmaku_file,
-            "danmaku_file_type": Config.Basic.danmaku_file_type,
-            "download_subtitle_file": Config.Basic.download_subtitle_file,
-            "subtitle_file_type": Config.Basic.subtitle_file_type,
-            "subtitle_lan_custom": Config.Basic.subtitle_lan_custom,
-            "subtitle_lan_type": Config.Basic.subtitle_lan_type,
-            "download_cover_file": Config.Basic.download_cover_file
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
 
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()
@@ -413,23 +397,6 @@ class DownloadTab(Tab):
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_mbps = int(self.speed_limit_box.GetValue())
 
-        kwargs = {
-            "path": Config.Download.path,
-            "max_download_count": Config.Download.max_download_count,
-            "max_thread_count": Config.Download.max_thread_count,
-            "video_quality_id": Config.Download.video_quality_id,
-            "audio_quality_id": Config.Download.audio_quality_id,
-            "video_codec_id": Config.Download.video_codec_id,
-            "enable_notification": Config.Download.enable_notification,
-            "delete_history": Config.Download.delete_history,
-            "auto_add_number": Config.Download.auto_add_number,
-            "number_type": Config.Download.number_type,
-            "enable_speed_limit": Config.Download.enable_speed_limit,
-            "speed_mbps": Config.Download.speed_mbps,
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
-
         # 更新下载窗口中并行下载数信息
         update_download_window()
         
@@ -489,42 +456,19 @@ class AdvancedTab(Tab):
     def init_UI(self):
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
-        self.enable_custom_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
+        self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
         self.enable_custom_cdn_tip = ToolTip(cdn_box)
         self.enable_custom_cdn_tip.set_tooltip("因 B 站分配的 CDN 线路不稳定，容易导致下载失败，开启此选项后，将自动替换下载链接中的 CDN host\n\n请注意：使用代理时，请手动关闭此选项")
-
-        enable_custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        enable_custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-
-        self.custom_cdn_auto_switch_radio = wx.RadioButton(cdn_box, -1, "自动切换")
-        self.custom_cdn_manual_radio = wx.RadioButton(cdn_box, -1, "手动设置")
-
-        custom_cdn_mode_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        custom_cdn_mode_hbox.AddSpacer(self.FromDIP(20))
-        custom_cdn_mode_hbox.Add(self.custom_cdn_auto_switch_radio, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        custom_cdn_mode_hbox.AddSpacer(self.FromDIP(13))
-        custom_cdn_mode_hbox.Add(self.custom_cdn_manual_radio, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-
-        self.custom_cdn_lab = wx.StaticText(cdn_box, -1, "CDN host")
-        self.custom_cdn_box = TextCtrl(cdn_box, -1)
+        self.custom_cdn_btn = wx.Button(cdn_box, -1, "自定义", size = self.get_scaled_size((100, 28)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        custom_cdn_hbox.AddSpacer(self.FromDIP(20))
-        custom_cdn_hbox.Add(self.custom_cdn_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        custom_cdn_hbox.Add(self.custom_cdn_box, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
-
-        self.change_cdn_btn = wx.Button(cdn_box, -1, "更改 CDN host", size = self.get_scaled_size((100, 28)))
-
-        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        btn_hbox.AddStretchSpacer()
-        btn_hbox.Add(self.change_cdn_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        custom_cdn_hbox.Add(self.enable_switch_cdn_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        custom_cdn_hbox.AddStretchSpacer()
+        custom_cdn_hbox.Add(self.custom_cdn_btn, 0, wx.ALL, self.FromDIP(6))
 
         cdn_sbox = wx.StaticBoxSizer(cdn_box, wx.VERTICAL)
-        cdn_sbox.Add(enable_custom_cdn_hbox, 0, wx.EXPAND)
-        cdn_sbox.Add(custom_cdn_mode_hbox, 0, wx.EXPAND)
-        cdn_sbox.Add(custom_cdn_hbox, 1, wx.EXPAND)
-        cdn_sbox.Add(btn_hbox, 0, wx.EXPAND)
+        cdn_sbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
 
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
@@ -570,18 +514,15 @@ class AdvancedTab(Tab):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.enable_custom_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableCustomCDNEVT)
-        self.custom_cdn_auto_switch_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
-        self.custom_cdn_manual_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomCDNModeEVT)
-        self.change_cdn_btn.Bind(wx.EVT_BUTTON, self.onChangeCDNEVT)
+        self.enable_switch_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableSwitchCDNEVT)
+        self.custom_cdn_btn.Bind(wx.EVT_BUTTON, self.onCustomCDNEVT)
 
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
 
     def init_data(self):
-        self.enable_custom_cdn_chk.SetValue(Config.Advanced.enable_custom_cdn)
-        self.custom_cdn_box.SetValue(Config.Advanced.custom_cdn)
+        self.enable_switch_cdn_chk.SetValue(Config.Advanced.enable_switch_cdn)
 
         self.file_name_template = Config.Advanced.file_name_template
         self.datetime_format = Config.Advanced.datetime_format
@@ -593,20 +534,12 @@ class AdvancedTab(Tab):
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
 
-        match CDNMode(Config.Advanced.custom_cdn_mode):
-            case CDNMode.Auto:
-                self.custom_cdn_auto_switch_radio.SetValue(True)
-
-            case CDNMode.Custom:
-                self.custom_cdn_manual_radio.SetValue(True)
-
-        self.onEnableCustomCDNEVT(0)
+        self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
         self.onChangeRestartEVT(0)
 
     def save(self):
-        Config.Advanced.enable_custom_cdn = self.enable_custom_cdn_chk.GetValue()
-        Config.Advanced.custom_cdn = self.custom_cdn_box.GetValue()
+        Config.Advanced.enable_switch_cdn = self.enable_switch_cdn_chk.GetValue()
 
         Config.Advanced.file_name_template = self.file_name_template
         Config.Advanced.datetime_format = self.datetime_format
@@ -618,48 +551,14 @@ class AdvancedTab(Tab):
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
 
-        if self.custom_cdn_auto_switch_radio.GetValue():
-            Config.Advanced.custom_cdn_mode = 0
-        else:
-            Config.Advanced.custom_cdn_mode = 1
+    def onEnableSwitchCDNEVT(self, event):        
+        self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
 
-        kwargs = {
-            "enable_custom_cdn": Config.Advanced.enable_custom_cdn,
-            "custom_cdn": Config.Advanced.custom_cdn,
-            "custom_cdn_mode": Config.Advanced.custom_cdn_mode,
-            "custom_cdn_list": Config.Advanced.custom_cdn_list,
-            "file_name_template": Config.Advanced.file_name_template,
-            "datetime_format": Config.Advanced.datetime_format,
-            "retry_when_download_error": Config.Advanced.retry_when_download_error,
-            "download_error_retry_count": Config.Advanced.download_error_retry_count,
-            "retry_when_download_suspend": Config.Advanced.retry_when_download_suspend,
-            "download_suspend_retry_interval": Config.Advanced.download_suspend_retry_interval,
-            "always_use_https_protocol": Config.Advanced.always_use_https_protocol
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
-
-    def onEnableCustomCDNEVT(self, event):
-        self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
-        self.custom_cdn_manual_radio.Enable(self.enable_custom_cdn_chk.GetValue())
-
-        if self.enable_custom_cdn_chk.GetValue():
-            self.onChangeCustomCDNModeEVT(0)
-        else:
-            self.custom_cdn_lab.Enable(False)
-            self.custom_cdn_box.Enable(False)
-            self.change_cdn_btn.Enable(False)
-
-    def onChangeCustomCDNModeEVT(self, event):
-        self.custom_cdn_lab.Enable(self.custom_cdn_manual_radio.GetValue())
-        self.custom_cdn_box.Enable(self.custom_cdn_manual_radio.GetValue())
-        self.change_cdn_btn.Enable(self.custom_cdn_manual_radio.GetValue())
-
-    def onChangeCDNEVT(self, event):
-        dlg = ChangeCDNDialog(self)
+    def onCustomCDNEVT(self, event):
+        dlg = CustomCDNDialog(self)
 
         if dlg.ShowModal() == wx.ID_OK:
-            self.custom_cdn_box.SetValue(dlg.get_cdn())
+            pass
 
     def onCustomFileNameEVT(self, event):
         dlg = CustomFileNameDialog(self, self.file_name_template, self.datetime_format, self.auto_adjust)
@@ -743,26 +642,17 @@ class MergeTab(Tab):
         self.tutorial_btn.Bind(wx.EVT_BUTTON, self.onTutorial)
 
     def init_data(self):
-        self.path_box.SetValue(Config.FFmpeg.path)
-        self.check_ffmpeg_chk.SetValue(Config.FFmpeg.check_available)
+        self.path_box.SetValue(Config.Merge.ffmpeg_path)
+        self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_lauch)
         
         self.override_option_choice.SetSelection(get_mapping_index_by_value(override_option_map, Config.Merge.override_option))
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
-        Config.FFmpeg.path = self.path_box.GetValue()
-        Config.FFmpeg.check_available = self.check_ffmpeg_chk.GetValue()
+        Config.Merge.ffmpeg_path = self.path_box.GetValue()
+        Config.Merge.ffmpeg_check_available_when_lauch = self.check_ffmpeg_chk.GetValue()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
-
-        kwargs = {
-            "ffmpeg_path": Config.FFmpeg.path,
-            "check_ffmpeg_available": Config.FFmpeg.check_available,
-            "override_option": Config.Merge.override_option,
-            "m4a_to_mp3": Config.Merge.m4a_to_mp3,
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
@@ -910,17 +800,6 @@ class ProxyTab(Tab):
         Config.Proxy.enable_auth = self.auth_chk.GetValue()
         Config.Proxy.auth_username = self.uname_box.GetValue()
         Config.Proxy.auth_password = self.passwd_box.GetValue()
-
-        kwargs = {
-            "proxy_mode": Config.Proxy.proxy_mode,
-            "proxy_ip": Config.Proxy.proxy_ip,
-            "proxy_port": Config.Proxy.proxy_port,
-            "enable_auth": Config.Proxy.enable_auth,
-            "auth_username": Config.Proxy.auth_username,
-            "auth_password": Config.Proxy.auth_password
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
 
     def onChangeProxyModeEVT(self, event):
         def set_enable(enable: bool):
@@ -1096,7 +975,7 @@ class MiscTab(Tab):
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
         self.player_path_box.SetValue(Config.Misc.player_path)
         self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
-        self.check_update_chk.SetValue(Config.Misc.auto_check_update)
+        self.check_update_chk.SetValue(Config.Misc.check_update_when_lauch)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
 
         self.onChangePlayerPreferenceEVT(None)
@@ -1119,21 +998,8 @@ class MiscTab(Tab):
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
         Config.Misc.player_path = self.player_path_box.GetValue()
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
-        Config.Misc.auto_check_update = self.check_update_chk.GetValue()
+        Config.Misc.check_update_when_lauch = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
-
-        kwargs = {
-            "episode_display_mode": Config.Misc.episode_display_mode,
-            "show_episode_full_name": Config.Misc.show_episode_full_name,
-            "auto_select": Config.Misc.auto_select,
-            "player_preference": Config.Misc.player_preference,
-            "player_path": Config.Misc.player_path,
-            "show_user_info": Config.Misc.show_user_info,
-            "auto_check_update": Config.Misc.auto_check_update,
-            "enable_debug": Config.Misc.enable_debug
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
         self.parent.init_menubar()
@@ -1166,7 +1032,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            ConfigMgr.remove_config_file()
+            ConfigMgr.remove_config_file(Config.APP.app_config_path)
 
             shutil.rmtree(Config.User.directory)
 
@@ -1176,7 +1042,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            ConfigMgr.remove_config_file()
+            ConfigMgr.remove_config_file(Config.APP.app_config_path)
 
             self.restart()
 

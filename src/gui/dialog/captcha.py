@@ -27,7 +27,7 @@ class CaptchaWindow(Dialog):
         self.webview.browser.SetPage(self.webview.get_page("captcha.html"), "")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.webview, 1, wx.ALL | wx.EXPAND)
+        vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
 

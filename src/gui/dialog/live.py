@@ -202,7 +202,7 @@ class LiveRecordingWindow(Dialog):
 
         output_path = self.recording_path_box.GetValue()
 
-        cmd = f'"{Config.FFmpeg.path}" -y -i "{LiveInfo.m3u8_link}" -c copy "{output_path}"'
+        cmd = f'"{Config.Merge.ffmpeg_path}" -y -i "{LiveInfo.m3u8_link}" -c copy "{output_path}"'
 
         self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, universal_newlines = True, encoding = "utf-8", shell = True, start_new_session = True)
 

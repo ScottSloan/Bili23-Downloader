@@ -41,10 +41,6 @@ class PlayerMode(Enum):
     Default = 0              # 系统默认
     Custom = 1               # 自定义
 
-class CDNMode(Enum):
-    Auto = 0                 # 自动切换
-    Custom = 1               # 手动设置
-
 class StreamType(Enum):
     Dash = 0                 # dash 流
     Flv = 1                  # flv 流

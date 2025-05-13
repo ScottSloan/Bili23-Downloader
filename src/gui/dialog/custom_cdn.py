@@ -10,7 +10,7 @@ from utils.common.enums import Platform
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
-class ChangeCDNDialog(Dialog):
+class CustomCDNDialog(Dialog):
     def __init__(self, parent):
         Dialog.__init__(self, parent, "更改 CDN host")
 
@@ -80,9 +80,6 @@ class ChangeCDNDialog(Dialog):
         def init_cdn_list():
             for entry in cdn_map:
                 index = self.cdn_list.Append([entry["cdn"], str(entry["order"]), "未检测"])
-
-                if entry["cdn"] == Config.Advanced.custom_cdn:
-                    self.cdn_list.CheckItem(index)
 
         self._last_index = -1
 
@@ -177,7 +174,7 @@ class ChangeCDNDialog(Dialog):
         
         index = self.cdn_list.Append([self.custom_box.GetValue(), str(self.cdn_list.GetItemCount() + 1), "未检测"])
 
-        Config.Advanced.custom_cdn_list.append(self.custom_box.GetValue())
+        Config.Advanced.cdn_list.append(self.custom_box.GetValue())
 
         self.cdn_list.Focus(index)
         self.cdn_list.Select(index)
@@ -192,6 +189,6 @@ class ChangeCDNDialog(Dialog):
 
         self.cdn_list.DeleteItem(self._last_index)
 
-        Config.Advanced.custom_cdn_list.remove(cdn)
+        Config.Advanced.cdn_list.remove(cdn)
 
         self._last_index = -1

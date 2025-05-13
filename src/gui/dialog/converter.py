@@ -247,7 +247,7 @@ class ConverterWindow(Dialog):
         encoder = _get_encoder()
         bitrate = self.target_bitrate_box.GetValue() + "k"
 
-        cmd = f'"{Config.FFmpeg.path}" -y -i "{input_path}" -c:v {encoder} -b:v {bitrate} -strict experimental "{output_path}"'
+        cmd = f'"{Config.Merge.ffmpeg_path}" -y -i "{input_path}" -c:v {encoder} -b:v {bitrate} -strict experimental "{output_path}"'
 
         self.process = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, universal_newlines = True, encoding = "utf-8", shell = True, start_new_session = True)
 

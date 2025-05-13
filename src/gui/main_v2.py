@@ -247,10 +247,10 @@ class MainWindow(Frame):
             ffmpeg = FFmpeg()
             ffmpeg.detect_location()
 
-            if Config.FFmpeg.check_available:
+            if Config.Merge.ffmpeg_check_available_when_lauch:
                 Thread(target = self.check_ffmpeg_available).start()
 
-            if Config.Misc.auto_check_update:
+            if Config.Misc.check_update_when_lauch:
                 Thread(target = self.check_update).start()
 
             Thread(target = self.show_user_info).start()
@@ -692,7 +692,7 @@ class MainWindow(Frame):
         ffmpeg = FFmpeg()
         ffmpeg.check_available()
 
-        if Config.FFmpeg.check_available and not Config.FFmpeg.available:
+        if Config.Merge.ffmpeg_check_available_when_lauch and not Config.Merge.ffmpeg_available:
             dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合成、裁切和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
             dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 

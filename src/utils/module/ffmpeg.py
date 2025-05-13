@@ -20,21 +20,21 @@ class FFmpeg:
         self.cut_info = cut_info
 
     def detect_location(self):
-        if not Config.FFmpeg.path:
+        if not Config.Merge.ffmpeg_path:
             cwd_path = self.get_cwd_path()
             env_path = self.get_env_path()
     
             if cwd_path:
-                Config.FFmpeg.path = cwd_path
+                Config.Merge.ffmpeg_path = cwd_path
 
             if env_path and not cwd_path:
-                Config.FFmpeg.path = env_path
+                Config.Merge.ffmpeg_path = env_path
 
     def check_available(self):
-        cmd = f""""{Config.FFmpeg.path}" -version"""
+        cmd = f""""{Config.Merge.ffmpeg_path}" -version"""
 
         if "ffmpeg version" in self.run_command(cmd, output = True):
-            Config.FFmpeg.available = True
+            Config.Merge.ffmpeg_available = True
 
     def merge_video(self, callback: MergeCallback):
         def check_file_exist():
@@ -81,15 +81,15 @@ class FFmpeg:
 
     def get_dash_command(self):
         def get_merge_command():
-            return f'"{Config.FFmpeg.path}" -y -i "{self.dash_video_temp_file_name}" -i "{self.dash_audio_temp_file_name}" -acodec copy -vcodec copy -strict experimental {self.output_temp_file_name}'
+            return f'"{Config.Merge.ffmpeg_path}" -y -i "{self.dash_video_temp_file_name}" -i "{self.dash_audio_temp_file_name}" -acodec copy -vcodec copy -strict experimental {self.output_temp_file_name}'
 
         def get_convent_command():
             if self.task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
                 self.task_info.output_type = "mp3"
-                return f'"{Config.FFmpeg.path}" -y -i "{self.dash_audio_temp_file_name}" -c:a libmp3lame -q:a 0 "{self.output_temp_file_name}"'
+                return f'"{Config.Merge.ffmpeg_path}" -y -i "{self.dash_audio_temp_file_name}" -c:a libmp3lame -q:a 0 "{self.output_temp_file_name}"'
             
             elif self.task_info.output_type == "flac":
-                return f'"{Config.FFmpeg.path}" -y -i "{self.dash_audio_temp_file_name}" -c:a flac -q:a 0 "{self.output_temp_file_name}"'
+                return f'"{Config.Merge.ffmpeg_path}" -y -i "{self.dash_audio_temp_file_name}" -c:a flac -q:a 0 "{self.output_temp_file_name}"'
             
             else:
                 return self.get_rename_command(self.dash_audio_temp_file_name, self.output_temp_file_name)
@@ -116,7 +116,7 @@ class FFmpeg:
                 f.write("\n".join([f"file flv_{self.task_info.id}_part{i + 1}.flv" for i in range(self.task_info.flv_video_count)]))
 
         def get_merge_command():
-            return f'"{Config.FFmpeg.path}" -y -f concat -safe 0 -i "{self.flv_list_file_name}" -c copy "{self.output_temp_file_name}"'
+            return f'"{Config.Merge.ffmpeg_path}" -y -f concat -safe 0 -i "{self.flv_list_file_name}" -c copy "{self.output_temp_file_name}"'
 
         command = Command()
 
@@ -133,7 +133,7 @@ class FFmpeg:
     def get_cut_command(self):
         command = Command()
 
-        command.add(f'"{Config.FFmpeg.path}" -ss {self.cut_info.start_time} -to {self.cut_info.end_time} -i "{self.cut_info.input_path}" -acodec copy -vcodec copy "{self.cut_info.output_path}"')
+        command.add(f'"{Config.Merge.ffmpeg_path}" -ss {self.cut_info.start_time} -to {self.cut_info.end_time} -i "{self.cut_info.input_path}" -acodec copy -vcodec copy "{self.cut_info.output_path}"')
 
         return command.format()
 
