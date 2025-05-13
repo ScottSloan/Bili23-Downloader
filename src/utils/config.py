@@ -211,7 +211,6 @@ class Config:
 
     class Advanced:
         enable_switch_cdn: bool = True
-        custom_cdn: str = "upos-sz-mirror08c.bilivideo.com"
         cdn_list: list = []
 
         file_name_template = "{number_with_zero} - {title}"
@@ -238,9 +237,11 @@ class ConfigMgr:
                     if not os.path.exists(entry["path"]):
                         cls.write_config_json(entry["path"], entry["config"])
 
+                        cls.save_config_group(Config, entry["config_group"], entry["path"])
+
             create_folder([Config.Download.path, Config.User.directory, Config.User.download_file_directory])
 
-            create_config([{"path": Config.APP.app_config_path, "config": app_config}, {"path": Config.User.user_config_path, "config": user_config}])
+            create_config([{"path": Config.APP.app_config_path, "config": app_config, "config_group": app_config_group}, {"path": Config.User.user_config_path, "config": user_config, "config_group": user_config_group}])
 
         def check_config():
             def check_config_version(config: Dict[str, dict], file_path: str):

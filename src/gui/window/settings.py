@@ -19,7 +19,7 @@ from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
-from utils.config import Config, ConfigMgr
+from utils.config import Config, ConfigMgr, app_config_group
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
@@ -76,6 +76,8 @@ class SettingWindow(Dialog):
         for i in range(0, self.note.GetPageCount()):
             if not self.note.GetPage(i).onConfirm():
                 return
+            
+        ConfigMgr.save_config_group(Config, app_config_group, Config.APP.app_config_path)
 
         event.Skip()
 
