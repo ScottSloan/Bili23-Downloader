@@ -53,6 +53,7 @@ from gui.component.button import Button
 from gui.component.bitmap_button import BitmapButton
 from gui.component.info_bar import InfoBar
 from gui.component.taskbar_icon import TaskBarIcon
+from gui.component.flat_button import FlatButton
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -97,9 +98,10 @@ class MainWindow(Frame):
         self.processing_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.LOADING_ICON), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        self.detail_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON), size = self.FromDIP((24, 24)))
-        self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.detail_icon.Hide()
+        self.detail_btn = FlatButton(self.panel, "详细信息", IconID.INFO_ICON, split = True)
+        self.detail_btn.Hide()
+        self.graph_btn = FlatButton(self.panel, "剧情树", IconID.TREE_STRUCTURE_ICON)
+        self.graph_btn.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
         self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.LIST_ICON))
@@ -110,7 +112,9 @@ class MainWindow(Frame):
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        info_hbox.Add(self.detail_icon, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.AddSpacer(self.FromDIP(6))
+        info_hbox.Add(self.detail_btn, 0, wx.EXPAND, self.FromDIP(6))
+        info_hbox.Add(self.graph_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.AddStretchSpacer()
         info_hbox.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -227,7 +231,8 @@ class MainWindow(Frame):
         self.face_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
 
-        self.detail_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowDetailInfoDlgEVT)
+        self.detail_btn.onClickCustomEVT = self.onShowDetailInfoDlgEVT
+        self.graph_btn.onClickCustomEVT = self.onShowGraphEVT
 
         self.episode_list.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onShowEpisodeListMenuEVT)
         self.episode_list.Bind(wx.EVT_MENU, self.onEpisodeListMenuEVT)
@@ -507,17 +512,17 @@ class MainWindow(Frame):
         else:
             self.show_login_window()
 
-    def onShowDetailInfoDlgEVT(self, event):
+    def onShowDetailInfoDlgEVT(self):
         match self.current_parse_type:
             case ParseType.Live:
                 wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
 
             case _:
-                if VideoInfo.is_interactive:
-                    GraphWindow(self).Show()
-                else:
-                    DetailDialog(self, self.current_parse_type).ShowModal()
+                DetailDialog(self, self.current_parse_type).ShowModal()
     
+    def onShowGraphEVT(self):
+        GraphWindow(self).Show()
+
     def onShowEpisodeListMenuEVT(self, event):
         menu = wx.Menu()
 
@@ -717,7 +722,7 @@ class MainWindow(Frame):
 
             match self.current_parse_type:
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    self.set_video_quality_list()
+                    self.set_video_quality_list()                        
 
                 case ParseType.Live:
                     self.set_live_quality_list()
@@ -843,7 +848,7 @@ class MainWindow(Frame):
 
                 self.type_lab.SetLabel("正在解析中")
 
-                self.detail_icon.Hide()
+                self.detail_btn.Hide()
 
                 set_enable_status(False)
                 self.video_quality_choice.Clear()
@@ -855,21 +860,21 @@ class MainWindow(Frame):
 
                 self.type_lab.SetLabel("")
 
-                self.detail_icon.Show()
+                self.detail_btn.Show()
+
+                self.graph_btn.Show(VideoInfo.is_interactive)
 
                 set_enable_status(True)
                 set_download_btn_label()
 
                 self.processing_window.Close()
 
-                self.status = False
-
             case ParseStatus.Error:
                 self.processing_icon.Hide()
 
                 self.type_lab.SetLabel("")
 
-                self.detail_icon.Hide()
+                self.detail_btn.Hide()
 
                 self.url_box.Enable(True)
                 self.get_btn.Enable(True)
