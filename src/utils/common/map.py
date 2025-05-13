@@ -230,6 +230,11 @@ number_type_map = {
     "使用剧集列表序号": 2
 }
 
+exit_option_map = {
+    "隐藏到托盘": 0,
+    "直接退出": 1
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

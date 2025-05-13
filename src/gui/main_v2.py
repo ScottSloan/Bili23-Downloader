@@ -99,14 +99,18 @@ class MainWindow(Frame):
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
         self.detail_btn = FlatButton(self.panel, "详细信息", IconID.INFO_ICON, split = True)
+        self.detail_btn.setToolTip("查看视频详细信息")
         self.detail_btn.Hide()
         self.graph_btn = FlatButton(self.panel, "剧情树", IconID.TREE_STRUCTURE_ICON)
+        self.graph_btn.setToolTip("查看互动视频剧情树")
         self.graph_btn.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
         self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.LIST_ICON))
+        self.episode_option_btn.SetToolTip("剧集列表显示设置")
         self.episode_option_btn.Enable(False)
         self.download_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.SETTING_ICON))
+        self.download_option_btn.SetToolTip("下载选项")
         self.download_option_btn.Enable(False)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -152,8 +156,7 @@ class MainWindow(Frame):
 
         self.clipboard_timer = wx.Timer(self, -1)
 
-        if Config.Basic.taskbar_icon:
-            self.taskbar_icon = TaskBarIcon(self)
+        self.taskbar_icon = TaskBarIcon(self)
 
     def init_id(self):
         self.ID_REFRESH_MENU = wx.NewIdRef()
@@ -269,23 +272,21 @@ class MainWindow(Frame):
         start_thread()
 
     def onCloseEVT(self, event):
-        if  self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
-            dlg = wx.MessageDialog(self, "退出程序\n\n当前存在未下载完成的任务，确定要退出程序吗？", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+        dlg = wx.MessageDialog(self, "退出程序\n\n确定要退出程序吗？\n下次将不再显示此对话框。", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
             
-            dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
+        dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
 
-            match dlg.ShowModal():
-                case wx.ID_YES:
-                    self.Iconize(True)
-                    return
+        match dlg.ShowModal():
+            case wx.ID_YES:
+                self.Hide()
+                return
 
-                case wx.ID_CANCEL:
-                    return
+            case wx.ID_CANCEL:
+                return
             
         self.clipboard_timer.Stop()
 
-        if Config.Basic.taskbar_icon:
-            self.taskbar_icon.Destroy()
+        self.taskbar_icon.Destroy()
         
         event.Skip()
 

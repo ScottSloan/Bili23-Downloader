@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from utils.tool_v2 import RequestTool
-from utils.config import Config, config_utils
+from utils.config import Config, ConfigMgr
 
 class CookieUtils:
     def __init__(self):
@@ -81,7 +81,7 @@ class CookieUtils:
         self.update_cookie_params(kwargs)
 
     def update_cookie_params(self, kwargs: dict, category: str = "cookie_params"):
-        config_utils.update_config_kwargs(Config.User.user_config_path, category, **kwargs)
+        ConfigMgr.update_config_kwargs(Config.User.user_config_path, category, **kwargs)
 
     def reset_user_params(self):
         Config.User.login = False

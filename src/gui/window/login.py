@@ -5,7 +5,7 @@ from typing import Dict, Callable
 from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
-from utils.config import Config, config_utils
+from utils.config import Config, ConfigMgr
 from utils.auth.cookie import CookieUtils
 
 from utils.common.thread import Thread
@@ -113,7 +113,7 @@ class LoginWindow(Dialog):
             "bili_jct": Config.User.bili_jct
         }
 
-        config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
 
         self.Close()
 

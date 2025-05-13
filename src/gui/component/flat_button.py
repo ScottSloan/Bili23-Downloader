@@ -46,3 +46,8 @@ class FlatButton(Panel):
 
     def onClickCustomEVT(self):
         pass
+
+    def setToolTip(self, tip: str):
+        self.SetToolTip(tip)
+        self.btn_icon.SetToolTip(tip)
+        self.btn_lab.SetToolTip(tip)

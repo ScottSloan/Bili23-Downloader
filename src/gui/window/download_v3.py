@@ -12,7 +12,7 @@ from utils.common.map import download_type_map
 
 from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
-from utils.config import Config, config_utils
+from utils.config import Config, ConfigMgr
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -549,7 +549,7 @@ class DownloadingPage(SimplePage):
             "max_download_count": Config.Download.max_download_count
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
     
     @property
     def scroller_count(self):

@@ -26,7 +26,7 @@ class Config:
 
     class Basic:
         listen_clipboard: bool = True
-        taskbar_icon: bool = True
+        exit_option: int = 0
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
 
@@ -141,11 +141,9 @@ class Config:
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
 
-class ConfigUtils:
-    def __init__(self):
-        pass
-
-    def load_config(self):
+class ConfigMgr:
+    @classmethod
+    def load_config(cls):
         def after_load_config():
             def create_files():
                 if not os.path.exists(Config.Download.path):
@@ -158,10 +156,10 @@ class ConfigUtils:
                     os.makedirs(Config.User.download_file_directory)
 
                 if not os.path.exists(Config.APP.app_config_path):
-                    self.write_config_json(Config.APP.app_config_path, app_config)
+                    cls.write_config_json(Config.APP.app_config_path, app_config)
 
                 if not os.path.exists(Config.User.user_config_path):
-                    self.write_config_json(Config.User.user_config_path, user_config)
+                    cls.write_config_json(Config.User.user_config_path, user_config)
 
             create_files()
 
@@ -178,7 +176,7 @@ class ConfigUtils:
                 min_version = app_config.get("header", {"min_version": 0}).get("min_version", 0)
                 
                 if min_version < Config.APP.config_file_min_version_code:
-                    self.remove_config_file()
+                    cls.remove_config_file()
 
                     app_config.clear()
 
@@ -215,14 +213,14 @@ class ConfigUtils:
         
         get_path()
 
-        app_config: Dict[str, dict] = self.read_config_json(Config.APP.app_config_path)
-        user_config: Dict[str, dict] = self.read_config_json(Config.User.user_config_path)
+        app_config: Dict[str, dict] = cls.read_config_json(Config.APP.app_config_path)
+        user_config: Dict[str, dict] = cls.read_config_json(Config.User.user_config_path)
 
         after_read_config()
 
         # basic
         Config.Basic.listen_clipboard = app_config["basic"].get("listen_clipboard", Config.Basic.listen_clipboard)
-        Config.Basic.taskbar_icon = app_config["basic"].get("taskbar_icon", Config.Basic.taskbar_icon)
+        Config.Basic.exit_option = app_config["basic"].get("exit_option", Config.Basic.exit_option)
         Config.Basic.auto_popup_option_dialog = app_config["basic"].get("auto_popup_option_dialog", Config.Basic.auto_popup_option_dialog)
         Config.Basic.auto_show_download_window = app_config["basic"].get("auto_show_download_window", Config.Basic.auto_show_download_window)
         Config.Basic.download_danmaku_file = app_config["basic"].get("download_danmaku_file", Config.Basic.download_danmaku_file)
@@ -305,8 +303,9 @@ class ConfigUtils:
 
         after_load_config()
 
-    def update_config_kwargs(self, file_path: str, category: str, **kwargs):
-        config = self.read_config_json(file_path)
+    @classmethod
+    def update_config_kwargs(cls, file_path: str, category: str, **kwargs):
+        config = cls.read_config_json(file_path)
 
         if category not in config:
             config[category] = {}
@@ -314,7 +313,7 @@ class ConfigUtils:
         for key, value in kwargs.items():
             config[category][key] = value
 
-        self.write_config_json(file_path, config)
+        cls.write_config_json(file_path, config)
 
     @staticmethod
     def remove_config_file():
@@ -322,7 +321,8 @@ class ConfigUtils:
 
         UniversalTool.remove_files([UniversalTool.get_file_path(os.getcwd(), "config.json")])
 
-    def read_config_json(self, file_path: str):
+    @staticmethod
+    def read_config_json(file_path: str):
         try:
             with open(file_path, "r", encoding = "utf-8") as f:
                 return json.loads(f.read())
@@ -330,9 +330,9 @@ class ConfigUtils:
         except Exception:
                 return {}
 
-    def write_config_json(self, file_path: str, contents: dict):
+    @staticmethod
+    def write_config_json(file_path: str, contents: dict):
         with open(file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
-config_utils = ConfigUtils()
-config_utils.load_config()
+ConfigMgr.load_config()

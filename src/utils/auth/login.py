@@ -6,7 +6,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.config import Config, config_utils
+from utils.config import Config, ConfigMgr
 from utils.common.enums import StatusCode
 
 class LoginInfo:
@@ -94,7 +94,7 @@ class Login:
             "login_expires": 0
         }
 
-        config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
 
         UniversalTool.remove_files([UniversalTool.get_file_path(os.path.dirname(Config.User.user_config_path), "face.jpg")])
 

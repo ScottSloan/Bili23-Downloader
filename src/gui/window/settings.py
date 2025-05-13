@@ -19,11 +19,10 @@ from gui.dialog.cdn import ChangeCDNDialog
 from gui.dialog.file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
-from utils.config import Config, config_utils
+from utils.config import Config, ConfigMgr
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, get_mapping_index_by_value
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, CDNMode, Platform
 
 from utils.module.notification import NotificationManager
@@ -107,14 +106,19 @@ class BasicTab(Tab):
         basic_box = wx.StaticBox(self, -1, "基本设置")
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
-        self.taskbar_icon_chk = wx.CheckBox(basic_box, -1, "显示托盘图标")
+        exit_option_lab = wx.StaticText(basic_box, -1, "当关闭窗口时")
+        self.exit_option_chk = wx.Choice(basic_box, -1, choices = list(exit_option_map.keys()))
+
+        exit_option_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        exit_option_hbox.Add(exit_option_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        exit_option_hbox.Add(self.exit_option_chk, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), self.FromDIP(6))
 
         self.auto_popup_option_chk = wx.CheckBox(basic_box, 0, "下载前自动弹出下载选项对话框")
         self.auto_show_download_window_chk = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
-        basic_sbox.Add(self.taskbar_icon_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_sbox.Add(exit_option_hbox, 0, wx.EXPAND)
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
@@ -169,7 +173,7 @@ class BasicTab(Tab):
 
     def init_data(self):
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
-        self.taskbar_icon_chk.SetValue(Config.Basic.taskbar_icon)
+        self.exit_option_chk.SetSelection(Config.Basic.exit_option)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
 
@@ -184,7 +188,7 @@ class BasicTab(Tab):
 
     def save(self):
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
-        Config.Basic.taskbar_icon = self.taskbar_icon_chk.GetValue()
+        Config.Basic.exit_option = self.exit_option_chk.GetSelection()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
 
@@ -196,7 +200,7 @@ class BasicTab(Tab):
 
         kwargs = {
             "listen_clipboard": Config.Basic.listen_clipboard,
-            "taskbar_icon": Config.Basic.taskbar_icon,
+            "exit_option": Config.Basic.exit_option,
             "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog,
             "auto_show_download_window": Config.Basic.auto_show_download_window,
             "download_danmaku_file": Config.Basic.download_danmaku_file,
@@ -208,7 +212,7 @@ class BasicTab(Tab):
             "download_cover_file": Config.Basic.download_cover_file
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
 
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()
@@ -424,7 +428,7 @@ class DownloadTab(Tab):
             "speed_mbps": Config.Download.speed_mbps,
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
 
         # 更新下载窗口中并行下载数信息
         update_download_window()
@@ -633,7 +637,7 @@ class AdvancedTab(Tab):
             "always_use_https_protocol": Config.Advanced.always_use_https_protocol
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "advanced", **kwargs)
 
     def onEnableCustomCDNEVT(self, event):
         self.custom_cdn_auto_switch_radio.Enable(self.enable_custom_cdn_chk.GetValue())
@@ -758,7 +762,7 @@ class MergeTab(Tab):
             "m4a_to_mp3": Config.Merge.m4a_to_mp3,
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "merge", **kwargs)
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
@@ -916,7 +920,7 @@ class ProxyTab(Tab):
             "auth_password": Config.Proxy.auth_password
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "proxy", **kwargs)
 
     def onChangeProxyModeEVT(self, event):
         def set_enable(enable: bool):
@@ -1129,7 +1133,7 @@ class MiscTab(Tab):
             "enable_debug": Config.Misc.enable_debug
         }
 
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
+        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "misc", **kwargs)
 
         # 重新创建主窗口的菜单
         self.parent.init_menubar()
@@ -1162,7 +1166,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            config_utils.remove_config_file()
+            ConfigMgr.remove_config_file()
 
             shutil.rmtree(Config.User.directory)
 
@@ -1172,7 +1176,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            config_utils.remove_config_file()
+            ConfigMgr.remove_config_file()
 
             self.restart()
 
