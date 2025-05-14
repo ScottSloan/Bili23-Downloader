@@ -6,7 +6,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.config import Config, ConfigMgr
+from utils.config import Config, user_config_group
 from utils.common.enums import StatusCode
 
 class LoginInfo:
@@ -78,25 +78,15 @@ class Login:
         Config.User.login = False
         Config.User.face_url = ""
         Config.User.username = ""
+        Config.User.login_expires = 0
         Config.User.SESSDATA = ""
         Config.User.DedeUserID = ""
         Config.User.DedeUserID__ckMd5 = ""
         Config.User.bili_jct = ""
 
-        kwargs = {
-            "login": Config.User.login,
-            "face_url": Config.User.face_url,
-            "username": Config.User.username,
-            "SESSDATA": Config.User.SESSDATA,
-            "DedeUserID": Config.User.DedeUserID,
-            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
-            "bili_jct": Config.User.bili_jct,
-            "login_expires": 0
-        }
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
-        ConfigMgr.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
-
-        UniversalTool.remove_files([UniversalTool.get_file_path(os.path.dirname(Config.User.user_config_path), "face.jpg")])
+        UniversalTool.remove_files([Config.User.face_path])
 
 class QRLogin(Login):
     def __init__(self):

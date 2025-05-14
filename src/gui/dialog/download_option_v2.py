@@ -3,7 +3,7 @@ from typing import Callable
 
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
-from utils.config import Config, ConfigMgr
+from utils.config import Config, app_config_group
 from utils.tool_v2 import FormatTool
 from utils.common.thread import Thread
 
@@ -450,11 +450,7 @@ class DownloadOptionDialog(Dialog):
     def onCheckAutoPopupEVT(self, event):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
 
-        kwargs = {
-            "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
+        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
 
     def onCheckAutoAddNumberEVT(self, event):
         enable = self.auto_add_number_chk.GetValue()

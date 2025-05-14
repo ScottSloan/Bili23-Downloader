@@ -17,7 +17,7 @@ app_config_group = {
         "subtitle_file_type",
         "subtitle_lan_custom",
         "subtitle_lan_type",
-        "download_cover_file"
+        "download_cover_file",
     ],
     "Download": [
         "path",
@@ -223,7 +223,6 @@ class Config:
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
 
-class ConfigMgr:
     @classmethod
     def load_config(cls):
         def after_load_config():
@@ -293,18 +292,6 @@ class ConfigMgr:
 
         after_load_config()
 
-    @classmethod
-    def update_config_kwargs(cls, file_path: str, section: str, **kwargs):
-        config = cls.read_config_json(file_path)
-
-        if section not in config:
-            config[section] = {}
-
-        for key, value in kwargs.items():
-            config[section][key] = value
-
-        cls.write_config_json(file_path, config)
-
     @staticmethod
     def read_config_group(object, config: Dict[str, dict], config_group: Dict[str, list]):
         for section, name_list in config_group.items():
@@ -341,4 +328,4 @@ class ConfigMgr:
         with open(file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
-ConfigMgr.load_config()
+Config.load_config()

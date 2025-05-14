@@ -12,7 +12,7 @@ from utils.common.map import download_type_map
 
 from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
-from utils.config import Config, ConfigMgr
+from utils.config import Config, app_config_group
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -544,12 +544,8 @@ class DownloadingPage(SimplePage):
 
                         if count > Config.Download.max_download_count:
                             panel.pause_download(set_waiting_status = True)
-        
-        kwargs = {
-            "max_download_count": Config.Download.max_download_count
-        }
-
-        ConfigMgr.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+          
+        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
     
     @property
     def scroller_count(self):

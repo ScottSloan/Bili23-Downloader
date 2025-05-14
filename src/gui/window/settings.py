@@ -19,7 +19,7 @@ from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
-from utils.config import Config, ConfigMgr, app_config_group
+from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
@@ -77,7 +77,7 @@ class SettingWindow(Dialog):
             if not self.note.GetPage(i).onConfirm():
                 return
             
-        ConfigMgr.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
 
         event.Skip()
 
@@ -1034,7 +1034,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            ConfigMgr.remove_config_file(Config.APP.app_config_path)
+            Config.remove_config_file(Config.APP.app_config_path)
 
             shutil.rmtree(Config.User.directory)
 
@@ -1044,7 +1044,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            ConfigMgr.remove_config_file(Config.APP.app_config_path)
+            Config.remove_config_file(Config.APP.app_config_path)
 
             self.restart()
 

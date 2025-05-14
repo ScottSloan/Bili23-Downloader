@@ -5,7 +5,7 @@ from typing import Dict, Callable
 from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
-from utils.config import Config, ConfigMgr
+from utils.config import Config, user_config_group
 from utils.auth.cookie import CookieUtils
 
 from utils.common.thread import Thread
@@ -70,12 +70,12 @@ class LoginWindow(Dialog):
         Thread(target = worker).start()
 
     def Bind_EVT(self):        
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocusEVT)
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocusEVT)
 
-    def onClose(self, event):
+    def onCloseEVT(self, event):
         self.qr_page.onClose()
         self.sms_page.onClose()
 
@@ -97,23 +97,13 @@ class LoginWindow(Dialog):
         Config.User.login = True
         Config.User.face_url = info["face_url"]
         Config.User.username = info["username"]
+        Config.User.login_expires = int((datetime.now() + timedelta(days = 365)).timestamp())
         Config.User.SESSDATA = info["SESSDATA"]
         Config.User.DedeUserID = info["DedeUserID"]
         Config.User.DedeUserID__ckMd5 = info["DedeUserID__ckMd5"]
         Config.User.bili_jct = info["bili_jct"]
 
-        kwargs = {
-            "login": Config.User.login,
-            "face_url": Config.User.face_url,
-            "username": Config.User.username,
-            "login_expires": int((datetime.now() + timedelta(days = 365)).timestamp()),
-            "SESSDATA": Config.User.SESSDATA,
-            "DedeUserID": Config.User.DedeUserID,
-            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
-            "bili_jct": Config.User.bili_jct
-        }
-
-        ConfigMgr.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
         self.Close()
 

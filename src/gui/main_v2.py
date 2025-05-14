@@ -43,7 +43,6 @@ from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
 from gui.dialog.duplicate import DuplicateDialog
 from gui.dialog.graph import GraphWindow
-from gui.dialog.interact_video import InteractVideoDialog
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -260,9 +259,7 @@ class MainWindow(Frame):
                 self.clipboard_timer.Start(1000)
 
         self.download_window = DownloadManagerWindow(self)
-        #inter = InteractVideoDialog(self)
-        #inter.ShowModal()
-
+        
         self.current_parse_url = ""
         self.error_url_list = []
         self.status = ParseStatus.Finish.value
