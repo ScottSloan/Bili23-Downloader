@@ -94,8 +94,6 @@ class CustomCDNDialog(Dialog):
             wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN host", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        Config.Advanced.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]
-
         event.Skip()
     
     def onPingTestEVT(self, event):
@@ -211,3 +209,6 @@ class CustomCDNDialog(Dialog):
     def setItemOrder(self):
         for index in range(self.cdn_list.GetItemCount()):
             self.cdn_list.SetItem(index, 1, str(index + 1))
+
+    def saveCDNList(self):
+        Config.Advanced.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]

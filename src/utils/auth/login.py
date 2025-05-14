@@ -88,6 +88,18 @@ class Login:
 
         UniversalTool.remove_files([Config.User.face_path])
 
+    def login(self, info: dict):
+        Config.User.login = True
+        Config.User.face_url = info["face_url"]
+        Config.User.username = info["username"]
+        Config.User.login_expires = int((datetime.now() + timedelta(days = 365)).timestamp())
+        Config.User.SESSDATA = info["SESSDATA"]
+        Config.User.DedeUserID = info["DedeUserID"]
+        Config.User.DedeUserID__ckMd5 = info["DedeUserID__ckMd5"]
+        Config.User.bili_jct = info["bili_jct"]
+
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+
 class QRLogin(Login):
     def __init__(self):
         Login.__init__(self)

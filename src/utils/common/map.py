@@ -119,65 +119,6 @@ download_status_map = {
     6: "视频合成失败"
 }
 
-cdn_map = [
-    {
-        "cdn": "upos-sz-estgoss.bilivideo.com",
-        "order": 1
-    },
-    {
-        "cdn": "upos-sz-mirror08c.bilivideo.com",
-        "order": 2
-    },
-    {
-        "cdn": "upos-sz-mirrorhw.bilivideo.com",
-        "order": 5
-    },
-    {
-        "cdn": "upos-sz-mirror08h.bilivideo.com",
-        "order": 6
-    },
-    {
-        "cdn": "upos-sz-mirrorcoso1.bilivideo.com",
-        "order": 3
-    },
-    {
-        "cdn": "upos-sz-mirrorcos.bilivideo.com",
-        "order": 7
-    },
-    {
-        "cdn": "upos-sz-mirrorcosb.bilivideo.com",
-        "order": 8
-    },
-    {
-        "cdn": "upos-sz-mirrorali.bilivideo.com",
-        "order": 9
-    },
-    {
-        "cdn": "upos-sz-mirrorali02.bilivideo.com",
-        "order": 4
-    },
-    {
-        "cdn": "upos-sz-mirroralib.bilivideo.com",
-        "order": 10
-    },
-    {
-        "cdn": "upos-sz-mirroraliov.bilivideo.com",
-        "order": 11
-    },
-    {
-        "cdn": "upos-sz-mirrorcosov.bilivideo.com",
-        "order": 12
-    },
-    {
-        "cdn": "upos-hz-mirrorakam.akamaized.net",
-        "order": 13
-    },
-    {
-        "cdn": "upos-sz-mirrorcf1ov.bilivideo.com",
-        "order": 14
-    },
-]
-
 cheese_status_map = {
     1: "全集试看",
     2: "付费",

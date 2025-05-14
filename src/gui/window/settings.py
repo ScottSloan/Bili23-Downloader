@@ -560,7 +560,7 @@ class AdvancedTab(Tab):
         dlg = CustomCDNDialog(self)
 
         if dlg.ShowModal() == wx.ID_OK:
-            pass
+            dlg.saveCDNList()
 
     def onCustomFileNameEVT(self, event):
         dlg = CustomFileNameDialog(self, self.file_name_template, self.datetime_format, self.auto_adjust)

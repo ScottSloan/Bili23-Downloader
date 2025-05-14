@@ -1,12 +1,11 @@
 import re
 
 from utils.config import Config
-from utils.common.map import cdn_map
 
 class CDN:
     def get_cdn_list():
         if Config.Advanced.enable_switch_cdn:
-            return [entry["cdn"] for entry in cdn_map]
+            return Config.Advanced.cdn_list
         else:
             return [None]
         

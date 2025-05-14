@@ -93,18 +93,9 @@ class LoginWindow(Dialog):
 
         event.Skip()
 
-    def onLoginSuccess(self, info: dict):
-        Config.User.login = True
-        Config.User.face_url = info["face_url"]
-        Config.User.username = info["username"]
-        Config.User.login_expires = int((datetime.now() + timedelta(days = 365)).timestamp())
-        Config.User.SESSDATA = info["SESSDATA"]
-        Config.User.DedeUserID = info["DedeUserID"]
-        Config.User.DedeUserID__ckMd5 = info["DedeUserID__ckMd5"]
-        Config.User.bili_jct = info["bili_jct"]
-
-        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
-
+    def onLoginSuccess(self):
+        wx.CallAfter(self.callback)
+        
         self.Close()
 
 class LoginPage(Panel):
@@ -123,10 +114,8 @@ class LoginPage(Panel):
         else:
             return wx.Colour(227, 229, 231)
 
-    def onLoginSuccess(self, info: dict):
-        self.GetParent().onLoginSuccess(info)
-
-        wx.CallAfter(self.GetParent().callback)
+    def onLoginSuccess(self):
+        self.GetParent().onLoginSuccess()
 
 class QRPage(LoginPage):
     def __init__(self, parent):
@@ -185,12 +174,12 @@ class QRPage(LoginPage):
         self.qrcode.Bind(wx.EVT_LEFT_DOWN, self.onRefreshQRCode)
 
     def onTimer(self, event):
-        def success(info: dict):
+        def success():
             self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
             
             time.sleep(1)
 
-            self.onLoginSuccess(info)
+            self.onLoginSuccess()
 
         def outdated():
             self.qrcode.SetBitmap(self.setQRCodeTextTip("二维码已过期"))
@@ -199,7 +188,9 @@ class QRPage(LoginPage):
         match self.login.check_scan()["code"]:
             case 0:
                 info = self.login.get_user_info()
-                success(info)
+                self.login.login(info)
+
+                success()
 
             case 86090:
                 self.scan_tip_lab.SetLabel("请在设备侧确认登录")
@@ -342,12 +333,16 @@ class SMSPage(LoginPage):
 
         self.SetSizerAndFit(page_vbox)
 
+        self.timer = wx.Timer(self, -1)
+
     def Bind_EVT(self):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCode)
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLogin)
 
+        self.Bind(wx.EVT_TIMER, self.onTimerEVT)
+
     def init_utils(self):
-        self.isLogin = False
+        self.count = 60
 
         self.login = SMSLogin()
         self.login.init_session()
@@ -389,28 +384,25 @@ class SMSPage(LoginPage):
             # 发送成功，倒计时一分钟
             self.get_validate_code_btn.Enable(False)
 
-            countdown_thread = Thread(target = self.countdown_thread)
-            countdown_thread.start()
+            self.timer.Start(1000)
 
-    def countdown_thread(self):
-        for i in range(60, 0, -1):
-            if self.isLogin:
-                return
-            
-            wx.CallAfter(self.update_countdown_info, i)
-            time.sleep(1)
+    def onTimerEVT(self, event):
+        def update():
+            self.get_validate_code_btn.SetLabel(f"重新发送({self.count})")
 
-        wx.CallAfter(self.countdown_finished)
+        def reset():
+            self.timer.Stop()
+            self.count = 60
 
-    def countdown_finished(self):
-        # 倒计时结束，恢复按钮
-        self.get_validate_code_btn.SetLabel("重新发送")
-        self.get_validate_code_btn.Enable(True)
+            self.get_validate_code_btn.SetLabel("重新发送")
+            self.get_validate_code_btn.Enable(True)
 
-    def update_countdown_info(self, seconds: int):
-        # 更新倒计时信息
-        self.get_validate_code_btn.SetLabel(f"重新发送({seconds})")
-    
+        self.count -= 1
+        wx.CallAfter(update)
+
+        if self.count == 0:
+            wx.CallAfter(reset)
+
     def onLogin(self, event):
         if not self.phone_number_box.GetValue():
             wx.MessageDialog(self, "登录失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
@@ -447,8 +439,9 @@ class SMSPage(LoginPage):
             wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
             return
 
-        # 登录成功，关闭窗口
-        self.isLogin = True
+        self.timer.Stop()
 
         info = self.login.get_user_info()
-        self.onLoginSuccess(info)
+        self.login.login(info)
+
+        self.onLoginSuccess()

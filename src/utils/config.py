@@ -106,7 +106,7 @@ class Config:
 
         # 断点续传文件最低支持版本号
         task_file_min_version_code: int = 1611
-        config_file_min_version_code: int = 1611
+        config_file_min_version_code: int = 1620
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -211,7 +211,22 @@ class Config:
 
     class Advanced:
         enable_switch_cdn: bool = True
-        cdn_list: list = []
+        cdn_list: list = [
+            "upos-sz-estgoss.bilivideo.com",
+            "upos-sz-mirror08c.bilivideo.com",
+            "upos-sz-mirrorcoso1.bilivideo.com",
+            "upos-sz-mirrorali02.bilivideo.com",
+            "upos-sz-mirrorhw.bilivideo.com",
+            "upos-sz-mirror08h.bilivideo.com",
+            "upos-sz-mirrorcos.bilivideo.com",
+            "upos-sz-mirrorcosb.bilivideo.com",
+            "upos-sz-mirrorali.bilivideo.com",
+            "upos-sz-mirroralib.bilivideo.com",
+            "upos-sz-mirroraliov.bilivideo.com",
+            "upos-sz-mirrorcosov.bilivideo.com",
+            "upos-hz-mirrorakam.akamaized.net",
+            "upos-sz-mirrorcf1ov.bilivideo.com"
+        ]
 
         file_name_template = "{number_with_zero} - {title}"
         datetime_format = "%Y-%m-%d %H-%M-%S"
