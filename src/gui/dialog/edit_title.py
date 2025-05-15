@@ -16,7 +16,7 @@ class EditTitleDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        title_lab = wx.StaticText(self, -1, "请输入新标题")
+        title_lab = wx.StaticText(self, -1, "请输入新标题，新标题将作为 {title} 字段")
 
         self.title_box = TextCtrl(self, -1, self.title, size = self.get_scaled_size((350, 24)), style = wx.TE_PROCESS_ENTER)
 

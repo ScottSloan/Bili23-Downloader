@@ -218,9 +218,12 @@ class TreeListItemInfo:
         self.cid: int = 0
 
 class ParseCallback:
+    # 解析回调类
     def __init__(self):
         self.onError: Callable = None
         self.onRedirect: Callable = None
+        self.onInteract: Callable = None
+        self.onInteractUpdate: Callable = None
 
 class Command:
     def __init__(self):

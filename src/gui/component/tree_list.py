@@ -271,7 +271,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         match VideoType(VideoInfo.type):
             case VideoType.Single:
                 cover_url = VideoInfo.cover
-                duration = entry["duration"]
+                duration = entry.get("duration")
                 aid = VideoInfo.aid
                 cid = VideoInfo.cid
                 bvid = VideoInfo.bvid
@@ -279,27 +279,27 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             case VideoType.Part:
                 cover_url = VideoInfo.cover
-                duration = entry["duration"]
+                duration = entry.get("duration")
                 aid = VideoInfo.aid
-                cid = entry["cid"]
+                cid = entry.get("cid")
                 bvid = VideoInfo.bvid
                 pubtime = VideoInfo.pubtime
 
             case VideoType.Collection:
                 if "arc" in entry:
-                    cover_url = entry["arc"]["pic"]
-                    duration = entry["arc"]["duration"]
-                    aid = entry["aid"]
-                    cid = entry["cid"]
-                    bvid = entry["bvid"]
-                    pubtime = entry["arc"]["pubdate"]
+                    cover_url = entry.get("arc").get("pic")
+                    duration = entry.get("arc").get("duration")
+                    aid = entry.get("aid")
+                    cid = entry.get("cid")
+                    bvid = entry.get("bvid")
+                    pubtime = entry.get("arc").get("pubdate")
                 else:
-                    cover_url = entry["cover_url"]
-                    duration = entry["duration"]
-                    aid = entry["aid"]
-                    cid = entry["cid"]
-                    bvid = entry["bvid"]
-                    pubtime = entry["pubtime"]
+                    cover_url = entry.get("cover_url")
+                    duration = entry.get("duration")
+                    aid = entry.get("aid")
+                    cid = entry.get("cid")
+                    bvid = entry.get("bvid")
+                    pubtime = entry.get("pubtime")
 
         return {
             "cover_url": cover_url,

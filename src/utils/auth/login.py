@@ -6,7 +6,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 from utils.tool_v2 import RequestTool, UniversalTool
-from utils.config import Config, config_utils
+from utils.config import Config, user_config_group
 from utils.common.enums import StatusCode
 
 class LoginInfo:
@@ -78,25 +78,27 @@ class Login:
         Config.User.login = False
         Config.User.face_url = ""
         Config.User.username = ""
+        Config.User.login_expires = 0
         Config.User.SESSDATA = ""
         Config.User.DedeUserID = ""
         Config.User.DedeUserID__ckMd5 = ""
         Config.User.bili_jct = ""
 
-        kwargs = {
-            "login": Config.User.login,
-            "face_url": Config.User.face_url,
-            "username": Config.User.username,
-            "SESSDATA": Config.User.SESSDATA,
-            "DedeUserID": Config.User.DedeUserID,
-            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
-            "bili_jct": Config.User.bili_jct,
-            "login_expires": 0
-        }
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
-        config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
+        UniversalTool.remove_files([Config.User.face_path])
 
-        UniversalTool.remove_files([UniversalTool.get_file_path(os.path.dirname(Config.User.user_config_path), "face.jpg")])
+    def login(self, info: dict):
+        Config.User.login = True
+        Config.User.face_url = info["face_url"]
+        Config.User.username = info["username"]
+        Config.User.login_expires = int((datetime.now() + timedelta(days = 365)).timestamp())
+        Config.User.SESSDATA = info["SESSDATA"]
+        Config.User.DedeUserID = info["DedeUserID"]
+        Config.User.DedeUserID__ckMd5 = info["DedeUserID__ckMd5"]
+        Config.User.bili_jct = info["bili_jct"]
+
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
 class QRLogin(Login):
     def __init__(self):
@@ -133,7 +135,7 @@ class SMSLogin(Login):
         Login.__init__(self)
 
     def get_country_list(self):
-        url = "https://passport.bilibili.com/x/passport-login/web/country"
+        url = "https://passport.bilibili.com/x/passport-login/web/country?web_location=333.1007"
 
         req = self.session.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 

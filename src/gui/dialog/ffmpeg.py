@@ -93,7 +93,7 @@ class DetectDialog(Dialog):
         set_cwd_enable(cwd_path)
         set_env_enable(env_path)
 
-        if Config.FFmpeg.path == env_path:
+        if Config.Merge.ffmpeg_path == env_path:
             self.env_chk.SetValue(True)
         else:
             self.cwd_chk.SetValue(True)

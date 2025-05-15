@@ -5,7 +5,7 @@ from typing import Dict, Callable
 from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
-from utils.config import Config, config_utils
+from utils.config import Config, user_config_group
 from utils.auth.cookie import CookieUtils
 
 from utils.common.thread import Thread
@@ -70,12 +70,12 @@ class LoginWindow(Dialog):
         Thread(target = worker).start()
 
     def Bind_EVT(self):        
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocusEVT)
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocusEVT)
 
-    def onClose(self, event):
+    def onCloseEVT(self, event):
         self.qr_page.onClose()
         self.sms_page.onClose()
 
@@ -93,46 +93,31 @@ class LoginWindow(Dialog):
 
         event.Skip()
 
-    def onLoginSuccess(self, info: dict):
-        Config.User.login = True
-        Config.User.face_url = info["face_url"]
-        Config.User.username = info["username"]
-        Config.User.SESSDATA = info["SESSDATA"]
-        Config.User.DedeUserID = info["DedeUserID"]
-        Config.User.DedeUserID__ckMd5 = info["DedeUserID__ckMd5"]
-        Config.User.bili_jct = info["bili_jct"]
-
-        kwargs = {
-            "login": Config.User.login,
-            "face_url": Config.User.face_url,
-            "username": Config.User.username,
-            "login_expires": int((datetime.now() + timedelta(days = 365)).timestamp()),
-            "SESSDATA": Config.User.SESSDATA,
-            "DedeUserID": Config.User.DedeUserID,
-            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
-            "bili_jct": Config.User.bili_jct
-        }
-
-        config_utils.update_config_kwargs(Config.User.user_config_path, "user", **kwargs)
-
+    def onLoginSuccess(self):
+        wx.CallAfter(self.callback)
+        
         self.Close()
 
 class LoginPage(Panel):
     def __init__(self, parent):
+        self.parent = parent
+
         Panel.__init__(self, parent)
 
     def getLabelColor(self):
-        if not Config.Sys.dark_mode:
+        if Config.Sys.dark_mode:
+            return wx.Colour("white")
+        else:
             return wx.Colour(80, 80, 80)
     
     def getBorderColor(self):
-        if not Config.Sys.dark_mode:
+        if Config.Sys.dark_mode:
+            return wx.Colour("white")
+        else:
             return wx.Colour(227, 229, 231)
 
-    def onLoginSuccess(self, info: dict):
-        self.GetParent().onLoginSuccess(info)
-
-        wx.CallAfter(self.GetParent().callback)
+    def onLoginSuccess(self):
+        self.GetParent().onLoginSuccess()
 
 class QRPage(LoginPage):
     def __init__(self, parent):
@@ -191,12 +176,12 @@ class QRPage(LoginPage):
         self.qrcode.Bind(wx.EVT_LEFT_DOWN, self.onRefreshQRCode)
 
     def onTimer(self, event):
-        def success(info: dict):
+        def success():
             self.qrcode.SetBitmap(self.setQRCodeTextTip("登录成功"))
             
             time.sleep(1)
 
-            self.onLoginSuccess(info)
+            self.onLoginSuccess()
 
         def outdated():
             self.qrcode.SetBitmap(self.setQRCodeTextTip("二维码已过期"))
@@ -205,7 +190,9 @@ class QRPage(LoginPage):
         match self.login.check_scan()["code"]:
             case 0:
                 info = self.login.get_user_info()
-                success(info)
+                self.login.login(info)
+
+                success()
 
             case 86090:
                 self.scan_tip_lab.SetLabel("请在设备侧确认登录")
@@ -348,12 +335,16 @@ class SMSPage(LoginPage):
 
         self.SetSizerAndFit(page_vbox)
 
+        self.timer = wx.Timer(self, -1)
+
     def Bind_EVT(self):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCode)
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLogin)
 
+        self.Bind(wx.EVT_TIMER, self.onTimerEVT)
+
     def init_utils(self):
-        self.isLogin = False
+        self.count = 60
 
         self.login = SMSLogin()
         self.login.init_session()
@@ -395,28 +386,25 @@ class SMSPage(LoginPage):
             # 发送成功，倒计时一分钟
             self.get_validate_code_btn.Enable(False)
 
-            countdown_thread = Thread(target = self.countdown_thread)
-            countdown_thread.start()
+            self.timer.Start(1000)
 
-    def countdown_thread(self):
-        for i in range(60, 0, -1):
-            if self.isLogin:
-                return
-            
-            wx.CallAfter(self.update_countdown_info, i)
-            time.sleep(1)
+    def onTimerEVT(self, event):
+        def update():
+            self.get_validate_code_btn.SetLabel(f"重新发送({self.count})")
 
-        wx.CallAfter(self.countdown_finished)
+        def reset():
+            self.timer.Stop()
+            self.count = 60
 
-    def countdown_finished(self):
-        # 倒计时结束，恢复按钮
-        self.get_validate_code_btn.SetLabel("重新发送")
-        self.get_validate_code_btn.Enable(True)
+            self.get_validate_code_btn.SetLabel("重新发送")
+            self.get_validate_code_btn.Enable(True)
 
-    def update_countdown_info(self, seconds: int):
-        # 更新倒计时信息
-        self.get_validate_code_btn.SetLabel(f"重新发送({seconds})")
-    
+        self.count -= 1
+        wx.CallAfter(update)
+
+        if self.count == 0:
+            wx.CallAfter(reset)
+
     def onLogin(self, event):
         if not self.phone_number_box.GetValue():
             wx.MessageDialog(self, "登录失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
@@ -441,7 +429,7 @@ class SMSPage(LoginPage):
         from gui.dialog.captcha import CaptchaWindow
 
         # 显示极验 captcha 窗口
-        captcha_window = CaptchaWindow(self)
+        captcha_window = CaptchaWindow(self.parent)
         captcha_window.ShowModal()
 
     def check_login_result(self, result: Dict):
@@ -453,8 +441,9 @@ class SMSPage(LoginPage):
             wx.MessageDialog(self, f"登录失败\n\n{result['data']['message']} ({result['data']['status']})", "警告", wx.ICON_WARNING).ShowModal()
             return
 
-        # 登录成功，关闭窗口
-        self.isLogin = True
+        self.timer.Stop()
 
         info = self.login.get_user_info()
-        self.onLoginSuccess(info)
+        self.login.login(info)
+
+        self.onLoginSuccess()

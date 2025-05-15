@@ -3,12 +3,14 @@ from typing import Callable
 
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
-from utils.config import Config, config_utils
+from utils.config import Config, app_config_group
 from utils.tool_v2 import FormatTool
 from utils.common.thread import Thread
 
 from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
+
+from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
 from gui.component.dialog import Dialog
 from gui.component.info_label import InfoLabel
@@ -62,7 +64,7 @@ class DownloadOptionDialog(Dialog):
         self.video_codec_choice = wx.Choice(self, -1)
         self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_codec_warn_icon.Hide()
-        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n这表示视频无此编码，默认将使用 AVC/H.264 替代。\nHDR 视频仅支持 H.265 编码。")
+        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n杜比视界和HDR 视频仅支持 H.265 编码。")
         self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
 
         video_codec_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -120,18 +122,18 @@ class DownloadOptionDialog(Dialog):
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
         self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
-        #self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
-        #self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
+        self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
+        self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
 
-        subtitle_grid_box = wx.FlexGridSizer(1, 4, 0, 0)
+        subtitle_grid_box = wx.FlexGridSizer(2, 4, 0, 0)
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
         subtitle_grid_box.Add(self.subtitle_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         subtitle_grid_box.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
-        #subtitle_grid_box.AddSpacer(self.FromDIP(20))
-        #subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        #subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
-        #subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
+        subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        subtitle_grid_box.Add(self.subtitle_file_lan_type_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
 
@@ -149,7 +151,7 @@ class DownloadOptionDialog(Dialog):
         self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(other_box)
-        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n\n请注意：自定义文件字段需添加 {number} 才会显示")
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名需添加 {number} 或者 {number_with_zero} 字段才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))
@@ -199,6 +201,8 @@ class DownloadOptionDialog(Dialog):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
         self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKBtnEVT)
+
+        self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
         self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
@@ -434,19 +438,19 @@ class DownloadOptionDialog(Dialog):
 
         self.subtitle_file_type_lab.Enable(enable)
         self.subtitle_file_type_choice.Enable(enable)
-        #self.subtitle_file_lan_type_lab.Enable(enable)
-        #self.subtitle_file_lan_type_btn.Enable(enable)
+        self.subtitle_file_lan_type_lab.Enable(enable)
+        self.subtitle_file_lan_type_btn.Enable(enable)
 
         self.onEnableOKBtnEVT(event)
+
+    def onCustomSubtitleLanEVT(self, event):
+        dlg = CustomLanDialog(self)
+        dlg.ShowModal()
 
     def onCheckAutoPopupEVT(self, event):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
 
-        kwargs = {
-            "auto_popup_option_dialog": Config.Basic.auto_popup_option_dialog
-        }
-
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "basic", **kwargs)
+        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
 
     def onCheckAutoAddNumberEVT(self, event):
         enable = self.auto_add_number_chk.GetValue()

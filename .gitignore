@@ -10,7 +10,7 @@ config.ini
 download
 
 # 配置文件
-video.json
+video*.json
 bangumi.json
 live.json
 download*.json
@@ -21,6 +21,8 @@ test_2.py
 bilidanmu.proto
 config.json
 cheese.json
+choices.json
+node.json
 
 # commitizen
 cz.json

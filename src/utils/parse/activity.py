@@ -6,27 +6,24 @@ from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 
+from utils.parse.parser import Parser
+
 class ActivityInfo:
     url: str = ""
 
-class ActivityParser:
+class ActivityParser(Parser):
     def __init__(self, callback: ParseCallback):
+        super().__init__()
+        
         self.callback = callback
 
-    def get_aid(self, initial_state):
-        # 其他类型的视频则提供 aid，取第 1 个即可
-        aid = re.findall(r'"aid":([0-9]+)', initial_state)
-
-        if not aid:
-            raise GlobalException(code = StatusCode.URL.value)
+    def get_aid(self, initial_state: str):
+        aid = self.re_find_str(r'"aid":([0-9]+)', initial_state)
 
         ActivityInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
 
     def get_bvid(self, url: str):
-        bvid = re.findall(r"BV\w+", url)
-
-        if not bvid:
-            raise GlobalException(code = StatusCode.URL.value)
+        bvid = self.re_find_str(r"BV\w+", url)
 
         ActivityInfo.url = f"https://www.bilibili.com/video/{bvid[0]}"
 
@@ -38,23 +35,19 @@ class ActivityParser:
         if "window.__initialState" in req.text:
             initial_state_info = re.findall(r"window.__initialState = (.*?);", req.text)
 
-        if "window.__INITIAL_STATE__" in req.text:
+        elif "window.__INITIAL_STATE__" in req.text:
             initial_state_info = re.findall(r"window.__INITIAL_STATE__=(.*?);", req.text)
 
         return initial_state_info[0]
 
     def get_real_url(self, initial_state):
-        # 获取真实链接
-
         if "https://www.bilibili.com/bangumi/play/ss" in initial_state:
             # 直接查找跳转链接
             jump_url = re.findall(r"https://www.bilibili.com/bangumi/play/ss[0-9]+", initial_state)
 
             ActivityInfo.url = jump_url[0]
 
-            return
-
-        if "videoInfo" in initial_state:
+        elif "videoInfo" in initial_state:
             # 解析网页中的json信息
             info_json = json.loads(initial_state)
 
@@ -63,9 +56,7 @@ class ActivityParser:
 
             ActivityInfo.url = f"https://www.bilibili.com/video/{bvid}"
 
-            return
-
-        if "aid" in initial_state:
+        elif "aid" in initial_state:
             self.get_aid(initial_state)
 
     def parse_url(self, url: str):

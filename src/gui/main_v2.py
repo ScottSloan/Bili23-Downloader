@@ -3,7 +3,7 @@ import wx
 import webbrowser
 import wx.dataview
 
-from utils.config import Config
+from utils.config import Config, app_config_group
 from utils.tool_v2 import UniversalTool, RequestTool
 from utils.auth.login import QRLogin
 from utils.module.ffmpeg import FFmpeg
@@ -11,7 +11,7 @@ from utils.module.ffmpeg import FFmpeg
 from utils.common.thread import Thread
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.update import Update
-from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID, Platform
+from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, VideoQualityID, Platform, ProcessingType, ExitOption
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
@@ -42,6 +42,7 @@ from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
 from gui.dialog.duplicate import DuplicateDialog
+from gui.dialog.graph import GraphWindow
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -50,20 +51,34 @@ from gui.component.tree_list import TreeListCtrl
 from gui.component.button import Button
 from gui.component.bitmap_button import BitmapButton
 from gui.component.info_bar import InfoBar
+from gui.component.taskbar_icon import TaskBarIcon
+from gui.component.flat_button import FlatButton
 
 class MainWindow(Frame):
     def __init__(self, parent):
-        def set_window_size():
+        def set_window_property():
             match Platform(Config.Sys.platform):
                 case Platform.Windows | Platform.macOS:
                     self.SetSize(self.FromDIP((800, 450)))
 
                 case Platform.Linux:
                     self.SetSize(self.FromDIP((900, 550)))
+            
+            self.CenterOnParent()
+
+            if Config.Basic.remember_window_status:
+                if Config.Basic.window_maximized:
+                    self.Maximize()
+                else:
+                    if Config.Basic.window_size:
+                        self.SetSize(Config.Basic.window_size)
+                    
+                    if Config.Basic.window_pos:
+                        self.SetPosition(Config.Basic.window_pos)
 
         Frame.__init__(self, parent, Config.APP.name)
 
-        set_window_size()
+        set_window_property()
 
         self.get_sys_settings()
 
@@ -72,8 +87,6 @@ class MainWindow(Frame):
         self.Bind_EVT()
 
         self.init_utils()
-
-        self.CenterOnParent()
 
     def init_UI(self):
         self.init_id()
@@ -94,20 +107,27 @@ class MainWindow(Frame):
         self.processing_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.LOADING_ICON), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        self.detail_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.INFO_ICON), size = self.FromDIP((24, 24)))
-        self.detail_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.detail_icon.Hide()
+        self.detail_btn = FlatButton(self.panel, "详细信息", IconID.INFO_ICON, split = True)
+        self.detail_btn.setToolTip("查看视频详细信息")
+        self.detail_btn.Hide()
+        self.graph_btn = FlatButton(self.panel, "剧情树", IconID.TREE_STRUCTURE_ICON)
+        self.graph_btn.setToolTip("查看互动视频剧情树")
+        self.graph_btn.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
         self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.LIST_ICON))
+        self.episode_option_btn.SetToolTip("剧集列表显示设置")
         self.episode_option_btn.Enable(False)
         self.download_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.SETTING_ICON))
+        self.download_option_btn.SetToolTip("下载选项")
         self.download_option_btn.Enable(False)
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        info_hbox.Add(self.detail_icon, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.AddSpacer(self.FromDIP(6))
+        info_hbox.Add(self.detail_btn, 0, wx.EXPAND, self.FromDIP(6))
+        info_hbox.Add(self.graph_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.AddStretchSpacer()
         info_hbox.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -144,6 +164,8 @@ class MainWindow(Frame):
         self.init_menubar()
 
         self.clipboard_timer = wx.Timer(self, -1)
+
+        self.taskbar_icon = TaskBarIcon(self)
 
     def init_id(self):
         self.ID_REFRESH_MENU = wx.NewIdRef()
@@ -221,7 +243,8 @@ class MainWindow(Frame):
         self.face_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
         self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
 
-        self.detail_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowDetailInfoDlgEVT)
+        self.detail_btn.onClickCustomEVT = self.onShowDetailInfoDlgEVT
+        self.graph_btn.onClickCustomEVT = self.onShowGraphEVT
 
         self.episode_list.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onShowEpisodeListMenuEVT)
         self.episode_list.Bind(wx.EVT_MENU, self.onEpisodeListMenuEVT)
@@ -230,32 +253,72 @@ class MainWindow(Frame):
 
     def init_utils(self):
         def start_thread():
-            wx.CallAfter(self.check_ffmpeg_available)
+            ffmpeg = FFmpeg()
+            ffmpeg.detect_location()
 
-            Thread(target = self.check_update).start()
+            if Config.Merge.ffmpeg_check_available_when_lauch:
+                Thread(target = self.check_ffmpeg_available).start()
+
+            if Config.Misc.check_update_when_lauch:
+                Thread(target = self.check_update).start()
+
+            Thread(target = self.show_user_info).start()
 
         def init_timer():
             if Config.Basic.listen_clipboard:
                 self.clipboard_timer.Start(1000)
 
         self.download_window = DownloadManagerWindow(self)
-
+        
         self.current_parse_url = ""
-
-        self.show_user_info()
+        self.error_url_list = []
+        self.status = ParseStatus.Finish.value
 
         init_timer()
 
         start_thread()
 
     def onCloseEVT(self, event):
-        if self.download_window.downloading_page.get_scroller_task_count([DownloadStatus.Downloading.value, DownloadStatus.Merging.value]):
-            dlg = wx.MessageDialog(self, "是否退出程序\n\n当前有下载任务正在进行中，是否退出程序？\n\n程序将在下次启动时恢复下载进度。", "警告", style = wx.ICON_WARNING | wx.YES_NO)
+        def save_config():
+            if Config.Basic.remember_window_status:
+                Config.Basic.window_pos = list(self.GetPosition())
+                Config.Basic.window_size = list(self.GetSize())
+                Config.Basic.window_maximized = self.IsMaximized()
 
-            if dlg.ShowModal() == wx.ID_NO:
+                Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+        def show_dialog():
+            dlg = wx.MessageDialog(self, "退出程序\n\n确定要退出程序吗？\n下次将不再显示此对话框。", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+            dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
+
+            flag = dlg.ShowModal()
+
+            match flag:
+                case wx.ID_YES:
+                    Config.Basic.exit_option = ExitOption.TaskIcon.value
+
+                case wx.ID_NO:
+                    Config.Basic.exit_option = ExitOption.Exit.value
+
+            Config.Basic.show_exit_dialog = False
+
+            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+            return flag
+                
+        if Config.Basic.show_exit_dialog:
+            if show_dialog() == wx.ID_CANCEL:
                 return
             
+        if Config.Basic.exit_option == ExitOption.TaskIcon.value:
+            self.Hide()
+            return
+            
         self.clipboard_timer.Stop()
+
+        self.taskbar_icon.Destroy()
+
+        save_config()
         
         event.Skip()
 
@@ -367,18 +430,21 @@ class MainWindow(Frame):
 
     def onGetEVT(self, event):
         url = self.url_box.GetValue()
+        self.current_parse_url = self.url_box.GetValue()
 
         if not url:
+            self.status = ParseStatus.Error
             wx.MessageDialog(self, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING).ShowModal()
+
             return
-        
-        self.current_parse_url = url
-        
+                
+        self.set_parse_status(ParseStatus.Parsing)
+
         self.episode_list.init_list()
         
-        self.set_parse_status(ParseStatus.Parsing.value)
-        
         Thread(target = self.parse_url_thread, args = (url, )).start()
+
+        self.processing_window.ShowModal()
 
     def onOpenDownloadMgrEVT(self, event):
         if not self.download_window.IsShown():
@@ -390,14 +456,14 @@ class MainWindow(Frame):
                 self.download_window.Iconize(False)
         
         if Config.Basic.auto_show_download_window:
-            self.download_window.SetFocus()
             self.download_window.downloading_page_btn.onClickEVT(event)
+            self.download_window.Raise()
 
     def onDownloadEVT(self, event):
         match self.current_parse_type:
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 def callback():
-                    self.processing_window.Hide()
+                    self.processing_window.Close()
                     self.onOpenDownloadMgrEVT(event)
 
                 if not self.episode_list.get_checked_item_count():
@@ -416,10 +482,10 @@ class MainWindow(Frame):
                     if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
                         return
 
-                self.processing_window = ProcessingWindow(self)
-                self.processing_window.Show()
-                
                 Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, callback, )).start()
+
+                self.processing_window = ProcessingWindow(self, ProcessingType.Normal)
+                self.processing_window.ShowModal()
 
             case ParseType.Live:
                 if LiveInfo.status == LiveStatus.Not_Started.value:
@@ -479,7 +545,7 @@ class MainWindow(Frame):
         else:
             self.show_login_window()
 
-    def onShowDetailInfoDlgEVT(self, event):
+    def onShowDetailInfoDlgEVT(self):
         match self.current_parse_type:
             case ParseType.Live:
                 wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
@@ -487,6 +553,9 @@ class MainWindow(Frame):
             case _:
                 DetailDialog(self, self.current_parse_type).ShowModal()
     
+    def onShowGraphEVT(self):
+        GraphWindow(self).Show()
+
     def onShowEpisodeListMenuEVT(self, event):
         menu = wx.Menu()
 
@@ -629,34 +698,33 @@ class MainWindow(Frame):
         self.video_quality_choice.Select(0)
 
     def show_user_info(self):
-        def worker():
-            def show():
-                self.face_icon.Show()
-                self.face_icon.SetBitmap(UniversalTool.get_user_round_face(image).ConvertToBitmap())
-                self.uname_lab.SetLabel(Config.User.username)
+        def show_face():
+            self.face_icon.Show()
+            self.face_icon.SetBitmap(UniversalTool.get_user_round_face(image).ConvertToBitmap())
+            self.uname_lab.SetLabel(Config.User.username)
 
-                self.panel.Layout()
+            self.panel.Layout()
 
-            scaled_size = self.FromDIP((32, 32))
+        def hide_face():
+            self.uname_lab.Hide()
+            self.face_icon.Hide()
 
-            image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
-
-            wx.CallAfter(show)
+            self.panel.Layout()
 
         if Config.Misc.show_user_info:
             if Config.User.login:
-                Thread(target = worker).start()
+                scaled_size = self.FromDIP((32, 32))
+                image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
+
+                wx.CallAfter(show_face)
         else:
-            self.uname_lab.Hide()
-            self.face_icon.Hide()
-        
-        self.panel.Layout()
+            wx.CallAfter(hide_face)
 
     def check_ffmpeg_available(self):
         ffmpeg = FFmpeg()
         ffmpeg.check_available()
 
-        if Config.FFmpeg.check_available and not Config.FFmpeg.available:
+        if Config.Merge.ffmpeg_check_available_when_lauch and not Config.Merge.ffmpeg_available:
             dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合成、裁切和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
             dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
@@ -664,14 +732,13 @@ class MainWindow(Frame):
                 webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
     def check_update(self):
-        if Config.Misc.auto_check_update:
-            Update.get_update_json()
+        Update.get_update_json()
 
-            if Config.Temp.update_json:
-                if Config.Temp.update_json["version_code"] > Config.APP.version_code:
-                    self.show_info_bar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
-            else:
-                self.show_info_bar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
+        if Config.Temp.update_json:
+            if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                self.show_info_bar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
+        else:
+            self.show_info_bar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
 
     def show_login_window(self):
         def callback():
@@ -684,11 +751,16 @@ class MainWindow(Frame):
 
     def parse_url_thread(self, url: str):
         def worker():
-            self.set_parse_status(ParseStatus.Finish.value)
+            self.set_parse_status(ParseStatus.Finish)
+
+            match self.current_parse_type:
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    self.set_video_quality_list()                        
+
+                case ParseType.Live:
+                    self.set_live_quality_list()
 
             self.show_episode_list()
-
-        self.current_parse_type = None
         
         match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
             case "cheese":
@@ -697,15 +769,11 @@ class MainWindow(Frame):
 
                 return_code = self.cheese_parser.parse_url(url)
 
-                wx.CallAfter(self.set_video_quality_list)
-
             case "av" | "BV":
                 self.current_parse_type = ParseType.Video
                 self.video_parser = VideoParser(self.parse_callback)
 
                 return_code = self.video_parser.parse_url(url)
-
-                wx.CallAfter(self.set_video_quality_list)
 
             case "ep" | "ss" | "md":
                 self.current_parse_type = ParseType.Bangumi
@@ -713,15 +781,11 @@ class MainWindow(Frame):
 
                 return_code = self.bangumi_parser.parse_url(url)
 
-                wx.CallAfter(self.set_video_quality_list)
-
             case "live":
                 self.current_parse_type = ParseType.Live
                 self.live_parser = LiveParser(self.parse_callback)
 
                 return_code = self.live_parser.parse_url(url)
-
-                wx.CallAfter(self.set_live_quality_list)
 
             case "b23.tv" | "bili2233.cn":
                 self.b23_parser = B23Parser(self.parse_callback)
@@ -734,10 +798,11 @@ class MainWindow(Frame):
                 return_code = self.activity_parser.parse_url(url)
             
             case _:
+                self.current_parse_type = None
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onErrorCallback)
         
         if return_code == StatusCode.Success.value:
-            wx.CallAfter(worker)
+            self.CallAfter(worker)
     
     def show_episode_list(self):
         self.episode_list.set_list()
@@ -751,7 +816,10 @@ class MainWindow(Frame):
 
         match self.current_parse_type:
             case ParseType.Video:
-                type = "投稿视频"
+                if VideoInfo.is_interactive:
+                    type = "互动视频"
+                else:
+                    type = "投稿视频"
 
             case ParseType.Bangumi:
                 type = BangumiInfo.type_name
@@ -768,20 +836,22 @@ class MainWindow(Frame):
 
     def onErrorCallback(self):
         def worker():
+            self.set_parse_status(ParseStatus.Error)
+
             dlg = wx.MessageDialog(self, f"解析失败\n\n错误码：{GlobalExceptionInfo.info.get('code')}\n描述：{GlobalExceptionInfo.info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
             dlg.SetYesNoLabels("详细信息", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:
                 ErrorInfoDialog(self, GlobalExceptionInfo.info).ShowModal()
 
-        self.set_parse_status(ParseStatus.Error)
+        self.error_url_list.append(self.current_parse_url)
 
-        wx.CallAfter(worker)
+        self.CallAfter(worker)
 
     def onRedirectCallback(self, url: str):
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
-    def set_parse_status(self, status: int):
+    def set_parse_status(self, status: ParseStatus):
         def set_enable_status(enable: bool):
             self.url_box.Enable(enable)
             self.get_btn.Enable(enable)
@@ -803,38 +873,47 @@ class MainWindow(Frame):
                     self.download_option_btn.Enable(False)
                     self.download_btn.SetLabel("直播录制")
 
-        match ParseStatus(status):
-            
+        self.status = status
+
+        match status:
             case ParseStatus.Parsing:
                 self.processing_icon.Show(True)
 
                 self.type_lab.SetLabel("正在解析中")
 
-                self.detail_icon.Hide()
+                self.detail_btn.Hide()
 
                 set_enable_status(False)
                 self.video_quality_choice.Clear()
+
+                self.processing_window = ProcessingWindow(self, ProcessingType.Parse)
             
             case ParseStatus.Finish:
                 self.processing_icon.Hide()
 
                 self.type_lab.SetLabel("")
 
-                self.detail_icon.Show()
+                self.detail_btn.Show()
+
+                self.graph_btn.Show(VideoInfo.is_interactive)
 
                 set_enable_status(True)
                 set_download_btn_label()
+
+                self.processing_window.Close()
 
             case ParseStatus.Error:
                 self.processing_icon.Hide()
 
                 self.type_lab.SetLabel("")
 
-                self.detail_icon.Hide()
+                self.detail_btn.Hide()
 
                 self.url_box.Enable(True)
                 self.get_btn.Enable(True)
                 self.episode_list.Enable(True)
+
+                self.processing_window.Close()
 
         self.panel.Layout()
     
@@ -849,24 +928,43 @@ class MainWindow(Frame):
         def is_valid_url(url: str):
             return re.findall(r"https:\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
 
+        if self.status == ParseStatus.Parsing:
+            return
+
         text = wx.TextDataObject()
 
         if wx.TheClipboard.Open():
             if wx.TheClipboard.GetData(text):
                 url: str = text.GetText()
                 if is_valid_url(url):
-                    if url != self.current_parse_url:
+                    if url != self.current_parse_url and url not in self.error_url_list:
                         self.url_box.SetValue(url)
 
                         wx.CallAfter(self.onGetEVT, event)
 
             wx.TheClipboard.Close()
 
+    def interact_video_detected(self):
+        def worker():
+            self.processing_window.change_type(ProcessingType.Interact)
+
+        wx.CallAfter(worker)
+
+    def CallAfter(self, func):
+        def worker():
+            self.processing_window.Close()
+
+            func()
+
+        wx.CallAfter(worker)
+
     @property
     def parse_callback(self):
         callback = ParseCallback()
         callback.onError = self.onErrorCallback
         callback.onRedirect = self.onRedirectCallback
+        callback.onInteract = self.interact_video_detected
+        callback.onInteractUpdate = self.processing_window.onUpdateNode
 
         return callback
     

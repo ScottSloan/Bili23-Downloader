@@ -4,13 +4,12 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.config import Config
-from utils.common.map import cdn_map
 from utils.common.enums import Platform
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
-class ChangeCDNDialog(Dialog):
+class CustomCDNDialog(Dialog):
     def __init__(self, parent):
         Dialog.__init__(self, parent, "更改 CDN host")
 
@@ -26,12 +25,13 @@ class ChangeCDNDialog(Dialog):
         cdn_lab = wx.StaticText(self, -1, "CDN host 列表")
 
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((670, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
-        self.cdn_list.EnableCheckBoxes(True)
 
         custom_lab = wx.StaticText(self, -1, "自定义")
         self.custom_box = TextCtrl(self, -1, size = self.get_scaled_size((240, 24)))
         self.add_btn = wx.Button(self, -1, "添加", size = self.get_scaled_size((80, 28)))
         self.delete_btn = wx.Button(self, -1, "删除", size = self.get_scaled_size((80, 28)))
+        self.up_btn = wx.Button(self, -1, "↑", size = self.get_scaled_size((28, 28)))
+        self.down_btn = wx.Button(self, -1, "↓", size = self.get_scaled_size((28, 28)))
 
         self.ping_btn = wx.Button(self, -1, "Ping 测试", size = self.get_scaled_size((100, 28)))
 
@@ -40,6 +40,8 @@ class ChangeCDNDialog(Dialog):
         action_hbox.Add(self.custom_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         action_hbox.Add(self.add_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
         action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
+        action_hbox.Add(self.up_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
+        action_hbox.Add(self.down_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT), self.FromDIP(6))
         action_hbox.AddStretchSpacer()
         action_hbox.Add(self.ping_btn, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
 
@@ -63,12 +65,13 @@ class ChangeCDNDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.cdn_list.Bind(wx.EVT_LIST_ITEM_CHECKED, self.onCheckEVT)
-        self.cdn_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivateEVT)
-
         self.ping_btn.Bind(wx.EVT_BUTTON, self.onPingTestEVT)
-        self.add_btn.Bind(wx.EVT_BUTTON, self.onAddCDNEVT)
-        self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteCDNEVT)
+
+        self.add_btn.Bind(wx.EVT_BUTTON, self.onAddEVT)
+        self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteEVT)
+        self.up_btn.Bind(wx.EVT_BUTTON, self.onUpEVT)
+        self.down_btn.Bind(wx.EVT_BUTTON, self.onDownEVT)
+
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
 
     def init_utils(self):
@@ -78,25 +81,19 @@ class ChangeCDNDialog(Dialog):
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 
         def init_cdn_list():
-            for entry in cdn_map:
-                index = self.cdn_list.Append([entry["cdn"], str(entry["order"]), "未检测"])
+            for cdn in Config.Advanced.cdn_list:
+                self.cdn_list.Append([cdn, "", "未检测"])
 
-                if entry["cdn"] == Config.Advanced.custom_cdn:
-                    self.cdn_list.CheckItem(index)
-
-        self._last_index = -1
+            self.setItemOrder()
 
         init_listctrl()
         init_cdn_list()
 
-    def get_cdn(self):
-        return self.cdn_list.GetItemText(self._last_index, 1)
-
     def onConfirm(self, event):
-        if self._last_index == -1 or not self.cdn_list.IsItemChecked(self._last_index):
-            wx.MessageDialog(self, "更改失败\n\n请选择需要更改的 CDN", "警告", wx.ICON_WARNING).ShowModal()
+        if self.cdn_list.GetItemCount() == 0:
+            wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN host", "警告", wx.ICON_WARNING).ShowModal()
             return
-
+        
         event.Skip()
     
     def onPingTestEVT(self, event):
@@ -143,55 +140,75 @@ class ChangeCDNDialog(Dialog):
             item: wx.ListItem = self.cdn_list.GetItem(i, 1)
 
             thread_pool.submit(worker, i, item.GetText())
-    
-    def onCheckEVT(self, event: wx.ListEvent):
-        index = event.GetIndex()
 
-        if self._last_index != -1 and self._last_index != index:
-            self.cdn_list.CheckItem(self._last_index, False)
-
-        self.cdn_list.Select(index)
-
-        self._last_index = index
-
-    def onItemActivateEVT(self, event: wx.ListEvent):
-        index = event.GetIndex()
-
-        self.cdn_list.CheckItem(index)
-
-    def onAddCDNEVT(self, event):
+    def onAddEVT(self, event):
         if not self.custom_box.GetValue():
             wx.MessageDialog(self, "添加失败\n\n请输入要添加的 CDN", "警告", wx.ICON_WARNING).ShowModal()
             self.custom_box.SetFocus()
             return
 
         for i in range(self.cdn_list.GetItemCount()):
-            item: wx.ListItem = self.cdn_list.GetItem(i, 1)
-
-            if item.GetText() == self.custom_box.GetValue():
-                wx.MessageDialog(self, "添加失败\n\n已存在相同的 CDN，无法重复添加", "警告", wx.ICON_WARNING).ShowModal()
+            if self.cdn_list.GetItemText(i, 0) == self.custom_box.GetValue():
+                wx.MessageDialog(self, "添加失败\n\n无法重复添加已存在的项目", "警告", wx.ICON_WARNING).ShowModal()
                 self.custom_box.SetFocus()
                 return
-            
-        self.cdn_list.SetFocus()
-        
-        index = self.cdn_list.Append([self.custom_box.GetValue(), str(self.cdn_list.GetItemCount() + 1), "未检测"])
+                    
+        index = self.cdn_list.Append([self.custom_box.GetValue(), "", "未检测"])
 
-        Config.Advanced.custom_cdn_list.append(self.custom_box.GetValue())
+        self.setItemOrder()
 
-        self.cdn_list.Focus(index)
         self.cdn_list.Select(index)
-    
-    def onDeleteCDNEVT(self, event):
-        if self._last_index == -1 or not self.cdn_list.IsItemChecked(self._last_index):
-            wx.MessageDialog(self, "删除失败\n\n请选择要删除的 CDN", "警告", wx.ICON_WARNING).ShowModal()
-            self.cdn_list.SetFocus()
-            return
+        self.cdn_list.Focus(index)
+
+    def onDeleteEVT(self, event):
+        dlg = wx.MessageDialog(self, "删除项目\n\n确定要删除选定的项目吗？", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+            self.cdn_list.DeleteItem(self.cdn_list.GetFocusedItem())
+
+    def onUpEVT(self, event):
+        current_item = self.cdn_list.GetFocusedItem()
+
+        if current_item > 0:
+            previous_item = current_item - 1
+
+            host = self.cdn_list.GetItemText(previous_item, 0)
+            latency = self.cdn_list.GetItemText(previous_item, 2)
+
+            self.cdn_list.DeleteItem(previous_item)
+            self.cdn_list.InsertItem(current_item, "")
+
+            self.cdn_list.SetItem(current_item, 0, host)
+            self.cdn_list.SetItem(current_item, 2, latency)
+
+            self.setItemOrder()
+
+            self.cdn_list.Select(previous_item)
+            self.cdn_list.Focus(previous_item)
+
+    def onDownEVT(self, event):
+        current_item = self.cdn_list.GetFocusedItem()
         
-        cdn = self.cdn_list.GetItemText(self._last_index, 1)
+        if current_item < self.cdn_list.GetItemCount() - 1:
+            next_item = current_item + 1
 
-        self.cdn_list.DeleteItem(self._last_index)
+            host = self.cdn_list.GetItemText(next_item, 0)
+            latency = self.cdn_list.GetItemText(next_item, 2)
 
-        Config.Advanced.custom_cdn_list.remove(cdn)
+            self.cdn_list.DeleteItem(next_item)
+            self.cdn_list.InsertItem(current_item, "")
 
-        self._last_index = -1
+            self.cdn_list.SetItem(current_item, 0, host)
+            self.cdn_list.SetItem(current_item, 2, latency)
+
+            self.setItemOrder()
+
+            self.cdn_list.Select(next_item)
+            self.cdn_list.Focus(next_item)
+
+    def setItemOrder(self):
+        for index in range(self.cdn_list.GetItemCount()):
+            self.cdn_list.SetItem(index, 1, str(index + 1))
+
+    def saveCDNList(self):
+        Config.Advanced.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]

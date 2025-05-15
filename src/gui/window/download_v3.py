@@ -12,7 +12,7 @@ from utils.common.map import download_type_map
 
 from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
-from utils.config import Config, config_utils
+from utils.config import Config, app_config_group
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -196,8 +196,14 @@ class DownloadManagerWindow(Frame):
         def create_local_file():
             def update_index():
                 if Config.Download.auto_add_number:
-                    entry.number = self.index
-                    entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
+                    match NumberType(Config.Download.number_type):
+                        case NumberType.From_1 | NumberType.Coherent:
+                            entry.number = self.index
+                            entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
+
+                        case NumberType.Episode_List:
+                            entry.number = entry.list_number
+                            entry.number_with_zero = entry.list_number
 
             if Config.Download.number_type == NumberType.From_1.value:
                 self.index = 0
@@ -213,8 +219,8 @@ class DownloadManagerWindow(Frame):
                 # 如果本地文件为空，则写入内容
                 if not download_local_file.get_info("task_info"):
                     if last_cid != entry.cid:
-                        self.index += 1
                         last_cid = entry.cid
+                        self.index += 1
 
                     update_index()
 
@@ -538,12 +544,8 @@ class DownloadingPage(SimplePage):
 
                         if count > Config.Download.max_download_count:
                             panel.pause_download(set_waiting_status = True)
-        
-        kwargs = {
-            "max_download_count": Config.Download.max_download_count
-        }
-
-        config_utils.update_config_kwargs(Config.APP.app_config_path, "download", **kwargs)
+          
+        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
     
     @property
     def scroller_count(self):

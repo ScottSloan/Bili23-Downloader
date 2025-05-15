@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from utils.tool_v2 import RequestTool
-from utils.config import Config, config_utils
+from utils.config import Config, user_config_group
 
 class CookieUtils:
     def __init__(self):
@@ -43,12 +43,7 @@ class CookieUtils:
         if self.check_timestamp_expires(Config.Auth.bili_ticket_expires):
             self.get_bili_ticket()
 
-            kwargs = {
-                "bili_ticket": Config.Auth.bili_ticket,
-                "bili_ticket_expires": Config.Auth.bili_ticket_expires
-            }
-
-            self.update_cookie_params(kwargs)
+            Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
     def check_login_expires(self):
         if self.check_timestamp_expires(Config.User.login_expires) and Config.User.login:
@@ -68,40 +63,23 @@ class CookieUtils:
 
         self.exclimbwuzhi(Config.Auth.uuid)
 
-        kwargs = {
-            "buvid3": Config.Auth.buvid3,
-            "buvid4": Config.Auth.buvid4,
-            "buvid_fp": "20dcd229181e846ea1c7b4fb797068b1",
-            "b_nut": Config.Auth.b_nut,
-            "bili_ticket": Config.Auth.bili_ticket,
-            "bili_ticket_expires": Config.Auth.bili_ticket_expires,
-            "uuid": Config.Auth.uuid,
-        }
+        Config.Auth.buvid_fp = "20dcd229181e846ea1c7b4fb797068b1"
 
-        self.update_cookie_params(kwargs)
-
-    def update_cookie_params(self, kwargs: dict, category: str = "cookie_params"):
-        config_utils.update_config_kwargs(Config.User.user_config_path, category, **kwargs)
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
     def reset_user_params(self):
         Config.User.login = False
-        Config.User.username = Config.User.face_url = Config.User.SESSDATA = Config.User.bili_jct = Config.User.DedeUserID = Config.User.DedeUserID__ckMd5 = ""
+        Config.User.username = ""
+        Config.User.face_url = ""
+        Config.User.SESSDATA = ""
+        Config.User.bili_jct = ""
+        Config.User.DedeUserID = ""
+        Config.User.DedeUserID__ckMd5 = ""
         Config.User.login_expires = 0
 
         Config.Temp.need_login = True
 
-        kwargs = {
-            "login": Config.User.login,
-            "username": Config.User.username,
-            "face_url": Config.User.face_url,
-            "SESSDATA": Config.User.SESSDATA,
-            "bili_jct": Config.User.bili_jct,
-            "DedeUserID": Config.User.DedeUserID,
-            "DedeUserID__ckMd5": Config.User.DedeUserID__ckMd5,
-            "login_expires": Config.User.login_expires
-        }
-
-        self.update_cookie_params(kwargs, category = "user")
+        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
     def params_invalid(self, params: list):
         return any([not bool(i) for i in params])

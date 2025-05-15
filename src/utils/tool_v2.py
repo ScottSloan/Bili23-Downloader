@@ -298,8 +298,10 @@ class FormatTool:
             case ParseType.Video:
                 if "arc" in episode:
                     duration = episode["arc"]["duration"]
-                else:
+                elif "duration" in episode:
                     duration = episode["duration"]
+                else:
+                    return "--:--"
 
             case ParseType.Bangumi:
                 if "duration" in episode:

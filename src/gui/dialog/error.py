@@ -18,8 +18,6 @@ class ErrorInfoDialog(Dialog):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
         self.CenterOnParent()
 
     def init_UI(self):
@@ -69,27 +67,6 @@ class ErrorInfoDialog(Dialog):
 
         self.set_dark_mode()
 
-    def Bind_EVT(self):
-        self.save_btn.Bind(wx.EVT_BUTTON, self.onSaveJsonEVT)
-
-    def onSaveJsonEVT(self, event):
-        dialog = wx.FileDialog(self, "保存错误日志", os.getcwd(), wildcard = "错误日志|*.json", style = wx.FD_SAVE)
-
-        if dialog.ShowModal() == wx.ID_OK:
-            contens = json.dumps(self.get_error_log(), ensure_ascii = False, indent = 4)
-
-            with open(dialog.GetPath(), "w", encoding = "utf-8") as f:
-                f.write(contens)
-    
-    def get_error_log(self):
-        return {
-            "记录时间": UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp")),
-            "异常类型": self.exception_info.get("exception_name"),
-            "错误码": self.exception_info.get("code"),
-            "描述": self.exception_info.get("message"),
-            "详细日志": self.exception_info.get("stack_trace"),
-        }
-    
     def set_dark_mode(self):
         if not Config.Sys.dark_mode:
             self.SetBackgroundColour("white")

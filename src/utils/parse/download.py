@@ -2,17 +2,20 @@ import json
 from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID
+from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID, StatusCode
 from utils.common.exception import GlobalException
 
 from utils.parse.preview import Preview
+from utils.parse.parser import Parser
 
 from utils.auth.wbi import WbiUtils
 from utils.tool_v2 import RequestTool
 from utils.config import Config
 
-class DownloadParser:
+class DownloadParser(Parser):
     def __init__(self, task_info: DownloadTaskInfo, callback: Callable):
+        super().__init__()
+
         self.callback = callback
         self.task_info = task_info
 
@@ -42,6 +45,8 @@ class DownloadParser:
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
+            self.check_json(data)
+
             return check_stream_type(data["data"])
 
         def get_bangumi_json():
@@ -50,6 +55,8 @@ class DownloadParser:
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
+            self.check_json(data)
+
             return check_stream_type(data["result"])
 
         def get_cheese_json():
@@ -57,6 +64,8 @@ class DownloadParser:
 
             req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
+
+            self.check_json(data)
 
             return check_stream_type(data["data"])
 

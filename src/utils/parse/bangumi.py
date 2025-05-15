@@ -1,6 +1,3 @@
-import re
-import json
-
 from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 from utils.config import Config
 
@@ -11,6 +8,7 @@ from utils.common.data_type import ParseCallback
 
 from utils.parse.audio import AudioInfo
 from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.parser import Parser
 
 class BangumiInfo:
     url: str = ""
@@ -48,69 +46,61 @@ class BangumiInfo:
     info_json: dict = {}
     download_json: dict = {}
 
-    @staticmethod
-    def clear_bangumi_info():
-        BangumiInfo.url = ""
-        BangumiInfo.bvid = ""
-        BangumiInfo.title = ""
-        BangumiInfo.cover = ""
-        BangumiInfo.type_name = ""
-        BangumiInfo.views = 0
-        BangumiInfo.danmakus = 0
-        BangumiInfo.followers = 0
-        BangumiInfo.styles = 0
-        BangumiInfo.new_ep = ""
-        BangumiInfo.actors = ""
-        BangumiInfo.evaluate = ""
-        BangumiInfo.epid = 0
-        BangumiInfo.cid = 0
-        BangumiInfo.season_id = 0
-        BangumiInfo.mid = 0
-        BangumiInfo.type_id = 0
-        BangumiInfo.stream_type = 0
-        BangumiInfo.area = ""
-        BangumiInfo.up_name = ""
-        BangumiInfo.up_mid = 0
+    @classmethod
+    def clear_bangumi_info(cls):
+        cls.url = ""
+        cls.bvid = ""
+        cls.title = ""
+        cls.cover = ""
+        cls.type_name = ""
+        cls.views = 0
+        cls.danmakus = 0
+        cls.followers = 0
+        cls.styles = 0
+        cls.new_ep = ""
+        cls.actors = ""
+        cls.evaluate = ""
+        cls.epid = 0
+        cls.cid = 0
+        cls.season_id = 0
+        cls.mid = 0
+        cls.type_id = 0
+        cls.stream_type = 0
+        cls.area = ""
+        cls.up_name = ""
+        cls.up_mid = 0
 
-        BangumiInfo.payment = False
+        cls.payment = False
 
-        BangumiInfo.episodes_list.clear()
-        BangumiInfo.video_quality_id_list.clear()
-        BangumiInfo.video_quality_desc_list.clear()
+        cls.episodes_list.clear()
+        cls.video_quality_id_list.clear()
+        cls.video_quality_desc_list.clear()
 
-        BangumiInfo.info_json.clear()
-        BangumiInfo.download_json.clear()
+        cls.info_json.clear()
+        cls.download_json.clear()
 
-class BangumiParser:
+class BangumiParser(Parser):
     def __init__(self, callback: ParseCallback):
+        super().__init__()
+
         self.callback = callback
     
     def get_epid(self, url: str):
-        epid = re.findall(r"ep([0-9]+)", url)
-
-        if not epid:
-            raise GlobalException(code = StatusCode.URL.value)
+        epid = self.re_find_str(r"ep([0-9]+)", url)
 
         self.url_type, self.url_type_value = "ep_id", epid[0]
 
     def get_season_id(self, url: str):
-        season_id = re.findall(r"ss([0-9]+)", url)
-
-        if not season_id:
-            raise GlobalException(code = StatusCode.URL.value)
+        season_id = self.re_find_str(r"ss([0-9]+)", url)
 
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
     def get_mid(self, url: str):
-        mid = re.findall(r"md([0-9]*)", url)
-        
-        if not mid:
-            raise GlobalException(code = StatusCode.URL.value)
+        mid = self.re_find_str(r"md([0-9]*)", str)
 
-        req = RequestTool.request_get(f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}", headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
+        url = f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}"
 
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
         self.url_type, self.url_type_value = "season_id", BangumiInfo.season_id
@@ -119,10 +109,7 @@ class BangumiParser:
         # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
-
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
         info_result = BangumiInfo.info_json = resp["result"]
 
@@ -149,8 +136,10 @@ class BangumiParser:
         BangumiInfo.evaluate = info_result["evaluate"]
 
         BangumiInfo.area = info_result["areas"][0]["name"]
-        BangumiInfo.up_name = info_result["up_info"]["uname"]
-        BangumiInfo.up_mid = info_result["up_info"]["mid"]
+
+        if "up_info" in info_result:
+            BangumiInfo.up_name = info_result["up_info"]["uname"]
+            BangumiInfo.up_mid = info_result["up_info"]["mid"]
 
         self.parse_episodes()
 
@@ -159,10 +148,7 @@ class BangumiParser:
     def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
-
-        self.check_json(resp)
+        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         BangumiInfo.download_json = info = resp["result"]
 
@@ -188,13 +174,9 @@ class BangumiParser:
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = "https://www.bilibili.com", sessdata = Config.User.SESSDATA))
-        resp = json.loads(req.text)
-
-        self.check_json(resp)
+        self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
     def get_bangumi_type(self):
-        # 识别番组类型
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
 
     def parse_url(self, url: str):
@@ -227,13 +209,11 @@ class BangumiParser:
             raise GlobalException(callback = self.callback.onError) from e
     
     def check_json(self, data: dict):
-        # 检查接口返回状态码
         status_code = data["code"]
         message = data["message"]
 
         if status_code != StatusCode.Success.value:
             if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
-                # 如果提示大会员专享限制就不用抛出异常，因为和地区限制共用一个状态码 -10403
                 return
             
             raise GlobalException(message = message, code = status_code)

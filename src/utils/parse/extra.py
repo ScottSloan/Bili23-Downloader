@@ -13,9 +13,11 @@ from utils.common.data_type import DownloadTaskInfo, ExtraCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
 
-class ExtraParser:
+from utils.parse.parser import Parser
+
+class ExtraParser(Parser):
     def __init__(self):
-        pass
+        super().__init__()
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
@@ -89,6 +91,20 @@ class ExtraParser:
 
             return json.loads(req.text)
 
+        def convert_subtitle_file(subtitle_json: dict, lan: str):
+            match SubtitleType(self.subtitle_file_type):
+                case SubtitleType.SRT:
+                    self.convert_subtitle_to_srt(subtitle_json, lan)
+
+                case SubtitleType.TXT:
+                    self.convert_subtitle_to_txt(subtitle_json, lan)
+
+                case SubtitleType.LRC:
+                    self.convert_subtitle_to_lrc(subtitle_json, lan)
+
+                case SubtitleType.JSON:
+                    self.convert_subtitle_to_json(subtitle_json, lan)
+
         params = {
             "bvid": self.task_info.bvid,
             "cid": self.task_info.cid
@@ -103,23 +119,15 @@ class ExtraParser:
 
         for entry in subtitle_list:
             lan = entry["lan"]
-            # lan_doc = entry["lan_doc"]
+
+            if Config.Basic.subtitle_lan_custom:
+                if lan not in Config.Basic.subtitle_lan_type:
+                    continue
+                
+            #lan_doc = entry["lan_doc"]
             subtitle_url = "https:" + entry["subtitle_url"]
 
-            subtitle_json = get_subtitle_json(subtitle_url)
-
-            match SubtitleType(self.subtitle_file_type):
-                case SubtitleType.SRT:
-                    self.convert_subtitle_to_srt(subtitle_json, lan)
-
-                case SubtitleType.TXT:
-                    self.convert_subtitle_to_txt(subtitle_json, lan)
-
-                case SubtitleType.LRC:
-                    self.convert_subtitle_to_lrc(subtitle_json, lan)
-
-                case SubtitleType.JSON:
-                    self.convert_subtitle_to_json(subtitle_json, lan)
+            convert_subtitle_file(get_subtitle_json(subtitle_url), lan)
 
     def convert_subtitle_to_srt(self, subtitle_json: dict, lan: str):
         def format_timestamp(_from: float, _to: float):
