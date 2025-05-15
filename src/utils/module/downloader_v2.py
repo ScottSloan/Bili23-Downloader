@@ -230,7 +230,7 @@ class Downloader:
             file_name = entry["file_name"]
             cache = self.cache.get(entry["file_name"])
 
-            if cache["md5"]:
+            if cache and cache["md5"]:
                 if MD5Verify.verify_md5(cache["md5"], self.get_file_path(file_name)):
                     # md5 校验通过，移除当前项的下载信息
                     remove_current_entry()
