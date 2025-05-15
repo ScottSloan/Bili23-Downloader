@@ -64,7 +64,7 @@ class DownloadOptionDialog(Dialog):
         self.video_codec_choice = wx.Choice(self, -1)
         self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_codec_warn_icon.Hide()
-        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n这表示视频无此编码，默认将使用 AVC/H.264 替代。\nHDR 视频仅支持 H.265 编码。")
+        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n杜比视界和HDR 视频仅支持 H.265 编码。")
         self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
 
         video_codec_info_hbox = wx.BoxSizer(wx.HORIZONTAL)

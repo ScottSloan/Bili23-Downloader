@@ -40,7 +40,7 @@ class FileNameManager:
         return {
             "datetime": datetime.now().strftime(Config.Advanced.datetime_format),
             "timestamp": str(int(datetime.now().timestamp())),
-            "pubdatetime": datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.datetime_format),
+            "pubdatetime": self.get_pubdatetime(),
             "pubtimestamp": self.task_info.pubtime,
             "number": self.task_info.number,
             "number_with_zero": self.task_info.number_with_zero,
@@ -77,3 +77,7 @@ class FileNameManager:
             end = len(string)
 
         return string[start:end]
+    
+    def get_pubdatetime(self):
+        if self.task_info.pubtime:
+            return datetime.fromtimestamp(self.task_info.pubtime).strftime(Config.Advanced.datetime_format)

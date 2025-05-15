@@ -282,7 +282,7 @@ class DownloadTab(Tab):
         codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
         self.codec_choice = wx.Choice(download_box, -1, choices = list(video_codec_preference_map.keys()))
         self.codec_tip = ToolTip(download_box)
-        self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认使用 AVC/H.264 编码\n\nHDR 视频仅支持 HEVC/H.265 编码")
+        self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认使用 AVC/H.264 编码\n\n杜比视界和HDR 视频仅支持 HEVC/H.265 编码")
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))

@@ -100,6 +100,8 @@ class LoginWindow(Dialog):
 
 class LoginPage(Panel):
     def __init__(self, parent):
+        self.parent = parent
+
         Panel.__init__(self, parent)
 
     def getLabelColor(self):
@@ -427,7 +429,7 @@ class SMSPage(LoginPage):
         from gui.dialog.captcha import CaptchaWindow
 
         # 显示极验 captcha 窗口
-        captcha_window = CaptchaWindow(self)
+        captcha_window = CaptchaWindow(self.parent)
         captcha_window.ShowModal()
 
     def check_login_result(self, result: Dict):

@@ -135,7 +135,7 @@ class SMSLogin(Login):
         Login.__init__(self)
 
     def get_country_list(self):
-        url = "https://passport.bilibili.com/x/passport-login/web/country"
+        url = "https://passport.bilibili.com/x/passport-login/web/country?web_location=333.1007"
 
         req = self.session.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
 
