@@ -109,30 +109,34 @@ class OverrideOption(Enum):
     Rename = 1               # 重命名
 
 class Platform(Enum):
-    Windows = "windows"
-    Linux = "linux"
-    macOS = "darwin"
+    Windows = "windows"      # Windows
+    Linux = "linux"          # Linux
+    macOS = "darwin"         # macOS
 
 class ParseStatus(Enum):
-    Finish = 0
-    Parsing = 1
-    Error = 2
+    Finish = 0               # 解析完成
+    Parsing = 1              # 解析中
+    Error = 2                # 解析失败
 
 class LiveQualityID(Enum):
-    _Auto = 40000
-    _Dolby_Vision = 30000
-    _4K = 20000
-    _1080P = 10000
-    _blue_ray = 400
-    _hd = 150
-    _sd = 80
+    _Auto = 40000            # 自动
+    _Dolby_Vision = 30000    # 杜比视界
+    _4K = 20000              # 4K
+    _1080P = 10000           # 1080P
+    _blue_ray = 400          # 蓝光
+    _hd = 150                # HD
+    _sd = 80                 # SD
 
 class NumberType(Enum):
-    From_1 = 0
-    Coherent = 1
-    Episode_List = 2
+    From_1 = 0               # 从 1 开始
+    Coherent = 1             # 连续序号
+    Episode_List = 2         # 剧集列表序号
 
 class ProcessingType(Enum):
-    Normal = 1
-    Parse = 2
-    Interact = 3
+    Normal = 1               # 正常
+    Parse = 2                # 解析
+    Interact = 3             # 解析互动视频
+
+class ExitOption(Enum):
+    TaskIcon = 0             # 托盘图标
+    Exit = 1                 # 直接退出

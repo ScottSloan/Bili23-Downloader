@@ -11,6 +11,7 @@ app_config_group = {
         "exit_option",
         "auto_popup_option_dialog",
         "auto_show_download_window",
+        "remember_window_status",
         "download_danmaku_file",
         "danmaku_file_type",
         "download_subtitle_file",
@@ -18,6 +19,10 @@ app_config_group = {
         "subtitle_lan_custom",
         "subtitle_lan_type",
         "download_cover_file",
+        "window_pos",
+        "window_size",
+        "window_maximized",
+        "show_exit_dialog"
     ],
     "Download": [
         "path",
@@ -115,6 +120,7 @@ class Config:
         exit_option: int = 0
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
+        remember_window_status: bool = False
 
         download_danmaku_file: bool = False
         danmaku_file_type: int = 0
@@ -123,6 +129,12 @@ class Config:
         subtitle_lan_custom: bool = False
         subtitle_lan_type: list = []
         download_cover_file: bool = False
+
+        window_pos: list = []
+        window_size: list = []
+        window_maximized: bool = False
+
+        show_exit_dialog: bool = True
 
     class Proxy:
         proxy_mode: int = 1

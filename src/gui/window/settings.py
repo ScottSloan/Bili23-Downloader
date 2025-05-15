@@ -117,12 +117,14 @@ class BasicTab(Tab):
 
         self.auto_popup_option_chk = wx.CheckBox(basic_box, 0, "下载前自动弹出下载选项对话框")
         self.auto_show_download_window_chk = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
+        self.remember_window_status_chk = wx.CheckBox(basic_box, 0, "记住窗口的大小和位置")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(exit_option_hbox, 0, wx.EXPAND)
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_sbox.Add(self.remember_window_status_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
 
@@ -178,6 +180,7 @@ class BasicTab(Tab):
         self.exit_option_chk.SetSelection(Config.Basic.exit_option)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
+        self.remember_window_status_chk.SetValue(Config.Basic.remember_window_status)
 
         self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
         self.danmaku_format_choice.SetSelection(Config.Basic.danmaku_file_type)
@@ -193,6 +196,7 @@ class BasicTab(Tab):
         Config.Basic.exit_option = self.exit_option_chk.GetSelection()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
+        Config.Basic.remember_window_status = self.remember_window_status_chk.GetValue()
 
         Config.Basic.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
         Config.Basic.danmaku_file_type = self.danmaku_format_choice.GetSelection()

@@ -47,7 +47,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
                 self.switch_window(self.frame.download_window)
 
             case self.ID_EXIT_MENU:
-                self.frame.Close()
+                wx.Exit()
     
     def switch_window(self, frame: wx.Frame):
         if frame.IsIconized():

@@ -3,7 +3,7 @@ import wx
 import webbrowser
 import wx.dataview
 
-from utils.config import Config
+from utils.config import Config, app_config_group
 from utils.tool_v2 import UniversalTool, RequestTool
 from utils.auth.login import QRLogin
 from utils.module.ffmpeg import FFmpeg
@@ -11,7 +11,7 @@ from utils.module.ffmpeg import FFmpeg
 from utils.common.thread import Thread
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.update import Update
-from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, DownloadStatus, VideoQualityID, Platform, ProcessingType
+from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, VideoQualityID, Platform, ProcessingType, ExitOption
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
@@ -56,17 +56,29 @@ from gui.component.flat_button import FlatButton
 
 class MainWindow(Frame):
     def __init__(self, parent):
-        def set_window_size():
+        def set_window_property():
             match Platform(Config.Sys.platform):
                 case Platform.Windows | Platform.macOS:
                     self.SetSize(self.FromDIP((800, 450)))
 
                 case Platform.Linux:
                     self.SetSize(self.FromDIP((900, 550)))
+            
+            self.CenterOnParent()
+
+            if Config.Basic.remember_window_status:
+                if Config.Basic.window_maximized:
+                    self.Maximize()
+                else:
+                    if Config.Basic.window_size:
+                        self.SetSize(Config.Basic.window_size)
+                    
+                    if Config.Basic.window_pos:
+                        self.SetPosition(Config.Basic.window_pos)
 
         Frame.__init__(self, parent, Config.APP.name)
 
-        set_window_size()
+        set_window_property()
 
         self.get_sys_settings()
 
@@ -75,8 +87,6 @@ class MainWindow(Frame):
         self.Bind_EVT()
 
         self.init_utils()
-
-        self.CenterOnParent()
 
     def init_UI(self):
         self.init_id()
@@ -269,21 +279,46 @@ class MainWindow(Frame):
         start_thread()
 
     def onCloseEVT(self, event):
-        dlg = wx.MessageDialog(self, "退出程序\n\n确定要退出程序吗？\n下次将不再显示此对话框。", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+        def save_config():
+            if Config.Basic.remember_window_status:
+                Config.Basic.window_pos = list(self.GetPosition())
+                Config.Basic.window_size = list(self.GetSize())
+                Config.Basic.window_maximized = self.IsMaximized()
+
+                Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+        def show_dialog():
+            dlg = wx.MessageDialog(self, "退出程序\n\n确定要退出程序吗？\n下次将不再显示此对话框。", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+            dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
+
+            flag = dlg.ShowModal()
+
+            match flag:
+                case wx.ID_YES:
+                    Config.Basic.exit_option = ExitOption.TaskIcon.value
+
+                case wx.ID_NO:
+                    Config.Basic.exit_option = ExitOption.Exit.value
+
+            Config.Basic.show_exit_dialog = False
+
+            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+            return flag
+                
+        if Config.Basic.show_exit_dialog:
+            if show_dialog() == wx.ID_CANCEL:
+                return
             
-        dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
-
-        match dlg.ShowModal():
-            case wx.ID_YES:
-                self.Hide()
-                return
-
-            case wx.ID_CANCEL:
-                return
+        if Config.Basic.exit_option == ExitOption.TaskIcon.value:
+            self.Hide()
+            return
             
         self.clipboard_timer.Stop()
 
         self.taskbar_icon.Destroy()
+
+        save_config()
         
         event.Skip()
 
