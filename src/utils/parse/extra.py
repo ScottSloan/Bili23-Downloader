@@ -11,7 +11,7 @@ from utils.common.file_name import FileNameManager
 from utils.common.enums import DanmakuType, SubtitleType
 from utils.common.data_type import DownloadTaskInfo, ExtraCallback
 from utils.common.exception import GlobalException
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, SubtitleLanOption
 
 from utils.parse.parser import Parser
 
@@ -120,11 +120,15 @@ class ExtraParser(Parser):
         for entry in subtitle_list:
             lan = entry["lan"]
 
-            if Config.Basic.subtitle_lan_custom:
-                if lan not in Config.Basic.subtitle_lan_type:
-                    continue
+            match SubtitleLanOption(Config.Basic.subtitle_lan_option):
+                case SubtitleLanOption.All_Subtitles:
+                    if lan in ["ai-zh", "ai-en"]:
+                        continue
+
+                case SubtitleLanOption.Custom:
+                    if lan not in Config.Basic.subtitle_lan_custom_type:
+                        continue
                 
-            #lan_doc = entry["lan_doc"]
             subtitle_url = "https:" + entry["subtitle_url"]
 
             convert_subtitle_file(get_subtitle_json(subtitle_url), lan)

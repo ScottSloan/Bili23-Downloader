@@ -16,7 +16,7 @@ from gui.component.tooltip import ToolTip
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.custom_cdn import CustomCDNDialog
-from gui.dialog.file_name import CustomFileNameDialog
+from gui.dialog.custom_file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
 from utils.config import Config, app_config_group
@@ -204,6 +204,8 @@ class BasicTab(Tab):
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
 
+        Config.Basic.show_exit_dialog = False
+
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()
         
@@ -222,8 +224,7 @@ class BasicTab(Tab):
         dlg = CustomLanDialog(self)
 
         if dlg.ShowModal() == wx.ID_OK:
-            Config.Basic.subtitle_lan_custom = dlg.custom_radio.GetValue()
-            Config.Basic.subtitle_lan_type = dlg.get_selected_lan_list()
+            dlg.set_option()
 
 class DownloadTab(Tab):
     def __init__(self, parent):

@@ -140,3 +140,8 @@ class ProcessingType(Enum):
 class ExitOption(Enum):
     TaskIcon = 0             # 托盘图标
     Exit = 1                 # 直接退出
+
+class SubtitleLanOption(Enum):
+    All_Subtitles_With_AI = 0
+    All_Subtitles = 1
+    Custom = 2

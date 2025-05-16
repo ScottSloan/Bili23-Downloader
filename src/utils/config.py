@@ -16,8 +16,8 @@ app_config_group = {
         "danmaku_file_type",
         "download_subtitle_file",
         "subtitle_file_type",
-        "subtitle_lan_custom",
-        "subtitle_lan_type",
+        "subtitle_lan_option",
+        "subtitle_lan_custom_type",
         "download_cover_file",
         "window_pos",
         "window_size",
@@ -106,8 +106,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.62.0"
-        version_code: int = 1620
+        version: str = "1.63.0"
+        version_code: int = 1630
 
         # 断点续传文件最低支持版本号
         task_file_min_version_code: int = 1611
@@ -126,8 +126,8 @@ class Config:
         danmaku_file_type: int = 0
         download_subtitle_file: bool = False
         subtitle_file_type: int = 0
-        subtitle_lan_custom: bool = False
-        subtitle_lan_type: list = []
+        subtitle_lan_option: int = 0
+        subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
 
         window_pos: list = []
