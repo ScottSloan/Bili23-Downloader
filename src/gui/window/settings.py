@@ -18,6 +18,7 @@ from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.custom_file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
+from gui.dialog.download_sort import DownloadSortDialog
 
 from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
@@ -480,9 +481,11 @@ class AdvancedTab(Tab):
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
         self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
+        self.download_sort_btn = wx.Button(advanced_download_box, -1, "下载分类设置", size = self.get_scaled_size((110, 28)))
 
         button_hbox = wx.BoxSizer(wx.HORIZONTAL)
         button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, self.FromDIP(6))
+        button_hbox.Add(self.download_sort_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
@@ -525,6 +528,7 @@ class AdvancedTab(Tab):
         self.custom_cdn_btn.Bind(wx.EVT_BUTTON, self.onCustomCDNEVT)
 
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
+        self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
 
@@ -575,6 +579,10 @@ class AdvancedTab(Tab):
             self.datetime_format = dlg.datetime_format_box.GetValue()
             self.auto_adjust = dlg.auto_adjust_chk.GetValue()
     
+    def onDownloadSortEVT(self, event):
+        dlg = DownloadSortDialog(self)
+        dlg.ShowModal()
+
     def onChangeRetryEVT(self, event):
         self.download_error_retry_lab.Enable(self.download_error_retry_chk.GetValue())
         self.download_error_retry_box.Enable(self.download_error_retry_chk.GetValue())
