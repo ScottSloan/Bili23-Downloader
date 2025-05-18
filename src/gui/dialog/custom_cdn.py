@@ -1,10 +1,9 @@
-import re
 import wx
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
 
 from utils.config import Config
-from utils.common.enums import Platform
+from utils.common.thread import ThreadPoolExecutor
+
+from utils.module.ping import Ping
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -99,45 +98,18 @@ class CustomCDNDialog(Dialog):
     def onPingTestEVT(self, event):
         def worker(index: int, cdn: str):
             def update(value):
-                self.cdn_list.SetItem(index, 3, value)
+                self.cdn_list.SetItem(index, 2, value)
             
-            def get_ping_cmd() -> str:
-                match Platform(Config.Sys.platform):
-                    case Platform.Windows:
-                        return f"ping {cdn}"
-                    
-                    case Platform.Linux | Platform.macOS:
-                        return f"ping {cdn} -c 4"
-
-            def get_latency():
-                match Platform(Config.Sys.platform):
-                    case Platform.Windows:
-                        return re.findall(r"Average = ([0-9]*)", process.stdout)
-                    
-                    case Platform.Linux | Platform.macOS:
-                        _temp = re.findall(r"time=([0-9]*)", process.stdout)
-
-                        if _temp:
-                            return [int(sum(list(map(int, _temp))) / len(_temp))]
-                        else:
-                            return None
-                    
             wx.CallAfter(update, "正在检测...")
 
-            process = subprocess.run(get_ping_cmd(), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
-            latency = get_latency()
-
-            if latency:
-                result = f"{latency[0]}ms"
-            else:
-                result = "请求超时"
+            result = Ping.run(cdn)
 
             wx.CallAfter(update, result)
 
         thread_pool = ThreadPoolExecutor(max_workers = 5)
 
         for i in range(self.cdn_list.GetItemCount()):
-            item: wx.ListItem = self.cdn_list.GetItem(i, 1)
+            item: wx.ListItem = self.cdn_list.GetItem(i, 0)
 
             thread_pool.submit(worker, i, item.GetText())
 
