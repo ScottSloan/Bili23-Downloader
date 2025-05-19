@@ -195,6 +195,8 @@ class CustomFileNameDialog(Dialog):
 
         init_field_list_content()
 
+        self.template_box.SetValue(Config.Temp.file_name_template)
+
     def show_preview_file_name(self):
         if self.check_legal(self.template_box.GetValue()):
             raise NameError("template")

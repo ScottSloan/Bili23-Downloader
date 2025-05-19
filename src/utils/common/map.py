@@ -176,6 +176,13 @@ exit_option_map = {
     "直接退出": 1
 }
 
+keep_files_map = {
+    "不保留原始文件": 0,
+    "保留视频和音频文件": 1,
+    "只保留视频文件": 2,
+    "只保留音频文件": 3
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

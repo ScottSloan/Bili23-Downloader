@@ -1,7 +1,7 @@
 import wx
 from typing import Callable
 
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, keep_files_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
 from utils.config import Config, app_config_group
 from utils.tool_v2 import FormatTool
@@ -100,11 +100,19 @@ class DownloadOptionDialog(Dialog):
         media_grid_box.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         media_grid_box.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
+        self.keep_files_lab = wx.StaticText(media_box, -1, "合成完成后")
+        self.keep_files_choice = wx.Choice(media_box, -1, choices = list(keep_files_map.keys()))
+
+        keep_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        keep_files_hbox.Add(self.keep_files_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_files_hbox.Add(self.keep_files_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
         media_sbox.Add(media_grid_box, 0, wx.EXPAND)
+        media_sbox.Add(keep_files_hbox, 0, wx.EXPAND)
 
         left_vbox = wx.BoxSizer(wx.VERTICAL)
-        left_vbox.Add(self.stream_type_lab, 0, wx.ALL, 10)
+        left_vbox.Add(self.stream_type_lab, 0, wx.ALL, self.FromDIP(6))
         left_vbox.Add(flex_grid_box, 0, wx.EXPAND)
         left_vbox.AddStretchSpacer()
         left_vbox.Add(media_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -181,8 +189,8 @@ class DownloadOptionDialog(Dialog):
         self.path_box = wx.TextCtrl(path_box, -1)
         self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
-        self.custom_file_name_btn = wx.Button(path_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 24)))
-        self.download_sort_btn = wx.Button(path_box, -1, "下载分类设置", size = self.get_scaled_size((100, 24)))
+        self.custom_file_name_btn = wx.Button(path_box, -1, "文件名...", size = self.get_scaled_size((60, 24)))
+        self.download_sort_btn = wx.Button(path_box, -1, "分类...", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -274,7 +282,7 @@ class DownloadOptionDialog(Dialog):
             else:
                 self.audio_quality_choice.Select(1)
 
-        def set_stream_download_option():            
+        def set_stream_download_option():
             match DownloadOption(Config.Download.stream_download_option):
                 case DownloadOption.NONE:
                     self.download_none_radio.SetValue(True)
@@ -309,6 +317,7 @@ class DownloadOptionDialog(Dialog):
         self.number_type_choice.SetSelection(Config.Download.number_type)
 
         self.path_box.SetValue(Config.Download.path)
+        self.keep_files_choice.SetSelection(Config.Merge.keep_files_option)
 
         Config.Temp.file_name_template = Config.Advanced.file_name_template
         Config.Temp.datetime_format = Config.Advanced.datetime_format
@@ -391,7 +400,9 @@ class DownloadOptionDialog(Dialog):
 
                 def disable_download_audio_option(label: str):
                     self.audio_quality_choice.Enable(False)
-                    self.download_both_radio.SetValue(True)
+
+                    if Config.Download.stream_download_option in [DownloadOption.OnlyAudio.value, DownloadOption.OnlyVideo]:
+                        self.download_both_radio.SetValue(True)
 
                     self.download_video_radio.Enable(False)
                     self.download_audio_radio.Enable(False)
@@ -441,21 +452,29 @@ class DownloadOptionDialog(Dialog):
             self.audio_quality_choice.Enable(enable)
             self.audio_quality_info_lab.Enable(enable)
 
+        def set_keep_files_enable(enable: bool):
+            self.keep_files_lab.Enable(enable)
+            self.keep_files_choice.Enable(enable)
+
         if self.download_none_radio.GetValue():
             set_video_quality_enable(False)
             set_audio_quality_enable(False)
+            set_keep_files_enable(False)
         
         if self.download_video_radio.GetValue():
             set_video_quality_enable(True)
             set_audio_quality_enable(False)
+            set_keep_files_enable(False)
 
         if self.download_audio_radio.GetValue():
             set_video_quality_enable(False)
             set_audio_quality_enable(True)
+            set_keep_files_enable(False)
         
         if self.download_both_radio.GetValue():
             set_video_quality_enable(True)
             set_audio_quality_enable(True)
+            set_keep_files_enable(True)
 
         self.onEnableOKBtnEVT(event)
 
@@ -518,13 +537,13 @@ class DownloadOptionDialog(Dialog):
             if self.download_none_radio.GetValue():
                 Config.Download.stream_download_option = DownloadOption.NONE.value
 
-            if self.download_video_radio.GetValue():
+            elif self.download_video_radio.GetValue():
                 Config.Download.stream_download_option = DownloadOption.OnlyVideo.value
 
-            if self.download_audio_radio.GetValue():
+            elif self.download_audio_radio.GetValue():
                 Config.Download.stream_download_option = DownloadOption.OnlyAudio.value
 
-            if self.download_both_radio.GetValue():
+            elif self.download_both_radio.GetValue():
                 Config.Download.stream_download_option = DownloadOption.VideoAndAudio.value
 
         AudioInfo.audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetStringSelection())
@@ -542,6 +561,7 @@ class DownloadOptionDialog(Dialog):
         Config.Download.number_type = self.number_type_choice.GetSelection()
 
         Config.Download.path = self.path_box.GetValue()
+        Config.Merge.keep_files_option = self.keep_files_choice.GetSelection()
 
         Config.Advanced.file_name_template = Config.Temp.file_name_template
         Config.Advanced.datetime_format = Config.Temp.datetime_format

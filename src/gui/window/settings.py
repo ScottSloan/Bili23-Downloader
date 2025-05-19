@@ -23,7 +23,7 @@ from gui.dialog.download_sort import DownloadSortDialog
 from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, keep_files_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, Platform
 
 from utils.module.notification import NotificationManager
@@ -252,7 +252,7 @@ class DownloadTab(Tab):
         self.browse_btn = wx.Button(download_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         
         self.max_thread_lab = wx.StaticText(download_box, -1, "多线程数：1")
@@ -633,16 +633,24 @@ class MergeTab(Tab):
 
         merge_option_box = wx.StaticBox(self, -1, "合成选项")
 
+        keep_files_lab = wx.StaticText(merge_option_box, -1, "合成完成后")
+        self.keep_files_choice = wx.Choice(merge_option_box, -1, choices = list(keep_files_map.keys()))
+
+        keep_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        keep_files_hbox.Add(keep_files_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_files_hbox.Add(self.keep_files_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
         override_lab = wx.StaticText(merge_option_box, -1, "存在同名文件时")
         self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
 
         override_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        override_hbox.Add(override_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, "仅下载音频时将 m4a 音频转换为 mp3 格式")
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box, wx.VERTICAL)
+        merge_option_sbox.Add(keep_files_hbox, 0, wx.EXPAND)
         merge_option_sbox.Add(override_hbox, 0, wx.EXPAND)
         merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
@@ -663,12 +671,14 @@ class MergeTab(Tab):
         self.path_box.SetValue(Config.Merge.ffmpeg_path)
         self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_lauch)
         
-        self.override_option_choice.SetSelection(get_mapping_index_by_value(override_option_map, Config.Merge.override_option))
+        self.keep_files_choice.SetSelection(Config.Merge.keep_files_option)
+        self.override_option_choice.SetSelection(Config.Merge.override_option)
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
         Config.Merge.ffmpeg_path = self.path_box.GetValue()
         Config.Merge.ffmpeg_check_available_when_lauch = self.check_ffmpeg_chk.GetValue()
+        Config.Merge.keep_files_option = self.keep_files_choice.GetSelection()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
 

@@ -101,7 +101,6 @@ class DownloadOption(Enum):
     OnlyVideo = 1            # 仅下载视频
     OnlyAudio = 2            # 仅下载音频
     VideoAndAudio = 3        # 下载音频和视频
-    FLV = 4                  # FLV
     NONE = 5                 # 不下载
 
 class OverrideOption(Enum):

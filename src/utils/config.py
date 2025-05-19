@@ -56,6 +56,7 @@ app_config_group = {
     "Merge": [
         "ffmpeg_path",
         "ffmpeg_check_available_when_lauch",
+        "keep_files_option",
         "override_option",
         "m4a_to_mp3"
     ],
@@ -204,6 +205,7 @@ class Config:
         ffmpeg_available: bool = False
         ffmpeg_check_available_when_lauch: bool = True
 
+        keep_files_option: int = 0
         override_option: int = 1
         m4a_to_mp3: bool = True
 
