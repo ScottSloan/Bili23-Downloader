@@ -80,7 +80,7 @@ class CustomCDNDialog(Dialog):
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 
         def init_cdn_list():
-            for cdn in Config.Advanced.cdn_list:
+            for cdn in Config.Temp.cdn_list:
                 self.cdn_list.Append([cdn, "", "未检测"])
 
             self.setItemOrder()
@@ -93,6 +93,8 @@ class CustomCDNDialog(Dialog):
             wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN host", "警告", wx.ICON_WARNING).ShowModal()
             return
         
+        Config.Temp.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]
+
         event.Skip()
     
     def onPingTestEVT(self, event):
@@ -181,6 +183,3 @@ class CustomCDNDialog(Dialog):
     def setItemOrder(self):
         for index in range(self.cdn_list.GetItemCount()):
             self.cdn_list.SetItem(index, 1, str(index + 1))
-
-    def saveCDNList(self):
-        Config.Advanced.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]

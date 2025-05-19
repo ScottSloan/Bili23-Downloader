@@ -174,6 +174,23 @@ class DownloadOptionDialog(Dialog):
         hbox.Add(left_vbox, 0, wx.EXPAND)
         hbox.Add(right_vbox, 0, wx.EXPAND)
 
+        path_box = wx.StaticBox(self, -1, "下载目录&&高级选项")
+
+        self.path_box = wx.TextCtrl(path_box, -1)
+        self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+
+        self.custom_file_name_btn = wx.Button(path_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 24)))
+        self.download_sort_btn = wx.Button(path_box, -1, "下载分类设置", size = self.get_scaled_size((100, 24)))
+
+        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        path_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        path_hbox.Add(self.download_sort_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+        path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
+        path_sbox.Add(path_hbox, 0, wx.EXPAND)
+
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
@@ -184,6 +201,7 @@ class DownloadOptionDialog(Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.Add(path_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -206,6 +224,8 @@ class DownloadOptionDialog(Dialog):
 
         self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
+
+        self.path_box.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -283,6 +303,8 @@ class DownloadOptionDialog(Dialog):
         self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
         self.number_type_choice.SetSelection(Config.Download.number_type)
+
+        self.path_box.SetValue(Config.Download.path)
     
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
@@ -463,6 +485,14 @@ class DownloadOptionDialog(Dialog):
         
         self.ok_btn.Enable(enable)
 
+    def onBrowsePathEVT(self, event):
+        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = self.path_box.GetValue())
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.path_box.SetValue(dlg.GetPath())
+
+        dlg.Destroy()
+
     def onConfirmEVT(self, event):
         def set_stream_download_option():
             if self.download_none_radio.GetValue():
@@ -490,6 +520,8 @@ class DownloadOptionDialog(Dialog):
 
         Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()
+
+        Config.Download.path = self.path_box.GetValue()
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 

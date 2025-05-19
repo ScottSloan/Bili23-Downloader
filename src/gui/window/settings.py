@@ -252,7 +252,7 @@ class DownloadTab(Tab):
         self.browse_btn = wx.Button(download_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP), self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         
         self.max_thread_lab = wx.StaticText(download_box, -1, "多线程数：1")
@@ -418,11 +418,10 @@ class DownloadTab(Tab):
         return True
     
     def onBrowsePathEVT(self, event):
-        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = Config.Download.path)
+        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = self.path_box.GetValue())
 
         if dlg.ShowModal() == wx.ID_OK:
-            save_path = dlg.GetPath()
-            self.path_box.SetValue(save_path)
+            self.path_box.SetValue(dlg.GetPath())
 
         dlg.Destroy()
 
@@ -534,10 +533,11 @@ class AdvancedTab(Tab):
 
     def init_data(self):
         self.enable_switch_cdn_chk.SetValue(Config.Advanced.enable_switch_cdn)
+        Config.Temp.cdn_list = Config.Advanced.cdn_list
 
-        self.file_name_template = Config.Advanced.file_name_template
-        self.datetime_format = Config.Advanced.datetime_format
-        self.auto_adjust = Config.Advanced.auto_adjust_field
+        Config.Temp.file_name_template = Config.Advanced.file_name_template
+        Config.Temp.datetime_format = Config.Advanced.datetime_format
+        Config.Temp.auto_adjust_field = Config.Advanced.auto_adjust_field
 
         self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
@@ -551,10 +551,11 @@ class AdvancedTab(Tab):
 
     def save(self):
         Config.Advanced.enable_switch_cdn = self.enable_switch_cdn_chk.GetValue()
+        Config.Advanced.cdn_list = Config.Temp.cdn_list
 
-        Config.Advanced.file_name_template = self.file_name_template
-        Config.Advanced.datetime_format = self.datetime_format
-        Config.Advanced.auto_adjust_field = self.auto_adjust
+        Config.Advanced.file_name_template = Config.Temp.file_name_template
+        Config.Advanced.datetime_format = Config.Temp.datetime_format
+        Config.Advanced.auto_adjust_field = Config.Temp.auto_adjust_field
 
         Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
@@ -567,17 +568,11 @@ class AdvancedTab(Tab):
 
     def onCustomCDNEVT(self, event):
         dlg = CustomCDNDialog(self)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            dlg.saveCDNList()
+        dlg.ShowModal()
 
     def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self, self.file_name_template, self.datetime_format, self.auto_adjust)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            self.file_name_template = dlg.template_box.GetValue()
-            self.datetime_format = dlg.datetime_format_box.GetValue()
-            self.auto_adjust = dlg.auto_adjust_chk.GetValue()
+        dlg = CustomFileNameDialog(self)
+        dlg.ShowModal()
     
     def onDownloadSortEVT(self, event):
         dlg = DownloadSortDialog(self)

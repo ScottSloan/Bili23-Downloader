@@ -205,10 +205,15 @@ class Config:
 
     class Temp:
         update_json: dict = None
-
         changelog: str = None
 
         need_login: bool = False
+
+        cdn_list: list = []
+
+        file_name_template: str = ""
+        datetime_format: str = ""
+        auto_adjust_field: bool = False
 
     class Auth:
         img_key: str = ""

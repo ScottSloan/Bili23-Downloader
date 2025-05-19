@@ -4,16 +4,13 @@ from datetime import datetime
 
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.file_name import FileNameManager
+from utils.config import Config
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class CustomFileNameDialog(Dialog):
-    def __init__(self, parent, template: str, datetime_format: str, auto_adjust: bool):
-        self.template = template
-        self.datetime_format = datetime_format
-        self.auto_adjust = auto_adjust
-
+    def __init__(self, parent):
         Dialog.__init__(self, parent, "自定义下载文件名")
 
         self.init_UI()
@@ -26,7 +23,7 @@ class CustomFileNameDialog(Dialog):
 
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板")
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((600, 24)))
+        self.template_box = TextCtrl(self, -1, Config.Temp.file_name_template, size = self.FromDIP((600, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
         template_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -49,10 +46,10 @@ class CustomFileNameDialog(Dialog):
         fields_vbox.Add(self.fields_list, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
 
         datetime_format_lab = wx.StaticText(self, -1, "日期和时间格式")
-        self.datetime_format_box = TextCtrl(self, -1, self.datetime_format, size = self.FromDIP((200, 24)))
+        self.datetime_format_box = TextCtrl(self, -1, Config.Temp.datetime_format, size = self.FromDIP((200, 24)))
 
         self.auto_adjust_chk = wx.CheckBox(self, -1, "自动调整空字段前后的显示效果")
-        self.auto_adjust_chk.SetValue(self.auto_adjust)
+        self.auto_adjust_chk.SetValue(Config.Temp.auto_adjust_field)
 
         datetime_hbox = wx.BoxSizer(wx.HORIZONTAL)
         datetime_hbox.Add(datetime_format_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -83,6 +80,8 @@ class CustomFileNameDialog(Dialog):
 
         self.fields_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
         self.auto_adjust_chk.Bind(wx.EVT_CHECKBOX, self.onAutoAdjustEVT)
+
+        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
     def init_utils(self):
         def init_fields_list_column():
@@ -196,8 +195,6 @@ class CustomFileNameDialog(Dialog):
 
         init_field_list_content()
 
-        self.template_box.SetValue(self.template)
-
     def show_preview_file_name(self):
         if self.check_legal(self.template_box.GetValue()):
             raise NameError("template")
@@ -264,6 +261,13 @@ class CustomFileNameDialog(Dialog):
 
     def onAutoAdjustEVT(self, event):
         self.onTemplateTextEVT(event)
+
+    def onConfirmEVT(self, event):
+        Config.Temp.file_name_template = self.template_box.GetValue()
+        Config.Temp.datetime_format = self.datetime_format_box.GetValue()
+        Config.Temp.auto_adjust_field = self.auto_adjust_chk.GetValue()
+
+        event.Skip()
 
     def check_legal(self, file_name):
         forbidden_chars = r'[<>:"/\\|?*\x00-\x1F]'
