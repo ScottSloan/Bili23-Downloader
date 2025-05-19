@@ -43,6 +43,10 @@ app_config_group = {
         "file_name_template",
         "datetime_format",
         "auto_adjust_field",
+        "enable_download_sort",
+        "sort_by_up",
+        "sort_by_collection",
+        "sort_by_series",
         "retry_when_download_error",
         "download_error_retry_count",
         "retry_when_download_suspend",
@@ -215,6 +219,11 @@ class Config:
         datetime_format: str = ""
         auto_adjust_field: bool = False
 
+        enable_download_sort: bool = False
+        sort_by_up: bool = False
+        sort_by_collection: bool = False
+        sort_by_series: bool = False
+
     class Auth:
         img_key: str = ""
         sub_key: str = ""
@@ -247,9 +256,14 @@ class Config:
             "upos-sz-mirrorcf1ov.bilivideo.com"
         ]
 
-        file_name_template = "{number_with_zero} - {title}"
-        datetime_format = "%Y-%m-%d %H-%M-%S"
-        auto_adjust_field = True
+        file_name_template: str = "{number_with_zero} - {title}"
+        datetime_format: str = "%Y-%m-%d %H-%M-%S"
+        auto_adjust_field: bool = True
+
+        enable_download_sort: bool = False
+        sort_by_up: bool = False
+        sort_by_collection: bool = False
+        sort_by_series: bool = False
 
         retry_when_download_error: bool = True
         download_error_retry_count: int = 3

@@ -11,6 +11,8 @@ from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
 
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
+from gui.dialog.custom_file_name import CustomFileNameDialog
+from gui.dialog.download_sort import DownloadSortDialog
 
 from gui.component.dialog import Dialog
 from gui.component.info_label import InfoLabel
@@ -225,7 +227,9 @@ class DownloadOptionDialog(Dialog):
         self.auto_popup_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoPopupEVT)
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
 
-        self.path_box.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
+        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
+        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
+        self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -305,6 +309,14 @@ class DownloadOptionDialog(Dialog):
         self.number_type_choice.SetSelection(Config.Download.number_type)
 
         self.path_box.SetValue(Config.Download.path)
+
+        Config.Temp.file_name_template = Config.Advanced.file_name_template
+        Config.Temp.datetime_format = Config.Advanced.datetime_format
+        Config.Temp.auto_adjust_field = Config.Advanced.auto_adjust_field
+        Config.Temp.enable_download_sort = Config.Advanced.enable_download_sort
+        Config.Temp.sort_by_up = Config.Advanced.sort_by_up
+        Config.Temp.sort_by_collection = Config.Advanced.sort_by_collection
+        Config.Temp.sort_by_series = Config.Advanced.sort_by_series
     
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
@@ -493,6 +505,14 @@ class DownloadOptionDialog(Dialog):
 
         dlg.Destroy()
 
+    def onCustomFileNameEVT(self, event):
+        dlg = CustomFileNameDialog(self)
+        dlg.ShowModal()
+    
+    def onDownloadSortEVT(self, event):
+        dlg = DownloadSortDialog(self)
+        dlg.ShowModal()
+
     def onConfirmEVT(self, event):
         def set_stream_download_option():
             if self.download_none_radio.GetValue():
@@ -522,6 +542,14 @@ class DownloadOptionDialog(Dialog):
         Config.Download.number_type = self.number_type_choice.GetSelection()
 
         Config.Download.path = self.path_box.GetValue()
+
+        Config.Advanced.file_name_template = Config.Temp.file_name_template
+        Config.Advanced.datetime_format = Config.Temp.datetime_format
+        Config.Advanced.auto_adjust_field = Config.Temp.auto_adjust_field
+        Config.Advanced.enable_download_sort = Config.Temp.enable_download_sort
+        Config.Advanced.sort_by_up = Config.Temp.sort_by_up
+        Config.Advanced.sort_by_collection = Config.Temp.sort_by_collection
+        Config.Advanced.sort_by_series = Config.Temp.sort_by_series
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 

@@ -538,6 +538,10 @@ class AdvancedTab(Tab):
         Config.Temp.file_name_template = Config.Advanced.file_name_template
         Config.Temp.datetime_format = Config.Advanced.datetime_format
         Config.Temp.auto_adjust_field = Config.Advanced.auto_adjust_field
+        Config.Temp.enable_download_sort = Config.Advanced.enable_download_sort
+        Config.Temp.sort_by_up = Config.Advanced.sort_by_up
+        Config.Temp.sort_by_collection = Config.Advanced.sort_by_collection
+        Config.Temp.sort_by_series = Config.Advanced.sort_by_series
 
         self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
@@ -556,6 +560,10 @@ class AdvancedTab(Tab):
         Config.Advanced.file_name_template = Config.Temp.file_name_template
         Config.Advanced.datetime_format = Config.Temp.datetime_format
         Config.Advanced.auto_adjust_field = Config.Temp.auto_adjust_field
+        Config.Advanced.enable_download_sort = Config.Temp.enable_download_sort
+        Config.Advanced.sort_by_up = Config.Temp.sort_by_up
+        Config.Advanced.sort_by_collection = Config.Temp.sort_by_collection
+        Config.Advanced.sort_by_series = Config.Temp.sort_by_series
 
         Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()

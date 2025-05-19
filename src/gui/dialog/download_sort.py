@@ -1,5 +1,7 @@
 import wx
 
+from utils.config import Config
+
 from gui.component.dialog import Dialog
 
 class DownloadSortDialog(Dialog):
@@ -46,8 +48,15 @@ class DownloadSortDialog(Dialog):
 
     def Bind_EVT(self):
         self.enable_download_sort_chk.Bind(wx.EVT_CHECKBOX, self.onEnableSortEVT)
+
+        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
     
     def init_utils(self):
+        self.enable_download_sort_chk.SetValue(Config.Temp.enable_download_sort)
+        self.sort_by_up_chk.SetValue(Config.Temp.sort_by_up)
+        self.sort_by_collection_chk.SetValue(Config.Temp.sort_by_collection)
+        self.sort_by_series_chk.SetValue(Config.Temp.sort_by_series)
+
         self.onEnableSortEVT(0)
 
     def onEnableSortEVT(self, event):
@@ -56,3 +65,11 @@ class DownloadSortDialog(Dialog):
         self.sort_by_up_chk.Enable(enable)
         self.sort_by_collection_chk.Enable(enable)
         self.sort_by_series_chk.Enable(enable)
+
+    def onConfirmEVT(self, event):
+        Config.Temp.enable_download_sort = self.enable_download_sort_chk.GetValue()
+        Config.Temp.sort_by_up = self.sort_by_up_chk.GetValue()
+        Config.Temp.sort_by_collection = self.sort_by_collection_chk.GetValue()
+        Config.Temp.sort_by_series = self.sort_by_series_chk.GetValue()
+
+        event.Skip()
