@@ -165,7 +165,7 @@ class SMSLogin(Login):
 
         return data
 
-    def login(self, tel: int, code: int, cid: int):
+    def sms_login(self, tel: int, code: int, cid: int):
         url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
 
         form = {

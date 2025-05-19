@@ -149,7 +149,9 @@ class Config:
         directory: str = ""
         download_file_directory: str = ""
         user_config_path: str = ""
+
         face_path: str = ""
+        face_type: str = ""
 
         login: bool = False
         username: str = ""
@@ -265,9 +267,18 @@ class Config:
 
                         cls.save_config_group(Config, entry["config_group"], entry["path"])
 
+            def get_user_face():
+                _, file_ext = os.path.splitext(Config.User.face_url)
+
+                Config.User.face_type = file_ext[1:]
+                
+                Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
+
             create_folder([Config.Download.path, Config.User.directory, Config.User.download_file_directory])
 
             create_config([{"path": Config.APP.app_config_path, "config": app_config, "config_group": app_config_group}, {"path": Config.User.user_config_path, "config": user_config, "config_group": user_config_group}])
+
+            get_user_face()
 
         def check_config():
             def check_config_version(config: Dict[str, dict], file_path: str):
@@ -302,9 +313,6 @@ class Config:
                     Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
 
             Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
-
-            Config.User.face_path = os.path.join(Config.User.directory, "face.jpg")
-
             Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         
         get_path()

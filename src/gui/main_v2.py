@@ -714,7 +714,7 @@ class MainWindow(Frame):
         if Config.Misc.show_user_info:
             if Config.User.login:
                 scaled_size = self.FromDIP((32, 32))
-                image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_JPEG).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
+                image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_ANY).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
 
                 wx.CallAfter(show_face)
         else:

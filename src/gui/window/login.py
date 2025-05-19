@@ -418,7 +418,7 @@ class SMSPage(LoginPage):
         code = int(self.validate_code_box.GetValue())
         cid = self.country_id_list[self.country_id_choice.GetSelection()]
 
-        result = self.login.login(tel, code, cid)
+        result = self.login.sms_login(tel, code, cid)
 
         self.check_login_result(result)
 

@@ -60,7 +60,7 @@ class CaptchaWindow(Dialog):
             LoginInfo.seccode = data["data"]["seccode"]
 
             # 验证通过，关闭窗口
-            self.webview.Close()
+            self.webview.browser.Close()
             
             self.Close()
             self.Destroy()
