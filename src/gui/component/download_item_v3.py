@@ -11,6 +11,7 @@ from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.file_name import FileNameManager
+from utils.common.download_path import DownloadPathManager
 
 from utils.module.ffmpeg import FFmpeg
 from utils.module.downloader_v2 import Downloader
@@ -377,7 +378,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.set_download_status(DownloadStatus.Downloading.value)
 
-        self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
+        self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback(), self.download_path)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -543,6 +544,7 @@ class DownloadTaskItemPanel(Panel):
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载链接...")
+                    self.speed_lab.reset_color()
 
                 case DownloadStatus.Pause:
                     self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
@@ -615,9 +617,15 @@ class DownloadTaskItemPanel(Panel):
         self.file_tool.update_task_info_kwargs(**kwargs)
     
     @property
-    def full_file_name(self):
+    def out_file_name(self):
         file_name_mgr = FileNameManager(self.task_info)
 
-        file_name = file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
+        return file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
 
-        return file_name_mgr.check_file_name_legnth(f"{file_name}{self.task_info.suffix}.{self.task_info.output_type}")
+    @property
+    def full_file_name(self):
+        return FileNameManager.check_file_name_legnth(f"{self.out_file_name}{self.task_info.suffix}.{self.task_info.output_type}")
+    
+    @property
+    def download_path(self):
+        return DownloadPathManager.get_download_path(self.task_info)

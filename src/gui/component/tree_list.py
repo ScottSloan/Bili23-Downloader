@@ -226,6 +226,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.id = random.randint(10000000, 99999999)
         download_info.list_number = base_info.get("list_number")
         download_info.title = base_info.get("title")
+        download_info.series = base_info.get("series")
         download_info.cover_url = base_info.get("cover_url")
         download_info.referer_url = base_info.get("referer_url")
         download_info.bvid = base_info.get("bvid")
@@ -342,6 +343,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "pubtime": pubtime,
             "referer_url": BangumiInfo.url,
             "title": title,
+            "series": BangumiInfo.title,
             "download_type": ParseType.Bangumi.value,
             "area": BangumiInfo.area,
             "up_info": {

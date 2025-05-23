@@ -31,6 +31,8 @@ class DownloadTaskInfo:
 
         # 视频标题
         self.title: str = None
+        # 剧集名称
+        self.series: str = None
 
         # 视频时长
         self.duration: int = None
@@ -95,6 +97,7 @@ class DownloadTaskInfo:
             "aid": self.aid,
             "ep_id": self.ep_id,
             "title": self.title,
+            "series": self.series,
             "duration": self.duration,
             "progress": self.progress,
             "total_file_size": self.total_file_size,
@@ -134,6 +137,7 @@ class DownloadTaskInfo:
         self.aid = data.get("aid")
         self.ep_id = data.get("ep_id")
         self.title = data.get("title")
+        self.series = data.get("series")
         self.duration = data.get("duration")
         self.progress = data.get("progress")
         self.total_file_size = data.get("total_file_size")

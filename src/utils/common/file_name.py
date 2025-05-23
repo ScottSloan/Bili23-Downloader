@@ -18,11 +18,14 @@ class FileNameManager:
 
         return template.format(**fields_dict)
     
-    def check_file_name_legnth(self, file_name: str):
+    @staticmethod
+    def check_file_name_legnth(file_name: str, reserve: bool = True):
         filename, ext = os.path.splitext(os.path.basename(file_name))
 
-        if len(file_name) > 255:
-            filename = filename[:255 - len(ext)]
+        length = 255 if reserve else 248
+
+        if len(file_name) > length:
+            filename = filename[:length - len(ext)]
         
         return filename + ext
 

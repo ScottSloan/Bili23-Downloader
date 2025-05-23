@@ -26,7 +26,7 @@ class ErrorInfoDialog(Dialog):
         time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp"))))
         error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.get("exception_name")))
         error_id_lab = wx.StaticText(self, -1, "错误码：{}".format(self.exception_info.get("code")))
-        message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")))
+        message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")), style = wx.ST_ELLIPSIZE_END)
 
         box_sizer = wx.FlexGridSizer(2, 2, 0, 75)
         box_sizer.Add(time_lab, 0, wx.ALL, self.FromDIP(6))

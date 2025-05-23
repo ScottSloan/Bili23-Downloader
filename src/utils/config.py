@@ -115,7 +115,7 @@ class Config:
         version_code: int = 1630
 
         # 断点续传文件最低支持版本号
-        task_file_min_version_code: int = 1611
+        task_file_min_version_code: int = 1630
         config_file_min_version_code: int = 1620
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")

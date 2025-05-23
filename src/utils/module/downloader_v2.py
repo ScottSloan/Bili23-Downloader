@@ -14,10 +14,11 @@ from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool, UniversalTo
 from utils.config import Config
 
 class Downloader:
-    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
+    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback, download_path: str):
         self.task_info = task_info
         self.file_tool = file_tool
         self.callback = callback
+        self.download_path = download_path
 
         self.init_utils()
 
@@ -310,4 +311,4 @@ class Downloader:
             self.callback.onErrorCallback()
 
     def get_file_path(self, file_name: str):
-        return UniversalTool.get_file_path(Config.Download.path, file_name)
+        return UniversalTool.get_file_path(self.download_path, file_name)
