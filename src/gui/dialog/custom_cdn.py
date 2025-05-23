@@ -10,7 +10,7 @@ from gui.component.dialog import Dialog
 
 class CustomCDNDialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "更改 CDN host")
+        Dialog.__init__(self, parent, "自定义 CDN host")
 
         self.init_UI()
 

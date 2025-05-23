@@ -51,7 +51,8 @@ app_config_group = {
         "download_error_retry_count",
         "retry_when_download_suspend",
         "download_suspend_retry_interval",
-        "always_use_https_protocol"
+        "always_use_https_protocol",
+        "check_md5"
     ],
     "Merge": [
         "ffmpeg_path",
@@ -272,6 +273,7 @@ class Config:
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
+        check_md5: bool = True
 
     @classmethod
     def load_config(cls):

@@ -1,7 +1,6 @@
 import re
 import wx
 import webbrowser
-import wx.dataview
 
 from utils.config import Config, app_config_group
 from utils.tool_v2 import UniversalTool, RequestTool
@@ -706,7 +705,7 @@ class MainWindow(Frame):
             self.panel.Layout()
 
         def hide_face():
-            self.uname_lab.Hide()
+            self.uname_lab.SetLabel("未登录")
             self.face_icon.Hide()
 
             self.panel.Layout()
@@ -717,6 +716,8 @@ class MainWindow(Frame):
                 image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_ANY).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
 
                 wx.CallAfter(show_face)
+            else:
+                wx.CallAfter(hide_face)
         else:
             wx.CallAfter(hide_face)
 

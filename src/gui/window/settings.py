@@ -506,7 +506,11 @@ class AdvancedTab(Tab):
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
         download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        self.check_md5_chk = wx.CheckBox(advanced_download_box, -1, "下载完成后进行 MD5 校验")
+
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
+
+        self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 UA", size = self.get_scaled_size((100, 28)))
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
         advanced_download_sbox.Add(button_hbox, 0, wx.EXPAND)
@@ -514,7 +518,9 @@ class AdvancedTab(Tab):
         advanced_download_sbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL, self.FromDIP(6))
+        advanced_download_sbox.Add(self.check_md5_chk, 0, wx.ALL, self.FromDIP(6))
+        advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        advanced_download_sbox.Add(self.custom_ua_btn, 0, wx.ALL, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -549,6 +555,8 @@ class AdvancedTab(Tab):
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
 
+        self.check_md5_chk.SetValue(Config.Advanced.check_md5)
+
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
         self.onChangeRestartEVT(0)
@@ -570,6 +578,8 @@ class AdvancedTab(Tab):
         Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
+
+        Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
 
     def onEnableSwitchCDNEVT(self, event):        
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
