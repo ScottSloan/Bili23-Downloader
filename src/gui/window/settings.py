@@ -19,6 +19,7 @@ from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.custom_file_name import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 from gui.dialog.download_sort import DownloadSortDialog
+from gui.dialog.custom_ua import CustomUADialog
 
 from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
@@ -537,6 +538,8 @@ class AdvancedTab(Tab):
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
 
+        self.custom_ua_btn.Bind(wx.EVT_BUTTON, self.onCustomUAEVT)
+
     def init_data(self):
         self.enable_switch_cdn_chk.SetValue(Config.Advanced.enable_switch_cdn)
         Config.Temp.cdn_list = Config.Advanced.cdn_list
@@ -604,6 +607,10 @@ class AdvancedTab(Tab):
         self.download_suspend_retry_lab.Enable(self.download_suspend_retry_chk.GetValue())
         self.download_suspend_retry_box.Enable(self.download_suspend_retry_chk.GetValue())
         self.download_suspend_retry_unit_lab.Enable(self.download_suspend_retry_chk.GetValue())
+
+    def onCustomUAEVT(self, event):
+        dlg = CustomUADialog(self)
+        dlg.ShowModal()
 
 class MergeTab(Tab):
     def __init__(self, parent):
