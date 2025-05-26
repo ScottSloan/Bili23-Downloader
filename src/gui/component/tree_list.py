@@ -198,7 +198,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         def get_download_info(list_number: int, title: str, cid: int):
             base_info = self.get_base_download_info(list_number, title, EpisodeInfo.cid_dict.get(cid))
 
-            if Config.Download.stream_download_option != DownloadOption.NONE.value:
+            if Config.Download.stream_download_option:
                 self.add_video_type_to_list(base_info)
 
             if self.download_extra:

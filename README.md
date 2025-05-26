@@ -23,10 +23,10 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 * 简洁易用的设置界面，无需参照文档手动修改配置文件
 
 ## 使用说明
-有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/waht-is-bili23-downloader.html)。
+有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html)。
 
 ## 更新日志
-### 1.63.0 (2025-05-19)
+### 1.63.0 (2025-05-26)
 ### 新增
 * 支持修改默认 UA
 * 支持按UP主\合集标题\剧集名称对下载视频进行自动分类
@@ -34,6 +34,7 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 
 ### 优化
 * 优化字幕下载相关设置
+* 优化音视频流下载选项
 
 ### 修复
 * 修复无法进行 CDN Ping 测试的问题

@@ -199,7 +199,7 @@ class Config:
         enable_speed_limit: bool = False
         speed_mbps: int = 10
 
-        stream_download_option: int = 3
+        stream_download_option: list = ["video", "audio"]
     
     class Merge:
         ffmpeg_path: str = ""

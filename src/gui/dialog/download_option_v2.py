@@ -89,26 +89,24 @@ class DownloadOptionDialog(Dialog):
 
         media_box = wx.StaticBox(self, -1, "媒体下载选项")
 
-        self.download_none_radio = wx.RadioButton(media_box, -1, "不下载")
-        self.download_video_radio = wx.RadioButton(media_box, -1, "仅下载视频")
-        self.download_audio_radio = wx.RadioButton(media_box, -1, "仅下载音频")
-        self.download_both_radio = wx.RadioButton(media_box, -1, "下载视频和音频")
+        self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
+        self.download_audio_steam_chk = wx.CheckBox(media_box, -1, "音频流")
 
-        media_grid_box = wx.FlexGridSizer(2, 2, 0, self.FromDIP(50))
-        media_grid_box.Add(self.download_none_radio, 0, wx.ALL, self.FromDIP(6))
-        media_grid_box.Add(self.download_video_radio, 0, wx.ALL, self.FromDIP(6))
-        media_grid_box.Add(self.download_both_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        media_grid_box.Add(self.download_audio_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-
-        self.keep_files_lab = wx.StaticText(media_box, -1, "合成完成后")
+        media_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        media_hbox.Add(self.download_video_steam_chk, 0, wx.ALL, self.FromDIP(6))
+        media_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL, self.FromDIP(6))
+        
+        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "使用 FFmpeg 合成视频")
+        self.keep_files_lab = wx.StaticText(media_box, -1, "合成完毕后")
         self.keep_files_choice = wx.Choice(media_box, -1, choices = list(keep_files_map.keys()))
 
         keep_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        keep_files_hbox.Add(self.keep_files_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_files_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        keep_files_hbox.Add(self.keep_files_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         keep_files_hbox.Add(self.keep_files_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
-        media_sbox.Add(media_grid_box, 0, wx.EXPAND)
+        media_sbox.Add(media_hbox, 0, wx.EXPAND)
         media_sbox.Add(keep_files_hbox, 0, wx.EXPAND)
 
         left_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -221,10 +219,8 @@ class DownloadOptionDialog(Dialog):
         self.audio_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeAudioQualityEVT)
         self.video_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityCodecEVT)
 
-        self.download_none_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
-        self.download_video_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
-        self.download_audio_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
-        self.download_both_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeStreamDownloadOptionEVT)
+        self.download_video_steam_chk.Bind(wx.EVT_CHECKBOX, self.onChangeStreamDownloadOptionEVT)
+        self.download_audio_steam_chk.Bind(wx.EVT_CHECKBOX, self.onChangeStreamDownloadOptionEVT)
 
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
@@ -238,6 +234,8 @@ class DownloadOptionDialog(Dialog):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
         self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
+
+        self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onChangeFFmpegMergeEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -283,18 +281,8 @@ class DownloadOptionDialog(Dialog):
                 self.audio_quality_choice.Select(1)
 
         def set_stream_download_option():
-            match DownloadOption(Config.Download.stream_download_option):
-                case DownloadOption.NONE:
-                    self.download_none_radio.SetValue(True)
-
-                case DownloadOption.OnlyVideo:
-                    self.download_video_radio.SetValue(True)
-
-                case DownloadOption.OnlyAudio:
-                    self.download_audio_radio.SetValue(True)
-
-                case DownloadOption.VideoAndAudio:
-                    self.download_both_radio.SetValue(True)
+            self.download_video_steam_chk.SetValue("video" in Config.Download.stream_download_option)
+            self.download_audio_steam_chk.SetValue("audio" in Config.Download.stream_download_option)
 
         self.video_quality_choice.Set(self.parent.video_quality_choice.GetItems())
         self.video_quality_choice.Select(self.parent.video_quality_choice.GetSelection())
@@ -398,16 +386,10 @@ class DownloadOptionDialog(Dialog):
 
                     self.Layout()
 
-                def disable_download_audio_option(label: str):
+                def disable_download_audio_option():
                     self.audio_quality_choice.Enable(False)
 
-                    if Config.Download.stream_download_option in [DownloadOption.OnlyAudio.value, DownloadOption.OnlyVideo]:
-                        self.download_both_radio.SetValue(True)
-
-                    self.download_video_radio.Enable(False)
-                    self.download_audio_radio.Enable(False)
-
-                    self.download_both_radio.SetLabel(label)
+                    self.download_video_steam_chk.Enable(False)
 
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
@@ -419,12 +401,12 @@ class DownloadOptionDialog(Dialog):
                             else:
                                 return "未知"
                         else:
-                            wx.CallAfter(disable_download_audio_option, "下载视频")
+                            wx.CallAfter(disable_download_audio_option)
 
                             return "此视频无音轨"
                     
                     case StreamType.Flv:
-                        wx.CallAfter(disable_download_audio_option, "下载 FLV 视频")
+                        wx.CallAfter(disable_download_audio_option)
 
                         return "FLV 视频流不支持自定义下载音质"
 
@@ -452,29 +434,8 @@ class DownloadOptionDialog(Dialog):
             self.audio_quality_choice.Enable(enable)
             self.audio_quality_info_lab.Enable(enable)
 
-        def set_keep_files_enable(enable: bool):
-            self.keep_files_lab.Enable(enable)
-            self.keep_files_choice.Enable(enable)
-
-        if self.download_none_radio.GetValue():
-            set_video_quality_enable(False)
-            set_audio_quality_enable(False)
-            set_keep_files_enable(False)
-        
-        if self.download_video_radio.GetValue():
-            set_video_quality_enable(True)
-            set_audio_quality_enable(False)
-            set_keep_files_enable(False)
-
-        if self.download_audio_radio.GetValue():
-            set_video_quality_enable(False)
-            set_audio_quality_enable(True)
-            set_keep_files_enable(False)
-        
-        if self.download_both_radio.GetValue():
-            set_video_quality_enable(True)
-            set_audio_quality_enable(True)
-            set_keep_files_enable(True)
+        set_video_quality_enable(self.download_video_steam_chk.GetValue())
+        set_audio_quality_enable(self.download_audio_steam_chk.GetValue())
 
         self.onEnableOKBtnEVT(event)
 
@@ -511,8 +472,14 @@ class DownloadOptionDialog(Dialog):
         self.number_type_lab.Enable(enable)
         self.number_type_choice.Enable(enable)
 
+    def onChangeFFmpegMergeEVT(self, event):
+        enable = self.ffmpeg_merge_chk.GetValue()
+
+        self.keep_files_lab.Enable(enable)
+        self.keep_files_choice.Enable(enable)
+
     def onEnableOKBtnEVT(self, event):
-        enable = not self.download_none_radio.GetValue() or (self.download_danmaku_file_chk.GetValue() or self.download_subtitle_file_chk.GetValue() or self.download_cover_file_chk.GetValue())
+        enable = (self.download_video_steam_chk.GetValue() or self.download_audio_steam_chk.GetValue()) or (self.download_danmaku_file_chk.GetValue() or self.download_subtitle_file_chk.GetValue() or self.download_cover_file_chk.GetValue())
         
         self.ok_btn.Enable(enable)
 
@@ -534,17 +501,13 @@ class DownloadOptionDialog(Dialog):
 
     def onConfirmEVT(self, event):
         def set_stream_download_option():
-            if self.download_none_radio.GetValue():
-                Config.Download.stream_download_option = DownloadOption.NONE.value
+            Config.Download.stream_download_option.clear()
 
-            elif self.download_video_radio.GetValue():
-                Config.Download.stream_download_option = DownloadOption.OnlyVideo.value
-
-            elif self.download_audio_radio.GetValue():
-                Config.Download.stream_download_option = DownloadOption.OnlyAudio.value
-
-            elif self.download_both_radio.GetValue():
-                Config.Download.stream_download_option = DownloadOption.VideoAndAudio.value
+            if self.download_video_steam_chk.GetValue():
+                Config.Download.stream_download_option.append("video")
+            
+            if self.download_audio_steam_chk.GetValue():
+                Config.Download.stream_download_option.append("audio")
 
         AudioInfo.audio_quality_id = audio_quality_map.get(self.audio_quality_choice.GetStringSelection())
         Config.Download.video_codec_id = self.video_codec_id
