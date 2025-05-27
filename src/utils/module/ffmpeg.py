@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from utils.common.enums import DownloadOption, StreamType, StatusCode, OverrideOption, Platform, KeepFilesOption
+from utils.common.enums import StreamType, StatusCode, OverrideOption, Platform, KeepFilesOption
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
@@ -96,15 +96,15 @@ class FFmpeg:
 
         command = Command()
 
-        match DownloadOption(self.task_info.download_option):
-            case DownloadOption.VideoAndAudio:
+        match self.task_info.download_option:
+            case ["video", "audio"]:
                 command.add(get_merge_command())
                 command.add(self.get_rename_command(self.output_temp_file_name, self.full_file_name))
 
-            case DownloadOption.OnlyVideo:
+            case ["video"]:
                 command.add(self.get_rename_command(self.dash_video_temp_file_name, self.full_file_name))
             
-            case DownloadOption.OnlyAudio:
+            case ["audio"]:
                 command.add(get_convent_command())
                 command.add(self.get_rename_command(self.output_temp_file_name, self.full_file_name))
         
@@ -194,15 +194,15 @@ class FFmpeg:
     def clear_temp_files(self):
         def worker():
             def get_dash_temp_file_list():
-                match DownloadOption(self.task_info.download_option):
-                    case DownloadOption.VideoAndAudio:
+                match self.task_info.download_option:
+                    case ["video", "audio"]:
                         temp_file_list.append(self.get_file_path(self.dash_video_temp_file_name))
                         temp_file_list.append(self.get_file_path(self.dash_audio_temp_file_name))
 
-                    case DownloadOption.OnlyVideo:
+                    case ["video"]:
                         temp_file_list.append(self.get_file_path(self.dash_video_temp_file_name))
 
-                    case DownloadOption.OnlyAudio:
+                    case ["audio"]:
                         temp_file_list.append(self.get_file_path(self.dash_audio_temp_file_name))
                 
                 temp_file_list.append(self.output_temp_file_name)
@@ -214,28 +214,17 @@ class FFmpeg:
                 else:
                     temp_file_list.append(self.get_file_path(self.flv_temp_file_name))
             
-            def keep_files():
+            def keep_original_files():
                 def get_video_rename_command():
-                    return self.get_rename_command(self.dash_video_temp_file_name, f"{self.out_file_name}.{self.task_info.video_type}")
+                    return self.get_rename_command(self.dash_video_temp_file_name, f"{self.out_file_name}_video.{self.task_info.video_type}")
                 
                 def get_audio_rename_command():
-                    return self.get_rename_command(self.dash_audio_temp_file_name, f"{self.out_file_name}.{self.task_info.audio_type}")
+                    return self.get_rename_command(self.dash_audio_temp_file_name, f"{self.out_file_name}_audio.{self.task_info.audio_type}")
                 
                 command = Command()
 
-                match KeepFilesOption(Config.Merge.keep_files_option):
-                    case KeepFilesOption.NONE:
-                        return
-
-                    case KeepFilesOption.ALL:
-                        command.add(get_video_rename_command())
-                        command.add(get_audio_rename_command())
-
-                    case KeepFilesOption.VIDEO:
-                        command.add(get_video_rename_command())
-
-                    case KeepFilesOption.AUDIO:
-                        command.add(get_audio_rename_command())
+                command.add(get_video_rename_command())
+                command.add(get_audio_rename_command())
 
                 self.run_command(command.format(), cwd = self.download_path)
 
@@ -246,7 +235,8 @@ class FFmpeg:
                 case StreamType.Flv:
                     get_flv_temp_file_list()
 
-            keep_files()
+            if Config.Merge.keep_original_files:
+                keep_original_files()
 
             UniversalTool.remove_files(temp_file_list)
         

@@ -42,7 +42,7 @@ class Downloader:
         self.downloader_info = downloader_info
 
     def start_download(self):
-        def get_downloader_info():
+        def get_downloader_info():            
             downloader_info = DownloaderInfo()
             downloader_info.load_from_dict(self.downloader_info[:1][0])
 

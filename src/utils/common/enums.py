@@ -99,12 +99,6 @@ class VideoCodecID(Enum):
     HEVC = 12                     # H265
     AV1 = 13                      # AV1
 
-class DownloadOption(Enum):
-    OnlyVideo = 1                 # 仅下载视频
-    OnlyAudio = 2                 # 仅下载音频
-    VideoAndAudio = 3             # 下载音频和视频
-    NONE = 5                      # 不下载
-
 class OverrideOption(Enum):
     Override = 0                  # 覆盖文件
     Rename = 1                    # 重命名

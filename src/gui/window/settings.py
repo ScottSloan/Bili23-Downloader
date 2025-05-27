@@ -24,7 +24,7 @@ from gui.dialog.custom_ua import CustomUADialog
 from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, keep_files_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, Platform
 
 from utils.module.notification import NotificationManager
@@ -53,7 +53,7 @@ class SettingWindow(Dialog):
         self.note.AddPage(BasicTab(self.note), "基本")
         self.note.AddPage(DownloadTab(self.note), "下载")
         self.note.AddPage(AdvancedTab(self.note), "高级")
-        self.note.AddPage(MergeTab(self.note), "合成")
+        self.note.AddPage(FFmpegTab(self.note), "FFmpeg")
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
 
@@ -612,7 +612,7 @@ class AdvancedTab(Tab):
         dlg = CustomUADialog(self)
         dlg.ShowModal()
 
-class MergeTab(Tab):
+class FFmpegTab(Tab):
     def __init__(self, parent):
         Tab.__init__(self, parent)
 
@@ -648,27 +648,28 @@ class MergeTab(Tab):
         ffmpeg_sbox.Add(self.check_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         ffmpeg_sbox.Add(btn_hbox, 0, wx.EXPAND)
 
-        merge_option_box = wx.StaticBox(self, -1, "合成选项")
+        merge_option_box = wx.StaticBox(self, -1, "音视频合并选项")
 
-        keep_files_lab = wx.StaticText(merge_option_box, -1, "合成完成后")
-        self.keep_files_choice = wx.Choice(merge_option_box, -1, choices = list(keep_files_map.keys()))
+        self.keep_original_files_chk = wx.CheckBox(merge_option_box, -1, "合并完成后保留原始文件")
+        keep_original_files_tip = ToolTip(merge_option_box)
+        keep_original_files_tip.set_tooltip("合并完成后，保留原始的视频和音频文件")
 
-        keep_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        keep_files_hbox.Add(keep_files_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        keep_files_hbox.Add(self.keep_files_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_original_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        keep_original_files_hbox.Add(self.keep_original_files_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_original_files_hbox.Add(keep_original_files_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         override_lab = wx.StaticText(merge_option_box, -1, "存在同名文件时")
         self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
 
         override_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        override_hbox.Add(override_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, "仅下载音频时将 m4a 音频转换为 mp3 格式")
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box, wx.VERTICAL)
-        merge_option_sbox.Add(keep_files_hbox, 0, wx.EXPAND)
         merge_option_sbox.Add(override_hbox, 0, wx.EXPAND)
+        merge_option_sbox.Add(keep_original_files_hbox, 0, wx.EXPAND)
         merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -688,15 +689,15 @@ class MergeTab(Tab):
         self.path_box.SetValue(Config.Merge.ffmpeg_path)
         self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_lauch)
         
-        self.keep_files_choice.SetSelection(Config.Merge.keep_files_option)
         self.override_option_choice.SetSelection(Config.Merge.override_option)
+        self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
         Config.Merge.ffmpeg_path = self.path_box.GetValue()
         Config.Merge.ffmpeg_check_available_when_lauch = self.check_ffmpeg_chk.GetValue()
-        Config.Merge.keep_files_option = self.keep_files_choice.GetSelection()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
+        Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
 
     def onBrowsePath(self, event):

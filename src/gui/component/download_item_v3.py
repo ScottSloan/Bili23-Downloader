@@ -5,7 +5,7 @@ from typing import Callable
 
 from utils.common.icon_v3 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
-from utils.common.enums import DownloadOption, DownloadStatus, ParseType, Platform
+from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
@@ -207,7 +207,7 @@ class DownloadTaskItemPanel(Panel):
         def get_video_quality_label():
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         return "音频"
                     else:
                         return get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--")
@@ -224,7 +224,7 @@ class DownloadTaskItemPanel(Panel):
         def get_video_codec_label():
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         return get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--")
                     else:
                         return get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--")
@@ -555,10 +555,10 @@ class DownloadTaskItemPanel(Panel):
                 case DownloadStatus.Merging:
                     self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
 
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         lab = "正在转换音频..."
                     else:
-                        lab = "正在合成视频..."
+                        lab = "正在合并视频..."
 
                     self.pause_btn.SetToolTip(lab)
                     self.speed_lab.SetLabel(lab)
@@ -581,10 +581,10 @@ class DownloadTaskItemPanel(Panel):
                     self.stop_btn.Enable(True)
                     self.speed_lab.SetForegroundColour("red")
 
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         lab = "转换音频"
                     else:
-                        lab = "合成视频"
+                        lab = "合并视频"
 
                     if self.error_info:
                         self.speed_lab.SetLabel(f"{lab}失败，点击查看详情")

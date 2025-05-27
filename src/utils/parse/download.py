@@ -2,7 +2,7 @@ import json
 from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID, StatusCode
+from utils.common.enums import ParseType, StreamType, VideoQualityID, VideoCodecID, AudioQualityID
 from utils.common.exception import GlobalException
 
 from utils.parse.preview import Preview
@@ -94,22 +94,22 @@ class DownloadParser(Parser):
     def parse_dash_json(self, data: dict):
         def check_download_items():
             if not self.task_info.download_items:
-                match DownloadOption(self.task_info.download_option):
-                    case DownloadOption.OnlyVideo:
+                match self.task_info.download_option:
+                    case ["video"]:
                         self.task_info.download_items = ["video"]
                         self.task_info.output_type = "mp4"
 
-                    case DownloadOption.OnlyAudio:
+                    case ["audio"]:
                         self.task_info.download_items = ["audio"]
 
-                    case DownloadOption.VideoAndAudio:
+                    case ["video", "audio"]:
                         if data["audio"]:
                             self.task_info.download_items = ["video", "audio"]
                             self.task_info.output_type = "mp4"
                         else:
                             self.task_info.download_items = ["video"]
                             self.task_info.output_type = "mp4"
-                            self.task_info.download_option = DownloadOption.OnlyVideo.value
+                            self.task_info.download_option = "video"
         
         check_download_items()
 
@@ -130,7 +130,7 @@ class DownloadParser(Parser):
 
         def get_flv_info():
             self.task_info.audio_quality_id = AudioQualityID._None.value
-            self.task_info.download_option = DownloadOption.OnlyVideo.value
+            self.task_info.download_option = ["audio"]
             self.task_info.flv_video_count = len(data["durl"])
         
         check_download_items()
@@ -191,7 +191,7 @@ class DownloadParser(Parser):
                     self.task_info.audio_type = "m4a"
                     stream_info = get_normal()
             
-            if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+            if self.task_info.download_option == ["audio"]:
                 self.task_info.output_type = self.task_info.audio_type
 
             return stream_info

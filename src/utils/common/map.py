@@ -109,16 +109,6 @@ subtitle_format_map = {
     "json": 3
 }
 
-download_status_map = {
-    0: "等待下载",
-    1: "正在获取下载信息...",
-    2: "暂停中",
-    3: "正在合成视频",
-    4: "下载完成",
-    5: "下载失败",
-    6: "视频合成失败"
-}
-
 cheese_status_map = {
     1: "全集试看",
     2: "付费",
@@ -174,13 +164,6 @@ number_type_map = {
 exit_option_map = {
     "隐藏到托盘": 0,
     "直接退出": 1
-}
-
-keep_files_map = {
-    "不保留原始文件": 0,
-    "保留视频和音频文件": 1,
-    "只保留视频文件": 2,
-    "只保留音频文件": 3
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):

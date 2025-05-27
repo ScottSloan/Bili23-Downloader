@@ -2,7 +2,7 @@ import wx
 from typing import Callable
 
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
-from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
+from utils.common.enums import AudioQualityID, VideoQualityID, StreamType
 from utils.config import Config, app_config_group
 from utils.tool_v2 import FormatTool
 from utils.common.thread import Thread
@@ -446,6 +446,11 @@ class DownloadOptionDialog(Dialog):
 
         set_video_quality_enable(self.download_video_steam_chk.GetValue())
         set_audio_quality_enable(self.download_audio_steam_chk.GetValue())
+
+        enable = self.download_video_steam_chk.GetValue() and self.download_audio_steam_chk.GetValue()
+
+        self.ffmpeg_merge_chk.Enable(enable)
+        self.ffmpeg_merge_chk.SetValue(enable)
 
         self.onEnableOKBtnEVT(event)
 

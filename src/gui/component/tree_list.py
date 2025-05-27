@@ -4,7 +4,7 @@ import wx.dataview
 from typing import Callable
 
 from utils.config import Config
-from utils.common.enums import ParseType, DownloadOption, VideoType, Platform
+from utils.common.enums import ParseType, VideoType, Platform
 from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 
 from utils.parse.video import VideoInfo
