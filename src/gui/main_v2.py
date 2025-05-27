@@ -927,7 +927,7 @@ class MainWindow(Frame):
 
     def read_clip_board(self, event):
         def is_valid_url(url: str):
-            return re.findall(r"https:\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
+            return re.findall(r"(https)|(http):\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
 
         if self.status == ParseStatus.Parsing:
             return

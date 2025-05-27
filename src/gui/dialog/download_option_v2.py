@@ -1,7 +1,7 @@
 import wx
 from typing import Callable
 
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, keep_files_map, get_mapping_index_by_value, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, DownloadOption, VideoQualityID, StreamType
 from utils.config import Config, app_config_group
 from utils.tool_v2 import FormatTool
@@ -90,24 +90,37 @@ class DownloadOptionDialog(Dialog):
         media_box = wx.StaticBox(self, -1, "媒体下载选项")
 
         self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
+        video_stream_tip = ToolTip(media_box)
+        video_stream_tip.set_tooltip('下载独立的视频流文件\n\n独立的视频流不包含音轨，若需要下载带音轨的视频，请一并勾选"音频流"和"合并视频和音频"选项')
+
+        video_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_stream_hbox.Add(self.download_video_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_stream_hbox.Add(video_stream_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
         self.download_audio_steam_chk = wx.CheckBox(media_box, -1, "音频流")
+        audio_stream_tip = ToolTip(media_box)
+        audio_stream_tip.set_tooltip('下载独立的音频流文件')
 
-        media_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        media_hbox.Add(self.download_video_steam_chk, 0, wx.ALL, self.FromDIP(6))
-        media_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL, self.FromDIP(6))
+        audio_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        audio_stream_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_stream_hbox.Add(audio_stream_tip, 0, wx.ALL & (~wx.LEFT)| wx.ALIGN_CENTER, self.FromDIP(6))
         
-        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "使用 FFmpeg 合成视频")
-        self.keep_files_lab = wx.StaticText(media_box, -1, "合成完毕后")
-        self.keep_files_choice = wx.Choice(media_box, -1, choices = list(keep_files_map.keys()))
+        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "合并视频和音频")
+        ffmpeg_merge_tip = ToolTip(media_box)
+        ffmpeg_merge_tip.set_tooltip("选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件")
 
-        keep_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        keep_files_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        keep_files_hbox.Add(self.keep_files_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        keep_files_hbox.Add(self.keep_files_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        ffmpeg_merge_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        ffmpeg_merge_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ffmpeg_merge_hbox.Add(ffmpeg_merge_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        media_flex_grid_box = wx.FlexGridSizer(2, 2, 0, 0)
+        media_flex_grid_box.Add(video_stream_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.Add(audio_stream_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.Add(ffmpeg_merge_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.AddStretchSpacer()
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
-        media_sbox.Add(media_hbox, 0, wx.EXPAND)
-        media_sbox.Add(keep_files_hbox, 0, wx.EXPAND)
+        media_sbox.Add(media_flex_grid_box, 0, wx.EXPAND)
 
         left_vbox = wx.BoxSizer(wx.VERTICAL)
         left_vbox.Add(self.stream_type_lab, 0, wx.ALL, self.FromDIP(6))
@@ -235,8 +248,6 @@ class DownloadOptionDialog(Dialog):
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
         self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
 
-        self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onChangeFFmpegMergeEVT)
-
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
     def init_utils(self):
@@ -305,7 +316,6 @@ class DownloadOptionDialog(Dialog):
         self.number_type_choice.SetSelection(Config.Download.number_type)
 
         self.path_box.SetValue(Config.Download.path)
-        self.keep_files_choice.SetSelection(Config.Merge.keep_files_option)
 
         Config.Temp.file_name_template = Config.Advanced.file_name_template
         Config.Temp.datetime_format = Config.Advanced.datetime_format
@@ -472,12 +482,6 @@ class DownloadOptionDialog(Dialog):
         self.number_type_lab.Enable(enable)
         self.number_type_choice.Enable(enable)
 
-    def onChangeFFmpegMergeEVT(self, event):
-        enable = self.ffmpeg_merge_chk.GetValue()
-
-        self.keep_files_lab.Enable(enable)
-        self.keep_files_choice.Enable(enable)
-
     def onEnableOKBtnEVT(self, event):
         enable = (self.download_video_steam_chk.GetValue() or self.download_audio_steam_chk.GetValue()) or (self.download_danmaku_file_chk.GetValue() or self.download_subtitle_file_chk.GetValue() or self.download_cover_file_chk.GetValue())
         
@@ -524,7 +528,6 @@ class DownloadOptionDialog(Dialog):
         Config.Download.number_type = self.number_type_choice.GetSelection()
 
         Config.Download.path = self.path_box.GetValue()
-        Config.Merge.keep_files_option = self.keep_files_choice.GetSelection()
 
         Config.Advanced.file_name_template = Config.Temp.file_name_template
         Config.Advanced.datetime_format = Config.Temp.datetime_format
