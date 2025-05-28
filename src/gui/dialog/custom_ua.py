@@ -1,6 +1,7 @@
 import wx
 
 from utils.config import Config
+from utils.common.enums import UAOption
 
 from gui.component.dialog import Dialog
 from gui.component.text_ctrl import TextCtrl
@@ -21,7 +22,7 @@ class CustomUADialog(Dialog):
         ua_lab = wx.StaticText(self, -1, "UA 选项")
 
         self.custom_ua_radio_btn = wx.RadioButton(self, -1, "自定义")
-        self.custom_ua_box = TextCtrl(self, -1, size = self.FromDIP((300, 64)), style = wx.TE_MULTILINE | wx.TE_WORDWRAP)
+        self.custom_ua_box = TextCtrl(self, -1, size = self.FromDIP((400, 64)), style = wx.TE_MULTILINE | wx.TE_WORDWRAP)
 
         self.random_ua_radio_btn = wx.RadioButton(self, -1, "使用随机 UA")
 
@@ -45,8 +46,17 @@ class CustomUADialog(Dialog):
     def Bind_EVT(self):
         self.custom_ua_radio_btn.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomUAEVT)
         self.random_ua_radio_btn.Bind(wx.EVT_RADIOBUTTON, self.onChangeCustomUAEVT)
+
+        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
     
     def init_utils(self):
+        match UAOption(Config.Temp.ua_option):
+            case UAOption.Custom:
+                self.custom_ua_radio_btn.SetValue(True)
+
+            case UAOption.Random:
+                self.random_ua_radio_btn.SetValue(True)
+
         self.custom_ua_box.SetValue(Config.Advanced.custom_ua)
 
         self.onChangeCustomUAEVT(0)
@@ -55,3 +65,14 @@ class CustomUADialog(Dialog):
         enable = self.custom_ua_radio_btn.GetValue()
 
         self.custom_ua_box.Enable(enable)
+
+    def onConfirm(self, event):
+        if self.custom_ua_radio_btn.GetValue():
+            Config.Temp.ua_option = UAOption.Custom.value
+
+        if self.random_ua_radio_btn.GetValue():
+            Config.Temp.ua_option = UAOption.Random.value
+
+        Config.Temp.custom_ua = self.custom_ua_box.GetValue()
+
+        event.Skip()

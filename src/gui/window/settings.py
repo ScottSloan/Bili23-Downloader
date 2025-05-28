@@ -560,6 +560,9 @@ class AdvancedTab(Tab):
 
         self.check_md5_chk.SetValue(Config.Advanced.check_md5)
 
+        Config.Temp.ua_option = Config.Advanced.ua_option
+        Config.Temp.custom_ua = Config.Advanced.custom_ua
+
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
         self.onChangeRestartEVT(0)
@@ -583,6 +586,9 @@ class AdvancedTab(Tab):
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
 
         Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
+
+        Config.Advanced.ua_option = Config.Temp.ua_option
+        Config.Advanced.custom_ua = Config.Temp.custom_ua
 
     def onEnableSwitchCDNEVT(self, event):        
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())

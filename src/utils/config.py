@@ -200,6 +200,7 @@ class Config:
         speed_mbps: int = 10
 
         stream_download_option: list = ["video", "audio"]
+        ffmpeg_merge: bool = True
     
     class Merge:
         ffmpeg_path: str = ""
@@ -226,6 +227,9 @@ class Config:
         sort_by_up: bool = False
         sort_by_collection: bool = False
         sort_by_series: bool = False
+
+        ua_option: int = 0
+        custom_ua: str = ""
 
     class Auth:
         img_key: str = ""

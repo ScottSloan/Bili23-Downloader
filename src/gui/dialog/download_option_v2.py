@@ -113,11 +113,19 @@ class DownloadOptionDialog(Dialog):
         ffmpeg_merge_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         ffmpeg_merge_hbox.Add(ffmpeg_merge_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        self.keep_original_files_chk = wx.CheckBox(media_box, -1, "合并完成后保留原始文件")
+        keep_original_files_tip = ToolTip(media_box)
+        keep_original_files_tip.set_tooltip("合并完成后，保留原始的视频和音频文件")
+
+        keep_original_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        keep_original_files_hbox.Add(self.keep_original_files_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_original_files_hbox.Add(keep_original_files_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
         media_flex_grid_box = wx.FlexGridSizer(2, 2, 0, 0)
         media_flex_grid_box.Add(video_stream_hbox, 0, wx.EXPAND)
         media_flex_grid_box.Add(audio_stream_hbox, 0, wx.EXPAND)
         media_flex_grid_box.Add(ffmpeg_merge_hbox, 0, wx.EXPAND)
-        media_flex_grid_box.AddStretchSpacer()
+        media_flex_grid_box.Add(keep_original_files_hbox, 0, wx.EXPAND)
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
         media_sbox.Add(media_flex_grid_box, 0, wx.EXPAND)
@@ -248,6 +256,8 @@ class DownloadOptionDialog(Dialog):
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
         self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
 
+        self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onEnableKeepFilesEVT)
+
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
     def init_utils(self):
@@ -275,6 +285,8 @@ class DownloadOptionDialog(Dialog):
         self.onChangeAudioQualityEVT(0)
 
         self.onCheckAutoAddNumberEVT(0)
+
+        self.onEnableKeepFilesEVT(0)
 
     def load_download_option(self):
         def set_audio_quality_list():
@@ -314,6 +326,9 @@ class DownloadOptionDialog(Dialog):
         self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
         self.number_type_choice.SetSelection(Config.Download.number_type)
+
+        self.ffmpeg_merge_chk.SetValue(Config.Download.ffmpeg_merge)
+        self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
 
         self.path_box.SetValue(Config.Download.path)
 
@@ -450,7 +465,6 @@ class DownloadOptionDialog(Dialog):
         enable = self.download_video_steam_chk.GetValue() and self.download_audio_steam_chk.GetValue()
 
         self.ffmpeg_merge_chk.Enable(enable)
-        self.ffmpeg_merge_chk.SetValue(enable)
 
         self.onEnableOKBtnEVT(event)
 
@@ -508,6 +522,14 @@ class DownloadOptionDialog(Dialog):
         dlg = DownloadSortDialog(self)
         dlg.ShowModal()
 
+    def onEnableKeepFilesEVT(self, event):
+        enable = self.ffmpeg_merge_chk.GetValue()
+
+        self.keep_original_files_chk.Enable(enable)
+        
+        if enable:
+            self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
+
     def onConfirmEVT(self, event):
         def set_stream_download_option():
             Config.Download.stream_download_option.clear()
@@ -533,6 +555,9 @@ class DownloadOptionDialog(Dialog):
         Config.Download.number_type = self.number_type_choice.GetSelection()
 
         Config.Download.path = self.path_box.GetValue()
+
+        Config.Download.ffmpeg_merge = self.ffmpeg_merge_chk.GetValue()
+        Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
         Config.Advanced.file_name_template = Config.Temp.file_name_template
         Config.Advanced.datetime_format = Config.Temp.datetime_format

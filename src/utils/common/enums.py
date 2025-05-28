@@ -146,3 +146,7 @@ class KeepFilesOption(Enum):
     ALL = 1                       # 保留全部
     VIDEO = 2                     # 保留视频
     AUDIO = 3                     # 保留音频
+
+class UAOption(Enum):
+    Custom = 0                    # 自定义
+    Random = 1                    # 随机

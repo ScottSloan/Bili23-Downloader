@@ -11,8 +11,10 @@ from typing import Optional, List
 
 from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType, ProxyMode, Platform
+from utils.common.enums import ParseType, ProxyMode, Platform, UAOption
 from utils.common.thread import Thread
+
+from utils.module.random_ua import RandomUA
 
 class RequestTool:
     # 请求工具类
@@ -54,8 +56,16 @@ class RequestTool:
             if Config.Auth.buvid4:
                 _cookie["buvid4"] = Config.Auth.buvid4
 
+        def ua():
+            match UAOption(Config.Advanced.ua_option):
+                case UAOption.Custom:
+                    return Config.Advanced.custom_ua
+                
+                case UAOption.Random:
+                    return RandomUA.get_random_ua()
+        
         headers = {
-            "User-Agent": RequestTool.USER_AGENT,
+            "User-Agent": ua(),
         }
 
         _cookie = {
