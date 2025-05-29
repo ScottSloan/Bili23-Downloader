@@ -103,7 +103,7 @@ class ActionButton(Panel):
 
     def set_unactive_bgcolor(self):
         if Config.Sys.dark_mode:
-            self.SetBackgroundColour(wx.SystemSettings.GetColour(getattr(wx, "SYS_COLOUR_FRAMEBK")))
+            self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_FRAMEBK))
         else:
             self.SetBackgroundColour("white")
 

@@ -27,6 +27,7 @@ from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
 from gui.window.debug import DebugWindow
 from gui.window.login import LoginWindow
+from gui.window.format_factory import FormatFactoryWindow
 
 from gui.dialog.about import AboutWindow
 from gui.dialog.changelog import ChangeLogDialog
@@ -173,6 +174,7 @@ class MainWindow(Frame):
         self.ID_DEBUG_MENU = wx.NewIdRef()
         self.ID_CONVERTER_MENU = wx.NewIdRef()
         self.ID_CUT_CLIP_MENU = wx.NewIdRef()
+        self.ID_FORMAT_FACTORY_MENU = wx.NewIdRef()
         self.ID_SETTINGS_MENU = wx.NewIdRef()
 
         self.ID_CHECK_UPDATE_MENU = wx.NewIdRef()
@@ -211,6 +213,7 @@ class MainWindow(Frame):
 
         tool_manu.Append(self.ID_CONVERTER_MENU, "格式转换(&F)")
         tool_manu.Append(self.ID_CUT_CLIP_MENU, "截取片段(&I)")
+        tool_manu.Append(self.ID_FORMAT_FACTORY_MENU, "视频工具箱(&F)")
         tool_manu.AppendSeparator()
         tool_manu.Append(self.ID_SETTINGS_MENU, "设置(&S)")
 
@@ -363,6 +366,9 @@ class MainWindow(Frame):
 
             case self.ID_CUT_CLIP_MENU:
                 CutClipDialog(self).ShowModal()
+
+            case self.ID_FORMAT_FACTORY_MENU:
+                FormatFactoryWindow(self).Show()
 
             case self.ID_SETTINGS_MENU:
                 SettingWindow(self).ShowModal()
