@@ -90,20 +90,20 @@ class DownloadOptionDialog(Dialog):
         media_box = wx.StaticBox(self, -1, "媒体下载选项")
 
         self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
-        video_stream_tip = ToolTip(media_box)
-        video_stream_tip.set_tooltip('下载独立的视频流文件\n\n独立的视频流不包含音轨，若需要下载带音轨的视频，请一并勾选"音频流"和"合并视频和音频"选项')
+        self.video_stream_tip = ToolTip(media_box)
+        self.video_stream_tip.set_tooltip('下载独立的视频流文件\n\n独立的视频流不包含音轨，若需要下载带音轨的视频，请一并勾选"音频流"和"合并视频和音频"选项')
 
         video_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_stream_hbox.Add(self.download_video_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        video_stream_hbox.Add(video_stream_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_stream_hbox.Add(self.video_stream_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.download_audio_steam_chk = wx.CheckBox(media_box, -1, "音频流")
-        audio_stream_tip = ToolTip(media_box)
-        audio_stream_tip.set_tooltip('下载独立的音频流文件')
+        self.audio_stream_tip = ToolTip(media_box)
+        self.audio_stream_tip.set_tooltip('下载独立的音频流文件')
 
         audio_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         audio_stream_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        audio_stream_hbox.Add(audio_stream_tip, 0, wx.ALL & (~wx.LEFT)| wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_stream_hbox.Add(self.audio_stream_tip, 0, wx.ALL & (~wx.LEFT)| wx.ALIGN_CENTER, self.FromDIP(6))
         
         self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "合并视频和音频")
         ffmpeg_merge_tip = ToolTip(media_box)
@@ -348,9 +348,12 @@ class DownloadOptionDialog(Dialog):
 
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
+
                         return "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
                     
                     case StreamType.Flv:
+                        self.video_stream_tip.set_tooltip("下载独立的视频流文件\n\nFLV 格式视频已包含音轨")
+
                         return "[{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatTool.format_size(info["size"]))
             
             def callback():
@@ -414,7 +417,10 @@ class DownloadOptionDialog(Dialog):
                 def disable_download_audio_option():
                     self.audio_quality_choice.Enable(False)
 
-                    self.download_video_steam_chk.Enable(False)
+                    self.download_audio_steam_chk.SetValue(False)
+                    self.download_audio_steam_chk.Enable(False)
+
+                    self.onChangeStreamDownloadOptionEVT(event)
 
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
@@ -422,18 +428,24 @@ class DownloadOptionDialog(Dialog):
                             wx.CallAfter(check)
 
                             if info:
+                                self.audio_stream_tip.set_tooltip("下载独立的音频流文件")
+
                                 return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
                             else:
                                 return "未知"
                         else:
                             wx.CallAfter(disable_download_audio_option)
 
+                            self.audio_stream_tip.set_tooltip("下载独立的音频流文件\n\n此视频无音轨")
+
                             return "此视频无音轨"
                     
                     case StreamType.Flv:
                         wx.CallAfter(disable_download_audio_option)
 
-                        return "FLV 视频流不支持自定义下载音质"
+                        self.audio_stream_tip.set_tooltip("下载独立的音频流文件\n\nFLV 格式视频已包含音轨")
+
+                        return "FLV 格式视频已包含音轨，不支持自定义音质"
 
             info = self.preview.get_audio_stream_size(self.audio_quality_id)
 
@@ -465,8 +477,10 @@ class DownloadOptionDialog(Dialog):
         enable = self.download_video_steam_chk.GetValue() and self.download_audio_steam_chk.GetValue()
 
         self.ffmpeg_merge_chk.Enable(enable)
+        self.ffmpeg_merge_chk.SetValue(enable)
 
         self.onEnableOKBtnEVT(event)
+        self.onEnableKeepFilesEVT(event)
 
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()

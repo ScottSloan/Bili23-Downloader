@@ -490,11 +490,13 @@ class AdvancedTab(Tab):
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
         self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
+        self.download_error_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "次")
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
         download_error_retry_hbox.AddSpacer(self.FromDIP(20))
         download_error_retry_hbox.Add(self.download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        download_error_retry_hbox.Add(self.download_error_retry_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.download_suspend_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载停滞时自动重启下载")
         self.download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "重启间隔")
@@ -606,13 +608,18 @@ class AdvancedTab(Tab):
         dlg.ShowModal()
 
     def onChangeRetryEVT(self, event):
-        self.download_error_retry_lab.Enable(self.download_error_retry_chk.GetValue())
-        self.download_error_retry_box.Enable(self.download_error_retry_chk.GetValue())
+        enable = self.download_error_retry_chk.GetValue()
+
+        self.download_error_retry_lab.Enable(enable)
+        self.download_error_retry_box.Enable(enable)
+        self.download_error_retry_unit_lab.Enable(enable)
 
     def onChangeRestartEVT(self, event):
-        self.download_suspend_retry_lab.Enable(self.download_suspend_retry_chk.GetValue())
-        self.download_suspend_retry_box.Enable(self.download_suspend_retry_chk.GetValue())
-        self.download_suspend_retry_unit_lab.Enable(self.download_suspend_retry_chk.GetValue())
+        enable = self.download_suspend_retry_chk.GetValue()
+
+        self.download_suspend_retry_lab.Enable(enable)
+        self.download_suspend_retry_box.Enable(enable)
+        self.download_suspend_retry_unit_lab.Enable(enable)
 
     def onCustomUAEVT(self, event):
         dlg = CustomUADialog(self)

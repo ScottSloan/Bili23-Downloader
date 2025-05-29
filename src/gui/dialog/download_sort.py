@@ -49,6 +49,10 @@ class DownloadSortDialog(Dialog):
     def Bind_EVT(self):
         self.enable_download_sort_chk.Bind(wx.EVT_CHECKBOX, self.onEnableSortEVT)
 
+        self.sort_by_up_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKEVT)
+        self.sort_by_collection_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKEVT)
+        self.sort_by_series_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKEVT)
+
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
     
     def init_utils(self):
@@ -66,6 +70,8 @@ class DownloadSortDialog(Dialog):
         self.sort_by_collection_chk.Enable(enable)
         self.sort_by_series_chk.Enable(enable)
 
+        self.onEnableOKEVT(event)
+
     def onConfirmEVT(self, event):
         Config.Temp.enable_download_sort = self.enable_download_sort_chk.GetValue()
         Config.Temp.sort_by_up = self.sort_by_up_chk.GetValue()
@@ -73,3 +79,6 @@ class DownloadSortDialog(Dialog):
         Config.Temp.sort_by_series = self.sort_by_series_chk.GetValue()
 
         event.Skip()
+
+    def onEnableOKEVT(self, event):
+        self.ok_btn.Enable(self.sort_by_up_chk.GetValue() or self.sort_by_collection_chk.GetValue() or self.sort_by_series_chk.GetValue())
