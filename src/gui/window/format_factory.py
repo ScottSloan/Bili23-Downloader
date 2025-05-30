@@ -1,11 +1,14 @@
 import wx
+import wx.media
 
 from utils.config import Config
+from utils.tool_v2 import FormatTool
 from utils.common.icon_v3 import Icon, IconID, IconSize
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
+from gui.component.bitmap_button import BitmapButton
 
 class FileDropTarget(wx.FileDropTarget):
     def __init__(self, parent):
@@ -132,6 +135,8 @@ class SubPage(Panel):
 
         self.Bind_EVT()
 
+        self.init_utils()
+
     def init_UI(self):
         font = self.GetFont()
         font.SetFractionalPointSize(font.GetFractionalPointSize() + 3)
@@ -165,8 +170,13 @@ class SubPage(Panel):
     def Bind_EVT(self):
         self.back_icon.Bind(wx.EVT_LEFT_DOWN, self.onBackEVT)
 
+    def init_utils(self):
+        self.input_path = None
+
     def onBackEVT(self, event):
         parent = self.GetParent().GetParent().GetParent()
+
+        self.notebook.GetCurrentPage().onCloseEVT()
 
         parent.select_action(0)
 
@@ -194,8 +204,102 @@ class CutClipPage(Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
     def init_UI(self):
-        pass
+        self.media_ctrl = wx.media.MediaCtrl(self, -1)
+
+        self.play_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.RESUME_ICON))
+        self.time_lab = wx.StaticText(self, -1, "00:00")
+        self.progress_bar = wx.Slider(self, -1)
+
+        ctrl_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        ctrl_hbox.Add(self.play_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.progress_bar, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.media_ctrl, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(ctrl_hbox, 0, wx.EXPAND)
+
+        self.SetSizer(vbox)
+
+        self.timer = wx.Timer(self, -1)
+
+    def Bind_EVT(self):
+        self.play_btn.Bind(wx.EVT_BUTTON, self.onPlayEVT)
+
+        self.progress_bar.Bind(wx.EVT_SCROLL_THUMBTRACK, self.onSliderEVT)
+        self.progress_bar.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.onSeekEVT)
+
+        self.Bind(wx.EVT_TIMER, self.onTimerEVT)
+
+    def init_utils(self):
+        self.media_ctrl.Load(self.GetParent().GetParent().input_path)
+
+        self.onSlider = False
+        self.status = wx.media.MEDIASTATE_PAUSED
+
+    def onCloseEVT(self):
+        self.reset()
+
+    def onPlayEVT(self, event):
+        match self.status:
+            case wx.media.MEDIASTATE_PAUSED:
+                if not self.media_ctrl.Play():
+                    print("error")
+                else:
+                    self.media_ctrl.SetInitialSize()
+                    self.GetSizer().Layout()
+                    self.progress_bar.SetRange(0, self.media_ctrl.Length())
+                    self.set_status(wx.media.MEDIASTATE_PLAYING)
+
+                    if not self.timer.IsRunning():
+                        self.timer.Start(1000)
+
+            case wx.media.MEDIASTATE_PLAYING:
+                self.media_ctrl.Pause()
+
+                self.set_status(wx.media.MEDIASTATE_PAUSED)
+
+    def onSliderEVT(self, event):
+        self.onSlider = True
+
+        self.set_time_lab(self.progress_bar.GetValue())
+
+    def onSeekEVT(self, event):
+        offset = self.progress_bar.GetValue()
+
+        self.media_ctrl.Seek(offset)
+
+        self.onSlider = False
+
+    def onTimerEVT(self, event):
+        if not self.onSlider:
+            offset = self.media_ctrl.Tell()
+
+            self.progress_bar.SetValue(offset)
+
+            self.set_time_lab(offset)
+
+    def set_time_lab(self, offset: int):
+        self.time_lab.SetLabel(FormatTool._format_duration(int(offset / 1000)))
+
+    def set_status(self, status: str):
+        match status:
+            case wx.media.MEDIASTATE_PLAYING:
+                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
+
+            case wx.media.MEDIASTATE_PAUSED:
+                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
+
+        self.status = status
+
+    def reset(self):
+        self.media_ctrl.Stop()
+        self.timer.Stop()
+        self.progress_bar.SetValue(0)
+        self.time_lab.SetLabel("00:00")
 
 class ExtractionPage(Panel):
     def __init__(self, parent):
@@ -210,7 +314,7 @@ class FormatFactoryWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, "视频工具箱")
 
-        self.SetSize(self.FromDIP((450, 280)))
+        self.SetSize(self.FromDIP((600, 380)))
 
         self.init_UI()
 
@@ -249,13 +353,15 @@ class FormatFactoryWindow(Frame):
         pass
     
     def set_input_path(self, path: str):
-        self.input_path = path
+        self.sub_page.input_path = path
 
         self.select_action(2)
+        self.sub_page.notebook.GetCurrentPage().init_utils()
 
     def select_action(self, page: int):
         self.notebook.SetSelection(page)
 
     def set_target_page(self, page: int, title: str):
         self.sub_page.notebook.SetSelection(page)
+
         self.sub_page.title_lab.SetLabel(title)

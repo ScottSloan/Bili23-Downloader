@@ -303,7 +303,8 @@ class DownloadFileTool:
 
 class FormatTool:
     # 格式化数据类
-    def format_duration(episode: dict, flag: int):
+    @classmethod
+    def format_duration(cls, episode: dict, flag: int):
         match flag:
             case ParseType.Video:
                 if "arc" in episode:
@@ -319,6 +320,9 @@ class FormatTool:
                 else:
                     return "--:--"
 
+        return cls._format_duration(duration)
+                
+    def _format_duration(duration: int):
         hours = int(duration // 3600)
         mins = int((duration - hours * 3600) // 60)
         secs = int(duration - hours * 3600 - mins * 60)
