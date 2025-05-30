@@ -74,13 +74,9 @@ class SelectPage(Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
     def init_UI(self):
-        font = self.GetFont()
-        font.SetFractionalPointSize(font.GetFractionalPointSize() + 2)
-
-        tip_lab = wx.StaticText(self, -1, "要如何处理此文件？")
-        tip_lab.SetFont(font)
-
         self.detail_info_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.INFO_ICON, size = IconSize.MEDIUM), "详细信息")
 
         self.convertion_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.CONVERT_ICON, size = IconSize.MEDIUM), "格式转换")
@@ -98,14 +94,110 @@ class SelectPage(Panel):
         hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(tip_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.AddStretchSpacer()
         vbox.Add(hbox, 0, wx.EXPAND)
         vbox.AddStretchSpacer()
 
         self.SetSizer(vbox)
 
+    def Bind_EVT(self):
+        self.detail_info_btn.onClickCustomEVT = self.onDetailInfoEVT
+        self.convertion_btn.onClickCustomEVT = self.onConvertionEVT
+        self.cutclip_btn.onClickCustomEVT = self.onCutClipEVT
+        self.extraction_btn.onClickCustomEVT = self.onExtractionEVT
+
+    def onDetailInfoEVT(self):
+        self.get_input_file(0, "详细信息")
+
+    def onConvertionEVT(self):
+        self.get_input_file(1, "格式转换")
+
+    def onCutClipEVT(self):
+        self.get_input_file(2, "截取片段")
+
+    def onExtractionEVT(self):
+        self.get_input_file(3, "音频分离")
+
+    def get_input_file(self, page: int, title: str):
+        parent = self.GetParent().GetParent().GetParent()
+
+        parent.select_action(1)
+        parent.set_target_page(page, title)
+
+class SubPage(Panel):
+    def __init__(self, parent):
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+    def init_UI(self):
+        font = self.GetFont()
+        font.SetFractionalPointSize(font.GetFractionalPointSize() + 3)
+
+        self.back_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.BACK_ICON, size = IconSize.SMALL))
+
+        self.title_lab = wx.StaticText(self, -1, "Title")
+        self.title_lab.SetFont(font)
+
+        top_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        top_hbox.Add(self.back_icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.AddSpacer(self.FromDIP(4))
+        top_hbox.Add(self.title_lab, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+        top_border = wx.StaticLine(self, -1)
+
+        self.notebook = wx.Simplebook(self, -1)
+
+        self.notebook.AddPage(DetailInfoPage(self.notebook), "detail_info")
+        self.notebook.AddPage(ConvertionPage(self.notebook), "convertion")
+        self.notebook.AddPage(CutClipPage(self.notebook), "cut clip")
+        self.notebook.AddPage(ExtractionPage(self.notebook), "extraction")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(top_hbox, 0, wx.EXPAND)
+        vbox.Add(top_border, 0, wx.EXPAND)
+        vbox.Add(self.notebook, 1, wx.EXPAND)
+
+        self.SetSizer(vbox)
+
+    def Bind_EVT(self):
+        self.back_icon.Bind(wx.EVT_LEFT_DOWN, self.onBackEVT)
+
+    def onBackEVT(self, event):
+        parent = self.GetParent().GetParent().GetParent()
+
+        parent.select_action(0)
+
+class DetailInfoPage(Panel):
+    def __init__(self, parent):
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        pass
+
+class ConvertionPage(Panel):
+    def __init__(self, parent):
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        pass
+
 class CutClipPage(Panel):
+    def __init__(self, parent):
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        pass
+
+class ExtractionPage(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
 
@@ -137,8 +229,13 @@ class FormatFactoryWindow(Frame):
 
         self.notebook = wx.Simplebook(self.panel, -1)
 
-        self.notebook.AddPage(DropFilePage(self.notebook), "drop files")
-        self.notebook.AddPage(SelectPage(self.notebook), "select action")
+        self.select_page = SelectPage(self.notebook)
+        self.drop_files_page = DropFilePage(self.notebook)
+        self.sub_page = SubPage(self.notebook)
+
+        self.notebook.AddPage(self.select_page, "select action")
+        self.notebook.AddPage(self.drop_files_page, "drop files")
+        self.notebook.AddPage(self.sub_page, "sub page")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.notebook, 1, wx.EXPAND)
@@ -154,7 +251,11 @@ class FormatFactoryWindow(Frame):
     def set_input_path(self, path: str):
         self.input_path = path
 
-        self.select_action()
+        self.select_action(2)
 
-    def select_action(self):
-        self.notebook.SetSelection(1)
+    def select_action(self, page: int):
+        self.notebook.SetSelection(page)
+
+    def set_target_page(self, page: int, title: str):
+        self.sub_page.notebook.SetSelection(page)
+        self.sub_page.title_lab.SetLabel(title)
