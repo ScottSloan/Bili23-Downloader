@@ -322,13 +322,16 @@ class FormatTool:
 
         return cls._format_duration(duration)
                 
-    def _format_duration(duration: int):
+    def _format_duration(duration: int, show_hour: bool = False):
         hours = int(duration // 3600)
         mins = int((duration - hours * 3600) // 60)
         secs = int(duration - hours * 3600 - mins * 60)
-        
-        return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2) if hours != 0 else str(mins).zfill(2) + ":" + str(secs).zfill(2)
 
+        if show_hour or hours:
+            return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2)
+        else:
+            return str(mins).zfill(2) + ":" + str(secs).zfill(2)
+        
     def format_speed(speed: int):
         if speed > 1024 * 1024 * 1024:
             return "{:.1f} GB/s".format(speed / 1024 / 1024 / 1024)

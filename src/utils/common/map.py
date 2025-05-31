@@ -111,7 +111,9 @@ subtitle_format_map = {
 
 cover_format_map = {
     "jpg": 0,
-    "png": 1
+    "png": 1,
+    "webp": 2,
+    "avif": 3
 }
 
 cheese_status_map = {

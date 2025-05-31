@@ -1,5 +1,7 @@
 import wx
 import wx.media
+from datetime import datetime
+import wx.lib.masked as masked
 
 from utils.config import Config
 from utils.tool_v2 import FormatTool
@@ -220,9 +222,43 @@ class CutClipPage(Panel):
         ctrl_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         ctrl_hbox.Add(self.progress_bar, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        bottom_line = wx.StaticLine(self, -1)
+
+        start_time_lab = wx.StaticText(self, -1, "开始时间")
+        self.start_time_box = masked.TimeCtrl(self, -1, "00:00:00")
+        self.start_time_paste_btn = wx.Button(self, -1, "填入", size = self.get_scaled_size((50, 24)))
+        self.start_time_paste_btn.SetToolTip("填入当前进度作为开始截取的时间")
+        self.start_time_box.SetOwnFont(self.GetFont())
+
+        start_time_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        start_time_hbox.Add(start_time_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        start_time_hbox.Add(self.start_time_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        start_time_hbox.Add(self.start_time_paste_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        end_time_lab = wx.StaticText(self, -1, "结束时间")
+        self.end_time_box = masked.TimeCtrl(self, -1, "00:00:10")
+        self.end_time_paste_btn = wx.Button(self, -1, "填入", size = self.get_scaled_size((50, 24)))
+        self.end_time_paste_btn.SetToolTip("填入当前进度作为结束截取的时间")
+        self.end_time_box.SetOwnFont(self.GetFont())
+
+        end_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        end_hbox.Add(end_time_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        end_hbox.Add(self.end_time_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        end_hbox.Add(self.end_time_paste_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.cut_btn = wx.Button(self, -1, "开始截取", size = self.get_scaled_size((100, 28)))
+
+        time_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        time_hbox.Add(start_time_hbox, 0, wx.EXPAND)
+        time_hbox.Add(end_hbox, 0, wx.EXPAND)
+        time_hbox.AddStretchSpacer()
+        time_hbox.Add(self.cut_btn, 0, wx.ALL, self.FromDIP(6))
+
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.media_ctrl, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(ctrl_hbox, 0, wx.EXPAND)
+        vbox.Add(bottom_line, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND)
+        vbox.Add(time_hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
 
@@ -234,6 +270,10 @@ class CutClipPage(Panel):
 
         self.progress_bar.Bind(wx.EVT_SCROLL_THUMBTRACK, self.onSliderEVT)
         self.progress_bar.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.onSeekEVT)
+
+        self.start_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteStartTimeEVT)
+        self.end_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteEndTimeEVT)
+        self.cut_btn.Bind(wx.EVT_BUTTON, self.onCutEVT)
 
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
@@ -286,10 +326,30 @@ class CutClipPage(Panel):
             self.set_time_lab(offset)
 
     def onStopEVT(self, event):
-        self.media_ctrl.Stop()
+        self.reset()
+
+        self.set_status(wx.media.MEDIASTATE_PAUSED)
+
+    def onPasteStartTimeEVT(self, event):
+        self.start_time_box.SetValue(self.get_current_progress())
+
+    def onPasteEndTimeEVT(self, event):
+        self.end_time_box.SetValue(self.get_current_progress())
+
+    def onCutEVT(self, event):
+        pass
+
+    def get_current_progress(self):
+        offset = self.media_ctrl.Tell()
+        date_str = FormatTool._format_duration(int(offset / 1000), show_hour = True)
+
+        return wx.DateTime(datetime.strptime(date_str, "%H:%M:%S"))
 
     def set_time_lab(self, offset: int):
-        self.time_lab.SetLabel(FormatTool._format_duration(int(offset / 1000)))
+        def worker():
+            self.time_lab.SetLabel(FormatTool._format_duration(int(offset / 1000)))
+
+        wx.CallAfter(worker)
 
     def set_status(self, status: str):
         match status:
@@ -320,7 +380,7 @@ class FormatFactoryWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, "视频工具箱")
 
-        self.SetSize(self.FromDIP((700, 430)))
+        self.SetSize(self.FromDIP((750, 450)))
 
         self.init_UI()
 
@@ -353,15 +413,21 @@ class FormatFactoryWindow(Frame):
         self.panel.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        pass
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
     def init_utils(self):
         pass
     
+    def onCloseEVT(self, event):
+        self.sub_page.notebook.GetCurrentPage().onCloseEVT()
+
+        event.Skip()
+
     def set_input_path(self, path: str):
         self.sub_page.input_path = path
 
         self.select_action(2)
+        self.sub_page.notebook.GetCurrentPage().init_utils()
 
     def select_action(self, page: int):
         self.notebook.SetSelection(page)
