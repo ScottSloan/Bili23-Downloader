@@ -2,7 +2,7 @@ import wx
 
 from utils.module.ffmpeg import FFmpeg
 from utils.config import Config
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.icon_v4 import Icon, IconID
 
 from gui.component.dialog import Dialog
 from gui.component.bitmap_button import BitmapButton
@@ -22,7 +22,7 @@ class DetectDialog(Dialog):
     def init_UI(self):
         select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
 
-        self.refresh_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.REFRESH_ICON))
+        self.refresh_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Refresh))
         self.refresh_btn.SetToolTip("刷新")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -23,6 +23,14 @@ class Parser:
         self.check_json(resp)
 
         return resp
+    
+    def request_post(self, url: str, headers: dict, raw_json: dict):
+        req = RequestTool.request_post(url, headers, json = raw_json)
+        resp = json.loads(req.text)
+
+        self.check_json(resp)
+
+        return resp
 
     def check_value(self, value: int | str):
         if not value:

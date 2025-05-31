@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.icon_v4 import Icon, IconID
 
 from gui.component.panel import Panel
 

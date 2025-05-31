@@ -8,7 +8,7 @@ from utils.auth.login import QRLogin
 from utils.module.ffmpeg import FFmpeg
 
 from utils.common.thread import Thread
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.icon_v4 import Icon, IconID
 from utils.common.update import Update
 from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, VideoQualityID, Platform, ProcessingType, ExitOption
 from utils.common.data_type import ParseCallback, TreeListItemInfo
@@ -104,21 +104,21 @@ class MainWindow(Frame):
         url_hbox.Add(self.url_box, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.processing_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.LOADING_ICON), size = self.FromDIP((24, 24)))
+        self.processing_icon = wx.StaticBitmap(self.panel, -1, Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self.panel, -1, "")
-        self.detail_btn = FlatButton(self.panel, "详细信息", IconID.INFO_ICON, split = True)
+        self.detail_btn = FlatButton(self.panel, "详细信息", IconID.Info, split = True)
         self.detail_btn.setToolTip("查看视频详细信息")
         self.detail_btn.Hide()
-        self.graph_btn = FlatButton(self.panel, "剧情树", IconID.TREE_STRUCTURE_ICON)
+        self.graph_btn = FlatButton(self.panel, "剧情树", IconID.Tree_Structure)
         self.graph_btn.setToolTip("查看互动视频剧情树")
         self.graph_btn.Hide()
         self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self.panel, -1)
-        self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.LIST_ICON))
+        self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.List))
         self.episode_option_btn.SetToolTip("剧集列表显示设置")
         self.episode_option_btn.Enable(False)
-        self.download_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.SETTING_ICON))
+        self.download_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.Setting))
         self.download_option_btn.SetToolTip("下载选项")
         self.download_option_btn.Enable(False)
 

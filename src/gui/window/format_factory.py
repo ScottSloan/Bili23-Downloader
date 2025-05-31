@@ -3,7 +3,7 @@ import wx.media
 
 from utils.config import Config
 from utils.tool_v2 import FormatTool
-from utils.common.icon_v3 import Icon, IconID, IconSize
+from utils.common.icon_v4 import Icon, IconID, IconSize
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -80,13 +80,13 @@ class SelectPage(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        self.detail_info_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.INFO_ICON, size = IconSize.MEDIUM), "详细信息")
+        self.detail_info_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.Info, size = IconSize.MEDIUM), "详细信息")
 
-        self.convertion_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.CONVERT_ICON, size = IconSize.MEDIUM), "格式转换")
+        self.convertion_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.Convert, size = IconSize.MEDIUM), "格式转换")
 
-        self.cutclip_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.CUT_ICON, size = IconSize.MEDIUM), "截取片段")
+        self.cutclip_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.Cut, size = IconSize.MEDIUM), "截取片段")
 
-        self.extraction_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.AUDIO_ICON, size = IconSize.MEDIUM), "音频提取")
+        self.extraction_btn = LargeBitmapButton(self, Icon.get_icon_bitmap(IconID.Audio, size = IconSize.MEDIUM), "音频提取")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddStretchSpacer()
@@ -141,7 +141,7 @@ class SubPage(Panel):
         font = self.GetFont()
         font.SetFractionalPointSize(font.GetFractionalPointSize() + 3)
 
-        self.back_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.BACK_ICON, size = IconSize.SMALL))
+        self.back_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.Back, size = IconSize.SMALL))
 
         self.title_lab = wx.StaticText(self, -1, "Title")
         self.title_lab.SetFont(font)
@@ -209,7 +209,7 @@ class CutClipPage(Panel):
     def init_UI(self):
         self.media_ctrl = wx.media.MediaCtrl(self, -1)
 
-        self.play_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.RESUME_ICON))
+        self.play_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Play))
         self.time_lab = wx.StaticText(self, -1, "00:00")
         self.progress_bar = wx.Slider(self, -1)
 
@@ -288,10 +288,10 @@ class CutClipPage(Panel):
     def set_status(self, status: str):
         match status:
             case wx.media.MEDIASTATE_PLAYING:
-                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
+                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
 
             case wx.media.MEDIASTATE_PAUSED:
-                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
+                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
 
         self.status = status
 
