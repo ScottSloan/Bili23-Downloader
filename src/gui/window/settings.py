@@ -24,7 +24,7 @@ from gui.dialog.custom_ua import CustomUADialog
 from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, cover_format_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, Platform
 
 from utils.module.notification import NotificationManager
@@ -157,6 +157,14 @@ class BasicTab(Tab):
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
+        self.cover_file_type_lab = wx.StaticText(extra_box, -1, "封面文件格式")
+        self.cover_file_type_choice = wx.Choice(extra_box, -1, choices = list(cover_format_map.keys()))
+
+        cover_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        cover_hbox.AddSpacer(self.FromDIP(20))
+        cover_hbox.Add(self.cover_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        cover_hbox.Add(self.cover_file_type_choice, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        cover_hbox.AddSpacer(self.FromDIP(20))
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
@@ -164,6 +172,7 @@ class BasicTab(Tab):
         extra_sbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
         extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
         
         basic_vbox = wx.BoxSizer(wx.VERTICAL)
         basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, self.FromDIP(6))
@@ -174,6 +183,7 @@ class BasicTab(Tab):
     def Bind_EVT(self):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
+        self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadCoverEVT)
 
         self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
@@ -189,9 +199,11 @@ class BasicTab(Tab):
         self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
         self.subtitle_file_type_choice.SetSelection(Config.Basic.subtitle_file_type)
         self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
+        self.cover_file_type_choice.SetSelection(Config.Basic.cover_file_type)
 
         self.onCheckDownloadDanmakuEVT(0)
         self.onCheckDownloadSubtitleEVT(0)
+        self.onCheckDownloadCoverEVT(0)
 
     def save(self):
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
@@ -205,6 +217,7 @@ class BasicTab(Tab):
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
+        Config.Basic.cover_file_type = self.download_cover_file_chk.GetValue()
 
         Config.Basic.show_exit_dialog = False
 
@@ -221,6 +234,12 @@ class BasicTab(Tab):
         self.subtitle_file_type_lab.Enable(enable)
         self.subtitle_file_lan_type_lab.Enable(enable)
         self.subtitle_file_lan_type_btn.Enable(enable)
+
+    def onCheckDownloadCoverEVT(self, event):
+        enable = self.download_cover_file_chk.GetValue()
+
+        self.cover_file_type_lab.Enable(enable)
+        self.cover_file_type_choice.Enable(enable)
 
     def onCustomSubtitleLanEVT(self, event):
         dlg = CustomLanDialog(self)

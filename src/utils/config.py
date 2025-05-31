@@ -19,6 +19,7 @@ app_config_group = {
         "subtitle_lan_option",
         "subtitle_lan_custom_type",
         "download_cover_file",
+        "cover_file_type",
         "window_pos",
         "window_size",
         "window_maximized",
@@ -135,6 +136,7 @@ class Config:
         subtitle_lan_option: int = 0
         subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
+        cover_file_type: int = 0
 
         window_pos: list = []
         window_size: list = []

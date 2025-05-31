@@ -1,7 +1,7 @@
 import wx
 from typing import Callable
 
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, get_mapping_index_by_value, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, cover_format_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, VideoQualityID, StreamType
 from utils.config import Config, app_config_group
 from utils.tool_v2 import FormatTool
@@ -38,7 +38,13 @@ class DownloadOptionDialog(Dialog):
     def init_UI(self):
         label_color = wx.Colour(64, 64, 64)
 
-        self.stream_type_lab = wx.StaticText(self, -1, "当前视频流格式：")
+        self.stream_type_lab = wx.StaticText(self, -1, "当前视频格式：")
+        stream_type_tip = ToolTip(self)
+        stream_type_tip.set_tooltip("DASH：视频流和音频流相互独立，即视频流中不包含音轨\nFLV：视频流中已包含音轨，因此无法自定义音质")
+
+        stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        stream_type_hbox.Add(self.stream_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        stream_type_hbox.Add(stream_type_tip, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
@@ -130,11 +136,29 @@ class DownloadOptionDialog(Dialog):
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
         media_sbox.Add(media_flex_grid_box, 0, wx.EXPAND)
 
+        path_box = wx.StaticBox(self, -1, "下载目录&&高级选项")
+
+        self.path_box = wx.TextCtrl(path_box, -1)
+        self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+
+        self.custom_file_name_btn = wx.Button(path_box, -1, "文件名...", size = self.get_scaled_size((60, 24)))
+        self.download_sort_btn = wx.Button(path_box, -1, "分类...", size = self.get_scaled_size((60, 24)))
+
+        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        path_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        path_hbox.Add(self.download_sort_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+        path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
+        path_sbox.Add(path_hbox, 0, wx.EXPAND)
+
         left_vbox = wx.BoxSizer(wx.VERTICAL)
-        left_vbox.Add(self.stream_type_lab, 0, wx.ALL, self.FromDIP(6))
+        left_vbox.Add(stream_type_hbox, 0, wx.EXPAND)
         left_vbox.Add(flex_grid_box, 0, wx.EXPAND)
         left_vbox.AddStretchSpacer()
         left_vbox.Add(media_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        left_vbox.Add(path_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
         extra_box = wx.StaticBox(self, -1, "附加内容下载选项")
 
@@ -165,13 +189,22 @@ class DownloadOptionDialog(Dialog):
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
+        self.cover_file_type_lab = wx.StaticText(extra_box, -1, "封面文件格式")
+        self.cover_file_type_choice = wx.Choice(extra_box, -1, choices = list(cover_format_map.keys()))
+
+        cover_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        cover_hbox.AddSpacer(self.FromDIP(20))
+        cover_hbox.Add(self.cover_file_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        cover_hbox.Add(self.cover_file_type_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        cover_hbox.AddSpacer(self.FromDIP(60))
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
         extra_sbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
-        extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
 
         other_box = wx.StaticBox(self, -1, "其他选项")
         
@@ -203,23 +236,6 @@ class DownloadOptionDialog(Dialog):
         hbox.Add(left_vbox, 0, wx.EXPAND)
         hbox.Add(right_vbox, 0, wx.EXPAND)
 
-        path_box = wx.StaticBox(self, -1, "下载目录&&高级选项")
-
-        self.path_box = wx.TextCtrl(path_box, -1)
-        self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
-
-        self.custom_file_name_btn = wx.Button(path_box, -1, "文件名...", size = self.get_scaled_size((60, 24)))
-        self.download_sort_btn = wx.Button(path_box, -1, "分类...", size = self.get_scaled_size((60, 24)))
-
-        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        path_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        path_hbox.Add(self.download_sort_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-
-        path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
-        path_sbox.Add(path_hbox, 0, wx.EXPAND)
-
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
 
@@ -230,7 +246,6 @@ class DownloadOptionDialog(Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hbox, 0, wx.EXPAND)
-        vbox.Add(path_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -245,7 +260,7 @@ class DownloadOptionDialog(Dialog):
 
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
-        self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onEnableOKBtnEVT)
+        self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadCoverEVT)
 
         self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
@@ -269,7 +284,7 @@ class DownloadOptionDialog(Dialog):
                 case StreamType.Flv:
                     lab = "FLV"
             
-            self.stream_type_lab.SetLabel(f"当前视频流格式：{lab}")
+            self.stream_type_lab.SetLabel(f"当前视频格式：{lab}")
 
         get_stream_type()
 
@@ -278,6 +293,7 @@ class DownloadOptionDialog(Dialog):
         self.onChangeStreamDownloadOptionEVT(0)
         self.onCheckDownloadDanmakuEVT(0)
         self.onCheckDownloadSubtitleEVT(0)
+        self.onCheckDownloadCoverEVT(0)
 
         self.preview = Preview(self.parent.current_parse_type, self.parent.stream_type)
 
@@ -322,6 +338,7 @@ class DownloadOptionDialog(Dialog):
         self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
         self.subtitle_file_type_choice.Select(Config.Basic.subtitle_file_type)
         self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
+        self.cover_file_type_choice.Select(Config.Basic.cover_file_type)
 
         self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
@@ -497,6 +514,14 @@ class DownloadOptionDialog(Dialog):
         self.subtitle_file_type_choice.Enable(enable)
         self.subtitle_file_lan_type_lab.Enable(enable)
         self.subtitle_file_lan_type_btn.Enable(enable)
+
+        self.onEnableOKBtnEVT(event)
+
+    def onCheckDownloadCoverEVT(self, event):
+        enable = self.download_cover_file_chk.GetValue()
+
+        self.cover_file_type_lab.Enable(enable)
+        self.cover_file_type_choice.Enable(enable)
 
         self.onEnableOKBtnEVT(event)
 

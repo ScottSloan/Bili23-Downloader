@@ -109,6 +109,11 @@ subtitle_format_map = {
     "json": 3
 }
 
+cover_format_map = {
+    "jpg": 0,
+    "png": 1
+}
+
 cheese_status_map = {
     1: "全集试看",
     2: "付费",
