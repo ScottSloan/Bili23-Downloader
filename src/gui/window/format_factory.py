@@ -7,6 +7,8 @@ from utils.config import Config
 from utils.tool_v2 import FormatTool
 from utils.common.icon_v4 import Icon, IconID, IconSize
 
+from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
+
 from gui.component.frame import Frame
 from gui.component.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
@@ -209,11 +211,13 @@ class CutClipPage(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        self.media_ctrl = wx.media.MediaCtrl(self, -1)
+        self.player_panel = Panel(self)
+        self.player_panel.SetBackgroundColour("black")
 
         self.play_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Play))
         self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Stop))
         self.time_lab = wx.StaticText(self, -1, "00:00")
+        self.length_lab = wx.StaticText(self, -1, "00:00")
         self.progress_bar = wx.Slider(self, -1)
 
         ctrl_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -221,6 +225,7 @@ class CutClipPage(Panel):
         ctrl_hbox.Add(self.stop_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         ctrl_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         ctrl_hbox.Add(self.progress_bar, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.length_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         bottom_line = wx.StaticLine(self, -1)
 
@@ -255,7 +260,7 @@ class CutClipPage(Panel):
         time_hbox.Add(self.cut_btn, 0, wx.ALL, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.media_ctrl, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(self.player_panel, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(ctrl_hbox, 0, wx.EXPAND)
         vbox.Add(bottom_line, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND)
         vbox.Add(time_hbox, 0, wx.EXPAND)
@@ -278,32 +283,38 @@ class CutClipPage(Panel):
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
-        self.media_ctrl.Load(self.GetParent().GetParent().input_path)
+        self.player = VLCPlayer()
+        self.player.set_window(self.player_panel.GetHandle())
+        self.player.set_mrl(self.GetParent().GetParent().input_path)
+        self.player.register_callback(VLCEvent.LengthChanged.value, self.onLengthChangeEVT)
+
+        self.player_panel.SetInitialSize()
+        self.GetSizer().Layout()
 
         self.onSlider = False
-        self.status = wx.media.MEDIASTATE_PAUSED
 
     def onCloseEVT(self):
         self.reset()
 
+        self.player.release()
+
     def onPlayEVT(self, event):
-        match self.status:
-            case wx.media.MEDIASTATE_PAUSED:
-                if not self.media_ctrl.Play():
-                    print("error")
-                else:
-                    self.media_ctrl.SetInitialSize()
-                    self.GetSizer().Layout()
-                    self.progress_bar.SetRange(0, self.media_ctrl.Length())
-                    self.set_status(wx.media.MEDIASTATE_PLAYING)
+        state = self.player.get_state()
 
-                    if not self.timer.IsRunning():
-                        self.timer.Start(1000)
+        match state:
+            case VLCState.Stopped:
+                self.player.play()
 
-            case wx.media.MEDIASTATE_PLAYING:
-                self.media_ctrl.Pause()
+                if not self.timer.IsRunning():
+                    self.timer.Start(1000)
 
-                self.set_status(wx.media.MEDIASTATE_PAUSED)
+            case VLCState.Playing:
+                self.player.pause()
+
+            case VLCState.Paused:
+                self.player.resume()
+
+        self.set_status(state)
 
     def onSliderEVT(self, event):
         self.onSlider = True
@@ -313,13 +324,16 @@ class CutClipPage(Panel):
     def onSeekEVT(self, event):
         offset = self.progress_bar.GetValue()
 
-        self.media_ctrl.Seek(offset)
+        self.player.seek(offset)
 
         self.onSlider = False
 
     def onTimerEVT(self, event):
+        if self.player.get_state() == VLCState.Ended:
+            self.reset()
+
         if not self.onSlider:
-            offset = self.media_ctrl.Tell()
+            offset = self.player.get_progress()
 
             self.progress_bar.SetValue(offset)
 
@@ -327,8 +341,6 @@ class CutClipPage(Panel):
 
     def onStopEVT(self, event):
         self.reset()
-
-        self.set_status(wx.media.MEDIASTATE_PAUSED)
 
     def onPasteStartTimeEVT(self, event):
         self.start_time_box.SetValue(self.get_current_progress())
@@ -338,9 +350,15 @@ class CutClipPage(Panel):
 
     def onCutEVT(self, event):
         pass
+    
+    def onLengthChangeEVT(self, event):
+        length = self.player.get_length()
+
+        self.progress_bar.SetRange(0, length)
+        self.length_lab.SetLabel(FormatTool._format_duration(int(length / 1000)))
 
     def get_current_progress(self):
-        offset = self.media_ctrl.Tell()
+        offset = self.player.get_progress()
         date_str = FormatTool._format_duration(int(offset / 1000), show_hour = True)
 
         return wx.DateTime(datetime.strptime(date_str, "%H:%M:%S"))
@@ -353,19 +371,20 @@ class CutClipPage(Panel):
 
     def set_status(self, status: str):
         match status:
-            case wx.media.MEDIASTATE_PLAYING:
-                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
-
-            case wx.media.MEDIASTATE_PAUSED:
+            case VLCState.Playing:
                 self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
 
-        self.status = status
+            case VLCState.Paused | VLCState.Stopped:
+                self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
 
     def reset(self):
-        self.media_ctrl.Stop()
+        self.player.stop()
         self.timer.Stop()
+
         self.progress_bar.SetValue(0)
         self.time_lab.SetLabel("00:00")
+
+        self.set_status(VLCState.Stopped)
 
 class ExtractionPage(Panel):
     def __init__(self, parent):

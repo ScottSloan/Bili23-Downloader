@@ -9,6 +9,9 @@ config.ini
 # 下载目录
 download
 
+# VLC
+VLC
+
 # 配置文件
 video*.json
 bangumi.json
