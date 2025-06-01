@@ -1,6 +1,7 @@
 import wx
 
 from utils.config import Config
+from utils.common.enums import Platform
 from utils.tool_v2 import UniversalTool
 from utils.auth.cookie import CookieUtils
 
@@ -15,8 +16,24 @@ class APP(wx.App):
         self.SetAppName(Config.APP.name)
 
 def init():
-    UniversalTool.msw_set_utf8_encode()
-    UniversalTool.msw_set_dpi_awareness()
+    def windows():
+        import ctypes
+        import subprocess
+
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
+
+    def linux():
+        import os
+
+        os.environ['GDK_BACKEND'] = "x11"
+
+    match Platform(Config.Sys.platform):
+        case Platform.Windows:
+            windows()
+
+        case Platform.Linux:
+            linux()
 
     cookie_utils = CookieUtils()
     cookie_utils.init_cookie_params()

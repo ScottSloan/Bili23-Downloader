@@ -474,10 +474,3 @@ class UniversalTool:
     def get_file_path(directory: str, file_name: str):
         return os.path.join(directory, file_name)
 
-    def msw_set_dpi_awareness():
-        if Config.Sys.platform == Platform.Windows.value:
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)
-
-    def msw_set_utf8_encode():
-        if Config.Sys.platform == Platform.Windows.value:
-            subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)

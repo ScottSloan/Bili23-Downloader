@@ -1,11 +1,11 @@
 import wx
-import wx.media
 from datetime import datetime
 import wx.lib.masked as masked
 
 from utils.config import Config
 from utils.tool_v2 import FormatTool
 from utils.common.icon_v4 import Icon, IconID, IconSize
+from utils.common.enums import Platform
 
 from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
 
@@ -50,9 +50,11 @@ class DropFilePage(Panel):
         dlg.Destroy()
 
     def draw_dashed_border(self, dc: wx.PaintDC):
-        pen = wx.Pen(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT), 2, wx.PENSTYLE_LONG_DASH)
+        pen = wx.Pen(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUTEXT), 2, wx.PENSTYLE_LONG_DASH)
+        brush = wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR))
 
         dc.SetPen(pen)
+        dc.SetBrush(brush)
 
         client_size = self.GetClientSize()
 
@@ -193,6 +195,15 @@ class DetailInfoPage(Panel):
     def init_UI(self):
         pass
 
+    def Bind_EVT(self):
+        pass
+
+    def init_utils(self):
+        pass
+
+    def onCloseEVT(self):
+        pass
+
 class ConvertionPage(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -200,6 +211,15 @@ class ConvertionPage(Panel):
         self.init_UI()
 
     def init_UI(self):
+        pass
+
+    def Bind_EVT(self):
+        pass
+
+    def init_utils(self):
+        pass
+
+    def onCloseEVT(self):
         pass
 
 class CutClipPage(Panel):
@@ -284,6 +304,7 @@ class CutClipPage(Panel):
 
     def init_utils(self):
         self.player = VLCPlayer()
+
         self.player.set_window(self.player_panel.GetHandle())
         self.player.set_mrl(self.GetParent().GetParent().input_path)
         self.player.register_callback(VLCEvent.LengthChanged.value, self.onLengthChangeEVT)
@@ -296,25 +317,25 @@ class CutClipPage(Panel):
     def onCloseEVT(self):
         self.reset()
 
-        self.player.release()
-
     def onPlayEVT(self, event):
-        state = self.player.get_state()
-
-        match state:
+        match self.player.get_state():
             case VLCState.Stopped:
                 self.player.play()
 
                 if not self.timer.IsRunning():
                     self.timer.Start(1000)
 
+                self.set_icon(VLCState.Paused)
+
             case VLCState.Playing:
                 self.player.pause()
+
+                self.set_icon(VLCState.Playing)
 
             case VLCState.Paused:
                 self.player.resume()
 
-        self.set_status(state)
+                self.set_icon(VLCState.Paused)
 
     def onSliderEVT(self, event):
         self.onSlider = True
@@ -369,22 +390,24 @@ class CutClipPage(Panel):
 
         wx.CallAfter(worker)
 
-    def set_status(self, status: str):
-        match status:
-            case VLCState.Playing:
+    def set_icon(self, state: str):
+        match state:
+            case VLCState.Playing | VLCState.Stopped:
                 self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
 
-            case VLCState.Paused | VLCState.Stopped:
+            case VLCState.Paused:
                 self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
 
     def reset(self):
-        self.player.stop()
+        if hasattr(self, "player"):
+            self.player.stop()
+
         self.timer.Stop()
 
         self.progress_bar.SetValue(0)
         self.time_lab.SetLabel("00:00")
 
-        self.set_status(VLCState.Stopped)
+        self.set_icon(VLCState.Stopped)
 
 class ExtractionPage(Panel):
     def __init__(self, parent):
@@ -393,6 +416,15 @@ class ExtractionPage(Panel):
         self.init_UI()
 
     def init_UI(self):
+        pass
+    
+    def Bind_EVT(self):
+        pass
+
+    def init_utils(self):
+        pass
+
+    def onCloseEVT(self):
         pass
 
 class FormatFactoryWindow(Frame):

@@ -18,9 +18,19 @@ class LargeBitmapButton(Panel):
         self.bitmap = wx.StaticBitmap(self, -1, bitmap)
         self.label = wx.StaticText(self, -1, label)
 
+        bitmap_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bitmap_hbox.AddStretchSpacer()
+        bitmap_hbox.Add(self.bitmap, 0, wx.ALL, self.FromDIP(6))
+        bitmap_hbox.AddStretchSpacer()
+
+        label_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        label_hbox.AddStretchSpacer()
+        label_hbox.Add(self.label, 0, wx.ALL, self.FromDIP(6))
+        label_hbox.AddStretchSpacer()
+
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.bitmap, 0, wx.ALL, self.FromDIP(6))
-        vbox.Add(self.label, 0, wx.ALL, self.FromDIP(6))
+        vbox.Add(bitmap_hbox, 0, wx.EXPAND)
+        vbox.Add(label_hbox, 0, wx.EXPAND)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.AddSpacer(self.FromDIP(10))
@@ -77,7 +87,7 @@ class LargeBitmapButton(Panel):
             self.SetBackgroundColour(wx.Colour(200, 200, 200))
 
     def set_default_bgcolor(self):
-        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_FRAMEBK))
+        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR))
 
     def onClickCustomEVT(self):
         pass

@@ -61,8 +61,8 @@ class Icon:
         decode_string = base64.b64decode(IconResource.resource.get(icon_id.value))
 
         if Config.Sys.dark_mode:
-            decode_string.replace("#000000", "#ffffff")
-
+            decode_string = decode_string.replace(b"#000000", b"#ffffff")
+            
         img: wx.svg.SVGimage = wx.svg.SVGimage.CreateFromBytes(BytesIO(decode_string).getvalue())
 
         size = cls.get_scale_size(icon_size)

@@ -73,7 +73,12 @@ class VLCPlayer:
         return self.player.get_time()
     
     def set_window(self, handle: int):
-        if Config.Sys.platform == Platform.Windows.value:
-            self.player.set_hwnd(handle)
-        else:
-            self.player.set_xwindow(handle)
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                self.player.set_hwnd(handle)
+
+            case Platform.Linux:
+                self.player.set_xwindow(handle)
+
+            case Platform.macOS:
+                self.player.set_nsobject(int(handle))
