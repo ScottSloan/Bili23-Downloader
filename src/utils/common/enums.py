@@ -66,7 +66,7 @@ class StatusCode(Enum):
     Pay = 601                     # 付费购买
     URL = 602                     # 无效链接
     Redirect = 603                # 跳转链接
-    FFmpegCall = 610              # 调用出错
+    FFmpeg = 610                  # 调用出错
     Download = 611                # 下载失败
     MaxRety = 612                 # 最大重试
     Area_Limit = -10403           # 区域限制
@@ -140,12 +140,6 @@ class SubtitleLanOption(Enum):
     All_Subtitles_With_AI = 0     # 下载全部字幕 + AI 字幕
     All_Subtitles = 1             # 下载全部字幕
     Custom = 2                    # 自定义
-
-class KeepFilesOption(Enum):
-    NONE = 0                      # 不保留
-    ALL = 1                       # 保留全部
-    VIDEO = 2                     # 保留视频
-    AUDIO = 3                     # 保留音频
 
 class UAOption(Enum):
     Custom = 0                    # 自定义

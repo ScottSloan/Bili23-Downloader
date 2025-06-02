@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from utils.common.enums import StreamType, StatusCode, OverrideOption, Platform, KeepFilesOption
+from utils.common.enums import StreamType, StatusCode, OverrideOption, Platform
 from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
@@ -67,7 +67,7 @@ class FFmpeg:
         if not resp[0]:
             callback.onSuccess()
         else:
-            raise GlobalException(code = StatusCode.FFmpegCall.value, stack_trace = resp[1], callback = callback.onError)
+            raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = resp[1], callback = callback.onError)
     
     def cut_clip(self, callback: CutCallback):
         command = self.get_cut_command()
@@ -77,7 +77,7 @@ class FFmpeg:
         if not resp[0]:
             callback.onSuccess()
         else:
-            raise GlobalException(code = StatusCode.FFmpegCall.value, stack_trace = resp[1], callback = callback.onError)
+            raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = resp[1], callback = callback.onError)
 
     def get_dash_command(self):
         def get_merge_command():

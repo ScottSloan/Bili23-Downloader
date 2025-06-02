@@ -589,6 +589,7 @@ class DownloadOptionDialog(Dialog):
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
+        Config.Basic.cover_file_type = self.cover_file_type_choice.GetSelection()
 
         Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()

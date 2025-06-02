@@ -233,7 +233,7 @@ class Command:
     def __init__(self):
         self.command = []
 
-    def add(self, command):
+    def add(self, command: str):
         self.command.append(command)
 
     def clear(self):
@@ -241,6 +241,14 @@ class Command:
 
     def format(self):
         return " && ".join(self.command)
+
+class Process:
+    output: str = None
+    return_code: int = None
+
+class Callback:
+    onSuccess: Callable = None
+    onError: Callable = None
 
 class MergeCallback:
     def __init__(self):

@@ -2,7 +2,6 @@ import wx
 
 from utils.config import Config
 from utils.common.enums import Platform
-from utils.tool_v2 import UniversalTool
 from utils.auth.cookie import CookieUtils
 
 from gui.main_v2 import MainWindow
