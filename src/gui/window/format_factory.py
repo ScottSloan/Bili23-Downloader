@@ -1,17 +1,16 @@
 import wx
-from datetime import datetime
+import os
 import wx.lib.masked as masked
 
 from utils.config import Config
-from utils.tool_v2 import FormatTool
 from utils.common.icon_v4 import Icon, IconID, IconSize
 
-from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
 from utils.module.ffmpeg_v2 import FFmpeg
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
+from gui.component.player import Player
 from gui.component.bitmap_button import BitmapButton
 
 class SelectPage(Panel):
@@ -172,6 +171,9 @@ class ContainerPage(Panel):
 
         def onCloseEVT(self):
             pass
+        
+        def onChangeInputFile(self):
+            pass
 
     class ConvertionPage(Page):
         def __init__(self, parent):
@@ -190,6 +192,9 @@ class ContainerPage(Panel):
 
         def onCloseEVT(self):
             pass
+        
+        def onChangeInputFile(self):
+            pass
 
     class CutClipPage(Page):
         def __init__(self, parent):
@@ -200,22 +205,8 @@ class ContainerPage(Panel):
             self.Bind_EVT()
 
         def init_UI(self):
-            self.player_panel = Panel(self)
-            self.player_panel.SetBackgroundColour("black")
-
-            self.play_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Play))
-            self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Stop))
-            self.time_lab = wx.StaticText(self, -1, "00:00")
-            self.length_lab = wx.StaticText(self, -1, "00:00")
-            self.progress_bar = wx.Slider(self, -1)
-
-            ctrl_hbox = wx.BoxSizer(wx.HORIZONTAL)
-            ctrl_hbox.Add(self.play_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-            ctrl_hbox.Add(self.stop_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-            ctrl_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-            ctrl_hbox.Add(self.progress_bar, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-            ctrl_hbox.Add(self.length_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-
+            self.player = Player(self)
+            
             bottom_line = wx.StaticLine(self, -1)
 
             start_time_lab = wx.StaticText(self, -1, "开始时间")
@@ -249,94 +240,33 @@ class ContainerPage(Panel):
             time_hbox.Add(self.cut_btn, 0, wx.ALL, self.FromDIP(6))
 
             vbox = wx.BoxSizer(wx.VERTICAL)
-            vbox.Add(self.player_panel, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
-            vbox.Add(ctrl_hbox, 0, wx.EXPAND)
+            vbox.Add(self.player, 1, wx.EXPAND)
             vbox.Add(bottom_line, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND)
             vbox.Add(time_hbox, 0, wx.EXPAND)
 
             self.SetSizer(vbox)
 
-            self.timer = wx.Timer(self, -1)
-
         def Bind_EVT(self):
-            self.play_btn.Bind(wx.EVT_BUTTON, self.onPlayEVT)
-            self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
-
-            self.progress_bar.Bind(wx.EVT_SCROLL_THUMBTRACK, self.onSliderEVT)
-            self.progress_bar.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.onSeekEVT)
-
             self.start_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteStartTimeEVT)
             self.end_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteEndTimeEVT)
             self.cut_btn.Bind(wx.EVT_BUTTON, self.onCutEVT)
 
-            self.Bind(wx.EVT_TIMER, self.onTimerEVT)
-
         def init_utils(self):
-            self.player = VLCPlayer()
-
-            self.player.set_window(self.player_panel.GetHandle())
-            self.player.set_mrl(self.input_path)
-            self.player.register_callback(VLCEvent.LengthChanged.value, self.onLengthChangeEVT)
-
-            self.player_panel.SetInitialSize()
-            self.GetSizer().Layout()
-
-            self.onSlider = False
+            self.player.init_player(self.input_path)
 
         def onCloseEVT(self):
-            self.reset()
+            self.player.close_player()
 
-        def onPlayEVT(self, event):
-            match self.player.get_state():
-                case VLCState.Stopped:
-                    self.player.play()
+        def onChangeInputFile(self):
+            self.player.reset()
 
-                    if not self.timer.IsRunning():
-                        self.timer.Start(1000)
-
-                    self.set_icon(VLCState.Paused)
-
-                case VLCState.Playing:
-                    self.player.pause()
-
-                    self.set_icon(VLCState.Playing)
-
-                case VLCState.Paused:
-                    self.player.resume()
-
-                    self.set_icon(VLCState.Paused)
-
-        def onSliderEVT(self, event):
-            self.onSlider = True
-
-            self.set_time_lab(self.progress_bar.GetValue())
-
-        def onSeekEVT(self, event):
-            offset = self.progress_bar.GetValue()
-
-            self.player.seek(offset)
-
-            self.onSlider = False
-
-        def onTimerEVT(self, event):
-            if self.player.get_state() == VLCState.Ended:
-                self.reset()
-
-            if not self.onSlider:
-                offset = self.player.get_progress()
-
-                self.progress_bar.SetValue(offset)
-
-                self.set_time_lab(offset)
-
-        def onStopEVT(self, event):
-            self.reset()
+            self.player.player.set_mrl(self.input_path)
 
         def onPasteStartTimeEVT(self, event):
-            self.start_time_box.SetValue(self.get_current_progress())
+            self.start_time_box.SetValue(self.player.get_time())
 
         def onPasteEndTimeEVT(self, event):
-            self.end_time_box.SetValue(self.get_current_progress())
+            self.end_time_box.SetValue(self.player.get_time())
 
         def onCutEVT(self, event):
             def get_info():
@@ -350,44 +280,6 @@ class ContainerPage(Panel):
             ffmpeg = FFmpeg()
 
             ffmpeg.cut(get_info())
-    
-        def onLengthChangeEVT(self, event):
-            length = self.player.get_length()
-
-            self.progress_bar.SetRange(0, length)
-            self.length_lab.SetLabel(FormatTool._format_duration(int(length / 1000)))
-
-        def get_current_progress(self):
-            offset = self.player.get_progress()
-            date_str = FormatTool._format_duration(int(offset / 1000), show_hour = True)
-
-            return wx.DateTime(datetime.strptime(date_str, "%H:%M:%S"))
-
-        def set_time_lab(self, offset: int):
-            def worker():
-                self.time_lab.SetLabel(FormatTool._format_duration(int(offset / 1000)))
-
-            wx.CallAfter(worker)
-
-        def set_icon(self, state: str):
-            match state:
-                case VLCState.Playing | VLCState.Stopped:
-                    self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
-
-                case VLCState.Paused:
-                    self.play_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
-
-        def reset(self):
-            if hasattr(self, "player"):
-                self.player.stop()
-
-            self.timer.Stop()
-
-            self.progress_bar.SetValue(0)
-            self.progress_bar.SetRange(0, 0)
-            self.time_lab.SetLabel("00:00")
-
-            self.set_icon(VLCState.Stopped)
 
     class ExtractionPage(Page):
         def __init__(self, parent):
@@ -406,9 +298,13 @@ class ContainerPage(Panel):
 
         def onCloseEVT(self):
             pass
+        
+        def onChangeInputFile(self):
+            pass
 
     def __init__(self, parent):
         Panel.__init__(self, parent)
+        self.parent = self.GetParent().GetParent().GetParent()
 
         self.init_UI()
 
@@ -425,10 +321,16 @@ class ContainerPage(Panel):
         self.title_lab = wx.StaticText(self, -1, "Title")
         self.title_lab.SetFont(font)
 
+        self.input_lab = wx.StaticText(self, -1, "当前选择文件：")
+        self.browse_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Folder))
+
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(self.back_icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        top_hbox.AddSpacer(self.FromDIP(4))
+        top_hbox.AddSpacer(self.FromDIP(6))
         top_hbox.Add(self.title_lab, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        top_hbox.AddStretchSpacer()
+        top_hbox.Add(self.input_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         top_border = wx.StaticLine(self, -1)
 
@@ -443,6 +345,7 @@ class ContainerPage(Panel):
 
     def Bind_EVT(self):
         self.back_icon.Bind(wx.EVT_LEFT_DOWN, self.onBackEVT)
+        self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
 
     def init_utils(self):
         pass
@@ -454,15 +357,30 @@ class ContainerPage(Panel):
 
         parent.change_page(0)
 
+    def onBrowseEVT(self, event):
+        dlg = wx.FileDialog(self, "选择文件", defaultDir = os.path.dirname(self.input_path), defaultFile = os.path.basename(self.input_path), style = wx.FD_OPEN)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.change_input_path(dlg.GetPath())
+            
+        dlg.Destroy()
+
+    def change_input_path(self, path: str):
+        self.parent.change_input_path(path)
+
+        self.input_lab.SetLabel(f"当前选择文件：{os.path.basename(self.input_path)}")
+
+        self.GetSizer().Layout()
+
     @property
     def input_path(self):
-        return self.GetParent().GetParent().GetParent().input_path
+        return self.parent.input_path
 
 class FormatFactoryWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, "视频工具箱")
 
-        self.SetSize(self.FromDIP((750, 450)))
+        self.SetSize(self.FromDIP((850, 500)))
 
         self.init_UI()
 
@@ -534,11 +452,18 @@ class FormatFactoryWindow(Frame):
 
             self.container_page.title_lab.SetLabel(get_title())
 
+            self.container_page.change_input_path(self.input_path)
+
         self.input_path = path
 
         load_page()
 
         self.change_page(2)
+
+    def change_input_path(self, path: str):
+        self.input_path = path
+
+        self.container_page.notebook.GetCurrentPage().onChangeInputFile()
 
     def change_page(self, page: int):
         self.notebook.SetSelection(page)
