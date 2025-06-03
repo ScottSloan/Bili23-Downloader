@@ -221,14 +221,6 @@ class TreeListItemInfo:
         self.title: str = ""
         self.cid: int = 0
 
-class ParseCallback:
-    # 解析回调类
-    def __init__(self):
-        self.onError: Callable = None
-        self.onRedirect: Callable = None
-        self.onInteract: Callable = None
-        self.onInteractUpdate: Callable = None
-
 class Command:
     def __init__(self):
         self.command = []
@@ -246,9 +238,25 @@ class Process:
     output: str = None
     return_code: int = None
 
-class Callback:
-    onSuccess: Callable = None
-    onError: Callable = None
+class RunCallback:
+    def onSuccess(process: Process):
+        pass
+    
+    def onError(process: Process):
+        pass
+
+class ParseCallback:
+    def onError():
+        pass
+
+    def onBangumi(url: str):
+        pass
+
+    def onInteractVideo():
+        pass
+
+    def onUpdateInteractVideo(title: str):
+        pass
 
 class MergeCallback:
     def __init__(self):

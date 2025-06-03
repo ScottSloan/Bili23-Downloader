@@ -769,38 +769,51 @@ class MainWindow(Frame):
 
             self.show_episode_list()
         
+        class Callback(ParseCallback):
+            def onError():
+                self.onErrorCallback()
+            
+            def onBangumi(url: str):
+                self.onBangumiCallback(url)
+
+            def onInteractVideo():
+                self.onInteractVideoCallback()
+
+            def onUpdateInteractVideo(title: str):
+                self.processing_window.onUpdateNode(title)
+
         match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
             case "cheese":
                 self.current_parse_type = ParseType.Cheese
-                self.cheese_parser = CheeseParser(self.parse_callback)
+                self.cheese_parser = CheeseParser(Callback)
 
                 return_code = self.cheese_parser.parse_url(url)
 
             case "av" | "BV":
                 self.current_parse_type = ParseType.Video
-                self.video_parser = VideoParser(self.parse_callback)
+                self.video_parser = VideoParser(Callback)
 
                 return_code = self.video_parser.parse_url(url)
 
             case "ep" | "ss" | "md":
                 self.current_parse_type = ParseType.Bangumi
-                self.bangumi_parser = BangumiParser(self.parse_callback)
+                self.bangumi_parser = BangumiParser(Callback)
 
                 return_code = self.bangumi_parser.parse_url(url)
 
             case "live":
                 self.current_parse_type = ParseType.Live
-                self.live_parser = LiveParser(self.parse_callback)
+                self.live_parser = LiveParser(Callback)
 
                 return_code = self.live_parser.parse_url(url)
 
             case "b23.tv" | "bili2233.cn":
-                self.b23_parser = B23Parser(self.parse_callback)
+                self.b23_parser = B23Parser(Callback)
 
                 return_code = self.b23_parser.parse_url(url)
 
             case "blackboard" | "festival":
-                self.activity_parser = ActivityParser(self.parse_callback)
+                self.activity_parser = ActivityParser(Callback)
 
                 return_code = self.activity_parser.parse_url(url)
             
@@ -855,7 +868,7 @@ class MainWindow(Frame):
 
         self.CallAfter(worker)
 
-    def onRedirectCallback(self, url: str):
+    def onBangumiCallback(self, url: str):
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
     def set_parse_status(self, status: ParseStatus):
@@ -951,7 +964,7 @@ class MainWindow(Frame):
 
             wx.TheClipboard.Close()
 
-    def interact_video_detected(self):
+    def onInteractVideoCallback(self):
         def worker():
             self.processing_window.change_type(ProcessingType.Interact)
 
@@ -969,8 +982,8 @@ class MainWindow(Frame):
     def parse_callback(self):
         callback = ParseCallback()
         callback.onError = self.onErrorCallback
-        callback.onRedirect = self.onRedirectCallback
-        callback.onInteract = self.interact_video_detected
+        callback.onRedirect = self.onBangumiCallback
+        callback.onInteract = self.onInteractVideoCallback
         callback.onInteractUpdate = self.processing_window.onUpdateNode
 
         return callback

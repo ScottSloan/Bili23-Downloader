@@ -163,10 +163,9 @@ class BangumiParser(Parser):
             BangumiInfo.stream_type = StreamType.Flv.value
         
         else:
-            if BangumiInfo.payment and Config.User.login:
-                raise GlobalException(code = StatusCode.Pay.value)
-            else:
-                raise GlobalException(code = StatusCode.Vip.value)
+            code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
+
+            raise GlobalException(code = code)
                 
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]

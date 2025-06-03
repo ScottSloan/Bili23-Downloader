@@ -113,7 +113,7 @@ class VideoParser(Parser):
         info = VideoInfo.info_json = resp["data"]
 
         if "redirect_url" in info:
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = info["redirect_url"])
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (info["redirect_url"], ))
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
@@ -144,7 +144,7 @@ class VideoParser(Parser):
 
         # 判断是否为互动视频
         if VideoInfo.is_interactive:
-            self.interact_video_parser = InteractVideoParser(self.callback.onInteractUpdate)
+            self.interact_video_parser = InteractVideoParser(self.callback.onUpdateInteractVideo)
 
             InteractVideoInfo.aid = VideoInfo.aid
             InteractVideoInfo.cid = VideoInfo.cid
@@ -154,7 +154,7 @@ class VideoParser(Parser):
 
             self.interact_video_parser.get_video_interactive_graph_version()
 
-            self.callback.onInteract()
+            self.callback.onInteractVideo()
 
         self.parse_episodes()
 

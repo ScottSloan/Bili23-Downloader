@@ -4,6 +4,7 @@ import wx.lib.masked as masked
 
 from utils.config import Config
 from utils.common.icon_v4 import Icon, IconID, IconSize
+from utils.common.data_type import RunCallback
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -12,6 +13,7 @@ from gui.component.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
 from gui.component.player import Player
 from gui.component.bitmap_button import BitmapButton
+from gui.component.text_ctrl import TextCtrl
 
 class SelectPage(Panel):
     def __init__(self, parent):
@@ -150,6 +152,15 @@ class ContainerPage(Panel):
         def __init__(self, parent):
             Panel.__init__(self, parent)
 
+        def init_utils(self):
+            pass
+
+        def onCloseEVT(self):
+            pass
+
+        def onChangeInputFile(self):
+            pass
+
         @property
         def input_path(self):
             return self.GetParent().GetParent().input_path
@@ -166,15 +177,6 @@ class ContainerPage(Panel):
         def Bind_EVT(self):
             pass
 
-        def init_utils(self):
-            pass
-
-        def onCloseEVT(self):
-            pass
-        
-        def onChangeInputFile(self):
-            pass
-
     class ConvertionPage(Page):
         def __init__(self, parent):
             ContainerPage.Page.__init__(self, parent)
@@ -185,15 +187,6 @@ class ContainerPage(Panel):
             pass
 
         def Bind_EVT(self):
-            pass
-
-        def init_utils(self):
-            pass
-
-        def onCloseEVT(self):
-            pass
-        
-        def onChangeInputFile(self):
             pass
 
     class CutClipPage(Page):
@@ -236,23 +229,36 @@ class ContainerPage(Panel):
             time_hbox = wx.BoxSizer(wx.HORIZONTAL)
             time_hbox.Add(start_time_hbox, 0, wx.EXPAND)
             time_hbox.Add(end_hbox, 0, wx.EXPAND)
-            time_hbox.AddStretchSpacer()
-            time_hbox.Add(self.cut_btn, 0, wx.ALL, self.FromDIP(6))
+
+            output_lab = wx.StaticText(self, -1, "输出")
+            self.output_box = TextCtrl(self, -1)
+            self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
+
+            output_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            output_hbox.Add(output_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+            output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+            output_hbox.AddStretchSpacer()
+            output_hbox.Add(self.cut_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
             vbox = wx.BoxSizer(wx.VERTICAL)
             vbox.Add(self.player, 1, wx.EXPAND)
             vbox.Add(bottom_line, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND)
             vbox.Add(time_hbox, 0, wx.EXPAND)
+            vbox.Add(output_hbox, 0, wx.EXPAND)
 
             self.SetSizer(vbox)
 
         def Bind_EVT(self):
             self.start_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteStartTimeEVT)
             self.end_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteEndTimeEVT)
+            self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
             self.cut_btn.Bind(wx.EVT_BUTTON, self.onCutEVT)
 
         def init_utils(self):
             self.player.init_player(self.input_path)
+
+            self.output_path = None
 
         def onCloseEVT(self):
             self.player.close_player()
@@ -268,18 +274,35 @@ class ContainerPage(Panel):
         def onPasteEndTimeEVT(self, event):
             self.end_time_box.SetValue(self.player.get_time())
 
+        def onBrowseEVT(self, event):
+            dlg = wx.FileDialog(self, "选择保存位置", defaultDir = os.path.dirname(self.input_path), style = wx.FD_SAVE)
+
+            if dlg.ShowModal() == wx.ID_OK:
+                self.output_path = dlg.GetPath()
+
+                self.output_box.SetValue(self.output_path)
+                
+            dlg.Destroy()
+
         def onCutEVT(self, event):
             def get_info():
                 return {
                     "input_path": self.input_path,
-                    "output_path": "",
+                    "output_path": self.output_path,
                     "start_time": self.start_time_box.GetValue(as_wxDateTime = True).Format("%H:%M:%S"),
                     "end_time": self.end_time_box.GetValue(as_wxDateTime = True).Format("%H:%M:%S")
                 }
 
+            class FFmpegCallback(RunCallback):
+                def onSuccess(process):
+                    print("su")
+
+                def onError(process):
+                    print("err")
+                    
             ffmpeg = FFmpeg()
 
-            ffmpeg.cut(get_info())
+            ffmpeg.cut(get_info(), FFmpegCallback)
 
     class ExtractionPage(Page):
         def __init__(self, parent):
@@ -291,15 +314,6 @@ class ContainerPage(Panel):
             pass
         
         def Bind_EVT(self):
-            pass
-
-        def init_utils(self):
-            pass
-
-        def onCloseEVT(self):
-            pass
-        
-        def onChangeInputFile(self):
             pass
 
     def __init__(self, parent):

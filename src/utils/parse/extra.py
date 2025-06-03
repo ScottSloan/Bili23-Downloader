@@ -43,7 +43,7 @@ class ExtraParser(Parser):
             callback.onSuccess()
 
         except Exception as e:
-            raise GlobalException(StatusCode.Download.value, callback = callback.onError) from e
+            raise GlobalException(code = StatusCode.Download.value, callback = callback.onError) from e
 
     def download_danmaku_file(self):
         # 下载弹幕文件
