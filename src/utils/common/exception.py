@@ -28,6 +28,15 @@ class GlobalException(Exception):
             self.code = 500
 
 def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
+    def get_exception_info(exception, exc_type, exc_value, exc_tb):
+        stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+
+        print()
+
+        return exception, stack_trace
+
     def update_exception_info():
         GlobalExceptionInfo.info = {
             "timestamp": int(datetime.now().timestamp()),
@@ -38,15 +47,10 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
         }
 
     if exc_value.__cause__:
-        exception = exc_value.__cause__
-        stack_trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        exception, stack_trace = get_exception_info(exc_value.__cause__, type(exception), exception, exception.__traceback__)
 
-        traceback.print_exception(type(exception), exception, exception.__traceback__)
     else:
-        exception = exc_value
-        stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
-
-        traceback.print_exception(exc_type, exc_value, exc_tb)
+        exception, stack_trace = get_exception_info(exc_value, exc_type, exc_value, exc_tb)
     
     message = exc_value.message if isinstance(exception, GlobalException) else str(exception)
     stack_trace = exception.stack_trace if hasattr(exception, "stack_trace") and exception.stack_trace else stack_trace

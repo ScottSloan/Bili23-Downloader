@@ -3,10 +3,14 @@ import os
 import wx.lib.masked as masked
 
 from utils.config import Config
+from utils.tool_v2 import FileDirectoryTool
 from utils.common.icon_v4 import Icon, IconID, IconSize
 from utils.common.data_type import Callback
+from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.ffmpeg_v2 import FFmpeg
+
+from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.frame import Frame
 from gui.component.panel import Panel
@@ -294,15 +298,34 @@ class ContainerPage(Panel):
                 }
 
             class callback(Callback):
-                def onSuccess(**kwargs):
-                    print("su")
+                def onSuccess(*args, **kwargs):
+                    def worker():
+                        dlg = wx.MessageDialog(self, "截取完成\n\n已成功截取片段", "提示", wx.ICON_INFORMATION | wx.YES_NO)
+                        dlg.SetYesNoLabels("打开所在位置", "确定")
 
-                def onError(**kwargs):
-                    print("err")
-                    
-            ffmpeg = FFmpeg()
+                        if dlg.ShowModal() == wx.ID_YES:
+                            FileDirectoryTool.open_file_location(self.output_path)
 
-            ffmpeg.cut(get_info(), callback)
+                        dlg.Destroy()
+
+                    wx.CallAfter(worker)
+
+                def onError(*args, **kwargs):
+                    def worker():
+                        dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)
+                        dlg.ShowModal()
+
+                    wx.CallAfter(worker)
+            
+            def check():
+                if not self.output_box.GetValue():
+                    wx.MessageDialog(self, "缺少参数\n\n请指定输出文件目录", "警告", wx.ICON_WARNING).ShowModal()
+                    return True
+            
+            if check():
+                return
+
+            FFmpeg.Utils.cut(get_info(), callback)
 
     class ExtractionPage(Page):
         def __init__(self, parent):

@@ -189,11 +189,17 @@ class RangeDownloadInfo:
         self.range: List[int] = []
 
 class DownloaderCallback:
-    def __init__(self):
-        self.onStartDownloadCallback: Callable = None
-        self.onDownloadingCallback: Callable = None
-        self.onDownloadFinish: Callable = None
-        self.onErrorCallback: Callable = None
+    def onStart():
+        pass
+
+    def onDownloading(speed: str):
+        pass
+
+    def onComplete():
+        pass
+
+    def onError():
+        pass
 
 class TaskPanelCallback:
     def onStartNextTask():
@@ -246,10 +252,10 @@ class Process:
     return_code: int = None
 
 class Callback:
-    def onSuccess(**kwargs):
+    def onSuccess(*args, **kwargs):
         pass
     
-    def onError(**kwargs):
+    def onError(*args, **kwargs):
         pass
 
 class ParseCallback:

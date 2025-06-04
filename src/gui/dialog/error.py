@@ -1,7 +1,4 @@
-import os
 import wx
-import json
-import wx.adv
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
@@ -19,6 +16,8 @@ class ErrorInfoDialog(Dialog):
         self.init_UI()
 
         self.CenterOnParent()
+
+        wx.Bell()
 
     def init_UI(self):
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
@@ -46,14 +45,12 @@ class ErrorInfoDialog(Dialog):
         self.log_box = TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.log_box.SetFont(font)
 
-        self.save_btn = wx.Button(self, -1, "保存到文件", size = self.get_scaled_size((100, 28)))
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.save_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.Add(self.close_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)

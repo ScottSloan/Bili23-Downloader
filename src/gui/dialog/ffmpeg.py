@@ -1,8 +1,9 @@
 import wx
 
-from utils.module.ffmpeg import FFmpeg
 from utils.config import Config
 from utils.common.icon_v4 import Icon, IconID
+
+from utils.module.ffmpeg import FFmpeg
 
 from gui.component.dialog import Dialog
 from gui.component.bitmap_button import BitmapButton

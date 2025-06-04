@@ -33,7 +33,6 @@ from gui.dialog.about import AboutWindow
 from gui.dialog.changelog import ChangeLogDialog
 from gui.dialog.update import UpdateWindow
 from gui.dialog.converter import ConverterWindow
-from gui.dialog.cut_clip import CutClipDialog
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.edit_title import EditTitleDialog
@@ -173,7 +172,6 @@ class MainWindow(Frame):
         self.ID_LOGOUT_MENU = wx.NewIdRef()
         self.ID_DEBUG_MENU = wx.NewIdRef()
         self.ID_CONVERTER_MENU = wx.NewIdRef()
-        self.ID_CUT_CLIP_MENU = wx.NewIdRef()
         self.ID_FORMAT_FACTORY_MENU = wx.NewIdRef()
         self.ID_SETTINGS_MENU = wx.NewIdRef()
 
@@ -212,7 +210,6 @@ class MainWindow(Frame):
             tool_manu.Append(self.ID_DEBUG_MENU, "调试(&D)")
 
         tool_manu.Append(self.ID_CONVERTER_MENU, "格式转换(&F)")
-        tool_manu.Append(self.ID_CUT_CLIP_MENU, "截取片段(&I)")
         tool_manu.Append(self.ID_FORMAT_FACTORY_MENU, "视频工具箱(&F)")
         tool_manu.AppendSeparator()
         tool_manu.Append(self.ID_SETTINGS_MENU, "设置(&S)")
@@ -363,9 +360,6 @@ class MainWindow(Frame):
 
             case self.ID_CONVERTER_MENU:
                 ConverterWindow(self).ShowModal()
-
-            case self.ID_CUT_CLIP_MENU:
-                CutClipDialog(self).ShowModal()
 
             case self.ID_FORMAT_FACTORY_MENU:
                 FormatFactoryWindow(self).Show()

@@ -130,13 +130,6 @@ class FFmpeg:
 
         return command.format()
 
-    def get_cut_command(self):
-        command = Command()
-
-        command.add(f'"{Config.Merge.ffmpeg_path}" -ss {self.cut_info.start_time} -to {self.cut_info.end_time} -i "{self.cut_info.input_path}" -acodec copy -vcodec copy "{self.cut_info.output_path}"')
-
-        return command.format()
-
     def get_rename_command(self, src: str, dst: str):
         def get_sys_rename_command():
             match Platform(Config.Sys.platform):

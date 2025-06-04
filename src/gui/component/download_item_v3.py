@@ -355,14 +355,18 @@ class DownloadTaskItemPanel(Panel):
             self.callback.onUpdateCountTitle(show_toast = show_toast)
 
     def start_download(self):
-        def get_downloader_callback():
-            downloader_callback = DownloaderCallback()
-            downloader_callback.onStartDownloadCallback = self.onStartDownload
-            downloader_callback.onDownloadingCallback = self.onDownloading
-            downloader_callback.onDownloadFinish = self.onDownloadFinish
-            downloader_callback.onErrorCallback = self.onDownloadError
+        class callback(DownloaderCallback):
+            def onStart():
+                self.onStartDownload()
 
-            return downloader_callback
+            def onDownloading(speed: str):
+                self.onDownloading(speed)
+
+            def onComplete():
+                self.onComplete()
+
+            def onError():
+                self.onDownloadError()
 
         def video_audio_download_worker():
             # 获取下载链接
@@ -378,7 +382,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.set_download_status(DownloadStatus.Downloading.value)
 
-        self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback(), self.download_path)
+        self.downloader = Downloader(self.task_info, self.file_tool, callback, self.download_path)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -401,7 +405,7 @@ class DownloadTaskItemPanel(Panel):
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:
             if self.task_info.progress == 100:
-                self.onDownloadFinish()
+                self.onComplete()
             else:
                 self.start_download()
 
@@ -425,10 +429,10 @@ class DownloadTaskItemPanel(Panel):
 
     def download_extra(self):
         class callback(Callback):
-            def onSuccess(**kwargs):
+            def onSuccess(*args, **kwargs):
                 self.onDownloadExtraSuccess()
 
-            def onError(**kwargs):
+            def onError(*args, **kwargs):
                 self.onDownloadError()
     
         extra_parser = ExtraParser()
@@ -462,7 +466,7 @@ class DownloadTaskItemPanel(Panel):
 
         wx.CallAfter(worker)
 
-    def onDownloadFinish(self):
+    def onComplete(self):
         def worker():
             if self.task_info.ffmpeg_merge:
                 self.set_download_status(DownloadStatus.Merging.value)

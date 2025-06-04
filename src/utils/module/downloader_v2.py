@@ -99,7 +99,7 @@ class Downloader:
                 self.retry_count = 0
                 self.has_stopped = False
 
-            self.callback.onStartDownloadCallback()
+            self.callback.onStart()
 
             update_flag()
 
@@ -251,7 +251,7 @@ class Downloader:
             if self.downloader_info:
                 Thread(target = self.start_download).start()
             else:
-                self.callback.onDownloadFinish()
+                self.callback.onComplete()
 
         def update_progress():
             if not self.stop_event.is_set():
@@ -262,7 +262,7 @@ class Downloader:
                 self.file_tool.update_info("task_info", self.task_info.to_dict())
                 self.file_tool.update_info("thread_info", self.progress_info)
 
-                self.callback.onDownloadingCallback(speed_str)
+                self.callback.onDownloading(speed_str)
 
         def check_speed():
             def worker():
@@ -308,7 +308,7 @@ class Downloader:
 
             self.stop_download()
 
-            self.callback.onErrorCallback()
+            self.callback.onError()
 
     def get_file_path(self, file_name: str):
         return UniversalTool.get_file_path(self.download_path, file_name)
