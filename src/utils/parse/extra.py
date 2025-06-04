@@ -9,7 +9,7 @@ from utils.auth.wbi import WbiUtils
 
 from utils.common.file_name import FileNameManager
 from utils.common.enums import DanmakuType, SubtitleType
-from utils.common.data_type import DownloadTaskInfo, ExtraCallback
+from utils.common.data_type import DownloadTaskInfo, Callback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode, SubtitleLanOption
 
@@ -27,7 +27,7 @@ class ExtraParser(Parser):
         self.danmaku_file_type = task_info.extra_option.get("danmaku_file_type")
         self.subtitle_file_type = task_info.extra_option.get("subtitle_file_type")
 
-    def download_extra(self, callback: ExtraCallback):
+    def download_extra(self, callback: Callback):
         try:
             if self.task_info.extra_option.get("download_danmaku_file"):
                 self.download_danmaku_file()

@@ -196,17 +196,24 @@ class DownloaderCallback:
         self.onErrorCallback: Callable = None
 
 class TaskPanelCallback:
-    def __init__(self):
-        self.onStartNextCallback: Callable = None
-        self.onUpdateCountTitleCallback: Callable = None
-        self.onLoadMoreTaskCallback: Callable = None
-        self.onAddPanelCallback: Callable = None
+    def onStartNextTask():
+        pass
+
+    def onUpdateCountTitle(show_toast = False):
+        pass
+
+    def onAddPanel(task_info: DownloadTaskInfo):
+        pass
 
 class DownloadPageCallback:
-    def __init__(self):
-        self.onSetTitleCallback: Callable = None
-        self.onAddPanelCallback: Callable = None
-        self.onStartNextCallback: Callable = None
+    def onSetTitle(name: str, count: int):
+        pass
+
+    def onAddPanel(task_info: DownloadTaskInfo):
+        pass
+
+    def onStartNextTask():
+        pass
 
 class NotificationMessage:
     def __init__(self):
@@ -238,11 +245,11 @@ class Process:
     output: str = None
     return_code: int = None
 
-class RunCallback:
-    def onSuccess(process: Process):
+class Callback:
+    def onSuccess(**kwargs):
         pass
     
-    def onError(process: Process):
+    def onError(**kwargs):
         pass
 
 class ParseCallback:
@@ -263,20 +270,3 @@ class MergeCallback:
         self.onSuccess: Callable = None
         self.onError: Callable = None
         self.onSaveSuffix: Callable = None
-
-class CutInfo:
-    def __init__(self):
-        self.input_path: str = ""
-        self.output_path: str = ""
-        self.start_time: str = ""
-        self.end_time: str = ""
-
-class CutCallback:
-    def __init__(self):
-        self.onSuccess: Callable = None
-        self.onError: Callable = None
-
-class ExtraCallback:
-    def __init__(self):
-        self.onSuccess: Callable = None
-        self.onError: Callable = None

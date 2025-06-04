@@ -2,7 +2,6 @@ import os
 import wx
 import wx.lib.masked as masked
 
-from utils.common.data_type import CutInfo, CutCallback
 from utils.common.exception import GlobalExceptionInfo
 from utils.module.ffmpeg import FFmpeg
 from utils.tool_v2 import FileDirectoryTool
@@ -112,15 +111,6 @@ class CutClipDialog(Dialog):
         dlg.Destroy()
 
     def onStartCutEVT(self, event):
-        def set_cut_info():
-            cut_info = CutInfo()
-            cut_info.input_path = self.input_box.GetValue()
-            cut_info.output_path = self.output_box.GetValue()
-            cut_info.start_time = self.start_box.GetValue(as_wxDateTime = True).Format("%H:%M:%S")
-            cut_info.end_time = self.end_box.GetValue(as_wxDateTime = True).Format("%H:%M:%S")
-
-            ffmpeg.set_cut_info(cut_info)
-
         if not self.input_box.GetValue():
             wx.MessageDialog(self, "未选择输入文件\n\n请选择输入文件", "警告", wx.ICON_WARNING).ShowModal()
             return
@@ -131,13 +121,7 @@ class CutClipDialog(Dialog):
 
         ffmpeg = FFmpeg()
 
-        set_cut_info()
-
-        cut_callback = CutCallback()
-        cut_callback.onSuccess = self.onCutSuccess
-        cut_callback.onError = self.onCutError
-
-        ffmpeg.cut_clip(cut_callback)
+        ffmpeg.cut_clip()
     
     def onOpenLocationEVT(self, event):
         FileDirectoryTool.open_file_location(self.output_box.GetValue())

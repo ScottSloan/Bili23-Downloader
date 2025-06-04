@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Callable
 
 from utils.common.icon_v4 import Icon, IconID
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, Callback
 from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
@@ -352,7 +352,7 @@ class DownloadTaskItemPanel(Panel):
         self.Destroy()
         
         if event:
-            self.callback.onUpdateCountTitleCallback(show_toast = show_toast)
+            self.callback.onUpdateCountTitle(show_toast = show_toast)
 
     def start_download(self):
         def get_downloader_callback():
@@ -424,17 +424,17 @@ class DownloadTaskItemPanel(Panel):
         self.ffmpeg.merge_video(get_callback())
 
     def download_extra(self):
-        def get_callback():
-            callback = ExtraCallback()
-            callback.onSuccess = self.onDownloadExtraSuccess
-            callback.onError = self.onDownloadError
+        class callback(Callback):
+            def onSuccess(**kwargs):
+                self.onDownloadExtraSuccess()
 
-            return callback
+            def onError(**kwargs):
+                self.onDownloadError()
     
         extra_parser = ExtraParser()
         extra_parser.set_task_info(self.task_info)
 
-        extra_parser.download_extra(get_callback())
+        extra_parser.download_extra(callback)
 
     def open_file_location(self):
         path = os.path.join(Config.Download.path, self.full_file_name)
@@ -471,7 +471,7 @@ class DownloadTaskItemPanel(Panel):
 
                 self.Layout()
 
-                self.callback.onStartNextCallback()
+                self.callback.onStartNextTask()
 
                 Thread(target = self.merge_video).start()
             else:
@@ -487,7 +487,7 @@ class DownloadTaskItemPanel(Panel):
 
             self.clear_temp_files()
 
-            self.callback.onAddPanelCallback(self.task_info)
+            self.callback.onAddPanel(self.task_info)
 
         wx.CallAfter(worker)
 
@@ -515,7 +515,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.onMergeSuccess()
 
-        self.callback.onStartNextCallback()
+        self.callback.onStartNextTask()
 
     def clear_temp_files(self):
         match ParseType(self.task_info.download_type):
@@ -526,9 +526,9 @@ class DownloadTaskItemPanel(Panel):
     def set_download_error(self, status: int):
         self.set_download_status(status)
 
-        self.callback.onUpdateCountTitleCallback()
+        self.callback.onUpdateCountTitle()
 
-        self.callback.onStartNextCallback()
+        self.callback.onStartNextTask()
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):

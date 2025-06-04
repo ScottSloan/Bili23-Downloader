@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from utils.common.enums import StreamType, StatusCode, OverrideOption, Platform
-from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback, CutInfo, CutCallback
+from utils.common.data_type import DownloadTaskInfo, Command, MergeCallback
 from utils.common.exception import GlobalException
 from utils.common.thread import Thread
 
@@ -16,7 +16,7 @@ class FFmpeg:
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
 
-    def set_cut_info(self, cut_info: CutInfo):
+    def set_cut_info(self, cut_info):
         self.cut_info = cut_info
 
     def detect_location(self):
@@ -69,7 +69,7 @@ class FFmpeg:
         else:
             raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = resp[1], callback = callback.onError)
     
-    def cut_clip(self, callback: CutCallback):
+    def cut_clip(self, callback):
         command = self.get_cut_command()
 
         resp = self.run_command(command, output = True, return_code = True)

@@ -4,7 +4,7 @@ import wx.lib.masked as masked
 
 from utils.config import Config
 from utils.common.icon_v4 import Icon, IconID, IconSize
-from utils.common.data_type import RunCallback
+from utils.common.data_type import Callback
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -293,16 +293,16 @@ class ContainerPage(Panel):
                     "end_time": self.end_time_box.GetValue(as_wxDateTime = True).Format("%H:%M:%S")
                 }
 
-            class FFmpegCallback(RunCallback):
-                def onSuccess(process):
+            class callback(Callback):
+                def onSuccess(**kwargs):
                     print("su")
 
-                def onError(process):
+                def onError(**kwargs):
                     print("err")
                     
             ffmpeg = FFmpeg()
 
-            ffmpeg.cut(get_info(), FFmpegCallback)
+            ffmpeg.cut(get_info(), callback)
 
     class ExtractionPage(Page):
         def __init__(self, parent):

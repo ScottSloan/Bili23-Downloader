@@ -50,6 +50,16 @@ class DownloadManagerWindow(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
+        class callback(DownloadPageCallback):
+            def onAddPanel(task_info: DownloadTaskInfo):
+                self.add_panel_to_completed_page(task_info)
+
+            def onStartNextTask():
+                self.start_download()
+
+            def onSetTitle(name: str, count: int):
+                self.setTitleLabel(name, count)
+
         top_panel = Panel(self)
         top_panel.set_dark_mode()
 
@@ -101,11 +111,6 @@ class DownloadManagerWindow(Frame):
         right_panel.set_dark_mode()
 
         self.book = wx.Simplebook(right_panel, -1)
-
-        callback = DownloadPageCallback()
-        callback.onSetTitleCallback = self.setTitleLabel
-        callback.onAddPanelCallback = self.add_panel_to_completed_page
-        callback.onStartNextCallback = self.start_download
 
         self.downloading_page = DownloadingPage(self.book, callback, self)
         self.completed_page = CompeltedPage(self.book, callback, self)
@@ -313,6 +318,12 @@ class DownloadManagerWindow(Frame):
 
 class SimplePage(Panel):
     def __init__(self, parent):
+        self.callback: DownloadPageCallback
+        self.temp_download_list: List[DownloadTaskInfo]
+        self.scroller: ScrolledPanel
+        self.name: str
+        self.total_count: int
+
         Panel.__init__(self, parent)
 
     def load_more_panel_item(self, callback: Callable = None):
@@ -326,18 +337,20 @@ class SimplePage(Panel):
             return temp_download_list
 
         def get_items():
-            def get_callback():
-                callback = TaskPanelCallback()
-                callback.onUpdateCountTitleCallback = self.refresh_scroller
-                callback.onAddPanelCallback = self.callback.onAddPanelCallback
-                callback.onStartNextCallback = self.callback.onStartNextCallback
+            class callback(TaskPanelCallback):
+                def onUpdateCountTitle(show_toast = False):
+                    self.refresh_scroller(show_toast)
 
-                return callback
+                def onAddPanel(task_info: DownloadTaskInfo):
+                    self.callback.onAddPanel(task_info)
+
+                def onStartNextTask():
+                    self.callback.onStartNextTask()
 
             items = []
 
             for entry in get_download_list():
-                item = DownloadTaskItemPanel(self.scroller, entry, get_callback(), self.download_window)
+                item = DownloadTaskItemPanel(self.scroller, entry, callback, self.download_window)
                 items.append((item, 0, wx.EXPAND))
 
             count = len(self.temp_download_list)
@@ -397,7 +410,7 @@ class SimplePage(Panel):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        self.callback.onSetTitleCallback(self.name, self.total_count)
+        self.callback.onSetTitle(self.name, self.total_count)
 
         if self.name == "正在下载":
             if not self.total_count and show_toast and Config.Download.enable_notification:
@@ -405,14 +418,14 @@ class SimplePage(Panel):
                 notification.show_toast("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
 
     def get_scroller_task_count(self, condition: List[int]):
-        _count = 0
+        count = 0
 
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 if panel.task_info.status in condition:
-                    _count += 1
+                    count += 1
 
-        return _count
+        return count
     
     @property
     def scroller_children(self):
