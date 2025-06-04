@@ -231,7 +231,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         download_info.bvid = base_info.get("bvid")
         download_info.cid = base_info.get("cid")
         download_info.aid = base_info.get("aid")
-        download_info.ep_id = base_info.get("ep_ip")
+        download_info.ep_id = base_info.get("ep_id")
         download_info.duration = base_info.get("duration")
 
         download_info.video_quality_id = base_info.get("video_quality_id")
