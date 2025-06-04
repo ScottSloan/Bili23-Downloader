@@ -473,4 +473,3 @@ class UniversalTool:
 
     def get_file_path(directory: str, file_name: str):
         return os.path.join(directory, file_name)
-

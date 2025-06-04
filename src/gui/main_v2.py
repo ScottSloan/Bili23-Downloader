@@ -5,7 +5,8 @@ import webbrowser
 from utils.config import Config, app_config_group
 from utils.tool_v2 import UniversalTool, RequestTool
 from utils.auth.login import QRLogin
-from utils.module.ffmpeg import FFmpeg
+
+from utils.module.ffmpeg_v2 import FFmpeg
 
 from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
@@ -252,8 +253,7 @@ class MainWindow(Frame):
 
     def init_utils(self):
         def start_thread():
-            ffmpeg = FFmpeg()
-            ffmpeg.detect_location()
+            FFmpeg.Env.detect()
 
             if Config.Merge.ffmpeg_check_available_when_lauch:
                 Thread(target = self.check_ffmpeg_available).start()
@@ -722,15 +722,15 @@ class MainWindow(Frame):
             wx.CallAfter(hide_face)
 
     def check_ffmpeg_available(self):
-        ffmpeg = FFmpeg()
-        ffmpeg.check_available()
+        if Config.Merge.ffmpeg_check_available_when_lauch:
+            FFmpeg.Env.check_availability()
 
-        if Config.Merge.ffmpeg_check_available_when_lauch and not Config.Merge.ffmpeg_available:
-            dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合成、裁切和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
-            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+            if not Config.Merge.ffmpeg_available:
+                dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合成、裁切和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+                dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
-            if dlg.ShowModal() == wx.ID_YES:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+                if dlg.ShowModal() == wx.ID_YES:
+                    webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
     def check_update(self):
         Update.get_update_json()

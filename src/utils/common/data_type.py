@@ -272,7 +272,11 @@ class ParseCallback:
         pass
 
 class MergeCallback:
-    def __init__(self):
-        self.onSuccess: Callable = None
-        self.onError: Callable = None
-        self.onSaveSuffix: Callable = None
+    def onSuccess():
+        pass
+
+    def onError():
+        pass
+
+    def onUpdateSuffix():
+        pass

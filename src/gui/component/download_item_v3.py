@@ -13,7 +13,7 @@ from utils.common.exception import GlobalExceptionInfo
 from utils.common.file_name import FileNameManager
 from utils.common.download_path import DownloadPathManager
 
-from utils.module.ffmpeg import FFmpeg
+from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
 
 from utils.parse.download import DownloadParser
@@ -195,9 +195,6 @@ class DownloadTaskItemPanel(Panel):
         self.error_info = None
 
         self.file_tool = DownloadFileTool(self.task_info.id)
-
-        self.ffmpeg = FFmpeg(self)
-        self.ffmpeg.set_task_info(self.task_info)
 
         self.show_task_info()
 
@@ -410,22 +407,24 @@ class DownloadTaskItemPanel(Panel):
                 self.start_download()
 
     def merge_video(self):
-        def get_callback():
-            def onSaveSuffix():
-                kwargs = {
-                    "suffix": self.task_info.suffix
-                }
+        def onUpdateSuffix():
+            kwargs = {
+                "suffix": self.task_info.suffix
+            }
 
-                self.file_tool.update_task_info_kwargs(**kwargs)
+            self.file_tool.update_task_info_kwargs(**kwargs)
 
-            callback = MergeCallback()
-            callback.onSuccess = self.onMergeSuccess
-            callback.onError = self.onMergeError
-            callback.onSaveSuffix = onSaveSuffix
+        class callback(MergeCallback):
+            def onSuccess():
+                self.onMergeSuccess()
 
-            return callback
+            def onError():
+                self.onMergeError()
 
-        self.ffmpeg.merge_video(get_callback())
+            def onUpdateSuffix():
+                onUpdateSuffix()
+
+        FFmpeg.Utils.merge(self.task_info, callback)
 
     def download_extra(self):
         class callback(Callback):

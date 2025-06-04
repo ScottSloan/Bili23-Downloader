@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 from utils.common.icon_v4 import Icon, IconID
 
-from utils.module.ffmpeg import FFmpeg
+from utils.module.ffmpeg_v2 import FFmpeg
 
 from gui.component.dialog import Dialog
 from gui.component.bitmap_button import BitmapButton
@@ -55,8 +55,6 @@ class DetectDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
-        self.ffmpeg = FFmpeg()
-
         self.detect_location()
 
     def Bind_EVT(self):
@@ -74,29 +72,29 @@ class DetectDialog(Dialog):
             wx.MessageDialog(self, "未选择路径\n\n请从下方选择 FFmpeg 路径", "警告", style = wx.ICON_WARNING).ShowModal()
 
     def detect_location(self):
-        def set_env_enable(path: str):
-            self.env_chk.Enable(bool(path))
-            self.env_path_lab.Enable(bool(path))
+        def set_enable(chk_control: wx.Window, lab_control: wx.Window, path: str):
+            enable = bool(path)
+        
+            chk_control.Enable(enable)
+            lab_control.Enable(enable)
 
-            self.env_path_lab.SetLabel(path if path else "未检测到 FFmpeg")
-            self.env_path_lab.SetToolTip(path if path else "未检测到 FFmpeg")
+            lab = path if enable else "未检测到 FFmpeg"
 
-        def set_cwd_enable(path: str):
-            self.cwd_chk.Enable(bool(path))
-            self.cwd_path_lab.Enable(bool(path))
+            lab_control.SetLabel(lab)
+            lab_control.SetToolTip(lab)
 
-            self.cwd_path_lab.SetLabel(path if path else "未检测到 FFmpeg")
-            self.cwd_path_lab.SetToolTip(path if path else "未检测到 FFmpeg")
+        ffmpeg_path = FFmpeg.Env.get_ffmpeg_path()
 
-        cwd_path = self.ffmpeg.get_cwd_path()
-        env_path = self.ffmpeg.get_env_path()
+        env_path, cwd_path = ffmpeg_path["env_path"], ffmpeg_path["cwd_path"]
 
-        set_cwd_enable(cwd_path)
-        set_env_enable(env_path)
+        
+        set_enable(self.env_chk, self.env_path_lab, env_path)
+        set_enable(self.cwd_chk, self.cwd_path_lab, cwd_path)
 
         if Config.Merge.ffmpeg_path == env_path:
             self.env_chk.SetValue(True)
-        else:
+
+        if Config.Merge.ffmpeg_path == cwd_path:
             self.cwd_chk.SetValue(True)
 
     def getPath(self):
