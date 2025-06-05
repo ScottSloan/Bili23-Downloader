@@ -6,6 +6,7 @@ from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
 from utils.common.file_name import FileNameManager
 from utils.common.download_path import DownloadPathManager
+from utils.common.thread import Thread
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
@@ -28,22 +29,41 @@ class FFmpeg:
 
             command = Command()
 
+            full_file_name = FFmpeg.Prop.full_file_name(task_info)
+
             match task_info.download_option.copy():
                 case ["video", "audio"]:
                     command.add(FFmpeg.Command.get_merge_video_and_audio_command(task_info))
-                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_output_temp_file(task_info), FFmpeg.Prop.full_file_name(task_info)))
+                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_output_temp_file(task_info), full_file_name))
 
                 case ["video"]:
-                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), FFmpeg.Prop.full_file_name(task_info)))
+                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), full_file_name))
 
                 case ["audio"]:
                     src = convert_audio()
-                    command.add(FFmpeg.Command.get_rename_command(src, FFmpeg.Prop.full_file_name(task_info)))
+                    command.add(FFmpeg.Command.get_rename_command(src, full_file_name))
 
             return command.format()
 
         def get_merge_flv_command(task_info: DownloadTaskInfo):
+            def create_flv_list_file():
+                with open(os.path.join(FFmpeg.Prop.download_path(task_info), flv_list_file), "w", encoding = "utf-8") as f:
+                    f.write("\n".join([f"file flv_{task_info.id}_part{i + 1}.flv" for i in range(task_info.flv_video_count)]))
+
             command = Command()
+
+            flv_list_file = FFmpeg.Prop.flv_list_file(task_info)
+            output_temp_file = FFmpeg.Prop.output_file_name(task_info)
+            flv_video_temp_file = FFmpeg.Prop.flv_video_temp_file(task_info)
+            full_file_name = FFmpeg.Prop.full_file_name(task_info)
+
+            if task_info.flv_video_count > 1:
+                create_flv_list_file()
+
+                command.add(f'"{Config.Merge.ffmpeg_path}" -y -f concat -safe 0 -i "{flv_list_file}" -c copy "{output_temp_file}"')
+                command.add(FFmpeg.Command.get_rename_command(output_temp_file, full_file_name))
+            else:
+                command.add(FFmpeg.Command.get_rename_command(flv_video_temp_file, full_file_name))
 
             return command.format()
 
@@ -65,6 +85,16 @@ class FFmpeg:
             output_temp_file = FFmpeg.Prop.dash_output_temp_file(task_info)
 
             command.add(f'"{Config.Merge.ffmpeg_path}" -y -i {audio_temp_file} -c:a {codec} -q:a 0 {output_temp_file}')
+
+            return command.format()
+
+        def get_keep_files_command(task_info: DownloadTaskInfo):
+            command = Command()
+
+            output_file_name = FFmpeg.Prop.output_file_name(task_info)
+
+            command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), f"{output_file_name}_video.{task_info.video_type}"))
+            command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_audio_temp_file(task_info), f"{output_file_name}_audio.{task_info.audio_type}"))
 
             return command.format()
 
@@ -111,7 +141,7 @@ class FFmpeg:
             process = run_process()
                 
             if not process.return_code:
-                callback.onSuccess(pocess = process)
+                callback.onSuccess(process = process)
             else:
                 raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = process.output, callback = callback.onError, args = (process, ))
     
@@ -170,7 +200,7 @@ class FFmpeg:
         def merge(task_info: DownloadTaskInfo, callback: MergeCallback):
             def check_file_existance():
                 index = 0
-                path =  os.path.join(FFmpeg.Prop.download_path(), FFmpeg.Prop.full_file_name(task_info))
+                path =  os.path.join(FFmpeg.Prop.download_path(task_info), FFmpeg.Prop.full_file_name(task_info))
 
                 while os.path.exists(path):
                     match OverrideOption(Config.Merge.override_option):
@@ -186,15 +216,61 @@ class FFmpeg:
 
             match StreamType(task_info.stream_type):
                 case StreamType.Dash:
-                    command = FFmpeg.Command.get_merge_dash_command()
+                    command = FFmpeg.Command.get_merge_dash_command(task_info)
 
                 case StreamType.Flv:
-                    command = FFmpeg.Command.get_merge_flv_command()
+                    command = FFmpeg.Command.get_merge_flv_command(task_info)
 
             check_file_existance()
 
             FFmpeg.Command.run(command, callback, FFmpeg.Prop.download_path(task_info))
 
+        def clear_temp_files(task_info: DownloadTaskInfo):
+            def worker():
+                def dash():
+                    if "video" in task_info.download_option:
+                        temp_files.append(os.path.join(download_path, FFmpeg.Prop.dash_video_temp_file(task_info)))
+
+                    if "audio" in task_info.download_option:
+                        temp_files.append(os.path.join(download_path, FFmpeg.Prop.dash_audio_temp_file(task_info)))
+
+                    temp_files.append(FFmpeg.Prop.dash_output_temp_file(task_info))
+
+                def flv():
+                    temp_files.append(FFmpeg.Prop.flv_list_file(task_info))
+                    temp_files.append(FFmpeg.Prop.flv_video_temp_file(task_info))
+                    temp_files.extend([os.path.join(download_path, f"flv_{task_info.id}_part{i + 1}") for i in range(task_info.flv_video_count)])
+
+                temp_files = []
+
+                download_path = FFmpeg.Prop.download_path(task_info)
+
+                match StreamType(task_info.stream_type):
+                    case StreamType.Dash:
+                        dash()
+
+                    case StreamType.Flv:
+                        flv()
+
+                if Config.Merge.keep_original_files:
+                    FFmpeg.Utils.keep_original_files(task_info)
+
+                UniversalTool.remove_files(temp_files)
+
+            Thread(target = worker).start()
+        
+        def keep_original_files(task_info: DownloadTaskInfo):
+            class callback(Callback):
+                def onSuccess(*args, **kwargs):
+                    return super().onSuccess(**kwargs)
+                
+                def onError(*args, **kwargs):
+                    return super().onError(**kwargs)
+            
+            command = FFmpeg.Command.get_keep_files_command(task_info)
+
+            FFmpeg.Command.run(command, callback)
+            
     class Prop:
         def ffmpeg_file():
             match Platform(Config.Sys.platform):
@@ -216,6 +292,12 @@ class FFmpeg:
         def dash_output_temp_file(task_info: DownloadTaskInfo):
             return f"output_{task_info.id}.{task_info.output_type}"
         
+        def flv_video_temp_file(task_info: DownloadTaskInfo):
+            return f"flv_{task_info.id}.flv"
+
+        def flv_list_file(task_info: DownloadTaskInfo):
+            return f"flv_list_{task_info.id}.txt"
+
         def output_file_name(task_info: DownloadTaskInfo):
             file_name_mgr = FileNameManager(task_info)
 

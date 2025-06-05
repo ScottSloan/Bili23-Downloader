@@ -415,10 +415,10 @@ class DownloadTaskItemPanel(Panel):
             self.file_tool.update_task_info_kwargs(**kwargs)
 
         class callback(MergeCallback):
-            def onSuccess():
+            def onSuccess(*args, **kwargs):
                 self.onMergeSuccess()
 
-            def onError():
+            def onError(*args, **kwargs):
                 self.onMergeError()
 
             def onUpdateSuffix():
@@ -524,7 +524,7 @@ class DownloadTaskItemPanel(Panel):
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 if self.task_info.total_file_size:
-                    self.ffmpeg.clear_temp_files()
+                    FFmpeg.Utils.clear_temp_files(self.task_info)
 
     def set_download_error(self, status: int):
         self.set_download_status(status)

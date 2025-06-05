@@ -272,10 +272,10 @@ class ParseCallback:
         pass
 
 class MergeCallback:
-    def onSuccess():
+    def onSuccess(*args, **kwargs):
         pass
 
-    def onError():
+    def onError(*args, **kwargs):
         pass
 
     def onUpdateSuffix():
