@@ -16,6 +16,8 @@ body:
           required: true
         - label: 我确认已在 [Issues](/ScottSloan/Bili23-Downloader/issues) 进行搜索并确认没有人反馈过相同的Bug。
           required: true
+        - label: 我确认已经总结议题内容并按规范设置此Issue的标题
+          required: true
   - type: input
     attributes:
       label: 系统环境
