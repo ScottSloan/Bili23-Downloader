@@ -130,7 +130,7 @@ class DownloadParser(Parser):
 
         def get_flv_info():
             self.task_info.audio_quality_id = AudioQualityID._None.value
-            self.task_info.download_option = ["audio"]
+            self.task_info.download_option = ["video"]
             self.task_info.flv_video_count = len(data["durl"])
         
         check_download_items()

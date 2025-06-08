@@ -173,6 +173,14 @@ exit_option_map = {
     "直接退出": 1
 }
 
+scope_map = {
+    "所有类型": 0,
+    "投稿视频": 1,
+    "剧集": 2,
+    "课程": 3,
+    "缺省值": 4
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

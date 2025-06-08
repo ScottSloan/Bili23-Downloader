@@ -118,7 +118,7 @@ class FFmpeg:
 
             return command.format()
 
-        def get_rename_command(src: str, dst: str):
+        def get_rename_command(src: str, dst: str, check: bool = False):
             command = Command()
 
             rename_command = FFmpeg.Prop.rename_command()
@@ -270,7 +270,10 @@ class FFmpeg:
             command = FFmpeg.Command.get_keep_files_command(task_info)
 
             FFmpeg.Command.run(command, callback)
-            
+        
+        def check_file_existance(dst: str):
+            pass
+
     class Prop:
         def ffmpeg_file():
             match Platform(Config.Sys.platform):

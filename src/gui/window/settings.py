@@ -16,7 +16,7 @@ from gui.component.tooltip import ToolTip
 
 from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.custom_cdn import CustomCDNDialog
-from gui.dialog.custom_file_name import CustomFileNameDialog
+from gui.dialog.custom_file_name_v2 import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 from gui.dialog.download_sort import DownloadSortDialog
 from gui.dialog.custom_ua import CustomUADialog

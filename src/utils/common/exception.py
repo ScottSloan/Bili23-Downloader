@@ -43,7 +43,7 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
             "exception_name": exception.__class__.__name__,
             "message": message,
             "stack_trace": stack_trace,
-            "code": exc_value.code
+            "code": getattr(exc_value, "code", 500)
         }
 
     if exc_value.__cause__:

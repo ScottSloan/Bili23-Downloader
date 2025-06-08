@@ -1,5 +1,4 @@
 import wx
-import wx.core
 
 from utils.config import Config
 
