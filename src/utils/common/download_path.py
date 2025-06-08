@@ -16,7 +16,7 @@ class DownloadPathManager:
                     folders.append(up_name)
 
             if Config.Advanced.sort_by_series:
-                folders.append(task_info.series)
+                folders.append(task_info.series_title)
 
             path = os.path.join(Config.Download.path, *folders)
 

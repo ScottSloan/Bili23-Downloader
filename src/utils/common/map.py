@@ -178,7 +178,148 @@ scope_map = {
     "投稿视频": 1,
     "剧集": 2,
     "课程": 3,
-    "缺省值": 4
+    "默认": 4
+}
+
+field_map = {
+    "datetime": {
+        "name": "{datetime}",
+        "description": "日期时间",
+        "example": "",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "timestamp": {
+        "name": "{timestamp}",
+        "description": "时间戳",
+        "example": "",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "pubdatetime": {
+        "name": "{pubdatetime}",
+        "description": "视频发布的日期时间",
+        "example": "",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "pubtimestamp": {
+        "name": "{pubtimestamp}",
+        "description": "视频发布的时间戳",
+        "example": "",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "number": {
+        "name": "{number}",
+        "description": "序号",
+        "example": "1",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "zero_padding_number": {
+        "name": "{zero_padding_number}",
+        "description": "补零序号",
+        "example": "01",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "zone": {
+        "name": "{zone}",
+        "description": "视频分区",
+        "example": "综合",
+        "scope": [0, 1, 4]
+    },
+    "subzone": {
+        "name": "{subzone}",
+        "description": "视频子分区",
+        "example": "动漫剪辑",
+        "scope": [0, 1, 4]
+    },
+    "area": {
+        "name": "{area}",
+        "description": "地区",
+        "example": "日本",
+        "scope": [0, 2, 4]
+    },
+    "title": {
+        "name": "{title}",
+        "description": "视频标题",
+        "example": "《孤独摇滚》第1话 孤独的转机",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "aid": {
+        "name": "{aid}",
+        "description": "视频 av 号",
+        "example": "944573356",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "bvid": {
+        "name": "{bvid}",
+        "description": "视频 BV 号",
+        "example": "BV1yW4y1j7Ft",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "cid": {
+        "name": "{cid}",
+        "description": "视频 cid",
+        "example": "875212290",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "ep_id": {
+        "name": "{ep_id}",
+        "description": "视频 ep_id",
+        "example": "693247",
+        "scope": [0, 2, 3, 4],
+    },
+    "season_id": {
+        "name": "{season_id}",
+        "description": "视频 season_id",
+        "example": "43164",
+        "scope": [0, 2, 3, 4]
+    },
+    "media_id": {
+        "name": "{media_id}",
+        "description": "视频 media_id",
+        "example": "28339735",
+        "scope": [0, 2, 4]
+    },
+    "series_title": {
+        "name": "{series_title}",
+        "description": "视频系列名称",
+        "example": "《孤独摇滚》",
+        "scope": [0, 2, 4]
+    },
+    "video_quality": {
+        "name": "{video_quality}",
+        "description": "视频清晰度",
+        "example": "超清 4K",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "audio_quality": {
+        "name": "{audio_quality}",
+        "description": "音质",
+        "example": "Hi-Res 无损",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "video_codec": {
+        "name": "{video_codec}",
+        "description": "视频编码",
+        "example": "H265",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "duration": {
+        "name": "{duration}",
+        "description": "视频时长，单位为秒",
+        "example": "256",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "up_name": {
+        "name": "{up_name}",
+        "description": "UP 主名称",
+        "example": "哔哩哔哩番剧",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "up_mid": {
+        "name": "{up_mid}",
+        "description": "UP 主 mid",
+        "example": "928123",
+        "scope": [0, 1, 2, 3, 4]
+    }
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):

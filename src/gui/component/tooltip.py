@@ -9,5 +9,6 @@ class ToolTip(wx.StaticBitmap):
     def set_tooltip(self, string: str):
         tooltip = wx.ToolTip(string)
         tooltip.SetDelay(50)
+        tooltip.SetAutoPop(30000)
 
         self.SetToolTip(tooltip)

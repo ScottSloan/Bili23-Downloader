@@ -7,10 +7,10 @@ class DownloadTaskInfo:
     def __init__(self):
         # id，区分不同下载任务的唯一标识符
         self.id: int = None
-        # 序号，从 1 开始
+        # 序号
         self.number: int = 0
         # 补零序号
-        self.number_with_zero: str = ""
+        self.zero_padding_number: str = ""
         # 列表中的序号
         self.list_number: int = 0
         # 后缀
@@ -28,11 +28,13 @@ class DownloadTaskInfo:
         self.cid: int = None
         self.aid: int = None
         self.ep_id: int = None
+        self.season_id: int = None
+        self.media_id: int = None
 
         # 视频标题
         self.title: str = None
-        # 剧集名称
-        self.series: str = None
+        # 剧集系列名称
+        self.series_title: str = None
 
         # 视频时长
         self.duration: int = None
@@ -97,7 +99,7 @@ class DownloadTaskInfo:
             "aid": self.aid,
             "ep_id": self.ep_id,
             "title": self.title,
-            "series": self.series,
+            "series": self.series_title,
             "duration": self.duration,
             "progress": self.progress,
             "total_file_size": self.total_file_size,
@@ -137,7 +139,7 @@ class DownloadTaskInfo:
         self.aid = data.get("aid")
         self.ep_id = data.get("ep_id")
         self.title = data.get("title")
-        self.series = data.get("series")
+        self.series_title = data.get("series")
         self.duration = data.get("duration")
         self.progress = data.get("progress")
         self.total_file_size = data.get("total_file_size")
@@ -189,35 +191,45 @@ class RangeDownloadInfo:
         self.range: List[int] = []
 
 class DownloaderCallback:
+    @staticmethod
     def onStart():
         pass
-
+    
+    @staticmethod
     def onDownloading(speed: str):
         pass
-
+    
+    @staticmethod
     def onComplete():
         pass
-
+    
+    @staticmethod
     def onError():
         pass
 
 class TaskPanelCallback:
+    @staticmethod
     def onStartNextTask():
         pass
-
+    
+    @staticmethod
     def onUpdateCountTitle(show_toast = False):
         pass
-
+    
+    @staticmethod
     def onAddPanel(task_info: DownloadTaskInfo):
         pass
 
 class DownloadPageCallback:
+    @staticmethod
     def onSetTitle(name: str, count: int):
         pass
-
+    
+    @staticmethod
     def onAddPanel(task_info: DownloadTaskInfo):
         pass
-
+    
+    @staticmethod
     def onStartNextTask():
         pass
 
@@ -252,31 +264,40 @@ class Process:
     return_code: int = None
 
 class Callback:
+    @staticmethod
     def onSuccess(*args, **kwargs):
         pass
     
+    @staticmethod
     def onError(*args, **kwargs):
         pass
 
 class ParseCallback:
+    @staticmethod
     def onError():
         pass
-
+    
+    @staticmethod
     def onBangumi(url: str):
         pass
-
+    
+    @staticmethod
     def onInteractVideo():
         pass
-
+    
+    @staticmethod
     def onUpdateInteractVideo(title: str):
         pass
 
 class MergeCallback:
+    @staticmethod
     def onSuccess(*args, **kwargs):
         pass
 
+    @staticmethod
     def onError(*args, **kwargs):
         pass
-
+    
+    @staticmethod
     def onUpdateSuffix():
         pass
