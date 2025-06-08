@@ -3,7 +3,6 @@ import re
 from datetime import datetime
 
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.file_name import FileNameManager
 from utils.config import Config
 
 from gui.component.text_ctrl import TextCtrl

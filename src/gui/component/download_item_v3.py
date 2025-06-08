@@ -10,8 +10,7 @@ from utils.common.map import video_quality_map, audio_quality_map, video_codec_m
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
-from utils.common.file_name import FileNameManager
-from utils.common.download_path import DownloadPathManager
+from utils.common.file_name_v2 import FileNameFormatter
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
@@ -379,7 +378,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.set_download_status(DownloadStatus.Downloading.value)
 
-        self.downloader = Downloader(self.task_info, self.file_tool, callback, self.download_path)
+        self.downloader = Downloader(self.task_info, self.file_tool, callback)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -621,14 +620,8 @@ class DownloadTaskItemPanel(Panel):
     
     @property
     def out_file_name(self):
-        file_name_mgr = FileNameManager(self.task_info)
-
-        return file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
+        return FileNameFormatter.format_file_name(self.task_info, Config.Advanced.file_name_template)
 
     @property
     def full_file_name(self):
-        return FileNameManager.check_file_name_legnth(f"{self.out_file_name}{self.task_info.suffix}.{self.task_info.output_type}")
-    
-    @property
-    def download_path(self):
-        return DownloadPathManager.get_download_path(self.task_info)
+        return FileNameFormatter.check_file_name_length(f"{self.out_file_name}{self.task_info.suffix}.{self.task_info.output_type}")

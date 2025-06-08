@@ -17,7 +17,7 @@ class FileNameFormatter:
         return template.format(**field_dict)
 
     @staticmethod
-    def get_download_directory():
+    def get_download_path():
         dirname = os.path.dirname(Config.Advanced.file_name_template)
 
         return os.path.join(Config.Download.path, dirname)
@@ -27,6 +27,15 @@ class FileNameFormatter:
         for value in field_dict.values():
             if not value:
                 value = "null"
+
+    @staticmethod
+    def check_file_name_length(file_name: str, max_length: int = 255):
+        base_name, ext = os.path.splitext(file_name)
+
+        if len(base_name) + len(ext) > max_length:
+            return base_name[:max_length - len(ext)] + ext
+        
+        return file_name
 
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):

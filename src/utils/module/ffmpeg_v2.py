@@ -4,8 +4,7 @@ import subprocess
 from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, MergeCallback
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
-from utils.common.file_name import FileNameManager
-from utils.common.download_path import DownloadPathManager
+from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
 
 from utils.config import Config
@@ -284,7 +283,7 @@ class FFmpeg:
                     return "ffmpeg"
         
         def download_path(task_info: DownloadTaskInfo):
-            return DownloadPathManager.get_download_path(task_info)
+            return FileNameFormatter.get_download_path()
 
         def dash_video_temp_file(task_info: DownloadTaskInfo):
             return f"video_{task_info.id}.{task_info.video_type}"
@@ -302,14 +301,12 @@ class FFmpeg:
             return f"flv_list_{task_info.id}.txt"
 
         def output_file_name(task_info: DownloadTaskInfo):
-            file_name_mgr = FileNameManager(task_info)
-
-            return file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
+            return FileNameFormatter.format_file_name(task_info, Config.Advanced.file_name_template)
 
         def full_file_name(task_info: DownloadTaskInfo):
             output_file_name = FFmpeg.Prop.output_file_name(task_info)
 
-            return FileNameManager.check_file_name_legnth(f"{output_file_name}{task_info.suffix}.{task_info.output_type}")
+            return FileNameFormatter.check_file_name_length(f"{output_file_name}{task_info.suffix}.{task_info.output_type}")
 
         def escape_character():
             match Platform(Config.Sys.platform):

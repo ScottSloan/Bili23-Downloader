@@ -6,6 +6,7 @@ from utils.common.data_type import DownloadTaskInfo, RangeDownloadInfo, Download
 from utils.common.enums import StatusCode
 from utils.common.thread import Thread, DaemonThreadPoolExecutor
 from utils.common.exception import GlobalException
+from utils.common.file_name_v2 import FileNameFormatter
 
 from utils.module.cdn import CDN
 from utils.module.md5_verify import MD5Verify
@@ -14,11 +15,10 @@ from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool, UniversalTo
 from utils.config import Config
 
 class Downloader:
-    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback, download_path: str):
+    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
         self.task_info = task_info
         self.file_tool = file_tool
         self.callback = callback
-        self.download_path = download_path
 
         self.init_utils()
 
@@ -312,3 +312,7 @@ class Downloader:
 
     def get_file_path(self, file_name: str):
         return UniversalTool.get_file_path(self.download_path, file_name)
+
+    @property
+    def download_path(self):
+        return FileNameFormatter.get_download_path()

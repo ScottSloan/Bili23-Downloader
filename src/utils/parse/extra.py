@@ -7,7 +7,7 @@ from utils.config import Config
 from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
 
-from utils.common.file_name import FileNameManager
+from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.enums import DanmakuType, SubtitleType
 from utils.common.data_type import DownloadTaskInfo, Callback
 from utils.common.exception import GlobalException
@@ -21,8 +21,7 @@ class ExtraParser(Parser):
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
-        file_name_mgr = FileNameManager(task_info)
-        self.file_name = file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
+        self.file_name = FileNameFormatter.format_file_name(task_info, Config.Advanced.file_name_template)
 
         self.danmaku_file_type = task_info.extra_option.get("danmaku_file_type")
         self.subtitle_file_type = task_info.extra_option.get("subtitle_file_type")
