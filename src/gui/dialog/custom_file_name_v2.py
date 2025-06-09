@@ -1,7 +1,12 @@
 import wx
 import os
+import webbrowser
 
-from utils.common.map import scope_map, field_map
+from utils.config import Config
+
+from utils.common.map import scope_map, field_map, get_mapping_key_by_value
+from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.data_type import DownloadTaskInfo
 
 from gui.component.dialog import Dialog
 from gui.component.text_ctrl import TextCtrl
@@ -25,10 +30,13 @@ class AddNewTemplateDialog(Dialog):
         template_lab = wx.StaticText(self, -1, "文件名模板（支持添加子目录）")
         template_tooltip = ToolTip(self)
         template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方加入路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会放在同一个文件夹中\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）\n\n空字段值将默认使用 null 替代')
+        self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((60, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        template_hbox.Add(template_lab, 0, wx.ALL, self.FromDIP(6))
-        template_hbox.Add(template_tooltip, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        template_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        template_hbox.Add(template_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        template_hbox.AddStretchSpacer()
+        template_hbox.Add(self.help_btn, 0, wx.ALL, self.FromDIP(6))
 
         self.template_box = TextCtrl(self, -1, size = self.FromDIP((610, 24)))
 
@@ -68,6 +76,8 @@ class AddNewTemplateDialog(Dialog):
 
         self.template_box.Bind(wx.EVT_TEXT, self.onTextEVT)
 
+        self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
+
     def init_utils(self):
         def init_list_column():
             self.field_list.AppendColumn("字段名称", width = self.FromDIP(180))
@@ -89,10 +99,16 @@ class AddNewTemplateDialog(Dialog):
         self.template_box.AppendText(field)
 
     def onTextEVT(self, event):
+        def show_file_name():
+            self.subdirectory_lab.SetLabel(f"子目录：{os.path.dirname(file_name)}")
+            self.file_name_lab.SetLabel(f"文件名：{os.path.basename(file_name)}")
+
         template = self.get_template()
 
         try:
-            self.check_template(template)
+            file_name = self.check_template(template)
+
+            show_file_name()
 
             self.error_msg_lab.SetLabel("")
 
@@ -101,17 +117,54 @@ class AddNewTemplateDialog(Dialog):
 
         event.Skip()
 
+    def onHelpEVT(self, event):
+        webbrowser.open("")
+
     def get_template(self):
         return self.template_box.GetValue()
     
     def check_template(self, template: str):
+        def get_task_info():
+            task_info = DownloadTaskInfo()
+            task_info.number = 1
+            task_info.zero_padding_number = "01"
+            task_info.title = "《孤独摇滚》第1话 孤独的转机"
+            task_info.aid = 944573356
+            task_info.bvid = "BV1yW4y1j7Ft"
+            task_info.cid = 875212290
+            task_info.ep_id = 693247
+            task_info.season_id = 43164
+            task_info.media_id = 28339735
+            task_info.series_title = "《孤独摇滚》"
+            task_info.video_quality_id = 120
+            task_info.audio_quality_id = 30251
+            task_info.video_codec_id = 12
+            task_info.duration = 256
+            task_info.pubtime = 1667061000
+            task_info.area = "中国大陆"
+            task_info.tname_info = {
+                "tname": "综合",
+                "subtname": "动漫剪辑"
+            }
+            task_info.up_info = {
+                "up_name": "哔哩哔哩番剧",
+                "up_mid": 928123
+            }
+
+            return task_info
+        
         if self.check_sep(template):
             raise ValueError("sep")
+        
+        return FileNameFormatter.format_file_name(get_task_info(), template)
         
     def show_error_msg(self, e):
         match str(e):
             case "sep":
                 msg = f"路径分隔符不正确，当前操作系统所使用的路径分割符为：{os.sep}"
+
+            case _:
+                msg = str(e)
 
         self.error_msg_lab.SetLabel(msg)
 
@@ -140,7 +193,7 @@ class CustomFileNameDialog(Dialog):
         self.scope_choice.SetSelection(0)
         scope_tooltip = ToolTip(self)
         scope_tooltip.set_tooltip("指定文件名模板的生效范围\n\n目前程序支持下载的视频分为三类：投稿视频、剧集（电影、番剧等）和课程\n\n所有类型：对三种类型的视频都生效\n投稿视频\\剧集\\课程：对相应类型的视频生效\n默认：未设置相应类型的文件名模板时所使用的默认值\n\n优先级：所有类型>投稿视频=剧集=课程>默认")
-        self.add_btn = wx.Button(self, -1, "添加", size = self.get_scaled_size((60, 24)))
+        self.add_btn = wx.Button(self, -1, "添加模板", size = self.get_scaled_size((80, 24)))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -189,7 +242,8 @@ class CustomFileNameDialog(Dialog):
             self.template_list.AppendColumn("生效范围", width = self.FromDIP(100))
 
         def init_list_data():
-            pass
+            for entry in Config.Download.file_name_template_list:
+                self.template_list.Append([entry["template"], get_mapping_key_by_value(scope_map, entry["scope"])])
 
         init_list_column()
 
@@ -218,3 +272,4 @@ class CustomFileNameDialog(Dialog):
         for i in range(self.template_list.GetItemCount()):
             if self.template_list.GetItemText(i, 1) == scope:
                 return True
+            

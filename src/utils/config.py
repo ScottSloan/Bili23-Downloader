@@ -185,6 +185,12 @@ class Config:
 
     class Download:
         path: str = os.path.join(os.getcwd(), "download")
+        file_name_template_list: list = [
+            {
+                "template": "{zero_padding_number} - {title}",
+                "scope": 4
+            },
+        ]
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
@@ -221,17 +227,10 @@ class Config:
 
         cdn_list: list = []
 
-        file_name_template: str = ""
-        datetime_format: str = ""
-        auto_adjust_field: bool = False
-
-        enable_download_sort: bool = False
-        sort_by_up: bool = False
-        sort_by_collection: bool = False
-        sort_by_series: bool = False
-
         ua_option: int = 0
         custom_ua: str = ""
+
+        file_name_template_list: list = []
 
     class Auth:
         img_key: str = ""
@@ -267,12 +266,6 @@ class Config:
 
         file_name_template: str = "{number_with_zero} - {title}"
         datetime_format: str = "%Y-%m-%d %H-%M-%S"
-        auto_adjust_field: bool = True
-
-        enable_download_sort: bool = False
-        sort_by_up: bool = False
-        sort_by_collection: bool = False
-        sort_by_series: bool = False
 
         retry_when_download_error: bool = True
         download_error_retry_count: int = 3

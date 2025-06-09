@@ -204,11 +204,11 @@ class DownloadManagerWindow(Frame):
                     match NumberType(Config.Download.number_type):
                         case NumberType.From_1 | NumberType.Coherent:
                             entry.number = self.index
-                            entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
+                            entry.zero_padding_number = str(self.index).zfill(len(str(len(download_list))))
 
                         case NumberType.Episode_List:
                             entry.number = entry.list_number
-                            entry.number_with_zero = entry.list_number
+                            entry.zero_padding_number = entry.list_number
 
             if Config.Download.number_type == NumberType.From_1.value:
                 self.index = 0

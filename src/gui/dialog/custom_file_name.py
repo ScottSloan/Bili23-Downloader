@@ -225,8 +225,7 @@ class CustomFileNameDialog(Dialog):
             "up_mid": 928123
         }
 
-        file_name_mgr = FileNameManager(task_info)
-        preview = file_name_mgr.get_full_file_name(self.template_box.GetValue(), self.auto_adjust_chk.GetValue())
+        preview = ""
 
         if len(preview) > 255:
             raise ValueError("max length")

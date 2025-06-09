@@ -28,6 +28,8 @@ class FileNameFormatter:
             if not value:
                 value = "null"
 
+        return field_dict
+
     @staticmethod
     def check_file_name_length(file_name: str, max_length: int = 255):
         base_name, ext = os.path.splitext(file_name)
@@ -49,7 +51,7 @@ class FileNameFormatter:
             "pubdatetime": get_pubdatetime(),
             "pubtimestamp": task_info.pubtime,
             "number": task_info.number,
-            "zero_padding_number": task_info.number_with_zero,
+            "zero_padding_number": task_info.zero_padding_number,
             "zone": task_info.tname_info.get("tname"),
             "subzone": task_info.tname_info.get("subtname"),
             "area": task_info.area,
@@ -57,7 +59,7 @@ class FileNameFormatter:
             "aid": task_info.aid,
             "bvid": task_info.bvid,
             "cid": task_info.cid,
-            "epid": task_info.ep_id,
+            "ep_id": task_info.ep_id,
             "season_id": task_info.season_id,
             "media_id": task_info.media_id,
             "series_title": task_info.series_title,

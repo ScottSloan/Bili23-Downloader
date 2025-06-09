@@ -18,7 +18,6 @@ from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.custom_file_name_v2 import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
-from gui.dialog.download_sort import DownloadSortDialog
 from gui.dialog.custom_ua import CustomUADialog
 
 from utils.config import Config, app_config_group
@@ -274,7 +273,9 @@ class DownloadTab(Tab):
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        
+
+        self.custom_file_name_btn = wx.Button(download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
+
         self.max_thread_lab = wx.StaticText(download_box, -1, "多线程数：1")
         self.max_thread_slider = wx.Slider(download_box, -1, 1, 1, 10)
 
@@ -346,6 +347,7 @@ class DownloadTab(Tab):
         download_sbox = wx.StaticBoxSizer(download_box, wx.VERTICAL)
         download_sbox.Add(path_lab, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(path_hbox, 0, wx.EXPAND)
+        download_sbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_thread_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
@@ -371,6 +373,7 @@ class DownloadTab(Tab):
 
     def Bind_EVT(self):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
+        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
 
         self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadCountSlideEVT)
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
@@ -383,6 +386,8 @@ class DownloadTab(Tab):
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
+
+        Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
         
         self.max_thread_lab.SetLabel("多线程数：{}".format(Config.Download.max_thread_count))
         self.max_thread_slider.SetValue(Config.Download.max_thread_count)
@@ -424,6 +429,8 @@ class DownloadTab(Tab):
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_mbps = int(self.speed_limit_box.GetValue())
+
+        Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
 
         # 更新下载窗口中并行下载数信息
         update_download_window()
@@ -470,6 +477,10 @@ class DownloadTab(Tab):
         self.number_type_lab.Enable(enable)
         self.number_type_choice.Enable(enable)
 
+    def onCustomFileNameEVT(self, event):
+        dlg = CustomFileNameDialog(self)
+        dlg.ShowModal()
+
 class AdvancedTab(Tab):
     def __init__(self, parent, ):
         Tab.__init__(self, parent)
@@ -498,13 +509,6 @@ class AdvancedTab(Tab):
         cdn_sbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
 
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
-
-        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
-        self.download_sort_btn = wx.Button(advanced_download_box, -1, "下载分类设置", size = self.get_scaled_size((110, 28)))
-
-        button_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, self.FromDIP(6))
-        button_hbox.Add(self.download_sort_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
@@ -535,7 +539,6 @@ class AdvancedTab(Tab):
         self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 UA", size = self.get_scaled_size((100, 28)))
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
-        advanced_download_sbox.Add(button_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         advanced_download_sbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
@@ -554,8 +557,6 @@ class AdvancedTab(Tab):
         self.enable_switch_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableSwitchCDNEVT)
         self.custom_cdn_btn.Bind(wx.EVT_BUTTON, self.onCustomCDNEVT)
 
-        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
-        self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
 
@@ -563,15 +564,7 @@ class AdvancedTab(Tab):
 
     def init_data(self):
         self.enable_switch_cdn_chk.SetValue(Config.Advanced.enable_switch_cdn)
-        Config.Temp.cdn_list = Config.Advanced.cdn_list
-
-        Config.Temp.file_name_template = Config.Advanced.file_name_template
-        Config.Temp.datetime_format = Config.Advanced.datetime_format
-        Config.Temp.auto_adjust_field = Config.Advanced.auto_adjust_field
-        Config.Temp.enable_download_sort = Config.Advanced.enable_download_sort
-        Config.Temp.sort_by_up = Config.Advanced.sort_by_up
-        Config.Temp.sort_by_collection = Config.Advanced.sort_by_collection
-        Config.Temp.sort_by_series = Config.Advanced.sort_by_series
+        Config.Temp.cdn_list = Config.Advanced.cdn_list.copy()
 
         self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
@@ -590,15 +583,7 @@ class AdvancedTab(Tab):
 
     def save(self):
         Config.Advanced.enable_switch_cdn = self.enable_switch_cdn_chk.GetValue()
-        Config.Advanced.cdn_list = Config.Temp.cdn_list
-
-        Config.Advanced.file_name_template = Config.Temp.file_name_template
-        Config.Advanced.datetime_format = Config.Temp.datetime_format
-        Config.Advanced.auto_adjust_field = Config.Temp.auto_adjust_field
-        Config.Advanced.enable_download_sort = Config.Temp.enable_download_sort
-        Config.Advanced.sort_by_up = Config.Temp.sort_by_up
-        Config.Advanced.sort_by_collection = Config.Temp.sort_by_collection
-        Config.Advanced.sort_by_series = Config.Temp.sort_by_series
+        Config.Advanced.cdn_list = Config.Temp.cdn_list.copy()
 
         Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
@@ -616,14 +601,6 @@ class AdvancedTab(Tab):
 
     def onCustomCDNEVT(self, event):
         dlg = CustomCDNDialog(self)
-        dlg.ShowModal()
-
-    def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self)
-        dlg.ShowModal()
-    
-    def onDownloadSortEVT(self, event):
-        dlg = DownloadSortDialog(self)
         dlg.ShowModal()
 
     def onChangeRetryEVT(self, event):

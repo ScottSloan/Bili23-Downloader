@@ -88,7 +88,7 @@ class DownloadTaskInfo:
         return {
             "id": self.id,
             "number": self.number,
-            "number_with_zero": self.number_with_zero,
+            "zero_padding_number": self.zero_padding_number,
             "list_number": self.list_number,
             "suffix": self.suffix,
             "timestamp": self.timestamp,
@@ -128,7 +128,7 @@ class DownloadTaskInfo:
     def load_from_dict(self, data: Dict):
         self.id = data.get("id")
         self.number = data.get("number")
-        self.number_with_zero = data.get("number_with_zero")
+        self.zero_padding_number = data.get("zero_padding_number")
         self.list_number = data.get("list_number")
         self.suffix = data.get("suffix")
         self.timestamp = data.get("timestamp")

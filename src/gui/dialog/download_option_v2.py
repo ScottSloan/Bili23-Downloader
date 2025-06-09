@@ -12,7 +12,6 @@ from utils.parse.preview import Preview
 
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 from gui.dialog.custom_file_name import CustomFileNameDialog
-from gui.dialog.download_sort import DownloadSortDialog
 
 from gui.component.dialog import Dialog
 from gui.component.info_label import InfoLabel
@@ -142,13 +141,11 @@ class DownloadOptionDialog(Dialog):
         self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         self.custom_file_name_btn = wx.Button(path_box, -1, "文件名...", size = self.get_scaled_size((60, 24)))
-        self.download_sort_btn = wx.Button(path_box, -1, "分类...", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         path_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        path_hbox.Add(self.download_sort_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
         path_sbox.Add(path_hbox, 0, wx.EXPAND)
@@ -269,7 +266,6 @@ class DownloadOptionDialog(Dialog):
 
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
-        self.download_sort_btn.Bind(wx.EVT_BUTTON, self.onDownloadSortEVT)
 
         self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onEnableKeepFilesEVT)
 
@@ -349,13 +345,7 @@ class DownloadOptionDialog(Dialog):
 
         self.path_box.SetValue(Config.Download.path)
 
-        Config.Temp.file_name_template = Config.Advanced.file_name_template
-        Config.Temp.datetime_format = Config.Advanced.datetime_format
-        Config.Temp.auto_adjust_field = Config.Advanced.auto_adjust_field
-        Config.Temp.enable_download_sort = Config.Advanced.enable_download_sort
-        Config.Temp.sort_by_up = Config.Advanced.sort_by_up
-        Config.Temp.sort_by_collection = Config.Advanced.sort_by_collection
-        Config.Temp.sort_by_series = Config.Advanced.sort_by_series
+        Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
     
     def onChangeVideoQualityCodecEVT(self, event):
         def worker():
@@ -556,10 +546,6 @@ class DownloadOptionDialog(Dialog):
     def onCustomFileNameEVT(self, event):
         dlg = CustomFileNameDialog(self)
         dlg.ShowModal()
-    
-    def onDownloadSortEVT(self, event):
-        dlg = DownloadSortDialog(self)
-        dlg.ShowModal()
 
     def onEnableKeepFilesEVT(self, event):
         enable = self.ffmpeg_merge_chk.GetValue()
@@ -599,13 +585,7 @@ class DownloadOptionDialog(Dialog):
         Config.Download.ffmpeg_merge = self.ffmpeg_merge_chk.GetValue()
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
-        Config.Advanced.file_name_template = Config.Temp.file_name_template
-        Config.Advanced.datetime_format = Config.Temp.datetime_format
-        Config.Advanced.auto_adjust_field = Config.Temp.auto_adjust_field
-        Config.Advanced.enable_download_sort = Config.Temp.enable_download_sort
-        Config.Advanced.sort_by_up = Config.Temp.sort_by_up
-        Config.Advanced.sort_by_collection = Config.Temp.sort_by_collection
-        Config.Advanced.sort_by_series = Config.Temp.sort_by_series
+        Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 
