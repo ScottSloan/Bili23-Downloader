@@ -41,14 +41,10 @@ class FileNameFormatter:
 
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):
-        def get_pubdatetime():
-            if task_info.pubtime:
-                return datetime.fromtimestamp(task_info.pubtime).strftime(Config.Advanced.datetime_format)
-
         return {
-            "datetime": datetime.now().strftime(Config.Advanced.datetime_format),
+            "time": datetime.now(),
             "timestamp": str(int(datetime.now().timestamp())),
-            "pubdatetime": get_pubdatetime(),
+            "pubtime": datetime.fromtimestamp(task_info.pubtime),
             "pubtimestamp": task_info.pubtime,
             "number": task_info.number,
             "zero_padding_number": task_info.zero_padding_number,

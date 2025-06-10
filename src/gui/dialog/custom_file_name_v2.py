@@ -7,16 +7,19 @@ from utils.config import Config
 from utils.common.map import scope_map, field_map, get_mapping_key_by_value
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.data_type import DownloadTaskInfo
+from utils.common.font import SysFont
 
 from gui.component.dialog import Dialog
 from gui.component.text_ctrl import TextCtrl
 from gui.component.tooltip import ToolTip
 
 class AddNewTemplateDialog(Dialog):
-    def __init__(self, parent, scope_id: int):
+    def __init__(self, parent, scope_id: int, add_mode = True, template: str = ""):
         self.scope_id = scope_id
+        self.add_mode = add_mode
+        self.template = template
 
-        Dialog.__init__(self, parent, "添加文件名模板")
+        Dialog.__init__(self, parent, f"{'添加' if add_mode else '修改'}文件名模板")
 
         self.init_UI()
 
@@ -29,7 +32,7 @@ class AddNewTemplateDialog(Dialog):
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板（支持添加子目录）")
         template_tooltip = ToolTip(self)
-        template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方加入路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会放在同一个文件夹中\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）\n\n空字段值将默认使用 null 替代')
+        template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方加入路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会放在同一个文件夹中\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）')
         self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((60, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -38,17 +41,27 @@ class AddNewTemplateDialog(Dialog):
         template_hbox.AddStretchSpacer()
         template_hbox.Add(self.help_btn, 0, wx.ALL, self.FromDIP(6))
 
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((610, 24)))
+        font = self.GetFont()
+        font.SetFaceName(SysFont.get_monospaced_font())
+        self.template_box = TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
+        self.template_box.SetFont(font)
 
         self.error_msg_lab = wx.StaticText(self, -1, "")
         self.error_msg_lab.SetForegroundColour("red")
 
         preview_lab = wx.StaticText(self, -1, "预览")
-        self.subdirectory_lab = wx.StaticText(self, -1, "子目录：")
+        self.directory_lab = wx.StaticText(self, -1, "子目录：")
         self.file_name_lab = wx.StaticText(self, -1, "文件名：")
 
-        field_lab = wx.StaticText(self, -1, "可用字段列表（双击添加字段）")
-        self.field_list = wx.ListCtrl(self, -1, style = wx.LC_REPORT)
+        field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
+        field_tooltip = ToolTip(self)
+        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中，格式可自定义，具体用法请参考说明文档\n\n不同类型视频可用的字段略有不同，请留意")
+
+        field_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        field_hbox.Add(field_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        field_hbox.Add(field_tooltip, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.field_list = wx.ListCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 200)), style = wx.LC_REPORT)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
@@ -63,9 +76,9 @@ class AddNewTemplateDialog(Dialog):
         vbox.Add(self.template_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(self.error_msg_lab, 0, wx.ALL, self.FromDIP(6))
         vbox.Add(preview_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
-        vbox.Add(self.subdirectory_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        vbox.Add(self.directory_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(self.file_name_lab, 0, wx.ALL, self.FromDIP(6))
-        vbox.Add(field_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        vbox.Add(field_hbox, 0, wx.EXPAND)
         vbox.Add(self.field_list, 1, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
@@ -80,18 +93,27 @@ class AddNewTemplateDialog(Dialog):
 
     def init_utils(self):
         def init_list_column():
-            self.field_list.AppendColumn("字段名称", width = self.FromDIP(180))
-            self.field_list.AppendColumn("说明", width = self.FromDIP(220))
+            self.field_list.AppendColumn("字段名称", width = self.FromDIP(170))
+            self.field_list.AppendColumn("说明", width = self.FromDIP(200))
             self.field_list.AppendColumn("示例", width = self.FromDIP(200))
+            self.field_list.AppendColumn("生效范围", width = self.FromDIP(160))
 
         def init_list_data():
+            def get_scope():
+                return "、".join([get_mapping_key_by_value(scope_map, i) for i in value["scope"] if i in [1, 2, 3]])
+            
             for value in field_map.values():            
                 if self.scope_id in value["scope"]:
-                    self.field_list.Append([value["name"], value["description"], value["example"]])
+                    self.field_list.Append([value["name"], value["description"], value["example"], get_scope()])
 
         init_list_column()
 
         init_list_data()
+
+        self.template_box.SetValue(self.template)
+
+        if self.scope_id in [1, 2, 3]:
+            self.field_list.DeleteColumn(3)
 
     def onAddFieldEVT(self, event):
         field = self.field_list.GetItemText(self.field_list.GetFocusedItem(), 0)
@@ -100,7 +122,7 @@ class AddNewTemplateDialog(Dialog):
 
     def onTextEVT(self, event):
         def show_file_name():
-            self.subdirectory_lab.SetLabel(f"子目录：{os.path.dirname(file_name)}")
+            self.directory_lab.SetLabel(f"子目录：{os.path.dirname(file_name)}")
             self.file_name_lab.SetLabel(f"文件名：{os.path.basename(file_name)}")
 
         template = self.get_template()
@@ -159,14 +181,28 @@ class AddNewTemplateDialog(Dialog):
         return FileNameFormatter.format_file_name(get_task_info(), template)
         
     def show_error_msg(self, e):
-        match str(e):
-            case "sep":
-                msg = f"路径分隔符不正确，当前操作系统所使用的路径分割符为：{os.sep}"
+        match e:
+            case ValueError():
+                if str(e) == "sep":
+                    msg = f"路径分隔符不正确，当前操作系统所使用的路径分割符为：{os.sep}"
+
+                if str(e).startswith(("Single", "expected", "unexpected", "unmatched")):
+                    msg = "字段名必须以 {} 包裹"
+
+                if str(e).startswith("Invalid"):
+                    msg = "时间格式无效"
+
+            case IndexError() | KeyError():
+                msg = "字段名无效"
 
             case _:
                 msg = str(e)
 
+        print(type(e), str(e))
+
         self.error_msg_lab.SetLabel(msg)
+        self.directory_lab.SetLabel("子目录：")
+        self.file_name_lab.SetLabel("文件名：")
 
     def check_sep(self, template: str):
         sep = "\\" if os.sep == "/" else "/"
@@ -205,15 +241,15 @@ class CustomFileNameDialog(Dialog):
 
         self.template_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 220)), style = wx.LC_REPORT)
 
-        self.auto_delete_empty_field_chk = wx.CheckBox(self, -1, "自动删除空字段")
         self.edit_btn = wx.Button(self, -1, "修改模板", size = self.get_scaled_size((80, 24)))
         self.delete_btn = wx.Button(self, -1, "删除模板", size = self.get_scaled_size((80, 24)))
+        self.reset_btn = wx.Button(self, -1, "重置为默认值", size = self.get_scaled_size((100, 24)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        action_hbox.Add(self.auto_delete_empty_field_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
-        action_hbox.AddStretchSpacer()
         action_hbox.Add(self.edit_btn, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM), self.FromDIP(6))
+        action_hbox.AddStretchSpacer()
+        action_hbox.Add(self.reset_btn, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
@@ -236,13 +272,15 @@ class CustomFileNameDialog(Dialog):
         self.edit_btn.Bind(wx.EVT_BUTTON, self.onEditEVT)
         self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteEVT)
 
+        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
+
     def init_utils(self):
         def init_list_column():
-            self.template_list.AppendColumn("模板", width = self.FromDIP(500))
+            self.template_list.AppendColumn("文件名模板", width = self.FromDIP(500))
             self.template_list.AppendColumn("生效范围", width = self.FromDIP(100))
 
         def init_list_data():
-            for entry in Config.Download.file_name_template_list:
+            for entry in Config.Temp.file_name_template_list:
                 self.template_list.Append([entry["template"], get_mapping_key_by_value(scope_map, entry["scope"])])
 
         init_list_column()
@@ -263,10 +301,50 @@ class CustomFileNameDialog(Dialog):
             self.template_list.Append([dlg.get_template(), scope])
 
     def onEditEVT(self, event):
-        pass
+        item = self.template_list.GetFocusedItem()
+
+        if item == -1:
+            wx.MessageDialog(self, "编辑文件名模板失败\n\n未选择要编辑的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        template = self.template_list.GetItemText(item, 0)
+        scope_id = scope_map.get(self.template_list.GetItemText(item, 1))
+
+        dlg = AddNewTemplateDialog(self, scope_id, add_mode = False, template = template)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            new_template = dlg.get_template()
+
+            self.template_list.SetItem(item, 0, new_template)
 
     def onDeleteEVT(self, event):
-        pass
+        item = self.template_list.GetFocusedItem()
+
+        if item == -1:
+            wx.MessageDialog(self, "删除文件名模板失败\n\n未选择要删除的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        scope_id = scope_map.get(self.template_list.GetItemText(item, 1))
+
+        if scope_id == 4:
+            wx.MessageDialog(self, "删除文件名模板失败\n\n不能删除默认的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
+            return
+
+        dlg = wx.MessageDialog(self, "删除文件名模板\n\n是否要删除该模板？", "提示", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+            self.template_list.DeleteItem(item)
+
+    def onConfirmEVT(self, event):
+        Config.Temp.file_name_template_list.clear()
+
+        for i in range(self.template_list.GetItemCount()):
+            Config.Temp.file_name_template_list.append({
+                "template": self.template_list.GetItemText(i, 0),
+                "scope": scope_map.get(self.template_list.GetItemText(i, 1))
+            })
+
+        event.Skip()
 
     def check_existence(self, scope: str):
         for i in range(self.template_list.GetItemCount()):

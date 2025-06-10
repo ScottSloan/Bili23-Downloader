@@ -27,6 +27,7 @@ app_config_group = {
     ],
     "Download": [
         "path",
+        "file_name_template_list",
         "max_download_count",
         "max_thread_count",
         "video_quality_id",
@@ -41,13 +42,6 @@ app_config_group = {
     "Advanced": [
         "enable_switch_cdn",
         "cdn_list",
-        "file_name_template",
-        "datetime_format",
-        "auto_adjust_field",
-        "enable_download_sort",
-        "sort_by_up",
-        "sort_by_collection",
-        "sort_by_series",
         "retry_when_download_error",
         "download_error_retry_count",
         "retry_when_download_suspend",
