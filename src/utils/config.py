@@ -110,9 +110,9 @@ class Config:
         version: str = "1.63.0"
         version_code: int = 1630
 
-        # 断点续传文件最低支持版本号
         task_file_min_version_code: int = 1630
-        config_file_min_version_code: int = 1630
+        app_config_file_min_version_code: int = 1630
+        user_config_file_min_version_code: int = 1620
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
@@ -274,18 +274,6 @@ class Config:
     @classmethod
     def load_config(cls):
         def after_load_config():
-            def create_folder(path_list: list):
-                for path in path_list:
-                    if not os.path.exists(path):
-                        os.makedirs(path)
-            
-            def create_config(config_list: list):
-                for entry in config_list:
-                    if not os.path.exists(entry["path"]):
-                        cls.write_config_json(entry["path"], entry["config"])
-
-                        cls.save_config_group(Config, entry["config_group"], entry["path"])
-
             def get_user_face():
                 _, file_ext = os.path.splitext(Config.User.face_url)
 
@@ -293,35 +281,12 @@ class Config:
                 
                 Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
 
-            create_folder([Config.Download.path, Config.User.directory, Config.User.download_file_directory])
+            cls.create_folder([Config.Download.path, Config.User.directory, Config.User.download_file_directory])
 
-            create_config([{"path": Config.APP.app_config_path, "config": app_config, "config_group": app_config_group}, {"path": Config.User.user_config_path, "config": user_config, "config_group": user_config_group}])
+            cls.create_config(app_config, Config.APP.app_config_path, app_config_group)
+            cls.create_config(user_config, Config.User.user_config_path, user_config_group)
 
             get_user_face()
-
-        def check_config():
-            def check_config_version(config: Dict[str, dict], file_path: str):
-                min_version = config.get("header", {"min_version": 0}).get("min_version", 0)
-                
-                if min_version < Config.APP.config_file_min_version_code:
-                    cls.remove_config_file(file_path)
-
-                    config.clear()
-
-            def check_config_node_name(config: Dict[str, dict], node_name_list: list):
-                for node_name in node_name_list:
-                    if node_name not in config:
-                        config[node_name] = {}
-
-                        if node_name == "header":
-                            config[node_name]["min_version"] = Config.APP.config_file_min_version_code
-                            config[node_name]["platform"] = Config.Sys.platform
-
-            check_config_version(app_config, Config.APP.app_config_path)
-            check_config_version(user_config, Config.User.user_config_path)
-
-            check_config_node_name(app_config, ["header", "basic", "download", "advanced", "merge", "extra", "proxy", "misc"])
-            check_config_node_name(user_config, ["header", "user", "auth"])
         
         def get_path():
             match Platform(Config.Sys.platform):
@@ -339,12 +304,42 @@ class Config:
         app_config: Dict[str, dict] = cls.read_config_json(Config.APP.app_config_path)
         user_config: Dict[str, dict] = cls.read_config_json(Config.User.user_config_path)
 
-        check_config()
+        app_config, user_config = cls.check_config(app_config, user_config)
 
         cls.read_config_group(Config, app_config, app_config_group)
         cls.read_config_group(Config, user_config, user_config_group)
 
         after_load_config()
+
+    @classmethod
+    def create_config(cls, config: dict, config_path: str, config_group: dict):
+        if not os.path.exists(config_path):
+            
+            cls.write_config_json(config_path, config)
+
+            cls.read_config_group(Config, config, config_group)
+            cls.save_config_group(Config, config_group, config_path)
+
+    @staticmethod
+    def create_folder(path_list: list):
+        for path in path_list:
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+    @classmethod
+    def check_config(cls, app_config, user_config):
+        def check_config_version(config: Dict[str, dict], file_path: str, version_code: int):
+            min_version = config.get("header", {"min_version": 0}).get("min_version", 0)
+            
+            if min_version < version_code:
+                cls.remove_config_file(file_path)
+
+                config.clear()
+
+        check_config_version(app_config, Config.APP.app_config_path, Config.APP.app_config_file_min_version_code)
+        check_config_version(user_config, Config.User.user_config_path, Config.APP.user_config_file_min_version_code)
+
+        return cls.get_initial_app_config(app_config), cls.get_initial_user_config(user_config)
 
     @staticmethod
     def read_config_group(object, config: Dict[str, dict], config_group: Dict[str, list]):
@@ -381,5 +376,31 @@ class Config:
     def write_config_json(file_path: str, contents: dict):
         with open(file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
+
+    @staticmethod
+    def get_initial_app_config(config: dict):
+        return config if config else {
+            "header": {
+                "min_version": Config.APP.app_config_file_min_version_code,
+                "platform": Config.Sys.platform
+            },
+            "basic": {},
+            "download": {},
+            "advanced": {},
+            "merge": {},
+            "proxy": {},
+            "misc": {}
+        }
+    
+    @staticmethod
+    def get_initial_user_config(config: dict):
+        return config if config else {
+            "header": {
+                "min_version": Config.APP.user_config_file_min_version_code,
+                "platform": Config.Sys.platform
+            },
+            "user": {},
+            "auth": {}
+        }
 
 Config.load_config()

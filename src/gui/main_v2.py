@@ -940,9 +940,11 @@ class MainWindow(Frame):
 
     def read_clip_board(self, event):
         def is_valid_url(url: str):
-            return re.findall(r"(https)|(http):\/\/[a-zA-Z0-9-]+\.bilibili\.com", url)
+            if url.startswith(("http", "https")):
+                if UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+                    return url != self.current_parse_url and url not in self.error_url_list
 
-        if self.status == ParseStatus.Parsing:
+        if self.status == ParseStatus.Parsing or not self.IsShown():
             return
 
         text = wx.TextDataObject()
@@ -950,8 +952,8 @@ class MainWindow(Frame):
         if wx.TheClipboard.Open():
             if wx.TheClipboard.GetData(text):
                 url: str = text.GetText()
+
                 if is_valid_url(url):
-                    if url != self.current_parse_url and url not in self.error_url_list:
                         self.url_box.SetValue(url)
 
                         wx.CallAfter(self.onGetEVT, event)
@@ -972,16 +974,6 @@ class MainWindow(Frame):
 
         wx.CallAfter(worker)
 
-    @property
-    def parse_callback(self):
-        callback = ParseCallback()
-        callback.onError = self.onErrorCallback
-        callback.onRedirect = self.onBangumiCallback
-        callback.onInteract = self.onInteractVideoCallback
-        callback.onInteractUpdate = self.processing_window.onUpdateNode
-
-        return callback
-    
     @property
     def video_quality_id(self):
         return video_quality_map.get(self.video_quality_choice.GetStringSelection())

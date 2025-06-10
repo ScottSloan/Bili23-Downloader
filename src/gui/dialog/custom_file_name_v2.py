@@ -32,7 +32,7 @@ class AddNewTemplateDialog(Dialog):
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板（支持添加子目录）")
         template_tooltip = ToolTip(self)
-        template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方加入路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会放在同一个文件夹中\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）')
+        template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方添加路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会被放置到同一个文件夹中，达到自动分类的效果。\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）')
         self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((60, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -55,7 +55,7 @@ class AddNewTemplateDialog(Dialog):
 
         field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
         field_tooltip = ToolTip(self)
-        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中，格式可自定义，具体用法请参考说明文档\n\n不同类型视频可用的字段略有不同，请留意")
+        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中，格式可自定义，具体用法请参考说明文档\n\n不同类型视频可用的字段有所不同，请留意")
 
         field_hbox = wx.BoxSizer(wx.HORIZONTAL)
         field_hbox.Add(field_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -140,7 +140,7 @@ class AddNewTemplateDialog(Dialog):
         event.Skip()
 
     def onHelpEVT(self, event):
-        webbrowser.open("")
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/use/advanced/custom_file_name.html")
 
     def get_template(self):
         return self.template_box.GetValue()
@@ -228,7 +228,7 @@ class CustomFileNameDialog(Dialog):
         self.scope_choice = wx.Choice(self, -1, choices = list(scope_map.keys()))
         self.scope_choice.SetSelection(0)
         scope_tooltip = ToolTip(self)
-        scope_tooltip.set_tooltip("指定文件名模板的生效范围\n\n目前程序支持下载的视频分为三类：投稿视频、剧集（电影、番剧等）和课程\n\n所有类型：对三种类型的视频都生效\n投稿视频\\剧集\\课程：对相应类型的视频生效\n默认：未设置相应类型的文件名模板时所使用的默认值\n\n优先级：所有类型>投稿视频=剧集=课程>默认")
+        scope_tooltip.set_tooltip("指定文件名模板的生效范围\n\n目前程序支持下载的视频分为三类：投稿视频、剧集（电影、番剧等）和课程\n\n所有类型：对三种类型的视频都生效\n投稿视频\\剧集\\课程：对相应类型的视频生效\n默认：未设置相应类型的文件名模板时所使用的默认值\n\n生效范围优先级：所有类型 > 投稿视频 = 剧集 = 课程 > 默认")
         self.add_btn = wx.Button(self, -1, "添加模板", size = self.get_scaled_size((80, 24)))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -241,15 +241,17 @@ class CustomFileNameDialog(Dialog):
 
         self.template_list = wx.ListCtrl(self, -1, size = self.FromDIP((650, 220)), style = wx.LC_REPORT)
 
-        self.edit_btn = wx.Button(self, -1, "修改模板", size = self.get_scaled_size((80, 24)))
-        self.delete_btn = wx.Button(self, -1, "删除模板", size = self.get_scaled_size((80, 24)))
-        self.reset_btn = wx.Button(self, -1, "重置为默认值", size = self.get_scaled_size((100, 24)))
+        self.edit_btn = wx.Button(self, -1, "修改模板", size = self.get_scaled_size((80, 28)))
+        self.delete_btn = wx.Button(self, -1, "删除模板", size = self.get_scaled_size((80, 28)))
+        self.reset_btn = wx.Button(self, -1, "重置为默认值", size = self.get_scaled_size((100, 28)))
 
         action_hbox = wx.BoxSizer(wx.HORIZONTAL)
         action_hbox.Add(self.edit_btn, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         action_hbox.Add(self.delete_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM), self.FromDIP(6))
         action_hbox.AddStretchSpacer()
         action_hbox.Add(self.reset_btn, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+
+        bottom_line = wx.StaticLine(self, -1)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
@@ -263,6 +265,7 @@ class CustomFileNameDialog(Dialog):
         vbox.Add(top_hbox, 0, wx.EXPAND)
         vbox.Add(self.template_list, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(action_hbox, 0, wx.EXPAND)
+        vbox.Add(bottom_line, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -271,6 +274,7 @@ class CustomFileNameDialog(Dialog):
         self.add_btn.Bind(wx.EVT_BUTTON, self.onAddEVT)
         self.edit_btn.Bind(wx.EVT_BUTTON, self.onEditEVT)
         self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteEVT)
+        self.reset_btn.Bind(wx.EVT_BUTTON, self.onResetEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
@@ -304,7 +308,7 @@ class CustomFileNameDialog(Dialog):
         item = self.template_list.GetFocusedItem()
 
         if item == -1:
-            wx.MessageDialog(self, "编辑文件名模板失败\n\n未选择要编辑的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "修改文件名模板失败\n\n未选择要修改的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         template = self.template_list.GetItemText(item, 0)
@@ -334,6 +338,14 @@ class CustomFileNameDialog(Dialog):
 
         if dlg.ShowModal() == wx.ID_YES:
             self.template_list.DeleteItem(item)
+
+    def onResetEVT(self, event):
+        dlg = wx.MessageDialog(self, "重置为默认值\n\n是否要重置为默认值？当前添加的文件名模板将会丢失", "警告", wx.ICON_WARNING | wx.YES_NO)
+
+        if dlg.ShowModal() == wx.ID_YES:
+            self.template_list.DeleteAllItems()
+
+            self.template_list.Append(["{zero_padding_number} - {title}", "默认"])
 
     def onConfirmEVT(self, event):
         Config.Temp.file_name_template_list.clear()
