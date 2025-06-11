@@ -85,7 +85,7 @@ class Preview:
         def get_url_list(data: dict):
             match AudioQualityID(audio_quality_id):
                 case AudioQualityID._Dolby_Atoms:
-                    data_node = data["dolby"]["audio"]
+                    data_node = data["dolby"]["audio"][0]
                     bandwidth = data_node["bandwidth"]
 
                 case AudioQualityID._Hi_Res:

@@ -315,4 +315,4 @@ class Downloader:
 
     @property
     def download_path(self):
-        return FileNameFormatter.get_download_path()
+        return FileNameFormatter.get_download_path(self.task_info)

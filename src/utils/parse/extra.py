@@ -21,7 +21,7 @@ class ExtraParser(Parser):
 
     def set_task_info(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
-        self.file_name = FileNameFormatter.format_file_name(task_info, Config.Advanced.file_name_template)
+        self.file_name = FileNameFormatter.format_file_name(task_info)
 
         self.danmaku_file_type = task_info.extra_option.get("danmaku_file_type")
         self.subtitle_file_type = task_info.extra_option.get("subtitle_file_type")

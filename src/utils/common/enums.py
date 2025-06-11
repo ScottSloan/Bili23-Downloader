@@ -144,3 +144,10 @@ class SubtitleLanOption(Enum):
 class UAOption(Enum):
     Custom = 0                    # 自定义
     Random = 1                    # 随机
+
+class ScopeID(Enum):
+    All = 0                       # 所有类型
+    Video = 1                     # 投稿视频
+    Bangumi = 2                   # 剧集
+    Cheese = 3                    # 课程
+    Default = 4                   # 默认

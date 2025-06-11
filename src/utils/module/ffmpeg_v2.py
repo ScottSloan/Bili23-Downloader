@@ -12,6 +12,7 @@ from utils.tool_v2 import UniversalTool
 
 class FFmpeg:
     class Command:
+        @staticmethod
         def get_merge_dash_command(task_info: DownloadTaskInfo):
             def convert_audio():
                 if task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
@@ -44,6 +45,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def get_merge_flv_command(task_info: DownloadTaskInfo):
             def create_flv_list_file():
                 with open(os.path.join(FFmpeg.Prop.download_path(task_info), flv_list_file), "w", encoding = "utf-8") as f:
@@ -66,6 +68,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def get_merge_video_and_audio_command(task_info: DownloadTaskInfo):
             command = Command()
 
@@ -77,6 +80,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def get_convert_audio_command(task_info: DownloadTaskInfo, codec: str):
             command = Command()
 
@@ -87,6 +91,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def get_keep_files_command(task_info: DownloadTaskInfo):
             command = Command()
 
@@ -97,6 +102,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def get_cut_command(info: dict):
             command = Command()
 
@@ -110,6 +116,7 @@ class FFmpeg:
 
             return command.format()
         
+        @staticmethod
         def get_test_command():
             command = Command()
 
@@ -117,6 +124,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def get_rename_command(src: str, dst: str, check: bool = False):
             command = Command()
 
@@ -127,6 +135,7 @@ class FFmpeg:
 
             return command.format()
 
+        @staticmethod
         def run(command: str, callback: Callback, cwd: str = None):
             def run_process():
                 p = subprocess.run(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, text = True, encoding = "utf-8")
@@ -137,17 +146,22 @@ class FFmpeg:
 
                 return process
             
+            def get_output():
+                return f"{process.output}\n\nCommand:\n{command}"
+            
             process = run_process()
                 
             if not process.return_code:
                 callback.onSuccess(process = process)
             else:
-                raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = process.output, callback = callback.onError, args = (process, ))
+                raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
     
     class Env:
+        @staticmethod
         def check_file(path: str):
             return os.path.isfile(path) and os.access(path, os.X_OK)
         
+        @staticmethod
         def get_env_path():
             path_env = os.environ.get("PATH", "")
 
@@ -157,18 +171,21 @@ class FFmpeg:
                 if FFmpeg.Env.check_file(possible_path):
                     return possible_path
 
+        @staticmethod
         def get_cwd_path():
             possible_path = os.path.join(os.getcwd(), FFmpeg.Prop.ffmpeg_file())
             
             if FFmpeg.Env.check_file(possible_path):
                 return possible_path
 
+        @staticmethod
         def get_ffmpeg_path():
             return {
                 "env_path": FFmpeg.Env.get_env_path(),
                 "cwd_path": FFmpeg.Env.get_cwd_path(),
             }
 
+        @staticmethod
         def detect():
             if not Config.Merge.ffmpeg_path:
                 ffmpeg_path = FFmpeg.Env.get_ffmpeg_path()
@@ -178,6 +195,7 @@ class FFmpeg:
                 Config.Merge.ffmpeg_path = env_path if env_path else Config.Merge.ffmpeg_path
                 Config.Merge.ffmpeg_path = cwd_path if cwd_path else Config.Merge.ffmpeg_path
 
+        @staticmethod
         def check_availability():
             class callback(Callback):
                 def onSuccess(*args, **kwargs):
@@ -191,11 +209,13 @@ class FFmpeg:
             FFmpeg.Command.run(command, callback)
 
     class Utils:
+        @staticmethod
         def cut(info: dict, callback: Callback):
             command = FFmpeg.Command.get_cut_command(info)
 
             FFmpeg.Command.run(command, callback)
 
+        @staticmethod
         def merge(task_info: DownloadTaskInfo, callback: MergeCallback):
             def check_file_existance():
                 index = 0
@@ -224,6 +244,7 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback, FFmpeg.Prop.download_path(task_info))
 
+        @staticmethod
         def clear_temp_files(task_info: DownloadTaskInfo):
             def worker():
                 def dash():
@@ -258,6 +279,7 @@ class FFmpeg:
 
             Thread(target = worker).start()
         
+        @staticmethod
         def keep_original_files(task_info: DownloadTaskInfo):
             class callback(Callback):
                 def onSuccess(*args, **kwargs):
@@ -270,10 +292,12 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback)
         
+        @staticmethod
         def check_file_existance(dst: str):
             pass
 
     class Prop:
+        @staticmethod
         def ffmpeg_file():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
@@ -282,32 +306,41 @@ class FFmpeg:
                 case Platform.Linux | Platform.macOS:
                     return "ffmpeg"
         
+        @staticmethod
         def download_path(task_info: DownloadTaskInfo):
-            return FileNameFormatter.get_download_path()
+            return FileNameFormatter.get_download_path(task_info)
 
+        @staticmethod
         def dash_video_temp_file(task_info: DownloadTaskInfo):
             return f"video_{task_info.id}.{task_info.video_type}"
 
+        @staticmethod
         def dash_audio_temp_file(task_info: DownloadTaskInfo):
             return f"audio_{task_info.id}.{task_info.audio_type}"
         
+        @staticmethod
         def dash_output_temp_file(task_info: DownloadTaskInfo):
             return f"output_{task_info.id}.{task_info.output_type}"
         
+        @staticmethod
         def flv_video_temp_file(task_info: DownloadTaskInfo):
             return f"flv_{task_info.id}.flv"
 
+        @staticmethod
         def flv_list_file(task_info: DownloadTaskInfo):
             return f"flv_list_{task_info.id}.txt"
 
+        @staticmethod
         def output_file_name(task_info: DownloadTaskInfo):
-            return FileNameFormatter.format_file_name(task_info, Config.Advanced.file_name_template)
+            return FileNameFormatter.format_file_name(task_info)
 
+        @staticmethod
         def full_file_name(task_info: DownloadTaskInfo):
             output_file_name = FFmpeg.Prop.output_file_name(task_info)
 
             return FileNameFormatter.check_file_name_length(f"{output_file_name}{task_info.suffix}.{task_info.output_type}")
 
+        @staticmethod
         def escape_character():
             match Platform(Config.Sys.platform):
                 case Platform.Windows | Platform.macOS:
@@ -315,7 +348,8 @@ class FFmpeg:
                 
                 case Platform.Linux:
                     return "-- "
-                
+        
+        @staticmethod
         def rename_command():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:

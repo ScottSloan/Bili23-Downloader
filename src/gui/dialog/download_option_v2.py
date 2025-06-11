@@ -38,7 +38,7 @@ class DownloadOptionDialog(Dialog):
 
         self.stream_type_lab = wx.StaticText(self, -1, "当前视频格式：")
         stream_type_tip = ToolTip(self)
-        stream_type_tip.set_tooltip("DASH：视频流和音频流相互独立，即视频流中不包含音轨\nFLV：视频流中已包含音轨，因此无法自定义音质")
+        stream_type_tip.set_tooltip("视频格式说明：\n\nDASH：视频和音频分开存储（需合并为一个文件，程序自动处理）\nFLV：视频和音频已合并，直接下载即可使用")
 
         stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         stream_type_hbox.Add(self.stream_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -95,7 +95,7 @@ class DownloadOptionDialog(Dialog):
 
         self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
         self.video_stream_tip = ToolTip(media_box)
-        self.video_stream_tip.set_tooltip('下载独立的视频流文件\n\n独立的视频流不包含音轨，若需要下载带音轨的视频，请一并勾选"音频流"和"合并视频和音频"选项')
+        self.video_stream_tip.set_tooltip('下载独立的视频流文件\n\n视频和音频分开存储，需要合并为一个完整的视频文件')
 
         video_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_stream_hbox.Add(self.download_video_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))

@@ -6,21 +6,34 @@ from utils.tool_v2 import UniversalTool
 
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
+from utils.common.enums import ParseType, ScopeID
 
 class FileNameFormatter:
     @classmethod
-    def format_file_name(cls, task_info: DownloadTaskInfo, template: str):
+    def format_file_name(cls, task_info: DownloadTaskInfo, template: str = None):
+        if not template:
+            template = cls.get_template(task_info)
+
         field_dict = cls.get_field_dict(task_info)
 
         field_dict = cls.check_empty_field(field_dict)
 
-        return template.format(**field_dict)
+        return os.path.basename(template.format(**field_dict))
 
-    @staticmethod
-    def get_download_path():
-        dirname = os.path.dirname(Config.Advanced.file_name_template)
+    @classmethod
+    def get_download_path(cls, task_info: DownloadTaskInfo):
+        def check_path(path: str):
+            if not os.path.exists(path):
+                os.makedirs(path)
 
-        return os.path.join(Config.Download.path, dirname)
+        field_dict = cls.get_field_dict(task_info)
+        dirname = os.path.dirname(cls.get_template(task_info)).removeprefix("\\")
+
+        path = os.path.join(Config.Download.path, dirname.format(**field_dict))
+
+        check_path(path)
+
+        return path
     
     @staticmethod
     def check_empty_field(field_dict: dict):
@@ -38,6 +51,33 @@ class FileNameFormatter:
             return base_name[:max_length - len(ext)] + ext
         
         return file_name
+
+    @staticmethod
+    def get_template(task_info: DownloadTaskInfo):
+        def get_specific_template(scope_id) -> str:
+            for entry in Config.Download.file_name_template_list:
+                if entry["scope"] == scope_id:
+                    return entry["template"]
+                
+        template = get_specific_template(ScopeID.All.value)
+        
+        if template:
+            return template
+        else:
+            match ParseType(task_info.download_type):
+                case ParseType.Video:
+                    template = get_specific_template(ScopeID.Video.value)
+
+                case ParseType.Bangumi:
+                    template = get_specific_template(ScopeID.Bangumi.value)
+
+                case ParseType.Cheese:
+                    template = get_specific_template(ScopeID.Cheese.value)
+
+        if template:
+            return template
+        else:
+            return get_specific_template(ScopeID.Default.value)
 
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):

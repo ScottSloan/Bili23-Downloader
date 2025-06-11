@@ -47,7 +47,7 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
         }
 
     if exc_value.__cause__:
-        exception, stack_trace = get_exception_info(exc_value.__cause__, type(exception), exception, exception.__traceback__)
+        exception, stack_trace = get_exception_info(exc_value.__cause__, type(exc_value.__cause__), exc_value.__cause__, exc_value.__cause__.__traceback__)
 
     else:
         exception, stack_trace = get_exception_info(exc_value, exc_type, exc_value, exc_tb)

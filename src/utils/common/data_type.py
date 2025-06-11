@@ -1,4 +1,4 @@
-from typing import Callable, List, Dict
+from typing import List, Dict
 
 from utils.common.enums import DownloadStatus
 
