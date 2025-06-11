@@ -16,7 +16,6 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.component.frame import Frame
 from gui.component.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
-from gui.component.player import Player
 from gui.component.bitmap_button import BitmapButton
 from gui.component.text_ctrl import TextCtrl
 
@@ -203,6 +202,8 @@ class ContainerPage(Panel):
             self.Bind_EVT()
 
         def init_UI(self):
+            from gui.component.player import Player
+            
             self.player = Player(self)
             
             bottom_line = wx.StaticLine(self, -1)

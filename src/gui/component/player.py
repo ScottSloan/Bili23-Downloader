@@ -4,10 +4,15 @@ from datetime import datetime
 from utils.tool_v2 import FormatTool
 from utils.common.icon_v4 import Icon, IconID
 
-from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
-
 from gui.component.panel import Panel
 from gui.component.bitmap_button import BitmapButton
+
+import_err = False
+
+try:
+    from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
+except:
+    import_err = True
 
 class Player(Panel):
     def __init__(self, parent):
@@ -52,6 +57,11 @@ class Player(Panel):
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_player(self, input_path: str):
+        if import_err:
+            self.vlc_unavailable()
+
+            return
+
         self.player = VLCPlayer()
 
         self.player.set_window(self.player_frame.GetHandle())
@@ -149,3 +159,6 @@ class Player(Panel):
         self.time_lab.SetLabel("00:00")
 
         self.set_play_btn_icon(VLCState.Stopped)
+
+    def vlc_unavailable(self):
+        print("!!!!")

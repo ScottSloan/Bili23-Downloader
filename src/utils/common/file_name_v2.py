@@ -10,15 +10,15 @@ from utils.common.enums import ParseType, ScopeID
 
 class FileNameFormatter:
     @classmethod
-    def format_file_name(cls, task_info: DownloadTaskInfo, template: str = None):
+    def format_file_name(cls, task_info: DownloadTaskInfo, template: str = None, basename: bool = True):
         if not template:
             template = cls.get_template(task_info)
 
-        field_dict = cls.get_field_dict(task_info)
+        field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
 
-        field_dict = cls.check_empty_field(field_dict)
+        result = template.format(**field_dict)
 
-        return os.path.basename(template.format(**field_dict))
+        return os.path.basename(result) if basename else result
 
     @classmethod
     def get_download_path(cls, task_info: DownloadTaskInfo):

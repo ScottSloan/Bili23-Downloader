@@ -1,10 +1,7 @@
-import os
 from enum import Enum
 
 from utils.config import Config
 from utils.common.enums import Platform
-
-os.environ['PYTHON_VLC_MODULE_PATH'] = "./VLC"
 
 import vlc
 

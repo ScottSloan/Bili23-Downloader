@@ -184,7 +184,7 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        file_name = FileNameFormatter.format_file_name(get_task_info(), template)
+        file_name = FileNameFormatter.format_file_name(get_task_info(), template, basename = False)
 
         if re.search(r'[<>:"|?*\x00-\x1F]', file_name):
             raise ValueError("illegal")
@@ -297,6 +297,8 @@ class CustomFileNameDialog(Dialog):
         self.reset_btn.Bind(wx.EVT_BUTTON, self.onResetEVT)
 
         self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
+
+        self.template_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onEditEVT)
 
     def init_utils(self):
         def init_list_column():

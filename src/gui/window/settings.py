@@ -24,7 +24,7 @@ from utils.config import Config, app_config_group
 from utils.tool_v2 import RequestTool
 from utils.common.thread import Thread
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, cover_format_map, get_mapping_index_by_value
-from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, Platform
+from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
 
 from utils.module.notification import NotificationManager
 
@@ -944,28 +944,6 @@ class MiscTab(Tab):
         episodes_sbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         episodes_sbox.Add(self.auto_select_chk, 0, wx.ALL, self.FromDIP(6))
 
-        player_box = wx.StaticBox(self.scrolled_panel, -1, "播放器设置")
-
-        path_lab = wx.StaticText(player_box, -1, "播放器路径")
-        self.player_default_rdbtn = wx.RadioButton(player_box, -1, "系统默认")
-        self.player_custom_rdbtn = wx.RadioButton(player_box, -1, "手动设置")
-
-        player_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-
-        self.player_path_box = TextCtrl(player_box, -1)
-        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
-
-        player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        
-        player_sbox = wx.StaticBoxSizer(player_box, wx.VERTICAL)
-        player_sbox.Add(path_lab, 0, wx.ALL, self.FromDIP(6))
-        player_sbox.Add(player_hbox, 0, wx.EXPAND)
-        player_sbox.Add(player_path_hbox, 1, wx.EXPAND)
-
         misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
 
         self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
@@ -987,7 +965,6 @@ class MiscTab(Tab):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
@@ -1000,11 +977,6 @@ class MiscTab(Tab):
         layout()
 
     def Bind_EVT(self):
-        self.player_default_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
-        self.player_custom_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
-
-        self.browse_player_btn.Bind(wx.EVT_BUTTON, self.onBrowsePlayerEVT)
-
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
         self.reset_default_btn.Bind(wx.EVT_BUTTON, self.onResetToDefaultEVT)
 
@@ -1019,21 +991,11 @@ class MiscTab(Tab):
             case EpisodeDisplayType.All:
                 self.episodes_all_sections_choice.SetValue(True)
 
-        match PlayerMode(Config.Misc.player_preference):
-            case PlayerMode.Default:
-                self.player_default_rdbtn.SetValue(True)
-
-            case PlayerMode.Custom:
-                self.player_custom_rdbtn.SetValue(True)
-
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_select)
-        self.player_path_box.SetValue(Config.Misc.player_path)
         self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
         self.check_update_chk.SetValue(Config.Misc.check_update_when_lauch)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
-
-        self.onChangePlayerPreferenceEVT(None)
 
     def save(self):
         if self.episodes_single_choice.GetValue():
@@ -1045,43 +1007,13 @@ class MiscTab(Tab):
         else:
             Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
-        if self.player_default_rdbtn.GetValue():
-            Config.Misc.player_preference = PlayerMode.Default.value
-        else:
-            Config.Misc.player_preference = PlayerMode.Custom.value
-
         Config.Misc.auto_select = self.auto_select_chk.GetValue()
-        Config.Misc.player_path = self.player_path_box.GetValue()
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.check_update_when_lauch = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
         # 重新创建主窗口的菜单
         self.parent.init_menubar()
-
-    def onBrowsePlayerEVT(self, event):
-        # 根据不同平台选取不同后缀名文件
-        match Platform(Config.Sys.platform):
-            case Platform.Windows:
-                wildcard = "可执行文件(*.exe)|*.exe"
-
-            case Platform.Linux | Platform.macOS:
-                wildcard = "可执行文件|*"
-
-        dialog = wx.FileDialog(self, "选择播放器路径", os.getcwd(), wildcard = wildcard, style = wx.FD_OPEN)
-
-        if dialog.ShowModal() == wx.ID_OK:
-            self.player_path_box.SetValue(dialog.GetPath())
-    
-    def onChangePlayerPreferenceEVT(self, event):
-        def set_enable(enable: bool):
-            self.player_path_box.Enable(enable)
-            self.browse_player_btn.Enable(enable)
-
-        if self.player_default_rdbtn.GetValue():
-            set_enable(False)
-        else:
-            set_enable(True)
 
     def onClearUserDataEVT(self, event):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)

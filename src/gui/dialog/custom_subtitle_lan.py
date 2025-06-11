@@ -22,7 +22,7 @@ class CustomLanDialog(Dialog):
 
     def init_UI(self):
         lan_lab = wx.StaticText(self, -1, "字幕语言下载选项")
-        self.select_all_with_ai_radio = wx.RadioButton(self, -1, "下载全部可用字幕（包含 AI 字幕）")
+        self.select_all_with_ai_radio = wx.RadioButton(self, -1, "下载包含 AI 字幕在内的全部可用字幕")
         self.select_all_radio = wx.RadioButton(self, -1, "下载全部可用字幕")
         self.custom_radio = wx.RadioButton(self, -1, "手动选择")
 

@@ -39,10 +39,6 @@ class SubtitleType(Enum):
     JSON = 3                      # JSON 格式
     ASS = 4                       # ASS 格式
 
-class PlayerMode(Enum):
-    Default = 0                   # 系统默认
-    Custom = 1                    # 自定义
-
 class StreamType(Enum):
     Dash = 0                      # dash 流
     Flv = 1                       # flv 流

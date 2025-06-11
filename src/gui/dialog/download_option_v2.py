@@ -545,8 +545,7 @@ class DownloadOptionDialog(Dialog):
 
         self.keep_original_files_chk.Enable(enable)
         
-        if enable:
-            self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
+        self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files if enable else False)
 
     def onConfirmEVT(self, event):
         def set_stream_download_option():

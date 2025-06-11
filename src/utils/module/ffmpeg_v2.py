@@ -97,8 +97,11 @@ class FFmpeg:
 
             output_file_name = FFmpeg.Prop.output_file_name(task_info)
 
-            command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), f"{output_file_name}_video.{task_info.video_type}"))
-            command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_audio_temp_file(task_info), f"{output_file_name}_audio.{task_info.audio_type}"))
+            if "video" in task_info.download_option:
+                command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), f"{output_file_name}_video.{task_info.video_type}"))
+
+            if "audio" in task_info.download_option:
+                command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_audio_temp_file(task_info), f"{output_file_name}_audio.{task_info.audio_type}"))
 
             return command.format()
 

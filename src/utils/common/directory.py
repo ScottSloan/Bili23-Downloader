@@ -26,37 +26,10 @@ class DirectoryUtils:
                 cls._msw_SHOpenFolderAndSelectItems(path)
 
             case Platform.Linux:
-                subprocess.Popen(f'xdg-open "{Config.Download.path}"', shell = True)
+                subprocess.Popen(f'xdg-open "{os.path.dirname(path)}"', shell = True)
 
             case Platform.macOS:
                 subprocess.Popen(f'open -R "{path}"', shell = True)
-
-    @classmethod
-    def get_file_ext_associated_app(cls, file_ext: str):
-        def _linux():
-            _desktop = subprocess.Popen("xdg-mime query default video/mp4", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
-
-            _desktop_path = os.path.join("/usr/share/applications", _desktop.stdout.read().replace("\n", ""))
-
-            _exec = subprocess.Popen(f"grep '^Exec=' {_desktop_path} | head -n 1 | cut -d'=' -f2", stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True)
-
-            return _exec.stdout.read().replace("\n", "")
-
-        match Platform(Config.Sys.platform):
-            case Platform.Windows:
-                result, buffer = cls._msw_AssocQueryStringW(file_ext)
-
-                if result == 0:
-                    return (True, str(buffer.value))
-                else:
-                    return (False, "")
-
-            case Platform.Linux:
-                return (True, _linux())
-
-            case Platform.macOS:
-                # macOS 不支持获取默认程序
-                return (False, "")
 
     @staticmethod
     def _msw_SHOpenFolderAndSelectItems(path: str):
@@ -79,14 +52,3 @@ class DirectoryUtils:
 
         finally:
             ctypes.windll.ole32.CoUninitialize()
-
-    @staticmethod
-    def _msw_AssocQueryStringW(file_ext: str):
-        from ctypes import wintypes
-
-        buffer = ctypes.create_unicode_buffer(512)
-        pcchOut = wintypes.DWORD(512)
-        
-        result = ctypes.windll.shlwapi.AssocQueryStringW(0x00000000, 1, file_ext, None, buffer, ctypes.byref(pcchOut))
-
-        return (result, buffer)

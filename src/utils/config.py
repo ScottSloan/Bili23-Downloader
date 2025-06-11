@@ -47,7 +47,9 @@ app_config_group = {
         "retry_when_download_suspend",
         "download_suspend_retry_interval",
         "always_use_https_protocol",
-        "check_md5"
+        "check_md5",
+        "ua_option",
+        "custom_ua"
     ],
     "Merge": [
         "ffmpeg_path",
@@ -68,8 +70,6 @@ app_config_group = {
         "episode_display_mode",
         "show_episode_full_name",
         "auto_select",
-        "player_preference",
-        "player_path",
         "show_user_info",
         "check_update_when_lauch",
         "enable_debug"
@@ -174,9 +174,6 @@ class Config:
         check_update_when_lauch: bool = True
         show_user_info: bool = True
 
-        player_preference: int = 0
-        player_path: str = ""
-
     class Download:
         path: str = os.path.join(os.getcwd(), "download")
         file_name_template_list: list = [
@@ -257,8 +254,6 @@ class Config:
             "upos-hz-mirrorakam.akamaized.net",
             "upos-sz-mirrorcf1ov.bilivideo.com"
         ]
-
-        file_name_template: str = "{number_with_zero} - {title}"
 
         retry_when_download_error: bool = True
         download_error_retry_count: int = 3
