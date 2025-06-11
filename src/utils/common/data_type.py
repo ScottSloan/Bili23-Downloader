@@ -1,9 +1,9 @@
+from abc import ABC, abstractmethod
 from typing import List, Dict
 
 from utils.common.enums import DownloadStatus
 
 class DownloadTaskInfo:
-    # 下载任务信息
     def __init__(self):
         # id，区分不同下载任务的唯一标识符
         self.id: int = None
@@ -13,8 +13,6 @@ class DownloadTaskInfo:
         self.zero_padding_number: str = ""
         # 列表中的序号
         self.list_number: int = 0
-        # 后缀
-        self.suffix: str = ""
         # 时间戳
         self.timestamp: int = 0
         
@@ -90,35 +88,46 @@ class DownloadTaskInfo:
             "number": self.number,
             "zero_padding_number": self.zero_padding_number,
             "list_number": self.list_number,
-            "suffix": self.suffix,
             "timestamp": self.timestamp,
+
             "referer_url": self.referer_url,
             "cover_url": self.cover_url,
+
             "bvid": self.bvid,
             "cid": self.cid,
             "aid": self.aid,
             "ep_id": self.ep_id,
+            "season_id": self.season_id,
+            "media_id": self.media_id,
+
             "title": self.title,
-            "series": self.series_title,
+            "series_title": self.series_title,
+
             "duration": self.duration,
+
             "progress": self.progress,
             "total_file_size": self.total_file_size,
             "total_downloaded_size": self.total_downloaded_size,
             "current_downloaded_size": self.current_downloaded_size,
             "status": self.status,
+
             "video_quality_id": self.video_quality_id,
             "audio_quality_id": self.audio_quality_id,
             "video_codec_id": self.video_codec_id,
             "video_type": self.video_type,
             "audio_type": self.audio_type,
             "output_type": self.output_type,
+
             "download_items": self.download_items,
+            
             "download_type": self.download_type,
             "stream_type": self.stream_type,
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
             "flv_video_count": self.flv_video_count,
+
             "extra_option": self.extra_option,
+
             "pubtime": self.pubtime,
             "area": self.area,
             "tname_info": self.tname_info,
@@ -130,35 +139,46 @@ class DownloadTaskInfo:
         self.number = data.get("number")
         self.zero_padding_number = data.get("zero_padding_number")
         self.list_number = data.get("list_number")
-        self.suffix = data.get("suffix")
         self.timestamp = data.get("timestamp")
+
         self.referer_url = data.get("referer_url")
         self.cover_url = data.get("cover_url")
+
         self.bvid = data.get("bvid")
         self.cid = data.get("cid")
         self.aid = data.get("aid")
         self.ep_id = data.get("ep_id")
+        self.season_id = data.get("season_id")
+        self.media_id = data.get("media_id")
+
         self.title = data.get("title")
         self.series_title = data.get("series")
+
         self.duration = data.get("duration")
+
         self.progress = data.get("progress")
         self.total_file_size = data.get("total_file_size")
         self.total_downloaded_size = data.get("total_downloaded_size")
         self.current_downloaded_size = data.get("current_downloaded_size")
         self.status = data.get("status")
+
         self.video_quality_id = data.get("video_quality_id")
         self.audio_quality_id = data.get("audio_quality_id")
         self.video_codec_id = data.get("video_codec_id")
         self.video_type = data.get("video_type")
         self.audio_type = data.get("audio_type")
         self.output_type = data.get("output_type")
+
         self.download_items = data.get("download_items")
+
         self.download_type = data.get("download_type")
         self.stream_type = data.get("stream_type")
         self.download_option = data.get("download_option")
         self.ffmpeg_merge = data.get("ffmpeg_merge")
         self.flv_video_count = data.get("flv_video_count")
+
         self.extra_option = data.get("extra_option")
+        
         self.pubtime = data.get("pubtime")
         self.area = data.get("area")
         self.tname_info = data.get("tname_info")
@@ -190,46 +210,56 @@ class RangeDownloadInfo:
         self.file_path: str = ""
         self.range: List[int] = []
 
-class DownloaderCallback:
+class DownloaderCallback(ABC):
     @staticmethod
+    @abstractmethod
     def onStart():
         pass
     
     @staticmethod
+    @abstractmethod
     def onDownloading(speed: str):
         pass
     
     @staticmethod
+    @abstractmethod
     def onComplete():
         pass
     
     @staticmethod
+    @abstractmethod
     def onError():
         pass
 
-class TaskPanelCallback:
+class TaskPanelCallback(ABC):
     @staticmethod
+    @abstractmethod
     def onStartNextTask():
         pass
     
     @staticmethod
+    @abstractmethod
     def onUpdateCountTitle(show_toast = False):
         pass
     
     @staticmethod
+    @abstractmethod
     def onAddPanel(task_info: DownloadTaskInfo):
         pass
 
-class DownloadPageCallback:
+class DownloadPageCallback(ABC):
     @staticmethod
+    @abstractmethod
     def onSetTitle(name: str, count: int):
         pass
     
     @staticmethod
+    @abstractmethod
     def onAddPanel(task_info: DownloadTaskInfo):
         pass
     
     @staticmethod
+    @abstractmethod
     def onStartNextTask():
         pass
 
@@ -263,41 +293,34 @@ class Process:
     output: str = None
     return_code: int = None
 
-class Callback:
+class Callback(ABC):
     @staticmethod
+    @abstractmethod
     def onSuccess(*args, **kwargs):
         pass
     
     @staticmethod
+    @abstractmethod
     def onError(*args, **kwargs):
         pass
 
-class ParseCallback:
+class ParseCallback(ABC):
     @staticmethod
+    @abstractmethod
     def onError():
         pass
     
     @staticmethod
+    @abstractmethod
     def onBangumi(url: str):
         pass
     
     @staticmethod
+    @abstractmethod
     def onInteractVideo():
         pass
     
     @staticmethod
+    @abstractmethod
     def onUpdateInteractVideo(title: str):
-        pass
-
-class MergeCallback:
-    @staticmethod
-    def onSuccess(*args, **kwargs):
-        pass
-
-    @staticmethod
-    def onError(*args, **kwargs):
-        pass
-    
-    @staticmethod
-    def onUpdateSuffix():
         pass

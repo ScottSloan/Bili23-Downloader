@@ -6,10 +6,12 @@ from typing import List
 
 from utils.config import Config
 from utils.parse.live import LiveInfo
-from utils.tool_v2 import FormatTool, FileDirectoryTool
+from utils.tool_v2 import FormatTool
+
 from utils.common.enums import Platform
 from utils.common.thread import Thread
 from utils.common.enums import PlayerMode
+from utils.common.directory import DirectoryUtils
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -144,13 +146,13 @@ class LiveRecordingWindow(Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        FileDirectoryTool.open_file_location(path)
+        DirectoryUtils.open_file_location(path)
 
     def onPlayStreamEVT(self, event):
         match PlayerMode(Config.Misc.player_preference):
             case PlayerMode.Default:
                 # 寻找关联的播放器
-                result = FileDirectoryTool.get_file_ext_associated_app(".mp4")
+                result = DirectoryUtils.get_file_ext_associated_app(".mp4")
 
                 if not result[0]:
                     wx.MessageDialog(self, "无法获取默认播放器\n\n无法获取系统默认播放器，请手动设置\n\n请使用支持播放 m3u8 视频流的播放器，如 VLC、PotPlayer、MPV等\nWindows 默认的媒体播放器不支持播放，请知悉", "警告", wx.ICON_WARNING).ShowModal()

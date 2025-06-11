@@ -7,7 +7,7 @@ from utils.common.thread import Thread
 from utils.common.enums import Platform
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.config import Config
-from utils.tool_v2 import FormatTool, FileDirectoryTool
+from utils.tool_v2 import FormatTool
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -204,7 +204,7 @@ class ConverterWindow(Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        FileDirectoryTool.open_file_location(path)
+        # FileDirectoryTool.open_file_location(path)
 
     def onConverting(self):
         def _get_mac_accels():

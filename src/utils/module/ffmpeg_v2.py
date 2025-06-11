@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, MergeCallback
+from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
@@ -125,7 +125,7 @@ class FFmpeg:
             return command.format()
 
         @staticmethod
-        def get_rename_command(src: str, dst: str, check: bool = False):
+        def get_rename_command(src: str, dst: str):
             command = Command()
 
             rename_command = FFmpeg.Prop.rename_command()
@@ -198,9 +198,11 @@ class FFmpeg:
         @staticmethod
         def check_availability():
             class callback(Callback):
+                @staticmethod
                 def onSuccess(*args, **kwargs):
                     Config.Merge.ffmpeg_available = True
 
+                @staticmethod
                 def onError(*args, **kwargs):
                     Config.Merge.ffmpeg_available = False
 
@@ -215,24 +217,8 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback)
 
-        @staticmethod
-        def merge(task_info: DownloadTaskInfo, callback: MergeCallback):
-            def check_file_existance():
-                index = 0
-                path =  os.path.join(FFmpeg.Prop.download_path(task_info), FFmpeg.Prop.full_file_name(task_info))
-
-                while os.path.exists(path):
-                    match OverrideOption(Config.Merge.override_option):
-                        case OverrideOption.Rename:
-                            index += 1
-
-                            task_info.suffix = f"_{index}"
-
-                        case OverrideOption.Override:
-                            UniversalTool.remove_files([path])
-                
-                callback.onUpdateSuffix()
-
+        @classmethod
+        def merge(cls, task_info: DownloadTaskInfo, callback: Callback):
             match StreamType(task_info.stream_type):
                 case StreamType.Dash:
                     command = FFmpeg.Command.get_merge_dash_command(task_info)
@@ -240,7 +226,7 @@ class FFmpeg:
                 case StreamType.Flv:
                     command = FFmpeg.Command.get_merge_flv_command(task_info)
 
-            check_file_existance()
+            cls.check_file_existance(FFmpeg.Prop.full_file_path(task_info), callback)
 
             FFmpeg.Command.run(command, callback, FFmpeg.Prop.download_path(task_info))
 
@@ -282,9 +268,11 @@ class FFmpeg:
         @staticmethod
         def keep_original_files(task_info: DownloadTaskInfo):
             class callback(Callback):
+                @staticmethod
                 def onSuccess(*args, **kwargs):
                     return super().onSuccess(**kwargs)
                 
+                @staticmethod
                 def onError(*args, **kwargs):
                     return super().onError(**kwargs)
             
@@ -292,9 +280,19 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback)
         
-        @staticmethod
-        def check_file_existance(dst: str):
-            pass
+        @classmethod
+        def check_file_existance(cls, dst: str, callback: Callback):
+            if os.path.exists(dst):
+                match OverrideOption(Config.Merge.override_option):
+                    case OverrideOption.Rename:
+                        base, ext = os.path.splitext(os.path.basename(dst))
+
+                        command = FFmpeg.Command.get_rename_command(dst, f"{base}_1{ext}")
+
+                        FFmpeg.Command.run(command, callback)
+
+                    case OverrideOption.Override:
+                        UniversalTool.remove_files([dst])
 
     class Prop:
         @staticmethod
@@ -338,7 +336,11 @@ class FFmpeg:
         def full_file_name(task_info: DownloadTaskInfo):
             output_file_name = FFmpeg.Prop.output_file_name(task_info)
 
-            return FileNameFormatter.check_file_name_length(f"{output_file_name}{task_info.suffix}.{task_info.output_type}")
+            return FileNameFormatter.check_file_name_length(f"{output_file_name}.{task_info.output_type}")
+
+        @staticmethod
+        def full_file_path(task_info: DownloadTaskInfo):
+            return os.path.join(FFmpeg.Prop.download_path(task_info), FFmpeg.Prop.full_file_name(task_info))
 
         @staticmethod
         def escape_character():

@@ -764,15 +764,19 @@ class MainWindow(Frame):
             self.show_episode_list()
         
         class Callback(ParseCallback):
+            @staticmethod
             def onError():
                 self.onErrorCallback()
             
+            @staticmethod
             def onBangumi(url: str):
                 self.onBangumiCallback(url)
 
+            @staticmethod
             def onInteractVideo():
                 self.onInteractVideoCallback()
 
+            @staticmethod
             def onUpdateInteractVideo(title: str):
                 self.processing_window.onUpdateNode(title)
 

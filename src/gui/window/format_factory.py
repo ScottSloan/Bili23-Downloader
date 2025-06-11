@@ -3,10 +3,11 @@ import os
 import wx.lib.masked as masked
 
 from utils.config import Config
-from utils.tool_v2 import FileDirectoryTool
+
 from utils.common.icon_v4 import Icon, IconID, IconSize
 from utils.common.data_type import Callback
 from utils.common.exception import GlobalExceptionInfo
+from utils.common.directory import DirectoryUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -298,18 +299,20 @@ class ContainerPage(Panel):
                 }
 
             class callback(Callback):
+                @staticmethod
                 def onSuccess(*args, **kwargs):
                     def worker():
                         dlg = wx.MessageDialog(self, "截取完成\n\n已成功截取片段", "提示", wx.ICON_INFORMATION | wx.YES_NO)
                         dlg.SetYesNoLabels("打开所在位置", "确定")
 
                         if dlg.ShowModal() == wx.ID_YES:
-                            FileDirectoryTool.open_file_location(self.output_path)
+                            DirectoryUtils.open_file_location(self.output_path)
 
                         dlg.Destroy()
 
                     wx.CallAfter(worker)
 
+                @staticmethod
                 def onError(*args, **kwargs):
                     def worker():
                         dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)

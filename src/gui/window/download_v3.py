@@ -9,9 +9,10 @@ from utils.common.enums import DownloadStatus, Platform, NumberType
 from utils.common.thread import Thread
 from utils.common.cache import DataCache
 from utils.common.map import download_type_map
+from utils.common.directory import DirectoryUtils
 
 from utils.module.notification import NotificationManager
-from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
+from utils.tool_v2 import DownloadFileTool
 from utils.config import Config, app_config_group
 
 from gui.component.frame import Frame
@@ -51,12 +52,15 @@ class DownloadManagerWindow(Frame):
 
     def init_UI(self):
         class callback(DownloadPageCallback):
+            @staticmethod
             def onAddPanel(task_info: DownloadTaskInfo):
                 self.add_panel_to_completed_page(task_info)
 
+            @staticmethod
             def onStartNextTask():
                 self.start_download()
 
+            @staticmethod
             def onSetTitle(name: str, count: int):
                 self.setTitleLabel(name, count)
 
@@ -275,7 +279,7 @@ class DownloadManagerWindow(Frame):
         self.downloading_page_btn.setUnactiveState()
 
     def onOpenDownloadDirectoryEVT(self, event):
-        FileDirectoryTool.open_directory(Config.Download.path)
+        DirectoryUtils.open_directory(Config.Download.path)
 
     def setTitleLabel(self, name: str, count: int):
         if count:
@@ -338,12 +342,15 @@ class SimplePage(Panel):
 
         def get_items():
             class callback(TaskPanelCallback):
+                @staticmethod
                 def onUpdateCountTitle(show_toast = False):
                     self.refresh_scroller(show_toast)
 
+                @staticmethod
                 def onAddPanel(task_info: DownloadTaskInfo):
                     self.callback.onAddPanel(task_info)
-
+                
+                @staticmethod
                 def onStartNextTask():
                     self.callback.onStartNextTask()
 

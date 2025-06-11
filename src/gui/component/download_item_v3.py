@@ -4,13 +4,14 @@ from io import BytesIO
 from typing import Callable
 
 from utils.common.icon_v4 import Icon, IconID
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, Callback
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, Callback
 from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
 from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.directory import DirectoryUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
@@ -18,7 +19,7 @@ from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser
 from utils.config import Config
-from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
+from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
 
 from gui.component.info_label import InfoLabel
 from gui.component.panel import Panel
@@ -352,15 +353,19 @@ class DownloadTaskItemPanel(Panel):
 
     def start_download(self):
         class callback(DownloaderCallback):
+            @staticmethod
             def onStart():
                 self.onStartDownload()
 
+            @staticmethod
             def onDownloading(speed: str):
                 self.onDownloading(speed)
 
+            @staticmethod
             def onComplete():
                 self.onComplete()
 
+            @staticmethod
             def onError():
                 self.onDownloadError()
 
@@ -406,30 +411,24 @@ class DownloadTaskItemPanel(Panel):
                 self.start_download()
 
     def merge_video(self):
-        def onUpdateSuffix():
-            kwargs = {
-                "suffix": self.task_info.suffix
-            }
-
-            self.file_tool.update_task_info_kwargs(**kwargs)
-
-        class callback(MergeCallback):
+        class callback(Callback):
+            @staticmethod
             def onSuccess(*args, **kwargs):
                 self.onMergeSuccess()
 
+            @staticmethod
             def onError(*args, **kwargs):
                 self.onMergeError()
-
-            def onUpdateSuffix():
-                onUpdateSuffix()
 
         FFmpeg.Utils.merge(self.task_info, callback)
 
     def download_extra(self):
         class callback(Callback):
+            @staticmethod
             def onSuccess(*args, **kwargs):
                 self.onDownloadExtraSuccess()
 
+            @staticmethod
             def onError(*args, **kwargs):
                 self.onDownloadError()
     
@@ -439,9 +438,9 @@ class DownloadTaskItemPanel(Panel):
         extra_parser.download_extra(callback)
 
     def open_file_location(self):
-        path = os.path.join(Config.Download.path, self.full_file_name)
+        path = os.path.join(FileNameFormatter.get_download_path(self.task_info), self.full_file_name)
 
-        FileDirectoryTool.open_file_location(path)
+        DirectoryUtils.open_file_location(path)
 
     def onStartDownload(self):
         def worker():
@@ -624,4 +623,4 @@ class DownloadTaskItemPanel(Panel):
 
     @property
     def full_file_name(self):
-        return FileNameFormatter.check_file_name_length(f"{self.out_file_name}{self.task_info.suffix}.{self.task_info.output_type}")
+        return FileNameFormatter.check_file_name_length(f"{self.out_file_name}.{self.task_info.output_type}")
