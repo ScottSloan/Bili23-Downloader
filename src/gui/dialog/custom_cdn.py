@@ -10,7 +10,7 @@ from gui.component.dialog import Dialog
 
 class CustomCDNDialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "自定义 CDN host")
+        Dialog.__init__(self, parent, "自定义 CDN 节点")
 
         self.init_UI()
 
@@ -21,7 +21,7 @@ class CustomCDNDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        cdn_lab = wx.StaticText(self, -1, "CDN host 列表")
+        cdn_lab = wx.StaticText(self, -1, "CDN 节点列表")
 
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((670, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
@@ -75,7 +75,7 @@ class CustomCDNDialog(Dialog):
 
     def init_utils(self):
         def init_listctrl():
-            self.cdn_list.AppendColumn("CDN host", width = self.FromDIP(350))
+            self.cdn_list.AppendColumn("CDN 节点", width = self.FromDIP(350))
             self.cdn_list.AppendColumn("优先级", width = self.FromDIP(120))
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 
@@ -90,7 +90,7 @@ class CustomCDNDialog(Dialog):
 
     def onConfirm(self, event):
         if self.cdn_list.GetItemCount() == 0:
-            wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN host", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN 节点", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         Config.Temp.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]

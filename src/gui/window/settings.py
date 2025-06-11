@@ -494,9 +494,9 @@ class AdvancedTab(Tab):
     def init_UI(self):
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
-        self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
+        self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN 节点")
         self.enable_custom_cdn_tip = ToolTip(cdn_box)
-        self.enable_custom_cdn_tip.set_tooltip("因 B 站分配的 CDN 线路不稳定，容易导致下载失败，开启此选项后，将自动替换下载链接中的 CDN host\n\n请注意：使用代理时，请手动关闭此选项")
+        self.enable_custom_cdn_tip.set_tooltip("由于哔哩哔哩（B 站）默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n\n请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。")
         self.custom_cdn_btn = wx.Button(cdn_box, -1, "自定义", size = self.get_scaled_size((100, 28)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)

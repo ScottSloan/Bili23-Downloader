@@ -1,5 +1,6 @@
 import wx
 import os
+import re
 import webbrowser
 
 from utils.config import Config
@@ -55,7 +56,7 @@ class AddNewTemplateDialog(Dialog):
 
         field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
         field_tooltip = ToolTip(self)
-        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中，格式可自定义，具体用法请参考说明文档\n\n不同类型视频可用的字段有所不同，请留意")
+        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中格式可自定义，具体用法请参考说明文档\n\n不同类型视频可用的字段有所不同，请留意")
 
         field_hbox = wx.BoxSizer(wx.HORIZONTAL)
         field_hbox.Add(field_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -127,12 +128,17 @@ class AddNewTemplateDialog(Dialog):
 
         template = self.get_template()
 
+        if not template or not os.path.basename(template):
+            self.ok_btn.Enable(False)
+            return
+
         try:
             file_name = self.check_template(template)
 
             show_file_name()
 
             self.error_msg_lab.SetLabel("")
+            self.ok_btn.Enable(True)
 
         except Exception as e:
             self.show_error_msg(e)
@@ -178,7 +184,15 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        return FileNameFormatter.format_file_name(get_task_info(), template)
+        file_name = FileNameFormatter.format_file_name(get_task_info(), template)
+
+        if re.search(r'[<>:"|?*\x00-\x1F]', file_name):
+            raise ValueError("illegal")
+        
+        if len(os.path.basename(file_name)) > 255:
+            raise ValueError("max length")
+
+        return file_name
         
     def show_error_msg(self, e):
         match e:
@@ -192,17 +206,23 @@ class AddNewTemplateDialog(Dialog):
                 if str(e).startswith("Invalid"):
                     msg = "时间格式无效"
 
+                if str(e) == "illegal":
+                    msg = '文件名和目录名不能包含 <>:"|?* 之中任何字符'
+
+                if str(e) == "max length":
+                    msg = "文件名长度超过 255"
+
             case IndexError() | KeyError():
                 msg = "字段名无效"
 
             case _:
                 msg = str(e)
 
-        print(type(e), str(e))
-
         self.error_msg_lab.SetLabel(msg)
         self.directory_lab.SetLabel("子目录：")
         self.file_name_lab.SetLabel("文件名：")
+
+        self.ok_btn.Enable(False)
 
     def check_sep(self, template: str):
         sep = "\\" if os.sep == "/" else "/"

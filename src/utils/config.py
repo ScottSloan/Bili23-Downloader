@@ -259,7 +259,6 @@ class Config:
         ]
 
         file_name_template: str = "{number_with_zero} - {title}"
-        datetime_format: str = "%Y-%m-%d %H-%M-%S"
 
         retry_when_download_error: bool = True
         download_error_retry_count: int = 3

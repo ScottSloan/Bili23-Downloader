@@ -11,7 +11,6 @@ from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
 
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
-from gui.dialog.custom_file_name import CustomFileNameDialog
 
 from gui.component.dialog import Dialog
 from gui.component.info_label import InfoLabel
@@ -135,17 +134,14 @@ class DownloadOptionDialog(Dialog):
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
         media_sbox.Add(media_flex_grid_box, 0, wx.EXPAND)
 
-        path_box = wx.StaticBox(self, -1, "下载目录&&高级选项")
+        path_box = wx.StaticBox(self, -1, "下载目录设置")
 
         self.path_box = wx.TextCtrl(path_box, -1)
         self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
-        self.custom_file_name_btn = wx.Button(path_box, -1, "文件名...", size = self.get_scaled_size((60, 24)))
-
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        path_hbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
         path_sbox.Add(path_hbox, 0, wx.EXPAND)
@@ -196,12 +192,14 @@ class DownloadOptionDialog(Dialog):
         cover_hbox.AddSpacer(self.FromDIP(60))
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
+        extra_sbox.AddSpacer(self.FromDIP(6))
         extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
         extra_sbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
         extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
+        extra_sbox.AddSpacer(self.FromDIP(6))
 
         other_box = wx.StaticBox(self, -1, "其他选项")
         
@@ -265,7 +263,6 @@ class DownloadOptionDialog(Dialog):
         self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
 
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
-        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
 
         self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onEnableKeepFilesEVT)
 
@@ -542,10 +539,6 @@ class DownloadOptionDialog(Dialog):
             self.path_box.SetValue(dlg.GetPath())
 
         dlg.Destroy()
-
-    def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self)
-        dlg.ShowModal()
 
     def onEnableKeepFilesEVT(self, event):
         enable = self.ffmpeg_merge_chk.GetValue()

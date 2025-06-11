@@ -4,9 +4,11 @@ from utils.tool_v2 import RequestTool
 from utils.config import Config
 
 class Update:
+    @staticmethod
     def get_json(url: str):
         return json.loads(RequestTool.request_get(url).text)
     
+    @staticmethod
     def get_changelog():
         try:
             url = f"https://api.scott-sloan.cn/Bili23-Downloader/getChangelog?version_code={Config.APP.version_code}"
@@ -15,7 +17,8 @@ class Update:
 
         except Exception:
             pass
-
+    
+    @staticmethod
     def get_update_json():
         try:
             url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
