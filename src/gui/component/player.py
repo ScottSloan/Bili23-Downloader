@@ -1,8 +1,8 @@
 import wx
 from datetime import datetime
 
-from utils.tool_v2 import FormatTool
 from utils.common.icon_v4 import Icon, IconID
+from utils.common.formatter import FormatUtils
 
 from gui.component.panel import Panel
 from gui.component.bitmap_button import BitmapButton
@@ -126,17 +126,17 @@ class Player(Panel):
         length = self.player.get_length()
 
         self.progress_bar.SetRange(0, length)
-        self.length_lab.SetLabel(FormatTool._format_duration(int(length / 1000)))
+        self.length_lab.SetLabel(FormatUtils.format_duration(int(length / 1000)))
 
     def get_time(self):
         offset = self.player.get_progress()
-        date_str = FormatTool._format_duration(int(offset / 1000), show_hour = True)
+        date_str = FormatUtils.format_duration(int(offset / 1000), show_hour = True)
 
         return wx.DateTime(datetime.strptime(date_str, "%H:%M:%S"))
 
     def update_time(self, offset: int):
         def worker():
-            self.time_lab.SetLabel(FormatTool._format_duration(int(offset / 1000)))
+            self.time_lab.SetLabel(FormatUtils.format_duration(int(offset / 1000)))
 
         wx.CallAfter(worker)
 

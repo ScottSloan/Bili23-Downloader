@@ -13,6 +13,7 @@ from utils.common.exception import GlobalExceptionInfo
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.directory import DirectoryUtils
 from utils.common.request import RequestUtils
+from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
@@ -20,7 +21,7 @@ from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser
 from utils.config import Config
-from utils.tool_v2 import FormatTool, DownloadFileTool
+from utils.tool_v2 import DownloadFileTool
 
 from gui.component.info_label import InfoLabel
 from gui.component.panel import Panel
@@ -241,9 +242,9 @@ class DownloadTaskItemPanel(Panel):
             self.video_codec_lab.SetLabel(get_video_codec_label())
             
             if self.task_info.progress == 100:
-                self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
+                self.video_size_lab.SetLabel(FormatUtils.format_size(self.task_info.total_file_size))
             elif self.task_info.total_file_size:
-                self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+                self.video_size_lab.SetLabel(f"{FormatUtils.format_size(self.task_info.total_downloaded_size)}/{FormatUtils.format_size(self.task_info.total_file_size)}")
             else:
                 self.video_size_lab.SetLabel("--")
 
@@ -458,7 +459,7 @@ class DownloadTaskItemPanel(Panel):
                 self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 
                 self.speed_lab.SetLabel(speed)
-                self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+                self.video_size_lab.SetLabel(f"{FormatUtils.format_size(self.task_info.total_downloaded_size)}/{FormatUtils.format_size(self.task_info.total_file_size)}")
 
                 self.Layout()
 
@@ -469,7 +470,7 @@ class DownloadTaskItemPanel(Panel):
             if self.task_info.ffmpeg_merge:
                 self.set_download_status(DownloadStatus.Merging.value)
 
-                self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
+                self.video_size_lab.SetLabel(FormatUtils.format_size(self.task_info.total_file_size))
 
                 self.Layout()
 

@@ -8,7 +8,6 @@ from typing import Optional, List
 from utils.config import Config
 
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType
 from utils.common.thread import Thread
 from utils.common.request import RequestUtils
 
@@ -113,102 +112,7 @@ class DownloadFileTool:
     def file_existence(self):
         return os.path.exists(self.file_path)
 
-class FormatTool:
-    @classmethod
-    def format_duration(cls, episode: dict, flag: int):
-        match flag:
-            case ParseType.Video:
-                if "arc" in episode:
-                    duration = episode["arc"]["duration"]
-                elif "duration" in episode:
-                    duration = episode["duration"]
-                else:
-                    return "--:--"
-
-            case ParseType.Bangumi:
-                if "duration" in episode:
-                    duration = episode["duration"] / 1000
-                else:
-                    return "--:--"
-
-        return cls._format_duration(duration)
-                
-    def _format_duration(duration: int, show_hour: bool = False):
-        hours = int(duration // 3600)
-        mins = int((duration - hours * 3600) // 60)
-        secs = int(duration - hours * 3600 - mins * 60)
-
-        if show_hour or hours:
-            return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2)
-        else:
-            return str(mins).zfill(2) + ":" + str(secs).zfill(2)
-        
-    def format_speed(speed: int):
-        if speed > 1024 * 1024 * 1024:
-            return "{:.1f} GB/s".format(speed / 1024 / 1024 / 1024)
-        
-        elif speed > 1024 * 1024:
-            return "{:.1f} MB/s".format(speed / 1024 / 1024)
-        
-        elif speed > 1024:
-            return "{:.1f} KB/s".format(speed / 1024)
-        
-        else:
-            return "0 KB/s"
-
-    def format_size(size: int):
-        if not size:
-            return "0 MB"
-        
-        elif size > 1024 * 1024 * 1024:
-            return "{:.2f} GB".format(size / 1024 / 1024 / 1024)
-        
-        elif size > 1024 * 1024:
-            return "{:.1f} MB".format(size / 1024 / 1024)
-        
-        else:
-            return "{:.1f} KB".format(size / 1024)
-
-    def format_bangumi_title(episode: dict, main_episode: bool = False):
-        from utils.parse.bangumi import BangumiInfo
-
-        if BangumiInfo.type_id == 2 and main_episode:
-            return f"《{BangumiInfo.title}》{episode['title']}"
-        
-        else:
-            if "share_copy" in episode:
-                if Config.Misc.show_episode_full_name:
-                    return episode["share_copy"]
-                
-                else:
-                    for key in ["show_title", "long_title"]:
-                        if key in episode and episode[key]:
-                            return episode[key]
-
-                    return episode["share_copy"]
-
-            else:
-                return episode["report"]["ep_title"]
-
-    def format_data_count(data: int):
-        if data >= 1e8:
-            return f"{data / 1e8:.1f}亿"
-        
-        elif data >= 1e4:
-            return f"{data / 1e4:.1f}万"
-        
-        else:
-            return str(data)
-
-    def format_bandwidth(bandwidth: int):
-        if bandwidth > 1024 * 1024:
-            return "{:.1f} mbps".format(bandwidth / 1024 / 1024)
-        
-        else:
-            return "{:.1f} kbps".format(bandwidth / 1024)
-
 class UniversalTool:
-    # 通用工具类
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
@@ -256,21 +160,6 @@ class UniversalTool:
         else:
             return None
     
-    def aid_to_bvid(_aid: int):
-        XOR_CODE = 23442827791579
-        MAX_AID = 1 << 51
-        ALPHABET = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf"
-        ENCODE_MAP = 8, 7, 0, 5, 1, 3, 2, 4, 6
-
-        bvid = [""] * 9
-        tmp = (MAX_AID | _aid) ^ XOR_CODE
-
-        for i in range(len(ENCODE_MAP)):
-            bvid[ENCODE_MAP[i]] = ALPHABET[tmp % len(ALPHABET)]
-            tmp //= len(ALPHABET)
-
-        return "BV1" + "".join(bvid)
-
     def remove_files(path_list: List):
         def worker():
             for path in path_list:

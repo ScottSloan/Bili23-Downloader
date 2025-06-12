@@ -2,10 +2,9 @@ import wx
 import time
 from io import BytesIO
 from typing import Dict, Callable
-from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
-from utils.config import Config, user_config_group
+from utils.config import Config
 from utils.auth.cookie import CookieUtils
 
 from utils.common.thread import Thread
@@ -64,8 +63,7 @@ class LoginWindow(Dialog):
 
     def init_utils(self):
         def worker():
-            cookie_utils = CookieUtils()
-            cookie_utils.exclimbwuzhi(Config.Auth.buvid3)
+            CookieUtils.exclimbwuzhi(Config.Auth.buvid3)
 
         Thread(target = worker).start()
 

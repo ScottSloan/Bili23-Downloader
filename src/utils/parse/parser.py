@@ -32,6 +32,21 @@ class Parser:
 
         return resp
 
+    def aid_to_bvid(_aid: int):
+        XOR_CODE = 23442827791579
+        MAX_AID = 1 << 51
+        ALPHABET = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf"
+        ENCODE_MAP = 8, 7, 0, 5, 1, 3, 2, 4, 6
+
+        bvid = [""] * 9
+        tmp = (MAX_AID | _aid) ^ XOR_CODE
+
+        for i in range(len(ENCODE_MAP)):
+            bvid[ENCODE_MAP[i]] = ALPHABET[tmp % len(ALPHABET)]
+            tmp //= len(ALPHABET)
+
+        return "BV1" + "".join(bvid)
+
     def check_value(self, value: int | str):
         if not value:
             raise GlobalException(code = StatusCode.URL.value)

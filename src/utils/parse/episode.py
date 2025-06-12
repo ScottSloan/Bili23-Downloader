@@ -1,7 +1,8 @@
 from utils.config import Config
-from utils.tool_v2 import FormatTool
+
 from utils.common.enums import ParseType, EpisodeDisplayType, VideoType
 from utils.common.map import cheese_status_map
+from utils.common.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}
@@ -64,7 +65,7 @@ class EpisodeManager:
                 "title": get_title(episode),
                 "cid": episode["cid"],
                 "badge": get_badge(),
-                "duration": FormatTool.format_duration(episode, ParseType.Video)
+                "duration": FormatUtils.format_episode_duration(episode, ParseType.Video)
             }
 
         def get_node(title: str, duration: str = ""):
@@ -88,7 +89,7 @@ class EpisodeManager:
                     if episode["cid"] == cid:
                         _in_section = section["episodes"]
                 else:
-                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], get_node(episode["title"], FormatTool.format_duration(episode, ParseType.Video)))
+                    EpisodeInfo.add_item(EpisodeInfo.data, section["title"], get_node(episode["title"], FormatUtils.format_episode_duration(episode, ParseType.Video)))
 
                     for page in episode["pages"]:
                         page["cover_url"] = episode["arc"]["pic"]
@@ -155,11 +156,11 @@ class EpisodeManager:
             EpisodeInfo.cid_dict[episode["cid"]] = episode
 
             return {
-                "title": FormatTool.format_bangumi_title(episode, main_episode),
+                "title": FormatUtils.format_bangumi_title(episode, main_episode),
                 "cid": episode["cid"],
                 "ep_id": episode["ep_id"],
                 "badge": episode["badge"],
-                "duration": FormatTool.format_duration(episode, ParseType.Bangumi)
+                "duration": FormatUtils.format_episode_duration(episode, ParseType.Bangumi)
             }
 
         if bangumi_main_episodes_parser(info_json):
@@ -179,7 +180,7 @@ class EpisodeManager:
                 "title": episode["title"],
                 "cid": episode["cid"],
                 "badge": _get_label(episode),
-                "duration": FormatTool.format_duration(episode, ParseType.Video)
+                "duration": FormatUtils.format_episode_duration(episode, ParseType.Video)
             }
         
         def _get_label(episode: dict):

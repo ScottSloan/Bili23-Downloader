@@ -22,7 +22,7 @@ class ActivityParser(Parser):
     def get_aid(self, initial_state: str):
         aid = self.re_find_str(r'"aid":([0-9]+)', initial_state)
 
-        ActivityInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
+        ActivityInfo.url = f"https://www.bilibili.com/video/{self.aid_to_bvid(int(aid[0]))}"
 
     def get_bvid(self, url: str):
         bvid = self.re_find_str(r"BV\w+", url)

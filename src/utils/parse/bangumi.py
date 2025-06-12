@@ -1,4 +1,4 @@
-from utils.tool_v2 import UniversalTool, FormatTool
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 from utils.common.exception import GlobalException
@@ -6,6 +6,7 @@ from utils.common.map import bangumi_type_map
 from utils.common.enums import StatusCode, StreamType
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
+from utils.common.formatter import FormatUtils
 
 from utils.parse.audio import AudioInfo
 from utils.parse.episode import EpisodeInfo, EpisodeManager
@@ -129,7 +130,7 @@ class BangumiParser(Parser):
 
         BangumiInfo.cover = info_result["cover"]
         BangumiInfo.views = info_result["icon_font"]["text"]
-        BangumiInfo.danmakus = FormatTool.format_data_count(info_result["stat"]["danmakus"])
+        BangumiInfo.danmakus = FormatUtils.format_data_quantity(info_result["stat"]["danmakus"])
         BangumiInfo.followers = info_result["stat"]["follow_text"]
         BangumiInfo.styles = " / ".join(info_result["styles"])
         BangumiInfo.new_ep = info_result["new_ep"]["desc"]

@@ -1,6 +1,6 @@
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
-from utils.tool_v2 import UniversalTool, FormatTool
+from utils.tool_v2 import UniversalTool
 
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
@@ -11,6 +11,7 @@ from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusC
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
+from utils.common.formatter import FormatUtils
 
 class VideoInfo:
     url: str = ""
@@ -93,7 +94,7 @@ class VideoParser(Parser):
     def get_aid(self, url: str):
         aid = self.re_find_str(r"av([0-9]+)", url)
 
-        bvid = UniversalTool.aid_to_bvid(int(aid[0]))
+        bvid = self.aid_to_bvid(int(aid[0]))
         self.set_bvid(bvid)
 
     def get_bvid(self, url: str):
@@ -122,8 +123,8 @@ class VideoParser(Parser):
         VideoInfo.pages_list = info["pages"]
 
         VideoInfo.desc = info["desc"]
-        VideoInfo.views = FormatTool.format_data_count(info["stat"]["view"])
-        VideoInfo.danmakus = FormatTool.format_data_count(info["stat"]["danmaku"])
+        VideoInfo.views = FormatUtils.format_data_quantity(info["stat"]["view"])
+        VideoInfo.danmakus = FormatUtils.format_data_quantity(info["stat"]["danmaku"])
 
         VideoInfo.pubtime = info["pubdate"]
         VideoInfo.tname = info["tname"]
@@ -249,7 +250,7 @@ class VideoParser(Parser):
                     "title": page["part"] if VideoInfo.type == VideoType.Part else VideoInfo.title,
                     "cid": page["cid"],
                     "badge": get_badge(),
-                    "duration": FormatTool.format_duration(page, ParseType.Video)
+                    "duration": FormatUtils.format_episode_duration(page, ParseType.Video)
                 })
 
         def interact_parser():

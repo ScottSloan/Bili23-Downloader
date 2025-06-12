@@ -3,9 +3,10 @@ from typing import Callable
 
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, video_codec_map, danmaku_format_map, subtitle_format_map, number_type_map, cover_format_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID, VideoQualityID, StreamType
-from utils.config import Config, app_config_group
-from utils.tool_v2 import FormatTool
 from utils.common.thread import Thread
+from utils.common.formatter import FormatUtils
+
+from utils.config import Config, app_config_group
 
 from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
@@ -353,12 +354,12 @@ class DownloadOptionDialog(Dialog):
                 match StreamType(self.parent.stream_type):
                     case StreamType.Dash:
 
-                        return "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                        return "[{}]   [{}]   [{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), info["frame_rate"], FormatUtils.format_bandwidth(info["bandwidth"]), FormatUtils.format_size(info["size"]))
                     
                     case StreamType.Flv:
                         self.video_stream_tip.set_tooltip("下载独立的视频流文件\n\nFLV 格式视频已包含音轨")
 
-                        return "[{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatTool.format_size(info["size"]))
+                        return "[{}]   [{}]".format(get_mapping_key_by_value(video_quality_map, info["video_quality_id"]), FormatUtils.format_size(info["size"]))
             
             def callback():
                 def check():
@@ -434,7 +435,7 @@ class DownloadOptionDialog(Dialog):
                             if info:
                                 self.audio_stream_tip.set_tooltip("下载独立的音频流文件")
 
-                                return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatTool.format_bandwidth(info["bandwidth"]), FormatTool.format_size(info["size"]))
+                                return "[{}]   [{}]   [{}]".format(get_mapping_key_by_value(audio_quality_map, info["audio_quality_id"]), FormatUtils.format_bandwidth(info["bandwidth"]), FormatUtils.format_size(info["size"]))
                             else:
                                 return "未知"
                         else:

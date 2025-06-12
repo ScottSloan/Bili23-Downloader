@@ -8,11 +8,12 @@ from utils.common.thread import Thread, DaemonThreadPoolExecutor
 from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.request import RequestUtils
+from utils.common.formatter import FormatUtils
 
 from utils.module.cdn import CDN
 from utils.module.md5_verify import MD5Verify
 
-from utils.tool_v2 import DownloadFileTool, FormatTool, UniversalTool
+from utils.tool_v2 import DownloadFileTool, UniversalTool
 from utils.config import Config
 
 class Downloader:
@@ -294,7 +295,7 @@ class Downloader:
                 # current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
                 total_progress = (self.total_downloaded_size / self.task_info.total_file_size) * 100
 
-                speed_str = FormatTool.format_speed(speed)
+                speed_str = FormatUtils.format_speed(speed)
 
                 update_progress()
 

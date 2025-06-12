@@ -27,7 +27,7 @@ def init():
 
         os.environ['GDK_BACKEND'] = "x11"
 
-    def all():
+    def init_vlc_path():
         import os
 
         os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"
@@ -39,10 +39,9 @@ def init():
         case Platform.Linux:
             linux()
 
-    all()
+    init_vlc_path()
 
-    cookie_utils = CookieUtils()
-    cookie_utils.init_cookie_params()
+    CookieUtils.init_cookie_params()
 
 if __name__ == "__main__":
     init()

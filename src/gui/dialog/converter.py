@@ -7,7 +7,6 @@ from utils.common.thread import Thread
 from utils.common.enums import Platform
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.config import Config
-from utils.tool_v2 import FormatTool
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -331,7 +330,7 @@ class ConverterWindow(Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
 
         if size:
-            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]))}")
+            self.size_lab.SetLabel(f"大小：{(int(size[0][0]))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")

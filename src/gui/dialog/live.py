@@ -6,10 +6,10 @@ from typing import List
 
 from utils.config import Config
 from utils.parse.live import LiveInfo
-from utils.tool_v2 import FormatTool
 
 from utils.common.thread import Thread
 from utils.common.directory import DirectoryUtils
+from utils.common.formatter import FormatUtils
 
 from gui.component.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
@@ -234,7 +234,7 @@ class LiveRecordingWindow(Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
         
         if size:
-            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]) * 1024)}")
+            self.size_lab.SetLabel(f"大小：{FormatUtils.format_size(int(size[0][0]) * 1024)}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")
