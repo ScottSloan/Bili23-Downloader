@@ -1,9 +1,11 @@
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
+
 from utils.common.exception import GlobalException
 from utils.common.map import live_status_map
 from utils.common.enums import StatusCode, LiveQualityID
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
 
 from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.parser import Parser
@@ -50,7 +52,7 @@ class LiveParser(Parser):
         # 获取直播间信息
         url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={LiveInfo.short_id}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
@@ -67,7 +69,7 @@ class LiveParser(Parser):
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
@@ -82,7 +84,7 @@ class LiveParser(Parser):
 
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 

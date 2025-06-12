@@ -4,7 +4,6 @@ import math
 import datetime
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
 
 from utils.common.file_name_v2 import FileNameFormatter
@@ -12,6 +11,7 @@ from utils.common.enums import DanmakuType, SubtitleType
 from utils.common.data_type import DownloadTaskInfo, Callback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode, SubtitleLanOption
+from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser
 
@@ -57,7 +57,7 @@ class ExtraParser(Parser):
         # 下载 xml 格式弹幕文件
         url = f"https://comment.bilibili.com/{self.task_info.cid}.xml"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         file_name = f"{self.file_name}.xml"
         self.write_to_file(file_name, req.content, mode = "wb")
@@ -73,7 +73,7 @@ class ExtraParser(Parser):
             # 下载 protobuf 格式弹幕文件
             url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={self.task_info.cid}&segment_index={index}"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
             file_name = get_file_name(index, _package_count)
             self.write_to_file(file_name, req.content, mode = "wb")
@@ -86,7 +86,7 @@ class ExtraParser(Parser):
 
     def download_subtitle_file(self):
         def get_subtitle_json(subtitle_url: str):
-            req = RequestTool.request_get(subtitle_url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(subtitle_url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
             return json.loads(req.text)
 
@@ -111,7 +111,7 @@ class ExtraParser(Parser):
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         subtitle_list = resp["data"]["subtitle"]["subtitles"]
@@ -191,7 +191,7 @@ class ExtraParser(Parser):
         self.write_to_file(file_name, contents)
 
     def download_cover_file(self):
-        req = RequestTool.request_get(self.task_info.cover_url)
+        req = RequestUtils.request_get(self.task_info.cover_url)
 
         file_name = f"{self.file_name}.jpg"
         self.write_to_file(file_name, req.content, mode = "wb")

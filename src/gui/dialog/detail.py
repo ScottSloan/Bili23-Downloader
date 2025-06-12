@@ -3,9 +3,11 @@ import io
 import wx.html
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import UniversalTool
+
 from utils.common.enums import ParseType
 from utils.common.thread import Thread
+from utils.common.request import RequestUtils
 
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -223,7 +225,7 @@ class BangumiPage(DetailPage):
             
                 self.cover_bmp.SetBitmap(bmp)
 
-            contents = RequestTool.request_get(BangumiInfo.cover).content
+            contents = RequestUtils.request_get(BangumiInfo.cover).content
 
             wx.CallAfter(set_bmp)
 

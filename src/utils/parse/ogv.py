@@ -1,5 +1,6 @@
 from utils.config import Config
-from utils.tool_v2 import RequestTool
+
+from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser
 
@@ -30,6 +31,6 @@ class OGVParser(Parser):
             }
         }
 
-        resp = self.request_post(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA), raw_json = raw_json)
+        resp = self.request_post(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA), raw_json = raw_json)
 
         print(resp)

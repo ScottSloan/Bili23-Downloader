@@ -48,8 +48,7 @@ app_config_group = {
         "download_suspend_retry_interval",
         "always_use_https_protocol",
         "check_md5",
-        "ua_option",
-        "custom_ua"
+        "user_agent"
     ],
     "Merge": [
         "ffmpeg_path",
@@ -218,8 +217,7 @@ class Config:
 
         cdn_list: list = []
 
-        ua_option: int = 0
-        custom_ua: str = ""
+        user_agent: str = ""
 
         file_name_template_list: list = []
 
@@ -262,8 +260,7 @@ class Config:
         always_use_https_protocol: bool = True
         check_md5: bool = True
 
-        ua_option: int = 0
-        custom_ua: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
+        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
 
     @classmethod
     def load_config(cls):

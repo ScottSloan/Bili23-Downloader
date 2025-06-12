@@ -137,10 +137,6 @@ class SubtitleLanOption(Enum):
     All_Subtitles = 1             # 下载全部字幕
     Custom = 2                    # 自定义
 
-class UAOption(Enum):
-    Custom = 0                    # 自定义
-    Random = 1                    # 随机
-
 class ScopeID(Enum):
     All = 0                       # 所有类型
     Video = 1                     # 投稿视频

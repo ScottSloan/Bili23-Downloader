@@ -12,6 +12,7 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.directory import DirectoryUtils
+from utils.common.request import RequestUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
@@ -19,7 +20,7 @@ from utils.module.downloader_v2 import Downloader
 from utils.parse.download import DownloadParser
 from utils.parse.extra import ExtraParser
 from utils.config import Config
-from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool
+from utils.tool_v2 import FormatTool, DownloadFileTool
 
 from gui.component.info_label import InfoLabel
 from gui.component.panel import Panel
@@ -275,7 +276,7 @@ class DownloadTaskItemPanel(Panel):
             if cache:
                 return cache
             else:
-                content = RequestTool.request_get(self.task_info.cover_url).content
+                content = RequestUtils.request_get(self.task_info.cover_url).content
 
                 DataCache.set_cache(self.task_info.cover_url, content)
 

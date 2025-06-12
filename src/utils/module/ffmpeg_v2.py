@@ -258,11 +258,11 @@ class FFmpeg:
                     case StreamType.Dash:
                         dash()
 
+                        if Config.Merge.keep_original_files and os.path.exists(os.path.join(FFmpeg.Prop.download_path(task_info), FFmpeg.Prop.dash_video_temp_file(task_info))):
+                            FFmpeg.Utils.keep_original_files(task_info)
+
                     case StreamType.Flv:
                         flv()
-
-                if Config.Merge.keep_original_files:
-                    FFmpeg.Utils.keep_original_files(task_info)
 
                 UniversalTool.remove_files(temp_files)
 
@@ -273,15 +273,15 @@ class FFmpeg:
             class callback(Callback):
                 @staticmethod
                 def onSuccess(*args, **kwargs):
-                    return super().onSuccess(**kwargs)
+                    pass
                 
                 @staticmethod
                 def onError(*args, **kwargs):
-                    return super().onError(**kwargs)
+                    pass
             
             command = FFmpeg.Command.get_keep_files_command(task_info)
 
-            FFmpeg.Command.run(command, callback)
+            FFmpeg.Command.run(command, callback, cwd = FFmpeg.Prop.download_path(task_info))
         
         @classmethod
         def check_file_existance(cls, dst: str, callback: Callback):

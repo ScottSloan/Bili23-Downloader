@@ -4,12 +4,12 @@ from typing import Callable
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
 from utils.common.enums import ParseType, StreamType, VideoQualityID, VideoCodecID, AudioQualityID
 from utils.common.exception import GlobalException
+from utils.common.request import RequestUtils
 
 from utils.parse.preview import Preview
 from utils.parse.parser import Parser
 
 from utils.auth.wbi import WbiUtils
-from utils.tool_v2 import RequestTool
 from utils.config import Config
 
 class DownloadParser(Parser):
@@ -42,7 +42,7 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
             self.check_json(data)
@@ -52,7 +52,7 @@ class DownloadParser(Parser):
         def get_bangumi_json():
             url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
             self.check_json(data)
@@ -62,7 +62,7 @@ class DownloadParser(Parser):
         def get_cheese_json():
             url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
             self.check_json(data)

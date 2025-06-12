@@ -1,7 +1,7 @@
 from functools import reduce
 
 from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
-from utils.tool_v2 import RequestTool
+from utils.common.request import RequestUtils
 
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -212,7 +212,7 @@ class Preview:
 
     def get_file_size(self, url_list: list):
         def request_head(url: str, cdn: str):
-            return RequestTool.request_head(CDN.replace_cdn(url, cdn), headers = RequestTool.get_headers("https://www.bilibili.com"))
+            return RequestUtils.request_head(CDN.replace_cdn(url, cdn), headers = RequestUtils.get_headers(referer_url = "https://www.bilibili.com"))
 
         cdn_list = CDN.get_cdn_list()
 

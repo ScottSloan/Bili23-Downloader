@@ -3,7 +3,7 @@ import wx
 import webbrowser
 
 from utils.config import Config, app_config_group
-from utils.tool_v2 import UniversalTool, RequestTool
+from utils.tool_v2 import UniversalTool
 from utils.auth.login import QRLogin
 
 from utils.module.ffmpeg_v2 import FFmpeg
@@ -15,6 +15,7 @@ from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDispla
 from utils.common.data_type import ParseCallback, TreeListItemInfo
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
+from utils.common.request import RequestUtils
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -594,7 +595,7 @@ class MainWindow(Frame):
                         def callback():
                             CoverViewerDialog(self, contents).Show()
 
-                        contents = RequestTool.request_get(url).content
+                        contents = RequestUtils.request_get(url).content
                         wx.CallAfter(callback)
 
                     cid = self.episode_list.GetItemData(self.episode_list.GetSelection()).cid

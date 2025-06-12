@@ -1,6 +1,6 @@
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
-from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
+from utils.tool_v2 import UniversalTool, FormatTool
 
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
@@ -10,6 +10,7 @@ from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
 
 class VideoInfo:
     url: str = ""
@@ -108,7 +109,7 @@ class VideoParser(Parser):
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
         info = VideoInfo.info_json = resp["data"]
 
@@ -161,7 +162,7 @@ class VideoParser(Parser):
     def get_video_tag(self):
         url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
         
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
         VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
 
@@ -177,7 +178,7 @@ class VideoParser(Parser):
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
         
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
         info = VideoInfo.download_json = resp["data"]
 

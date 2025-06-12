@@ -3,7 +3,7 @@ import json
 
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
-from utils.tool_v2 import RequestTool
+from utils.common.request import RequestUtils
 
 class Parser:
     def __init__(self):
@@ -17,7 +17,7 @@ class Parser:
         return result
 
     def request_get(self, url: str, headers: dict) -> dict:
-        req = RequestTool.request_get(url, headers)
+        req = RequestUtils.request_get(url, headers)
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -25,7 +25,7 @@ class Parser:
         return resp
     
     def request_post(self, url: str, headers: dict, raw_json: dict):
-        req = RequestTool.request_post(url, headers, json = raw_json)
+        req = RequestUtils.request_post(url, headers, json = raw_json)
         resp = json.loads(req.text)
 
         self.check_json(resp)

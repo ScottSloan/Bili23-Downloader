@@ -2,120 +2,15 @@ import os
 import wx
 import re
 import json
-import requests
-import requests.auth
 from datetime import datetime
 from typing import Optional, List
 
 from utils.config import Config
+
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType, ProxyMode, UAOption
+from utils.common.enums import ParseType
 from utils.common.thread import Thread
-
-from utils.module.random_ua import RandomUA
-
-class RequestTool:
-    # 请求工具类
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
-
-    def request_get(url: str, headers = None, proxies = None, auth = None, stream = False):
-        if not headers:
-            headers = RequestTool.get_headers()
-
-        if not proxies:
-            proxies = RequestTool.get_proxies()
-
-        if not auth:
-            auth = RequestTool.get_auth()
-
-        return requests.get(RequestTool.replace_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream)
-    
-    def request_post(url: str, headers = None, params = None, json = None):
-        if not headers:
-            headers = RequestTool.get_headers()
-        
-        return requests.post(RequestTool.replace_protocol(url), headers = headers, params = params, json = json, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-
-    def request_head(url: str, headers = None):
-        if not headers:
-            headers = RequestTool.get_headers()
-        
-        return requests.head(RequestTool.replace_protocol(url), headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
-
-    def get_headers(referer_url: Optional[str] = None, sessdata: Optional[str] = None, range: Optional[List[int]] = None):
-        def cookie():
-            if Config.Auth.buvid3:
-                _cookie["buvid3"] = Config.Auth.buvid3
-                _cookie["b_nut"] = Config.Auth.b_nut
-            
-            if Config.Auth.bili_ticket:
-                _cookie["bili_ticket"] = Config.Auth.bili_ticket
-
-            if Config.Auth.buvid4:
-                _cookie["buvid4"] = Config.Auth.buvid4
-
-        def ua():
-            match UAOption(Config.Advanced.ua_option):
-                case UAOption.Custom:
-                    return Config.Advanced.custom_ua
-                
-                case UAOption.Random:
-                    return RandomUA.get_random_ua()
-        
-        headers = {
-            "User-Agent": ua(),
-        }
-
-        _cookie = {
-            "CURRENT_FNVAL": "4048",
-            "b_lsid": Config.Auth.b_lsid,
-            "_uuid": Config.Auth.uuid,
-            "buvid_fp": Config.Auth.buvid_fp
-        }
-
-        if referer_url:
-            headers["Referer"] = referer_url
-
-        if sessdata:
-            _cookie["SESSDATA"] = Config.User.SESSDATA
-            _cookie["DedeUserID"] = Config.User.DedeUserID
-            _cookie["DedeUserID__ckMd5"] = Config.User.DedeUserID__ckMd5
-            _cookie["bili_jct"] = Config.User.bili_jct
-
-        if range:
-            headers["Range"] = f"bytes={range[0]}-{range[1]}"
-
-        cookie()
-
-        headers["Cookie"] = ";".join([f"{key}={value}" for key, value in _cookie.items()])
-
-        return headers
-
-    def get_proxies():
-        match ProxyMode(Config.Proxy.proxy_mode):
-            case ProxyMode.Disable:
-                return {}
-            
-            case ProxyMode.Follow:
-                return None
-            
-            case ProxyMode.Custom:
-                return {
-                    "http": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}",
-                    "https": f"{Config.Proxy.proxy_ip}:{Config.Proxy.proxy_port}"
-                }
-    
-    def get_auth():
-        if Config.Proxy.enable_auth:
-            return requests.auth.HTTPProxyAuth(Config.Proxy.auth_username, Config.Proxy.auth_password)
-        else:
-            return None
-    
-    def replace_protocol(url: str):
-        if not Config.Advanced.always_use_https_protocol:
-            return url.replace("https://", "http://")
-        
-        return url
+from utils.common.request import RequestUtils
 
 class DownloadFileTool:
     # 断点续传信息工具类
@@ -219,7 +114,6 @@ class DownloadFileTool:
         return os.path.exists(self.file_path)
 
 class FormatTool:
-    # 格式化数据类
     @classmethod
     def format_duration(cls, episode: dict, flag: int):
         match flag:
@@ -318,7 +212,7 @@ class UniversalTool:
     def get_user_face():
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
-            content = RequestTool.request_get(Config.User.face_url).content
+            content = RequestUtils.request_get(Config.User.face_url).content
 
             with open(Config.User.face_path, "wb") as f:
                 f.write(content)

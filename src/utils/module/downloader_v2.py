@@ -7,11 +7,12 @@ from utils.common.enums import StatusCode
 from utils.common.thread import Thread, DaemonThreadPoolExecutor
 from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.request import RequestUtils
 
 from utils.module.cdn import CDN
 from utils.module.md5_verify import MD5Verify
 
-from utils.tool_v2 import DownloadFileTool, RequestTool, FormatTool, UniversalTool
+from utils.tool_v2 import DownloadFileTool, FormatTool, UniversalTool
 from utils.config import Config
 
 class Downloader:
@@ -158,7 +159,7 @@ class Downloader:
                 if self.current_downloaded_size:
                     start_time -= self.current_downloaded_size / speed_bps
 
-                with RequestTool.request_get(info.url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA, range = info.range), stream = True) as req:
+                with RequestUtils.request_get(info.url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA, range = info.range), stream = True) as req:
                     for chunk in req.iter_content(chunk_size = 1024):
                         if chunk:
                             with self.lock:
@@ -187,7 +188,7 @@ class Downloader:
         def request_head(url: str, cdn: str):
             new_url = CDN.replace_cdn(url, cdn)
             
-            return new_url, RequestTool.request_head(new_url, headers = RequestTool.get_headers(self.task_info.referer_url))
+            return new_url, RequestUtils.request_head(new_url, headers = RequestUtils.get_headers(self.task_info.referer_url))
 
         for url in url_list:
             for cdn in CDN.get_cdn_list():

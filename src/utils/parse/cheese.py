@@ -1,9 +1,10 @@
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 from utils.common.enums import StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
 
 from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.audio import AudioInfo
@@ -75,7 +76,7 @@ class CheeseParser(Parser):
     def get_cheese_info(self):
         url = f"https://api.bilibili.com/pugv/view/web/season?{self.url_type}={self.url_type_value}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info_data = CheeseInfo.info_json = resp["data"]
 
@@ -97,7 +98,7 @@ class CheeseParser(Parser):
     def get_cheese_available_media_info(self):
         url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.epid}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         CheeseInfo.download_json = info = resp["data"]
 

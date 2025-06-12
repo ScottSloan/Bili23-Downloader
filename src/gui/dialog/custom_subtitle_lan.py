@@ -1,10 +1,11 @@
 import wx
 import json
 
-from utils.tool_v2 import RequestTool
 from utils.config import Config
+
 from utils.common.thread import Thread
 from utils.common.enums import SubtitleLanOption
+from utils.common.request import RequestUtils
 
 from gui.component.dialog import Dialog
 
@@ -87,7 +88,7 @@ class CustomLanDialog(Dialog):
     def get_lan_list(self):
         url = "https://i0.hdslb.com/bfs/subtitle/subtitle_lan.json"
 
-        req = RequestTool.request_get(url)
+        req = RequestUtils.request_get(url)
         data = json.loads(req.text)
 
         self.lan_list.update({entry["doc_zh"]: entry["lan"] for entry in data})

@@ -18,11 +18,12 @@ from gui.dialog.ffmpeg import DetectDialog
 from gui.dialog.custom_cdn import CustomCDNDialog
 from gui.dialog.custom_file_name_v2 import CustomFileNameDialog
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
-from gui.dialog.custom_ua import CustomUADialog
+from gui.dialog.custom_user_agent import CustomUADialog
 
 from utils.config import Config, app_config_group
-from utils.tool_v2 import RequestTool
+
 from utils.common.thread import Thread
+from utils.common.request import RequestUtils
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, cover_format_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
 
@@ -536,7 +537,7 @@ class AdvancedTab(Tab):
 
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
 
-        self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 UA", size = self.get_scaled_size((100, 28)))
+        self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((120, 28)))
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
         advanced_download_sbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
@@ -574,8 +575,7 @@ class AdvancedTab(Tab):
 
         self.check_md5_chk.SetValue(Config.Advanced.check_md5)
 
-        Config.Temp.ua_option = Config.Advanced.ua_option
-        Config.Temp.custom_ua = Config.Advanced.custom_ua
+        Config.Temp.user_agent = Config.Advanced.user_agent
 
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
@@ -593,8 +593,7 @@ class AdvancedTab(Tab):
 
         Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
 
-        Config.Advanced.ua_option = Config.Temp.ua_option
-        Config.Advanced.custom_ua = Config.Temp.custom_ua
+        Config.Advanced.user_agent = Config.Temp.user_agent
 
     def onEnableSwitchCDNEVT(self, event):        
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
@@ -883,7 +882,7 @@ class ProxyTab(Tab):
                 start_time = time.time()
 
                 url = "https://www.bilibili.com"
-                req = RequestTool.request_get(url, proxies = proxy, auth = _auth)
+                req = RequestUtils.request_get(url, proxies = proxy, auth = _auth)
                 
                 end_time = time.time()
 
