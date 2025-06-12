@@ -1,4 +1,3 @@
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 from utils.common.exception import GlobalException
@@ -6,6 +5,7 @@ from utils.common.map import live_status_map
 from utils.common.enums import StatusCode, LiveQualityID
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
+from utils.common.file_name_v2 import FileNameFormatter
 
 from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.parser import Parser
@@ -56,7 +56,7 @@ class LiveParser(Parser):
 
         info = resp["data"]
 
-        LiveInfo.title = UniversalTool.get_legal_name(info["title"])
+        LiveInfo.title = FileNameFormatter.get_legal_file_name(info["title"])
         LiveInfo.room_id = info["room_id"]
 
         LiveInfo.status = info["live_status"]

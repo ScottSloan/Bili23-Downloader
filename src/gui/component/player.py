@@ -1,4 +1,5 @@
 import wx
+import webbrowser
 from datetime import datetime
 
 from utils.common.icon_v4 import Icon, IconID
@@ -7,22 +8,28 @@ from utils.common.formatter import FormatUtils
 from gui.component.panel import Panel
 from gui.component.bitmap_button import BitmapButton
 
-import_err = False
+vlc_available = False
 
 try:
     from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
+
+    vlc_available = True
+
 except:
-    import_err = True
+    vlc_available = False
 
 class Player(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
 
-        self.init_UI()
+        if vlc_available:
+            self.init_player_UI()
 
-        self.Bind_EVT()
+            self.Bind_EVT()
+        else:
+            self.init_unavailable_UI()
 
-    def init_UI(self):
+    def init_player_UI(self):
         self.player_frame = Panel(self)
         self.player_frame.SetBackgroundColour("black")
 
@@ -47,6 +54,32 @@ class Player(Panel):
 
         self.timer = wx.Timer(self, -1)
 
+    def init_unavailable_UI(self):
+        def onHelpEVT(self, event):
+            webbrowser.open("https://bili23.scott-sloan.cn/doc/install/vlc.html")
+
+        tip_lab = wx.StaticText(self, -1, "VLC Media Player 不可用，无法显示预览")
+        self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((100, 28)))
+        self.help_btn.Bind(wx.EVT_BUTTON, onHelpEVT)
+
+        tip_vbox = wx.BoxSizer(wx.HORIZONTAL)
+        tip_vbox.AddStretchSpacer()
+        tip_vbox.Add(tip_lab, 0, wx.ALL, self.FromDIP(6))
+        tip_vbox.AddStretchSpacer()
+
+        btn_vbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_vbox.AddStretchSpacer()
+        btn_vbox.Add(self.help_btn, 0, wx.ALL, self.FromDIP(6))
+        btn_vbox.AddStretchSpacer()
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddStretchSpacer()
+        vbox.Add(tip_vbox, 0, wx.EXPAND)
+        vbox.Add(btn_vbox, 0, wx.EXPAND)
+        vbox.AddStretchSpacer()
+
+        self.SetSizer(vbox)
+
     def Bind_EVT(self):
         self.play_btn.Bind(wx.EVT_BUTTON, self.onPlayEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
@@ -57,9 +90,7 @@ class Player(Panel):
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_player(self, input_path: str):
-        if import_err:
-            self.vlc_unavailable()
-
+        if not vlc_available:
             return
 
         self.player = VLCPlayer()
@@ -74,7 +105,8 @@ class Player(Panel):
         self.onSlider = False
 
     def close_player(self):
-        self.reset()
+        if vlc_available:
+            self.reset()
 
     def onPlayEVT(self, event):
         match self.player.get_state():
@@ -159,6 +191,3 @@ class Player(Panel):
         self.time_lab.SetLabel("00:00")
 
         self.set_play_btn_icon(VLCState.Stopped)
-
-    def vlc_unavailable(self):
-        print("!!!!")

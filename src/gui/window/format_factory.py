@@ -18,6 +18,7 @@ from gui.component.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
 from gui.component.bitmap_button import BitmapButton
 from gui.component.text_ctrl import TextCtrl
+from gui.component.player import Player, vlc_available
 
 class SelectPage(Panel):
     def __init__(self, parent):
@@ -202,8 +203,6 @@ class ContainerPage(Panel):
             self.Bind_EVT()
 
         def init_UI(self):
-            from gui.component.player import Player
-            
             self.player = Player(self)
             
             bottom_line = wx.StaticLine(self, -1)
@@ -270,9 +269,10 @@ class ContainerPage(Panel):
             self.player.close_player()
 
         def onChangeInputFile(self):
-            self.player.reset()
+            if vlc_available:
+                self.player.reset()
 
-            self.player.player.set_mrl(self.input_path)
+                self.player.player.set_mrl(self.input_path)
 
         def onPasteStartTimeEVT(self, event):
             self.start_time_box.SetValue(self.player.get_time())

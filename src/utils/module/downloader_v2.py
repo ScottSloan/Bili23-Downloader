@@ -118,7 +118,7 @@ class Downloader:
 
         self.stop_event.clear()
         downloader_info = get_downloader_info()
-        file_path = self.get_file_path(downloader_info.file_name)
+        file_path = os.path.join(self.download_path, downloader_info.file_name)
 
         try:
             get_total_file_size()
@@ -234,12 +234,14 @@ class Downloader:
             cache = self.cache.get(entry["file_name"])
 
             if cache and cache["md5"] and Config.Advanced.check_md5:
-                if MD5Verify.verify_md5(cache["md5"], self.get_file_path(file_name)):
+                path = os.path.join(self.download_path, file_name)
+
+                if MD5Verify.verify_md5(cache["md5"], path):
                     # md5 校验通过，移除当前项的下载信息
                     remove_current_entry()
                 else:
                     # md5 校验不通过，重新下载该文件
-                    UniversalTool.remove_files([self.get_file_path(file_name)])
+                    UniversalTool.remove_files([path])
 
                     self.total_downloaded_size -= self.current_file_size
 
@@ -311,9 +313,6 @@ class Downloader:
             self.stop_download()
 
             self.callback.onError()
-
-    def get_file_path(self, file_name: str):
-        return UniversalTool.get_file_path(self.download_path, file_name)
 
     @property
     def download_path(self):

@@ -1,8 +1,8 @@
 import os
+import re
 from datetime import datetime
 
 from utils.config import Config
-from utils.tool_v2 import UniversalTool
 
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
@@ -16,7 +16,7 @@ class FileNameFormatter:
 
         field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
 
-        result = template.format(**field_dict)
+        result = cls.get_legal_file_name(template.format(**field_dict))
 
         return os.path.basename(result) if basename else result
 
@@ -33,7 +33,7 @@ class FileNameFormatter:
 
         check_path(path)
 
-        return path
+        return cls.get_legal_file_name(path)
     
     @staticmethod
     def check_empty_field(field_dict: dict):
@@ -91,7 +91,7 @@ class FileNameFormatter:
             "zone": task_info.tname_info.get("tname"),
             "subzone": task_info.tname_info.get("subtname"),
             "area": task_info.area,
-            "title": UniversalTool.get_legal_name(task_info.title),
+            "title": FileNameFormatter.get_legal_file_name(task_info.title),
             "aid": task_info.aid,
             "bvid": task_info.bvid,
             "cid": task_info.cid,
@@ -106,3 +106,7 @@ class FileNameFormatter:
             "up_name": task_info.up_info.get("up_name"),
             "up_mid": task_info.up_info.get("up_mid")
         }
+
+    @staticmethod
+    def get_legal_file_name(file_name: str):
+        return re.sub(r'[:*?"<>|]', "_", file_name)

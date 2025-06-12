@@ -143,14 +143,8 @@ class UniversalTool:
         
         return circle_image
 
-    def get_current_time_str():
-        return datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
-    
     def get_time_str_from_timestamp(timestamp: int):
         return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
-
-    def get_legal_name(_name: str):
-        return re.sub(r'[/\:*?"<>|]', "", _name)
 
     def re_find_string(_pattern: str, _string: str):
         find = re.findall(_pattern, _string)
@@ -170,6 +164,3 @@ class UniversalTool:
                         pass
 
         Thread(target = worker).start()
-
-    def get_file_path(directory: str, file_name: str):
-        return os.path.join(directory, file_name)
