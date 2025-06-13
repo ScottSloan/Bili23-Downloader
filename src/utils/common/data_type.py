@@ -275,12 +275,15 @@ class TreeListItemInfo:
         self.cid: int = 0
         self.aid: int = 0
         self.bvid: str = ""
+        self.ep_id: int = 0
+        self.season_id: int = 0
+        self.media_id: int = 0
         self.pubtime: int = 0
         self.badge: str = ""
         self.duration: str = ""
         self.cover_url: str = ""
         self.pid: str = ""
-        self.chapter_title: str = ""
+        self.section_title: str = ""
         self.part_title: str = ""
         self.type: str = ""
 
@@ -291,12 +294,15 @@ class TreeListItemInfo:
             "cid": self.cid,
             "aid": self.aid,
             "bvid": self.bvid,
+            "ep_id": self.ep_id,
+            "season_id": self.season_id,
+            "media_id": self.media_id,
             "pubtime": self.pubtime,
             "badge": self.badge,
             "duration": self.duration,
             "cover_url": self.cover_url,
             "pid": self.pid,
-            "chapter_title": self.chapter_title,
+            "section_title": self.section_title,
             "part_title": self.part_title,
             "type": self.type
         }
@@ -307,12 +313,15 @@ class TreeListItemInfo:
         self.cid = data.get("cid", 0)
         self.aid = data.get("aid", 0)
         self.bvid = data.get("bvid", "")
+        self.ep_id = data.get("ep_id", 0)
+        self.season_id = data.get("season_id", 0)
+        self.media_id = data.get("media_id", 0)
         self.pubtime = data.get("pubtime", 0)
         self.badge = data.get("badge", "")
         self.duration = data.get("duration", "")
         self.cover_url = data.get("cover_url", "")
         self.pid = data.get("pid", "")
-        self.chapter_title = data.get("chapter_title", "")
+        self.section_title = data.get("section_title", "")
         self.part_title = data.get("part_title", "")
         self.type = data.get("type", "node")
 
