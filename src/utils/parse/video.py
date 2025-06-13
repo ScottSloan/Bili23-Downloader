@@ -29,7 +29,6 @@ class VideoInfo:
 
     stream_type: int = 0
 
-    is_upower_exclusive: bool = False
     is_interactive: bool = False
 
     pages_list: list = []
@@ -65,7 +64,6 @@ class VideoInfo:
         cls.up_name = ""
         cls.up_mid = 0
 
-        cls.is_upower_exclusive = False
         cls.is_interactive = False
 
         cls.tag_list.clear()
@@ -112,7 +110,7 @@ class VideoParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
-        info = VideoInfo.info_json = resp["data"]
+        info = resp["data"]
 
         if "redirect_url" in info:
             raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (info["redirect_url"], ))
@@ -142,6 +140,8 @@ class VideoParser(Parser):
                 VideoInfo.cid = info["pages"][0]["cid"]
         else:
             VideoInfo.cid = info["cid"]
+
+        VideoInfo.info_json = info.copy()
 
         # 判断是否为互动视频
         if VideoInfo.is_interactive:
@@ -239,8 +239,6 @@ class VideoParser(Parser):
 
             for node in InteractVideoInfo.node_list:
                 VideoInfo.info_json["pages"].append(get_page())
-
-        EpisodeInfo.clear_episode_data()
 
         if VideoInfo.is_interactive:
             interact_video_parser()

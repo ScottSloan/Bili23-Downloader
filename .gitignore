@@ -23,7 +23,7 @@ test.py
 test_2.py
 bilidanmu.proto
 config.json
-cheese.json
+cheese*.json
 choices.json
 node.json
 episode.json

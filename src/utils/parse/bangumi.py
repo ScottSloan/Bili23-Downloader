@@ -37,7 +37,6 @@ class BangumiInfo:
 
     stream_type: int = 0
 
-    episodes_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
@@ -74,7 +73,6 @@ class BangumiInfo:
 
         cls.payment = False
 
-        cls.episodes_list.clear()
         cls.video_quality_id_list.clear()
         cls.video_quality_desc_list.clear()
 
@@ -113,17 +111,15 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
-        info_result = BangumiInfo.info_json = resp["result"]
+        info_result = resp["result"]
 
         BangumiInfo.payment = True if "payment" in info_result else False
         
-        BangumiInfo.episodes_list = info_result["episodes"]
-
         BangumiInfo.title = info_result["title"]
-        BangumiInfo.url = BangumiInfo.episodes_list[0]["link"]
-        BangumiInfo.bvid = BangumiInfo.episodes_list[0]["bvid"]
-        BangumiInfo.cid = BangumiInfo.episodes_list[0]["cid"]
-        BangumiInfo.epid = BangumiInfo.episodes_list[0]["id"]
+        BangumiInfo.url = info_result["episodes"][0]["link"]
+        BangumiInfo.bvid = info_result["episodes"][0]["bvid"]
+        BangumiInfo.cid = info_result["episodes"][0]["cid"]
+        BangumiInfo.epid = info_result["episodes"][0]["id"]
         BangumiInfo.mid = info_result["media_id"]
 
         BangumiInfo.type_id = info_result["type"]
@@ -142,6 +138,8 @@ class BangumiParser(Parser):
         if "up_info" in info_result:
             BangumiInfo.up_name = info_result["up_info"]["uname"]
             BangumiInfo.up_mid = info_result["up_info"]["mid"]
+
+        BangumiInfo.info_json = info_result.copy()
 
         self.parse_episodes()
 
@@ -220,8 +218,6 @@ class BangumiParser(Parser):
             raise GlobalException(message = message, code = status_code)
 
     def parse_episodes(self):
-        EpisodeInfo.clear_episode_data()
-
         if self.url_type == "season_id":
             ep_id = BangumiInfo.epid
         else:

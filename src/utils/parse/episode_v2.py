@@ -1,7 +1,7 @@
 from utils.config import Config
 
-from utils.common.formatter import FormatUtils
-from utils.common.enums import ParseType, EpisodeDisplayType
+from utils.common.enums import EpisodeDisplayType
+from utils.common.map import cheese_status_map
 
 class EpisodeInfo:
     data: dict = {}
@@ -73,6 +73,8 @@ class Episode:
 
         @classmethod
         def parse_episodes(cls, info_json: dict, target_cid: int):
+            EpisodeInfo.clear_episode_data()
+
             match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     cls.pages_parser(info_json, target_cid)
@@ -141,18 +143,8 @@ class Episode:
                         cls.target_chapter_ttile = section_title
 
             if Config.Misc.episode_display_mode == EpisodeDisplayType.In_Section.value:
-                cls.display_episodes_in_section(cls.target_chapter_ttile)
+                Episode.Utils.display_episodes_in_section(cls.target_chapter_ttile)
         
-        @classmethod
-        def display_episodes_in_section(cls, section_title: list):
-            for section in EpisodeInfo.data.get("entries"):
-                if section.get("pid") == section_title:
-                    EpisodeInfo.clear_episode_data()
-
-                    EpisodeInfo.add_item("视频", section)
-
-                    break
-
         @staticmethod
         def get_entry_info(episode: dict, is_upower_exclusive: bool = False):
             episode["title"] = episode["title"] if "title" in episode else episode["part"]
@@ -166,6 +158,8 @@ class Episode:
 
         @classmethod
         def parse_episodes(cls, info_json: dict, ep_id: int):
+            EpisodeInfo.clear_episode_data()
+
             cls.main_episodes_parser(info_json, ep_id)
 
             if "section" in info_json:
@@ -173,10 +167,10 @@ class Episode:
 
             match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
-                    cls.display_episodes_in_single(cls.target_section_title, ep_id)
+                    Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
                 case EpisodeDisplayType.In_Section:
-                    cls.display_episodes_in_section(cls.target_section_title)
+                    Episode.Utils.display_episodes_in_section(cls.target_section_title)
         
         @classmethod
         def episodes_parser(cls, episodes: dict, pid: str, ep_id: int, info_json: dict):
@@ -205,28 +199,6 @@ class Episode:
 
                 cls.episodes_parser(section["episodes"], section_title, ep_id, info_json)
 
-        @classmethod
-        def display_episodes_in_section(cls, section_title: str):
-            for section in EpisodeInfo.data.get("entries"):
-                if section.get("pid") == section_title:
-                    EpisodeInfo.clear_episode_data()
-
-                    EpisodeInfo.add_item("视频", section)
-
-                    break
-        
-        @classmethod
-        def display_episodes_in_single(cls, section_title: str, ep_id: int):
-            for section in EpisodeInfo.data.get("entries"):
-                if section.get("pid") == section_title:
-                    for episode in section.get("entries"):
-                        if episode.get("ep_id") == ep_id:
-                            EpisodeInfo.clear_episode_data()
-
-                            EpisodeInfo.add_item("视频", episode)
-
-                            break
-
         @staticmethod
         def get_entry_info(episode: dict):
             episode["title"] = episode["show_title"]
@@ -237,4 +209,74 @@ class Episode:
             return EpisodeInfo.get_entry_info(episode)
 
     class Cheese:
-        pass
+        target_section_title: str = ""
+
+        @classmethod
+        def parse_episodes(cls, info_json: dict, ep_id: int):
+            EpisodeInfo.clear_episode_data()
+    
+            cls.sections_parser(info_json, ep_id)
+
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
+                case EpisodeDisplayType.Single:
+                    Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
+
+                case EpisodeDisplayType.In_Section:
+                    Episode.Utils.display_episodes_in_section(cls.target_section_title)
+        
+        @classmethod
+        def sections_parser(cls, info_json: dict, ep_id: int):
+            for section in info_json["sections"]:
+                section_title = section["title"]
+
+                EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
+
+                for episode in section["episodes"]:
+                    episode["section_title"] = section_title
+                    episode["season_id"] = info_json["season_id"]
+
+                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
+
+                    if episode["id"] == ep_id:
+                        cls.target_section_title = section_title
+
+        @staticmethod
+        def get_entry_info(episode: dict):
+            def get_badge():
+                if "label" in episode:
+                    return episode["label"]
+                else:
+                    if episode["status"] != 1:
+                        return cheese_status_map.get(episode.get("status"))
+                    else:
+                        return ""
+
+            episode["pubtime"] = episode["release_date"]
+            episode["ep_id"] = episode["id"]
+            episode["badge"] = get_badge()
+            episode["cover_url"] = episode["cover"]
+
+            return EpisodeInfo.get_entry_info(episode)
+        
+    class Utils:
+        @staticmethod
+        def display_episodes_in_section(section_title: str):
+            for section in EpisodeInfo.data.get("entries"):
+                if section.get("pid") == section_title:
+                    EpisodeInfo.clear_episode_data()
+
+                    EpisodeInfo.add_item("视频", section)
+
+                    break
+        
+        @staticmethod
+        def display_episodes_in_single(section_title: str, ep_id: int):
+            for section in EpisodeInfo.data.get("entries"):
+                if section.get("pid") == section_title:
+                    for episode in section.get("entries"):
+                        if episode.get("ep_id") == ep_id:
+                            EpisodeInfo.clear_episode_data()
+
+                            EpisodeInfo.add_item("视频", episode)
+
+                            break

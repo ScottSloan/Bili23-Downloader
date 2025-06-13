@@ -5,21 +5,6 @@ from utils.config import Config
 class FormatUtils:
     @classmethod
     def format_episode_duration(cls, duration: int):
-        # match flag:
-        #     case ParseType.Video:
-        #         if "arc" in episode:
-        #             duration = episode["arc"]["duration"]
-        #         elif "duration" in episode:
-        #             duration = episode["duration"]
-        #         else:
-        #             return "--:--"
-
-        #     case ParseType.Bangumi:
-        #         if "duration" in episode:
-        #             duration = episode["duration"] / 1000
-        #         else:
-        #             return "--:--"
-
         return cls.format_duration(duration) if duration else "--:--"
 
     @staticmethod        
