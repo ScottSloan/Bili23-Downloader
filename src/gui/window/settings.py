@@ -991,7 +991,7 @@ class MiscTab(Tab):
                 self.episodes_all_sections_choice.SetValue(True)
 
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
-        self.auto_select_chk.SetValue(Config.Misc.auto_select)
+        self.auto_select_chk.SetValue(Config.Misc.auto_check_episode_item)
         self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
         self.check_update_chk.SetValue(Config.Misc.check_update_when_lauch)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
@@ -1006,7 +1006,7 @@ class MiscTab(Tab):
         else:
             Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
-        Config.Misc.auto_select = self.auto_select_chk.GetValue()
+        Config.Misc.auto_check_episode_item = self.auto_select_chk.GetValue()
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.check_update_when_lauch = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()

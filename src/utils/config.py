@@ -68,7 +68,7 @@ app_config_group = {
     "Misc": [
         "episode_display_mode",
         "show_episode_full_name",
-        "auto_select",
+        "auto_check_episode_item",
         "show_user_info",
         "check_update_when_lauch",
         "enable_debug"
@@ -168,7 +168,7 @@ class Config:
         episode_display_mode: int = 2
 
         show_episode_full_name: bool = True
-        auto_select: bool = False
+        auto_check_episode_item: bool = False
         enable_debug: bool = False
         check_update_when_lauch: bool = True
         show_user_info: bool = True

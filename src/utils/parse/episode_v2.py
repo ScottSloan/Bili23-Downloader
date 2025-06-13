@@ -1,7 +1,8 @@
 from utils.config import Config
 
-from utils.common.enums import EpisodeDisplayType
-from utils.common.map import cheese_status_map
+from utils.common.enums import EpisodeDisplayType, ParseType
+from utils.common.map import cheese_status_map, live_status_map
+from utils.common.data_type import TreeListItemInfo
 
 class EpisodeInfo:
     data: dict = {}
@@ -43,13 +44,14 @@ class EpisodeInfo:
             "duration": duration,
             "pid": title,
             "entries": [],
-            "type": "node"
+            "item_type": "node"
         }
 
     @staticmethod
     def get_entry_info(episode: dict):
         return {
             "number": 0,
+            "page": episode.get("page", 0),
             "title": episode.get("title", ""),
             "cid": episode.get("cid", 0),
             "aid": episode.get("aid", 0),
@@ -64,7 +66,9 @@ class EpisodeInfo:
             "pid": "",
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
-            "type": "item"
+            "room_id": episode.get("room_id", 0),
+            "item_type": "item",
+            "type": episode.get("type", 0)
         }
 
 class Episode:
@@ -116,6 +120,7 @@ class Episode:
                     pubtime = episode["arc"]["pubdate"]
 
                     if len(episode["pages"]) == 1:
+                        episode["page"] = episode["page"]["page"]
                         episode["cover_url"] = cover_url
                         episode["aid"] = aid
                         episode["bvid"] = bvid
@@ -147,9 +152,20 @@ class Episode:
         
         @staticmethod
         def get_entry_info(episode: dict, is_upower_exclusive: bool = False):
+            def get_duration():
+                if "duration" in episode:
+                    return episode["duration"]
+                
+                elif "arc" in episode:
+                    return episode["arc"]["duration"]
+                
+                else:
+                    return 0
+
             episode["title"] = episode["title"] if "title" in episode else episode["part"]
             episode["badge"] = "充电专属" if is_upower_exclusive else ""
-            episode["duration"] = episode["duration"] if "duration" in episode else episode["arc"]["duration"]
+            episode["duration"] = get_duration()
+            episode["type"] = ParseType.Video.value
 
             return EpisodeInfo.get_entry_info(episode)
 
@@ -205,6 +221,7 @@ class Episode:
             episode["pubtime"] = episode["pub_time"]
             episode["duration"] = episode["duration"] / 1000
             episode["cover_url"] = episode["cover"]
+            episode["type"] = ParseType.Bangumi.value
 
             return EpisodeInfo.get_entry_info(episode)
 
@@ -255,9 +272,27 @@ class Episode:
             episode["ep_id"] = episode["id"]
             episode["badge"] = get_badge()
             episode["cover_url"] = episode["cover"]
+            episode["type"] = ParseType.Cheese.value
 
             return EpisodeInfo.get_entry_info(episode)
-        
+    
+    class Live:
+        @classmethod
+        def parse_episodes(cls, info_json: dict):
+            EpisodeInfo.clear_episode_data(title = "直播")
+
+            EpisodeInfo.add_item("直播", cls.get_entry_info({}, info_json))
+
+        @staticmethod
+        def get_entry_info(episode: dict, info_json: dict):
+            episode["title"] = info_json["title"]
+            episode["badge"] = live_status_map.get(info_json["live_status"])
+            episode["cover"] = info_json["user_cover"]
+            episode["room_id"] = info_json["room_id"]
+            episode["type"] = ParseType.Live.value
+
+            return EpisodeInfo.get_entry_info(episode)
+
     class Utils:
         @staticmethod
         def display_episodes_in_section(section_title: str):
@@ -280,3 +315,22 @@ class Episode:
                             EpisodeInfo.add_item("视频", episode)
 
                             break
+        
+        @staticmethod
+        def get_share_url(item_info: TreeListItemInfo):
+            match ParseType(item_info.type):
+                case ParseType.Video:
+                    if item_info.page > 1:
+                        return f"https://www.bilibili.com/video/{item_info.bvid}?p={item_info.page}"
+                    
+                    else:
+                        return f"https://www.bilibili.com/video/{item_info.bvid}"
+
+                case ParseType.Bangumi:
+                    return f"https://www.bilibili.com/bangumi/play/ep{item_info.ep_id}"
+
+                case ParseType.Cheese:
+                    return f"https://www.bilibili.com/cheese/play/ep{item_info.ep_id}"
+
+                case ParseType.Live:
+                    return f"https://live.bilibili.com/{item_info.room_id}"

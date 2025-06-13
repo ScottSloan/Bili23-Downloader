@@ -268,28 +268,45 @@ class NotificationMessage:
         self.status: int = 0
         self.video_merge_type: int = 0
 
+class TreeListCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onUpdateCheckedItemCount(count: int):
+        pass
+
 class TreeListItemInfo:
     def __init__(self):
         self.number: int = 0
+        self.page: int = 0
+
         self.title: str = ""
+
         self.cid: int = 0
         self.aid: int = 0
         self.bvid: str = ""
         self.ep_id: int = 0
         self.season_id: int = 0
         self.media_id: int = 0
+
         self.pubtime: int = 0
         self.badge: str = ""
         self.duration: str = ""
         self.cover_url: str = ""
+
         self.pid: str = ""
+
         self.section_title: str = ""
         self.part_title: str = ""
-        self.type: str = ""
+
+        self.room_id: int = 0
+
+        self.item_type: str = ""
+        self.type: str = 0
 
     def to_dict(self):
         return {
             "number": self.number,
+            "page": self.page,
             "title": self.title,
             "cid": self.cid,
             "aid": self.aid,
@@ -304,11 +321,14 @@ class TreeListItemInfo:
             "pid": self.pid,
             "section_title": self.section_title,
             "part_title": self.part_title,
+            "room_id": self.room_id,
+            "item_type": self.item_type,
             "type": self.type
         }
 
     def load_from_dict(self, data: dict):
         self.number = data.get("number", 0)
+        self.page = data.get("page", 0)
         self.title = data.get("title", "")
         self.cid = data.get("cid", 0)
         self.aid = data.get("aid", 0)
@@ -323,7 +343,9 @@ class TreeListItemInfo:
         self.pid = data.get("pid", "")
         self.section_title = data.get("section_title", "")
         self.part_title = data.get("part_title", "")
-        self.type = data.get("type", "node")
+        self.room_id = data.get("room_id", 0)
+        self.item_type = data.get("item_type", "node")
+        self.type = data.get("type", 0)
 
 class Command:
     def __init__(self):

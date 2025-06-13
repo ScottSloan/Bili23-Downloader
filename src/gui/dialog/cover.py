@@ -6,8 +6,8 @@ from gui.component.frame import Frame
 from gui.component.panel import Panel
 
 class CoverViewerDialog(Frame):
-    def __init__(self, parent, _cover_raw_contents: bytes):
-        self._cover_raw_contents = _cover_raw_contents
+    def __init__(self, parent, cover_raw_contents: bytes):
+        self.cover_raw_contents = cover_raw_contents
 
         Frame.__init__(self, parent, "视频封面")
 
@@ -88,7 +88,7 @@ class CoverViewerDialog(Frame):
             save_path = dlg.GetPath()
 
             with open(save_path, "wb") as f:
-                f.write(self._cover_raw_contents)
+                f.write(self.cover_raw_contents)
 
     def onExitEVT(self, event):
         self.Destroy()
@@ -112,7 +112,7 @@ class CoverViewerDialog(Frame):
         self.CenterOnScreen()
 
     def show_cover(self, width: int):
-        self._temp_image = wx.Image(io.BytesIO(self._cover_raw_contents))
+        self._temp_image = wx.Image(io.BytesIO(self.cover_raw_contents))
 
         _width, _height = self._temp_image.GetSize()
 

@@ -56,3 +56,7 @@ class Parser:
 
         if status_code != StatusCode.Success.value:
             raise GlobalException(message = data["message"], code = status_code)
+        
+    def dumps_json(self, file_name: str, json_file: dict):
+        with open(file_name, "w", encoding = "utf-8") as f:
+            f.write(json.dumps(json_file, ensure_ascii = False))

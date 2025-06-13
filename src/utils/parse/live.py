@@ -5,10 +5,9 @@ from utils.common.map import live_status_map
 from utils.common.enums import StatusCode, LiveQualityID
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.file_name_v2 import FileNameFormatter
 
-from utils.parse.episode import EpisodeInfo, EpisodeUtils
 from utils.parse.parser import Parser
+from utils.parse.episode_v2 import Episode
 
 class LiveInfo:
     title: str = ""
@@ -23,6 +22,8 @@ class LiveInfo:
 
     live_quality_id_list: list = []
     live_quality_desc_list: list = []
+
+    info_json: dict = {}
 
     @classmethod
     def clear_live_info(cls):
@@ -56,15 +57,15 @@ class LiveParser(Parser):
 
         info = resp["data"]
 
-        LiveInfo.title = FileNameFormatter.get_legal_file_name(info["title"])
+        LiveInfo.title = info["title"]
         LiveInfo.room_id = info["room_id"]
 
         LiveInfo.status = info["live_status"]
         LiveInfo.status_str = live_status_map[LiveInfo.status]
 
-        EpisodeInfo.clear_episode_data("直播")
+        LiveInfo.info_json = info.copy()
 
-        EpisodeUtils.live_episode_parser(LiveInfo.title, LiveInfo.status_str)
+        self.parse_episodes()
 
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
@@ -107,3 +108,6 @@ class LiveParser(Parser):
 
         except Exception as e:
             raise GlobalException(callback = self.callback.onError) from e
+        
+    def parse_episodes(self):
+        Episode.Live.parse_episodes(LiveInfo.info_json)
