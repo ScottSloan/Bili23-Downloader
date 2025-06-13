@@ -9,7 +9,7 @@ from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
 
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.episode import EpisodeInfo, EpisodeUtils
 from utils.parse.parser import Parser
 
 class BangumiInfo:
@@ -227,7 +227,7 @@ class BangumiParser(Parser):
         else:
             ep_id = int(self.url_type_value)
 
-        EpisodeManager.bangumi_episodes_parser(BangumiInfo.info_json, ep_id)
+        EpisodeUtils.bangumi_episodes_parser(BangumiInfo.info_json, ep_id)
 
     def clear_bangumi_info(self):
         # 清除番组信息

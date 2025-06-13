@@ -10,7 +10,7 @@ from utils.common.data_type import DownloadTaskInfo, TreeListItemInfo
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo
+from utils.parse.episode_v2 import EpisodeInfo
 from utils.parse.cheese import CheeseInfo
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
@@ -80,11 +80,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     
                     self.SetItemData(item, get_item_data("item", data["title"], data["cid"]))
 
-                    _column_width = self.WidthFor(data["title"])
-
-                    if _column_width > self.title_longest_width:
-                        self.title_longest_width = _column_width
-
                 if Config.Misc.auto_select or self.item_count == 1:
                     self.CheckItem(item, wx.CHK_CHECKED)
 
@@ -120,15 +115,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.init_list()
 
         self.count = 0
-        self.title_longest_width = 0
         self.item_count = 0
 
         get_item_count()
 
         traverse_item(EpisodeInfo.data, self.GetRootItem())
-
-        if self.title_longest_width > self.FromDIP(375):
-            self.SetColumnWidth(1, self.title_longest_width + 15)
 
     def is_current_item_checked(self):
         match self.GetCheckedState(self.GetSelection()):

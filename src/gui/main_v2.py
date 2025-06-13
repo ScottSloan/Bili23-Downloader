@@ -23,7 +23,7 @@ from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
-from utils.parse.episode import EpisodeManager, EpisodeInfo
+from utils.parse.episode_v2 import Episode, EpisodeInfo
 
 from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
@@ -48,7 +48,7 @@ from gui.dialog.graph import GraphWindow
 from gui.component.frame import Frame
 from gui.component.panel import Panel
 from gui.component.search_ctrl import SearchCtrl
-from gui.component.tree_list import TreeListCtrl
+from gui.component.tree_list_v2 import TreeListCtrl
 from gui.component.button import Button
 from gui.component.bitmap_button import BitmapButton
 from gui.component.info_bar import InfoBar
@@ -440,7 +440,7 @@ class MainWindow(Frame):
                 
         self.set_parse_status(ParseStatus.Parsing)
 
-        self.episode_list.init_list()
+        self.episode_list.init_episode_list()
         
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
@@ -629,7 +629,7 @@ class MainWindow(Frame):
             case self.ID_EPISODE_LIST_COPY_URL_MENU:
                 cid = self.episode_list.GetItemData(self.episode_list.GetSelection()).cid
 
-                url = EpisodeManager.get_episode_url(cid, self.current_parse_type)
+                url = Episode.get_episode_url(cid, self.current_parse_type)
 
                 wx.TheClipboard.SetData(wx.TextDataObject(url))
 
@@ -824,7 +824,7 @@ class MainWindow(Frame):
             self.CallAfter(worker)
     
     def show_episode_list(self):
-        self.episode_list.set_list()
+        self.episode_list.show_episode_list()
         self.update_checked_count()
     
     def update_checked_count(self, count: int = 0):

@@ -203,12 +203,11 @@ class DownloaderInfo:
         self.file_name = data.get("file_name")
 
 class RangeDownloadInfo:
-    def __init__(self):
-        self.index: str = ""
-        self.type: str = ""
-        self.url: str = ""
-        self.file_path: str = ""
-        self.range: List[int] = []
+    index: str = ""
+    type: str = ""
+    url: str = ""
+    file_path: str = ""
+    range: List[int] = []
 
 class DownloaderCallback(ABC):
     @staticmethod
@@ -271,10 +270,51 @@ class NotificationMessage:
 
 class TreeListItemInfo:
     def __init__(self):
-        self.list_number: int = 0
-        self.type: str = ""
+        self.number: int = 0
         self.title: str = ""
         self.cid: int = 0
+        self.aid: int = 0
+        self.bvid: str = ""
+        self.pubtime: int = 0
+        self.badge: str = ""
+        self.duration: str = ""
+        self.cover_url: str = ""
+        self.pid: str = ""
+        self.chapter_title: str = ""
+        self.part_title: str = ""
+        self.type: str = ""
+
+    def to_dict(self):
+        return {
+            "number": self.number,
+            "title": self.title,
+            "cid": self.cid,
+            "aid": self.aid,
+            "bvid": self.bvid,
+            "pubtime": self.pubtime,
+            "badge": self.badge,
+            "duration": self.duration,
+            "cover_url": self.cover_url,
+            "pid": self.pid,
+            "chapter_title": self.chapter_title,
+            "part_title": self.part_title,
+            "type": self.type
+        }
+
+    def load_from_dict(self, data: dict):
+        self.number = data.get("number", 0)
+        self.title = data.get("title", "")
+        self.cid = data.get("cid", 0)
+        self.aid = data.get("aid", 0)
+        self.bvid = data.get("bvid", "")
+        self.pubtime = data.get("pubtime", 0)
+        self.badge = data.get("badge", "")
+        self.duration = data.get("duration", "")
+        self.cover_url = data.get("cover_url", "")
+        self.pid = data.get("pid", "")
+        self.chapter_title = data.get("chapter_title", "")
+        self.part_title = data.get("part_title", "")
+        self.type = data.get("type", "node")
 
 class Command:
     def __init__(self):

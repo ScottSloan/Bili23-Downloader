@@ -217,7 +217,7 @@ class BasicTab(Tab):
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
-        Config.Basic.cover_file_type = self.download_cover_file_chk.GetValue()
+        Config.Basic.cover_file_type = self.cover_file_type_choice.GetSelection()
 
         Config.Basic.show_exit_dialog = False
 

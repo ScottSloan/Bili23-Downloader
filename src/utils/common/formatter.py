@@ -4,23 +4,23 @@ from utils.config import Config
 
 class FormatUtils:
     @classmethod
-    def format_episode_duration(cls, episode: dict, flag: int):
-        match flag:
-            case ParseType.Video:
-                if "arc" in episode:
-                    duration = episode["arc"]["duration"]
-                elif "duration" in episode:
-                    duration = episode["duration"]
-                else:
-                    return "--:--"
+    def format_episode_duration(cls, duration: int):
+        # match flag:
+        #     case ParseType.Video:
+        #         if "arc" in episode:
+        #             duration = episode["arc"]["duration"]
+        #         elif "duration" in episode:
+        #             duration = episode["duration"]
+        #         else:
+        #             return "--:--"
 
-            case ParseType.Bangumi:
-                if "duration" in episode:
-                    duration = episode["duration"] / 1000
-                else:
-                    return "--:--"
+        #     case ParseType.Bangumi:
+        #         if "duration" in episode:
+        #             duration = episode["duration"] / 1000
+        #         else:
+        #             return "--:--"
 
-        return cls.format_duration(duration)
+        return cls.format_duration(duration) if duration else "--:--"
 
     @staticmethod        
     def format_duration(duration: int, show_hour: bool = False):

@@ -7,7 +7,7 @@ from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.file_name_v2 import FileNameFormatter
 
-from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.episode import EpisodeInfo, EpisodeUtils
 from utils.parse.parser import Parser
 
 class LiveInfo:
@@ -64,7 +64,7 @@ class LiveParser(Parser):
 
         EpisodeInfo.clear_episode_data("直播")
 
-        EpisodeManager.live_episode_parser(LiveInfo.title, LiveInfo.status_str)
+        EpisodeUtils.live_episode_parser(LiveInfo.title, LiveInfo.status_str)
 
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"

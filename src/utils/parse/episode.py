@@ -31,7 +31,8 @@ class EpisodeInfo:
             for entry in data:
                 cls.add_item(entry, parent, entry_data)
 
-class EpisodeManager:
+class EpisodeUtils:
+    @staticmethod
     def video_ugc_season_parser(info_json: dict, cid: int):
         def episode_display_in_section():
             if Config.Misc.episode_display_mode == EpisodeDisplayType.In_Section.value:
@@ -104,6 +105,7 @@ class EpisodeManager:
                 
         episode_display_in_section()
     
+    @staticmethod
     def bangumi_episodes_parser(info_json: dict, ep_id: int):
         def bangumi_main_episodes_parser(info_json: dict):
             EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
@@ -166,6 +168,7 @@ class EpisodeManager:
         if bangumi_main_episodes_parser(info_json):
             bangumi_sections_parser(info_json)
 
+    @staticmethod
     def live_episode_parser(title: str, status: str):
         EpisodeInfo.add_item(EpisodeInfo.data, "直播", {
             "title": title,
@@ -174,6 +177,7 @@ class EpisodeManager:
             "cid": 0
         })
 
+    @staticmethod
     def cheese_episode_parser(info_json: dict, ep_id: int):
         def _get_entry(episode: dict):
             return {
@@ -201,6 +205,7 @@ class EpisodeManager:
 
             EpisodeInfo.add_item(EpisodeInfo.data, "视频", _get_entry(episode))
 
+    @staticmethod
     def get_episode_url(cid: int, parse_type: ParseType):
         episode_info = EpisodeInfo.cid_dict.get(cid)
 

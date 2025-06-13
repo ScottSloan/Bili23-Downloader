@@ -4,7 +4,7 @@ from utils.tool_v2 import UniversalTool
 
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.episode_v2 import Episode, EpisodeInfo
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 
 from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
@@ -133,7 +133,6 @@ class VideoParser(Parser):
         VideoInfo.up_mid = info["owner"]["mid"]
 
         VideoInfo.is_interactive = "stein_guide_cid" in info
-        VideoInfo.is_upower_exclusive = info["is_upower_exclusive"]
 
         # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
         if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
@@ -227,68 +226,26 @@ class VideoParser(Parser):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 
     def parse_episodes(self):
-        def pages_parser():
-            def get_badge():
-                if VideoInfo.is_upower_exclusive:
-                    return "充电专属"
-                else:
-                    return ""
-
-            if len(VideoInfo.pages_list) == 1:
-                VideoInfo.type = VideoType.Single
-            else:
-                VideoInfo.type = VideoType.Part
-
-            for page in VideoInfo.pages_list:
-                if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
-                    if page["cid"] != VideoInfo.cid:
-                        continue
-
-                EpisodeInfo.cid_dict[page["cid"]] = page
-
-                EpisodeInfo.add_item(EpisodeInfo.data, "视频", {
-                    "title": page["part"] if VideoInfo.type == VideoType.Part else VideoInfo.title,
-                    "cid": page["cid"],
-                    "badge": get_badge(),
-                    "duration": FormatUtils.format_episode_duration(page, ParseType.Video)
-                })
-
-        def interact_parser():
+        def interact_video_parser():
             def get_page():
                 return {
-                    "ctime": None,
                     "part": node.title,
                     "cid": node.cid
                 }
-            
+
+            VideoInfo.info_json["pages"].clear()
+
             self.interact_video_parser.parse_interactive_video_episodes()
 
-            VideoInfo.pages_list.clear()
-
             for node in InteractVideoInfo.node_list:
-                VideoInfo.pages_list.append(get_page())
-
-                EpisodeInfo.cid_dict[node.cid] = get_page()
-
-            pages_parser()
+                VideoInfo.info_json["pages"].append(get_page())
 
         EpisodeInfo.clear_episode_data()
 
-        match EpisodeDisplayType(Config.Misc.episode_display_mode):
-            case EpisodeDisplayType.Single:
-                pages_parser()
-
-            case EpisodeDisplayType.In_Section | EpisodeDisplayType.All:
-                if VideoInfo.is_interactive:
-                    interact_parser()
-
-                else:
-                    if "ugc_season" in VideoInfo.info_json:
-                        VideoInfo.type = VideoType.Collection
-
-                        EpisodeManager.video_ugc_season_parser(VideoInfo.info_json, VideoInfo.cid)
-                    else:
-                        pages_parser()
+        if VideoInfo.is_interactive:
+            interact_video_parser()
+            
+        Episode.Video.parse_episodes(VideoInfo.info_json, VideoInfo.cid)
 
     def clear_video_info(self):
         # 清除视频信息

@@ -6,7 +6,7 @@ from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 
-from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.episode import EpisodeInfo, EpisodeUtils
 from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 
@@ -146,7 +146,7 @@ class CheeseParser(Parser):
         else:
             ep_id = int(self.url_type_value)
 
-        EpisodeManager.cheese_episode_parser(CheeseInfo.info_json, ep_id)
+        EpisodeUtils.cheese_episode_parser(CheeseInfo.info_json, ep_id)
 
     def clear_cheese_info(self):
         CheeseInfo.clear_cheese_info()

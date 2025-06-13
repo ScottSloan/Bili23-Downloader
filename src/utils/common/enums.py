@@ -39,6 +39,12 @@ class SubtitleType(Enum):
     JSON = 3                      # JSON 格式
     ASS = 4                       # ASS 格式
 
+class CoverType(Enum):
+    JPG = 0                       # jpg 格式
+    PNG = 1                       # png 格式
+    WEBP = 2                      # Webp 格式
+    AVIF = 3                      # avif 格式
+
 class StreamType(Enum):
     Dash = 0                      # dash 流
     Flv = 1                       # flv 流
