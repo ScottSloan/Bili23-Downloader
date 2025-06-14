@@ -1,4 +1,4 @@
-from utils.common.enums import ParseType
+import datetime
 
 from utils.config import Config
 
@@ -86,3 +86,21 @@ class FormatUtils:
         
         else:
             return "{:.1f} kbps".format(bandwidth / 1024)
+
+    @staticmethod
+    def format_srt_line(start_time: float, end_time: float):
+        def get_timestamp(time: float):
+            ms = int((time - int(time)) * 1000)
+
+            t = str(datetime.timedelta(seconds = int(time))).split('.')[0]
+
+            return f"{t},{ms:03d}"
+
+        return f"{get_timestamp(start_time)} --> {get_timestamp(end_time)}"
+    
+    @staticmethod
+    def format_lrc_line(start_time: float):
+        min = int(start_time // 60)
+        sec = start_time % 60
+
+        return f"{min:02}:{sec:04.1f}"

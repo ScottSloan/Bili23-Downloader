@@ -19,7 +19,7 @@ from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
 
 from utils.parse.download import DownloadParser
-from utils.parse.extra import ExtraParser
+from utils.parse.extra_v2 import ExtraParser
 from utils.config import Config
 from utils.tool_v2 import DownloadFileTool
 
@@ -434,10 +434,7 @@ class DownloadTaskItemPanel(Panel):
             def onError(*args, **kwargs):
                 self.onDownloadError()
     
-        extra_parser = ExtraParser()
-        extra_parser.set_task_info(self.task_info)
-
-        extra_parser.download_extra(callback)
+        ExtraParser.Utils.download(self.task_info, callback)
 
     def open_file_location(self):
         path = os.path.join(FileNameFormatter.get_download_path(self.task_info), self.full_file_name)
