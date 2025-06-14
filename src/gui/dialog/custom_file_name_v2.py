@@ -164,6 +164,9 @@ class AddNewTemplateDialog(Dialog):
             task_info.season_id = 43164
             task_info.media_id = 28339735
             task_info.series_title = "《孤独摇滚》"
+            task_info.section_title = "正片"
+            task_info.part_title = "分节"
+            task_info.list_title = "合集"
             task_info.video_quality_id = 120
             task_info.audio_quality_id = 30251
             task_info.video_codec_id = 12

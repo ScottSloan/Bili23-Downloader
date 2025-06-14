@@ -167,7 +167,7 @@ class Config:
     class Misc:
         episode_display_mode: int = 2
 
-        show_episode_full_name: bool = True
+        show_episode_full_name: bool = False
         auto_check_episode_item: bool = False
         enable_debug: bool = False
         check_update_when_lauch: bool = True

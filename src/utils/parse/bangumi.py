@@ -121,10 +121,13 @@ class BangumiParser(Parser):
         BangumiInfo.title = info_result["title"]
         BangumiInfo.series_title = info_result["series"]["series_title"]
 
-        BangumiInfo.url = info_result["episodes"][0]["link"]
-        BangumiInfo.bvid = info_result["episodes"][0]["bvid"]
-        BangumiInfo.cid = info_result["episodes"][0]["cid"]
-        BangumiInfo.epid = info_result["episodes"][0]["id"]
+        first_episode = info_result["episodes"][0] if info_result.get("episodes") else info_result["section"][0]["episodes"][0]
+
+        BangumiInfo.url = first_episode["link"]
+        BangumiInfo.bvid = first_episode["bvid"]
+        BangumiInfo.cid = first_episode["cid"]
+        BangumiInfo.epid = first_episode["id"]
+
         BangumiInfo.mid = info_result["media_id"]
 
         BangumiInfo.type_id = info_result["type"]

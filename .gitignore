@@ -14,7 +14,7 @@ VLC
 
 # 配置文件
 video*.json
-bangumi.json
+bangumi*.json
 live.json
 download*.json
 ffmpeg.exe

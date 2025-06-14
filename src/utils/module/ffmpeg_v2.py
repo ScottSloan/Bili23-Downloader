@@ -255,7 +255,7 @@ class FFmpeg:
         
             video_stream_info = cls.re_findall(r"Video: (.*?), (.*?), (\d*x\d*), (\d* kb\/s)", output, 4)
 
-            fps_info = cls.re_findall(r"(\d+(?:.\d+)? fps)", output, 1)
+            fps_info = cls.re_findall(r"((\d+(?:.\d+)? fps))", output, 1)
 
             audio_stream_info = cls.re_findall(r"Audio: (.*?), (.*?), (.*?), (.*?), (\d* kb\/s)", output, 5)
 
@@ -267,7 +267,7 @@ class FFmpeg:
                 "vformat": video_stream_info[1],
                 "resolution": video_stream_info[2],
                 "vbitrate": video_stream_info[3],
-                "fps": fps_info,
+                "fps": fps_info[0],
                 "acodec": audio_stream_info[0],
                 "samplerate": audio_stream_info[1],
                 "channel": audio_stream_info[2],

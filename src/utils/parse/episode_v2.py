@@ -66,6 +66,7 @@ class EpisodeInfo:
             "pid": "",
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
+            "list_title": episode.get("list_title", ""),
             "room_id": episode.get("room_id", 0),
             "item_type": "item",
             "type": episode.get("type", 0)
@@ -108,6 +109,7 @@ class Episode:
             is_upower_exclusive = info_json["is_upower_exclusive"]
 
             for section in info_json["ugc_season"]["sections"]:
+                list_title = info_json["ugc_season"]["title"]
                 section_title = section["title"]
 
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
@@ -126,6 +128,7 @@ class Episode:
                         episode["bvid"] = bvid
                         episode["pubtime"] = pubtime
                         episode["section_title"] = section_title
+                        episode["list_title"] = list_title
 
                         EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), is_upower_exclusive))
 
@@ -141,6 +144,7 @@ class Episode:
                             page["pubtime"] = pubtime
                             page["section_title"] = section_title
                             page["part_title"] = part_title
+                            page["list_title"] = list_title
 
                             EpisodeInfo.add_item(part_title, cls.get_entry_info(page.copy(), is_upower_exclusive))
 
@@ -202,9 +206,10 @@ class Episode:
 
         @classmethod
         def main_episodes_parser(cls, info_json: dict, ep_id: int):
-            EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info("正片", label = "章节"))
+            if info_json.get("episodes"):
+                EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info("正片", label = "章节"))
 
-            cls.episodes_parser(info_json["episodes"], "正片", ep_id, info_json)
+                cls.episodes_parser(info_json["episodes"], "正片", ep_id, info_json)
 
         @classmethod
         def section_parser(cls, info_json: dict, ep_id: int):
@@ -217,7 +222,13 @@ class Episode:
 
         @staticmethod
         def get_entry_info(episode: dict):
-            episode["title"] = episode["show_title"]
+            def get_title():
+                if Config.Misc.show_episode_full_name:
+                    return episode.get("share_copy")
+                else:
+                    return episode.get("show_title")
+
+            episode["title"] = get_title()
             episode["pubtime"] = episode["pub_time"]
             episode["duration"] = episode["duration"] / 1000
             episode["cover_url"] = episode["cover"]

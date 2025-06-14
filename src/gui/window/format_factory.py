@@ -231,7 +231,7 @@ class ContainerPage(Panel):
         def Bind_EVT(self):
             pass
         
-        def init_utils(self):
+        def get_file_info(self):
             class callback(Callback):
                 @staticmethod
                 def onSuccess(*args, **kwargs):
@@ -262,7 +262,7 @@ class ContainerPage(Panel):
             FFmpeg.Utils.info(self.input_path, callback)
         
         def onChangeInputFile(self):
-            self.init_utils()
+            self.get_file_info()
         
     class ConvertionPage(Page):
         def __init__(self, parent):
@@ -584,8 +584,6 @@ class FormatFactoryWindow(Frame):
         self.change_page(2)
 
     def change_input_path(self, path: str):
-        self.input_path = path
-
         self.container_page.notebook.GetCurrentPage().onChangeInputFile()
 
     def change_page(self, page: int):

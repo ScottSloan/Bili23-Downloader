@@ -37,6 +37,8 @@ class DownloadTaskInfo:
         self.section_title: str = ""
         # 分节标题
         self.part_title: str = ""
+        # 合集标题
+        self.list_title: str = ""
 
         # 视频时长
         self.duration: int = 0
@@ -108,6 +110,7 @@ class DownloadTaskInfo:
             "series_title": self.series_title,
             "section_title": self.section_title,
             "part_title": self.part_title,
+            "list_title": self.list_title,
 
             "duration": self.duration,
 
@@ -161,6 +164,7 @@ class DownloadTaskInfo:
         self.series_title = data.get("series_title", self.series_title)
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
+        self.list_title = data.get("list_title", self.list_title)
 
         self.duration = data.get("duration", self.duration)
 
@@ -305,6 +309,7 @@ class TreeListItemInfo:
 
         self.section_title: str = ""
         self.part_title: str = ""
+        self.list_title: str = ""
 
         self.room_id: int = 0
 
@@ -329,6 +334,7 @@ class TreeListItemInfo:
             "pid": self.pid,
             "section_title": self.section_title,
             "part_title": self.part_title,
+            "list_title": self.list_title,
             "room_id": self.room_id,
             "item_type": self.item_type,
             "type": self.type
@@ -351,6 +357,7 @@ class TreeListItemInfo:
         self.pid = data.get("pid", self.pid)
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
+        self.list_title = data.get("list_title", self.list_title)
         self.room_id = data.get("room_id", self.room_id)
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)

@@ -240,8 +240,26 @@ field_map = {
     "title": {
         "name": "{title}",
         "description": "视频标题",
-        "example": "《孤独摇滚》第1话 孤独的转机",
+        "example": "第1话 孤独的转机",
         "scope": [0, 1, 2, 3, 4]
+    },
+    "section_title": {
+        "name": "{section_title}",
+        "description": "章节标题",
+        "example": "正片",
+        "scope": [0, 1, 2, 3, 4]
+    },
+    "part_title": {
+        "name": "{part_title}",
+        "description": "分节标题",
+        "example": "分节（请参考说明文档）",
+        "scope": [0, 1, 4]
+    },
+    "list_title": {
+        "name": "{list_title}",
+        "description": "合集标题",
+        "example": "合集（请参考说明文档）",
+        "scope": [0, 1, 4],
     },
     "aid": {
         "name": "{aid}",
