@@ -170,9 +170,9 @@ class AddNewTemplateDialog(Dialog):
             task_info.duration = 256
             task_info.pubtime = 1667061000
             task_info.area = "中国大陆"
-            task_info.tname_info = {
-                "tname": "综合",
-                "subtname": "动漫剪辑"
+            task_info.zone_info = {
+                "zone": "综合",
+                "subzone": "动漫剪辑"
             }
             task_info.up_info = {
                 "up_name": "哔哩哔哩番剧",

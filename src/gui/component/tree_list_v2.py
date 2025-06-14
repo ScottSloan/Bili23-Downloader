@@ -1,11 +1,11 @@
-import json
 import wx.dataview
 
 from utils.config import Config
 
-from utils.common.enums import Platform
+from utils.common.enums import Platform, ParseType
 from utils.common.data_type import TreeListItemInfo, TreeListCallback
 from utils.common.formatter import FormatUtils
+from utils.common.download_info import DownloadInfo
 
 from utils.parse.episode_v2 import EpisodeInfo
 
@@ -86,6 +86,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             item_data = TreeListItemInfo()
             item_data.load_from_dict(data)
+
+            item_data.number = self.count
 
             self.SetItemData(item, item_data)
 
@@ -181,6 +183,21 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
     def CheckAllItems(self):
         self.CheckItemRecursively(self.GetRootItem(), wx.CHK_CHECKED)
+
+    def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int):
+        self.download_task_info_list = []
+
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    item_data = self.GetItemData(item)
+
+                    if item_data.cid:
+                        self.download_task_info_list.append(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id))
 
     def GetCurrentItemType(self):
         item = self.GetSelection()

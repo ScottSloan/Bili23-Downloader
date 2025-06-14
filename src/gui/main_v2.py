@@ -470,7 +470,7 @@ class MainWindow(Frame):
                     if self.onShowDownloadOptionDlgEVT(event) != wx.ID_OK:
                         return
                 
-                self.episode_list.get_all_checked_item()
+                self.episode_list.GetAllCheckedItem(self.current_parse_type, self.video_quality_id)
 
                 duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
 

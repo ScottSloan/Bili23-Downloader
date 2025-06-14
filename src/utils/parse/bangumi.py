@@ -21,6 +21,8 @@ class BangumiInfo:
     mid: int = 0
 
     title: str = ""
+    series_title: str = ""
+
     cover: str = ""
     views: str = ""
     danmakus: str = ""
@@ -52,6 +54,7 @@ class BangumiInfo:
         cls.url = ""
         cls.bvid = ""
         cls.title = ""
+        cls.series_title = ""
         cls.cover = ""
         cls.type_name = ""
         cls.views = 0
@@ -116,6 +119,8 @@ class BangumiParser(Parser):
         BangumiInfo.payment = True if "payment" in info_result else False
         
         BangumiInfo.title = info_result["title"]
+        BangumiInfo.series_title = info_result["series"]["series_title"]
+
         BangumiInfo.url = info_result["episodes"][0]["link"]
         BangumiInfo.bvid = info_result["episodes"][0]["bvid"]
         BangumiInfo.cid = info_result["episodes"][0]["cid"]

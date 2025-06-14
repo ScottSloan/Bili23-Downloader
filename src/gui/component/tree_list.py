@@ -85,7 +85,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         download_info.pubtime = base_info.get("pubtime")
         download_info.area = base_info.get("area")
-        download_info.tname_info = base_info.get("tname_info", {})
+        download_info.zone_info = base_info.get("tname_info", {})
         download_info.up_info = base_info.get("up_info", {})
 
         return download_info
@@ -151,8 +151,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             "title": title,
             "download_type": ParseType.Video.value,
             "tname_info": {
-                "tname": VideoInfo.tname,
-                "subtname": VideoInfo.subtname
+                "tname": VideoInfo.zone,
+                "subtname": VideoInfo.subzone
             },
             "up_info": {
                 "up_name": VideoInfo.up_name,

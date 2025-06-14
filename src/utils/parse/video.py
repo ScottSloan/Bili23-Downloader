@@ -36,8 +36,8 @@ class VideoInfo:
     video_quality_desc_list: list = []
 
     pubtime: int = 0
-    tname: str = ""
-    subtname: str = ""
+    zone: str = ""
+    subzone: str = ""
     up_name: str = ""
     up_mid: int = 0
 
@@ -59,8 +59,8 @@ class VideoInfo:
         cls.type = 0
         cls.stream_type = 0
         cls.pubtime = 0
-        cls.tname = ""
-        cls.subtname = ""
+        cls.zone = ""
+        cls.subzone = ""
         cls.up_name = ""
         cls.up_mid = 0
 
@@ -125,8 +125,8 @@ class VideoParser(Parser):
         VideoInfo.danmakus = FormatUtils.format_data_quantity(info["stat"]["danmaku"])
 
         VideoInfo.pubtime = info["pubdate"]
-        VideoInfo.tname = info["tname"]
-        VideoInfo.subtname = info["tname_v2"]
+        VideoInfo.zone = info["tname"]
+        VideoInfo.subzone = info["tname_v2"]
         VideoInfo.up_name = info["owner"]["name"]
         VideoInfo.up_mid = info["owner"]["mid"]
 

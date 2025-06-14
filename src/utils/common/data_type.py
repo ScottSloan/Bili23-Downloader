@@ -6,7 +6,7 @@ from utils.common.enums import DownloadStatus
 class DownloadTaskInfo:
     def __init__(self):
         # id，区分不同下载任务的唯一标识符
-        self.id: int = None
+        self.id: int = 0
         # 序号
         self.number: int = 0
         # 补零序号
@@ -17,25 +17,29 @@ class DownloadTaskInfo:
         self.timestamp: int = 0
         
         # Referer URL
-        self.referer_url: str = None
+        self.referer_url: str = ""
         # 视频封面链接
-        self.cover_url: str = None
+        self.cover_url: str = ""
 
         # 视频 bvid 和 cid 信息
-        self.bvid: str = None
-        self.cid: int = None
-        self.aid: int = None
-        self.ep_id: int = None
-        self.season_id: int = None
-        self.media_id: int = None
+        self.bvid: str = ""
+        self.cid: int = 0
+        self.aid: int = 0
+        self.ep_id: int = 0
+        self.season_id: int = 0
+        self.media_id: int = 0
 
         # 视频标题
-        self.title: str = None
+        self.title: str = ""
         # 剧集系列名称
-        self.series_title: str = None
+        self.series_title: str = ""
+        # 章节标题
+        self.section_title: str = ""
+        # 分节标题
+        self.part_title: str = ""
 
         # 视频时长
-        self.duration: int = None
+        self.duration: int = 0
 
         # 下载信息
         self.progress: int = 0
@@ -49,11 +53,11 @@ class DownloadTaskInfo:
         self.status: int = DownloadStatus.Waiting.value
 
         # 媒体信息，0 表示未定义
-        self.video_quality_id: int = None
-        self.audio_quality_id: int = None
-        self.video_codec_id: int = None
-        self.video_type: str = None
-        self.audio_type: str = None
+        self.video_quality_id: int = 0
+        self.audio_quality_id: int = 00
+        self.video_codec_id: int = 0
+        self.video_type: str = ""
+        self.audio_type: str = ""
         self.output_type: str = ""
 
         # 下载项目标识
@@ -62,23 +66,23 @@ class DownloadTaskInfo:
         # 下载类型
         self.download_type: int = 0
         # 视频流类型
-        self.stream_type: int = None
+        self.stream_type: int = 0
         # 下载选项
         self.download_option: List[int] = []
         # 是否调用 FFmpeg 合并
         self.ffmpeg_merge: bool = False
         # flv 视频个数，仅 flv 流时有效
-        self.flv_video_count: int = None
+        self.flv_video_count: int = 0
 
         # 附加内容选项
-        self.extra_option: dict = None
+        self.extra_option: dict = {}
 
         # 视频发布时间戳
         self.pubtime: int = 0
         # 地区
         self.area: str = ""
         # 分区信息
-        self.tname_info: dict = {}
+        self.zone_info: dict = {}
         # UP 主信息
         self.up_info: dict = {}
 
@@ -102,6 +106,8 @@ class DownloadTaskInfo:
 
             "title": self.title,
             "series_title": self.series_title,
+            "section_title": self.section_title,
+            "part_title": self.part_title,
 
             "duration": self.duration,
 
@@ -130,16 +136,16 @@ class DownloadTaskInfo:
 
             "pubtime": self.pubtime,
             "area": self.area,
-            "tname_info": self.tname_info,
+            "zone_info": self.zone_info,
             "up_info": self.up_info,
         }
 
     def load_from_dict(self, data: Dict):
-        self.id = data.get("id")
-        self.number = data.get("number")
-        self.zero_padding_number = data.get("zero_padding_number")
-        self.list_number = data.get("list_number")
-        self.timestamp = data.get("timestamp")
+        self.id = data.get("id", 0)
+        self.number = data.get("number", 0)
+        self.zero_padding_number = data.get("zero_padding_number", "")
+        self.list_number = data.get("list_number", 0)
+        self.timestamp = data.get("timestamp", 0)
 
         self.referer_url = data.get("referer_url")
         self.cover_url = data.get("cover_url")
@@ -149,25 +155,27 @@ class DownloadTaskInfo:
         self.aid = data.get("aid")
         self.ep_id = data.get("ep_id")
         self.season_id = data.get("season_id")
-        self.media_id = data.get("media_id")
+        self.media_id = data.get("media_id", 0)
 
-        self.title = data.get("title")
-        self.series_title = data.get("series")
+        self.title = data.get("title", "")
+        self.series_title = data.get("series_title", "")
+        self.section_title = data.get("section_title", "")
+        self.part_title = data.get("part_title", "")
 
-        self.duration = data.get("duration")
+        self.duration = data.get("duration", 0)
 
-        self.progress = data.get("progress")
-        self.total_file_size = data.get("total_file_size")
-        self.total_downloaded_size = data.get("total_downloaded_size")
-        self.current_downloaded_size = data.get("current_downloaded_size")
-        self.status = data.get("status")
+        self.progress = data.get("progress", self.progress)
+        self.total_file_size = data.get("total_file_size", self.total_file_size)
+        self.total_downloaded_size = data.get("total_downloaded_size", self.total_downloaded_size)
+        self.current_downloaded_size = data.get("current_downloaded_size", self.current_downloaded_size)
+        self.status = data.get("status", self.status)
 
-        self.video_quality_id = data.get("video_quality_id")
-        self.audio_quality_id = data.get("audio_quality_id")
+        self.video_quality_id = data.get("video_quality_id", self.video_quality_id)
+        self.audio_quality_id = data.get("audio_quality_id", self.audio_quality_id)
         self.video_codec_id = data.get("video_codec_id")
         self.video_type = data.get("video_type")
         self.audio_type = data.get("audio_type")
-        self.output_type = data.get("output_type")
+        self.output_type = data.get("output_type", "")
 
         self.download_items = data.get("download_items")
 
@@ -177,12 +185,12 @@ class DownloadTaskInfo:
         self.ffmpeg_merge = data.get("ffmpeg_merge")
         self.flv_video_count = data.get("flv_video_count")
 
-        self.extra_option = data.get("extra_option")
+        self.extra_option = data.get("extra_option", {})
         
         self.pubtime = data.get("pubtime")
         self.area = data.get("area")
-        self.tname_info = data.get("tname_info")
-        self.up_info = data.get("up_info")
+        self.zone_info = data.get("zone_info", {})
+        self.up_info = data.get("up_info", {})
 
 class DownloaderInfo:
     def __init__(self):
