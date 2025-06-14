@@ -26,8 +26,6 @@ class DownloadInfo:
 
         task_info.id = random.randint(10000000, 99999999)
 
-        print(task_info.to_dict())
-
         return task_info
     
     @classmethod
@@ -107,6 +105,7 @@ class DownloadInfo:
     
     @staticmethod
     def get_download_params_info(info: dict, video_quality_id):
+        info["download_option"] = Config.Download.stream_download_option
         info["video_quality_id"] = video_quality_id
         info["audio_quality_id"] = AudioInfo.audio_quality_id
         info["video_codec_id"] = Config.Download.video_codec_id

@@ -5,7 +5,7 @@ import wx.lib.masked as masked
 from utils.config import Config
 
 from utils.common.icon_v4 import Icon, IconID, IconSize
-from utils.common.data_type import Callback
+from utils.common.data_type import Callback, Process
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.directory import DirectoryUtils
 
@@ -177,11 +177,93 @@ class ContainerPage(Panel):
             self.init_UI()
 
         def init_UI(self):
-            pass
+            overall_box = wx.StaticBox(self, -1, "总体信息")
+
+            self.duration_lab = wx.StaticText(overall_box, -1, "时长：")
+            self.start_lab = wx.StaticText(overall_box, -1, "开始时间：")
+            self.bitrate_lab = wx.StaticText(overall_box, -1, "比特率：")
+
+            overall_sbox = wx.StaticBoxSizer(overall_box, wx.VERTICAL)
+            overall_sbox.Add(self.duration_lab, 0, wx.ALL, self.FromDIP(6))
+            overall_sbox.Add(self.start_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            overall_sbox.Add(self.bitrate_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+
+            video_box = wx.StaticBox(self, -1, "视频流信息")
+
+            self.video_codec_lab = wx.StaticText(video_box, -1, "编码格式：")
+            self.video_format_lab = wx.StaticText(video_box, -1, "格式：")
+            self.resolution_lab = wx.StaticText(video_box, -1, "分辨率：")
+            self.video_bitrate_lab = wx.StaticText(video_box, -1, "比特率：")
+            self.fps_lab = wx.StaticText(video_box, -1, "帧速率：")
+
+            video_sbox = wx.StaticBoxSizer(video_box, wx.VERTICAL)
+            video_sbox.Add(self.video_codec_lab, 0, wx.ALL, self.FromDIP(6))
+            video_sbox.Add(self.video_format_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            video_sbox.Add(self.resolution_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            video_sbox.Add(self.video_bitrate_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            video_sbox.Add(self.fps_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+
+            audio_box = wx.StaticBox(self, -1, "音频流信息")
+
+            self.audio_codec_lab = wx.StaticText(audio_box, -1, "编码格式：")
+            self.samplerate_lab = wx.StaticText(audio_box, -1, "采样率：")
+            self.channel_lab = wx.StaticText(audio_box, -1, "声道：")
+            self.sample_format_lab = wx.StaticText(audio_box, -1, "采样格式：")
+            self.audio_bitrate_lab = wx.StaticText(audio_box, -1, "比特率：")
+
+            audio_sbox = wx.StaticBoxSizer(audio_box, wx.VERTICAL)
+            audio_sbox.Add(self.audio_codec_lab, 0, wx.ALL, self.FromDIP(6))
+            audio_sbox.Add(self.samplerate_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            audio_sbox.Add(self.channel_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            audio_sbox.Add(self.sample_format_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+            audio_sbox.Add(self.audio_bitrate_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+
+            stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            stream_hbox.Add(video_sbox, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+            stream_hbox.Add(audio_sbox, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+
+            vbox = wx.BoxSizer(wx.VERTICAL)
+            vbox.Add(overall_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+            vbox.Add(stream_hbox, 0, wx.EXPAND)
+
+            self.SetSizer(vbox)
 
         def Bind_EVT(self):
             pass
+        
+        def init_utils(self):
+            class callback(Callback):
+                @staticmethod
+                def onSuccess(*args, **kwargs):
+                    process: Process = kwargs["process"]
 
+                    info = FFmpeg.Utils.parse_info(process.output)
+
+                    self.duration_lab.SetLabel(f"时长：{info.get('duration')}")
+                    self.start_lab.SetLabel(f"开始时间：{info.get('start')}")
+                    self.bitrate_lab.SetLabel(f"比特率：{info.get('bitrate')}")
+
+                    self.video_codec_lab.SetLabel(f"编码格式：{info.get('vcodec')}")
+                    self.video_format_lab.SetLabel(f"格式：{info.get('vformat')}")
+                    self.resolution_lab.SetLabel(f"分辨率：{info.get('resolution')}")
+                    self.video_bitrate_lab.SetLabel(f"比特率：{info.get('vbitrate')}")
+                    self.fps_lab.SetLabel(f"帧速率：{info.get('fps')}")
+
+                    self.audio_codec_lab.SetLabel(f"编码格式：{info.get('acodec')}")
+                    self.samplerate_lab.SetLabel(f"采样率：{info.get('samplerate')}")
+                    self.channel_lab.SetLabel(f"声道：{info.get('channel')}")
+                    self.sample_format_lab.SetLabel(f"采样格式：{info.get('sampleformat')}")
+                    self.audio_bitrate_lab.SetLabel(f"比特率：{info.get('abitrate')}")
+                
+                @staticmethod
+                def onError(*args, **kwargs):
+                    pass
+
+            FFmpeg.Utils.info(self.input_path, callback)
+        
+        def onChangeInputFile(self):
+            self.init_utils()
+        
     class ConvertionPage(Page):
         def __init__(self, parent):
             ContainerPage.Page.__init__(self, parent)

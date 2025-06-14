@@ -9,7 +9,7 @@ from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
 
 from utils.parse.audio import AudioInfo
-from utils.parse.episode_v2 import EpisodeInfo, Episode
+from utils.parse.episode_v2 import Episode
 from utils.parse.parser import Parser
 
 class BangumiInfo:

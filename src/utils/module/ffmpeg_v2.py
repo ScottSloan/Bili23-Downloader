@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo
@@ -120,6 +121,14 @@ class FFmpeg:
             return command.format()
         
         @staticmethod
+        def get_info_command(file_path: str):
+            command = Command()
+
+            command.add(f'"{Config.Merge.ffmpeg_path}" -i "{file_path}"')
+
+            return command.format()
+
+        @staticmethod
         def get_test_command():
             command = Command()
 
@@ -139,7 +148,7 @@ class FFmpeg:
             return command.format()
 
         @staticmethod
-        def run(command: str, callback: Callback, cwd: str = None):
+        def run(command: str, callback: Callback, cwd: str = None, check = True):
             def run_process():
                 p = subprocess.run(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, stdin = subprocess.PIPE, text = True, encoding = "utf-8")
 
@@ -154,11 +163,11 @@ class FFmpeg:
             
             process = run_process()
                 
-            if not process.return_code:
+            if not process.return_code or not check:
                 callback.onSuccess(process = process)
             else:
                 raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
-    
+
     class Env:
         @staticmethod
         def check_file(path: str):
@@ -232,6 +241,45 @@ class FFmpeg:
             cls.check_file_existance(FFmpeg.Prop.full_file_path(task_info), callback)
 
             FFmpeg.Command.run(command, callback, FFmpeg.Prop.download_path(task_info))
+
+        @classmethod
+        def info(cls, file_path: str, callback: Callback):
+            command = FFmpeg.Command.get_info_command(file_path)
+
+            FFmpeg.Command.run(command, callback, check  = False)
+
+        @classmethod
+        def parse_info(cls, output: str):
+
+            duration_info = cls.re_findall(r"Duration: (.*?), start: (.*?), bitrate: (\d* kb\/s)", output, 3)
+        
+            video_stream_info = cls.re_findall(r"Video: (.*?), (.*?), (\d*x\d*), (\d* kb\/s)", output, 4)
+
+            fps_info = cls.re_findall(r"(\d+(?:.\d+)? fps)", output, 1)
+
+            audio_stream_info = cls.re_findall(r"Audio: (.*?), (.*?), (.*?), (.*?), (\d* kb\/s)", output, 5)
+
+            return {
+                "duration": duration_info[0],
+                "start": duration_info[1],
+                "bitrate": duration_info[2],
+                "vcodec": video_stream_info[0],
+                "vformat": video_stream_info[1],
+                "resolution": video_stream_info[2],
+                "vbitrate": video_stream_info[3],
+                "fps": fps_info,
+                "acodec": audio_stream_info[0],
+                "samplerate": audio_stream_info[1],
+                "channel": audio_stream_info[2],
+                "sampleformat": audio_stream_info[3],
+                "abitrate": audio_stream_info[4]
+            }           
+
+        @staticmethod
+        def re_findall(pattern: str, string: str, group: int):
+            result = re.findall(pattern, string)
+
+            return result[0] if result else ["--" for i in range(group)]
 
         @staticmethod
         def clear_temp_files(task_info: DownloadTaskInfo):

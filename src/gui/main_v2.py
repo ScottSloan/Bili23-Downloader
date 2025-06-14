@@ -594,10 +594,10 @@ class MainWindow(Frame):
                 edit_title()
 
             case self.episode_list.ID_EPISODE_LIST_CHECK_MENU:
-                self.episode_list.check_current_item()
+                self.episode_list.CheckCurrentItem()
 
             case self.episode_list.ID_EPISODE_LIST_COLLAPSE_MENU:
-                self.episode_list.collapse_current_item()
+                self.episode_list.CollapseCurrentItem()
 
     def onUpdateCheckedItemCount(self, count: int):        
         if count:

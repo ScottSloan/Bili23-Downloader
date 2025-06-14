@@ -6,7 +6,7 @@ from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 
-from utils.parse.episode_v2 import EpisodeInfo, Episode
+from utils.parse.episode_v2 import Episode
 from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 

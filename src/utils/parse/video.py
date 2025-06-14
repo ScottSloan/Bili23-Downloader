@@ -4,10 +4,10 @@ from utils.tool_v2 import UniversalTool
 
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
-from utils.parse.episode_v2 import Episode, EpisodeInfo
+from utils.parse.episode_v2 import Episode
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 
-from utils.common.enums import ParseType, VideoType, EpisodeDisplayType, StatusCode, StreamType
+from utils.common.enums import EpisodeDisplayType, StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
@@ -25,7 +25,6 @@ class VideoInfo:
     danmakus: str = ""
     desc: str = ""
     tag_list: list = []
-    type: int = 0
 
     stream_type: int = 0
 
@@ -56,7 +55,6 @@ class VideoInfo:
         cls.views = 0
         cls.danmakus = 0
         cls.cid = 0
-        cls.type = 0
         cls.stream_type = 0
         cls.pubtime = 0
         cls.zone = ""

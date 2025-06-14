@@ -29,11 +29,13 @@ class FileNameFormatter:
         field_dict = cls.get_field_dict(task_info)
         dirname = os.path.dirname(cls.get_template(task_info)).removeprefix("\\")
 
-        path = os.path.join(Config.Download.path, dirname.format(**field_dict))
+        legal_path = cls.get_legal_file_name(dirname.format(**field_dict))
+
+        path = os.path.join(Config.Download.path, legal_path)
 
         check_path(path)
 
-        return cls.get_legal_file_name(path)
+        return path
     
     @staticmethod
     def check_empty_field(field_dict: dict):

@@ -53,6 +53,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("备注", width = self.FromDIP(75))
         self.AppendColumn("时长", width = self.FromDIP(75))
 
+        dv = self.GetDataView()
+
+        dv.SetIndent(20)
+
     def show_episode_list(self):
         def add_item(data: dict | list, item: wx.dataview.TreeListItem):
             if isinstance(data, dict):
@@ -97,20 +101,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.count = 0
 
-        # with open("episode.json", "w", encoding = "utf-8") as f:
-        #     f.write(json.dumps(EpisodeInfo.data, ensure_ascii = False))
-
         add_item(EpisodeInfo.data, self.GetRootItem())
-
-        dv = self.GetDataView()
-
-        dv.SetIndent(20)
-
-        #renderer = wx.dataview.DataViewTextRenderer()
-        #renderer.EnableMarkup()
-        #self.GetDataView().AppendColumn(wx.dataview.DataViewColumn("title", renderer, 0))
-
-        # dv.SetWindowStyleFlag(wx.dataview.DV_VERT_RULES)
 
     def onItemActivatedEVT(self, event):
         item = self.GetSelection()
