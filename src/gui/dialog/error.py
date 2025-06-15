@@ -5,7 +5,7 @@ from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class ErrorInfoDialog(Dialog):
     def __init__(self, parent, exception_info = GlobalExceptionInfo.info):

@@ -14,11 +14,11 @@ from utils.module.notification import NotificationManager
 from utils.tool_v2 import DownloadFileTool
 from utils.config import Config, app_config_group
 
-from gui.component.frame import Frame
+from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 from gui.component.button.action_button import ActionButton
 from gui.component.panel.scrolled_panel import ScrolledPanel
-from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
+from gui.component.panel.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):

@@ -9,7 +9,7 @@ from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encode
 from utils.config import Config
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class ConverterWindow(Dialog):
     def __init__(self, parent):

@@ -10,7 +10,7 @@ from requests.auth import HTTPProxyAuth
 
 from gui.component.panel.scrolled_panel import ScrolledPanel
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 from gui.component.tooltip import ToolTip
 

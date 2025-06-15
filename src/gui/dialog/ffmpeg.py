@@ -5,7 +5,7 @@ from utils.common.icon_v4 import Icon, IconID
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
 
 class DetectDialog(Dialog):

@@ -1,7 +1,7 @@
 import wx
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class EditTitleDialog(Dialog):
     def __init__(self, parent, title: str):

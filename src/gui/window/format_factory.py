@@ -1,6 +1,5 @@
 import wx
 import os
-import wx.lib.masked as masked
 
 from utils.config import Config
 
@@ -13,12 +12,14 @@ from utils.module.ffmpeg_v2 import FFmpeg
 
 from gui.dialog.error import ErrorInfoDialog
 
-from gui.component.frame import Frame
+from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
-from gui.component.large_bitmap_button import LargeBitmapButton
+from gui.component.button.large_bitmap_button import LargeBitmapButton
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.text_ctrl.text_ctrl import TextCtrl
+from gui.component.text_ctrl.time_ctrl import TimeCtrl
 from gui.component.player import Player, vlc_available
+from gui.component.range_slider import RangeSlider
 
 class SelectPage(Panel):
     def __init__(self, parent):
@@ -333,33 +334,16 @@ class ContainerPage(Panel):
             
             bottom_line = wx.StaticLine(self, -1)
 
-            start_time_lab = wx.StaticText(self, -1, "开始时间")
-            self.start_time_box = masked.TimeCtrl(self, -1, "00:00:00")
-            self.start_time_paste_btn = wx.Button(self, -1, "填入", size = self.get_scaled_size((50, 24)))
-            self.start_time_paste_btn.SetToolTip("填入当前进度作为开始截取的时间")
-            self.start_time_box.SetOwnFont(self.GetFont())
+            self.range_slider = RangeSlider(self, -1, lowValue = 0, highValue = 100, minValue = 0, maxValue = 100)
 
-            start_time_hbox = wx.BoxSizer(wx.HORIZONTAL)
-            start_time_hbox.Add(start_time_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-            start_time_hbox.Add(self.start_time_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-            start_time_hbox.Add(self.start_time_paste_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-
-            end_time_lab = wx.StaticText(self, -1, "结束时间")
-            self.end_time_box = masked.TimeCtrl(self, -1, "00:00:10")
-            self.end_time_paste_btn = wx.Button(self, -1, "填入", size = self.get_scaled_size((50, 24)))
-            self.end_time_paste_btn.SetToolTip("填入当前进度作为结束截取的时间")
-            self.end_time_box.SetOwnFont(self.GetFont())
-
-            end_hbox = wx.BoxSizer(wx.HORIZONTAL)
-            end_hbox.Add(end_time_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-            end_hbox.Add(self.end_time_box, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-            end_hbox.Add(self.end_time_paste_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+            self.start_time_box = TimeCtrl(self, "开始时间")
+            self.end_time_box = TimeCtrl(self, "结束时间")
 
             self.cut_btn = wx.Button(self, -1, "开始截取", size = self.get_scaled_size((100, 28)))
 
             time_hbox = wx.BoxSizer(wx.HORIZONTAL)
-            time_hbox.Add(start_time_hbox, 0, wx.EXPAND)
-            time_hbox.Add(end_hbox, 0, wx.EXPAND)
+            time_hbox.Add(self.start_time_box, 0, wx.EXPAND)
+            time_hbox.Add(self.end_time_box, 0, wx.EXPAND)
 
             output_lab = wx.StaticText(self, -1, "输出")
             self.output_box = TextCtrl(self, -1)
@@ -375,14 +359,13 @@ class ContainerPage(Panel):
             vbox = wx.BoxSizer(wx.VERTICAL)
             vbox.Add(self.player, 1, wx.EXPAND)
             vbox.Add(bottom_line, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND)
+            vbox.Add(self.range_slider, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
             vbox.Add(time_hbox, 0, wx.EXPAND)
             vbox.Add(output_hbox, 0, wx.EXPAND)
 
             self.SetSizer(vbox)
 
         def Bind_EVT(self):
-            self.start_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteStartTimeEVT)
-            self.end_time_paste_btn.Bind(wx.EVT_BUTTON, self.onPasteEndTimeEVT)
             self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
             self.cut_btn.Bind(wx.EVT_BUTTON, self.onCutEVT)
 

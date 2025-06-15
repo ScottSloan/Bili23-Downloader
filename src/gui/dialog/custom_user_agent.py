@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 
 class CustomUADialog(Dialog):

@@ -6,7 +6,7 @@ from utils.common.icon_v4 import Icon, IconID
 from utils.common.compile_data import date, compile
 
 from gui.dialog.license import LicenseWindow
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class AboutWindow(Dialog):
     def __init__(self, parent):

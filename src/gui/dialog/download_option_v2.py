@@ -13,7 +13,7 @@ from utils.parse.preview import Preview
 
 from gui.dialog.custom_subtitle_lan import CustomLanDialog
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.info_label import InfoLabel
 from gui.component.tooltip import ToolTip
 

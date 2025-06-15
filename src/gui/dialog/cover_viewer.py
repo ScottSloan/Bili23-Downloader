@@ -3,7 +3,7 @@ import os
 
 from utils.module.cover import CoverUtils
 
-from gui.component.frame import Frame
+from gui.component.window.frame import Frame
 
 class CoverViewerDialog(Frame):
     def __init__(self, parent, cover_raw_contents: bytes, cover_url: str):

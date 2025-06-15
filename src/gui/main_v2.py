@@ -44,7 +44,7 @@ from gui.dialog.download_option_v2 import DownloadOptionDialog
 from gui.dialog.duplicate import DuplicateDialog
 from gui.dialog.graph import GraphWindow
 
-from gui.component.frame import Frame
+from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.tree_list_v2 import TreeListCtrl
@@ -52,7 +52,7 @@ from gui.component.button.button import Button
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.info_bar import InfoBar
 from gui.component.taskbar_icon import TaskBarIcon
-from gui.component.flat_button import FlatButton
+from gui.component.button.flat_button import FlatButton
 
 class MainWindow(Frame):
     def __init__(self, parent):

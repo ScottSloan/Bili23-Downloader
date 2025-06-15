@@ -7,7 +7,7 @@ from utils.common.thread import Thread
 from utils.common.enums import SubtitleLanOption
 from utils.common.request import RequestUtils
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class CustomLanDialog(Dialog):
     def __init__(self, parent):

@@ -11,7 +11,7 @@ from utils.common.thread import Thread
 from utils.common.pic import Pic, PicID
 from utils.common.enums import Platform
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 

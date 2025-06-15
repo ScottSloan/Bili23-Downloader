@@ -12,7 +12,7 @@ from utils.common.directory import DirectoryUtils
 from utils.common.formatter import FormatUtils
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class LiveRecordingWindow(Dialog):
     def __init__(self, parent):

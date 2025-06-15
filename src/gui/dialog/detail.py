@@ -13,7 +13,7 @@ from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
 from utils.parse.cheese import CheeseInfo
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
 class DetailDialog(Dialog):

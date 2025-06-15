@@ -4,7 +4,7 @@ import json
 
 from utils.auth.login import CaptchaUtils, LoginInfo
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.webview import Webview
 
 class CaptchaWindow(Dialog):

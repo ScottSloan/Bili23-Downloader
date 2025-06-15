@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class ChangeLogDialog(Dialog):
     def __init__(self, parent):
