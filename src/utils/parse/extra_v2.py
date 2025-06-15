@@ -164,7 +164,13 @@ class ExtraParser:
     class Cover:
         @classmethod
         def download(cls, task_info: DownloadTaskInfo):
-            pass
+            base_file_name = FileNameFormatter.format_file_name(task_info)
+
+            cover_type = CoverUtils.get_cover_type()
+
+            CoverUtils.download_cover(task_info.cover_url)
+
+            ExtraParser.Utils.save_to_file(f"{base_file_name}{cover_type}")
 
     class Utils:
         @staticmethod
@@ -177,7 +183,7 @@ class ExtraParser:
                     ExtraParser.Subtitle.download(task_info)
 
                 if task_info.extra_option.get("download_cover_file"):
-                    ExtraParser.Subtitle.download(task_info)
+                    ExtraParser.Cover.download(task_info)
 
                 task_info.total_downloaded_size = task_info.total_file_size
 

@@ -17,6 +17,7 @@ from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
+from utils.module.cover import CoverUtils
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
@@ -26,7 +27,7 @@ from utils.tool_v2 import DownloadFileTool
 from gui.component.info_label import InfoLabel
 from gui.component.panel import Panel
 from gui.component.bitmap_button import BitmapButton
-from gui.dialog.cover import CoverViewerDialog
+
 from gui.dialog.error import ErrorInfoDialog
 
 class EmptyItemPanel(Panel):
@@ -291,9 +292,7 @@ class DownloadTaskItemPanel(Panel):
             self.flag_show_cover = True
             size = self.FromDIP((112, 63))
 
-            self._cover = get_bitmap()
-
-            image = wx.Image(BytesIO(self._cover))
+            image = wx.Image(BytesIO(get_bitmap()))
 
             if not is_16_9(image):
                 image = crop(image)
@@ -308,8 +307,7 @@ class DownloadTaskItemPanel(Panel):
         event.Skip()
 
     def onViewCoverEVT(self, event):
-        dlg = CoverViewerDialog(self.download_window, self._cover)
-        dlg.Show()
+        CoverUtils.view_cover(self.download_window, self.task_info.cover_url)
 
     def onViewErrorEVT(self, event):
         if self.error_info:
