@@ -197,7 +197,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     item_data = self.GetItemData(item)
 
                     if item_data.cid:
-                        self.download_task_info_list.append(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id))
+                        self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id))
 
     def GetCurrentItemType(self):
         item = self.GetSelection()
@@ -235,3 +235,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
     def GetItemData(self, item) -> TreeListItemInfo:
         return super().GetItemData(item)
+
+    def SetItemTitle(self, item: wx.dataview.TreeListItem, title: str):
+        item_data = self.GetItemData(item)
+
+        item_data.title = title
+
+        self.SetItemText(item, 1, title)
+        self.SetItemData(item, item_data)

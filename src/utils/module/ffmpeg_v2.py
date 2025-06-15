@@ -1,5 +1,4 @@
 import os
-import re
 import subprocess
 
 from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo
@@ -7,6 +6,7 @@ from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
+from utils.common.re_utils import REUtils
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
@@ -125,6 +125,17 @@ class FFmpeg:
             command = Command()
 
             command.add(f'"{Config.Merge.ffmpeg_path}" -i "{file_path}"')
+
+            return command.format()
+
+        @staticmethod
+        def get_extract_audio_command(info: dict):
+            command = Command()
+
+            input_path = info.get("input_path")
+            output_path = info.get("output_path")
+
+            command.add(f'{Config.Merge.ffmpeg_path} -i "{input_path}" -vn -acodec copy "{output_path}"')
 
             return command.format()
 
@@ -248,21 +259,30 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback, check  = False)
 
+        @staticmethod
+        def extract_audio(info: dict, callback: Callback):
+            command = FFmpeg.Command.get_extract_audio_command(info)
+
+            FFmpeg.Command.run(command, callback)
+
         @classmethod
         def parse_info(cls, output: str):
+            duration_info = REUtils.re_findall_in_group(r"Duration: (([\d:.]+))", output, 1)
 
-            duration_info = cls.re_findall(r"Duration: (.*?), start: (.*?), bitrate: (\d* kb\/s)", output, 3)
+            start_info = REUtils.re_findall_in_group(r"start: (([\d.]+))", output, 1)
+
+            bitrate_info = REUtils.re_findall_in_group(r"bitrate: ((\d* kb\/s))", output, 1)
         
-            video_stream_info = cls.re_findall(r"Video: (.*?), (.*?), (\d*x\d*), (\d* kb\/s)", output, 4)
+            video_stream_info = REUtils.re_match_in_group(r"Video: (.*)", output, 4)
 
-            fps_info = cls.re_findall(r"((\d+(?:.\d+)? fps))", output, 1)
+            fps_info = REUtils.re_findall_in_group(r"((\d+(?:.\d+)? fps))", output, 1)
 
-            audio_stream_info = cls.re_findall(r"Audio: (.*?), (.*?), (.*?), (.*?), (\d* kb\/s)", output, 5)
+            audio_stream_info = REUtils.re_match_in_group(r"Audio: (.*)", output, 5)
 
             return {
                 "duration": duration_info[0],
-                "start": duration_info[1],
-                "bitrate": duration_info[2],
+                "start": start_info[0],
+                "bitrate": bitrate_info[0],
                 "vcodec": video_stream_info[0],
                 "vformat": video_stream_info[1],
                 "resolution": video_stream_info[2],
@@ -273,13 +293,7 @@ class FFmpeg:
                 "channel": audio_stream_info[2],
                 "sampleformat": audio_stream_info[3],
                 "abitrate": audio_stream_info[4]
-            }           
-
-        @staticmethod
-        def re_findall(pattern: str, string: str, group: int):
-            result = re.findall(pattern, string)
-
-            return result[0] if result else ["--" for i in range(group)]
+            }
 
         @staticmethod
         def clear_temp_files(task_info: DownloadTaskInfo):

@@ -13,20 +13,21 @@ from utils.parse.audio import AudioInfo
 class DownloadInfo:
     @classmethod
     def get_download_info(cls, item_info: TreeListItemInfo, parse_type: ParseType, video_quality_id: int):
+        download_info_list = []
+
         info = cls.get_media_download_info(item_info, parse_type)
 
         if Config.Download.stream_download_option:
             info = cls.get_download_params_info(info, video_quality_id)
 
+        download_info_list.append(cls.get_task_info_obj(info))
+
         if Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file:
             info = cls.get_extra_download_info(info)
 
-        task_info = DownloadTaskInfo()
-        task_info.load_from_dict(info)
+            download_info_list.append(cls.get_task_info_obj(info))
 
-        task_info.id = random.randint(10000000, 99999999)
-
-        return task_info
+        return download_info_list
     
     @classmethod
     def get_media_download_info(cls, item_info: TreeListItemInfo, parse_type: ParseType):
@@ -130,3 +131,12 @@ class DownloadInfo:
         }
 
         return info
+    
+    @staticmethod
+    def get_task_info_obj(info: dict):
+        task_info = DownloadTaskInfo()
+        task_info.load_from_dict(info)
+
+        task_info.id = random.randint(10000000, 99999999)
+
+        return task_info

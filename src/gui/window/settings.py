@@ -537,7 +537,7 @@ class AdvancedTab(Tab):
 
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
 
-        self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((120, 28)))
+        self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((130, 28)))
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
         advanced_download_sbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))

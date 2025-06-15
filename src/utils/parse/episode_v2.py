@@ -126,7 +126,7 @@ class Episode:
                     pubtime = episode["arc"]["pubdate"]
 
                     if len(episode["pages"]) == 1:
-                        episode["page"] = episode["page"]["page"]
+                        episode["page"] = episode["page"]["page"] if isinstance(episode["page"], dict) else episode["page"]
                         episode["cover_url"] = cover_url
                         episode["aid"] = aid
                         episode["bvid"] = bvid
@@ -160,7 +160,6 @@ class Episode:
         
         @staticmethod
         def get_entry_info(episode: dict, is_upower_exclusive: bool = False):
-
             def get_duration():
                 if "duration" in episode:
                     return episode["duration"]

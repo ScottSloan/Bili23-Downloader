@@ -157,6 +157,8 @@ class ContainerPage(Panel):
         def __init__(self, parent):
             Panel.__init__(self, parent)
 
+            self.output_box: TextCtrl = None
+
         def init_utils(self):
             pass
 
@@ -165,11 +167,53 @@ class ContainerPage(Panel):
 
         def onChangeInputFile(self):
             pass
+        
+        def onBrowseEVT(self, event):
+            dlg = wx.FileDialog(self, "选择保存位置", defaultDir = os.path.dirname(self.input_path), style = wx.FD_SAVE)
 
+            if dlg.ShowModal() == wx.ID_OK:
+                self.output_box.SetValue(dlg.GetPath())
+                
+            dlg.Destroy()
+
+        def check(self):
+            if not self.output_path:
+                wx.MessageDialog(self, "缺少参数\n\n请指定输出文件目录", "警告", wx.ICON_WARNING).ShowModal()
+                return True
+
+        def get_callback(self, success_message: str):
+            class callback(Callback):
+                @staticmethod
+                def onSuccess(*args, **kwargs):
+                    def worker():
+                        dlg = wx.MessageDialog(self, success_message, "提示", wx.ICON_INFORMATION | wx.YES_NO)
+                        dlg.SetYesNoLabels("打开所在位置", "确定")
+
+                        if dlg.ShowModal() == wx.ID_YES:
+                            DirectoryUtils.open_file_location(self.output_path)
+
+                        dlg.Destroy()
+
+                    wx.CallAfter(worker)
+                
+                @staticmethod
+                def onError(*args, **kwargs):
+                    def worker():
+                        dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)
+                        dlg.ShowModal()
+
+                    wx.CallAfter(worker)
+
+            return callback
+            
         @property
-        def input_path(self):
+        def input_path(self) -> str:
             return self.GetParent().GetParent().input_path
         
+        @property
+        def output_path(self) -> str:
+            return self.output_box.GetValue()
+
     class DetailInfoPage(Page):
         def __init__(self, parent):
             ContainerPage.Page.__init__(self, parent)
@@ -345,8 +389,6 @@ class ContainerPage(Panel):
         def init_utils(self):
             self.player.init_player(self.input_path)
 
-            self.output_path = None
-
         def onCloseEVT(self):
             self.player.close_player()
 
@@ -362,16 +404,6 @@ class ContainerPage(Panel):
         def onPasteEndTimeEVT(self, event):
             self.end_time_box.SetValue(self.player.get_time())
 
-        def onBrowseEVT(self, event):
-            dlg = wx.FileDialog(self, "选择保存位置", defaultDir = os.path.dirname(self.input_path), style = wx.FD_SAVE)
-
-            if dlg.ShowModal() == wx.ID_OK:
-                self.output_path = dlg.GetPath()
-
-                self.output_box.SetValue(self.output_path)
-                
-            dlg.Destroy()
-
         def onCutEVT(self, event):
             def get_info():
                 return {
@@ -381,37 +413,10 @@ class ContainerPage(Panel):
                     "end_time": self.end_time_box.GetValue(as_wxDateTime = True).Format("%H:%M:%S")
                 }
 
-            class callback(Callback):
-                @staticmethod
-                def onSuccess(*args, **kwargs):
-                    def worker():
-                        dlg = wx.MessageDialog(self, "截取完成\n\n已成功截取片段", "提示", wx.ICON_INFORMATION | wx.YES_NO)
-                        dlg.SetYesNoLabels("打开所在位置", "确定")
-
-                        if dlg.ShowModal() == wx.ID_YES:
-                            DirectoryUtils.open_file_location(self.output_path)
-
-                        dlg.Destroy()
-
-                    wx.CallAfter(worker)
-
-                @staticmethod
-                def onError(*args, **kwargs):
-                    def worker():
-                        dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)
-                        dlg.ShowModal()
-
-                    wx.CallAfter(worker)
-            
-            def check():
-                if not self.output_box.GetValue():
-                    wx.MessageDialog(self, "缺少参数\n\n请指定输出文件目录", "警告", wx.ICON_WARNING).ShowModal()
-                    return True
-            
-            if check():
+            if self.check():
                 return
 
-            FFmpeg.Utils.cut(get_info(), callback)
+            FFmpeg.Utils.cut(get_info(), self.get_callback("截取完成\n\n已成功截取片段"))
 
     class ExtractionPage(Page):
         def __init__(self, parent):
@@ -419,11 +424,45 @@ class ContainerPage(Panel):
 
             self.init_UI()
 
+            self.Bind_EVT()
+
         def init_UI(self):
-            pass
+            output_lab = wx.StaticText(self, -1, "输出")
+            self.output_box = TextCtrl(self, -1)
+            self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
+
+            output_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            output_hbox.Add(output_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+            output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+            self.start_btn = wx.Button(self, -1, "开始分离", size = self.FromDIP((120, 28)))
+
+            action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            action_hbox.AddStretchSpacer()
+            action_hbox.Add(self.start_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+
+            vbox = wx.BoxSizer(wx.VERTICAL)
+            vbox.Add(output_hbox, 0, wx.EXPAND)
+            vbox.Add(action_hbox, 0, wx.EXPAND)
+
+            self.SetSizer(vbox)
         
         def Bind_EVT(self):
-            pass
+            self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
+
+            self.start_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
+        
+        def onStartEVT(self, event):
+            if self.check():
+                return
+
+            info = {
+                "input_path": self.input_path,
+                "output_path": self.output_path
+            }
+                
+            FFmpeg.Utils.extract_audio(info, self.get_callback("分离完成\n\n已成功分离音频"))
 
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -584,6 +623,8 @@ class FormatFactoryWindow(Frame):
         self.change_page(2)
 
     def change_input_path(self, path: str):
+        self.input_path = path
+
         self.container_page.notebook.GetCurrentPage().onChangeInputFile()
 
     def change_page(self, page: int):

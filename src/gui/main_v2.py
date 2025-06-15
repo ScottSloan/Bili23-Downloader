@@ -13,7 +13,7 @@ from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.update import Update
 from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, VideoQualityID, Platform, ProcessingType, ExitOption
-from utils.common.data_type import ParseCallback, TreeListItemInfo, TreeListCallback
+from utils.common.data_type import ParseCallback, TreeListCallback
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
 
@@ -575,18 +575,13 @@ class MainWindow(Frame):
             case self.episode_list.ID_EPISODE_LIST_EDIT_TITLE_MENU:
                 def edit_title():
                     item = self.episode_list.GetSelection()
-                    text = self.episode_list.GetItemText(item, 1)
 
-                    dialog = EditTitleDialog(self, text)
+                    dialog = EditTitleDialog(self, self.episode_list.GetItemText(item, 1))
 
                     if dialog.ShowModal() == wx.ID_OK:
                         title = dialog.title_box.GetValue()
-                        item_info: TreeListItemInfo = self.episode_list.GetItemData(item)
 
-                        item_info.title = title
-
-                        self.episode_list.SetItemText(item, 1, title)
-                        self.episode_list.SetItemData(item, item_info)
+                        self.episode_list.SetItemTitle(item, title)
 
                         if self.current_parse_type == ParseType.Live:
                             LiveInfo.title = title
