@@ -20,7 +20,7 @@ class ExtraParser:
         def download(cls, task_info: DownloadTaskInfo):
             base_file_name = FileNameFormatter.format_file_name(task_info)
 
-            match task_info.extra_option.get("danmaku_file_type"):
+            match DanmakuType(task_info.extra_option.get("danmaku_file_type")):
                 case DanmakuType.XML:
                     cls.get_xml_file(task_info, base_file_name)
 
@@ -33,7 +33,7 @@ class ExtraParser:
 
             req = ExtraParser.Utils.request_get(url)
 
-            ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", req.content, task_info, "w")
+            ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", req.text, task_info, "w")
 
         @staticmethod
         def get_protobuf_file(task_info: DownloadTaskInfo, base_file_name: str):
@@ -79,7 +79,7 @@ class ExtraParser:
 
                 subtitle_url = "https:" + entry["subtitle_url"]
 
-                cls.convert_subtitle(task_info, subtitle_url)
+                cls.convert_subtitle(task_info, subtitle_url, lan)
         
         @staticmethod
         def query_all_subtitles(task_info: DownloadTaskInfo):
@@ -106,7 +106,7 @@ class ExtraParser:
 
             subtitle_json = cls.get_subtitle_json(subtitle_url)
 
-            match task_info.extra_option.get("subtitle_file_type"):
+            match SubtitleType(task_info.extra_option.get("subtitle_file_type")):
                 case SubtitleType.SRT:
                     cls.convert_to_srt(task_info, subtitle_json, lan, base_file_name)
 

@@ -66,7 +66,7 @@ class FileNameFormatter:
         if template:
             return template
         else:
-            match ParseType(task_info.download_type):
+            match ParseType(task_info.parse_type):
                 case ParseType.Video:
                     template = get_specific_template(ScopeID.Video.value)
 

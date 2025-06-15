@@ -36,6 +36,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_ACTIVATED, self.onItemActivatedEVT)
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onItemContextMenuEVT)
 
+        self.Bind(wx.EVT_SIZE, self.onSizeEVT)
+
     def init_id(self):
         self.ID_EPISODE_LIST_VIEW_COVER_MENU = wx.NewIdRef()
         self.ID_EPISODE_LIST_COPY_TITLE_MENU = wx.NewIdRef()
@@ -149,6 +151,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         if self.GetSelection().IsOk():
             self.PopupMenu(menu)
+
+    def onSizeEVT(self, event):
+        width, height = self.GetSize()
+
+        self.SetColumnWidth(1, width - self.FromDIP(350))
+
+        event.Skip()
 
     def CheckCurrentItem(self):
         item = self.GetSelection()

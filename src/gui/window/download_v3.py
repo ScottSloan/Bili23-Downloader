@@ -7,7 +7,6 @@ from utils.common.icon_v4 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
 from utils.common.enums import DownloadStatus, Platform, NumberType
 from utils.common.thread import Thread
-from utils.common.cache import DataCache
 from utils.common.map import download_type_map
 from utils.common.directory import DirectoryUtils
 
@@ -400,9 +399,6 @@ class SimplePage(Panel):
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 panel.show_cover()
-
-        # 封面显示完成后，清除图片换成
-        DataCache.clear_cache()
 
     def refresh_scroller(self, show_toast: bool = False):
         if self.is_scroller_empty:

@@ -119,7 +119,7 @@ class BangumiParser(Parser):
         BangumiInfo.payment = True if "payment" in info_result else False
         
         BangumiInfo.title = info_result["title"]
-        BangumiInfo.series_title = info_result["series"]["series_title"]
+        BangumiInfo.series_title = info_result["season_title"]
 
         first_episode = info_result["episodes"][0] if info_result.get("episodes") else info_result["section"][0]["episodes"][0]
 

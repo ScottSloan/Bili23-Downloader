@@ -71,6 +71,33 @@ class CoverUtils:
 
     @classmethod
     def get_scaled_bitmap(cls, cover_raw_contents: bytes, new_size: wx.Size):
-        cover_image = cls.get_image_obj(cover_raw_contents)
+        image = cls.get_image_obj(cover_raw_contents)
 
-        return cover_image.Copy().Scale(new_size.width, new_size.height, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+        return cls.get_scaled_bitmap_from_image(image, new_size)
+    
+    @staticmethod
+    def get_scaled_bitmap_from_image(image: wx.Image, new_size: wx.Size):
+        return image.Rescale(new_size.width, new_size.height, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+    
+    @classmethod
+    def crop_cover(cls, cover_raw_contents: bytes):
+        image = cls.get_image_obj(cover_raw_contents)
+
+        width, height = image.GetSize()
+
+        if width * 9 > height * 16:
+            new_width = round(height * 16 / 9)
+
+            x_offset = (width - new_width) // 2
+
+            return image.GetSubImage(wx.Rect((x_offset, 0, new_width, height)))
+        
+        elif width * 9 < height * 16:
+            new_height = round(width * 9 / 16)
+
+            y_offset = (height - new_height) // 2
+
+            return image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
+        
+        else:
+            return image

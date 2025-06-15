@@ -46,6 +46,7 @@ class DownloadInfo:
     def get_video_download_info(cls, item_info: TreeListItemInfo):
         info = cls.get_base_download_info(item_info)
 
+        info["parse_type"] = ParseType.Video.value
         info["download_type"] = ParseType.Video.value
         info["zone_info"] = {
             "zone": VideoInfo.zone,
@@ -62,6 +63,7 @@ class DownloadInfo:
     def get_bangumi_download_info(cls, item_info: TreeListItemInfo):
         info = cls.get_base_download_info(item_info)
 
+        info["parse_type"] = ParseType.Bangumi.value
         info["download_type"] = ParseType.Bangumi.value
         info["area"] = BangumiInfo.area
         info["series_title"] = BangumiInfo.series_title
@@ -76,6 +78,7 @@ class DownloadInfo:
     def get_cheese_download_info(cls, item_info: TreeListItemInfo):
         info = cls.get_base_download_info(item_info)
 
+        info["parse_type"] = ParseType.Cheese.value
         info["download_type"] = ParseType.Cheese.value
         info["up_info"] = {
             "up_name": CheeseInfo.up_name,
@@ -116,6 +119,7 @@ class DownloadInfo:
 
     @staticmethod
     def get_extra_download_info(info: dict):
+        info["download_type"] = ParseType.Extra.value
         info["extra_option"] = {
             "download_danmaku_file": Config.Basic.download_danmaku_file,
             "danmaku_file_type": Config.Basic.danmaku_file_type,

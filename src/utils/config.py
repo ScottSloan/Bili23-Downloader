@@ -180,6 +180,10 @@ class Config:
                 "template": "{zero_padding_number} - {title}",
                 "scope": 4
             },
+            {
+                "template": "\\{series_title}\\{title}",
+                "scope": 2
+            }
         ]
         
         video_quality_id: int = 200

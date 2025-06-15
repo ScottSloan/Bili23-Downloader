@@ -65,6 +65,8 @@ class DownloadTaskInfo:
         # 下载项目标识
         self.download_items: list = []
 
+        # 解析类型
+        self.parse_type: int = 0
         # 下载类型
         self.download_type: int = 0
         # 视频流类型
@@ -129,6 +131,7 @@ class DownloadTaskInfo:
 
             "download_items": self.download_items,
             
+            "parse_type": self.parse_type,
             "download_type": self.download_type,
             "stream_type": self.stream_type,
             "download_option": self.download_option,
@@ -183,6 +186,7 @@ class DownloadTaskInfo:
 
         self.download_items = data.get("download_items", self.download_items)
 
+        self.parse_type = data.get("parse_type", self.parse_type)
         self.download_type = data.get("download_type", self.download_type)
         self.stream_type = data.get("stream_type", self.stream_type)
         self.download_option = data.get("download_option", self.download_option)

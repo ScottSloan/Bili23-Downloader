@@ -3,6 +3,7 @@ from utils.config import Config
 from utils.common.enums import EpisodeDisplayType, ParseType
 from utils.common.map import cheese_status_map, live_status_map
 from utils.common.data_type import TreeListItemInfo
+from utils.common.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}
@@ -92,6 +93,8 @@ class Episode:
 
         @classmethod
         def pages_parser(cls, info_json: dict, target_cid: int):
+            pages_cnt = len(info_json["pages"])
+
             for page in info_json["pages"]:
                 if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
                     if page["cid"] != target_cid:
@@ -101,6 +104,7 @@ class Episode:
                 page["aid"] = info_json["aid"]
                 page["bvid"] = info_json["bvid"]
                 page["pubtime"] = info_json["pubdate"]
+                page["title"] = info_json["title"] if pages_cnt == 1 else page["part"]
 
                 EpisodeInfo.add_item("视频", cls.get_entry_info(page.copy(), info_json["is_upower_exclusive"]))
 
@@ -156,6 +160,7 @@ class Episode:
         
         @staticmethod
         def get_entry_info(episode: dict, is_upower_exclusive: bool = False):
+
             def get_duration():
                 if "duration" in episode:
                     return episode["duration"]
@@ -193,13 +198,13 @@ class Episode:
                     Episode.Utils.display_episodes_in_section(cls.target_section_title)
         
         @classmethod
-        def episodes_parser(cls, episodes: dict, pid: str, ep_id: int, info_json: dict):
+        def episodes_parser(cls, episodes: dict, pid: str, ep_id: int, info_json: dict, main_episode: bool = False):
             for episode in episodes:
                 episode["season_id"] = info_json["season_id"]
                 episode["media_id"] = info_json["media_id"]
                 episode["section_title"] = pid
 
-                EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy()))
+                EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), main_episode))
 
                 if episode["ep_id"] == ep_id:
                     cls.target_section_title = pid
@@ -209,7 +214,7 @@ class Episode:
             if info_json.get("episodes"):
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info("正片", label = "章节"))
 
-                cls.episodes_parser(info_json["episodes"], "正片", ep_id, info_json)
+                cls.episodes_parser(info_json["episodes"], "正片", ep_id, info_json, main_episode = True)
 
         @classmethod
         def section_parser(cls, info_json: dict, ep_id: int):
@@ -218,17 +223,11 @@ class Episode:
 
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
 
-                cls.episodes_parser(section["episodes"], section_title, ep_id, info_json)
+                cls.episodes_parser(section["episodes"], section_title, ep_id, info_json, main_episode = False)
 
         @staticmethod
-        def get_entry_info(episode: dict):
-            def get_title():
-                if Config.Misc.show_episode_full_name:
-                    return episode.get("share_copy")
-                else:
-                    return episode.get("show_title")
-
-            episode["title"] = get_title()
+        def get_entry_info(episode: dict, main_episode: bool):
+            episode["title"] = FormatUtils.format_bangumi_title(episode, main_episode)
             episode["pubtime"] = episode["pub_time"]
             episode["duration"] = episode["duration"] / 1000
             episode["cover_url"] = episode["cover"]

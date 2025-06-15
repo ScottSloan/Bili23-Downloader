@@ -47,26 +47,23 @@ class FormatUtils:
             return "{:.1f} KB".format(size / 1024)
 
     @staticmethod
-    def format_bangumi_title(episode: dict, main_episode: bool = False):
-        from utils.parse.bangumi import BangumiInfo
-
-        if BangumiInfo.type_id == 2 and main_episode:
-            return f"《{BangumiInfo.title}》{episode['title']}"
-        
-        else:
+    def format_bangumi_title(episode: dict, main_episode: bool):
+        def get_share_copy():
             if "share_copy" in episode:
-                if Config.Misc.show_episode_full_name:
-                    return episode["share_copy"]
-                
-                else:
-                    for key in ["show_title", "long_title"]:
-                        if key in episode and episode[key]:
-                            return episode[key]
-
-                    return episode["share_copy"]
-
+                return episode["share_copy"]
             else:
                 return episode["report"]["ep_title"]
+        
+        from utils.parse.bangumi import BangumiInfo
+
+        if Config.Misc.show_episode_full_name:
+            if BangumiInfo.type_id == 2 and main_episode:
+                return f"《{BangumiInfo.series_title}》{episode['show_title']}"
+            else:
+                return get_share_copy()
+        
+        else:
+            return episode.get("show_title", get_share_copy())
 
     @staticmethod
     def format_data_quantity(data: int):

@@ -1,18 +1,15 @@
 import os
 import wx
-from io import BytesIO
 from typing import Callable
 
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, Callback
 from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
-from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.directory import DirectoryUtils
-from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
@@ -193,7 +190,6 @@ class DownloadTaskItemPanel(Panel):
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
-        self.flag_show_cover = False
         self.flag_destroy = False
         self.error_info = None
 
@@ -252,54 +248,20 @@ class DownloadTaskItemPanel(Panel):
             self.Layout()
     
     def show_cover(self):
-        def is_16_9(image: wx.Image):
-            width, height = image.GetSize()
-
-            return (width / height) == (16 / 9)
-
-        def crop(image: wx.Image):
-            # 将非 16:9 封面调整为 16:9
-                width, height = image.GetSize()
-
-                new_height = int(width * (9 / 16))
-
-                y_offset = (height - new_height) // 2
-
-                if y_offset >= 0:
-                    return image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
-                else:
-                    new_width = int(height * (16 / 9))
-                    x_offset = (width - new_width) // 2
-                    return image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
-
-        def get_bitmap():
-            cache = DataCache.get_cache(self.task_info.cover_url)
-
-            if cache:
-                return cache
-            else:
-                content = RequestUtils.request_get(self.task_info.cover_url).content
-
-                DataCache.set_cache(self.task_info.cover_url, content)
-
-                return content
-
-        def setBitmap(image: wx.Image):
+        def setBitmap(bitmap: wx.Bitmap):
             if not self.flag_destroy:
-                self.cover_bmp.SetBitmap(image.ConvertToBitmap())
+                self.cover_bmp.SetBitmap(bitmap)
 
-        if not self.flag_show_cover:
-            self.flag_show_cover = True
-            size = self.FromDIP((112, 63))
+        if not self.cover_bmp.GetBitmap():
+            size = wx.Size(self.FromDIP(112), self.FromDIP(63))
 
-            image = wx.Image(BytesIO(get_bitmap()))
+            image = CoverUtils.crop_cover(CoverUtils.get_cover_raw_contents(self.task_info.cover_url))
 
-            if not is_16_9(image):
-                image = crop(image)
+            bitmap = CoverUtils.get_scaled_bitmap_from_image(image, size)
 
-            image: wx.Image = image.Scale(size[0], size[1], wx.IMAGE_QUALITY_HIGH)
+            image: wx.Image = image.Scale(size.width, size.height, wx.IMAGE_QUALITY_HIGH)
 
-            wx.CallAfter(setBitmap, image)
+            wx.CallAfter(setBitmap, bitmap)
 
     def onDestroyEVT(self, event):
         self.flag_destroy = True
