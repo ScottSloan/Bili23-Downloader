@@ -1,7 +1,7 @@
 import wx
 import base64
 
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class LicenseWindow(Dialog):

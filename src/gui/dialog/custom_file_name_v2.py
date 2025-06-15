@@ -11,7 +11,7 @@ from utils.common.font import SysFont
 from utils.common.re_utils import REUtils
 
 from gui.component.dialog import Dialog
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.tooltip import ToolTip
 
 class AddNewTemplateDialog(Dialog):

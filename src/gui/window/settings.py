@@ -8,10 +8,10 @@ import requests
 import subprocess
 from requests.auth import HTTPProxyAuth
 
-from gui.component.scrolled_panel import ScrolledPanel
-from gui.component.text_ctrl import TextCtrl
+from gui.component.panel.scrolled_panel import ScrolledPanel
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
-from gui.component.panel import Panel
+from gui.component.panel.panel import Panel
 from gui.component.tooltip import ToolTip
 
 from gui.dialog.ffmpeg import DetectDialog

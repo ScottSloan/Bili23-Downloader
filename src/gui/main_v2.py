@@ -45,11 +45,11 @@ from gui.dialog.duplicate import DuplicateDialog
 from gui.dialog.graph import GraphWindow
 
 from gui.component.frame import Frame
-from gui.component.panel import Panel
-from gui.component.search_ctrl import SearchCtrl
+from gui.component.panel.panel import Panel
+from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.tree_list_v2 import TreeListCtrl
-from gui.component.button import Button
-from gui.component.bitmap_button import BitmapButton
+from gui.component.button.button import Button
+from gui.component.button.bitmap_button import BitmapButton
 from gui.component.info_bar import InfoBar
 from gui.component.taskbar_icon import TaskBarIcon
 from gui.component.flat_button import FlatButton

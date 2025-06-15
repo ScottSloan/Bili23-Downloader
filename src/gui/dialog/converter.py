@@ -8,7 +8,7 @@ from utils.common.enums import Platform
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.config import Config
 
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class ConverterWindow(Dialog):

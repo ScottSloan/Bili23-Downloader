@@ -12,8 +12,8 @@ from utils.common.pic import Pic, PicID
 from utils.common.enums import Platform
 
 from gui.component.dialog import Dialog
-from gui.component.panel import Panel
-from gui.component.search_ctrl import SearchCtrl
+from gui.component.panel.panel import Panel
+from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
 class LoginWindow(Dialog):
     def __init__(self, parent, callback: Callable):

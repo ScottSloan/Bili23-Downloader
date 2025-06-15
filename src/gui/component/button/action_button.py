@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 
-from gui.component.panel import Panel
+from gui.component.panel.panel import Panel
 
 class ActionButton(Panel):
     def __init__(self, parent, title):

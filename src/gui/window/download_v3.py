@@ -15,9 +15,9 @@ from utils.tool_v2 import DownloadFileTool
 from utils.config import Config, app_config_group
 
 from gui.component.frame import Frame
-from gui.component.panel import Panel
-from gui.component.action_button import ActionButton
-from gui.component.scrolled_panel import ScrolledPanel
+from gui.component.panel.panel import Panel
+from gui.component.button.action_button import ActionButton
+from gui.component.panel.scrolled_panel import ScrolledPanel
 from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(Frame):

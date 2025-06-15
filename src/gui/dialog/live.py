@@ -11,7 +11,7 @@ from utils.common.thread import Thread
 from utils.common.directory import DirectoryUtils
 from utils.common.formatter import FormatUtils
 
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class LiveRecordingWindow(Dialog):

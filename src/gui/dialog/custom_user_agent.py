@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 
 from gui.component.dialog import Dialog
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 
 class CustomUADialog(Dialog):
     def __init__(self, parent):

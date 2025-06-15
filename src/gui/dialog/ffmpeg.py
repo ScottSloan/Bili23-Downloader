@@ -6,7 +6,7 @@ from utils.common.icon_v4 import Icon, IconID
 from utils.module.ffmpeg_v2 import FFmpeg
 
 from gui.component.dialog import Dialog
-from gui.component.bitmap_button import BitmapButton
+from gui.component.button.bitmap_button import BitmapButton
 
 class DetectDialog(Dialog):
     def __init__(self, parent):

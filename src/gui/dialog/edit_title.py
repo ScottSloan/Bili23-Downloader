@@ -1,6 +1,6 @@
 import wx
 
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class EditTitleDialog(Dialog):

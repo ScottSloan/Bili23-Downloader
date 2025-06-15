@@ -19,8 +19,7 @@ live.json
 download*.json
 ffmpeg.exe
 build.bat
-test.py
-test_2.py
+test*.py
 bilidanmu.proto
 config.json
 cheese*.json

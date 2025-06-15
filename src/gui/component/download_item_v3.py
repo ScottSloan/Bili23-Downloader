@@ -22,8 +22,8 @@ from utils.config import Config
 from utils.tool_v2 import DownloadFileTool
 
 from gui.component.info_label import InfoLabel
-from gui.component.panel import Panel
-from gui.component.bitmap_button import BitmapButton
+from gui.component.panel.panel import Panel
+from gui.component.button.bitmap_button import BitmapButton
 
 from gui.dialog.error import ErrorInfoDialog
 

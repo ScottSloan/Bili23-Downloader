@@ -4,7 +4,7 @@ from utils.config import Config
 from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
-from gui.component.text_ctrl import TextCtrl
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.dialog import Dialog
 
 class ErrorInfoDialog(Dialog):

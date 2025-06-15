@@ -5,8 +5,8 @@ from datetime import datetime
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.formatter import FormatUtils
 
-from gui.component.panel import Panel
-from gui.component.bitmap_button import BitmapButton
+from gui.component.panel.panel import Panel
+from gui.component.button.bitmap_button import BitmapButton
 
 vlc_available = False
 

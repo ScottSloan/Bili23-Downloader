@@ -14,10 +14,10 @@ from utils.module.ffmpeg_v2 import FFmpeg
 from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.frame import Frame
-from gui.component.panel import Panel
+from gui.component.panel.panel import Panel
 from gui.component.large_bitmap_button import LargeBitmapButton
-from gui.component.bitmap_button import BitmapButton
-from gui.component.text_ctrl import TextCtrl
+from gui.component.button.bitmap_button import BitmapButton
+from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.player import Player, vlc_available
 
 class SelectPage(Panel):
@@ -436,6 +436,8 @@ class ContainerPage(Panel):
             output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT), self.FromDIP(6))
             output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
+            self.audio_format_lab = wx.StaticText(self, -1, "音频流格式：--")
+            target_format_lab = wx.StaticText(self, -1, "目标格式：")
             self.start_btn = wx.Button(self, -1, "开始分离", size = self.FromDIP((120, 28)))
 
             action_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -14,7 +14,7 @@ from utils.parse.bangumi import BangumiInfo
 from utils.parse.cheese import CheeseInfo
 
 from gui.component.dialog import Dialog
-from gui.component.panel import Panel
+from gui.component.panel.panel import Panel
 
 class DetailDialog(Dialog):
     def __init__(self, parent, parse_type: ParseType):
