@@ -1,12 +1,13 @@
-from utils.tool_v2 import RequestTool, UniversalTool
 from utils.config import Config
+
 from utils.common.exception import GlobalException
 from utils.common.map import live_status_map
 from utils.common.enums import StatusCode, LiveQualityID
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
 
-from utils.parse.episode import EpisodeInfo, EpisodeManager
 from utils.parse.parser import Parser
+from utils.parse.episode_v2 import Episode
 
 class LiveInfo:
     title: str = ""
@@ -21,6 +22,8 @@ class LiveInfo:
 
     live_quality_id_list: list = []
     live_quality_desc_list: list = []
+
+    info_json: dict = {}
 
     @classmethod
     def clear_live_info(cls):
@@ -50,24 +53,24 @@ class LiveParser(Parser):
         # 获取直播间信息
         url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={LiveInfo.short_id}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
-        LiveInfo.title = UniversalTool.get_legal_name(info["title"])
+        LiveInfo.title = info["title"]
         LiveInfo.room_id = info["room_id"]
 
         LiveInfo.status = info["live_status"]
         LiveInfo.status_str = live_status_map[LiveInfo.status]
 
-        EpisodeInfo.clear_episode_data("直播")
+        LiveInfo.info_json = info.copy()
 
-        EpisodeManager.live_episode_parser(LiveInfo.title, LiveInfo.status_str)
+        self.parse_episodes()
 
     def get_live_available_media_info(self):
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
@@ -82,7 +85,7 @@ class LiveParser(Parser):
 
         url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5&qn={qn}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
@@ -105,3 +108,6 @@ class LiveParser(Parser):
 
         except Exception as e:
             raise GlobalException(callback = self.callback.onError) from e
+        
+    def parse_episodes(self):
+        Episode.Live.parse_episodes(LiveInfo.info_json)

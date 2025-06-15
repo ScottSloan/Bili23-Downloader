@@ -1,17 +1,16 @@
-import re
 import wx
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
 
 from utils.config import Config
-from utils.common.enums import Platform
+from utils.common.thread import ThreadPoolExecutor
 
-from gui.component.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from utils.module.ping import Ping
+
+from gui.component.text_ctrl.text_ctrl import TextCtrl
+from gui.component.window.dialog import Dialog
 
 class CustomCDNDialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "更改 CDN host")
+        Dialog.__init__(self, parent, "自定义 CDN 节点")
 
         self.init_UI()
 
@@ -22,7 +21,7 @@ class CustomCDNDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        cdn_lab = wx.StaticText(self, -1, "CDN host 列表")
+        cdn_lab = wx.StaticText(self, -1, "CDN 节点列表")
 
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((670, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
@@ -76,12 +75,12 @@ class CustomCDNDialog(Dialog):
 
     def init_utils(self):
         def init_listctrl():
-            self.cdn_list.AppendColumn("CDN host", width = self.FromDIP(350))
+            self.cdn_list.AppendColumn("CDN 节点", width = self.FromDIP(350))
             self.cdn_list.AppendColumn("优先级", width = self.FromDIP(120))
             self.cdn_list.AppendColumn("延迟", width = self.FromDIP(100))
 
         def init_cdn_list():
-            for cdn in Config.Advanced.cdn_list:
+            for cdn in Config.Temp.cdn_list:
                 self.cdn_list.Append([cdn, "", "未检测"])
 
             self.setItemOrder()
@@ -91,53 +90,28 @@ class CustomCDNDialog(Dialog):
 
     def onConfirm(self, event):
         if self.cdn_list.GetItemCount() == 0:
-            wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN host", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN 节点", "警告", wx.ICON_WARNING).ShowModal()
             return
         
+        Config.Temp.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]
+
         event.Skip()
     
     def onPingTestEVT(self, event):
         def worker(index: int, cdn: str):
             def update(value):
-                self.cdn_list.SetItem(index, 3, value)
+                self.cdn_list.SetItem(index, 2, value)
             
-            def get_ping_cmd() -> str:
-                match Platform(Config.Sys.platform):
-                    case Platform.Windows:
-                        return f"ping {cdn}"
-                    
-                    case Platform.Linux | Platform.macOS:
-                        return f"ping {cdn} -c 4"
-
-            def get_latency():
-                match Platform(Config.Sys.platform):
-                    case Platform.Windows:
-                        return re.findall(r"Average = ([0-9]*)", process.stdout)
-                    
-                    case Platform.Linux | Platform.macOS:
-                        _temp = re.findall(r"time=([0-9]*)", process.stdout)
-
-                        if _temp:
-                            return [int(sum(list(map(int, _temp))) / len(_temp))]
-                        else:
-                            return None
-                    
             wx.CallAfter(update, "正在检测...")
 
-            process = subprocess.run(get_ping_cmd(), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
-            latency = get_latency()
-
-            if latency:
-                result = f"{latency[0]}ms"
-            else:
-                result = "请求超时"
+            result = Ping.run(cdn)
 
             wx.CallAfter(update, result)
 
         thread_pool = ThreadPoolExecutor(max_workers = 5)
 
         for i in range(self.cdn_list.GetItemCount()):
-            item: wx.ListItem = self.cdn_list.GetItem(i, 1)
+            item: wx.ListItem = self.cdn_list.GetItem(i, 0)
 
             thread_pool.submit(worker, i, item.GetText())
 
@@ -209,6 +183,3 @@ class CustomCDNDialog(Dialog):
     def setItemOrder(self):
         for index in range(self.cdn_list.GetItemCount()):
             self.cdn_list.SetItem(index, 1, str(index + 1))
-
-    def saveCDNList(self):
-        Config.Advanced.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]

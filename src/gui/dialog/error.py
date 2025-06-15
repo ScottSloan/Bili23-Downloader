@@ -1,14 +1,11 @@
-import os
 import wx
-import json
-import wx.adv
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
-from gui.component.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.text_ctrl.text_ctrl import TextCtrl
+from gui.component.window.dialog import Dialog
 
 class ErrorInfoDialog(Dialog):
     def __init__(self, parent, exception_info = GlobalExceptionInfo.info):
@@ -20,13 +17,15 @@ class ErrorInfoDialog(Dialog):
 
         self.CenterOnParent()
 
+        wx.Bell()
+
     def init_UI(self):
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
 
         time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp"))))
         error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.get("exception_name")))
         error_id_lab = wx.StaticText(self, -1, "错误码：{}".format(self.exception_info.get("code")))
-        message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")))
+        message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")), style = wx.ST_ELLIPSIZE_END)
 
         box_sizer = wx.FlexGridSizer(2, 2, 0, 75)
         box_sizer.Add(time_lab, 0, wx.ALL, self.FromDIP(6))
@@ -46,14 +45,12 @@ class ErrorInfoDialog(Dialog):
         self.log_box = TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.log_box.SetFont(font)
 
-        self.save_btn = wx.Button(self, -1, "保存到文件", size = self.get_scaled_size((100, 28)))
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.save_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.Add(self.close_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)

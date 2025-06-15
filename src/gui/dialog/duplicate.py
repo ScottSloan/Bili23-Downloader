@@ -1,6 +1,6 @@
 import wx
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class DuplicateDialog(Dialog):
     def __init__(self, parent, duplicate_episode_list: dict):

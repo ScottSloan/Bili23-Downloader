@@ -2,7 +2,7 @@ import wx
 
 from utils.common.enums import ProcessingType
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 
 class ProcessingWindow(Dialog):
     def __init__(self, parent, type: ProcessingType):

@@ -4,7 +4,7 @@ import json
 
 from utils.auth.login import CaptchaUtils, LoginInfo
 
-from gui.component.dialog import Dialog
+from gui.component.window.dialog import Dialog
 from gui.component.webview import Webview
 
 class CaptchaWindow(Dialog):
@@ -60,7 +60,7 @@ class CaptchaWindow(Dialog):
             LoginInfo.seccode = data["data"]["seccode"]
 
             # 验证通过，关闭窗口
-            self.webview.Close()
+            self.webview.browser.Close()
             
             self.Close()
             self.Destroy()

@@ -7,10 +7,9 @@ from utils.common.thread import Thread
 from utils.common.enums import Platform
 from utils.common.map import video_codec_map, supported_gpu_map, video_sw_encoder_map, video_hw_encoder_map
 from utils.config import Config
-from utils.tool_v2 import FormatTool, FileDirectoryTool
 
-from gui.component.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
+from gui.component.text_ctrl.text_ctrl import TextCtrl
+from gui.component.window.dialog import Dialog
 
 class ConverterWindow(Dialog):
     def __init__(self, parent):
@@ -204,7 +203,7 @@ class ConverterWindow(Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        FileDirectoryTool.open_file_location(path)
+        # FileDirectoryTool.open_file_location(path)
 
     def onConverting(self):
         def _get_mac_accels():
@@ -331,7 +330,7 @@ class ConverterWindow(Dialog):
             self.duration_lab.SetLabel(f"时长：{duration[0]}")
 
         if size:
-            self.size_lab.SetLabel(f"大小：{FormatTool.format_size(int(size[0][0]))}")
+            self.size_lab.SetLabel(f"大小：{(int(size[0][0]))}")
 
         if speed:
             self.speed_lab.SetLabel(f"速度：{speed[0]}x")

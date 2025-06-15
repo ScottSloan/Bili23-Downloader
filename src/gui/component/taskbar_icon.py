@@ -1,7 +1,7 @@
 import wx
 import wx.adv
 
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.icon_v4 import Icon, IconID
 from utils.config import Config
 
 class TaskBarIcon(wx.adv.TaskBarIcon):
@@ -10,7 +10,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
 
         wx.adv.TaskBarIcon.__init__(self)
 
-        self.SetIcon(wx.Icon(Icon.get_icon_bitmap(IconID.APP_ICON_SMALL)), Config.APP.name)
+        self.SetIcon(wx.Icon(Icon.get_app_icon_bitmap(IconID.App_Small)), Config.APP.name)
 
         self.init_id()
 

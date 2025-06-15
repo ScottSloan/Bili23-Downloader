@@ -1,10 +1,9 @@
 from utils.common.data_type import ParseCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
+from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser
-
-from utils.tool_v2 import RequestTool
 
 class B23Parser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -13,7 +12,7 @@ class B23Parser(Parser):
         self.callback = callback
 
     def get_redirect_url(self, url: str):
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers())
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers())
     
         return req.url
 
@@ -21,7 +20,7 @@ class B23Parser(Parser):
         def worker():
             new_url = self.get_redirect_url(url)
 
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = new_url)
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (new_url, ))
 
         try:
             return worker()

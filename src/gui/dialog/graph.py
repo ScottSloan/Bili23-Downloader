@@ -3,7 +3,7 @@ import wx
 from utils.parse.interact_video import InteractVideoInfo
 
 from gui.component.webview import Webview
-from gui.component.frame import Frame
+from gui.component.window.frame import Frame
 
 class GraphWindow(Frame):
     def __init__(self, parent):

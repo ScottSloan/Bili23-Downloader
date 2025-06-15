@@ -1,6 +1,6 @@
 import wx
 
-from gui.component.frame import Frame
+from gui.component.window.frame import Frame
 
 class DebugWindow(Frame):
     def __init__(self, parent):

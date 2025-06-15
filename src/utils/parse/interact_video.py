@@ -3,8 +3,9 @@ import time
 from typing import List, Callable
 
 from utils.config import Config
-from utils.tool_v2 import RequestTool
 from utils.auth.wbi import WbiUtils
+
+from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser
 
@@ -115,7 +116,7 @@ class InteractVideoParser(Parser):
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?aid={InteractVideoInfo.aid}&cid={InteractVideoInfo.cid}&{WbiUtils.encWbi(params)}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = InteractVideoInfo.url, sessdata = Config.User.SESSDATA))
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = InteractVideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -129,7 +130,7 @@ class InteractVideoParser(Parser):
         # 获取互动视频模块信息
         url = f"https://api.bilibili.com/x/stein/edgeinfo_v2?bvid={InteractVideoInfo.bvid}&graph_version={InteractVideoInfo.graph_version}&edge_id={edge_id}"
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = InteractVideoInfo.url, sessdata = Config.User.SESSDATA))
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = InteractVideoInfo.url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
