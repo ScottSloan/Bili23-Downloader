@@ -83,7 +83,14 @@ class FileNameFormatter:
 
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):
-        return {
+        def check(data: dict):
+            for value in data.values:
+                if not value:
+                    value = None
+            
+            return data
+
+        return check({
             "time": datetime.now(),
             "timestamp": str(int(datetime.now().timestamp())),
             "pubtime": datetime.fromtimestamp(task_info.pubtime),
@@ -110,7 +117,7 @@ class FileNameFormatter:
             "duration": task_info.duration,
             "up_name": task_info.up_info.get("up_name"),
             "up_mid": task_info.up_info.get("up_mid")
-        }
+        })
 
     @staticmethod
     def get_legal_file_name(file_name: str):

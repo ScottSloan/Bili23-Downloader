@@ -8,6 +8,7 @@ from utils.common.data_type import Callback, Process, PlayerCallback
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.directory import DirectoryUtils
 from utils.common.map import time_ratio_map
+from utils.common.re_utils import REUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -75,7 +76,7 @@ class SelectPage(Panel):
     def change_drop_file_page(self, page: int):
         parent = self.GetParent().GetParent().GetParent()
 
-        parent.change_page(1)
+        parent.notebook.SetSelection(1)
         parent.set_target_page(page)
 
 class DropFilePage(Panel):
@@ -114,7 +115,9 @@ class DropFilePage(Panel):
         dlg = wx.FileDialog(self, "选择文件", defaultDir = Config.Download.path, style = wx.FD_OPEN)
 
         if dlg.ShowModal() == wx.ID_OK:
-            self.change_page(dlg.GetPath())
+            parent = self.GetParent().GetParent().GetParent()
+
+            parent.load_page(dlg.GetPath())
             
         dlg.Destroy()
 
@@ -148,11 +151,6 @@ class DropFilePage(Panel):
             x = (self.GetClientSize().width - text_width) // 2
             dc.DrawText(line, x, y_start)
             y_start += text_height + self.FromDIP(4)
-    
-    def change_page(self, input_path: str):
-        parent = self.GetParent().GetParent().GetParent()
-
-        parent.set_input_path(input_path)
 
 class ContainerPage(Panel):
     class Page(Panel):
@@ -171,7 +169,7 @@ class ContainerPage(Panel):
             pass
         
         def onBrowseEVT(self, event):
-            dlg = wx.FileDialog(self, "选择保存位置", defaultDir = os.path.dirname(self.input_path), style = wx.FD_SAVE)
+            dlg = wx.FileDialog(self, "选择保存位置", wildcard = self.wildcard, defaultDir = os.path.dirname(self.input_path), style = wx.FD_SAVE)
 
             if dlg.ShowModal() == wx.ID_OK:
                 self.output_box.SetValue(dlg.GetPath())
@@ -212,6 +210,12 @@ class ContainerPage(Panel):
         def input_path(self) -> str:
             return self.GetParent().GetParent().input_path
         
+        @property
+        def input_format(self) -> str:
+            _, ext = os.path.splitext(self.input_path)
+
+            return ext.removeprefix(".")
+
         @property
         def output_path(self) -> str:
             return self.output_box.GetValue()
@@ -446,6 +450,10 @@ class ContainerPage(Panel):
             self.onLengthChange(self.player.get_time())
 
         @property
+        def wildcard(self):
+            return f"{self.input_format.upper()} 文件 | *.{self.input_format}"
+
+        @property
         def time_ratio(self):
             match self.ratio_choice.GetSelection():
                 case 0:
@@ -465,6 +473,9 @@ class ContainerPage(Panel):
 
             self.Bind_EVT()
 
+            self.acodec = ""
+            self.output_format = ""
+
         def init_UI(self):
             output_lab = wx.StaticText(self, -1, "输出")
             self.output_box = TextCtrl(self, -1)
@@ -475,11 +486,18 @@ class ContainerPage(Panel):
             output_hbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT), self.FromDIP(6))
             output_hbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
-            self.audio_format_lab = wx.StaticText(self, -1, "音频流格式：--")
-            target_format_lab = wx.StaticText(self, -1, "目标格式：")
+            self.audio_format_lab = wx.StaticText(self, -1, "音频流编码格式：--")
+            self.target_format_lab = wx.StaticText(self, -1, "目标格式：--")
+
+            format_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            format_hbox.Add(self.audio_format_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            format_hbox.AddSpacer(self.FromDIP(40))
+            format_hbox.Add(self.target_format_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
             self.start_btn = wx.Button(self, -1, "开始分离", size = self.FromDIP((120, 28)))
 
             action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            action_hbox.Add(format_hbox, 0, wx.EXPAND)
             action_hbox.AddStretchSpacer()
             action_hbox.Add(self.start_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
@@ -493,7 +511,7 @@ class ContainerPage(Panel):
             self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
 
             self.start_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
-        
+
         def onStartEVT(self, event):
             if self.check():
                 return
@@ -504,6 +522,57 @@ class ContainerPage(Panel):
             }
                 
             FFmpeg.Utils.extract_audio(info, self.get_callback("分离完成\n\n已成功分离音频"))
+
+        def onChangeInputFile(self):
+            self.get_file_info()
+
+            self.output_box.SetValue("")
+        
+        def get_file_info(self):
+            class callback(Callback):
+                @staticmethod
+                def onSuccess(*args, **kwargs):
+                    process: Process = kwargs["process"]
+
+                    info = FFmpeg.Utils.parse_info(process.output)
+
+                    self.acodec = info.get("acodec")
+
+                    result = REUtils.find_output_format(self.acodec)
+
+                    self.set_output_format(result)
+
+                    self.update_info()
+                
+                @staticmethod
+                def onError(*args, **kwargs):
+                    pass
+
+            FFmpeg.Utils.info(self.input_path, callback)
+
+        def update_info(self):
+            self.output_box.Enable(bool(self.output_format))
+            self.output_browse_btn.Enable(bool(self.output_format))
+            self.start_btn.Enable(bool(self.output_format))
+
+            self.audio_format_lab.SetLabel(f"音频流编码格式：{self.acodec}")
+            self.target_format_lab.SetLabel(f"目标格式：{self.output_format}")
+
+            self.Layout()
+
+        def set_output_format(self, result: list):
+            if result:
+                self.output_format: str = result[0]
+
+                if self.output_format.startswith("wma"):
+                    self.output_format = "wma"
+
+            else:
+                self.output_format = None
+
+        @property
+        def wildcard(self):
+            return f"{self.output_format.upper()} 文件 | *.{self.output_format}"
 
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -558,7 +627,7 @@ class ContainerPage(Panel):
 
         self.notebook.GetCurrentPage().onCloseEVT()
 
-        parent.change_page(0)
+        parent.notebook.SetSelection(0)
 
     def onBrowseEVT(self, event):
         dlg = wx.FileDialog(self, "选择文件", defaultDir = os.path.dirname(self.input_path), defaultFile = os.path.basename(self.input_path), style = wx.FD_OPEN)
@@ -616,6 +685,7 @@ class FormatFactoryWindow(Frame):
 
     def init_utils(self):
         self.input_path = None
+        self.input_format = None
         self.target_page = None
     
     def onCloseEVT(self, event):
@@ -624,8 +694,8 @@ class FormatFactoryWindow(Frame):
 
         event.Skip()
 
-    def set_input_path(self, path: str):
-        def load_page():
+    def load_page(self, path: str):
+        def load_container_page():
             def get_title():
                 return {
                     0: "详细信息",
@@ -657,19 +727,19 @@ class FormatFactoryWindow(Frame):
 
             self.container_page.change_input_path(self.input_path)
 
-        self.input_path = path
+        self.set_input_path(path)
 
-        load_page()
+        load_container_page()
 
-        self.change_page(2)
+        self.notebook.SetSelection(2)
 
     def change_input_path(self, path: str):
-        self.input_path = path
+        self.set_input_path(path)
 
         self.container_page.notebook.GetCurrentPage().onChangeInputFile()
 
-    def change_page(self, page: int):
-        self.notebook.SetSelection(page)
+    def set_input_path(self, path: str):
+        self.input_path = path
 
     def set_target_page(self, page: int):
         self.target_page = page

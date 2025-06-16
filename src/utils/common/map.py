@@ -261,6 +261,12 @@ field_map = {
         "example": "合集（请参考说明文档）",
         "scope": [0, 1, 4],
     },
+    "series_title": {
+        "name": "{series_title}",
+        "description": "剧集名称或课程名称",
+        "example": "《孤独摇滚》",
+        "scope": [0, 2, 3, 4]
+    },
     "aid": {
         "name": "{aid}",
         "description": "视频 av 号",
@@ -295,12 +301,6 @@ field_map = {
         "name": "{media_id}",
         "description": "视频 media_id",
         "example": "28339735",
-        "scope": [0, 2, 4]
-    },
-    "series_title": {
-        "name": "{series_title}",
-        "description": "视频系列名称",
-        "example": "《孤独摇滚》",
         "scope": [0, 2, 4]
     },
     "video_quality": {

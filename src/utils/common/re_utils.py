@@ -18,6 +18,10 @@ class REUtils:
         return re.search(r'[<>:"|?*\x00-\x1F]', string)
     
     @classmethod
+    def find_output_format(cls, acodec: str):
+        return re.findall(r"\w+", acodec)
+    
+    @classmethod
     def check_result(cls, result: list, group: int):
         if len(result) < group:
             result.extend(cls.fill_empty(group - len(result)))

@@ -81,6 +81,7 @@ class DownloadInfo:
 
         info["parse_type"] = ParseType.Cheese.value
         info["download_type"] = ParseType.Cheese.value
+        info["series_title"] = CheeseInfo.title
         info["up_info"] = {
             "up_name": CheeseInfo.up_name,
             "up_mid": CheeseInfo.up_mid
