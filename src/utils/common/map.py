@@ -264,7 +264,7 @@ field_map = {
     "series_title": {
         "name": "{series_title}",
         "description": "剧集名称或课程名称",
-        "example": "《孤独摇滚》",
+        "example": "孤独摇滚！",
         "scope": [0, 2, 3, 4]
     },
     "aid": {

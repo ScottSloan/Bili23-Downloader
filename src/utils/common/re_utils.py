@@ -15,7 +15,7 @@ class REUtils:
     
     @classmethod
     def find_illegal_chars(cls, string: str):
-        return re.search(r'[<>:"|?*\x00-\x1F]', string)
+        return re.findall(r'[<>:"|?*\x00-\x1F]', string)
     
     @classmethod
     def find_output_format(cls, acodec: str):

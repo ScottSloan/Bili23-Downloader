@@ -84,7 +84,7 @@ class FileNameFormatter:
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):
         def check(data: dict):
-            for value in data.values:
+            for value in data.values():
                 if not value:
                     value = None
             

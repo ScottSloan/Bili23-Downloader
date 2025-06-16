@@ -31,7 +31,7 @@ class AddNewTemplateDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        template_lab = wx.StaticText(self, -1, "文件名模板（支持添加子目录）")
+        template_lab = wx.StaticText(self, -1, f"文件名模板（支持添加子目录），生效范围：{get_mapping_key_by_value(scope_map, self.scope_id)}")
         template_tooltip = ToolTip(self)
         template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方添加路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会被放置到同一个文件夹中，达到自动分类的效果。\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）')
         self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((60, 24)))
@@ -187,10 +187,10 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        file_name = FileNameFormatter.format_file_name(get_task_info(), template, basename = False)
-
-        if REUtils.find_illegal_chars(r'[<>:"|?*\x00-\x1F]', file_name):
+        if REUtils.find_illegal_chars(template):
             raise ValueError("illegal")
+        
+        file_name = FileNameFormatter.format_file_name(get_task_info(), template, basename = False)
         
         if len(os.path.basename(file_name)) > 255:
             raise ValueError("max length")

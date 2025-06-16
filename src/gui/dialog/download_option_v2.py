@@ -11,7 +11,7 @@ from utils.config import Config, app_config_group
 from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
 
-from gui.dialog.custom_subtitle_lan import CustomLanDialog
+from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
 
 from gui.component.window.dialog import Dialog
 from gui.component.info_label import InfoLabel
@@ -209,7 +209,7 @@ class DownloadOptionDialog(Dialog):
         self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(other_box)
-        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名需添加 {number} 或者 {number_with_zero} 字段才会显示")
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))
