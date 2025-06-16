@@ -4,9 +4,10 @@ import os
 from utils.config import Config
 
 from utils.common.icon_v4 import Icon, IconID, IconSize
-from utils.common.data_type import Callback, Process
+from utils.common.data_type import Callback, Process, PlayerCallback
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.directory import DirectoryUtils
+from utils.common.map import time_ratio_map
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -339,11 +340,27 @@ class ContainerPage(Panel):
             self.start_time_box = TimeCtrl(self, "开始时间")
             self.end_time_box = TimeCtrl(self, "结束时间")
 
+            ratio_lab = wx.StaticText(self, -1, "精度")
+            self.ratio_choice = wx.Choice(self, -1, choices = list(time_ratio_map.keys()))
+            self.ratio_choice.SetSelection(0)
+
+            ratio_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            ratio_hbox.Add(ratio_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            ratio_hbox.Add(self.ratio_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+            ratio_vbox = wx.BoxSizer(wx.VERTICAL)
+            ratio_vbox.AddStretchSpacer()
+            ratio_vbox.Add(ratio_hbox, 0, wx.EXPAND)
+            ratio_vbox.AddStretchSpacer()
+
             self.cut_btn = wx.Button(self, -1, "开始截取", size = self.get_scaled_size((100, 28)))
 
             time_hbox = wx.BoxSizer(wx.HORIZONTAL)
             time_hbox.Add(self.start_time_box, 0, wx.EXPAND)
+            time_hbox.AddSpacer(self.FromDIP(10))
             time_hbox.Add(self.end_time_box, 0, wx.EXPAND)
+            time_hbox.AddSpacer(self.FromDIP(10))
+            time_hbox.Add(ratio_vbox, 0, wx.EXPAND)
 
             output_lab = wx.StaticText(self, -1, "输出")
             self.output_box = TextCtrl(self, -1)
@@ -369,8 +386,20 @@ class ContainerPage(Panel):
             self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
             self.cut_btn.Bind(wx.EVT_BUTTON, self.onCutEVT)
 
+            self.range_slider.Bind(wx.EVT_SLIDER, self.onSliderEVT)
+            self.ratio_choice.Bind(wx.EVT_CHOICE, self.onChangeTimeRatio)
+
         def init_utils(self):
-            self.player.init_player(self.input_path)
+            class callback(PlayerCallback):
+                @staticmethod
+                def onLengthChange(length: int):
+                    self.onLengthChange(length)
+
+                @staticmethod
+                def onReset():
+                    self.onReset()
+
+            self.player.init_player(self.input_path, callback)
 
         def onCloseEVT(self):
             self.player.close_player()
@@ -381,11 +410,12 @@ class ContainerPage(Panel):
 
                 self.player.player.set_mrl(self.input_path)
 
-        def onPasteStartTimeEVT(self, event):
-            self.start_time_box.SetValue(self.player.get_time())
+        def onSliderEVT(self, event):
+            obj = event.GetEventObject()
+            lv, hv = obj.GetValues()
 
-        def onPasteEndTimeEVT(self, event):
-            self.end_time_box.SetValue(self.player.get_time())
+            self.start_time_box.SetTime(int(round(lv) * self.time_ratio))
+            self.end_time_box.SetTime(int(round(hv) * self.time_ratio))
 
         def onCutEVT(self, event):
             def get_info():
@@ -400,6 +430,32 @@ class ContainerPage(Panel):
                 return
 
             FFmpeg.Utils.cut(get_info(), self.get_callback("截取完成\n\n已成功截取片段"))
+
+        def onLengthChange(self, length):
+            self.range_slider.SetMax(int(length / self.time_ratio))
+            self.range_slider.SetValues(0, int(length / self.time_ratio))
+
+        def onReset(self):
+            self.start_time_box.SetTime(0)
+            self.end_time_box.SetTime(0)
+
+            self.range_slider.SetMax(100)
+            self.range_slider.SetValues(0, 100)
+
+        def onChangeTimeRatio(self, event):
+            self.onLengthChange(self.player.get_time())
+
+        @property
+        def time_ratio(self):
+            match self.ratio_choice.GetSelection():
+                case 0:
+                    return 100
+                
+                case 1:
+                    return 500
+                
+                case 2:
+                    return 1000
 
     class ExtractionPage(Page):
         def __init__(self, parent):

@@ -1,9 +1,11 @@
 import wx
 import webbrowser
 from datetime import datetime
+from typing import Callable
 
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.formatter import FormatUtils
+from utils.common.data_type import PlayerCallback
 
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
@@ -89,7 +91,7 @@ class Player(Panel):
 
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
-    def init_player(self, input_path: str):
+    def init_player(self, input_path: str, callback: PlayerCallback):
         if not vlc_available:
             return
 
@@ -103,6 +105,7 @@ class Player(Panel):
         self.GetSizer().Layout()
 
         self.onSlider = False
+        self.callback = callback
 
     def close_player(self):
         if vlc_available:
@@ -160,11 +163,10 @@ class Player(Panel):
         self.progress_bar.SetRange(0, length)
         self.length_lab.SetLabel(FormatUtils.format_duration(int(length / 1000)))
 
-    def get_time(self):
-        offset = self.player.get_progress()
-        date_str = FormatUtils.format_duration(int(offset / 1000), show_hour = True)
+        wx.CallAfter(self.callback.onLengthChange, length)
 
-        return wx.DateTime(datetime.strptime(date_str, "%H:%M:%S"))
+    def get_time(self):
+        return self.player.get_length()
 
     def update_time(self, offset: int):
         def worker():
@@ -191,3 +193,5 @@ class Player(Panel):
         self.time_lab.SetLabel("00:00")
 
         self.set_play_btn_icon(VLCState.Stopped)
+
+        wx.CallAfter(self.callback.onReset)

@@ -414,3 +414,14 @@ class ParseCallback(ABC):
     @abstractmethod
     def onUpdateInteractVideo(title: str):
         pass
+
+class PlayerCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onLengthChange(length: int):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onReset():
+        pass

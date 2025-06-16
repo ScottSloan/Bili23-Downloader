@@ -11,6 +11,8 @@ class TimeCtrl(Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
     def init_UI(self):
         label = wx.StaticText(self, -1, self.label)
 
@@ -35,3 +37,30 @@ class TimeCtrl(Panel):
         vbox.Add(adjust_hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
+
+    def Bind_EVT(self):
+        self.plus_btn.Bind(wx.EVT_BUTTON, self.onPlusEVT)
+        self.min_btn.Bind(wx.EVT_BUTTON, self.onMinEVT)
+
+    def onPlusEVT(self, event):
+        ms = self.GetTime()
+        self.SetTime(ms + 100)
+
+    def onMinEVT(self, event):
+        ms = self.GetTime()
+        self.SetTime(ms - 100)
+
+    def SetTime(self, ms: int):
+        hours, ms = divmod(ms, 3600000)
+        minutes, ms = divmod(ms, 60000)
+        seconds, ms = divmod(ms, 1000)
+        
+        time =  f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}.{int(ms):03d}"
+
+        self.time_ctrl.SetValue(time)
+
+    def GetTime(self):
+        h, m, s_millis = self.time_ctrl.GetValue().split(':')
+        s, ms = s_millis.split('.') if '.' in s_millis else (s_millis, '000')
+
+        return (int(h) * 3600000) + (int(m) * 60000) + (int(s) * 1000) + int(ms)

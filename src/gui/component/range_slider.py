@@ -1,26 +1,31 @@
 import wx
 
 class SliderThumb:
-    def __init__(self, parent, value):
+    def __init__(self, parent: wx.Window, value):
         self.parent = parent
+
         self.dragged = False
         self.mouse_over = False
-        self.thumb_poly = ((0, 0), (0, 13), (5, 18), (10, 13), (10, 0))
-        self.thumb_shadow_poly = ((0, 14), (4, 18), (6, 18), (10, 14))
+
+        self.thumb_poly = ((1, 1), (1, parent.FromDIP(13) + 1), (parent.FromDIP(5) + 1, parent.FromDIP(18) + 1), (parent.FromDIP(10) + 1, parent.FromDIP(13) + 1), (parent.FromDIP(10) + 1, 1))
+        self.thumb_shadow_poly = ((0, 0), (0, parent.FromDIP(13) + 2), (parent.FromDIP(5) + 1, parent.FromDIP(18) + 3), (parent.FromDIP(10) + 2, parent.FromDIP(13) + 2), (parent.FromDIP(10) + 2, 0))
+
         min_coords = [float('Inf'), float('Inf')]
         max_coords = [-float('Inf'), -float('Inf')]
+
         for pt in list(self.thumb_poly) + list(self.thumb_shadow_poly):
             for i_coord, coord in enumerate(pt):
                 if coord > max_coords[i_coord]:
                     max_coords[i_coord] = coord
                 if coord < min_coords[i_coord]:
                     min_coords[i_coord] = coord
+
         self.size = (max_coords[0] - min_coords[0],
                      max_coords[1] - min_coords[1])
 
         self.value = value
-        self.normal_color = wx.Colour((0, 120, 215))
-        self.normal_shadow_color = wx.Colour((120, 180, 228))
+        self.normal_color = wx.Colour((255, 255, 255))
+        self.normal_shadow_color = wx.Colour((120, 120, 120))
         self.dragged_color = wx.Colour((204, 204, 204))
         self.dragged_shadow_color = wx.Colour((222, 222, 222))
         self.mouse_over_color = wx.Colour((23, 23, 23))
@@ -130,25 +135,25 @@ class SliderThumb:
       return float(value - min_value) / (max_value - min_value)
 
 class RangeSlider(wx.Panel):
-    def __init__(self, parent, id=wx.ID_ANY, lowValue=None, highValue=None, minValue=0, maxValue=100,
-                 pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.SL_HORIZONTAL, validator=wx.DefaultValidator,
-                 name='rangeSlider'):
-        if style != wx.SL_HORIZONTAL:
-            raise NotImplementedError('Styles not implemented')
-        if validator != wx.DefaultValidator:
-            raise NotImplementedError('Validator not implemented')
-        super().__init__(parent=parent, id=id, pos=pos, size=size, name=name)
-        self.SetMinSize(size=(max(50, size[0]), max(26, size[1])))
+    def __init__(self, parent, id = wx.ID_ANY, lowValue = None, highValue = None, minValue = 0, maxValue = 100, pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.SL_HORIZONTAL, validator = wx.DefaultValidator, name = 'rangeSlider'):
+        
+        super().__init__(parent = parent, id = id, pos = pos, size = size, name = name)
+
+        self.SetMinSize(size = (max(self.FromDIP(50), size[0]), max(self.FromDIP(28), size[1])))
+
         if minValue > maxValue:
             minValue, maxValue = maxValue, minValue
+
         self.min_value = minValue
         self.max_value = maxValue
+
         if lowValue is None:
             lowValue = self.min_value
         if highValue is None:
             highValue = self.max_value
         if lowValue > highValue:
             lowValue, highValue = highValue, lowValue
+
         lowValue = max(lowValue, self.min_value)
         highValue = min(highValue, self.max_value)
 
@@ -280,10 +285,10 @@ class RangeSlider(wx.Panel):
         dc.SetBackground(background_brush)
         dc.Clear()
         # Draw slider
-        track_height = 12
+        track_height = self.FromDIP(28)
         dc.SetPen(wx.Pen(self.slider_outline_color, width = 1, style = wx.PENSTYLE_SOLID))
         dc.SetBrush(wx.Brush(self.slider_background_color, style = wx.BRUSHSTYLE_SOLID))
-        dc.DrawRectangle(self.border_width, int(h/2 - track_height/2), int(w - 2 * self.border_width), track_height)
+        dc.DrawRectangle(self.border_width, int(h / 2 - track_height / 2), int(w - 2 * self.border_width), track_height)
 
         # Draw selected range
         if self.IsEnabled():
