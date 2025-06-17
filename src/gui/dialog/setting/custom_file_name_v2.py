@@ -61,11 +61,14 @@ class AddNewTemplateDialog(Dialog):
 
         field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
         field_tooltip = ToolTip(self)
-        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中格式可自定义，具体用法请参考说明文档\n\n不同类型视频可用的字段有所不同，请留意")
+        field_tooltip.set_tooltip("字段名必须以 {} 包裹，可重复添加，但最终文件名部分长度不能超过 255\n\n时间字段中格式可自定义，具体用法请参考说明文档")
+        field_scope_lab = wx.StaticText(self, -1, "注意：不同生效范围可用的字段不同")
 
         field_hbox = wx.BoxSizer(wx.HORIZONTAL)
         field_hbox.Add(field_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
         field_hbox.Add(field_tooltip, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        field_hbox.AddStretchSpacer()
+        field_hbox.Add(field_scope_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.field_list = wx.ListCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 200)), style = wx.LC_REPORT)
 
@@ -99,27 +102,20 @@ class AddNewTemplateDialog(Dialog):
 
     def init_utils(self):
         def init_list_column():
-            self.field_list.AppendColumn("字段名称", width = self.FromDIP(170))
-            self.field_list.AppendColumn("说明", width = self.FromDIP(200))
+            self.field_list.AppendColumn("字段名称", width = self.FromDIP(210))
+            self.field_list.AppendColumn("说明", width = self.FromDIP(240))
             self.field_list.AppendColumn("示例", width = self.FromDIP(200))
-            self.field_list.AppendColumn("生效范围", width = self.FromDIP(160))
 
         def init_list_data():
-            def get_scope():
-                return "、".join([get_mapping_key_by_value(scope_map, i) for i in value["scope"] if i in [1, 2, 3]])
-            
             for value in field_map.values():            
                 if self.scope_id in value["scope"]:
-                    self.field_list.Append([value["name"], value["description"], value["example"], get_scope()])
+                    self.field_list.Append([value["name"], value["description"], value["example"]])
 
         init_list_column()
 
         init_list_data()
 
         self.template_box.SetValue(self.template)
-
-        if self.scope_id in [1, 2, 3]:
-            self.field_list.DeleteColumn(3)
 
     def onAddFieldEVT(self, event):
         field = self.field_list.GetItemText(self.field_list.GetFocusedItem(), 0)
@@ -310,12 +306,19 @@ class CustomFileNameDialog(Dialog):
 
     def init_utils(self):
         def init_list_column():
-            self.template_list.AppendColumn("文件名模板", width = self.FromDIP(500))
+            self.template_list.AppendColumn("优先级", width = self.FromDIP(50))
+            self.template_list.AppendColumn("文件名模板", width = self.FromDIP(400))
             self.template_list.AppendColumn("生效范围", width = self.FromDIP(100))
 
         def init_list_data():
             for entry in Config.Temp.file_name_template_list:
-                self.template_list.Append([entry["template"], get_mapping_key_by_value(scope_map, entry["scope"])])
+                scope_id = entry["scope"]
+
+                item = self.template_list.Append([str(scope_id), entry["template"], get_mapping_key_by_value(scope_map, scope_id)])
+
+                self.template_list.SetItemData(item, scope_id)
+
+            self.template_list.SortItems(self.listCompareCallback)
 
         init_list_column()
 
@@ -332,7 +335,11 @@ class CustomFileNameDialog(Dialog):
         dlg = AddNewTemplateDialog(self, scope_id)
 
         if dlg.ShowModal() == wx.ID_OK:
-            self.template_list.Append([dlg.get_template(), scope])
+            item = self.template_list.Append([str(scope_id), dlg.get_template(), scope])
+
+            self.template_list.SetItemData(item, scope_id)
+
+            self.template_list.SortItems(self.listCompareCallback)
 
     def onEditEVT(self, event):
         item = self.template_list.GetFocusedItem()
@@ -341,15 +348,15 @@ class CustomFileNameDialog(Dialog):
             wx.MessageDialog(self, "修改文件名模板失败\n\n未选择要修改的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        template = self.template_list.GetItemText(item, 0)
-        scope_id = scope_map.get(self.template_list.GetItemText(item, 1))
+        template = self.template_list.GetItemText(item, 1)
+        scope_id = scope_map.get(self.template_list.GetItemText(item, 2))
 
         dlg = AddNewTemplateDialog(self, scope_id, add_mode = False, template = template)
 
         if dlg.ShowModal() == wx.ID_OK:
             new_template = dlg.get_template()
 
-            self.template_list.SetItem(item, 0, new_template)
+            self.template_list.SetItem(item, 1, new_template)
 
     def onDeleteEVT(self, event):
         item = self.template_list.GetFocusedItem()
@@ -358,7 +365,7 @@ class CustomFileNameDialog(Dialog):
             wx.MessageDialog(self, "删除文件名模板失败\n\n未选择要删除的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        scope_id = scope_map.get(self.template_list.GetItemText(item, 1))
+        scope_id = scope_map.get(self.template_list.GetItemText(item, 2))
 
         if scope_id == 4:
             wx.MessageDialog(self, "删除文件名模板失败\n\n不能删除默认的文件名模板", "警告", wx.ICON_WARNING).ShowModal()
@@ -369,27 +376,35 @@ class CustomFileNameDialog(Dialog):
         if dlg.ShowModal() == wx.ID_YES:
             self.template_list.DeleteItem(item)
 
+            self.template_list.SortItems(self.listCompareCallback)
+
     def onResetEVT(self, event):
         dlg = wx.MessageDialog(self, "重置为默认值\n\n是否要重置为默认值？当前添加的文件名模板将会丢失", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             self.template_list.DeleteAllItems()
 
+            self.template_list.Append(["\\{series_title}\\{title}", "剧集"])
+            self.template_list.Append(["\\{series_title}\\{title}", "课程"])
             self.template_list.Append(["{zero_padding_number} - {title}", "默认"])
+
+            self.template_list.SortItems(self.listCompareCallback)
 
     def onConfirmEVT(self, event):
         Config.Temp.file_name_template_list.clear()
 
         for i in range(self.template_list.GetItemCount()):
             Config.Temp.file_name_template_list.append({
-                "template": self.template_list.GetItemText(i, 0),
-                "scope": scope_map.get(self.template_list.GetItemText(i, 1))
+                "template": self.template_list.GetItemText(i, 1),
+                "scope": scope_map.get(self.template_list.GetItemText(i, 2))
             })
 
         event.Skip()
 
     def check_existence(self, scope: str):
         for i in range(self.template_list.GetItemCount()):
-            if self.template_list.GetItemText(i, 1) == scope:
+            if self.template_list.GetItemText(i, 2) == scope:
                 return True
-            
+
+    def listCompareCallback(self, item1: int, item2: int):
+        return  not (item1 < item2)

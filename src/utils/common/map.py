@@ -223,19 +223,19 @@ field_map = {
         "name": "{zone}",
         "description": "视频分区",
         "example": "综合",
-        "scope": [0, 1, 4]
+        "scope": [1]
     },
     "subzone": {
         "name": "{subzone}",
         "description": "视频子分区",
         "example": "动漫剪辑",
-        "scope": [0, 1, 4]
+        "scope": [1]
     },
     "area": {
         "name": "{area}",
         "description": "地区",
         "example": "日本",
-        "scope": [0, 2, 4]
+        "scope": [2]
     },
     "title": {
         "name": "{title}",
@@ -253,19 +253,19 @@ field_map = {
         "name": "{part_title}",
         "description": "分节标题",
         "example": "分节（请参考说明文档）",
-        "scope": [0, 1, 4]
+        "scope": [1]
     },
     "list_title": {
         "name": "{list_title}",
         "description": "合集标题",
         "example": "合集（请参考说明文档）",
-        "scope": [0, 1, 4],
+        "scope": [1],
     },
     "series_title": {
         "name": "{series_title}",
         "description": "剧集名称或课程名称",
         "example": "孤独摇滚！",
-        "scope": [0, 2, 3, 4]
+        "scope": [2, 3]
     },
     "aid": {
         "name": "{aid}",
@@ -289,19 +289,19 @@ field_map = {
         "name": "{ep_id}",
         "description": "视频 ep_id",
         "example": "693247",
-        "scope": [0, 2, 3, 4],
+        "scope": [2, 3],
     },
     "season_id": {
         "name": "{season_id}",
         "description": "视频 season_id",
         "example": "43164",
-        "scope": [0, 2, 3, 4]
+        "scope": [2, 3]
     },
     "media_id": {
         "name": "{media_id}",
         "description": "视频 media_id",
         "example": "28339735",
-        "scope": [0, 2, 4]
+        "scope": [2]
     },
     "video_quality": {
         "name": "{video_quality}",

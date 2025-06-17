@@ -402,8 +402,8 @@ class ContainerPage(Panel):
                 @staticmethod
                 def onReset():
                     self.onReset()
-
-            self.player.init_player(self.input_path, callback)
+            
+            self.player.init_player(callback)
 
         def onCloseEVT(self):
             self.player.close_player()
@@ -412,7 +412,7 @@ class ContainerPage(Panel):
             if vlc_available:
                 self.player.reset()
 
-                self.player.player.set_mrl(self.input_path)
+                self.player.set_playurl(self.input_path)
 
         def onSliderEVT(self, event):
             obj = event.GetEventObject()

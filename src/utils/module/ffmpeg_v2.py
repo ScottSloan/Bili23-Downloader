@@ -217,9 +217,9 @@ class FFmpeg:
             if not Config.Merge.ffmpeg_path:
                 Config.Merge.ffmpeg_path = env_path if env_path else Config.Merge.ffmpeg_path
                 Config.Merge.ffmpeg_path = cwd_path if cwd_path else Config.Merge.ffmpeg_path
-            
-            if not cls.check_file(Config.Merge.ffmpeg_path):
-                Config.Merge.ffmpeg_path = cwd_path
+            else:
+                if not cls.check_file(Config.Merge.ffmpeg_path):
+                    Config.Merge.ffmpeg_path = cwd_path
 
         @staticmethod
         def check_availability():

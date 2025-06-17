@@ -1,11 +1,13 @@
 import wx
 import webbrowser
-from datetime import datetime
-from typing import Callable
+from enum import Enum
 
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.formatter import FormatUtils
 from utils.common.data_type import PlayerCallback
+from utils.common.enums import Platform
+
+from utils.config import Config
 
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
@@ -13,12 +15,21 @@ from gui.component.button.bitmap_button import BitmapButton
 vlc_available = False
 
 try:
-    from utils.module.vlc_player import VLCPlayer, VLCState, VLCEvent
+    import vlc
 
     vlc_available = True
 
 except:
     vlc_available = False
+
+class VLCState(Enum):
+    Playing = 0
+    Paused = 1
+    Stopped = 2
+    Ended = 3
+
+class VLCEvent(Enum):
+    LengthChanged = vlc.EventType.MediaPlayerLengthChanged
 
 class Player(Panel):
     def __init__(self, parent):
@@ -28,12 +39,14 @@ class Player(Panel):
             self.init_player_UI()
 
             self.Bind_EVT()
+
+            self.onSlider = False
         else:
             self.init_unavailable_UI()
 
     def init_player_UI(self):
-        self.player_frame = Panel(self)
-        self.player_frame.SetBackgroundColour("black")
+        self.player_panel = Panel(self)
+        self.player_panel.SetBackgroundColour("black")
 
         self.play_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Play))
         self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Stop))
@@ -49,12 +62,15 @@ class Player(Panel):
         ctrl_hbox.Add(self.length_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.player_frame, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(self.player_panel, 1, wx.EXPAND)
         vbox.Add(ctrl_hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
 
         self.timer = wx.Timer(self, -1)
+
+        self.Instance = vlc.Instance()
+        self.player: vlc.MediaPlayer = self.Instance.media_player_new()
 
     def init_unavailable_UI(self):
         def onHelpEVT(self, event):
@@ -91,20 +107,7 @@ class Player(Panel):
 
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
-    def init_player(self, input_path: str, callback: PlayerCallback):
-        if not vlc_available:
-            return
-
-        self.player = VLCPlayer()
-
-        self.player.set_window(self.player_frame.GetHandle())
-        self.player.set_mrl(input_path)
-        self.player.register_callback(VLCEvent.LengthChanged.value, self.onLengthChangeEVT)
-
-        self.player_frame.SetInitialSize()
-        self.GetSizer().Layout()
-
-        self.onSlider = False
+    def init_player(self, callback: PlayerCallback):
         self.callback = callback
 
     def close_player(self):
@@ -112,9 +115,9 @@ class Player(Panel):
             self.reset()
 
     def onPlayEVT(self, event):
-        match self.player.get_state():
+        match self.get_state():
             case VLCState.Stopped:
-                self.player.play()
+                self.play()
 
                 if not self.timer.IsRunning():
                     self.timer.Start(1000)
@@ -127,7 +130,7 @@ class Player(Panel):
                 self.set_play_btn_icon(VLCState.Playing)
 
             case VLCState.Paused:
-                self.player.resume()
+                self.player.set_pause(0)
 
                 self.set_play_btn_icon(VLCState.Paused)
 
@@ -139,7 +142,7 @@ class Player(Panel):
     def onSeekEVT(self, event):
         offset = self.progress_bar.GetValue()
 
-        self.player.seek(offset)
+        self.seek(offset)
 
         self.onSlider = False
 
@@ -148,7 +151,7 @@ class Player(Panel):
             self.reset()
 
         if not self.onSlider:
-            offset = self.player.get_progress()
+            offset = self.get_progress()
 
             self.progress_bar.SetValue(offset)
 
@@ -165,8 +168,57 @@ class Player(Panel):
 
         wx.CallAfter(self.callback.onLengthChange, length)
 
+    def set_playurl(self, path: str):
+        self.path = path
+
+    def play(self):
+        self.set_mrl(self.path)
+        self.set_window(self.player_panel.GetHandle())
+        self.register_callback(VLCEvent.LengthChanged.value, self.onLengthChangeEVT)
+
+        self.player_panel.SetInitialSize()
+        self.GetSizer().Layout()
+
+        self.player.play()
+
+    def set_mrl(self, mrl: str):
+        media = self.Instance.media_new(mrl)
+
+        self.player.set_media(media)
+
     def get_time(self):
         return self.player.get_length()
+    
+    def seek(self, progress: int):
+        return self.player.set_time(progress)
+    
+    def get_state(self):
+        match self.player.get_state():
+            case vlc.State.Playing:
+                return VLCState.Playing
+            
+            case vlc.State.Paused:
+                return VLCState.Paused
+            
+            case vlc.State.Stopped | vlc.State.NothingSpecial:
+                return VLCState.Stopped
+            
+            case vlc.State.Ended:
+                return VLCState.Ended
+    
+    def get_progress(self):
+        return self.player.get_time()
+    
+    def set_window(self, handle: int):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                self.player.set_hwnd(handle)
+
+            case Platform.Linux:
+                self.player.set_xwindow(handle)
+
+            case Platform.macOS:
+                self.player.set_nsobject(int(handle))
 
     def update_time(self, offset: int):
         def worker():
@@ -195,3 +247,9 @@ class Player(Panel):
         self.set_play_btn_icon(VLCState.Stopped)
 
         wx.CallAfter(self.callback.onReset)
+
+    def register_callback(self, event_type, callback):
+        self.player.event_manager().event_attach(event_type, callback)
+
+    def unregister_callback(self, event_type, callback):
+        self.player.event_manager().event_detach(event_type, callback)
