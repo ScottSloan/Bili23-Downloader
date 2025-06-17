@@ -22,6 +22,15 @@ class REUtils:
         return re.findall(r"\w+", acodec)
     
     @classmethod
+    def find_string(cls, pattern: str, string: str):
+        find = re.findall(pattern, string)
+    
+        if find:
+            return find[0]
+        else:
+            return None
+    
+    @classmethod
     def check_result(cls, result: list, group: int):
         if len(result) < group:
             result.extend(cls.fill_empty(group - len(result)))

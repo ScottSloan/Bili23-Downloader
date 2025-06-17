@@ -1,4 +1,3 @@
-import os
 import json
 import qrcode
 import requests
@@ -10,6 +9,8 @@ from utils.config import Config, user_config_group
 
 from utils.common.enums import StatusCode
 from utils.common.request import RequestUtils
+
+from utils.module.face import FaceUtils
 
 class LoginInfo:
     url: str = ""
@@ -64,7 +65,7 @@ class Login:
         Config.User.face_url = user_info["face_url"]
         Config.User.username = user_info["username"]
 
-        os.remove(Config.User.face_path)
+        UniversalTool.remove_files([Config.User.face_path])
 
     def logout(self):
         self.init_session()
@@ -101,6 +102,8 @@ class Login:
         Config.User.bili_jct = info["bili_jct"]
 
         Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+
+        FaceUtils.check_face_path()
 
 class QRLogin(Login):
     def __init__(self):

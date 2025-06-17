@@ -1,12 +1,11 @@
 import re
 import json
 
-from utils.tool_v2 import UniversalTool
-
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
+from utils.common.re_utils import REUtils
 
 from utils.parse.parser import Parser
 
@@ -63,7 +62,7 @@ class ActivityParser(Parser):
 
     def parse_url(self, url: str):
         def worker():
-            match UniversalTool.re_find_string(r"BV", url):
+            match REUtils.find_string(r"BV", url):
                 case "BV":
                     # 判断视频链接是否包含 BV 号
                     self.get_bvid(url)

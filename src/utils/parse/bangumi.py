@@ -1,4 +1,3 @@
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 from utils.common.exception import GlobalException
@@ -7,6 +6,7 @@ from utils.common.enums import StatusCode, StreamType
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
+from utils.common.re_utils import REUtils
 
 from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
@@ -191,7 +191,7 @@ class BangumiParser(Parser):
             # 清除当前的番组信息
             self.clear_bangumi_info()
 
-            match UniversalTool.re_find_string(r"ep|ss|md", url):
+            match REUtils.find_string(r"ep|ss|md", url):
                 case "ep":
                     self.get_epid(url)
 

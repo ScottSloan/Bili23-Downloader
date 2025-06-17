@@ -28,6 +28,7 @@ from utils.common.map import video_quality_map, audio_quality_map, video_codec_p
 from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
 
 from utils.module.notification import NotificationManager
+from utils.module.ffmpeg_v2 import FFmpeg
 
 class SettingWindow(Dialog):
     def __init__(self, parent):

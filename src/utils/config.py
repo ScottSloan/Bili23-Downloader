@@ -152,7 +152,6 @@ class Config:
         user_config_path: str = ""
 
         face_path: str = ""
-        face_type: str = ""
 
         login: bool = False
         username: str = ""
@@ -271,8 +270,6 @@ class Config:
         def after_load_config():
             def get_user_face():
                 _, file_ext = os.path.splitext(Config.User.face_url)
-
-                Config.User.face_type = file_ext[1:]
                 
                 Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
 

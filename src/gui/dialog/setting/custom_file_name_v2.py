@@ -31,16 +31,21 @@ class AddNewTemplateDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        template_lab = wx.StaticText(self, -1, f"文件名模板（支持添加子目录），生效范围：{get_mapping_key_by_value(scope_map, self.scope_id)}")
+        template_lab = wx.StaticText(self, -1, f"文件名模板（支持添加子目录）")
         template_tooltip = ToolTip(self)
         template_tooltip.set_tooltip('此处的文件名不包含后缀名，具体的后缀名程序将根据所下载的媒体类型自动添加\n\n在文件名前方添加路径分隔符（\\ 或 /），即可添加子目录，满足相应字段的视频将会被放置到同一个文件夹中，达到自动分类的效果。\n\n示例：\n\\{series_title}\\{number}_{title} （一级子目录）\n\\{up_name}\\{pubdatetime}\\{collection_title}\\{number}_{title} （多级子目录）')
+        scope_lab = wx.StaticText(self, -1, "生效范围：")
+        self.scope_lab = wx.StaticText(self, -1, f"{get_mapping_key_by_value(scope_map, self.scope_id)}")
         self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((60, 24)))
 
         template_hbox = wx.BoxSizer(wx.HORIZONTAL)
         template_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         template_hbox.Add(template_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         template_hbox.AddStretchSpacer()
-        template_hbox.Add(self.help_btn, 0, wx.ALL, self.FromDIP(6))
+        template_hbox.Add(scope_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        template_hbox.Add(self.scope_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        template_hbox.AddSpacer(self.FromDIP(10))
+        template_hbox.Add(self.help_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         font = self.GetFont()
         font.SetFaceName(SysFont.get_monospaced_font())

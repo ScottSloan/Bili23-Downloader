@@ -521,7 +521,7 @@ class ContainerPage(Panel):
                 "output_path": self.output_path
             }
                 
-            FFmpeg.Utils.extract_audio(info, self.get_callback("分离完成\n\n已成功分离音频"))
+            FFmpeg.Utils.extract_audio(info, self.get_callback("提取完成\n\n已成功提取音频"))
 
         def onChangeInputFile(self):
             self.get_file_info()

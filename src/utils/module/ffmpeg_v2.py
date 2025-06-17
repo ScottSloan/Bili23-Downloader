@@ -208,15 +208,18 @@ class FFmpeg:
                 "cwd_path": FFmpeg.Env.get_cwd_path(),
             }
 
-        @staticmethod
-        def detect():
+        @classmethod
+        def detect(cls):
+            ffmpeg_path = FFmpeg.Env.get_ffmpeg_path()
+
+            env_path, cwd_path = ffmpeg_path["env_path"], ffmpeg_path["cwd_path"]
+            
             if not Config.Merge.ffmpeg_path:
-                ffmpeg_path = FFmpeg.Env.get_ffmpeg_path()
-
-                env_path, cwd_path = ffmpeg_path["env_path"], ffmpeg_path["cwd_path"]
-
                 Config.Merge.ffmpeg_path = env_path if env_path else Config.Merge.ffmpeg_path
                 Config.Merge.ffmpeg_path = cwd_path if cwd_path else Config.Merge.ffmpeg_path
+            
+            if not cls.check_file(Config.Merge.ffmpeg_path):
+                Config.Merge.ffmpeg_path = cwd_path
 
         @staticmethod
         def check_availability():

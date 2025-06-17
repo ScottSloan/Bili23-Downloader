@@ -1,6 +1,5 @@
 import os
 import wx
-import re
 import json
 from datetime import datetime
 from typing import Optional, List
@@ -9,7 +8,6 @@ from utils.config import Config
 
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.thread import Thread
-from utils.common.request import RequestUtils
 
 class DownloadFileTool:
     # 断点续传信息工具类
@@ -113,47 +111,9 @@ class DownloadFileTool:
         return os.path.exists(self.file_path)
 
 class UniversalTool:
-    def get_user_face():
-        if not os.path.exists(Config.User.face_path):
-            # 若未缓存头像，则下载头像到本地
-            content = RequestUtils.request_get(Config.User.face_url).content
-
-            with open(Config.User.face_path, "wb") as f:
-                f.write(content)
-
-        return Config.User.face_path
-
-    def get_user_round_face(image):
-        width, height = image.GetSize()
-        diameter = min(width, height)
-        
-        image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
-        
-        circle_image = wx.Image(diameter, diameter)
-        circle_image.InitAlpha()
-        
-        for x in range(diameter):
-            for y in range(diameter):
-                dist = ((x - diameter / 2) ** 2 + (y - diameter / 2) ** 2) ** 0.5
-                if dist <= diameter / 2:
-                    circle_image.SetRGB(x, y, image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y))
-                    circle_image.SetAlpha(x, y, 255)
-                else:
-                    circle_image.SetAlpha(x, y, 0)
-        
-        return circle_image
-
     def get_time_str_from_timestamp(timestamp: int):
         return datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d %H:%M:%S")
 
-    def re_find_string(_pattern: str, _string: str):
-        find = re.findall(_pattern, _string)
-    
-        if find:
-            return find[0]
-        else:
-            return None
-    
     def remove_files(path_list: List):
         def worker():
             for path in path_list:

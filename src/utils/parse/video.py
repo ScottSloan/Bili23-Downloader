@@ -1,6 +1,5 @@
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
-from utils.tool_v2 import UniversalTool
 
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
@@ -12,6 +11,7 @@ from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
+from utils.common.re_utils import REUtils
 
 class VideoInfo:
     url: str = ""
@@ -201,7 +201,7 @@ class VideoParser(Parser):
             # 清除当前的视频信息
             self.clear_video_info()
 
-            match UniversalTool.re_find_string(r"av|BV", url):
+            match REUtils.find_string(r"av|BV", url):
                 case "av":
                     self.get_aid(url)
 

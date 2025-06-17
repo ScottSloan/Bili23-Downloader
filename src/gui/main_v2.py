@@ -8,6 +8,7 @@ from utils.auth.login import QRLogin
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
 from utils.module.cover import CoverUtils
+from utils.module.face import FaceUtils
 
 from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
@@ -16,6 +17,7 @@ from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDispla
 from utils.common.data_type import ParseCallback, TreeListCallback
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
+from utils.common.re_utils import REUtils
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -660,7 +662,7 @@ class MainWindow(Frame):
     def show_user_info(self):
         def show_face():
             self.face_icon.Show()
-            self.face_icon.SetBitmap(UniversalTool.get_user_round_face(image).ConvertToBitmap())
+            self.face_icon.SetBitmap(FaceUtils.crop_round_face_bmp(image))
             self.uname_lab.SetLabel(Config.User.username)
 
             self.panel.Layout()
@@ -671,16 +673,13 @@ class MainWindow(Frame):
 
             self.panel.Layout()
 
+        wx.CallAfter(hide_face)
+
         if Config.Misc.show_user_info:
             if Config.User.login:
-                scaled_size = self.FromDIP((32, 32))
-                image = wx.Image(UniversalTool.get_user_face(), wx.BITMAP_TYPE_ANY).Scale(scaled_size[0], scaled_size[1], wx.IMAGE_QUALITY_HIGH)
+                image = FaceUtils.get_scaled_face(self.FromDIP((32, 32)))
 
                 wx.CallAfter(show_face)
-            else:
-                wx.CallAfter(hide_face)
-        else:
-            wx.CallAfter(hide_face)
 
     def check_ffmpeg_available(self):
         if Config.Merge.ffmpeg_check_available_when_lauch:
@@ -741,7 +740,7 @@ class MainWindow(Frame):
             def onUpdateInteractVideo(title: str):
                 self.processing_window.onUpdateNode(title)
 
-        match UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+        match REUtils.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
             case "cheese":
                 self.current_parse_type = ParseType.Cheese
                 self.cheese_parser = CheeseParser(Callback)
@@ -885,7 +884,7 @@ class MainWindow(Frame):
         def is_valid_url(url: str):
             if url:
                 if url.startswith(("http", "https")):
-                    if UniversalTool.re_find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+                    if REUtils.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
                         return url != self.current_parse_url and url not in self.error_url_list
 
         if self.status == ParseStatus.Parsing or not self.IsShown():

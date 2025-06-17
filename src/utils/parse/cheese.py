@@ -5,6 +5,7 @@ from utils.common.enums import StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
+from utils.common.re_utils import REUtils
 
 from utils.parse.episode_v2 import Episode
 from utils.parse.audio import AudioInfo
@@ -122,7 +123,7 @@ class CheeseParser(Parser):
         def worker():
             self.clear_cheese_info()
 
-            match UniversalTool.re_find_string(r"ep|ss", url):
+            match REUtils.find_string(r"ep|ss", url):
                 case "ep":
                     self.get_epid(url)
 
