@@ -421,16 +421,21 @@ class ContainerPage(Panel):
 
             progress_box = wx.StaticBox(self, -1, "进度")
 
+            self.progress_lab = wx.StaticText(progress_box, -1, "进度：--")
+            self.frame_lab = wx.StaticText(progress_box, -1, "帧：--")
+            self.size_lab = wx.StaticText(progress_box, -1, "大小：--")
             self.speed_lab = wx.StaticText(progress_box, -1, "速度：--")
 
-            info_hbox = wx.BoxSizer(wx.HORIZONTAL)
-            info_hbox.AddStretchSpacer()
-            info_hbox.Add(self.speed_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            info_box = wx.BoxSizer(wx.HORIZONTAL)
+            info_box.Add(self.progress_lab, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            info_box.Add(self.frame_lab, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            info_box.Add(self.size_lab, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            info_box.Add(self.speed_lab, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
             self.progress_bar = wx.Gauge(progress_box, -1, range = 100, style = wx.GA_SMOOTH)
 
             progress_sbox = wx.StaticBoxSizer(progress_box, wx.VERTICAL)
-            progress_sbox.Add(info_hbox, 0, wx.EXPAND)
+            progress_sbox.Add(info_box, 0, wx.EXPAND)
             progress_sbox.Add(self.progress_bar, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
             self.start_btn = wx.Button(self, -1, "开始转换", size =self.FromDIP((120, 28)))
@@ -518,12 +523,17 @@ class ContainerPage(Panel):
         def onUpdateInfo(self, info: dict):
             def worker():
                 progress = info.get("progress")
+                frame = info.get("frame")
+                size = info.get("size")
                 speed = info.get("speed")
 
                 self.progress_bar.SetValue(progress)
+                self.progress_lab.SetLabel(f"进度：{progress}%")
+                self.frame_lab.SetLabel(f"帧：{frame}")
+                self.size_lab.SetLabel(f"大小：{size}")
                 self.speed_lab.SetLabel(f"速度：{speed}")
 
-                self.GetSizer().Layout()
+                self.Layout()
 
             wx.CallAfter(worker)
 

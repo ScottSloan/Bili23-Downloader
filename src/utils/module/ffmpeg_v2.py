@@ -8,6 +8,7 @@ from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
 from utils.common.re_utils import REUtils
+from utils.common.formatter import FormatUtils
 
 from utils.config import Config
 from utils.tool_v2 import UniversalTool
@@ -211,11 +212,15 @@ class FFmpeg:
         @staticmethod
         def run_realtime(command: str, callback: RealTimeCallback, cwd: str = None):
             def run_process():
-                p = subprocess.Popen(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, text = True, encoding = "utf-8")
+                p = subprocess.Popen(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, text = True, universal_newlines = True, bufsize = 1, encoding = "utf-8")
+                
+                temp_output = []
 
                 while True:
                     if p.poll() is None:
                         output = p.stdout.readline()
+
+                        temp_output.append(output)
 
                         callback.onReadOutput(output)
                     
@@ -224,7 +229,7 @@ class FFmpeg:
 
                 process = Process()
                 process.return_code = p.returncode
-                process.output = p.stdout.readline()
+                process.output = "".join(temp_output)
 
                 p.stdout.close()
 
@@ -376,17 +381,38 @@ class FFmpeg:
                     hours, minutes, seconds = map(int, match.groups())
                     return hours * 3600 + minutes * 60 + seconds
             
+            def get_frame(pattern: str):
+                result = re.findall(pattern, output)
+
+                if result:
+                    return [result[0]]
+                else:
+                    return ["--"]
+
+            def get_size(pattern: str):
+                result = re.findall(pattern, output)
+
+                if result:
+                    size = int(result[0][0])
+                    return [FormatUtils.format_size(int(size * 1024))]
+                else:
+                    return ["--"]
+
             duration = get_time(r"Duration: (\d{2}):(\d{2}):(\d{2})")
 
             if duration:
                 cls.temp_duration = duration
 
             current_time = get_time(r"time=(\d{2}):(\d{2}):(\d{2})")
+            frame_info = get_frame(r"frame=\s*(\d+)")
+            size_info = get_size(r"size=\s*(\d+)(KiB|kB)")
 
             speed_info = REUtils.re_findall_in_group(r"speed=\s*((\d+\.\d+x))", output, 1)
 
             return {
                 "progress": int(current_time / cls.temp_duration * 100) if cls.temp_duration and current_time else 0,
+                "frame": frame_info[0],
+                "size": size_info[0],
                 "speed": speed_info[0]
             }
 
