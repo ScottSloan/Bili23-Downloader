@@ -176,11 +176,11 @@ class Config:
         path: str = os.path.join(os.getcwd(), "download")
         file_name_template_list: list = [
             {
-                "template": "\\{series_title}\\{title}",
+                "template":  os.sep + "{series_title}" + os.sep + "{title}",
                 "scope": 2
             },
             {
-                "template": "\\{series_title}\\{title}",
+                "template": os.sep + "{series_title}" + os.sep + "{title}",
                 "scope": 3
             },
             {

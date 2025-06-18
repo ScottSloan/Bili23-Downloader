@@ -36,5 +36,5 @@ class SysFont:
             
             case Platform.macOS:
                 return [
-                    "Melon"
+                    "Menlo"
                 ]

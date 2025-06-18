@@ -321,7 +321,9 @@ class ContainerPage(Panel):
             self.init_UI()
 
         def init_UI(self):
-            pass
+            video_stream_box = wx.StaticBox(self, -1, "视频")
+
+            audio_stream_box = wx.StaticBox(self, -1, "音频")
 
         def Bind_EVT(self):
             pass
@@ -361,9 +363,9 @@ class ContainerPage(Panel):
 
             time_hbox = wx.BoxSizer(wx.HORIZONTAL)
             time_hbox.Add(self.start_time_box, 0, wx.EXPAND)
-            time_hbox.AddSpacer(self.FromDIP(10))
+            time_hbox.AddSpacer(self.FromDIP(20))
             time_hbox.Add(self.end_time_box, 0, wx.EXPAND)
-            time_hbox.AddSpacer(self.FromDIP(10))
+            time_hbox.AddSpacer(self.FromDIP(20))
             time_hbox.Add(ratio_vbox, 0, wx.EXPAND)
 
             output_lab = wx.StaticText(self, -1, "输出")
@@ -599,10 +601,10 @@ class ContainerPage(Panel):
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(self.back_icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddSpacer(self.FromDIP(6))
-        top_hbox.Add(self.title_lab, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        top_hbox.Add(self.title_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddStretchSpacer()
         top_hbox.Add(self.input_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        top_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        top_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTRE, self.FromDIP(6))
 
         top_border = wx.StaticLine(self, -1)
 

@@ -22,15 +22,15 @@ class TimeCtrl(Panel):
         label_hbox.AddStretchSpacer()
 
         self.time_ctrl = TextCtrl(self, -1, mask = "##:##:##.###", formatcodes = "F0R", defaultValue = "00:00:00.000")
-        self.time_ctrl.SetFont(self.GetParent().GetFont())
+        self.time_ctrl.SetFont(self.GetFont())
 
         self.min_btn = wx.Button(self, -1, "-", size = self.FromDIP((24, 24)))
         self.plus_btn = wx.Button(self, -1, "+", size = self.FromDIP((24, 24)))
 
         adjust_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        adjust_hbox.Add(self.min_btn, 0, wx.ALL, self.FromDIP(6))
-        adjust_hbox.Add(self.time_ctrl, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        adjust_hbox.Add(self.plus_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        adjust_hbox.Add(self.min_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        adjust_hbox.Add(self.time_ctrl, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        adjust_hbox.Add(self.plus_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(label_hbox, 0, wx.EXPAND)

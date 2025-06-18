@@ -108,7 +108,14 @@ class BasicTab(Tab):
         self.init_data()
 
     def init_UI(self):
-        basic_box = wx.StaticBox(self, -1, "基本设置")
+        def layout():
+            self.scrolled_panel.Layout()
+
+            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+
+        self.scrolled_panel = ScrolledPanel(self)
+
+        basic_box = wx.StaticBox(self.scrolled_panel, -1, "基本设置")
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
         exit_option_lab = wx.StaticText(basic_box, -1, "当关闭窗口时")
@@ -129,7 +136,7 @@ class BasicTab(Tab):
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         basic_sbox.Add(self.remember_window_status_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
+        extra_box = wx.StaticBox(self.scrolled_panel, -1, "附加内容下载设置")
 
         self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
@@ -174,12 +181,16 @@ class BasicTab(Tab):
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
         extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
+
+        self.scrolled_panel.sizer.Add(basic_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        self.scrolled_panel.sizer.Add(extra_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         
         basic_vbox = wx.BoxSizer(wx.VERTICAL)
-        basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, self.FromDIP(6))
-        basic_vbox.Add(extra_sbox, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
 
         self.SetSizer(basic_vbox)
+
+        layout()
 
     def Bind_EVT(self):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)

@@ -22,14 +22,15 @@ try:
 except:
     vlc_available = False
 
-class VLCState(Enum):
-    Playing = 0
-    Paused = 1
-    Stopped = 2
-    Ended = 3
+if vlc_available:
+    class VLCState(Enum):
+        Playing = 0
+        Paused = 1
+        Stopped = 2
+        Ended = 3
 
-class VLCEvent(Enum):
-    LengthChanged = vlc.EventType.MediaPlayerLengthChanged
+    class VLCEvent(Enum):
+        LengthChanged = vlc.EventType.MediaPlayerLengthChanged
 
 class Player(Panel):
     def __init__(self, parent):
@@ -193,18 +194,19 @@ class Player(Panel):
         return self.player.set_time(progress)
     
     def get_state(self):
-        match self.player.get_state():
-            case vlc.State.Playing:
-                return VLCState.Playing
-            
-            case vlc.State.Paused:
-                return VLCState.Paused
-            
-            case vlc.State.Stopped | vlc.State.NothingSpecial:
-                return VLCState.Stopped
-            
-            case vlc.State.Ended:
-                return VLCState.Ended
+        if vlc_available:
+            match self.player.get_state():
+                case vlc.State.Playing:
+                    return VLCState.Playing
+                
+                case vlc.State.Paused:
+                    return VLCState.Paused
+                
+                case vlc.State.Stopped | vlc.State.NothingSpecial:
+                    return VLCState.Stopped
+                
+                case vlc.State.Ended:
+                    return VLCState.Ended
     
     def get_progress(self):
         return self.player.get_time()

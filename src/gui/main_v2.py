@@ -2,7 +2,6 @@ import wx
 import webbrowser
 
 from utils.config import Config, app_config_group
-from utils.tool_v2 import UniversalTool
 from utils.auth.login import QRLogin
 
 from utils.module.ffmpeg_v2 import FFmpeg
@@ -785,7 +784,7 @@ class MainWindow(Frame):
     def show_episode_list(self):
         self.episode_list.show_episode_list()
 
-        if Config.Misc.auto_check_episode_item:
+        if Config.Misc.auto_check_episode_item or self.episode_list.count == 1:
             self.episode_list.CheckAllItems()
 
         self.onUpdateCheckedItemCount(self.episode_list.GetCheckedItemCount())
