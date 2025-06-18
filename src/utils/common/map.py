@@ -135,7 +135,7 @@ status_code_map = {
     601: "应版权方要求本片需购买",
     602: "无效的链接",
     603: "跳转链接",
-    610: "调用 FFmpeg 时出错",
+    610: "执行外部命令失败",
     611: "下载时出现问题",
     612: "下载失败达到最大重试次数",
     62002: "稿件不可见",
@@ -348,15 +348,59 @@ time_ratio_map = {
 }
 
 ffmpeg_video_codec_map = {
-    "VCC/H.266": "",
-    "HEVC/H.265": "",
-    "AVC/H.264": "",
-    "AV1": "",
-    "Copy": ""
+    "AVC/H.264": {
+        "windows": {
+            "关闭": "libx264",
+            "NVIDIA": "h264_nvenc",
+            "AMD": "h264_amf",
+            "Intel": "h264_qsv"
+        },
+        "linux": {
+            "关闭": "libx264",
+            "VAAPI": "h264_vaapi"
+        },
+        "darwin": {
+            "关闭": "libx264",
+            "Apple": "h264_videotoolbox"
+        }
+    },
+    "HEVC/H.265": {
+        "windows": {
+            "关闭": "libx265",
+            "NVIDIA": "hevc_nvenc",
+            "AMD": "hevc_amf",
+            "Intel": "hevc_qsv"
+        },
+        "linux": {
+            "关闭": "libx265",
+            "VAAPI": "hevc_vaapi",
+        },
+        "darwin": {
+            "关闭": "libx265",
+            "Apple": "hevc_videotoolbox"
+        }
+    },
+    "AV1": {
+        "windows": {
+            "关闭": "libaom-av1",
+            "NVIDIA": "av1_nvenc",
+            "AMD": "av1_amf",
+            "Intel": "av1_qsv"
+        },
+        "linux": {
+            "关闭": "libaom-av1",
+            "VAAPI": "av1_vaapi"
+        },
+        "darwin": {
+            "关闭": "libaom-av1",
+            "Apple": None,
+        }
+    },
+    "Copy": "copy"
 }
 
 ffmpeg_video_crf_map = {
-    "关闭": 0,
+    "关闭": None,
     "10（高质量）": 10,
     "12": 12,
     "14": 14,
@@ -369,20 +413,28 @@ ffmpeg_video_crf_map = {
     "28（低质量）": 28,
 }
 
-ffmpeg_video_gpu_map = {
+ffmpeg_video_gpu_windows_map = {
     "关闭": 0,
-    "自动检测": 0,
-    "NVIDIA": 0,
-    "AMD": 0,
-    "Intel": 0,
-    "Apple": 0
+    "NVIDIA": 1,
+    "AMD": 2,
+    "Intel": 3,
+}
+
+ffmpeg_video_gpu_linux_map = {
+    "关闭": 0,
+    "VAAPI": 1,
+}
+
+ffmpeg_video_gpu_darwin_map = {
+    "关闭": 0,
+    "Apple": 1,
 }
 
 ffmpeg_audio_codec_map = {
-    "AAC": "",
-    "MP3": "",
-    "AC3": "",
-    "Copy": ""
+    "AAC": "aac",
+    "MP3": "libmp3lame",
+    "AC3": "ac3_fixed",
+    "Copy": "copy"
 }
 
 ffmpeg_audio_samplerate_map = {

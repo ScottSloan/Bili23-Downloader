@@ -56,11 +56,11 @@ class Player(Panel):
         self.progress_bar = wx.Slider(self, -1)
 
         ctrl_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        ctrl_hbox.Add(self.play_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        ctrl_hbox.Add(self.stop_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        ctrl_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        ctrl_hbox.Add(self.progress_bar, 1, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        ctrl_hbox.Add(self.length_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.play_btn, 0, wx.ALL| wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.stop_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.time_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.progress_bar, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ctrl_hbox.Add(self.length_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.player_panel, 1, wx.EXPAND)

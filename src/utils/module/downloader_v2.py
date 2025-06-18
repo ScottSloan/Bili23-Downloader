@@ -128,7 +128,7 @@ class Downloader:
             worker()
 
         except Exception as e:
-            raise GlobalException(code = StatusCode.Download.value, callback = self.download_error) from e
+            raise GlobalException(code = StatusCode.DownloadError.value, callback = self.download_error) from e
 
     def stop_download(self):
         self.stop_event.set()
@@ -177,10 +177,10 @@ class Downloader:
             self.retry_count += 1
 
             if self.retry_count > Config.Advanced.download_error_retry_count:
-                raise GlobalException(code = StatusCode.MaxRety.value, callback = self.download_error) from e
+                raise GlobalException(code = StatusCode.MaxRetry.value, callback = self.download_error) from e
             
             elif not Config.Advanced.retry_when_download_error:
-                raise GlobalException(code = StatusCode.Download.value, callback = self.download_error) from e
+                raise GlobalException(code = StatusCode.DownloadError.value, callback = self.download_error) from e
             
             info.range = self.progress_info[info.index]
             self.executor.submit(self.download_range, info)

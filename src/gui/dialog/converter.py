@@ -269,7 +269,6 @@ class ConverterWindow(Dialog):
                 time_match = re.search(r"time=(\d{2}):(\d{2}):(\d{2})", output)
 
                 frame = re.findall(r"frame=\s*(\d+)", output)
-                duration_str = re.findall(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})", output)
                 size = re.findall(r"size=\s*(\d+)(KiB|kB)", output)
                 speed = re.findall(r"speed=\s*(\d+\.\d+)x", output)
 
@@ -277,7 +276,7 @@ class ConverterWindow(Dialog):
                     current_time = sum(int(x) * 60 ** i for i, x in enumerate(reversed(time_match.groups())))
                     progress = int(current_time / duration * 100)
 
-                    wx.CallAfter(self.updateProgress, progress, frame, duration_str, size, speed)
+                    wx.CallAfter(self.updateProgress, progress, frame, size, speed)
 
                     self.Layout()
     

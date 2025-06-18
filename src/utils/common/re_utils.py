@@ -11,7 +11,7 @@ class REUtils:
     def re_match_in_group(cls, pattern: str, string: str, group: int):
         match = re.search(pattern, string)
 
-        return cls.check_result(match.group(1).split(", "), group) if match else cls.fill_empty(group)
+        return cls.check_result(cls.split(match.group(1)), group) if match else cls.fill_empty(group)
     
     @classmethod
     def find_illegal_chars(cls, string: str):
@@ -40,3 +40,33 @@ class REUtils:
     @staticmethod
     def fill_empty(group):
         return ["--" for i in range(group)]
+    
+    @staticmethod
+    def split(text):
+        result = []
+        current = []
+        stack = []
+        
+        for char in text:
+            if char in '([{':
+                stack.append(char)
+                current.append(char)
+                continue
+                
+            if char in ')]}':
+                if stack:
+                    stack.pop()
+                current.append(char)
+                continue
+                
+            if char == ',' and not stack:
+                result.append(''.join(current).strip())
+                current = []
+                continue
+                
+            current.append(char)
+        
+        if current:
+            result.append(''.join(current).strip())
+        
+        return result

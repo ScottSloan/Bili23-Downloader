@@ -190,7 +190,7 @@ class ExtraParser:
                 callback.onSuccess()
 
             except Exception as e:
-                raise GlobalException(code = StatusCode.Download.value, callback = callback.onError) from e
+                raise GlobalException(code = StatusCode.DownloadError.value, callback = callback.onError) from e
 
         @staticmethod
         def request_get(url: str):

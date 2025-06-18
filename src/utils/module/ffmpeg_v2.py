@@ -1,5 +1,5 @@
 import os
-import time
+import re
 import subprocess
 
 from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, RealTimeCallback
@@ -98,7 +98,15 @@ class FFmpeg:
             input_path = info.get("input_path")
             output_path = info.get("output_path")
 
-            command.add(f'"{Config.Merge.ffmpeg_path}" -i {input_path} -c:v {vcodec} {f"-crf {crf}" if crf else ""} -b:v {vbitrate}k -c:a {acodec} -ac {achannel} -ar {asamplerate} -b:a {abitrate}k "{output_path}"')
+            raw = f'"{Config.Merge.ffmpeg_path}" -i "{input_path}" -c:v {vcodec} -c:a {acodec}'
+
+            if vcodec != "copy":
+                raw += f" {f"-crf {crf}" if crf else ""} -b:v: {vbitrate}k"
+
+            if acodec != "copy":
+                raw += f" -ac {achannel} -ar {asamplerate} -b:a {abitrate}k"
+
+            command.add(raw + f' "{output_path}"')
 
             return command.format()
 
@@ -198,7 +206,7 @@ class FFmpeg:
             if not process.return_code or not check:
                 callback.onSuccess(process)
             else:
-                raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
+                raise GlobalException(code = StatusCode.CallError.value, stack_trace = get_output(), callback = callback.onError, args = (process))
 
         @staticmethod
         def run_realtime(command: str, callback: RealTimeCallback, cwd: str = None):
@@ -214,11 +222,11 @@ class FFmpeg:
                     else:
                         break
 
-                p.stdout.close()
-
                 process = Process()
                 process.return_code = p.returncode
-                process.output = p.stdout
+                process.output = p.stdout.readline()
+
+                p.stdout.close()
 
                 return process
 
@@ -230,7 +238,7 @@ class FFmpeg:
             if not process.return_code:
                 callback.onSuccess(process)
             else:
-                raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
+                raise GlobalException(code = StatusCode.CallError.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
             
     class Env:
         @staticmethod
@@ -290,6 +298,8 @@ class FFmpeg:
             FFmpeg.Command.run(command, callback)
 
     class Utils:
+        temp_duration = 0
+
         @staticmethod
         def cut(info: dict, callback: Callback):
             command = FFmpeg.Command.get_cut_command(info)
@@ -327,8 +337,8 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback)
 
-        @classmethod
-        def parse_info(cls, output: str):
+        @staticmethod
+        def parse_media_info(output: str):
             duration_info = REUtils.re_findall_in_group(r"Duration: (([\d:.]+))", output, 1)
 
             start_info = REUtils.re_findall_in_group(r"start: (([\d.]+))", output, 1)
@@ -355,6 +365,29 @@ class FFmpeg:
                 "channel": audio_stream_info[2],
                 "sampleformat": audio_stream_info[3],
                 "abitrate": audio_stream_info[4]
+            }
+
+        @classmethod
+        def parse_progress_info(cls, output: str):
+            def get_time(pattern: str):
+                match = re.search(pattern, output)
+
+                if match:
+                    hours, minutes, seconds = map(int, match.groups())
+                    return hours * 3600 + minutes * 60 + seconds
+            
+            duration = get_time(r"Duration: (\d{2}):(\d{2}):(\d{2})")
+
+            if duration:
+                cls.temp_duration = duration
+
+            current_time = get_time(r"time=(\d{2}):(\d{2}):(\d{2})")
+
+            speed_info = REUtils.re_findall_in_group(r"speed=\s*((\d+\.\d+x))", output, 1)
+
+            return {
+                "progress": int(current_time / cls.temp_duration * 100) if cls.temp_duration and current_time else 0,
+                "speed": speed_info[0]
             }
 
         @staticmethod

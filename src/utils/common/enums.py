@@ -68,9 +68,9 @@ class StatusCode(Enum):
     Pay = 601                     # 付费购买
     URL = 602                     # 无效链接
     Redirect = 603                # 跳转链接
-    FFmpeg = 610                  # 调用出错
-    Download = 611                # 下载失败
-    MaxRety = 612                 # 最大重试
+    CallError = 610               # 调用出错
+    DownloadError = 611           # 下载失败
+    MaxRetry = 612                # 最大重试
     Area_Limit = -10403           # 区域限制
 
 class VideoQualityID(Enum):
