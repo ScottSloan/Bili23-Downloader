@@ -386,12 +386,12 @@ class Process:
 class Callback(ABC):
     @staticmethod
     @abstractmethod
-    def onSuccess(*args, **kwargs):
+    def onSuccess(*process: Process):
         pass
     
     @staticmethod
     @abstractmethod
-    def onError(*args, **kwargs):
+    def onError(*process: Process):
         pass
 
 class ParseCallback(ABC):
@@ -424,4 +424,20 @@ class PlayerCallback(ABC):
     @staticmethod
     @abstractmethod
     def onReset():
+        pass
+
+class RealTimeCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onReadOutput(output: str):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onSuccess(process):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onError(process):
         pass

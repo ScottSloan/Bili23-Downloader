@@ -347,7 +347,57 @@ time_ratio_map = {
     "1s": 2
 }
 
+ffmpeg_video_codec_map = {
+    "VCC/H.266": "",
+    "HEVC/H.265": "",
+    "AVC/H.264": "",
+    "AV1": "",
+    "Copy": ""
+}
 
+ffmpeg_video_crf_map = {
+    "关闭": 0,
+    "10（高质量）": 10,
+    "12": 12,
+    "14": 14,
+    "16": 16,
+    "18（推荐）": 18,
+    "20": 20,
+    "22": 22,
+    "24": 24,
+    "26": 26,
+    "28（低质量）": 28,
+}
+
+ffmpeg_video_gpu_map = {
+    "关闭": 0,
+    "自动检测": 0,
+    "NVIDIA": 0,
+    "AMD": 0,
+    "Intel": 0,
+    "Apple": 0
+}
+
+ffmpeg_audio_codec_map = {
+    "AAC": "",
+    "MP3": "",
+    "AC3": "",
+    "Copy": ""
+}
+
+ffmpeg_audio_samplerate_map = {
+    "22050 Hz": 22050,
+    "24000 Hz": 24000,
+    "44100 Hz": 44100,
+    "48000 Hz": 48000
+}
+
+ffmpeg_audio_channel_map = {
+    "1 (Mono)": 1,
+    "2 (Stereo)": 2,
+    "6 (5.1)": 6,
+    "8 (7.1)": 8
+}
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))

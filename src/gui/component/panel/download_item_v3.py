@@ -375,11 +375,11 @@ class DownloadTaskItemPanel(Panel):
     def merge_video(self):
         class callback(Callback):
             @staticmethod
-            def onSuccess(*args, **kwargs):
+            def onSuccess(*process):
                 self.onMergeSuccess()
 
             @staticmethod
-            def onError(*args, **kwargs):
+            def onError(*process):
                 self.onMergeError()
 
         FFmpeg.Utils.merge(self.task_info, callback)
@@ -387,11 +387,11 @@ class DownloadTaskItemPanel(Panel):
     def download_extra(self):
         class callback(Callback):
             @staticmethod
-            def onSuccess(*args, **kwargs):
+            def onSuccess(*process):
                 self.onDownloadExtraSuccess()
 
             @staticmethod
-            def onError(*args, **kwargs):
+            def onError(*process):
                 self.onDownloadError()
     
         ExtraParser.Utils.download(self.task_info, callback)

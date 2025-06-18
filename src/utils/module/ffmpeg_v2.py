@@ -1,7 +1,8 @@
 import os
+import time
 import subprocess
 
-from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo
+from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, RealTimeCallback
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
@@ -78,6 +79,26 @@ class FFmpeg:
             output_temp_file = FFmpeg.Prop.dash_output_temp_file(task_info)
 
             command.add(f'"{Config.Merge.ffmpeg_path}" -y -i {video_temp_file} -i {audio_temp_file} -acodec copy -vcodec copy -strict experimental {output_temp_file}')
+
+            return command.format()
+
+        @staticmethod
+        def get_convert_video_and_audio_command(info: dict):
+            command = Command()
+
+            vcodec = info.get("vcodec")
+            crf = info.get("crf")
+            vbitrate = info.get("vbitrate")
+
+            acodec = info.get("acodec")
+            asamplerate = info.get("asamplerate")
+            achannel = info.get("achannel")
+            abitrate = info.get("abitrate")
+
+            input_path = info.get("input_path")
+            output_path = info.get("output_path")
+
+            command.add(f'"{Config.Merge.ffmpeg_path}" -i {input_path} -c:v {vcodec} {f"-crf {crf}" if crf else ""} -b:v {vbitrate}k -c:a {acodec} -ac {achannel} -ar {asamplerate} -b:a {abitrate}k "{output_path}"')
 
             return command.format()
 
@@ -175,10 +196,42 @@ class FFmpeg:
             process = run_process()
                 
             if not process.return_code or not check:
-                callback.onSuccess(process = process)
+                callback.onSuccess(process)
             else:
                 raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
 
+        @staticmethod
+        def run_realtime(command: str, callback: RealTimeCallback, cwd: str = None):
+            def run_process():
+                p = subprocess.Popen(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, text = True, encoding = "utf-8")
+
+                while True:
+                    if p.poll() is None:
+                        output = p.stdout.readline()
+
+                        callback.onReadOutput(output)
+                    
+                    else:
+                        break
+
+                p.stdout.close()
+
+                process = Process()
+                process.return_code = p.returncode
+                process.output = p.stdout
+
+                return process
+
+            def get_output():
+                return f"{process.output}\n\nCommand:\n{command}"
+
+            process = run_process()
+
+            if not process.return_code:
+                callback.onSuccess(process)
+            else:
+                raise GlobalException(code = StatusCode.FFmpeg.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
+            
     class Env:
         @staticmethod
         def check_file(path: str):
@@ -225,11 +278,11 @@ class FFmpeg:
         def check_availability():
             class callback(Callback):
                 @staticmethod
-                def onSuccess(*args, **kwargs):
+                def onSuccess(*process):
                     Config.Merge.ffmpeg_available = True
 
                 @staticmethod
-                def onError(*args, **kwargs):
+                def onError(*process):
                     Config.Merge.ffmpeg_available = False
 
             command = FFmpeg.Command.get_test_command()
@@ -256,11 +309,17 @@ class FFmpeg:
 
             FFmpeg.Command.run(command, callback, FFmpeg.Prop.download_path(task_info))
 
+        @staticmethod
+        def convert(info: dict, callback: RealTimeCallback):
+            command = FFmpeg.Command.get_convert_video_and_audio_command(info)
+
+            FFmpeg.Command.run_realtime(command, callback)
+
         @classmethod
         def info(cls, file_path: str, callback: Callback):
             command = FFmpeg.Command.get_info_command(file_path)
 
-            FFmpeg.Command.run(command, callback, check  = False)
+            FFmpeg.Command.run(command, callback, check = False)
 
         @staticmethod
         def extract_audio(info: dict, callback: Callback):
@@ -337,11 +396,11 @@ class FFmpeg:
         def keep_original_files(task_info: DownloadTaskInfo):
             class callback(Callback):
                 @staticmethod
-                def onSuccess(*args, **kwargs):
+                def onSuccess(*process):
                     pass
                 
                 @staticmethod
-                def onError(*args, **kwargs):
+                def onError(*process):
                     pass
             
             command = FFmpeg.Command.get_keep_files_command(task_info)

@@ -4,10 +4,10 @@ import os
 from utils.config import Config
 
 from utils.common.icon_v4 import Icon, IconID, IconSize
-from utils.common.data_type import Callback, Process, PlayerCallback
+from utils.common.data_type import Callback, Process, PlayerCallback, RealTimeCallback
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.directory import DirectoryUtils
-from utils.common.map import time_ratio_map
+from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
 from utils.common.re_utils import REUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
@@ -184,7 +184,7 @@ class ContainerPage(Panel):
         def get_callback(self, success_message: str):
             class callback(Callback):
                 @staticmethod
-                def onSuccess(*args, **kwargs):
+                def onSuccess(*process):
                     def worker():
                         dlg = wx.MessageDialog(self, success_message, "提示", wx.ICON_INFORMATION | wx.YES_NO)
                         dlg.SetYesNoLabels("打开所在位置", "确定")
@@ -197,7 +197,7 @@ class ContainerPage(Panel):
                     wx.CallAfter(worker)
                 
                 @staticmethod
-                def onError(*args, **kwargs):
+                def onError(*process):
                     def worker():
                         dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)
                         dlg.ShowModal()
@@ -284,9 +284,7 @@ class ContainerPage(Panel):
         def get_file_info(self):
             class callback(Callback):
                 @staticmethod
-                def onSuccess(*args, **kwargs):
-                    process: Process = kwargs["process"]
-
+                def onSuccess(*process: Process):
                     info = FFmpeg.Utils.parse_info(process.output)
 
                     self.duration_lab.SetLabel(f"时长：{info.get('duration')}")
@@ -306,7 +304,7 @@ class ContainerPage(Panel):
                     self.audio_bitrate_lab.SetLabel(f"比特率：{info.get('abitrate')}")
                 
                 @staticmethod
-                def onError(*args, **kwargs):
+                def onError(*process):
                     pass
 
             FFmpeg.Utils.info(self.input_path, callback)
@@ -320,14 +318,179 @@ class ContainerPage(Panel):
 
             self.init_UI()
 
-        def init_UI(self):
-            video_stream_box = wx.StaticBox(self, -1, "视频")
+            self.Bind_EVT()
 
-            audio_stream_box = wx.StaticBox(self, -1, "音频")
+        def init_UI(self):
+            output_box = wx.StaticBox(self, -1, "输出设置")
+
+            output_lab = wx.StaticText(output_box, -1, "输出")
+            self.output_box = TextCtrl(output_box, -1)
+            self.output_browse_btn = wx.Button(output_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+
+            output_sbox = wx.StaticBoxSizer(output_box, wx.HORIZONTAL)
+            output_sbox.Add(output_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            output_sbox.Add(self.output_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+            output_sbox.Add(self.output_browse_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+            video_stream_box = wx.StaticBox(self, -1, "视频流设置")
+
+            video_stream_codec_lab = wx.StaticText(video_stream_box, -1, "编码格式")
+            self.video_stream_codec_choice = wx.Choice(video_stream_box, -1, choices = list(ffmpeg_video_codec_map.keys()))
+            self.video_stream_codec_choice.SetStringSelection("AVC/H.264")
+
+            video_stream_crf_lab = wx.StaticText(video_stream_box, -1, "CRF")
+            self.video_stream_crf_choice = wx.Choice(video_stream_box, -1, choices = list(ffmpeg_video_crf_map.keys()))
+            self.video_stream_crf_choice.SetStringSelection("关闭")
+
+            video_stream_gpu_lab = wx.StaticText(video_stream_box, -1, "GPU")
+            self.video_stream_gpu_choice = wx.Choice(video_stream_box, -1, choices = list(ffmpeg_video_gpu_map.keys()))
+            self.video_stream_gpu_choice.SetStringSelection("自动检测")
+
+            video_stream_bitrate_lab = wx.StaticText(video_stream_box, -1, "比特率")
+            self.video_stream_bitrate_box = TextCtrl(video_stream_box, -1, "1500")
+            video_stream_bitrate_unit_lab = wx.StaticText(video_stream_box, -1, "kb/s")
+
+            video_stream_grid_box = wx.FlexGridSizer(4, 3, 0, 0)
+            video_stream_grid_box.Add(video_stream_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            video_stream_grid_box.Add(self.video_stream_codec_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+            video_stream_grid_box.AddSpacer(0)
+            video_stream_grid_box.Add(video_stream_crf_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            video_stream_grid_box.Add(self.video_stream_crf_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+            video_stream_grid_box.AddSpacer(0)
+            video_stream_grid_box.Add(video_stream_gpu_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            video_stream_grid_box.Add(self.video_stream_gpu_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+            video_stream_grid_box.AddSpacer(0)
+            video_stream_grid_box.Add(video_stream_bitrate_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            video_stream_grid_box.Add(self.video_stream_bitrate_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+            video_stream_grid_box.Add(video_stream_bitrate_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+            video_stream_sbox = wx.StaticBoxSizer(video_stream_box, wx.VERTICAL)
+            video_stream_sbox.Add(video_stream_grid_box, 0, wx.EXPAND)
+
+            audio_stream_box = wx.StaticBox(self, -1, "音频流设置")
+
+            audio_stream_codec_lab = wx.StaticText(audio_stream_box, -1, "编码格式")
+            self.audio_stream_codec_choice = wx.Choice(audio_stream_box, -1, choices = list(ffmpeg_audio_codec_map))
+            self.audio_stream_codec_choice.SetStringSelection("AAC")
+
+            audio_stream_samplerate_lab = wx.StaticText(audio_stream_box, -1, "采样率")
+            self.audio_stream_samplerate_choice = wx.Choice(audio_stream_box, -1, choices = list(ffmpeg_audio_samplerate_map.keys()))
+            self.audio_stream_samplerate_choice.SetStringSelection("44100 Hz")
+
+            audio_stream_channel_lab = wx.StaticText(audio_stream_box, -1, "声道")
+            self.audio_stream_channel_choice = wx.Choice(audio_stream_box, -1, choices = list(ffmpeg_audio_channel_map.keys()))
+            self.audio_stream_channel_choice.SetStringSelection("2 (Stereo)")
+
+            audio_stream_bitrate_lab = wx.StaticText(audio_stream_box, -1, "比特率")
+            self.audio_stream_bitrate_box = TextCtrl(audio_stream_box, -1, "128")
+            audio_stream_bitrate_unit_lab = wx.StaticText(audio_stream_box, -1, "kb/s")
+
+            audio_stream_grid_box = wx.FlexGridSizer(4, 3, 0, 0)
+            audio_stream_grid_box.Add(audio_stream_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+            audio_stream_grid_box.Add(self.audio_stream_codec_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+            audio_stream_grid_box.AddSpacer(0)
+            audio_stream_grid_box.Add(audio_stream_samplerate_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            audio_stream_grid_box.Add(self.audio_stream_samplerate_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+            audio_stream_grid_box.AddSpacer(0)
+            audio_stream_grid_box.Add(audio_stream_channel_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            audio_stream_grid_box.Add(self.audio_stream_channel_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+            audio_stream_grid_box.AddSpacer(0)
+            audio_stream_grid_box.Add(audio_stream_bitrate_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+            audio_stream_grid_box.Add(self.audio_stream_bitrate_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+            audio_stream_grid_box.Add(audio_stream_bitrate_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+            audio_stream_sbox = wx.StaticBoxSizer(audio_stream_box, wx.VERTICAL)
+            audio_stream_sbox.Add(audio_stream_grid_box, 0, wx.EXPAND)
+
+            stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            stream_hbox.Add(video_stream_sbox, 1, wx.ALL, self.FromDIP(6))
+            stream_hbox.Add(audio_stream_sbox, 1, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+            progress_box = wx.StaticBox(self, -1, "进度")
+
+            self.progress_bar = wx.Gauge(self, -1, style = wx.GA_SMOOTH | wx.GA_TEXT)
+
+            progress_sbox = wx.StaticBoxSizer(progress_box, wx.VERTICAL)
+            progress_sbox.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+
+            self.start_btn = wx.Button(self, -1, "开始转换", size =self.FromDIP((120, 28)))
+
+            action_hbox = wx.BoxSizer(wx.HORIZONTAL)
+            action_hbox.AddStretchSpacer()
+            action_hbox.Add(self.start_btn, 0, wx.ALL, self.FromDIP(6))
+
+            vbox = wx.BoxSizer(wx.VERTICAL)
+            vbox.Add(output_sbox, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
+            vbox.Add(stream_hbox, 0, wx.EXPAND)
+            vbox.Add(progress_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+            vbox.Add(action_hbox, 0, wx.EXPAND)
+
+            self.SetSizer(vbox)
 
         def Bind_EVT(self):
-            pass
+            self.output_browse_btn.Bind(wx.EVT_BUTTON, self.onBrowseEVT)
 
+            self.video_stream_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoCodecEVT)
+            self.audio_stream_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeAudioCodecEVT)
+
+            self.start_btn.Bind(wx.EVT_BUTTON, self.onStartEVT)
+        
+        def onChangeInputFile(self):
+            self.output_box.SetValue("")
+
+        def onChangeVideoCodecEVT(self, event):
+            enable = self.video_stream_codec_choice.GetStringSelection() == "Copy"
+
+            self.video_stream_crf_choice.Enable(enable)
+            self.video_stream_gpu_choice.Enable(enable)
+
+        def onChangeAudioCodecEVT(self, event):
+            pass
+        
+        def onStartEVT(self, event):
+            if self.check():
+                return
+            
+            info = {
+                "input_path": self.input_path,
+                "output_path": self.output_path
+            }
+
+            FFmpeg.Utils.convert(info, self.get_callback("转换完成\n\n视频转换完成"))
+
+        def get_callback(self, success_message: str):
+            class callback(RealTimeCallback):
+                @staticmethod
+                def onReadOutput(output):
+                    pass
+
+                @staticmethod
+                def onSuccess(*process):
+                    def worker():
+                        dlg = wx.MessageDialog(self, success_message, "提示", wx.ICON_INFORMATION | wx.YES_NO)
+                        dlg.SetYesNoLabels("打开所在位置", "确定")
+
+                        if dlg.ShowModal() == wx.ID_YES:
+                            DirectoryUtils.open_file_location(self.output_path)
+
+                        dlg.Destroy()
+
+                    wx.CallAfter(worker)
+
+                @staticmethod
+                def onError(*process):
+                    def worker():
+                        dlg = ErrorInfoDialog(self, GlobalExceptionInfo.info)
+                        dlg.ShowModal()
+
+                    wx.CallAfter(worker)
+
+            return callback
+
+        @property
+        def wildcard(self):
+            return "媒体文件 | *.mp4;*.avi;*flv;*.mkv;*.mov;*.wmv;*.webm"
+    
     class CutClipPage(Page):
         def __init__(self, parent):
             ContainerPage.Page.__init__(self, parent)
@@ -416,6 +579,8 @@ class ContainerPage(Panel):
 
                 self.player.set_playurl(self.input_path)
 
+                self.output_box.SetValue("")
+
         def onSliderEVT(self, event):
             obj = event.GetEventObject()
             lv, hv = obj.GetValues()
@@ -435,7 +600,7 @@ class ContainerPage(Panel):
             if self.check():
                 return
 
-            FFmpeg.Utils.cut(get_info(), self.get_callback("截取完成\n\n已成功截取片段"))
+            FFmpeg.Utils.cut(get_info(), self.get_callback("截取完成\n\n截取片段完成"))
 
         def onLengthChange(self, length):
             self.range_slider.SetMax(int(length / self.time_ratio))
@@ -523,7 +688,7 @@ class ContainerPage(Panel):
                 "output_path": self.output_path
             }
                 
-            FFmpeg.Utils.extract_audio(info, self.get_callback("提取完成\n\n已成功提取音频"))
+            FFmpeg.Utils.extract_audio(info, self.get_callback("提取完成\n\n音频提取完成"))
 
         def onChangeInputFile(self):
             self.get_file_info()
@@ -533,9 +698,7 @@ class ContainerPage(Panel):
         def get_file_info(self):
             class callback(Callback):
                 @staticmethod
-                def onSuccess(*args, **kwargs):
-                    process: Process = kwargs["process"]
-
+                def onSuccess(*process: Process):
                     info = FFmpeg.Utils.parse_info(process.output)
 
                     self.acodec = info.get("acodec")
@@ -547,7 +710,7 @@ class ContainerPage(Panel):
                     self.update_info()
                 
                 @staticmethod
-                def onError(*args, **kwargs):
+                def onError(*process):
                     pass
 
             FFmpeg.Utils.info(self.input_path, callback)
