@@ -7,8 +7,9 @@ license = "MIT License"
 requires-python = ">=3.9"
 dependencies = [
     "qrcode[pil]==7.4.2",
-    "requests>=2.30.0",
-    "wxpython>=4.2.0",
+    "requests==2.32.3",
+    "wxpython==4.2.3",
+    "python-vlc==3.0.21203"
 ]
 authors = [
     {name = "ScottSloan", email = "scottsloan@petalmail.com"},
