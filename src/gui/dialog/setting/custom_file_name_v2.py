@@ -306,15 +306,15 @@ class CustomFileNameDialog(Dialog):
 
     def init_utils(self):
         def init_list_column():
-            self.template_list.AppendColumn("优先级", width = self.FromDIP(50))
+            self.template_list.AppendColumn("序号", width = self.FromDIP(50))
             self.template_list.AppendColumn("文件名模板", width = self.FromDIP(400))
             self.template_list.AppendColumn("生效范围", width = self.FromDIP(100))
 
         def init_list_data():
-            for entry in Config.Temp.file_name_template_list:
+            for index, entry in enumerate(Config.Temp.file_name_template_list):
                 scope_id = entry["scope"]
 
-                item = self.template_list.Append([str(scope_id), entry["template"], get_mapping_key_by_value(scope_map, scope_id)])
+                item = self.template_list.Append([str(index + 1), entry["template"], get_mapping_key_by_value(scope_map, scope_id)])
 
                 self.template_list.SetItemData(item, scope_id)
 

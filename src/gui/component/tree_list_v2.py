@@ -55,10 +55,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("备注", width = self.FromDIP(75))
         self.AppendColumn("时长", width = self.FromDIP(75))
 
-        dv = self.GetDataView()
-
-        dv.SetIndent(20)
-
     def show_episode_list(self):
         def add_item(data: dict | list, item: wx.dataview.TreeListItem):
             if isinstance(data, dict):

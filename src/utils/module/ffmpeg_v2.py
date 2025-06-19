@@ -102,7 +102,8 @@ class FFmpeg:
             raw = f'"{Config.Merge.ffmpeg_path}" -i "{input_path}" -c:v {vcodec} -c:a {acodec}'
 
             if vcodec != "copy":
-                raw += f" {f"-crf {crf}" if crf else ""} -b:v: {vbitrate}k"
+                crf_arg = f"-crf {crf}" if crf else ""
+                raw += f" {crf_arg} -b:v: {vbitrate}k"
 
             if acodec != "copy":
                 raw += f" -ac {achannel} -ar {asamplerate} -b:a {abitrate}k"
