@@ -16,7 +16,7 @@ class FileNameFormatter:
 
         field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
 
-        result = cls.get_legal_file_name(template.format(**field_dict))
+        result = cls.removeprefix(cls.get_legal_file_name(template.format(**field_dict)))
 
         return os.path.basename(result) if basename else result
 
@@ -27,11 +27,12 @@ class FileNameFormatter:
                 os.makedirs(path)
 
         field_dict = cls.get_field_dict(task_info)
-        dirname = os.path.dirname(cls.get_template(task_info)).removeprefix("\\")
 
-        legal_path = cls.get_legal_file_name(dirname.format(**field_dict))
+        dirname = os.path.dirname(cls.get_template(task_info))
 
-        path = os.path.join(Config.Download.path, legal_path)
+        formatted = cls.removeprefix(dirname.format(**field_dict))
+
+        path = os.path.join(Config.Download.path, cls.get_legal_file_name(formatted))
 
         check_path(path)
 
@@ -122,3 +123,10 @@ class FileNameFormatter:
     @staticmethod
     def get_legal_file_name(file_name: str):
         return re.sub(r'[:*?"<>|]', "_", file_name)
+    
+    @staticmethod
+    def removeprefix(path: str):
+        while path.startswith("\\"):
+            path = path.removeprefix("\\")
+
+        return path

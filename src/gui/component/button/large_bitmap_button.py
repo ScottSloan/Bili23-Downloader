@@ -2,6 +2,8 @@ import wx
 
 from utils.config import Config
 
+from utils.common.color import Color
+
 from gui.component.panel.panel import Panel
 
 class LargeBitmapButton(Panel):
@@ -87,7 +89,7 @@ class LargeBitmapButton(Panel):
             self.SetBackgroundColour(wx.Colour(200, 200, 200))
 
     def set_default_bgcolor(self):
-        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR))
+        self.SetBackgroundColour(Color.get_panel_background_color())
 
     def onClickCustomEVT(self):
         pass

@@ -221,7 +221,7 @@ class FFmpeg:
             if not process.return_code or not check:
                 callback.onSuccess(process)
             else:
-                raise GlobalException(code = StatusCode.CallError.value, stack_trace = get_output(), callback = callback.onError, args = (process))
+                raise GlobalException(code = StatusCode.CallError.value, stack_trace = get_output(), callback = callback.onError, args = (process,))
 
         @staticmethod
         def run_realtime(command: str, callback: RealTimeCallback, cwd: str = None):
@@ -302,16 +302,7 @@ class FFmpeg:
                     Config.Merge.ffmpeg_path = cwd_path
 
         @staticmethod
-        def check_availability():
-            class callback(Callback):
-                @staticmethod
-                def onSuccess(*process):
-                    Config.Merge.ffmpeg_available = True
-
-                @staticmethod
-                def onError(*process):
-                    Config.Merge.ffmpeg_available = False
-
+        def check_availability(callback: Callback):
             command = FFmpeg.Command.get_test_command()
 
             FFmpeg.Command.run(command, callback)

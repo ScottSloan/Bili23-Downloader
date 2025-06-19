@@ -2,6 +2,8 @@ import wx
 
 from utils.config import Config
 
+from utils.common.color import Color
+
 from gui.component.panel.panel import Panel
 
 class ActionButton(Panel):
@@ -102,7 +104,7 @@ class ActionButton(Panel):
 
     def set_unactive_bgcolor(self):
         if Config.Sys.dark_mode:
-            self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR))
+            self.SetBackgroundColour(Color.get_panel_background_color())
         else:
             self.SetBackgroundColour("white")
 

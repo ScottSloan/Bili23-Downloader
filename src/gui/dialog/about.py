@@ -2,10 +2,13 @@ import wx
 import webbrowser
 
 from utils.config import Config
+
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.compile_data import date, compile
+from utils.common.color import Color
 
 from gui.dialog.license import LicenseWindow
+
 from gui.component.window.dialog import Dialog
 
 class AboutWindow(Dialog):
@@ -27,7 +30,7 @@ class AboutWindow(Dialog):
             _width, _height = image.GetSize()
 
             if Config.Sys.dark_mode:
-                color = wx.SystemSettings.GetColour(getattr(wx, "SYS_COLOUR_FRAMEBK"))
+                color = Color.get_panel_background_color()
 
                 for x in range(_width):
                     for y in range(_height):

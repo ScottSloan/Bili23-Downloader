@@ -13,7 +13,7 @@ from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.update import Update
 from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, VideoQualityID, Platform, ProcessingType, ExitOption
-from utils.common.data_type import ParseCallback, TreeListCallback
+from utils.common.data_type import ParseCallback, TreeListCallback, Callback
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import video_quality_map, live_quality_map
 from utils.common.re_utils import REUtils
@@ -676,15 +676,25 @@ class MainWindow(Frame):
                 wx.CallAfter(show_face)
 
     def check_ffmpeg_available(self):
-        if Config.Merge.ffmpeg_check_available_when_lauch:
-            FFmpeg.Env.check_availability()
+        class callback(Callback):
+            @staticmethod
+            def onSuccess(*process):
+                pass
+            
+            @staticmethod
+            def onError(*process):
+                def worker():
+                    dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+                    dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
-            if not Config.Merge.ffmpeg_available:
-                dlg = wx.MessageDialog(self, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合成、裁切和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
-                dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+                    if dlg.ShowModal() == wx.ID_YES:
+                        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
 
-                if dlg.ShowModal() == wx.ID_YES:
-                    webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+                        return super().onError(*process)
+                    
+                wx.CallAfter(worker)
+            
+        FFmpeg.Env.check_availability(callback)
 
     def check_update(self):
         Update.get_update_json()

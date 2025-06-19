@@ -209,7 +209,6 @@ class Config:
     
     class Merge:
         ffmpeg_path: str = ""
-        ffmpeg_available: bool = False
         ffmpeg_check_available_when_lauch: bool = True
 
         override_option: int = 1

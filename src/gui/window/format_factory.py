@@ -11,6 +11,7 @@ from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_vide
 from utils.common.re_utils import REUtils
 from utils.common.enums import Platform
 from utils.common.thread import Thread
+from utils.common.color import Color
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -124,8 +125,8 @@ class DropFilePage(Panel):
         dlg.Destroy()
 
     def draw_dashed_border(self, dc: wx.PaintDC):
-        pen = wx.Pen(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUTEXT), 2, wx.PENSTYLE_LONG_DASH)
-        brush = wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR))
+        pen = wx.Pen(Color.get_text_color(), 2, wx.PENSTYLE_LONG_DASH)
+        brush = wx.Brush(Color.get_panel_background_color())
 
         dc.SetPen(pen)
         dc.SetBrush(brush)

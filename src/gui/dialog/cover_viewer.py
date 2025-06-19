@@ -3,6 +3,8 @@ import os
 
 from utils.module.cover import CoverUtils
 
+from utils.common.color import Color
+
 from gui.component.window.frame import Frame
 
 class CoverViewerDialog(Frame):
@@ -21,7 +23,7 @@ class CoverViewerDialog(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
-        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR))
+        self.SetBackgroundColour(Color.get_panel_background_color())
 
         self.cover_bmp = wx.StaticBitmap(self, -1, bitmap = self.show_cover(self.FromDIP((800, 480))))
 

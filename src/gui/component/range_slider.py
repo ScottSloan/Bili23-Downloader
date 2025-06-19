@@ -1,5 +1,7 @@
 import wx
 
+from utils.common.color import Color
+
 class SliderThumb:
     def __init__(self, parent: wx.Window, value):
         self.parent = parent
@@ -166,7 +168,7 @@ class RangeSlider(wx.Panel):
         self.thumb_width = self.thumbs['low'].size[0]
 
         # Aesthetic definitions
-        self.slider_background_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR)
+        self.slider_background_color = Color.get_panel_background_color()
         self.slider_outline_color = wx.Colour((214, 214, 214))
         self.selected_range_color = wx.Colour((0, 120, 215))
         self.selected_range_outline_color = wx.Colour((0, 120, 215))
