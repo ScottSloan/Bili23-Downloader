@@ -1,10 +1,11 @@
 import re
 import json
 
-from utils.tool_v2 import RequestTool, UniversalTool
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
+from utils.common.re_utils import REUtils
 
 from utils.parse.parser import Parser
 
@@ -20,7 +21,7 @@ class ActivityParser(Parser):
     def get_aid(self, initial_state: str):
         aid = self.re_find_str(r'"aid":([0-9]+)', initial_state)
 
-        ActivityInfo.url = f"https://www.bilibili.com/video/{UniversalTool.aid_to_bvid(int(aid[0]))}"
+        ActivityInfo.url = f"https://www.bilibili.com/video/{self.aid_to_bvid(int(aid[0]))}"
 
     def get_bvid(self, url: str):
         bvid = self.re_find_str(r"BV\w+", url)
@@ -30,7 +31,7 @@ class ActivityParser(Parser):
     def get_initial_state(self, url: str):
         # 活动页链接不会包含 BV 号，ep 号等关键信息，故采用网页解析方式获取视频数据
 
-        req = RequestTool.request_get(url, headers = RequestTool.get_headers())
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers())
 
         if "window.__initialState" in req.text:
             initial_state_info = re.findall(r"window.__initialState = (.*?);", req.text)
@@ -61,7 +62,7 @@ class ActivityParser(Parser):
 
     def parse_url(self, url: str):
         def worker():
-            match UniversalTool.re_find_string(r"BV", url):
+            match REUtils.find_string(r"BV", url):
                 case "BV":
                     # 判断视频链接是否包含 BV 号
                     self.get_bvid(url)
@@ -71,7 +72,7 @@ class ActivityParser(Parser):
 
                     self.get_real_url(initial_state)
 
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onRedirect, url = ActivityInfo.url)
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (ActivityInfo.url, ))
         
         try:
             return worker()

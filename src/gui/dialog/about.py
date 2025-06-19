@@ -2,11 +2,14 @@ import wx
 import webbrowser
 
 from utils.config import Config
-from utils.common.icon_v3 import Icon, IconID
+
+from utils.common.icon_v4 import Icon, IconID
 from utils.common.compile_data import date, compile
+from utils.common.color import Color
 
 from gui.dialog.license import LicenseWindow
-from gui.component.dialog import Dialog
+
+from gui.component.window.dialog import Dialog
 
 class AboutWindow(Dialog):
     def __init__(self, parent):
@@ -27,7 +30,7 @@ class AboutWindow(Dialog):
             _width, _height = image.GetSize()
 
             if Config.Sys.dark_mode:
-                color = wx.SystemSettings.GetColour(getattr(wx, "SYS_COLOUR_FRAMEBK"))
+                color = Color.get_panel_background_color()
 
                 for x in range(_width):
                     for y in range(_height):
@@ -41,7 +44,7 @@ class AboutWindow(Dialog):
 
         self.set_dark_mode()
 
-        logo = wx.StaticBitmap(self, -1, set_icon_background(Icon.get_icon_bitmap(IconID.APP_ICON_DEFAULT)).ConvertToBitmap())
+        logo = wx.StaticBitmap(self, -1, set_icon_background(Icon.get_app_icon_bitmap(IconID.App_Default)).ConvertToBitmap())
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))

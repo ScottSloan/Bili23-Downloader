@@ -8,24 +8,27 @@ import requests
 import subprocess
 from requests.auth import HTTPProxyAuth
 
-from gui.component.scrolled_panel import ScrolledPanel
-from gui.component.text_ctrl import TextCtrl
-from gui.component.dialog import Dialog
-from gui.component.panel import Panel
+from gui.component.panel.scrolled_panel import ScrolledPanel
+from gui.component.text_ctrl.text_ctrl import TextCtrl
+from gui.component.window.dialog import Dialog
+from gui.component.panel.panel import Panel
 from gui.component.tooltip import ToolTip
 
-from gui.dialog.ffmpeg import DetectDialog
-from gui.dialog.custom_cdn import CustomCDNDialog
-from gui.dialog.file_name import CustomFileNameDialog
-from gui.dialog.custom_subtitle_lan import CustomLanDialog
+from gui.dialog.setting.ffmpeg import DetectDialog
+from gui.dialog.setting.custom_cdn import CustomCDNDialog
+from gui.dialog.setting.custom_file_name_v2 import CustomFileNameDialog
+from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
+from gui.dialog.setting.custom_user_agent import CustomUADialog
 
 from utils.config import Config, app_config_group
-from utils.tool_v2 import RequestTool
+
 from utils.common.thread import Thread
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, get_mapping_index_by_value
-from utils.common.enums import EpisodeDisplayType, ProxyMode, PlayerMode, Platform
+from utils.common.request import RequestUtils
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, cover_format_map, get_mapping_index_by_value
+from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
 
 from utils.module.notification import NotificationManager
+from utils.module.ffmpeg_v2 import FFmpeg
 
 class SettingWindow(Dialog):
     def __init__(self, parent):
@@ -51,7 +54,7 @@ class SettingWindow(Dialog):
         self.note.AddPage(BasicTab(self.note), "基本")
         self.note.AddPage(DownloadTab(self.note), "下载")
         self.note.AddPage(AdvancedTab(self.note), "高级")
-        self.note.AddPage(MergeTab(self.note), "合成")
+        self.note.AddPage(FFmpegTab(self.note), "FFmpeg")
         self.note.AddPage(ProxyTab(self.note), "代理")
         self.note.AddPage(MiscTab(self.note), "其他")
 
@@ -105,7 +108,14 @@ class BasicTab(Tab):
         self.init_data()
 
     def init_UI(self):
-        basic_box = wx.StaticBox(self, -1, "基本设置")
+        def layout():
+            self.scrolled_panel.Layout()
+
+            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
+
+        self.scrolled_panel = ScrolledPanel(self)
+
+        basic_box = wx.StaticBox(self.scrolled_panel, -1, "基本设置")
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
         exit_option_lab = wx.StaticText(basic_box, -1, "当关闭窗口时")
@@ -126,7 +136,7 @@ class BasicTab(Tab):
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         basic_sbox.Add(self.remember_window_status_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        extra_box = wx.StaticBox(self, -1, "附加内容下载设置")
+        extra_box = wx.StaticBox(self.scrolled_panel, -1, "附加内容下载设置")
 
         self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
         self.danmaku_format_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
@@ -155,6 +165,14 @@ class BasicTab(Tab):
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
+        self.cover_file_type_lab = wx.StaticText(extra_box, -1, "封面文件格式")
+        self.cover_file_type_choice = wx.Choice(extra_box, -1, choices = list(cover_format_map.keys()))
+
+        cover_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        cover_hbox.AddSpacer(self.FromDIP(20))
+        cover_hbox.Add(self.cover_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        cover_hbox.Add(self.cover_file_type_choice, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        cover_hbox.AddSpacer(self.FromDIP(20))
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
@@ -162,16 +180,22 @@ class BasicTab(Tab):
         extra_sbox.Add(self.download_subtitle_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
         extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
+
+        self.scrolled_panel.sizer.Add(basic_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        self.scrolled_panel.sizer.Add(extra_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         
         basic_vbox = wx.BoxSizer(wx.VERTICAL)
-        basic_vbox.Add(basic_sbox, 0, wx.EXPAND | wx.ALL, self.FromDIP(6))
-        basic_vbox.Add(extra_sbox, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
 
         self.SetSizer(basic_vbox)
+
+        layout()
 
     def Bind_EVT(self):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
+        self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadCoverEVT)
 
         self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
@@ -187,9 +211,11 @@ class BasicTab(Tab):
         self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
         self.subtitle_file_type_choice.SetSelection(Config.Basic.subtitle_file_type)
         self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
+        self.cover_file_type_choice.SetSelection(Config.Basic.cover_file_type)
 
         self.onCheckDownloadDanmakuEVT(0)
         self.onCheckDownloadSubtitleEVT(0)
+        self.onCheckDownloadCoverEVT(0)
 
     def save(self):
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
@@ -203,6 +229,9 @@ class BasicTab(Tab):
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
+        Config.Basic.cover_file_type = self.cover_file_type_choice.GetSelection()
+
+        Config.Basic.show_exit_dialog = False
 
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()
@@ -218,12 +247,17 @@ class BasicTab(Tab):
         self.subtitle_file_lan_type_lab.Enable(enable)
         self.subtitle_file_lan_type_btn.Enable(enable)
 
+    def onCheckDownloadCoverEVT(self, event):
+        enable = self.download_cover_file_chk.GetValue()
+
+        self.cover_file_type_lab.Enable(enable)
+        self.cover_file_type_choice.Enable(enable)
+
     def onCustomSubtitleLanEVT(self, event):
         dlg = CustomLanDialog(self)
 
         if dlg.ShowModal() == wx.ID_OK:
-            Config.Basic.subtitle_lan_custom = dlg.custom_radio.GetValue()
-            Config.Basic.subtitle_lan_type = dlg.get_selected_lan_list()
+            dlg.set_option()
 
 class DownloadTab(Tab):
     def __init__(self, parent):
@@ -250,9 +284,11 @@ class DownloadTab(Tab):
         self.browse_btn = wx.Button(download_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        
+
+        self.custom_file_name_btn = wx.Button(download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
+
         self.max_thread_lab = wx.StaticText(download_box, -1, "多线程数：1")
         self.max_thread_slider = wx.Slider(download_box, -1, 1, 1, 10)
 
@@ -304,7 +340,7 @@ class DownloadTab(Tab):
         self.number_type_lab = wx.StaticText(download_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(download_box)
-        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名需添加 {number} 或者 {number_with_zero} 字段才会显示")
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.AddSpacer(self.FromDIP(20))
@@ -324,6 +360,7 @@ class DownloadTab(Tab):
         download_sbox = wx.StaticBoxSizer(download_box, wx.VERTICAL)
         download_sbox.Add(path_lab, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(path_hbox, 0, wx.EXPAND)
+        download_sbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_thread_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_thread_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
@@ -349,6 +386,7 @@ class DownloadTab(Tab):
 
     def Bind_EVT(self):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
+        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
 
         self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadCountSlideEVT)
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadCountSlideEVT)
@@ -361,6 +399,8 @@ class DownloadTab(Tab):
 
     def init_data(self):
         self.path_box.SetValue(Config.Download.path)
+
+        Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
         
         self.max_thread_lab.SetLabel("多线程数：{}".format(Config.Download.max_thread_count))
         self.max_thread_slider.SetValue(Config.Download.max_thread_count)
@@ -403,6 +443,8 @@ class DownloadTab(Tab):
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
         Config.Download.speed_mbps = int(self.speed_limit_box.GetValue())
 
+        Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
+
         # 更新下载窗口中并行下载数信息
         update_download_window()
         
@@ -416,11 +458,10 @@ class DownloadTab(Tab):
         return True
     
     def onBrowsePathEVT(self, event):
-        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = Config.Download.path)
+        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = self.path_box.GetValue())
 
         if dlg.ShowModal() == wx.ID_OK:
-            save_path = dlg.GetPath()
-            self.path_box.SetValue(save_path)
+            self.path_box.SetValue(dlg.GetPath())
 
         dlg.Destroy()
 
@@ -449,6 +490,10 @@ class DownloadTab(Tab):
         self.number_type_lab.Enable(enable)
         self.number_type_choice.Enable(enable)
 
+    def onCustomFileNameEVT(self, event):
+        dlg = CustomFileNameDialog(self)
+        dlg.ShowModal()
+
 class AdvancedTab(Tab):
     def __init__(self, parent, ):
         Tab.__init__(self, parent)
@@ -462,9 +507,9 @@ class AdvancedTab(Tab):
     def init_UI(self):
         cdn_box = wx.StaticBox(self, -1, "CDN 设置")
 
-        self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN host")
+        self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN 节点")
         self.enable_custom_cdn_tip = ToolTip(cdn_box)
-        self.enable_custom_cdn_tip.set_tooltip("因 B 站分配的 CDN 线路不稳定，容易导致下载失败，开启此选项后，将自动替换下载链接中的 CDN host\n\n请注意：使用代理时，请手动关闭此选项")
+        self.enable_custom_cdn_tip.set_tooltip("由于哔哩哔哩（B 站）默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n\n请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。")
         self.custom_cdn_btn = wx.Button(cdn_box, -1, "自定义", size = self.get_scaled_size((100, 28)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -478,19 +523,16 @@ class AdvancedTab(Tab):
 
         advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
 
-        self.custom_file_name_btn = wx.Button(advanced_download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
-
-        button_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        button_hbox.Add(self.custom_file_name_btn, 0, wx.ALL, self.FromDIP(6))
-
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
         self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
+        self.download_error_retry_unit_lab = wx.StaticText(advanced_download_box, -1, "次")
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
         download_error_retry_hbox.AddSpacer(self.FromDIP(20))
         download_error_retry_hbox.Add(self.download_error_retry_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         download_error_retry_hbox.Add(self.download_error_retry_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        download_error_retry_hbox.Add(self.download_error_retry_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.download_suspend_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载停滞时自动重启下载")
         self.download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, "重启间隔")
@@ -503,15 +545,20 @@ class AdvancedTab(Tab):
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
         download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        self.check_md5_chk = wx.CheckBox(advanced_download_box, -1, "下载完成后进行 MD5 校验")
+
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
 
+        self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((130, 28)))
+
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
-        advanced_download_sbox.Add(button_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.download_error_retry_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         advanced_download_sbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL, self.FromDIP(6))
+        advanced_download_sbox.Add(self.check_md5_chk, 0, wx.ALL, self.FromDIP(6))
+        advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        advanced_download_sbox.Add(self.custom_ua_btn, 0, wx.ALL, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -523,16 +570,14 @@ class AdvancedTab(Tab):
         self.enable_switch_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableSwitchCDNEVT)
         self.custom_cdn_btn.Bind(wx.EVT_BUTTON, self.onCustomCDNEVT)
 
-        self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
 
+        self.custom_ua_btn.Bind(wx.EVT_BUTTON, self.onCustomUAEVT)
+
     def init_data(self):
         self.enable_switch_cdn_chk.SetValue(Config.Advanced.enable_switch_cdn)
-
-        self.file_name_template = Config.Advanced.file_name_template
-        self.datetime_format = Config.Advanced.datetime_format
-        self.auto_adjust = Config.Advanced.auto_adjust_field
+        Config.Temp.cdn_list = Config.Advanced.cdn_list.copy()
 
         self.download_error_retry_chk.SetValue(Config.Advanced.retry_when_download_error)
         self.download_error_retry_box.SetValue(Config.Advanced.download_error_retry_count)
@@ -540,16 +585,17 @@ class AdvancedTab(Tab):
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
 
+        self.check_md5_chk.SetValue(Config.Advanced.check_md5)
+
+        Config.Temp.user_agent = Config.Advanced.user_agent
+
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
         self.onChangeRestartEVT(0)
 
     def save(self):
         Config.Advanced.enable_switch_cdn = self.enable_switch_cdn_chk.GetValue()
-
-        Config.Advanced.file_name_template = self.file_name_template
-        Config.Advanced.datetime_format = self.datetime_format
-        Config.Advanced.auto_adjust_field = self.auto_adjust
+        Config.Advanced.cdn_list = Config.Temp.cdn_list.copy()
 
         Config.Advanced.retry_when_download_error = self.download_error_retry_chk.GetValue()
         Config.Advanced.download_error_retry_count = self.download_error_retry_box.GetValue()
@@ -557,33 +603,36 @@ class AdvancedTab(Tab):
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
 
+        Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
+
+        Config.Advanced.user_agent = Config.Temp.user_agent
+
     def onEnableSwitchCDNEVT(self, event):        
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
 
     def onCustomCDNEVT(self, event):
         dlg = CustomCDNDialog(self)
+        dlg.ShowModal()
 
-        if dlg.ShowModal() == wx.ID_OK:
-            dlg.saveCDNList()
-
-    def onCustomFileNameEVT(self, event):
-        dlg = CustomFileNameDialog(self, self.file_name_template, self.datetime_format, self.auto_adjust)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            self.file_name_template = dlg.template_box.GetValue()
-            self.datetime_format = dlg.datetime_format_box.GetValue()
-            self.auto_adjust = dlg.auto_adjust_chk.GetValue()
-    
     def onChangeRetryEVT(self, event):
-        self.download_error_retry_lab.Enable(self.download_error_retry_chk.GetValue())
-        self.download_error_retry_box.Enable(self.download_error_retry_chk.GetValue())
+        enable = self.download_error_retry_chk.GetValue()
+
+        self.download_error_retry_lab.Enable(enable)
+        self.download_error_retry_box.Enable(enable)
+        self.download_error_retry_unit_lab.Enable(enable)
 
     def onChangeRestartEVT(self, event):
-        self.download_suspend_retry_lab.Enable(self.download_suspend_retry_chk.GetValue())
-        self.download_suspend_retry_box.Enable(self.download_suspend_retry_chk.GetValue())
-        self.download_suspend_retry_unit_lab.Enable(self.download_suspend_retry_chk.GetValue())
+        enable = self.download_suspend_retry_chk.GetValue()
 
-class MergeTab(Tab):
+        self.download_suspend_retry_lab.Enable(enable)
+        self.download_suspend_retry_box.Enable(enable)
+        self.download_suspend_retry_unit_lab.Enable(enable)
+
+    def onCustomUAEVT(self, event):
+        dlg = CustomUADialog(self)
+        dlg.ShowModal()
+
+class FFmpegTab(Tab):
     def __init__(self, parent):
         Tab.__init__(self, parent)
 
@@ -619,7 +668,15 @@ class MergeTab(Tab):
         ffmpeg_sbox.Add(self.check_ffmpeg_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         ffmpeg_sbox.Add(btn_hbox, 0, wx.EXPAND)
 
-        merge_option_box = wx.StaticBox(self, -1, "合成选项")
+        merge_option_box = wx.StaticBox(self, -1, "音视频合并选项")
+
+        self.keep_original_files_chk = wx.CheckBox(merge_option_box, -1, "合并完成后保留原始文件")
+        keep_original_files_tip = ToolTip(merge_option_box)
+        keep_original_files_tip.set_tooltip("合并完成后，保留原始的视频和音频文件")
+
+        keep_original_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        keep_original_files_hbox.Add(self.keep_original_files_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_original_files_hbox.Add(keep_original_files_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         override_lab = wx.StaticText(merge_option_box, -1, "存在同名文件时")
         self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
@@ -632,6 +689,7 @@ class MergeTab(Tab):
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box, wx.VERTICAL)
         merge_option_sbox.Add(override_hbox, 0, wx.EXPAND)
+        merge_option_sbox.Add(keep_original_files_hbox, 0, wx.EXPAND)
         merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -651,13 +709,15 @@ class MergeTab(Tab):
         self.path_box.SetValue(Config.Merge.ffmpeg_path)
         self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_lauch)
         
-        self.override_option_choice.SetSelection(get_mapping_index_by_value(override_option_map, Config.Merge.override_option))
+        self.override_option_choice.SetSelection(Config.Merge.override_option)
+        self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
         self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
         Config.Merge.ffmpeg_path = self.path_box.GetValue()
         Config.Merge.ffmpeg_check_available_when_lauch = self.check_ffmpeg_chk.GetValue()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
+        Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
         Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
 
     def onBrowsePath(self, event):
@@ -834,7 +894,7 @@ class ProxyTab(Tab):
                 start_time = time.time()
 
                 url = "https://www.bilibili.com"
-                req = RequestTool.request_get(url, proxies = proxy, auth = _auth)
+                req = RequestUtils.request_get(url, proxies = proxy, auth = _auth)
                 
                 end_time = time.time()
 
@@ -895,28 +955,6 @@ class MiscTab(Tab):
         episodes_sbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         episodes_sbox.Add(self.auto_select_chk, 0, wx.ALL, self.FromDIP(6))
 
-        player_box = wx.StaticBox(self.scrolled_panel, -1, "播放器设置")
-
-        path_lab = wx.StaticText(player_box, -1, "播放器路径")
-        self.player_default_rdbtn = wx.RadioButton(player_box, -1, "系统默认")
-        self.player_custom_rdbtn = wx.RadioButton(player_box, -1, "手动设置")
-
-        player_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_hbox.Add(self.player_default_rdbtn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        player_hbox.Add(self.player_custom_rdbtn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-
-        self.player_path_box = TextCtrl(player_box, -1)
-        self.browse_player_btn = wx.Button(player_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
-
-        player_path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        player_path_hbox.Add(self.player_path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        player_path_hbox.Add(self.browse_player_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        
-        player_sbox = wx.StaticBoxSizer(player_box, wx.VERTICAL)
-        player_sbox.Add(path_lab, 0, wx.ALL, self.FromDIP(6))
-        player_sbox.Add(player_hbox, 0, wx.EXPAND)
-        player_sbox.Add(player_path_hbox, 1, wx.EXPAND)
-
         misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
 
         self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
@@ -938,7 +976,6 @@ class MiscTab(Tab):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(player_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
@@ -951,11 +988,6 @@ class MiscTab(Tab):
         layout()
 
     def Bind_EVT(self):
-        self.player_default_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
-        self.player_custom_rdbtn.Bind(wx.EVT_RADIOBUTTON, self.onChangePlayerPreferenceEVT)
-
-        self.browse_player_btn.Bind(wx.EVT_BUTTON, self.onBrowsePlayerEVT)
-
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
         self.reset_default_btn.Bind(wx.EVT_BUTTON, self.onResetToDefaultEVT)
 
@@ -970,21 +1002,11 @@ class MiscTab(Tab):
             case EpisodeDisplayType.All:
                 self.episodes_all_sections_choice.SetValue(True)
 
-        match PlayerMode(Config.Misc.player_preference):
-            case PlayerMode.Default:
-                self.player_default_rdbtn.SetValue(True)
-
-            case PlayerMode.Custom:
-                self.player_custom_rdbtn.SetValue(True)
-
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
-        self.auto_select_chk.SetValue(Config.Misc.auto_select)
-        self.player_path_box.SetValue(Config.Misc.player_path)
+        self.auto_select_chk.SetValue(Config.Misc.auto_check_episode_item)
         self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
         self.check_update_chk.SetValue(Config.Misc.check_update_when_lauch)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
-
-        self.onChangePlayerPreferenceEVT(None)
 
     def save(self):
         if self.episodes_single_choice.GetValue():
@@ -996,43 +1018,13 @@ class MiscTab(Tab):
         else:
             Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
-        if self.player_default_rdbtn.GetValue():
-            Config.Misc.player_preference = PlayerMode.Default.value
-        else:
-            Config.Misc.player_preference = PlayerMode.Custom.value
-
-        Config.Misc.auto_select = self.auto_select_chk.GetValue()
-        Config.Misc.player_path = self.player_path_box.GetValue()
+        Config.Misc.auto_check_episode_item = self.auto_select_chk.GetValue()
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.check_update_when_lauch = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
         # 重新创建主窗口的菜单
         self.parent.init_menubar()
-
-    def onBrowsePlayerEVT(self, event):
-        # 根据不同平台选取不同后缀名文件
-        match Platform(Config.Sys.platform):
-            case Platform.Windows:
-                wildcard = "可执行文件(*.exe)|*.exe"
-
-            case Platform.Linux | Platform.macOS:
-                wildcard = "可执行文件|*"
-
-        dialog = wx.FileDialog(self, "选择播放器路径", os.getcwd(), wildcard = wildcard, style = wx.FD_OPEN)
-
-        if dialog.ShowModal() == wx.ID_OK:
-            self.player_path_box.SetValue(dialog.GetPath())
-    
-    def onChangePlayerPreferenceEVT(self, event):
-        def set_enable(enable: bool):
-            self.player_path_box.Enable(enable)
-            self.browse_player_btn.Enable(enable)
-
-        if self.player_default_rdbtn.GetValue():
-            set_enable(False)
-        else:
-            set_enable(True)
 
     def onClearUserDataEVT(self, event):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)

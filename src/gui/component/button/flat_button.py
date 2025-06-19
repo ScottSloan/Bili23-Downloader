@@ -1,8 +1,8 @@
 import wx
 
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.icon_v4 import Icon, IconID
 
-from gui.component.panel import Panel
+from gui.component.panel.panel import Panel
 
 class FlatButton(Panel):
     def __init__(self, parent, label: str, icon_id: IconID, split: bool = False):

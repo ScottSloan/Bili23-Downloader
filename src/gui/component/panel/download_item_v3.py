@@ -1,29 +1,30 @@
 import os
 import wx
-from io import BytesIO
 from typing import Callable
 
-from utils.common.icon_v3 import Icon, IconID
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, MergeCallback, ExtraCallback
-from utils.common.enums import DownloadOption, DownloadStatus, ParseType, Platform
+from utils.common.icon_v4 import Icon, IconID
+from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloaderCallback, Callback
+from utils.common.enums import DownloadStatus, ParseType, Platform
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, extra_map, get_mapping_key_by_value
-from utils.common.cache import DataCache
 from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
-from utils.common.file_name import FileNameManager
+from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.directory import DirectoryUtils
+from utils.common.formatter import FormatUtils
 
-from utils.module.ffmpeg import FFmpeg
+from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
+from utils.module.cover import CoverUtils
 
 from utils.parse.download import DownloadParser
-from utils.parse.extra import ExtraParser
+from utils.parse.extra_v2 import ExtraParser
 from utils.config import Config
-from utils.tool_v2 import FormatTool, DownloadFileTool, RequestTool, FileDirectoryTool
+from utils.tool_v2 import DownloadFileTool
 
 from gui.component.info_label import InfoLabel
-from gui.component.panel import Panel
-from gui.component.bitmap_button import BitmapButton
-from gui.dialog.cover import CoverViewerDialog
+from gui.component.panel.panel import Panel
+from gui.component.button.bitmap_button import BitmapButton
+
 from gui.dialog.error import ErrorInfoDialog
 
 class EmptyItemPanel(Panel):
@@ -156,10 +157,10 @@ class DownloadTaskItemPanel(Panel):
         progress_bar_vbox.Add(speed_hbox, 0, wx.EXPAND)
         progress_bar_vbox.AddSpacer(self.FromDIP(8))
 
-        self.pause_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.RESUME_ICON))
+        self.pause_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Play))
         self.pause_btn.SetToolTip("开始下载")
 
-        self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.DELETE_ICON))
+        self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Close))
         self.stop_btn.SetToolTip("取消下载")
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -189,14 +190,10 @@ class DownloadTaskItemPanel(Panel):
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
-        self.flag_show_cover = False
         self.flag_destroy = False
         self.error_info = None
 
         self.file_tool = DownloadFileTool(self.task_info.id)
-
-        self.ffmpeg = FFmpeg(self)
-        self.ffmpeg.set_task_info(self.task_info)
 
         self.show_task_info()
 
@@ -206,7 +203,7 @@ class DownloadTaskItemPanel(Panel):
         def get_video_quality_label():
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         return "音频"
                     else:
                         return get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--")
@@ -223,7 +220,7 @@ class DownloadTaskItemPanel(Panel):
         def get_video_codec_label():
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         return get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--")
                     else:
                         return get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--")
@@ -242,65 +239,29 @@ class DownloadTaskItemPanel(Panel):
             self.video_codec_lab.SetLabel(get_video_codec_label())
             
             if self.task_info.progress == 100:
-                self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
+                self.video_size_lab.SetLabel(FormatUtils.format_size(self.task_info.total_file_size))
             elif self.task_info.total_file_size:
-                self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+                self.video_size_lab.SetLabel(f"{FormatUtils.format_size(self.task_info.total_downloaded_size)}/{FormatUtils.format_size(self.task_info.total_file_size)}")
             else:
                 self.video_size_lab.SetLabel("--")
 
             self.Layout()
     
     def show_cover(self):
-        def is_16_9(image: wx.Image):
-            width, height = image.GetSize()
-
-            return (width / height) == (16 / 9)
-
-        def crop(image: wx.Image):
-            # 将非 16:9 封面调整为 16:9
-                width, height = image.GetSize()
-
-                new_height = int(width * (9 / 16))
-
-                y_offset = (height - new_height) // 2
-
-                if y_offset >= 0:
-                    return image.GetSubImage(wx.Rect(0, y_offset, width, new_height))
-                else:
-                    new_width = int(height * (16 / 9))
-                    x_offset = (width - new_width) // 2
-                    return image.GetSubImage(wx.Rect(x_offset, 0, new_width, height))
-
-        def get_bitmap():
-            cache = DataCache.get_cache(self.task_info.cover_url)
-
-            if cache:
-                return cache
-            else:
-                content = RequestTool.request_get(self.task_info.cover_url).content
-
-                DataCache.set_cache(self.task_info.cover_url, content)
-
-                return content
-
-        def setBitmap(image: wx.Image):
+        def setBitmap(bitmap: wx.Bitmap):
             if not self.flag_destroy:
-                self.cover_bmp.SetBitmap(image.ConvertToBitmap())
+                self.cover_bmp.SetBitmap(bitmap)
 
-        if not self.flag_show_cover:
-            self.flag_show_cover = True
-            size = self.FromDIP((112, 63))
+        if not self.cover_bmp.GetBitmap():
+            size = wx.Size(self.FromDIP(112), self.FromDIP(63))
 
-            self._cover = get_bitmap()
+            image = CoverUtils.crop_cover(CoverUtils.get_cover_raw_contents(self.task_info.cover_url))
 
-            image = wx.Image(BytesIO(self._cover))
+            bitmap = CoverUtils.get_scaled_bitmap_from_image(image, size)
 
-            if not is_16_9(image):
-                image = crop(image)
+            image: wx.Image = image.Scale(size.width, size.height, wx.IMAGE_QUALITY_HIGH)
 
-            image: wx.Image = image.Scale(size[0], size[1], wx.IMAGE_QUALITY_HIGH)
-
-            wx.CallAfter(setBitmap, image)
+            wx.CallAfter(setBitmap, bitmap)
 
     def onDestroyEVT(self, event):
         self.flag_destroy = True
@@ -308,8 +269,7 @@ class DownloadTaskItemPanel(Panel):
         event.Skip()
 
     def onViewCoverEVT(self, event):
-        dlg = CoverViewerDialog(self.download_window, self._cover)
-        dlg.Show()
+        CoverUtils.view_cover(self.download_window, self.task_info.cover_url)
 
     def onViewErrorEVT(self, event):
         if self.error_info:
@@ -351,17 +311,25 @@ class DownloadTaskItemPanel(Panel):
         self.Destroy()
         
         if event:
-            self.callback.onUpdateCountTitleCallback(show_toast = show_toast)
+            self.callback.onUpdateCountTitle(show_toast = show_toast)
 
     def start_download(self):
-        def get_downloader_callback():
-            downloader_callback = DownloaderCallback()
-            downloader_callback.onStartDownloadCallback = self.onStartDownload
-            downloader_callback.onDownloadingCallback = self.onDownloading
-            downloader_callback.onDownloadFinish = self.onDownloadFinish
-            downloader_callback.onErrorCallback = self.onDownloadError
+        class callback(DownloaderCallback):
+            @staticmethod
+            def onStart():
+                self.onStartDownload()
 
-            return downloader_callback
+            @staticmethod
+            def onDownloading(speed: str):
+                self.onDownloading(speed)
+
+            @staticmethod
+            def onComplete():
+                self.onComplete()
+
+            @staticmethod
+            def onError():
+                self.onDownloadError()
 
         def video_audio_download_worker():
             # 获取下载链接
@@ -377,7 +345,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.set_download_status(DownloadStatus.Downloading.value)
 
-        self.downloader = Downloader(self.task_info, self.file_tool, get_downloader_callback())
+        self.downloader = Downloader(self.task_info, self.file_tool, callback)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -400,45 +368,43 @@ class DownloadTaskItemPanel(Panel):
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:
             if self.task_info.progress == 100:
-                self.onDownloadFinish()
+                self.onComplete()
             else:
                 self.start_download()
 
     def merge_video(self):
-        def get_callback():
-            def onSaveSuffix():
-                kwargs = {
-                    "suffix": self.task_info.suffix
-                }
+        class callback(Callback):
+            @staticmethod
+            def onSuccess(*process):
+                self.onMergeSuccess()
 
-                self.file_tool.update_task_info_kwargs(**kwargs)
+            @staticmethod
+            def onError(*process):
+                self.onMergeError()
 
-            callback = MergeCallback()
-            callback.onSuccess = self.onMergeSuccess
-            callback.onError = self.onMergeError
-            callback.onSaveSuffix = onSaveSuffix
+        FFmpeg.Utils.merge(self.task_info, callback)
 
-            return callback
+    def rename_file(self):
+        FFmpeg.Utils.rename_files(self.task_info)
 
-        self.ffmpeg.merge_video(get_callback())
+        self.onMergeSuccess()
 
     def download_extra(self):
-        def get_callback():
-            callback = ExtraCallback()
-            callback.onSuccess = self.onDownloadExtraSuccess
-            callback.onError = self.onDownloadError
+        class callback(Callback):
+            @staticmethod
+            def onSuccess(*process):
+                self.onDownloadExtraSuccess()
 
-            return callback
+            @staticmethod
+            def onError(*process):
+                self.onDownloadError()
     
-        extra_parser = ExtraParser()
-        extra_parser.set_task_info(self.task_info)
-
-        extra_parser.download_extra(get_callback())
+        ExtraParser.Utils.download(self.task_info, callback)
 
     def open_file_location(self):
-        path = os.path.join(Config.Download.path, self.full_file_name)
+        path = os.path.join(FileNameFormatter.get_download_path(self.task_info), self.full_file_name)
 
-        FileDirectoryTool.open_file_location(path)
+        DirectoryUtils.open_file_location(path)
 
     def onStartDownload(self):
         def worker():
@@ -455,26 +421,28 @@ class DownloadTaskItemPanel(Panel):
                 self.progress_bar.SetToolTip(f"{self.task_info.progress}%")
 
                 self.speed_lab.SetLabel(speed)
-                self.video_size_lab.SetLabel(f"{FormatTool.format_size(self.task_info.total_downloaded_size)}/{FormatTool.format_size(self.task_info.total_file_size)}")
+                self.video_size_lab.SetLabel(f"{FormatUtils.format_size(self.task_info.total_downloaded_size)}/{FormatUtils.format_size(self.task_info.total_file_size)}")
 
                 self.Layout()
 
         wx.CallAfter(worker)
 
-    def onDownloadFinish(self):
+    def onComplete(self):
         def worker():
-            if self.task_info.ffmpeg_merge:
+            if self.task_info.further_processing:
                 self.set_download_status(DownloadStatus.Merging.value)
+                
+                self.callback.onStartNextTask()
 
-                self.video_size_lab.SetLabel(FormatTool.format_size(self.task_info.total_file_size))
+                if self.task_info.ffmpeg_merge:
+                    Thread(target = self.merge_video).start()
+
+                else:
+                    Thread(target = self.rename_file).start()
+
+                self.video_size_lab.SetLabel(FormatUtils.format_size(self.task_info.total_file_size))
 
                 self.Layout()
-
-                self.callback.onStartNextCallback()
-
-                Thread(target = self.merge_video).start()
-            else:
-                pass
 
         wx.CallAfter(worker)
 
@@ -486,7 +454,7 @@ class DownloadTaskItemPanel(Panel):
 
             self.clear_temp_files()
 
-            self.callback.onAddPanelCallback(self.task_info)
+            self.callback.onAddPanel(self.task_info)
 
         wx.CallAfter(worker)
 
@@ -514,49 +482,50 @@ class DownloadTaskItemPanel(Panel):
 
         self.onMergeSuccess()
 
-        self.callback.onStartNextCallback()
+        self.callback.onStartNextTask()
 
     def clear_temp_files(self):
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 if self.task_info.total_file_size:
-                    self.ffmpeg.clear_temp_files()
+                    FFmpeg.Utils.clear_temp_files(self.task_info)
 
     def set_download_error(self, status: int):
         self.set_download_status(status)
 
-        self.callback.onUpdateCountTitleCallback()
+        self.callback.onUpdateCountTitle()
 
-        self.callback.onStartNextCallback()
+        self.callback.onStartNextTask()
 
     def set_download_status(self, status: int):
         def set_button_icon(status: int):
             match DownloadStatus(status):
                 case DownloadStatus.Waiting:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
 
                     self.pause_btn.SetToolTip("开始下载")
                     self.speed_lab.SetLabel("等待下载...")
 
                 case DownloadStatus.Downloading:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载链接...")
+                    self.speed_lab.reset_color()
 
                 case DownloadStatus.Pause:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RESUME_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
 
                     self.pause_btn.SetToolTip("继续下载")
                     self.speed_lab.SetLabel("暂停中...")
 
                 case DownloadStatus.Merging:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.PAUSE_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
 
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         lab = "正在转换音频..."
                     else:
-                        lab = "正在合成视频..."
+                        lab = "正在合并视频..."
 
                     self.pause_btn.SetToolTip(lab)
                     self.speed_lab.SetLabel(lab)
@@ -565,24 +534,24 @@ class DownloadTaskItemPanel(Panel):
                     self.stop_btn.Enable(False)
 
                 case DownloadStatus.Complete:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.FOLDER_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Folder))
 
                     self.pause_btn.SetToolTip("打开文件所在位置")
                     self.speed_lab.SetLabel("下载完成")
                     self.stop_btn.SetToolTip("清除记录")
 
                 case DownloadStatus.MergeError:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RETRY_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Retry))
 
                     self.pause_btn.SetToolTip("重试")
                     self.pause_btn.Enable(True)
                     self.stop_btn.Enable(True)
                     self.speed_lab.SetForegroundColour("red")
 
-                    if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+                    if self.task_info.download_option == ["audio"]:
                         lab = "转换音频"
                     else:
-                        lab = "合成视频"
+                        lab = "合并视频"
 
                     if self.error_info:
                         self.speed_lab.SetLabel(f"{lab}失败，点击查看详情")
@@ -591,7 +560,7 @@ class DownloadTaskItemPanel(Panel):
                         self.speed_lab.SetLabel(f"{lab}失败")
 
                 case DownloadStatus.DownloadError:
-                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.RETRY_ICON))
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Retry))
 
                     self.pause_btn.SetToolTip("重试")
                     self.pause_btn.Enable(True)
@@ -615,9 +584,9 @@ class DownloadTaskItemPanel(Panel):
         self.file_tool.update_task_info_kwargs(**kwargs)
     
     @property
+    def out_file_name(self):
+        return FileNameFormatter.format_file_name(self.task_info)
+
+    @property
     def full_file_name(self):
-        file_name_mgr = FileNameManager(self.task_info)
-
-        file_name = file_name_mgr.get_full_file_name(Config.Advanced.file_name_template, Config.Advanced.auto_adjust_field)
-
-        return file_name_mgr.check_file_name_legnth(f"{file_name}{self.task_info.suffix}.{self.task_info.output_type}")
+        return FileNameFormatter.check_file_name_length(f"{self.out_file_name}.{self.task_info.output_type}")

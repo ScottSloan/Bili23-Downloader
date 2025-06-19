@@ -1,13 +1,15 @@
-from utils.tool_v2 import RequestTool, UniversalTool, FormatTool
 from utils.config import Config
 
 from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_map
 from utils.common.enums import StatusCode, StreamType
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
+from utils.common.formatter import FormatUtils
+from utils.common.re_utils import REUtils
 
 from utils.parse.audio import AudioInfo
-from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.episode_v2 import Episode
 from utils.parse.parser import Parser
 
 class BangumiInfo:
@@ -19,6 +21,8 @@ class BangumiInfo:
     mid: int = 0
 
     title: str = ""
+    series_title: str = ""
+
     cover: str = ""
     views: str = ""
     danmakus: str = ""
@@ -35,7 +39,6 @@ class BangumiInfo:
 
     stream_type: int = 0
 
-    episodes_list: list = []
     video_quality_id_list: list = []
     video_quality_desc_list: list = []
 
@@ -51,6 +54,7 @@ class BangumiInfo:
         cls.url = ""
         cls.bvid = ""
         cls.title = ""
+        cls.series_title = ""
         cls.cover = ""
         cls.type_name = ""
         cls.views = 0
@@ -72,7 +76,6 @@ class BangumiInfo:
 
         cls.payment = False
 
-        cls.episodes_list.clear()
         cls.video_quality_id_list.clear()
         cls.video_quality_desc_list.clear()
 
@@ -100,7 +103,7 @@ class BangumiParser(Parser):
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         BangumiInfo.season_id = resp["result"]["media"]["season_id"]
         self.url_type, self.url_type_value = "season_id", BangumiInfo.season_id
@@ -109,26 +112,29 @@ class BangumiParser(Parser):
         # 获取番组信息
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_type}={self.url_type_value}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
-        info_result = BangumiInfo.info_json = resp["result"]
+        info_result = resp["result"]
 
         BangumiInfo.payment = True if "payment" in info_result else False
         
-        BangumiInfo.episodes_list = info_result["episodes"]
-
         BangumiInfo.title = info_result["title"]
-        BangumiInfo.url = BangumiInfo.episodes_list[0]["link"]
-        BangumiInfo.bvid = BangumiInfo.episodes_list[0]["bvid"]
-        BangumiInfo.cid = BangumiInfo.episodes_list[0]["cid"]
-        BangumiInfo.epid = BangumiInfo.episodes_list[0]["id"]
+        BangumiInfo.series_title = info_result["season_title"]
+
+        first_episode = info_result["episodes"][0] if info_result.get("episodes") else info_result["section"][0]["episodes"][0]
+
+        BangumiInfo.url = first_episode["link"]
+        BangumiInfo.bvid = first_episode["bvid"]
+        BangumiInfo.cid = first_episode["cid"]
+        BangumiInfo.epid = first_episode["id"]
+
         BangumiInfo.mid = info_result["media_id"]
 
         BangumiInfo.type_id = info_result["type"]
 
         BangumiInfo.cover = info_result["cover"]
         BangumiInfo.views = info_result["icon_font"]["text"]
-        BangumiInfo.danmakus = FormatTool.format_data_count(info_result["stat"]["danmakus"])
+        BangumiInfo.danmakus = FormatUtils.format_data_quantity(info_result["stat"]["danmakus"])
         BangumiInfo.followers = info_result["stat"]["follow_text"]
         BangumiInfo.styles = " / ".join(info_result["styles"])
         BangumiInfo.new_ep = info_result["new_ep"]["desc"]
@@ -141,6 +147,8 @@ class BangumiParser(Parser):
             BangumiInfo.up_name = info_result["up_info"]["uname"]
             BangumiInfo.up_mid = info_result["up_info"]["mid"]
 
+        BangumiInfo.info_json = info_result.copy()
+
         self.parse_episodes()
 
         self.get_bangumi_type()
@@ -148,7 +156,7 @@ class BangumiParser(Parser):
     def get_bangumi_available_media_info(self):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         BangumiInfo.download_json = info = resp["result"]
 
@@ -163,10 +171,9 @@ class BangumiParser(Parser):
             BangumiInfo.stream_type = StreamType.Flv.value
         
         else:
-            if BangumiInfo.payment and Config.User.login:
-                raise GlobalException(code = StatusCode.Pay.value)
-            else:
-                raise GlobalException(code = StatusCode.Vip.value)
+            code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
+
+            raise GlobalException(code = code)
                 
         BangumiInfo.video_quality_id_list = info["accept_quality"]
         BangumiInfo.video_quality_desc_list = info["accept_description"]
@@ -174,7 +181,7 @@ class BangumiParser(Parser):
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        self.request_get(url, headers = RequestTool.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
     def get_bangumi_type(self):
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
@@ -184,7 +191,7 @@ class BangumiParser(Parser):
             # 清除当前的番组信息
             self.clear_bangumi_info()
 
-            match UniversalTool.re_find_string(r"ep|ss|md", url):
+            match REUtils.find_string(r"ep|ss|md", url):
                 case "ep":
                     self.get_epid(url)
 
@@ -219,14 +226,12 @@ class BangumiParser(Parser):
             raise GlobalException(message = message, code = status_code)
 
     def parse_episodes(self):
-        EpisodeInfo.clear_episode_data()
-
         if self.url_type == "season_id":
             ep_id = BangumiInfo.epid
         else:
             ep_id = int(self.url_type_value)
 
-        EpisodeManager.bangumi_episodes_parser(BangumiInfo.info_json, ep_id)
+        Episode.Bangumi.parse_episodes(BangumiInfo.info_json, ep_id)
 
     def clear_bangumi_info(self):
         # 清除番组信息

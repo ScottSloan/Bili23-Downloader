@@ -2,14 +2,14 @@ import json
 from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, DownloadOption, VideoQualityID, VideoCodecID, AudioQualityID, StatusCode
+from utils.common.enums import ParseType, StreamType, VideoQualityID, VideoCodecID, AudioQualityID
 from utils.common.exception import GlobalException
+from utils.common.request import RequestUtils
 
 from utils.parse.preview import Preview
 from utils.parse.parser import Parser
 
 from utils.auth.wbi import WbiUtils
-from utils.tool_v2 import RequestTool
 from utils.config import Config
 
 class DownloadParser(Parser):
@@ -42,7 +42,7 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
             self.check_json(data)
@@ -52,7 +52,7 @@ class DownloadParser(Parser):
         def get_bangumi_json():
             url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
             self.check_json(data)
@@ -62,7 +62,7 @@ class DownloadParser(Parser):
         def get_cheese_json():
             url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
 
-            req = RequestTool.request_get(url, headers = RequestTool.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
             self.check_json(data)
@@ -94,22 +94,22 @@ class DownloadParser(Parser):
     def parse_dash_json(self, data: dict):
         def check_download_items():
             if not self.task_info.download_items:
-                match DownloadOption(self.task_info.download_option):
-                    case DownloadOption.OnlyVideo:
+                match self.task_info.download_option:
+                    case ["video"]:
                         self.task_info.download_items = ["video"]
                         self.task_info.output_type = "mp4"
 
-                    case DownloadOption.OnlyAudio:
+                    case ["audio"]:
                         self.task_info.download_items = ["audio"]
 
-                    case DownloadOption.VideoAndAudio:
+                    case ["video", "audio"]:
                         if data["audio"]:
                             self.task_info.download_items = ["video", "audio"]
                             self.task_info.output_type = "mp4"
                         else:
                             self.task_info.download_items = ["video"]
                             self.task_info.output_type = "mp4"
-                            self.task_info.download_option = DownloadOption.OnlyVideo.value
+                            self.task_info.download_option = "video"
         
         check_download_items()
 
@@ -130,7 +130,7 @@ class DownloadParser(Parser):
 
         def get_flv_info():
             self.task_info.audio_quality_id = AudioQualityID._None.value
-            self.task_info.download_option = DownloadOption.OnlyVideo.value
+            self.task_info.download_option = ["video"]
             self.task_info.flv_video_count = len(data["durl"])
         
         check_download_items()
@@ -191,7 +191,7 @@ class DownloadParser(Parser):
                     self.task_info.audio_type = "m4a"
                     stream_info = get_normal()
             
-            if self.task_info.download_option == DownloadOption.OnlyAudio.value:
+            if self.task_info.download_option == ["audio"]:
                 self.task_info.output_type = self.task_info.audio_type
 
             return stream_info

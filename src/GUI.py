@@ -1,7 +1,7 @@
 import wx
 
 from utils.config import Config
-from utils.tool_v2 import UniversalTool
+from utils.common.enums import Platform
 from utils.auth.cookie import CookieUtils
 
 from gui.main_v2 import MainWindow
@@ -15,11 +15,33 @@ class APP(wx.App):
         self.SetAppName(Config.APP.name)
 
 def init():
-    UniversalTool.msw_set_utf8_encode()
-    UniversalTool.msw_set_dpi_awareness()
+    def windows():
+        import ctypes
+        import subprocess
 
-    cookie_utils = CookieUtils()
-    cookie_utils.init_cookie_params()
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
+
+    def linux():
+        import os
+
+        os.environ['GDK_BACKEND'] = "x11"
+
+    def init_vlc_path():
+        import os
+
+        os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"
+
+    match Platform(Config.Sys.platform):
+        case Platform.Windows:
+            windows()
+
+        case Platform.Linux:
+            linux()
+
+    init_vlc_path()
+
+    CookieUtils.init_cookie_params()
 
 if __name__ == "__main__":
     init()

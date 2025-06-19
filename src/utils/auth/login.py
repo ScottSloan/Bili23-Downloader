@@ -1,13 +1,16 @@
-import os
 import json
 import qrcode
 import requests
 from io import BytesIO
 from datetime import datetime, timedelta
 
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import UniversalTool
 from utils.config import Config, user_config_group
+
 from utils.common.enums import StatusCode
+from utils.common.request import RequestUtils
+
+from utils.module.face import FaceUtils
 
 class LoginInfo:
     url: str = ""
@@ -33,14 +36,14 @@ class Login:
         url = "https://api.bilibili.com/x/web-interface/nav"
 
         if refresh:
-            headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA)
+            headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA)
 
         else:
-            headers = RequestTool.get_headers()
+            headers = RequestUtils.get_headers()
             
             headers["Cookie"] = ";".join([f'{key}={value}' for (key, value) in self.session.cookies.items()])
 
-        req = self.session.get(url, headers = headers, proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = self.session.get(url, headers = headers, proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
 
         resp = json.loads(req.text)["data"]
                 
@@ -62,7 +65,7 @@ class Login:
         Config.User.face_url = user_info["face_url"]
         Config.User.username = user_info["username"]
 
-        os.remove(Config.User.face_path)
+        UniversalTool.remove_files([Config.User.face_path])
 
     def logout(self):
         self.init_session()
@@ -73,7 +76,7 @@ class Login:
             "biliCSRF": Config.User.bili_jct
         }
 
-        self.session.post(url, params = form, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        self.session.post(url, params = form, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
 
         Config.User.login = False
         Config.User.face_url = ""
@@ -100,6 +103,8 @@ class Login:
 
         Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
+        FaceUtils.check_face_path()
+
 class QRLogin(Login):
     def __init__(self):
         Login.__init__(self)
@@ -107,7 +112,7 @@ class QRLogin(Login):
     def init_qrcode(self):
         url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
 
-        req = self.session.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = self.session.get(url, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
         resp = json.loads(req.text)
 
         LoginInfo.url = resp["data"]["url"]
@@ -123,7 +128,7 @@ class QRLogin(Login):
     def check_scan(self):
         url = f"https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={LoginInfo.qrcode_key}"
 
-        req = self.session.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = self.session.get(url, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
         req_json = json.loads(req.text)
 
         return {
@@ -137,7 +142,7 @@ class SMSLogin(Login):
     def get_country_list(self):
         url = "https://passport.bilibili.com/x/passport-login/web/country?web_location=333.1007"
 
-        req = self.session.get(url, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = self.session.get(url, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
 
         data = json.loads(req.text)
 
@@ -156,7 +161,7 @@ class SMSLogin(Login):
             "seccode": LoginInfo.seccode
         }
 
-        req = self.session.post(url, params = form, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = self.session.post(url, params = form, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
         data = json.loads(req.text)
 
         if data["code"]  == StatusCode.Success.value:
@@ -165,7 +170,7 @@ class SMSLogin(Login):
 
         return data
 
-    def login(self, tel: int, code: int, cid: int):
+    def sms_login(self, tel: int, code: int, cid: int):
         url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
 
         form = {
@@ -176,7 +181,7 @@ class SMSLogin(Login):
             "captcha_key": LoginInfo.captcha_key
         }
         
-        req = self.session.post(url, params = form, headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = self.session.post(url, params = form, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
         data = json.loads(req.text)
 
         return data
@@ -186,7 +191,7 @@ class CaptchaUtils:
         pass
 
     def get_geetest_challenge_gt(self):
-        req = requests.get("https://passport.bilibili.com/x/passport-login/captcha?source=main-fe-header&t=0.1867987009754133", headers = RequestTool.get_headers(), proxies = RequestTool.get_proxies(), auth = RequestTool.get_auth())
+        req = requests.get("https://passport.bilibili.com/x/passport-login/captcha?source=main-fe-header&t=0.1867987009754133", headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
 
         data = json.loads(req.text)
 

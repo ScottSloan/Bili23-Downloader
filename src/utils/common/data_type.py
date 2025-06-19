@@ -1,39 +1,47 @@
-from typing import Callable, List, Dict
+from abc import ABC, abstractmethod
+from typing import List, Dict
 
 from utils.common.enums import DownloadStatus
 
 class DownloadTaskInfo:
-    # 下载任务信息
     def __init__(self):
         # id，区分不同下载任务的唯一标识符
-        self.id: int = None
-        # 序号，从 1 开始
+        self.id: int = 0
+        # 序号
         self.number: int = 0
         # 补零序号
-        self.number_with_zero: str = ""
+        self.zero_padding_number: str = ""
         # 列表中的序号
         self.list_number: int = 0
-        # 后缀
-        self.suffix: str = ""
         # 时间戳
         self.timestamp: int = 0
         
         # Referer URL
-        self.referer_url: str = None
+        self.referer_url: str = ""
         # 视频封面链接
-        self.cover_url: str = None
+        self.cover_url: str = ""
 
         # 视频 bvid 和 cid 信息
-        self.bvid: str = None
-        self.cid: int = None
-        self.aid: int = None
-        self.ep_id: int = None
+        self.bvid: str = ""
+        self.cid: int = 0
+        self.aid: int = 0
+        self.ep_id: int = 0
+        self.season_id: int = 0
+        self.media_id: int = 0
 
         # 视频标题
-        self.title: str = None
+        self.title: str = ""
+        # 剧集系列名称
+        self.series_title: str = ""
+        # 章节标题
+        self.section_title: str = ""
+        # 分节标题
+        self.part_title: str = ""
+        # 合集标题
+        self.list_title: str = ""
 
         # 视频时长
-        self.duration: int = None
+        self.duration: int = 0
 
         # 下载信息
         self.progress: int = 0
@@ -47,36 +55,40 @@ class DownloadTaskInfo:
         self.status: int = DownloadStatus.Waiting.value
 
         # 媒体信息，0 表示未定义
-        self.video_quality_id: int = None
-        self.audio_quality_id: int = None
-        self.video_codec_id: int = None
-        self.video_type: str = None
-        self.audio_type: str = None
+        self.video_quality_id: int = 0
+        self.audio_quality_id: int = 00
+        self.video_codec_id: int = 0
+        self.video_type: str = ""
+        self.audio_type: str = ""
         self.output_type: str = ""
 
         # 下载项目标识
         self.download_items: list = []
 
+        # 解析类型
+        self.parse_type: int = 0
         # 下载类型
         self.download_type: int = 0
         # 视频流类型
-        self.stream_type: int = None
+        self.stream_type: int = 0
         # 下载选项
         self.download_option: List[int] = []
         # 是否调用 FFmpeg 合并
         self.ffmpeg_merge: bool = False
+        # 下载完成后是否对文件进行进一步处理
+        self.further_processing = False
         # flv 视频个数，仅 flv 流时有效
-        self.flv_video_count: int = None
+        self.flv_video_count: int = 0
 
         # 附加内容选项
-        self.extra_option: dict = None
+        self.extra_option: dict = {}
 
         # 视频发布时间戳
         self.pubtime: int = 0
         # 地区
         self.area: str = ""
         # 分区信息
-        self.tname_info: dict = {}
+        self.zone_info: dict = {}
         # UP 主信息
         self.up_info: dict = {}
 
@@ -84,79 +96,113 @@ class DownloadTaskInfo:
         return {
             "id": self.id,
             "number": self.number,
-            "number_with_zero": self.number_with_zero,
+            "zero_padding_number": self.zero_padding_number,
             "list_number": self.list_number,
-            "suffix": self.suffix,
             "timestamp": self.timestamp,
+
             "referer_url": self.referer_url,
             "cover_url": self.cover_url,
+
             "bvid": self.bvid,
             "cid": self.cid,
             "aid": self.aid,
             "ep_id": self.ep_id,
+            "season_id": self.season_id,
+            "media_id": self.media_id,
+
             "title": self.title,
+            "series_title": self.series_title,
+            "section_title": self.section_title,
+            "part_title": self.part_title,
+            "list_title": self.list_title,
+
             "duration": self.duration,
+
             "progress": self.progress,
             "total_file_size": self.total_file_size,
             "total_downloaded_size": self.total_downloaded_size,
             "current_downloaded_size": self.current_downloaded_size,
             "status": self.status,
+
             "video_quality_id": self.video_quality_id,
             "audio_quality_id": self.audio_quality_id,
             "video_codec_id": self.video_codec_id,
             "video_type": self.video_type,
             "audio_type": self.audio_type,
             "output_type": self.output_type,
+
             "download_items": self.download_items,
+            
+            "parse_type": self.parse_type,
             "download_type": self.download_type,
             "stream_type": self.stream_type,
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
+            "further_processing": self.further_processing,
             "flv_video_count": self.flv_video_count,
+
             "extra_option": self.extra_option,
+
             "pubtime": self.pubtime,
             "area": self.area,
-            "tname_info": self.tname_info,
+            "zone_info": self.zone_info,
             "up_info": self.up_info,
         }
 
     def load_from_dict(self, data: Dict):
-        self.id = data.get("id")
-        self.number = data.get("number")
-        self.number_with_zero = data.get("number_with_zero")
-        self.list_number = data.get("list_number")
-        self.suffix = data.get("suffix")
-        self.timestamp = data.get("timestamp")
-        self.referer_url = data.get("referer_url")
-        self.cover_url = data.get("cover_url")
-        self.bvid = data.get("bvid")
-        self.cid = data.get("cid")
-        self.aid = data.get("aid")
-        self.ep_id = data.get("ep_id")
-        self.title = data.get("title")
-        self.duration = data.get("duration")
-        self.progress = data.get("progress")
-        self.total_file_size = data.get("total_file_size")
-        self.total_downloaded_size = data.get("total_downloaded_size")
-        self.current_downloaded_size = data.get("current_downloaded_size")
-        self.status = data.get("status")
-        self.video_quality_id = data.get("video_quality_id")
-        self.audio_quality_id = data.get("audio_quality_id")
-        self.video_codec_id = data.get("video_codec_id")
-        self.video_type = data.get("video_type")
-        self.audio_type = data.get("audio_type")
-        self.output_type = data.get("output_type")
-        self.download_items = data.get("download_items")
-        self.download_type = data.get("download_type")
-        self.stream_type = data.get("stream_type")
-        self.download_option = data.get("download_option")
-        self.ffmpeg_merge = data.get("ffmpeg_merge")
-        self.flv_video_count = data.get("flv_video_count")
-        self.extra_option = data.get("extra_option")
-        self.pubtime = data.get("pubtime")
-        self.area = data.get("area")
-        self.tname_info = data.get("tname_info")
-        self.up_info = data.get("up_info")
+        self.id = data.get("id", self.id)
+        self.number = data.get("number", self.number)
+        self.zero_padding_number = data.get("zero_padding_number", self.zero_padding_number)
+        self.list_number = data.get("list_number", self.list_number)
+        self.timestamp = data.get("timestamp", self.timestamp)
+
+        self.referer_url = data.get("referer_url", self.referer_url)
+        self.cover_url = data.get("cover_url", self.cover_url)
+
+        self.bvid = data.get("bvid", self.bvid)
+        self.cid = data.get("cid", self.cid)
+        self.aid = data.get("aid", self.aid)
+        self.ep_id = data.get("ep_id", self.ep_id)
+        self.season_id = data.get("season_id", self.season_id)
+        self.media_id = data.get("media_id", self.media_id)
+
+        self.title = data.get("title", self.title)
+        self.series_title = data.get("series_title", self.series_title)
+        self.section_title = data.get("section_title", self.section_title)
+        self.part_title = data.get("part_title", self.part_title)
+        self.list_title = data.get("list_title", self.list_title)
+
+        self.duration = data.get("duration", self.duration)
+
+        self.progress = data.get("progress", self.progress)
+        self.total_file_size = data.get("total_file_size", self.total_file_size)
+        self.total_downloaded_size = data.get("total_downloaded_size", self.total_downloaded_size)
+        self.current_downloaded_size = data.get("current_downloaded_size", self.current_downloaded_size)
+        self.status = data.get("status", self.status)
+
+        self.video_quality_id = data.get("video_quality_id", self.video_quality_id)
+        self.audio_quality_id = data.get("audio_quality_id", self.audio_quality_id)
+        self.video_codec_id = data.get("video_codec_id", self.video_codec_id)
+        self.video_type = data.get("video_type", self.video_type)
+        self.audio_type = data.get("audio_type", self.audio_type)
+        self.output_type = data.get("output_type", self.output_type)
+
+        self.download_items = data.get("download_items", self.download_items)
+
+        self.parse_type = data.get("parse_type", self.parse_type)
+        self.download_type = data.get("download_type", self.download_type)
+        self.stream_type = data.get("stream_type", self.stream_type)
+        self.download_option = data.get("download_option", self.download_option)
+        self.ffmpeg_merge = data.get("ffmpeg_merge", self.ffmpeg_merge)
+        self.further_processing = data.get("further_processing", self.further_processing)
+        self.flv_video_count = data.get("flv_video_count", self.flv_video_count)
+
+        self.extra_option = data.get("extra_option", self.extra_option)
+        
+        self.pubtime = data.get("pubtime", self.pubtime)
+        self.area = data.get("area", self.area)
+        self.zone_info = data.get("zone_info", self.zone_info)
+        self.up_info = data.get("up_info", self.up_info)
 
 class DownloaderInfo:
     def __init__(self):
@@ -177,32 +223,64 @@ class DownloaderInfo:
         self.file_name = data.get("file_name")
 
 class RangeDownloadInfo:
-    def __init__(self):
-        self.index: str = ""
-        self.type: str = ""
-        self.url: str = ""
-        self.file_path: str = ""
-        self.range: List[int] = []
+    index: str = ""
+    type: str = ""
+    url: str = ""
+    file_path: str = ""
+    range: List[int] = []
 
-class DownloaderCallback:
-    def __init__(self):
-        self.onStartDownloadCallback: Callable = None
-        self.onDownloadingCallback: Callable = None
-        self.onDownloadFinish: Callable = None
-        self.onErrorCallback: Callable = None
+class DownloaderCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onStart():
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onDownloading(speed: str):
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onComplete():
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onError():
+        pass
 
-class TaskPanelCallback:
-    def __init__(self):
-        self.onStartNextCallback: Callable = None
-        self.onUpdateCountTitleCallback: Callable = None
-        self.onLoadMoreTaskCallback: Callable = None
-        self.onAddPanelCallback: Callable = None
+class TaskPanelCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onStartNextTask():
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onUpdateCountTitle(show_toast = False):
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onAddPanel(task_info: DownloadTaskInfo):
+        pass
 
-class DownloadPageCallback:
-    def __init__(self):
-        self.onSetTitleCallback: Callable = None
-        self.onAddPanelCallback: Callable = None
-        self.onStartNextCallback: Callable = None
+class DownloadPageCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onSetTitle(name: str, count: int):
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onAddPanel(task_info: DownloadTaskInfo):
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onStartNextTask():
+        pass
 
 class NotificationMessage:
     def __init__(self):
@@ -210,26 +288,93 @@ class NotificationMessage:
         self.status: int = 0
         self.video_merge_type: int = 0
 
+class TreeListCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onUpdateCheckedItemCount(count: int):
+        pass
+
 class TreeListItemInfo:
     def __init__(self):
-        self.list_number: int = 0
-        self.type: str = ""
-        self.title: str = ""
-        self.cid: int = 0
+        self.number: int = 0
+        self.page: int = 0
 
-class ParseCallback:
-    # 解析回调类
-    def __init__(self):
-        self.onError: Callable = None
-        self.onRedirect: Callable = None
-        self.onInteract: Callable = None
-        self.onInteractUpdate: Callable = None
+        self.title: str = ""
+
+        self.cid: int = 0
+        self.aid: int = 0
+        self.bvid: str = ""
+        self.ep_id: int = 0
+        self.season_id: int = 0
+        self.media_id: int = 0
+
+        self.pubtime: int = 0
+        self.badge: str = ""
+        self.duration: str = ""
+        self.cover_url: str = ""
+
+        self.pid: str = ""
+
+        self.section_title: str = ""
+        self.part_title: str = ""
+        self.list_title: str = ""
+
+        self.room_id: int = 0
+
+        self.item_type: str = "node"
+        self.type: str = 0
+
+    def to_dict(self):
+        return {
+            "number": self.number,
+            "page": self.page,
+            "title": self.title,
+            "cid": self.cid,
+            "aid": self.aid,
+            "bvid": self.bvid,
+            "ep_id": self.ep_id,
+            "season_id": self.season_id,
+            "media_id": self.media_id,
+            "pubtime": self.pubtime,
+            "badge": self.badge,
+            "duration": self.duration,
+            "cover_url": self.cover_url,
+            "pid": self.pid,
+            "section_title": self.section_title,
+            "part_title": self.part_title,
+            "list_title": self.list_title,
+            "room_id": self.room_id,
+            "item_type": self.item_type,
+            "type": self.type
+        }
+
+    def load_from_dict(self, data: dict):
+        self.number = data.get("number", self.number)
+        self.page = data.get("page", self.page)
+        self.title = data.get("title", self.title)
+        self.cid = data.get("cid", self.cid)
+        self.aid = data.get("aid", self.aid)
+        self.bvid = data.get("bvid", self.bvid)
+        self.ep_id = data.get("ep_id", self.ep_id)
+        self.season_id = data.get("season_id", self.season_id)
+        self.media_id = data.get("media_id", self.media_id)
+        self.pubtime = data.get("pubtime", self.pubtime)
+        self.badge = data.get("badge", self.badge)
+        self.duration = data.get("duration", self.duration)
+        self.cover_url = data.get("cover_url", self.cover_url)
+        self.pid = data.get("pid", self.pid)
+        self.section_title = data.get("section_title", self.section_title)
+        self.part_title = data.get("part_title", self.part_title)
+        self.list_title = data.get("list_title", self.list_title)
+        self.room_id = data.get("room_id", self.room_id)
+        self.item_type = data.get("item_type", self.item_type)
+        self.type = data.get("type", self.type)
 
 class Command:
     def __init__(self):
         self.command = []
 
-    def add(self, command):
+    def add(self, command: str):
         self.command.append(command)
 
     def clear(self):
@@ -238,25 +383,65 @@ class Command:
     def format(self):
         return " && ".join(self.command)
 
-class MergeCallback:
-    def __init__(self):
-        self.onSuccess: Callable = None
-        self.onError: Callable = None
-        self.onSaveSuffix: Callable = None
+class Process:
+    output: str = None
+    return_code: int = None
 
-class CutInfo:
-    def __init__(self):
-        self.input_path: str = ""
-        self.output_path: str = ""
-        self.start_time: str = ""
-        self.end_time: str = ""
+class Callback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onSuccess(*process: Process):
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onError(*process: Process):
+        pass
 
-class CutCallback:
-    def __init__(self):
-        self.onSuccess: Callable = None
-        self.onError: Callable = None
+class ParseCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onError():
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onBangumi(url: str):
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onInteractVideo():
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def onUpdateInteractVideo(title: str):
+        pass
 
-class ExtraCallback:
-    def __init__(self):
-        self.onSuccess: Callable = None
-        self.onError: Callable = None
+class PlayerCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onLengthChange(length: int):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onReset():
+        pass
+
+class RealTimeCallback(ABC):
+    @staticmethod
+    @abstractmethod
+    def onReadOutput(output: str):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onSuccess(process):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onError(process):
+        pass

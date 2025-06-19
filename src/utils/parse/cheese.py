@@ -1,18 +1,20 @@
-from utils.tool_v2 import RequestTool, UniversalTool
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 from utils.common.enums import StatusCode, StreamType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
+from utils.common.request import RequestUtils
+from utils.common.re_utils import REUtils
 
-from utils.parse.episode import EpisodeInfo, EpisodeManager
+from utils.parse.episode_v2 import Episode
 from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 
 class CheeseInfo:
     url: str = ""
     aid: int = 0
-    epid: int = 0
+    ep_id: int = 0
     cid: int = 0
     season_id: int = 0
 
@@ -43,7 +45,7 @@ class CheeseInfo:
         cls.release = ""
         cls.expiry = ""
         cls.aid = 0
-        cls.epid = 0
+        cls.ep_id = 0
         cls.cid = 0
         cls.season_id = 0
         cls.up_name = ""
@@ -73,11 +75,13 @@ class CheeseParser(Parser):
         self.url_type, self.url_type_value, CheeseInfo.season_id = "season_id", season_id[0], season_id[0]
 
     def get_cheese_info(self):
-        url = f"https://api.bilibili.com/pugv/view/web/season?{self.url_type}={self.url_type_value}"
+        url = f"https://api.bilibili.com/pugv/view/web/season/v2?{self.url_type}={self.url_type_value}"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        info_data = CheeseInfo.info_json = resp["data"]
+        info_data = resp["data"]
+
+        info_data["sections"] = [section for section in info_data["sections"] if section["title"] != "默认章节"]
 
         CheeseInfo.url = info_data["share_url"]
         CheeseInfo.title = info_data["title"]
@@ -86,18 +90,19 @@ class CheeseParser(Parser):
         CheeseInfo.release = info_data["release_info"]
         CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
 
-        CheeseInfo.episodes_list = info_data["episodes"]
-        CheeseInfo.epid = CheeseInfo.episodes_list[0]["id"]
+        CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
 
         CheeseInfo.up_name = info_data["up_info"]["uname"]
         CheeseInfo.up_mid = info_data["up_info"]["mid"]
 
+        CheeseInfo.info_json = info_data.copy()
+
         self.parse_episodes()
 
     def get_cheese_available_media_info(self):
-        url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.epid}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.ep_id}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
 
-        resp = self.request_get(url, headers = RequestTool.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         CheeseInfo.download_json = info = resp["data"]
 
@@ -118,7 +123,7 @@ class CheeseParser(Parser):
         def worker():
             self.clear_cheese_info()
 
-            match UniversalTool.re_find_string(r"ep|ss", url):
+            match REUtils.find_string(r"ep|ss", url):
                 case "ep":
                     self.get_epid(url)
 
@@ -138,14 +143,12 @@ class CheeseParser(Parser):
             raise GlobalException(callback = self.callback.onError) from e
 
     def parse_episodes(self):
-        EpisodeInfo.clear_episode_data()
-
         if self.url_type == "season_id":
-            ep_id = CheeseInfo.epid
+            ep_id = CheeseInfo.ep_id
         else:
             ep_id = int(self.url_type_value)
 
-        EpisodeManager.cheese_episode_parser(CheeseInfo.info_json, ep_id)
+        Episode.Cheese.parse_episodes(CheeseInfo.info_json, ep_id)
 
     def clear_cheese_info(self):
         CheeseInfo.clear_cheese_info()

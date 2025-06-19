@@ -1,13 +1,16 @@
 import wx
-import io
 import os
 
-from gui.component.frame import Frame
-from gui.component.panel import Panel
+from utils.module.cover import CoverUtils
+
+from utils.common.color import Color
+
+from gui.component.window.frame import Frame
 
 class CoverViewerDialog(Frame):
-    def __init__(self, parent, _cover_raw_contents: bytes):
-        self._cover_raw_contents = _cover_raw_contents
+    def __init__(self, parent, cover_raw_contents: bytes, cover_url: str):
+        self.cover_raw_contents = cover_raw_contents
+        self.cover_url = cover_url
 
         Frame.__init__(self, parent, "视频封面")
 
@@ -19,21 +22,23 @@ class CoverViewerDialog(Frame):
 
         self.CenterOnParent()
 
-        self.onResizeEVT(None)
-        self.onFitSizeEVT(None)
-
     def init_UI(self):
-        self.panel = Panel(self)
+        self.SetBackgroundColour(Color.get_panel_background_color())
 
-        self.cover_bmp = wx.StaticBitmap(self.panel, -1, bitmap = self.show_cover(self.FromDIP(640)))
+        self.cover_bmp = wx.StaticBitmap(self, -1, bitmap = self.show_cover(self.FromDIP((800, 480))))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.AddStretchSpacer()
+        hbox.Add(self.cover_bmp, 0, wx.EXPAND)
+        hbox.AddStretchSpacer()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.cover_bmp, 1, wx.EXPAND)
+        vbox.AddStretchSpacer()
+        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.AddStretchSpacer()
 
-        self.panel.SetSizerAndFit(vbox)
+        self.SetSizerAndFit(vbox)
 
-        self.Fit()
-        
         self.init_menubar()
         self.init_statusbar()
 
@@ -57,7 +62,7 @@ class CoverViewerDialog(Frame):
         self.SetMenuBar(menu_bar)
 
     def init_statusbar(self):
-        _size = self._temp_image.GetSize()
+        width, height = CoverUtils.get_cover_size(self.cover_raw_contents)
 
         self.status_bar: wx.StatusBar = self.CreateStatusBar()
 
@@ -65,7 +70,7 @@ class CoverViewerDialog(Frame):
         self.status_bar.SetStatusWidths([250, 250])
 
         self.status_bar.SetStatusText("Ready", 0)
-        self.status_bar.SetStatusText(f"原图尺寸：{_size[0]}x{_size[1]}", 1)
+        self.status_bar.SetStatusText(f"原图尺寸：{width}x{height}", 1)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onSaveEVT, id = self.ID_SAVE)
@@ -73,7 +78,7 @@ class CoverViewerDialog(Frame):
         self.Bind(wx.EVT_MENU, self.onFitSizeEVT, id = self.ID_FIT_SIZE)
         self.Bind(wx.EVT_MENU, self.onOriginalSizeEVT, id = self.ID_ORIGINAL_SIZE)
 
-        self.panel.Bind(wx.EVT_SIZE, self.onResizeEVT)
+        self.Bind(wx.EVT_SIZE, self.onResizeEVT)
 
     def init_utils(self):
         self.ID_SAVE = wx.NewIdRef()
@@ -82,42 +87,43 @@ class CoverViewerDialog(Frame):
         self.ID_FIT_SIZE = wx.NewIdRef()
 
     def onSaveEVT(self, event):
-        dlg = wx.FileDialog(self, "保存封面", os.getcwd(), wildcard = "图片文件|*.jpg", style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        dlg = wx.FileDialog(self, "保存封面", os.getcwd(), wildcard = "JPG 文件(*.jpg)|*.jpg|PNG 文件|*.png|WEBP 文件|*.webp|AVIF 文件|*.avif", style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
 
+            cover_raw_contents = CoverUtils.download_cover(self.cover_url, dlg.GetFilterIndex())
+
             with open(save_path, "wb") as f:
-                f.write(self._cover_raw_contents)
+                f.write(cover_raw_contents)
 
     def onExitEVT(self, event):
         self.Destroy()
 
     def onResizeEVT(self, event):
-        temp_bmp: wx.Bitmap = self.show_cover(self.GetSize()[0])
-        _size = temp_bmp.GetSize()
+        scaled_cover: wx.Bitmap = self.show_cover(self.GetClientSize())
 
-        self.cover_bmp.SetBitmap(temp_bmp)
+        width, height = scaled_cover.GetSize()
 
-        self.status_bar.SetStatusText(f"缩放尺寸：{_size[0]}x{_size[1]}", 0)
+        self.cover_bmp.SetBitmap(scaled_cover)
+
+        self.status_bar.SetStatusText(f"缩放尺寸：{width}x{height}", 0)
+
+        event.Skip()
 
     def onFitSizeEVT(self, event):
-        self.SetSize(self.cover_bmp.GetSize()[0], self.cover_bmp.GetSize()[1] + (self.GetSize()[1] - self.GetClientSize()[1]))
+        cover_width, cover_height = self.cover_bmp.GetSize()
+
+        self.SetSize(cover_width, cover_height + (self.GetSize()[1] - self.GetClientSize()[1]))
 
     def onOriginalSizeEVT(self, event):
-        self.cover_bmp.SetBitmap(self._temp_image)
+        self.cover_bmp.SetBitmap(CoverUtils.get_image_obj(self.cover_raw_contents))
 
         self.onFitSizeEVT(event)
 
         self.CenterOnScreen()
 
-    def show_cover(self, width: int):
-        self._temp_image = wx.Image(io.BytesIO(self._cover_raw_contents))
+    def show_cover(self, new_size: wx.Size):
+        cover_size = CoverUtils.get_scaled_size(self.cover_raw_contents, new_size)
 
-        _width, _height = self._temp_image.GetSize()
-
-        # 按图片原纵横比缩放
-        self._x = width
-        self._h = int(width / (_width / _height))
-
-        return self._temp_image.Copy().Rescale(self._x, self._h, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+        return CoverUtils.get_scaled_bitmap(self.cover_raw_contents, cover_size)

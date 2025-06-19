@@ -3,22 +3,22 @@ import os
 from datetime import datetime
 from typing import List, Callable
 
-from utils.common.icon_v3 import Icon, IconID
+from utils.common.icon_v4 import Icon, IconID
 from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback, DownloadPageCallback
 from utils.common.enums import DownloadStatus, Platform, NumberType
 from utils.common.thread import Thread
-from utils.common.cache import DataCache
 from utils.common.map import download_type_map
+from utils.common.directory import DirectoryUtils
 
 from utils.module.notification import NotificationManager
-from utils.tool_v2 import DownloadFileTool, FileDirectoryTool
+from utils.tool_v2 import DownloadFileTool
 from utils.config import Config, app_config_group
 
-from gui.component.frame import Frame
-from gui.component.panel import Panel
-from gui.component.action_button import ActionButton
-from gui.component.scrolled_panel import ScrolledPanel
-from gui.component.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
+from gui.component.window.frame import Frame
+from gui.component.panel.panel import Panel
+from gui.component.button.action_button import ActionButton
+from gui.component.panel.scrolled_panel import ScrolledPanel
+from gui.component.panel.download_item_v3 import DownloadTaskItemPanel, EmptyItemPanel, LoadMoreTaskItemPanel
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
@@ -50,6 +50,19 @@ class DownloadManagerWindow(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
+        class callback(DownloadPageCallback):
+            @staticmethod
+            def onAddPanel(task_info: DownloadTaskInfo):
+                self.add_panel_to_completed_page(task_info)
+
+            @staticmethod
+            def onStartNextTask():
+                self.start_download()
+
+            @staticmethod
+            def onSetTitle(name: str, count: int):
+                self.setTitleLabel(name, count)
+
         top_panel = Panel(self)
         top_panel.set_dark_mode()
 
@@ -76,9 +89,9 @@ class DownloadManagerWindow(Frame):
         left_panel.set_dark_mode()
 
         self.downloading_page_btn = ActionButton(left_panel, "正在下载(0)")
-        self.downloading_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.DOWNLOADING_ICON))
+        self.downloading_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.Downloading))
         self.completed_page_btn = ActionButton(left_panel, "下载完成(0)")
-        self.completed_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.COMPLETED_ICON))
+        self.completed_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.Complete))
 
         self.open_download_dir_btn = wx.Button(left_panel, -1, "打开下载目录", size = self.FromDIP((120, 28)))
 
@@ -101,11 +114,6 @@ class DownloadManagerWindow(Frame):
         right_panel.set_dark_mode()
 
         self.book = wx.Simplebook(right_panel, -1)
-
-        callback = DownloadPageCallback()
-        callback.onSetTitleCallback = self.setTitleLabel
-        callback.onAddPanelCallback = self.add_panel_to_completed_page
-        callback.onStartNextCallback = self.start_download
 
         self.downloading_page = DownloadingPage(self.book, callback, self)
         self.completed_page = CompeltedPage(self.book, callback, self)
@@ -199,11 +207,11 @@ class DownloadManagerWindow(Frame):
                     match NumberType(Config.Download.number_type):
                         case NumberType.From_1 | NumberType.Coherent:
                             entry.number = self.index
-                            entry.number_with_zero = str(self.index).zfill(len(str(len(download_list))))
+                            entry.zero_padding_number = str(self.index).zfill(len(str(len(download_list))))
 
                         case NumberType.Episode_List:
                             entry.number = entry.list_number
-                            entry.number_with_zero = entry.list_number
+                            entry.zero_padding_number = entry.list_number
 
             if Config.Download.number_type == NumberType.From_1.value:
                 self.index = 0
@@ -270,7 +278,7 @@ class DownloadManagerWindow(Frame):
         self.downloading_page_btn.setUnactiveState()
 
     def onOpenDownloadDirectoryEVT(self, event):
-        FileDirectoryTool.open_directory(Config.Download.path)
+        DirectoryUtils.open_directory(Config.Download.path)
 
     def setTitleLabel(self, name: str, count: int):
         if count:
@@ -313,6 +321,12 @@ class DownloadManagerWindow(Frame):
 
 class SimplePage(Panel):
     def __init__(self, parent):
+        self.callback: DownloadPageCallback
+        self.temp_download_list: List[DownloadTaskInfo]
+        self.scroller: ScrolledPanel
+        self.name: str
+        self.total_count: int
+
         Panel.__init__(self, parent)
 
     def load_more_panel_item(self, callback: Callable = None):
@@ -326,18 +340,23 @@ class SimplePage(Panel):
             return temp_download_list
 
         def get_items():
-            def get_callback():
-                callback = TaskPanelCallback()
-                callback.onUpdateCountTitleCallback = self.refresh_scroller
-                callback.onAddPanelCallback = self.callback.onAddPanelCallback
-                callback.onStartNextCallback = self.callback.onStartNextCallback
+            class callback(TaskPanelCallback):
+                @staticmethod
+                def onUpdateCountTitle(show_toast = False):
+                    self.refresh_scroller(show_toast)
 
-                return callback
+                @staticmethod
+                def onAddPanel(task_info: DownloadTaskInfo):
+                    self.callback.onAddPanel(task_info)
+                
+                @staticmethod
+                def onStartNextTask():
+                    self.callback.onStartNextTask()
 
             items = []
 
             for entry in get_download_list():
-                item = DownloadTaskItemPanel(self.scroller, entry, get_callback(), self.download_window)
+                item = DownloadTaskItemPanel(self.scroller, entry, callback, self.download_window)
                 items.append((item, 0, wx.EXPAND))
 
             count = len(self.temp_download_list)
@@ -381,9 +400,6 @@ class SimplePage(Panel):
             if isinstance(panel, DownloadTaskItemPanel):
                 panel.show_cover()
 
-        # 封面显示完成后，清除图片换成
-        DataCache.clear_cache()
-
     def refresh_scroller(self, show_toast: bool = False):
         if self.is_scroller_empty:
             if self.temp_download_list:
@@ -397,7 +413,7 @@ class SimplePage(Panel):
         self.scroller.Layout()
         self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
-        self.callback.onSetTitleCallback(self.name, self.total_count)
+        self.callback.onSetTitle(self.name, self.total_count)
 
         if self.name == "正在下载":
             if not self.total_count and show_toast and Config.Download.enable_notification:
@@ -405,14 +421,14 @@ class SimplePage(Panel):
                 notification.show_toast("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
 
     def get_scroller_task_count(self, condition: List[int]):
-        _count = 0
+        count = 0
 
         for panel in self.scroller_children:
             if isinstance(panel, DownloadTaskItemPanel):
                 if panel.task_info.status in condition:
-                    _count += 1
+                    count += 1
 
-        return _count
+        return count
     
     @property
     def scroller_children(self):

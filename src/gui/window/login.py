@@ -2,19 +2,18 @@ import wx
 import time
 from io import BytesIO
 from typing import Dict, Callable
-from datetime import datetime, timedelta
 
 from utils.auth.login import QRLogin, SMSLogin
-from utils.config import Config, user_config_group
+from utils.config import Config
 from utils.auth.cookie import CookieUtils
 
 from utils.common.thread import Thread
 from utils.common.pic import Pic, PicID
 from utils.common.enums import Platform
 
-from gui.component.dialog import Dialog
-from gui.component.panel import Panel
-from gui.component.search_ctrl import SearchCtrl
+from gui.component.window.dialog import Dialog
+from gui.component.panel.panel import Panel
+from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
 class LoginWindow(Dialog):
     def __init__(self, parent, callback: Callable):
@@ -64,8 +63,7 @@ class LoginWindow(Dialog):
 
     def init_utils(self):
         def worker():
-            cookie_utils = CookieUtils()
-            cookie_utils.exclimbwuzhi(Config.Auth.buvid3)
+            CookieUtils.exclimbwuzhi(Config.Auth.buvid3)
 
         Thread(target = worker).start()
 
@@ -418,7 +416,7 @@ class SMSPage(LoginPage):
         code = int(self.validate_code_box.GetValue())
         cid = self.country_id_list[self.country_id_choice.GetSelection()]
 
-        result = self.login.login(tel, code, cid)
+        result = self.login.sms_login(tel, code, cid)
 
         self.check_login_result(result)
 
