@@ -168,9 +168,9 @@ class ExtraParser:
 
             cover_type = CoverUtils.get_cover_type()
 
-            CoverUtils.download_cover(task_info.cover_url)
+            contents = CoverUtils.download_cover(task_info.cover_url)
 
-            ExtraParser.Utils.save_to_file(f"{base_file_name}{cover_type}")
+            ExtraParser.Utils.save_to_file(f"{base_file_name}{cover_type}", contents, task_info, "wb")
 
     class Utils:
         @staticmethod

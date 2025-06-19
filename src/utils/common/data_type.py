@@ -75,6 +75,8 @@ class DownloadTaskInfo:
         self.download_option: List[int] = []
         # 是否调用 FFmpeg 合并
         self.ffmpeg_merge: bool = False
+        # 下载完成后是否对文件进行进一步处理
+        self.further_processing = False
         # flv 视频个数，仅 flv 流时有效
         self.flv_video_count: int = 0
 
@@ -136,6 +138,7 @@ class DownloadTaskInfo:
             "stream_type": self.stream_type,
             "download_option": self.download_option,
             "ffmpeg_merge": self.ffmpeg_merge,
+            "further_processing": self.further_processing,
             "flv_video_count": self.flv_video_count,
 
             "extra_option": self.extra_option,
@@ -191,6 +194,7 @@ class DownloadTaskInfo:
         self.stream_type = data.get("stream_type", self.stream_type)
         self.download_option = data.get("download_option", self.download_option)
         self.ffmpeg_merge = data.get("ffmpeg_merge", self.ffmpeg_merge)
+        self.further_processing = data.get("further_processing", self.further_processing)
         self.flv_video_count = data.get("flv_video_count", self.flv_video_count)
 
         self.extra_option = data.get("extra_option", self.extra_option)

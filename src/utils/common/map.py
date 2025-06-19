@@ -68,36 +68,6 @@ live_status_map = {
     2: "轮播中"
 }
 
-supported_gpu_map = {
-    "NVIDIA": 1,
-    "AMD": 2,
-    "Intel": 3
-}
-
-video_sw_encoder_map = {
-    0: "libx264",
-    1: "libx265",
-    2: "libaom-av1"
-}
-
-video_hw_encoder_map = {
-    0: {
-        0: "h264_nvenc",
-        1: "hevc_nvenc",
-        2: "av1_nvenc"
-    },
-    1: {
-        0: "h264_amf",
-        1: "hevc_amf",
-        2: "av1_amf"
-    },
-    2: {
-        0: "h264_qsv",
-        1: "hevc_qsv",
-        2: "av1_qsv"
-    }
-}
-
 danmaku_format_map = {
     "xml": 0,
     "protobuf": 1

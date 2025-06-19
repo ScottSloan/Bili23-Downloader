@@ -170,6 +170,20 @@ class FFmpeg:
             return command.format()
 
         @staticmethod
+        def get_rename_files_command(task_info: DownloadTaskInfo):
+            command = Command()
+
+            output_file_name = FFmpeg.Prop.output_file_name(task_info)
+
+            if "video" in task_info.download_option:
+                command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), f"{output_file_name}.{task_info.video_type}"))
+
+            if "audio" in task_info.download_option:
+                command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_audio_temp_file(task_info), f"{output_file_name}.{task_info.audio_type}"))
+
+            return command.format()
+
+        @staticmethod
         def get_test_command():
             command = Command()
 
@@ -451,21 +465,22 @@ class FFmpeg:
 
             Thread(target = worker).start()
         
-        @staticmethod
-        def keep_original_files(task_info: DownloadTaskInfo):
-            class callback(Callback):
-                @staticmethod
-                def onSuccess(*process):
-                    pass
-                
-                @staticmethod
-                def onError(*process):
-                    pass
+        @classmethod
+        def keep_original_files(cls, task_info: DownloadTaskInfo):
+            callback = cls.get_empty_callback()
             
             command = FFmpeg.Command.get_keep_files_command(task_info)
 
             FFmpeg.Command.run(command, callback, cwd = FFmpeg.Prop.download_path(task_info))
         
+        @classmethod
+        def rename_files(cls, task_info: DownloadTaskInfo):
+            callback = cls.get_empty_callback()
+            
+            command = FFmpeg.Command.get_rename_files_command(task_info)
+
+            FFmpeg.Command.run(command, callback, cwd = FFmpeg.Prop.download_path(task_info))
+
         @classmethod
         def check_file_existance(cls, dst: str, callback: Callback):
             if os.path.exists(dst):
@@ -479,6 +494,19 @@ class FFmpeg:
 
                     case OverrideOption.Override:
                         UniversalTool.remove_files([dst])
+
+        @staticmethod
+        def get_empty_callback():
+            class callback(Callback):
+                @staticmethod
+                def onSuccess(*process):
+                    pass
+                
+                @staticmethod
+                def onError(*process):
+                    pass
+
+            return callback
 
     class Prop:
         @staticmethod

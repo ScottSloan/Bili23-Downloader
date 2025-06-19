@@ -384,6 +384,11 @@ class DownloadTaskItemPanel(Panel):
 
         FFmpeg.Utils.merge(self.task_info, callback)
 
+    def rename_file(self):
+        FFmpeg.Utils.rename_files(self.task_info)
+
+        self.onMergeSuccess()
+
     def download_extra(self):
         class callback(Callback):
             @staticmethod
@@ -424,18 +429,20 @@ class DownloadTaskItemPanel(Panel):
 
     def onComplete(self):
         def worker():
-            if self.task_info.ffmpeg_merge:
+            if self.task_info.further_processing:
                 self.set_download_status(DownloadStatus.Merging.value)
+                
+                self.callback.onStartNextTask()
+
+                if self.task_info.ffmpeg_merge:
+                    Thread(target = self.merge_video).start()
+
+                else:
+                    Thread(target = self.rename_file).start()
 
                 self.video_size_lab.SetLabel(FormatUtils.format_size(self.task_info.total_file_size))
 
                 self.Layout()
-
-                self.callback.onStartNextTask()
-
-                Thread(target = self.merge_video).start()
-            else:
-                pass
 
         wx.CallAfter(worker)
 
