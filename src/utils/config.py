@@ -106,8 +106,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.63.0"
-        version_code: int = 1630
+        version: str = "1.63.1"
+        version_code: int = 1631
 
         task_file_min_version_code: int = 1630
         app_config_file_min_version_code: int = 1630
@@ -271,17 +271,10 @@ class Config:
     @classmethod
     def load_config(cls):
         def after_load_config():
-            def get_user_face():
-                _, file_ext = os.path.splitext(Config.User.face_url)
-                
-                Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
-
-            cls.create_folder([Config.Download.path, Config.User.directory, Config.User.download_file_directory])
+            cls.create_folder([Config.User.download_file_directory])
 
             cls.create_config(app_config, Config.APP.app_config_path, app_config_group)
             cls.create_config(user_config, Config.User.user_config_path, user_config_group)
-
-            get_user_face()
         
         def get_path():
             match Platform(Config.Sys.platform):

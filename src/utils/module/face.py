@@ -8,12 +8,15 @@ from utils.common.request import RequestUtils
 class FaceUtils:
     @staticmethod
     def check_face_path():
-        _, file_ext = os.path.splitext(Config.User.face_url)
+        if not Config.User.face_path:
+            _, file_ext = os.path.splitext(Config.User.face_url)
 
-        Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
+            Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
 
-    @staticmethod
-    def get_user_face_path():
+    @classmethod
+    def get_user_face_path(cls):
+        cls.check_face_path()
+
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
             content = RequestUtils.request_get(Config.User.face_url).content
@@ -49,3 +52,4 @@ class FaceUtils:
         width, height = scaled_size
 
         return wx.Image(cls.get_user_face_path(), wx.BITMAP_TYPE_ANY).Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+    

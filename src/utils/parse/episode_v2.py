@@ -226,9 +226,15 @@ class Episode:
 
         @staticmethod
         def get_entry_info(episode: dict, main_episode: bool):
+            def get_duration():
+                if "duration" in episode:
+                    return episode.get("duration") / 10000
+                else:
+                    return 0
+
             episode["title"] = FormatUtils.format_bangumi_title(episode, main_episode)
             episode["pubtime"] = episode["pub_time"]
-            episode["duration"] = episode["duration"] / 1000
+            episode["duration"] = get_duration()
             episode["cover_url"] = episode["cover"]
             episode["type"] = ParseType.Bangumi.value
 
