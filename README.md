@@ -1,7 +1,7 @@
 # Bili23-Downloader
 ![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml)
 
-![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.11.9-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.3-green?style=flat) 
+![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.12.10-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.3-green?style=flat) 
 
 [项目官网](https://bili23.scott-sloan.cn/)
 
@@ -26,7 +26,11 @@ Bili23 Downloader 是一款跨平台的 B 站视频下载工具，支持 Windows
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html)。
 
 ## 更新日志
-### 1.63.0 (2025-06-19)
+### 1.63.1 (2025-06-20)
+### 修复
+* 修复部分剧集解析失败的问题
+
+## 1.63.0 (2025-06-19)
 ### 新增
 * 支持自定义 User-Agent
 * 支持在自定义文件名模板中添加子目录，实现自动分类
