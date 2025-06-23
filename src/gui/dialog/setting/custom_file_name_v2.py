@@ -188,10 +188,10 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        if REUtils.find_illegal_chars(template):
-            raise ValueError("illegal")
-        
         file_name = FileNameFormatter.format_file_name(get_task_info(), template, basename = False)
+
+        if REUtils.find_illegal_chars(file_name):
+            raise ValueError("illegal")
         
         if len(os.path.basename(file_name)) > 255:
             raise ValueError("max length")

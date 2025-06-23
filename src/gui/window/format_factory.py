@@ -273,7 +273,7 @@ class ContainerPage(Panel):
 
             stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
             stream_hbox.Add(video_sbox, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
-            stream_hbox.Add(audio_sbox, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+            stream_hbox.Add(audio_sbox, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
             vbox = wx.BoxSizer(wx.VERTICAL)
             vbox.Add(overall_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))

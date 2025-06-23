@@ -18,6 +18,7 @@ live.json
 download*.json
 ffmpeg.exe
 build.bat
+build.ps1
 test*.py
 bilidanmu.proto
 config.json
