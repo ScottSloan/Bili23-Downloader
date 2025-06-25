@@ -16,14 +16,7 @@ class B23Parser(Parser):
     
         return req.url
 
-    def parse_url(self, url: str):
-        def worker():
-            new_url = self.get_redirect_url(url)
+    def parse_worker(self, url: str):
+        new_url = self.get_redirect_url(url)
 
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (new_url, ))
-
-        try:
-            return worker()
-        
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (new_url, ))

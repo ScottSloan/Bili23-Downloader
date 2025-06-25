@@ -91,23 +91,16 @@ class LiveParser(Parser):
 
         LiveInfo.m3u8_link = info["durl"][0]["url"]
 
-    def parse_url(self, url: str):
-        def worker():
-            LiveInfo.clear_live_info()
+    def parse_worker(self, url: str):
+        LiveInfo.clear_live_info()
 
-            self.get_short_id(url)
+        self.get_short_id(url)
 
-            self.get_live_room_info()
+        self.get_live_room_info()
 
-            self.get_live_available_media_info()
+        self.get_live_available_media_info()
 
-            return StatusCode.Success.value
-        
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        return StatusCode.Success.value
         
     def parse_episodes(self):
         Episode.Live.parse_episodes(LiveInfo.info_json)

@@ -119,28 +119,21 @@ class CheeseParser(Parser):
 
             CheeseInfo.stream_type = StreamType.Flv.value
 
-    def parse_url(self, url: str):
-        def worker():
-            self.clear_cheese_info()
+    def parse_worker(self, url: str):
+        self.clear_cheese_info()
 
-            match REUtils.find_string(r"ep|ss", url):
-                case "ep":
-                    self.get_epid(url)
+        match REUtils.find_string(r"ep|ss", url):
+            case "ep":
+                self.get_epid(url)
 
-                case "ss":
-                    self.get_season_id(url)
+            case "ss":
+                self.get_season_id(url)
 
-            self.get_cheese_info()
+        self.get_cheese_info()
 
-            self.get_cheese_available_media_info()
+        self.get_cheese_available_media_info()
 
-            return StatusCode.Success.value
-
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        return StatusCode.Success.value
 
     def parse_episodes(self):
         if self.url_type == "season_id":

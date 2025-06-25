@@ -186,34 +186,27 @@ class BangumiParser(Parser):
     def get_bangumi_type(self):
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
 
-    def parse_url(self, url: str):
-        def worker():
-            # 清除当前的番组信息
-            self.clear_bangumi_info()
+    def parse_worker(self, url: str):
+        # 清除当前的番组信息
+        self.clear_bangumi_info()
 
-            match REUtils.find_string(r"ep|ss|md", url):
-                case "ep":
-                    self.get_epid(url)
+        match REUtils.find_string(r"ep|ss|md", url):
+            case "ep":
+                self.get_epid(url)
 
-                case "ss":
-                    self.get_season_id(url)
+            case "ss":
+                self.get_season_id(url)
 
-                case "md":
-                    self.get_mid(url)
+            case "md":
+                self.get_mid(url)
 
-            # 先检查视频是否存在区域限制
-            self.check_bangumi_can_play()
+        # 先检查视频是否存在区域限制
+        self.check_bangumi_can_play()
 
-            self.get_bangumi_info()
-            self.get_bangumi_available_media_info()
+        self.get_bangumi_info()
+        self.get_bangumi_available_media_info()
 
-            return StatusCode.Success.value
-
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        return StatusCode.Success.value
     
     def check_json(self, data: dict):
         status_code = data["code"]

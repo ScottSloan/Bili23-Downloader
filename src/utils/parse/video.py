@@ -193,32 +193,25 @@ class VideoParser(Parser):
         VideoInfo.video_quality_id_list = info["accept_quality"]
         VideoInfo.video_quality_desc_list = info["accept_description"]
 
-    def parse_url(self, url: str):
-        def worker():
-            # 先检查是否为分 P 视频
-            self.get_part(url)
+    def parse_worker(self, url: str):
+        # 先检查是否为分 P 视频
+        self.get_part(url)
 
-            # 清除当前的视频信息
-            self.clear_video_info()
+        # 清除当前的视频信息
+        self.clear_video_info()
 
-            match REUtils.find_string(r"av|BV", url):
-                case "av":
-                    self.get_aid(url)
+        match REUtils.find_string(r"av|BV", url):
+            case "av":
+                self.get_aid(url)
 
-                case "BV":
-                    self.get_bvid(url)
+            case "BV":
+                self.get_bvid(url)
 
-            self.get_video_info()
-            
-            self.get_video_available_media_info()
-
-            return StatusCode.Success.value
+        self.get_video_info()
         
-        try:
-            return worker()
-        
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        self.get_video_available_media_info()
+
+        return StatusCode.Success.value
 
     def set_bvid(self, bvid: str):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"

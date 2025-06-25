@@ -1,4 +1,5 @@
 import sys
+import json
 import threading
 import traceback
 from typing import Callable
@@ -10,12 +11,13 @@ class GlobalExceptionInfo:
     info = {}
 
 class GlobalException(Exception):
-    def __init__(self, message: str = None, code: int = None, stack_trace: str = None, callback: Callable = None, args: tuple = ()):
+    def __init__(self, message: str = None, code: int = None, stack_trace: str = None, callback: Callable = None, args: tuple = (), json_data: dict = None):
         self.message = message
         self.code = code
         self.stack_trace = stack_trace
         self.callback = callback
         self.custom_args = args
+        self.json_data = json_data
 
         self.get_message()
 
@@ -52,11 +54,19 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
     if exc_value.__cause__:
         exception, stack_trace = get_exception_info(exc_value.__cause__, type(exc_value.__cause__), exc_value.__cause__, exc_value.__cause__.__traceback__)
 
+        if hasattr(exception, "callback") and exception.callback:
+            callback = getattr(exception, "callback", None)
+            args = getattr(exception, "custom_args", ())
     else:
         exception, stack_trace = get_exception_info(exc_value, exc_type, exc_value, exc_tb)
+
+    json_data = getattr(exception, "json_data", None)
     
     message = exc_value.message if isinstance(exception, GlobalException) else str(exception)
     stack_trace = exception.stack_trace if hasattr(exception, "stack_trace") and exception.stack_trace else stack_trace
+
+    if json_data:
+        stack_trace += f"\n\nJSON Data:\n{json.dumps(json_data, ensure_ascii = False, indent = 4)}"
     
     update_exception_info()
 

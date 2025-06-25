@@ -60,22 +60,15 @@ class ActivityParser(Parser):
         elif "aid" in initial_state:
             self.get_aid(initial_state)
 
-    def parse_url(self, url: str):
-        def worker():
-            match REUtils.find_string(r"BV", url):
-                case "BV":
-                    # 判断视频链接是否包含 BV 号
-                    self.get_bvid(url)
+    def parse_worker(self, url: str):
+        match REUtils.find_string(r"BV", url):
+            case "BV":
+                # 判断视频链接是否包含 BV 号
+                self.get_bvid(url)
 
-                case _:
-                    initial_state = self.get_initial_state(url)
+            case _:
+                initial_state = self.get_initial_state(url)
 
-                    self.get_real_url(initial_state)
+                self.get_real_url(initial_state)
 
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (ActivityInfo.url, ))
-        
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (ActivityInfo.url, ))

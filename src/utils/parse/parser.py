@@ -8,6 +8,7 @@ from utils.common.request import RequestUtils
 class Parser:
     def __init__(self):
         self.bilibili_url = "https://www.bilibili.com"
+        self.json_data = None
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
         result = re.findall(pattern, string)
@@ -21,6 +22,8 @@ class Parser:
         resp = json.loads(req.text)
 
         self.check_json(resp)
+
+        self.json_data = resp.copy()
 
         return resp
     
@@ -55,8 +58,18 @@ class Parser:
         status_code = data["code"]
 
         if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code)
+            raise GlobalException(message = data["message"], code = status_code, json_data = data)
+        
+    def parse_url(self, url: str):
+        try:
+            return self.parse_worker(url)
+
+        except Exception as e:
+            raise GlobalException(callback = self.callback.onError, json_data = self.json_data) from e
         
     def dumps_json(self, file_name: str, json_file: dict):
         with open(file_name, "w", encoding = "utf-8") as f:
             f.write(json.dumps(json_file, ensure_ascii = False))
+
+    def parse_worker(self, url: str):
+        pass
