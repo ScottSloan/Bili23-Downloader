@@ -40,6 +40,8 @@ class DownloadInfo:
 
             case ParseType.Cheese:
                 info = cls.get_cheese_download_info(item_info)
+        
+        info["download_path"] = Config.Download.path
 
         return info
     

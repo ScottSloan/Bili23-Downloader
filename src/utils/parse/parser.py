@@ -63,9 +63,12 @@ class Parser:
     def parse_url(self, url: str):
         try:
             return self.parse_worker(url)
+        
+        except KeyError as e:
+            raise GlobalException(callback = self.callback.onError, json_data = self.json_data) from e
 
         except Exception as e:
-            raise GlobalException(callback = self.callback.onError, json_data = self.json_data) from e
+            raise GlobalException(callback = self.callback.onError) from e
         
     def dumps_json(self, file_name: str, json_file: dict):
         with open(file_name, "w", encoding = "utf-8") as f:

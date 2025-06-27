@@ -32,7 +32,7 @@ class FileNameFormatter:
 
         formatted = cls.removeprefix(dirname.format(**field_dict))
 
-        path = os.path.join(Config.Download.path, cls.get_legal_file_name(formatted))
+        path = os.path.join(task_info.download_path, cls.get_legal_file_name(formatted))
 
         check_path(path)
 

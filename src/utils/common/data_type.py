@@ -43,7 +43,9 @@ class DownloadTaskInfo:
         # 视频时长
         self.duration: int = 0
 
-        # 下载信息
+        # 下载目录
+        self.download_path: str = ""
+        # 下载进度
         self.progress: int = 0
         # 总大小，单位字节
         self.total_file_size: int = 0
@@ -118,6 +120,7 @@ class DownloadTaskInfo:
 
             "duration": self.duration,
 
+            "download_path": self.download_path,
             "progress": self.progress,
             "total_file_size": self.total_file_size,
             "total_downloaded_size": self.total_downloaded_size,
@@ -174,6 +177,7 @@ class DownloadTaskInfo:
 
         self.duration = data.get("duration", self.duration)
 
+        self.download_path = data.get("download_path", self.download_path)
         self.progress = data.get("progress", self.progress)
         self.total_file_size = data.get("total_file_size", self.total_file_size)
         self.total_downloaded_size = data.get("total_downloaded_size", self.total_downloaded_size)

@@ -55,8 +55,8 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
         exception, stack_trace = get_exception_info(exc_value.__cause__, type(exc_value.__cause__), exc_value.__cause__, exc_value.__cause__.__traceback__)
 
         if hasattr(exception, "callback") and exception.callback:
-            callback = getattr(exception, "callback", None)
-            args = getattr(exception, "custom_args", ())
+            callback = exception.callback
+            args = exception.custom_args
     else:
         exception, stack_trace = get_exception_info(exc_value, exc_type, exc_value, exc_tb)
 
