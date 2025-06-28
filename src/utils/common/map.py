@@ -70,14 +70,16 @@ live_status_map = {
 
 danmaku_format_map = {
     "xml": 0,
-    "protobuf": 1
+    "protobuf": 1,
+    "ass": 2
 }
 
 subtitle_format_map = {
     "srt": 0,
     "txt": 1,
     "lrc": 2,
-    "json": 3
+    "json": 3,
+    "ass": 4
 }
 
 cover_format_map = {

@@ -449,3 +449,15 @@ class RealTimeCallback(ABC):
     @abstractmethod
     def onError(process):
         pass
+
+class ASSDialogueData:
+    Layer = 0
+    Start = "00:00:00.00"
+    End = "00:00:00.00"
+    Style = "Default"
+    Name = ""
+    MarginL = 0
+    MarginR = 0
+    MarginV = 0
+    Effect = ""
+    Text = ""

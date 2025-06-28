@@ -3,7 +3,7 @@ import math
 import json
 from utils.config import Config
 
-from utils.common.data_type import DownloadTaskInfo, Callback
+from utils.common.data_type import DownloadTaskInfo, Callback, ASSDialogueData
 from utils.common.enums import DanmakuType, SubtitleType, SubtitleLanOption, StatusCode
 from utils.common.request import RequestUtils
 from utils.common.file_name_v2 import FileNameFormatter
@@ -11,6 +11,7 @@ from utils.common.formatter import FormatUtils
 from utils.common.exception import GlobalException
 
 from utils.module.cover import CoverUtils
+from utils.module.ass import ASS
 
 from utils.auth.wbi import WbiUtils
 
@@ -118,6 +119,9 @@ class ExtraParser:
 
                 case SubtitleType.JSON:
                     cls.convert_to_json(task_info, subtitle_json, lan, base_file_name)
+
+                case SubtitleType.ASS:
+                    cls.convert_to_ass(task_info, subtitle_json, lan, base_file_name)
         
         @staticmethod
         def convert_to_srt(task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
@@ -160,6 +164,14 @@ class ExtraParser:
             contents = json.dumps(subtitle_json, ensure_ascii = False, indent = 4)
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.json", contents, task_info, "w")
+
+        @staticmethod
+        def convert_to_ass(task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
+            dialogue_list = [(FormatUtils.format_ass_time(entry["from"]), FormatUtils.format_ass_time(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
+
+            contents = ASS.make(dialogue_list)
+
+            ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.ass", contents, task_info, "w")
 
     class Cover:
         @classmethod
