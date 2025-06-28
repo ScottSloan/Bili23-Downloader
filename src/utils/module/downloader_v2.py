@@ -203,15 +203,17 @@ class Downloader:
                         return new_url, etag, file_size
     
     def generate_ranges(self, file_size: int):
-        num_threads = Config.Download.max_thread_count
-        part_size = file_size // num_threads
+        num_threads = min(Config.Download.max_thread_count, max(1, file_size))
+        part_size = max(file_size // num_threads, 1)
 
         ranges = []
-
+        start = 0
         for i in range(num_threads):
-            start = i * part_size
             end = start + part_size - 1 if i != num_threads - 1 else file_size - 1
+            if start > end:
+                break
             ranges.append([start, end])
+            start = end + 1
         
         return ranges
 

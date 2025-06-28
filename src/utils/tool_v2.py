@@ -1,6 +1,7 @@
 import os
 import wx
 import json
+import time
 from datetime import datetime
 from typing import Optional, List
 
@@ -117,10 +118,13 @@ class UniversalTool:
     def remove_files(path_list: List):
         def worker():
             for path in path_list:
-                while os.path.exists(path):
+                attempts = 0
+                while os.path.exists(path) and attempts < 10:
                     try:
                         os.remove(path)
+                        break
                     except Exception:
-                        pass
+                        attempts += 1
+                        time.sleep(0.1)
 
-        Thread(target = worker).start()
+        Thread(target = worker, daemon = True).start()
