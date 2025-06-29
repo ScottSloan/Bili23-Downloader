@@ -451,13 +451,17 @@ class RealTimeCallback(ABC):
         pass
 
 class ASSDialogueData:
-    Layer = 0
-    Start = "00:00:00.00"
-    End = "00:00:00.00"
-    Style = "Default"
-    Name = ""
-    MarginL = 0
-    MarginR = 0
-    MarginV = 0
-    Effect = ""
-    Text = ""
+    def __init__(self):
+        self.Layer = 0
+        self.Start = "00:00:00.00"
+        self.End = "00:00:00.00"
+        self.Style = "Default"
+        self.Name = ""
+        self.MarginL = 0
+        self.MarginR = 0
+        self.MarginV = 0
+        self.Effect = ""
+        self.Text = ""
+
+    def to_string(self):
+        return ",".join([str(value) for key, value in self.__dict__.items() if not key.startswith("__")])

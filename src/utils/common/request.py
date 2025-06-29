@@ -23,7 +23,7 @@ class RequestUtils:
     def request_head(cls, url: str, headers = None, proxies = None, auth = None):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return requests.head(RequestUtils.get_protocol(url), headers = headers, proxies = proxies, auth = auth)
+        return requests.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth)
     
     @classmethod
     def get_params(cls, headers = None, proxies = None, auth = None):

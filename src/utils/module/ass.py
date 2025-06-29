@@ -23,7 +23,7 @@ class ASS:
     def get_styles(cls):
         data = [
             ("Format", "Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding"),
-            ("Style", "Default, 微软雅黑, 52, &H00FFFFFF, &H000000FF, &H00000000, &H00000000, 0, 0, 0, 0, 100, 100, 0, 0, 1, 2, 2, 2, 10, 10, 30, 1")
+            ("Style", "Default,微软雅黑,52,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1")
         ]
 
         return cls.format_section("V4+ Styles", data)
@@ -37,7 +37,7 @@ class ASS:
             data.End = end
             data.Text = text
 
-            return cls.format_dialogue(data)
+            return data.to_string()
 
         data = [
             ("Format", "Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"),
@@ -52,7 +52,3 @@ class ASS:
     @staticmethod
     def format_section(title: str, data: list):
         return f"[{title}]\n" + "\n".join([f"{key}: {value}" if key != ";" else f"; {value}" for (key, value) in data])
-    
-    @staticmethod
-    def format_dialogue(data: ASSDialogueData):
-        return ", ".join([str(value) for key, value in data.__dict__.items() if not key.startswith("__")])

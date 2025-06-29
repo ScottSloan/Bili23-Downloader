@@ -106,8 +106,8 @@ class FormatUtils:
     
     @staticmethod
     def format_ass_time(time):
-        ms = int((time - int(time)) * 1000)
+        ms = int((time - int(time)) * 100)
 
         t = str(datetime.timedelta(seconds = int(time))).split('.')[0]
 
-        return f"{t},{ms:02d}"
+        return f"{t}.{ms:02d}"
