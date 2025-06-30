@@ -108,7 +108,7 @@ class CookieUtils:
             "csrf": ""
         }
 
-        req = RequestUtils.request_post(url, headers = RequestUtils.get_headers(), params = params)
+        req = RequestUtils.request_post(url, params = params)
         data = json.loads(req.text)
 
         Config.Auth.bili_ticket = data["data"]["ticket"]

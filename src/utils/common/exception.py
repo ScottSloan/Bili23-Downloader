@@ -62,7 +62,7 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
 
     json_data = getattr(exception, "json_data", None)
     
-    message = exc_value.message if isinstance(exception, GlobalException) else str(exception)
+    message = exception.message if isinstance(exception, GlobalException) else str(exception)
     stack_trace = exception.stack_trace if hasattr(exception, "stack_trace") and exception.stack_trace else stack_trace
 
     if json_data:

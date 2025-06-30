@@ -7,23 +7,25 @@ from utils.common.enums import ProxyMode
 from utils.config import Config
 
 class RequestUtils:
+    session = requests.Session()
+
     @classmethod
     def request_get(cls, url: str, headers = None, proxies = None, auth = None, stream = False):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return requests.get(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream)
+        return cls.session.get(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream, timeout = 5)
     
     @classmethod
     def request_post(cls, url: str, headers = None, proxies = None, auth = None, params = None, json = None):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return requests.post(cls.get_protocol(url), headers = headers, params = params, json = json, proxies = proxies, auth = auth)
+        return cls.session.post(cls.get_protocol(url), headers = headers, params = params, json = json, proxies = proxies, auth = auth, timeout = 5)
 
     @classmethod
     def request_head(cls, url: str, headers = None, proxies = None, auth = None):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return requests.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth)
+        return cls.session.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth)
     
     @classmethod
     def get_params(cls, headers = None, proxies = None, auth = None):
