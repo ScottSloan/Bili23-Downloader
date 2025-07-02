@@ -23,7 +23,8 @@ app_config_group = {
         "window_pos",
         "window_size",
         "window_maximized",
-        "show_exit_dialog"
+        "show_exit_dialog",
+        "ass_style"
     ],
     "Download": [
         "path",
@@ -109,7 +110,7 @@ class Config:
         version: str = "1.64.0"
         version_code: int = 1640
 
-        task_file_min_version_code: int = 1630
+        task_file_min_version_code: int = 1640
         app_config_file_min_version_code: int = 1630
         user_config_file_min_version_code: int = 1620
 
@@ -130,6 +131,7 @@ class Config:
         subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
         cover_file_type: int = 0
+        ass_style: dict = {}
 
         window_pos: list = []
         window_size: list = []

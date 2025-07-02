@@ -1,6 +1,9 @@
 import os
 import math
 import json
+from io import StringIO
+import xml.etree.ElementTree as ET
+
 from utils.config import Config
 
 from utils.common.data_type import DownloadTaskInfo, Callback, ASSDialogueData
@@ -28,13 +31,14 @@ class ExtraParser:
                 case DanmakuType.Protobuf:
                     cls.get_protobuf_file(task_info, base_file_name)
 
-        @staticmethod
-        def get_xml_file(task_info: DownloadTaskInfo, base_file_name: str):
-            url = f"https://comment.bilibili.com/{task_info.cid}.xml"
+                case DanmakuType.ASS:
+                    cls.get_ass_file(task_info, base_file_name)
 
-            req = ExtraParser.Utils.request_get(url)
-
-            ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", req.text, task_info, "w")
+        @classmethod
+        def get_xml_file(cls, task_info: DownloadTaskInfo, base_file_name: str):
+            contents = cls.get_xml_contents(task_info.cid)
+            
+            ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", contents, task_info, "w")
 
         @staticmethod
         def get_protobuf_file(task_info: DownloadTaskInfo, base_file_name: str):
@@ -58,6 +62,30 @@ class ExtraParser:
 
                 for index in range(1, p_count + 1):
                     get_file()
+
+        @classmethod
+        def get_ass_file(cls, task_info: DownloadTaskInfo, base_file_name: str):
+            contents = cls.get_xml_contents(task_info.cid)
+
+            xml_tree = ET.parse(StringIO(contents))
+
+            for child in xml_tree.getroot():
+                if child.tag == "d":
+                    attr = child.get("p").split(",")
+
+                    attr[0] # 出现时间
+                    attr[1] # 弹幕类型
+                    attr[2] # 弹幕字号
+                    attr[3] # 弹幕颜色
+
+        @staticmethod
+        def get_xml_contents(cid: int):
+            url = f"https://comment.bilibili.com/{cid}.xml"
+
+            req = ExtraParser.Utils.request_get(url)
+            req.encoding = "utf-8"
+
+            return req.text
 
     class Subtitle:
         @classmethod

@@ -15,10 +15,11 @@ from gui.component.panel.panel import Panel
 from gui.component.tooltip import ToolTip
 
 from gui.dialog.setting.ffmpeg import DetectDialog
-from gui.dialog.setting.custom_cdn import CustomCDNDialog
+from gui.dialog.setting.custom_cdn_host import CustomCDNDialog
 from gui.dialog.setting.custom_file_name_v2 import CustomFileNameDialog
 from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
 from gui.dialog.setting.custom_user_agent import CustomUADialog
+from gui.dialog.setting.custom_ass_style import CustomASSStyleDialog
 
 from utils.config import Config, app_config_group
 
@@ -28,7 +29,6 @@ from utils.common.map import video_quality_map, audio_quality_map, video_codec_p
 from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
 
 from utils.module.notification import NotificationManager
-from utils.module.ffmpeg_v2 import FFmpeg
 
 class SettingWindow(Dialog):
     def __init__(self, parent):
@@ -174,6 +174,8 @@ class BasicTab(Tab):
         cover_hbox.Add(self.cover_file_type_choice, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         cover_hbox.AddSpacer(self.FromDIP(20))
 
+        self.custom_ass_style_btn = wx.Button(extra_box, -1, "自定义 ASS 样式", size = self.get_scaled_size((120, 28)))
+
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.Add(self.download_danmaku_file_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(danmaku_hbox, 0, wx.EXPAND)
@@ -181,6 +183,7 @@ class BasicTab(Tab):
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
         extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.custom_ass_style_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         self.scrolled_panel.sizer.Add(basic_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         self.scrolled_panel.sizer.Add(extra_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
@@ -198,6 +201,8 @@ class BasicTab(Tab):
         self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadCoverEVT)
 
         self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
+
+        self.custom_ass_style_btn.Bind(wx.EVT_BUTTON, self.onCustomASSStyleEVT)
 
     def init_data(self):
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
@@ -255,6 +260,12 @@ class BasicTab(Tab):
 
     def onCustomSubtitleLanEVT(self, event):
         dlg = CustomLanDialog(self)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            dlg.set_option()
+
+    def onCustomASSStyleEVT(self, event):
+        dlg = CustomASSStyleDialog(self)
 
         if dlg.ShowModal() == wx.ID_OK:
             dlg.set_option()
