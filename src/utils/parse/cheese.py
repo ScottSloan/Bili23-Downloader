@@ -81,7 +81,14 @@ class CheeseParser(Parser):
 
         info_data = resp["data"]
 
-        info_data["sections"] = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+        # 过滤掉默认章节
+        filtered_sections = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+
+        # 如果过滤后没有章节，保留原始章节
+        if not filtered_sections:
+            filtered_sections = info_data["sections"]
+
+        info_data["sections"] = filtered_sections
 
         CheeseInfo.url = info_data["share_url"]
         CheeseInfo.title = info_data["title"]
@@ -89,6 +96,10 @@ class CheeseParser(Parser):
         CheeseInfo.views = info_data["stat"]["play_desc"]
         CheeseInfo.release = info_data["release_info"]
         CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
+
+        # 检查是否有可用的章节和剧集
+        if not info_data["sections"] or not info_data["sections"][0].get("episodes"):
+            raise GlobalException(message="该课程暂无可用内容或章节为空", code=StatusCode.CallError.value)
 
         CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
 
