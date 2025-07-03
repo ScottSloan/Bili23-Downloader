@@ -81,7 +81,14 @@ class CheeseParser(Parser):
 
         info_data = resp["data"]
 
-        info_data["sections"] = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+        # 过滤掉默认章节
+        filtered_sections = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+
+        # 如果过滤后没有章节，保留原始章节
+        if not filtered_sections:
+            filtered_sections = info_data["sections"]
+
+        info_data["sections"] = filtered_sections
 
         CheeseInfo.url = info_data["share_url"]
         CheeseInfo.title = info_data["title"]
@@ -89,6 +96,10 @@ class CheeseParser(Parser):
         CheeseInfo.views = info_data["stat"]["play_desc"]
         CheeseInfo.release = info_data["release_info"]
         CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
+
+        # 检查是否有可用的章节和剧集
+        if not info_data["sections"] or not info_data["sections"][0].get("episodes"):
+            raise GlobalException(message="该课程暂无可用内容或章节为空", code=StatusCode.CallError.value)
 
         CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
 
@@ -119,28 +130,21 @@ class CheeseParser(Parser):
 
             CheeseInfo.stream_type = StreamType.Flv.value
 
-    def parse_url(self, url: str):
-        def worker():
-            self.clear_cheese_info()
+    def parse_worker(self, url: str):
+        self.clear_cheese_info()
 
-            match REUtils.find_string(r"ep|ss", url):
-                case "ep":
-                    self.get_epid(url)
+        match REUtils.find_string(r"ep|ss", url):
+            case "ep":
+                self.get_epid(url)
 
-                case "ss":
-                    self.get_season_id(url)
+            case "ss":
+                self.get_season_id(url)
 
-            self.get_cheese_info()
+        self.get_cheese_info()
 
-            self.get_cheese_available_media_info()
+        self.get_cheese_available_media_info()
 
-            return StatusCode.Success.value
-
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        return StatusCode.Success.value
 
     def parse_episodes(self):
         if self.url_type == "season_id":
