@@ -62,7 +62,7 @@ class Login:
 
         user_info = self.get_user_info(refresh = True)
 
-        Config.User.face_url = user_info["face_url"]
+        Config.User.face_url = user_info["face_url"] + "@.jpg"
         Config.User.username = user_info["username"]
 
         UniversalTool.remove_files([Config.User.face_path])
@@ -93,7 +93,7 @@ class Login:
 
     def login(self, info: dict):
         Config.User.login = True
-        Config.User.face_url = info["face_url"]
+        Config.User.face_url = info["face_url"] + "@.jpg"
         Config.User.username = info["username"]
         Config.User.login_expires = int((datetime.now() + timedelta(days = 365)).timestamp())
         Config.User.SESSDATA = info["SESSDATA"]

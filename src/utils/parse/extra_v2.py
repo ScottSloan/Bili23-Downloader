@@ -1,8 +1,10 @@
 import os
 import math
 import json
-from io import StringIO
-import xml.etree.ElementTree as ET
+from io import BytesIO
+from typing import List
+from google.protobuf import json_format
+import utils.module.dm_pb2 as dm_pb2
 
 from utils.config import Config
 
@@ -15,6 +17,7 @@ from utils.common.exception import GlobalException
 
 from utils.module.cover import CoverUtils
 from utils.module.ass import ASS
+from utils.module.danmaku import Danmaku
 
 from utils.auth.wbi import WbiUtils
 
@@ -24,68 +27,70 @@ class ExtraParser:
         def download(cls, task_info: DownloadTaskInfo):
             base_file_name = FileNameFormatter.format_file_name(task_info)
 
+            io_buffer = cls.get_all_protobuf_contents(task_info)
+
             match DanmakuType(task_info.extra_option.get("danmaku_file_type")):
                 case DanmakuType.XML:
-                    cls.get_xml_file(task_info, base_file_name)
+                    cls.get_xml_file(io_buffer, task_info, base_file_name)
 
                 case DanmakuType.Protobuf:
-                    cls.get_protobuf_file(task_info, base_file_name)
+                    cls.get_protobuf_file(io_buffer, task_info, base_file_name)
 
                 case DanmakuType.ASS:
-                    cls.get_ass_file(task_info, base_file_name)
+                    cls.get_ass_file(io_buffer, task_info, base_file_name)
 
         @classmethod
-        def get_xml_file(cls, task_info: DownloadTaskInfo, base_file_name: str):
+        def get_xml_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             contents = cls.get_xml_contents(task_info.cid)
             
             ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", contents, task_info, "w")
 
-        @staticmethod
-        def get_protobuf_file(task_info: DownloadTaskInfo, base_file_name: str):
+        @classmethod
+        def get_protobuf_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             def get_file_name():
-                if p_count > 1:
-                    return f"{base_file_name}_part{index}.protobuf"
+                if len(io_buffer) > 1:
+                    return f"{base_file_name}_part{index + 1}.protobuf"
                 else:
                     return f"{base_file_name}.protobuf"
 
-            def get_file():
-                url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={task_info.cid}&segment_index={index}"
+            for index, io in enumerate(io_buffer):
+                ExtraParser.Utils.save_to_file(get_file_name, io.getvalue(), task_info, "wb")
 
-                req = ExtraParser.Utils.request_get(url)
+        @classmethod
+        def get_ass_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
+            protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
 
-                file_name = get_file_name()
+            Danmaku.convert_protobuf_to_ass(protobuf_dict)
+            
+        @staticmethod
+        def get_all_protobuf_contents(task_info: DownloadTaskInfo):
+            def get_contents(cid: int, index: int):
+                url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={cid}&segment_index={index}"
 
-                ExtraParser.Utils.save_to_file(file_name, req.content, task_info, "wb")
+                return ExtraParser.Utils.request_get(url).content
+
+            io_buffer = []
 
             if task_info.duration:
                 p_count = math.ceil(task_info.duration / 360)
 
                 for index in range(1, p_count + 1):
-                    get_file()
+                    io_buffer.append(BytesIO(get_contents(task_info.cid, index)))
 
-        @classmethod
-        def get_ass_file(cls, task_info: DownloadTaskInfo, base_file_name: str):
-            contents = cls.get_xml_contents(task_info.cid)
-
-            xml_tree = ET.parse(StringIO(contents))
-
-            for child in xml_tree.getroot():
-                if child.tag == "d":
-                    attr = child.get("p").split(",")
-
-                    attr[0] # 出现时间
-                    attr[1] # 弹幕类型
-                    attr[2] # 弹幕字号
-                    attr[3] # 弹幕颜色
+            return io_buffer        
 
         @staticmethod
-        def get_xml_contents(cid: int):
-            url = f"https://comment.bilibili.com/{cid}.xml"
+        def get_protobuf_entry_list(io_buffer: List[BytesIO]):
+            temp = []
 
-            req = ExtraParser.Utils.request_get(url)
-            req.encoding = "utf-8"
+            seg = dm_pb2.DmSegMobileReply()
 
-            return req.text
+            for io in io_buffer:
+                seg.ParseFromString(io.getvalue())
+
+                temp.extend([json_format.MessageToDict(entry) for entry in seg.elems])
+
+            return temp
 
     class Subtitle:
         @classmethod
