@@ -4,7 +4,7 @@ import json
 from io import BytesIO
 from typing import List
 from google.protobuf import json_format
-import utils.module.dm_pb2 as dm_pb2
+import utils.module.danmaku.dm_pb2 as dm_pb2
 
 from utils.config import Config
 
@@ -16,8 +16,9 @@ from utils.common.formatter import FormatUtils
 from utils.common.exception import GlobalException
 
 from utils.module.cover import CoverUtils
-from utils.module.ass import ASS
-from utils.module.danmaku import Danmaku
+from utils.module.danmaku.ass_file import ASS
+from utils.module.danmaku.danmaku import Danmaku
+from utils.module.danmaku.xml_file import XML
 
 from utils.auth.wbi import WbiUtils
 
@@ -36,12 +37,17 @@ class ExtraParser:
                 case DanmakuType.Protobuf:
                     cls.get_protobuf_file(io_buffer, task_info, base_file_name)
 
+                case DanmakuType.JSON:
+                    cls.get_json_file(io_buffer, task_info, base_file_name)
+
                 case DanmakuType.ASS:
                     cls.get_ass_file(io_buffer, task_info, base_file_name)
 
         @classmethod
         def get_xml_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
-            contents = cls.get_xml_contents(task_info.cid)
+            protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
+
+            contents = XML.make(protobuf_dict, task_info.cid)
             
             ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", contents, task_info, "w")
 
@@ -55,6 +61,14 @@ class ExtraParser:
 
             for index, io in enumerate(io_buffer):
                 ExtraParser.Utils.save_to_file(get_file_name, io.getvalue(), task_info, "wb")
+
+        @classmethod
+        def get_json_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
+            protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
+
+            contents = json.dumps({"comments": protobuf_dict}, ensure_ascii = False, indent = 4)
+
+            ExtraParser.Utils.save_to_file(f"{base_file_name}.json", contents, task_info, "w")
 
         @classmethod
         def get_ass_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
@@ -213,7 +227,7 @@ class ExtraParser:
 
         @staticmethod
         def convert_to_ass(task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
-            dialogue_list = [(FormatUtils.format_ass_time(entry["from"]), FormatUtils.format_ass_time(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
+            dialogue_list = [(FormatUtils.format_ass_timestamp(entry["from"]), FormatUtils.format_ass_timestamp(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
             style = "Default,微软雅黑,52,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1"
 
             contents = ASS.make(dialogue_list, style)

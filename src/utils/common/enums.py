@@ -30,7 +30,8 @@ class ProxyMode(Enum):
 class DanmakuType(Enum):
     XML = 0                       # XML 格式
     Protobuf = 1                  # Protobuf 格式
-    ASS = 2                       # ASS 格式
+    JSON = 2                      # JSON 格式
+    ASS = 3                       # ASS 格式
 
 class SubtitleType(Enum):
     SRT = 0                       # SRT 格式

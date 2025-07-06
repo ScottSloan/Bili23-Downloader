@@ -76,7 +76,7 @@ class Danmaku:
             if color and color != 16777215:
                 style += f"\\c&H{self.get_color(color)}&"
 
-            return (FormatUtils.format_ass_time(start_time), FormatUtils.format_ass_time(comment_data.end_time), f"{{{style}}}{text}")    
+            return (FormatUtils.format_ass_timestamp(start_time), FormatUtils.format_ass_timestamp(comment_data.end_time), f"{{{style}}}{text}")    
 
     def calc_pos(self, row: int):
         return int(self.width / 2), self.calc_row(row)

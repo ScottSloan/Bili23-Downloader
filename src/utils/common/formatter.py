@@ -105,9 +105,13 @@ class FormatUtils:
         return f"{min:02}:{sec:04.1f}"
     
     @staticmethod
-    def format_ass_time(time: float):
+    def format_ass_timestamp(time: float):
         ms = int((time - int(time)) * 100)
 
         t = str(datetime.timedelta(seconds = int(time))).split('.')[0]
 
         return f"{t}.{ms:02d}"
+    
+    @staticmethod
+    def format_xml_timestamp(time: int):
+        return f"{time:.5f}"

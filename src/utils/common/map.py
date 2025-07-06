@@ -71,7 +71,8 @@ live_status_map = {
 danmaku_format_map = {
     "xml": 0,
     "protobuf": 1,
-    "ass": 2
+    "json": 2,
+    "ass": 3
 }
 
 subtitle_format_map = {
