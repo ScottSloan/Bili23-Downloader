@@ -460,6 +460,7 @@ class RealTimeCallback(ABC):
 
 class CommentData:
     start_time: int = 0
+    end_time: int = 0
     text: str = ""
-    length: int = 0
-    speed: int = 0
+    width: int = 0
+    row: int = 0

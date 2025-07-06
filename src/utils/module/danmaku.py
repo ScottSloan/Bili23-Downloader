@@ -53,15 +53,19 @@ class Danmaku:
         start_time = data.get("progress") / 1000
         end_time = start_time + self.scroll_duration
         text = data.get("content")
+        color = data.get("color")
 
-        row = self.check_row(1, self.get_comment_data(start_time, text))
+        comment_data = self.check_row(1, self.get_comment_data(start_time, end_time, text))
 
-        if row:
-            height = self.calc_row(row)
+        if comment_data:
+            height = self.calc_row(comment_data.row)
 
             style = f"\\move({self.width}, {height}, -{len(text) * self.font_size}, {height})"
 
-            return (FormatUtils.format_ass_time(start_time), FormatUtils.format_ass_time(end_time), f"{{{style}}}{text}")
+            if color != 16777215:
+                style += f"\\c&H{self.get_color(color)}&"
+
+            return (FormatUtils.format_ass_time(start_time), FormatUtils.format_ass_time(comment_data.end_time), f"{{{style}}}{text}")
 
     def calc_pos(self):
         width = Config.Basic.ass_style.get("width")
@@ -75,19 +79,26 @@ class Danmaku:
     def check_row(self, type: int, new_row: CommentData):
         for key, value in self.data.get(type).items():
             if value:
-                if new_row.start_time >= value.start_time + value.length / value.speed:
-                    self.data.get(type)[key] = new_row
-                    return key
-            else:
-                self.data.get(type)[key] = new_row
-                return key
+                speed = int((value.width + self.width) / (value.end_time - value.start_time))
 
-    def get_comment_data(self, start_time: int, text: str):
+                if new_row.start_time >= value.start_time + value.width / speed:
+                    new_row.end_time = new_row.start_time + (new_row.width + self.width) / speed
+                    new_row.row = key
+
+                    self.data.get(type)[key] = new_row
+                    return new_row
+            else:
+                new_row.row = key
+
+                self.data.get(type)[key] = new_row
+                return new_row
+
+    def get_comment_data(self, start_time: int, end_time: int, text: str):
         data = CommentData()
         data.start_time = start_time
+        data.end_time = end_time
         data.text = text
-        data.length = len(text) * self.font_size
-        data.speed = (data.length + self.width) / self.scroll_duration
+        data.width = len(text) * self.font_size
 
         return data
 
@@ -100,4 +111,9 @@ class Danmaku:
     
     def get_style(self):
         return f"Default,微软雅黑,{self.font_size},&H33FFFFFF,&H33FFFFFF,&H33000000,&H33000000,0,0,0,0,100,100,0,0,1,2,0,7,0,0,0,0"
+    
+    def get_color(self, color: int):
+        hex_color = hex(color)[2:]
+
+        return hex_color[4:] + hex_color[2:4] + hex_color[:2]
     
