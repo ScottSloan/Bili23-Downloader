@@ -458,18 +458,8 @@ class RealTimeCallback(ABC):
     def onError(process):
         pass
 
-class ASSDialogueData:
-    def __init__(self):
-        self.Layer = 0
-        self.Start = "00:00:00.00"
-        self.End = "00:00:00.00"
-        self.Style = "Default"
-        self.Name = ""
-        self.MarginL = 0
-        self.MarginR = 0
-        self.MarginV = 0
-        self.Effect = ""
-        self.Text = ""
-
-    def to_string(self):
-        return ",".join([str(value) for key, value in self.__dict__.items() if not key.startswith("__")])
+class CommentData:
+    start_time: int = 0
+    text: str = ""
+    length: int = 0
+    speed: int = 0

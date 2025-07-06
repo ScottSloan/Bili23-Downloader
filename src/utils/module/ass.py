@@ -1,9 +1,7 @@
-from utils.common.data_type import ASSDialogueData
-
 class ASS:
     @classmethod
-    def make(cls, dialogue_list: list):
-        sections = (cls.get_script_info(), cls.get_styles(), cls.get_events(dialogue_list))
+    def make(cls, dialogue_list: list, style: str):
+        sections = (cls.get_script_info(), cls.get_styles(style), cls.get_events(dialogue_list))
 
         return "\n\n".join(sections)
 
@@ -20,10 +18,10 @@ class ASS:
         return cls.format_section("Script Info", data)
     
     @classmethod
-    def get_styles(cls):
+    def get_styles(cls, style: str):
         data = [
             ("Format", "Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding"),
-            ("Style", "Default,微软雅黑,52,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1")
+            ("Style", style)
         ]
 
         return cls.format_section("V4+ Styles", data)
@@ -31,13 +29,7 @@ class ASS:
     @classmethod
     def get_events(cls, dialogue_list: list):
         def get_dialogue_data(start: str, end: str, text: str):
-            data = ASSDialogueData()
-
-            data.Start = start
-            data.End = end
-            data.Text = text
-
-            return data.to_string()
+            return f"0,{start},{end},Default,,0,0,0,,{text}"
 
         data = [
             ("Format", "Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"),

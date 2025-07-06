@@ -105,7 +105,7 @@ class FormatUtils:
         return f"{min:02}:{sec:04.1f}"
     
     @staticmethod
-    def format_ass_time(time):
+    def format_ass_time(time: float):
         ms = int((time - int(time)) * 100)
 
         t = str(datetime.timedelta(seconds = int(time))).split('.')[0]

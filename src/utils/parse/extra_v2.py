@@ -8,7 +8,7 @@ import utils.module.dm_pb2 as dm_pb2
 
 from utils.config import Config
 
-from utils.common.data_type import DownloadTaskInfo, Callback, ASSDialogueData
+from utils.common.data_type import DownloadTaskInfo, Callback
 from utils.common.enums import DanmakuType, SubtitleType, SubtitleLanOption, StatusCode
 from utils.common.request import RequestUtils
 from utils.common.file_name_v2 import FileNameFormatter
@@ -60,7 +60,14 @@ class ExtraParser:
         def get_ass_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
 
-            Danmaku.convert_protobuf_to_ass(protobuf_dict)
+            danmaku = Danmaku()
+
+            dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
+            style = danmaku.get_style()
+
+            contents = ASS.make(dialogue_list, style)
+
+            ExtraParser.Utils.save_to_file(f"{base_file_name}.ass", contents, task_info, "w")
             
         @staticmethod
         def get_all_protobuf_contents(task_info: DownloadTaskInfo):
@@ -77,7 +84,7 @@ class ExtraParser:
                 for index in range(1, p_count + 1):
                     io_buffer.append(BytesIO(get_contents(task_info.cid, index)))
 
-            return io_buffer        
+            return io_buffer
 
         @staticmethod
         def get_protobuf_entry_list(io_buffer: List[BytesIO]):
@@ -88,7 +95,13 @@ class ExtraParser:
             for io in io_buffer:
                 seg.ParseFromString(io.getvalue())
 
-                temp.extend([json_format.MessageToDict(entry) for entry in seg.elems])
+                temp_part = [json_format.MessageToDict(entry) for entry in seg.elems]
+
+                part = [entry for entry in temp_part if "progress" in entry]
+
+                temp.extend(part)
+
+            temp.sort(key = lambda x: x["progress"])
 
             return temp
 
@@ -201,8 +214,9 @@ class ExtraParser:
         @staticmethod
         def convert_to_ass(task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
             dialogue_list = [(FormatUtils.format_ass_time(entry["from"]), FormatUtils.format_ass_time(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
+            style = "Default,微软雅黑,52,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1"
 
-            contents = ASS.make(dialogue_list)
+            contents = ASS.make(dialogue_list, style)
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.ass", contents, task_info, "w")
 
