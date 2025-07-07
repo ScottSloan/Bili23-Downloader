@@ -884,6 +884,10 @@ class MainWindow(Frame):
         Config.Sys.dark_mode = False if Config.Sys.platform == Platform.Windows.value else wx.SystemSettings.GetAppearance().IsDark()
         Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
 
+        for key in ["danmaku", "subtitle"]:
+            if Config.Basic.ass_style.get(key).get("font_name") == "default":
+                Config.Basic.ass_style[key]["font_name"] = self.GetFont().GetFaceName()
+
     def read_clipboard(self, event):
         def is_valid_url(url: str):
             if url:

@@ -424,6 +424,15 @@ ffmpeg_audio_channel_map = {
     "8 (7.1)": 8
 }
 
+resolution_map = {
+    "4320p": 4320,
+    "2160p": 2160,
+    "1080p": 1080,
+    "720p": 720,
+    "480p": 480,
+    "360p": 360
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

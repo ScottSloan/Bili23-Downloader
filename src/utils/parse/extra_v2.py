@@ -228,7 +228,7 @@ class ExtraParser:
         @staticmethod
         def convert_to_ass(task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
             dialogue_list = [(FormatUtils.format_ass_timestamp(entry["from"]), FormatUtils.format_ass_timestamp(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
-            style = "Default,微软雅黑,52,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1"
+            style = "Default,{},{},&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1".format(Config.Basic.ass_style.get("subtitle").get("font_name"), Config.Basic.ass_style.get("subtitle").get("font_size"))
 
             contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_ass_info())
 

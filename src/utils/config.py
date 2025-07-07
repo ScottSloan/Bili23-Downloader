@@ -131,9 +131,18 @@ class Config:
         subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
         cover_file_type: int = 0
-        ass_style: dict = {
-            "width": 1920,
-            "height": 1080,
+
+        ass_style: Dict[str, Dict] = {
+            "danmaku": {
+                "font_name": "default",
+                "font_size": 48,
+                "scroll_duration": 10,
+                "stay_duration": 5
+            },
+            "subtitle": {
+                "font_name": "default",
+                "font_size": 48
+            }
         }
 
         window_pos: list = []
@@ -231,6 +240,8 @@ class Config:
         user_agent: str = ""
 
         file_name_template_list: list = []
+
+        ass_style: Dict[str, Dict] = {}
 
     class Auth:
         img_key: str = ""

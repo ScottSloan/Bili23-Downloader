@@ -6,14 +6,15 @@ from utils.common.data_type import CommentData
 from utils.common.formatter import FormatUtils
 
 class Danmaku:
-    def __init__(self):
+    def __init__(self, parent):
         self.width = 1920
         self.height = 1080
 
-        self.font_size = Config.Basic.ass_style.get("font_size", 48)
+        self.font_name = Config.Basic.ass_style.get("danmaku").get("font_name", parent.GetFont().GetFaceName())
+        self.font_size = Config.Basic.ass_style.get("danmaku").get("font_size")
 
-        self.scroll_duration = Config.Basic.ass_style.get("scroll_duration", 10)
-        self.stay_duration = Config.Basic.ass_style.get("stay_duration", 5)
+        self.scroll_duration = Config.Basic.ass_style.get("danmaku").get("scroll_duration")
+        self.stay_duration = Config.Basic.ass_style.get("danmaku").get("stay_duration")
 
         rows = {i + 1: None for i in range(int(self.height / self.font_size))}
 

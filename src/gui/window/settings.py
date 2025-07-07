@@ -205,6 +205,8 @@ class BasicTab(Tab):
         self.custom_ass_style_btn.Bind(wx.EVT_BUTTON, self.onCustomASSStyleEVT)
 
     def init_data(self):
+        Config.Temp.ass_style = Config.Basic.ass_style.copy()
+        
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
         self.exit_option_chk.SetSelection(Config.Basic.exit_option)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
@@ -236,6 +238,8 @@ class BasicTab(Tab):
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
         Config.Basic.cover_file_type = self.cover_file_type_choice.GetSelection()
 
+        Config.Basic.ass_style = Config.Temp.ass_style.copy()
+
         Config.Basic.show_exit_dialog = False
 
     def onCheckDownloadDanmakuEVT(self, event):
@@ -266,9 +270,7 @@ class BasicTab(Tab):
 
     def onCustomASSStyleEVT(self, event):
         dlg = CustomASSStyleDialog(self)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            dlg.set_option()
+        dlg.ShowModal()
 
 class DownloadTab(Tab):
     def __init__(self, parent):
