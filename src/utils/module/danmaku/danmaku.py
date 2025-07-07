@@ -10,10 +10,10 @@ class Danmaku:
         self.width = 1920
         self.height = 1080
 
-        self.font_size = 48
+        self.font_size = Config.Basic.ass_style.get("font_size", 48)
 
-        self.scroll_duration = 10
-        self.stay_duration = 5
+        self.scroll_duration = Config.Basic.ass_style.get("scroll_duration", 10)
+        self.stay_duration = Config.Basic.ass_style.get("stay_duration", 5)
 
         rows = {i + 1: None for i in range(int(self.height / self.font_size))}
 
@@ -65,13 +65,13 @@ class Danmaku:
                     # 顶部弹幕
                     left, top = self.calc_pos(comment_data.row)
 
-                    style = f"\\an8\\pos({left},{top})"
+                    style = f"\\an8\\pos({left}, {top})"
 
                 case 3:
                     # 底部弹幕
                     left, top = self.calc_pos(comment_data.row)
 
-                    style = f"\\an2\\pos({left},{top})"
+                    style = f"\\an2\\pos({left}, {top})"
 
             if color and color != 16777215:
                 style += f"\\c&H{self.get_color(color)}&"
@@ -116,7 +116,7 @@ class Danmaku:
                     return new_row
         
         def type_btm():
-            for key, value in reversed(list(self.data.get(type).items())):
+            for key, value in reversed(list(self.data.get(2).items())):
                 if value:
                     if new_row.start_time >= value.end_time:
                         set_row(new_row, key)
@@ -156,7 +156,7 @@ class Danmaku:
         }
     
     def get_style(self):
-        return f"Default,微软雅黑,{self.font_size},&H33FFFFFF,&H33FFFFFF,&H33000000,&H33000000,0,0,0,0,100,100,0,0,1,2,0,7,0,0,0,0"
+        return f"Default,微软雅黑,{self.font_size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,7,0,0,0,0"
     
     def get_color(self, color: int):
         hex_color = hex(color)[2:]

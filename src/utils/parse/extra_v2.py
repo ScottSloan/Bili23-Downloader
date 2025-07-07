@@ -79,7 +79,7 @@ class ExtraParser:
             dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
             style = danmaku.get_style()
 
-            contents = ASS.make(dialogue_list, style)
+            contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_ass_info())
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}.ass", contents, task_info, "w")
             
@@ -230,7 +230,7 @@ class ExtraParser:
             dialogue_list = [(FormatUtils.format_ass_timestamp(entry["from"]), FormatUtils.format_ass_timestamp(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
             style = "Default,微软雅黑,52,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,30,1"
 
-            contents = ASS.make(dialogue_list, style)
+            contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_ass_info())
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.ass", contents, task_info, "w")
 
@@ -279,3 +279,10 @@ class ExtraParser:
 
             with open(file_path, mode, encoding = encoding) as f:
                 f.write(contents)
+
+        @staticmethod
+        def get_ass_info():
+            return {
+                "width": 1920,
+                "height": 1080
+            }

@@ -131,7 +131,10 @@ class Config:
         subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
         cover_file_type: int = 0
-        ass_style: dict = {}
+        ass_style: dict = {
+            "width": 1920,
+            "height": 1080,
+        }
 
         window_pos: list = []
         window_size: list = []
