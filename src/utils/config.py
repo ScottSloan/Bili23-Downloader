@@ -141,7 +141,11 @@ class Config:
             },
             "subtitle": {
                 "font_name": "default",
-                "font_size": 48
+                "font_size": 48,
+                "alignment": 2,
+                "primary_color": "&H00FFFFFF",
+                "border_color": "&H00000000",
+                "shadow_color": "&H00000000"
             }
         }
 

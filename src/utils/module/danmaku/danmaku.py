@@ -4,17 +4,20 @@ from utils.config import Config
 
 from utils.common.data_type import CommentData
 from utils.common.formatter import FormatUtils
+from utils.common.color import Color
 
 class Danmaku:
     def __init__(self, parent):
         self.width = 1920
         self.height = 1080
 
-        self.font_name = Config.Basic.ass_style.get("danmaku").get("font_name", parent.GetFont().GetFaceName())
-        self.font_size = Config.Basic.ass_style.get("danmaku").get("font_size")
+        danmaku = Config.Basic.ass_style.get("danmaku")
 
-        self.scroll_duration = Config.Basic.ass_style.get("danmaku").get("scroll_duration")
-        self.stay_duration = Config.Basic.ass_style.get("danmaku").get("stay_duration")
+        self.font_name = danmaku.get("font_name", parent.GetFont().GetFaceName())
+        self.font_size = danmaku.get("font_size")
+
+        self.scroll_duration = danmaku.get("scroll_duration")
+        self.stay_duration = danmaku.get("stay_duration")
 
         rows = {i + 1: None for i in range(int(self.height / self.font_size))}
 
@@ -75,7 +78,7 @@ class Danmaku:
                     style = f"\\an2\\pos({left}, {top})"
 
             if color and color != 16777215:
-                style += f"\\c&H{self.get_color(color)}&"
+                style += f"\\c{Color.convert_to_ass_color(hex(color)[2:])}"
 
             return (FormatUtils.format_ass_timestamp(start_time), FormatUtils.format_ass_timestamp(comment_data.end_time), f"{{{style}}}{text}")    
 
@@ -157,10 +160,4 @@ class Danmaku:
         }
     
     def get_style(self):
-        return f"Default,微软雅黑,{self.font_size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,7,0,0,0,0"
-    
-    def get_color(self, color: int):
-        hex_color = hex(color)[2:]
-
-        return hex_color[4:] + hex_color[2:4] + hex_color[:2]
-    
+        return f"Default,{self.font_name},{self.font_size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,7,0,0,0,1"
