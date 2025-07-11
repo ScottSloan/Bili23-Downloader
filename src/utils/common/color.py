@@ -35,6 +35,8 @@ class Color:
 
         r, g, b, a = hex_new[0:2], hex_new[2:4], hex_new[4:6], hex_new[6:8]
 
+        a = "00" if not a else a
+
         return f"&H{a}{b}{g}{r}"
     
     @staticmethod

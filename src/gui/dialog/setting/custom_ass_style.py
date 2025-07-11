@@ -9,6 +9,8 @@ from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
 from gui.component.tooltip import ToolTip
+from gui.component.ass_color_picker import ASSColorPicker
+from gui.component.label_spinctrl import LabelSpinCtrl
 
 class DanmakuPage(Panel):
     def __init__(self, parent):
@@ -169,63 +171,34 @@ class SubtitlePage(Panel):
         font_size_hbox.Add(self.font_size_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         font_size_hbox.Add(font_size_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        align_box = wx.StaticBox(self, -1, "对齐方式")
-
-        self.align_7_radio_btn = wx.RadioButton(self, -1, "7", name = "7")
-        self.align_8_radio_btn = wx.RadioButton(self, -1, "8", name = "8")
-        self.align_9_radio_btn = wx.RadioButton(self, -1, "9", name = "9")
-        self.align_4_radio_btn = wx.RadioButton(self, -1, "4", name = "4")
-        self.align_5_radio_btn = wx.RadioButton(self, -1, "5", name = "5")
-        self.align_6_radio_btn = wx.RadioButton(self, -1, "6", name = "6")
-        self.align_1_radio_btn = wx.RadioButton(self, -1, "1", name = "1")
-        self.align_2_radio_btn = wx.RadioButton(self, -1, "2", name = "2")
-        self.align_3_radio_btn = wx.RadioButton(self, -1, "3", name = "3")
-
-        align_grid_box = wx.FlexGridSizer(3, 3, 0, 0)
-        align_grid_box.Add(self.align_7_radio_btn, 0, wx.ALL, self.FromDIP(6))
-        align_grid_box.Add(self.align_8_radio_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        align_grid_box.Add(self.align_9_radio_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        align_grid_box.Add(self.align_4_radio_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        align_grid_box.Add(self.align_5_radio_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), self.FromDIP(6))
-        align_grid_box.Add(self.align_6_radio_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), self.FromDIP(6))
-        align_grid_box.Add(self.align_1_radio_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        align_grid_box.Add(self.align_2_radio_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), self.FromDIP(6))
-        align_grid_box.Add(self.align_3_radio_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP), self.FromDIP(6))
-
-        align_sbox = wx.StaticBoxSizer(align_box, wx.VERTICAL)
-        align_sbox.Add(align_grid_box, 0, wx.EXPAND)
-
         color_box = wx.StaticBox(self, -1, "颜色")
-
-        primary_color_lab = wx.StaticText(self, -1, "主要颜色")
-        self.primary_color_picker = wx.ColourPickerCtrl(self, -1)
-
-        primary_vbox = wx.BoxSizer(wx.VERTICAL)
-        primary_vbox.Add(primary_color_lab, 0, wx.ALL, self.FromDIP(6))
-        primary_vbox.Add(self.primary_color_picker, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-
-        border_color_lab = wx.StaticText(self, -1, "边框")
-        self.border_color_picker = wx.ColourPickerCtrl(self, -1)
-
-        border_vbox = wx.BoxSizer(wx.VERTICAL)
-        border_vbox.Add(border_color_lab, 0, wx.ALL, self.FromDIP(6))
-        border_vbox.Add(self.border_color_picker, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-
-        shadow_color_lab = wx.StaticText(self, -1, "阴影")
-        self.shadow_color_picker = wx.ColourPickerCtrl(self, -1)
-
-        shadow_vbox = wx.BoxSizer(wx.VERTICAL)
-        shadow_vbox.Add(shadow_color_lab, 0, wx.ALL, self.FromDIP(6))
-        shadow_vbox.Add(self.shadow_color_picker, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        
+        self.primary_color_picker = ASSColorPicker(self, "主要颜色")
+        self.border_color_picker = ASSColorPicker(self, "边框")
+        self.shadow_color_picker = ASSColorPicker(self, "阴影")
 
         color_sbox = wx.StaticBoxSizer(color_box, wx.HORIZONTAL)
-        color_sbox.Add(primary_vbox, 0, wx.EXPAND)
-        color_sbox.Add(border_vbox, 0, wx.EXPAND)
-        color_sbox.Add(shadow_vbox, 0, wx.EXPAND)
+        color_sbox.Add(self.primary_color_picker, 0, wx.EXPAND)
+        color_sbox.Add(self.border_color_picker, 0, wx.EXPAND)
+        color_sbox.Add(self.shadow_color_picker, 0, wx.EXPAND)
+
+        margin_box = wx.StaticBox(self, -1, "边距")
+
+        self.left_margin_box = LabelSpinCtrl(self, "左边距", 10)
+        self.right_margin_box = LabelSpinCtrl(self, "右边距", 10)
+        self.vertical_margin_box = LabelSpinCtrl(self, "垂直边距", 10)
+
+        margin_sbox = wx.StaticBoxSizer(margin_box, wx.HORIZONTAL)
+        margin_sbox.Add(self.left_margin_box, 0, wx.ALL, self.FromDIP(6))
+        margin_sbox.Add(self.right_margin_box, 0, wx.ALL, self.FromDIP(6))
+        margin_sbox.Add(self.vertical_margin_box, 0, wx.ALL, self.FromDIP(6))
+
+        self.align_radio_box = wx.RadioBox(self, -1, "对齐方式", choices = ["7", "8", "9", "4", "5", "6", "1", "2", "3"], majorDimension = 3)
+        self.align_radio_box.SetToolTip("字幕在画面中位置的对齐方式，按照小键盘区布局")
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(align_sbox, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        hbox.Add(color_sbox, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        hbox.Add(margin_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        hbox.Add(self.align_radio_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
 
         grid_box = wx.FlexGridSizer(1, 4, 0, 0)
         grid_box.Add(font_name_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -235,6 +208,7 @@ class SubtitlePage(Panel):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(grid_box, 0, wx.EXPAND)
+        vbox.Add(color_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
@@ -251,18 +225,11 @@ class SubtitlePage(Panel):
         self.set_font(font)
         self.font_size_box.SetValue(subtitle.get("font_size"))
 
-        self.FindWindowByName(str(subtitle.get("alignment"))).SetValue(True)
+        self.align_radio_box.SetStringSelection(str(subtitle.get("alignment")))
 
-        color = wx.Colour()
-
-        color.SetRGBA(Color.convert_to_abgr_color(subtitle.get("primary_color")))
-        self.primary_color_picker.SetColour(color)
-
-        color.SetRGBA(Color.convert_to_abgr_color(subtitle.get("border_color")))
-        self.border_color_picker.SetColour(color)
-
-        color.SetRGBA(Color.convert_to_abgr_color(subtitle.get("shadow_color")))
-        self.shadow_color_picker.SetColour(color)
+        self.primary_color_picker.SetColour(subtitle.get("primary_color"))
+        self.border_color_picker.SetColour(subtitle.get("border_color"))
+        self.shadow_color_picker.SetColour(subtitle.get("shadow_color"))
 
     def set_font(self, font: wx.Font):
         self.font_name_preview_lab.SetLabel(font.GetFaceName())
@@ -279,11 +246,6 @@ class SubtitlePage(Panel):
             self.set_font(font)
 
     def get_option(self):
-        def get_alignment():
-            for i in range(9):
-                if self.FindWindowByName(str(i + 1)).GetValue():
-                    return i + 1
-                
         def get_ass_style_color(window: wx.Window):
             color: wx.Colour = window.GetColour()
             return Color.convert_to_ass_style_color(color.GetAsString(wx.C2S_HTML_SYNTAX))
@@ -291,7 +253,7 @@ class SubtitlePage(Panel):
         return {
             "font_name": self.font_name_preview_lab.GetFont().GetFaceName(),
             "font_size": self.font_size_box.GetValue(),
-            "alignment": get_alignment(),
+            "alignment": int(self.align_radio_box.GetStringSelection()),
             "primary_color": get_ass_style_color(self.primary_color_picker),
             "border_color": get_ass_style_color(self.border_color_picker),
             "shadow_color": get_ass_style_color(self.shadow_color_picker)
