@@ -136,16 +136,31 @@ class Config:
             "danmaku": {
                 "font_name": "default",
                 "font_size": 48,
+                "bold": 0,
+                "italic": 0,
+                "underline": 0,
+                "strikeout": 0,
+                "border": 2.0,
+                "shadow": 2.0,
                 "scroll_duration": 10,
                 "stay_duration": 5
             },
             "subtitle": {
                 "font_name": "default",
                 "font_size": 48,
-                "alignment": 2,
+                "bold": 0,
+                "italic": 0,
+                "underline": 0,
+                "strikeout": 0,
+                "border": 2.0,
+                "shadow": 2.0,
                 "primary_color": "&H00FFFFFF",
                 "border_color": "&H00000000",
-                "shadow_color": "&H00000000"
+                "shadow_color": "&H00000000",
+                "marginL": 10,
+                "marginR": 10,
+                "marginV": 10,
+                "alignment": 2
             }
         }
 
