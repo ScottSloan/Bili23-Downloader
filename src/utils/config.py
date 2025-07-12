@@ -141,7 +141,7 @@ class Config:
                 "underline": 0,
                 "strikeout": 0,
                 "border": 2.0,
-                "shadow": 2.0,
+                "shadow": 0.0,
                 "scroll_duration": 10,
                 "stay_duration": 5
             },

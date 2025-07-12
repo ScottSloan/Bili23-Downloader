@@ -2,6 +2,7 @@ from functools import reduce
 
 from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
 from utils.common.request import RequestUtils
+from utils.common.data_type import DownloadTaskInfo
 
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -209,6 +210,14 @@ class Preview:
             video_codec_id = codec_id_list[0]
         
         return video_codec_id
+
+    @classmethod
+    def get_video_resolution(cls, task_info: DownloadTaskInfo, data: list):
+        video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, task_info.stream_type, data)
+
+        for entry in data:
+            if entry["id"] == video_quality_id:
+                return entry["width"], entry["height"]
 
     def get_file_size(self, url_list: list):
         def request_head(url: str, cdn: str):

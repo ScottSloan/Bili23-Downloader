@@ -19,22 +19,23 @@ class DownloadParser(Parser):
         self.callback = callback
         self.task_info = task_info
 
-    def get_download_stream_json(self):
+    @classmethod
+    def get_download_stream_json(cls, task_info: DownloadTaskInfo):
         def check_stream_type(data: dict):
             if "dash" in data:
-                self.task_info.stream_type = StreamType.Dash.value
+                task_info.stream_type = StreamType.Dash.value
 
                 return data["dash"]
                 
             elif "durl" in data:
-                self.task_info.stream_type = StreamType.Flv.value
+                task_info.stream_type = StreamType.Flv.value
 
                 return data
 
         def get_video_json():
             params = {
-                "bvid": self.task_info.bvid,
-                "cid": self.task_info.cid,
+                "bvid": task_info.bvid,
+                "cid": task_info.cid,
                 "fnver": 0,
                 "fnval": 4048,
                 "fourk": 1
@@ -42,34 +43,34 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
-            self.check_json(data)
+            cls.check_json(cls, data)
 
             return check_stream_type(data["data"])
 
         def get_bangumi_json():
-            url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={self.task_info.bvid}&cid={self.task_info.cid}&qn={self.task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
+            url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={task_info.bvid}&cid={task_info.cid}&qn={task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
-            self.check_json(data)
+            cls.check_json(cls, data)
 
             return check_stream_type(data["result"])
 
         def get_cheese_json():
-            url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={self.task_info.aid}&ep_id={self.task_info.ep_id}&cid={self.task_info.cid}&fnver=0&fnval=4048&fourk=1"
+            url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={task_info.aid}&ep_id={task_info.ep_id}&cid={task_info.cid}&fnver=0&fnval=4048&fourk=1"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA))
+            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
-            self.check_json(data)
+            cls.check_json(cls, data)
 
             return check_stream_type(data["data"])
 
-        match ParseType(self.task_info.download_type):
+        match ParseType(task_info.parse_type):
             case ParseType.Video:
                 return get_video_json()
 
@@ -90,7 +91,7 @@ class DownloadParser(Parser):
             downloader_info.remove(None)
         
         return downloader_info
-
+    
     def parse_dash_json(self, data: dict):
         def check_download_items():
             if not self.task_info.download_items:
@@ -159,6 +160,7 @@ class DownloadParser(Parser):
         for entry in data:
             if entry["id"] == self.task_info.video_quality_id and entry["codecid"] == self.task_info.video_codec_id:
                 url_list = Preview.get_stream_download_url_list(entry)
+                break
 
         return get_video_downloader_info()
 
@@ -256,7 +258,7 @@ class DownloadParser(Parser):
 
     def get_download_url(self):
         try:
-            data = self.get_download_stream_json()
+            data = self.get_download_stream_json(self.task_info)
 
             return self.parse_download_stream_json(data)
         

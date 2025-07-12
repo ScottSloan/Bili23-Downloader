@@ -464,3 +464,35 @@ class CommentData:
     text: str = ""
     width: int = 0
     row: int = 0
+
+class ASSStyle:
+    Name: str = "Default"
+    Fontname: str = ""
+    Fontsize: int = 48
+    PrimaryColour: str = ""
+    SecondaryColour: str = ""
+    OutlineColour: str = ""
+    BackColour: str = ""
+    Bold: int = 0
+    Italic: int = 0
+    Underline: int = 0
+    StrikeOut: int = 0
+    ScaleX: int = 100
+    ScaleY: int = 100
+    Spacing: int = 0
+    Angle: int = 0
+    BorderStyle: int = 1
+    Outline: int = 0
+    Shadow: int = 0
+    Alignment: int = 2
+    MarginL: int = 0
+    MarginR: int = 0
+    MarginV: int = 0
+    Encoding: int = 1
+
+    @classmethod
+    def to_string(cls):
+        values = [str(value) for key, value in cls.__dict__.items() if not key.startswith("__")]
+
+        return ",".join(values)
+

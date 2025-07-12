@@ -2,18 +2,17 @@ from typing import Dict, Union
 
 from utils.config import Config
 
-from utils.common.data_type import CommentData
+from utils.common.data_type import CommentData, ASSStyle
 from utils.common.formatter import FormatUtils
 from utils.common.color import Color
 
 class Danmaku:
-    def __init__(self, parent):
-        self.width = 1920
-        self.height = 1080
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
 
         danmaku = Config.Basic.ass_style.get("danmaku")
 
-        self.font_name = danmaku.get("font_name", parent.GetFont().GetFaceName())
         self.font_size = danmaku.get("font_size")
 
         self.scroll_duration = danmaku.get("scroll_duration")
@@ -159,5 +158,31 @@ class Danmaku:
             "text": text
         }
     
-    def get_style(self):
-        return f"Default,{self.font_name},{self.font_size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,7,0,0,0,1"
+    def get_ass_style(self):
+        danmaku = Config.Basic.ass_style.get("danmaku")
+
+        ASSStyle.Name = "Default"
+        ASSStyle.Fontname = danmaku.get("font_name")
+        ASSStyle.Fontsize = danmaku.get("font_size")
+        ASSStyle.PrimaryColour = "&H00FFFFFF"
+        ASSStyle.SecondaryColour = "&H00FFFFFF"
+        ASSStyle.OutlineColour = "&H00000000"
+        ASSStyle.BackColour = "&H00000000"
+        ASSStyle.Bold = danmaku.get("bold")
+        ASSStyle.Italic = danmaku.get("italic")
+        ASSStyle.Underline = danmaku.get("underline")
+        ASSStyle.StrikeOut = danmaku.get("strikeout")
+        ASSStyle.ScaleX = 100
+        ASSStyle.ScaleY = 100
+        ASSStyle.Spacing = 0
+        ASSStyle.Angle = 0
+        ASSStyle.BorderStyle = 1
+        ASSStyle.Outline = danmaku.get("border")
+        ASSStyle.Shadow = danmaku.get("shadow")
+        ASSStyle.Alignment = 7
+        ASSStyle.MarginL = 0
+        ASSStyle.MarginR = 0
+        ASSStyle.MarginV = 0
+        ASSStyle.Encoding = 1
+
+        return ASSStyle.to_string()

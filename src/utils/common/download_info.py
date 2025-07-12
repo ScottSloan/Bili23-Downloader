@@ -23,7 +23,7 @@ class DownloadInfo:
             download_info_list.append(cls.get_task_info_obj(info))
 
         if Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file:
-            info = cls.get_extra_download_info(info)
+            info = cls.get_extra_download_info(info, video_quality_id)
 
             download_info_list.append(cls.get_task_info_obj(info))
 
@@ -112,7 +112,7 @@ class DownloadInfo:
         }
     
     @staticmethod
-    def get_download_params_info(info: dict, video_quality_id):
+    def get_download_params_info(info: dict, video_quality_id: int):
         info["download_option"] = Config.Download.stream_download_option
         info["video_quality_id"] = video_quality_id
         info["audio_quality_id"] = AudioInfo.audio_quality_id
@@ -123,8 +123,9 @@ class DownloadInfo:
         return info
 
     @staticmethod
-    def get_extra_download_info(info: dict):
+    def get_extra_download_info(info: dict, video_quality_id: int):
         info["download_type"] = ParseType.Extra.value
+        info["video_quality_id"] = video_quality_id
         info["further_processing"] = False
         info["ffmpeg_merge"] = False
         info["extra_option"] = {

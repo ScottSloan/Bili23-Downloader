@@ -343,15 +343,17 @@ class DownloadTaskItemPanel(Panel):
 
             self.downloader.start_download()
 
-        self.set_download_status(DownloadStatus.Downloading.value)
-
         self.downloader = Downloader(self.task_info, self.file_tool, callback)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                self.set_download_status(DownloadStatus.Downloading.value)
+
                 target = video_audio_download_worker
 
             case ParseType.Extra:
+                self.set_download_status(DownloadStatus.Generating.value)
+
                 target = self.download_extra
 
         Thread(target = target).start()
@@ -398,7 +400,7 @@ class DownloadTaskItemPanel(Panel):
             @staticmethod
             def onError(*process):
                 self.onDownloadError()
-    
+
         ExtraParser.Utils.download(self.task_info, callback)
 
     def open_file_location(self):
@@ -512,6 +514,15 @@ class DownloadTaskItemPanel(Panel):
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载链接...")
                     self.speed_lab.reset_color()
+
+                case DownloadStatus.Generating:
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
+
+                    self.speed_lab.SetLabel("正在生成中...")
+                    self.speed_lab.reset_color()
+
+                    self.pause_btn.Enable(False)
+                    self.stop_btn.Enable(False)
 
                 case DownloadStatus.Pause:
                     self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))

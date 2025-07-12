@@ -8,12 +8,15 @@ import utils.module.danmaku.dm_pb2 as dm_pb2
 
 from utils.config import Config
 
-from utils.common.data_type import DownloadTaskInfo, Callback
+from utils.common.data_type import DownloadTaskInfo, Callback, ASSStyle
 from utils.common.enums import DanmakuType, SubtitleType, SubtitleLanOption, StatusCode
 from utils.common.request import RequestUtils
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.formatter import FormatUtils
 from utils.common.exception import GlobalException
+
+from utils.parse.preview import Preview
+from utils.parse.download import DownloadParser
 
 from utils.module.cover import CoverUtils
 from utils.module.danmaku.ass_file import ASS
@@ -74,12 +77,14 @@ class ExtraParser:
         def get_ass_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
 
-            danmaku = Danmaku()
+            resolution = ExtraParser.Utils.get_video_resolution(task_info)
+
+            danmaku = Danmaku(resolution.get("width"), resolution.get("height"))
 
             dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
-            style = danmaku.get_style()
+            style = danmaku.get_ass_style()
 
-            contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_ass_info())
+            contents = ASS.make(dialogue_list, style, resolution)
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}.ass", contents, task_info, "w")
             
@@ -225,16 +230,44 @@ class ExtraParser:
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.json", contents, task_info, "w")
 
-        @staticmethod
-        def convert_to_ass(task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
-            subtitle = Config.Basic.ass_style.get("subtitle")
-
+        @classmethod
+        def convert_to_ass(cls, task_info: DownloadTaskInfo, subtitle_json: dict, lan: str, base_file_name: str):
             dialogue_list = [(FormatUtils.format_ass_timestamp(entry["from"]), FormatUtils.format_ass_timestamp(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
-            style = "Default,{},{},&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,{},10,10,30,1".format(subtitle.get("font_name"), subtitle.get("font_size"), subtitle.get("alignment"))
+            style = cls.get_ass_style()
 
-            contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_ass_info())
+            contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_video_resolution(task_info))
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.ass", contents, task_info, "w")
+
+        @staticmethod
+        def get_ass_style():
+            subtitle = Config.Basic.ass_style.get("subtitle")
+
+            ASSStyle.Name = "Default"
+            ASSStyle.Fontname = subtitle.get("font_name")
+            ASSStyle.Fontsize = subtitle.get("font_size")
+            ASSStyle.PrimaryColour = subtitle.get("primary_color")
+            ASSStyle.SecondaryColour = "&H000000FF"
+            ASSStyle.OutlineColour = subtitle.get("border_color")
+            ASSStyle.BackColour = subtitle.get("shadow_color")
+            ASSStyle.Bold = subtitle.get("bold")
+            ASSStyle.Italic = subtitle.get("italic")
+            ASSStyle.Underline = subtitle.get("underline")
+            ASSStyle.StrikeOut = subtitle.get("strikeout")
+            ASSStyle.ScaleX = 100
+            ASSStyle.ScaleY = 100
+            ASSStyle.Spacing = 0
+            ASSStyle.Angle = 0
+            ASSStyle.BorderStyle = 1
+            ASSStyle.Outline = subtitle.get("border")
+            ASSStyle.Shadow = subtitle.get("shadow")
+            ASSStyle.Alignment = subtitle.get("alignment")
+            ASSStyle.MarginL = subtitle.get("marginL")
+            ASSStyle.MarginR = subtitle.get("marginR")
+            ASSStyle.MarginV = subtitle.get("marginV")
+            ASSStyle.Encoding = 1
+
+            return ASSStyle.to_string()
 
     class Cover:
         @classmethod
@@ -283,8 +316,12 @@ class ExtraParser:
                 f.write(contents)
 
         @staticmethod
-        def get_ass_info():
+        def get_video_resolution(task_info: DownloadTaskInfo):
+            data = DownloadParser.get_download_stream_json(task_info)
+
+            width, height = Preview.get_video_resolution(task_info, data["video"])
+
             return {
-                "width": 1920,
-                "height": 1080
+                "width": width,
+                "height": height
             }
