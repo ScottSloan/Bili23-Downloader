@@ -11,8 +11,6 @@ class UpdateWindow(Dialog):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
         self.CenterOnParent()
 
         self.showUpdateInfo()
@@ -38,7 +36,7 @@ class UpdateWindow(Dialog):
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        self.update_btn = wx.Button(self, -1, "更新", size = self.FromDIP((100, 28)))
+        self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((100, 28)))
         self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((100, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -58,10 +56,7 @@ class UpdateWindow(Dialog):
 
         self.set_dark_mode()
     
-    def Bind_EVT(self):
-        self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)
-    
-    def onUpdate(self, event):
+    def onOKEVT(self):
         import webbrowser
 
         webbrowser.open(Config.Temp.update_json["url"])

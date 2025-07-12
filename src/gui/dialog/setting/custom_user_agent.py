@@ -11,8 +11,6 @@ class CustomUADialog(Dialog):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
         self.init_utils()
 
         self.CenterOnParent()
@@ -36,19 +34,13 @@ class CustomUADialog(Dialog):
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
-
-    def Bind_EVT(self):
-
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
     
     def init_utils(self):
         self.custom_ua_box.SetValue(Config.Advanced.user_agent)
 
-    def onConfirm(self, event):
+    def onOKEVT(self):
         if not self.custom_ua_box.GetValue():
             wx.MessageDialog(self, "User-Agent 无效\n\nUser-Agent 不能为空", "警告", wx.ICON_WARNING).ShowModal()
             return
 
         Config.Temp.user_agent = self.custom_ua_box.GetValue()
-
-        event.Skip()

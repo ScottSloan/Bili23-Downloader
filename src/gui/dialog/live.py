@@ -116,11 +116,10 @@ class LiveRecordingWindow(Dialog):
             if dlg.ShowModal() == wx.ID_YES:
                 self.terminate_ffmpeg_process()
 
-                event.Skip()
-
-                return
-            
-        event.Skip()
+            else:
+                return True
+        
+        super().onCloseEVT(event)
 
     def onCopyLinkEVT(self, event):
         # 复制到剪切板

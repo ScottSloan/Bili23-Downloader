@@ -71,8 +71,6 @@ class CustomCDNDialog(Dialog):
         self.up_btn.Bind(wx.EVT_BUTTON, self.onUpEVT)
         self.down_btn.Bind(wx.EVT_BUTTON, self.onDownEVT)
 
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
-
     def init_utils(self):
         def init_listctrl():
             self.cdn_list.AppendColumn("CDN 节点", width = self.FromDIP(350))
@@ -88,14 +86,12 @@ class CustomCDNDialog(Dialog):
         init_listctrl()
         init_cdn_list()
 
-    def onConfirm(self, event):
+    def onOKEVT(self):
         if self.cdn_list.GetItemCount() == 0:
             wx.MessageDialog(self, "保存失败\n\n至少需要添加一个 CDN 节点", "警告", wx.ICON_WARNING).ShowModal()
             return
         
         Config.Temp.cdn_list = [self.cdn_list.GetItemText(i, 0) for i in range(self.cdn_list.GetItemCount())]
-
-        event.Skip()
     
     def onPingTestEVT(self, event):
         def worker(index: int, cdn: str):

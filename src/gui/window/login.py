@@ -67,17 +67,13 @@ class LoginWindow(Dialog):
 
         Thread(target = worker).start()
 
-    def Bind_EVT(self):        
-        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
-
+    def Bind_EVT(self):
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocusEVT)
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocusEVT)
 
-    def onCloseEVT(self, event):
+    def onCancelEVT(self):
         self.qr_page.onClose()
         self.sms_page.onClose()
-
-        event.Skip()
 
     def onValidateBoxSetFocusEVT(self, event):
         self.left_bmp.SetBitmap(Pic.get_pic_bitmap(PicID.LeftGirlMask))

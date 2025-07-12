@@ -300,8 +300,6 @@ class CustomFileNameDialog(Dialog):
         self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteEVT)
         self.reset_btn.Bind(wx.EVT_BUTTON, self.onResetEVT)
 
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
-
         self.template_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onEditEVT)
 
     def init_utils(self):
@@ -390,7 +388,7 @@ class CustomFileNameDialog(Dialog):
 
             self.template_list.SortItems(self.listCompareCallback)
 
-    def onConfirmEVT(self, event):
+    def onOKEVT(self):
         Config.Temp.file_name_template_list.clear()
 
         for i in range(self.template_list.GetItemCount()):
@@ -398,8 +396,6 @@ class CustomFileNameDialog(Dialog):
                 "template": self.template_list.GetItemText(i, 1),
                 "scope": scope_map.get(self.template_list.GetItemText(i, 2))
             })
-
-        event.Skip()
 
     def check_existence(self, scope: str):
         for i in range(self.template_list.GetItemCount()):

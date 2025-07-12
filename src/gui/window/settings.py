@@ -36,8 +36,6 @@ class SettingWindow(Dialog):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
         self.CenterOnParent()
 
     def init_UI(self):
@@ -72,17 +70,12 @@ class SettingWindow(Dialog):
 
         self.SetSizerAndFit(vbox)
     
-    def Bind_EVT(self):
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
-    
-    def onConfirm(self, event):
+    def onOKEVT(self):
         for i in range(0, self.note.GetPageCount()):
             if not self.note.GetPage(i).onConfirm():
                 return
             
         Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
-
-        event.Skip()
 
 class Tab(Panel):
     def __init__(self, parent):

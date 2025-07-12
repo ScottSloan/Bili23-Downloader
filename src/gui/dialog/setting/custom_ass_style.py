@@ -174,8 +174,6 @@ class CustomASSStyleDialog(Dialog):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
         self.CenterOnParent()
 
     def init_UI(self):
@@ -198,13 +196,8 @@ class CustomASSStyleDialog(Dialog):
 
         self.SetSizerAndFit(vbox)
 
-    def Bind_EVT(self):
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
-
-    def onConfirmEVT(self, event):
+    def onOKEVT(self):
         for i in range(self.notebook.GetPageCount()):
             page, option = self.notebook.GetPage(i).get_option()
 
             Config.Temp.ass_style[page] = option
-
-        event.Skip()

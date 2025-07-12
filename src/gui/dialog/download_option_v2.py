@@ -267,8 +267,6 @@ class DownloadOptionDialog(Dialog):
 
         self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onEnableKeepFilesEVT)
 
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
-
     def init_utils(self):
         def get_stream_type():
             match StreamType(self.parent.stream_type):
@@ -548,7 +546,7 @@ class DownloadOptionDialog(Dialog):
         
         self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files if enable else False)
 
-    def onConfirmEVT(self, event):
+    def onOKEVT(self):
         def set_stream_download_option():
             Config.Download.stream_download_option.clear()
 
@@ -581,8 +579,6 @@ class DownloadOptionDialog(Dialog):
         Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
-
-        event.Skip()
 
     @property
     def video_quality_id(self):

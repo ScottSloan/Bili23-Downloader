@@ -93,10 +93,6 @@ class DownloadTaskInfo:
         self.zone_info: dict = {}
         # UP 主信息
         self.up_info: dict = {}
-        # 视频宽度
-        self.video_width: int = 0
-        # 视频高度
-        self.video_height: int = 0
 
     def to_dict(self):
         return {
@@ -154,8 +150,6 @@ class DownloadTaskInfo:
             "area": self.area,
             "zone_info": self.zone_info,
             "up_info": self.up_info,
-            "video_width": self.video_width,
-            "video_height": self.video_height
         }
 
     def load_from_dict(self, data: Dict):
@@ -213,8 +207,6 @@ class DownloadTaskInfo:
         self.area = data.get("area", self.area)
         self.zone_info = data.get("zone_info", self.zone_info)
         self.up_info = data.get("up_info", self.up_info)
-        self.video_width = data.get("video_width", self.video_width)
-        self.video_height = data.get("video_height", self.video_height)
 
 class DownloaderInfo:
     def __init__(self):
@@ -495,4 +487,3 @@ class ASSStyle:
         values = [str(value) for key, value in cls.__dict__.items() if not key.startswith("__")]
 
         return ",".join(values)
-
