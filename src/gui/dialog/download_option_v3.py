@@ -1,0 +1,321 @@
+import wx
+from typing import Callable
+
+from utils.config import Config
+
+from utils.common.map import number_type_map, video_quality_map, video_codec_preference_map, audio_quality_map, get_mapping_index_by_value, get_mapping_key_by_value
+from utils.common.enums import StreamType
+from utils.common.thread import Thread
+from utils.common.formatter import FormatUtils
+
+from utils.parse.preview import Preview
+from utils.parse.audio import AudioInfo
+
+from gui.component.window.dialog import Dialog
+from gui.component.panel.panel import Panel
+
+from gui.component.staticbox.extra import ExtraStaticBox
+
+from gui.component.info_label import InfoLabel
+from gui.component.tooltip import ToolTip
+
+class MediaInfoPanel(Panel):
+    def __init__(self, parent):
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+        self.Bind_EVT()
+
+    def init_UI(self):
+        label_color = wx.Colour(64, 64, 64)
+
+        stream_lab = wx.StaticText(self, -1, "当前视频类型：")
+        self.stream_type_lab = wx.StaticText(self, -1)
+
+        stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        stream_type_hbox.Add(stream_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        stream_type_hbox.Add(self.stream_type_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
+        self.video_quality_choice = wx.Choice(self, -1)
+        self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.video_quality_warn_icon.Hide()
+        self.video_quality_warn_icon.SetToolTip("当前所选的清晰度与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
+        self.video_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
+
+        video_quality_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_quality_info_hbox.Add(self.video_quality_warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_info_hbox.Add(self.video_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.audio_quality_lab = wx.StaticText(self, -1, "音质")
+        self.audio_quality_choice = wx.Choice(self, -1)
+        self.audio_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.audio_quality_warn_icon.Hide()
+        self.audio_quality_warn_icon.SetToolTip("当前所选的音质与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
+        self.audio_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
+
+        audio_quality_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        audio_quality_info_hbox.Add(self.audio_quality_warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_quality_info_hbox.Add(self.audio_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.video_codec_lab = wx.StaticText(self, -1, "编码格式")
+        self.video_codec_choice = wx.Choice(self, -1)
+        self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.video_codec_warn_icon.Hide()
+        self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n杜比视界和HDR 视频仅支持 H.265 编码。")
+        self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((320, 16)), color = label_color)
+
+        video_codec_info_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_codec_info_hbox.Add(self.video_codec_warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_codec_info_hbox.Add(self.video_codec_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        flex_grid_box = wx.FlexGridSizer(6, 2, 0, 0)
+        flex_grid_box.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_grid_box.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        flex_grid_box.AddStretchSpacer()
+        flex_grid_box.Add(video_quality_info_hbox, 0, wx.EXPAND)
+        flex_grid_box.Add(self.audio_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_grid_box.Add(self.audio_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        flex_grid_box.AddStretchSpacer()
+        flex_grid_box.Add(audio_quality_info_hbox, 0, wx.EXPAND)
+        flex_grid_box.Add(self.video_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_grid_box.Add(self.video_codec_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        flex_grid_box.AddStretchSpacer()
+        flex_grid_box.Add(video_codec_info_hbox, 0, wx.EXPAND)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(stream_type_hbox, 0, wx.EXPAND)
+        vbox.Add(flex_grid_box, 0, wx.EXPAND)
+
+        self.SetSizer(vbox)
+    
+    def Bind_EVT(self):
+        self.video_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
+        self.audio_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeAudioQualityEVT)
+
+    def load_data(self, parent):
+        self.video_quality_choice.Set(parent.video_quality_choice.GetItems())
+        self.video_quality_choice.Select(parent.video_quality_choice.GetSelection())
+
+        self.audio_quality_choice.Set(AudioInfo.audio_quality_desc_list)
+        self.audio_quality_choice.Select(get_mapping_index_by_value(audio_quality_map, AudioInfo.audio_quality_id))
+
+        self.video_codec_choice.Set(list(video_codec_preference_map.keys()))
+        self.video_codec_choice.Select(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
+
+        self.preview = Preview(parent.current_parse_type, parent.stream_type)
+
+        self.onChangeVideoQualityEVT(0)
+        self.onChangeAudioQualityEVT(0)
+
+    def set_stream_type(self, stream_type: str):
+        self.stream_type_lab.SetLabel(stream_type)
+
+    def get_video_quality_info(self):
+        def get_label():
+            label_info = {
+                "desc": get_mapping_key_by_value(video_quality_map, info["id"]),
+                "frame_rate": info["framerate"],
+                "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
+                "size": FormatUtils.format_size(info["size"])
+            }
+
+            return "   ".join([f"[{value}]" for value in label_info.values()])
+
+        info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
+
+        wx.CallAfter(self.video_quality_info_lab.SetLabel, get_label())
+
+    def get_aduio_quality_info(self):
+        def get_label():
+            label_info = {
+                "desc": get_mapping_key_by_value(audio_quality_map, info["id"]),
+                "codec": info["codec"],
+                "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
+                "size": FormatUtils.format_size(info["size"])
+            }
+
+            return "   ".join([f"[{value}]" for value in label_info.values()])
+
+        info = self.preview.get_audio_stream_info(self.audio_quality_id)
+
+        wx.CallAfter(self.audio_quality_info_lab.SetLabel, get_label())
+
+    def onChangeVideoQualityEVT(self, event):
+        self.video_quality_info_lab.SetLabel("正在检测...")
+
+        Thread(target = self.get_video_quality_info).start()
+
+    def onChangeAudioQualityEVT(self, event):
+        self.audio_quality_info_lab.SetLabel("正在检测...")
+
+        Thread(target = self.get_aduio_quality_info).start()
+
+    @property
+    def video_quality_id(self):
+        return video_quality_map.get(self.video_quality_choice.GetStringSelection())
+    
+    @property
+    def audio_quality_id(self):
+        return audio_quality_map.get(self.audio_quality_choice.GetStringSelection())
+    
+    @property
+    def video_codec_id(self):
+        return video_codec_preference_map.get(self.video_codec_choice.GetStringSelection())
+
+class MediaOptionStaticBox(Panel):
+    def __init__(self, parent):
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        media_box = wx.StaticBox(self, -1, "媒体下载选项")
+
+        self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
+        self.video_stream_tip = ToolTip(media_box)
+        self.video_stream_tip.set_tooltip('下载独立的视频流文件\n\n视频和音频分开存储，需要合并为一个完整的视频文件')
+
+        video_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_stream_hbox.Add(self.download_video_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_stream_hbox.Add(self.video_stream_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.download_audio_steam_chk = wx.CheckBox(media_box, -1, "音频流")
+        self.audio_stream_tip = ToolTip(media_box)
+        self.audio_stream_tip.set_tooltip('下载独立的音频流文件')
+
+        audio_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        audio_stream_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_stream_hbox.Add(self.audio_stream_tip, 0, wx.ALL & (~wx.LEFT)| wx.ALIGN_CENTER, self.FromDIP(6))
+        
+        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "合并视频和音频")
+        ffmpeg_merge_tip = ToolTip(media_box)
+        ffmpeg_merge_tip.set_tooltip("选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件")
+
+        ffmpeg_merge_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        ffmpeg_merge_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ffmpeg_merge_hbox.Add(ffmpeg_merge_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.keep_original_files_chk = wx.CheckBox(media_box, -1, "合并完成后保留原始文件")
+        keep_original_files_tip = ToolTip(media_box)
+        keep_original_files_tip.set_tooltip("合并完成后，保留原始的视频和音频文件")
+
+        keep_original_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        keep_original_files_hbox.Add(self.keep_original_files_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        keep_original_files_hbox.Add(keep_original_files_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        media_flex_grid_box = wx.FlexGridSizer(2, 2, 0, 0)
+        media_flex_grid_box.Add(video_stream_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.Add(audio_stream_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.Add(ffmpeg_merge_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.Add(keep_original_files_hbox, 0, wx.EXPAND)
+
+        media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
+        media_sbox.Add(media_flex_grid_box, 0, wx.EXPAND)
+
+        self.SetSizer(media_sbox)
+
+    def load_data(self):
+        pass
+
+class DownloadOptionDialog(Dialog):
+    def __init__(self, parent, callback: Callable):
+        from gui.main_v2 import MainWindow
+
+        self.parent: MainWindow = parent
+
+        Dialog.__init__(self, parent, "下载选项")
+
+        self.init_UI()
+
+        self.init_utils()
+
+        self.CenterOnParent()
+
+    def init_UI(self):
+        self.media_info_box = MediaInfoPanel(self)
+
+        self.media_option_box = MediaOptionStaticBox(self)
+
+        path_box = wx.StaticBox(self, -1, "下载目录设置")
+
+        self.path_box = wx.TextCtrl(path_box, -1)
+        self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+
+        path_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
+        path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
+        path_sbox.Add(path_hbox, 0, wx.EXPAND)
+
+        left_vbox = wx.BoxSizer(wx.VERTICAL)
+        left_vbox.Add(self.media_info_box, 0, wx.EXPAND)
+        left_vbox.AddStretchSpacer()
+        left_vbox.Add(self.media_option_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        left_vbox.Add(path_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+
+        self.extra_box = ExtraStaticBox(self)
+
+        other_box = wx.StaticBox(self, -1, "其他选项")
+        
+        self.auto_popup_chk = wx.CheckBox(other_box, -1, "下载时自动弹出此对话框")
+        self.auto_add_number_chk = wx.CheckBox(other_box, -1, "自动添加序号")
+        self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
+        self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
+        number_type_tip = ToolTip(other_box)
+        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示")
+
+        number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        number_type_hbox.AddSpacer(self.FromDIP(20))
+        number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(self.number_type_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.Add(number_type_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        number_type_hbox.AddSpacer(self.FromDIP(60))
+
+        other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
+        other_sbox.Add(self.auto_popup_chk, 0, wx.ALL, self.FromDIP(6))
+        other_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        other_sbox.Add(number_type_hbox, 0, wx.EXPAND)
+
+        right_vbox = wx.BoxSizer(wx.VERTICAL)
+        right_vbox.Add(self.extra_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        right_vbox.AddStretchSpacer()
+        right_vbox.Add(other_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(left_vbox, 0, wx.EXPAND)
+        hbox.Add(right_vbox, 0, wx.EXPAND)
+
+        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+
+        bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_hbox.AddStretchSpacer()
+        bottom_hbox.Add(self.ok_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        bottom_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox, 0, wx.EXPAND)
+        vbox.Add(bottom_hbox, 0, wx.EXPAND)
+
+        self.SetSizerAndFit(vbox)
+
+    def init_utils(self):
+        def get_stream_type():
+            match StreamType(self.parent.stream_type):
+                case StreamType.Dash:
+                    type = "DASH"
+
+                case StreamType.Flv:
+                    type = "FLV"
+
+            self.media_info_box.set_stream_type(type)
+
+        def load_download_option():
+            self.media_info_box.load_data(self.parent)
+
+        get_stream_type()
+
+        load_download_option()

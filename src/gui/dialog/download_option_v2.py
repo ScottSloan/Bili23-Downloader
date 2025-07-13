@@ -451,7 +451,7 @@ class DownloadOptionDialog(Dialog):
 
                         return "FLV 格式视频已包含音轨，不支持自定义音质"
 
-            info = self.preview.get_audio_stream_size(self.audio_quality_id)
+            info = self.preview.get_audio_stream_info(self.audio_quality_id)
 
             audio_info_label = get_audio_quality_info_label()
             wx.CallAfter(self.audio_quality_info_lab.SetLabel, audio_info_label)

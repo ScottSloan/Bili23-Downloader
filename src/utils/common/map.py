@@ -34,6 +34,15 @@ audio_quality_map = {
     "64K": 30216
 }
 
+audio_quality_sort_map = {
+    30300: 1,
+    30251: 2,
+    30250: 3,
+    30280: 4,
+    30232: 5,
+    30216: 6
+}
+
 video_codec_map = {
     "AVC/H.264": 7,
     "HEVC/H.265": 12,

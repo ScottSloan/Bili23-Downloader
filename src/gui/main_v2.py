@@ -40,7 +40,7 @@ from gui.dialog.detail import DetailDialog
 from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
-from gui.dialog.download_option_v2 import DownloadOptionDialog
+from gui.dialog.download_option_v3 import DownloadOptionDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
 from gui.dialog.graph import GraphWindow
 
