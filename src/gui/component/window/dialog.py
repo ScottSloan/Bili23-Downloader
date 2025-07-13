@@ -36,7 +36,7 @@ class Dialog(wx.Dialog):
         if not rtn:
             self.Destroy()
 
-            return event.GetId()
+            return event.Skip()
     
     def onOKEVT(self):
         pass

@@ -33,15 +33,15 @@ from gui.window.login import LoginWindow
 from gui.window.format_factory import FormatFactoryWindow
 
 from gui.dialog.about import AboutWindow
-from gui.dialog.changelog import ChangeLogDialog
-from gui.dialog.update import UpdateWindow
+from gui.dialog.misc.changelog import ChangeLogDialog
+from gui.dialog.misc.update import UpdateWindow
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
-from gui.dialog.edit_title import EditTitleDialog
+from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.live import LiveRecordingWindow
 from gui.dialog.download_option_v2 import DownloadOptionDialog
-from gui.dialog.duplicate import DuplicateDialog
+from gui.dialog.confirm.duplicate import DuplicateDialog
 from gui.dialog.graph import GraphWindow
 
 from gui.component.window.frame import Frame

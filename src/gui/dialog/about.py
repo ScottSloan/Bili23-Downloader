@@ -7,7 +7,7 @@ from utils.common.icon_v4 import Icon, IconID
 from utils.common.compile_data import date, compile
 from utils.common.color import Color
 
-from gui.dialog.license import LicenseWindow
+from gui.dialog.misc.license import LicenseWindow
 
 from gui.component.window.dialog import Dialog
 

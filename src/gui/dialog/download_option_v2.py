@@ -12,6 +12,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.preview import Preview
 
 from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
+from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
 
 from gui.component.window.dialog import Dialog
 from gui.component.info_label import InfoLabel
@@ -577,6 +578,12 @@ class DownloadOptionDialog(Dialog):
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
         Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
+
+        if self.download_danmaku_file_chk.GetValue() and self.danmaku_file_type_choice.GetStringSelection() == "ass":
+            dlg = RequireVideoResolutionDialog(self)
+
+            if dlg.ShowModal() == wx.ID_CANCEL:
+                return True
 
         self.callback(self.video_quality_choice.GetSelection(), self.video_quality_choice.IsEnabled())
 

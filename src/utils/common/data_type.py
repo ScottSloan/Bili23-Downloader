@@ -484,6 +484,6 @@ class ASSStyle:
 
     @classmethod
     def to_string(cls):
-        values = [str(value) for key, value in cls.__dict__.items() if not key.startswith("__")]
+        values = [str(value) for key, value in cls.__dict__.items() if not key.startswith("__") and key != "to_string"]
 
         return ",".join(values)
