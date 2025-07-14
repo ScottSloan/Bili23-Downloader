@@ -1,9 +1,6 @@
-from functools import reduce
-
 from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
 from utils.common.request import RequestUtils
 from utils.common.data_type import DownloadTaskInfo
-from utils.common.map import video_quality_map, get_mapping_key_by_value
 
 from utils.parse.video import VideoInfo
 from utils.parse.bangumi import BangumiInfo
@@ -32,32 +29,38 @@ class Preview:
                 return CheeseInfo.download_json
 
     def get_video_stream_info(self, video_quality_id: int, video_codec_id: int):
-        def get_stream_json():
+        def get_info(data: dict):
             match StreamType(self.stream_type):
                 case StreamType.Dash:
-                    return self.download_json["dash"]["video"]
-
+                    for entry in data["dash"]["video"]:
+                        if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
+                            return {
+                                "id": video_quality_id,
+                                "codec": entry["codecid"],
+                                "framerate": entry["frame_rate"],
+                                "bandwidth": entry["bandwidth"],
+                                "size": self.get_file_size(self.get_stream_download_url_list(entry))
+                            }
+                        
                 case StreamType.Flv:
-                    return self.download_json
+                    size = 0
 
-        def get_info(data: dict):
-            for entry in data:
-                if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
+                    for entry in data["durl"]:
+                        size += entry["size"]
+
                     return {
                         "id": video_quality_id,
-                        "codec": 0,
-                        "framerate": entry["frame_rate"],
-                        "bandwidth": entry["bandwidth"],
-                        "size": self.get_file_size(self.get_stream_download_url_list(entry))
+                        "codec": video_codec_id,
+                        "size": size
                     }
 
-        video_quality_id = self.get_video_quality_id(video_quality_id, self.stream_type, get_stream_json())
-        video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, get_stream_json())
+        video_quality_id = self.get_video_quality_id(video_quality_id, self.stream_type, self.download_json)
+        video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, self.download_json)
 
         key = f"{video_quality_id} - {video_codec_id}"
 
         if key not in self.video_size_cache:
-            self.video_size_cache[key] = get_info(get_stream_json())
+            self.video_size_cache[key] = get_info(self.download_json)
         
         return self.video_size_cache.get(key)
 
@@ -69,7 +72,7 @@ class Preview:
                 if entry["id"] == audio_quality_id:
                     return {
                         "id": audio_quality_id,
-                        "codec": entry["codecs"],
+                        "codec": "m4a" if entry["codecs"].startswith("mp4a") else entry["codecs"],
                         "bandwidth": entry["bandwidth"],
                         "size": self.get_file_size(self.get_stream_download_url_list(entry))
                     }
@@ -115,7 +118,7 @@ class Preview:
                 case StreamType.Dash:
                     codec_id_list = []
 
-                    for entry in data:
+                    for entry in data["dash"]["video"]:
                         if entry["id"] == video_quality_id:
                             codec_id_list.append(entry["codecid"])
 
@@ -141,22 +144,15 @@ class Preview:
 
     @classmethod
     def get_video_quality_id_desc_list(cls, data: dict):
-        video_quality_id_list, video_quality_desc_list = [], []
+        video_quality_id_list, video_quality_desc_list = [VideoQualityID._Auto.value], ["自动"]
 
-        video_quality_id_list.append(VideoQualityID._Auto.value)
-        video_quality_desc_list.append("自动")
-
-        for entry in data:
-            id = entry["id"]
-            desc = get_mapping_key_by_value(video_quality_map, id)
-
-            if desc:
-                video_quality_id_list.append(id)
-                video_quality_desc_list.append(desc)
+        video_quality_id_list.extend(data["accept_quality"])
+        video_quality_desc_list.extend(data["accept_description"])
 
         return video_quality_id_list, video_quality_desc_list
 
-    def get_file_size(self, url_list: list):
+    @staticmethod
+    def get_file_size(url_list: list):
         def request_head(url: str, cdn: str):
             return RequestUtils.request_head(CDN.replace_cdn(url, cdn), headers = RequestUtils.get_headers(referer_url = "https://www.bilibili.com"))
 

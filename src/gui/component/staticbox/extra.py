@@ -1,6 +1,10 @@
 import wx
 
+from utils.config import Config
+
 from utils.common.map import danmaku_format_map, subtitle_format_map, cover_format_map
+
+from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
 
 from gui.component.panel.panel import Panel
 
@@ -9,6 +13,8 @@ class ExtraStaticBox(Panel):
         Panel.__init__(self, parent)
 
         self.init_UI()
+
+        self.Bind_EVT()
 
     def init_UI(self):
         extra_box = wx.StaticBox(self, -1, "附加内容下载选项")
@@ -60,3 +66,46 @@ class ExtraStaticBox(Panel):
         extra_sbox.AddSpacer(self.FromDIP(6))
 
         self.SetSizer(extra_sbox)
+
+    def Bind_EVT(self):
+        self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
+        self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
+        self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadCoverEVT)
+
+        self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
+
+    def load_data(self):
+        self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
+        self.danmaku_file_type_choice.Select(Config.Basic.danmaku_file_type)
+        self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
+        self.subtitle_file_type_choice.Select(Config.Basic.subtitle_file_type)
+        self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
+        self.cover_file_type_choice.Select(Config.Basic.cover_file_type)
+
+        self.onCheckDownloadDanmakuEVT(0)
+        self.onCheckDownloadSubtitleEVT(0)
+        self.onCheckDownloadCoverEVT(0)
+
+    def onCheckDownloadDanmakuEVT(self, event):
+        enable = self.download_danmaku_file_chk.GetValue()
+
+        self.danmaku_file_type_lab.Enable(enable)
+        self.danmaku_file_type_choice.Enable(enable)
+
+    def onCheckDownloadSubtitleEVT(self, event):
+        enable = self.download_subtitle_file_chk.GetValue()
+
+        self.subtitle_file_type_lab.Enable(enable)
+        self.subtitle_file_type_choice.Enable(enable)
+        self.subtitle_file_lan_type_lab.Enable(enable)
+        self.subtitle_file_lan_type_btn.Enable(enable)
+
+    def onCheckDownloadCoverEVT(self, event):
+        enable = self.download_cover_file_chk.GetValue()
+
+        self.cover_file_type_lab.Enable(enable)
+        self.cover_file_type_choice.Enable(enable)
+
+    def onCustomSubtitleLanEVT(self, event):
+        dlg = CustomLanDialog(self)
+        dlg.ShowModal()

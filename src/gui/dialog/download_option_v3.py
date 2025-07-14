@@ -3,8 +3,8 @@ from typing import Callable
 
 from utils.config import Config
 
-from utils.common.map import number_type_map, video_quality_map, video_codec_preference_map, audio_quality_map, get_mapping_index_by_value, get_mapping_key_by_value
-from utils.common.enums import StreamType
+from utils.common.map import number_type_map, video_quality_map, video_codec_preference_map, video_codec_map, audio_quality_map, get_mapping_index_by_value, get_mapping_key_by_value
+from utils.common.enums import StreamType, VideoQualityID, AudioQualityID
 from utils.common.thread import Thread
 from utils.common.formatter import FormatUtils
 
@@ -93,6 +93,7 @@ class MediaInfoPanel(Panel):
     def Bind_EVT(self):
         self.video_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
         self.audio_quality_choice.Bind(wx.EVT_CHOICE, self.onChangeAudioQualityEVT)
+        self.video_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
     def load_data(self, parent):
         self.video_quality_choice.Set(parent.video_quality_choice.GetItems())
@@ -110,52 +111,126 @@ class MediaInfoPanel(Panel):
         self.onChangeAudioQualityEVT(0)
 
     def set_stream_type(self, stream_type: str):
-        self.stream_type_lab.SetLabel(stream_type)
+        match StreamType(stream_type):
+            case StreamType.Dash:
+                lab = "DASH"
+
+            case StreamType.Flv:
+                lab = "FLV"
+
+        self.stream_type_lab.SetLabel(lab)
+        self.stream_type = stream_type
 
     def get_video_quality_info(self):
         def get_label():
-            label_info = {
-                "desc": get_mapping_key_by_value(video_quality_map, info["id"]),
-                "frame_rate": info["framerate"],
-                "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
-                "size": FormatUtils.format_size(info["size"])
-            }
+            match StreamType(self.stream_type):
+                case StreamType.Dash:
+                    label_info = {
+                        "desc": get_mapping_key_by_value(video_quality_map, info["id"]),
+                        "frame_rate": info["framerate"],
+                        "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
+                        "size": FormatUtils.format_size(info["size"])
+                    }
+                
+                case StreamType.Flv:
+                    label_info = {
+                        "desc": get_mapping_key_by_value(video_quality_map, info["id"]),
+                        "size": FormatUtils.format_size(info["size"])
+                    }
 
             return "   ".join([f"[{value}]" for value in label_info.values()])
+        
+        def worker():
+            self.video_quality_info_lab.SetLabel(get_label())
+            self.video_codec_info_lab.SetLabel(get_mapping_key_by_value(video_codec_map, info["codec"]))
+
+            video_quality_id = self.video_quality_id if self.video_quality_id != VideoQualityID._Auto.value else video_quality_map.get(self.video_quality_choice.GetString(1))
+
+            self.video_quality_warn_icon.Show(info["id"] != video_quality_id)
+            self.video_codec_warn_icon.Show(info["codec"] != self.video_codec_id)
+
+            self.Layout()
 
         info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
 
-        wx.CallAfter(self.video_quality_info_lab.SetLabel, get_label())
+        wx.CallAfter(worker)
 
-    def get_aduio_quality_info(self):
+    def get_audio_quality_info(self):
         def get_label():
-            label_info = {
-                "desc": get_mapping_key_by_value(audio_quality_map, info["id"]),
-                "codec": info["codec"],
-                "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
-                "size": FormatUtils.format_size(info["size"])
-            }
+            match info:
+                case None:
+                    return "此视频无音轨"
+                
+                case "FLV":
+                    return "FLV 格式视频流中已包含音轨，不支持自定义"
+                
+                case _:
+                    label_info = {
+                        "desc": get_mapping_key_by_value(audio_quality_map, info["id"]),
+                        "codec": info["codec"],
+                        "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
+                        "size": FormatUtils.format_size(info["size"])
+                    }
 
-            return "   ".join([f"[{value}]" for value in label_info.values()])
+                    return "   ".join([f"[{value}]" for value in label_info.values()])
 
-        info = self.preview.get_audio_stream_info(self.audio_quality_id)
+        def worker():
+            self.audio_quality_info_lab.SetLabel(get_label())
 
-        wx.CallAfter(self.audio_quality_info_lab.SetLabel, get_label())
+            if info not in [None, "FLV"]:
+                audio_quality_id = self.audio_quality_id if self.audio_quality_id != AudioQualityID._Auto.value else audio_quality_map.get(self.audio_quality_choice.GetString(1))
+
+                self.audio_quality_warn_icon.Show(info["id"] != audio_quality_id)
+
+                self.Layout()
+
+            else:
+                self.enable_audio_quality_group(False)
+
+        match StreamType(self.stream_type):
+            case StreamType.Dash:
+                if AudioInfo.audio:
+                    info = self.preview.get_audio_stream_info(self.audio_quality_id)
+                else:
+                    info = None
+
+            case StreamType.Flv:
+                info = "FLV"
+
+        wx.CallAfter(worker)
 
     def onChangeVideoQualityEVT(self, event):
         self.video_quality_info_lab.SetLabel("正在检测...")
+        self.video_codec_info_lab.SetLabel("正在检测...")
 
         Thread(target = self.get_video_quality_info).start()
 
     def onChangeAudioQualityEVT(self, event):
         self.audio_quality_info_lab.SetLabel("正在检测...")
 
-        Thread(target = self.get_aduio_quality_info).start()
+        Thread(target = self.get_audio_quality_info).start()
+
+    def enable_video_quality_group(self, enable: bool):
+        self.video_quality_lab.Enable(enable)
+        self.video_quality_choice.Enable(enable)
+        self.video_quality_warn_icon.Enable(enable)
+        self.video_quality_info_lab.Enable(enable)
+
+        self.video_codec_lab.Enable(enable)
+        self.video_codec_choice.Enable(enable)
+        self.video_codec_warn_icon.Enable(enable)
+        self.video_codec_info_lab.Enable(enable)
+
+    def enable_audio_quality_group(self, enable: bool):
+        self.audio_quality_lab.Enable(enable)
+        self.audio_quality_choice.Enable(enable)
+        self.audio_quality_warn_icon.Enable(enable)
+        self.audio_quality_info_lab.Enable(enable)
 
     @property
     def video_quality_id(self):
         return video_quality_map.get(self.video_quality_choice.GetStringSelection())
-    
+
     @property
     def audio_quality_id(self):
         return audio_quality_map.get(self.audio_quality_choice.GetStringSelection())
@@ -303,19 +378,11 @@ class DownloadOptionDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
-        def get_stream_type():
-            match StreamType(self.parent.stream_type):
-                case StreamType.Dash:
-                    type = "DASH"
-
-                case StreamType.Flv:
-                    type = "FLV"
-
-            self.media_info_box.set_stream_type(type)
-
         def load_download_option():
             self.media_info_box.load_data(self.parent)
 
-        get_stream_type()
+            self.extra_box.load_data()
+
+        self.media_info_box.set_stream_type(self.parent.stream_type)
 
         load_download_option()
