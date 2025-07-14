@@ -3,11 +3,13 @@ from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
 from utils.common.enums import ParseType, StreamType, VideoQualityID, VideoCodecID, AudioQualityID
+from utils.common.map import audio_file_type_map
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
 from utils.parse.preview import Preview
 from utils.parse.parser import Parser
+from utils.parse.audio import AudioInfo
 
 from utils.auth.wbi import WbiUtils
 from utils.config import Config
@@ -24,13 +26,11 @@ class DownloadParser(Parser):
         def check_stream_type(data: dict):
             if "dash" in data:
                 task_info.stream_type = StreamType.Dash.value
-
-                return data["dash"]
                 
             elif "durl" in data:
                 task_info.stream_type = StreamType.Flv.value
 
-                return data
+            return data
 
         def get_video_json():
             params = {
@@ -93,34 +93,34 @@ class DownloadParser(Parser):
         return downloader_info
     
     def parse_dash_json(self, data: dict):
-        def check_download_items():
+        def get_download_items():
             if not self.task_info.download_items:
-                match self.task_info.download_option:
-                    case ["video"]:
-                        self.task_info.download_items = ["video"]
-                        self.task_info.output_type = "mp4"
+                self.task_info.download_items = self.task_info.download_option.copy()
 
-                    case ["audio"]:
-                        self.task_info.download_items = ["audio"]
+                if self.task_info.download_option == ["video", "audio"] and not data["audio"]:
+                    self.task_info.download_items = ["video"]
 
-                    case ["video", "audio"]:
-                        if data["audio"]:
-                            self.task_info.download_items = ["video", "audio"]
-                            self.task_info.output_type = "mp4"
-                        else:
-                            self.task_info.download_items = ["video"]
-                            self.task_info.output_type = "mp4"
-                            self.task_info.download_option = "video"
+        def get_output_type():
+            match self.task_info.download_items:
+                case ["audio"]:
+                    self.task_info.output_type = self.task_info.audio_type
+
+                case _:
+                    self.task_info.output_type = self.task_info.video_type
         
-        check_download_items()
+        get_download_items()
 
         downloader_info = []
 
+        self.task_info.download_items = self.task_info.download_option.copy()
+
         if "video" in self.task_info.download_items:
-            downloader_info.append(self.parse_video_stream(data["video"]))
+            downloader_info.append(self.parse_video_stream(data))
 
         if "audio" in self.task_info.download_items:
             downloader_info.append(self.parse_audio_stream(data))
+
+        get_output_type()
 
         return downloader_info
 
@@ -141,79 +141,43 @@ class DownloadParser(Parser):
         return self.parse_flv_stream(data)
 
     def parse_video_stream(self, data: list):
-        def get_video_downloader_info():
-            if url_list:
-                info = DownloaderInfo()
-                info.url_list = url_list
-                info.type = "video"
-                info.file_name = f"video_{self.task_info.id}.m4s"
+        def get_video_downloader_info(entry: dict):
+            info = DownloaderInfo()
+            info.url_list = Preview.get_stream_download_url_list(entry)
+            info.type = "video"
+            info.file_name = f"video_{self.task_info.id}.m4s"
 
-                return info.to_dict()
-            else:
-                return None
-
+            return info.to_dict()
+        
         self.task_info.video_type = "m4s"
 
-        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, self.task_info.stream_type, data)
+        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
         self.task_info.video_codec_id = Preview.get_video_codec_id(self.task_info.video_quality_id, self.task_info.video_codec_id, self.task_info.stream_type, data)
 
-        for entry in data:
+        for entry in data["dash"]["video"]:
             if entry["id"] == self.task_info.video_quality_id and entry["codecid"] == self.task_info.video_codec_id:
-                url_list = Preview.get_stream_download_url_list(entry)
-                break
-
+                return get_video_downloader_info(entry)
+            
         return get_video_downloader_info()
 
     def parse_audio_stream(self, data: dict):
-        def get_audio_stream_url_list(data: dict):
-            def get_hi_res():
-                return Preview.get_stream_download_url_list(data["flac"]["audio"])
+        def get_audio_downloader_info(entry: dict):
+            info = DownloaderInfo()
+            info.url_list = Preview.get_stream_download_url_list(entry)
+            info.type = "audio"
+            info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
-            def get_dolby():
-                return Preview.get_stream_download_url_list(data["dolby"]["audio"][0])
-
-            def get_normal():
-                for entry in data["audio"]:
-                    if entry["id"] == self.task_info.audio_quality_id:
-                        return Preview.get_stream_download_url_list(entry)
-
-            match AudioQualityID(self.task_info.audio_quality_id):
-                case AudioQualityID._None:
-                    stream_info = None
-
-                case AudioQualityID._Hi_Res:
-                    self.task_info.audio_type = "flac"
-                    stream_info = get_hi_res()
-
-                case AudioQualityID._Dolby_Atoms:
-                    self.task_info.audio_type = "ec3"
-                    stream_info = get_dolby()
-
-                case _:
-                    self.task_info.audio_type = "m4a"
-                    stream_info = get_normal()
-            
-            if self.task_info.download_option == ["audio"]:
-                self.task_info.output_type = self.task_info.audio_type
-
-            return stream_info
-
-        def get_audio_downloader_info():
-            if url_list:
-                info = DownloaderInfo()
-                info.url_list = url_list
-                info.type = "audio"
-                info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
-
-                return info.to_dict()
-            else:
-                return None
+            return info.to_dict()
 
         self.task_info.audio_quality_id = Preview.get_audio_quality_id(self.task_info.audio_quality_id, data)
 
-        url_list = get_audio_stream_url_list(data)
+        self.task_info.audio_type = audio_file_type_map.get(self.task_info.audio_quality_id)
 
-        return get_audio_downloader_info()
+        all_url_list = AudioInfo.get_all_audio_url_list(data)
+
+        for entry in all_url_list:
+            if entry["id"] == self.task_info.audio_quality_id:
+                return get_audio_downloader_info(entry)
     
     def parse_flv_stream(self, data: dict):
         def get_flv_quality_id():

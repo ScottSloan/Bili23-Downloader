@@ -596,7 +596,7 @@ class DownloadTaskItemPanel(Panel):
     
     @property
     def out_file_name(self):
-        return FileNameFormatter.format_file_name(self.task_info)
+        return FileNameFormatter.format_file_basename(self.task_info)
 
     @property
     def full_file_name(self):

@@ -56,7 +56,6 @@ app_config_group = {
         "ffmpeg_check_available_when_lauch",
         "override_option",
         "keep_original_files",
-        "m4a_to_mp3"
     ],
     "Proxy": [
         "proxy_mode",
@@ -246,7 +245,6 @@ class Config:
 
         override_option: int = 1
         keep_original_files: bool = False
-        m4a_to_mp3: bool = True
 
     class Temp:
         update_json: dict = None

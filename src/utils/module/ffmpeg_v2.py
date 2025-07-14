@@ -18,12 +18,7 @@ class FFmpeg:
         @staticmethod
         def get_merge_dash_command(task_info: DownloadTaskInfo):
             def convert_audio():
-                if task_info.output_type == "m4a" and Config.Merge.m4a_to_mp3:
-                    command.add(FFmpeg.Command.get_convert_audio_command(task_info, "libmp3lame"))
-
-                    return FFmpeg.Prop.dash_output_temp_file(task_info)
-
-                elif task_info.output_type == "flac":
+                if task_info.output_type == "flac":
                     command.add(FFmpeg.Command.get_convert_audio_command(task_info, "flac"))
 
                     return FFmpeg.Prop.dash_output_temp_file(task_info)
@@ -536,7 +531,7 @@ class FFmpeg:
 
         @staticmethod
         def output_file_name(task_info: DownloadTaskInfo):
-            return FileNameFormatter.format_file_name(task_info)
+            return FileNameFormatter.format_file_basename(task_info)
 
         @staticmethod
         def full_file_name(task_info: DownloadTaskInfo):

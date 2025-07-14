@@ -1,5 +1,6 @@
 import wx
 import os
+import wx.adv
 import webbrowser
 
 from utils.config import Config
@@ -52,9 +53,6 @@ class AddNewTemplateDialog(Dialog):
         self.template_box = TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
         self.template_box.SetFont(font)
 
-        self.error_msg_lab = wx.StaticText(self, -1, "")
-        self.error_msg_lab.SetForegroundColour("red")
-
         preview_lab = wx.StaticText(self, -1, "预览")
         self.directory_lab = wx.StaticText(self, -1, "子目录：")
         self.file_name_lab = wx.StaticText(self, -1, "文件名：")
@@ -83,7 +81,6 @@ class AddNewTemplateDialog(Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(template_hbox, 0, wx.EXPAND)
         vbox.Add(self.template_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
-        vbox.Add(self.error_msg_lab, 0, wx.ALL, self.FromDIP(6))
         vbox.Add(preview_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(self.directory_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(self.file_name_lab, 0, wx.ALL, self.FromDIP(6))
@@ -138,7 +135,6 @@ class AddNewTemplateDialog(Dialog):
 
             show_file_name()
 
-            self.error_msg_lab.SetLabel("")
             self.ok_btn.Enable(True)
 
         except Exception as e:
@@ -188,7 +184,7 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        file_name = FileNameFormatter.format_file_name(get_task_info(), template, basename = False)
+        file_name = FileNameFormatter.format_file_name(get_task_info(), template)
 
         if REUtils.find_illegal_chars(file_name):
             raise ValueError("illegal")
@@ -222,7 +218,11 @@ class AddNewTemplateDialog(Dialog):
             case _:
                 msg = str(e)
 
-        self.error_msg_lab.SetLabel(msg)
+        tip = wx.adv.RichToolTip("模板格式错误", msg)
+        tip.SetIcon(wx.ICON_ERROR)
+
+        tip.ShowFor(self.template_box)
+
         self.directory_lab.SetLabel("子目录：")
         self.file_name_lab.SetLabel("文件名：")
 

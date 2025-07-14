@@ -49,7 +49,7 @@ class AudioInfo:
         cls.audio_quality_id_list = audio_quality_id_list.copy()
         cls.audio_quality_desc_list = audio_quality_desc_list.copy()
 
-        cls.audio_quality_id = Config.Download.audio_quality_id
+        cls.audio_quality_id = Config.Download.audio_quality_id if Config.Download.audio_quality_id in cls.audio_quality_id_list else cls.audio_quality_id_list[1]
 
         cls.audio = len(cls.audio_quality_id_list) != 1
 

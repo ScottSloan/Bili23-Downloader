@@ -25,6 +25,7 @@ from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.episode_v2 import Episode
+from utils.parse.preview import Preview
 
 from gui.window.download_v3 import DownloadManagerWindow
 from gui.window.settings import SettingWindow
@@ -118,8 +119,6 @@ class MainWindow(Frame):
         self.graph_btn = FlatButton(self.panel, "剧情树", IconID.Tree_Structure)
         self.graph_btn.setToolTip("查看互动视频剧情树")
         self.graph_btn.Hide()
-        self.video_quality_lab = wx.StaticText(self.panel, -1, "清晰度")
-        self.video_quality_choice = wx.Choice(self.panel, -1)
         self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.List))
         self.episode_option_btn.SetToolTip("剧集列表显示设置")
         self.episode_option_btn.Enable(False)
@@ -134,8 +133,6 @@ class MainWindow(Frame):
         info_hbox.Add(self.detail_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.Add(self.graph_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.AddStretchSpacer()
-        info_hbox.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        info_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.episode_option_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.download_option_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
@@ -268,6 +265,10 @@ class MainWindow(Frame):
         self.current_parse_url = ""
         self.error_url_list = []
         self.status = ParseStatus.Finish.value
+
+        self.video_quality_id = 0
+        self.video_quality_id_list = []
+        self.video_quality_desc_list = []
 
         init_timer()
 
@@ -519,12 +520,8 @@ class MainWindow(Frame):
         self.PopupMenu(menu)
 
     def onShowDownloadOptionDlgEVT(self, event):
-        def callback(index: int, enable: bool):
-            self.video_quality_choice.SetSelection(index)
-            self.video_quality_choice.Enable(enable)
-            self.video_quality_lab.Enable(enable)
-
-        return DownloadOptionDialog(self, callback).ShowModal()
+        dlg = DownloadOptionDialog(self)
+        return dlg.ShowModal()
 
     def onShowUserMenuEVT(self, event):
         if Config.User.login:
@@ -616,43 +613,6 @@ class MainWindow(Frame):
 
         self.panel.Layout()
 
-    def set_video_quality_list(self):
-        def get_video_quality_list():
-            match self.current_parse_type:
-                case ParseType.Video:
-                    video_quality_id_list = VideoInfo.video_quality_id_list.copy()
-                    video_quality_desc_list = VideoInfo.video_quality_desc_list.copy()
-                
-                case ParseType.Bangumi:
-                    video_quality_id_list = BangumiInfo.video_quality_id_list.copy()
-                    video_quality_desc_list = BangumiInfo.video_quality_desc_list.copy()
-                
-                case ParseType.Cheese:
-                    video_quality_id_list = CheeseInfo.video_quality_id_list.copy()
-                    video_quality_desc_list = CheeseInfo.video_quality_desc_list.copy()
-
-            video_quality_id_list.insert(0, VideoQualityID._Auto.value)
-            video_quality_desc_list.insert(0, "自动")
-
-            return video_quality_id_list, video_quality_desc_list
-            
-        (video_quality_id_list, video_quality_desc_list) = get_video_quality_list()
-
-        self.video_quality_choice.Set(video_quality_desc_list)
-
-        if Config.Download.video_quality_id in video_quality_id_list:
-            self.video_quality_choice.Select(video_quality_id_list.index(Config.Download.video_quality_id))
-        else:
-            self.video_quality_choice.Select(1)
-    
-    def set_live_quality_list(self):
-        live_quality_desc_list = LiveInfo.live_quality_desc_list
-
-        live_quality_desc_list.insert(0, "自动")
-
-        self.video_quality_choice.Set(live_quality_desc_list)
-        self.video_quality_choice.Select(0)
-
     def show_user_info(self):
         def show_face():
             self.face_icon.Show()
@@ -718,12 +678,11 @@ class MainWindow(Frame):
         def worker():
             self.set_parse_status(ParseStatus.Finish)
 
-            match self.current_parse_type:
-                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    self.set_video_quality_list()                        
+            data = Preview.get_download_json(self.current_parse_type)
 
-                case ParseType.Live:
-                    self.set_live_quality_list()
+            self.video_quality_id_list, self.video_quality_desc_list = Preview.get_video_quality_id_desc_list(data)
+
+            self.video_quality_id = Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else self.video_quality_id_list[1]
 
             self.show_episode_list()
         
@@ -819,7 +778,6 @@ class MainWindow(Frame):
             self.download_btn.Enable(enable)
             self.episode_option_btn.Enable(enable)
             self.download_option_btn.Enable(enable)
-            self.video_quality_choice.Enable(enable)
         
         def set_download_btn_label():
             match self.current_parse_type:
@@ -844,7 +802,6 @@ class MainWindow(Frame):
                 self.detail_btn.Hide()
 
                 set_enable_status(False)
-                self.video_quality_choice.Clear()
 
                 self.processing_window = ProcessingWindow(self, ProcessingType.Parse)
             
@@ -919,14 +876,6 @@ class MainWindow(Frame):
 
         wx.CallAfter(worker)
 
-    @property
-    def video_quality_id(self):
-        return video_quality_map.get(self.video_quality_choice.GetStringSelection())
-    
-    @property
-    def live_quality_id(self):
-        return live_quality_map.get(self.video_quality_choice.GetStringSelection())
-    
     @property
     def stream_type(self):
         match self.current_parse_type:

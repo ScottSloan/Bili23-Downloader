@@ -43,6 +43,14 @@ audio_quality_sort_map = {
     30216: 6
 }
 
+audio_file_type_map = {
+    30251: "flac",
+    30250: "ec3",
+    30280: "aac",
+    30232: "aac",
+    30216: "aac"
+}
+
 video_codec_map = {
     "AVC/H.264": 7,
     "HEVC/H.265": 12,

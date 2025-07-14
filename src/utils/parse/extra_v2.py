@@ -29,7 +29,7 @@ class ExtraParser:
     class Danmaku:
         @classmethod
         def download(cls, task_info: DownloadTaskInfo):
-            base_file_name = FileNameFormatter.format_file_name(task_info)
+            base_file_name = FileNameFormatter.format_file_basename(task_info)
 
             io_buffer = cls.get_all_protobuf_contents(task_info)
 
@@ -168,7 +168,7 @@ class ExtraParser:
         
         @classmethod
         def convert_subtitle(cls, task_info: DownloadTaskInfo, subtitle_url: str, lan: str):
-            base_file_name = FileNameFormatter.format_file_name(task_info)
+            base_file_name = FileNameFormatter.format_file_basename(task_info)
 
             subtitle_json = cls.get_subtitle_json(subtitle_url)
 
@@ -272,7 +272,7 @@ class ExtraParser:
     class Cover:
         @classmethod
         def download(cls, task_info: DownloadTaskInfo):
-            base_file_name = FileNameFormatter.format_file_name(task_info)
+            base_file_name = FileNameFormatter.format_file_basename(task_info)
 
             cover_type = CoverUtils.get_cover_type()
 

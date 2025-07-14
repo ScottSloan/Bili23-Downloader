@@ -17,7 +17,8 @@ class Preview:
         self.video_size_cache = {}
         self.audio_size_cache = {}
 
-    def get_download_json(self, parse_type: ParseType):
+    @staticmethod
+    def get_download_json(parse_type: ParseType):
         match parse_type:
             case ParseType.Video:
                 return VideoInfo.download_json
@@ -54,7 +55,7 @@ class Preview:
                         "size": size
                     }
 
-        video_quality_id = self.get_video_quality_id(video_quality_id, self.stream_type, self.download_json)
+        video_quality_id = self.get_video_quality_id(video_quality_id, self.download_json)
         video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, self.download_json)
 
         key = f"{video_quality_id} - {video_codec_id}"
@@ -90,7 +91,7 @@ class Preview:
                 return video_codec_id
 
     @classmethod
-    def get_video_quality_id(cls, video_quality_id: int, stream_type: int, data: list | dict):
+    def get_video_quality_id(cls, video_quality_id: int, data: list | dict):
         video_quality_id_list, video_quality_desc_list = cls.get_video_quality_id_desc_list(data)
 
         video_quality_id_list.remove(VideoQualityID._Auto.value)
@@ -109,7 +110,7 @@ class Preview:
         if audio_quality_id in audio_quality_id_list:
             return audio_quality_id
         else:
-            return audio_quality_id_list[0]
+            return audio_quality_id_list[0] if audio_quality_id_list else None
         
     @staticmethod
     def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: list):
@@ -136,7 +137,7 @@ class Preview:
 
     @classmethod
     def get_video_resolution(cls, task_info: DownloadTaskInfo, data: list):
-        video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, task_info.stream_type, data)
+        video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, data)
 
         for entry in data:
             if entry["id"] == video_quality_id:

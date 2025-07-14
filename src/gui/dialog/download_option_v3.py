@@ -96,19 +96,27 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
     def load_data(self, parent):
-        self.video_quality_choice.Set(parent.video_quality_choice.GetItems())
-        self.video_quality_choice.Select(parent.video_quality_choice.GetSelection())
+        self.parent: DownloadOptionDialog = parent
+        main_window = self.parent.GetParent()
+
+        self.video_quality_choice.Set(main_window.video_quality_desc_list)
+        self.video_quality_choice.SetStringSelection(get_mapping_key_by_value(video_quality_map, main_window.video_quality_id))
 
         self.audio_quality_choice.Set(AudioInfo.audio_quality_desc_list)
-        self.audio_quality_choice.Select(get_mapping_index_by_value(audio_quality_map, AudioInfo.audio_quality_id))
+        self.audio_quality_choice.SetStringSelection(get_mapping_key_by_value(audio_quality_map, AudioInfo.audio_quality_id))
 
         self.video_codec_choice.Set(list(video_codec_preference_map.keys()))
         self.video_codec_choice.Select(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
-        self.preview = Preview(parent.current_parse_type, parent.stream_type)
+        self.preview = Preview(main_window.current_parse_type, main_window.stream_type)
 
         self.onChangeVideoQualityEVT(0)
         self.onChangeAudioQualityEVT(0)
+
+    def save(self):
+        Config.Download.video_quality_id = self.video_quality_id
+        AudioInfo.audio_quality_id = self.audio_quality_id
+        Config.Download.video_codec_id = self.video_codec_id
 
     def set_stream_type(self, stream_type: str):
         match StreamType(stream_type):
@@ -187,6 +195,8 @@ class MediaInfoPanel(Panel):
             else:
                 self.enable_audio_quality_group(False)
 
+                self.disable_download_audio_option()
+
         match StreamType(self.stream_type):
             case StreamType.Dash:
                 if AudioInfo.audio:
@@ -227,6 +237,9 @@ class MediaInfoPanel(Panel):
         self.audio_quality_warn_icon.Enable(enable)
         self.audio_quality_info_lab.Enable(enable)
 
+    def disable_download_audio_option(self):
+        self.parent.media_option_box.enable_audio_download_option(False)
+
     @property
     def video_quality_id(self):
         return video_quality_map.get(self.video_quality_choice.GetStringSelection())
@@ -238,14 +251,6 @@ class MediaInfoPanel(Panel):
     @property
     def video_codec_id(self):
         return video_codec_preference_map.get(self.video_codec_choice.GetStringSelection())
-
-    @property
-    def video_stream_available(self):
-        pass
-
-    @property
-    def audio_stream_available(self):
-        pass
 
 class MediaOptionStaticBox(Panel):
     def __init__(self, parent):
@@ -346,7 +351,13 @@ class MediaOptionStaticBox(Panel):
         enable = self.ffmpeg_merge_chk.GetValue()
 
         self.keep_original_files_chk.Enable(enable)
-        
+    
+    def enable_audio_download_option(self, enable: bool):
+        self.download_audio_steam_chk.Enable(enable)
+        self.download_audio_steam_chk.SetValue(enable)
+
+        self.onChangeStreamDownloadOptionEVT(0)
+
 class PathStaticBox(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -439,7 +450,7 @@ class OtherStaticBox(Panel):
         self.number_type_choice.Enable(enable)
 
 class DownloadOptionDialog(Dialog):
-    def __init__(self, parent, callback: Callable):
+    def __init__(self, parent):
         from gui.main_v2 import MainWindow
 
         self.parent: MainWindow = parent
@@ -493,7 +504,7 @@ class DownloadOptionDialog(Dialog):
 
     def init_utils(self):
         def load_download_option():
-            self.media_info_box.load_data(self.parent)
+            self.media_info_box.load_data(self)
 
             self.media_option_box.load_data(self)
 
@@ -508,6 +519,8 @@ class DownloadOptionDialog(Dialog):
         load_download_option()
 
     def onOKEVT(self):
+        self.media_info_box.save()
+        
         self.media_option_box.save()
 
         self.path_box.save()

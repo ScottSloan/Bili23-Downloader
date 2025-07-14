@@ -589,12 +589,9 @@ class FFmpegTab(Tab):
         override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, "仅下载音频时将 m4a 音频转换为 mp3 格式")
-
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box, wx.VERTICAL)
         merge_option_sbox.Add(override_hbox, 0, wx.EXPAND)
         merge_option_sbox.Add(keep_original_files_hbox, 0, wx.EXPAND)
-        merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         merge_vbox = wx.BoxSizer(wx.VERTICAL)
         merge_vbox.Add(ffmpeg_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -615,14 +612,12 @@ class FFmpegTab(Tab):
         
         self.override_option_choice.SetSelection(Config.Merge.override_option)
         self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
-        self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
 
     def save(self):
         Config.Merge.ffmpeg_path = self.path_box.GetValue()
         Config.Merge.ffmpeg_check_available_when_lauch = self.check_ffmpeg_chk.GetValue()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
-        Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
 
     def onBrowsePath(self, event):
         default_dir = os.path.dirname(self.path_box.GetValue())
