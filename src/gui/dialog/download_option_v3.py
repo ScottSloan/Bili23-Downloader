@@ -1,5 +1,4 @@
 import wx
-from typing import Callable
 
 from utils.config import Config, app_config_group
 
@@ -520,7 +519,7 @@ class DownloadOptionDialog(Dialog):
 
     def onOKEVT(self):
         self.media_info_box.save()
-        
+
         self.media_option_box.save()
 
         self.path_box.save()

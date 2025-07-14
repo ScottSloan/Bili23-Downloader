@@ -97,7 +97,7 @@ class DownloadParser(Parser):
             if not self.task_info.download_items:
                 self.task_info.download_items = self.task_info.download_option.copy()
 
-                if self.task_info.download_option == ["video", "audio"] and not data["audio"]:
+                if self.task_info.download_option == ["video", "audio"] and not data["dash"]["audio"]:
                     self.task_info.download_items = ["video"]
 
         def get_output_type():
@@ -111,8 +111,6 @@ class DownloadParser(Parser):
         get_download_items()
 
         downloader_info = []
-
-        self.task_info.download_items = self.task_info.download_option.copy()
 
         if "video" in self.task_info.download_items:
             downloader_info.append(self.parse_video_stream(data))
@@ -169,11 +167,11 @@ class DownloadParser(Parser):
 
             return info.to_dict()
 
-        self.task_info.audio_quality_id = Preview.get_audio_quality_id(self.task_info.audio_quality_id, data)
+        self.task_info.audio_quality_id = Preview.get_audio_quality_id(self.task_info.audio_quality_id, data["dash"])
 
         self.task_info.audio_type = audio_file_type_map.get(self.task_info.audio_quality_id)
 
-        all_url_list = AudioInfo.get_all_audio_url_list(data)
+        all_url_list = AudioInfo.get_all_audio_url_list(data["dash"])
 
         for entry in all_url_list:
             if entry["id"] == self.task_info.audio_quality_id:

@@ -12,10 +12,9 @@ from utils.module.face import FaceUtils
 from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.update import Update
-from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, VideoQualityID, Platform, ProcessingType, ExitOption
+from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, Platform, ProcessingType, ExitOption
 from utils.common.data_type import ParseCallback, TreeListCallback, Callback
 from utils.common.exception import GlobalException, GlobalExceptionInfo
-from utils.common.map import video_quality_map, live_quality_map
 from utils.common.re_utils import REUtils
 
 from utils.parse.video import VideoInfo, VideoParser
@@ -849,7 +848,7 @@ class MainWindow(Frame):
     def read_clipboard(self, event):
         def is_valid_url(url: str):
             if url:
-                if url.startswith(("http", "https")):
+                if url.startswith(("http", "https")) and "bilibili.com" in url:
                     if REUtils.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
                         return url != self.current_parse_url and url not in self.error_url_list
 
