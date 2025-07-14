@@ -247,9 +247,6 @@ class Config:
         keep_original_files: bool = False
 
     class Temp:
-        update_json: dict = None
-        changelog: str = None
-
         need_login: bool = False
 
         cdn_list: list = []

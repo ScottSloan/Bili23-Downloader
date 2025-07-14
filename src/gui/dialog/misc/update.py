@@ -6,7 +6,9 @@ from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
 class UpdateWindow(Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, info: dict):
+        self.info = info
+
         Dialog.__init__(self, parent, "检查更新")
 
         self.init_UI()
@@ -59,18 +61,16 @@ class UpdateWindow(Dialog):
     def onOKEVT(self):
         import webbrowser
 
-        webbrowser.open(Config.Temp.update_json["url"])
+        webbrowser.open(self.info["url"])
 
         self.Hide()
 
     def showUpdateInfo(self):
-        data = Config.Temp.update_json
-
         self.SetTitle("检查更新")
 
-        self.changelog.SetValue(data["changelog"])
+        self.changelog.SetValue(self.info["changelog"])
 
-        self.detail_lab.SetLabel(f"Version {data['version']}，发布于 {data['date']}，大小 {data['size']}")
+        self.detail_lab.SetLabel(f"Version {self.info['version']}，发布于 {self.info['date']}，大小 {self.info['size']}")
 
         self.update_btn.Show(True)
 

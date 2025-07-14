@@ -46,9 +46,9 @@ audio_quality_sort_map = {
 audio_file_type_map = {
     30251: "flac",
     30250: "ec3",
-    30280: "aac",
-    30232: "aac",
-    30216: "aac"
+    30280: "m4a",
+    30232: "m4a",
+    30216: "m4a"
 }
 
 video_codec_map = {

@@ -6,25 +6,23 @@ from utils.common.request import RequestUtils
 
 class Update:
     @staticmethod
-    def get_json(url: str):
-        return json.loads(RequestUtils.request_get(url).text)
+    def get_json(url: str) -> dict:
+        try:
+            req = RequestUtils.request_get(url)
+
+            return json.loads(req.text)
+        
+        except Exception as e:
+            return None
     
     @staticmethod
     def get_changelog():
-        try:
-            url = f"https://api.scott-sloan.cn/Bili23-Downloader/getChangelog?version_code={Config.APP.version_code}"
+        url = f"https://api.scott-sloan.cn/Bili23-Downloader/getChangelog?version_code={Config.APP.version_code}"
 
-            Config.Temp.changelog = Update.get_json(url)
-
-        except Exception:
-            pass
+        return Update.get_json(url)
     
     @staticmethod
     def get_update_json():
-        try:
-            url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
+        url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
 
-            Config.Temp.update_json = Update.get_json(url)
-
-        except Exception:
-            pass
+        return Update.get_json(url)

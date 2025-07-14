@@ -106,7 +106,7 @@ class DownloadParser(Parser):
                     self.task_info.output_type = self.task_info.audio_type
 
                 case _:
-                    self.task_info.output_type = self.task_info.video_type
+                    self.task_info.output_type = "mp4"
         
         get_download_items()
 

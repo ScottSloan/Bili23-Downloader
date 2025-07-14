@@ -366,10 +366,10 @@ class MainWindow(Frame):
                     def callback():
                         UpdateWindow(self).ShowModal()
 
-                    Update.get_update_json()
+                    info = Update.get_update_json()
 
-                    if Config.Temp.update_json:
-                        if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+                    if info:
+                        if info["version_code"] > Config.APP.version_code:
                             wx.CallAfter(callback)
                         else:
                             wx.CallAfter(wx.MessageDialog(self, "当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION).ShowModal)
@@ -381,11 +381,12 @@ class MainWindow(Frame):
             case self.ID_CHANGELOG_MENU:
                 def changelog_thread():
                     def callback():
-                        ChangeLogDialog(self).ShowModal()
+                        dlg = ChangeLogDialog(self)
+                        dlg.ShowModal()
 
-                    Update.get_changelog()
+                    info = Update.get_changelog()
 
-                    if Config.Temp.changelog:
+                    if info:
                         wx.CallAfter(callback)
                     else:
                         wx.CallAfter(wx.MessageDialog(self, "获取更新日志失败\n\n当前无法获取更新日志，请稍候再试", "获取更新日志", wx.ICON_ERROR).ShowModal)
@@ -657,10 +658,10 @@ class MainWindow(Frame):
         FFmpeg.Env.check_availability(callback)
 
     def check_update(self):
-        Update.get_update_json()
+        info = Update.get_update_json()
 
-        if Config.Temp.update_json:
-            if Config.Temp.update_json["version_code"] > Config.APP.version_code:
+        if info:
+            if info["version_code"] > Config.APP.version_code:
                 self.show_info_bar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
         else:
             self.show_info_bar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
