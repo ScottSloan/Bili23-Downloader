@@ -126,7 +126,11 @@ class FileNameFormatter:
     
     @staticmethod
     def removeprefix(path: str):
-        while path.startswith("\\"):
-            path = path.removeprefix("\\")
+        # 移除开头的反斜杠和正斜杠，防止创建根目录路径
+        while path.startswith("\\") or path.startswith("/"):
+            if path.startswith("\\"):
+                path = path.removeprefix("\\")
+            elif path.startswith("/"):
+                path = path.removeprefix("/")
 
         return path

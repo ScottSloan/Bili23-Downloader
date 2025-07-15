@@ -178,7 +178,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.Expand(item)
 
     def CheckAllItems(self):
-        self.CheckItemRecursively(self.GetRootItem(), wx.CHK_CHECKED)
+        root_item = self.GetRootItem()
+        if root_item.IsOk():
+            self.CheckItemRecursively(root_item, wx.CHK_CHECKED)
 
     def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int):
         self.download_task_info_list = []
@@ -198,20 +200,29 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def GetCurrentItemType(self):
         item = self.GetSelection()
 
+        if not item.IsOk():
+            return None
+
         return self.GetItemData(item).item_type
     
     def GetCurrentItemCheckedState(self):
         item = self.GetSelection()
 
+        if not item.IsOk():
+            return False
+
         match self.GetCheckedState(item):
             case wx.CHK_CHECKED | wx.CHK_UNDETERMINED:
                 return True
-            
+
             case wx.CHK_UNCHECKED:
                 return False
 
     def GetCurrentItemCollapsedState(self):
         item = self.GetSelection()
+
+        if not item.IsOk():
+            return True
 
         return not self.IsExpanded(item)
 
