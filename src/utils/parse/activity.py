@@ -5,7 +5,7 @@ from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 from utils.parse.parser import Parser
 
@@ -61,7 +61,7 @@ class ActivityParser(Parser):
             self.get_aid(initial_state)
 
     def parse_worker(self, url: str):
-        match REUtils.find_string(r"BV", url):
+        match Regex.find_string(r"BV", url):
             case "BV":
                 # 判断视频链接是否包含 BV 号
                 self.get_bvid(url)

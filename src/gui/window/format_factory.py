@@ -8,7 +8,7 @@ from utils.common.data_type import Callback, Process, PlayerCallback, RealTimeCa
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.directory import DirectoryUtils
 from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_windows_map, ffmpeg_video_gpu_linux_map, ffmpeg_video_gpu_darwin_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 from utils.common.enums import Platform
 from utils.common.thread import Thread
 from utils.common.color import Color
@@ -783,7 +783,7 @@ class ContainerPage(Panel):
 
                     self.acodec = info.get("acodec")
 
-                    result = REUtils.find_output_format(self.acodec)
+                    result = Regex.find_output_format(self.acodec)
 
                     self.set_output_format(result)
 

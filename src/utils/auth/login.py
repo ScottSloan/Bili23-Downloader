@@ -10,7 +10,7 @@ from utils.config import Config, user_config_group
 from utils.common.enums import StatusCode
 from utils.common.request import RequestUtils
 
-from utils.module.face import FaceUtils
+from utils.module.face import Face
 
 class LoginInfo:
     url: str = ""
@@ -103,7 +103,7 @@ class Login:
 
         Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
-        FaceUtils.check_face_path()
+        Face.check_face_path()
 
 class QRLogin(Login):
     def __init__(self):

@@ -3,14 +3,14 @@ import wx.dataview
 from utils.config import Config
 
 from utils.common.enums import Platform, ParseType
-from utils.common.data_type import TreeListItemInfo, TreeListCallback
+from utils.common.data_type import TreeListItemInfo
 from utils.common.formatter import FormatUtils
 from utils.common.download_info import DownloadInfo
 
 from utils.parse.episode_v2 import EpisodeInfo
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
-    def __init__(self, parent, callback: TreeListCallback):
+    def __init__(self, parent, main_window: wx.Window):
         def get_size():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
@@ -19,7 +19,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 case Platform.Linux | Platform.macOS:
                     return self.FromDIP((775, 350))
         
-        self.callback = callback
+        self.main_window = main_window
 
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
@@ -115,7 +115,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self.callback.onUpdateCheckedItemCount(self.GetCheckedItemCount())
+        self.main_window.onUpdateCheckedItemCount(self.GetCheckedItemCount())
 
     def onItemContextMenuEVT(self, event):
         menu = wx.Menu()

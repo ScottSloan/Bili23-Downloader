@@ -11,7 +11,7 @@ from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 class VideoInfo:
     url: str = ""
@@ -200,7 +200,7 @@ class VideoParser(Parser):
         # 清除当前的视频信息
         self.clear_video_info()
 
-        match REUtils.find_string(r"av|BV", url):
+        match Regex.find_string(r"av|BV", url):
             case "av":
                 self.get_aid(url)
 

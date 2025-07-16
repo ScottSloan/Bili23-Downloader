@@ -292,12 +292,6 @@ class NotificationMessage:
         self.status: int = 0
         self.video_merge_type: int = 0
 
-class TreeListCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onUpdateCheckedItemCount(count: int):
-        pass
-
 class TreeListItemInfo:
     def __init__(self):
         self.number: int = 0

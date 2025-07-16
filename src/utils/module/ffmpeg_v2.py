@@ -7,7 +7,7 @@ from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 from utils.common.formatter import FormatUtils
 
 from utils.config import Config
@@ -345,17 +345,17 @@ class FFmpeg:
 
         @staticmethod
         def parse_media_info(output: str):
-            duration_info = REUtils.re_findall_in_group(r"Duration: (([\d:.]+))", output, 1)
+            duration_info = Regex.re_findall_in_group(r"Duration: (([\d:.]+))", output, 1)
 
-            start_info = REUtils.re_findall_in_group(r"start: (([\d.]+))", output, 1)
+            start_info = Regex.re_findall_in_group(r"start: (([\d.]+))", output, 1)
 
-            bitrate_info = REUtils.re_findall_in_group(r"bitrate: ((\d* kb\/s))", output, 1)
+            bitrate_info = Regex.re_findall_in_group(r"bitrate: ((\d* kb\/s))", output, 1)
         
-            video_stream_info = REUtils.re_match_in_group(r"Video: (.*)", output, 4)
+            video_stream_info = Regex.re_match_in_group(r"Video: (.*)", output, 4)
 
-            fps_info = REUtils.re_findall_in_group(r"((\d+(?:.\d+)? fps))", output, 1)
+            fps_info = Regex.re_findall_in_group(r"((\d+(?:.\d+)? fps))", output, 1)
 
-            audio_stream_info = REUtils.re_match_in_group(r"Audio: (.*)", output, 5)
+            audio_stream_info = Regex.re_match_in_group(r"Audio: (.*)", output, 5)
 
             return {
                 "duration": duration_info[0],
@@ -408,7 +408,7 @@ class FFmpeg:
             frame_info = get_frame(r"frame=\s*(\d+)")
             size_info = get_size(r"size=\s*(\d+)(KiB|kB)")
 
-            speed_info = REUtils.re_findall_in_group(r"speed=\s*((\d+\.\d+x))", output, 1)
+            speed_info = Regex.re_findall_in_group(r"speed=\s*((\d+\.\d+x))", output, 1)
 
             return {
                 "progress": int(current_time / cls.temp_duration * 100) if cls.temp_duration and current_time else 0,

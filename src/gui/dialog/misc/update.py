@@ -5,7 +5,7 @@ from utils.config import Config
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
-class UpdateWindow(Dialog):
+class UpdateDialog(Dialog):
     def __init__(self, parent, info: dict):
         self.info = info
 

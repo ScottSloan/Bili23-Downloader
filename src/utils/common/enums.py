@@ -74,6 +74,7 @@ class StatusCode(Enum):
     DownloadError = 611           # 下载失败
     MaxRetry = 612                # 最大重试
     Area_Limit = -10403           # 区域限制
+    OtherError = None             # 其他错误
 
 class VideoQualityID(Enum):
     _None = 0                     # 无视频

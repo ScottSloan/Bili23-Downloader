@@ -5,7 +5,7 @@ from utils.config import Config
 
 from utils.common.request import RequestUtils
 
-class FaceUtils:
+class Face:
     @staticmethod
     def check_face_path():
         Config.User.face_path = os.path.join(Config.User.directory, f"face.jpg")

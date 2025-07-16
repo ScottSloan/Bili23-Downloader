@@ -9,7 +9,7 @@ from utils.common.map import scope_map, field_map, get_mapping_key_by_value
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.font import SysFont
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 from gui.component.window.dialog import Dialog
 from gui.component.text_ctrl.text_ctrl import TextCtrl
@@ -186,7 +186,7 @@ class AddNewTemplateDialog(Dialog):
         
         file_name = FileNameFormatter.format_file_name(get_task_info(), template)
 
-        if REUtils.find_illegal_chars(file_name):
+        if Regex.find_illegal_chars(file_name):
             raise ValueError("illegal")
         
         if len(os.path.basename(file_name)) > 255:

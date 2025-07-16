@@ -7,7 +7,7 @@ from utils.auth.login import QRLogin
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
 from utils.module.cover import CoverUtils
-from utils.module.face import FaceUtils
+from utils.module.face import Face
 
 from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
@@ -15,7 +15,7 @@ from utils.common.update import Update
 from utils.common.enums import ParseStatus, ParseType, StatusCode, EpisodeDisplayType, LiveStatus, Platform, ProcessingType, ExitOption
 from utils.common.data_type import ParseCallback, TreeListCallback, Callback
 from utils.common.exception import GlobalException, GlobalExceptionInfo
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -34,7 +34,7 @@ from gui.window.format_factory import FormatFactoryWindow
 
 from gui.dialog.about import AboutWindow
 from gui.dialog.misc.changelog import ChangeLogDialog
-from gui.dialog.misc.update import UpdateWindow
+from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.setting.edit_title import EditTitleDialog
@@ -364,7 +364,7 @@ class MainWindow(Frame):
             case self.ID_CHECK_UPDATE_MENU:
                 def check_update_thread():
                     def callback():
-                        UpdateWindow(self).ShowModal()
+                        UpdateDialog(self).ShowModal()
 
                     info = Update.get_update_json()
 
@@ -584,54 +584,6 @@ class MainWindow(Frame):
             case self.episode_list.ID_EPISODE_LIST_COLLAPSE_MENU:
                 self.episode_list.CollapseCurrentItem()
 
-    def onUpdateCheckedItemCount(self, count: int):        
-        if count:
-            label = f"(共 {self.episode_list.count} 个，已选择 {count} 个)"
-        else:
-            label = f"(共 {self.episode_list.count} 个)"
-
-        match self.current_parse_type:
-            case ParseType.Video:
-                if VideoInfo.is_interactive:
-                    type = "互动视频"
-                else:
-                    type = "投稿视频"
-
-            case ParseType.Bangumi:
-                type = BangumiInfo.type_name
-
-            case ParseType.Live:
-                type = "直播"
-
-            case ParseType.Cheese:
-                type = "课程"
-        
-        self.type_lab.SetLabel(f"{type} {label}")
-
-        self.panel.Layout()
-
-    def show_user_info(self):
-        def show_face():
-            self.face_icon.Show()
-            self.face_icon.SetBitmap(FaceUtils.crop_round_face_bmp(image))
-            self.uname_lab.SetLabel(Config.User.username)
-
-            self.panel.Layout()
-
-        def hide_face():
-            self.uname_lab.SetLabel("未登录")
-            self.face_icon.Hide()
-
-            self.panel.Layout()
-
-        wx.CallAfter(hide_face)
-
-        if Config.Misc.show_user_info:
-            if Config.User.login:
-                image = FaceUtils.get_scaled_face(self.FromDIP((32, 32)))
-
-                wx.CallAfter(show_face)
-
     def check_ffmpeg_available(self):
         class callback(Callback):
             @staticmethod
@@ -670,85 +622,6 @@ class MainWindow(Frame):
 
         login_window = LoginWindow(self, callback)
         login_window.ShowModal()
-
-    def parse_url_thread(self, url: str):
-        def worker():
-            self.set_parse_status(ParseStatus.Finish)
-
-            data = Preview.get_download_json(self.current_parse_type)
-
-            self.video_quality_id_list, self.video_quality_desc_list = Preview.get_video_quality_id_desc_list(data)
-
-            self.video_quality_id = Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else self.video_quality_id_list[1]
-
-            self.show_episode_list()
-        
-        class Callback(ParseCallback):
-            @staticmethod
-            def onError():
-                self.onErrorCallback()
-            
-            @staticmethod
-            def onBangumi(url: str):
-                self.onBangumiCallback(url)
-
-            @staticmethod
-            def onInteractVideo():
-                self.onInteractVideoCallback()
-
-            @staticmethod
-            def onUpdateInteractVideo(title: str):
-                self.processing_window.onUpdateNode(title)
-
-        match REUtils.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
-            case "cheese":
-                self.current_parse_type = ParseType.Cheese
-                self.cheese_parser = CheeseParser(Callback)
-
-                return_code = self.cheese_parser.parse_url(url)
-
-            case "av" | "BV":
-                self.current_parse_type = ParseType.Video
-                self.video_parser = VideoParser(Callback)
-
-                return_code = self.video_parser.parse_url(url)
-
-            case "ep" | "ss" | "md":
-                self.current_parse_type = ParseType.Bangumi
-                self.bangumi_parser = BangumiParser(Callback)
-
-                return_code = self.bangumi_parser.parse_url(url)
-
-            case "live":
-                self.current_parse_type = ParseType.Live
-                self.live_parser = LiveParser(Callback)
-
-                return_code = self.live_parser.parse_url(url)
-
-            case "b23.tv" | "bili2233.cn":
-                self.b23_parser = B23Parser(Callback)
-
-                return_code = self.b23_parser.parse_url(url)
-
-            case "blackboard" | "festival":
-                self.activity_parser = ActivityParser(Callback)
-
-                return_code = self.activity_parser.parse_url(url)
-            
-            case _:
-                self.current_parse_type = None
-                raise GlobalException(code = StatusCode.URL.value, callback = self.onErrorCallback)
-        
-        if return_code == StatusCode.Success.value:
-            wx.CallAfter(worker)
-    
-    def show_episode_list(self):
-        self.episode_list.show_episode_list()
-
-        if Config.Misc.auto_check_episode_item or self.episode_list.count == 1:
-            self.episode_list.CheckAllItems()
-
-        self.onUpdateCheckedItemCount(self.episode_list.GetCheckedItemCount())
 
     def onErrorCallback(self):
         def worker():
@@ -846,7 +719,7 @@ class MainWindow(Frame):
         def is_valid_url(url: str):
             if url:
                 if url.startswith(("http", "https")) and "bilibili.com" in url:
-                    if REUtils.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+                    if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
                         return url != self.current_parse_url and url not in self.error_url_list
 
         if self.status == ParseStatus.Parsing or not self.IsShown():

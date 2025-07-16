@@ -319,6 +319,11 @@ class DownloadManagerWindow(Frame):
     def get_timestamp(self):
         return int(datetime.now().timestamp())
 
+    def Show(self, show = True):
+        self.CenterOnParent()
+        
+        return super().Show(show)
+
 class SimplePage(Panel):
     def __init__(self, parent):
         self.callback: DownloadPageCallback

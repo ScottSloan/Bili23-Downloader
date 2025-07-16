@@ -4,7 +4,7 @@ from utils.config import Config
 from utils.common.enums import Platform
 from utils.auth.cookie import CookieUtils
 
-from gui.main_v2 import MainWindow
+from gui.main_v3 import MainWindow
 
 class APP(wx.App):
     def __init__(self):
