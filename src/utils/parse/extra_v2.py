@@ -18,7 +18,7 @@ from utils.common.exception import GlobalException
 from utils.parse.preview import Preview
 from utils.parse.download import DownloadParser
 
-from utils.module.cover import CoverUtils
+from utils.module.cover import Cover
 from utils.module.danmaku.ass_file import ASS
 from utils.module.danmaku.danmaku import Danmaku
 from utils.module.danmaku.xml_file import XML
@@ -274,9 +274,9 @@ class ExtraParser:
         def download(cls, task_info: DownloadTaskInfo):
             base_file_name = FileNameFormatter.format_file_basename(task_info)
 
-            cover_type = CoverUtils.get_cover_type()
+            cover_type = Cover.get_cover_type()
 
-            contents = CoverUtils.download_cover(task_info.cover_url)
+            contents = Cover.download_cover(task_info.cover_url)
 
             ExtraParser.Utils.save_to_file(f"{base_file_name}{cover_type}", contents, task_info, "wb")
 

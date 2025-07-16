@@ -1,10 +1,10 @@
 import wx
 import webbrowser
 
-from utils.config import Config
+from utils.config import Config, app_config_group
 from utils.auth.login import QRLogin
 from utils.common.regex import Regex
-from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode
+from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption
 from utils.common.data_type import ParseCallback
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.thread import Thread
@@ -12,24 +12,33 @@ from utils.common.update import Update
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 from utils.module.face import Face
+from utils.module.clipboard import ClipBoard
+from utils.module.cover import Cover
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
-from utils.parse.live import LiveParser
+from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.preview import Preview
+from utils.parse.episode_v2 import Episode
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
+
+from gui.id import ID
 
 from gui.dialog.about import AboutWindow
 from gui.dialog.processing import ProcessingWindow
 from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.misc.changelog import ChangeLogDialog
 from gui.dialog.error import ErrorInfoDialog
+from gui.dialog.setting.edit_title import EditTitleDialog
+from gui.dialog.detail import DetailDialog
+from gui.dialog.download_option_v3 import DownloadOptionDialog
 
+from gui.window.graph import GraphWindow
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings import SettingWindow
@@ -43,6 +52,9 @@ from gui.component.button.button import Button
 from gui.component.info_bar import InfoBar
 from gui.component.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
+
+from gui.component.menu.episode_option import EpisodeOptionMenu
+from gui.component.menu.user import UserMenu
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -258,6 +270,67 @@ class Utils:
 
         wx.CallAfter(worker)
 
+    def set_episode_display_mode(self, mode: EpisodeDisplayType):
+        Config.Misc.episode_display_mode = mode.value
+
+        self.main_window.show_episode_list()
+
+    def set_episode_full_name(self):
+        Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
+
+        self.main_window.show_episode_list()
+
+    def update_checked_item_count(self, count: int):
+        label = f"(共 {self.main_window.episode_list.count} 个{f"，已选择 {count} 个)" if count else ")"}"
+
+        self.main_window.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
+
+        self.main_window.panel.Layout()
+
+    def read_clipboard(self, event):
+        url: str = ClipBoard.Read()
+
+        if url and self.validate_url(url):
+            self.main_window.url_box.SetValue(url)
+
+            wx.CallAfter(self.main_window.onParseEVT, event)
+
+    def validate_url(self, url: str):
+        if url.startswith(("http", "https")) and "bilibili.com" in url:
+            if url != self.main_window.url_box.GetValue():
+                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+                    return True
+
+    def get_episode_title(self):
+        return self.main_window.episode_list.GetItemText(self.main_window.episode_list.GetSelection(), 1)
+    
+    def set_episode_title(self, item, title: str):
+        self.main_window.episode_list.SetItemTitle(item, title)
+
+        if self.main_window.parser.parse_type == ParseType.Live:
+            LiveInfo.title = title
+
+    def save_exit_dialog_settings(self, flag: int): 
+        save = ExitOption(Config.Basic.exit_option) == ExitOption.AskOnce
+
+        match flag:
+            case wx.ID_YES:
+                Config.Basic.exit_option = ExitOption.TaskIcon.value
+
+            case wx.ID_NO:
+                Config.Basic.exit_option = ExitOption.Exit.value
+
+        if save:
+            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+    def save_window_params_settings(self):
+        if Config.Basic.remember_window_status:
+            Config.Basic.window_pos = list(self.main_window.GetPosition())
+            Config.Basic.window_size = list(self.main_window.GetSize())
+            Config.Basic.window_maximized = self.main_window.IsMaximized()
+
+            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
     def show_message_dialog(self, message: str, caption: str, style: int):
         def worker():
             dlg = wx.MessageDialog(self.main_window, message, caption, style)
@@ -275,13 +348,11 @@ class MainWindow(Frame):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
         self.init_utils()
 
-    def init_UI(self):
-        self.init_id()
+        self.Bind_EVT()
 
+    def init_UI(self):
         self.panel = Panel(self)
 
         self.infobar = InfoBar(self.panel)
@@ -354,26 +425,6 @@ class MainWindow(Frame):
 
         self.taskbar_icon = TaskBarIcon(self)
 
-    def init_id(self):
-        self.ID_REFRESH_MENU = wx.NewIdRef()
-        self.ID_LOGIN_MENU = wx.NewIdRef()
-        self.ID_LOGOUT_MENU = wx.NewIdRef()
-        self.ID_DEBUG_MENU = wx.NewIdRef()
-        self.ID_CONVERTER_MENU = wx.NewIdRef()
-        self.ID_FORMAT_FACTORY_MENU = wx.NewIdRef()
-        self.ID_SETTINGS_MENU = wx.NewIdRef()
-
-        self.ID_CHECK_UPDATE_MENU = wx.NewIdRef()
-        self.ID_CHANGELOG_MENU = wx.NewIdRef()
-        self.ID_HELP_MENU = wx.NewIdRef()
-        self.ID_FEEDBACK_MENU = wx.NewIdRef()
-        self.ID_ABOUT_MENU = wx.NewIdRef()
-
-        self.ID_EPISODE_SINGLE_MENU = wx.NewIdRef()
-        self.ID_EPISODE_IN_SECTION_MENU = wx.NewIdRef()
-        self.ID_EPISODE_ALL_SECTIONS_MENU = wx.NewIdRef()
-        self.ID_EPISODE_FULL_NAME_MENU = wx.NewIdRef()
-
     def init_menubar(self):
         menu_bar = wx.MenuBar()
 
@@ -381,25 +432,25 @@ class MainWindow(Frame):
         help_menu = wx.Menu()
 
         if Config.User.login:
-            tool_manu.Append(self.ID_LOGOUT_MENU, "注销(&L)")
+            tool_manu.Append(ID.LOGOUT_MENU, "注销(&L)")
         else:
-            tool_manu.Append(self.ID_LOGIN_MENU, "登录(&L)")
+            tool_manu.Append(ID.LOGIN_MENU, "登录(&L)")
 
         tool_manu.AppendSeparator()
 
         if Config.Misc.enable_debug:
-            tool_manu.Append(self.ID_DEBUG_MENU, "调试(&D)")
+            tool_manu.Append(ID.DEBUG_MENU, "调试(&D)")
 
-        tool_manu.Append(self.ID_FORMAT_FACTORY_MENU, "视频工具箱(&F)")
+        tool_manu.Append(ID.FORMAT_FACTORY_MENU, "视频工具箱(&F)")
         tool_manu.AppendSeparator()
-        tool_manu.Append(self.ID_SETTINGS_MENU, "设置(&S)")
+        tool_manu.Append(ID.SETTINGS_MENU, "设置(&S)")
 
-        help_menu.Append(self.ID_CHECK_UPDATE_MENU, "检查更新(&U)")
-        help_menu.Append(self.ID_CHANGELOG_MENU, "更新日志(&P)")
+        help_menu.Append(ID.CHECK_UPDATE_MENU, "检查更新(&U)")
+        help_menu.Append(ID.CHANGELOG_MENU, "更新日志(&P)")
         help_menu.AppendSeparator()
-        help_menu.Append(self.ID_HELP_MENU, "使用帮助(&C)")
-        help_menu.Append(self.ID_FEEDBACK_MENU, "意见反馈(&B)")
-        help_menu.Append(self.ID_ABOUT_MENU, "关于(&A)")
+        help_menu.Append(ID.HELP_MENU, "使用帮助(&C)")
+        help_menu.Append(ID.FEEDBACK_MENU, "意见反馈(&B)")
+        help_menu.Append(ID.ABOUT_MENU, "关于(&A)")
 
         menu_bar.Append(tool_manu, "工具(&T)")
         menu_bar.Append(help_menu, "帮助(&H)")
@@ -408,12 +459,26 @@ class MainWindow(Frame):
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onMenuEVT)
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
         self.url_box.Bind(wx.EVT_SEARCH, self.onParseEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onParseEVT)
 
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadWindowEVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
+
+        self.episode_option_btn.Bind(wx.EVT_BUTTON, self.onShowEpisodeOptionMenuEVT)
+        self.download_option_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadOptionDialogEVT)
+
+        self.face_icon.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
+        self.uname_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowUserMenuEVT)
+
+        self.detail_btn.onClickCustomEVT = self.onShowDetailInfoDialogEVT
+        self.graph_btn.onClickCustomEVT = self.onShowGraphWindowEVT
+
+        self.episode_list.Bind(wx.EVT_MENU, self.onEpisodeListContextMenuEVT)
+
+        self.Bind(wx.EVT_TIMER, self.utils.read_clipboard, self.clipboard_timer)
 
     def init_utils(self):
         self.utils = Utils(self)
@@ -424,69 +489,86 @@ class MainWindow(Frame):
 
     def onMenuEVT(self, event):
         match event.GetId():
-            case self.ID_LOGIN_MENU:
-                window = LoginWindow()
+            case ID.LOGIN_MENU:
+                window = LoginWindow(self)
                 window.Show()
 
-            case self.ID_LOGOUT_MENU:
+            case ID.LOGOUT_MENU:
                 dlg = wx.MessageDialog(self, '退出登录\n\n是否要退出登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
 
                 if dlg.ShowModal() == wx.ID_YES:
                     self.utils.user_logout()
 
-            case self.ID_REFRESH_MENU:
+            case ID.REFRESH_MENU:
                 Thread(target = self.utils.user_refresh).start()
 
-            case self.ID_DEBUG_MENU:
+            case ID.DEBUG_MENU:
                 window = DebugWindow(self)
                 window.Show()
 
-            case self.ID_FORMAT_FACTORY_MENU:
+            case ID.FORMAT_FACTORY_MENU:
                 window = FormatFactoryWindow(self)
                 window.Show()
 
-            case self.ID_SETTINGS_MENU:
+            case ID.SETTINGS_MENU:
                 window = SettingWindow(self)
                 window.ShowModal()
 
-            case self.ID_CHECK_UPDATE_MENU:
+            case ID.CHECK_UPDATE_MENU:
                 Thread(target = self.utils.check_update).start()
 
-            case self.ID_CHANGELOG_MENU:
+            case ID.CHANGELOG_MENU:
                 Thread(target = self.utils.get_changelog).start()
 
-            case self.ID_HELP_MENU:
+            case ID.HELP_MENU:
                 webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
 
-            case self.ID_FEEDBACK_MENU:
+            case ID.FEEDBACK_MENU:
                 webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader/issues")
 
-            case self.ID_ABOUT_MENU:
+            case ID.ABOUT_MENU:
                 dlg = AboutWindow(self)
                 dlg.ShowModal()
 
-            case self.ID_EPISODE_SINGLE_MENU:
-                Config.Misc.episode_display_mode = EpisodeDisplayType.Single.value
+            case ID.EPISODE_SINGLE_MENU:
+                self.utils.set_episode_display_mode(EpisodeDisplayType.Single)
 
-                self.show_episode_list()
+            case ID.EPISODE_IN_SECTION_MENU:
+                self.utils.set_episode_display_mode(EpisodeDisplayType.In_Section)
 
-            case self.ID_EPISODE_IN_SECTION_MENU:
-                Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
-
-                self.show_episode_list()
-
-            case self.ID_EPISODE_ALL_SECTIONS_MENU:
-                Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
-
-                self.show_episode_list()
-
-            case self.ID_EPISODE_FULL_NAME_MENU:
-                Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
-
-                self.show_episode_list()
+            case ID.EPISODE_ALL_SECTIONS_MENU:
+                self.utils.set_episode_display_mode(EpisodeDisplayType.All)
+                
+            case ID.EPISODE_FULL_NAME_MENU:
+                self.utils.set_episode_full_name()
 
     def onCloseEVT(self, event):
-        pass
+        def show_exit_dialog():
+            dlg = wx.MessageDialog(self, "退出程序\n\n确定要退出程序吗？", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+            dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
+
+            return dlg.ShowModal()
+        
+        if ExitOption(Config.Basic.exit_option) in [ExitOption.Ask, ExitOption.AskOnce]:
+            flag = show_exit_dialog()
+
+            if flag == wx.ID_CANCEL:
+                return
+        
+            self.utils.save_exit_dialog_settings(flag)
+
+        self.utils.save_window_params_settings()
+
+        match ExitOption(Config.Basic.exit_option):
+            case ExitOption.TaskIcon:
+                self.Hide()
+                return
+            
+            case ExitOption.Exit:
+                self.clipboard_timer.Stop()
+                self.taskbar_icon.Destroy()
+
+                event.Skip()
 
     def onShowDownloadWindowEVT(self, event):
         if not self.download_window.IsShown():
@@ -513,13 +595,69 @@ class MainWindow(Frame):
 
         Thread(target = self.parser.parse_url, args = (url, )).start()
 
-    def onUpdateCheckedItemCount(self, count: int):
-        label = f"(共 {self.episode_list.count} 个{f"，已选择 {count} 个)" if count else ")"}"
+    def onShowEpisodeOptionMenuEVT(self, event):
+        menu = EpisodeOptionMenu()
 
-        self.type_lab.SetLabel(f"{self.parser.parse_type_str} {label}")
+        self.PopupMenu(menu)
 
-        self.panel.Layout()
+    def onShowUserMenuEVT(self, event):
+        if Config.User.login:
+            menu = UserMenu()
 
+            self.PopupMenu(menu)
+        else:
+            evt = wx.PyCommandEvent(wx.EVT_MENU, id = ID.LOGIN_MENU)
+            wx.PostEvent(self.GetEventHandler(), evt)
+
+    def onEpisodeListContextMenuEVT(self, event):
+        match event.GetId():
+            case ID.EPISODE_LIST_VIEW_COVER_MENU:
+                item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
+
+                if item_data.cover_url:
+                    Cover.view_cover(self, item_data.cover_url)
+                
+            case ID.EPISODE_LIST_COPY_TITLE_MENU:
+                ClipBoard.Write(self.utils.get_episode_title())
+
+            case ID.EPISODE_LIST_COPY_URL_MENU:
+                item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
+
+                url = Episode.Utils.get_share_url(item_data)
+
+                ClipBoard.Write(url)
+
+            case ID.EPISODE_LIST_EDIT_TITLE_MENU:
+                item = self.episode_list.GetSelection()
+
+                dlg = EditTitleDialog(self.utils.get_episode_title())
+
+                if dlg.ShowModal() == wx.ID_OK:
+                    self.utils.set_episode_title(item, dlg.title_box.GetValue())
+
+            case ID.EPISODE_LIST_CHECK_MENU:
+                self.episode_list.CheckCurrentItem()
+
+            case ID.EPISODE_LIST_COLLAPSE_MENU:
+                self.episode_list.CollapseCurrentItem()
+
+    def onShowGraphWindowEVT(self):
+        window = GraphWindow(self)
+        window.Show()
+
+    def onShowDetailInfoDialogEVT(self):
+        match self.parser.parse_type:
+            case ParseType.Live:
+                wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
+
+            case _:
+                dlg = DetailDialog(self, self.parser.parse_type)
+                dlg.ShowModal()
+
+    def onShowDownloadOptionDialogEVT(self, event):
+        dlg = DownloadOptionDialog(self)
+        return dlg.ShowModal()
+    
     def show_episode_list(self):
         self.parser.parse_episode()
 
@@ -528,7 +666,7 @@ class MainWindow(Frame):
         if Config.Misc.auto_check_episode_item or self.episode_list.count == 1:
             self.episode_list.CheckAllItems()
 
-        self.onUpdateCheckedItemCount(self.episode_list.GetCheckedItemCount())
+        self.utils.update_checked_item_count(self.episode_list.GetCheckedItemCount())
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):

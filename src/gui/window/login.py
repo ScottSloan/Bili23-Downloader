@@ -16,8 +16,10 @@ from gui.component.panel.panel import Panel
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
 class LoginWindow(Dialog):
-    def __init__(self, parent, callback: Callable):
-        self.callback = callback
+    def __init__(self, parent):
+        from gui.main_v3 import MainWindow
+
+        self.main_window: MainWindow = parent
 
         Dialog.__init__(self, parent, "登录")
         
@@ -88,7 +90,12 @@ class LoginWindow(Dialog):
         event.Skip()
 
     def onLoginSuccess(self):
-        wx.CallAfter(self.callback)
+        def worker():
+            self.main_window.init_menubar()
+
+            self.main_window.utils.show_user_info()
+
+        wx.CallAfter(worker)
         
         self.Close()
 

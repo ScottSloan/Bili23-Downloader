@@ -19,15 +19,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 case Platform.Linux | Platform.macOS:
                     return self.FromDIP((775, 350))
         
-        self.main_window = main_window
+        from gui.main_v3 import MainWindow
+
+        self.main_window: MainWindow = main_window
 
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
         self.SetSize(get_size())
 
         self.Bind_EVT()
-
-        self.init_id()
 
         self.init_episode_list()
 
@@ -37,14 +37,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.Bind(wx.dataview.EVT_TREELIST_ITEM_CONTEXT_MENU, self.onItemContextMenuEVT)
 
         self.Bind(wx.EVT_SIZE, self.onSizeEVT)
-
-    def init_id(self):
-        self.ID_EPISODE_LIST_VIEW_COVER_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_COPY_TITLE_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_COPY_URL_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_EDIT_TITLE_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_CHECK_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_COLLAPSE_MENU = wx.NewIdRef()
 
     def init_episode_list(self):
         self.ClearColumns()
@@ -115,7 +107,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self.main_window.onUpdateCheckedItemCount(self.GetCheckedItemCount())
+        self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
 
     def onItemContextMenuEVT(self, event):
         menu = wx.Menu()

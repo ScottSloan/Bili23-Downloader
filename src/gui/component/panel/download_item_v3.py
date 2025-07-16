@@ -14,7 +14,7 @@ from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
-from utils.module.cover import CoverUtils
+from utils.module.cover import Cover
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
@@ -255,9 +255,9 @@ class DownloadTaskItemPanel(Panel):
         if not self.cover_bmp.GetBitmap():
             size = wx.Size(self.FromDIP(112), self.FromDIP(63))
 
-            image = CoverUtils.crop_cover(CoverUtils.get_cover_raw_contents(self.task_info.cover_url))
+            image = Cover.crop_cover(Cover.get_cover_raw_contents(self.task_info.cover_url))
 
-            bitmap = CoverUtils.get_scaled_bitmap_from_image(image, size)
+            bitmap = Cover.get_scaled_bitmap_from_image(image, size)
 
             image: wx.Image = image.Scale(size.width, size.height, wx.IMAGE_QUALITY_HIGH)
 
@@ -269,7 +269,7 @@ class DownloadTaskItemPanel(Panel):
         event.Skip()
 
     def onViewCoverEVT(self, event):
-        CoverUtils.view_cover(self.download_window, self.task_info.cover_url)
+        Cover.view_cover(self.download_window, self.task_info.cover_url)
 
     def onViewErrorEVT(self, event):
         if self.error_info:

@@ -79,7 +79,7 @@ class SettingWindow(Dialog):
 
 class Tab(Panel):
     def __init__(self, parent):
-        from gui.main_v2 import MainWindow
+        from gui.main_v3 import MainWindow
 
         Panel.__init__(self, parent)
 

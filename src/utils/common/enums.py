@@ -140,6 +140,8 @@ class ProcessingType(Enum):
 class ExitOption(Enum):
     TaskIcon = 0                  # 托盘图标
     Exit = 1                      # 直接退出
+    Ask = 2                       # 每次询问
+    AskOnce = 3                   # 询问一次
 
 class SubtitleLanOption(Enum):
     All_Subtitles_With_AI = 0     # 下载全部字幕 + AI 字幕

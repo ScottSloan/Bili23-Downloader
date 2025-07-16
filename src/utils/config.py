@@ -23,7 +23,6 @@ app_config_group = {
         "window_pos",
         "window_size",
         "window_maximized",
-        "show_exit_dialog",
         "ass_style"
     ],
     "Download": [
@@ -117,7 +116,7 @@ class Config:
 
     class Basic:
         listen_clipboard: bool = True
-        exit_option: int = 0
+        exit_option: int = 3
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
         remember_window_status: bool = False
@@ -166,8 +165,6 @@ class Config:
         window_pos: list = []
         window_size: list = []
         window_maximized: bool = False
-
-        show_exit_dialog: bool = True
 
     class Proxy:
         proxy_mode: int = 1
