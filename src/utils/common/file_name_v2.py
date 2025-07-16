@@ -126,7 +126,4 @@ class FileNameFormatter:
     
     @staticmethod
     def removeprefix(path: str):
-        while path.startswith("\\"):
-            path = path.removeprefix("\\")
-
-        return path
+        return path.lstrip("\\/")

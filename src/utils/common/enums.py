@@ -132,7 +132,7 @@ class NumberType(Enum):
     Episode_List = 2              # 剧集列表序号
 
 class ProcessingType(Enum):
-    Normal = 1                    # 正常
+    Process = 1                   # 处理
     Parse = 2                     # 解析
     Interact = 3                  # 解析互动视频
 

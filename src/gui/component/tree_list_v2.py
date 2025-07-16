@@ -178,7 +178,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.Expand(item)
 
     def CheckAllItems(self):
-        self.CheckItemRecursively(self.GetRootItem(), wx.CHK_CHECKED)
+        self.CheckItemRecursively(self.GetFirstItem(), wx.CHK_CHECKED)
 
     def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int):
         self.download_task_info_list = []

@@ -260,6 +260,7 @@ class MainWindow(Frame):
                 self.clipboard_timer.Start(1000)
 
         self.download_window = DownloadManagerWindow(self)
+        self.processing_window = ProcessingWindow(self)
         
         self.current_parse_url = ""
         self.error_url_list = []
@@ -431,13 +432,11 @@ class MainWindow(Frame):
 
             return
                 
-        self.set_parse_status(ParseStatus.Parsing)
-
         self.episode_list.init_episode_list()
         
         Thread(target = self.parse_url_thread, args = (url, )).start()
 
-        self.processing_window.ShowModal()
+        self.set_parse_status(ParseStatus.Parsing)
 
     def onOpenDownloadMgrEVT(self, event):
         if not self.download_window.IsShown():
@@ -456,7 +455,6 @@ class MainWindow(Frame):
         match self.current_parse_type:
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 def callback():
-                    self.processing_window.Close()
                     self.onOpenDownloadMgrEVT(event)
 
                 if not self.episode_list.GetCheckedItemCount():
@@ -477,8 +475,7 @@ class MainWindow(Frame):
 
                 Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, callback, )).start()
 
-                self.processing_window = ProcessingWindow(self, ProcessingType.Normal)
-                self.processing_window.ShowModal()
+                self.processing_window.ShowModal(ProcessingType.Process)
 
             case ParseType.Live:
                 if LiveInfo.status == LiveStatus.Not_Started.value:
@@ -743,7 +740,7 @@ class MainWindow(Frame):
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onErrorCallback)
         
         if return_code == StatusCode.Success.value:
-            self.CallAfter(worker)
+            wx.CallAfter(worker)
     
     def show_episode_list(self):
         self.episode_list.show_episode_list()
@@ -765,7 +762,7 @@ class MainWindow(Frame):
 
         self.error_url_list.append(self.current_parse_url)
 
-        self.CallAfter(worker)
+        wx.CallAfter(worker)
 
     def onBangumiCallback(self, url: str):
         Thread(target = self.parse_url_thread, args = (url, )).start()
@@ -803,7 +800,7 @@ class MainWindow(Frame):
 
                 set_enable_status(False)
 
-                self.processing_window = ProcessingWindow(self, ProcessingType.Parse)
+                self.processing_window.ShowModal(ProcessingType.Parse)
             
             case ParseStatus.Finish:
                 self.processing_icon.Hide()
@@ -864,15 +861,7 @@ class MainWindow(Frame):
 
     def onInteractVideoCallback(self):
         def worker():
-            self.processing_window.change_type(ProcessingType.Interact)
-
-        wx.CallAfter(worker)
-
-    def CallAfter(self, func):
-        def worker():
-            self.processing_window.Close()
-
-            func()
+            self.processing_window.SetType(ProcessingType.Interact)
 
         wx.CallAfter(worker)
 
