@@ -95,8 +95,10 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
     def load_data(self, parent):
+        from gui.main_v3 import MainWindow
+
         self.parent: DownloadOptionDialog = parent
-        main_window = self.parent.GetParent()
+        main_window: MainWindow = self.parent.GetParent()
 
         self.video_quality_choice.Set(main_window.video_quality_desc_list)
         self.video_quality_choice.SetStringSelection(get_mapping_key_by_value(video_quality_map, main_window.video_quality_id))
@@ -107,7 +109,7 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Set(list(video_codec_preference_map.keys()))
         self.video_codec_choice.Select(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
-        self.preview = Preview(main_window.current_parse_type, main_window.stream_type)
+        self.preview = Preview(main_window.parser.parse_type, main_window.stream_type)
 
         self.onChangeVideoQualityEVT(0)
         self.onChangeAudioQualityEVT(0)

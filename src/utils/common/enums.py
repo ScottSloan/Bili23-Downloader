@@ -114,7 +114,7 @@ class Platform(Enum):
     macOS = "darwin"              # macOS
 
 class ParseStatus(Enum):
-    Finish = 0                    # 解析完成
+    Success = 0                   # 解析完成
     Parsing = 1                   # 解析中
     Error = 2                     # 解析失败
 
@@ -140,7 +140,7 @@ class ProcessingType(Enum):
 class ExitOption(Enum):
     TaskIcon = 0                  # 托盘图标
     Exit = 1                      # 直接退出
-    Ask = 2                       # 每次询问
+    Ask = 2                       # 总是询问
     AskOnce = 3                   # 询问一次
 
 class SubtitleLanOption(Enum):

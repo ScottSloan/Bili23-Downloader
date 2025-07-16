@@ -18,11 +18,19 @@ class ProcessingWindow(Dialog):
         self.processing_label = wx.StaticText(self, -1, "label")
         self.node_title_label = wx.StaticText(self, -1, "节点：--")
 
+        self.cancel_btn = wx.Button(self, -1, "取消", size = self.get_scaled_size((60, 24)))
+
+        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        btn_hbox.AddStretchSpacer()
+        btn_hbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        btn_hbox.AddStretchSpacer()
+
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.processing_label, 0, wx.ALL, self.FromDIP(6))
         vbox.Add(self.node_title_label, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        vbox.Add(btn_hbox, 0, wx.EXPAND)
 
-        self.SetSizerAndFit(vbox)
+        self.SetSizer(vbox)
 
     def onUpdateNode(self, title: str):
         def worker():
@@ -59,7 +67,7 @@ class ProcessingWindow(Dialog):
         self.processing_label.SetLabel(tip)
         self.node_title_label.Show(show)
 
-        self.GetSizer().Layout()
+        self.Layout()
         self.Fit()
         
         self.CenterOnParent()

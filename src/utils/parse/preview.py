@@ -92,6 +92,15 @@ class Preview:
 
     @classmethod
     def get_video_quality_id(cls, video_quality_id: int, data: list | dict):
+        def get_highest_video_quality_id():
+            highest_video_quality_id = 0
+
+            for entry in data["dash"]["video"]:
+                if entry["id"] > highest_video_quality_id:
+                    highest_video_quality_id = entry["id"]
+
+            return highest_video_quality_id
+        
         video_quality_id_list, video_quality_desc_list = cls.get_video_quality_id_desc_list(data)
 
         video_quality_id_list.remove(VideoQualityID._Auto.value)
@@ -99,7 +108,7 @@ class Preview:
         if video_quality_id in video_quality_id_list:
             return video_quality_id
         else:
-            return video_quality_id_list[0]
+            return get_highest_video_quality_id()
 
     @staticmethod
     def get_audio_quality_id(audio_quality_id: int, data: dict):
@@ -117,14 +126,8 @@ class Preview:
         def check_codec_id():
             match StreamType(stream_type):
                 case StreamType.Dash:
-                    codec_id_list = []
-
-                    for entry in data["dash"]["video"]:
-                        if entry["id"] == video_quality_id:
-                            codec_id_list.append(entry["codecid"])
-
-                    return codec_id_list
-                
+                    return [entry["codecid"] for entry in data["dash"]["video"] if entry["id"] == video_quality_id]
+                    
                 case StreamType.Flv:
                     return [VideoCodecID.AVC.value]
 

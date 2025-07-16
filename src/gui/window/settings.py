@@ -608,14 +608,14 @@ class FFmpegTab(Tab):
 
     def init_data(self):
         self.path_box.SetValue(Config.Merge.ffmpeg_path)
-        self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_lauch)
+        self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_launch)
         
         self.override_option_choice.SetSelection(Config.Merge.override_option)
         self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
 
     def save(self):
         Config.Merge.ffmpeg_path = self.path_box.GetValue()
-        Config.Merge.ffmpeg_check_available_when_lauch = self.check_ffmpeg_chk.GetValue()
+        Config.Merge.ffmpeg_check_available_when_launch = self.check_ffmpeg_chk.GetValue()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
@@ -904,7 +904,7 @@ class MiscTab(Tab):
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_check_episode_item)
         self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
-        self.check_update_chk.SetValue(Config.Misc.check_update_when_lauch)
+        self.check_update_chk.SetValue(Config.Misc.check_update_when_launch)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
 
     def save(self):
@@ -919,7 +919,7 @@ class MiscTab(Tab):
 
         Config.Misc.auto_check_episode_item = self.auto_select_chk.GetValue()
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
-        Config.Misc.check_update_when_lauch = self.check_update_chk.GetValue()
+        Config.Misc.check_update_when_launch = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
         # 重新创建主窗口的菜单

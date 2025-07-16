@@ -161,7 +161,8 @@ number_type_map = {
 
 exit_option_map = {
     "隐藏到托盘": 0,
-    "直接退出": 1
+    "直接退出": 1,
+    "总是询问": 2
 }
 
 scope_map = {

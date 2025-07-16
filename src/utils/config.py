@@ -52,7 +52,7 @@ app_config_group = {
     ],
     "Merge": [
         "ffmpeg_path",
-        "ffmpeg_check_available_when_lauch",
+        "ffmpeg_check_available_when_launch",
         "override_option",
         "keep_original_files",
     ],
@@ -69,7 +69,7 @@ app_config_group = {
         "show_episode_full_name",
         "auto_check_episode_item",
         "show_user_info",
-        "check_update_when_lauch",
+        "check_update_when_launch",
         "enable_debug"
     ],
 }
@@ -198,7 +198,7 @@ class Config:
         show_episode_full_name: bool = False
         auto_check_episode_item: bool = False
         enable_debug: bool = False
-        check_update_when_lauch: bool = True
+        check_update_when_launch: bool = True
         show_user_info: bool = True
 
     class Download:
@@ -238,7 +238,7 @@ class Config:
     
     class Merge:
         ffmpeg_path: str = ""
-        ffmpeg_check_available_when_lauch: bool = True
+        ffmpeg_check_available_when_launch: bool = True
 
         override_option: int = 1
         keep_original_files: bool = False

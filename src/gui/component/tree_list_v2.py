@@ -9,6 +9,8 @@ from utils.common.download_info import DownloadInfo
 
 from utils.parse.episode_v2 import EpisodeInfo
 
+from gui.component.menu.episode_list import EpisodeListMenu
+
 class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent, main_window: wx.Window):
         def get_size():
@@ -110,32 +112,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
 
     def onItemContextMenuEVT(self, event):
-        menu = wx.Menu()
-
-        view_cover_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_VIEW_COVER_MENU, "查看封面(&V)")
-        copy_title_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COPY_TITLE_MENU, "复制标题(&C)")
-        copy_url_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COPY_URL_MENU, "复制链接(&U)")
-        edit_title_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_EDIT_TITLE_MENU, "修改标题(&E)")
-        check_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_CHECK_MENU, "取消选择(&N)" if self.GetCurrentItemCheckedState() else "选择(&S)")
-        collapse_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COLLAPSE_MENU, "展开(&X)" if self.GetCurrentItemCollapsedState() else "折叠(&O)")
-
-        if self.GetCurrentItemType() == "node":
-            view_cover_menuitem.Enable(False)
-            copy_title_menuitem.Enable(False)
-            copy_url_menuitem.Enable(False)
-            edit_title_menuitem.Enable(False)
-        else:
-            collapse_menuitem.Enable(False)
-
-        menu.Append(view_cover_menuitem)
-        menu.AppendSeparator()
-        menu.Append(copy_title_menuitem)
-        menu.Append(copy_url_menuitem)
-        menu.AppendSeparator()
-        menu.Append(edit_title_menuitem)
-        menu.AppendSeparator()
-        menu.Append(check_menuitem)
-        menu.Append(collapse_menuitem)
+        menu = EpisodeListMenu(self.GetCurrentItemType(), self.GetCurrentItemCheckedState(), self.GetCurrentItemCollapsedState())
 
         if self.GetSelection().IsOk():
             self.PopupMenu(menu)

@@ -4,8 +4,8 @@ import webbrowser
 from utils.config import Config, app_config_group
 from utils.auth.login import QRLogin
 from utils.common.regex import Regex
-from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption
-from utils.common.data_type import ParseCallback
+from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus
+from utils.common.data_type import ParseCallback, Callback
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.thread import Thread
 from utils.common.update import Update
@@ -14,6 +14,7 @@ from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.module.face import Face
 from utils.module.clipboard import ClipBoard
 from utils.module.cover import Cover
+from utils.module.ffmpeg_v2 import FFmpeg
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -100,13 +101,15 @@ class Parser:
             wx.CallAfter(self.parse_success)
     
     def parse_success(self):
+        self.main_window.utils.set_status(ParseStatus.Success)
+
+        self.parse_type_str = self.get_parse_type_str()
+
         self.main_window.show_episode_list()
 
         self.set_video_quality_id()
 
         self.set_stream_type()
-
-        self.parse_type_str = self.get_parse_type_str()
 
     def set_video_quality_id(self):
         data = Preview.get_download_json(self.parse_type)
@@ -151,6 +154,8 @@ class Parser:
 
     def onError(self):
         def worker():
+            self.main_window.utils.set_status(ParseStatus.Error)
+
             info = GlobalExceptionInfo.info.copy()
 
             dlg = wx.MessageDialog(self.main_window, f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
@@ -210,11 +215,18 @@ class Utils:
 
         if info:
             if info["version_code"] > Config.APP.version_code:
-                wx.CallAfter(show_update_dialog)
+                if info_bar:
+                    self.show_infobar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
+                else:
+                    wx.CallAfter(show_update_dialog)
             else:
-                self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
+                if not info_bar:
+                    self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
         else:
-            self.show_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", wx.ICON_ERROR)
+            if info_bar:
+                self.show_infobar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
+            else:
+                self.show_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", wx.ICON_ERROR)
 
     def get_changelog(self):
         def show_changelog_dialog():
@@ -331,6 +343,92 @@ class Utils:
 
             Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
 
+    def check_ffmpeg(self):
+        class FFmpegCallback(Callback):
+            @staticmethod
+            def onSuccess(*process):
+                pass
+            
+            @staticmethod
+            def onError(*process):
+                def worker():
+                    dlg = wx.MessageDialog(self.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+                    dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+
+                    if dlg.ShowModal() == wx.ID_YES:
+                        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+                    
+                wx.CallAfter(worker)
+
+        FFmpeg.Env.check_availability(FFmpegCallback)
+
+    def set_status(self, status: ParseStatus):
+        def update():
+            self.main_window.processing_icon.Show(processing_icon)
+            self.main_window.type_lab.SetLabel(type_lab)
+
+            self.main_window.detail_btn.Show(detail_btn)
+            self.main_window.graph_btn.Show(graph_btn)
+
+        def enable_controls(enable: bool):
+            self.main_window.url_box.Enable(enable)
+            self.main_window.get_btn.Enable(enable)
+            self.main_window.episode_list.Enable(enable)
+            self.main_window.download_btn.Enable(enable)
+            self.main_window.episode_option_btn.Enable(enable)
+            self.main_window.download_option_btn.Enable(enable)
+
+        def set_label():
+            match self.main_window.parser.parse_type:
+                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                    self.main_window.download_btn.SetLabel("开始下载")
+
+                case ParseType.Live:
+                    self.main_window.episode_option_btn.Enable(False)
+                    self.main_window.download_option_btn.Enable(False)
+                    self.main_window.download_btn.SetLabel("直播录制")
+
+        self.status = status
+
+        match status:
+            case ParseStatus.Parsing:
+                processing_icon = True
+                type_lab = "正在解析中"
+
+                detail_btn = False
+                graph_btn = False
+
+                enable_controls(False)
+
+                self.main_window.show_processing_window(ProcessingType.Parse)
+
+            case ParseStatus.Success:
+                processing_icon = False
+                type_lab = ""
+
+                detail_btn = True
+                graph_btn = VideoInfo.is_interactive
+
+                enable_controls(True)
+                set_label()
+
+                self.main_window.hide_processing_window()
+
+            case ParseStatus.Error:
+                processing_icon = False
+                type_lab = ""
+
+                detail_btn = False
+                graph_btn = False
+
+                enable_controls(False)
+
+                self.main_window.hide_processing_window()
+
+        update()
+
+        self.main_window.panel.Layout()
+
     def show_message_dialog(self, message: str, caption: str, style: int):
         def worker():
             dlg = wx.MessageDialog(self.main_window, message, caption, style)
@@ -338,8 +436,13 @@ class Utils:
 
         wx.CallAfter(worker)
 
+    def show_infobar_message(self, message: str, flag: int):
+        wx.CallAfter(self.main_window.infobar.ShowMessage, message, flag)
+
 class MainWindow(Frame):
     def __init__(self, parent):
+        self.utils = Utils(self)
+
         Frame.__init__(self, parent, Config.APP.name)
 
         self.set_window_params()
@@ -348,9 +451,9 @@ class MainWindow(Frame):
 
         self.init_UI()
 
-        self.init_utils()
-
         self.Bind_EVT()
+
+        self.init_utils()
 
     def init_UI(self):
         self.panel = Panel(self)
@@ -481,11 +584,29 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_TIMER, self.utils.read_clipboard, self.clipboard_timer)
 
     def init_utils(self):
-        self.utils = Utils(self)
+        def init_timer():
+            if Config.Basic.listen_clipboard:
+                self.clipboard_timer.Start(1000)
+
+        def start_thread():
+            FFmpeg.Env.detect()
+
+            if Config.Merge.ffmpeg_check_available_when_launch:
+                Thread(target = self.utils.check_ffmpeg).start()
+
+            if Config.Misc.check_update_when_launch:
+                Thread(target = self.utils.check_update, args = (True, )).start()
+
+            Thread(target = self.utils.show_user_info).start()
+
         self.parser = Parser(self)
 
         self.processing_window = ProcessingWindow(self)
         self.download_window = DownloadManagerWindow(self)
+
+        init_timer()
+
+        start_thread()
 
     def onMenuEVT(self, event):
         match event.GetId():
@@ -595,6 +716,8 @@ class MainWindow(Frame):
 
         Thread(target = self.parser.parse_url, args = (url, )).start()
 
+        self.utils.set_status(ParseStatus.Parsing)
+
     def onShowEpisodeOptionMenuEVT(self, event):
         menu = EpisodeOptionMenu()
 
@@ -606,7 +729,7 @@ class MainWindow(Frame):
 
             self.PopupMenu(menu)
         else:
-            evt = wx.PyCommandEvent(wx.EVT_MENU, id = ID.LOGIN_MENU)
+            evt = wx.PyCommandEvent(wx.EVT_MENU.typeId, id = ID.LOGIN_MENU)
             wx.PostEvent(self.GetEventHandler(), evt)
 
     def onEpisodeListContextMenuEVT(self, event):
@@ -709,3 +832,7 @@ class MainWindow(Frame):
     @property
     def video_quality_id(self):
         return self.parser.video_quality_id
+    
+    @property
+    def video_quality_desc_list(self):
+        return self.parser.video_quality_desc_list
