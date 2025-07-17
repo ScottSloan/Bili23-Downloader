@@ -11,6 +11,8 @@ class ProcessingWindow(Dialog):
         self.EnableCloseButton(False)
         
         self.init_UI()
+
+        self.Bind_EVT()
         
         self.CenterOnParent()
         
@@ -31,6 +33,12 @@ class ProcessingWindow(Dialog):
         vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
+
+    def Bind_EVT(self):
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCancelEVT)
+
+    def onCancelEVT(self, event):
+        pass
 
     def onUpdateNode(self, title: str):
         def worker():

@@ -1,5 +1,6 @@
 import wx
 import os
+from importlib.resources import files
 
 from utils.common.enums import Platform
 from utils.config import Config
@@ -35,16 +36,15 @@ class Webview:
         return backend
     
     def get_page(self, file: str):
-        def get_file_path(*paths):
-            return os.path.join(os.getcwd(), *paths)
-        
-        possible_paths = [get_file_path("src", "static", file), get_file_path("static", file)]
+        try:
+            return files("static").joinpath(file).read_text(encoding = "utf-8")
 
-        for path in possible_paths:
-            if os.path.exists(path):
-                with open(path, "r", encoding = "utf-8") as f:
-                    return f.read()
-                
-        wx.MessageDialog(self.parent, "文件不存在\n\nHTML 静态文件不存在，无法调用 Webview 显示。", "警告", wx.ICON_WARNING).ShowModal()
+        except FileNotFoundError:
+            dlg = wx.MessageDialog(self.parent, f"文件不存在\n\nHTML 静态文件 ({file}) 不存在，无法调用 Webview 进行显示。", "警告", wx.ICON_WARNING)
+
+        except Exception as e:
+            dlg = wx.MessageDialog(self.parent, "无法读取静态文件\n\n在读取静态文件时出错", "警告", wx.ICON_WARNING)
+
+        dlg.ShowModal()
 
         self.parent.Destroy()

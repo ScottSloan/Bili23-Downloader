@@ -4,7 +4,7 @@ import webbrowser
 from utils.config import Config, app_config_group
 from utils.auth.login import QRLogin
 from utils.common.regex import Regex
-from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus
+from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus, LiveStatus
 from utils.common.data_type import ParseCallback, Callback
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.thread import Thread
@@ -38,6 +38,8 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
+from gui.dialog.live import LiveRecordingDialog
+from gui.dialog.confirm.duplicate import DuplicateDialog
 
 from gui.window.graph import GraphWindow
 from gui.window.debug import DebugWindow
@@ -228,6 +230,19 @@ class Utils:
             else:
                 self.show_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", wx.ICON_ERROR)
 
+    def check_download_items(self):
+        if not self.main_window.episode_list.GetCheckedItemCount():
+            self.show_message_dialog("下载失败\n\n请选择要下载的项目。", "警告", wx.ICON_WARNING)
+            return True
+
+    def check_live_status(self):
+        if LiveInfo.status == LiveStatus.Not_Started.value:
+            self.show_message_dialog("直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING)
+            return True
+        
+        self.show_message_dialog("解析失败\n\n当前版本暂不支持直播链接解析，请等待后续版本支持", "警告", wx.ICON_WARNING)
+        return True
+
     def get_changelog(self):
         def show_changelog_dialog():
             dlg = ChangeLogDialog(self.main_window)
@@ -400,7 +415,7 @@ class Utils:
 
                 enable_controls(False)
 
-                self.main_window.show_processing_window(ProcessingType.Parse)
+                self.show_processing_window(ProcessingType.Parse)
 
             case ParseStatus.Success:
                 processing_icon = False
@@ -412,7 +427,7 @@ class Utils:
                 enable_controls(True)
                 set_label()
 
-                self.main_window.hide_processing_window()
+                self.hide_processing_window()
 
             case ParseStatus.Error:
                 processing_icon = False
@@ -423,7 +438,7 @@ class Utils:
 
                 enable_controls(False)
 
-                self.main_window.hide_processing_window()
+                self.hide_processing_window()
 
         update()
 
@@ -438,6 +453,12 @@ class Utils:
 
     def show_infobar_message(self, message: str, flag: int):
         wx.CallAfter(self.main_window.infobar.ShowMessage, message, flag)
+
+    def show_processing_window(self, type: ProcessingType):
+        wx.CallAfter(self.main_window.processing_window.ShowModal, type)
+
+    def hide_processing_window(self):
+        wx.CallAfter(self.main_window.processing_window.Close)
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -704,7 +725,44 @@ class MainWindow(Frame):
             self.download_window.Raise()
 
     def onDownloadEVT(self, event):
-        pass
+        def video():
+            def download_callback():
+                self.utils.hide_processing_window()
+                self.onShowDownloadWindowEVT(event)
+
+            self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.video_quality_id)
+
+            # 确认下载选项
+            if Config.Basic.auto_popup_option_dialog:
+                if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+                    return
+                
+            duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
+
+            if duplicate_episode_list:
+                if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
+                    return
+
+            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, download_callback, )).start()
+
+            self.processing_window.ShowModal(ProcessingType.Process)
+
+        def live():
+            if self.utils.check_live_status():
+                return
+            
+            dlg = LiveRecordingDialog(self)
+            dlg.ShowModal()
+
+        if self.utils.check_download_items():
+            return
+        
+        match self.parser.parse_type:
+            case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                video()
+
+            case ParseType.Live:
+                live()
 
     def onParseEVT(self, event):
         url = self.url_box.GetValue()
@@ -753,7 +811,7 @@ class MainWindow(Frame):
             case ID.EPISODE_LIST_EDIT_TITLE_MENU:
                 item = self.episode_list.GetSelection()
 
-                dlg = EditTitleDialog(self.utils.get_episode_title())
+                dlg = EditTitleDialog(self, self.utils.get_episode_title())
 
                 if dlg.ShowModal() == wx.ID_OK:
                     self.utils.set_episode_title(item, dlg.title_box.GetValue())
@@ -818,12 +876,6 @@ class MainWindow(Frame):
         for key in ["danmaku", "subtitle"]:
             if Config.Basic.ass_style.get(key).get("font_name") == "default":
                 Config.Basic.ass_style[key]["font_name"] = self.GetFont().GetFaceName()
-
-    def show_processing_window(self, type: ProcessingType):
-        wx.CallAfter(self.processing_window.ShowModal, type)
-
-    def hide_processing_window(self):
-        wx.CallAfter(self.processing_window.Close)
 
     @property
     def stream_type(self):

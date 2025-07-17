@@ -91,6 +91,7 @@ class VideoParser(Parser):
         aid = self.re_find_str(r"av([0-9]+)", url)
 
         bvid = self.aid_to_bvid(int(aid[0]))
+
         self.set_bvid(bvid)
 
     def get_bvid(self, url: str):

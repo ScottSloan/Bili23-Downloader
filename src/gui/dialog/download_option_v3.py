@@ -452,7 +452,7 @@ class OtherStaticBox(Panel):
 
 class DownloadOptionDialog(Dialog):
     def __init__(self, parent):
-        from gui.main_v2 import MainWindow
+        from gui.main_v3 import MainWindow
 
         self.parent: MainWindow = parent
 
