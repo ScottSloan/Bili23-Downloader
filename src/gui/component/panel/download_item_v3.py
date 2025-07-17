@@ -332,11 +332,17 @@ class DownloadTaskItemPanel(Panel):
                 self.onDownloadError()
 
         def video_audio_download_worker():
+            def update_task_info():
+                self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
+                self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
+
+                self.file_tool.update_info("task_info", self.task_info.to_dict())
+
             # 获取下载链接
             download_parser = DownloadParser(self.task_info, self.onDownloadError)
             downloader_info = download_parser.get_download_url()
 
-            self.file_tool.update_info("task_info", self.task_info.to_dict())
+            update_task_info()
 
             # 开始下载
             self.downloader.set_downloader_info(downloader_info)
@@ -404,7 +410,7 @@ class DownloadTaskItemPanel(Panel):
         ExtraParser.Utils.download(self.task_info, callback)
 
     def open_file_location(self):
-        path = os.path.join(FileNameFormatter.get_download_path(self.task_info), self.full_file_name)
+        path = os.path.join(self.task_info.download_path, self.full_file_name)
 
         DirectoryUtils.open_file_location(path)
 
@@ -595,9 +601,5 @@ class DownloadTaskItemPanel(Panel):
         self.file_tool.update_task_info_kwargs(**kwargs)
     
     @property
-    def out_file_name(self):
-        return FileNameFormatter.format_file_basename(self.task_info)
-
-    @property
     def full_file_name(self):
-        return FileNameFormatter.check_file_name_length(f"{self.out_file_name}.{self.task_info.output_type}")
+        return FileNameFormatter.check_file_name_length(f"{self.task_info.file_name}.{self.task_info.output_type}")

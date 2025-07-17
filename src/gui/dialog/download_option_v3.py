@@ -98,10 +98,10 @@ class MediaInfoPanel(Panel):
         from gui.main_v3 import MainWindow
 
         self.parent: DownloadOptionDialog = parent
-        main_window: MainWindow = self.parent.GetParent()
+        self.main_window: MainWindow = self.parent.GetParent()
 
-        self.video_quality_choice.Set(main_window.video_quality_desc_list)
-        self.video_quality_choice.SetStringSelection(get_mapping_key_by_value(video_quality_map, main_window.video_quality_id))
+        self.video_quality_choice.Set(self.main_window.video_quality_desc_list)
+        self.video_quality_choice.SetStringSelection(get_mapping_key_by_value(video_quality_map, self.main_window.video_quality_id))
 
         self.audio_quality_choice.Set(AudioInfo.audio_quality_desc_list)
         self.audio_quality_choice.SetStringSelection(get_mapping_key_by_value(audio_quality_map, AudioInfo.audio_quality_id))
@@ -109,15 +109,15 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Set(list(video_codec_preference_map.keys()))
         self.video_codec_choice.Select(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
-        self.preview = Preview(main_window.parser.parse_type, main_window.stream_type)
+        self.preview = Preview(self.main_window.parser.parse_type, self.main_window.stream_type)
 
         self.onChangeVideoQualityEVT(0)
         self.onChangeAudioQualityEVT(0)
 
     def save(self):
-        Config.Download.video_quality_id = self.video_quality_id
+        self.main_window.parser.video_quality_id = self.video_quality_id
         AudioInfo.audio_quality_id = self.audio_quality_id
-        Config.Download.video_codec_id = self.video_codec_id
+        self.main_window.parser.video_codec_id = self.video_codec_id
 
     def set_stream_type(self, stream_type: str):
         match StreamType(stream_type):

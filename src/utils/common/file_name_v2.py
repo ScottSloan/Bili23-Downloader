@@ -16,7 +16,9 @@ class FileNameFormatter:
 
         field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
 
-        return cls.removeprefix(cls.get_legal_file_name(template.format(**field_dict)))
+        file_name = template.format(**field_dict)
+
+        return cls.remove_slash(file_name)
     
     @classmethod
     def format_file_basename(cls, task_info: DownloadTaskInfo, template: str = None):
@@ -32,12 +34,12 @@ class FileNameFormatter:
 
         temp_path = cls.get_template(task_info).format(**field_dict)
 
-        path = os.path.dirname(os.path.join(task_info.download_path, cls.removeprefix(temp_path)))
+        path = os.path.dirname(os.path.join(task_info.download_base_path, cls.remove_slash(temp_path)))
 
         check_path(path)
 
         return path
-    
+
     @staticmethod
     def check_empty_field(field_dict: dict):
         for value in field_dict.values():
@@ -125,5 +127,5 @@ class FileNameFormatter:
         return re.sub(r'[:*?"<>|\\/]', "_", file_name)
     
     @staticmethod
-    def removeprefix(path: str):
-        return path.lstrip("\\/")
+    def remove_slash(path: str):
+        return path.lstrip("\\/").rstrip("\\/")

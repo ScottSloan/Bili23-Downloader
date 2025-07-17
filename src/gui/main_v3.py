@@ -120,6 +120,8 @@ class Parser:
 
         self.video_quality_id = Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else self.video_quality_id_list[1]
 
+        self.video_codec_id = Config.Download.video_codec_id
+
     def set_stream_type(self):
         match self.parse_type:
             case ParseType.Video:
@@ -730,13 +732,14 @@ class MainWindow(Frame):
                 self.utils.hide_processing_window()
                 self.onShowDownloadWindowEVT(event)
 
-            self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.video_quality_id)
-
             # 确认下载选项
             if Config.Basic.auto_popup_option_dialog:
                 if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
                     return
-                
+
+            self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
+            
+            # 确认重复下载项
             duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
 
             if duplicate_episode_list:

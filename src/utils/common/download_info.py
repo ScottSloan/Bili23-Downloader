@@ -12,13 +12,13 @@ from utils.parse.audio import AudioInfo
 
 class DownloadInfo:
     @classmethod
-    def get_download_info(cls, item_info: TreeListItemInfo, parse_type: ParseType, video_quality_id: int):
+    def get_download_info(cls, item_info: TreeListItemInfo, parse_type: ParseType, video_quality_id: int, video_codec_id: int):
         download_info_list = []
 
         info = cls.get_media_download_info(item_info, parse_type)
 
         if Config.Download.stream_download_option:
-            info = cls.get_download_params_info(info, video_quality_id)
+            info = cls.get_download_params_info(info, video_quality_id, video_codec_id)
 
             download_info_list.append(cls.get_task_info_obj(info))
 
@@ -41,7 +41,7 @@ class DownloadInfo:
             case ParseType.Cheese:
                 info = cls.get_cheese_download_info(item_info)
         
-        info["download_path"] = Config.Download.path
+        info["download_base_path"] = Config.Download.path
 
         return info
     
@@ -112,11 +112,11 @@ class DownloadInfo:
         }
     
     @staticmethod
-    def get_download_params_info(info: dict, video_quality_id: int):
+    def get_download_params_info(info: dict, video_quality_id: int, video_codec_id: int):
         info["download_option"] = Config.Download.stream_download_option
         info["video_quality_id"] = video_quality_id
         info["audio_quality_id"] = AudioInfo.audio_quality_id
-        info["video_codec_id"] = Config.Download.video_codec_id
+        info["video_codec_id"] = video_codec_id
         info["further_processing"] = True
         info["ffmpeg_merge"] = Config.Download.ffmpeg_merge
 

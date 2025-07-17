@@ -109,7 +109,7 @@ class Config:
         version_code: int = 1640
 
         task_file_min_version_code: int = 1640
-        app_config_file_min_version_code: int = 1630
+        app_config_file_min_version_code: int = 1640
         user_config_file_min_version_code: int = 1620
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")

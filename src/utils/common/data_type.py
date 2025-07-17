@@ -44,7 +44,11 @@ class DownloadTaskInfo:
         self.duration: int = 0
 
         # 下载目录
+        self.download_base_path: str = ""
+        # 完整下载目录
         self.download_path: str = ""
+        # 下载文件名
+        self.file_name: str = ""
         # 下载进度
         self.progress: int = 0
         # 总大小，单位字节
@@ -120,7 +124,9 @@ class DownloadTaskInfo:
 
             "duration": self.duration,
 
+            "download_base_path": self.download_base_path,
             "download_path": self.download_path,
+            "file_name": self.file_name,
             "progress": self.progress,
             "total_file_size": self.total_file_size,
             "total_downloaded_size": self.total_downloaded_size,
@@ -177,7 +183,9 @@ class DownloadTaskInfo:
 
         self.duration = data.get("duration", self.duration)
 
+        self.download_base_path = data.get("download_base_path", self.download_base_path)
         self.download_path = data.get("download_path", self.download_path)
+        self.file_name = data.get("file_name", self.file_name)
         self.progress = data.get("progress", self.progress)
         self.total_file_size = data.get("total_file_size", self.total_file_size)
         self.total_downloaded_size = data.get("total_downloaded_size", self.total_downloaded_size)

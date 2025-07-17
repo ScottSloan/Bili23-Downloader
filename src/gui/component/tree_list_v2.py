@@ -149,7 +149,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     def CheckAllItems(self):
         self.CheckItemRecursively(self.GetFirstItem(), wx.CHK_CHECKED)
 
-    def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int):
+    def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int, video_codec_id: int):
         self.download_task_info_list = []
 
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
@@ -162,7 +162,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     item_data = self.GetItemData(item)
 
                     if item_data.cid:
-                        self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id))
+                        self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id, video_codec_id))
 
     def GetCurrentItemType(self):
         item = self.GetSelection()
