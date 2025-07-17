@@ -137,6 +137,10 @@ class DownloadInfo:
             "cover_file_type": Config.Basic.cover_file_type
         }
 
+        if Config.Temp.ass_resolution_confirm and Config.Temp.ass_custom_resolution:
+            info["video_width"] = Config.Temp.ass_video_width
+            info["video_height"] = Config.Temp.ass_video_height
+
         return info
     
     @staticmethod

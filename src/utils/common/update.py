@@ -13,7 +13,6 @@ class Update:
             return json.loads(req.text)
         
         except Exception as e:
-            raise e
             return None
     
     @staticmethod

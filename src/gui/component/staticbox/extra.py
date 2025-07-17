@@ -9,6 +9,8 @@ from gui.dialog.setting.custom_ass_style import CustomASSStyleDialog
 
 from gui.component.panel.panel import Panel
 
+from gui.component.tooltip import ToolTip
+
 class ExtraStaticBox(Panel):
     def __init__(self, parent, show_more = True):
         self.show_more = show_more
@@ -25,22 +27,34 @@ class ExtraStaticBox(Panel):
         self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
         self.danmaku_file_type_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
         self.danmaku_file_type_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
+        danmaku_tooltip = ToolTip(extra_box)
+        danmaku_tooltip.set_tooltip("ASS 格式弹幕支持自定义样式，请在设置窗口中进行修改\n\n找不到设置窗口的，请仔细阅读程序使用说明")
+        danmaku_tooltip.Show(not self.show_more)
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(self.FromDIP(20))
         danmaku_hbox.Add(self.danmaku_file_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         danmaku_hbox.Add(self.danmaku_file_type_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        danmaku_hbox.Add(danmaku_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
         self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
+        subtitle_tooltip = ToolTip(extra_box)
+        subtitle_tooltip.set_tooltip("ASS 格式字幕支持自定义样式，请在设置窗口中进行修改\n\n找不到设置窗口的，请仔细阅读程序使用说明")
+        subtitle_tooltip.Show(not self.show_more)
+
+        subtitle_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        subtitle_type_hbox.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        subtitle_type_hbox.Add(subtitle_tooltip, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
         self.subtitle_file_lan_type_lab = wx.StaticText(extra_box, -1, "字幕语言")
         self.subtitle_file_lan_type_btn = wx.Button(extra_box, -1, "自定义")
 
         subtitle_grid_box = wx.FlexGridSizer(2, 4, 0, 0)
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
         subtitle_grid_box.Add(self.subtitle_file_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        subtitle_grid_box.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+        subtitle_grid_box.Add(subtitle_type_hbox, 0, wx.EXPAND)
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
         subtitle_grid_box.AddSpacer(self.FromDIP(20))
         subtitle_grid_box.Add(self.subtitle_file_lan_type_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))

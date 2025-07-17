@@ -79,7 +79,7 @@ class ExtraParser:
 
             resolution = ExtraParser.Utils.get_video_resolution(task_info)
 
-            danmaku = Danmaku(resolution.get("width"), resolution.get("height"))
+            danmaku = Danmaku(resolution)
 
             dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
             style = danmaku.get_ass_style()
@@ -317,9 +317,12 @@ class ExtraParser:
 
         @staticmethod
         def get_video_resolution(task_info: DownloadTaskInfo):
-            data = DownloadParser.get_download_stream_json(task_info)
+            if task_info.video_width:
+                width, height = task_info.video_width, task_info.video_height
+            else:
+                data = DownloadParser.get_download_stream_json(task_info)
 
-            width, height = Preview.get_video_resolution(task_info, data["video"])
+                width, height = Preview.get_video_resolution(task_info, data)
 
             return {
                 "width": width,

@@ -142,7 +142,7 @@ class Preview:
     def get_video_resolution(cls, task_info: DownloadTaskInfo, data: list):
         video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, data)
 
-        for entry in data:
+        for entry in data["dash"]["video"]:
             if entry["id"] == video_quality_id:
                 return entry["width"], entry["height"]
 

@@ -332,12 +332,6 @@ class DownloadTaskItemPanel(Panel):
                 self.onDownloadError()
 
         def video_audio_download_worker():
-            def update_task_info():
-                self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
-                self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
-
-                self.file_tool.update_info("task_info", self.task_info.to_dict())
-
             # 获取下载链接
             download_parser = DownloadParser(self.task_info, self.onDownloadError)
             downloader_info = download_parser.get_download_url()
@@ -349,6 +343,12 @@ class DownloadTaskItemPanel(Panel):
 
             self.downloader.start_download()
 
+        def update_task_info():
+            self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
+            self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
+
+            self.file_tool.update_info("task_info", self.task_info.to_dict())
+    
         self.downloader = Downloader(self.task_info, self.file_tool, callback)
 
         match ParseType(self.task_info.download_type):
@@ -359,6 +359,8 @@ class DownloadTaskItemPanel(Panel):
 
             case ParseType.Extra:
                 self.set_download_status(DownloadStatus.Generating.value)
+
+                update_task_info()
 
                 target = self.download_extra
 

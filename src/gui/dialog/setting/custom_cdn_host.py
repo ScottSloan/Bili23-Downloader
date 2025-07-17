@@ -113,7 +113,7 @@ class CustomCDNDialog(Dialog):
 
     def onAddEVT(self, event):
         if not self.custom_box.GetValue():
-            wx.MessageDialog(self, "添加失败\n\n请输入要添加的 CDN", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, "添加失败\n\n请输入要添加的 CDN 节点", "警告", wx.ICON_WARNING).ShowModal()
             self.custom_box.SetFocus()
             return
 

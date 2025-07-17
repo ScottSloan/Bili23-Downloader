@@ -738,7 +738,7 @@ class MainWindow(Frame):
                     return
 
             self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
-            
+
             # 确认重复下载项
             duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
 

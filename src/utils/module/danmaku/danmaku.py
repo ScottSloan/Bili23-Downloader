@@ -7,9 +7,9 @@ from utils.common.formatter import FormatUtils
 from utils.common.color import Color
 
 class Danmaku:
-    def __init__(self, width: int, height: int):
-        self.width = width
-        self.height = height
+    def __init__(self, resolution: dict):
+        self.width = resolution.get("width")
+        self.height = resolution.get("height")
 
         danmaku = Config.Basic.ass_style.get("danmaku")
 

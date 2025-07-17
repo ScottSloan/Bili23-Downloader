@@ -254,6 +254,14 @@ class Config:
 
         ass_style: Dict[str, Dict] = {}
 
+        ass_resolution_confirm: bool = False
+
+        ass_custom_resolution: bool = False
+        ass_video_width: int = 1920
+        ass_video_height: int = 1080
+
+        remember_resolution_settings: bool = False
+
     class Auth:
         img_key: str = ""
         sub_key: str = ""

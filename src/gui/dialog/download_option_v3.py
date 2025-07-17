@@ -13,8 +13,9 @@ from utils.parse.audio import AudioInfo
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
-from gui.component.staticbox.extra import ExtraStaticBox
+from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
 
+from gui.component.staticbox.extra import ExtraStaticBox
 from gui.component.info_label import InfoLabel
 from gui.component.tooltip import ToolTip
 
@@ -31,13 +32,23 @@ class MediaInfoPanel(Panel):
 
         stream_lab = wx.StaticText(self, -1, "当前视频类型：")
         self.stream_type_lab = wx.StaticText(self, -1)
+        stream_type_tooltip = ToolTip(self)
+        stream_type_tooltip.set_tooltip("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质")
 
         stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         stream_type_hbox.Add(stream_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         stream_type_hbox.Add(self.stream_type_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        stream_type_hbox.Add(stream_type_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = wx.Choice(self, -1)
+        video_quality_tooltip = ToolTip(self)
+        video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
+        
+        video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        video_quality_hbox.Add(video_quality_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
         self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_quality_warn_icon.Hide()
         self.video_quality_warn_icon.SetToolTip("当前所选的清晰度与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
@@ -71,7 +82,7 @@ class MediaInfoPanel(Panel):
 
         flex_grid_box = wx.FlexGridSizer(6, 2, 0, 0)
         flex_grid_box.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        flex_grid_box.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        flex_grid_box.Add(video_quality_hbox, 0, wx.EXPAND)
         flex_grid_box.AddStretchSpacer()
         flex_grid_box.Add(video_quality_info_hbox, 0, wx.EXPAND)
         flex_grid_box.Add(self.audio_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -519,6 +530,17 @@ class DownloadOptionDialog(Dialog):
 
         load_download_option()
 
+    def check_ass_only(self):
+        Config.Temp.ass_resolution_confirm = not self.media_option_box.download_video_steam_chk.GetValue() and (self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" or self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass")
+
+        if Config.Temp.ass_resolution_confirm and not Config.Temp.remember_resolution_settings:
+            dlg = RequireVideoResolutionDialog(self, self.media_info_box.video_quality_choice.GetItems(), self.media_info_box.video_quality_choice.GetStringSelection())
+            
+            if dlg.ShowModal() == wx.ID_OK:
+                self.media_info_box.video_quality_choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())
+            else:
+                return True
+
     def onOKEVT(self):
         self.media_info_box.save()
 
@@ -531,3 +553,5 @@ class DownloadOptionDialog(Dialog):
         self.other_box.save()
 
         Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+        return self.check_ass_only()
