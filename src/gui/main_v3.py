@@ -62,11 +62,14 @@ from gui.component.menu.user import UserMenu
 class Parser:
     def __init__(self, parent: wx.Window):
         self.main_window: MainWindow = parent
+        self.url = None
 
     def init_utils(self):
         self.parse_type: ParseType = None
 
     def parse_url(self, url: str):
+        self.url = url
+
         match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
             case "cheese":
                 self.set_parse_type(ParseType.Cheese)
@@ -96,7 +99,7 @@ class Parser:
 
             case _:
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
-        
+    
         rtnVal = self.parser.parse_url(url)
 
         if StatusCode(rtnVal) == StatusCode.Success:
@@ -171,7 +174,7 @@ class Parser:
 
         wx.CallAfter(worker)
 
-    def onBangumi(self, url: str):
+    def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, )).start()
 
     def onInteractVideo(self):
@@ -188,8 +191,8 @@ class Parser:
                 self.onError()
             
             @staticmethod
-            def onBangumi(url: str):
-                self.onBangumi(url)
+            def onJump(url: str):
+                self.onJump(url)
 
             @staticmethod
             def onInteractVideo():
@@ -204,6 +207,7 @@ class Parser:
 class Utils:
     def __init__(self, parent: wx.Window):
         self.main_window: MainWindow = parent
+        self.status = ParseStatus.Success
 
     def check_url(self, url: str):
         if not url:
@@ -244,6 +248,11 @@ class Utils:
         
         self.show_message_dialog("解析失败\n\n当前版本暂不支持直播链接解析，请等待后续版本支持", "警告", wx.ICON_WARNING)
         return True
+
+    def check_parse_status(self):
+        if self.main_window.IsShown():
+            if self.status != ParseStatus.Parsing:
+                return True
 
     def get_changelog(self):
         def show_changelog_dialog():
@@ -319,10 +328,11 @@ class Utils:
     def read_clipboard(self, event):
         url: str = ClipBoard.Read()
 
-        if url and self.validate_url(url):
-            self.main_window.url_box.SetValue(url)
+        if url and url != self.main_window.parser.url:
+            if self.validate_url(url) and self.check_parse_status():
+                self.main_window.url_box.SetValue(url)
 
-            wx.CallAfter(self.main_window.onParseEVT, event)
+                wx.CallAfter(self.main_window.onParseEVT, event)
 
     def validate_url(self, url: str):
         if url.startswith(("http", "https")) and "bilibili.com" in url:
@@ -387,13 +397,13 @@ class Utils:
             self.main_window.detail_btn.Show(detail_btn)
             self.main_window.graph_btn.Show(graph_btn)
 
-        def enable_controls(enable: bool):
+        def enable_controls(enable: bool, option_enable: bool = True):
             self.main_window.url_box.Enable(enable)
             self.main_window.get_btn.Enable(enable)
             self.main_window.episode_list.Enable(enable)
             self.main_window.download_btn.Enable(enable)
-            self.main_window.episode_option_btn.Enable(enable)
-            self.main_window.download_option_btn.Enable(enable)
+            self.main_window.episode_option_btn.Enable(enable and option_enable)
+            self.main_window.download_option_btn.Enable(enable and option_enable)
 
         def set_label():
             match self.main_window.parser.parse_type:
@@ -438,7 +448,7 @@ class Utils:
                 detail_btn = False
                 graph_btn = False
 
-                enable_controls(False)
+                enable_controls(True, option_enable = False)
 
                 self.hide_processing_window()
 

@@ -541,13 +541,14 @@ class DownloadOptionDialog(Dialog):
         load_download_option()
 
     def check_ass_only(self):
-        Config.Temp.ass_resolution_confirm = not self.media_option_box.download_video_steam_chk.GetValue() and (self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" or self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass")
-        
+        not_dash = StreamType(self.parent.stream_type) != StreamType.Dash
+        Config.Temp.ass_resolution_confirm = (not self.media_option_box.download_video_steam_chk.GetValue() or not_dash) and (self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" or self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass")
+
         video_quality_desc_list = self.media_info_box.video_quality_choice.GetItems()
         video_quality_desc = self.media_info_box.video_quality_choice.GetStringSelection()
 
         if Config.Temp.ass_resolution_confirm and not Config.Temp.remember_resolution_settings:
-            dlg = RequireVideoResolutionDialog(self, video_quality_desc_list, video_quality_desc)
+            dlg = RequireVideoResolutionDialog(self, video_quality_desc_list, video_quality_desc, not_dash)
             
             if dlg.ShowModal() == wx.ID_OK:
                 self.media_info_box.video_quality_choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())

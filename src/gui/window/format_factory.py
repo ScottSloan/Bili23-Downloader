@@ -105,8 +105,12 @@ class DropFilePage(Panel):
         self.SetDropTarget(file_drop_target)
 
     def Bind_EVT(self):
+        self.Bind(wx.EVT_SIZE, self.onSizeEVT)
         self.Bind(wx.EVT_PAINT, self.onPaintEVT)
         self.Bind(wx.EVT_LEFT_DOWN, self.onBrowseFileEVT)
+
+    def onSizeEVT(self, event):
+        self.Refresh()
 
     def onPaintEVT(self, event):
         dc = wx.PaintDC(self)

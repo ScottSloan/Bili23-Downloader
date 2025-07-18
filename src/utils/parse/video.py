@@ -105,7 +105,7 @@ class VideoParser(Parser):
         info = resp["data"]
 
         if "redirect_url" in info:
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (info["redirect_url"], ))
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (info["redirect_url"], ))
 
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]

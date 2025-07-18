@@ -19,4 +19,4 @@ class B23Parser(Parser):
     def parse_worker(self, url: str):
         new_url = self.get_redirect_url(url)
 
-        raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (new_url, ))
+        raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (new_url, ))

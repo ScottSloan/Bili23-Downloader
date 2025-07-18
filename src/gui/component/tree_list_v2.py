@@ -138,6 +138,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.UpdateItemParentStateRecursively(item)
 
+        self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
+
     def CollapseCurrentItem(self):
         item = self.GetSelection()
 

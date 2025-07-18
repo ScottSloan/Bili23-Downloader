@@ -71,4 +71,4 @@ class ActivityParser(Parser):
 
                 self.get_real_url(initial_state)
 
-        raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onBangumi, args = (ActivityInfo.url, ))
+        raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (ActivityInfo.url, ))

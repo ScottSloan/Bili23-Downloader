@@ -422,7 +422,7 @@ class ParseCallback(ABC):
     
     @staticmethod
     @abstractmethod
-    def onBangumi(url: str):
+    def onJump(url: str):
         pass
     
     @staticmethod
