@@ -47,8 +47,9 @@ class CoverType(Enum):
     AVIF = 3                      # avif 格式
 
 class StreamType(Enum):
-    Dash = 0                      # dash 流
-    Flv = 1                       # flv 流
+    Dash = "DASH"                 # dash 流
+    Flv = "FLV"                   # flv 流
+    Mp4 = "MP4"                   # mp4 流
 
 class DownloadStatus(Enum):
     Waiting = 0                   # 等待下载

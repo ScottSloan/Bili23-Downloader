@@ -1,7 +1,6 @@
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
-from utils.common.enums import StatusCode, StreamType
+from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
@@ -122,15 +121,9 @@ class CheeseParser(Parser):
         CheeseInfo.download_json = resp["data"].copy()
 
         if not qn:
-            if "dash" in CheeseInfo.download_json:
-                AudioInfo.get_audio_quality_list(CheeseInfo.download_json["dash"])
+            CheeseInfo.stream_type = CheeseInfo.download_json.get("type")
 
-                CheeseInfo.stream_type = StreamType.Dash.value
-
-            elif "durl" in CheeseInfo.download_json:
-                AudioInfo.get_audio_quality_list({})
-
-                CheeseInfo.stream_type = StreamType.Flv.value
+            AudioInfo.get_audio_quality_list(CheeseInfo.download_json.get("dash", {}))
 
     def parse_worker(self, url: str):
         self.clear_cheese_info()

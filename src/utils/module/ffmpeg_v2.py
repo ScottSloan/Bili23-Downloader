@@ -65,6 +65,17 @@ class FFmpeg:
             return command.format()
 
         @staticmethod
+        def get_merge_mp4_command(task_info: DownloadTaskInfo):
+            command = Command()
+
+            mp4_temp_file = FFmpeg.Prop.mp4_video_temp_file(task_info)
+            full_file_name = FFmpeg.Prop.full_file_name(task_info)
+
+            command.add(FFmpeg.Command.get_rename_command(mp4_temp_file, full_file_name))
+
+            return command.format()
+
+        @staticmethod
         def get_merge_video_and_audio_command(task_info: DownloadTaskInfo):
             command = Command()
 
@@ -315,6 +326,9 @@ class FFmpeg:
                 case StreamType.Flv:
                     command = FFmpeg.Command.get_merge_flv_command(task_info)
 
+                case StreamType.Mp4:
+                    command = FFmpeg.Command.get_merge_mp4_command(task_info)
+
             cls.check_file_existance(FFmpeg.Prop.full_file_path(task_info), callback)
 
             FFmpeg.Command.run(command, callback, cwd = task_info.download_path)
@@ -428,6 +442,9 @@ class FFmpeg:
                     temp_files.append(FFmpeg.Prop.flv_video_temp_file(task_info))
                     temp_files.extend([os.path.join(task_info.download_path, f"flv_{task_info.id}_part{i + 1}") for i in range(task_info.flv_video_count)])
 
+                def mp4():
+                    temp_files.append(FFmpeg.Prop.mp4_video_temp_file(task_info))
+
                 temp_files = []
 
                 match StreamType(task_info.stream_type):
@@ -439,6 +456,9 @@ class FFmpeg:
 
                     case StreamType.Flv:
                         flv()
+
+                    case StreamType.Mp4:
+                        mp4()
 
                 UniversalTool.remove_files(temp_files)
 
@@ -516,6 +536,10 @@ class FFmpeg:
         @staticmethod
         def flv_list_file(task_info: DownloadTaskInfo):
             return f"flv_list_{task_info.id}.txt"
+        
+        @staticmethod
+        def mp4_video_temp_file(task_info: DownloadTaskInfo):
+            return f"video_{task_info.id}.mp4"
 
         @staticmethod
         def output_file_name(task_info: DownloadTaskInfo):

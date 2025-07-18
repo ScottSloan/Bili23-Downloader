@@ -24,11 +24,7 @@ class DownloadParser(Parser):
     @classmethod
     def get_download_stream_json(cls, task_info: DownloadTaskInfo):
         def check_stream_type(data: dict):
-            if "dash" in data:
-                task_info.stream_type = StreamType.Dash.value
-                
-            elif "durl" in data:
-                task_info.stream_type = StreamType.Flv.value
+            task_info.stream_type = data.get("type")
 
             return data
 
@@ -46,27 +42,45 @@ class DownloadParser(Parser):
             req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
-            cls.check_json(cls, data)
+            cls.check_json(data)
 
             return check_stream_type(data["data"])
 
         def get_bangumi_json():
-            url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={task_info.bvid}&cid={task_info.cid}&qn={task_info.video_quality_id}&fnver=0&fnval=12240&fourk=1"
+            params = {
+                "bvid": task_info.bvid,
+                "cid": task_info.cid,
+                "qn": task_info.video_quality_id,
+                "fnver": 0,
+                "fnval": 12240,
+                "fourk": 1
+            }
+
+            url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
             req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
-            cls.check_json(cls, data)
+            cls.check_json(data)
 
             return check_stream_type(data["result"])
 
         def get_cheese_json():
-            url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={task_info.aid}&ep_id={task_info.ep_id}&cid={task_info.cid}&fnver=0&fnval=4048&fourk=1"
+            params = {
+                "avid": task_info.aid,
+                "ep_id": task_info.ep_id,
+                "cid": task_info.cid,
+                "fnver": 0,
+                "fnval": 4048,
+                "fourk": 1
+            }
+
+            url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
             req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
             data = json.loads(req.text)
 
-            cls.check_json(cls, data)
+            cls.check_json(data)
 
             return check_stream_type(data["data"])
 
@@ -81,11 +95,15 @@ class DownloadParser(Parser):
                 return get_cheese_json()
 
     def parse_download_stream_json(self, data: dict):
-        if self.task_info.stream_type == StreamType.Dash.value:
-            downloader_info = self.parse_dash_json(data)
+        match StreamType(self.task_info.stream_type):
+            case StreamType.Dash:
+                downloader_info = self.parse_dash_json(data)
 
-        else:
-            downloader_info = self.parse_flv_json(data)
+            case StreamType.Flv:
+                downloader_info = self.parse_flv_json(data)
+
+            case StreamType.Mp4:
+                downloader_info = self.parse_mp4_json(data)
 
         if None in downloader_info:
             downloader_info.remove(None)
@@ -138,6 +156,16 @@ class DownloadParser(Parser):
 
         return self.parse_flv_stream(data)
 
+    def parse_mp4_json(self, data: dict):
+        def get_mp4_info():
+            self.task_info.audio_quality_id = AudioQualityID._None.value
+            self.task_info.download_option = ["video"]
+            self.task_info.download_items = ["video"]
+
+        get_mp4_info()
+
+        return self.parse_mp4_stream(data)
+
     def parse_video_stream(self, data: list):
         def get_video_downloader_info(entry: dict):
             info = DownloaderInfo()
@@ -178,15 +206,6 @@ class DownloadParser(Parser):
                 return get_audio_downloader_info(entry)
     
     def parse_flv_stream(self, data: dict):
-        def get_flv_quality_id():
-            highest_video_quality_id = data["accept_quality"][0]
-
-            if self.task_info.video_quality_id == VideoQualityID._Auto.value:
-                self.task_info.video_quality_id = highest_video_quality_id
-
-            elif highest_video_quality_id < self.task_info.video_quality_id:
-                self.task_info.video_quality_id = highest_video_quality_id
-        
         def get_flv_downloader_info(index: int):
             if url_list:
                 info = DownloaderInfo()
@@ -204,9 +223,9 @@ class DownloadParser(Parser):
 
         self.task_info.video_type = "flv"
         self.task_info.output_type = "flv"
-        self.task_info.video_codec_id = VideoCodecID.AVC.value
 
-        get_flv_quality_id()
+        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
+        self.task_info.video_codec_id = VideoCodecID.AVC.value
 
         downloader_info = []
 
@@ -215,6 +234,34 @@ class DownloadParser(Parser):
                 url_list = Preview.get_stream_download_url_list(entry)
 
                 downloader_info.append(get_flv_downloader_info(index + 1))
+
+        return downloader_info
+
+    def parse_mp4_stream(self, data: dict):
+        def get_mp4_downloader_info():
+            if url_list:
+                info = DownloaderInfo()
+                info.url_list = url_list
+                info.type = "video"
+                info.file_name = f"video_{self.task_info.id}.mp4"
+
+                return info.to_dict()
+            else:
+                return None
+
+        self.task_info.video_type = "mp4"
+        self.task_info.output_type = "mp4"
+
+        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
+        self.task_info.video_codec_id = VideoCodecID.AVC.value
+
+        downloader_info = []
+
+        for entry in data["durls"]:
+            if entry["quality"] == self.task_info.video_quality_id:
+                url_list = Preview.get_stream_download_url_list(entry["durl"][0])
+
+                downloader_info.append(get_mp4_downloader_info())
 
         return downloader_info
 

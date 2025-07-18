@@ -6,7 +6,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 
-from utils.common.enums import EpisodeDisplayType, StatusCode, StreamType
+from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
@@ -29,8 +29,6 @@ class VideoInfo:
     stream_type: int = 0
 
     is_interactive: bool = False
-
-    pages_list: list = []
 
     pubtime: int = 0
     zone: str = ""
@@ -63,7 +61,6 @@ class VideoInfo:
         cls.is_interactive = False
 
         cls.tag_list.clear()
-        cls.pages_list.clear()
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -113,7 +110,6 @@ class VideoParser(Parser):
         VideoInfo.title = info["title"]
         VideoInfo.cover = info["pic"]
         VideoInfo.aid = info["aid"]
-        VideoInfo.pages_list = info["pages"]
 
         VideoInfo.desc = info["desc"]
         VideoInfo.views = FormatUtils.format_data_quantity(info["stat"]["view"])
@@ -126,15 +122,6 @@ class VideoParser(Parser):
         VideoInfo.up_mid = info["owner"]["mid"]
 
         VideoInfo.is_interactive = "stein_guide_cid" in info
-
-        # 当解析单个视频时，取 pages 中的 cid，使得清晰度和音质识别更加准确
-        if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
-            if hasattr(self, "part_num"):
-                VideoInfo.cid = VideoInfo.pages_list[self.part_num - 1]["cid"]
-            else:
-                VideoInfo.cid = info["pages"][0]["cid"]
-        else:
-            VideoInfo.cid = info["cid"]
 
         VideoInfo.info_json = info.copy()
 
@@ -181,15 +168,9 @@ class VideoParser(Parser):
         VideoInfo.download_json = resp["data"].copy()
 
         if not qn:
-            if "dash" in VideoInfo.download_json:
-                AudioInfo.get_audio_quality_list(VideoInfo.download_json["dash"])
+            VideoInfo.stream_type = VideoInfo.download_json.get("type")
 
-                VideoInfo.stream_type = StreamType.Dash.value
-                
-            elif "durl" in VideoInfo.download_json:
-                AudioInfo.get_audio_quality_list({})
-
-                VideoInfo.stream_type = StreamType.Flv.value
+            AudioInfo.get_audio_quality_list(VideoInfo.download_json.get("dash", {}))
 
     def parse_worker(self, url: str):
         # 先检查是否为分 P 视频

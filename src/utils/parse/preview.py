@@ -66,8 +66,18 @@ class Preview:
                     return {
                         "id": video_quality_id,
                         "codec": video_codec_id,
+                        "seg": len(data["durl"]),
                         "size": size
                     }
+                
+                case StreamType.Mp4:
+                    for entry in data["durls"]:
+                        if entry["quality"] == video_quality_id:
+                            return {
+                                "id": video_quality_id,
+                                "codec": video_codec_id,
+                                "size": entry["durl"][0]["size"]
+                            }
 
         if flv_query:
             self.refresh_download_json(video_quality_id)
@@ -136,7 +146,7 @@ class Preview:
                 case StreamType.Dash:
                     return [entry["codecid"] for entry in data["dash"]["video"] if entry["id"] == video_quality_id]
                     
-                case StreamType.Flv:
+                case StreamType.Flv | StreamType.Mp4:
                     return [VideoCodecID.AVC.value]
 
         codec_id_list = check_codec_id()
@@ -150,9 +160,17 @@ class Preview:
     def get_video_resolution(cls, task_info: DownloadTaskInfo, data: list):
         video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, data)
 
-        for entry in data["dash"]["video"]:
-            if entry["id"] == video_quality_id:
-                return entry["width"], entry["height"]
+        match StreamType(task_info):
+            case StreamType.Dash:
+                for entry in data["dash"]["video"]:
+                    if entry["id"] == video_quality_id:
+                        return entry["width"], entry["height"]
+                    
+            case StreamType.Flv:
+                pass
+
+            case StreamType.Mp4:
+                pass
 
     @classmethod
     def get_video_quality_id_desc_list(cls, data: dict):

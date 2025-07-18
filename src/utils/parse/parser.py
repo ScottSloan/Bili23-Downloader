@@ -8,7 +8,7 @@ from utils.common.request import RequestUtils
 
 class Parser:
     bilibili_url = "https://www.bilibili.com"
-    
+
     def __init__(self):
         self.json_data = None
 
@@ -73,8 +73,9 @@ class Parser:
 
         except Exception as e:
             raise GlobalException(callback = self.callback.onError) from e
-        
-    def dumps_json(self, file_name: str, json_file: dict):
+
+    @staticmethod
+    def dumps_json(file_name: str, json_file: dict):
         with open(file_name, "w", encoding = "utf-8") as f:
             f.write(json.dumps(json_file, ensure_ascii = False))
 

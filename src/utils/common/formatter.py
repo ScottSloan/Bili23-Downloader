@@ -58,7 +58,7 @@ class FormatUtils:
 
         show_title = episode.get("show_title")
 
-        if Config.Misc.show_episode_full_name or show_title.isnumeric():
+        if Config.Misc.show_episode_full_name:
             if BangumiInfo.type_id == 2 and main_episode:
                 return f"《{BangumiInfo.series_title}》{episode['show_title']}"
             else:

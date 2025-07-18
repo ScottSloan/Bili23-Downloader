@@ -133,14 +133,7 @@ class MediaInfoPanel(Panel):
         self.main_window.parser.video_codec_id = self.video_codec_id
 
     def set_stream_type(self, stream_type: str):
-        match StreamType(stream_type):
-            case StreamType.Dash:
-                lab = "DASH"
-
-            case StreamType.Flv:
-                lab = "FLV"
-
-        self.stream_type_lab.SetLabel(lab)
+        self.stream_type_lab.SetLabel(stream_type)
         self.stream_type = stream_type
 
     def get_video_quality_info(self):
@@ -155,6 +148,13 @@ class MediaInfoPanel(Panel):
                     }
                 
                 case StreamType.Flv:
+                    label_info = {
+                        "desc": get_mapping_key_by_value(video_quality_map, info["id"]),
+                        "seg": "分段" if info["seg"] > 1 else "连贯",
+                        "size": FormatUtils.format_size(info["size"])
+                    }
+
+                case StreamType.Mp4:
                     label_info = {
                         "desc": get_mapping_key_by_value(video_quality_map, info["id"]),
                         "size": FormatUtils.format_size(info["size"])
@@ -188,6 +188,9 @@ class MediaInfoPanel(Panel):
                 case "FLV":
                     return "FLV 格式视频流中已包含音轨，不支持自定义"
                 
+                case "MP4":
+                    return "MP4 格式视频流中已包含音轨，不支持自定义"
+                
                 case _:
                     label_info = {
                         "desc": get_mapping_key_by_value(audio_quality_map, info["id"]),
@@ -201,7 +204,7 @@ class MediaInfoPanel(Panel):
         def worker():
             self.audio_quality_info_lab.SetLabel(get_label())
 
-            if info not in [None, "FLV"]:
+            if info not in [None, "FLV", "MP4"]:
                 audio_quality_id = self.audio_quality_id if self.audio_quality_id != AudioQualityID._Auto.value else audio_quality_map.get(self.audio_quality_choice.GetString(1))
 
                 self.audio_quality_warn_icon.Show(info["id"] != audio_quality_id)
@@ -222,6 +225,9 @@ class MediaInfoPanel(Panel):
 
             case StreamType.Flv:
                 info = "FLV"
+
+            case StreamType.Mp4:
+                info = "MP4"
 
         wx.CallAfter(worker)
 
@@ -536,9 +542,12 @@ class DownloadOptionDialog(Dialog):
 
     def check_ass_only(self):
         Config.Temp.ass_resolution_confirm = not self.media_option_box.download_video_steam_chk.GetValue() and (self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" or self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass")
+        
+        video_quality_desc_list = self.media_info_box.video_quality_choice.GetItems()
+        video_quality_desc = self.media_info_box.video_quality_choice.GetStringSelection()
 
         if Config.Temp.ass_resolution_confirm and not Config.Temp.remember_resolution_settings:
-            dlg = RequireVideoResolutionDialog(self, self.media_info_box.video_quality_choice.GetItems(), self.media_info_box.video_quality_choice.GetStringSelection())
+            dlg = RequireVideoResolutionDialog(self, video_quality_desc_list, video_quality_desc)
             
             if dlg.ShowModal() == wx.ID_OK:
                 self.media_info_box.video_quality_choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())

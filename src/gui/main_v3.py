@@ -238,7 +238,7 @@ class Utils:
             return True
 
     def check_live_status(self):
-        if LiveInfo.status == LiveStatus.Not_Started.value:
+        if LiveStatus(LiveInfo.status) == LiveStatus.Not_Started:
             self.show_message_dialog("直播间未开播\n\n当前直播间未开播，请开播后再进行解析", "警告", wx.ICON_WARNING)
             return True
         
@@ -273,7 +273,7 @@ class Utils:
             self.main_window.face_icon.SetBitmap(Face.crop_round_face_bmp(image))
             self.main_window.uname_lab.SetLabel(Config.User.username)
 
-            self.main_window.panel.Layout()
+            self.main_window.panel.GetSizer().Layout()
 
         def hide_user_info():
             self.main_window.face_icon.Hide()
@@ -523,7 +523,7 @@ class MainWindow(Frame):
         self.face_icon = wx.StaticBitmap(self.panel, -1, size = self.FromDIP((32, 32)))
         self.face_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.face_icon.Hide()
-        self.uname_lab = wx.StaticText(self.panel, -1, "未登录", style = wx.ELLIPSIZE_END)
+        self.uname_lab = wx.StaticText(self.panel, -1, "未登录")
         self.uname_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.download_mgr_btn = Button(self.panel, "下载管理", size = self.get_scaled_size((100, 30)))
         self.download_btn = Button(self.panel, "开始下载", size = self.get_scaled_size((100, 30)))
@@ -531,10 +531,10 @@ class MainWindow(Frame):
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.face_icon, 0, wx.ALL & (~wx.RIGHT), self.FromDIP(6))
-        bottom_hbox.Add(self.uname_lab, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        bottom_hbox.Add(self.uname_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL, self.FromDIP(6))
-        bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        bottom_hbox.Add(self.download_mgr_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.infobar, 0, wx.EXPAND)

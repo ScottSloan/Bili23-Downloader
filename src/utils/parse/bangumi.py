@@ -2,7 +2,7 @@ from utils.config import Config
 
 from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_map
-from utils.common.enums import StatusCode, StreamType
+from utils.common.enums import StatusCode
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
@@ -163,20 +163,16 @@ class BangumiParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
+        cls.dumps_json("download.json", resp)
+
         BangumiInfo.download_json = resp["result"].copy()
 
         if not qn:
-            if "dash" in BangumiInfo.download_json:
-                AudioInfo.get_audio_quality_list(BangumiInfo.download_json["dash"])
+            BangumiInfo.stream_type = BangumiInfo.download_json.get("type")
 
-                BangumiInfo.stream_type = StreamType.Dash.value
-            
-            elif "durl" in BangumiInfo.download_json:
-                AudioInfo.get_audio_quality_list({})
+            AudioInfo.get_audio_quality_list(BangumiInfo.download_json.get("dash", {}))
 
-                BangumiInfo.stream_type = StreamType.Flv.value
-            
-            else:
+            if not BangumiInfo.download_json.get("dash") and not BangumiInfo.download_json.get("durl"):
                 code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
 
                 raise GlobalException(code = code)
