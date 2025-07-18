@@ -110,9 +110,11 @@ pip install -r requirements.txt
 下表为程序所需依赖：
 | 包 | 版本 | 备注 |
 | -- | -- | -- |
-| requests | >=2.30.0 | - |
-| wxPython | >=4.2.0 | - |
-| qrcode[pil] | >=7.4.2 | 必须附带 [pil]（Pillow），否则程序可能无法运行 |
+| requests | ==2.32.4 | - |
+| wxPython | ==4.2.3 | - |
+| qrcode[pil] | ==7.4.2 | 必须附带 [pil]（Pillow），否则程序可能无法运行 |
+| python-vlc | ==3.0.21203 | |
+| protobuf | ==3.19.0 | |
 
 用户也可以手动安装：
 ```bash

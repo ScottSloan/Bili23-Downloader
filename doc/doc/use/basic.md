@@ -9,7 +9,7 @@
 
 接下来从菜单栏点击`工具`->`设置`，打开设置窗口，根据需要调整相关设置。
 
-:::details 查看如何找到设置窗口
+:::details 点击查看如何找到设置窗口
 ### Windows
 
 <img src="https://s21.ax1x.com/2025/06/19/pVVG6pj.png" alt="Windows">
