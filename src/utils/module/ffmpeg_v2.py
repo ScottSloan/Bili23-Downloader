@@ -438,12 +438,12 @@ class FFmpeg:
                     temp_files.append(FFmpeg.Prop.dash_output_temp_file(task_info))
 
                 def flv():
-                    temp_files.append(FFmpeg.Prop.flv_list_file(task_info))
-                    temp_files.append(FFmpeg.Prop.flv_video_temp_file(task_info))
-                    temp_files.extend([os.path.join(task_info.download_path, f"flv_{task_info.id}_part{i + 1}") for i in range(task_info.flv_video_count)])
+                    temp_files.append(os.path.join(task_info.download_path, FFmpeg.Prop.flv_list_file(task_info)))
+                    temp_files.append(os.path.join(task_info.download_path, FFmpeg.Prop.flv_video_temp_file(task_info)))
+                    temp_files.extend([os.path.join(task_info.download_path, f"flv_{task_info.id}_part{i + 1}.flv") for i in range(task_info.flv_video_count)])
 
                 def mp4():
-                    temp_files.append(FFmpeg.Prop.mp4_video_temp_file(task_info))
+                    temp_files.append(os.path.join(task_info.download_path, FFmpeg.Prop.mp4_video_temp_file(task_info)))
 
                 temp_files = []
 

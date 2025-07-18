@@ -27,7 +27,7 @@ class MediaInfoPanel(Panel):
 
         self.Bind_EVT()
 
-        self.flv_query = False
+        self.requery = False
 
     def init_UI(self):
         label_color = wx.Colour(64, 64, 64)
@@ -35,7 +35,7 @@ class MediaInfoPanel(Panel):
         stream_lab = wx.StaticText(self, -1, "当前视频类型：")
         self.stream_type_lab = wx.StaticText(self, -1)
         stream_type_tooltip = ToolTip(self)
-        stream_type_tooltip.set_tooltip("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质")
+        stream_type_tooltip.set_tooltip("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质\nMP4：同上")
 
         stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         stream_type_hbox.Add(stream_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -173,9 +173,9 @@ class MediaInfoPanel(Panel):
 
             self.Layout()
 
-        info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id, self.flv_query)
+        info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id, self.requery)
 
-        self.flv_query = StreamType(self.stream_type) == StreamType.Flv
+        self.requery = StreamType(self.stream_type) != StreamType.Dash
 
         wx.CallAfter(worker)
 

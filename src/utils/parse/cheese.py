@@ -23,7 +23,7 @@ class CheeseInfo:
     release: str = ""
     expiry: str = ""
 
-    stream_type: str = ""
+    stream_type: str = "DASH"
 
     up_name: str = ""
     up_mid: int = 0

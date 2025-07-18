@@ -257,11 +257,16 @@ class DownloadParser(Parser):
 
         downloader_info = []
 
-        for entry in data["durls"]:
-            if entry["quality"] == self.task_info.video_quality_id:
-                url_list = Preview.get_stream_download_url_list(entry["durl"][0])
+        if data["durls"]:
+            for entry in data["durls"]:
+                if entry["quality"] == self.task_info.video_quality_id:
+                    node = entry["durl"][0]
+        else:
+            node = data["durl"][0]
 
-                downloader_info.append(get_mp4_downloader_info())
+        url_list = Preview.get_stream_download_url_list(node)
+
+        downloader_info.append(get_mp4_downloader_info())
 
         return downloader_info
 

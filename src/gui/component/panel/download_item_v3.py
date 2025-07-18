@@ -291,7 +291,7 @@ class DownloadTaskItemPanel(Panel):
                 self.open_file_location()
             
             case DownloadStatus.MergeError:
-                self.merge_video()
+                Thread(target = self.merge_video).start()
 
             case DownloadStatus.DownloadError:
                 self.resume_download()
@@ -390,6 +390,8 @@ class DownloadTaskItemPanel(Panel):
             def onError(*process):
                 self.onMergeError()
 
+        self.set_download_status(DownloadStatus.Merging.value)
+        
         FFmpeg.Utils.merge(self.task_info, callback)
 
     def rename_file(self):
@@ -438,8 +440,6 @@ class DownloadTaskItemPanel(Panel):
     def onComplete(self):
         def worker():
             if self.task_info.further_processing:
-                self.set_download_status(DownloadStatus.Merging.value)
-                
                 self.callback.onStartNextTask()
 
                 if self.task_info.ffmpeg_merge:

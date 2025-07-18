@@ -37,7 +37,7 @@ class BangumiInfo:
 
     payment: bool = False
 
-    stream_type: int = 0
+    stream_type: str = "DASH"
 
     area: str = ""
     up_name: str = ""
@@ -93,7 +93,7 @@ class BangumiParser(Parser):
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
     def get_mid(self, url: str):
-        mid = self.re_find_str(r"md([0-9]*)", str)
+        mid = self.re_find_str(r"md([0-9]*)", url)
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}"
 
@@ -162,8 +162,6 @@ class BangumiParser(Parser):
         url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
-
-        cls.dumps_json("download.json", resp)
 
         BangumiInfo.download_json = resp["result"].copy()
 

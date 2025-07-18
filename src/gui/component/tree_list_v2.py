@@ -112,9 +112,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
 
     def onItemContextMenuEVT(self, event):
-        menu = EpisodeListMenu(self.GetCurrentItemType(), self.GetCurrentItemCheckedState(), self.GetCurrentItemCollapsedState())
-
         if self.GetSelection().IsOk():
+            menu = EpisodeListMenu(self.GetCurrentItemType(), self.GetCurrentItemCheckedState(), self.GetCurrentItemCollapsedState())
+
             self.PopupMenu(menu)
 
     def onSizeEVT(self, event):

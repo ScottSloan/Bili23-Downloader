@@ -43,7 +43,7 @@ class Preview:
 
         self.download_json = self.get_download_json(self.parse_type)
 
-    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int, flv_query: bool = False):
+    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int, requery: bool = False):
         def get_info(data: dict):
             match StreamType(self.stream_type):
                 case StreamType.Dash:
@@ -71,15 +71,20 @@ class Preview:
                     }
                 
                 case StreamType.Mp4:
-                    for entry in data["durls"]:
-                        if entry["quality"] == video_quality_id:
-                            return {
-                                "id": video_quality_id,
-                                "codec": video_codec_id,
-                                "size": entry["durl"][0]["size"]
-                            }
+                    if data["durls"]:
+                        for entry in data["durls"]:
+                            if entry["quality"] == video_quality_id:
+                                node = entry["durl"][0]
+                    else:
+                        node = data["durl"][0]
 
-        if flv_query:
+                    return {
+                        "id": video_quality_id,
+                        "codec": video_codec_id,
+                        "size": node["size"]
+                }
+
+        if requery:
             self.refresh_download_json(video_quality_id)
 
         video_quality_id = self.get_video_quality_id(video_quality_id, self.download_json)
