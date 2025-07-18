@@ -14,6 +14,7 @@ from utils.common.request import RequestUtils
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.formatter import FormatUtils
 from utils.common.exception import GlobalException
+from utils.tool_v2 import DownloadFileTool
 
 from utils.parse.preview import Preview
 from utils.parse.download import DownloadParser
@@ -35,15 +36,19 @@ class ExtraParser:
 
             match DanmakuType(task_info.extra_option.get("danmaku_file_type")):
                 case DanmakuType.XML:
+                    task_info.output_type = "xml"
                     cls.get_xml_file(io_buffer, task_info, base_file_name)
 
                 case DanmakuType.Protobuf:
+                    task_info.output_type = "protobuf"
                     cls.get_protobuf_file(io_buffer, task_info, base_file_name)
 
                 case DanmakuType.JSON:
+                    task_info.output_type = "json"
                     cls.get_json_file(io_buffer, task_info, base_file_name)
 
                 case DanmakuType.ASS:
+                    task_info.output_type = "ass"
                     cls.get_ass_file(io_buffer, task_info, base_file_name)
 
         @classmethod
@@ -174,18 +179,23 @@ class ExtraParser:
 
             match SubtitleType(task_info.extra_option.get("subtitle_file_type")):
                 case SubtitleType.SRT:
+                    task_info.output_type = "srt"
                     cls.convert_to_srt(task_info, subtitle_json, lan, base_file_name)
 
                 case SubtitleType.TXT:
+                    task_info.output_type = "txt"
                     cls.convert_to_txt(task_info, subtitle_json, lan, base_file_name)
 
                 case SubtitleType.LRC:
+                    task_info.output_type = "lrc"
                     cls.convert_to_lrc(task_info, subtitle_json, lan, base_file_name)
 
                 case SubtitleType.JSON:
+                    task_info.output_type = "json"
                     cls.convert_to_json(task_info, subtitle_json, lan, base_file_name)
 
                 case SubtitleType.ASS:
+                    task_info.output_type = "ass"
                     cls.convert_to_ass(task_info, subtitle_json, lan, base_file_name)
         
         @staticmethod
@@ -275,6 +285,7 @@ class ExtraParser:
             base_file_name = FileNameFormatter.format_file_basename(task_info)
 
             cover_type = Cover.get_cover_type()
+            task_info.output_type = cover_type.lstrip(".")
 
             contents = Cover.download_cover(task_info.cover_url)
 
@@ -282,7 +293,13 @@ class ExtraParser:
 
     class Utils:
         @staticmethod
-        def download(task_info: DownloadTaskInfo, callback: Callback):
+        def download(task_info: DownloadTaskInfo, callback: Callback, file_tool: DownloadFileTool):
+            def update_task_info():
+                task_info.download_path = FileNameFormatter.get_download_path(task_info)
+                task_info.file_name = FileNameFormatter.format_file_basename(task_info)
+
+                file_tool.update_info("task_info", task_info.to_dict())
+
             try:
                 if task_info.extra_option.get("download_danmaku_file"):
                     ExtraParser.Danmaku.download(task_info)
@@ -294,6 +311,8 @@ class ExtraParser:
                     ExtraParser.Cover.download(task_info)
 
                 task_info.total_downloaded_size = task_info.total_file_size
+
+                update_task_info()
 
                 callback.onSuccess()
 
@@ -314,6 +333,8 @@ class ExtraParser:
 
             with open(file_path, mode, encoding = encoding) as f:
                 f.write(contents)
+
+            task_info.total_file_size += os.stat(file_path).st_size
 
         @staticmethod
         def get_video_resolution(task_info: DownloadTaskInfo):

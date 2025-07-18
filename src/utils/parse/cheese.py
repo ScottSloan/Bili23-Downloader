@@ -26,10 +26,6 @@ class CheeseInfo:
 
     stream_type: str = ""
 
-    episodes_list: list = []
-    video_quality_id_list: list = []
-    video_quality_desc_list: list = []
-
     up_name: str = ""
     up_mid: int = 0
 
@@ -50,10 +46,6 @@ class CheeseInfo:
         cls.season_id = 0
         cls.up_name = ""
         cls.up_mid = 0
-
-        cls.episodes_list.clear()
-        cls.video_quality_id_list.clear()
-        cls.video_quality_desc_list.clear()
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -110,25 +102,35 @@ class CheeseParser(Parser):
 
         self.parse_episodes()
 
-    def get_cheese_available_media_info(self):
-        url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.ep_id}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
+    @classmethod
+    def get_cheese_available_media_info(cls, qn: int = None):
+        params = {
+            "avid": CheeseInfo.aid,
+            "ep_id": CheeseInfo.ep_id,
+            "cid": CheeseInfo.cid,
+            "fnver": 0,
+            "fnval": 4048,
+            "fourk": 1
+        }
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+        if qn: params["qn"] = qn
 
-        CheeseInfo.download_json = info = resp["data"]
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
-        CheeseInfo.video_quality_id_list = info["accept_quality"]
-        CheeseInfo.video_quality_desc_list = info["accept_description"]
-        
-        if "dash" in info:
-            AudioInfo.get_audio_quality_list(info["dash"])
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-            CheeseInfo.stream_type = StreamType.Dash.value
+        CheeseInfo.download_json = resp["data"].copy()
 
-        elif "durl" in info:
-            AudioInfo.get_audio_quality_list({})
+        if not qn:
+            if "dash" in CheeseInfo.download_json:
+                AudioInfo.get_audio_quality_list(CheeseInfo.download_json["dash"])
 
-            CheeseInfo.stream_type = StreamType.Flv.value
+                CheeseInfo.stream_type = StreamType.Dash.value
+
+            elif "durl" in CheeseInfo.download_json:
+                AudioInfo.get_audio_quality_list({})
+
+                CheeseInfo.stream_type = StreamType.Flv.value
 
     def parse_worker(self, url: str):
         self.clear_cheese_info()

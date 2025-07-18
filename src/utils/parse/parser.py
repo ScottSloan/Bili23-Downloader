@@ -1,13 +1,15 @@
 import re
 import json
+import urllib.parse
 
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
 class Parser:
+    bilibili_url = "https://www.bilibili.com"
+    
     def __init__(self):
-        self.bilibili_url = "https://www.bilibili.com"
         self.json_data = None
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
@@ -17,13 +19,14 @@ class Parser:
 
         return result
 
-    def request_get(self, url: str, headers: dict) -> dict:
+    @classmethod
+    def request_get(cls, url: str, headers: dict) -> dict:
         req = RequestUtils.request_get(url, headers)
         resp = json.loads(req.text)
 
-        self.check_json(resp)
+        cls.check_json(resp)
 
-        self.json_data = resp.copy()
+        cls.json_data = resp.copy()
 
         return resp
     
@@ -54,7 +57,8 @@ class Parser:
         if not value:
             raise GlobalException(code = StatusCode.URL.value)
 
-    def check_json(self, data: dict):
+    @staticmethod
+    def check_json(data: dict):
         status_code = data["code"]
 
         if status_code != StatusCode.Success.value:
@@ -76,3 +80,7 @@ class Parser:
 
     def parse_worker(self, url: str):
         pass
+    
+    @staticmethod
+    def url_encode(params: dict):
+        return urllib.parse.urlencode(params)

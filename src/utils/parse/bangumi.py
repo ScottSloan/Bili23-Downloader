@@ -39,9 +39,6 @@ class BangumiInfo:
 
     stream_type: int = 0
 
-    video_quality_id_list: list = []
-    video_quality_desc_list: list = []
-
     area: str = ""
     up_name: str = ""
     up_mid: int = 0
@@ -75,9 +72,6 @@ class BangumiInfo:
         cls.up_mid = 0
 
         cls.payment = False
-
-        cls.video_quality_id_list.clear()
-        cls.video_quality_desc_list.clear()
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -153,30 +147,39 @@ class BangumiParser(Parser):
 
         self.get_bangumi_type()
     
-    def get_bangumi_available_media_info(self):
-        url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
+    @classmethod
+    def get_bangumi_available_media_info(cls, qn: int = None):
+        params = {
+            "bvid": BangumiInfo.bvid,
+            "cid": BangumiInfo.cid,
+            "fnver": 0,
+            "fnval": 12240,
+            "fourk": 1
+        }
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        if qn: params["qn"] = qn
 
-        BangumiInfo.download_json = info = resp["result"]
+        url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
-        if "dash" in info:
-            AudioInfo.get_audio_quality_list(info["dash"])
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-            BangumiInfo.stream_type = StreamType.Dash.value
-        
-        elif "durl" in info:
-            AudioInfo.get_audio_quality_list({})
+        BangumiInfo.download_json = resp["result"].copy()
 
-            BangumiInfo.stream_type = StreamType.Flv.value
-        
-        else:
-            code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
+        if not qn:
+            if "dash" in BangumiInfo.download_json:
+                AudioInfo.get_audio_quality_list(BangumiInfo.download_json["dash"])
 
-            raise GlobalException(code = code)
-                
-        BangumiInfo.video_quality_id_list = info["accept_quality"]
-        BangumiInfo.video_quality_desc_list = info["accept_description"]
+                BangumiInfo.stream_type = StreamType.Dash.value
+            
+            elif "durl" in BangumiInfo.download_json:
+                AudioInfo.get_audio_quality_list({})
+
+                BangumiInfo.stream_type = StreamType.Flv.value
+            
+            else:
+                code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
+
+                raise GlobalException(code = code)
 
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
@@ -208,7 +211,8 @@ class BangumiParser(Parser):
 
         return StatusCode.Success.value
     
-    def check_json(self, data: dict):
+    @staticmethod
+    def check_json(data: dict):
         status_code = data["code"]
         message = data["message"]
 

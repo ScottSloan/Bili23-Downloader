@@ -31,8 +31,6 @@ class VideoInfo:
     is_interactive: bool = False
 
     pages_list: list = []
-    video_quality_id_list: list = []
-    video_quality_desc_list: list = []
 
     pubtime: int = 0
     zone: str = ""
@@ -66,8 +64,6 @@ class VideoInfo:
 
         cls.tag_list.clear()
         cls.pages_list.clear()
-        cls.video_quality_id_list.clear()
-        cls.video_quality_desc_list.clear()
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -165,34 +161,35 @@ class VideoParser(Parser):
 
         VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
 
-    def get_video_available_media_info(self):
+    @classmethod
+    def get_video_available_media_info(cls, qn: int = None):
         # 获取视频清晰度
         params = {
             "bvid": VideoInfo.bvid,
             "cid": VideoInfo.cid,
             "fnver": 0,
             "fnval": 4048,
-            "fourk": 1
+            "fourk": 1,
         }
+
+        if qn: params["qn"] = qn
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
         
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
-        info = VideoInfo.download_json = resp["data"]
+        VideoInfo.download_json = resp["data"].copy()
 
-        if "dash" in info:
-            AudioInfo.get_audio_quality_list(info["dash"])
+        if not qn:
+            if "dash" in VideoInfo.download_json:
+                AudioInfo.get_audio_quality_list(VideoInfo.download_json["dash"])
 
-            VideoInfo.stream_type = StreamType.Dash.value
-            
-        elif "durl" in info:
-            AudioInfo.get_audio_quality_list({})
+                VideoInfo.stream_type = StreamType.Dash.value
+                
+            elif "durl" in VideoInfo.download_json:
+                AudioInfo.get_audio_quality_list({})
 
-            VideoInfo.stream_type = StreamType.Flv.value
-
-        VideoInfo.video_quality_id_list = info["accept_quality"]
-        VideoInfo.video_quality_desc_list = info["accept_description"]
+                VideoInfo.stream_type = StreamType.Flv.value
 
     def parse_worker(self, url: str):
         # 先检查是否为分 P 视频

@@ -2,16 +2,17 @@ from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, Stream
 from utils.common.request import RequestUtils
 from utils.common.data_type import DownloadTaskInfo
 
-from utils.parse.video import VideoInfo
-from utils.parse.bangumi import BangumiInfo
-from utils.parse.cheese import CheeseInfo
+from utils.parse.video import VideoInfo, VideoParser
+from utils.parse.bangumi import BangumiInfo, BangumiParser
+from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.audio import AudioInfo
 
 from utils.module.cdn import CDN
 
 class Preview:
     def __init__(self, parse_type: ParseType, stream_type: int):
-        self.stream_type = stream_type
+        self.parse_type, self.stream_type = parse_type, stream_type
+
         self.download_json = self.get_download_json(parse_type)
 
         self.video_size_cache = {}
@@ -28,8 +29,21 @@ class Preview:
 
             case ParseType.Cheese:
                 return CheeseInfo.download_json
+            
+    def refresh_download_json(self, video_quality_id: int):
+        match self.parse_type:
+            case ParseType.Video:
+                VideoParser.get_video_available_media_info(video_quality_id)
 
-    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int):
+            case ParseType.Bangumi:
+                BangumiParser.get_bangumi_available_media_info(video_quality_id)
+
+            case ParseType.Cheese:
+                CheeseParser.get_cheese_available_media_info(video_quality_id)
+
+        self.download_json = self.get_download_json(self.parse_type)
+
+    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int, flv_query: bool = False):
         def get_info(data: dict):
             match StreamType(self.stream_type):
                 case StreamType.Dash:
@@ -54,6 +68,9 @@ class Preview:
                         "codec": video_codec_id,
                         "size": size
                     }
+
+        if flv_query:
+            self.refresh_download_json(video_quality_id)
 
         video_quality_id = self.get_video_quality_id(video_quality_id, self.download_json)
         video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, self.download_json)
@@ -92,15 +109,6 @@ class Preview:
 
     @classmethod
     def get_video_quality_id(cls, video_quality_id: int, data: list | dict):
-        def get_highest_video_quality_id():
-            highest_video_quality_id = 0
-
-            for entry in data["dash"]["video"]:
-                if entry["id"] > highest_video_quality_id:
-                    highest_video_quality_id = entry["id"]
-
-            return highest_video_quality_id
-        
         video_quality_id_list, video_quality_desc_list = cls.get_video_quality_id_desc_list(data)
 
         video_quality_id_list.remove(VideoQualityID._Auto.value)
@@ -108,7 +116,7 @@ class Preview:
         if video_quality_id in video_quality_id_list:
             return video_quality_id
         else:
-            return get_highest_video_quality_id()
+            return max(data["accept_quality"])
 
     @staticmethod
     def get_audio_quality_id(audio_quality_id: int, data: dict):

@@ -27,6 +27,8 @@ class MediaInfoPanel(Panel):
 
         self.Bind_EVT()
 
+        self.flv_query = False
+
     def init_UI(self):
         label_color = wx.Colour(64, 64, 64)
 
@@ -171,7 +173,9 @@ class MediaInfoPanel(Panel):
 
             self.Layout()
 
-        info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id)
+        info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id, self.flv_query)
+
+        self.flv_query = StreamType(self.stream_type) == StreamType.Flv
 
         wx.CallAfter(worker)
 
@@ -538,6 +542,7 @@ class DownloadOptionDialog(Dialog):
             
             if dlg.ShowModal() == wx.ID_OK:
                 self.media_info_box.video_quality_choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())
+                self.parent.parser.video_quality_id = self.media_info_box.video_quality_id
             else:
                 return True
 

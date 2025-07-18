@@ -360,8 +360,6 @@ class DownloadTaskItemPanel(Panel):
             case ParseType.Extra:
                 self.set_download_status(DownloadStatus.Generating.value)
 
-                update_task_info()
-
                 target = self.download_extra
 
         Thread(target = target).start()
@@ -409,7 +407,7 @@ class DownloadTaskItemPanel(Panel):
             def onError(*process):
                 self.onDownloadError()
 
-        ExtraParser.Utils.download(self.task_info, callback)
+        ExtraParser.Utils.download(self.task_info, callback, self.file_tool)
 
     def open_file_location(self):
         path = os.path.join(self.task_info.download_path, self.full_file_name)
