@@ -169,7 +169,7 @@ class VideoParser(Parser):
         VideoInfo.download_json = resp["data"].copy()
 
         if not qn:
-            VideoInfo.stream_type = VideoInfo.download_json.get("type", "DASH" if "dash" in VideoInfo.download_json else "FLV")
+            VideoInfo.stream_type = "DASH" if "dash" in VideoInfo.download_json else "FLV"
 
             AudioInfo.get_audio_quality_list(VideoInfo.download_json.get("dash", {}))
 

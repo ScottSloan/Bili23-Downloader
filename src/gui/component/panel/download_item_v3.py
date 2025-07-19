@@ -291,6 +291,8 @@ class DownloadTaskItemPanel(Panel):
                 self.open_file_location()
             
             case DownloadStatus.MergeError:
+                self.set_download_status(DownloadStatus.Merging.value)
+                
                 Thread(target = self.merge_video).start()
 
             case DownloadStatus.DownloadError:
@@ -440,6 +442,8 @@ class DownloadTaskItemPanel(Panel):
     def onComplete(self):
         def worker():
             if self.task_info.further_processing:
+                self.set_download_status(DownloadStatus.Merging.value)
+
                 self.callback.onStartNextTask()
 
                 if self.task_info.ffmpeg_merge:

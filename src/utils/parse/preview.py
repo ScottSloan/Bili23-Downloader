@@ -123,15 +123,13 @@ class Preview:
                 return video_codec_id
 
     @classmethod
-    def get_video_quality_id(cls, video_quality_id: int, data: list | dict):
-        video_quality_id_list, video_quality_desc_list = cls.get_video_quality_id_desc_list(data)
-
-        video_quality_id_list.remove(VideoQualityID._Auto.value)
+    def get_video_quality_id(cls, video_quality_id: int, data: dict):
+        video_quality_id_list = cls.get_video_available_quality_id_list(data)
 
         if video_quality_id in video_quality_id_list:
             return video_quality_id
         else:
-            return max(data["accept_quality"])
+            return max(video_quality_id_list)
 
     @staticmethod
     def get_audio_quality_id(audio_quality_id: int, data: dict):
@@ -145,7 +143,7 @@ class Preview:
             return audio_quality_id_list[0] if audio_quality_id_list else None
         
     @staticmethod
-    def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: list):
+    def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: dict):
         def check_codec_id():
             match StreamType(stream_type):
                 case StreamType.Dash:
@@ -153,7 +151,7 @@ class Preview:
                     
                 case StreamType.Flv | StreamType.Mp4:
                     return [VideoCodecID.AVC.value]
-
+                
         codec_id_list = check_codec_id()
 
         if video_codec_id not in codec_id_list:
@@ -162,10 +160,12 @@ class Preview:
         return video_codec_id
 
     @classmethod
-    def get_video_resolution(cls, task_info: DownloadTaskInfo, data: list):
+    def get_video_resolution(cls, task_info: DownloadTaskInfo, data: dict):
         video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, data)
 
-        match StreamType(task_info):
+        stream_type = data.get("type", "DASH" if "dash" in data else "FLV")
+
+        match StreamType(stream_type):
             case StreamType.Dash:
                 for entry in data["dash"]["video"]:
                     if entry["id"] == video_quality_id:
@@ -185,6 +185,17 @@ class Preview:
         video_quality_desc_list.extend(data["accept_description"])
 
         return video_quality_id_list, video_quality_desc_list
+
+    @staticmethod
+    def get_video_available_quality_id_list(data: dict):
+        available_list = {}
+
+        for entry in data["dash"]["video"]:
+            id = entry["id"]
+
+            available_list[id] = id
+
+        return list(available_list.keys())
 
     @staticmethod
     def get_file_size(url_list: list):

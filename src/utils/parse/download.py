@@ -24,7 +24,7 @@ class DownloadParser(Parser):
     @classmethod
     def get_download_stream_json(cls, task_info: DownloadTaskInfo):
         def check_stream_type(data: dict):
-            task_info.stream_type = data.get("type")
+            task_info.stream_type = data.get("type", "DASH" if "dash" in data else "FLV")
 
             return data
 

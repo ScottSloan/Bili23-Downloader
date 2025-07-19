@@ -121,7 +121,7 @@ class Parser:
 
         self.video_quality_id_list, self.video_quality_desc_list = Preview.get_video_quality_id_desc_list(data)
 
-        self.video_quality_id = Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else self.video_quality_id_list[1]
+        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else max(Preview.get_video_available_quality_id_list(data))
 
         self.video_codec_id = Config.Download.video_codec_id
 
@@ -319,7 +319,7 @@ class Utils:
         self.main_window.show_episode_list()
 
     def update_checked_item_count(self, count: int):
-        label = f"(共 {self.main_window.episode_list.count} 个{f"，已选择 {count} 个)" if count else ")"}"
+        label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
 
         self.main_window.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
 
