@@ -13,7 +13,7 @@ from utils.common.regex import Regex
 
 from gui.component.window.dialog import Dialog
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.tooltip import ToolTip
+from gui.component.misc.tooltip import ToolTip
 
 class AddNewTemplateDialog(Dialog):
     def __init__(self, parent, scope_id: int, add_mode = True, template: str = ""):

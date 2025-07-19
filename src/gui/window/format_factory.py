@@ -24,7 +24,7 @@ from gui.component.button.bitmap_button import BitmapButton
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.text_ctrl.time_ctrl import TimeCtrl
 from gui.component.player import Player, vlc_available
-from gui.component.range_slider import RangeSlider
+from gui.component.slider.range_slider import RangeSlider
 
 class SelectPage(Panel):
     def __init__(self, parent):

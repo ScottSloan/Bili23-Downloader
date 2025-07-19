@@ -12,7 +12,7 @@ from gui.component.panel.scrolled_panel import ScrolledPanel
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
-from gui.component.tooltip import ToolTip
+from gui.component.misc.tooltip import ToolTip
 from gui.component.staticbox.extra import ExtraStaticBox
 
 from gui.dialog.setting.ffmpeg import DetectDialog

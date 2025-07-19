@@ -21,7 +21,7 @@ from utils.parse.extra_v2 import ExtraParser
 from utils.config import Config
 from utils.tool_v2 import DownloadFileTool
 
-from gui.component.info_label import InfoLabel
+from gui.component.label.info_label import InfoLabel
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
 
@@ -292,7 +292,7 @@ class DownloadTaskItemPanel(Panel):
             
             case DownloadStatus.MergeError:
                 self.set_download_status(DownloadStatus.Merging.value)
-                
+
                 Thread(target = self.merge_video).start()
 
             case DownloadStatus.DownloadError:

@@ -34,7 +34,7 @@ class Dialog(wx.Dialog):
                 rtn = False
 
         if not rtn:
-            if Platform(Config.Sys.platform) != Platform.macOS:
+            if Platform(Config.Sys.platform) == Platform.Windows:
                 self.Destroy()
 
             return event.Skip()

@@ -7,8 +7,8 @@ from utils.common.color import Color
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
-from gui.component.ass_color_picker import ASSColorPicker
-from gui.component.label_spinctrl import LabelSpinCtrl
+from gui.component.misc.ass_color_picker import ASSColorPicker
+from gui.component.misc.label_spinctrl import LabelSpinCtrl
 from gui.component.staticbox.font import FontStaticBox
 from gui.component.staticbox.border import BorderStaticBox
 

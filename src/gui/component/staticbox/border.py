@@ -2,7 +2,7 @@ import wx
 
 from gui.component.panel.panel import Panel
 
-from gui.component.label_spinctrl import LabelSpinCtrl
+from gui.component.misc.label_spinctrl import LabelSpinCtrl
 
 class BorderStaticBox(Panel):
     def __init__(self, parent):

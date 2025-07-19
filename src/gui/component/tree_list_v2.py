@@ -44,7 +44,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.ClearColumns()
         self.DeleteAllItems()
 
-        self.AppendColumn("序号", width = self.FromDIP(100))
+        self.AppendColumn("序号", width = self.FromDIP(100 if Platform(Config.Sys.platform) != Platform.Linux else 125))
         self.AppendColumn("标题", width = self.FromDIP(385))
         self.AppendColumn("备注", width = self.FromDIP(75))
         self.AppendColumn("时长", width = self.FromDIP(75))

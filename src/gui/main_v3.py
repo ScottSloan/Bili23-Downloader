@@ -52,8 +52,8 @@ from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.button.button import Button
-from gui.component.info_bar import InfoBar
-from gui.component.taskbar_icon import TaskBarIcon
+from gui.component.misc.info_bar import InfoBar
+from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
 
 from gui.component.menu.episode_option import EpisodeOptionMenu

@@ -16,8 +16,8 @@ from gui.component.panel.panel import Panel
 from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
 
 from gui.component.staticbox.extra import ExtraStaticBox
-from gui.component.info_label import InfoLabel
-from gui.component.tooltip import ToolTip
+from gui.component.label.info_label import InfoLabel
+from gui.component.misc.tooltip import ToolTip
 
 class MediaInfoPanel(Panel):
     def __init__(self, parent):

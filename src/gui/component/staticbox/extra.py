@@ -9,7 +9,7 @@ from gui.dialog.setting.custom_ass_style import CustomASSStyleDialog
 
 from gui.component.panel.panel import Panel
 
-from gui.component.tooltip import ToolTip
+from gui.component.misc.tooltip import ToolTip
 
 class ExtraStaticBox(Panel):
     def __init__(self, parent, show_more = True):

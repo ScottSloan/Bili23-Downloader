@@ -5,7 +5,7 @@ from utils.config import Config
 from gui.component.window.dialog import Dialog
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.tooltip import ToolTip
+from gui.component.misc.tooltip import ToolTip
 
 class RequireVideoResolutionDialog(Dialog):
     def __init__(self, parent, video_quality_desc_list: list, video_quality_desc: str, flv_mp4: bool = False):
