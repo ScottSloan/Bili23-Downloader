@@ -86,8 +86,11 @@ export default defineConfig({
               {
                 text: '互动视频剧情树',
                 link: '/doc/use/advanced/interact_video_graph'
+              },
+              {
+                text: '下载 ASS 格式的弹幕和字幕',
+                link: '/doc/use/advanced/ass'
               }
-
             ],
           },
           {

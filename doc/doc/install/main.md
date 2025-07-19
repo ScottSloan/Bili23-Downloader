@@ -113,12 +113,12 @@ pip install -r requirements.txt
 | requests | ==2.32.4 | - |
 | wxPython | ==4.2.3 | - |
 | qrcode[pil] | ==7.4.2 | 必须附带 [pil]（Pillow），否则程序可能无法运行 |
-| python-vlc | ==3.0.21203 | |
-| protobuf | ==3.19.0 | |
+| python-vlc | ==3.0.21203 | - |
+| protobuf | ==3.19.0 | 高于 3.19.0 的版本无法正常解析 protobuf 文件 |
 
 用户也可以手动安装：
 ```bash
-pip install wxPython qrcode[pil] requests
+pip install wxPython==4.2.3 qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0
 ```
 #### Linux
 由于 Linux 平台各发行版存在差异，wxPython 安装较为繁琐，以下提供最简便的安装方式。
@@ -131,7 +131,7 @@ pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu
 
 随后再安装其他依赖：
 ```bash
-pip install qrcode[pil] requests
+pip install qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0
 ```
 
 ### 安装 FFmpeg
