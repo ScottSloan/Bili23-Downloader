@@ -17,7 +17,7 @@ Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下�
 * 支持下载 Hi-Res 无损、杜比全景声音质
 * 支持完整下载互动视频所有分支，自动生成可视化剧情树
 * 支持断点续传、下载限速、多线程下载、并行下载、自动重试等功能
-* 支持视频格式转换、片段截取、音频分离等功能
+* 支持视频格式转换、片段截取、音频提取等功能
 
 ## 使用说明
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html)。

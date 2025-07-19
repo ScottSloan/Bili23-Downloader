@@ -6,7 +6,7 @@ from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, EpisodeDisplayType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
@@ -212,6 +212,7 @@ class VideoParser(Parser):
                 VideoInfo.info_json["pages"].append(get_page())
 
         if VideoInfo.is_interactive:
+            Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
             interact_video_parser()
             
         Episode.Video.parse_episodes(VideoInfo.info_json, VideoInfo.cid)

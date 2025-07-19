@@ -81,7 +81,7 @@ class Episode:
         def parse_episodes(cls, info_json: dict, target_cid: int):
             EpisodeInfo.clear_episode_data()
 
-            match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            match Episode.Utils.get_episode_display_type():
                 case EpisodeDisplayType.Single:
                     cls.pages_parser(info_json, target_cid)
 
@@ -189,7 +189,7 @@ class Episode:
             if "section" in info_json:
                 cls.section_parser(info_json, ep_id)
 
-            match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            match Episode.Utils.get_episode_display_type():
                 case EpisodeDisplayType.Single:
                     Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
@@ -231,8 +231,6 @@ class Episode:
                     return episode.get("duration") / 1000
                 else:
                     return 0
-                
-
 
             episode["title"] = FormatUtils.format_bangumi_title(episode, main_episode)
             episode["pubtime"] = episode["pub_time"]
@@ -251,7 +249,7 @@ class Episode:
     
             cls.sections_parser(info_json, ep_id)
 
-            match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            match Episode.Utils.get_episode_display_type():
                 case EpisodeDisplayType.Single:
                     Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
@@ -311,6 +309,17 @@ class Episode:
             return EpisodeInfo.get_entry_info(episode)
 
     class Utils:
+        @staticmethod
+        def get_episode_display_type():
+            from utils.parse.video import VideoInfo
+
+            mode = Config.Misc.episode_display_mode
+
+            if VideoInfo.is_interactive:
+                mode = EpisodeDisplayType.In_Section.value
+
+            return EpisodeDisplayType(mode)
+        
         @staticmethod
         def display_episodes_in_section(section_title: str):
             for section in EpisodeInfo.data.get("entries"):

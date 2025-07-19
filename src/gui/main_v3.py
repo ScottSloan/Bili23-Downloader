@@ -402,7 +402,7 @@ class Utils:
             self.main_window.get_btn.Enable(enable)
             self.main_window.episode_list.Enable(enable)
             self.main_window.download_btn.Enable(enable)
-            self.main_window.episode_option_btn.Enable(enable and option_enable)
+            self.main_window.episode_option_btn.Enable(enable and option_enable and not graph_btn)
             self.main_window.download_option_btn.Enable(enable and option_enable)
 
         def set_label():
