@@ -25,9 +25,9 @@
 
 | 文件名 | 平台架构 | 下载地址 | 备注 |
 | --- | --- | --- | --- |
-| {{ release_asset_file_name }} | 通用 | <a :href="release_asset_github(version, release_asset_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a href="{{ release_asset_url }}" target="_blank" rel="noreferer">蓝奏云</a> | 源码版，需要 Python 环境，并安装 FFmpeg |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_ffmpeg_release.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a href="{{ release_asset_win_ffmpeg_url }}" target="_blank" rel="noreferer">蓝奏云</a> | 编译版，附带 FFmpeg |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_release.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a href="{{ release_asset_win_url }}" target="_blank" rel="noreferer">蓝奏云</a> | 编译版，不附带 FFmpeg |
+| {{ release_asset_file_name }} | 通用 | <a :href="release_asset_github(version, release_asset_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="release_asset_url" target="_blank" rel="noreferer">蓝奏云</a> | 源码版，需要 Python 环境，并安装 FFmpeg |
+| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_ffmpeg_release.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="release_asset_win_ffmpeg_url" target="_blank" rel="noreferer">蓝奏云</a> | 编译版，附带 FFmpeg |
+| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_release.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="release_asset_win_url" target="_blank" rel="noreferer">蓝奏云</a> | 编译版，不附带 FFmpeg |
 
 ::: warning 重要提示
 若您使用的是编译版，请先确保安装 Microsoft Visual C++ 2015-2022 运行库，否则无法运行本程序。
