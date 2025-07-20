@@ -28,7 +28,6 @@ Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下�
 * 支持下载 ass 格式弹幕和字幕
 * 支持自定义 ass 样式
 * 支持 MP4 格式流解析
-* 视频工具箱支持合并视频字幕
 
 ### 优化
 * 优化视频解析速度
