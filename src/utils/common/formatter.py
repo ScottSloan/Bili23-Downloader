@@ -47,7 +47,7 @@ class FormatUtils:
             return "{:.1f} KB".format(size / 1024)
 
     @staticmethod
-    def format_bangumi_title(episode: dict, main_episode: bool):
+    def format_bangumi_title(episode: dict):
         def get_share_copy():
             if "share_copy" in episode:
                 return episode["share_copy"]
@@ -56,16 +56,18 @@ class FormatUtils:
         
         from utils.parse.bangumi import BangumiInfo
 
-        show_title = episode.get("show_title")
-
-        if Config.Misc.show_episode_full_name:
-            if BangumiInfo.type_id == 2 and main_episode:
-                return f"《{BangumiInfo.series_title}》{episode['show_title']}"
-            else:
-                return get_share_copy()
+        if BangumiInfo.type_id == 2:
+            return f"《{BangumiInfo.series_title}》{episode.get('show_title')}"
         
+        long_title = episode.get("long_title")
+
+        if long_title:
+            if Config.Misc.show_episode_full_name:
+                return get_share_copy()
+            else:
+                return episode.get("show_title")
         else:
-            return episode.get("show_title", get_share_copy())
+            return get_share_copy()
 
     @staticmethod
     def format_data_quantity(data: int):

@@ -197,13 +197,13 @@ class Episode:
                     Episode.Utils.display_episodes_in_section(cls.target_section_title)
         
         @classmethod
-        def episodes_parser(cls, episodes: dict, pid: str, ep_id: int, info_json: dict, main_episode: bool = False):
+        def episodes_parser(cls, episodes: dict, pid: str, ep_id: int, info_json: dict):
             for episode in episodes:
                 episode["season_id"] = info_json["season_id"]
                 episode["media_id"] = info_json["media_id"]
                 episode["section_title"] = pid
 
-                EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), main_episode))
+                EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy()))
 
                 if episode["ep_id"] == ep_id:
                     cls.target_section_title = pid
@@ -213,7 +213,7 @@ class Episode:
             if info_json.get("episodes"):
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info("正片", label = "章节"))
 
-                cls.episodes_parser(info_json["episodes"], "正片", ep_id, info_json, main_episode = True)
+                cls.episodes_parser(info_json["episodes"], "正片", ep_id, info_json)
 
         @classmethod
         def section_parser(cls, info_json: dict, ep_id: int):
@@ -222,17 +222,17 @@ class Episode:
 
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
 
-                cls.episodes_parser(section["episodes"], section_title, ep_id, info_json, main_episode = False)
+                cls.episodes_parser(section["episodes"], section_title, ep_id, info_json)
 
         @staticmethod
-        def get_entry_info(episode: dict, main_episode: bool):
+        def get_entry_info(episode: dict):
             def get_duration():
                 if "duration" in episode:
                     return episode.get("duration") / 1000
                 else:
                     return 0
 
-            episode["title"] = FormatUtils.format_bangumi_title(episode, main_episode)
+            episode["title"] = FormatUtils.format_bangumi_title(episode)
             episode["pubtime"] = episode["pub_time"]
             episode["duration"] = get_duration()
             episode["cover_url"] = episode["cover"]
