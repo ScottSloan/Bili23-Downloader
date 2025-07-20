@@ -38,8 +38,8 @@ class UpdateDialog(Dialog):
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((100, 28)))
-        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((100, 28)))
+        self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((90, 28)))
+        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((90, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
