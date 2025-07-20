@@ -1,7 +1,7 @@
 # 下载 ASS 格式的弹幕和字幕
 **最低支持版本：1.64.0**
 
-<img src="https://s21.ax1x.com/2025/07/19/pV3Hie1.png" alt="弹幕和字幕下载设置">
+<img src="https://s21.ax1x.com/2025/07/19/pV3Hie1.png" alt="弹幕和字幕下载设置" style="width: 50%;">
 
 *图1 弹幕和字幕下载设置示意图*
 
@@ -11,7 +11,7 @@
 
 目前支持以 ASS 格式显示的弹幕类型有：`普通弹幕`、`顶部弹幕`、`底部弹幕`
 
-<img src="https://s21.ax1x.com/2025/07/19/pV3HrkV.png" alt="自定义 ASS 样式">
+<img src="https://s21.ax1x.com/2025/07/19/pV3HrkV.png" alt="自定义 ASS 样式" style="width: 80%;">
 
 *图2 自定义 ASS 样式示意图*
 

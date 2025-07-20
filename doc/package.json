@@ -1,6 +1,6 @@
 {
   "name": "bili23_downloader_docs",
-  "version": "1.63.1",
+  "version": "1.64.0",
   "scripts": {
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
