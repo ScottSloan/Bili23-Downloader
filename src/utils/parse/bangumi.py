@@ -2,11 +2,11 @@ from utils.config import Config
 
 from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_map
-from utils.common.enums import StatusCode, StreamType
+from utils.common.enums import StatusCode
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
@@ -37,10 +37,7 @@ class BangumiInfo:
 
     payment: bool = False
 
-    stream_type: int = 0
-
-    video_quality_id_list: list = []
-    video_quality_desc_list: list = []
+    stream_type: str = "DASH"
 
     area: str = ""
     up_name: str = ""
@@ -76,9 +73,6 @@ class BangumiInfo:
 
         cls.payment = False
 
-        cls.video_quality_id_list.clear()
-        cls.video_quality_desc_list.clear()
-
         cls.info_json.clear()
         cls.download_json.clear()
 
@@ -99,7 +93,7 @@ class BangumiParser(Parser):
         self.url_type, self.url_type_value, BangumiInfo.season_id = "season_id", season_id[0], season_id[0]
 
     def get_mid(self, url: str):
-        mid = self.re_find_str(r"md([0-9]*)", str)
+        mid = self.re_find_str(r"md([0-9]*)", url)
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={mid[0]}"
 
@@ -153,30 +147,33 @@ class BangumiParser(Parser):
 
         self.get_bangumi_type()
     
-    def get_bangumi_available_media_info(self):
-        url = f"https://api.bilibili.com/pgc/player/web/playurl?bvid={BangumiInfo.bvid}&cid={BangumiInfo.cid}&fnver=0&fnval=12240&fourk=1"
+    @classmethod
+    def get_bangumi_available_media_info(cls, qn: int = None):
+        params = {
+            "bvid": BangumiInfo.bvid,
+            "cid": BangumiInfo.cid,
+            "fnver": 0,
+            "fnval": 12240,
+            "fourk": 1
+        }
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        if qn: params["qn"] = qn
 
-        BangumiInfo.download_json = info = resp["result"]
+        url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
-        if "dash" in info:
-            AudioInfo.get_audio_quality_list(info["dash"])
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-            BangumiInfo.stream_type = StreamType.Dash.value
-        
-        elif "durl" in info:
-            AudioInfo.get_audio_quality_list({})
+        BangumiInfo.download_json = resp["result"].copy()
 
-            BangumiInfo.stream_type = StreamType.Flv.value
-        
-        else:
-            code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
+        if not qn:
+            BangumiInfo.stream_type = BangumiInfo.download_json.get("type")
 
-            raise GlobalException(code = code)
-                
-        BangumiInfo.video_quality_id_list = info["accept_quality"]
-        BangumiInfo.video_quality_desc_list = info["accept_description"]
+            AudioInfo.get_audio_quality_list(BangumiInfo.download_json.get("dash", {}))
+
+            if not BangumiInfo.download_json.get("dash") and not BangumiInfo.download_json.get("durl"):
+                code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
+
+                raise GlobalException(code = code)
 
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
@@ -186,36 +183,30 @@ class BangumiParser(Parser):
     def get_bangumi_type(self):
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
 
-    def parse_url(self, url: str):
-        def worker():
-            # 清除当前的番组信息
-            self.clear_bangumi_info()
+    def parse_worker(self, url: str):
+        # 清除当前的番组信息
+        self.clear_bangumi_info()
 
-            match REUtils.find_string(r"ep|ss|md", url):
-                case "ep":
-                    self.get_epid(url)
+        match Regex.find_string(r"ep|ss|md", url):
+            case "ep":
+                self.get_epid(url)
 
-                case "ss":
-                    self.get_season_id(url)
+            case "ss":
+                self.get_season_id(url)
 
-                case "md":
-                    self.get_mid(url)
+            case "md":
+                self.get_mid(url)
 
-            # 先检查视频是否存在区域限制
-            self.check_bangumi_can_play()
+        # 先检查视频是否存在区域限制
+        self.check_bangumi_can_play()
 
-            self.get_bangumi_info()
-            self.get_bangumi_available_media_info()
+        self.get_bangumi_info()
+        self.get_bangumi_available_media_info()
 
-            return StatusCode.Success.value
-
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        return StatusCode.Success.value
     
-    def check_json(self, data: dict):
+    @staticmethod
+    def check_json(data: dict):
         status_code = data["code"]
         message = data["message"]
 

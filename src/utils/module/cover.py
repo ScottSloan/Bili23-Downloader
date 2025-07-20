@@ -7,7 +7,7 @@ from utils.common.request import RequestUtils
 from utils.common.thread import Thread
 from utils.common.enums import CoverType
 
-class CoverUtils:
+class Cover:
     @classmethod
     def view_cover(cls, parent, cover_url: str):
         def worker():

@@ -3,14 +3,16 @@ import wx.dataview
 from utils.config import Config
 
 from utils.common.enums import Platform, ParseType
-from utils.common.data_type import TreeListItemInfo, TreeListCallback
+from utils.common.data_type import TreeListItemInfo
 from utils.common.formatter import FormatUtils
 from utils.common.download_info import DownloadInfo
 
 from utils.parse.episode_v2 import EpisodeInfo
 
+from gui.component.menu.episode_list import EpisodeListMenu
+
 class TreeListCtrl(wx.dataview.TreeListCtrl):
-    def __init__(self, parent, callback: TreeListCallback):
+    def __init__(self, parent, main_window: wx.Window):
         def get_size():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
@@ -19,15 +21,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 case Platform.Linux | Platform.macOS:
                     return self.FromDIP((775, 350))
         
-        self.callback = callback
+        from gui.main_v3 import MainWindow
+
+        self.main_window: MainWindow = main_window
 
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
         self.SetSize(get_size())
 
         self.Bind_EVT()
-
-        self.init_id()
 
         self.init_episode_list()
 
@@ -38,19 +40,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.Bind(wx.EVT_SIZE, self.onSizeEVT)
 
-    def init_id(self):
-        self.ID_EPISODE_LIST_VIEW_COVER_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_COPY_TITLE_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_COPY_URL_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_EDIT_TITLE_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_CHECK_MENU = wx.NewIdRef()
-        self.ID_EPISODE_LIST_COLLAPSE_MENU = wx.NewIdRef()
-
     def init_episode_list(self):
         self.ClearColumns()
         self.DeleteAllItems()
 
-        self.AppendColumn("序号", width = self.FromDIP(100))
+        self.AppendColumn("序号", width = self.FromDIP(100 if Platform(Config.Sys.platform) != Platform.Linux else 125))
         self.AppendColumn("标题", width = self.FromDIP(385))
         self.AppendColumn("备注", width = self.FromDIP(75))
         self.AppendColumn("时长", width = self.FromDIP(75))
@@ -115,37 +109,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self.callback.onUpdateCheckedItemCount(self.GetCheckedItemCount())
+        self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
 
     def onItemContextMenuEVT(self, event):
-        menu = wx.Menu()
-
-        view_cover_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_VIEW_COVER_MENU, "查看封面(&V)")
-        copy_title_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COPY_TITLE_MENU, "复制标题(&C)")
-        copy_url_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COPY_URL_MENU, "复制链接(&U)")
-        edit_title_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_EDIT_TITLE_MENU, "修改标题(&E)")
-        check_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_CHECK_MENU, "取消选择(&N)" if self.GetCurrentItemCheckedState() else "选择(&S)")
-        collapse_menuitem = wx.MenuItem(menu, self.ID_EPISODE_LIST_COLLAPSE_MENU, "展开(&X)" if self.GetCurrentItemCollapsedState() else "折叠(&O)")
-
-        if self.GetCurrentItemType() == "node":
-            view_cover_menuitem.Enable(False)
-            copy_title_menuitem.Enable(False)
-            copy_url_menuitem.Enable(False)
-            edit_title_menuitem.Enable(False)
-        else:
-            collapse_menuitem.Enable(False)
-
-        menu.Append(view_cover_menuitem)
-        menu.AppendSeparator()
-        menu.Append(copy_title_menuitem)
-        menu.Append(copy_url_menuitem)
-        menu.AppendSeparator()
-        menu.Append(edit_title_menuitem)
-        menu.AppendSeparator()
-        menu.Append(check_menuitem)
-        menu.Append(collapse_menuitem)
-
         if self.GetSelection().IsOk():
+            menu = EpisodeListMenu(self.GetCurrentItemType(), self.GetCurrentItemCheckedState(), self.GetCurrentItemCollapsedState())
+
             self.PopupMenu(menu)
 
     def onSizeEVT(self, event):
@@ -169,6 +138,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.UpdateItemParentStateRecursively(item)
 
+        self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
+
     def CollapseCurrentItem(self):
         item = self.GetSelection()
 
@@ -178,9 +149,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.Expand(item)
 
     def CheckAllItems(self):
-        self.CheckItemRecursively(self.GetRootItem(), wx.CHK_CHECKED)
+        self.CheckItemRecursively(self.GetFirstItem(), wx.CHK_CHECKED)
 
-    def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int):
+    def GetAllCheckedItem(self, parse_type: ParseType, video_quality_id: int, video_codec_id: int):
         self.download_task_info_list = []
 
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
@@ -193,7 +164,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     item_data = self.GetItemData(item)
 
                     if item_data.cid:
-                        self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id))
+                        self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id, video_codec_id))
 
     def GetCurrentItemType(self):
         item = self.GetSelection()

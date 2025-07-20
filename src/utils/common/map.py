@@ -34,6 +34,23 @@ audio_quality_map = {
     "64K": 30216
 }
 
+audio_quality_sort_map = {
+    30300: 1,
+    30251: 2,
+    30250: 3,
+    30280: 4,
+    30232: 5,
+    30216: 6
+}
+
+audio_file_type_map = {
+    30251: "flac",
+    30250: "ec3",
+    30280: "m4a",
+    30232: "m4a",
+    30216: "m4a"
+}
+
 video_codec_map = {
     "AVC/H.264": 7,
     "HEVC/H.265": 12,
@@ -70,14 +87,17 @@ live_status_map = {
 
 danmaku_format_map = {
     "xml": 0,
-    "protobuf": 1
+    "protobuf": 1,
+    "json": 2,
+    "ass": 3
 }
 
 subtitle_format_map = {
     "srt": 0,
     "txt": 1,
     "lrc": 2,
-    "json": 3
+    "json": 3,
+    "ass": 4
 }
 
 cover_format_map = {
@@ -141,7 +161,8 @@ number_type_map = {
 
 exit_option_map = {
     "隐藏到托盘": 0,
-    "直接退出": 1
+    "直接退出": 1,
+    "总是询问": 2
 }
 
 scope_map = {

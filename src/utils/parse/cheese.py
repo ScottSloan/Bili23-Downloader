@@ -1,11 +1,10 @@
-from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
-from utils.common.enums import StatusCode, StreamType
+from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 from utils.parse.episode_v2 import Episode
 from utils.parse.audio import AudioInfo
@@ -24,11 +23,7 @@ class CheeseInfo:
     release: str = ""
     expiry: str = ""
 
-    stream_type: str = ""
-
-    episodes_list: list = []
-    video_quality_id_list: list = []
-    video_quality_desc_list: list = []
+    stream_type: str = "DASH"
 
     up_name: str = ""
     up_mid: int = 0
@@ -50,10 +45,6 @@ class CheeseInfo:
         cls.season_id = 0
         cls.up_name = ""
         cls.up_mid = 0
-
-        cls.episodes_list.clear()
-        cls.video_quality_id_list.clear()
-        cls.video_quality_desc_list.clear()
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -81,7 +72,14 @@ class CheeseParser(Parser):
 
         info_data = resp["data"]
 
-        info_data["sections"] = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+        # 过滤掉默认章节
+        filtered_sections = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+
+        # 如果过滤后没有章节，保留原始章节
+        if not filtered_sections:
+            filtered_sections = info_data["sections"]
+
+        info_data["sections"] = filtered_sections
 
         CheeseInfo.url = info_data["share_url"]
         CheeseInfo.title = info_data["title"]
@@ -89,6 +87,10 @@ class CheeseParser(Parser):
         CheeseInfo.views = info_data["stat"]["play_desc"]
         CheeseInfo.release = info_data["release_info"]
         CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
+
+        # 检查是否有可用的章节和剧集
+        if not info_data["sections"] or not info_data["sections"][0].get("episodes"):
+            raise GlobalException(message="该课程暂无可用内容或章节为空", code=StatusCode.CallError.value)
 
         CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
 
@@ -99,48 +101,45 @@ class CheeseParser(Parser):
 
         self.parse_episodes()
 
-    def get_cheese_available_media_info(self):
-        url = f"https://api.bilibili.com/pugv/player/web/playurl?avid={CheeseInfo.aid}&ep_id={CheeseInfo.ep_id}&cid={CheeseInfo.cid}&fnver=0&fnval=4048&fourk=1"
+    @classmethod
+    def get_cheese_available_media_info(cls, qn: int = None):
+        params = {
+            "avid": CheeseInfo.aid,
+            "ep_id": CheeseInfo.ep_id,
+            "cid": CheeseInfo.cid,
+            "fnver": 0,
+            "fnval": 4048,
+            "fourk": 1
+        }
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+        if qn: params["qn"] = qn
 
-        CheeseInfo.download_json = info = resp["data"]
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
-        CheeseInfo.video_quality_id_list = info["accept_quality"]
-        CheeseInfo.video_quality_desc_list = info["accept_description"]
-        
-        if "dash" in info:
-            AudioInfo.get_audio_quality_list(info["dash"])
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-            CheeseInfo.stream_type = StreamType.Dash.value
+        CheeseInfo.download_json = resp["data"].copy()
 
-        elif "durl" in info:
-            AudioInfo.get_audio_quality_list({})
+        if not qn:
+            CheeseInfo.stream_type = CheeseInfo.download_json.get("type")
 
-            CheeseInfo.stream_type = StreamType.Flv.value
+            AudioInfo.get_audio_quality_list(CheeseInfo.download_json.get("dash", {}))
 
-    def parse_url(self, url: str):
-        def worker():
-            self.clear_cheese_info()
+    def parse_worker(self, url: str):
+        self.clear_cheese_info()
 
-            match REUtils.find_string(r"ep|ss", url):
-                case "ep":
-                    self.get_epid(url)
+        match Regex.find_string(r"ep|ss", url):
+            case "ep":
+                self.get_epid(url)
 
-                case "ss":
-                    self.get_season_id(url)
+            case "ss":
+                self.get_season_id(url)
 
-            self.get_cheese_info()
+        self.get_cheese_info()
 
-            self.get_cheese_available_media_info()
+        self.get_cheese_available_media_info()
 
-            return StatusCode.Success.value
-
-        try:
-            return worker()
-
-        except Exception as e:
-            raise GlobalException(callback = self.callback.onError) from e
+        return StatusCode.Success.value
 
     def parse_episodes(self):
         if self.url_type == "season_id":

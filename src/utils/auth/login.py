@@ -10,7 +10,7 @@ from utils.config import Config, user_config_group
 from utils.common.enums import StatusCode
 from utils.common.request import RequestUtils
 
-from utils.module.face import FaceUtils
+from utils.module.face import Face
 
 class LoginInfo:
     url: str = ""
@@ -62,7 +62,7 @@ class Login:
 
         user_info = self.get_user_info(refresh = True)
 
-        Config.User.face_url = user_info["face_url"]
+        Config.User.face_url = user_info["face_url"] + "@.jpg"
         Config.User.username = user_info["username"]
 
         UniversalTool.remove_files([Config.User.face_path])
@@ -93,7 +93,7 @@ class Login:
 
     def login(self, info: dict):
         Config.User.login = True
-        Config.User.face_url = info["face_url"]
+        Config.User.face_url = info["face_url"] + "@.jpg"
         Config.User.username = info["username"]
         Config.User.login_expires = int((datetime.now() + timedelta(days = 365)).timestamp())
         Config.User.SESSDATA = info["SESSDATA"]
@@ -103,7 +103,7 @@ class Login:
 
         Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
-        FaceUtils.check_face_path()
+        Face.check_face_path()
 
 class QRLogin(Login):
     def __init__(self):

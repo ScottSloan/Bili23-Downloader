@@ -16,8 +16,10 @@ from gui.component.panel.panel import Panel
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
 class LoginWindow(Dialog):
-    def __init__(self, parent, callback: Callable):
-        self.callback = callback
+    def __init__(self, parent):
+        from gui.main_v3 import MainWindow
+
+        self.main_window: MainWindow = parent
 
         Dialog.__init__(self, parent, "登录")
         
@@ -67,17 +69,13 @@ class LoginWindow(Dialog):
 
         Thread(target = worker).start()
 
-    def Bind_EVT(self):        
-        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
-
+    def Bind_EVT(self):
         self.sms_page.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onValidateBoxSetFocusEVT)
         self.sms_page.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onValidateBoxKillFocusEVT)
 
-    def onCloseEVT(self, event):
+    def onCancelEVT(self):
         self.qr_page.onClose()
         self.sms_page.onClose()
-
-        event.Skip()
 
     def onValidateBoxSetFocusEVT(self, event):
         self.left_bmp.SetBitmap(Pic.get_pic_bitmap(PicID.LeftGirlMask))
@@ -92,7 +90,12 @@ class LoginWindow(Dialog):
         event.Skip()
 
     def onLoginSuccess(self):
-        wx.CallAfter(self.callback)
+        def worker():
+            self.main_window.init_menubar()
+
+            self.main_window.utils.show_user_info()
+
+        wx.CallAfter(worker)
         
         self.Close()
 

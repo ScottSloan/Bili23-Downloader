@@ -1,6 +1,6 @@
 import re
 
-class REUtils:
+class Regex:
     @classmethod
     def re_findall_in_group(cls, pattern: str, string: str, group: int):
         result = re.findall(pattern, string)

@@ -58,18 +58,10 @@ class DetectDialog(Dialog):
         self.detect_location()
 
     def Bind_EVT(self):
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
-
         self.refresh_btn.Bind(wx.EVT_BUTTON, self.onRefresh)
 
     def onRefresh(self, event):
         self.detect_location()
-
-    def onConfirm(self, event):
-        if self.env_chk.GetValue() or self.cwd_chk.GetValue():
-            event.Skip()
-        else:
-            wx.MessageDialog(self, "未选择路径\n\n请从下方选择 FFmpeg 路径", "警告", style = wx.ICON_WARNING).ShowModal()
 
     def detect_location(self):
         def set_enable(chk_control: wx.Window, lab_control: wx.Window, path: str):
@@ -87,7 +79,6 @@ class DetectDialog(Dialog):
 
         env_path, cwd_path = ffmpeg_path["env_path"], ffmpeg_path["cwd_path"]
 
-        
         set_enable(self.env_chk, self.env_path_lab, env_path)
         set_enable(self.cwd_chk, self.cwd_path_lab, cwd_path)
 
@@ -96,6 +87,8 @@ class DetectDialog(Dialog):
 
         if Config.Merge.ffmpeg_path == cwd_path:
             self.cwd_chk.SetValue(True)
+
+        self.ok_btn.Enable(self.env_chk.GetValue() or self.cwd_chk.GetValue())
 
     def getPath(self):
         if self.env_chk.GetValue():

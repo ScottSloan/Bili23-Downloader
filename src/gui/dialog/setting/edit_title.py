@@ -37,12 +37,9 @@ class EditTitleDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirm)
-        self.title_box.Bind(wx.EVT_TEXT_ENTER, self.onConfirm)
+        self.title_box.Bind(wx.EVT_TEXT_ENTER, self.onCloseEVT)
 
-    def onConfirm(self, event):
+    def onOKEVT(self):
         if not self.title_box.GetValue():
             wx.MessageDialog(self, "修改标题失败\n\n新标题不能为空", "警告", wx.ICON_WARNING).ShowModal()
-            return
-        
-        event.Skip()
+            return True

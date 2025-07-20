@@ -8,7 +8,7 @@ from utils.common.data_type import Callback, Process, PlayerCallback, RealTimeCa
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.directory import DirectoryUtils
 from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_windows_map, ffmpeg_video_gpu_linux_map, ffmpeg_video_gpu_darwin_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 from utils.common.enums import Platform
 from utils.common.thread import Thread
 from utils.common.color import Color
@@ -24,7 +24,7 @@ from gui.component.button.bitmap_button import BitmapButton
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.text_ctrl.time_ctrl import TimeCtrl
 from gui.component.player import Player, vlc_available
-from gui.component.range_slider import RangeSlider
+from gui.component.slider.range_slider import RangeSlider
 
 class SelectPage(Panel):
     def __init__(self, parent):
@@ -105,8 +105,12 @@ class DropFilePage(Panel):
         self.SetDropTarget(file_drop_target)
 
     def Bind_EVT(self):
+        self.Bind(wx.EVT_SIZE, self.onSizeEVT)
         self.Bind(wx.EVT_PAINT, self.onPaintEVT)
         self.Bind(wx.EVT_LEFT_DOWN, self.onBrowseFileEVT)
+
+    def onSizeEVT(self, event):
+        self.Refresh()
 
     def onPaintEVT(self, event):
         dc = wx.PaintDC(self)
@@ -273,7 +277,7 @@ class ContainerPage(Panel):
 
             stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
             stream_hbox.Add(video_sbox, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
-            stream_hbox.Add(audio_sbox, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+            stream_hbox.Add(audio_sbox, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
             vbox = wx.BoxSizer(wx.VERTICAL)
             vbox.Add(overall_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -783,7 +787,7 @@ class ContainerPage(Panel):
 
                     self.acodec = info.get("acodec")
 
-                    result = REUtils.find_output_format(self.acodec)
+                    result = Regex.find_output_format(self.acodec)
 
                     self.set_output_format(result)
 

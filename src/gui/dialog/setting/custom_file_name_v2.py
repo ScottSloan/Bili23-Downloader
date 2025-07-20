@@ -1,5 +1,6 @@
 import wx
 import os
+import wx.adv
 import webbrowser
 
 from utils.config import Config
@@ -8,11 +9,11 @@ from utils.common.map import scope_map, field_map, get_mapping_key_by_value
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.font import SysFont
-from utils.common.re_utils import REUtils
+from utils.common.regex import Regex
 
 from gui.component.window.dialog import Dialog
 from gui.component.text_ctrl.text_ctrl import TextCtrl
-from gui.component.tooltip import ToolTip
+from gui.component.misc.tooltip import ToolTip
 
 class AddNewTemplateDialog(Dialog):
     def __init__(self, parent, scope_id: int, add_mode = True, template: str = ""):
@@ -52,9 +53,6 @@ class AddNewTemplateDialog(Dialog):
         self.template_box = TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
         self.template_box.SetFont(font)
 
-        self.error_msg_lab = wx.StaticText(self, -1, "")
-        self.error_msg_lab.SetForegroundColour("red")
-
         preview_lab = wx.StaticText(self, -1, "预览")
         self.directory_lab = wx.StaticText(self, -1, "子目录：")
         self.file_name_lab = wx.StaticText(self, -1, "文件名：")
@@ -83,7 +81,6 @@ class AddNewTemplateDialog(Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(template_hbox, 0, wx.EXPAND)
         vbox.Add(self.template_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
-        vbox.Add(self.error_msg_lab, 0, wx.ALL, self.FromDIP(6))
         vbox.Add(preview_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(self.directory_lab, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(self.file_name_lab, 0, wx.ALL, self.FromDIP(6))
@@ -138,7 +135,6 @@ class AddNewTemplateDialog(Dialog):
 
             show_file_name()
 
-            self.error_msg_lab.SetLabel("")
             self.ok_btn.Enable(True)
 
         except Exception as e:
@@ -188,10 +184,10 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        if REUtils.find_illegal_chars(template):
+        file_name = FileNameFormatter.format_file_name(get_task_info(), template)
+
+        if Regex.find_illegal_chars(file_name):
             raise ValueError("illegal")
-        
-        file_name = FileNameFormatter.format_file_name(get_task_info(), template, basename = False)
         
         if len(os.path.basename(file_name)) > 255:
             raise ValueError("max length")
@@ -222,7 +218,11 @@ class AddNewTemplateDialog(Dialog):
             case _:
                 msg = str(e)
 
-        self.error_msg_lab.SetLabel(msg)
+        tip = wx.adv.RichToolTip("模板格式错误", msg)
+        tip.SetIcon(wx.ICON_ERROR)
+
+        tip.ShowFor(self.template_box)
+
         self.directory_lab.SetLabel("子目录：")
         self.file_name_lab.SetLabel("文件名：")
 
@@ -299,8 +299,6 @@ class CustomFileNameDialog(Dialog):
         self.edit_btn.Bind(wx.EVT_BUTTON, self.onEditEVT)
         self.delete_btn.Bind(wx.EVT_BUTTON, self.onDeleteEVT)
         self.reset_btn.Bind(wx.EVT_BUTTON, self.onResetEVT)
-
-        self.ok_btn.Bind(wx.EVT_BUTTON, self.onConfirmEVT)
 
         self.template_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onEditEVT)
 
@@ -390,7 +388,7 @@ class CustomFileNameDialog(Dialog):
 
             self.template_list.SortItems(self.listCompareCallback)
 
-    def onConfirmEVT(self, event):
+    def onOKEVT(self):
         Config.Temp.file_name_template_list.clear()
 
         for i in range(self.template_list.GetItemCount()):
@@ -398,8 +396,6 @@ class CustomFileNameDialog(Dialog):
                 "template": self.template_list.GetItemText(i, 1),
                 "scope": scope_map.get(self.template_list.GetItemText(i, 2))
             })
-
-        event.Skip()
 
     def check_existence(self, scope: str):
         for i in range(self.template_list.GetItemCount()):

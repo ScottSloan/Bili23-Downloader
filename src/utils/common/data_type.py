@@ -43,7 +43,13 @@ class DownloadTaskInfo:
         # 视频时长
         self.duration: int = 0
 
-        # 下载信息
+        # 下载目录
+        self.download_base_path: str = ""
+        # 完整下载目录
+        self.download_path: str = ""
+        # 下载文件名
+        self.file_name: str = ""
+        # 下载进度
         self.progress: int = 0
         # 总大小，单位字节
         self.total_file_size: int = 0
@@ -92,6 +98,10 @@ class DownloadTaskInfo:
         # UP 主信息
         self.up_info: dict = {}
 
+        # 视频宽度
+        self.video_width: int = 0
+        self.video_height: int = 0
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -118,6 +128,9 @@ class DownloadTaskInfo:
 
             "duration": self.duration,
 
+            "download_base_path": self.download_base_path,
+            "download_path": self.download_path,
+            "file_name": self.file_name,
             "progress": self.progress,
             "total_file_size": self.total_file_size,
             "total_downloaded_size": self.total_downloaded_size,
@@ -147,6 +160,9 @@ class DownloadTaskInfo:
             "area": self.area,
             "zone_info": self.zone_info,
             "up_info": self.up_info,
+
+            "video_width": self.video_width,
+            "video_height": self.video_height
         }
 
     def load_from_dict(self, data: Dict):
@@ -174,6 +190,9 @@ class DownloadTaskInfo:
 
         self.duration = data.get("duration", self.duration)
 
+        self.download_base_path = data.get("download_base_path", self.download_base_path)
+        self.download_path = data.get("download_path", self.download_path)
+        self.file_name = data.get("file_name", self.file_name)
         self.progress = data.get("progress", self.progress)
         self.total_file_size = data.get("total_file_size", self.total_file_size)
         self.total_downloaded_size = data.get("total_downloaded_size", self.total_downloaded_size)
@@ -203,6 +222,9 @@ class DownloadTaskInfo:
         self.area = data.get("area", self.area)
         self.zone_info = data.get("zone_info", self.zone_info)
         self.up_info = data.get("up_info", self.up_info)
+
+        self.video_width = data.get("video_width", self.video_width)
+        self.video_height = data.get("video_height", self.video_height)
 
 class DownloaderInfo:
     def __init__(self):
@@ -287,12 +309,6 @@ class NotificationMessage:
         self.video_title: str = ""
         self.status: int = 0
         self.video_merge_type: int = 0
-
-class TreeListCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onUpdateCheckedItemCount(count: int):
-        pass
 
 class TreeListItemInfo:
     def __init__(self):
@@ -406,7 +422,7 @@ class ParseCallback(ABC):
     
     @staticmethod
     @abstractmethod
-    def onBangumi(url: str):
+    def onJump(url: str):
         pass
     
     @staticmethod
@@ -445,3 +461,41 @@ class RealTimeCallback(ABC):
     @abstractmethod
     def onError(process):
         pass
+
+class CommentData:
+    start_time: int = 0
+    end_time: int = 0
+    text: str = ""
+    width: int = 0
+    row: int = 0
+
+class ASSStyle:
+    Name: str = "Default"
+    Fontname: str = ""
+    Fontsize: int = 48
+    PrimaryColour: str = ""
+    SecondaryColour: str = ""
+    OutlineColour: str = ""
+    BackColour: str = ""
+    Bold: int = 0
+    Italic: int = 0
+    Underline: int = 0
+    StrikeOut: int = 0
+    ScaleX: int = 100
+    ScaleY: int = 100
+    Spacing: int = 0
+    Angle: int = 0
+    BorderStyle: int = 1
+    Outline: int = 0
+    Shadow: int = 0
+    Alignment: int = 2
+    MarginL: int = 0
+    MarginR: int = 0
+    MarginV: int = 0
+    Encoding: int = 1
+
+    @classmethod
+    def to_string(cls):
+        values = [str(value) for key, value in cls.__dict__.items() if not key.startswith("__") and key != "to_string"]
+
+        return ",".join(values)

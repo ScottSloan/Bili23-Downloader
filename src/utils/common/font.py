@@ -38,3 +38,7 @@ class SysFont:
                 return [
                     "Menlo"
                 ]
+
+    @staticmethod
+    def get_sys_font_list():
+        return sorted(wx.FontEnumerator().GetFacenames())

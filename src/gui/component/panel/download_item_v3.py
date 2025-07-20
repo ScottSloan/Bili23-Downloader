@@ -14,14 +14,14 @@ from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
-from utils.module.cover import CoverUtils
+from utils.module.cover import Cover
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
 from utils.config import Config
 from utils.tool_v2 import DownloadFileTool
 
-from gui.component.info_label import InfoLabel
+from gui.component.label.info_label import InfoLabel
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
 
@@ -255,9 +255,9 @@ class DownloadTaskItemPanel(Panel):
         if not self.cover_bmp.GetBitmap():
             size = wx.Size(self.FromDIP(112), self.FromDIP(63))
 
-            image = CoverUtils.crop_cover(CoverUtils.get_cover_raw_contents(self.task_info.cover_url))
+            image = Cover.crop_cover(Cover.get_cover_raw_contents(self.task_info.cover_url))
 
-            bitmap = CoverUtils.get_scaled_bitmap_from_image(image, size)
+            bitmap = Cover.get_scaled_bitmap_from_image(image, size)
 
             image: wx.Image = image.Scale(size.width, size.height, wx.IMAGE_QUALITY_HIGH)
 
@@ -269,7 +269,7 @@ class DownloadTaskItemPanel(Panel):
         event.Skip()
 
     def onViewCoverEVT(self, event):
-        CoverUtils.view_cover(self.download_window, self.task_info.cover_url)
+        Cover.view_cover(self.download_window, self.task_info.cover_url)
 
     def onViewErrorEVT(self, event):
         if self.error_info:
@@ -291,7 +291,9 @@ class DownloadTaskItemPanel(Panel):
                 self.open_file_location()
             
             case DownloadStatus.MergeError:
-                self.merge_video()
+                self.set_download_status(DownloadStatus.Merging.value)
+
+                Thread(target = self.merge_video).start()
 
             case DownloadStatus.DownloadError:
                 self.resume_download()
@@ -336,22 +338,30 @@ class DownloadTaskItemPanel(Panel):
             download_parser = DownloadParser(self.task_info, self.onDownloadError)
             downloader_info = download_parser.get_download_url()
 
-            self.file_tool.update_info("task_info", self.task_info.to_dict())
+            update_task_info()
 
             # 开始下载
             self.downloader.set_downloader_info(downloader_info)
 
             self.downloader.start_download()
 
-        self.set_download_status(DownloadStatus.Downloading.value)
+        def update_task_info():
+            self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
+            self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
 
+            self.file_tool.update_info("task_info", self.task_info.to_dict())
+    
         self.downloader = Downloader(self.task_info, self.file_tool, callback)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
+                self.set_download_status(DownloadStatus.Downloading.value)
+
                 target = video_audio_download_worker
 
             case ParseType.Extra:
+                self.set_download_status(DownloadStatus.Generating.value)
+
                 target = self.download_extra
 
         Thread(target = target).start()
@@ -382,6 +392,8 @@ class DownloadTaskItemPanel(Panel):
             def onError(*process):
                 self.onMergeError()
 
+        self.set_download_status(DownloadStatus.Merging.value)
+        
         FFmpeg.Utils.merge(self.task_info, callback)
 
     def rename_file(self):
@@ -398,11 +410,11 @@ class DownloadTaskItemPanel(Panel):
             @staticmethod
             def onError(*process):
                 self.onDownloadError()
-    
-        ExtraParser.Utils.download(self.task_info, callback)
+
+        ExtraParser.Utils.download(self.task_info, callback, self.file_tool)
 
     def open_file_location(self):
-        path = os.path.join(FileNameFormatter.get_download_path(self.task_info), self.full_file_name)
+        path = os.path.join(self.task_info.download_path, self.full_file_name)
 
         DirectoryUtils.open_file_location(path)
 
@@ -431,7 +443,7 @@ class DownloadTaskItemPanel(Panel):
         def worker():
             if self.task_info.further_processing:
                 self.set_download_status(DownloadStatus.Merging.value)
-                
+
                 self.callback.onStartNextTask()
 
                 if self.task_info.ffmpeg_merge:
@@ -513,6 +525,15 @@ class DownloadTaskItemPanel(Panel):
                     self.speed_lab.SetLabel("正在获取下载链接...")
                     self.speed_lab.reset_color()
 
+                case DownloadStatus.Generating:
+                    self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
+
+                    self.speed_lab.SetLabel("正在生成中...")
+                    self.speed_lab.reset_color()
+
+                    self.pause_btn.Enable(False)
+                    self.stop_btn.Enable(False)
+
                 case DownloadStatus.Pause:
                     self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Play))
 
@@ -584,9 +605,5 @@ class DownloadTaskItemPanel(Panel):
         self.file_tool.update_task_info_kwargs(**kwargs)
     
     @property
-    def out_file_name(self):
-        return FileNameFormatter.format_file_name(self.task_info)
-
-    @property
     def full_file_name(self):
-        return FileNameFormatter.check_file_name_length(f"{self.out_file_name}.{self.task_info.output_type}")
+        return FileNameFormatter.check_file_name_length(f"{self.task_info.file_name}.{self.task_info.output_type}")

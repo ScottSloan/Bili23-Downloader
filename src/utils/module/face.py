@@ -5,13 +5,10 @@ from utils.config import Config
 
 from utils.common.request import RequestUtils
 
-class FaceUtils:
+class Face:
     @staticmethod
     def check_face_path():
-        if not Config.User.face_path:
-            _, file_ext = os.path.splitext(Config.User.face_url)
-
-            Config.User.face_path = os.path.join(Config.User.directory, f"face.{file_ext[1:]}")
+        Config.User.face_path = os.path.join(Config.User.directory, f"face.jpg")
 
     @classmethod
     def get_user_face_path(cls):

@@ -46,6 +46,10 @@ class ActionButton(Panel):
         self.lab.Bind(wx.EVT_LEAVE_WINDOW, self.onLabLeaveEVT)
         self.lab.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
 
+        self.icon.Bind(wx.EVT_ENTER_WINDOW, self.onLabHoverEVT)
+        self.icon.Bind(wx.EVT_LEAVE_WINDOW, self.onLabLeaveEVT)
+        self.icon.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
+
     def onHoverEVT(self, event):
         if not self._active:
             self.set_hover_bgcolor()

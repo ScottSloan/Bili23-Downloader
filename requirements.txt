@@ -1,4 +1,5 @@
-requests==2.32.3
+requests==2.32.4
 wxPython==4.2.3
 qrcode[pil]==7.4.2
 python-vlc==3.0.21203
+protobuf==3.19.0

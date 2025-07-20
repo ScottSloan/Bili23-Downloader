@@ -6,8 +6,9 @@ from utils.common.enums import Platform
 class Dialog(wx.Dialog):
     def __init__(self, parent, title):
         wx.Dialog.__init__(self, parent, -1, title)
-        
-        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+        self.Bind(wx.EVT_BUTTON, self.onCloseEVT, id = wx.ID_OK)
+        self.Bind(wx.EVT_BUTTON, self.onCloseEVT, id = wx.ID_CANCEL)
 
     def get_scaled_size(self, size: tuple):
         match Platform(Config.Sys.platform):
@@ -21,10 +22,25 @@ class Dialog(wx.Dialog):
         if not Config.Sys.dark_mode:
             self.SetBackgroundColour("white")
 
-    def onCloseEVT(self, event: wx.CloseEvent):
-        match Platform(Config.Sys.platform):
-            case Platform.Windows | Platform.Linux:
+    def onCloseEVT(self, event):
+        match event.GetId():
+            case wx.ID_OK:
+                rtn =  self.onOKEVT()
+
+            case wx.ID_CANCEL:
+                rtn = self.onCancelEVT()
+
+            case _:
+                rtn = False
+
+        if not rtn:
+            if Platform(Config.Sys.platform) == Platform.Windows:
                 self.Destroy()
 
-            case Platform.macOS:
-                event.Skip()
+            return event.Skip()
+    
+    def onOKEVT(self):
+        pass
+
+    def onCancelEVT(self):
+        pass

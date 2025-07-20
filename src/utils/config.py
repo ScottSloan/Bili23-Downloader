@@ -23,7 +23,7 @@ app_config_group = {
         "window_pos",
         "window_size",
         "window_maximized",
-        "show_exit_dialog"
+        "ass_style"
     ],
     "Download": [
         "path",
@@ -52,10 +52,9 @@ app_config_group = {
     ],
     "Merge": [
         "ffmpeg_path",
-        "ffmpeg_check_available_when_lauch",
+        "ffmpeg_check_available_when_launch",
         "override_option",
         "keep_original_files",
-        "m4a_to_mp3"
     ],
     "Proxy": [
         "proxy_mode",
@@ -70,7 +69,7 @@ app_config_group = {
         "show_episode_full_name",
         "auto_check_episode_item",
         "show_user_info",
-        "check_update_when_lauch",
+        "check_update_when_launch",
         "enable_debug"
     ],
 }
@@ -106,18 +105,18 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.63.1"
-        version_code: int = 1631
+        version: str = "1.64.0"
+        version_code: int = 1640
 
-        task_file_min_version_code: int = 1630
-        app_config_file_min_version_code: int = 1630
+        task_file_min_version_code: int = 1640
+        app_config_file_min_version_code: int = 1640
         user_config_file_min_version_code: int = 1620
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
     class Basic:
         listen_clipboard: bool = True
-        exit_option: int = 0
+        exit_option: int = 3
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
         remember_window_status: bool = False
@@ -131,11 +130,41 @@ class Config:
         download_cover_file: bool = False
         cover_file_type: int = 0
 
+        ass_style: Dict[str, Dict] = {
+            "danmaku": {
+                "font_name": "default",
+                "font_size": 48,
+                "bold": 0,
+                "italic": 0,
+                "underline": 0,
+                "strikeout": 0,
+                "border": 2.0,
+                "shadow": 0.0,
+                "scroll_duration": 10,
+                "stay_duration": 5
+            },
+            "subtitle": {
+                "font_name": "default",
+                "font_size": 48,
+                "bold": 0,
+                "italic": 0,
+                "underline": 0,
+                "strikeout": 0,
+                "border": 2.0,
+                "shadow": 2.0,
+                "primary_color": "&H00FFFFFF",
+                "border_color": "&H00000000",
+                "shadow_color": "&H00000000",
+                "marginL": 10,
+                "marginR": 10,
+                "marginV": 10,
+                "alignment": 2
+            }
+        }
+
         window_pos: list = []
         window_size: list = []
         window_maximized: bool = False
-
-        show_exit_dialog: bool = True
 
     class Proxy:
         proxy_mode: int = 1
@@ -169,7 +198,7 @@ class Config:
         show_episode_full_name: bool = False
         auto_check_episode_item: bool = False
         enable_debug: bool = False
-        check_update_when_lauch: bool = True
+        check_update_when_launch: bool = True
         show_user_info: bool = True
 
     class Download:
@@ -209,16 +238,12 @@ class Config:
     
     class Merge:
         ffmpeg_path: str = ""
-        ffmpeg_check_available_when_lauch: bool = True
+        ffmpeg_check_available_when_launch: bool = True
 
         override_option: int = 1
         keep_original_files: bool = False
-        m4a_to_mp3: bool = True
 
     class Temp:
-        update_json: dict = None
-        changelog: str = None
-
         need_login: bool = False
 
         cdn_list: list = []
@@ -226,6 +251,16 @@ class Config:
         user_agent: str = ""
 
         file_name_template_list: list = []
+
+        ass_style: Dict[str, Dict] = {}
+
+        ass_resolution_confirm: bool = False
+
+        ass_custom_resolution: bool = False
+        ass_video_width: int = 1920
+        ass_video_height: int = 1080
+
+        remember_resolution_settings: bool = False
 
     class Auth:
         img_key: str = ""
@@ -266,7 +301,7 @@ class Config:
         always_use_https_protocol: bool = True
         check_md5: bool = True
 
-        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0"
+        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
 
     @classmethod
     def load_config(cls):

@@ -1,7 +1,7 @@
 import wx
 import os
 
-from utils.module.cover import CoverUtils
+from utils.module.cover import Cover
 
 from utils.common.color import Color
 
@@ -62,7 +62,7 @@ class CoverViewerDialog(Frame):
         self.SetMenuBar(menu_bar)
 
     def init_statusbar(self):
-        width, height = CoverUtils.get_cover_size(self.cover_raw_contents)
+        width, height = Cover.get_cover_size(self.cover_raw_contents)
 
         self.status_bar: wx.StatusBar = self.CreateStatusBar()
 
@@ -92,7 +92,7 @@ class CoverViewerDialog(Frame):
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
 
-            cover_raw_contents = CoverUtils.download_cover(self.cover_url, dlg.GetFilterIndex())
+            cover_raw_contents = Cover.download_cover(self.cover_url, dlg.GetFilterIndex())
 
             with open(save_path, "wb") as f:
                 f.write(cover_raw_contents)
@@ -117,13 +117,13 @@ class CoverViewerDialog(Frame):
         self.SetSize(cover_width, cover_height + (self.GetSize()[1] - self.GetClientSize()[1]))
 
     def onOriginalSizeEVT(self, event):
-        self.cover_bmp.SetBitmap(CoverUtils.get_image_obj(self.cover_raw_contents))
+        self.cover_bmp.SetBitmap(Cover.get_image_obj(self.cover_raw_contents))
 
         self.onFitSizeEVT(event)
 
         self.CenterOnScreen()
 
     def show_cover(self, new_size: wx.Size):
-        cover_size = CoverUtils.get_scaled_size(self.cover_raw_contents, new_size)
+        cover_size = Cover.get_scaled_size(self.cover_raw_contents, new_size)
 
-        return CoverUtils.get_scaled_bitmap(self.cover_raw_contents, cover_size)
+        return Cover.get_scaled_bitmap(self.cover_raw_contents, cover_size)

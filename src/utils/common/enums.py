@@ -30,7 +30,8 @@ class ProxyMode(Enum):
 class DanmakuType(Enum):
     XML = 0                       # XML 格式
     Protobuf = 1                  # Protobuf 格式
-    ASS = 2                       # ASS 格式
+    JSON = 2                      # JSON 格式
+    ASS = 3                       # ASS 格式
 
 class SubtitleType(Enum):
     SRT = 0                       # SRT 格式
@@ -46,12 +47,14 @@ class CoverType(Enum):
     AVIF = 3                      # avif 格式
 
 class StreamType(Enum):
-    Dash = 0                      # dash 流
-    Flv = 1                       # flv 流
+    Dash = "DASH"                 # dash 流
+    Flv = "FLV"                   # flv 流
+    Mp4 = "MP4"                   # mp4 流
 
 class DownloadStatus(Enum):
     Waiting = 0                   # 等待下载
     Downloading = 1               # 下载中
+    Generating = 10               # 生成中
     Pause = 2                     # 暂停中
     Merging = 3                   # 合成中
     Complete = 4                  # 下载完成
@@ -71,7 +74,9 @@ class StatusCode(Enum):
     CallError = 610               # 调用出错
     DownloadError = 611           # 下载失败
     MaxRetry = 612                # 最大重试
+    Cancel = 613                  # 取消解析
     Area_Limit = -10403           # 区域限制
+    OtherError = None             # 其他错误
 
 class VideoQualityID(Enum):
     _None = 0                     # 无视频
@@ -111,7 +116,7 @@ class Platform(Enum):
     macOS = "darwin"              # macOS
 
 class ParseStatus(Enum):
-    Finish = 0                    # 解析完成
+    Success = 0                   # 解析完成
     Parsing = 1                   # 解析中
     Error = 2                     # 解析失败
 
@@ -130,13 +135,15 @@ class NumberType(Enum):
     Episode_List = 2              # 剧集列表序号
 
 class ProcessingType(Enum):
-    Normal = 1                    # 正常
+    Process = 1                   # 处理
     Parse = 2                     # 解析
     Interact = 3                  # 解析互动视频
 
 class ExitOption(Enum):
     TaskIcon = 0                  # 托盘图标
     Exit = 1                      # 直接退出
+    Ask = 2                       # 总是询问
+    AskOnce = 3                   # 询问一次
 
 class SubtitleLanOption(Enum):
     All_Subtitles_With_AI = 0     # 下载全部字幕 + AI 字幕

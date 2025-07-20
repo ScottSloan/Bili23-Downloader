@@ -203,7 +203,7 @@ class Downloader:
                         return new_url, etag, file_size
     
     def generate_ranges(self, file_size: int):
-        num_threads = Config.Download.max_thread_count
+        num_threads = Config.Download.max_thread_count if file_size > 1024 * 1024 else 1
         part_size = file_size // num_threads
 
         ranges = []

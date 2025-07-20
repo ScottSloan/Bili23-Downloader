@@ -14,7 +14,7 @@ from utils.common.formatter import FormatUtils
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
-class LiveRecordingWindow(Dialog):
+class LiveRecordingDialog(Dialog):
     def __init__(self, parent):
         Dialog.__init__(self, parent, "直播录制")
 
@@ -116,11 +116,10 @@ class LiveRecordingWindow(Dialog):
             if dlg.ShowModal() == wx.ID_YES:
                 self.terminate_ffmpeg_process()
 
-                event.Skip()
-
-                return
-            
-        event.Skip()
+            else:
+                return True
+        
+        super().onCloseEVT(event)
 
     def onCopyLinkEVT(self, event):
         # 复制到剪切板

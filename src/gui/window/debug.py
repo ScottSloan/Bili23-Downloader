@@ -4,7 +4,7 @@ from gui.component.window.frame import Frame
 
 class DebugWindow(Frame):
     def __init__(self, parent):
-        from gui.main_v2 import MainWindow
+        from gui.main_v3 import MainWindow
         
         self.parent: MainWindow = parent
 

@@ -5,13 +5,13 @@ from utils.config import Config
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
-class UpdateWindow(Dialog):
-    def __init__(self, parent):
+class UpdateDialog(Dialog):
+    def __init__(self, parent, info: dict):
+        self.info = info
+
         Dialog.__init__(self, parent, "检查更新")
 
         self.init_UI()
-
-        self.Bind_EVT()
 
         self.CenterOnParent()
 
@@ -38,7 +38,7 @@ class UpdateWindow(Dialog):
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        self.update_btn = wx.Button(self, -1, "更新", size = self.FromDIP((100, 28)))
+        self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((100, 28)))
         self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((100, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -58,24 +58,19 @@ class UpdateWindow(Dialog):
 
         self.set_dark_mode()
     
-    def Bind_EVT(self):
-        self.update_btn.Bind(wx.EVT_BUTTON, self.onUpdate)
-    
-    def onUpdate(self, event):
+    def onOKEVT(self):
         import webbrowser
 
-        webbrowser.open(Config.Temp.update_json["url"])
+        webbrowser.open(self.info["url"])
 
         self.Hide()
 
     def showUpdateInfo(self):
-        data = Config.Temp.update_json
-
         self.SetTitle("检查更新")
 
-        self.changelog.SetValue(data["changelog"])
+        self.changelog.SetValue(self.info["changelog"])
 
-        self.detail_lab.SetLabel(f"Version {data['version']}，发布于 {data['date']}，大小 {data['size']}")
+        self.detail_lab.SetLabel(f"Version {self.info['version']}，发布于 {self.info['date']}，大小 {self.info['size']}")
 
         self.update_btn.Show(True)
 

@@ -12,18 +12,18 @@ from utils.parse.audio import AudioInfo
 
 class DownloadInfo:
     @classmethod
-    def get_download_info(cls, item_info: TreeListItemInfo, parse_type: ParseType, video_quality_id: int):
+    def get_download_info(cls, item_info: TreeListItemInfo, parse_type: ParseType, video_quality_id: int, video_codec_id: int):
         download_info_list = []
 
         info = cls.get_media_download_info(item_info, parse_type)
 
         if Config.Download.stream_download_option:
-            info = cls.get_download_params_info(info, video_quality_id)
+            info = cls.get_download_params_info(info, video_quality_id, video_codec_id)
 
             download_info_list.append(cls.get_task_info_obj(info))
 
         if Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file:
-            info = cls.get_extra_download_info(info)
+            info = cls.get_extra_download_info(info, video_quality_id)
 
             download_info_list.append(cls.get_task_info_obj(info))
 
@@ -40,6 +40,8 @@ class DownloadInfo:
 
             case ParseType.Cheese:
                 info = cls.get_cheese_download_info(item_info)
+        
+        info["download_base_path"] = Config.Download.path
 
         return info
     
@@ -110,19 +112,20 @@ class DownloadInfo:
         }
     
     @staticmethod
-    def get_download_params_info(info: dict, video_quality_id):
+    def get_download_params_info(info: dict, video_quality_id: int, video_codec_id: int):
         info["download_option"] = Config.Download.stream_download_option
         info["video_quality_id"] = video_quality_id
         info["audio_quality_id"] = AudioInfo.audio_quality_id
-        info["video_codec_id"] = Config.Download.video_codec_id
+        info["video_codec_id"] = video_codec_id
         info["further_processing"] = True
         info["ffmpeg_merge"] = Config.Download.ffmpeg_merge
 
         return info
 
     @staticmethod
-    def get_extra_download_info(info: dict):
+    def get_extra_download_info(info: dict, video_quality_id: int):
         info["download_type"] = ParseType.Extra.value
+        info["video_quality_id"] = video_quality_id
         info["further_processing"] = False
         info["ffmpeg_merge"] = False
         info["extra_option"] = {
@@ -133,6 +136,10 @@ class DownloadInfo:
             "download_cover_file": Config.Basic.download_cover_file,
             "cover_file_type": Config.Basic.cover_file_type
         }
+
+        if Config.Temp.ass_resolution_confirm and Config.Temp.ass_custom_resolution:
+            info["video_width"] = Config.Temp.ass_video_width
+            info["video_height"] = Config.Temp.ass_video_height
 
         return info
     

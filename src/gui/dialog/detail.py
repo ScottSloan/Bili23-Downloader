@@ -20,6 +20,10 @@ class DetailDialog(Dialog):
     def __init__(self, parent, parse_type: ParseType):
         self.parse_type = parse_type
 
+        from gui.main_v3 import MainWindow
+
+        self.main_window: MainWindow = parent
+
         Dialog.__init__(self, parent, "详细信息")
 
         self.init_UI()
@@ -56,6 +60,9 @@ class DetailDialog(Dialog):
 class DetailPage(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
+
+        parent_dailog: DetailDialog = self.GetParent().GetParent()
+        self.main_window = parent_dailog.main_window
 
         self.html_page = wx.html.HtmlWindow(self, -1, size = self.FromDIP((550, 300)))
 
@@ -151,7 +158,7 @@ class VideoPage(DetailPage):
 
                 self.html_page.AppendToPage(tag_div)
 
-            self.GetParent().GetParent().GetParent().video_parser.get_video_tag()
+            self.main_window.parser.parser.get_video_tag()
 
             wx.CallAfter(add_tag)
 

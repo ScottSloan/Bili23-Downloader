@@ -1,7 +1,6 @@
 import wx
 import json
 
-
 from utils.auth.login import CaptchaUtils, LoginInfo
 
 from gui.component.window.dialog import Dialog
@@ -24,7 +23,12 @@ class CaptchaWindow(Dialog):
     def init_UI(self):
         self.webview = Webview(self)
 
-        self.webview.browser.SetPage(self.webview.get_page("captcha.html"), "")
+        page = self.webview.get_page("captcha.html")
+
+        if not page:
+            return
+
+        self.webview.browser.SetPage(page, "")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)

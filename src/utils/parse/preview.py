@@ -1,24 +1,25 @@
-from functools import reduce
-
 from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
 from utils.common.request import RequestUtils
+from utils.common.data_type import DownloadTaskInfo
 
-from utils.parse.video import VideoInfo
-from utils.parse.bangumi import BangumiInfo
-from utils.parse.cheese import CheeseInfo
+from utils.parse.video import VideoInfo, VideoParser
+from utils.parse.bangumi import BangumiInfo, BangumiParser
+from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.audio import AudioInfo
 
 from utils.module.cdn import CDN
 
 class Preview:
     def __init__(self, parse_type: ParseType, stream_type: int):
-        self.stream_type = stream_type
+        self.parse_type, self.stream_type = parse_type, stream_type
+
         self.download_json = self.get_download_json(parse_type)
 
         self.video_size_cache = {}
         self.audio_size_cache = {}
 
-    def get_download_json(self, parse_type: ParseType):
+    @staticmethod
+    def get_download_json(parse_type: ParseType):
         match parse_type:
             case ParseType.Video:
                 return VideoInfo.download_json
@@ -28,96 +29,91 @@ class Preview:
 
             case ParseType.Cheese:
                 return CheeseInfo.download_json
+            
+    def refresh_download_json(self, video_quality_id: int):
+        match self.parse_type:
+            case ParseType.Video:
+                VideoParser.get_video_available_media_info(video_quality_id)
 
-    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int):
-        def get_stream_json():
+            case ParseType.Bangumi:
+                BangumiParser.get_bangumi_available_media_info(video_quality_id)
+
+            case ParseType.Cheese:
+                CheeseParser.get_cheese_available_media_info(video_quality_id)
+
+        self.download_json = self.get_download_json(self.parse_type)
+
+    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int, requery: bool = False):
+        def get_info(data: dict):
             match StreamType(self.stream_type):
                 case StreamType.Dash:
-                    return self.download_json["dash"]["video"]
-
-                case StreamType.Flv:
-                    return self.download_json
-
-        def get_url_list():
-            match StreamType(self.stream_type):
-                case StreamType.Dash:
-                    for entry in self.download_json["dash"]["video"]:
+                    for entry in data["dash"]["video"]:
                         if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
-                            frame_rate = entry["frame_rate"]
-                            bandwidth = entry["bandwidth"]
-
-                            return self.get_stream_download_url_list(entry), frame_rate, bandwidth
+                            return {
+                                "id": video_quality_id,
+                                "codec": entry["codecid"],
+                                "framerate": entry["frame_rate"],
+                                "bandwidth": entry["bandwidth"],
+                                "size": self.get_file_size(self.get_stream_download_url_list(entry))
+                            }
                         
                 case StreamType.Flv:
-                    return None, None, None
-                
-        def get_file_size():
-            match StreamType(self.stream_type):
-                case StreamType.Dash:
-                    return self.get_file_size(url_list)
-                
-                case StreamType.Flv:
-                    return reduce(lambda total, entry: total + entry["size"], self.download_json["durl"], 0)
+                    size = 0
 
-        video_quality_id = self.get_video_quality_id(video_quality_id, self.stream_type, get_stream_json())
-        video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, get_stream_json())
+                    for entry in data["durl"]:
+                        size += entry["size"]
+
+                    return {
+                        "id": video_quality_id,
+                        "codec": video_codec_id,
+                        "seg": len(data["durl"]),
+                        "size": size
+                    }
+                
+                case StreamType.Mp4:
+                    if data["durls"]:
+                        for entry in data["durls"]:
+                            if entry["quality"] == video_quality_id:
+                                node = entry["durl"][0]
+                    else:
+                        node = data["durl"][0]
+
+                    return {
+                        "id": video_quality_id,
+                        "codec": video_codec_id,
+                        "size": node["size"]
+                }
+
+        if requery:
+            self.refresh_download_json(video_quality_id)
+
+        video_quality_id = self.get_video_quality_id(video_quality_id, self.download_json)
+        video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, self.download_json)
 
         key = f"{video_quality_id} - {video_codec_id}"
 
         if key not in self.video_size_cache:
-            try:
-                (url_list, frame_rate, bandwidth) = get_url_list()
-
-                self.video_size_cache[key] = {
-                    "video_quality_id": video_quality_id,
-                    "video_codec_id": video_codec_id,
-                    "frame_rate": frame_rate,
-                    "bandwidth": bandwidth,
-                    "size": get_file_size()
-                }
-
-            except Exception:
-                return
-
+            self.video_size_cache[key] = get_info(self.download_json)
+        
         return self.video_size_cache.get(key)
 
-    def get_audio_stream_size(self, audio_quality_id: int):
-        def get_url_list(data: dict):
-            match AudioQualityID(audio_quality_id):
-                case AudioQualityID._Dolby_Atoms:
-                    data_node = data["dolby"]["audio"][0]
-                    bandwidth = data_node["bandwidth"]
+    def get_audio_stream_info(self, audio_quality_id: int):
+        def get_info(data: dict):
+            all_url_list = AudioInfo.get_all_audio_url_list(data)
 
-                case AudioQualityID._Hi_Res:
-                    data_node = data["flac"]["audio"]
-                    bandwidth = data_node["bandwidth"]
-                
-                case _:
-                    for entry in data["audio"]:
-                        if entry["id"] == audio_quality_id:
-                            data_node = entry
-
-                            bandwidth = entry["bandwidth"]
-                            break
-
-            return self.get_stream_download_url_list(data_node), bandwidth
-
-        if self.stream_type == StreamType.Flv.value:
-            return
-        
-        if not AudioInfo.Availability.audio:
-            return
+            for entry in all_url_list:
+                if entry["id"] == audio_quality_id:
+                    return {
+                        "id": audio_quality_id,
+                        "codec": "m4a" if entry["codecs"].startswith("mp4a") else entry["codecs"],
+                        "bandwidth": entry["bandwidth"],
+                        "size": self.get_file_size(self.get_stream_download_url_list(entry))
+                    }
 
         audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
         
         if audio_quality_id not in self.audio_size_cache:
-            (url_list, bandwidth) = get_url_list(self.download_json["dash"])
-
-            self.audio_size_cache[audio_quality_id] = {
-                "audio_quality_id": audio_quality_id,
-                "bandwidth": bandwidth,
-                "size": self.get_file_size(url_list)
-            }     
+            self.audio_size_cache[audio_quality_id] = get_info(self.download_json["dash"])
 
         return self.audio_size_cache.get(audio_quality_id)
     
@@ -126,83 +122,36 @@ class Preview:
             if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
                 return video_codec_id
 
-    @staticmethod
-    def get_video_quality_id(video_quality_id: int, stream_type: int, data: list | dict):
-        def get_highest_video_quality_id(data: list):
-            match StreamType(stream_type):
-                case StreamType.Dash:
-                    highest_video_quality_id = VideoQualityID._360P.value
+    @classmethod
+    def get_video_quality_id(cls, video_quality_id: int, data: dict):
+        video_quality_id_list = cls.get_video_available_quality_id_list(data)
 
-                    for entry in data:
-                        if entry["id"] > highest_video_quality_id:
-                            highest_video_quality_id = entry["id"]
-
-                    return highest_video_quality_id
-                
-                case StreamType.Flv:
-                    return data["accept_quality"][0]
-
-        highest_video_quality_id = get_highest_video_quality_id(data)
-
-        if video_quality_id == VideoQualityID._Auto.value:
-            video_quality_id = highest_video_quality_id
-
-        elif highest_video_quality_id < video_quality_id:
-            video_quality_id = highest_video_quality_id
-
-        return video_quality_id
+        if video_quality_id in video_quality_id_list:
+            return video_quality_id
+        else:
+            return max(video_quality_id_list)
 
     @staticmethod
     def get_audio_quality_id(audio_quality_id: int, data: dict):
-        def get_highest_audio_quality_id(data: dict):
-            highest_audio_quality = AudioQualityID._64K.value
+        audio_quality_id_list, audio_quality_desc_list = AudioInfo.get_audio_quality_id_desc_list(data)
 
-            for entry in data["audio"]:
-                if entry["id"] > highest_audio_quality:
-                    highest_audio_quality = entry["id"]
+        audio_quality_id_list.remove(AudioQualityID._Auto.value)
 
-            if "dolby" in data and data["dolby"]:
-                if data["dolby"]["audio"]:
-                    highest_audio_quality = AudioQualityID._Dolby_Atoms.value
-
-            if "flac" in data and data["flac"]:
-                if data["flac"]["audio"]:
-                    highest_audio_quality = AudioQualityID._Hi_Res.value
-
-            return highest_audio_quality
+        if audio_quality_id in audio_quality_id_list:
+            return audio_quality_id
+        else:
+            return audio_quality_id_list[0] if audio_quality_id_list else None
         
-        highest_audio_quality = get_highest_audio_quality_id(data)
-
-        match AudioQualityID(audio_quality_id):
-            case AudioQualityID._Auto:
-                audio_quality_id = highest_audio_quality
-
-            case AudioQualityID._Dolby_Atoms | AudioQualityID._Hi_Res:
-                if highest_audio_quality != audio_quality_id:
-                    audio_quality_id = highest_audio_quality
-
-            case AudioQualityID._192K | AudioQualityID._132K | AudioQualityID._64K:
-                if AudioQualityID(highest_audio_quality) not in [AudioQualityID._Dolby_Atoms, AudioQualityID._Hi_Res] and highest_audio_quality < audio_quality_id:
-                    audio_quality_id = highest_audio_quality
-
-        return audio_quality_id
-
     @staticmethod
-    def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: list):
+    def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: dict):
         def check_codec_id():
             match StreamType(stream_type):
                 case StreamType.Dash:
-                    codec_id_list = []
-
-                    for entry in data:
-                        if entry["id"] == video_quality_id:
-                            codec_id_list.append(entry["codecid"])
-
-                    return codec_id_list
-                
-                case StreamType.Flv:
+                    return [entry["codecid"] for entry in data["dash"]["video"] if entry["id"] == video_quality_id]
+                    
+                case StreamType.Flv | StreamType.Mp4:
                     return [VideoCodecID.AVC.value]
-
+                
         codec_id_list = check_codec_id()
 
         if video_codec_id not in codec_id_list:
@@ -210,7 +159,46 @@ class Preview:
         
         return video_codec_id
 
-    def get_file_size(self, url_list: list):
+    @classmethod
+    def get_video_resolution(cls, task_info: DownloadTaskInfo, data: dict):
+        video_quality_id = cls.get_video_quality_id(task_info.video_quality_id, data)
+
+        stream_type = data.get("type", "DASH" if "dash" in data else "FLV")
+
+        match StreamType(stream_type):
+            case StreamType.Dash:
+                for entry in data["dash"]["video"]:
+                    if entry["id"] == video_quality_id:
+                        return entry["width"], entry["height"]
+                    
+            case StreamType.Flv:
+                pass
+
+            case StreamType.Mp4:
+                pass
+
+    @classmethod
+    def get_video_quality_id_desc_list(cls, data: dict):
+        video_quality_id_list, video_quality_desc_list = [VideoQualityID._Auto.value], ["自动"]
+
+        video_quality_id_list.extend(data["accept_quality"])
+        video_quality_desc_list.extend(data["accept_description"])
+
+        return video_quality_id_list, video_quality_desc_list
+
+    @staticmethod
+    def get_video_available_quality_id_list(data: dict):
+        available_list = {}
+
+        for entry in data["dash"]["video"]:
+            id = entry["id"]
+
+            available_list[id] = id
+
+        return list(available_list.keys())
+
+    @staticmethod
+    def get_file_size(url_list: list):
         def request_head(url: str, cdn: str):
             return RequestUtils.request_head(CDN.replace_cdn(url, cdn), headers = RequestUtils.get_headers(referer_url = "https://www.bilibili.com"))
 
@@ -237,3 +225,10 @@ class Preview:
                     yield v
 
         return [i for i in generator([data[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in data])]
+    
+    @staticmethod
+    def get_cache(key: int, cache: dict, data: dict):
+        if key not in cache:
+            data[key] = data
+
+        data.get(key)
