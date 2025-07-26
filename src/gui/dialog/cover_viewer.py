@@ -1,7 +1,7 @@
 import wx
 import os
 
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 
 from utils.common.color import Color
 

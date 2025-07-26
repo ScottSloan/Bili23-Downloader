@@ -542,7 +542,10 @@ class DownloadOptionDialog(Dialog):
 
     def check_ass_only(self):
         not_dash = StreamType(self.parent.stream_type) != StreamType.Dash
-        Config.Temp.ass_resolution_confirm = (not self.media_option_box.download_video_steam_chk.GetValue() or not_dash) and (self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" or self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass")
+        ass_danmaku = self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" and self.extra_box.download_danmaku_file_chk.GetValue()
+        ass_subtitle = self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass" and self.extra_box.download_subtitle_file_chk.GetValue()
+
+        Config.Temp.ass_resolution_confirm = (not self.media_option_box.download_video_steam_chk.GetValue() or not_dash) and (ass_danmaku or ass_subtitle)
 
         video_quality_desc_list = self.media_info_box.video_quality_choice.GetItems()
         video_quality_desc = self.media_info_box.video_quality_choice.GetStringSelection()

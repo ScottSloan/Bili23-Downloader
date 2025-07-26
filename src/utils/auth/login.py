@@ -10,7 +10,7 @@ from utils.config import Config, user_config_group
 from utils.common.enums import StatusCode
 from utils.common.request import RequestUtils
 
-from utils.module.face import Face
+from utils.module.pic.face import Face
 
 class LoginInfo:
     url: str = ""

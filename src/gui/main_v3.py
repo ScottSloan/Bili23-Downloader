@@ -11,9 +11,9 @@ from utils.common.thread import Thread
 from utils.common.update import Update
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
-from utils.module.face import Face
+from utils.module.pic.face import Face
 from utils.module.clipboard import ClipBoard
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 from utils.module.ffmpeg_v2 import FFmpeg
 
 from utils.parse.video import VideoInfo, VideoParser

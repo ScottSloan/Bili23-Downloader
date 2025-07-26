@@ -19,7 +19,7 @@ from utils.tool_v2 import DownloadFileTool
 from utils.parse.preview import Preview
 from utils.parse.download import DownloadParser
 
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 from utils.module.danmaku.ass_file import ASS
 from utils.module.danmaku.danmaku import Danmaku
 from utils.module.danmaku.xml_file import XML

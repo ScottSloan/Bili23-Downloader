@@ -105,8 +105,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.64.0"
-        version_code: int = 164000
+        version: str = "1.65.0"
+        version_code: int = 165000
 
         task_file_min_version_code: int = 1640
         app_config_file_min_version_code: int = 1640

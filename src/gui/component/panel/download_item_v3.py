@@ -14,7 +14,7 @@ from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.downloader_v2 import Downloader
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
