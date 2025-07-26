@@ -1,4 +1,5 @@
 import wx
+import asyncio
 import webbrowser
 
 from utils.config import Config, app_config_group
@@ -165,12 +166,7 @@ class Parser:
 
             info = GlobalExceptionInfo.info.copy()
 
-            dlg = wx.MessageDialog(self.main_window, f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
-            dlg.SetYesNoLabels("详细信息", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                dlg = ErrorInfoDialog(self.main_window, info)
-                dlg.ShowModal()
+            self.main_window.utils.show_error_message_dialog(f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}" , "错误", info)
 
         wx.CallAfter(worker)
 
@@ -209,19 +205,33 @@ class Utils:
         self.main_window: MainWindow = parent
         self.status = ParseStatus.Success
 
+    def init_timer(self):
+        if Config.Basic.listen_clipboard:
+            if not self.main_window.clipboard_timer.IsRunning():
+                self.main_window.clipboard_timer.Start(1000)
+        else:
+            if self.main_window.clipboard_timer.IsRunning():
+                self.main_window.clipboard_timer.Stop()
+
     def check_url(self, url: str):
         if not url:
             self.show_message_dialog("解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True
 
     def check_update(self, info_bar: bool = False):
-        def show_update_dialog():
-            window = UpdateDialog(self.main_window, info)
-            window.ShowModal()
+        def onError():
+            if info_bar:
+                self.show_infobar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
+            else:
+                self.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
 
-        info = Update.get_update_json()
+        def worker():
+            def show_update_dialog():
+                window = UpdateDialog(self.main_window, info)
+                window.ShowModal()
 
-        if info:
+            info = Update.get_update_json()
+
             if info["version_code"] > Config.APP.version_code:
                 if info_bar:
                     self.show_infobar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
@@ -230,11 +240,12 @@ class Utils:
             else:
                 if not info_bar:
                     self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
-        else:
-            if info_bar:
-                self.show_infobar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
-            else:
-                self.show_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", wx.ICON_ERROR)
+
+            try:
+                worker()
+
+            except Exception as e:
+                raise GlobalException(callback = onError) from e
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
@@ -259,12 +270,16 @@ class Utils:
             dlg = ChangeLogDialog(self.main_window, info)
             dlg.ShowModal()
 
-        info = Update.get_changelog()
+        def onError():
+            self.show_error_message_dialog("获取更新日志失败\n\n当前无法获取更新日志，请稍候再试。", "获取更新日志", GlobalExceptionInfo.info.copy())
 
-        if info:
+        try:
+            info = Update.get_changelog()
+
             wx.CallAfter(show_changelog_dialog)
-        else:
-            self.show_message_dialog("获取更新日志失败\n\n当前无法获取更新日志，请稍候再试", "获取更新日志", wx.ICON_ERROR)
+
+        except Exception as e:
+            raise GlobalException(callback = onError) from e
 
     def user_logout(self):
         QRLogin().logout()
@@ -463,6 +478,17 @@ class Utils:
 
         wx.CallAfter(worker)
 
+    def show_error_message_dialog(self, message: str, caption: str, info: dict):
+        def worker():
+            dlg = wx.MessageDialog(self.main_window, message, caption, wx.ICON_ERROR | wx.YES_NO)
+            dlg.SetYesNoLabels("详细信息", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                err_dlg = ErrorInfoDialog(self.main_window, info)
+                err_dlg.ShowModal()
+
+        wx.CallAfter(worker)
+
     def show_infobar_message(self, message: str, flag: int):
         wx.CallAfter(self.main_window.infobar.ShowMessage, message, flag)
 
@@ -617,27 +643,37 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_TIMER, self.utils.read_clipboard, self.clipboard_timer)
 
     def init_utils(self):
-        def init_timer():
-            if Config.Basic.listen_clipboard:
-                self.clipboard_timer.Start(1000)
-
         def worker():
+            async def check_ffmpeg():
+                if Config.Merge.ffmpeg_check_available_when_launch:
+                    self.utils.check_ffmpeg()
+
+            async def check_update():
+                if Config.Merge.ffmpeg_check_available_when_launch:
+                    self.utils.check_update(info_bar = True)
+
+            async def show_user_info():
+                self.utils.show_user_info()
+
             FFmpeg.Env.detect()
 
-            if Config.Merge.ffmpeg_check_available_when_launch:
-                self.utils.check_ffmpeg()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-            if Config.Merge.ffmpeg_check_available_when_launch:
-                self.utils.check_update(info_bar = True)
+            tasks = [
+                loop.create_task(check_ffmpeg()),
+                loop.create_task(check_update()),
+                loop.create_task(show_user_info())
+            ]
 
-            self.utils.show_user_info()
+            loop.run_until_complete(asyncio.wait(tasks))
 
         self.parser = Parser(self)
 
         self.processing_window = ProcessingWindow(self)
         self.download_window = DownloadManagerWindow(self)
 
-        init_timer()
+        self.utils.init_timer()
 
         Thread(target = worker).start()
 

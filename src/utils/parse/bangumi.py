@@ -214,7 +214,7 @@ class BangumiParser(Parser):
             if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
                 return
             
-            raise GlobalException(message = message, code = status_code)
+            raise GlobalException(message = message, code = status_code, json_data = data)
 
     def parse_episodes(self):
         if self.url_type == "season_id":

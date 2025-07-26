@@ -3,17 +3,14 @@ import json
 from utils.config import Config
 
 from utils.common.request import RequestUtils
+from utils.common.exception import GlobalException
 
 class Update:
-    @staticmethod
-    def get_json(url: str) -> dict:
-        try:
-            req = RequestUtils.request_get(url)
+    @classmethod
+    def get_json(cls, url: str) -> dict:
+        req = RequestUtils.request_get(url)
 
-            return json.loads(req.text)
-        
-        except Exception as e:
-            return None
+        return json.loads(req.text)
     
     @staticmethod
     def get_changelog():

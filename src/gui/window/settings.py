@@ -155,7 +155,7 @@ class BasicTab(Tab):
 
         Config.Basic.ass_style = Config.Temp.ass_style.copy()
 
-        Config.Basic.show_exit_dialog = False
+        self.parent.utils.init_timer()
 
 class DownloadTab(Tab):
     def __init__(self, parent):

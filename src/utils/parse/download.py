@@ -1,8 +1,7 @@
-import json
 from typing import Callable
 
 from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, VideoQualityID, VideoCodecID, AudioQualityID
+from utils.common.enums import ParseType, StreamType, VideoCodecID, AudioQualityID
 from utils.common.map import audio_file_type_map
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
@@ -39,12 +38,9 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-            data = json.loads(req.text)
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
-            cls.check_json(data)
-
-            return check_stream_type(data["data"])
+            return data["data"]
 
         def get_bangumi_json():
             params = {
@@ -58,12 +54,9 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-            data = json.loads(req.text)
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
-            cls.check_json(data)
-
-            return check_stream_type(data["result"])
+            return data["result"]
 
         def get_cheese_json():
             params = {
@@ -77,22 +70,21 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-            data = json.loads(req.text)
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
-            cls.check_json(data)
-
-            return check_stream_type(data["data"])
+            return data["data"]
 
         match ParseType(task_info.parse_type):
             case ParseType.Video:
-                return get_video_json()
+                data = get_video_json()
 
             case ParseType.Bangumi:
-                return get_bangumi_json()
+                data = get_bangumi_json()
 
             case ParseType.Cheese:
-                return get_cheese_json()
+                data = get_cheese_json()
+        
+        return check_stream_type(data)
 
     def parse_download_stream_json(self, data: dict):
         match StreamType(self.task_info.stream_type):
