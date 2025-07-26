@@ -15,3 +15,9 @@ class ScrolledPanel(_ScrolledPanel):
     def set_dark_mode(self):
         if not Config.Sys.dark_mode:
             self.SetBackgroundColour("white")
+
+    def Layout(self, scroll_x = False, scrollToTop = False):
+        super().Layout()
+
+        self.SetupScrolling(scroll_x = scroll_x, scrollToTop = scrollToTop)
+        

@@ -416,7 +416,6 @@ class SimplePage(Panel):
                 self.scroller.sizer.Add(item, 1, wx.EXPAND)
 
         self.scroller.Layout()
-        self.scroller.SetupScrolling(scroll_x = False, scrollToTop = False)
 
         self.callback.onSetTitle(self.name, self.total_count)
 

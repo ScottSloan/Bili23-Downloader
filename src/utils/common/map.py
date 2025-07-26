@@ -442,6 +442,12 @@ ffmpeg_audio_channel_map = {
     "8 (7.1)": 8
 }
 
+webpage_option_map = {
+    "自动选择": 0,
+    "使用系统 Webview 组件": 1,
+    "使用系统默认浏览器": 2
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

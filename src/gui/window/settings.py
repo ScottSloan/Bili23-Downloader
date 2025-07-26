@@ -20,12 +20,11 @@ from gui.dialog.setting.custom_cdn_host import CustomCDNDialog
 from gui.dialog.setting.custom_file_name_v2 import CustomFileNameDialog
 from gui.dialog.setting.custom_user_agent import CustomUADialog
 
-
 from utils.config import Config, app_config_group
 
 from utils.common.thread import Thread
 from utils.common.request import RequestUtils
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, danmaku_format_map, subtitle_format_map, override_option_map, number_type_map, exit_option_map, cover_format_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, override_option_map, number_type_map, exit_option_map, webpage_option_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
 
 from utils.module.notification import NotificationManager
@@ -99,11 +98,6 @@ class BasicTab(Tab):
         self.init_data()
 
     def init_UI(self):
-        def layout():
-            self.scrolled_panel.Layout()
-
-            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
-
         self.scrolled_panel = ScrolledPanel(self)
 
         basic_box = wx.StaticBox(self.scrolled_panel, -1, "基本设置")
@@ -137,7 +131,7 @@ class BasicTab(Tab):
 
         self.SetSizer(basic_vbox)
 
-        layout()
+        self.scrolled_panel.Layout()
 
     def init_data(self):
         Config.Temp.ass_style = Config.Basic.ass_style.copy()
@@ -174,11 +168,6 @@ class DownloadTab(Tab):
         self.init_data()
 
     def init_UI(self):
-        def layout():
-            self.scrolled_panel.Layout()
-
-            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
-
         self.scrolled_panel = ScrolledPanel(self)
 
         download_box = wx.StaticBox(self.scrolled_panel, -1, "下载设置")
@@ -286,7 +275,7 @@ class DownloadTab(Tab):
 
         self.SetSizer(download_vbox)
 
-        layout()
+        self.scrolled_panel.Layout()
 
     def Bind_EVT(self):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
@@ -409,7 +398,9 @@ class AdvancedTab(Tab):
         self.init_data()
 
     def init_UI(self):
-        cdn_box = wx.StaticBox(self, -1, "CDN 设置")
+        self.scrolled_panel = ScrolledPanel(self)
+
+        cdn_box = wx.StaticBox(self.scrolled_panel, -1, "CDN 设置")
 
         self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN 节点")
         self.enable_custom_cdn_tip = ToolTip(cdn_box)
@@ -425,7 +416,7 @@ class AdvancedTab(Tab):
         cdn_sbox = wx.StaticBoxSizer(cdn_box, wx.VERTICAL)
         cdn_sbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
 
-        advanced_download_box = wx.StaticBox(self, -1, "高级下载设置")
+        advanced_download_box = wx.StaticBox(self.scrolled_panel, -1, "高级下载设置")
 
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, "下载出错时自动重试")
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, "重试次数")
@@ -464,11 +455,31 @@ class AdvancedTab(Tab):
         advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(self.custom_ua_btn, 0, wx.ALL, self.FromDIP(6))
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(advanced_download_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        webpage_box = wx.StaticBox(self.scrolled_panel, -1, "Web 页面展示设置")
 
-        self.SetSizerAndFit(vbox)
+        webpage_lab = wx.StaticText(webpage_box, -1, "展示方式")
+        self.webpage_option_choice = wx.Choice(webpage_box, -1, choices = list(webpage_option_map.keys()))
+        webpage_tooltip = ToolTip(webpage_box)
+        webpage_tooltip.set_tooltip("设置 Web 页面的展示方式\n\n自动检测：自动选择可用的展示方式\n使用系统 Webview 组件：在窗口中内嵌展示页面\n使用系统默认浏览器：在外部浏览器中展示页面")
+
+        webpage_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        webpage_hbox.Add(webpage_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        webpage_hbox.Add(self.webpage_option_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        webpage_hbox.Add(webpage_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        webpage_sbox = wx.StaticBoxSizer(webpage_box, wx.VERTICAL)
+        webpage_sbox.Add(webpage_hbox, 0, wx.EXPAND)
+
+        self.scrolled_panel.sizer.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        self.scrolled_panel.sizer.Add(advanced_download_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        self.scrolled_panel.sizer.Add(webpage_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+
+        advanced_vbox = wx.BoxSizer(wx.VERTICAL)
+        advanced_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
+        
+        self.SetSizer(advanced_vbox)
+
+        self.scrolled_panel.Layout()
 
     def Bind_EVT(self):
         self.enable_switch_cdn_chk.Bind(wx.EVT_CHECKBOX, self.onEnableSwitchCDNEVT)
@@ -493,6 +504,8 @@ class AdvancedTab(Tab):
 
         Config.Temp.user_agent = Config.Advanced.user_agent
 
+        self.webpage_option_choice.SetSelection(get_mapping_index_by_value(webpage_option_map, Config.Advanced.webpage_option))
+
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
         self.onChangeRestartEVT(0)
@@ -510,6 +523,8 @@ class AdvancedTab(Tab):
         Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
 
         Config.Advanced.user_agent = Config.Temp.user_agent
+
+        Config.Advanced.webpage_option = self.webpage_option_choice.GetSelection()
 
     def onEnableSwitchCDNEVT(self, event):
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
@@ -831,11 +846,6 @@ class MiscTab(Tab):
         self.init_data()
 
     def init_UI(self):
-        def layout():
-            self.scrolled_panel.Layout()
-
-            self.scrolled_panel.SetupScrolling(scroll_x = False, scrollToTop = False)
-
         self.scrolled_panel = ScrolledPanel(self)
         
         episodes_box = wx.StaticBox(self.scrolled_panel, -1, "剧集列表显示设置")
@@ -854,37 +864,34 @@ class MiscTab(Tab):
         episodes_sbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         episodes_sbox.Add(self.auto_select_chk, 0, wx.ALL, self.FromDIP(6))
 
-        misc_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
+        other_box = wx.StaticBox(self.scrolled_panel, -1, "杂项")
 
-        self.show_user_info_chk = wx.CheckBox(misc_box, -1, "在主界面显示用户头像和昵称")
-        self.check_update_chk = wx.CheckBox(misc_box, -1, "自动检查更新")
-        self.debug_chk = wx.CheckBox(misc_box, -1, "启用调试模式")
+        self.show_user_info_chk = wx.CheckBox(other_box, -1, "在主界面显示用户头像和昵称")
+        self.check_update_chk = wx.CheckBox(other_box, -1, "自动检查更新")
+        self.debug_chk = wx.CheckBox(other_box, -1, "启用调试模式")
 
-        self.clear_userdata_btn = wx.Button(misc_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
-        self.reset_default_btn = wx.Button(misc_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
+        self.clear_userdata_btn = wx.Button(other_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
+        self.reset_default_btn = wx.Button(other_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
         
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, self.FromDIP(6))
         btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
-        misc_sbox = wx.StaticBoxSizer(misc_box, wx.VERTICAL)
-        misc_sbox.Add(self.show_user_info_chk, 0, wx.ALL, self.FromDIP(6))
-        misc_sbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        misc_sbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), self.FromDIP(6))
-        misc_sbox.Add(btn_hbox, 0, wx.EXPAND)
+        other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
+        other_sbox.Add(self.show_user_info_chk, 0, wx.ALL, self.FromDIP(6))
+        other_sbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        other_sbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), self.FromDIP(6))
+        other_sbox.Add(btn_hbox, 0, wx.EXPAND)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(misc_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        self.scrolled_panel.sizer.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        self.scrolled_panel.sizer.Add(other_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
-        self.scrolled_panel.sizer.Add(vbox, 0, wx.EXPAND)
+        misc_vbox = wx.BoxSizer(wx.VERTICAL)
+        misc_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
 
-        _misc_vbox = wx.BoxSizer(wx.VERTICAL)
-        _misc_vbox.Add(self.scrolled_panel, 1, wx.EXPAND)
+        self.SetSizer(misc_vbox)
 
-        self.SetSizer(_misc_vbox)
-
-        layout()
+        self.scrolled_panel.Layout()
 
     def Bind_EVT(self):
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)

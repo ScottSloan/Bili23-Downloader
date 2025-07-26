@@ -48,7 +48,8 @@ app_config_group = {
         "download_suspend_retry_interval",
         "always_use_https_protocol",
         "check_md5",
-        "user_agent"
+        "user_agent",
+        "webpage_option"
     ],
     "Merge": [
         "ffmpeg_path",
@@ -302,6 +303,8 @@ class Config:
         check_md5: bool = True
 
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
+
+        webpage_option: int = 0
 
     @classmethod
     def load_config(cls):

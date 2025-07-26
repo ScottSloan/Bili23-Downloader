@@ -256,7 +256,7 @@ class Utils:
 
     def get_changelog(self):
         def show_changelog_dialog():
-            dlg = ChangeLogDialog(self.main_window)
+            dlg = ChangeLogDialog(self.main_window, info)
             dlg.ShowModal()
 
         info = Update.get_changelog()
@@ -621,16 +621,16 @@ class MainWindow(Frame):
             if Config.Basic.listen_clipboard:
                 self.clipboard_timer.Start(1000)
 
-        def start_thread():
+        def worker():
             FFmpeg.Env.detect()
 
             if Config.Merge.ffmpeg_check_available_when_launch:
-                Thread(target = self.utils.check_ffmpeg).start()
+                self.utils.check_ffmpeg()
 
-            if Config.Misc.check_update_when_launch:
-                Thread(target = self.utils.check_update, args = (True, )).start()
+            if Config.Merge.ffmpeg_check_available_when_launch:
+                self.utils.check_update(info_bar = True)
 
-            Thread(target = self.utils.show_user_info).start()
+            self.utils.show_user_info()
 
         self.parser = Parser(self)
 
@@ -639,7 +639,7 @@ class MainWindow(Frame):
 
         init_timer()
 
-        start_thread()
+        Thread(target = worker).start()
 
     def onMenuEVT(self, event):
         match event.GetId():
