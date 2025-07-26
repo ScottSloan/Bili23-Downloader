@@ -328,6 +328,7 @@ class TreeListItemInfo:
         self.badge: str = ""
         self.duration: str = ""
         self.cover_url: str = ""
+        self.link: str = ""
 
         self.pid: str = ""
 
@@ -355,6 +356,7 @@ class TreeListItemInfo:
             "badge": self.badge,
             "duration": self.duration,
             "cover_url": self.cover_url,
+            "link": self.link,
             "pid": self.pid,
             "section_title": self.section_title,
             "part_title": self.part_title,
@@ -378,6 +380,7 @@ class TreeListItemInfo:
         self.badge = data.get("badge", self.badge)
         self.duration = data.get("duration", self.duration)
         self.cover_url = data.get("cover_url", self.cover_url)
+        self.link = data.get("link", self.link)
         self.pid = data.get("pid", self.pid)
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)

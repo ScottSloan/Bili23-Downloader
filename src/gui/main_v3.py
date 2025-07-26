@@ -853,9 +853,7 @@ class MainWindow(Frame):
             case ID.EPISODE_LIST_COPY_URL_MENU:
                 item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
 
-                url = Episode.Utils.get_share_url(item_data)
-
-                ClipBoard.Write(url)
+                ClipBoard.Write(item_data.link)
 
             case ID.EPISODE_LIST_EDIT_TITLE_MENU:
                 item = self.episode_list.GetSelection()

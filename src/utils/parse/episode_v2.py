@@ -2,7 +2,6 @@ from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType, ParseType
 from utils.common.map import cheese_status_map, live_status_map
-from utils.common.data_type import TreeListItemInfo
 from utils.common.formatter import FormatUtils
 
 class EpisodeInfo:
@@ -64,6 +63,7 @@ class EpisodeInfo:
             "badge": episode.get("badge", ""),
             "duration": episode.get("duration", 0),
             "cover_url": episode.get("cover_url", ""),
+            "link": episode.get("link"),
             "pid": "",
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
@@ -173,6 +173,7 @@ class Episode:
             episode["title"] = episode["title"] if "title" in episode else episode["part"]
             episode["badge"] = "充电专属" if is_upower_exclusive else ""
             episode["duration"] = get_duration()
+            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}?p={episode.get('page')}" if episode.get("page", 0) > 1 else f"https://www.bilibili.com/video/{episode.get('bvid')}"
             episode["type"] = ParseType.Video.value
 
             return EpisodeInfo.get_entry_info(episode)
@@ -226,16 +227,11 @@ class Episode:
 
         @staticmethod
         def get_entry_info(episode: dict):
-            def get_duration():
-                if "duration" in episode:
-                    return episode.get("duration") / 1000
-                else:
-                    return 0
-
             episode["title"] = FormatUtils.format_bangumi_title(episode)
-            episode["pubtime"] = episode["pub_time"]
-            episode["duration"] = get_duration()
-            episode["cover_url"] = episode["cover"]
+            episode["pubtime"] = episode.get("pub_time")
+            episode["duration"] = episode.get("duration", 0) / 1000
+            episode["cover_url"] = episode.get("cover")
+            episode["link"] = f"https://www.bilibili.com/bangumi/play/ep{episode.get('ep_id')}"
             episode["type"] = ParseType.Bangumi.value
 
             return EpisodeInfo.get_entry_info(episode)
@@ -287,6 +283,7 @@ class Episode:
             episode["ep_id"] = episode["id"]
             episode["badge"] = get_badge()
             episode["cover_url"] = episode["cover"]
+            episode["link"] = f"https://www.bilibili.com/cheese/play/ep{episode.get('id')}"
             episode["type"] = ParseType.Cheese.value
 
             return EpisodeInfo.get_entry_info(episode)
@@ -341,22 +338,3 @@ class Episode:
                             EpisodeInfo.add_item("视频", episode)
 
                             break
-        
-        @staticmethod
-        def get_share_url(item_info: TreeListItemInfo):
-            match ParseType(item_info.type):
-                case ParseType.Video:
-                    if item_info.page > 1:
-                        return f"https://www.bilibili.com/video/{item_info.bvid}?p={item_info.page}"
-                    
-                    else:
-                        return f"https://www.bilibili.com/video/{item_info.bvid}"
-
-                case ParseType.Bangumi:
-                    return f"https://www.bilibili.com/bangumi/play/ep{item_info.ep_id}"
-
-                case ParseType.Cheese:
-                    return f"https://www.bilibili.com/cheese/play/ep{item_info.ep_id}"
-
-                case ParseType.Live:
-                    return f"https://live.bilibili.com/{item_info.room_id}"

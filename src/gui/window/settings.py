@@ -455,12 +455,12 @@ class AdvancedTab(Tab):
         advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(self.custom_ua_btn, 0, wx.ALL, self.FromDIP(6))
 
-        webpage_box = wx.StaticBox(self.scrolled_panel, -1, "Web 页面展示设置")
+        webpage_box = wx.StaticBox(self.scrolled_panel, -1, "Web 页面显示设置")
 
         webpage_lab = wx.StaticText(webpage_box, -1, "展示方式")
         self.webpage_option_choice = wx.Choice(webpage_box, -1, choices = list(webpage_option_map.keys()))
         webpage_tooltip = ToolTip(webpage_box)
-        webpage_tooltip.set_tooltip("设置 Web 页面的展示方式\n\n自动检测：自动选择可用的展示方式\n使用系统 Webview 组件：在窗口中内嵌展示页面\n使用系统默认浏览器：在外部浏览器中展示页面")
+        webpage_tooltip.set_tooltip("设置 Web 页面的显示方式\n\n自动检测：自动选择可用的显示方式\n使用系统 Webview 组件：在窗口中内嵌显示页面\n使用系统默认浏览器：在外部浏览器中显示页面")
 
         webpage_hbox = wx.BoxSizer(wx.HORIZONTAL)
         webpage_hbox.Add(webpage_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
