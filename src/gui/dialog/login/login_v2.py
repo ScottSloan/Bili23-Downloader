@@ -1,7 +1,15 @@
 import wx
+import time
 
 from utils.common.color import Color
 from utils.common.pic_v2 import Pic, PicID
+from utils.common.thread import Thread
+from utils.common.enums import QRCodeStatus
+from utils.common.exception import GlobalExceptionInfo
+
+from utils.auth.login_v2 import Login
+
+from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
@@ -10,9 +18,13 @@ from gui.component.panel.panel import Panel
 
 class QRCodePanel(Panel):
     def __init__(self, parent):
+        self.parent: LoginDialog = parent
+
         Panel.__init__(self, parent)
 
         self.init_UI()
+
+        self.Bind_EVT()
 
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -45,8 +57,15 @@ class QRCodePanel(Panel):
 
         self.SetSizer(qrcode_vbox)
 
+    def Bind_EVT(self):
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
+
     def init_utils(self):
-        self.set_tip(["正在加载"])
+        wx.CallAfter(self.set_tip, ["正在加载"])
+        
+        self.show_qrcode()
+
+        wx.CallAfter(self.timer.Start, 1000)
 
     def set_tip(self, text: list):
         font: wx.Font = self.GetFont()
@@ -72,7 +91,52 @@ class QRCodePanel(Panel):
 
         dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
 
-        self.qrcode.SetBitmap(bmp)
+        wx.CallAfter(self.qrcode.SetBitmap, bmp)
+
+    def show_qrcode(self):
+        Login.QRCode.generate_qrcode()
+
+        img_io = Login.QRCode.get_qrcode_img_io()
+
+        width, height = Login.QRCode.get_qrcode_size()
+
+        bmp = wx.Image(img_io).Scale(width, height, quality = wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+
+        wx.CallAfter(self.qrcode.SetBitmap, bmp)
+
+    def onTimer(self, event):
+        resp = Login.QRCode.check_scan_status()
+
+        match QRCodeStatus(resp.get("code")):
+            case QRCodeStatus.Success:
+                self.status_success()
+
+            case QRCodeStatus.Confirm:
+                self.status_confirm()
+
+            case QRCodeStatus.Outdated:
+                self.status_outdated()
+
+    def status_success(self):
+        self.timer.Stop()
+
+        wx.CallAfter(self.set_tip, ["登录成功"])
+
+        info = Login.get_user_info(login = True)
+        Login.login(info)
+
+        time.sleep(1)
+
+        self.parent.onSuccess()
+
+    def status_confirm(self):
+        self.scan_tip_lab.SetLabel("请在设备侧确认登录")
+        self.Layout()
+
+    def status_outdated(self):
+        self.timer.Stop()
+
+        wx.CallAfter(self.set_tip, ["二维码已过期", "点击重新加载"])
 
 class SMSPanel(Panel):
     def __init__(self, parent):
@@ -141,9 +205,15 @@ class SMSPanel(Panel):
 
 class LoginDialog(Dialog):
     def __init__(self, parent):
+        from gui.main_v3 import MainWindow
+
+        self.parent: MainWindow = parent
+
         Dialog.__init__(self, parent, "登录")
 
         self.init_UI()
+
+        self.init_utils()
 
         self.CenterOnParent()
 
@@ -165,8 +235,8 @@ class LoginDialog(Dialog):
         hbox.Add(self.sms_panel, 0, wx.EXPAND)
         hbox.AddSpacer(self.FromDIP(60))
 
-        self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Left_Onnanoko))
-        self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Right_Onnanoko))
+        self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Left_22))
+        self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Right_33))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.left_bmp, 0, wx.EXPAND)
@@ -181,5 +251,31 @@ class LoginDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
-        self.qrcode_panel.init_utils()
-        self.sms_panel.init_utils()
+        def worker():
+            self.qrcode_panel.init_utils()
+            self.sms_panel.init_utils()
+        
+        Login.set_on_error_callback(self.onError)
+
+        Thread(target = worker).start()
+
+    def onSuccess(self):
+        def worker():
+            self.parent.init_menubar()
+
+            self.parent.utils.show_user_info()
+
+        wx.CallAfter(worker)
+
+        event = wx.PyCommandEvent(wx.EVT_CLOSE.typeId, self.GetId())
+        wx.PostEvent(self.GetEventHandler(), event)
+
+    def onError(self):
+        info = GlobalExceptionInfo.info.copy()
+
+        dlg = wx.MessageDialog(self, f"登录失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
+        dlg.SetYesNoLabels("详细信息", "确定")
+
+        if dlg.ShowModal() == wx.ID_YES:
+            err_dlg = ErrorInfoDialog(self, info)
+            err_dlg.ShowModal()

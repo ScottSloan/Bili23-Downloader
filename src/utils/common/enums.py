@@ -156,3 +156,9 @@ class ScopeID(Enum):
     Bangumi = 2                   # 剧集
     Cheese = 3                    # 课程
     Default = 4                   # 默认
+
+class QRCodeStatus(Enum):
+    Success = 0                   # 成功
+    Confirm = 86090               # 未确认
+    Outdated = 86038              # 已失效
+    NotScan = 86101               # 未扫码

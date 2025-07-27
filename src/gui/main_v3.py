@@ -3,7 +3,8 @@ import asyncio
 import webbrowser
 
 from utils.config import Config, app_config_group
-from utils.auth.login import QRLogin
+from utils.auth.login_v2 import Login
+
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus, LiveStatus
 from utils.common.data_type import ParseCallback, Callback
@@ -165,7 +166,7 @@ class Parser:
 
             info = GlobalExceptionInfo.info.copy()
 
-            self.main_window.utils.show_error_message_dialog(f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}" , "错误", info)
+            self.main_window.utils.show_error_message_dialog(f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", info)
 
         wx.CallAfter(worker)
 
@@ -281,12 +282,12 @@ class Utils:
             raise GlobalException(callback = onError) from e
 
     def user_logout(self):
-        QRLogin().logout()
+        Login.logout()
 
         self.show_user_info()
 
     def user_refresh(self):
-        QRLogin().refresh
+        Login.refresh()
 
         self.show_user_info()
 
