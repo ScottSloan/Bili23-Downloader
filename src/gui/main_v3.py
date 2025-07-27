@@ -24,15 +24,14 @@ from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.preview import Preview
-from utils.parse.episode_v2 import Episode
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
 from gui.id import ID
 
-from gui.dialog.about import AboutWindow
-from gui.dialog.processing import ProcessingWindow
+from gui.dialog.misc.about import AboutWindow
+from gui.dialog.misc.processing import ProcessingWindow
 from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.misc.changelog import ChangeLogDialog
 from gui.dialog.error import ErrorInfoDialog
@@ -41,13 +40,13 @@ from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
 from gui.dialog.live import LiveRecordingDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
+from gui.dialog.login.login_v2 import LoginDialog
 
 from gui.window.graph import GraphWindow
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings import SettingWindow
 from gui.window.download_v3 import DownloadManagerWindow
-from gui.window.login import LoginWindow
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
@@ -680,8 +679,8 @@ class MainWindow(Frame):
     def onMenuEVT(self, event):
         match event.GetId():
             case ID.LOGIN_MENU:
-                window = LoginWindow(self)
-                window.Show()
+                dlg = LoginDialog(self)
+                dlg.ShowModal()
 
             case ID.LOGOUT_MENU:
                 dlg = wx.MessageDialog(self, '退出登录\n\n是否要退出登录？', "警告", wx.ICON_WARNING | wx.YES_NO)

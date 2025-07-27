@@ -223,6 +223,7 @@ class QRPage(LoginPage):
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
 
         bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
+        
         dc = wx.MemoryDC(bmp)
         dc.SetTextForeground(self.getLabelColor())
         dc.SetFont(font)
@@ -427,7 +428,7 @@ class SMSPage(LoginPage):
         self.login.session.close()
 
     def check_captcha(self):
-        from gui.dialog.captcha import CaptchaWindow
+        from gui.dialog.login.captcha import CaptchaWindow
 
         # 显示极验 captcha 窗口
         captcha_window = CaptchaWindow(self.parent)

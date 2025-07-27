@@ -7,7 +7,7 @@ from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.audio import AudioInfo
 
-from utils.module.cdn import CDN
+from utils.module.web.cdn import CDN
 
 class Preview:
     def __init__(self, parse_type: ParseType, stream_type: int):

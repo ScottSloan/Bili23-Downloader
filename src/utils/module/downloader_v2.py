@@ -10,7 +10,7 @@ from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.request import RequestUtils
 from utils.common.formatter import FormatUtils
 
-from utils.module.cdn import CDN
+from utils.module.web.cdn import CDN
 from utils.module.md5_verify import MD5Verify
 
 from utils.tool_v2 import DownloadFileTool, UniversalTool

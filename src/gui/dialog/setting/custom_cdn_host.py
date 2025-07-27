@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 from utils.common.thread import ThreadPoolExecutor
 
-from utils.module.ping import Ping
+from utils.module.web.ping import Ping
 
 from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog

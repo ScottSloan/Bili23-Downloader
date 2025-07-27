@@ -22,6 +22,13 @@ class Color:
         return wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUTEXT)
     
     @staticmethod
+    def get_border_color():
+        if Config.Sys.dark_mode:
+            return wx.Colour("white")
+        else:
+            return wx.Colour(227, 229, 231)
+    
+    @staticmethod
     def convert_to_ass_color(hex_color: str):
         hex_new = hex_color.lstrip("#").upper()
 
