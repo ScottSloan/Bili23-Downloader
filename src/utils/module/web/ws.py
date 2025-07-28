@@ -1,6 +1,11 @@
+import json
 import asyncio
 import websockets
 from websockets.server import ServerProtocol
+
+from utils.config import Config
+
+from utils.auth.login_v2 import LoginInfo
 
 from utils.common.thread import Thread
 
@@ -16,13 +21,52 @@ class WebSocketServer:
 
         try:
             async for message in websocket:
-                print(message)
+                await self.process_message(str(message))
         finally:
             self.clients.remove(websocket)
 
+    async def process_message(self, message: str):
+        async def queryCaptchaInfo():
+            data = {
+                "msg": "queryCaptchaInfo",
+                "data": {
+                    "gt": LoginInfo.Captcha.gt,
+                    "challenge": LoginInfo.Captcha.challenge
+                }
+            }
+
+            await self.broadcast(data)
+
+        async def captchaResult():
+            LoginInfo.Captcha.seccode = data["data"]["seccode"]
+            LoginInfo.Captcha.validate = data["data"]["validate"]
+
+            LoginInfo.Captcha.flag = False
+
+            self.stop()
+
+        data = json.loads(message)
+
+        print(data)
+
+        match data.get("msg"):
+            case "queryCaptchaInfo":
+                await queryCaptchaInfo()
+
+            case "captchaResult":
+                await captchaResult()
+
+    async def broadcast(self, data: dict):
+        message = json.dumps(data, ensure_ascii = False)
+
+        if self.clients:
+            await asyncio.gather(
+                *(client.send(message) for client in self.clients)
+            )
+
     def start(self):
         async def run():
-            self.server = await websockets.serve(self.handler, "localhost", port = 8765)
+            self.server = await websockets.serve(self.handler, "localhost", port = Config.Advanced.websocket_port)
 
             await self.server.wait_closed()
 

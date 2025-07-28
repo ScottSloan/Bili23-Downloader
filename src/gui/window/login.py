@@ -428,10 +428,10 @@ class SMSPage(LoginPage):
         self.login.session.close()
 
     def check_captcha(self):
-        from gui.dialog.login.captcha import CaptchaWindow
+        from gui.dialog.login.captcha import CaptchaDialog
 
         # 显示极验 captcha 窗口
-        captcha_window = CaptchaWindow(self.parent)
+        captcha_window = CaptchaDialog(self.parent)
         captcha_window.ShowModal()
 
     def check_login_result(self, result: Dict):

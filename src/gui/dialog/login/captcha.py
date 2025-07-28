@@ -1,12 +1,13 @@
 import wx
 import json
+import wx.html2
 
-from utils.auth.login import CaptchaUtils, LoginInfo
+from utils.auth.login_v2 import LoginInfo
 
 from gui.component.window.dialog import Dialog
 from gui.component.webview import Webview
 
-class CaptchaWindow(Dialog):
+class CaptchaDialog(Dialog):
     def __init__(self, parent):
         Dialog.__init__(self, parent, "请完成验证")
 
@@ -23,12 +24,7 @@ class CaptchaWindow(Dialog):
     def init_UI(self):
         self.webview = Webview(self)
 
-        page = self.webview.get_page("captcha.html")
-
-        if not page:
-            return
-
-        self.webview.browser.SetPage(page, "")
+        self.webview.browser.SetPage(self.webview.get_page("captcha.html"), "")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)
@@ -40,31 +36,27 @@ class CaptchaWindow(Dialog):
 
         self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)
 
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
     def init_utils(self):
-        self.captcha = CaptchaUtils()
-        
-        # 设置 MessageHandler，便于接收从前端返回的验证结果
         self.webview.browser.AddScriptMessageHandler("MainApplication")
 
     def onLoadedEVT(self, event):
-        # 获取极验 captcha 的 gt 和 challenge
-        self.captcha.get_geetest_challenge_gt()
-
-        # 向前端传递 gt 和 challenge
-        self.webview.browser.RunScriptAsync(f"receiveMessage('{LoginInfo.gt}','{LoginInfo.challenge}')")
+        self.webview.browser.RunScriptAsync(f"receiveMessage('{LoginInfo.Captcha.gt}','{LoginInfo.Captcha.challenge}')")
 
     def onMessageEVT(self, event):
-        # 接收前端返回的验证结果
         message = event.GetString()
 
         data = json.loads(message)
 
         if data["code"] == 200:
-            LoginInfo.validate = data["data"]["validate"]
-            LoginInfo.seccode = data["data"]["seccode"]
+            LoginInfo.Captcha.validate = data["data"]["validate"]
+            LoginInfo.Captcha.seccode = data["data"]["seccode"]
 
-            # 验证通过，关闭窗口
-            self.webview.browser.Close()
-            
-            self.Close()
-            self.Destroy()
+            event = wx.PyCommandEvent(wx.EVT_CLOSE.typeId, self.GetId())
+            wx.PostEvent(self.GetEventHandler(), event)
+
+    def onCloseEVT(self, event):
+        LoginInfo.Captcha.flag = False
+
+        event.Skip()

@@ -162,3 +162,8 @@ class QRCodeStatus(Enum):
     Confirm = 86090               # 未确认
     Outdated = 86038              # 已失效
     NotScan = 86101               # 未扫码
+
+class WebPageOption(Enum):
+    Auto = 0                      # 自动检测
+    Webview = 1                   # 使用 Webview
+    Websocket = 2                 # 使用 Websocket

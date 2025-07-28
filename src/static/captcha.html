@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captcha</title>
+    <title>请完成验证</title>
     <style>
         body,
         html {
@@ -504,6 +504,32 @@
 </script>
 
 <script>
+    var socket = null;
+
+    window.onload = function () {
+        if (window.MainApplication == undefined) {
+            // websocket
+            socket = new WebSocket('ws://localhost:8765');
+
+            socket.onopen = function () {
+                // 向后端查询 captcha 信息
+                data = {
+                    "msg": "queryCaptchaInfo"
+                };
+
+                socket.send(JSON.stringify(data));
+            };
+
+            socket.onmessage = function (event) {
+                var json = JSON.parse(event.data);
+
+                if (json.msg == "queryCaptchaInfo") {
+                    receiveMessage(json.data.gt, json.data.challenge)
+                }
+            };
+        }
+    }
+
     function receiveMessage(gt, challenge) {
         document.querySelector('#wait').style.display = "block";
         initGeetest({
@@ -518,6 +544,7 @@
             https: true
         }, handler);
     }
+
     var handler = function (captchaObj) {
         captchaObj.appendTo('#captcha');
         captchaObj.onReady(function () {
@@ -525,15 +552,22 @@
         });
         captchaObj.onSuccess(function () {
             var result = captchaObj.getValidate();
-            window.MainApplication.postMessage(JSON.stringify({
-                code:200,
-                msg:'success',
-                data:{
-                    challenge: result.geetest_challenge,
-                    seccode: result.geetest_seccode,
-                    validate: result.geetest_validate
+
+            data = {
+                "msg": "captchaResult",
+                "data": {
+                    "challenge": result.geetest_challenge,
+                    "seccode": result.geetest_seccode,
+                    "validate": result.geetest_validate
                 }
-            }));
+            };
+
+            if (window.MainApplication == undefined) {
+                socket.send(JSON.stringify(data));
+            }
+            else {
+                window.MainApplication.postMessage(JSON.stringify(data));
+            }
         });
         captchaObj.onError(function(e) {
             window.MainApplication.postMessage(JSON.stringify({

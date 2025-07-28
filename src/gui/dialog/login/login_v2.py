@@ -7,10 +7,11 @@ from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
 from utils.common.exception import GlobalExceptionInfo
 
-from utils.auth.login_v2 import Login
+from utils.auth.login_v2 import Login, LoginInfo
+
+from utils.module.web.page import WebPage
 
 from gui.dialog.error import ErrorInfoDialog
-from gui.dialog.login.captcha import CaptchaWindow
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
@@ -217,6 +218,7 @@ class SMSPanel(Panel):
     
     def Bind_EVT(self):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCodeEVT)
+        self.login_btn.Bind(wx.EVT_BUTTON, self.onLoginEVT)
 
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
@@ -229,10 +231,12 @@ class SMSPanel(Panel):
 
     def onGetValidateCodeEVT(self, event):
         def worker():
-            Login.SMS.send_sms(self.tel, self.cid)
-    
-            self.check_send_sms_status()
+            self.check_captcha_status()
 
+            Login.SMS.send_sms(self.tel, self.cid)
+
+            wx.CallAfter(self.start_countdown)
+    
         if not self.phone_number_box.GetValue():
             wx.MessageDialog(self.parent, "发送验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
             return
@@ -256,10 +260,19 @@ class SMSPanel(Panel):
         if self.countdown == 0:
             wx.CallAfter(reset)
 
-    def check_captcha_status(self):
+    def onLoginEVT(self, event):
         pass
 
-    def check_send_sms_status(self):
+    def check_captcha_status(self):
+        if not LoginInfo.Captcha.seccode:
+            Login.Captcha.get_geetest_challenge_gt()
+
+            WebPage.show_webpage(self.parent, "captcha.html")
+
+            while LoginInfo.Captcha.flag:
+                time.sleep(1)
+
+    def start_countdown(self):
         self.get_validate_code_btn.SetLabel("重新发送(60)")
         self.get_validate_code_btn.Enable(False)
 

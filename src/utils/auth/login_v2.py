@@ -14,6 +14,9 @@ from utils.common.exception import GlobalException
 
 class LoginInfo:
     class Captcha:
+        flag: bool = False
+        
+        token: str = ""
         challenge: str = ""
         gt: str = ""
 
@@ -24,8 +27,6 @@ class LoginInfo:
 
     url: str = ""
     qrcode_key: str = ""
-
-    token: str = ""
 
 class Login:
     class QRCode:
@@ -85,22 +86,34 @@ class Login:
                 "cid": cid,
                 "tel": tel,
                 "source": "main-fe-header",
-                "token": LoginInfo.token,
+                "token": LoginInfo.Captcha.token,
                 "challenge": LoginInfo.Captcha.challenge,
                 "validate": LoginInfo.Captcha.validate,
                 "seccode": LoginInfo.Captcha.seccode
             }
 
+            Login.clear_captcha_info()
+
             data = Login.request_post(url, params = form)
 
-            if data["code"]  == StatusCode.Success.value:
-                LoginInfo.Captcha.captcha_key = data["data"]["captcha_key"]
+            LoginInfo.Captcha.captcha_key = data["data"]["captcha_key"]
 
             return data
 
         @staticmethod
         def login():
             pass
+
+    class Captcha:
+        @staticmethod
+        def get_geetest_challenge_gt():
+            url = "https://passport.bilibili.com/x/passport-login/captcha?source=main-fe-header&t=0.1867987009754133"
+
+            data = Login.request_get(url)
+
+            LoginInfo.Captcha.token = data["data"]["token"]
+            LoginInfo.Captcha.challenge = data["data"]["geetest"]["challenge"]
+            LoginInfo.Captcha.gt = data["data"]["geetest"]["gt"]
 
     @classmethod
     def request_get(cls, url: str, headers: dict = None):
@@ -211,6 +224,16 @@ class Login:
         Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
         Face.remove()
+
+    @staticmethod
+    def clear_captcha_info():
+        LoginInfo.Captcha.challenge = ""
+        LoginInfo.Captcha.gt = ""
+
+        LoginInfo.Captcha.seccode = ""
+        LoginInfo.Captcha.validate = ""
+
+        LoginInfo.Captcha.captcha_key = ""
 
     @classmethod
     def check_json(cls, data: dict):
