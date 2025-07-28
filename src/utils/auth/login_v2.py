@@ -5,15 +5,27 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 from utils.config import Config, user_config_group
-from utils.tool_v2 import UniversalTool
+
+from utils.module.pic.face import Face
 
 from utils.common.request import RequestUtils
 from utils.common.enums import StatusCode, Platform
 from utils.common.exception import GlobalException
 
 class LoginInfo:
+    class Captcha:
+        challenge: str = ""
+        gt: str = ""
+
+        validate: str = ""
+        seccode: str = ""
+
+        captcha_key: str = ""
+
     url: str = ""
     qrcode_key: str = ""
+
+    token: str = ""
 
 class Login:
     class QRCode:
@@ -59,8 +71,37 @@ class Login:
             return size.Scale(factor, factor)
 
     class SMS:
-        pass
-    
+        @staticmethod
+        def get_country_list():
+            url = "https://passport.bilibili.com/x/passport-login/web/country"
+
+            return Login.request_get(url)["data"]["list"]
+
+        @staticmethod
+        def send_sms(tel: int, cid: int):
+            url = "https://passport.bilibili.com/x/passport-login/web/sms/send"
+
+            form = {
+                "cid": cid,
+                "tel": tel,
+                "source": "main-fe-header",
+                "token": LoginInfo.token,
+                "challenge": LoginInfo.Captcha.challenge,
+                "validate": LoginInfo.Captcha.validate,
+                "seccode": LoginInfo.Captcha.seccode
+            }
+
+            data = Login.request_post(url, params = form)
+
+            if data["code"]  == StatusCode.Success.value:
+                LoginInfo.Captcha.captcha_key = data["data"]["captcha_key"]
+
+            return data
+
+        @staticmethod
+        def login():
+            pass
+
     @classmethod
     def request_get(cls, url: str, headers: dict = None):
         if not headers:
@@ -95,22 +136,30 @@ class Login:
             headers = RequestUtils.get_headers()
             
             headers["Cookie"] = ";".join([f'{key}={value}' for (key, value) in RequestUtils.session.cookies.items()])
+        else:
+            headers = None
 
         data = cls.request_get(url, headers = headers).get("data")
 
-        info = {
-            "username": data["uname"],
-            "face_url": data["face"],
-            "SESSDATA": RequestUtils.session.cookies["SESSDATA"],
-            "DedeUserID": RequestUtils.session.cookies["DedeUserID"],
-            "DedeUserID__ckMd5": RequestUtils.session.cookies["DedeUserID__ckMd5"],
-            "bili_jct": RequestUtils.session.cookies["bili_jct"],
-        }
-
         if login:
-            info["login_expires"] = int((datetime.now() + timedelta(days = 365)).timestamp())
+            info = {
+                "username": data["uname"],
+                "face_url": data["face"],
+                "SESSDATA": RequestUtils.session.cookies["SESSDATA"],
+                "DedeUserID": RequestUtils.session.cookies["DedeUserID"],
+                "DedeUserID__ckMd5": RequestUtils.session.cookies["DedeUserID__ckMd5"],
+                "bili_jct": RequestUtils.session.cookies["bili_jct"],
+            }
 
-        return info
+            if login:
+                info["login_expires"] = int((datetime.now() + timedelta(days = 365)).timestamp())
+
+            return info
+        else:
+            return {
+                "username": data["uname"],
+                "face_url": data["face"],
+            }
 
     @staticmethod
     def login(info: dict):
@@ -141,7 +190,12 @@ class Login:
 
     @classmethod
     def refresh(cls):
-        pass
+        info = cls.get_user_info(login = False)
+
+        Config.User.face_url = info["face_url"] + "@.jpg"
+        Config.User.username = info["username"]
+
+        Face.remove()
 
     @staticmethod
     def clear_login_info():
@@ -156,7 +210,7 @@ class Login:
 
         Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
 
-        UniversalTool.remove_files([Config.User.face_path])
+        Face.remove()
 
     @classmethod
     def check_json(cls, data: dict):

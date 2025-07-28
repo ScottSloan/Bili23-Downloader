@@ -9,7 +9,6 @@ import subprocess
 from requests.auth import HTTPProxyAuth
 
 from gui.component.panel.scrolled_panel import ScrolledPanel
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
@@ -173,7 +172,7 @@ class DownloadTab(Tab):
         download_box = wx.StaticBox(self.scrolled_panel, -1, "下载设置")
 
         path_lab = wx.StaticText(download_box, -1, "下载目录")
-        self.path_box = TextCtrl(download_box, -1)
+        self.path_box = wx.TextCtrl(download_box, -1)
         self.browse_btn = wx.Button(download_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -220,7 +219,7 @@ class DownloadTab(Tab):
 
         self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
-        self.speed_limit_box = TextCtrl(download_box, -1, size = self.FromDIP((50, 25)))
+        self.speed_limit_box = wx.TextCtrl(download_box, -1, size = self.FromDIP((50, 25)))
         self.speed_limit_unit_lab = wx.StaticText(download_box, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -400,21 +399,20 @@ class AdvancedTab(Tab):
     def init_UI(self):
         self.scrolled_panel = ScrolledPanel(self)
 
-        cdn_box = wx.StaticBox(self.scrolled_panel, -1, "CDN 设置")
+        cdn_box = wx.StaticBox(self.scrolled_panel, -1, "CDN 节点设置")
 
         self.enable_switch_cdn_chk = wx.CheckBox(cdn_box, -1, "替换音视频流 CDN 节点")
         self.enable_custom_cdn_tip = ToolTip(cdn_box)
         self.enable_custom_cdn_tip.set_tooltip("由于哔哩哔哩（B 站）默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n\n请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。")
-        self.custom_cdn_btn = wx.Button(cdn_box, -1, "自定义", size = self.get_scaled_size((100, 28)))
+        self.custom_cdn_btn = wx.Button(cdn_box, -1, "自定义 CDN 节点", size = self.get_scaled_size((120, 28)))
 
         custom_cdn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         custom_cdn_hbox.Add(self.enable_switch_cdn_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         custom_cdn_hbox.Add(self.enable_custom_cdn_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        custom_cdn_hbox.AddStretchSpacer()
-        custom_cdn_hbox.Add(self.custom_cdn_btn, 0, wx.ALL, self.FromDIP(6))
 
         cdn_sbox = wx.StaticBoxSizer(cdn_box, wx.VERTICAL)
         cdn_sbox.Add(custom_cdn_hbox, 0, wx.EXPAND)
+        cdn_sbox.Add(self.custom_cdn_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         advanced_download_box = wx.StaticBox(self.scrolled_panel, -1, "高级下载设置")
 
@@ -441,9 +439,7 @@ class AdvancedTab(Tab):
         download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.check_md5_chk = wx.CheckBox(advanced_download_box, -1, "下载完成后进行 MD5 校验")
-
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
-
         self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((130, 28)))
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
@@ -457,7 +453,7 @@ class AdvancedTab(Tab):
 
         webpage_box = wx.StaticBox(self.scrolled_panel, -1, "Web 页面显示设置")
 
-        webpage_lab = wx.StaticText(webpage_box, -1, "展示方式")
+        webpage_lab = wx.StaticText(webpage_box, -1, "显示方式")
         self.webpage_option_choice = wx.Choice(webpage_box, -1, choices = list(webpage_option_map.keys()))
         webpage_tooltip = ToolTip(webpage_box)
         webpage_tooltip.set_tooltip("设置 Web 页面的显示方式\n\n自动检测：自动选择可用的显示方式\n使用系统 Webview 组件：在窗口中内嵌显示页面\n使用系统默认浏览器：在外部浏览器中显示页面")
@@ -467,8 +463,16 @@ class AdvancedTab(Tab):
         webpage_hbox.Add(self.webpage_option_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         webpage_hbox.Add(webpage_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        ws_port_lab = wx.StaticText(webpage_box, -1, "Websocket 端口")
+        self.ws_port_box = wx.TextCtrl(webpage_box, -1)
+
+        ws_port_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        ws_port_hbox.Add(ws_port_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        ws_port_hbox.Add(self.ws_port_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
+
         webpage_sbox = wx.StaticBoxSizer(webpage_box, wx.VERTICAL)
         webpage_sbox.Add(webpage_hbox, 0, wx.EXPAND)
+        webpage_sbox.Add(ws_port_hbox, 0, wx.EXPAND)
 
         self.scrolled_panel.sizer.Add(cdn_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         self.scrolled_panel.sizer.Add(advanced_download_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
@@ -499,12 +503,11 @@ class AdvancedTab(Tab):
         self.download_suspend_retry_chk.SetValue(Config.Advanced.retry_when_download_suspend)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
-
         self.check_md5_chk.SetValue(Config.Advanced.check_md5)
-
         Config.Temp.user_agent = Config.Advanced.user_agent
 
         self.webpage_option_choice.SetSelection(get_mapping_index_by_value(webpage_option_map, Config.Advanced.webpage_option))
+        self.ws_port_box.SetValue(str(Config.Advanced.websocket_port))
 
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
@@ -519,12 +522,11 @@ class AdvancedTab(Tab):
         Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
-
         Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
-
         Config.Advanced.user_agent = Config.Temp.user_agent
 
         Config.Advanced.webpage_option = self.webpage_option_choice.GetSelection()
+        Config.Advanced.websocket_port = int(self.ws_port_box.GetValue())
 
     def onEnableSwitchCDNEVT(self, event):
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
@@ -565,7 +567,7 @@ class FFmpegTab(Tab):
         ffmpeg_box = wx.StaticBox(self, -1, "FFmpeg 设置")
 
         ffmpeg_path_label = wx.StaticText(ffmpeg_box, -1, "FFmpeg 路径")
-        self.path_box = TextCtrl(ffmpeg_box, -1)
+        self.path_box = wx.TextCtrl(ffmpeg_box, -1)
         self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -692,16 +694,16 @@ class ProxyTab(Tab):
         proxy_hbox.Add(self.proxy_custom_radio, 0, wx.ALL, self.FromDIP(6))
         
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
-        self.ip_box = TextCtrl(proxy_box, -1)
+        self.ip_box = wx.TextCtrl(proxy_box, -1)
         port_lab = wx.StaticText(proxy_box, -1, "端口")
-        self.port_box = TextCtrl(proxy_box, -1)
+        self.port_box = wx.TextCtrl(proxy_box, -1)
 
         self.auth_chk = wx.CheckBox(proxy_box, -1, "启用代理身份验证")
         
         uname_lab = wx.StaticText(proxy_box, -1, "用户名")
-        self.uname_box = TextCtrl(proxy_box, -1)
+        self.uname_box = wx.TextCtrl(proxy_box, -1)
         pwd_lab = wx.StaticText(proxy_box, -1, "密码")
-        self.passwd_box = TextCtrl(proxy_box)
+        self.passwd_box = wx.TextCtrl(proxy_box)
 
         flex_sizer = wx.GridBagSizer(0, 0)
         flex_sizer.Add(ip_lab, pos = (0, 0), flag =  wx.ALL | wx.ALIGN_CENTER, border = self.FromDIP(6))

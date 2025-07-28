@@ -49,7 +49,8 @@ app_config_group = {
         "always_use_https_protocol",
         "check_md5",
         "user_agent",
-        "webpage_option"
+        "webpage_option",
+        "websocket_port"
     ],
     "Merge": [
         "ffmpeg_path",
@@ -305,6 +306,7 @@ class Config:
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
 
         webpage_option: int = 0
+        websocket_port: int = 8765
 
     @classmethod
     def load_config(cls):

@@ -21,7 +21,6 @@ from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 from gui.component.button.large_bitmap_button import LargeBitmapButton
 from gui.component.button.bitmap_button import BitmapButton
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.text_ctrl.time_ctrl import TimeCtrl
 from gui.component.player import Player, vlc_available
 from gui.component.slider.range_slider import RangeSlider
@@ -164,7 +163,7 @@ class ContainerPage(Panel):
         def __init__(self, parent):
             Panel.__init__(self, parent)
 
-            self.output_box: TextCtrl = None
+            self.output_box: wx.TextCtrl = None
 
         def init_utils(self):
             pass
@@ -342,7 +341,7 @@ class ContainerPage(Panel):
             output_box = wx.StaticBox(self, -1, "输出设置")
 
             output_lab = wx.StaticText(output_box, -1, "输出")
-            self.output_box = TextCtrl(output_box, -1)
+            self.output_box = wx.TextCtrl(output_box, -1)
             self.output_browse_btn = wx.Button(output_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
             output_sbox = wx.StaticBoxSizer(output_box, wx.HORIZONTAL)
@@ -365,7 +364,7 @@ class ContainerPage(Panel):
             self.video_stream_gpu_choice.SetStringSelection("关闭")
 
             self.video_stream_bitrate_lab = wx.StaticText(video_stream_box, -1, "比特率")
-            self.video_stream_bitrate_box = TextCtrl(video_stream_box, -1, "1500")
+            self.video_stream_bitrate_box = wx.TextCtrl(video_stream_box, -1, "1500")
             self.video_stream_bitrate_unit_lab = wx.StaticText(video_stream_box, -1, "kb/s")
 
             video_stream_grid_box = wx.FlexGridSizer(4, 3, 0, 0)
@@ -400,7 +399,7 @@ class ContainerPage(Panel):
             self.audio_stream_channel_choice.SetStringSelection("2 (Stereo)")
 
             self.audio_stream_bitrate_lab = wx.StaticText(audio_stream_box, -1, "比特率")
-            self.audio_stream_bitrate_box = TextCtrl(audio_stream_box, -1, "128")
+            self.audio_stream_bitrate_box = wx.TextCtrl(audio_stream_box, -1, "128")
             self.audio_stream_bitrate_unit_lab = wx.StaticText(audio_stream_box, -1, "kb/s")
 
             audio_stream_grid_box = wx.FlexGridSizer(4, 3, 0, 0)
@@ -616,7 +615,7 @@ class ContainerPage(Panel):
             time_hbox.Add(ratio_vbox, 0, wx.EXPAND)
 
             output_lab = wx.StaticText(self, -1, "输出")
-            self.output_box = TextCtrl(self, -1)
+            self.output_box = wx.TextCtrl(self, -1)
             self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
             output_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -729,7 +728,7 @@ class ContainerPage(Panel):
 
         def init_UI(self):
             output_lab = wx.StaticText(self, -1, "输出")
-            self.output_box = TextCtrl(self, -1)
+            self.output_box = wx.TextCtrl(self, -1)
             self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
             output_hbox = wx.BoxSizer(wx.HORIZONTAL)

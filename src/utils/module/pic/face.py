@@ -6,13 +6,9 @@ from utils.config import Config
 from utils.common.request import RequestUtils
 
 class Face:
-    @staticmethod
-    def check_face_path():
-        Config.User.face_path = os.path.join(Config.User.directory, f"face.jpg")
-
     @classmethod
     def get_user_face_path(cls):
-        cls.check_face_path()
+        Config.User.face_path = os.path.join(Config.User.directory, f"face.jpg")
 
         if not os.path.exists(Config.User.face_path):
             # 若未缓存头像，则下载头像到本地
@@ -49,4 +45,8 @@ class Face:
         width, height = scaled_size
 
         return wx.Image(cls.get_user_face_path(), wx.BITMAP_TYPE_ANY).Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+    
+    @staticmethod
+    def remove():
+        os.remove(Config.User.face_path)
     

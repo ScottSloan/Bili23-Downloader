@@ -4,7 +4,6 @@ from utils.config import Config
 from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
 
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
 class ErrorInfoDialog(Dialog):
@@ -42,7 +41,7 @@ class ErrorInfoDialog(Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.log_box = wx.TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.log_box.SetFont(font)
 
         self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))

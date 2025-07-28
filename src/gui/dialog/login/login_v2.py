@@ -10,6 +10,7 @@ from utils.common.exception import GlobalExceptionInfo
 from utils.auth.login_v2 import Login
 
 from gui.dialog.error import ErrorInfoDialog
+from gui.dialog.login.captcha import CaptchaWindow
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
@@ -58,7 +59,9 @@ class QRCodePanel(Panel):
         self.SetSizer(qrcode_vbox)
 
     def Bind_EVT(self):
-        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
+        self.qrcode.Bind(wx.EVT_LEFT_DOWN, self.onRefreshEVT)
+
+        self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
         wx.CallAfter(self.set_tip, ["正在加载"])
@@ -104,7 +107,7 @@ class QRCodePanel(Panel):
 
         wx.CallAfter(self.qrcode.SetBitmap, bmp)
 
-    def onTimer(self, event):
+    def onTimerEVT(self, event):
         resp = Login.QRCode.check_scan_status()
 
         match QRCodeStatus(resp.get("code")):
@@ -116,6 +119,9 @@ class QRCodePanel(Panel):
 
             case QRCodeStatus.Outdated:
                 self.status_outdated()
+
+    def onRefreshEVT(self, event):
+        Thread(target = self.init_utils).start()
 
     def status_success(self):
         self.timer.Stop()
@@ -134,15 +140,24 @@ class QRCodePanel(Panel):
         self.Layout()
 
     def status_outdated(self):
+        def worker():
+            self.set_tip(["二维码已过期", "点击重新加载"])
+
+            self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
         self.timer.Stop()
 
-        wx.CallAfter(self.set_tip, ["二维码已过期", "点击重新加载"])
+        wx.CallAfter(worker)
 
 class SMSPanel(Panel):
     def __init__(self, parent):
+        self.parent: LoginDialog = parent
+
         Panel.__init__(self, parent)
 
         self.init_UI()
+
+        self.Bind_EVT()
 
     def init_UI(self):
         font: wx.Font = self.GetFont()
@@ -200,8 +215,73 @@ class SMSPanel(Panel):
 
         self.timer = wx.Timer(self, -1)
     
+    def Bind_EVT(self):
+        self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCodeEVT)
+
+        self.Bind(wx.EVT_TIMER, self.onTimerEVT)
+
     def init_utils(self):
+        self.countdown = 60
+
+        country_data = Login.SMS.get_country_list()
+
+        wx.CallAfter(self.set_country_list, country_data)
+
+    def onGetValidateCodeEVT(self, event):
+        def worker():
+            Login.SMS.send_sms(self.tel, self.cid)
+    
+            self.check_send_sms_status()
+
+        if not self.phone_number_box.GetValue():
+            wx.MessageDialog(self.parent, "发送验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        Thread(target = worker).start()
+
+    def onTimerEVT(self, event):
+        def update():
+            self.get_validate_code_btn.SetLabel(f"重新发送({self.countdown})")
+
+        def reset():
+            self.timer.Stop()
+            self.countdown = 60
+
+            self.get_validate_code_btn.SetLabel("重新发送")
+            self.get_validate_code_btn.Enable(True)
+
+        self.countdown -= 1
+        wx.CallAfter(update)
+
+        if self.countdown == 0:
+            wx.CallAfter(reset)
+
+    def check_captcha_status(self):
         pass
+
+    def check_send_sms_status(self):
+        self.get_validate_code_btn.SetLabel("重新发送(60)")
+        self.get_validate_code_btn.Enable(False)
+
+        self.timer.Start(1000)
+
+    def set_country_list(self, country_desc_list: list):
+        self.country_id_list = [entry["country_code"] for entry in country_desc_list]
+
+        country_desc_list = [f"+{entry['country_code']} - {entry['cname']}" for entry in country_desc_list]
+
+        self.country_id_choice.Set(country_desc_list)
+        self.country_id_choice.SetSelection(0)
+
+        self.Layout()
+
+    @property
+    def cid(self):
+        return self.country_id_list[self.country_id_choice.GetSelection()]
+    
+    @property
+    def tel(self):
+        return int(self.phone_number_box.GetValue())
 
 class LoginDialog(Dialog):
     def __init__(self, parent):
@@ -212,6 +292,8 @@ class LoginDialog(Dialog):
         Dialog.__init__(self, parent, "登录")
 
         self.init_UI()
+
+        self.Bind_EVT()
 
         self.init_utils()
 
@@ -250,6 +332,9 @@ class LoginDialog(Dialog):
 
         self.SetSizerAndFit(vbox)
 
+    def Bind_EVT(self):
+        pass
+
     def init_utils(self):
         def worker():
             self.qrcode_panel.init_utils()
@@ -271,11 +356,14 @@ class LoginDialog(Dialog):
         wx.PostEvent(self.GetEventHandler(), event)
 
     def onError(self):
-        info = GlobalExceptionInfo.info.copy()
+        def worker():
+            info = GlobalExceptionInfo.info.copy()
 
-        dlg = wx.MessageDialog(self, f"登录失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
-        dlg.SetYesNoLabels("详细信息", "确定")
+            dlg = wx.MessageDialog(self, f"登录失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
+            dlg.SetYesNoLabels("详细信息", "确定")
 
-        if dlg.ShowModal() == wx.ID_YES:
-            err_dlg = ErrorInfoDialog(self, info)
-            err_dlg.ShowModal()
+            if dlg.ShowModal() == wx.ID_YES:
+                err_dlg = ErrorInfoDialog(self, info)
+                err_dlg.ShowModal()
+
+        wx.CallAfter(worker)

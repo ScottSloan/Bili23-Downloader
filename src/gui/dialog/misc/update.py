@@ -2,7 +2,6 @@ import wx
 
 from utils.config import Config
 
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
 class UpdateDialog(Dialog):
@@ -33,7 +32,7 @@ class UpdateDialog(Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.changelog = TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.changelog = wx.TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)

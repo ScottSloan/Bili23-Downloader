@@ -1,8 +1,5 @@
 import wx
 
-from utils.config import Config
-
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
 class ChangeLogDialog(Dialog):
@@ -18,7 +15,7 @@ class ChangeLogDialog(Dialog):
         wx.Bell()
 
     def init_UI(self):
-        changelog_box = TextCtrl(self, -1, self.info["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        changelog_box = wx.TextCtrl(self, -1, self.info["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
 
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 

@@ -12,7 +12,6 @@ from utils.common.font import SysFont
 from utils.common.regex import Regex
 
 from gui.component.window.dialog import Dialog
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.misc.tooltip import ToolTip
 
 class AddNewTemplateDialog(Dialog):
@@ -50,7 +49,7 @@ class AddNewTemplateDialog(Dialog):
 
         font = self.GetFont()
         font.SetFaceName(SysFont.get_monospaced_font())
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
+        self.template_box = wx.TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
         self.template_box.SetFont(font)
 
         preview_lab = wx.StaticText(self, -1, "预览")
