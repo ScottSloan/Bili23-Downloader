@@ -15,7 +15,7 @@ from utils.common.exception import GlobalException
 class LoginInfo:
     class Captcha:
         flag: bool = False
-        
+
         token: str = ""
         challenge: str = ""
         gt: str = ""
@@ -24,9 +24,10 @@ class LoginInfo:
         seccode: str = ""
 
         captcha_key: str = ""
-
-    url: str = ""
-    qrcode_key: str = ""
+    
+    class QRCode:
+        url: str = ""
+        key: str = ""
 
 class Login:
     class QRCode:
@@ -36,20 +37,20 @@ class Login:
 
             data = Login.request_get(url)
 
-            LoginInfo.url = data["data"]["url"]
-            LoginInfo.qrcode_key = data["data"]["qrcode_key"]
+            LoginInfo.QRCode.url = data["data"]["url"]
+            LoginInfo.QRCode.key = data["data"]["qrcode_key"]
 
         @staticmethod
         def get_qrcode_img_io():
             pic = BytesIO()
 
-            qrcode.make(LoginInfo.url).save(pic)
+            qrcode.make(LoginInfo.QRCode.url).save(pic)
 
             return BytesIO(pic.getvalue())
 
         @staticmethod
         def check_scan_status():
-            url = f"https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={LoginInfo.qrcode_key}"
+            url = f"https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={LoginInfo.QRCode.key}"
 
             data = Login.request_get(url)
 
@@ -101,8 +102,18 @@ class Login:
             return data
 
         @staticmethod
-        def login():
-            pass
+        def login(tel: int, cid: int, validate_code: int):
+            url = "https://passport.bilibili.com/x/passport-login/web/login/sms"
+
+            form = {
+                "cid": cid,
+                "tel": tel,
+                "code": validate_code,
+                "source": "main-fe-header",
+                "captcha_key": LoginInfo.Captcha.captcha_key
+            }
+
+            return Login.request_post(url, params = form)
 
     class Captcha:
         @staticmethod

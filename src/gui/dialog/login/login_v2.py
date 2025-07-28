@@ -261,7 +261,19 @@ class SMSPanel(Panel):
             wx.CallAfter(reset)
 
     def onLoginEVT(self, event):
-        pass
+        def worker():
+            Login.SMS.login(self.tel, self.cid, int(self.validate_code_box.GetValue()))
+
+            info = Login.get_user_info(login = True)
+            Login.login(info)
+
+            self.parent.onSuccess()
+
+        if not self.validate_code_box.GetValue():
+            wx.MessageDialog(self.parent, "登录失败\n\n验证码不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            return
+
+        Thread(target = worker).start()
 
     def check_captcha_status(self):
         if not LoginInfo.Captcha.seccode:
@@ -273,6 +285,8 @@ class SMSPanel(Panel):
                 time.sleep(1)
 
     def start_countdown(self):
+        self.parent.raise_top()
+
         self.get_validate_code_btn.SetLabel("重新发送(60)")
         self.get_validate_code_btn.Enable(False)
 
@@ -370,6 +384,8 @@ class LoginDialog(Dialog):
 
     def onError(self):
         def worker():
+            self.raise_top()
+
             info = GlobalExceptionInfo.info.copy()
 
             dlg = wx.MessageDialog(self, f"登录失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)

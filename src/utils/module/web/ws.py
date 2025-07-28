@@ -47,8 +47,6 @@ class WebSocketServer:
 
         data = json.loads(message)
 
-        print(data)
-
         match data.get("msg"):
             case "queryCaptchaInfo":
                 await queryCaptchaInfo()
@@ -76,8 +74,7 @@ class WebSocketServer:
 
     def stop(self):
         if self.server:
-            self.loop.call_soon_threadsafe(self.server_task.cancel)
-            self.loop.call_soon_threadsafe(self.loop.stop)
+            self.server.close()
             self.server = None
 
     @classmethod

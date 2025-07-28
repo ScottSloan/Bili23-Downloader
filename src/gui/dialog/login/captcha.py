@@ -49,7 +49,7 @@ class CaptchaDialog(Dialog):
 
         data = json.loads(message)
 
-        if data["code"] == 200:
+        if data["msg"] == "captchaResult":
             LoginInfo.Captcha.validate = data["data"]["validate"]
             LoginInfo.Captcha.seccode = data["data"]["seccode"]
 
