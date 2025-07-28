@@ -9,6 +9,8 @@ from utils.auth.login_v2 import LoginInfo
 
 from utils.common.thread import Thread
 
+from utils.module.graph import Graph
+
 class WebSocketServer:
     def __init__(self):
         self.server = None
@@ -45,6 +47,14 @@ class WebSocketServer:
 
             self.stop()
 
+        async def queryGraph():
+            data = {
+                "msg": "queryGraph",
+                "data": Graph.get_graph_json(Config.Sys.default_font)
+            }
+
+            await self.broadcast(data)
+
         data = json.loads(message)
 
         match data.get("msg"):
@@ -53,6 +63,9 @@ class WebSocketServer:
 
             case "captchaResult":
                 await captchaResult()
+
+            case "queryGraph":
+                await queryGraph()
 
     async def broadcast(self, data: dict):
         message = json.dumps(data, ensure_ascii = False)

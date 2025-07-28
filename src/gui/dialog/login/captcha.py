@@ -24,7 +24,7 @@ class CaptchaDialog(Dialog):
     def init_UI(self):
         self.webview = Webview(self)
 
-        self.webview.browser.SetPage(self.webview.get_page("captcha.html"), "")
+        self.webview.browser.LoadURL(self.webview.get_page("captcha.html"))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)

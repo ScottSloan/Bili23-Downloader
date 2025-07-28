@@ -14,7 +14,7 @@ from utils.module.web.ws import WebSocketServer
 class WebPage:
     @classmethod
     def get_webview_availability(cls):
-        return wx.html2.WebView.IsBackendAvailable(cls.get_webview_backend()) and False
+        return wx.html2.WebView.IsBackendAvailable(cls.get_webview_backend())
     
     @classmethod
     def show_webpage(cls, parent: wx.Window, file_name: str):
@@ -72,6 +72,15 @@ class WebPage:
 
                 wx.CallAfter(worker)
 
+            case "graph.html":
+                def worker():
+                    from gui.window.graph import GraphWindow
+
+                    window = GraphWindow(parent)
+                    window.Show()
+
+                wx.CallAfter(worker)
+
     @classmethod
     def websocket(cls, parent: wx.Window, file_name: str):
         websocket = WebSocketServer()
@@ -80,6 +89,9 @@ class WebPage:
         match file_name:
             case "captcha.html":
                 LoginInfo.Captcha.flag = True
+
+            case "graph.html":
+                pass
 
         path = cls.get_static_file_path(file_name)
 

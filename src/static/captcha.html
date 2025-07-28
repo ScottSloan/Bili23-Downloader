@@ -508,11 +508,9 @@
 
     window.onload = function () {
         if (window.MainApplication == undefined) {
-            // websocket
             socket = new WebSocket('ws://localhost:8765');
 
             socket.onopen = function () {
-                // 向后端查询 captcha 信息
                 data = {
                     "msg": "queryCaptchaInfo"
                 };

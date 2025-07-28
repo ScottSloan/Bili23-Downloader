@@ -104,6 +104,8 @@ class Config:
         dark_mode: bool = False
         dpi_scale_factor: float = 1
 
+        default_font: str = ""
+
     class APP:
         name: str = "Bili23 Downloader"
 

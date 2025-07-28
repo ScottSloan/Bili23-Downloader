@@ -132,9 +132,33 @@
         <div id="tip">由 Bili23 Downloader 生成</div>
 
         <script>
+            var socket = null;
             var svgClone = null;
 
-            function initGraph(dot) {
+            window.onload = function () {
+                if (window.MainApplication == undefined) {
+                    socket = new WebSocket('ws://localhost:8765');
+
+                    socket.onopen = function () {
+                        data = {
+                            "msg": "queryGraph"
+                        };
+
+                        socket.send(JSON.stringify(data));
+                    }
+
+                    socket.onmessage = function (event) {
+                        var json = JSON.parse(event.data);
+
+                        if (json.msg == "queryGraph") {
+                            initGraph(json.data.graph, json.data.title)
+                        }
+                    }
+                    
+                }
+            }
+
+            function initGraph(graph, title) {
                 Viz.instance().then(function (viz) {
                     const options = {
                         format: "svg",
@@ -142,7 +166,7 @@
                     };
         
                     const container = document.getElementById("container");
-                    const svgElement = viz.renderSVGElement(dot, options);
+                    const svgElement = viz.renderSVGElement(graph, options);
                     
                     container.appendChild(svgElement);
 
@@ -162,6 +186,8 @@
                         svgZoom.center();
                     }
                 })
+
+                setTitle(title)
             }
             
             function setTitle(title) {
@@ -217,9 +243,16 @@
                 img.src = svgUrl;
             }
 
-            //initGraph("digraph {a -> b}");
+            // data = {
+            //     "msg": "queryGraph",
+            //     "data": {
+            //         "graph": "digraph {a -> b}",
+            //         "title": "Test Title"
+            //     }
+            // }
 
-            //setTitle("【互动视频】测试视频");
+            // initGraph(JSON.stringify(data));
+
         </script>
     </body>
 </html>

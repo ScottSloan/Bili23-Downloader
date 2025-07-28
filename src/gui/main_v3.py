@@ -17,6 +17,7 @@ from utils.module.pic.face import Face
 from utils.module.clipboard import ClipBoard
 from utils.module.pic.cover import Cover
 from utils.module.ffmpeg_v2 import FFmpeg
+from utils.module.web.page import WebPage
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -870,8 +871,7 @@ class MainWindow(Frame):
                 self.episode_list.CollapseCurrentItem()
 
     def onShowGraphWindowEVT(self):
-        window = GraphWindow(self)
-        window.Show()
+        WebPage.show_webpage(self, "graph.html")
 
     def onShowDetailInfoDialogEVT(self):
         match self.parser.parse_type:
@@ -919,10 +919,11 @@ class MainWindow(Frame):
     def get_sys_settings(self):
         Config.Sys.dark_mode = False if Platform(Config.Sys.platform) == Platform.Windows else wx.SystemSettings.GetAppearance().IsDark()
         Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
+        Config.Sys.default_font = self.GetFont().GetFaceName()
 
         for key in ["danmaku", "subtitle"]:
             if Config.Basic.ass_style.get(key).get("font_name") == "default":
-                Config.Basic.ass_style[key]["font_name"] = self.GetFont().GetFaceName()
+                Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
 
     @property
     def stream_type(self):
