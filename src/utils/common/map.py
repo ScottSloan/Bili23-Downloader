@@ -449,20 +449,66 @@ webpage_option_map = {
 }
 
 rid_map = {
-    "cinephile": 1001,
-    "ent": 1002,
-    "music": 1003,
-    "dance": 1004,
-    "douga": 1005,
-    "kichiku": 1007,
-    "game": 1008,
-    "knowledge": 1010,
-    "tech": 1012,
-    "car": 1013,
-    "fasion": 1014,
-    "sports": 1018,
-    "food": 1020,
-    "animal": 1024
+    "all": {
+        "rid": 0,
+        "desc": "全部"
+    },
+    "cinephile": {
+        "rid": 1001,
+        "desc": "影视"
+    },
+    "ent": {
+        "rid": 1002,
+        "desc": "娱乐"
+    },
+    "music": {
+        "rid": 1003,
+        "desc": "音乐"
+    },
+    "dance": {
+        "rid": 1004,
+        "desc": "舞蹈"
+    },
+    "douga": {
+        "rid": 1005,
+        "desc": "动画"
+    },
+    "kichiku": {
+        "rid": 1007,
+        "desc": "鬼畜"
+    },
+    "game": {
+        "rid": 1008,
+        "desc": "游戏"
+    },
+    "knowledge": {
+        "rid": 1010,
+        "desc": "知识"
+    },
+    "tech": {
+        "rid": 1012,
+        "desc": "科技数码"
+    },
+    "car": {
+        "rid": 1013,
+        "desc": "汽车"
+    },
+    "fasion": {
+        "rid": 1014,
+        "desc": "时尚美妆"
+    },
+    "sports": {
+        "rid": 1018,
+        "desc": "体育运动"
+    },
+    "food": {
+        "rid": 1020,
+        "desc": "美食"
+    },
+    "animal": {
+        "rid": 1024,
+        "desc": "动物"
+    }
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
