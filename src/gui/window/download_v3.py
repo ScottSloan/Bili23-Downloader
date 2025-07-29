@@ -67,7 +67,7 @@ class DownloadManagerWindow(Frame):
         top_panel.set_dark_mode()
 
         font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 4))
 
         self.top_title_lab = wx.StaticText(top_panel, -1, "下载管理")
         self.top_title_lab.SetFont(font)

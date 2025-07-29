@@ -6,6 +6,7 @@ class ID:
     LOGOUT_MENU = wx.NewIdRef()
     DEBUG_MENU = wx.NewIdRef()
     CONVERTER_MENU = wx.NewIdRef()
+    LIVE_RECORDING_MENU = wx.NewIdRef()
     FORMAT_FACTORY_MENU = wx.NewIdRef()
     SETTINGS_MENU = wx.NewIdRef()
 

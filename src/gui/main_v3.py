@@ -41,7 +41,6 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
-from gui.dialog.live import LiveRecordingDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
 from gui.dialog.login.login_v2 import LoginDialog
 
@@ -49,6 +48,7 @@ from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings import SettingWindow
 from gui.window.download_v3 import DownloadManagerWindow
+from gui.window.live_recording import LiveRecordingWindow
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
@@ -115,13 +115,18 @@ class Parser:
     def parse_success(self):
         self.main_window.utils.set_status(ParseStatus.Success)
 
-        self.parse_type_str = self.get_parse_type_str()
+        match self.parse_type:
+            case ParseType.Live:
+                wx.CallAfter(self.live_recording)
 
-        self.main_window.show_episode_list()
+            case _:
+                self.parse_type_str = self.get_parse_type_str()
 
-        self.set_video_quality_id()
+                self.main_window.show_episode_list()
 
-        self.set_stream_type()
+                self.set_video_quality_id()
+
+                self.set_stream_type()
 
     def set_video_quality_id(self):
         data = Preview.get_download_json(self.parse_type)
@@ -165,6 +170,10 @@ class Parser:
 
     def parse_episode(self):
         self.parser.parse_episodes()
+
+    def live_recording(self):
+        window = LiveRecordingWindow(self.main_window)
+        window.Show()
 
     def onError(self):
         def worker():
@@ -418,23 +427,13 @@ class Utils:
             self.main_window.detail_btn.Show(detail_btn)
             self.main_window.graph_btn.Show(graph_btn)
 
-        def enable_controls(enable: bool, option_enable: bool = True):
+        def enable_controls(enable: bool, option_enable: bool = True, not_live: bool = True):
             self.main_window.url_box.Enable(enable)
             self.main_window.get_btn.Enable(enable)
             self.main_window.episode_list.Enable(enable)
-            self.main_window.download_btn.Enable(enable)
-            self.main_window.episode_option_btn.Enable(enable and option_enable and not graph_btn)
-            self.main_window.download_option_btn.Enable(enable and option_enable)
-
-        def set_label():
-            match self.main_window.parser.parse_type:
-                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    self.main_window.download_btn.SetLabel("开始下载")
-
-                case ParseType.Live:
-                    self.main_window.episode_option_btn.Enable(False)
-                    self.main_window.download_option_btn.Enable(False)
-                    self.main_window.download_btn.SetLabel("直播录制")
+            self.main_window.download_btn.Enable(enable and not_live)
+            self.main_window.episode_option_btn.Enable(enable and option_enable and not graph_btn and not_live)
+            self.main_window.download_option_btn.Enable(enable and option_enable and not_live)
 
         self.status = status
 
@@ -454,11 +453,12 @@ class Utils:
                 processing_icon = False
                 type_lab = ""
 
-                detail_btn = True
+                not_live = self.main_window.parser.parse_type != ParseType.Live
+
+                detail_btn = True and not_live
                 graph_btn = VideoInfo.is_interactive
 
-                enable_controls(True)
-                set_label()
+                enable_controls(True, not_live = not_live)
 
                 self.hide_processing_window()
 
@@ -596,22 +596,23 @@ class MainWindow(Frame):
     def init_menubar(self):
         menu_bar = wx.MenuBar()
 
-        tool_manu = wx.Menu()
+        tool_menu = wx.Menu()
         help_menu = wx.Menu()
 
         if Config.User.login:
-            tool_manu.Append(ID.LOGOUT_MENU, "注销(&L)")
+            tool_menu.Append(ID.LOGOUT_MENU, "注销(&L)")
         else:
-            tool_manu.Append(ID.LOGIN_MENU, "登录(&L)")
+            tool_menu.Append(ID.LOGIN_MENU, "登录(&L)")
 
-        tool_manu.AppendSeparator()
+        tool_menu.AppendSeparator()
 
         if Config.Misc.enable_debug:
-            tool_manu.Append(ID.DEBUG_MENU, "调试(&D)")
+            tool_menu.Append(ID.DEBUG_MENU, "调试(&D)")
 
-        tool_manu.Append(ID.FORMAT_FACTORY_MENU, "视频工具箱(&F)")
-        tool_manu.AppendSeparator()
-        tool_manu.Append(ID.SETTINGS_MENU, "设置(&S)")
+        tool_menu.Append(ID.LIVE_RECORDING_MENU, "直播录制(&R)")
+        tool_menu.Append(ID.FORMAT_FACTORY_MENU, "视频工具箱(&F)")
+        tool_menu.AppendSeparator()
+        tool_menu.Append(ID.SETTINGS_MENU, "设置(&S)")
 
         help_menu.Append(ID.CHECK_UPDATE_MENU, "检查更新(&U)")
         help_menu.Append(ID.CHANGELOG_MENU, "更新日志(&P)")
@@ -620,7 +621,7 @@ class MainWindow(Frame):
         help_menu.Append(ID.FEEDBACK_MENU, "意见反馈(&B)")
         help_menu.Append(ID.ABOUT_MENU, "关于(&A)")
 
-        menu_bar.Append(tool_manu, "工具(&T)")
+        menu_bar.Append(tool_menu, "工具(&T)")
         menu_bar.Append(help_menu, "帮助(&H)")
 
         self.SetMenuBar(menu_bar)
@@ -702,6 +703,10 @@ class MainWindow(Frame):
                 window = DebugWindow(self)
                 window.Show()
 
+            case ID.LIVE_RECORDING_MENU:
+                window = LiveRecordingWindow(self)
+                window.Show()
+
             case ID.FORMAT_FACTORY_MENU:
                 window = FormatFactoryWindow(self)
                 window.Show()
@@ -779,7 +784,7 @@ class MainWindow(Frame):
             self.download_window.Raise()
 
     def onDownloadEVT(self, event):
-        def video():
+        def download_video():
             def download_callback():
                 self.utils.hide_processing_window()
                 self.onShowDownloadWindowEVT(event)
@@ -802,22 +807,10 @@ class MainWindow(Frame):
 
             self.processing_window.ShowModal(ProcessingType.Process)
 
-        def live():
-            if self.utils.check_live_status():
-                return
-            
-            dlg = LiveRecordingDialog(self)
-            dlg.ShowModal()
-
         if self.utils.check_download_items():
             return
         
-        match self.parser.parse_type:
-            case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                video()
-
-            case ParseType.Live:
-                live()
+        download_video()
 
     def onParseEVT(self, event):
         url = self.url_box.GetValue()

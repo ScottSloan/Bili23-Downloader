@@ -197,7 +197,7 @@ class Config:
         bili_jct = ""
 
     class Misc:
-        episode_display_mode: int = 2
+        episode_display_mode: int = 3
 
         show_episode_full_name: bool = False
         auto_check_episode_item: bool = False
