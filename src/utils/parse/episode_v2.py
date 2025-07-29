@@ -279,10 +279,10 @@ class Episode:
                     else:
                         return ""
 
-            episode["pubtime"] = episode["release_date"]
-            episode["ep_id"] = episode["id"]
+            episode["pubtime"] = episode.get("release_date")
+            episode["ep_id"] = episode.get("id")
             episode["badge"] = get_badge()
-            episode["cover_url"] = episode["cover"]
+            episode["cover_url"] = episode.get("cover")
             episode["link"] = f"https://www.bilibili.com/cheese/play/ep{episode.get('id')}"
             episode["type"] = ParseType.Cheese.value
 
@@ -302,6 +302,29 @@ class Episode:
             episode["cover"] = info_json["user_cover"]
             episode["room_id"] = info_json["room_id"]
             episode["type"] = ParseType.Live.value
+
+            return EpisodeInfo.get_entry_info(episode)
+
+    class Popular:
+        @classmethod
+        def parse_episodes(cls, info_json: dict):
+            EpisodeInfo.clear_episode_data()
+
+            section_title = info_json["config"]["label"]
+
+            EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
+
+            for episode in info_json["list"]:
+                episode["section_title"] = section_title
+                
+                EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
+            
+        @staticmethod
+        def get_entry_info(episode: dict):
+            episode["pubtime"] = episode["pubdate"]
+            episode["link"] = f"https://www/bilibili.com/video/{episode.get('bvid')}"
+            episode["cover_url"] = episode.get("pic")
+            episode["type"] = ParseType.Video.value
 
             return EpisodeInfo.get_entry_info(episode)
 

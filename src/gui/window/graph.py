@@ -1,5 +1,4 @@
 import wx
-import json
 
 from utils.module.graph import Graph
 

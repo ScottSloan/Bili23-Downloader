@@ -26,6 +26,7 @@ from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.preview import Preview
+from utils.parse.popular import PopularParser
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -44,7 +45,6 @@ from gui.dialog.live import LiveRecordingDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
 from gui.dialog.login.login_v2 import LoginDialog
 
-from gui.window.graph import GraphWindow
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings import SettingWindow
@@ -72,7 +72,7 @@ class Parser:
     def parse_url(self, url: str):
         self.url = url
 
-        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular", url):
             case "cheese":
                 self.set_parse_type(ParseType.Cheese)
 
@@ -98,6 +98,11 @@ class Parser:
 
             case "blackboard" | "festival":
                 self.parser = ActivityParser(self.parser_callback)
+
+            case "popular":
+                self.set_parse_type(ParseType.Video)
+
+                self.parser = PopularParser(self.parser_callback)
 
             case _:
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
@@ -242,11 +247,11 @@ class Utils:
                 if not info_bar:
                     self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
 
-            try:
-                worker()
+        try:
+            worker()
 
-            except Exception as e:
-                raise GlobalException(callback = onError) from e
+        except Exception as e:
+            raise GlobalException(callback = onError) from e
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
@@ -353,7 +358,7 @@ class Utils:
     def validate_url(self, url: str):
         if url.startswith(("http", "https")) and "bilibili.com" in url:
             if url != self.main_window.url_box.GetValue():
-                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular", url):
                     return True
 
     def get_episode_title(self):

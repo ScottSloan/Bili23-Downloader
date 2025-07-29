@@ -448,6 +448,23 @@ webpage_option_map = {
     "使用系统默认浏览器": 2
 }
 
+rid_map = {
+    "cinephile": 1001,
+    "ent": 1002,
+    "music": 1003,
+    "dance": 1004,
+    "douga": 1005,
+    "kichiku": 1007,
+    "game": 1008,
+    "knowledge": 1010,
+    "tech": 1012,
+    "car": 1013,
+    "fasion": 1014,
+    "sports": 1018,
+    "food": 1020,
+    "animal": 1024
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
