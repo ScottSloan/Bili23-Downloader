@@ -5,8 +5,6 @@ from utils.config import Config
 from utils.common.enums import Platform
 from utils.common.data_type import LiveRoomInfo
 
-from utils.parse.live import LiveInfo
-
 from gui.component.panel.panel import Panel
 from gui.component.panel.live_room_item import LiveRoomItemPanel
 from gui.component.panel.scrolled_panel import ScrolledPanel
@@ -20,8 +18,6 @@ class LiveRecordingWindow(Frame):
         self.set_window_params()
 
         self.init_UI()
-
-        self.init_utils()
 
         self.CenterOnParent()
 
@@ -66,16 +62,7 @@ class LiveRecordingWindow(Frame):
 
         self.SetSizer(vbox)
 
-    def init_utils(self):
-        info = LiveRoomInfo()
-
-        info.cover_url = LiveInfo.cover_url
-
-        info.room_id = LiveInfo.room_id
-
-        info.up_name = LiveInfo.up_name
-        info.title = LiveInfo.title
-
+    def add_new_live_room(self, info: LiveRoomInfo):
         panel = LiveRoomItemPanel(self.live_room_list, info, self)
 
         self.live_room_list.sizer.Add(panel, 0, wx.EXPAND)

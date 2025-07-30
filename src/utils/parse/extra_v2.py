@@ -16,7 +16,7 @@ from utils.common.formatter import FormatUtils
 from utils.common.exception import GlobalException
 from utils.tool_v2 import DownloadFileTool
 
-from utils.parse.preview import Preview
+from utils.parse.preview import VideoPreview
 from utils.parse.download import DownloadParser
 
 from utils.module.pic.cover import Cover
@@ -343,7 +343,7 @@ class ExtraParser:
             else:
                 data = DownloadParser.get_download_stream_json(task_info)
 
-                width, height = Preview.get_video_resolution(task_info, data)
+                width, height = VideoPreview.get_video_resolution(task_info, data)
 
             return {
                 "width": width,

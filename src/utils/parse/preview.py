@@ -5,11 +5,12 @@ from utils.common.data_type import DownloadTaskInfo
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
+from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.audio import AudioInfo
 
 from utils.module.web.cdn import CDN
 
-class Preview:
+class VideoPreview:
     def __init__(self, parse_type: ParseType, stream_type: int):
         self.parse_type, self.stream_type = parse_type, stream_type
 
@@ -232,3 +233,15 @@ class Preview:
             data[key] = data
 
         data.get(key)
+
+class LivePreview:
+    def __init__(self, room_id: int):
+        self.room_id = room_id
+
+        self.stream_json: dict = {}
+
+    def get_live_stream_json(self):
+        self.stream_json = LiveParser.get_live_stream_info(self.room_id)
+
+    def get_quality_desc_list(self):
+        return [entry["media_base_desc"]["detail_desc"]["desc"] for entry in self.stream_json.get("g_qn_desc") if entry.get("media_base_desc")]

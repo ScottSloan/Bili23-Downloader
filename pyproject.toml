@@ -10,7 +10,8 @@ dependencies = [
     "requests==2.32.4",
     "wxpython==4.2.3",
     "python-vlc==3.0.21203",
-    "protobuf==3.19.0"
+    "protobuf==3.19.0",
+    "websockets==15.0.1"
 ]
 authors = [
     {name = "ScottSloan", email = "scottsloan@petalmail.com"},

@@ -7,7 +7,7 @@ from utils.common.enums import StreamType, VideoQualityID, AudioQualityID
 from utils.common.thread import Thread
 from utils.common.formatter import FormatUtils
 
-from utils.parse.preview import Preview
+from utils.parse.preview import VideoPreview
 from utils.parse.audio import AudioInfo
 
 from gui.component.window.dialog import Dialog
@@ -122,7 +122,7 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Set(list(video_codec_preference_map.keys()))
         self.video_codec_choice.Select(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
-        self.preview = Preview(self.main_window.parser.parse_type, self.main_window.stream_type)
+        self.preview = VideoPreview(self.main_window.parser.parse_type, self.main_window.stream_type)
 
         self.onChangeVideoQualityEVT(0)
         self.onChangeAudioQualityEVT(0)
@@ -560,14 +560,14 @@ class DownloadOptionDialog(Dialog):
                 return True
 
     def onOKEVT(self):
+        if not self.path_box.path_box.GetValue():
+            wx.MessageDialog(self, "保存设置失败\n\n下载目录不能为空", "警告", wx.ICON_WARNING).Show()
+            return True
+
         self.media_info_box.save()
-
         self.media_option_box.save()
-
         self.path_box.save()
-
         self.extra_box.save()
-
         self.other_box.save()
 
         Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)

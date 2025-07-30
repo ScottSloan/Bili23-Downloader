@@ -25,7 +25,7 @@ from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
-from utils.parse.preview import Preview
+from utils.parse.preview import VideoPreview
 from utils.parse.popular import PopularParser
 
 from gui.component.window.frame import Frame
@@ -129,11 +129,11 @@ class Parser:
                 self.set_stream_type()
 
     def set_video_quality_id(self):
-        data = Preview.get_download_json(self.parse_type)
+        data = VideoPreview.get_download_json(self.parse_type)
 
-        self.video_quality_id_list, self.video_quality_desc_list = Preview.get_video_quality_id_desc_list(data)
+        self.video_quality_id_list, self.video_quality_desc_list = VideoPreview.get_video_quality_id_desc_list(data)
 
-        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else max(Preview.get_video_available_quality_id_list(data))
+        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else max(VideoPreview.get_video_available_quality_id_list(data))
 
         self.video_codec_id = Config.Download.video_codec_id
 
@@ -172,8 +172,9 @@ class Parser:
         self.parser.parse_episodes()
 
     def live_recording(self):
-        window = LiveRecordingWindow(self.main_window)
-        window.Show()
+        self.main_window.onShowLiveRecordingWindowEVT(0)
+
+        self.main_window.live_recording_window.add_new_live_room(self.parser.get_live_info())
 
     def onError(self):
         def worker():
@@ -679,6 +680,7 @@ class MainWindow(Frame):
 
         self.processing_window = ProcessingWindow(self)
         self.download_window = DownloadManagerWindow(self)
+        self.live_recording_window = LiveRecordingWindow(self)
 
         self.utils.init_timer()
 
@@ -704,8 +706,7 @@ class MainWindow(Frame):
                 window.Show()
 
             case ID.LIVE_RECORDING_MENU:
-                window = LiveRecordingWindow(self)
-                window.Show()
+                self.onShowLiveRecordingWindowEVT(event)
 
             case ID.FORMAT_FACTORY_MENU:
                 window = FormatFactoryWindow(self)
@@ -782,6 +783,15 @@ class MainWindow(Frame):
         if Config.Basic.auto_show_download_window:
             self.download_window.downloading_page_btn.onClickEVT(event)
             self.download_window.Raise()
+
+    def onShowLiveRecordingWindowEVT(self, event):
+        if not self.live_recording_window.IsShown():
+            self.live_recording_window.Show()
+
+        elif self.live_recording_window.IsIconized():
+            self.Iconize(False)
+
+        self.live_recording_window.Raise()
 
     def onDownloadEVT(self, event):
         def download_video():

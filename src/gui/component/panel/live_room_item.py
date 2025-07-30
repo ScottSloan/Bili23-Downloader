@@ -3,7 +3,7 @@ import wx
 from utils.common.data_type import LiveRoomInfo
 from utils.common.thread import Thread
 from utils.common.icon_v4 import Icon, IconID
-from utils.common.enums import LiveRecordingStatus
+from utils.common.enums import LiveRecordingStatus, LiveStatus
 
 from utils.module.pic.cover import Cover
 
@@ -42,11 +42,13 @@ class LiveRoomItemPanel(Panel):
         self.title_lab = wx.StaticText(self, -1, "直播间标题")
 
         self.room_id_lab = InfoLabel(self, "ID 123456", size = self.FromDIP((90, 16)))
+        self.area_lab = InfoLabel(self, "分区", size = self.FromDIP((150, 16)))
         self.live_status_lab = InfoLabel(self, "直播中", size = self.FromDIP((50, 16)))
         self.recording_status_lab = InfoLabel(self, "未录制", size = self.FromDIP((-1, -1)))
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.room_id_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
+        info_hbox.Add(self.area_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.live_status_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.recording_status_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
 
@@ -89,6 +91,7 @@ class LiveRoomItemPanel(Panel):
         self.title_lab.SetLabel(self.info.title)
 
         self.room_id_lab.SetLabel(f"ID {self.info.room_id}")
+        self.area_lab.SetLabel(f"{self.info.parent_area} · {self.info.area}")
 
     def show_cover(self):
         def setBitmap():
@@ -104,7 +107,11 @@ class LiveRoomItemPanel(Panel):
             wx.CallAfter(setBitmap)
 
     def start_recording(self):
-        dlg = LiveRecordingOptionDialog(self.live_recording_window)
+        if LiveStatus(self.info.live_status) == LiveStatus.Not_Started:
+            wx.MessageDialog(self, "录制失败\n\n直播间未开播，无法进行录制", "警告", wx.ICON_WARNING).ShowModal()
+            return
+        
+        dlg = LiveRecordingOptionDialog(self.live_recording_window, self.info.room_id)
         dlg.ShowModal()
 
     def onPauseEVT(self, event):

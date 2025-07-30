@@ -512,6 +512,10 @@ class LiveRoomInfo:
         self.up_name: str = ""
         self.title: str = ""
 
+        self.parent_area: str = ""
+        self.area: str = ""
+
+        self.live_status: int = 0
         self.recording_status: int = 0
 
     def to_dict(self):
@@ -520,6 +524,9 @@ class LiveRoomInfo:
             "room_id": self.room_id,
             "up_name": self.up_name,
             "title": self.title,
+            "parent_area": self.parent_area,
+            "area": self.area,
+            "live_status": self.live_status,
             "recording_status": self.recording_status
         }
 
@@ -528,4 +535,7 @@ class LiveRoomInfo:
         self.room_id = data.get("room_id")
         self.up_name = data.get("up_name")
         self.title = data.get("title")
+        self.parent_area = data.get("parent_area")
+        self.area = data.get("area")
+        self.live_status = data.get("live_status")
         self.recording_status = data.get("recording_status")
