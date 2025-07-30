@@ -219,7 +219,7 @@ class DownloadTab(Tab):
 
         self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
-        self.speed_limit_box = wx.TextCtrl(download_box, -1, size = self.FromDIP((50, 25)))
+        self.speed_limit_box = wx.TextCtrl(download_box, -1, size = self.FromDIP((50, 24)))
         self.speed_limit_unit_lab = wx.StaticText(download_box, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)

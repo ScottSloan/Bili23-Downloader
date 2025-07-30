@@ -502,3 +502,30 @@ class ASSStyle:
         values = [str(value) for key, value in cls.__dict__.items() if not key.startswith("__") and key != "to_string"]
 
         return ",".join(values)
+
+class LiveRoomInfo:
+    def __init__(self):
+        self.cover_url: str = ""
+
+        self.room_id: int = 0
+
+        self.up_name: str = ""
+        self.title: str = ""
+
+        self.recording_status: int = 0
+
+    def to_dict(self):
+        return {
+            "cover_url": self.cover_url,
+            "room_id": self.room_id,
+            "up_name": self.up_name,
+            "title": self.title,
+            "recording_status": self.recording_status
+        }
+
+    def load_from_dict(self, data: dict):
+        self.cover_url = data.get("cover_url")
+        self.room_id = data.get("room_id")
+        self.up_name = data.get("up_name")
+        self.title = data.get("title")
+        self.recording_status = data.get("recording_status")

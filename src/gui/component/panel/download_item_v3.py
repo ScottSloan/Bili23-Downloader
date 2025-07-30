@@ -259,8 +259,6 @@ class DownloadTaskItemPanel(Panel):
 
             bitmap = Cover.get_scaled_bitmap_from_image(image, size)
 
-            image: wx.Image = image.Scale(size.width, size.height, wx.IMAGE_QUALITY_HIGH)
-
             wx.CallAfter(setBitmap, bitmap)
 
     def onDestroyEVT(self, event):

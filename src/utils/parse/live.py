@@ -7,13 +7,14 @@ from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser
-from utils.parse.episode_v2 import Episode
 
 class LiveInfo:
-    title: str = ""
+    cover_url: str = ""
 
     room_id: int = 0
-    short_id: int = 0
+
+    up_name: str = ""
+    title: str = ""
 
     status: int = 0
     status_str: str = ""
@@ -23,14 +24,14 @@ class LiveInfo:
     live_quality_id_list: list = []
     live_quality_desc_list: list = []
 
-    info_json: dict = {}
-
     @classmethod
     def clear_live_info(cls):
-        cls.title = ""
+        cls.cover_url = ""
 
         cls.room_id = 0
-        cls.short_id = 0
+
+        cls.up_name = ""
+        cls.title = ""
 
         cls.status = 0
         cls.status_str = ""
@@ -44,40 +45,48 @@ class LiveParser(Parser):
 
         self.callback = callback
 
-    def get_short_id(self, url: str):
-        short_id = self.re_find_str(r"live.bilibili.com/([0-9]+)", url)
+    def get_room_id(self, url: str):
+        room_id = self.re_find_str(r"live.bilibili.com/([0-9]+)", url)
 
-        LiveInfo.short_id = short_id[0]
+        LiveInfo.room_id = room_id[0]
 
     def get_live_room_info(self):
         # 获取直播间信息
-        url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={LiveInfo.short_id}"
+        params = {
+            "req_biz": "web_room_componet",
+            "room_ids": LiveInfo.room_id
+        }
+
+        url = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?{self.url_encode(params)}"
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        info = resp["data"]
+        info = resp["data"]["by_room_ids"][LiveInfo.room_id]
 
+        LiveInfo.cover_url = info["cover"]
+
+        LiveInfo.up_name = info["uname"]
         LiveInfo.title = info["title"]
-        LiveInfo.room_id = info["room_id"]
 
         LiveInfo.status = info["live_status"]
         LiveInfo.status_str = live_status_map[LiveInfo.status]
 
-        LiveInfo.info_json = info.copy()
-
-        self.parse_episodes()
-
     def get_live_available_media_info(self):
-        url = f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={LiveInfo.room_id}&platform=h5"
+        params = {
+            "room_id": LiveInfo.room_id,
+            "protocol": 0,
+            "format": 0,
+            "codec": "0,1"
+        }
+
+        url = f"https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?{self.url_encode(params)}"
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
-        quality_description = info["quality_description"]
-
-        LiveInfo.live_quality_id_list = [entry["qn"] for entry in quality_description]
-        LiveInfo.live_quality_desc_list = [entry["desc"] for entry in quality_description]
+        #LiveInfo.live_quality_id_list = [entry["qn"] for entry in quality_description]
+        #LiveInfo.live_quality_desc_list = [entry["desc"] for entry in quality_description]
 
     def get_live_stream(self, qn: int):
         if qn == LiveQualityID._Auto.value:
@@ -94,13 +103,10 @@ class LiveParser(Parser):
     def parse_worker(self, url: str):
         LiveInfo.clear_live_info()
 
-        self.get_short_id(url)
+        self.get_room_id(url)
 
         self.get_live_room_info()
 
-        self.get_live_available_media_info()
+        #self.get_live_available_media_info()
 
         return StatusCode.Success.value
-        
-    def parse_episodes(self):
-        Episode.Live.parse_episodes(LiveInfo.info_json)

@@ -167,3 +167,7 @@ class WebPageOption(Enum):
     Auto = 0                      # 自动检测
     Webview = 1                   # 使用 Webview
     Websocket = 2                 # 使用 Websocket
+
+class LiveRecordingStatus(Enum):
+    Free = 0                      # 未录制
+    Recording = 1                 # 录制中

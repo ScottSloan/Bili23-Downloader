@@ -288,23 +288,6 @@ class Episode:
 
             return EpisodeInfo.get_entry_info(episode)
     
-    class Live:
-        @classmethod
-        def parse_episodes(cls, info_json: dict):
-            EpisodeInfo.clear_episode_data(title = "直播")
-
-            EpisodeInfo.add_item("直播", cls.get_entry_info({}, info_json))
-
-        @staticmethod
-        def get_entry_info(episode: dict, info_json: dict):
-            episode["title"] = info_json["title"]
-            episode["badge"] = live_status_map.get(info_json["live_status"])
-            episode["cover"] = info_json["user_cover"]
-            episode["room_id"] = info_json["room_id"]
-            episode["type"] = ParseType.Live.value
-
-            return EpisodeInfo.get_entry_info(episode)
-
     class Popular:
         @classmethod
         def parse_episodes(cls, info_json: dict):

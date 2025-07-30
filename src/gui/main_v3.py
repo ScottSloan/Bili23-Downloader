@@ -872,13 +872,8 @@ class MainWindow(Frame):
         WebPage.show_webpage(self, "graph.html")
 
     def onShowDetailInfoDialogEVT(self):
-        match self.parser.parse_type:
-            case ParseType.Live:
-                wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
-
-            case _:
-                dlg = DetailDialog(self, self.parser.parse_type)
-                dlg.ShowModal()
+        dlg = DetailDialog(self, self.parser.parse_type)
+        dlg.ShowModal()
 
     def onShowDownloadOptionDialogEVT(self, event):
         dlg = DownloadOptionDialog(self)

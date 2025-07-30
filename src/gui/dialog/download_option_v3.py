@@ -395,7 +395,7 @@ class PathStaticBox(Panel):
         self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        path_hbox.Add(self.path_box, 1, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         path_sbox = wx.StaticBoxSizer(path_box, wx.VERTICAL)
