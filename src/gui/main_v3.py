@@ -47,7 +47,7 @@ from gui.dialog.login.login_v2 import LoginDialog
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings import SettingWindow
-from gui.window.download_v3 import DownloadManagerWindow
+from gui.window.download.download_v4 import DownloadManagerWindow
 from gui.window.live_recording import LiveRecordingWindow
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
@@ -781,7 +781,7 @@ class MainWindow(Frame):
                 self.download_window.Iconize(False)
         
         if Config.Basic.auto_show_download_window:
-            self.download_window.downloading_page_btn.onClickEVT(event)
+            #self.download_window.downloading_page_btn.onClickEVT(event)
             self.download_window.Raise()
 
     def onShowLiveRecordingWindowEVT(self, event):
@@ -795,7 +795,7 @@ class MainWindow(Frame):
 
     def onDownloadEVT(self, event):
         def download_video():
-            def download_callback():
+            def after_show_items_callback():
                 self.utils.hide_processing_window()
                 self.onShowDownloadWindowEVT(event)
 
@@ -807,13 +807,13 @@ class MainWindow(Frame):
             self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
 
             # 确认重复下载项
-            duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
+            # duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
 
-            if duplicate_episode_list:
-                if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
-                    return
+            # if duplicate_episode_list:
+            #     if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
+            #         return
 
-            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, download_callback, )).start()
+            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 
             self.processing_window.ShowModal(ProcessingType.Process)
 

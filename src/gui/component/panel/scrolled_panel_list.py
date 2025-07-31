@@ -5,10 +5,10 @@ from gui.component.panel.scrolled_panel import ScrolledPanel
 from gui.component.panel.panel import Panel
 
 class EmptyItemPanel(Panel):
-    def __init__(self, parent, label: str):
+    def __init__(self, parent, label: str, name: str):
         self.label = label
 
-        Panel.__init__(self, parent)
+        Panel.__init__(self, parent, name)
 
         self.init_UI()
 
@@ -33,7 +33,7 @@ class EmptyItemPanel(Panel):
         self.Destroy()
 
 class LoadMoreTaskItemPanel(Panel):
-    def __init__(self, parent, left_count: int, load_more_callback: Callable):
+    def __init__(self, parent, left_count: int, load_more_callback: Callable, name: str):
         self.count, self.callback = left_count, load_more_callback
 
         Panel.__init__(self, parent)
@@ -79,10 +79,36 @@ class ScrolledPanelList(ScrolledPanel):
         self.init_utils()
 
     def init_utils(self):
+        self.more = False
+        self.info_list = []
+
+        self.add_panel_item = self.info.get("add_panel_item")
+
         self.add_empty_panel()
 
-    def Show(self):
-        pass
+    def ShowListItems(self, after_show_items_callback: Callable = None):
+        panel_list = [self.add_panel_item(entry) for entry in self.get_items_batch()]
+
+        if panel_list:
+            self.Freeze()
+
+            self.remove_more_panel()
+
+            self.AddMany(panel_list)
+
+            if len(self.info_list):
+                self.add_more_panel()
+
+            self.Thaw()
+
+        if after_show_items_callback:
+            after_show_items_callback()
+    
+    def get_items_batch(self):
+        temp_items = self.info_list[:100]
+        del self.info_list[:100]
+
+        return temp_items
 
     def Add(self, window: wx.Window, proportion: int = 0, flag: int = 0, border: int = 0):
         self.remove_empty_panel()
@@ -101,17 +127,32 @@ class ScrolledPanelList(ScrolledPanel):
     def add_empty_panel(self):
         self.empty = True
 
-        empty_item = EmptyItemPanel(self, self.info.get("empty_label"))
+        empty_item = EmptyItemPanel(self, self.info.get("empty_label"), "empty_panel")
 
         self.Add(empty_item, 1, wx.EXPAND)
 
     def remove_empty_panel(self):
         if self.empty and not self.sizer.IsEmpty():
-            empty_panel: EmptyItemPanel = self.sizer.GetItem(0).GetWindow()
+            empty_panel: EmptyItemPanel = wx.FindWindowByName("empty_panel", self)
 
             empty_panel.destroy_panel()
 
             self.empty = False
+
+    def add_more_panel(self):
+        self.more = True
+
+        more_item = LoadMoreTaskItemPanel(self, len(self.info), 0, "more_panel")
+
+        self.Add(more_item, 0, wx.EXPAND)
+
+    def remove_more_panel(self):
+        if self.more:
+            more_panel: LoadMoreTaskItemPanel = wx.FindWindowByName("more_panel", self)
+
+            more_panel.destroy_panel()
+
+            self.more = False
 
     def Remove(self):
         if self.sizer.IsEmpty():

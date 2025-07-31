@@ -1,5 +1,9 @@
-from abc import ABC, abstractmethod
+import os
+import json
 from typing import List, Dict
+from abc import ABC, abstractmethod
+
+from utils.config import Config
 
 from utils.common.enums import DownloadStatus
 
@@ -102,6 +106,9 @@ class DownloadTaskInfo:
         self.video_width: int = 0
         self.video_height: int = 0
 
+        # 本地文件
+        self.local_file: int = False
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -162,7 +169,9 @@ class DownloadTaskInfo:
             "up_info": self.up_info,
 
             "video_width": self.video_width,
-            "video_height": self.video_height
+            "video_height": self.video_height,
+
+            "local_file": self.local_file
         }
 
     def load_from_dict(self, data: Dict):
@@ -225,6 +234,28 @@ class DownloadTaskInfo:
 
         self.video_width = data.get("video_width", self.video_width)
         self.video_height = data.get("video_height", self.video_height)
+
+        self.local_file = data.get("local_file", self.local_file)
+
+    def create_local_file(self):
+        contents = {
+            "min_version": Config.APP.task_file_min_version_code,
+            "task_info": self.to_dict(),
+            "thread_info": {}
+        }
+
+        self.write(contents)
+
+    def remove_file(self):
+        pass
+
+    def write(self, contents: dict):
+        with open(self.file_path, "w", encoding = "utf-8") as f:
+            f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
+
+    @property
+    def file_path(self):
+        return os.path.join(Config.User.download_file_directory, f"info_{self.id}.json")
 
 class DownloaderInfo:
     def __init__(self):
