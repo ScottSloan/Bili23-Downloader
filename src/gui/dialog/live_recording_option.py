@@ -200,4 +200,3 @@ class LiveRecordingOptionDialog(Dialog):
         if not self.dir_box.path_box.GetValue():
             wx.MessageDialog(self, "保存设置失败\n\n工作目录不能为空", "警告", wx.ICON_WARNING).Show()
             return True
-    

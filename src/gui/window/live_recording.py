@@ -7,7 +7,7 @@ from utils.common.data_type import LiveRoomInfo
 
 from gui.component.panel.panel import Panel
 from gui.component.panel.live_room_item import LiveRoomItemPanel
-from gui.component.panel.scrolled_panel import ScrolledPanel
+from gui.component.panel.scrolled_panel_list import ScrolledPanelList
 
 from gui.component.window.frame import Frame
 
@@ -47,7 +47,11 @@ class LiveRecordingWindow(Frame):
         list_panel = Panel(self)
         list_panel.set_dark_mode()
 
-        self.live_room_list = ScrolledPanel(list_panel)
+        info = {
+            "empty_label": "直播间列表为空"
+        }
+
+        self.live_room_list = ScrolledPanelList(list_panel, info)
         self.live_room_list.set_dark_mode()
 
         list_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -65,20 +69,23 @@ class LiveRecordingWindow(Frame):
     def add_new_live_room(self, info: LiveRoomInfo):
         panel = LiveRoomItemPanel(self.live_room_list, info, self)
 
-        self.live_room_list.sizer.Add(panel, 0, wx.EXPAND)
+        self.live_room_list.Add(panel, 0, wx.EXPAND)
 
-        self.live_room_list.Layout()
+    def remove_live_room(self):
+        self.live_room_list.Remove()
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
                 if self.GetDPIScaleFactor() >= 1.5:
-                    return self.SetSize(self.FromDIP((930, 550)))
+                    size = self.FromDIP((930, 550))
                 else:
-                    return self.SetSize(self.FromDIP((960, 580)))
+                    size = self.FromDIP((960, 580))
             
             case Platform.macOS:
-                return self.SetSize(self.FromDIP((1000, 600)))
+                size = self.FromDIP((1000, 600))
             
             case Platform.Linux:
-                return self.SetSizer(self.FromDIP((1070, 650)))
+                size = self.FromDIP((1070, 650))
+
+        self.SetSize(size)

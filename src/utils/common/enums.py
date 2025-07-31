@@ -120,15 +120,6 @@ class ParseStatus(Enum):
     Parsing = 1                   # 解析中
     Error = 2                     # 解析失败
 
-class LiveQualityID(Enum):
-    _Auto = 40000                 # 自动
-    _Dolby_Vision = 30000         # 杜比视界
-    _4K = 20000                   # 4K
-    _1080P = 10000                # 1080P
-    _blue_ray = 400               # 蓝光
-    _hd = 150                     # HD
-    _sd = 80                      # SD
-
 class NumberType(Enum):
     From_1 = 0                    # 从 1 开始
     Coherent = 1                  # 连续序号

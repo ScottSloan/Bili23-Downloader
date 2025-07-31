@@ -336,8 +336,6 @@ class TreeListItemInfo:
         self.part_title: str = ""
         self.list_title: str = ""
 
-        self.room_id: int = 0
-
         self.item_type: str = "node"
         self.type: str = 0
 
@@ -361,7 +359,6 @@ class TreeListItemInfo:
             "section_title": self.section_title,
             "part_title": self.part_title,
             "list_title": self.list_title,
-            "room_id": self.room_id,
             "item_type": self.item_type,
             "type": self.type
         }
@@ -385,7 +382,6 @@ class TreeListItemInfo:
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
         self.list_title = data.get("list_title", self.list_title)
-        self.room_id = data.get("room_id", self.room_id)
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
 
@@ -518,6 +514,8 @@ class LiveRoomInfo:
         self.live_status: int = 0
         self.recording_status: int = 0
 
+        self.option_setuped: bool = False
+
     def to_dict(self):
         return {
             "cover_url": self.cover_url,
@@ -527,7 +525,8 @@ class LiveRoomInfo:
             "parent_area": self.parent_area,
             "area": self.area,
             "live_status": self.live_status,
-            "recording_status": self.recording_status
+            "recording_status": self.recording_status,
+            "option_setuped": self.option_setuped
         }
 
     def load_from_dict(self, data: dict):
@@ -539,3 +538,4 @@ class LiveRoomInfo:
         self.area = data.get("area")
         self.live_status = data.get("live_status")
         self.recording_status = data.get("recording_status")
+        self.option_setuped = data.get("option_setuped")

@@ -44,13 +44,18 @@ class LiveRoomItemPanel(Panel):
         self.room_id_lab = InfoLabel(self, "ID 123456", size = self.FromDIP((90, 16)))
         self.area_lab = InfoLabel(self, "分区", size = self.FromDIP((150, 16)))
         self.live_status_lab = InfoLabel(self, "直播中", size = self.FromDIP((50, 16)))
-        self.recording_status_lab = InfoLabel(self, "未录制", size = self.FromDIP((-1, -1)))
+        self.rec_bmp = wx.StaticBitmap(self, -1, bitmap = Icon.get_icon_bitmap(IconID.Rec))
+        self.rec_bmp.Hide()
+        self.recording_lab = wx.StaticText(self, -1, "录制中")
+        self.recording_lab.SetForegroundColour(wx.Colour(235, 54, 67))
+        self.recording_lab.Hide()
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.room_id_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.area_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.live_status_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
-        info_hbox.Add(self.recording_status_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
+        info_hbox.Add(self.rec_bmp, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.RIGHT) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
+        info_hbox.Add(self.recording_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         room_info_vbox = wx.BoxSizer(wx.VERTICAL)
         room_info_vbox.Add(self.up_name_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
@@ -79,7 +84,9 @@ class LiveRoomItemPanel(Panel):
         self.SetSizer(panel_vbox)
 
     def Bind_EVT(self):
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseEVT)
+        self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
         self.show_live_room_info()
@@ -107,17 +114,57 @@ class LiveRoomItemPanel(Panel):
             wx.CallAfter(setBitmap)
 
     def start_recording(self):
+        def start():
+            self.set_recording_status(LiveRecordingStatus.Recording.value)
+
         if LiveStatus(self.info.live_status) == LiveStatus.Not_Started:
             wx.MessageDialog(self, "录制失败\n\n直播间未开播，无法进行录制", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        dlg = LiveRecordingOptionDialog(self.live_recording_window, self.info.room_id)
-        dlg.ShowModal()
+        if not self.info.option_setuped:
+            dlg = LiveRecordingOptionDialog(self.live_recording_window, self.info.room_id)
+
+            if dlg.ShowModal() == wx.ID_OK:
+                self.info.option_setuped = True
+                start()
+        else:
+            start()
+
+    def stop_recording(self):
+        self.set_recording_status(LiveRecordingStatus.Free.value)
 
     def onPauseEVT(self, event):
         match LiveRecordingStatus(self.info.recording_status):
             case LiveRecordingStatus.Free:
                 self.start_recording()
 
-    def set_status(self, status):
-        pass
+            case LiveRecordingStatus.Recording:
+                self.stop_recording()
+
+    def onViewCoverEVT(self, event):
+        Cover.view_cover(self.live_recording_window, self.info.cover_url)
+
+    def onStopEVT(self, event):
+        self.Destroy()
+
+        self.live_recording_window.remove_live_room()
+
+    def set_recording_status(self, status: int):
+        self.info.recording_status = status
+
+        match LiveRecordingStatus(status):
+            case LiveRecordingStatus.Recording:
+                self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Stop_Recording))
+
+                self.pause_btn.SetToolTip("停止录制")
+                self.rec_bmp.Show()
+                self.recording_lab.Show()
+
+            case LiveRecordingStatus.Free:
+                self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Start_Recording))
+
+                self.pause_btn.SetToolTip("开始录制")
+                self.rec_bmp.Hide()
+                self.recording_lab.Hide()
+
+        self.GetSizer().Layout()

@@ -68,7 +68,6 @@ class EpisodeInfo:
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
             "list_title": episode.get("list_title", ""),
-            "room_id": episode.get("room_id", 0),
             "item_type": "item",
             "type": episode.get("type", 0)
         }
