@@ -19,7 +19,6 @@ from utils.module.pic.cover import Cover
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
 from utils.config import Config
-from utils.tool_v2 import DownloadFileTool
 
 from gui.component.label.info_label import InfoLabel
 from gui.component.panel.panel import Panel
@@ -192,8 +191,6 @@ class DownloadTaskItemPanel(Panel):
     def init_utils(self):
         self.flag_destroy = False
         self.error_info = None
-
-        self.file_tool = DownloadFileTool(self.task_info.id)
 
         self.show_task_info()
 

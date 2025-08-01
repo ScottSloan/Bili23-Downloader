@@ -62,9 +62,14 @@ class LoadMoreTaskItemPanel(Panel):
         self.more_lab.Bind(wx.EVT_LEFT_DOWN, self.onShowMoreEVT)
 
     def onShowMoreEVT(self, event):
-        self.destroy_panel()
+        wx.BeginBusyCursor()
+        self.more_lab.SetLabel("正在加载...")
+        self.GetSizer().Layout()
 
         self.callback()
+
+        wx.EndBusyCursor()
+        self.destroy_panel()
 
     def destroy_panel(self):
         self.Hide()
@@ -76,25 +81,29 @@ class ScrolledPanelList(ScrolledPanel):
 
         ScrolledPanel.__init__(self, parent)
 
+        self.SetDoubleBuffered(True)
+
         self.init_utils()
 
     def init_utils(self):
         self.more = False
         self.info_list = []
 
-        self.add_panel_item = self.info.get("add_panel_item")
+        self.add_panel_item: Callable = self.info.get("add_panel_item")
 
         self.add_empty_panel()
 
     def ShowListItems(self, after_show_items_callback: Callable = None):
-        panel_list = [self.add_panel_item(entry) for entry in self.get_items_batch()]
+        panel_list = self.add_panel_item(self.get_items_batch())
 
         if panel_list:
             self.Freeze()
 
+            self.remove_empty_panel()
+
             self.remove_more_panel()
 
-            self.AddMany(panel_list)
+            self.sizer.AddMany(panel_list)
 
             if len(self.info_list):
                 self.add_more_panel()
@@ -105,8 +114,8 @@ class ScrolledPanelList(ScrolledPanel):
             after_show_items_callback()
     
     def get_items_batch(self):
-        temp_items = self.info_list[:100]
-        del self.info_list[:100]
+        temp_items = self.info_list[:50]
+        del self.info_list[:50]
 
         return temp_items
 
@@ -142,7 +151,7 @@ class ScrolledPanelList(ScrolledPanel):
     def add_more_panel(self):
         self.more = True
 
-        more_item = LoadMoreTaskItemPanel(self, len(self.info), 0, "more_panel")
+        more_item = LoadMoreTaskItemPanel(self, len(self.info_list), self.ShowListItems, "more_panel")
 
         self.Add(more_item, 0, wx.EXPAND)
 
@@ -150,7 +159,8 @@ class ScrolledPanelList(ScrolledPanel):
         if self.more:
             more_panel: LoadMoreTaskItemPanel = wx.FindWindowByName("more_panel", self)
 
-            more_panel.destroy_panel()
+            if more_panel:
+                more_panel.destroy_panel()
 
             self.more = False
 

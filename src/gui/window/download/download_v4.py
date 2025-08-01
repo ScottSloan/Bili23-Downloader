@@ -7,7 +7,7 @@ from utils.config import Config
 from utils.common.enums import Platform, NumberType
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.directory import DirectoryUtils
-from utils.common.data_type import DownloadTaskInfo, TaskPanelCallback
+from utils.common.data_type import DownloadTaskInfo
 
 from gui.window.download.page import DownloadingPage, CompletedPage
 
@@ -17,7 +17,7 @@ from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
 class TopPanel(Panel):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
         self.parent: DownloadManagerWindow = parent
 
         Panel.__init__(self, parent)
@@ -44,6 +44,11 @@ class TopPanel(Panel):
 
         self.SetSizer(vbox)
 
+    def UpdateAllTitle(self, count: int, source: str):
+        self.UpdateTitle(count, source)
+
+        self.parent.left_panel.UpdateButtonTitle(count, source)
+
     def UpdateTitle(self, count: int, source: str):
         def worker():
             self.top_title_lab.SetLabel(title)
@@ -53,8 +58,6 @@ class TopPanel(Panel):
         else:
             title = "下载管理"
 
-        self.parent.left_panel.UpdateButtonTitle(count, source)
-
         if source == self.GetCurrentPageName():
             wx.CallAfter(worker)
 
@@ -62,7 +65,7 @@ class TopPanel(Panel):
         return self.parent.right_panel.GetCurrentPageName()
 
 class LeftPanel(Panel):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
         self.parent: DownloadManagerWindow = parent
 
         Panel.__init__(self, parent)
@@ -108,10 +111,14 @@ class LeftPanel(Panel):
     def onClickDownloadingPageEVT(self):
         self.parent.right_panel.change_page(0)
 
+        self.parent.top_panel.UpdateTitle(self.parent.right_panel.downloading_page.total_item_count, self.GetCurrentPageName())
+
         self.completed_page_btn.setUnactiveState()
 
     def onClickCompletedPageEVT(self):
         self.parent.right_panel.change_page(1)
+
+        self.parent.top_panel.UpdateTitle(self.parent.right_panel.completed_page.total_item_count, self.GetCurrentPageName())
 
         self.downloading_page_btn.setUnactiveState()
 
@@ -130,7 +137,7 @@ class LeftPanel(Panel):
         return self.parent.right_panel.GetCurrentPageName()
 
 class RightPanel(Panel):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
         self.parent: DownloadManagerWindow = parent
 
         Panel.__init__(self, parent)
@@ -142,8 +149,8 @@ class RightPanel(Panel):
 
         self.book = wx.Simplebook(self, -1)
 
-        self.downloading_page = DownloadingPage(self.book, self.parent)
-        self.completed_page = CompletedPage(self.book, self.parent)
+        self.downloading_page = DownloadingPage(self.book, self.parent, "正在下载")
+        self.completed_page = CompletedPage(self.book, self.parent, "下载完成")
 
         self.book.AddPage(self.downloading_page, "正在下载")
         self.book.AddPage(self.completed_page, "下载完成")
@@ -154,8 +161,6 @@ class RightPanel(Panel):
         self.SetSizer(vbox)
 
     def change_page(self, index: 0):
-        self.parent.top_panel.UpdateTitle(0, self.GetCurrentPageName())
-
         self.book.SetSelection(index)
     
     def ShowDownloadingItemList(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
@@ -163,11 +168,13 @@ class RightPanel(Panel):
             callback()
 
             if start_download:
-                self.downloading_page.start_download()
+                pass
 
         self.downloading_page.scroller.info_list.extend(download_list)
 
         self.downloading_page.scroller.ShowListItems(after_show_items_callback)
+
+        self.downloading_page.show_task_info()
 
     def GetCurrentPageName(self):
         return self.book.GetPageText(self.book.GetSelection())
@@ -195,6 +202,7 @@ class Utils:
 
         for index, entry in enumerate(download_list):
             entry.timestamp = cls.get_timestamp(index)
+            entry.source = "正在下载"
 
             if last_cid != entry.cid:
                 last_cid = entry.cid
@@ -253,35 +261,31 @@ class DownloadManagerWindow(Frame):
         self.Hide()
 
     def add_to_download_list(self, download_list: List[DownloadTaskInfo], after_show_items_callback: Callable, create_local_file: bool = False, start_download: bool = False):
+        def get_after_show_items_callback():
+            after_show_items_callback()
+
+            self.top_panel.UpdateAllTitle(self.right_panel.downloading_page.total_item_count, self.right_panel.GetCurrentPageName())
+
+            if start_download:
+                self.right_panel.downloading_page.start_download()
+        
         if create_local_file:
             Utils.create_download_file(download_list)
 
-        wx.CallAfter(self.right_panel.ShowDownloadingItemList, download_list, after_show_items_callback, start_download)
+        wx.CallAfter(self.right_panel.ShowDownloadingItemList, download_list, get_after_show_items_callback, start_download)
 
     def add_to_completed_list(self):
         pass
     
-    def get_download_task_item_callback(self):
-        class callback():
-            @staticmethod
-            def onUpdateCountTitle(show_toast = False):
-                pass
-                
-                #self.refresh_scroller(show_toast)
+    def update_title(self, source: str):
+        page = wx.FindWindowByName(source, self.right_panel)
 
-            @staticmethod
-            def onAddPanel(task_info: DownloadTaskInfo):
-                pass
+        count = page.total_item_count
 
-                #self.callback.onAddPanel(task_info)
-            
-            @staticmethod
-            def onStartNextTask():
-                pass
+        self.top_panel.UpdateTitle(count, source)
+        self.left_panel.UpdateButtonTitle(count, source)
 
-                #self.callback.onStartNextTask()
-
-        return callback
+        page.scroller.Layout()
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):
