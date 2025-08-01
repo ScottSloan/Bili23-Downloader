@@ -109,6 +109,8 @@ class DownloadTaskInfo:
         # 源
         self.source: str = ""
 
+        self.thread_info: dict = {}
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -171,7 +173,9 @@ class DownloadTaskInfo:
             "video_width": self.video_width,
             "video_height": self.video_height,
 
-            "source": self.source
+            "source": self.source,
+
+            "thread_info": self.thread_info
         }
 
     def load_from_dict(self, data: Dict):
@@ -237,11 +241,13 @@ class DownloadTaskInfo:
 
         self.source = data.get("source", self.source)
 
-    def create_local_file(self):
+        self.thread_info = data.get("thread_info", self.thread_info)
+
+    def update(self):
         contents = {
             "min_version": Config.APP.task_file_min_version_code,
             "task_info": self.to_dict(),
-            "thread_info": {}
+            "thread_info": self.thread_info
         }
 
         self.write(contents)

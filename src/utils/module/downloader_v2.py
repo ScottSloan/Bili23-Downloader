@@ -13,13 +13,12 @@ from utils.common.formatter import FormatUtils
 from utils.module.web.cdn import CDN
 from utils.module.md5_verify import MD5Verify
 
-from utils.tool_v2 import DownloadFileTool, UniversalTool
+from utils.tool_v2 import UniversalTool
 from utils.config import Config
 
 class Downloader:
-    def __init__(self, task_info: DownloadTaskInfo, file_tool: DownloadFileTool, callback: DownloaderCallback):
+    def __init__(self, task_info: DownloadTaskInfo, callback: DownloaderCallback):
         self.task_info = task_info
-        self.file_tool = file_tool
         self.callback = callback
 
         self.init_utils()
@@ -38,7 +37,6 @@ class Downloader:
 
         self.downloader_info = []
         self.cache = {}
-        self.progress_info = {}
 
     def set_downloader_info(self, downloader_info: DownloaderInfo):
         self.downloader_info = downloader_info
@@ -76,11 +74,10 @@ class Downloader:
             self.create_local_file(file_path, self.current_file_size)
 
             if self.task_info.current_downloaded_size:
-                self.progress_info = self.file_tool.get_info("thread_info")
                 self.current_downloaded_size = self.task_info.current_downloaded_size
                 self.total_downloaded_size = self.task_info.total_downloaded_size
     
-                return url, list(self.progress_info.values())
+                return url, list(self.task_info.thread_info.values())
 
             else:
                 return url, self.generate_ranges(self.current_file_size)
@@ -96,7 +93,7 @@ class Downloader:
                 return range_info
 
             def update_flag():
-                self.progress_info.clear()
+                self.task_info.thread_info.clear()
 
                 self.retry_count = 0
                 self.has_stopped = False
@@ -110,7 +107,7 @@ class Downloader:
             with DaemonThreadPoolExecutor(max_workers = Config.Download.max_thread_count) as self.executor:
                 for index, range in enumerate(ranges):
                     if range[0] < range[1]:
-                        self.progress_info[index] = range
+                        self.task_info.thread_info[index] = range
 
                         range_info = get_range_info(index, file_path, url, range)
 
@@ -139,7 +136,7 @@ class Downloader:
         def update(chunk_size):
             self.current_downloaded_size += chunk_size
             self.total_downloaded_size += chunk_size
-            self.progress_info[info.index][0] += chunk_size
+            self.task_info.thread_info[info.index][0] += chunk_size
 
         def speed_limit():
             if Config.Download.enable_speed_limit:
@@ -182,7 +179,7 @@ class Downloader:
             elif not Config.Advanced.retry_when_download_error:
                 raise GlobalException(code = StatusCode.DownloadError.value, callback = self.download_error) from e
             
-            info.range = self.progress_info[info.index]
+            info.range = self.task_info.thread_info[info.index]
             self.executor.submit(self.download_range, info)
 
     def get_file_size(self, url_list: list):
@@ -263,8 +260,7 @@ class Downloader:
                 self.task_info.current_downloaded_size = self.current_downloaded_size
                 self.task_info.total_downloaded_size = self.total_downloaded_size
 
-                self.file_tool.update_info("task_info", self.task_info.to_dict())
-                self.file_tool.update_info("thread_info", self.progress_info)
+                self.task_info.update()
 
                 self.callback.onDownloading(speed_str)
 

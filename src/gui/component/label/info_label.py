@@ -2,17 +2,18 @@ import wx
 
 from utils.config import Config
 
+from utils.common.color import Color
+
 class InfoLabel(wx.StaticText):
-    def __init__(self, parent, label: str = wx.EmptyString, size = wx.DefaultSize, color: wx.Colour = None):
+    def __init__(self, parent, label: str = wx.EmptyString, size = wx.DefaultSize, color: wx.Colour = wx.Colour(108, 108, 108)):
         self.color = color
 
         wx.StaticText.__init__(self, parent, -1, label, size = size)
 
-        self.reset_color()
+        self.get_default_color()
 
-    def reset_color(self):
+    def get_default_color(self):
         if not Config.Sys.dark_mode:
-            if self.color:
-                self.SetForegroundColour(self.color)
-            else:
-                self.SetForegroundColour(wx.Colour(108, 108, 108))
+            return self.color
+        else:
+            return Color.get_text_color()

@@ -518,13 +518,13 @@ class DownloadTaskItemPanel(Panel):
 
                     self.pause_btn.SetToolTip("暂停下载")
                     self.speed_lab.SetLabel("正在获取下载链接...")
-                    self.speed_lab.reset_color()
+                    self.speed_lab.get_default_color()
 
                 case DownloadStatus.Generating:
                     self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Pause))
 
                     self.speed_lab.SetLabel("正在生成中...")
-                    self.speed_lab.reset_color()
+                    self.speed_lab.get_default_color()
 
                     self.pause_btn.Enable(False)
                     self.stop_btn.Enable(False)

@@ -5,6 +5,7 @@ from utils.config import Config
 
 from utils.common.enums import DownloadStatus
 from utils.common.data_type import DownloadTaskInfo
+from utils.common.thread import Thread
 
 from gui.component.panel.scrolled_panel_list import ScrolledPanelList
 from gui.component.panel.panel import Panel
@@ -28,8 +29,13 @@ class BasePage(Panel):
         return count 
     
     def show_task_info(self):
-        for (panel, proportion, flag) in self.temp_panel_list:
-            panel.utils.show_task_info()
+        def worker():
+            for (panel, proportion, flag) in self.temp_panel_list:
+                wx.CallAfter(panel.utils.show_task_info)
+
+                panel.utils.show_cover()
+
+        Thread(target = worker).start()
 
     @property
     def panel_items(self):
@@ -43,6 +49,8 @@ class DownloadingPage(BasePage):
         BasePage.__init__(self, parent, name)
 
         self.init_UI()
+
+        self.Bind_EVT()
 
     def init_UI(self):
         self.set_dark_mode()
@@ -80,13 +88,39 @@ class DownloadingPage(BasePage):
 
         self.SetSizer(vbox)
 
+    def Bind_EVT(self):
+        self.start_all_btn.Bind(wx.EVT_BUTTON, self.onStartAllEVT)
+        self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
+        self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onStopAllEVT)
+
+    def onStartAllEVT(self, event):
+        self.start_download(start_all = True)
+
+    def onPauseAllEVT(self, event):
+        pass
+
+    def onStopAllEVT(self, event):
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                panel.utils.destory_panel()
+
+        for info in self.scroller.info_list:
+            info.remove_file()
+
     def add_panel_item(self, temp_info_list: List[DownloadTaskInfo]):
         self.temp_panel_list = [(DownloadTaskItemPanel(self.scroller, entry, self.download_window), 0, wx.EXPAND) for entry in temp_info_list]
 
         return self.temp_panel_list
-    
-    def start_download(self):
-        pass
+
+    def start_download(self, start_all: bool = False):
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status == DownloadStatus.Pause.value and start_all:
+                    panel.utils.set_download_status(DownloadStatus.Waiting.value)
+
+                if panel.task_info.status == DownloadStatus.Waiting.value:
+                    if self.get_panel_items_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
+                        panel.utils.resume_download()
     
     @property
     def alive_item_count(self):

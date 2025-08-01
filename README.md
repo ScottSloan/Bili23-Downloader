@@ -23,7 +23,7 @@ Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下�
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html)。
 
 ## 更新日志
-## 1.65.0 (2025-07-30)
+## 1.65.0 (2025-08-01)
 ### 新增
 * 支持调用系统默认浏览器实现 Web 页面显示
 * 支持解析每周必看、排行榜链接
@@ -34,6 +34,7 @@ Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下�
 * 优化用户 Cookie 信息存储方式
 * 优化视频工具箱部分操作逻辑
 * 优化二维码登录\短信登录相关逻辑
+* 优化下载列表相关行为逻辑
 
 ### 修复
 * 修复单独下载 ass 文件时判定逻辑异常的问题

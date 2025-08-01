@@ -293,12 +293,12 @@ class ExtraParser:
 
     class Utils:
         @staticmethod
-        def download(task_info: DownloadTaskInfo, callback: Callback, file_tool: DownloadFileTool):
+        def download(task_info: DownloadTaskInfo, callback: Callback):
             def update_task_info():
                 task_info.download_path = FileNameFormatter.get_download_path(task_info)
                 task_info.file_name = FileNameFormatter.format_file_basename(task_info)
 
-                file_tool.update_info("task_info", task_info.to_dict())
+                task_info.update()
 
             try:
                 if task_info.extra_option.get("download_danmaku_file"):

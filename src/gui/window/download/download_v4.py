@@ -168,7 +168,7 @@ class RightPanel(Panel):
             callback()
 
             if start_download:
-                pass
+                self.downloading_page.start_download()
 
         self.downloading_page.scroller.info_list.extend(download_list)
 
@@ -210,7 +210,7 @@ class Utils:
 
             update_index()
 
-            entry.create_local_file()
+            entry.update()
 
     @staticmethod
     def get_timestamp(index):
@@ -278,7 +278,7 @@ class DownloadManagerWindow(Frame):
         pass
     
     def update_title(self, source: str):
-        page = wx.FindWindowByName(source, self.right_panel)
+        page: DownloadingPage = wx.FindWindowByName(source, self.right_panel)
 
         count = page.total_item_count
 
