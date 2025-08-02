@@ -41,7 +41,6 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
-from gui.dialog.confirm.duplicate import DuplicateDialog
 from gui.dialog.login.login_v2 import LoginDialog
 
 from gui.window.debug import DebugWindow
@@ -805,13 +804,6 @@ class MainWindow(Frame):
                     return
 
             self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
-
-            # 确认重复下载项
-            # duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
-
-            # if duplicate_episode_list:
-            #     if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
-            #         return
 
             Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 

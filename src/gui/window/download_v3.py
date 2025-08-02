@@ -619,7 +619,7 @@ class CompeltedPage(SimplePage):
             for panel in self.scroller_children:
                 if isinstance(panel, DownloadTaskItemPanel):
                     if panel.task_info.status in [DownloadStatus.Complete.value]:
-                        panel.onStopEVT(0)
+                        panel.destroy_panel()
 
         def clear_temp():
             for entry in self.temp_download_list:

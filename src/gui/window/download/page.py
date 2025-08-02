@@ -26,14 +26,16 @@ class BasePage(Panel):
                 if panel.task_info.status in condition:
                     count += 1
 
-        return count 
+        return count
     
     def show_task_info(self):
         def worker():
             for (panel, proportion, flag) in self.temp_panel_list:
-                wx.CallAfter(panel.utils.show_task_info)
+                wx.CallAfter(panel.utils.show_task_info, self.GetName() == "下载完成")
 
                 panel.utils.show_cover()
+
+            self.temp_panel_list.clear()
 
         Thread(target = worker).start()
 
@@ -42,6 +44,16 @@ class BasePage(Panel):
         children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
         return children  
 
+    @property
+    def total_panel_items(self):
+        count = 0
+
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                count += 1
+
+        return count 
+    
 class DownloadingPage(BasePage):
     def __init__(self, parent: wx.Window, download_window: wx.Window, name: str):
         self.download_window = download_window
@@ -126,12 +138,8 @@ class DownloadingPage(BasePage):
                         panel.utils.resume_download()
     
     @property
-    def alive_item_count(self):
-        return self.get_panel_items_count(DownloadStatus.Alive.value)
-
-    @property
     def total_item_count(self):
-        return self.alive_item_count + len(self.scroller.info_list)
+        return self.total_panel_items + len(self.scroller.info_list)
 
 class CompletedPage(BasePage):
     def __init__(self, parent: wx.Window, download_window: wx.Window, name: str):
@@ -140,6 +148,8 @@ class CompletedPage(BasePage):
         BasePage.__init__(self, parent, name)
 
         self.init_UI()
+
+        self.Bind_EVT()
 
     def init_UI(self):
         self.set_dark_mode()
@@ -167,13 +177,19 @@ class CompletedPage(BasePage):
 
         self.SetSizer(vbox)
 
+    def Bind_EVT(self):
+        self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearAllEVT)
+
+    def onClearAllEVT(self, event):
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                panel.utils.destory_panel(remove_file = True)
+
     def add_panel_item(self, temp_info_list: List[DownloadTaskInfo]):
-        return [(DownloadTaskItemPanel(self.scroller, entry, self.download_window), 0, wx.EXPAND) for entry in temp_info_list]
-    
-    @property
-    def alive_item_count(self):
-        return self.get_panel_items_count(DownloadStatus.Complete.value)
+        self.temp_panel_list = [(DownloadTaskItemPanel(self.scroller, entry, self.download_window), 0, wx.EXPAND) for entry in temp_info_list]
+
+        return self.temp_panel_list
 
     @property
     def total_item_count(self):
-        return self.alive_item_count + len(self.scroller.info_list)
+        return self.total_panel_items + len(self.scroller.info_list)

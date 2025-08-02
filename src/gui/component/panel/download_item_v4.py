@@ -131,7 +131,7 @@ class Utils:
         self.ui = self.UI(parent)
         self.info = self.Info(task_info)
 
-    def show_task_info(self):
+    def show_task_info(self, set_status: bool = False):
         self.ui.show_cover(self.task_info.cover_url)
 
         self.ui.set_title(self.task_info.title)
@@ -140,6 +140,9 @@ class Utils:
         self.ui.set_quality_label(self.info.get_quality_label())
         self.ui.set_codec_label(self.info.get_codec_label())
         self.ui.set_size_label(self.info.get_size_label())
+
+        if set_status:
+            self.set_download_status(DownloadStatus(self.task_info.status))
 
         self.ui.update()
 
@@ -163,6 +166,8 @@ class Utils:
     def move_panel(self):
         def worker():
             self.destory_panel(remove_file = False)
+
+            self.parent.download_window.right_panel.move_to_completed_page(self.task_info)
 
         wx.CallAfter(worker)
 
@@ -244,7 +249,7 @@ class Utils:
             self.ui.update()
 
         if self.task_info.further_processing:
-            self.set_download_status(DownloadStatus.Merging)
+            self.parent.download_window.start_next_task()
 
             if self.task_info.ffmpeg_merge:
                 self.merge_video()
@@ -262,11 +267,9 @@ class Utils:
     
     def onMergeSuccess(self):
         def worker():
-            self.set_download_status(DownloadStatus.Complete)
-
             self.move_panel()
 
-            # self.callback.onAddPanel(self.task_info)
+        self.set_download_status(DownloadStatus.Complete)
 
         wx.CallAfter(worker)
 
@@ -291,13 +294,13 @@ class Utils:
 
         DirectoryUtils.open_file_location(path)
 
-    def set_download_status(self, status: ParseType):
+    def set_download_status(self, status: DownloadStatus):
         def worker():
-            self.task_info.status = status.value
-
             self.update_pause_btn(status)
 
             self.task_info.update()
+
+        self.task_info.status = status.value
 
         wx.CallAfter(worker)
 
@@ -311,7 +314,7 @@ class Utils:
                 self.ui.set_pause_btn(IconID.Pause, "暂停下载")
                 self.ui.set_speed_label("正在获取下载链接...")
 
-            case DownloadStatus.Generating:                
+            case DownloadStatus.Generating:
                 self.ui.set_pause_btn(IconID.Pause, "", False)
                 self.ui.set_speed_label("正在生成中...")
 

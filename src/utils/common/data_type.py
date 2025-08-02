@@ -255,7 +255,10 @@ class DownloadTaskInfo:
         self.write(contents)
 
     def remove_file(self):
-        os.remove(self.file_path)
+        path = self.file_path
+
+        if os.path.exists(path):
+            os.remove(path)
 
     def write(self, contents: dict):
         with open(self.file_path, "w", encoding = "utf-8") as f:

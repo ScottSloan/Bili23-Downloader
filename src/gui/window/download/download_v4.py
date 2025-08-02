@@ -47,7 +47,7 @@ class TopPanel(Panel):
     def UpdateAllTitle(self, count: int, source: str):
         self.UpdateTitle(count, source)
 
-        self.parent.left_panel.UpdateButtonTitle(count, source)
+        self.parent.left_panel.UpdateButtonTitle()
 
     def UpdateTitle(self, count: int, source: str):
         def worker():
@@ -125,16 +125,21 @@ class LeftPanel(Panel):
     def onOpenDirEVT(self, event):
         DirectoryUtils.open_directory(Config.Download.path)
 
-    def UpdateButtonTitle(self, count: int, source: str):
+    def UpdateButtonTitle(self):
         def worker():
-            action_button: ActionButton = wx.FindWindowByName(source, self)
-
-            action_button.setTitle(f"{source}({count})")
+            self.downloading_page_btn.setTitle(f"正在下载({self.GetTotalDownloadingCount()})")
+            self.completed_page_btn.setTitle(f"下载完成({self.GetTotalCompletedCount()})")
 
         wx.CallAfter(worker)
 
     def GetCurrentPageName(self):
         return self.parent.right_panel.GetCurrentPageName()
+    
+    def GetTotalDownloadingCount(self):
+        return self.parent.right_panel.downloading_page.total_item_count
+    
+    def GetTotalCompletedCount(self):
+        return self.parent.right_panel.completed_page.total_item_count
 
 class RightPanel(Panel):
     def __init__(self, parent: wx.Window):
@@ -175,6 +180,23 @@ class RightPanel(Panel):
         self.downloading_page.scroller.ShowListItems(after_show_items_callback)
 
         self.downloading_page.show_task_info()
+
+    def ShowCompletedItemList(self, download_list: List[DownloadTaskInfo]):
+        self.completed_page.scroller.info_list.extend(download_list)
+
+        self.completed_page.scroller.ShowListItems()
+
+        self.completed_page.show_task_info()
+
+    def move_to_completed_page(self, task_info: DownloadTaskInfo):
+        def worker():
+            task_info.source = "下载完成"
+
+            self.ShowCompletedItemList([task_info])
+
+            self.parent.top_panel.UpdateAllTitle(self.parent.left_panel.GetTotalCompletedCount(), "下载完成")
+
+        wx.CallAfter(worker)
 
     def GetCurrentPageName(self):
         return self.book.GetPageText(self.book.GetSelection())
@@ -279,8 +301,7 @@ class DownloadManagerWindow(Frame):
 
         count = page.total_item_count
 
-        self.top_panel.UpdateTitle(count, source)
-        self.left_panel.UpdateButtonTitle(count, source)
+        self.top_panel.UpdateAllTitle(count, source)
 
         page.scroller.Layout()
 
@@ -289,6 +310,9 @@ class DownloadManagerWindow(Frame):
 
         page.scroller.Remove()
 
+    def start_next_task(self):
+        self.right_panel.downloading_page.start_download()
+        
     def set_window_params(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:

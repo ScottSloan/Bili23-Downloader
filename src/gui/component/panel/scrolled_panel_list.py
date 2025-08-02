@@ -108,6 +108,8 @@ class ScrolledPanelList(ScrolledPanel):
             if len(self.info_list):
                 self.add_more_panel()
 
+            self.Layout()
+
             self.Thaw()
 
         if after_show_items_callback:

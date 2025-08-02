@@ -132,7 +132,10 @@ class Utils:
         self.parent.stop_event.clear()
         self.parent.thread_info.clear()
 
-    def update_download_progress(self, progress: int, speed: str):
+        self.parent.retry_times = 0
+        self.parent.suspend_interval = 0
+
+    def update_download_progress(self, progress: int, speed: str = None):
         if self.parent.stop_event.is_set():
             return
         
@@ -143,12 +146,48 @@ class Utils:
 
         self.task_info.update()
 
-        self.parent.callback.onDownloading(speed)
+        if speed:
+            self.parent.callback.onDownloading(speed)
 
     def update_thread_info(self, index: int, chunk_size: int):
         self.parent.current_downloaded_size += chunk_size
         self.parent.total_downloaded_size += chunk_size
         self.parent.thread_info[index][0] += chunk_size
+
+    def check_speed_limit(self, start_time: float):
+        if Config.Download.enable_speed_limit:
+            elapsed_time = time.time() - start_time
+            expected_time = self.parent.current_downloaded_size / self.get_speed_bps()
+
+            if elapsed_time < expected_time:
+                time.sleep(expected_time - elapsed_time)
+
+    def update_start_time(self):
+        if Config.Download.enable_speed_limit:
+            if self.parent.current_downloaded_size:
+                return time.time() - self.parent.current_downloaded_size / self.get_speed_bps()
+            else:
+                return time.time()
+
+    def get_speed_bps(self):
+        return Config.Download.speed_mbps * 1024 * 1024
+
+    def check_download_speed(self, speed: int):
+        if Config.Advanced.retry_when_download_suspend:
+            if speed == 0:
+                self.parent.suspend_interval += 1
+            else:
+                self.parent.suspend_interval = 0
+            
+            if self.parent.suspend_interval > Config.Advanced.download_suspend_retry_interval and not self.parent.stop_event.is_set():
+                Thread(target = self.restart_download).start()
+
+    def restart_download(self):
+        self.parent.stop_download()
+
+        time.sleep(1)
+
+        self.parent.start_download()
 
     def onDownloadError(self):
         if not self.parent.stop_event.is_set():
@@ -175,6 +214,7 @@ class Downloader:
         self.cdn_host_list = self.utils.get_cdn_host_list()
 
         self.retry_times = 0
+        self.suspend_interval = 0
 
         self.current_file_size = 0
         self.current_downloaded_size = 0
@@ -219,6 +259,8 @@ class Downloader:
             with open(info.file_path, "r+b") as f:
                 f.seek(info.range[0])
 
+                start_time = self.utils.update_start_time()
+
                 with RequestUtils.request_get(info.url, headers = RequestUtils.get_headers(referer_url = self.task_info.referer_url, sessdata = Config.User.SESSDATA, range = info.range), stream = True) as req:
                     for chunk in req.iter_content(chunk_size = 1024):
                         if chunk:
@@ -229,6 +271,8 @@ class Downloader:
                                 f.write(chunk)
 
                                 self.utils.update_thread_info(info.index, len(chunk))
+
+                                self.utils.check_speed_limit(start_time)
 
         except Exception as e:
             print(e)
@@ -255,6 +299,8 @@ class Downloader:
 
                 self.utils.update_download_progress(total_progress, FormatUtils.format_speed(speed))
 
+                self.utils.check_download_speed(speed)
+
         if not self.stop_event.is_set():
             self.download_complete()
 
@@ -266,7 +312,7 @@ class Downloader:
 
         del self.downloader_info_list[:1]
 
-        self.utils.update_download_progress(100, "")
+        self.utils.update_download_progress(100)
 
         if self.downloader_info_list:
             Thread(self.start_download).start()
