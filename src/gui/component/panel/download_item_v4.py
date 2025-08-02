@@ -15,7 +15,7 @@ from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.pic.cover import Cover
 from utils.module.ffmpeg_v2 import FFmpeg
-from utils.module.downloader_v2 import Downloader
+from utils.module.downloader_v3 import Downloader
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
@@ -146,12 +146,13 @@ class Utils:
     def show_cover(self):
         self.ui.show_cover(self.task_info.cover_url)
 
-    def destory_panel(self):
-        self.task_info.remove_file()
+    def destory_panel(self, remove_file: bool = False):
+        if remove_file:
+            self.task_info.remove_file()
 
         self.clear_temp_files()
 
-        if hasattr(self, "downloader"):
+        if hasattr(self, "downloader") and remove_file:
             self.downloader.stop_download()
 
         self.parent.Destroy()
@@ -160,9 +161,10 @@ class Utils:
         self.parent.download_window.remove_item(self.task_info.source)
 
     def move_panel(self):
-        self.parent.Destroy()
+        def worker():
+            self.destory_panel(remove_file = False)
 
-        self.parent.download_window.remove_item(self.task_info.source)
+        wx.CallAfter(worker)
 
     def start_download(self):
         match ParseType(self.task_info.download_type):
@@ -253,6 +255,7 @@ class Utils:
             wx.CallAfter(worker)
 
     def onDownloadError(self):
+        print("err")
         self.task_info.error_info = GlobalExceptionInfo.info
 
         self.set_download_status(DownloadStatus.DownloadError)
@@ -508,7 +511,7 @@ class DownloadTaskItemPanel(Panel):
                 pass
 
     def onStopEVT(self, event):
-        self.utils.destory_panel()
+        self.utils.destory_panel(remove_file = True)
 
     def get_progress_bar_size(self):
         match Platform(Config.Sys.platform):

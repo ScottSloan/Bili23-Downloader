@@ -265,9 +265,6 @@ class DownloadManagerWindow(Frame):
             after_show_items_callback()
 
             self.top_panel.UpdateAllTitle(self.right_panel.downloading_page.total_item_count, self.right_panel.GetCurrentPageName())
-
-            if start_download:
-                self.right_panel.downloading_page.start_download()
         
         if create_local_file:
             Utils.create_download_file(download_list)
