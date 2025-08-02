@@ -97,7 +97,10 @@ class DownloadingPage(BasePage):
         self.start_download(start_all = True)
 
     def onPauseAllEVT(self, event):
-        pass
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if panel.task_info.status in DownloadStatus.Alive.value:
+                    panel.utils.pause_download()
 
     def onStopAllEVT(self, event):
         for panel in self.panel_items:

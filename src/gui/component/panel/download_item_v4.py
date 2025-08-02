@@ -1,4 +1,5 @@
 import wx
+import os
 
 from utils.config import Config
 
@@ -9,6 +10,8 @@ from utils.common.map import extra_map, video_quality_map, video_codec_map, audi
 from utils.common.formatter import FormatUtils
 from utils.common.thread import Thread
 from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.directory import DirectoryUtils
+from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.pic.cover import Cover
 from utils.module.ffmpeg_v2 import FFmpeg
@@ -16,6 +19,8 @@ from utils.module.downloader_v2 import Downloader
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra_v2 import ExtraParser
+
+from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.label.info_label import InfoLabel
 from gui.component.button.bitmap_button import BitmapButton
@@ -152,6 +157,12 @@ class Utils:
         self.parent.Destroy()
 
         self.parent.download_window.update_title(self.task_info.source)
+        self.parent.download_window.remove_item(self.task_info.source)
+
+    def move_panel(self):
+        self.parent.Destroy()
+
+        self.parent.download_window.remove_item(self.task_info.source)
 
     def start_download(self):
         match ParseType(self.task_info.download_type):
@@ -181,10 +192,29 @@ class Utils:
     def start_extra_download_thread(self):
         ExtraParser.Utils.download(self.task_info, self.get_extra_callback())
 
+    def pause_download(self, set_waiting_status: bool = False):
+        self.set_download_status(DownloadStatus.Waiting if set_waiting_status else DownloadStatus.Pause)
+        
+        if hasattr(self, "downloader"):
+            self.downloader.stop_download()
+
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:
             if self.task_info.progress != 100:
                 self.start_download()
+
+    def merge_video(self):
+        def worker():
+            FFmpeg.Utils.merge(self.task_info, self.get_merge_callback())
+
+        self.set_download_status(DownloadStatus.Merging)
+
+        Thread(target = worker).start()
+
+    def rename_file(self):
+        FFmpeg.Utils.rename_files(self.task_info)
+
+        self.onMergeSuccess()
 
     def onDownloadStart(self):
         def worker():
@@ -206,10 +236,46 @@ class Utils:
             wx.CallAfter(worker)
 
     def onDownloadVideoComplete(self):
-        pass
+        def worker():
+            self.ui.set_size_label(self.info.get_size_label())
+
+            self.ui.update()
+
+        if self.task_info.further_processing:
+            self.set_download_status(DownloadStatus.Merging)
+
+            if self.task_info.ffmpeg_merge:
+                self.merge_video()
+
+            else:
+                self.rename_file()
+
+            wx.CallAfter(worker)
 
     def onDownloadError(self):
-        pass
+        self.task_info.error_info = GlobalExceptionInfo.info
+
+        self.set_download_status(DownloadStatus.DownloadError)
+    
+    def onMergeSuccess(self):
+        def worker():
+            self.set_download_status(DownloadStatus.Complete)
+
+            self.move_panel()
+
+            # self.callback.onAddPanel(self.task_info)
+
+        wx.CallAfter(worker)
+
+    def onMergeError(self):
+        self.set_download_status(DownloadStatus.MergeError)
+
+    def onDownloadExtraSuccess(self):
+        self.task_info.progress = 100
+
+        self.task_info.update()
+
+        self.onMergeSuccess()
 
     def clear_temp_files(self):
         match ParseType(self.task_info.download_type):
@@ -217,12 +283,20 @@ class Utils:
                 if self.task_info.total_file_size:
                     FFmpeg.Utils.clear_temp_files(self.task_info)
 
+    def open_file_location(self):
+        path = os.path.join(self.task_info.download_path, self.get_full_file_name())
+
+        DirectoryUtils.open_file_location(path)
+
     def set_download_status(self, status: ParseType):
-        self.task_info.status = status.value
+        def worker():
+            self.task_info.status = status.value
 
-        self.update_pause_btn(status)
+            self.update_pause_btn(status)
 
-        self.task_info.update()
+            self.task_info.update()
+
+        wx.CallAfter(worker)
 
     def update_pause_btn(self, status: int):
         match DownloadStatus(status):
@@ -290,6 +364,21 @@ class Utils:
 
         return callback
 
+    def get_merge_callback(self):
+        class callback(Callback):
+            @staticmethod
+            def onSuccess(*process):
+                self.onMergeSuccess()
+
+            @staticmethod
+            def onError(*process):
+                self.onMergeError()
+
+        return callback
+    
+    def get_full_file_name(self):
+        return FileNameFormatter.check_file_name_length(f"{self.task_info.file_name}.{self.task_info.output_type}")
+    
 class DownloadTaskItemPanel(Panel):
     def __init__(self, parent: wx.Window, task_info: DownloadTaskInfo, download_window: wx.Window):
         from gui.window.download.download_v4 import DownloadManagerWindow
@@ -374,6 +463,9 @@ class DownloadTaskItemPanel(Panel):
     def Bind_EVT(self):
         self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestoryEVT)
 
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onCoverEVT)
+        self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onErrorDialogEVT)
+
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
@@ -387,8 +479,33 @@ class DownloadTaskItemPanel(Panel):
 
         event.Skip()
 
+    def onCoverEVT(self, event):
+        Cover.view_cover(self.download_window, self.task_info.cover_url)
+
+    def onErrorDialogEVT(self, event):
+        if self.task_info.error_info:
+            dlg = ErrorInfoDialog(self.download_window, self.task_info.error_info)
+            dlg.ShowModal()
+
     def onPauseEVT(self, event):
-        pass
+        match DownloadStatus(self.task_info.status):
+            case DownloadStatus.Waiting:
+                self.utils.start_download()
+
+            case DownloadStatus.Downloading:
+                self.utils.pause_download()
+
+            case DownloadStatus.Pause:
+                self.utils.resume_download()
+
+            case DownloadStatus.Complete:
+                self.utils.open_file_location()
+
+            case DownloadStatus.MergeError:
+                pass
+
+            case DownloadStatus.DownloadError:
+                pass
 
     def onStopEVT(self, event):
         self.utils.destory_panel()

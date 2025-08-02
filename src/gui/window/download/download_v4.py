@@ -287,6 +287,11 @@ class DownloadManagerWindow(Frame):
 
         page.scroller.Layout()
 
+    def remove_item(self, source: str):
+        page: DownloadingPage = wx.FindWindowByName(source, self.right_panel)
+
+        page.scroller.Remove()
+
     def set_window_params(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:

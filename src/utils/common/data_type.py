@@ -110,6 +110,7 @@ class DownloadTaskInfo:
         self.source: str = ""
 
         self.thread_info: dict = {}
+        self.error_info: dict = {}
 
     def to_dict(self):
         return {
@@ -175,7 +176,8 @@ class DownloadTaskInfo:
 
             "source": self.source,
 
-            "thread_info": self.thread_info
+            "thread_info": self.thread_info,
+            "error_info": self.error_info
         }
 
     def load_from_dict(self, data: Dict):
@@ -242,12 +244,12 @@ class DownloadTaskInfo:
         self.source = data.get("source", self.source)
 
         self.thread_info = data.get("thread_info", self.thread_info)
+        self.error_info = data.get("error_info", self.error_info)
 
     def update(self):
         contents = {
             "min_version": Config.APP.task_file_min_version_code,
-            "task_info": self.to_dict(),
-            "thread_info": self.thread_info
+            "task_info": self.to_dict()
         }
 
         self.write(contents)
@@ -262,24 +264,6 @@ class DownloadTaskInfo:
     @property
     def file_path(self):
         return os.path.join(Config.User.download_file_directory, f"info_{self.id}.json")
-
-class DownloaderInfo:
-    def __init__(self):
-        self.url_list: List[str] = []
-        self.type: str = ""
-        self.file_name: str = ""
-
-    def to_dict(self):
-        return {
-            "url_list": self.url_list,
-            "type": self.type,
-            "file_name": self.file_name
-        }
-    
-    def load_from_dict(self, data: Dict):
-        self.url_list = data.get("url_list")
-        self.type = data.get("type")
-        self.file_name = data.get("file_name")
 
 class RangeDownloadInfo:
     index: str = ""

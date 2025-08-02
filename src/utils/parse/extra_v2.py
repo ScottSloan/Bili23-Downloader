@@ -14,7 +14,6 @@ from utils.common.request import RequestUtils
 from utils.common.file_name_v2 import FileNameFormatter
 from utils.common.formatter import FormatUtils
 from utils.common.exception import GlobalException
-from utils.tool_v2 import DownloadFileTool
 
 from utils.parse.preview import VideoPreview
 from utils.parse.download import DownloadParser

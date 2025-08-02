@@ -10,7 +10,7 @@ class InfoLabel(wx.StaticText):
 
         wx.StaticText.__init__(self, parent, -1, label, size = size)
 
-        self.get_default_color()
+        self.SetForegroundColour(self.get_default_color())
 
     def get_default_color(self):
         if not Config.Sys.dark_mode:
