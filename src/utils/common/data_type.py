@@ -9,6 +9,7 @@ from utils.common.enums import DownloadStatus
 
 class DownloadTaskInfo:
     def __init__(self):
+
         # id，区分不同下载任务的唯一标识符
         self.id: int = 0
         # 序号
@@ -245,6 +246,12 @@ class DownloadTaskInfo:
 
         self.thread_info = data.get("thread_info", self.thread_info)
         self.error_info = data.get("error_info", self.error_info)
+
+    def load_from_file(self, file_path: str):
+        with open(file_path, "r", encoding = "utf-8") as f:
+            data = json.loads(f.read())
+
+            self.load_from_dict(data.get("task_info"))
 
     def update(self):
         contents = {

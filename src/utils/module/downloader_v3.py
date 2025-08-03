@@ -123,9 +123,13 @@ class Utils:
         self.parent.retry_times += 1
 
         if self.parent.retry_times > Config.Advanced.download_error_retry_count:
+            self.parent.stop_event.set()
+
             raise GlobalException(code = StatusCode.MaxRetry.value, callback = self.onDownloadError) from e
         
         elif not Config.Advanced.retry_when_download_error:
+            self.parent.stop_event.set()
+
             raise GlobalException(code = StatusCode.DownloadError.value, callback = self.onDownloadError) from e
 
     def reset_flag(self):
@@ -189,11 +193,15 @@ class Utils:
 
         self.parent.start_download()
 
-    def onDownloadError(self):
-        if not self.parent.stop_event.is_set():
-            self.parent.stop_download()
+    def check_future_exception(self, future_list: list):
+        for future in future_list:
+            if e := future.exception():
+                raise GlobalException(code = StatusCode.DownloadError.value) from e
 
-            self.parent.callback.onError()
+    def onDownloadError(self):
+        self.parent.stop_download()
+
+        self.parent.callback.onError()
 
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, callback: DownloaderCallback):
@@ -237,11 +245,11 @@ class Downloader:
             url = self.utils.cache.get(file_name).get("url")
             file_range_list = self.utils.get_file_range_list(file_name, file_path)
 
-            self.utils.reset_flag()
-
             self.callback.onStart()
 
             Thread(target = self.listener).start()
+
+            future_list = []
 
             with DaemonThreadPoolExecutor(max_workers = Config.Download.max_thread_count) as self.executor:
                 for index, range in enumerate(file_range_list):
@@ -249,7 +257,9 @@ class Downloader:
                         self.thread_info[index] = range
                         range_info = self.utils.get_range_info(index, file_path, url, range)
 
-                        self.executor.submit(self.range_download, range_info)
+                        future_list.append(self.executor.submit(self.range_download, range_info))
+
+            self.utils.check_future_exception(future_list)
 
         except Exception as e:
             raise GlobalException(code = StatusCode.DownloadError.value, callback = self.utils.onDownloadError) from e
@@ -275,10 +285,9 @@ class Downloader:
                                 self.utils.check_speed_limit(start_time)
 
         except Exception as e:
-            print(e)
             self.utils.retry_download(e)
             
-            #info.range = self.task_info.thread_info[info.index]
+            info.range = self.thread_info[info.index]
             self.range_download(info)
 
     def stop_download(self):
@@ -315,6 +324,8 @@ class Downloader:
         self.utils.update_download_progress(100)
 
         if self.downloader_info_list:
+            self.utils.reset_flag()
+
             Thread(self.start_download).start()
         else:
             self.callback.onComplete()

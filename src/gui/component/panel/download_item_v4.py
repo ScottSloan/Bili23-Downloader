@@ -64,6 +64,7 @@ class Utils:
         def set_speed_label(self, label: str, error: bool = False):
             self.parent.speed_lab.SetLabel(label)
             self.parent.speed_lab.SetForegroundColour("red" if error else self.parent.speed_lab.get_default_color())
+            self.parent.speed_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND if error else wx.CURSOR_DEFAULT))
 
         def set_pause_btn(self, icon_id: IconID, tooltip: str, enable = True):
             self.parent.pause_btn.SetBitmap(Icon.get_icon_bitmap(icon_id))
@@ -132,8 +133,6 @@ class Utils:
         self.info = self.Info(task_info)
 
     def show_task_info(self, set_status: bool = False):
-        self.ui.show_cover(self.task_info.cover_url)
-
         self.ui.set_title(self.task_info.title)
         self.ui.set_progress(self.task_info.progress)
 
@@ -260,7 +259,6 @@ class Utils:
             wx.CallAfter(worker)
 
     def onDownloadError(self):
-        print("err")
         self.task_info.error_info = GlobalExceptionInfo.info
 
         self.set_download_status(DownloadStatus.DownloadError)
@@ -274,6 +272,8 @@ class Utils:
         wx.CallAfter(worker)
 
     def onMergeError(self):
+        self.task_info.error_info = GlobalExceptionInfo.info
+        
         self.set_download_status(DownloadStatus.MergeError)
 
     def onDownloadExtraSuccess(self):

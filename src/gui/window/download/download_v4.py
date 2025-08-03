@@ -1,13 +1,15 @@
 import wx
+import os
 from datetime import datetime
 from typing import List, Callable
 
 from utils.config import Config
 
-from utils.common.enums import Platform, NumberType
+from utils.common.enums import Platform, NumberType, DownloadStatus
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.directory import DirectoryUtils
 from utils.common.data_type import DownloadTaskInfo
+from utils.common.thread import Thread
 
 from gui.window.download.page import DownloadingPage, CompletedPage
 
@@ -238,6 +240,35 @@ class Utils:
     def get_timestamp(index):
         return round(datetime.now().timestamp()) + index
 
+    @classmethod
+    def read_download_files(cls):
+        temp_task_info_list: List[DownloadTaskInfo] = []
+
+        for file_name in os.listdir(Config.User.download_file_directory):
+            file_path = os.path.join(Config.User.download_file_directory, file_name)
+
+            if file_name.startswith("info_") and file_name.endswith(".json"):
+                task_info = DownloadTaskInfo()
+                task_info.load_from_file(file_path)
+
+                temp_task_info_list.append(task_info)
+
+        return cls.task_info_filter(temp_task_info_list)
+
+    @staticmethod
+    def task_info_filter(task_info_list: List[DownloadTaskInfo]):
+        temp_downloading_list = []
+        temp_completed_list = []
+
+        for task_info in task_info_list:
+            if DownloadStatus(task_info.status) != DownloadStatus.Complete:
+                temp_downloading_list.append(task_info)
+
+            else:
+                temp_completed_list.append(task_info)
+
+        return temp_downloading_list, temp_completed_list
+
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, "下载管理")
@@ -247,6 +278,8 @@ class DownloadManagerWindow(Frame):
         self.init_UI()
 
         self.Bind_EVT()
+
+        self.init_utils()
 
         self.CenterOnParent()
 
@@ -277,14 +310,21 @@ class DownloadManagerWindow(Frame):
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
     
     def init_utils(self):
-        pass
+        def worker():
+            downloading_list, completed_list = Utils.read_download_files()
+
+            self.add_to_download_list(downloading_list)
+            self.add_to_completed_list(completed_list)
+
+        Thread(target = worker).start()
     
     def onCloseEVT(self, event):
         self.Hide()
 
-    def add_to_download_list(self, download_list: List[DownloadTaskInfo], after_show_items_callback: Callable, create_local_file: bool = False, start_download: bool = False):
+    def add_to_download_list(self, download_list: List[DownloadTaskInfo], after_show_items_callback: Callable = None, create_local_file: bool = False, start_download: bool = False):
         def get_after_show_items_callback():
-            after_show_items_callback()
+            if after_show_items_callback:
+                after_show_items_callback()
 
             self.top_panel.UpdateAllTitle(self.right_panel.downloading_page.total_item_count, self.right_panel.GetCurrentPageName())
         
@@ -293,8 +333,8 @@ class DownloadManagerWindow(Frame):
 
         wx.CallAfter(self.right_panel.ShowDownloadingItemList, download_list, get_after_show_items_callback, start_download)
 
-    def add_to_completed_list(self):
-        pass
+    def add_to_completed_list(self, completed_list: List[DownloadTaskInfo]):
+        wx.CallAfter(self.right_panel.ShowCompletedItemList, completed_list)
     
     def update_title(self, source: str):
         page: DownloadingPage = wx.FindWindowByName(source, self.right_panel)

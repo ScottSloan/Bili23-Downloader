@@ -1,7 +1,7 @@
 import wx
 from typing import List, Tuple
 
-from utils.config import Config
+from utils.config import Config, app_config_group
 
 from utils.common.enums import DownloadStatus
 from utils.common.data_type import DownloadTaskInfo
@@ -105,6 +105,8 @@ class DownloadingPage(BasePage):
         self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onStopAllEVT)
 
+        self.max_download_choice.Bind(wx.EVT_BUTTON, self.onChangeDownloadCountEVT)
+
     def onStartAllEVT(self, event):
         self.start_download(start_all = True)
 
@@ -117,10 +119,29 @@ class DownloadingPage(BasePage):
     def onStopAllEVT(self, event):
         for panel in self.panel_items:
             if isinstance(panel, DownloadTaskItemPanel):
-                panel.utils.destory_panel()
+                panel.utils.destory_panel(remove_file = True)
 
         for info in self.scroller.info_list:
             info.remove_file()
+
+    def onChangeDownloadCountEVT(self, event):
+        Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
+
+        count = 0
+
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                if self.get_panel_items_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
+                    if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.Pause.value]:
+                        panel.utils.resume_download()
+                else:
+                    if panel.task_info.status == DownloadStatus.Downloading.value:
+                        count += 1
+
+                        if count > Config.Download.max_download_count:
+                            panel.utils.pause_download(set_waiting_status = True)
+          
+        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
 
     def add_panel_item(self, temp_info_list: List[DownloadTaskInfo]):
         self.temp_panel_list = [(DownloadTaskItemPanel(self.scroller, entry, self.download_window), 0, wx.EXPAND) for entry in temp_info_list]

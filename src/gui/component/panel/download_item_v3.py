@@ -13,7 +13,6 @@ from utils.common.directory import DirectoryUtils
 from utils.common.formatter import FormatUtils
 
 from utils.module.ffmpeg_v2 import FFmpeg
-from utils.module.downloader_v2 import Downloader
 from utils.module.pic.cover import Cover
 
 from utils.parse.download import DownloadParser
@@ -346,7 +345,7 @@ class DownloadTaskItemPanel(Panel):
 
             self.file_tool.update_info("task_info", self.task_info.to_dict())
     
-        self.downloader = Downloader(self.task_info, self.file_tool, callback)
+        self.downloader = 0(self.task_info, self.file_tool, callback)
 
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
