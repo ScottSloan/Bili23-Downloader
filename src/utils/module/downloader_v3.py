@@ -139,11 +139,13 @@ class Utils:
         self.parent.retry_times = 0
         self.parent.suspend_interval = 0
 
-    def update_download_progress(self, progress: int, speed: str = None):
+    def update_download_progress(self, progress: int = None, speed: str = None):
         if self.parent.stop_event.is_set():
             return
         
-        self.task_info.progress = int(progress)
+        if progress:
+            self.task_info.progress = int(progress)
+
         self.task_info.current_downloaded_size = self.parent.current_downloaded_size
         self.task_info.total_downloaded_size = self.parent.total_downloaded_size
         self.task_info.thread_info = self.parent.thread_info.copy()
@@ -321,7 +323,7 @@ class Downloader:
 
         del self.downloader_info_list[:1]
 
-        self.utils.update_download_progress(100)
+        self.utils.update_download_progress()
 
         if self.downloader_info_list:
             self.utils.reset_flag()

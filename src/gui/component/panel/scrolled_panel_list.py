@@ -36,7 +36,7 @@ class LoadMoreTaskItemPanel(Panel):
     def __init__(self, parent, left_count: int, load_more_callback: Callable, name: str):
         self.count, self.callback = left_count, load_more_callback
 
-        Panel.__init__(self, parent)
+        Panel.__init__(self, parent, name)
 
         self.init_UI()
 
@@ -69,10 +69,8 @@ class LoadMoreTaskItemPanel(Panel):
         self.callback()
 
         wx.EndBusyCursor()
-        self.destroy_panel()
 
     def destroy_panel(self):
-        self.Hide()
         self.Destroy()
 
 class ScrolledPanelList(ScrolledPanel):
@@ -89,35 +87,44 @@ class ScrolledPanelList(ScrolledPanel):
         self.more = False
         self.info_list = []
 
+        self.max_items = self.info.get("max_items", 25)
         self.add_panel_item: Callable = self.info.get("add_panel_item")
+        self.load_more_item: Callable = self.info.get("load_more_item")
 
         self.add_empty_panel()
 
-    def ShowListItems(self, after_show_items_callback: Callable = None):
-        panel_list = self.add_panel_item(self.get_items_batch())
+    def ShowListItems(self, after_show_items_callback: Callable = None, load_items: int = None, max_limit: bool = False):
+        panel_list = self.add_panel_item(self.get_items_batch(load_items, max_limit))
+
+        self.Freeze()
 
         if panel_list:
-            self.Freeze()
-
             self.remove_empty_panel()
 
             self.remove_more_panel()
 
             self.sizer.AddMany(panel_list)
 
-            if len(self.info_list):
-                self.add_more_panel()
+        if len(self.info_list):
+            self.remove_more_panel()
 
-            self.Layout()
+            self.add_more_panel()
 
-            self.Thaw()
+        self.Layout()
+
+        self.Thaw()
 
         if after_show_items_callback:
             after_show_items_callback()
     
-    def get_items_batch(self):
-        temp_items = self.info_list[:50]
-        del self.info_list[:50]
+    def get_items_batch(self, load_items: int = None, max_limit: bool = False):
+        if max_limit:
+            count = max(self.max_items - self.get_items_count(), 0)
+        else:
+            count = load_items if load_items else self.max_items
+
+        temp_items = self.info_list[:count]
+        del self.info_list[:count]
 
         return temp_items
 
@@ -146,14 +153,15 @@ class ScrolledPanelList(ScrolledPanel):
         if self.empty and not self.sizer.IsEmpty():
             empty_panel: EmptyItemPanel = wx.FindWindowByName("empty_panel", self)
 
-            empty_panel.destroy_panel()
+            if empty_panel:
+                empty_panel.destroy_panel()
 
             self.empty = False
 
     def add_more_panel(self):
         self.more = True
 
-        more_item = LoadMoreTaskItemPanel(self, len(self.info_list), self.ShowListItems, "more_panel")
+        more_item = LoadMoreTaskItemPanel(self, len(self.info_list), self.load_more_item, "more_panel")
 
         self.Add(more_item, 0, wx.EXPAND)
 
@@ -169,3 +177,6 @@ class ScrolledPanelList(ScrolledPanel):
     def Remove(self):
         if self.sizer.IsEmpty():
             self.add_empty_panel()
+
+    def get_items_count(self):
+        return self.sizer.GetItemCount() - int(self.empty) - int(self.more)

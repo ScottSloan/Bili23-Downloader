@@ -148,7 +148,7 @@ class Utils:
     def show_cover(self):
         self.ui.show_cover(self.task_info.cover_url)
 
-    def destory_panel(self, remove_file: bool = False):
+    def destory_panel(self, remove_file: bool = False, user_action: bool = False):
         if remove_file:
             self.task_info.remove_file()
 
@@ -161,6 +161,9 @@ class Utils:
 
         self.parent.download_window.update_title(self.task_info.source)
         self.parent.download_window.remove_item(self.task_info.source)
+
+        if user_action:
+            self.parent.download_window.load_next_task(self.task_info.source)
 
     def move_panel(self):
         def worker():
@@ -209,11 +212,12 @@ class Utils:
             if self.task_info.progress != 100:
                 self.start_download()
 
-    def merge_video(self):
+    def merge_video(self, set_status: bool = True):
         def worker():
             FFmpeg.Utils.merge(self.task_info, self.get_merge_callback())
 
-        self.set_download_status(DownloadStatus.Merging)
+        if set_status:
+            self.set_download_status(DownloadStatus.Merging)
 
         Thread(target = worker).start()
 
@@ -248,11 +252,12 @@ class Utils:
             self.ui.update()
 
         if self.task_info.further_processing:
+            self.set_download_status(DownloadStatus.Merging)
+
             self.parent.download_window.start_next_task()
 
             if self.task_info.ffmpeg_merge:
-                self.merge_video()
-
+                self.merge_video(set_status = False)
             else:
                 self.rename_file()
 
@@ -262,6 +267,8 @@ class Utils:
         self.task_info.error_info = GlobalExceptionInfo.info
 
         self.set_download_status(DownloadStatus.DownloadError)
+
+        self.parent.download_window.start_next_task()
     
     def onMergeSuccess(self):
         def worker():
@@ -508,13 +515,13 @@ class DownloadTaskItemPanel(Panel):
                 self.utils.open_file_location()
 
             case DownloadStatus.MergeError:
-                pass
+                self.utils.merge_video()
 
             case DownloadStatus.DownloadError:
-                pass
+                self.utils.start_download()
 
     def onStopEVT(self, event):
-        self.utils.destory_panel(remove_file = True)
+        self.utils.destory_panel(remove_file = True, user_action = True)
 
     def get_progress_bar_size(self):
         match Platform(Config.Sys.platform):

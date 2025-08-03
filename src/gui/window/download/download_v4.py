@@ -179,22 +179,18 @@ class RightPanel(Panel):
 
         self.downloading_page.scroller.info_list.extend(download_list)
 
-        self.downloading_page.scroller.ShowListItems(after_show_items_callback)
+        self.downloading_page.ShowItems(after_show_items_callback)
 
-        self.downloading_page.show_task_info()
-
-    def ShowCompletedItemList(self, download_list: List[DownloadTaskInfo]):
+    def ShowCompletedItemList(self, download_list: List[DownloadTaskInfo], max_limit: bool = False):
         self.completed_page.scroller.info_list.extend(download_list)
 
-        self.completed_page.scroller.ShowListItems()
-
-        self.completed_page.show_task_info()
+        self.completed_page.ShowItems(max_limit = max_limit)
 
     def move_to_completed_page(self, task_info: DownloadTaskInfo):
         def worker():
             task_info.source = "下载完成"
 
-            self.ShowCompletedItemList([task_info])
+            self.ShowCompletedItemList([task_info], max_limit = True)
 
             self.parent.top_panel.UpdateAllTitle(self.parent.left_panel.GetTotalCompletedCount(), "下载完成")
 
@@ -257,8 +253,8 @@ class Utils:
 
     @staticmethod
     def task_info_filter(task_info_list: List[DownloadTaskInfo]):
-        temp_downloading_list = []
-        temp_completed_list = []
+        temp_downloading_list: List[DownloadTaskInfo] = []
+        temp_completed_list: List[DownloadTaskInfo] = []
 
         for task_info in task_info_list:
             if DownloadStatus(task_info.status) != DownloadStatus.Complete:
@@ -266,6 +262,9 @@ class Utils:
 
             else:
                 temp_completed_list.append(task_info)
+
+        temp_downloading_list.sort(key = lambda x: x.timestamp, reverse = False)
+        temp_completed_list.sort(key = lambda x: x.timestamp, reverse = False)
 
         return temp_downloading_list, temp_completed_list
 
@@ -337,7 +336,7 @@ class DownloadManagerWindow(Frame):
         wx.CallAfter(self.right_panel.ShowCompletedItemList, completed_list)
     
     def update_title(self, source: str):
-        page: DownloadingPage = wx.FindWindowByName(source, self.right_panel)
+        page = self.get_page(source)
 
         count = page.total_item_count
 
@@ -346,13 +345,24 @@ class DownloadManagerWindow(Frame):
         page.scroller.Layout()
 
     def remove_item(self, source: str):
-        page: DownloadingPage = wx.FindWindowByName(source, self.right_panel)
+        page = self.get_page(source)
 
         page.scroller.Remove()
 
     def start_next_task(self):
-        self.right_panel.downloading_page.start_download()
-        
+        self.load_next_task("正在下载", self.right_panel.downloading_page.start_download)
+    
+    def load_next_task(self, source: str, callback: Callable = None):
+        def worker():
+            page.ShowItems(callback, load_items = 1)
+
+        page = self.get_page(source)
+
+        if page.is_need_load_more():
+            wx.CallAfter(worker)
+        elif callback:
+            callback()
+
     def set_window_params(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
@@ -368,3 +378,11 @@ class DownloadManagerWindow(Frame):
                 size = self.FromDIP((1070, 650))
 
         self.SetSize(size)
+
+    def get_page(self, source: str):
+        match source:
+            case "正在下载":
+                return self.right_panel.downloading_page
+            
+            case "下载完成":
+                return self.right_panel.completed_page

@@ -1,5 +1,5 @@
 import wx
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 
 from utils.config import Config, app_config_group
 
@@ -17,6 +17,11 @@ class BasePage(Panel):
 
         self.scroller: ScrolledPanelList = None
         self.temp_panel_list: List[Tuple[DownloadTaskItemPanel, int, int]] = []
+
+    def ShowItems(self, callback: Callable = None, load_items: int = None, max_limit: bool = False):
+        self.scroller.ShowListItems(callback, load_items, max_limit)
+
+        self.show_task_info()
 
     def get_panel_items_count(self, condition: List[int]):
         count = 0
@@ -38,6 +43,29 @@ class BasePage(Panel):
             self.temp_panel_list.clear()
 
         Thread(target = worker).start()
+
+    def remove_all_items(self):
+        wx.BeginBusyCursor()
+
+        self.scroller.Freeze()
+
+        for info in self.scroller.info_list:
+            info.remove_file()
+
+        self.scroller.info_list.clear()
+
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                panel.utils.destory_panel(remove_file = True)
+
+        self.scroller.remove_more_panel()
+        self.scroller.Remove()
+
+        self.scroller.Thaw()
+
+        wx.EndBusyCursor()
+
+        self.download_window.update_title(self.GetName())
 
     @property
     def panel_items(self):
@@ -86,8 +114,10 @@ class DownloadingPage(BasePage):
         top_separate_line = wx.StaticLine(self, -1)
 
         info = {
+            "max_items": 50,
             "empty_label": "没有正在下载的项目",
-            "add_panel_item": self.add_panel_item
+            "add_panel_item": self.add_panel_item,
+            "load_more_item": self.ShowItems
         }
 
         self.scroller = ScrolledPanelList(self, info)
@@ -117,12 +147,7 @@ class DownloadingPage(BasePage):
                     panel.utils.pause_download()
 
     def onStopAllEVT(self, event):
-        for panel in self.panel_items:
-            if isinstance(panel, DownloadTaskItemPanel):
-                panel.utils.destory_panel(remove_file = True)
-
-        for info in self.scroller.info_list:
-            info.remove_file()
+        self.remove_all_items()
 
     def onChangeDownloadCountEVT(self, event):
         Config.Download.max_download_count = int(self.max_download_choice.GetStringSelection())
@@ -158,6 +183,9 @@ class DownloadingPage(BasePage):
                     if self.get_panel_items_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.utils.resume_download()
     
+    def is_need_load_more(self):
+        return self.scroller.more
+
     @property
     def total_item_count(self):
         return self.total_panel_items + len(self.scroller.info_list)
@@ -184,8 +212,10 @@ class CompletedPage(BasePage):
         top_separate_line = wx.StaticLine(self, -1)
 
         info = {
+            "max_items": 50,
             "empty_label": "没有下载完成的项目",
-            "add_panel_item": self.add_panel_item
+            "add_panel_item": self.add_panel_item,
+            "load_more_item": self.ShowItems
         }
 
         self.scroller = ScrolledPanelList(self, info)
@@ -202,9 +232,7 @@ class CompletedPage(BasePage):
         self.clear_history_btn.Bind(wx.EVT_BUTTON, self.onClearAllEVT)
 
     def onClearAllEVT(self, event):
-        for panel in self.panel_items:
-            if isinstance(panel, DownloadTaskItemPanel):
-                panel.utils.destory_panel(remove_file = True)
+        self.remove_all_items()
 
     def add_panel_item(self, temp_info_list: List[DownloadTaskInfo]):
         self.temp_panel_list = [(DownloadTaskItemPanel(self.scroller, entry, self.download_window), 0, wx.EXPAND) for entry in temp_info_list]
