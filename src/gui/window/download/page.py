@@ -36,7 +36,7 @@ class BasePage(Panel):
     def show_task_info(self):
         def worker():
             for (panel, proportion, flag) in self.temp_panel_list:
-                wx.CallAfter(panel.utils.show_task_info, self.GetName() == "下载完成")
+                wx.CallAfter(panel.utils.show_task_info)
 
                 panel.utils.show_cover()
 
@@ -66,6 +66,9 @@ class BasePage(Panel):
         wx.EndBusyCursor()
 
         self.download_window.update_title(self.GetName())
+
+    def is_need_load_more(self):
+        return self.scroller.more
 
     @property
     def panel_items(self):
@@ -135,12 +138,14 @@ class DownloadingPage(BasePage):
         self.pause_all_btn.Bind(wx.EVT_BUTTON, self.onPauseAllEVT)
         self.cancel_all_btn.Bind(wx.EVT_BUTTON, self.onStopAllEVT)
 
-        self.max_download_choice.Bind(wx.EVT_BUTTON, self.onChangeDownloadCountEVT)
+        self.max_download_choice.Bind(wx.EVT_CHOICE, self.onChangeDownloadCountEVT)
 
     def onStartAllEVT(self, event):
         self.start_download(start_all = True)
 
     def onPauseAllEVT(self, event):
+        self.set_info_list_status(DownloadStatus.Pause.value)
+
         for panel in self.panel_items:
             if isinstance(panel, DownloadTaskItemPanel):
                 if panel.task_info.status in DownloadStatus.Alive.value:
@@ -174,17 +179,20 @@ class DownloadingPage(BasePage):
         return self.temp_panel_list
 
     def start_download(self, start_all: bool = False):
+        self.set_info_list_status(DownloadStatus.Waiting.value)
+
         for panel in self.panel_items:
             if isinstance(panel, DownloadTaskItemPanel):
                 if panel.task_info.status == DownloadStatus.Pause.value and start_all:
-                    panel.utils.set_download_status(DownloadStatus.Waiting.value)
+                    panel.utils.set_download_status(DownloadStatus.Waiting)
 
                 if panel.task_info.status == DownloadStatus.Waiting.value:
                     if self.get_panel_items_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.utils.resume_download()
     
-    def is_need_load_more(self):
-        return self.scroller.more
+    def set_info_list_status(self, status: int):
+        for info in self.scroller.info_list:
+            info.status = status
 
     @property
     def total_item_count(self):

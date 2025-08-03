@@ -170,16 +170,10 @@ class RightPanel(Panel):
     def change_page(self, index: 0):
         self.book.SetSelection(index)
     
-    def ShowDownloadingItemList(self, download_list: List[DownloadTaskInfo], callback: Callable, start_download: bool):
-        def after_show_items_callback():
-            callback()
-
-            if start_download:
-                self.downloading_page.start_download()
-
+    def ShowDownloadingItemList(self, download_list: List[DownloadTaskInfo], callback: Callable = None, max_limit = False):
         self.downloading_page.scroller.info_list.extend(download_list)
 
-        self.downloading_page.ShowItems(after_show_items_callback)
+        self.downloading_page.ShowItems(callback, max_limit = max_limit)
 
     def ShowCompletedItemList(self, download_list: List[DownloadTaskInfo], max_limit: bool = False):
         self.completed_page.scroller.info_list.extend(download_list)
@@ -247,7 +241,8 @@ class Utils:
                 task_info = DownloadTaskInfo()
                 task_info.load_from_file(file_path)
 
-                temp_task_info_list.append(task_info)
+                if task_info.is_valid():
+                    temp_task_info_list.append(task_info)
 
         return cls.task_info_filter(temp_task_info_list)
 
@@ -257,11 +252,13 @@ class Utils:
         temp_completed_list: List[DownloadTaskInfo] = []
 
         for task_info in task_info_list:
-            if DownloadStatus(task_info.status) != DownloadStatus.Complete:
-                temp_downloading_list.append(task_info)
-
-            else:
+            if DownloadStatus(task_info.status) == DownloadStatus.Complete:
                 temp_completed_list.append(task_info)
+            else:
+                if DownloadStatus(task_info.status) in [DownloadStatus.Downloading, DownloadStatus.Waiting, DownloadStatus.Merging, DownloadStatus.Generating]:
+                    task_info.status = DownloadStatus.Pause.value
+
+                temp_downloading_list.append(task_info)
 
         temp_downloading_list.sort(key = lambda x: x.timestamp, reverse = False)
         temp_completed_list.sort(key = lambda x: x.timestamp, reverse = False)
@@ -325,12 +322,15 @@ class DownloadManagerWindow(Frame):
             if after_show_items_callback:
                 after_show_items_callback()
 
-            self.top_panel.UpdateAllTitle(self.right_panel.downloading_page.total_item_count, self.right_panel.GetCurrentPageName())
+            if start_download:
+                self.right_panel.downloading_page.start_download()
+
+            self.top_panel.UpdateAllTitle(self.right_panel.downloading_page.total_item_count, "正在下载")
         
         if create_local_file:
             Utils.create_download_file(download_list)
 
-        wx.CallAfter(self.right_panel.ShowDownloadingItemList, download_list, get_after_show_items_callback, start_download)
+        wx.CallAfter(self.right_panel.ShowDownloadingItemList, download_list, get_after_show_items_callback, True)
 
     def add_to_completed_list(self, completed_list: List[DownloadTaskInfo]):
         wx.CallAfter(self.right_panel.ShowCompletedItemList, completed_list)

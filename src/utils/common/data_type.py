@@ -9,6 +9,8 @@ from utils.common.enums import DownloadStatus
 
 class DownloadTaskInfo:
     def __init__(self):
+        # 最低支持版本
+        self.min_version: int = 0
 
         # id，区分不同下载任务的唯一标识符
         self.id: int = 0
@@ -115,6 +117,8 @@ class DownloadTaskInfo:
 
     def to_dict(self):
         return {
+            "min_version": self.min_version,
+
             "id": self.id,
             "number": self.number,
             "zero_padding_number": self.zero_padding_number,
@@ -182,6 +186,8 @@ class DownloadTaskInfo:
         }
 
     def load_from_dict(self, data: Dict):
+        self.min_version = data.get("min_version", self.min_version)
+
         self.id = data.get("id", self.id)
         self.number = data.get("number", self.number)
         self.zero_padding_number = data.get("zero_padding_number", self.zero_padding_number)
@@ -251,15 +257,12 @@ class DownloadTaskInfo:
         with open(file_path, "r", encoding = "utf-8") as f:
             data = json.loads(f.read())
 
-            self.load_from_dict(data.get("task_info"))
+            self.load_from_dict(data)
 
     def update(self):
-        contents = {
-            "min_version": Config.APP.task_file_min_version_code,
-            "task_info": self.to_dict()
-        }
+        self.min_version = Config.APP.task_file_min_version_code
 
-        self.write(contents)
+        self.write(self.to_dict())
 
     def remove_file(self):
         path = self.file_path
@@ -271,16 +274,20 @@ class DownloadTaskInfo:
         with open(self.file_path, "w", encoding = "utf-8") as f:
             f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
 
+    def is_valid(self):
+        return self.min_version >= Config.APP.task_file_min_version_code
+
     @property
     def file_path(self):
         return os.path.join(Config.User.download_file_directory, f"info_{self.id}.json")
 
 class RangeDownloadInfo:
-    index: str = ""
-    type: str = ""
-    url: str = ""
-    file_path: str = ""
-    range: List[int] = []
+    def __init__(self):
+        self.index: str = ""
+        self.type: str = ""
+        self.url: str = ""
+        self.file_path: str = ""
+        self.range: List[int] = []
 
 class DownloaderCallback(ABC):
     @staticmethod

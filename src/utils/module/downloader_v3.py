@@ -112,7 +112,7 @@ class Utils:
     
     def get_range_info(self, index: int, file_path: str, url: str, range: list):
         info = RangeDownloadInfo()
-        info.index = index
+        info.index = str(index)
         info.file_path = file_path
         info.url = url
         info.range = range
@@ -134,10 +134,8 @@ class Utils:
 
     def reset_flag(self):
         self.parent.stop_event.clear()
-        self.parent.thread_info.clear()
 
         self.parent.retry_times = 0
-        self.parent.suspend_interval = 0
 
     def update_download_progress(self, progress: int = None, speed: str = None):
         if self.parent.stop_event.is_set():
@@ -160,6 +158,14 @@ class Utils:
         self.parent.total_downloaded_size += chunk_size
         self.parent.thread_info[index][0] += chunk_size
 
+    def on_thread_exit(self):
+        with self.parent.lock:
+            self.task_info.current_downloaded_size = self.parent.total_downloaded_size
+            self.task_info.total_downloaded_size = self.parent.total_downloaded_size
+            self.task_info.thread_info = self.parent.thread_info
+
+            self.task_info.update()
+
     def check_speed_limit(self, start_time: float):
         if Config.Download.enable_speed_limit:
             elapsed_time = time.time() - start_time
@@ -177,16 +183,6 @@ class Utils:
 
     def get_speed_bps(self):
         return Config.Download.speed_mbps * 1024 * 1024
-
-    def check_download_speed(self, speed: int):
-        if Config.Advanced.retry_when_download_suspend:
-            if speed == 0:
-                self.parent.suspend_interval += 1
-            else:
-                self.parent.suspend_interval = 0
-            
-            if self.parent.suspend_interval > Config.Advanced.download_suspend_retry_interval and not self.parent.stop_event.is_set():
-                Thread(target = self.restart_download).start()
 
     def restart_download(self):
         self.parent.stop_download()
@@ -224,7 +220,6 @@ class Downloader:
         self.cdn_host_list = self.utils.get_cdn_host_list()
 
         self.retry_times = 0
-        self.suspend_interval = 0
 
         self.current_file_size = 0
         self.current_downloaded_size = 0
@@ -240,6 +235,7 @@ class Downloader:
 
         file_name = downloader_info.get("file_name")
         file_path = os.path.join(self.download_path, file_name)
+        self.utils.reset_flag()
 
         try:
             self.utils.get_total_file_size()
@@ -256,7 +252,7 @@ class Downloader:
             with DaemonThreadPoolExecutor(max_workers = Config.Download.max_thread_count) as self.executor:
                 for index, range in enumerate(file_range_list):
                     if range[0] < range[1]:
-                        self.thread_info[index] = range
+                        self.thread_info[str(index)] = range
                         range_info = self.utils.get_range_info(index, file_path, url, range)
 
                         future_list.append(self.executor.submit(self.range_download, range_info))
@@ -292,6 +288,8 @@ class Downloader:
             info.range = self.thread_info[info.index]
             self.range_download(info)
 
+        self.utils.on_thread_exit()
+
     def stop_download(self):
         self.stop_event.set()
 
@@ -310,8 +308,6 @@ class Downloader:
 
                 self.utils.update_download_progress(total_progress, FormatUtils.format_speed(speed))
 
-                self.utils.check_download_speed(speed)
-
         if not self.stop_event.is_set():
             self.download_complete()
 
@@ -326,8 +322,6 @@ class Downloader:
         self.utils.update_download_progress()
 
         if self.downloader_info_list:
-            self.utils.reset_flag()
-
             Thread(self.start_download).start()
         else:
             self.callback.onComplete()

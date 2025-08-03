@@ -121,7 +121,7 @@ class Utils:
                 return "正在转换音频..."
             
         def get_merge_error_label(self):
-            reason = "合并视频" if "vieo" in self.task_info.download_option else "转换音频"
+            reason = "合并视频" if "video" in self.task_info.download_option else "转换音频"
 
             return f"{reason}失败，点击查看详情"
 
@@ -132,7 +132,7 @@ class Utils:
         self.ui = self.UI(parent)
         self.info = self.Info(task_info)
 
-    def show_task_info(self, set_status: bool = False):
+    def show_task_info(self):
         self.ui.set_title(self.task_info.title)
         self.ui.set_progress(self.task_info.progress)
 
@@ -140,8 +140,7 @@ class Utils:
         self.ui.set_codec_label(self.info.get_codec_label())
         self.ui.set_size_label(self.info.get_size_label())
 
-        if set_status:
-            self.set_download_status(DownloadStatus(self.task_info.status))
+        self.set_download_status(DownloadStatus(self.task_info.status))
 
         self.ui.update()
 
@@ -209,7 +208,9 @@ class Utils:
 
     def resume_download(self):
         if self.task_info.status != DownloadStatus.Downloading.value:
-            if self.task_info.progress != 100:
+            if self.task_info.progress == 100:
+                self.onDownloadVideoComplete()
+            else:
                 self.start_download()
 
     def merge_video(self, set_status: bool = True):
@@ -228,9 +229,11 @@ class Utils:
 
     def onDownloadStart(self):
         def worker():
+            self.parent.show_info = True
+            
             self.show_task_info()
 
-        if not self.parent.panel_destory:
+        if not self.parent.panel_destory and not self.parent.show_info:
             wx.CallAfter(worker)
 
     def onDownloading(self, speed_label: str):
@@ -486,6 +489,7 @@ class DownloadTaskItemPanel(Panel):
         self.utils = Utils(self, self.task_info)
 
         self.panel_destory = False
+        self.show_info = False
 
     def onDestoryEVT(self, event):
         self.panel_destory = True
