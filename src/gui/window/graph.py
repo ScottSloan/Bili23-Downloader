@@ -41,7 +41,7 @@ class GraphWindow(Frame):
     def onLoadedEVT(self, event):
         data = Graph.get_graph_json(self.GetFont().GetFaceName())
 
-        self.webview.browser.RunScriptAsync(f"initGraph('{data.get("graph")}', '{data.get("title")}');")
+        self.webview.browser.RunScriptAsync(f"""initGraph('{data.get("graph")}', '{data.get("title")}');""")
 
     def onMessageEVT(self, event):
         msg = event.GetString()

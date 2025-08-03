@@ -11,6 +11,8 @@ from utils.common.directory import DirectoryUtils
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.thread import Thread
 
+from utils.module.notification import NotificationManager
+
 from gui.window.download.page import DownloadingPage, CompletedPage
 
 from gui.component.button.action_button import ActionButton
@@ -335,7 +337,7 @@ class DownloadManagerWindow(Frame):
     def add_to_completed_list(self, completed_list: List[DownloadTaskInfo]):
         wx.CallAfter(self.right_panel.ShowCompletedItemList, completed_list)
     
-    def update_title(self, source: str):
+    def update_title(self, source: str, user_action: bool = False):
         page = self.get_page(source)
 
         count = page.total_item_count
@@ -343,6 +345,10 @@ class DownloadManagerWindow(Frame):
         self.top_panel.UpdateAllTitle(count, source)
 
         page.scroller.Layout()
+
+        if count == 0 and source == "正在下载" and not user_action and Config.Download.enable_notification:
+            notification = NotificationManager(self)
+            notification.show_toast("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
 
     def remove_item(self, source: str):
         page = self.get_page(source)

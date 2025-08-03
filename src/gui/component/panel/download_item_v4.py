@@ -158,7 +158,7 @@ class Utils:
 
         self.parent.Destroy()
 
-        self.parent.download_window.update_title(self.task_info.source)
+        self.parent.download_window.update_title(self.task_info.source, user_action)
         self.parent.download_window.remove_item(self.task_info.source)
 
         if user_action:
@@ -230,7 +230,7 @@ class Utils:
     def onDownloadStart(self):
         def worker():
             self.parent.show_info = True
-            
+
             self.show_task_info()
 
         if not self.parent.panel_destory and not self.parent.show_info:
