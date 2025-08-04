@@ -7,9 +7,9 @@ from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, Callbac
 from utils.common.enums import Platform, ParseType, DownloadStatus
 from utils.common.icon_v4 import Icon, IconID
 from utils.common.map import extra_map, video_quality_map, video_codec_map, audio_quality_map, get_mapping_key_by_value
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.thread import Thread
-from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.io.directory import Directory
 from utils.common.exception import GlobalExceptionInfo
 

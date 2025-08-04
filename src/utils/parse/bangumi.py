@@ -5,7 +5,7 @@ from utils.common.map import bangumi_type_map
 from utils.common.enums import StatusCode
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex
 
 from utils.parse.audio import AudioInfo

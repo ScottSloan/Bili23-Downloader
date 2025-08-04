@@ -6,7 +6,7 @@ import webbrowser
 from utils.config import Config
 
 from utils.common.map import scope_map, field_map, get_mapping_key_by_value
-from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.font import SysFont
 from utils.common.regex import Regex

@@ -11,8 +11,8 @@ from utils.config import Config
 from utils.common.data_type import DownloadTaskInfo, Callback, ASSStyle
 from utils.common.enums import DanmakuType, SubtitleType, SubtitleLanOption, StatusCode
 from utils.common.request import RequestUtils
-from utils.common.file_name_v2 import FileNameFormatter
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.exception import GlobalException
 
 from utils.parse.preview import VideoPreview

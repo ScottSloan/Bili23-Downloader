@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from utils.config import Config
 
 from utils.common.enums import DownloadStatus
+from utils.common.io.file import File
 
 class DownloadTaskInfo:
     def __init__(self):
@@ -265,10 +266,7 @@ class DownloadTaskInfo:
         self.write(self.to_dict())
 
     def remove_file(self):
-        path = self.file_path
-
-        if os.path.exists(path):
-            os.remove(path)
+        File.remove_file(self.file_path)
 
     def write(self, contents: dict):
         with open(self.file_path, "w", encoding = "utf-8") as f:

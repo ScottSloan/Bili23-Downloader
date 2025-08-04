@@ -10,7 +10,7 @@ from utils.common.enums import StatusCode, EpisodeDisplayType
 from utils.common.exception import GlobalException
 from utils.common.data_type import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex
 
 class VideoInfo:

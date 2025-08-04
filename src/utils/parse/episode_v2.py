@@ -2,7 +2,7 @@ from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType, ParseType
 from utils.common.map import cheese_status_map, live_status_map
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}

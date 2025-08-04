@@ -5,13 +5,13 @@ import subprocess
 from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, RealTimeCallback
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
-from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
 from utils.common.regex import Regex
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
+from utils.common.io.file import File
 
 from utils.config import Config
-from utils.tool_v2 import UniversalTool
 
 class FFmpeg:
     class Command:
@@ -460,7 +460,7 @@ class FFmpeg:
                     case StreamType.Mp4:
                         mp4()
 
-                UniversalTool.remove_files(temp_files)
+                File.remove_files(temp_files)
 
             Thread(target = worker).start()
         
@@ -492,7 +492,7 @@ class FFmpeg:
                         FFmpeg.Command.run(command, callback)
 
                     case OverrideOption.Override:
-                        UniversalTool.remove_files([dst])
+                        File.remove_file(dst)
 
         @staticmethod
         def get_empty_callback():

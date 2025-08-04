@@ -4,6 +4,7 @@ import wx
 from utils.config import Config
 
 from utils.common.request import RequestUtils
+from utils.common.io.file import File
 
 class Face:
     @classmethod
@@ -48,5 +49,5 @@ class Face:
     
     @staticmethod
     def remove():
-        os.remove(Config.User.face_path)
+        File.remove_file(Config.user_config.file_path)
     

@@ -5,7 +5,7 @@ from utils.config import Config
 from utils.common.map import number_type_map, video_quality_map, video_codec_preference_map, video_codec_map, audio_quality_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import StreamType, VideoQualityID, AudioQualityID
 from utils.common.thread import Thread
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 
 from utils.parse.preview import VideoPreview
 from utils.parse.audio import AudioInfo

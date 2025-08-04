@@ -12,8 +12,8 @@ from utils.common.enums import StatusCode
 from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, RangeDownloadInfo
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread
-from utils.common.formatter import FormatUtils
-from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.formatter.formatter import FormatUtils
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 
 class Utils:
     def __init__(self, parent, task_info: DownloadTaskInfo):

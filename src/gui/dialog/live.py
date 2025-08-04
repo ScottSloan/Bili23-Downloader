@@ -9,7 +9,7 @@ from utils.parse.live import LiveInfo
 
 from utils.common.thread import Thread
 from utils.common.io.directory import Directory
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 
 from gui.component.window.dialog import Dialog
 

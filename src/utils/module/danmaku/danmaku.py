@@ -3,7 +3,7 @@ from typing import Dict, Union
 from utils.config import Config
 
 from utils.common.data_type import CommentData, ASSStyle
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.color import Color
 
 class Danmaku:
