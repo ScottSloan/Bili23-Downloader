@@ -10,7 +10,7 @@ from gui.component.staticbox.extra import ExtraStaticBox
 
 class BasicPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent)
+        Page.__init__(self, parent, "基本")
 
         self.init_UI()
 
@@ -71,3 +71,6 @@ class BasicPage(Page):
         Config.Basic.ass_style = Config.Temp.ass_style.copy()
 
         self.parent.utils.init_timer()
+
+    def onValidate(self):
+        self.save_data()

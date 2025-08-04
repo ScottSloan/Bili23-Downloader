@@ -6,6 +6,9 @@ from utils.common.enums import Platform
 from gui.window.settings.basic import BasicPage
 from gui.window.settings.download import DownloadPage
 from gui.window.settings.advanced import AdvancedPage
+from gui.window.settings.ffmpeg import FFmpegPage
+from gui.window.settings.proxy import ProxyPage
+from gui.window.settings.misc import MiscPage
 
 from gui.component.window.dialog import Dialog
 
@@ -23,6 +26,9 @@ class SettingWindow(Dialog):
         self.note.AddPage(BasicPage(self.note), "基本")
         self.note.AddPage(DownloadPage(self.note), "下载")
         self.note.AddPage(AdvancedPage(self.note), "高级")
+        self.note.AddPage(FFmpegPage(self.note), "FFmpeg")
+        self.note.AddPage(ProxyPage(self.note), "代理")
+        self.note.AddPage(MiscPage(self.note), "其他")
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
@@ -39,7 +45,11 @@ class SettingWindow(Dialog):
         self.SetSizerAndFit(vbox)
 
     def onOKEVT(self):
-        return super().onOKEVT()
+        for i in range(0, self.note.GetPageCount()):
+            if self.note.GetPage(i).onValidate():
+                return True
+            
+        Config.save_app_config()
     
     def get_book_size(self):
         match Platform(Config.Sys.platform):

@@ -12,7 +12,7 @@ from gui.dialog.setting.custom_user_agent import CustomUADialog
 
 class AdvancedPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent)
+        Page.__init__(self, parent, "高级")
 
         self.init_UI()
 
@@ -86,7 +86,7 @@ class AdvancedPage(Page):
         webpage_hbox.Add(webpage_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         ws_port_lab = wx.StaticText(webpage_box, -1, "Websocket 端口")
-        self.ws_port_box = IntCtrl(webpage_box)
+        self.ws_port_box = IntCtrl(webpage_box, size = self.get_scaled_size((70, 24)))
 
         ws_port_hbox = wx.BoxSizer(wx.HORIZONTAL)
         ws_port_hbox.Add(ws_port_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -148,6 +148,12 @@ class AdvancedPage(Page):
         Config.Advanced.webpage_option = self.webpage_option_choice.GetSelection()
         Config.Advanced.websocket_port = int(self.ws_port_box.GetValue())
 
+    def onValidate(self):
+        if not self.ws_port_box.GetValue().isnumeric():
+            return self.warn("Websocket 端口无效")
+        
+        self.save_data()
+    
     def onEnableSwitchCDNEVT(self, event: wx.CommandEvent):
         self.custom_cdn_btn.Enable(self.enable_switch_cdn_chk.GetValue())
 

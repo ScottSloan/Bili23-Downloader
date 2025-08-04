@@ -45,7 +45,6 @@ from gui.dialog.login.login_v2 import LoginDialog
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
-from gui.window.settings_v1 import SettingWindow
 from gui.window.settings.settings_v2 import SettingWindow
 from gui.window.download.download_v4 import DownloadManagerWindow
 from gui.window.live_recording import LiveRecordingWindow

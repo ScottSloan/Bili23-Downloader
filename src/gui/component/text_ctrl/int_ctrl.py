@@ -4,19 +4,15 @@ class NumberValidator(wx.Validator):
     def __init__(self):
         wx.Validator.__init__(self)
 
+        self.valid = "0123456789"
+
         self.Bind(wx.EVT_CHAR, self.onCharEVT)
     
     def Clone(self):
         return NumberValidator()
     
     def Validate(self, parent):
-        text_ctrl: wx.TextCtrl = parent.GetWindow()
-
-        if text_ctrl.GetValue().isnumeric():
-            return True
-        else:
-            wx.Bell()
-            return False
+        return True
     
     def onCharEVT(self, event: wx.KeyEvent):
         keycode = event.GetKeyCode()

@@ -13,7 +13,7 @@ from gui.component.text_ctrl.int_ctrl import IntCtrl
 
 class DownloadPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent)
+        Page.__init__(self, parent, "下载")
 
         self.init_UI()
 
@@ -185,6 +185,15 @@ class DownloadPage(Page):
 
         self.parent.download_window.adjust_download_item_count(self.max_download_slider.GetValue())
 
+    def onValidate(self):
+        if not self.path_box.GetValue():
+            return self.warn("下载目录不能为空")
+        
+        if not self.speed_limit_box.GetValue().isnumeric() and self.speed_limit_chk.GetValue():
+            return self.warn("速度值无效，需要为一个正整数")
+
+        self.save_data()
+    
     def onBrowsePathEVT(self, event: wx.CommandEvent):
         dlg = wx.DirDialog(self, "选择下载目录", defaultPath = self.path_box.GetValue())
 
