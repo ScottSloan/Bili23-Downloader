@@ -369,6 +369,11 @@ class DownloadManagerWindow(Frame):
         elif callback:
             callback()
 
+    def adjust_download_item_count(self, selection: int):
+        self.right_panel.downloading_page.max_download_choice.SetSelection(selection)
+
+        self.right_panel.downloading_page.start_download()
+
     def set_window_params(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:

@@ -13,6 +13,7 @@ from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
 from gui.component.staticbox.extra import ExtraStaticBox
+from gui.component.text_ctrl.int_ctrl import IntCtrl
 
 from gui.dialog.setting.ffmpeg import DetectDialog
 from gui.dialog.setting.custom_cdn_host import CustomCDNDialog
@@ -318,11 +319,6 @@ class DownloadTab(Tab):
         self.onCheckAutoAddNumberEVT(0)
 
     def save(self):
-        def update_download_window():
-            self.parent.download_window.downloading_page.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
-
-            self.parent.download_window.downloading_page.onMaxDownloadChangeEVT(None)
-
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
@@ -338,8 +334,7 @@ class DownloadTab(Tab):
 
         Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
 
-        # 更新下载窗口中并行下载数信息
-        update_download_window()
+        self.parent.download_window.adjust_download_item_count(self.max_download_slider.GetValue())
         
     def onConfirm(self):
         if not self.isValidSpeedLimit(self.speed_limit_box.GetValue()):
@@ -465,7 +460,7 @@ class AdvancedTab(Tab):
         webpage_hbox.Add(webpage_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         ws_port_lab = wx.StaticText(webpage_box, -1, "Websocket 端口")
-        self.ws_port_box = wx.TextCtrl(webpage_box, -1)
+        self.ws_port_box = IntCtrl(webpage_box)
 
         ws_port_hbox = wx.BoxSizer(wx.HORIZONTAL)
         ws_port_hbox.Add(ws_port_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))

@@ -315,19 +315,6 @@ class Config:
         webpage_option: int = 0
         websocket_port: int = 8765
 
-    class Utils:
-        @staticmethod
-        def init_path():
-            match Platform(Config.Sys.platform):
-                case Platform.Windows:
-                    Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
-
-                case Platform.Linux | Platform.macOS:
-                    Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
-
-            Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
-            Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
-
     class ConfigBase:
         def __init__(self):
             self.config: Dict[str, dict] = {}
@@ -428,10 +415,24 @@ class Config:
             
     @classmethod
     def load_config(cls):
+        cls.init_path()
+        
         cls.app_config = Config.APPConfig()
         cls.user_config = Config.UserConfig()
 
         Directory.create_directory(Config.User.download_file_directory)
+
+    @staticmethod
+    def init_path():
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
+
+            case Platform.Linux | Platform.macOS:
+                Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
+
+        Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
+        Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
 
     @classmethod
     def save_app_config(cls):
@@ -441,5 +442,4 @@ class Config:
     def save_user_config(cls):
         cls.user_config.save()
 
-Config.Utils.init_path()
 Config.load_config()
