@@ -8,7 +8,7 @@ import hashlib
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from utils.config import Config, user_config_group
+from utils.config import Config
 
 from utils.common.request import RequestUtils
 
@@ -44,7 +44,7 @@ class CookieUtils:
         if cls.check_timestamp_expires(Config.Auth.bili_ticket_expires):
             cls.get_bili_ticket()
 
-            Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+            Config.save_user_config()
 
     @classmethod
     def check_login_expires(cls):
@@ -68,7 +68,7 @@ class CookieUtils:
 
         Config.Auth.buvid_fp = "20dcd229181e846ea1c7b4fb797068b1"
 
-        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+        Config.save_user_config()
 
     @staticmethod
     def reset_user_params():
@@ -83,7 +83,7 @@ class CookieUtils:
 
         Config.Temp.need_login = True
 
-        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+        Config.save_user_config()
 
     @staticmethod
     def params_invalid(params: list):

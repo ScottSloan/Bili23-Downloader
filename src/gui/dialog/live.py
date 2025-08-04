@@ -8,7 +8,7 @@ from utils.config import Config
 from utils.parse.live import LiveInfo
 
 from utils.common.thread import Thread
-from utils.common.directory import DirectoryUtils
+from utils.common.io.directory import Directory
 from utils.common.formatter import FormatUtils
 
 from gui.component.window.dialog import Dialog
@@ -142,7 +142,7 @@ class LiveRecordingDialog(Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        DirectoryUtils.open_file_location(path)
+        Directory.open_file_location(path)
 
     def onPlayStreamEVT(self, event):
         pass

@@ -2,7 +2,7 @@ import wx
 import asyncio
 import webbrowser
 
-from utils.config import Config, app_config_group
+from utils.config import Config
 from utils.auth.login_v2 import Login
 
 from utils.common.regex import Regex
@@ -390,7 +390,7 @@ class Utils:
                 Config.Basic.exit_option = ExitOption.Exit.value
 
         if save:
-            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+            Config.save_app_config()
 
     def save_window_params_settings(self):
         if Config.Basic.remember_window_status:
@@ -398,7 +398,7 @@ class Utils:
             Config.Basic.window_size = list(self.main_window.GetSize())
             Config.Basic.window_maximized = self.main_window.IsMaximized()
 
-            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+            Config.save_app_config()
 
     def check_ffmpeg(self):
         class FFmpegCallback(Callback):

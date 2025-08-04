@@ -7,7 +7,7 @@ from utils.config import Config
 
 from utils.common.enums import Platform, NumberType, DownloadStatus
 from utils.common.icon_v4 import Icon, IconID
-from utils.common.directory import DirectoryUtils
+from utils.common.io.directory import Directory
 from utils.common.data_type import DownloadTaskInfo
 from utils.common.thread import Thread
 
@@ -127,7 +127,7 @@ class LeftPanel(Panel):
         self.downloading_page_btn.setUnactiveState()
 
     def onOpenDirEVT(self, event):
-        DirectoryUtils.open_directory(Config.Download.path)
+        Directory.open_directory(Config.Download.path)
 
     def UpdateButtonTitle(self):
         def worker():

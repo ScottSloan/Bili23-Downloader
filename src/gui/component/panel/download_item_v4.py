@@ -10,7 +10,7 @@ from utils.common.map import extra_map, video_quality_map, video_codec_map, audi
 from utils.common.formatter import FormatUtils
 from utils.common.thread import Thread
 from utils.common.file_name_v2 import FileNameFormatter
-from utils.common.directory import DirectoryUtils
+from utils.common.io.directory import Directory
 from utils.common.exception import GlobalExceptionInfo
 
 from utils.module.pic.cover import Cover
@@ -302,7 +302,7 @@ class Utils:
     def open_file_location(self):
         path = os.path.join(self.task_info.download_path, self.get_full_file_name())
 
-        DirectoryUtils.open_file_location(path)
+        Directory.open_file_location(path)
 
     def set_download_status(self, status: DownloadStatus):
         def worker():

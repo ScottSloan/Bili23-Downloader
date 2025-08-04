@@ -19,12 +19,13 @@ from gui.dialog.setting.custom_cdn_host import CustomCDNDialog
 from gui.dialog.setting.custom_file_name_v2 import CustomFileNameDialog
 from gui.dialog.setting.custom_user_agent import CustomUADialog
 
-from utils.config import Config, app_config_group
+from utils.config import Config
 
 from utils.common.thread import Thread
 from utils.common.request import RequestUtils
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, override_option_map, number_type_map, exit_option_map, webpage_option_map, get_mapping_index_by_value
 from utils.common.enums import EpisodeDisplayType, ProxyMode, Platform
+from utils.common.io.file import File
 
 from utils.module.notification import NotificationManager
 
@@ -73,8 +74,8 @@ class SettingWindow(Dialog):
             if not self.note.GetPage(i).onConfirm():
                 return
             
-        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
-
+        Config.save_app_config()
+            
 class Tab(Panel):
     def __init__(self, parent):
         from gui.main_v3 import MainWindow
@@ -938,7 +939,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            Config.remove_config_file(Config.APP.app_config_path)
+            File.remove_file(Config.APP.app_config_path)
 
             shutil.rmtree(Config.User.directory)
 
@@ -948,7 +949,7 @@ class MiscTab(Tab):
         dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            Config.remove_config_file(Config.APP.app_config_path)
+            File.remove_file(Config.APP.app_config_path)
 
             self.restart()
 

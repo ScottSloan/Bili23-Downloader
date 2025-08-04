@@ -198,7 +198,7 @@ class Login:
         if "login_expires" in info:
             Config.User.login_expires = info.get("login_expires")
 
-        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+        Config.save_user_config()
     
     @classmethod
     def logout(cls):
@@ -232,7 +232,7 @@ class Login:
         Config.User.DedeUserID__ckMd5 = ""
         Config.User.bili_jct = ""
 
-        Config.save_config_group(Config, user_config_group, Config.User.user_config_path)
+        Config.save_user_config()
 
         Face.remove()
 

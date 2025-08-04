@@ -1,14 +1,25 @@
 import os
 import ctypes
 import subprocess
-
-from utils.config import Config
+from typing import List
 
 from utils.common.enums import Platform
 
-class DirectoryUtils:
+class Directory:
+    @classmethod
+    def create_directories(cls, directory_list: List[str]):
+        for directory in directory_list:
+            cls.create_directory(directory)
+
+    @staticmethod
+    def create_directory(directory: str):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
     @staticmethod
     def open_directory(directory: str):
+        from utils.config import Config
+
         match Platform(Config.Sys.platform):
             case Platform.Windows:
                 os.startfile(directory)
@@ -21,6 +32,8 @@ class DirectoryUtils:
 
     @classmethod
     def open_file_location(cls, path: str):
+        from utils.config import Config
+        
         match Platform(Config.Sys.platform):
             case Platform.Windows:
                 cls._msw_SHOpenFolderAndSelectItems(path)

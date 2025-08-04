@@ -6,7 +6,7 @@ from utils.config import Config
 from utils.common.icon_v4 import Icon, IconID, IconSize
 from utils.common.data_type import Callback, Process, PlayerCallback, RealTimeCallback
 from utils.common.exception import GlobalExceptionInfo
-from utils.common.directory import DirectoryUtils
+from utils.common.io.directory import Directory
 from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_windows_map, ffmpeg_video_gpu_linux_map, ffmpeg_video_gpu_darwin_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
 from utils.common.regex import Regex
 from utils.common.enums import Platform
@@ -196,7 +196,7 @@ class ContainerPage(Panel):
                         dlg.SetYesNoLabels("打开所在位置", "确定")
 
                         if dlg.ShowModal() == wx.ID_YES:
-                            DirectoryUtils.open_file_location(self.output_path)
+                            Directory.open_file_location(self.output_path)
 
                         dlg.Destroy()
 
@@ -554,7 +554,7 @@ class ContainerPage(Panel):
                         dlg.SetYesNoLabels("打开所在位置", "确定")
 
                         if dlg.ShowModal() == wx.ID_YES:
-                            DirectoryUtils.open_file_location(self.output_path)
+                            Directory.open_file_location(self.output_path)
 
                         dlg.Destroy()
 

@@ -1,7 +1,7 @@
 import wx
 from typing import List, Tuple, Callable
 
-from utils.config import Config, app_config_group
+from utils.config import Config
 
 from utils.common.enums import DownloadStatus
 from utils.common.data_type import DownloadTaskInfo
@@ -170,8 +170,8 @@ class DownloadingPage(BasePage):
 
                         if count > Config.Download.max_download_count:
                             panel.utils.pause_download(set_waiting_status = True)
-          
-        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+
+        Config.save_app_config()
 
     def add_panel_item(self, temp_info_list: List[DownloadTaskInfo]):
         self.temp_panel_list = [(DownloadTaskItemPanel(self.scroller, entry, self.download_window), 0, wx.EXPAND) for entry in temp_info_list]

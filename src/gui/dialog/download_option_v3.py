@@ -1,6 +1,6 @@
 import wx
 
-from utils.config import Config, app_config_group
+from utils.config import Config
 
 from utils.common.map import number_type_map, video_quality_map, video_codec_preference_map, video_codec_map, audio_quality_map, get_mapping_index_by_value, get_mapping_key_by_value
 from utils.common.enums import StreamType, VideoQualityID, AudioQualityID
@@ -570,6 +570,6 @@ class DownloadOptionDialog(Dialog):
         self.extra_box.save()
         self.other_box.save()
 
-        Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+        Config.save_app_config()
 
         return self.check_ass_only()

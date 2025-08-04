@@ -1,9 +1,11 @@
 import os
 import json
 import platform
-from typing import Dict
+from typing import Dict, List
 
 from utils.common.enums import Platform
+from utils.common.io.file import File
+from utils.common.io.directory import Directory
 
 app_config_group = {
     "Basic": [
@@ -99,6 +101,9 @@ user_config_group = {
 }
 
 class Config:
+    app_config = None
+    user_config = None
+
     class Sys:
         platform: str = platform.system().lower()
         dark_mode: bool = False
@@ -310,15 +315,9 @@ class Config:
         webpage_option: int = 0
         websocket_port: int = 8765
 
-    @classmethod
-    def load_config(cls):
-        def after_load_config():
-            cls.create_folder([Config.User.download_file_directory])
-
-            cls.create_config(app_config, Config.APP.app_config_path, app_config_group)
-            cls.create_config(user_config, Config.User.user_config_path, user_config_group)
-        
-        def get_path():
+    class Utils:
+        @staticmethod
+        def init_path():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
                     Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
@@ -328,109 +327,119 @@ class Config:
 
             Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
             Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
+
+    class ConfigBase:
+        def __init__(self):
+            self.config: Dict[str, dict] = {}
+
+            self.file_path = ""
+            self.min_version = 0
+
+            self.config_group: Dict[str, List[str]] = {}
+
+        def init_config(self):
+            self.read()
+            self.check()
+
+            self.make()
+
+            self.read_group()
+
+        def read(self):
+            try:
+                with open(self.file_path, "r", encoding = "utf-8") as f:
+                    self.config = json.loads(f.read())
+
+            except Exception:
+                    self.config = {}
+
+        def read_group(self):
+            for section, name_list in self.config_group.items():
+                for name in name_list:
+                    setattr(getattr(Config, section), name, self.config.get(section.lower()).get(name, getattr(getattr(Config, section), name)))
+
+        def save(self):
+            for section, name_list in self.config_group.items():
+                for name in name_list:
+                    self.config[section.lower()][name] = getattr(getattr(Config, section), name)
+
+            with open(self.file_path, "w", encoding = "utf-8") as f:
+                f.write(json.dumps(self.config, ensure_ascii = False, indent = 4))
         
-        get_path()
+        def make(self):
+            if not os.path.exists(self.file_path):
+                self.save()
 
-        app_config: Dict[str, dict] = cls.read_config_json(Config.APP.app_config_path)
-        user_config: Dict[str, dict] = cls.read_config_json(Config.User.user_config_path)
+        def check(self):
+            if self.check_version():
+                self.reset()
 
-        app_config, user_config = cls.check_config(app_config, user_config)
+                File.remove_file(self.file_path)
 
-        cls.read_config_group(Config, app_config, app_config_group)
-        cls.read_config_group(Config, user_config, user_config_group)
+        def check_version(self):
+            min_version = self.config.get("header", {"min_version": 0}).get("min_version", 0)
 
-        after_load_config()
-
-    @classmethod
-    def create_config(cls, config: dict, config_path: str, config_group: dict):
-        if not os.path.exists(config_path):
+            if min_version < self.min_version:
+                return True
             
-            cls.write_config_json(config_path, config)
+    class APPConfig(ConfigBase):
+        def __init__(self):
+            Config.ConfigBase.__init__(self)
 
-            cls.read_config_group(Config, config, config_group)
-            cls.save_config_group(Config, config_group, config_path)
+            self.file_path = Config.APP.app_config_path
+            self.min_version = Config.APP.app_config_file_min_version_code
 
-    @staticmethod
-    def create_folder(path_list: list):
-        for path in path_list:
-            if not os.path.exists(path):
-                os.makedirs(path)
+            self.config_group = app_config_group
 
-    @classmethod
-    def check_config(cls, app_config, user_config):
-        def check_config_version(config: Dict[str, dict], file_path: str, version_code: int):
-            min_version = config.get("header", {"min_version": 0}).get("min_version", 0)
-            
-            if min_version < version_code:
-                cls.remove_config_file(file_path)
+            self.init_config()
 
-                config.clear()
-
-        check_config_version(app_config, Config.APP.app_config_path, Config.APP.app_config_file_min_version_code)
-        check_config_version(user_config, Config.User.user_config_path, Config.APP.user_config_file_min_version_code)
-
-        return cls.get_initial_app_config(app_config), cls.get_initial_user_config(user_config)
-
-    @staticmethod
-    def read_config_group(object, config: Dict[str, dict], config_group: Dict[str, list]):
-        for section, name_list in config_group.items():
-            for name in name_list:
-                setattr(getattr(object, section), name, config.get(section.lower()).get(name, getattr(getattr(object, section), name)))
-
-    @classmethod
-    def save_config_group(cls, object, config_group: Dict[str, list], config_file_path: str):
-        config = cls.read_config_json(config_file_path)
-
-        for section, name_list in config_group.items():
-            for name in name_list:
-                config[section.lower()][name] = getattr(getattr(object, section), name)
-
-        cls.write_config_json(config_file_path, config)
-
-    @staticmethod
-    def remove_config_file(file_path: str):
-        from utils.tool_v2 import UniversalTool
-
-        UniversalTool.remove_files([file_path])
-
-    @staticmethod
-    def read_config_json(file_path: str):
-        try:
-            with open(file_path, "r", encoding = "utf-8") as f:
-                return json.loads(f.read())
-
-        except Exception:
-                return {}
-
-    @staticmethod
-    def write_config_json(file_path: str, contents: dict):
-        with open(file_path, "w", encoding = "utf-8") as f:
-            f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
-
-    @staticmethod
-    def get_initial_app_config(config: dict):
-        return config if config else {
-            "header": {
-                "min_version": Config.APP.app_config_file_min_version_code,
-                "platform": Config.Sys.platform
-            },
-            "basic": {},
-            "download": {},
-            "advanced": {},
-            "merge": {},
-            "proxy": {},
-            "misc": {}
-        }
+        def reset(self):
+            self.config = {
+                "header": {
+                    "min_version": self.min_version
+                },
+                "basic": {},
+                "download": {},
+                "advanced": {},
+                "merge": {},
+                "proxy": {},
+                "misc": {}
+            }
     
-    @staticmethod
-    def get_initial_user_config(config: dict):
-        return config if config else {
-            "header": {
-                "min_version": Config.APP.user_config_file_min_version_code,
-                "platform": Config.Sys.platform
-            },
-            "user": {},
-            "auth": {}
-        }
+    class UserConfig(ConfigBase):
+        def __init__(self):
+            Config.ConfigBase.__init__(self)
 
+            self.file_path = Config.User.user_config_path
+            self.min_version = Config.APP.user_config_file_min_version_code
+
+            self.config_group = user_config_group
+
+            self.init_config()
+
+        def reset(self):
+            self.config = {
+                "header": {
+                    "min_version": self.min_version
+                },
+                "user": {},
+                "auth": {}
+            }
+            
+    @classmethod
+    def load_config(cls):
+        cls.app_config = Config.APPConfig()
+        cls.user_config = Config.UserConfig()
+
+        Directory.create_directory(Config.User.download_file_directory)
+
+    @classmethod
+    def save_app_config(cls):
+        cls.app_config.save()
+
+    @classmethod
+    def save_user_config(cls):
+        cls.user_config.save()
+
+Config.Utils.init_path()
 Config.load_config()
