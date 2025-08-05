@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel

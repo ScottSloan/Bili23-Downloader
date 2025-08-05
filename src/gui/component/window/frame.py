@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import Platform
 from utils.config import Config
 

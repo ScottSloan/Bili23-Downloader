@@ -1,8 +1,8 @@
 import wx
 import time
 
-from utils.common.color import Color
-from utils.common.pic_v2 import Pic, PicID
+from utils.common.style.color import Color
+from utils.common.style.pic_v2 import Pic, PicID
 from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
 from utils.common.exception import GlobalExceptionInfo

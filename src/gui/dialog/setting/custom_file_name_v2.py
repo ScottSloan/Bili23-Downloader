@@ -7,8 +7,8 @@ from utils.config import Config
 
 from utils.common.map import scope_map, field_map, get_mapping_key_by_value
 from utils.common.formatter.file_name_v2 import FileNameFormatter
-from utils.common.data_type import DownloadTaskInfo
-from utils.common.font import SysFont
+from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.style.font import SysFont
 from utils.common.regex import Regex
 
 from gui.component.window.dialog import Dialog

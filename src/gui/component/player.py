@@ -2,9 +2,9 @@ import wx
 import webbrowser
 from enum import Enum
 
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.formatter.formatter import FormatUtils
-from utils.common.data_type import PlayerCallback
+from utils.common.model.data_type import PlayerCallback
 from utils.common.enums import Platform
 
 from utils.config import Config

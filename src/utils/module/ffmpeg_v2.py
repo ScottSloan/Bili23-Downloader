@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 
-from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, RealTimeCallback
+from utils.common.model.data_type import Command, Process, Callback, DownloadTaskInfo, RealTimeCallback
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
 from utils.common.formatter.file_name_v2 import FileNameFormatter

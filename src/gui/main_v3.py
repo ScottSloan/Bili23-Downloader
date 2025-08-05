@@ -7,8 +7,8 @@ from utils.auth.login_v2 import Login
 
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus, LiveStatus
-from utils.common.data_type import ParseCallback, Callback
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.model.data_type import ParseCallback, Callback
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.thread import Thread
 from utils.common.update import Update
 from utils.common.exception import GlobalException, GlobalExceptionInfo

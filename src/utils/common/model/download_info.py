@@ -2,7 +2,7 @@ import random
 
 from utils.config import Config
 
-from utils.common.data_type import TreeListItemInfo, DownloadTaskInfo
+from utils.common.model.data_type import TreeListItemInfo, DownloadTaskInfo
 from utils.common.enums import ParseType
 
 from utils.parse.video import VideoInfo

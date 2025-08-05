@@ -1,6 +1,6 @@
 from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
 from utils.common.request import RequestUtils
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.model.data_type import DownloadTaskInfo
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser

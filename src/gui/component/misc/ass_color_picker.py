@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 from gui.component.panel.panel import Panel
 

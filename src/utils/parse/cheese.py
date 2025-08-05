@@ -2,7 +2,7 @@ from utils.config import Config
 
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
-from utils.common.data_type import ParseCallback
+from utils.common.model.data_type import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.regex import Regex
 

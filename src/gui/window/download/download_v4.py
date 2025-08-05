@@ -6,9 +6,9 @@ from typing import List, Callable
 from utils.config import Config
 
 from utils.common.enums import Platform, NumberType, DownloadStatus
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.io.directory import Directory
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.thread import Thread
 
 from utils.module.notification import NotificationManager

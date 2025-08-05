@@ -8,7 +8,7 @@ import utils.module.danmaku.dm_pb2 as dm_pb2
 
 from utils.config import Config
 
-from utils.common.data_type import DownloadTaskInfo, Callback, ASSStyle
+from utils.common.model.data_type import DownloadTaskInfo, Callback, ASSStyle
 from utils.common.enums import DanmakuType, SubtitleType, SubtitleLanOption, StatusCode
 from utils.common.request import RequestUtils
 from utils.common.formatter.file_name_v2 import FileNameFormatter

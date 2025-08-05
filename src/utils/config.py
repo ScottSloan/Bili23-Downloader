@@ -49,7 +49,6 @@ app_config_group = {
         "retry_when_download_suspend",
         "download_suspend_retry_interval",
         "always_use_https_protocol",
-        "check_md5",
         "user_agent",
         "webpage_option",
         "websocket_port"
@@ -308,7 +307,6 @@ class Config:
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
-        check_md5: bool = True
 
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
 

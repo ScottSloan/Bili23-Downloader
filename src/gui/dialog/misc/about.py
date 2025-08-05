@@ -3,9 +3,9 @@ import webbrowser
 
 from utils.config import Config
 
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.compile_data import date, compile
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 from gui.dialog.misc.license import LicenseWindow
 

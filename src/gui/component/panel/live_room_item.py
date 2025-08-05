@@ -1,8 +1,8 @@
 import wx
 
-from utils.common.data_type import LiveRoomInfo
+from utils.common.model.data_type import LiveRoomInfo
 from utils.common.thread import Thread
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import LiveRecordingStatus, LiveStatus
 
 from utils.module.pic.cover import Cover

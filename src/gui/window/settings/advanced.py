@@ -60,7 +60,6 @@ class AdvancedPage(Page):
         download_suspend_retry_hbox.Add(self.download_suspend_retry_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
         download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.check_md5_chk = wx.CheckBox(advanced_download_box, -1, "下载完成后进行 MD5 校验")
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
         self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((130, 28)))
 
@@ -123,7 +122,6 @@ class AdvancedPage(Page):
         self.download_suspend_retry_chk.SetValue(Config.Advanced.retry_when_download_suspend)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
-        self.check_md5_chk.SetValue(Config.Advanced.check_md5)
         Config.Temp.user_agent = Config.Advanced.user_agent
 
         self.webpage_option_choice.SetSelection(get_mapping_index_by_value(webpage_option_map, Config.Advanced.webpage_option))
@@ -142,7 +140,6 @@ class AdvancedPage(Page):
         Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
-        Config.Advanced.check_md5 = self.check_md5_chk.GetValue()
         Config.Advanced.user_agent = Config.Temp.user_agent
 
         Config.Advanced.webpage_option = self.webpage_option_choice.GetSelection()

@@ -9,7 +9,7 @@ from utils.config import Config
 from utils.common.thread import DaemonThreadPoolExecutor
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
-from utils.common.data_type import DownloadTaskInfo, DownloaderCallback, RangeDownloadInfo
+from utils.common.model.data_type import DownloadTaskInfo, DownloaderCallback, RangeDownloadInfo
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
@@ -320,7 +320,7 @@ class Downloader:
 
                 self.utils.update_download_progress(total_progress, FormatUtils.format_speed(speed))
 
-                self.utils.check_speed_suspend()
+                self.utils.check_speed_suspend(speed)
 
         if not self.stop_event.is_set():
             self.download_complete()

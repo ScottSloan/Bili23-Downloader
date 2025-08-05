@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 class InfoLabel(wx.StaticText):
     def __init__(self, parent, label: str = wx.EmptyString, size = wx.DefaultSize, color: wx.Colour = wx.Colour(108, 108, 108)):

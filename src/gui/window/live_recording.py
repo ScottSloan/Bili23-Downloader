@@ -3,7 +3,7 @@ import wx
 from utils.config import Config
 
 from utils.common.enums import Platform
-from utils.common.data_type import LiveRoomInfo
+from utils.common.model.data_type import LiveRoomInfo
 
 from gui.component.panel.panel import Panel
 from gui.component.panel.live_room_item import LiveRoomItemPanel

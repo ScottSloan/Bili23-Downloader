@@ -3,9 +3,9 @@ import wx.dataview
 from utils.config import Config
 
 from utils.common.enums import Platform, ParseType
-from utils.common.data_type import TreeListItemInfo
+from utils.common.model.data_type import TreeListItemInfo
 from utils.common.formatter.formatter import FormatUtils
-from utils.common.download_info import DownloadInfo
+from utils.common.model.download_info import DownloadInfo
 
 from utils.parse.episode_v2 import EpisodeInfo
 

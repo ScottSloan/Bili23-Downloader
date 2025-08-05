@@ -1,8 +1,8 @@
 import wx
 
 from utils.config import Config
-from utils.tool_v2 import UniversalTool
 from utils.common.exception import GlobalExceptionInfo
+from utils.common.datetime_util import DateTime
 
 from gui.component.window.dialog import Dialog
 
@@ -21,7 +21,7 @@ class ErrorInfoDialog(Dialog):
     def init_UI(self):
         err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
 
-        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(UniversalTool.get_time_str_from_timestamp(self.exception_info.get("timestamp"))))
+        time_lab = wx.StaticText(self, -1, "记录时间：{}".format(DateTime.time_str_from_timestamp(self.exception_info.get("timestamp"))))
         error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.get("exception_name")))
         error_id_lab = wx.StaticText(self, -1, "错误码：{}".format(self.exception_info.get("code")))
         message_lab = wx.StaticText(self, -1, "描述：{}".format(self.exception_info.get("message")), style = wx.ST_ELLIPSIZE_END)

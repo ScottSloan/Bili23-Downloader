@@ -3,7 +3,7 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
-from utils.common.data_type import ParseCallback
+from utils.common.model.data_type import ParseCallback
 from utils.common.enums import StatusCode
 from utils.common.map import rid_map
 from utils.common.regex import Regex

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from utils.config import Config
 
-from utils.common.data_type import DownloadTaskInfo
+from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
 from utils.common.enums import ParseType, ScopeID
 
