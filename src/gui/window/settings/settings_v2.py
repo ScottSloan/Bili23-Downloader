@@ -2,6 +2,7 @@ import wx
 
 from utils.config import Config
 from utils.common.enums import Platform
+from utils.common.exception import GlobalExceptionInfo
 
 from gui.window.settings.basic import BasicPage
 from gui.window.settings.download import DownloadPage
@@ -9,6 +10,7 @@ from gui.window.settings.advanced import AdvancedPage
 from gui.window.settings.ffmpeg import FFmpegPage
 from gui.window.settings.proxy import ProxyPage
 from gui.window.settings.misc import MiscPage
+from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.window.dialog import Dialog
 
@@ -45,11 +47,22 @@ class SettingWindow(Dialog):
         self.SetSizerAndFit(vbox)
 
     def onOKEVT(self):
-        for i in range(0, self.note.GetPageCount()):
-            if self.note.GetPage(i).onValidate():
-                return True
-            
-        Config.save_app_config()
+        try:
+            for i in range(0, self.note.GetPageCount()):
+                if self.note.GetPage(i).onValidate():
+                    return True
+                
+            Config.save_app_config()
+
+        except:
+            info = GlobalExceptionInfo.info.copy()
+
+            dlg = wx.MessageDialog(self, f"保存失败\n\n错误描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
+            dlg.SetYesNoLabels("详细信息", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                err_dlg = ErrorInfoDialog(self, info)
+                err_dlg.ShowModal()
     
     def get_book_size(self):
         match Platform(Config.Sys.platform):

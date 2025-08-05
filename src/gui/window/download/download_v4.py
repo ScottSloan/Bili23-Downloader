@@ -245,6 +245,8 @@ class Utils:
 
                 if task_info.is_valid():
                     temp_task_info_list.append(task_info)
+                else:
+                    task_info.remove_file()
 
         return cls.task_info_filter(temp_task_info_list)
 

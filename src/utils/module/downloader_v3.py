@@ -136,6 +136,7 @@ class Utils:
         self.parent.stop_event.clear()
 
         self.parent.retry_times = 0
+        self.parent.suspend_interval = 0
 
     def update_download_progress(self, progress: int = None, speed: str = None):
         if self.parent.stop_event.is_set():
@@ -174,6 +175,18 @@ class Utils:
             if elapsed_time < expected_time:
                 time.sleep(expected_time - elapsed_time)
 
+    def check_speed_suspend(self, speed: int):
+        if Config.Advanced.retry_when_download_suspend:
+            if speed == 0:
+                self.parent.suspend_interval += 1
+            else:
+                self.parent.suspend_interval = 0
+
+        if self.parent.suspend_interval > Config.Advanced.download_suspend_retry_interval and not self.parent.stop_event.is_set():
+            self.parent.stop_download()
+
+            Thread(target = self.restart_download).start()
+
     def update_start_time(self):
         if Config.Download.enable_speed_limit:
             if self.parent.current_downloaded_size:
@@ -185,8 +198,6 @@ class Utils:
         return Config.Download.speed_mbps * 1024 * 1024
 
     def restart_download(self):
-        self.parent.stop_download()
-
         time.sleep(1)
 
         self.parent.start_download()
@@ -220,6 +231,7 @@ class Downloader:
         self.cdn_host_list = self.utils.get_cdn_host_list()
 
         self.retry_times = 0
+        self.suspend_interval = 0
 
         self.current_file_size = 0
         self.current_downloaded_size = 0
@@ -307,6 +319,8 @@ class Downloader:
                 total_progress = (self.total_downloaded_size / self.task_info.total_file_size) * 100
 
                 self.utils.update_download_progress(total_progress, FormatUtils.format_speed(speed))
+
+                self.utils.check_speed_suspend()
 
         if not self.stop_event.is_set():
             self.download_complete()

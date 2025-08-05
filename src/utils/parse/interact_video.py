@@ -58,7 +58,7 @@ class InteractVideoInfo:
             for entry in question["choices"]:
                 option = Option(entry["id"], entry["option"])
                 option.target_node_cid = entry["cid"]
-                option.show = question["pause_video"]
+                option.show = question["type"]
 
                 node.options.append(option)
 

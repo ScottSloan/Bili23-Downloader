@@ -197,25 +197,25 @@ class VideoParser(Parser):
         VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
 
     def parse_episodes(self):
-        def interact_video_parser():
-            def get_page():
-                return {
-                    "part": node.title,
-                    "cid": node.cid
-                }
-
-            VideoInfo.info_json["pages"].clear()
-
-            self.interact_video_parser.parse_interactive_video_episodes()
-
-            for node in InteractVideoInfo.node_list:
-                VideoInfo.info_json["pages"].append(get_page())
-
         if VideoInfo.is_interactive:
             Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
-            interact_video_parser()
+            self.parse_interact_video()
             
         Episode.Video.parse_episodes(VideoInfo.info_json, VideoInfo.cid)
+
+    def parse_interact_video(self):
+        def get_page():
+            return {
+                "part": node.title,
+                "cid": node.cid
+            }
+        
+        VideoInfo.info_json["pages"].clear()
+
+        self.interact_video_parser.parse_interactive_video_episodes()
+
+        for node in InteractVideoInfo.node_list:
+            VideoInfo.info_json["pages"].append(get_page())
 
     def clear_video_info(self):
         # 清除视频信息

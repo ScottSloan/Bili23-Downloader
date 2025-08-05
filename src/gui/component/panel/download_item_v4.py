@@ -145,7 +145,7 @@ class Utils:
         self.ui.update()
 
     def show_cover(self):
-        self.ui.show_cover(self.task_info.cover_url)
+        self.ui.show_cover(f"{self.task_info.cover_url}@.jpeg")
 
     def destory_panel(self, remove_file: bool = False, user_action: bool = False):
         if remove_file:

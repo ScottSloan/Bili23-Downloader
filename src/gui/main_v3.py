@@ -121,7 +121,7 @@ class Parser:
             case _:
                 self.parse_type_str = self.get_parse_type_str()
 
-                self.main_window.show_episode_list()
+                self.main_window.show_episode_list(from_menu = False)
 
                 self.set_video_quality_id()
 
@@ -881,8 +881,9 @@ class MainWindow(Frame):
         dlg = DownloadOptionDialog(self)
         return dlg.ShowModal()
     
-    def show_episode_list(self):
-        self.parser.parse_episode()
+    def show_episode_list(self, from_menu: bool = True):
+        if from_menu:
+            self.parser.parse_episode()
 
         self.episode_list.show_episode_list()
 

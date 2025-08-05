@@ -1,4 +1,5 @@
 import os
+import time
 from typing import List
 
 class File:
@@ -9,5 +10,12 @@ class File:
 
     @staticmethod
     def remove_file(file_path: str):
-        while os.path.exists(file_path):
-            os.remove(file_path)
+        for i in range(20):
+            if not os.path.exists(file_path):
+                break
+
+            try:
+                os.remove(file_path)
+            except PermissionError:
+                time.sleep(0.1)
+                continue

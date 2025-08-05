@@ -30,7 +30,7 @@ class NumberValidator(wx.Validator):
     
     def TransferFromWindow(self):
         return True
-        
+ 
 class IntCtrl(wx.TextCtrl):
     def __init__(self, parent: wx.Window, size = wx.DefaultSize):
         wx.TextCtrl.__init__(self, parent, -1, size = size, validator = NumberValidator())
