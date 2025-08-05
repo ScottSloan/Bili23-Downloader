@@ -37,7 +37,6 @@ app_config_group = {
         "video_codec_id",
         "enable_notification",
         "delete_history",
-        "auto_add_number",
         "enable_speed_limit",
         "speed_mbps"
     ],
@@ -235,7 +234,6 @@ class Config:
 
         enable_notification: bool = False
         delete_history: bool = False
-        auto_add_number: bool = True
         number_type: int = 1
 
         enable_speed_limit: bool = False

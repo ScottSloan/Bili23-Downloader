@@ -1,5 +1,6 @@
 from typing import Any
-from datetime import datetime
+
+from utils.common.datetime_util import DateTime
 
 bangumi_type_map = {
     1: "番剧",
@@ -177,19 +178,19 @@ field_map = {
     "datetime": {
         "name": "{time:%H-%M-%S}",
         "description": "当前时间（%H-%M-%S）",
-        "example": "{time:%H-%M-%S}".format(time = datetime.now()),
+        "example": "{time:%H-%M-%S}".format(time = DateTime.now()),
         "scope": [0, 1, 2, 3, 4]
     },
     "timestamp": {
         "name": "{timestamp}",
         "description": "当前时间戳",
-        "example": str(int(datetime.now().timestamp())),
+        "example": str(DateTime.get_timestamp()),
         "scope": [0, 1, 2, 3, 4]
     },
     "pubdatetime": {
         "name": "{pubtime:%Y-%m-%d}",
         "description": "视频发布时间（%Y-%m-%d）",
-        "example": "{pubtime:%Y-%m-%d}".format(pubtime = datetime.fromtimestamp(1667061000)),
+        "example": "{pubtime:%Y-%m-%d}".format(pubtime = DateTime.from_timestamp(1667061000)),
         "scope": [0, 1, 2, 3, 4]
     },
     "pubtimestamp": {

@@ -1,12 +1,12 @@
 import os
 import re
-from datetime import datetime
 
 from utils.config import Config
 
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
 from utils.common.enums import ParseType, ScopeID
+from utils.common.datetime_util import DateTime
 
 class FileNameFormatter:
     @classmethod
@@ -94,9 +94,9 @@ class FileNameFormatter:
             return data
 
         return check({
-            "time": datetime.now(),
-            "timestamp": str(int(datetime.now().timestamp())),
-            "pubtime": datetime.fromtimestamp(task_info.pubtime),
+            "time": DateTime.now(),
+            "timestamp": str(DateTime.get_timestamp()),
+            "pubtime": DateTime.from_timestamp(task_info.pubtime),
             "pubtimestamp": task_info.pubtime,
             "number": task_info.number,
             "zero_padding_number": task_info.zero_padding_number,

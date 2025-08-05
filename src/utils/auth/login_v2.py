@@ -2,15 +2,14 @@ import wx
 import json
 import qrcode
 from io import BytesIO
-from datetime import datetime, timedelta
 
-from utils.config import Config, user_config_group
-
-from utils.module.pic.face import Face
-
+from utils.config import Config
 from utils.common.request import RequestUtils
 from utils.common.enums import StatusCode, Platform
 from utils.common.exception import GlobalException
+from utils.common.datetime_util import DateTime
+
+from utils.module.pic.face import Face
 
 class LoginInfo:
     class Captcha:
@@ -176,7 +175,7 @@ class Login:
             }
 
             if login:
-                info["login_expires"] = int((datetime.now() + timedelta(days = 365)).timestamp())
+                info["login_expires"] = DateTime.get_timedelta(DateTime.now(), 365)
 
             return info
         else:

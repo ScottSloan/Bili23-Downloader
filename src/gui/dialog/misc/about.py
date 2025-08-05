@@ -4,7 +4,7 @@ import webbrowser
 from utils.config import Config
 
 from utils.common.style.icon_v4 import Icon, IconID
-from utils.common.compile_data import date, compile
+from utils.common.compile_data import date, compile, beta_flag, beta_ver
 from utils.common.style.color import Color
 
 from gui.dialog.misc.license import LicenseWindow
@@ -52,12 +52,15 @@ class AboutWindow(Dialog):
         app_name_lab = wx.StaticText(self, -1, f"{Config.APP.name}")
         app_name_lab.SetFont(font.MakeBold())
 
-        version_lab = wx.StaticText(self, -1, f"{Config.APP.version}")
+        version_lab = wx.StaticText(self, -1, f"{Config.APP.version}{f" (Beta {beta_ver})" if beta_flag else ""}")
         version_lab.SetFont(font)
 
         desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片等资源")
 
         date_lab = wx.StaticText(self, -1, f"构建日期：{date}" if compile else f"发布日期：{date}")
+
+        if beta_flag:
+            dev_lab = wx.StaticText(self, -1, "开发中，不代表最终品质")
 
         copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
 
@@ -90,7 +93,11 @@ class AboutWindow(Dialog):
         about_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
         about_vbox.Add(desc_lab, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
         about_vbox.Add(date_lab, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
-        about_vbox.AddSpacer(self.FromDIP(13))
+
+        if beta_flag:
+            about_vbox.Add(dev_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
+
+        about_vbox.AddSpacer(self.FromDIP(8))
         about_vbox.Add(copyright_hbox, 0, wx.CENTER)
         about_vbox.Add(self.home_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
         about_vbox.Add(self.github_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))

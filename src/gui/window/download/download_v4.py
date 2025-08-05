@@ -1,6 +1,5 @@
 import wx
 import os
-from datetime import datetime
 from typing import List, Callable
 
 from utils.config import Config
@@ -10,6 +9,7 @@ from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.io.directory import Directory
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.thread import Thread
+from utils.common.datetime_util import DateTime
 
 from utils.module.notification import NotificationManager
 
@@ -201,15 +201,14 @@ class Utils:
     @classmethod
     def create_download_file(cls, download_list: List[DownloadTaskInfo]):
         def update_index():
-            if Config.Download.auto_add_number:
-                match NumberType(Config.Download.number_type):
-                    case NumberType.From_1 | NumberType.Coherent:
-                        entry.number = cls.index
-                        entry.zero_padding_number = str(cls.index).zfill(len(str(len(download_list))))
+            match NumberType(Config.Download.number_type):
+                case NumberType.From_1 | NumberType.Coherent:
+                    entry.number = cls.index
+                    entry.zero_padding_number = str(cls.index).zfill(len(str(len(download_list))))
 
-                    case NumberType.Episode_List:
-                        entry.number = entry.list_number
-                        entry.zero_padding_number = entry.list_number
+                case NumberType.Episode_List:
+                    entry.number = entry.list_number
+                    entry.zero_padding_number = entry.list_number
 
         if NumberType(Config.Download.number_type) == NumberType.From_1:
             cls.index = 0
@@ -230,7 +229,7 @@ class Utils:
 
     @staticmethod
     def get_timestamp(index):
-        return round(datetime.now().timestamp()) + index
+        return DateTime.get_timestamp() + index
 
     @classmethod
     def read_download_files(cls):

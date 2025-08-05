@@ -68,7 +68,6 @@ class AdvancedPage(Page):
         advanced_download_sbox.Add(download_error_retry_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
-        advanced_download_sbox.Add(self.check_md5_chk, 0, wx.ALL, self.FromDIP(6))
         advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(self.custom_ua_btn, 0, wx.ALL, self.FromDIP(6))
 

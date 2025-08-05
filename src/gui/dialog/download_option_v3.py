@@ -424,20 +424,17 @@ class OtherStaticBox(Panel):
 
         self.init_UI()
 
-        self.Bind_EVT()
-
     def init_UI(self):
         other_box = wx.StaticBox(self, -1, "其他选项")
         
         self.auto_popup_chk = wx.CheckBox(other_box, -1, "下载时自动弹出此对话框")
-        self.auto_add_number_chk = wx.CheckBox(other_box, -1, "自动添加序号")
+
         self.number_type_lab = wx.StaticText(other_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(other_box)
         number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        number_type_hbox.AddSpacer(self.FromDIP(20))
         number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.Add(self.number_type_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.Add(number_type_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -445,31 +442,17 @@ class OtherStaticBox(Panel):
 
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_sbox.Add(self.auto_popup_chk, 0, wx.ALL, self.FromDIP(6))
-        other_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         other_sbox.Add(number_type_hbox, 0, wx.EXPAND)
 
         self.SetSizer(other_sbox)
 
-    def Bind_EVT(self):
-        self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
-
     def load_data(self):
         self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
-        self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
         self.number_type_choice.SetSelection(Config.Download.number_type)
-
-        self.onCheckAutoAddNumberEVT(0)
 
     def save(self):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
-        Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()
-
-    def onCheckAutoAddNumberEVT(self, event):
-        enable = self.auto_add_number_chk.GetValue()
-
-        self.number_type_lab.Enable(enable)
-        self.number_type_choice.Enable(enable)
 
 class DownloadOptionDialog(Dialog):
     def __init__(self, parent):

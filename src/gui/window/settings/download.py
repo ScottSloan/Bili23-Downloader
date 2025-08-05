@@ -81,14 +81,12 @@ class DownloadPage(Page):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.auto_add_number_chk = wx.CheckBox(download_box, -1, "自动添加序号")
         self.number_type_lab = wx.StaticText(download_box, -1, "序号类型")
         self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(download_box)
         number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示")
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        number_type_hbox.AddSpacer(self.FromDIP(20))
         number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.Add(self.number_type_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.Add(number_type_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -115,7 +113,6 @@ class DownloadPage(Page):
         download_sbox.Add(codec_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        download_sbox.Add(self.auto_add_number_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(number_type_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.delete_history_chk, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(toast_hbox, 0, wx.EXPAND)
@@ -136,8 +133,6 @@ class DownloadPage(Page):
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
 
-        self.auto_add_number_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAutoAddNumberEVT)
-
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestToastEVT)
 
     def load_data(self):
@@ -157,7 +152,6 @@ class DownloadPage(Page):
         self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
 
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
-        self.auto_add_number_chk.SetValue(Config.Download.auto_add_number)
         self.number_type_choice.SetSelection(Config.Download.number_type)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
@@ -165,7 +159,6 @@ class DownloadPage(Page):
         self.speed_limit_box.SetValue(str(Config.Download.speed_mbps))
 
         self.onChangeSpeedLimitEVT(0)
-        self.onCheckAutoAddNumberEVT(0)
 
     def save_data(self):
         Config.Download.path = self.path_box.GetValue()
@@ -174,7 +167,6 @@ class DownloadPage(Page):
         Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
         Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
         Config.Download.video_codec_id = video_codec_preference_map[self.codec_choice.GetStringSelection()]
-        Config.Download.auto_add_number = self.auto_add_number_chk.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
@@ -214,12 +206,6 @@ class DownloadPage(Page):
         self.speed_limit_box.Enable(self.speed_limit_chk.GetValue())
         self.speed_limit_lab.Enable(self.speed_limit_chk.GetValue())
         self.speed_limit_unit_lab.Enable(self.speed_limit_chk.GetValue())
-
-    def onCheckAutoAddNumberEVT(self, event: wx.CommandEvent):
-        enable = self.auto_add_number_chk.GetValue()
-
-        self.number_type_lab.Enable(enable)
-        self.number_type_choice.Enable(enable)
 
     def onTestToastEVT(self, event: wx.CommandEvent):
         notification = NotificationManager(self)
