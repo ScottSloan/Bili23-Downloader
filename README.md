@@ -1,24 +1,24 @@
 # Bili23-Downloader
-<p style="text-align: center;">
+<p align="center">
     <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;">
 </p>
 
-<p style="text-align: center;">
-    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat" alt="GitHub">
-    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat" alt="Platform">
-    <img src="https://img.shields.io/badge/license-MIT-orange?style=flat" alt="License">
-    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml" alt="Build">
+<p align="center">
+    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub">
+    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform">
+    <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="License">
+    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml?style=flat-square" alt="Build">
 </p>
 
-<p style="text-align: center;">
-    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat" alt="Version">
-    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat" alt="Python">
-    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat" alt="wxPython">
+<p align="center">
+    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python">
+    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat-square" alt="wxPython">
 </p>
 
 <!-- [项目官网](https://bili23.scott-sloan.cn/) -->
 
-<p style="text-align: center;">
+<p align="center">
     Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下载工具，支持下载 B 站投稿视频、番剧、电影等类型视频。支持多线程加速、断点续传等特性，搭配图形化界面与零配置操作，提供高效便捷的下载体验。
 </p>
 
