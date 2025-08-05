@@ -1,11 +1,26 @@
 # Bili23-Downloader
-![Github](https://img.shields.io/badge/GitHub-black?logo=github&style=flat) ![Platform](https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat) ![License](https://img.shields.io/badge/license-MIT-orange?style=flat) ![Build](https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml)
+<p style="text-align: center;">
+    <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;">
+</p>
 
-![Version](https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat) ![Python](https://img.shields.io/badge/Python-3.12.10-green?style=flat) ![wxPython](https://img.shields.io/badge/wxPython-4.2.3-green?style=flat) 
+<p style="text-align: center;">
+    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat" alt="GitHub">
+    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat" alt="Platform">
+    <img src="https://img.shields.io/badge/license-MIT-orange?style=flat" alt="License">
+    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml" alt="Build">
+</p>
 
-[项目官网](https://bili23.scott-sloan.cn/)
+<p style="text-align: center;">
+    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat" alt="Version">
+    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat" alt="Python">
+    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat" alt="wxPython">
+</p>
 
-Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下载工具，支持下载 B 站投稿视频、番剧、电影等类型视频。支持多线程加速、断点续传等特性，搭配图形化界面与零配置操作，提供高效便捷的下载体验。
+<!-- [项目官网](https://bili23.scott-sloan.cn/) -->
+
+<p style="text-align: center;">
+    Bili23 Downloader 是一款跨平台（Windows/Linux/macOS）的 B 站视频下载工具，支持下载 B 站投稿视频、番剧、电影等类型视频。支持多线程加速、断点续传等特性，搭配图形化界面与零配置操作，提供高效便捷的下载体验。
+</p>
 
 ## 程序特性
 * 跨平台（兼容 Windows、Linux、macOS 三大平台）
