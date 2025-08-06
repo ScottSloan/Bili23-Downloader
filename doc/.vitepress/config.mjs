@@ -179,6 +179,11 @@ export default defineConfig({
         timeStyle: 'medium'
       }
     },
+
+    footer: {
+      copyright: 'Copyright © 2025 Scott Sloan. All Rights Reserved.',
+      message: '<a href="https://beian.miit.gov.cn/" target="_blank">滇ICP备2023007640号-1</a>'
+    },
     
     returnToTopLabel: '回到顶部',
     sidebarMenuLabel: '菜单',
