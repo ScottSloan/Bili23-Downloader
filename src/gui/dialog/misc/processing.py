@@ -40,12 +40,11 @@ class ProcessingWindow(Dialog):
     def onCancelEVT(self, event):
         pass
 
-    def onUpdateNode(self, title: str):
+    def UpdateTitle(self, title: str):
         def worker():
-            self.node_title_label.SetLabel(f"节点：{title}")
+            self.node_title_label.SetLabel(title)
 
             self.Layout()
-            self.Fit()
 
         wx.CallAfter(worker)
 
@@ -55,27 +54,40 @@ class ProcessingWindow(Dialog):
         return super().ShowModal()
     
     def SetType(self, type: ProcessingType):
+        def worker():
+            self.SetTitle(title)
+            self.processing_label.SetLabel(tip)
+            self.node_title_label.Show(title_show)
+
+            self.Layout()
+            
         match type:
             case ProcessingType.Process:
                 title = "处理中"
                 tip = "正在处理中，请稍候"
-                show = False
+                title_show = False
 
             case ProcessingType.Parse:
                 title = "解析中"
                 tip = "正在解析中，请稍候"
-                show = False
+                title_show = False
 
             case ProcessingType.Interact:
                 title = "互动视频"
                 tip = "正在探查所有节点，请稍候"
-                show = True
+                title_show = True
 
-        self.SetTitle(title)
-        self.processing_label.SetLabel(tip)
-        self.node_title_label.Show(show)
+            case ProcessingType.Page:
+                title = "解析中"
+                tip = "正在获取所有分页数据，请稍候"
+                title_show = True
 
-        self.Layout()
+        wx.CallAfter(worker)
+
+    def Layout(self):
+        super().Layout()
+
         self.Fit()
-        
+
         self.CenterOnParent()
+    

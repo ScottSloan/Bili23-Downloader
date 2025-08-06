@@ -6,6 +6,8 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
+from utils.common.model.data_type import ParseCallback
+from utils.common.enums import ProcessingType
 
 from utils.parse.parser import Parser
 
@@ -102,7 +104,7 @@ class InteractVideoInfo:
         cls.node_list.clear()
 
 class InteractVideoParser(Parser):
-    def __init__(self, callback: Callable):
+    def __init__(self, callback: ParseCallback):
         super().__init__()
 
         self.callback = callback
@@ -139,14 +141,19 @@ class InteractVideoParser(Parser):
 
         InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"])
 
-        self.callback(info["title"])
+        self.onUpdateTitle(info["title"])
 
         return InteractVideoInfo.get_option()
     
     def parse_interactive_video_episodes(self):
+        self.callback.onChangeProcessingType(ProcessingType.Interact)
+
         option = self.get_video_interactive_edge_info(cid = InteractVideoInfo.cid)
         
         while option:
             option = self.get_video_interactive_edge_info(option.target_node_cid, option.edge_id)
             
             time.sleep(0.1)
+
+    def onUpdateTitle(self, title: str):
+        self.callback.onUpdateTitle(f"节点：{title}")

@@ -462,7 +462,12 @@ class ParseCallback(ABC):
     
     @staticmethod
     @abstractmethod
-    def onInteractVideo():
+    def onChangeProcessingType(type):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def onUpdateTitle(title: str):
         pass
     
     @staticmethod

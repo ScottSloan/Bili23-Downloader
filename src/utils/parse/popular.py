@@ -75,6 +75,8 @@ class PopularParser(Parser):
         self.parse_episodes()
 
     def parse_worker(self, url: str):
+        self.clear_popular_info()
+
         match Regex.find_string(r"one|rank", url):
             case "one":
                 self.get_one_number(url)
@@ -92,4 +94,11 @@ class PopularParser(Parser):
 
     def parse_episodes(self):
         Episode.Popular.parse_episodes(PopularInfo.info_json)
+
+    def clear_popular_info(self):
+        PopularInfo.number = 0
+        PopularInfo.rid = 0
+        PopularInfo.rid_desc = ""
+
+        PopularInfo.info_json.clear()
         

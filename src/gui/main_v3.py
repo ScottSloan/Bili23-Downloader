@@ -194,12 +194,6 @@ class Parser:
     def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, )).start()
 
-    def onInteractVideo(self):
-        def worker():
-            self.main_window.processing_window.SetType(ProcessingType.Interact)
-
-        wx.CallAfter(worker)
-
     @property
     def parser_callback(self):
         class Callback(ParseCallback):
@@ -212,12 +206,12 @@ class Parser:
                 self.onJump(url)
 
             @staticmethod
-            def onInteractVideo():
-                self.onInteractVideo()
+            def onChangeProcessingType(type: ProcessingType):
+                self.main_window.processing_window.SetType(type)
 
             @staticmethod
-            def onUpdateInteractVideo(title: str):
-                self.main_window.processing_window.onUpdateNode(title)
+            def onUpdateTitle(title: str):
+                self.main_window.processing_window.UpdateTitle(title)
 
         return Callback
 

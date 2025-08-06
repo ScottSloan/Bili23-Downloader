@@ -129,6 +129,7 @@ class ProcessingType(Enum):
     Process = 1                   # 处理
     Parse = 2                     # 解析
     Interact = 3                  # 解析互动视频
+    Page = 4                      # 解析分页
 
 class ExitOption(Enum):
     TaskIcon = 0                  # 托盘图标

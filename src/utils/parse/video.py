@@ -128,7 +128,7 @@ class VideoParser(Parser):
 
         # 判断是否为互动视频
         if VideoInfo.is_interactive:
-            self.interact_video_parser = InteractVideoParser(self.callback.onUpdateInteractVideo)
+            self.interact_video_parser = InteractVideoParser(self.callback)
 
             InteractVideoInfo.aid = VideoInfo.aid
             InteractVideoInfo.cid = VideoInfo.cid
@@ -137,8 +137,6 @@ class VideoParser(Parser):
             InteractVideoInfo.title = VideoInfo.title
 
             self.interact_video_parser.get_video_interactive_graph_version()
-
-            self.callback.onInteractVideo()
 
         self.parse_episodes()
 
