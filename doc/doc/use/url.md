@@ -6,7 +6,10 @@
 | 用户投稿视频 （含分P、合集视频、充电专属视频、互动视频） | 解析下载 | https://www.bilibili.com/video/BV1t94y1C7fp |
 | 剧集（含番剧、电影、纪录片、国创、电视剧、综艺） | 解析下载 | https://www.bilibili.com/bangumi/play/ss45574 |
 | 课程 | 解析下载 | https://www.bilibili.com/cheese/play/ep69165 |
-| 直播 | m3u8直链解析、录制 | https://live.bilibili.com/1 |
+| 直播 | 录制 | https://live.bilibili.com/1 |
+| 合集列表 | 解析下载 | https://www.bilibili.com/list/485163549/?sid=2196248&oid=114799761492950&bvid=BV1At3XzNEeL |
+| UP 个人空间<br>**当前仅支持下载合集列表** | 解析下载 | https://space.bilibili.com/485163549/lists/2196248?type=series |
+| 每周必看、排行榜 | 解析下载 | https://www.bilibili.com/v/popular/rank/all |
 | b23.tv 短链接 <br> bili2233.cn 短链接 | 解析下载 | https://b23.tv/BV1UG411f7K1 <br> https://bili2233.cn/LPB6kY1 |
 | 活动页链接（拜年祭、二游新春会等） | 解析下载 | https://www.bilibili.com/festival/bnj2025 <br> https://www.bilibili.com/festival/genshin2024 |
 

@@ -28,7 +28,7 @@ export default defineConfig({
         text: '简介',
         items: [
           {
-            text: '什么是 Bili23 Downloader？',
+            text: 'Bili23 Downloader 是什么？',
             link: '/doc/what-is-bili23-downloader'
           }
         ]
