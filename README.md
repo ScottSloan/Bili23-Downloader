@@ -1,19 +1,19 @@
 # Bili23-Downloader
 <p align="center">
-    <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;">
+    <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;"/>
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub">
-    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform">
-    <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="License">
-    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml?style=flat-square" alt="Build">
+    <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub"/>
+    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform"/>
+    <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="License"/>
+    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml?style=flat-square" alt="Build"/>
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version">
-    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python">
-    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat-square" alt="wxPython">
+    <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version"/>
+    <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python"/>
+    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat-square" alt="wxPython"/>
 </p>
 
 <p align="center">
@@ -33,6 +33,8 @@
 * QQ 频道
     * [频道](https://pd.qq.com/s/8941to1p0)
 
+> 如需提问，请提供**问题描述**、**完整日志**，以便我们更好地提供帮助。
+
 ## ⚡ 程序特性
 * 跨平台（兼容 Windows、Linux、macOS 三大平台）
 * GUI 图形化界面，零配置开箱即用，适配高分屏显示
@@ -49,7 +51,7 @@
 有关本程序的使用说明，请参考[项目文档](https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html)。
 
 ## 🪧 免责声明
-本项目仅供个人学习与研究用途，任何通过本项目下载的内容仅限于个人使用，用户需自行承担使用本项目可能带来的所有风险；项目开发者不对因使用本项目所引发的任何法律纠纷、版权问题或其他损害承担责任；本项目不拥有任何下载内容的版权，B站上的所有视频均为其原始版权方的财产，用户需遵守相关法律法规，且仅限于合理使用，不得进行任何形式的商业化传播或使用。
+本项目仅供个人学习与研究用途，任何通过本项目下载的内容仅限于个人使用，用户需自行承担使用本项目可能带来的所有风险；项目开发者不对因使用本项目所引发的任何法律纠纷、版权问题或其他损害承担责任。
 
 ## 🛡️ 关于反病毒软件误报的说明
 本程序使用了 Nuitka 工具进行封装。由于 Nuitka 的压缩和封装方式与一些木马较为相似，部分反病毒软件在扫描时可能会将其误判为威胁。这种误报并非表示程序本身有问题，而是因为反病毒软件通过特征匹配判断出风险。实际上，这种情况在使用 Nuitka 打包的 Python 程序中并不少见，很多恶意程序也使用了同样的工具进行分发，导致反病毒软件难以区分。
@@ -67,3 +69,17 @@
 
 wbi 签名、部分接口以及 buvid3 等参数生成参考 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)  
 编译版提供的 FFmpeg 来源于 [gyan.dev](https://www.gyan.dev/ffmpeg/builds/)  
+
+## 🛠️ 参与贡献
+欢迎提出新的点子~
+
+<a href="https://github.com/ScottSloan/Bili23-Downloader/graphs/contributors" target="_blank">
+    <img src="https://contrib.rocks/image?repo=ScottSloan/Bili23-Downloader" alt="Contributors" style="width: 25%"/>
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
+
+## 💪 支持我们
+<img src="https://bili23.scott-sloan.cn/sponsor.png" alt="Sponser" style="width: 25%;">
+
+Bili23-Downloader 项目主要由作者 [Scott Sloan](https://github.com/ScottSloan) 在业余时间开发维护。如果这个项目对您有所帮助，您可以帮作者买一杯咖啡表示鼓励☕️，也可以点一个 ⭐️ 支持我们。
