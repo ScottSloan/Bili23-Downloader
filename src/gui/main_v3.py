@@ -27,7 +27,7 @@ from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.preview import VideoPreview
 from utils.parse.popular import PopularParser
-from utils.parse.list import ListParser
+from utils.parse.space import SpaceParser
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -72,16 +72,16 @@ class Parser:
     def parse_url(self, url: str):
         self.url = url
 
-        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|list", url):
+        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
             case "cheese":
                 self.set_parse_type(ParseType.Cheese)
 
                 self.parser = CheeseParser(self.parser_callback)
 
-            case "list":
+            case "space" | "list":
                 self.set_parse_type(ParseType.Video)
 
-                self.parser = ListParser(self.parser_callback)
+                self.parser = SpaceParser(self.parser_callback)
 
             case "av" | "BV":
                 self.set_parse_type(ParseType.Video)
@@ -367,7 +367,7 @@ class Utils:
     def validate_url(self, url: str):
         if url.startswith(("http", "https")) and "bilibili.com" in url:
             if url != self.main_window.url_box.GetValue():
-                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|list", url):
+                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
                     return True
 
     def get_episode_title(self):

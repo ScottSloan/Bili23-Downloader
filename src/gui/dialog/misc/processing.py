@@ -45,7 +45,7 @@ class ProcessingWindow(Dialog):
             self.node_title_label.SetLabel(title)
 
             self.Layout()
-
+        
         wx.CallAfter(worker)
 
     def ShowModal(self, type: ProcessingType):
