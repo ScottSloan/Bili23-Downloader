@@ -132,7 +132,8 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/ScottSloan/Bili23-Downloader' }
+      { icon: 'github', link: 'https://github.com/ScottSloan/Bili23-Downloader' },
+      { icon: 'qq', link: 'https://qm.qq.com/q/KX3uJIFIYK' }
     ],
 
     search: {
