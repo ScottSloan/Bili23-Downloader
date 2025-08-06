@@ -107,7 +107,7 @@ class DownloadInfo:
             "title": item_info.title,
             "section_title": item_info.section_title,
             "part_title": item_info.part_title,
-            "list_title": item_info.list_title,
+            "collection_title": item_info.collection_title,
             "referer_url": "https://www.bilibili.com"
         }
     

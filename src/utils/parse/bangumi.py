@@ -36,6 +36,7 @@ class BangumiInfo:
     type_name: str = ""
 
     payment: bool = False
+    play_check: str = ""
 
     stream_type: str = "DASH"
 
@@ -72,6 +73,7 @@ class BangumiInfo:
         cls.up_mid = 0
 
         cls.payment = False
+        cls.play_check = ""
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -163,6 +165,8 @@ class BangumiParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
+        cls.dumps_json("download5.json", resp)
+
         BangumiInfo.download_json = resp["result"].copy()
 
         if not qn:
@@ -178,7 +182,9 @@ class BangumiParser(Parser):
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        BangumiInfo.play_check = resp.get("result").get("play_check").get("play_detail")
 
     def get_bangumi_type(self):
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
@@ -211,10 +217,8 @@ class BangumiParser(Parser):
         message = data["message"]
 
         if status_code != StatusCode.Success.value:
-            if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
-                return
-            
-            raise GlobalException(message = message, code = status_code, json_data = data)
+            if message == "抱歉您所在地区不可观看！":
+                raise GlobalException(message = message, code = status_code, json_data = data)
 
     def parse_episodes(self):
         if self.url_type == "season_id":

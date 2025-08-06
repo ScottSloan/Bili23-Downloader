@@ -164,6 +164,19 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                     item_data = self.GetItemData(item)
 
                     self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id, video_codec_id))
+    
+    def CheckItemBadgePaid(self):
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    item_data: TreeListItemInfo = self.GetItemData(item)
+
+                    if item_data.badge == "会员":
+                        return True
 
     def GetCurrentItemType(self):
         item = self.GetSelection()

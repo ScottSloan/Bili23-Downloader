@@ -113,7 +113,7 @@ class FileNameFormatter:
             "series_title": FileNameFormatter.get_legal_file_name(task_info.series_title),
             "section_title": FileNameFormatter.get_legal_file_name(task_info.section_title),
             "part_title": FileNameFormatter.get_legal_file_name(task_info.part_title),
-            "list_title": FileNameFormatter.get_legal_file_name(task_info.list_title),
+            "collection_title": FileNameFormatter.get_legal_file_name(task_info.collection_title),
             "video_quality": get_mapping_key_by_value(video_quality_map, task_info.video_quality_id),
             "audio_quality": get_mapping_key_by_value(audio_quality_map, task_info.audio_quality_id),
             "video_codec": get_mapping_key_by_value(video_codec_short_map, task_info.video_codec_id),

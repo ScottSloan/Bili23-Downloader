@@ -70,16 +70,6 @@ video_codec_short_map = {
     "AV1": 13
 }
 
-live_quality_map = {
-    "自动": 40000,
-    "杜比": 30000,
-    "4K": 20000,
-    "原画": 10000,
-    "蓝光": 400,
-    "高清": 150,
-    "流畅": 80
-}
-
 live_status_map = {
     0: "未开播",
     1: "直播中",
@@ -247,8 +237,8 @@ field_map = {
         "example": "分节（请参考说明文档）",
         "scope": [1]
     },
-    "list_title": {
-        "name": "{list_title}",
+    "collection_title": {
+        "name": "{collection_title}",
         "description": "合集标题",
         "example": "合集（请参考说明文档）",
         "scope": [1],

@@ -1,6 +1,5 @@
 from utils.config import Config
 
-from utils.common.map import live_status_map
 from utils.common.enums import StatusCode
 from utils.common.model.data_type import ParseCallback, LiveRoomInfo
 from utils.common.request import RequestUtils

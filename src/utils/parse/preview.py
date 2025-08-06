@@ -76,6 +76,7 @@ class VideoPreview:
                         for entry in data["durls"]:
                             if entry["quality"] == video_quality_id:
                                 node = entry["durl"][0]
+
                     else:
                         node = data["durl"][0]
 
@@ -83,7 +84,7 @@ class VideoPreview:
                         "id": video_quality_id,
                         "codec": video_codec_id,
                         "size": node["size"]
-                }
+                    }
 
         if requery:
             self.refresh_download_json(video_quality_id)
@@ -189,14 +190,26 @@ class VideoPreview:
 
     @staticmethod
     def get_video_available_quality_id_list(data: dict):
-        available_list = {}
+        available_list = []
 
-        for entry in data["dash"]["video"]:
-            id = entry["id"]
+        if "dash" in data:
+            for entry in data["dash"]["video"]:
+                id = entry.get("id")
 
-            available_list[id] = id
+                available_list.append(id)
 
-        return list(available_list.keys())
+            return available_list
+        else:
+            if data["durls"]:
+                for entry in data["durls"]:
+                    id = entry.get("quality")
+
+                    available_list.append(id)
+            
+                return available_list
+            
+            else:
+                return data["accept_quality"]
 
     @staticmethod
     def get_file_size(url_list: list):

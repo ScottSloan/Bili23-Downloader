@@ -46,7 +46,7 @@ class DownloadTaskInfo:
         # 分节标题
         self.part_title: str = ""
         # 合集标题
-        self.list_title: str = ""
+        self.collection_title: str = ""
 
         # 视频时长
         self.duration: int = 0
@@ -140,7 +140,7 @@ class DownloadTaskInfo:
             "series_title": self.series_title,
             "section_title": self.section_title,
             "part_title": self.part_title,
-            "list_title": self.list_title,
+            "collection_title": self.collection_title,
 
             "duration": self.duration,
 
@@ -209,7 +209,7 @@ class DownloadTaskInfo:
         self.series_title = data.get("series_title", self.series_title)
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
-        self.list_title = data.get("list_title", self.list_title)
+        self.collection_title = data.get("collection_title", self.collection_title)
 
         self.duration = data.get("duration", self.duration)
 
@@ -370,7 +370,7 @@ class TreeListItemInfo:
 
         self.section_title: str = ""
         self.part_title: str = ""
-        self.list_title: str = ""
+        self.collection_title: str = ""
 
         self.item_type: str = "node"
         self.type: str = 0
@@ -394,7 +394,7 @@ class TreeListItemInfo:
             "pid": self.pid,
             "section_title": self.section_title,
             "part_title": self.part_title,
-            "list_title": self.list_title,
+            "collection_title": self.collection_title,
             "item_type": self.item_type,
             "type": self.type
         }
@@ -417,7 +417,7 @@ class TreeListItemInfo:
         self.pid = data.get("pid", self.pid)
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
-        self.list_title = data.get("list_title", self.list_title)
+        self.collection_title = data.get("collection_title", self.collection_title)
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
 

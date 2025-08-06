@@ -1,7 +1,7 @@
 from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType, ParseType
-from utils.common.map import cheese_status_map, live_status_map
+from utils.common.map import cheese_status_map
 from utils.common.formatter.formatter import FormatUtils
 
 class EpisodeInfo:
@@ -67,7 +67,7 @@ class EpisodeInfo:
             "pid": "",
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
-            "list_title": episode.get("list_title", ""),
+            "collection_title": episode.get("collection_title", ""),
             "item_type": "item",
             "type": episode.get("type", 0)
         }
@@ -112,7 +112,7 @@ class Episode:
             is_upower_exclusive = info_json["is_upower_exclusive"]
 
             for section in info_json["ugc_season"]["sections"]:
-                list_title = info_json["ugc_season"]["title"]
+                collection_title = info_json["ugc_season"]["title"]
                 section_title = section["title"]
 
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
@@ -131,7 +131,7 @@ class Episode:
                         episode["bvid"] = bvid
                         episode["pubtime"] = pubtime
                         episode["section_title"] = section_title
-                        episode["list_title"] = list_title
+                        episode["collection_title"] = collection_title
 
                         EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), is_upower_exclusive))
 
@@ -147,7 +147,7 @@ class Episode:
                             page["pubtime"] = pubtime
                             page["section_title"] = section_title
                             page["part_title"] = part_title
-                            page["list_title"] = list_title
+                            page["collection_title"] = collection_title
 
                             EpisodeInfo.add_item(part_title, cls.get_entry_info(page.copy(), is_upower_exclusive))
 
@@ -321,6 +321,7 @@ class Episode:
 
             for episode in info_json["archives"]:
                 episode["section_title"] = section_title
+                episode["collection_title"] = section_title
                 
                 EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
         
