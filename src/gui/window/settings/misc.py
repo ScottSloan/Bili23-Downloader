@@ -1,4 +1,5 @@
 import wx
+import os
 import sys
 import shutil
 import subprocess
@@ -123,9 +124,6 @@ class MiscPage(Page):
             self.restart()
 
     def restart(self):
-        python = sys.executable
-        script = sys.argv[0]
-
-        subprocess.Popen([python, script])
+        subprocess.Popen([sys.executable] + sys.argv)
 
         sys.exit()
