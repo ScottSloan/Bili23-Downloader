@@ -303,6 +303,29 @@ class Episode:
             
         @staticmethod
         def get_entry_info(episode: dict):
+            episode["pubtime"] = episode.get("pubdate")
+            episode["link"] = f"https://www/bilibili.com/video/{episode.get('bvid')}"
+            episode["cover_url"] = episode.get("pic")
+            episode["type"] = ParseType.Video.value
+
+            return EpisodeInfo.get_entry_info(episode)
+
+    class List:
+        @classmethod
+        def parse_episodes(cls, info_json: dict):
+            EpisodeInfo.clear_episode_data()
+
+            section_title = info_json["meta"]["title"]
+
+            EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
+
+            for episode in info_json["archives"]:
+                episode["section_title"] = section_title
+                
+                EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
+        
+        @staticmethod
+        def get_entry_info(episode: dict):
             episode["pubtime"] = episode["pubdate"]
             episode["link"] = f"https://www/bilibili.com/video/{episode.get('bvid')}"
             episode["cover_url"] = episode.get("pic")

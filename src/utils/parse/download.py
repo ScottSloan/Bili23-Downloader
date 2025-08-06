@@ -9,6 +9,7 @@ from utils.common.request import RequestUtils
 from utils.parse.preview import VideoPreview
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
+from utils.parse.video import VideoParser
 
 from utils.auth.wbi import WbiUtils
 from utils.config import Config
@@ -73,6 +74,8 @@ class DownloadParser(Parser):
             data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
             return data["data"]
+
+        cls.check_cid(task_info)
 
         match ParseType(task_info.parse_type):
             case ParseType.Video:
@@ -242,3 +245,7 @@ class DownloadParser(Parser):
         
         except Exception as e:
             raise GlobalException(callback = self.callback) from e
+
+    def check_cid(task_info: DownloadTaskInfo):
+        if not task_info.cid:
+            task_info.cid = VideoParser.get_video_cid(task_info.bvid)

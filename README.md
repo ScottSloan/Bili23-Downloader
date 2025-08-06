@@ -1,6 +1,8 @@
 # Bili23-Downloader
 <p align="center">
-    <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;"/>
+    <a href="https://bili23.scott-sloan.cn" target="_blank">
+        <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;"/>
+    </a>
 </p>
 
 <p align="center">
@@ -74,12 +76,14 @@ wbi 签名、部分接口以及 buvid3 等参数生成参考 [SocialSisterYi/bil
 欢迎提出新的点子~
 
 <a href="https://github.com/ScottSloan/Bili23-Downloader/graphs/contributors" target="_blank">
-    <img src="https://contrib.rocks/image?repo=ScottSloan/Bili23-Downloader" alt="Contributors" style="width: 25%"/>
+    <img src="https://contrib.rocks/image?repo=ScottSloan/Bili23-Downloader" alt="Contributors" style="width: 300px"/>
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
 
 ## 💪 支持我们
-<img src="https://bili23.scott-sloan.cn/sponsor.png" alt="Sponser" style="width: 25%;">
 
-Bili23-Downloader 项目主要由作者 [Scott Sloan](https://github.com/ScottSloan) 在业余时间开发维护。如果这个项目对您有所帮助，您可以帮作者买一杯咖啡表示鼓励☕️，也可以点一个 ⭐️ 支持我们。
+<img src="https://bili23.scott-sloan.cn/sponsor.png" alt="Sponser" style="width: 300px">
+
+Bili23-Downloader 项目主要由作者 [Scott Sloan](https://github.com/ScottSloan) 在业余时间开发维护。  
+如果这个项目对您有所帮助，您可以帮作者买一杯咖啡表示鼓励☕️，也可以点一个 ⭐️ 支持我们。

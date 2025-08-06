@@ -72,6 +72,8 @@ class PopularParser(Parser):
 
         VideoParser.get_video_available_media_info()
 
+        self.parse_episodes()
+
     def parse_worker(self, url: str):
         match Regex.find_string(r"one|rank", url):
             case "one":

@@ -173,6 +173,18 @@ class VideoParser(Parser):
 
             AudioInfo.get_audio_quality_list(VideoInfo.download_json.get("dash", {}))
 
+    @classmethod
+    def get_video_cid(cls, bvid: str):
+        params = {
+            "bvid": bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
+
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        return resp["data"]["cid"]
+
     def parse_worker(self, url: str):
         # 先检查是否为分 P 视频
         self.get_part(url)
