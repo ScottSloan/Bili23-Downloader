@@ -122,12 +122,20 @@ export default defineConfig({
         ]
       },
       {
+        text: '社区交流',
+        link: '/doc/community'
+      },
+      {
         text: '免责声明',
         link: '/doc/announcement'
       },
       {
         text: '开源许可',
         link: '/doc/license'
+      },
+      {
+        text: '支持我们',
+        link: '/doc/sponsor'
       }
     ],
 
