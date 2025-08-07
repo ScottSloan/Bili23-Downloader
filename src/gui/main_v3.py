@@ -233,34 +233,30 @@ class Utils:
             self.show_message_dialog("解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True
 
-    def check_update(self, info_bar: bool = False):
+    def check_update(self, from_menu: bool = False):
         def onError():
-            if info_bar:
-                self.show_infobar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
-            else:
-                self.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
+            self.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
 
-        def worker():
-            def show_update_dialog():
-                window = UpdateDialog(self.main_window, info)
-                window.ShowModal()
-
-            info = Update.get_update_json()
-
-            if info["version_code"] > Config.APP.version_code:
-                if info_bar:
-                    self.show_infobar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
-                else:
-                    wx.CallAfter(show_update_dialog)
-            else:
-                if not info_bar:
-                    self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
+        def show_update_dialog():
+            window = UpdateDialog(self.main_window, info)
+            window.ShowModal()
 
         try:
-            worker()
+            info = Update.get_update_json()
+
+            version = info.get("version_code")
+
+            if (version > Config.APP.version_code and version != Config.Misc.ignore_version) or from_menu:
+                wx.CallAfter(show_update_dialog)
+            else:
+                if from_menu:
+                    self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
 
         except Exception as e:
             raise GlobalException(callback = onError) from e
+
+    async def check_update_async(self):
+        self.check_update()
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
@@ -337,6 +333,9 @@ class Utils:
             worker = hide_user_info
 
         wx.CallAfter(worker)
+
+    async def show_user_info_async(self):
+        self.show_user_info()
 
     def set_episode_display_mode(self, mode: EpisodeDisplayType):
         Config.Misc.episode_display_mode = mode.value
@@ -418,6 +417,19 @@ class Utils:
                 wx.CallAfter(worker)
 
         FFmpeg.Env.check_availability(FFmpegCallback)
+
+    async def check_ffmpeg_async(self):
+        if Config.Merge.ffmpeg_check_available_when_launch:
+            self.check_ffmpeg()
+
+    async def async_worker(self):
+        tasks = [
+            asyncio.create_task(self.show_user_info_async()),
+            asyncio.create_task(self.check_ffmpeg_async()),
+            asyncio.create_task(self.check_update_async())
+        ]
+
+        await asyncio.gather(*tasks, return_exceptions = True)
 
     def set_status(self, status: ParseStatus):
         def update():
@@ -618,7 +630,10 @@ class MainWindow(Frame):
         help_menu.Append(ID.CHANGELOG_MENU, "更新日志(&P)")
         help_menu.AppendSeparator()
         help_menu.Append(ID.HELP_MENU, "使用帮助(&C)")
-        help_menu.Append(ID.FEEDBACK_MENU, "意见反馈(&B)")
+        help_menu.AppendSeparator()
+        help_menu.Append(ID.FEEDBACK_MENU, "报告问题(&B)")
+        help_menu.Append(ID.COMMUNITY_MENU, "社区交流(&G)")
+        help_menu.AppendSeparator()
         help_menu.Append(ID.ABOUT_MENU, "关于(&A)")
 
         menu_bar.Append(tool_menu, "工具(&T)")
@@ -651,29 +666,9 @@ class MainWindow(Frame):
 
     def init_utils(self):
         def worker():
-            async def check_ffmpeg():
-                if Config.Merge.ffmpeg_check_available_when_launch:
-                    self.utils.check_ffmpeg()
-
-            async def check_update():
-                if Config.Merge.ffmpeg_check_available_when_launch:
-                    self.utils.check_update(info_bar = True)
-
-            async def show_user_info():
-                self.utils.show_user_info()
-
             FFmpeg.Env.detect()
 
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-            tasks = [
-                loop.create_task(check_ffmpeg()),
-                loop.create_task(check_update()),
-                loop.create_task(show_user_info())
-            ]
-
-            loop.run_until_complete(asyncio.wait(tasks))
+            asyncio.run(self.utils.async_worker())
 
         self.parser = Parser(self)
 
@@ -716,7 +711,7 @@ class MainWindow(Frame):
                 window.ShowModal()
 
             case ID.CHECK_UPDATE_MENU:
-                Thread(target = self.utils.check_update).start()
+                Thread(target = self.utils.check_update, args = (True,)).start()
 
             case ID.CHANGELOG_MENU:
                 Thread(target = self.utils.get_changelog).start()
@@ -726,6 +721,9 @@ class MainWindow(Frame):
 
             case ID.FEEDBACK_MENU:
                 webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader/issues")
+
+            case ID.COMMUNITY_MENU:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/community.html")
 
             case ID.ABOUT_MENU:
                 dlg = AboutWindow(self)

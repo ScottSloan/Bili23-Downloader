@@ -1,5 +1,5 @@
-date = "2025-08-05 18:25:53"
-commit = "ed023bc669e99d8cc6ea438c1f80deac6a911293"
+date = "2025-08-07 13:02:37"
+commit = "2932e6b59ff56b6cee1c5349fd0753efe52575aa"
 beta_ver = 1
-beta_flag = True
+beta_flag = False
 compile = False

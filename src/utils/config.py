@@ -71,8 +71,8 @@ app_config_group = {
         "show_episode_full_name",
         "auto_check_episode_item",
         "show_user_info",
-        "check_update_when_launch",
-        "enable_debug"
+        "enable_debug",
+        "ignore_version"
     ],
 }
 
@@ -113,7 +113,7 @@ class Config:
         name: str = "Bili23 Downloader"
 
         version: str = "1.65.0"
-        version_code: int = 165000
+        version_code: int = 163000
 
         task_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 165000
@@ -205,8 +205,9 @@ class Config:
         show_episode_full_name: bool = False
         auto_check_episode_item: bool = False
         enable_debug: bool = False
-        check_update_when_launch: bool = True
         show_user_info: bool = True
+
+        ignore_version: int = 0
 
     class Download:
         path: str = os.path.join(os.getcwd(), "download")

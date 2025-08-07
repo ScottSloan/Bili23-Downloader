@@ -14,6 +14,7 @@ class ID:
     CHANGELOG_MENU = wx.NewIdRef()
     HELP_MENU = wx.NewIdRef()
     FEEDBACK_MENU = wx.NewIdRef()
+    COMMUNITY_MENU = wx.NewIdRef()
     ABOUT_MENU = wx.NewIdRef()
 
     EPISODE_SINGLE_MENU = wx.NewIdRef()

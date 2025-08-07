@@ -97,7 +97,7 @@ class AboutWindow(Dialog):
         if beta_flag:
             about_vbox.Add(dev_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
 
-        about_vbox.AddSpacer(self.FromDIP(8))
+        about_vbox.AddSpacer(self.FromDIP(13))
         about_vbox.Add(copyright_hbox, 0, wx.CENTER)
         about_vbox.Add(self.home_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
         about_vbox.Add(self.github_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))

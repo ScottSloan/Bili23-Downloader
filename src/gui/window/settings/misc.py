@@ -40,7 +40,6 @@ class MiscPage(Page):
         other_box = wx.StaticBox(self.panel, -1, "杂项")
 
         self.show_user_info_chk = wx.CheckBox(other_box, -1, "在主界面显示用户头像和昵称")
-        self.check_update_chk = wx.CheckBox(other_box, -1, "自动检查更新")
         self.debug_chk = wx.CheckBox(other_box, -1, "启用调试模式")
 
         self.clear_userdata_btn = wx.Button(other_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
@@ -52,7 +51,6 @@ class MiscPage(Page):
 
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_sbox.Add(self.show_user_info_chk, 0, wx.ALL, self.FromDIP(6))
-        other_sbox.Add(self.check_update_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         other_sbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), self.FromDIP(6))
         other_sbox.Add(btn_hbox, 0, wx.EXPAND)
         
@@ -82,7 +80,6 @@ class MiscPage(Page):
         self.show_episode_full_name.SetValue(Config.Misc.show_episode_full_name)
         self.auto_select_chk.SetValue(Config.Misc.auto_check_episode_item)
         self.show_user_info_chk.SetValue(Config.Misc.show_user_info)
-        self.check_update_chk.SetValue(Config.Misc.check_update_when_launch)
         self.debug_chk.SetValue(Config.Misc.enable_debug)
 
     def save_data(self):
@@ -97,7 +94,6 @@ class MiscPage(Page):
 
         Config.Misc.auto_check_episode_item = self.auto_select_chk.GetValue()
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
-        Config.Misc.check_update_when_launch = self.check_update_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
         self.parent.init_menubar()
