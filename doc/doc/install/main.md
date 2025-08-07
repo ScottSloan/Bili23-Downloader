@@ -21,7 +21,7 @@
 
 # 安装程序
 ## 下载发行版
-用户可前往[GitHub Release](https://github.com/ScottSloan/Bili23-Downloader/releases/)页面查看历史版本，也可以在下方列表中根据需要选择下载。
+用户可前往 [GitHub Release](https://github.com/ScottSloan/Bili23-Downloader/releases/) 页面查看历史版本，也可以在下方列表中根据需要选择下载。
 
 | 文件名 | 平台架构 | 下载地址 | 备注 |
 | --- | --- | --- | --- |
@@ -32,6 +32,10 @@
 ::: warning 重要提示
 若您使用的是编译版，请先确保安装 Microsoft Visual C++ 2015-2022 运行库，否则无法运行本程序。
 如果未安装，请[点击此处](https://aka.ms/vs/17/release/vc_redist.x64.exe)下载安装。
+:::
+
+::: info 社区交流
+欢迎[加入社区](https://bili23.scott-sloan.cn/doc/community.html)，获取项目最新动态、问题答疑和技术交流。
 :::
 
 文件 SHA1 值校验
@@ -123,6 +127,7 @@ pip install -r requirements.txt
 | qrcode[pil] | ==7.4.2 | 必须附带 [pil]（Pillow），否则程序可能无法运行 |
 | python-vlc | ==3.0.21203 | - |
 | protobuf | ==3.19.0 | 高于 3.19.0 的版本无法正常解析 protobuf 文件 |
+| websockets | ==15.0.1 | -- |
 
 用户也可以手动安装：
 ```bash
