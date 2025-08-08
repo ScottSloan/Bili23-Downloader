@@ -29,4 +29,5 @@ class ID:
     EPISODE_LIST_CHECK_MENU = wx.NewIdRef()
     EPISODE_LIST_COLLAPSE_MENU = wx.NewIdRef()
 
-    USER_INFO_BOXSIZER = wx.NewIdRef()
+    SUPPORTTED_URL_MENU = wx.NewIdRef()
+    HISTORY_MENU = wx.NewIdRef()

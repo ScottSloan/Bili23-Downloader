@@ -60,6 +60,7 @@ from gui.component.tree_list_v2 import TreeListCtrl
 
 from gui.component.menu.episode_option import EpisodeOptionMenu
 from gui.component.menu.user import UserMenu
+from gui.component.menu.url import URLMenu
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -220,6 +221,9 @@ class Utils:
         self.main_window: MainWindow = parent
         self.status = ParseStatus.Success
 
+        self.copy_from_menu = False
+        self.dialog_show = False
+
     def init_timer(self):
         if Config.Basic.listen_clipboard:
             if not self.main_window.clipboard_timer.IsRunning():
@@ -272,6 +276,12 @@ class Utils:
         return True
 
     def check_parse_status(self):
+        if self.main_window.utils.copy_from_menu:
+            return False
+        
+        if self.main_window.utils.dialog_show:
+            return False
+
         if self.main_window.IsShown():
             if self.status != ParseStatus.Parsing:
                 return True
@@ -359,6 +369,8 @@ class Utils:
 
         if url and url != self.main_window.parser.url:
             if self.validate_url(url) and self.check_parse_status():
+                self.main_window.utils.copy_from_menu = False
+
                 self.main_window.url_box.SetValue(url)
 
                 wx.CallAfter(self.main_window.onParseEVT, event)
@@ -400,23 +412,17 @@ class Utils:
             Config.save_app_config()
 
     def check_ffmpeg(self):
-        class FFmpegCallback(Callback):
-            @staticmethod
-            def onSuccess(*process):
-                pass
+        def worker():
+            dlg = wx.MessageDialog(self.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
             
-            @staticmethod
-            def onError(*process):
-                def worker():
-                    dlg = wx.MessageDialog(self.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
-                    dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+        result = FFmpeg.Env.check_availability()
 
-                    if dlg.ShowModal() == wx.ID_YES:
-                        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
-                    
-                wx.CallAfter(worker)
-
-        FFmpeg.Env.check_availability(FFmpegCallback)
+        if result:
+            wx.CallAfter(worker)
 
     async def check_ffmpeg_async(self):
         if Config.Merge.ffmpeg_check_available_when_launch:
@@ -516,6 +522,21 @@ class Utils:
     def hide_processing_window(self):
         wx.CallAfter(self.main_window.processing_window.Close)
 
+    def show_welcome_dialog(self):
+        def worker():
+            dlg = wx.MessageDialog(self.main_window, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析、批量直播录制", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg.SetYesNoLabels("说明文档", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+            
+            Config.Basic.is_new_user = False
+
+            Config.save_app_config()
+        
+        if Config.Basic.is_new_user:
+            wx.CallAfter(worker)
+
 class MainWindow(Frame):
     def __init__(self, parent):
         self.utils = Utils(self)
@@ -538,7 +559,9 @@ class MainWindow(Frame):
         self.infobar = InfoBar(self.panel)
 
         url_lab = wx.StaticText(self.panel, -1, "链接")
-        self.url_box = SearchCtrl(self.panel, "在此处粘贴链接进行解析", search = False, clear = True)
+        self.url_box = SearchCtrl(self.panel, "在此处粘贴链接进行解析", search_btn = True, clear_btn = True)
+        self.url_box.SetMenu(URLMenu())
+
         self.get_btn = wx.Button(self.panel, -1, "Get")
 
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -645,7 +668,7 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_MENU, self.onMenuEVT)
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
-        self.url_box.Bind(wx.EVT_SEARCH, self.onParseEVT)
+        #self.url_box.Bind(wx.EVT_SEARCH, self.onParseEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onParseEVT)
 
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadWindowEVT)
@@ -669,6 +692,8 @@ class MainWindow(Frame):
             FFmpeg.Env.detect()
 
             asyncio.run(self.utils.async_worker())
+
+            self.utils.show_welcome_dialog()
 
         self.parser = Parser(self)
 
@@ -707,8 +732,12 @@ class MainWindow(Frame):
                 window.Show()
 
             case ID.SETTINGS_MENU:
+                self.utils.dialog_show = True
+
                 window = SettingWindow(self)
                 window.ShowModal()
+
+                self.utils.dialog_show = False
 
             case ID.CHECK_UPDATE_MENU:
                 Thread(target = self.utils.check_update, args = (True,)).start()
@@ -724,6 +753,9 @@ class MainWindow(Frame):
 
             case ID.COMMUNITY_MENU:
                 webbrowser.open("https://bili23.scott-sloan.cn/doc/community.html")
+
+            case ID.SUPPORTTED_URL_MENU:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/url.html")
 
             case ID.ABOUT_MENU:
                 dlg = AboutWindow(self)
@@ -850,6 +882,8 @@ class MainWindow(Frame):
                 ClipBoard.Write(self.utils.get_episode_title())
 
             case ID.EPISODE_LIST_COPY_URL_MENU:
+                self.utils.copy_from_menu = True
+
                 item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
 
                 ClipBoard.Write(item_data.link)
@@ -876,8 +910,14 @@ class MainWindow(Frame):
         dlg.ShowModal()
 
     def onShowDownloadOptionDialogEVT(self, event):
+        self.utils.dialog_show = True
+
         dlg = DownloadOptionDialog(self)
-        return dlg.ShowModal()
+        rtn = dlg.ShowModal()
+
+        self.utils.dialog_show = False
+
+        return rtn
     
     def show_episode_list(self, from_menu: bool = True):
         if from_menu:

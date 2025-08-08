@@ -185,14 +185,6 @@ class FFmpeg:
             return command.format()
 
         @staticmethod
-        def get_test_command():
-            command = Command()
-
-            command.add(f'"{Config.Merge.ffmpeg_path}" -version')
-
-            return command.format()
-
-        @staticmethod
         def get_rename_command(src: str, dst: str):
             command = Command()
 
@@ -303,10 +295,8 @@ class FFmpeg:
                     Config.Merge.ffmpeg_path = cwd_path
 
         @staticmethod
-        def check_availability(callback: Callback):
-            command = FFmpeg.Command.get_test_command()
-
-            FFmpeg.Command.run(command, callback)
+        def check_availability():
+            return not os.path.exists(Config.Merge.ffmpeg_path)
 
     class Utils:
         temp_duration = 0

@@ -4,10 +4,9 @@ import webbrowser
 from importlib.resources import files, as_file
 
 from utils.config import Config
-
-from utils.common.enums import Platform, WebPageOption
-
 from utils.auth.login_v2 import LoginInfo
+from utils.common.enums import Platform, WebPageOption
+from utils.common.regex import Regex
 
 from utils.module.web.ws import WebSocketServer
 
@@ -95,6 +94,8 @@ class WebPage:
 
         path = cls.get_static_file_path(file_name)
 
+        cls.update_ws_port(path)
+
         webbrowser.open(f"file://{path}")
 
     @staticmethod
@@ -103,3 +104,10 @@ class WebPage:
 
         with as_file(resource) as path:
             return path.resolve()
+        
+    @staticmethod
+    def update_ws_port(file_path: str):
+        with open(file_path, "w") as f:
+            contents = Regex.sub(r"port = ([0-9]+)", f"port = {Config.Advanced.websocket_port}", f.read())
+
+            f.write(contents)

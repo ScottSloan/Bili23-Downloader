@@ -508,7 +508,9 @@
 
     window.onload = function () {
         if (window.MainApplication == undefined) {
-            socket = new WebSocket('ws://localhost:8765');
+            let port = 8765;
+
+            socket = new WebSocket(`ws://localhost:${port}`);
 
             socket.onopen = function () {
                 data = {
@@ -519,11 +521,15 @@
             };
 
             socket.onmessage = function (event) {
-                var json = JSON.parse(event.data);
+                let json = JSON.parse(event.data);
 
                 if (json.msg == "queryCaptchaInfo") {
                     receiveMessage(json.data.gt, json.data.challenge)
                 }
+            };
+
+            socket.onerror = function (event) {
+                alert("无法连接至 Websocket 服务器，与程序通信失败");
             };
         }
     }
@@ -569,8 +575,8 @@
         });
         captchaObj.onError(function(e) {
             window.MainApplication.postMessage(JSON.stringify({
-                code:100,
-                msg:e.msg
+                code: 100,
+                msg: e.msg
             }));
         });
     };

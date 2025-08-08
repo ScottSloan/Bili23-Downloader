@@ -25,6 +25,7 @@ app_config_group = {
         "window_pos",
         "window_size",
         "window_maximized",
+        "is_new_user",
         "ass_style"
     ],
     "Download": [
@@ -113,7 +114,7 @@ class Config:
         name: str = "Bili23 Downloader"
 
         version: str = "1.65.0"
-        version_code: int = 163000
+        version_code: int = 165000
 
         task_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 165000
@@ -172,6 +173,8 @@ class Config:
         window_pos: list = []
         window_size: list = []
         window_maximized: bool = False
+
+        is_new_user: bool = True
 
     class Proxy:
         proxy_mode: int = 1
