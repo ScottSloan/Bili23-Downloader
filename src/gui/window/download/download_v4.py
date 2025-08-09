@@ -213,14 +213,14 @@ class Utils:
         if NumberType(Config.Download.number_type) == NumberType.From_1:
             cls.index = 0
 
-        last_cid = 0
+        last_aid = 0
 
         for index, entry in enumerate(download_list):
             entry.timestamp = cls.get_timestamp(index)
             entry.source = "正在下载"
 
-            if last_cid != entry.cid:
-                last_cid = entry.cid
+            if last_aid != entry.aid:
+                last_aid = entry.aid
                 cls.index += 1
 
             update_index()

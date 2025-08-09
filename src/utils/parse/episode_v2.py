@@ -315,15 +315,14 @@ class Episode:
         def parse_episodes(cls, info_json: dict):
             EpisodeInfo.clear_episode_data()
 
-            section_title = info_json["meta"]["title"]
+            for section_title, entry in info_json["archives"].items():
+                EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
 
-            EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
-
-            for episode in info_json["archives"]:
-                episode["section_title"] = section_title
-                episode["collection_title"] = section_title
-                
-                EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
+                for episode  in entry["episodes"]:
+                    episode["section_title"] = section_title
+                    episode["collection_title"] = section_title
+                    
+                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
         
         @staticmethod
         def get_entry_info(episode: dict):

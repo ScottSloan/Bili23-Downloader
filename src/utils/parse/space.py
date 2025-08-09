@@ -1,5 +1,6 @@
 import math
 import time
+from typing import Dict, List
 
 from utils.auth.wbi import WbiUtils
 from utils.config import Config
@@ -24,40 +25,54 @@ class SpaceInfo:
 
     info_json: dict = {}
 
+class Section:
+    info_json: Dict[str, Dict[str, Dict[str, list]]] = {
+        "archives": {}
+    }
+    total_entries: int = 0
+
+    seasons_list: list = []
+    series_list: list = []
+
+    @classmethod
+    def add_section(cls, title: str):
+        if title not in cls.info_json["archives"]:
+            cls.info_json["archives"][title] = {
+                "episodes": []
+            }
+
+    @classmethod
+    def update_section(cls, title: str, archives: list):
+        cls.info_json["archives"][title]["episodes"].extend(archives)
+        
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
         super().__init__()
 
         self.callback = callback
+        self.info_json: dict = {}
 
     def get_mid(self, url: str):
         mid = self.re_find_str(r"/([0-9]+)/", url)
 
-        SpaceInfo.mid = mid[0]
+        return mid[0]
 
-    def get_type(self, url: str):
-        type = self.re_find_str(r"type=(\w+)", url)
-
-        SpaceInfo.type = type[0]
-    
     def get_season_series_id(self, url: str):
         id = self.re_find_str(r"/([0-9]+)\?type", url)
 
-        setattr(SpaceInfo, f"{SpaceInfo.type}_id" , id[0])
-
         self.reset_info_json()
+
+        return id[0]
 
     def get_sid(self, url: str):
         sid = self.re_find_str(r"sid=([0-9]+)", url)
 
-        SpaceInfo.series_id = sid[0]
+        return sid[0]
 
-        self.reset_info_json()
-
-    def get_season_info(self, page_num: int = 1):
+    def get_season_info(self, mid: int, season_id: int, page_num: int = 1):
         params = {
-            "mid": SpaceInfo.mid,
-            "season_id": SpaceInfo.season_id,
+            "mid": mid,
+            "season_id": season_id,
             "page_num": page_num,
             "page_size": 30
         }
@@ -66,26 +81,35 @@ class SpaceParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        SpaceInfo.total = resp["data"]["meta"]["total"]
-        SpaceInfo.info_json["meta"]["title"] = resp["data"]["meta"]["name"]
-        SpaceInfo.info_json["archives"].extend(resp["data"]["archives"])
+        section_title = resp["data"]["meta"]["name"]
+        episodes = resp["data"]["archives"]
 
-    def get_series_meta_info(self):
+        Section.add_section(section_title)
+        Section.update_section(section_title, episodes)
+
+        Section.total_entries += len(episodes)
+
+        return resp["data"]["meta"]["total"]
+
+    def get_series_meta_info(self, series_id: int):
         params = {
-            "series_id": SpaceInfo.series_id,
+            "series_id": series_id,
         }
 
         url = f"https://api.bilibili.com/x/series/series?{self.url_encode(params)}"
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        SpaceInfo.total = resp["data"]["meta"]["total"]
-        SpaceInfo.info_json["meta"]["title"] = resp["data"]["meta"]["name"]
+        section_title = resp["data"]["meta"]["name"]
 
-    def get_series_archives_info(self, pn: int = 1):
+        Section.add_section(section_title)
+
+        return section_title, resp["data"]["meta"]["total"]
+
+    def get_series_archives_info(self, mid: int, series_id: int, section_title: str, pn: int = 1):
         params = {
-            "mid": SpaceInfo.mid,
-            "series_id": SpaceInfo.series_id,
+            "mid": mid,
+            "series_id": series_id,
             "pn": pn,
             "ps": 30
         }
@@ -94,10 +118,32 @@ class SpaceParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = "https://www.bilibili.com"))
 
-        SpaceInfo.info_json["archives"].extend(resp["data"]["archives"])
+        archives = resp["data"]["archives"]
+
+        Section.update_section(section_title, archives)
+
+        Section.total_entries += len(archives)
+
+    def get_season_series_info(self, mid: int, page_num: int = 1):
+        params = {
+            "mid": mid,
+            "page_num": page_num,
+            "page_size": 20,
+        }
+
+        url = f"https://api.bilibili.com/x/polymer/web-space/seasons_series_list?{WbiUtils.encWbi(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        items_list = resp["data"]["items_lists"]
+
+        Section.seasons_list.extend([entry["meta"]["season_id"] for entry in items_list.get("seasons_list")])
+        Section.series_list.extend([entry["meta"]["series_id"] for entry in items_list.get("series_list")])
+
+        return items_list["page"]["total"]
 
     def get_video_available_media_info(self):
-        episode = SpaceInfo.info_json["archives"][0]
+        episode = list(Section.info_json["archives"].values())[0]["episodes"][0]
 
         VideoInfo.bvid = episode["bvid"]
         VideoInfo.cid = VideoParser.get_video_cid(episode["bvid"])
@@ -107,80 +153,93 @@ class SpaceParser(Parser):
     def parse_worker(self, url: str):
         self.clear_space_info()
 
-        self.get_mid(url)
+        mid = self.get_mid(url)
 
         if "list" in url:
-            if "type" in url:
-                self.get_type(url)
+            if "space" in url:
+                if "type" in url:
+                    seaason_series_id = self.get_season_series_id(url)
 
-                self.get_season_series_id(url)
-
-                match SpaceInfo.type:
-                    case "season":
-                        self.parse_season_info()
-
-                    case "series":
-                        self.parse_series_info()
+                    if "season" in url:
+                        self.parse_season_info(mid, seaason_series_id)
+                    else:
+                        self.parse_series_info(mid, seaason_series_id)
+                else:
+                    self.parse_season_series_info(mid)
             else:
-                self.get_sid(url)
+                series_id = self.get_sid(url)
 
-                self.parse_series_info()
-
+                self.parse_series_info(mid, series_id)
+        
         self.parse_episodes()
 
         self.get_video_available_media_info()
 
         return StatusCode.Success.value
 
-    def parse_season_info(self):
-        self.get_season_info()
+    def parse_season_info(self, mid: str, season_id: int):
+        total = self.get_season_info(mid, season_id)
+        total_page = self.get_total_page(total)
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
 
-        for i in range(1, self.total_page):
-            self.get_season_info(i + 1)
+        for i in range(1, total_page):
+            page = i + 1
 
-            self.update_loop(i + 1)
+            self.get_season_info(mid, season_id, page)
 
-    def parse_series_info(self):
-        self.get_series_meta_info()
+            self.onUpdateTitle(page, total_page, Section.total_entries)
+
+    def parse_series_info(self, mid: int, series_id: int):
+        section_title, total = self.get_series_meta_info(series_id)
+        total_page = self.get_total_page(total)
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
 
-        for i in range(self.total_page):
-            self.get_series_archives_info(i + 1)
+        for i in range(total_page):
+            page = i + 1
 
-            self.update_loop(i + 1)
+            self.get_series_archives_info(mid, series_id, section_title, page)
+
+            self.onUpdateTitle(page, total_page, Section.total_entries)
+
+    def parse_season_series_info(self, mid: int):
+        total = self.get_season_series_info(mid)
+
+        self.callback.onChangeProcessingType(ProcessingType.Page)
+
+        for i in range(1, total):
+            page = i + 1
+
+            self.get_season_series_info(mid, page)
+
+        for season_id in Section.seasons_list:
+            self.parse_season_info(mid, season_id)
+
+            time.sleep(1)
+
+        for series_id in Section.series_list:
+            self.parse_series_info(mid, series_id)
+
+            time.sleep(1)
 
     def parse_episodes(self):
-        Episode.List.parse_episodes(SpaceInfo.info_json)
+        Episode.List.parse_episodes(Section.info_json)
 
     def clear_space_info(self):
-        SpaceInfo.mid = 0
+        Section.info_json = {
+            "archives": {}
+        }
 
-        SpaceInfo.season_id = 0
-        SpaceInfo.season_id = 0
+        Section.total_entries = 0
 
-        SpaceInfo.total = 0
-
-        SpaceInfo.info_json.clear()
+        Section.seasons_list.clear()
+        Section.series_list.clear()
 
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
 
-    def update_loop(self, page: int):
-        self.onUpdateTitle(page, self.total_page, len(SpaceInfo.info_json.get("archives")))
+        time.sleep(0.2)
 
-        time.sleep(0.1)
-
-    def reset_info_json(self):
-        SpaceInfo.info_json = {
-            "meta": {
-                "title": ""
-            },
-            "archives": []
-        }
-
-    @property
-    def total_page(self):
-        return math.ceil(SpaceInfo.total / 30)
+    def get_total_page(self, total: int):
+        return math.ceil(total / 30)

@@ -54,7 +54,7 @@ class ExtraParser:
         def get_xml_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
 
-            contents = XML.make(protobuf_dict, task_info.cid)
+            contents = XML.make(protobuf_dict, task_info.aid)
             
             ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", contents, task_info, "w")
 
@@ -105,7 +105,7 @@ class ExtraParser:
                 p_count = math.ceil(task_info.duration / 360)
 
                 for index in range(1, p_count + 1):
-                    io_buffer.append(BytesIO(get_contents(task_info.cid, index)))
+                    io_buffer.append(BytesIO(get_contents(task_info.aid, index)))
 
             return io_buffer
 
@@ -155,7 +155,7 @@ class ExtraParser:
         def query_all_subtitles(task_info: DownloadTaskInfo):
             params = {
                 "bvid": task_info.bvid,
-                "cid": task_info.cid
+                "cid": task_info.aid
             }
 
             url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"

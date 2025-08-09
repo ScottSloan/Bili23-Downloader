@@ -7,6 +7,7 @@ from utils.common.model.data_type import ParseCallback
 from utils.common.enums import StatusCode
 from utils.common.map import rid_map
 from utils.common.regex import Regex
+from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
@@ -36,6 +37,8 @@ class PopularParser(Parser):
                 PopularInfo.rid = value.get("rid")
                 PopularInfo.rid_desc = value.get("desc")
                 return
+            
+        raise GlobalException(message = "暂不支持解析此类链接", callback = self.callback.onError)
 
     def get_popular_one_list(self):
         params = {

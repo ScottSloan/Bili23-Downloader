@@ -7,7 +7,7 @@ from utils.auth.login_v2 import Login
 
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus, LiveStatus
-from utils.common.model.data_type import ParseCallback, Callback
+from utils.common.model.data_type import ParseCallback
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.thread import Thread
 from utils.common.update import Update
@@ -667,8 +667,9 @@ class MainWindow(Frame):
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onMenuEVT)
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+        
+        self.url_box.Bind(wx.EVT_KEY_DOWN, self.onSearchKeyDownEVT)
 
-        #self.url_box.Bind(wx.EVT_SEARCH, self.onParseEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onParseEVT)
 
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadWindowEVT)
@@ -855,6 +856,12 @@ class MainWindow(Frame):
         Thread(target = self.parser.parse_url, args = (url, )).start()
 
         self.utils.set_status(ParseStatus.Parsing)
+
+    def onSearchKeyDownEVT(self, event: wx.KeyEvent):
+        if event.GetKeyCode() == wx.WXK_RETURN:
+            self.onParseEVT(event)
+        
+        event.Skip()
 
     def onShowEpisodeOptionMenuEVT(self, event):
         menu = EpisodeOptionMenu()

@@ -106,7 +106,7 @@ class FileNameFormatter:
             "title": FileNameFormatter.get_legal_file_name(task_info.title),
             "aid": task_info.aid,
             "bvid": task_info.bvid,
-            "cid": task_info.cid,
+            "cid": task_info.aid,
             "ep_id": task_info.ep_id,
             "season_id": task_info.season_id,
             "media_id": task_info.media_id,
