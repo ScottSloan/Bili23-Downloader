@@ -155,7 +155,7 @@ class AddNewTemplateDialog(Dialog):
             task_info.title = "第1话 孤独的转机"
             task_info.aid = 944573356
             task_info.bvid = "BV1yW4y1j7Ft"
-            task_info.aid = 875212290
+            task_info.cid = 875212290
             task_info.ep_id = 693247
             task_info.season_id = 43164
             task_info.media_id = 28339735

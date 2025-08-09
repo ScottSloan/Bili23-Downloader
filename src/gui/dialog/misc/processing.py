@@ -6,7 +6,7 @@ from gui.component.window.dialog import Dialog
 
 class ProcessingWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "Processing")
+        Dialog.__init__(self, parent, "解析中")
 
         self.EnableCloseButton(False)
         
@@ -17,7 +17,8 @@ class ProcessingWindow(Dialog):
         self.CenterOnParent()
         
     def init_UI(self):
-        self.processing_label = wx.StaticText(self, -1, "label")
+        self.processing_label = wx.StaticText(self, -1, "正在解析中，请稍候")
+        self.name_lab = wx.StaticText(self, -1, "")
         self.node_title_label = wx.StaticText(self, -1, "节点：--")
 
         self.cancel_btn = wx.Button(self, -1, "取消", size = self.get_scaled_size((60, 24)))
@@ -29,6 +30,7 @@ class ProcessingWindow(Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.processing_label, 0, wx.ALL, self.FromDIP(6))
+        vbox.Add(self.name_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(self.node_title_label, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(btn_hbox, 0, wx.EXPAND)
 
@@ -39,6 +41,14 @@ class ProcessingWindow(Dialog):
 
     def onCancelEVT(self, event):
         pass
+    
+    def UpdateName(self, name: str):
+        def worker():
+            self.name_lab.SetLabel(name)
+
+            self.Layout()
+        
+        wx.CallAfter(worker)
 
     def UpdateTitle(self, title: str):
         def worker():
@@ -57,6 +67,8 @@ class ProcessingWindow(Dialog):
         def worker():
             self.SetTitle(title)
             self.processing_label.SetLabel(tip)
+
+            self.name_lab.Show(title_show)
             self.node_title_label.Show(title_show)
 
             self.Layout()
@@ -90,4 +102,3 @@ class ProcessingWindow(Dialog):
         self.Fit()
 
         self.CenterOnParent()
-    

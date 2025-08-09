@@ -54,7 +54,7 @@ class ExtraParser:
         def get_xml_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
 
-            contents = XML.make(protobuf_dict, task_info.aid)
+            contents = XML.make(protobuf_dict, task_info.cid)
             
             ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", contents, task_info, "w")
 
@@ -95,7 +95,13 @@ class ExtraParser:
         @staticmethod
         def get_all_protobuf_contents(task_info: DownloadTaskInfo):
             def get_contents(cid: int, index: int):
-                url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={cid}&segment_index={index}"
+                params = {
+                    "type": 1,
+                    "oid": cid,
+                    "segment_index": index
+                }
+
+                url = f"https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?{WbiUtils.encWbi(params)}"
 
                 return ExtraParser.Utils.request_get(url).content
 
@@ -105,7 +111,7 @@ class ExtraParser:
                 p_count = math.ceil(task_info.duration / 360)
 
                 for index in range(1, p_count + 1):
-                    io_buffer.append(BytesIO(get_contents(task_info.aid, index)))
+                    io_buffer.append(BytesIO(get_contents(task_info.cid, index)))
 
             return io_buffer
 
@@ -155,7 +161,7 @@ class ExtraParser:
         def query_all_subtitles(task_info: DownloadTaskInfo):
             params = {
                 "bvid": task_info.bvid,
-                "cid": task_info.aid
+                "cid": task_info.cid
             }
 
             url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"

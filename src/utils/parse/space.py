@@ -44,13 +44,18 @@ class Section:
     @classmethod
     def update_section(cls, title: str, archives: list):
         cls.info_json["archives"][title]["episodes"].extend(archives)
+
+    @classmethod
+    def get_total_data(cls):
+        return len(cls.seasons_list) + len(cls.series_list)
         
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
         super().__init__()
 
         self.callback = callback
-        self.info_json: dict = {}
+
+        self.set_processing_type = True
 
     def get_mid(self, url: str):
         mid = self.re_find_str(r"/([0-9]+)/", url)
@@ -59,8 +64,6 @@ class SpaceParser(Parser):
 
     def get_season_series_id(self, url: str):
         id = self.re_find_str(r"/([0-9]+)\?type", url)
-
-        self.reset_info_json()
 
         return id[0]
 
@@ -89,7 +92,7 @@ class SpaceParser(Parser):
 
         Section.total_entries += len(episodes)
 
-        return resp["data"]["meta"]["total"]
+        return section_title, resp["data"]["meta"]["total"]
 
     def get_series_meta_info(self, series_id: int):
         params = {
@@ -155,6 +158,10 @@ class SpaceParser(Parser):
 
         mid = self.get_mid(url)
 
+        time.sleep(0.5)
+
+        self.callback.onChangeProcessingType(ProcessingType.Page)
+
         if "list" in url:
             if "space" in url:
                 if "type" in url:
@@ -178,10 +185,11 @@ class SpaceParser(Parser):
         return StatusCode.Success.value
 
     def parse_season_info(self, mid: str, season_id: int):
-        total = self.get_season_info(mid, season_id)
+        section_title, total = self.get_season_info(mid, season_id)
         total_page = self.get_total_page(total)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.onUpdateName(section_title)
+        self.onUpdateTitle(1, total_page, Section.total_entries)
 
         for i in range(1, total_page):
             page = i + 1
@@ -194,7 +202,8 @@ class SpaceParser(Parser):
         section_title, total = self.get_series_meta_info(series_id)
         total_page = self.get_total_page(total)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.onUpdateName(section_title)
+        self.onUpdateTitle(1, total_page, Section.total_entries)
 
         for i in range(total_page):
             page = i + 1
@@ -205,13 +214,17 @@ class SpaceParser(Parser):
 
     def parse_season_series_info(self, mid: int):
         total = self.get_season_series_info(mid)
+        total_page = self.get_total_page(total)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.onUpdateName("合集列表")
+        self.onUpdateTitle(1, total_page, Section.get_total_data())
 
-        for i in range(1, total):
+        for i in range(1, total_page):
             page = i + 1
 
             self.get_season_series_info(mid, page)
+
+            self.onUpdateTitle(page, total_page, Section.get_total_data())
 
         for season_id in Section.seasons_list:
             self.parse_season_info(mid, season_id)
@@ -236,10 +249,13 @@ class SpaceParser(Parser):
         Section.seasons_list.clear()
         Section.series_list.clear()
 
+    def onUpdateName(self, name: str):
+        self.callback.onUpdateName(name)
+
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
 
-        time.sleep(0.2)
+        time.sleep(0.3)
 
     def get_total_page(self, total: int):
         return math.ceil(total / 30)

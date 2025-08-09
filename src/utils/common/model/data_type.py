@@ -31,7 +31,7 @@ class DownloadTaskInfo:
 
         # 视频 bvid 和 cid 信息
         self.bvid: str = ""
-        self.aid: int = 0
+        self.cid: int = 0
         self.aid: int = 0
         self.ep_id: int = 0
         self.season_id: int = 0
@@ -130,7 +130,7 @@ class DownloadTaskInfo:
             "cover_url": self.cover_url,
 
             "bvid": self.bvid,
-            "cid": self.aid,
+            "cid": self.cid,
             "aid": self.aid,
             "ep_id": self.ep_id,
             "season_id": self.season_id,
@@ -199,7 +199,7 @@ class DownloadTaskInfo:
         self.cover_url = data.get("cover_url", self.cover_url)
 
         self.bvid = data.get("bvid", self.bvid)
-        self.aid = data.get("cid", self.aid)
+        self.cid = data.get("cid", self.cid)
         self.aid = data.get("aid", self.aid)
         self.ep_id = data.get("ep_id", self.ep_id)
         self.season_id = data.get("season_id", self.season_id)
@@ -464,15 +464,15 @@ class ParseCallback(ABC):
     @abstractmethod
     def onChangeProcessingType(type):
         pass
+    
+    @staticmethod
+    @abstractmethod
+    def onUpdateName(name: str):
+        pass
 
     @staticmethod
     @abstractmethod
     def onUpdateTitle(title: str):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onUpdateInteractVideo(title: str):
         pass
 
 class PlayerCallback(ABC):

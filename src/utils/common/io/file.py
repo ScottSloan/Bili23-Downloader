@@ -10,12 +10,13 @@ class File:
 
     @staticmethod
     def remove_file(file_path: str):
-        for i in range(20):
+        for i in range(30):
             if not os.path.exists(file_path):
                 break
 
             try:
                 os.remove(file_path)
-            except PermissionError:
+
+            except:
                 time.sleep(0.1)
                 continue

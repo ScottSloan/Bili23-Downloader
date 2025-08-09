@@ -211,6 +211,10 @@ class Parser:
                 self.main_window.processing_window.SetType(type)
 
             @staticmethod
+            def onUpdateName(name: str):
+                self.main_window.processing_window.UpdateName(name)
+
+            @staticmethod
             def onUpdateTitle(title: str):
                 self.main_window.processing_window.UpdateTitle(title)
 
@@ -669,7 +673,6 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
         
         self.url_box.Bind(wx.EVT_KEY_DOWN, self.onSearchKeyDownEVT)
-
         self.get_btn.Bind(wx.EVT_BUTTON, self.onParseEVT)
 
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadWindowEVT)
@@ -838,7 +841,7 @@ class MainWindow(Frame):
 
             Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 
-            self.processing_window.ShowModal(ProcessingType.Process)
+            self.utils.show_processing_window(ProcessingType.Process)
 
         if self.utils.check_download_items():
             return
@@ -853,9 +856,9 @@ class MainWindow(Frame):
 
         self.episode_list.init_episode_list()
 
-        Thread(target = self.parser.parse_url, args = (url, )).start()
-
         self.utils.set_status(ParseStatus.Parsing)
+
+        Thread(target = self.parser.parse_url, args = (url, )).start()
 
     def onSearchKeyDownEVT(self, event: wx.KeyEvent):
         if event.GetKeyCode() == wx.WXK_RETURN:

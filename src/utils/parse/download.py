@@ -31,7 +31,7 @@ class DownloadParser(Parser):
         def get_video_json():
             params = {
                 "bvid": task_info.bvid,
-                "cid": task_info.aid,
+                "cid": task_info.cid,
                 "fnver": 0,
                 "fnval": 4048,
                 "fourk": 1
@@ -46,7 +46,7 @@ class DownloadParser(Parser):
         def get_bangumi_json():
             params = {
                 "bvid": task_info.bvid,
-                "cid": task_info.aid,
+                "cid": task_info.cid,
                 "qn": task_info.video_quality_id,
                 "fnver": 0,
                 "fnval": 12240,
@@ -63,7 +63,7 @@ class DownloadParser(Parser):
             params = {
                 "avid": task_info.aid,
                 "ep_id": task_info.ep_id,
-                "cid": task_info.aid,
+                "cid": task_info.cid,
                 "fnver": 0,
                 "fnval": 4048,
                 "fourk": 1
@@ -247,5 +247,5 @@ class DownloadParser(Parser):
             raise GlobalException(callback = self.callback) from e
 
     def check_cid(task_info: DownloadTaskInfo):
-        if not task_info.aid:
-            task_info.aid = VideoParser.get_video_cid(task_info.bvid)
+        if not task_info.cid:
+            task_info.cid = VideoParser.get_video_cid(task_info.bvid)

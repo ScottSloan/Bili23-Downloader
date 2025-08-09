@@ -147,6 +147,7 @@ class InteractVideoParser(Parser):
     
     def parse_interactive_video_episodes(self):
         self.callback.onChangeProcessingType(ProcessingType.Interact)
+        self.callback.onUpdateName("互动视频")
 
         option = self.get_video_interactive_edge_info(cid = InteractVideoInfo.cid)
         
