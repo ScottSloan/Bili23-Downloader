@@ -1,9 +1,11 @@
 import wx
+from typing import List, Callable, Tuple
 
 from utils.config import Config
 
 from utils.common.enums import Platform
 from utils.common.model.data_type import LiveRoomInfo
+from utils.common.thread import Thread
 
 from gui.component.panel.panel import Panel
 from gui.component.panel.live_room_item import LiveRoomItemPanel
@@ -48,14 +50,17 @@ class LiveRecordingWindow(Frame):
         list_panel.set_dark_mode()
 
         info = {
-            "empty_label": "直播间列表为空"
+            "max_items": 50,
+            "empty_label": "直播间列表为空",
+            "add_panel_item": self.add_panel_item,
+            "load_more_item": self.ShowItems
         }
 
-        self.live_room_list = ScrolledPanelList(list_panel, info)
-        self.live_room_list.set_dark_mode()
+        self.scroller = ScrolledPanelList(list_panel, info)
+        self.scroller.set_dark_mode()
 
         list_vbox = wx.BoxSizer(wx.VERTICAL)
-        list_vbox.Add(self.live_room_list, 1, wx.EXPAND)
+        list_vbox.Add(self.scroller, 1, wx.EXPAND)
         
         list_panel.SetSizerAndFit(list_vbox)
 
@@ -65,14 +70,38 @@ class LiveRecordingWindow(Frame):
         vbox.Add(list_panel, 1, wx.EXPAND)
 
         self.SetSizer(vbox)
+    
+    def init_utils(self):
+        self.temp_panel_items: List[Tuple[LiveRoomItemPanel, int, int]] = []
+
+    def add_panel_item(self, temp_info_list: List[LiveRoomInfo]):
+        self.temp_panel_items = [(LiveRoomItemPanel(self.scroller, entry, self), 0, wx.EXPAND) for entry in temp_info_list]
+
+        return self.temp_panel_items
+    
+    def ShowItems(self, callback: Callable = None, load_items: int = None, max_limit: bool = False):
+        self.scroller.ShowListItems(callback, load_items, max_limit)
+
+        self.show_room_info()
+
+    def show_room_info(self):
+        def worker():
+            for (panel, proportion, flag) in self.temp_panel_items:
+                wx.CallAfter(panel.utils.show_room_info)
+
+                panel.utils.show_cover()
+
+            self.temp_panel_items.clear()
+
+        Thread(target = worker).start()
 
     def add_new_live_room(self, info: LiveRoomInfo):
-        panel = LiveRoomItemPanel(self.live_room_list, info, self)
+        self.scroller.info_list.append(info)
 
-        self.live_room_list.Add(panel, 0, wx.EXPAND)
+        wx.CallAfter(self.ShowItems)
 
-    def remove_live_room(self):
-        self.live_room_list.Remove()
+    def remove_item(self):
+        self.scroller.Remove()
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):

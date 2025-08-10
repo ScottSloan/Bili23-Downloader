@@ -594,7 +594,7 @@ class DownloadOptionDialog(Dialog):
                 return self.warn("账号未开通大会员\n\n账号未开通大会员，无法完整下载全片，仅能下载 6 分钟试看部分，是否继续下载？", wx.YES_NO) == wx.ID_NO
 
         if self.media_info_box.is_warn_show:
-            return self.warn("账号未开通大会员\n\n账号未开通大会员，无法下载 1080P 以上清晰度视频，是否继续下载？", wx.YES_NO) == wx.ID_NO
+            return self.warn("账号未开通大会员\n\n账号未开通大会员，无法下载 1080P 以上清晰度视频、杜比无损音质，是否继续下载？", wx.YES_NO) == wx.ID_NO
 
     def onOKEVT(self):
         if not self.path_box.path_box.GetValue():

@@ -217,8 +217,10 @@ class BangumiParser(Parser):
         message = data["message"]
 
         if status_code != StatusCode.Success.value:
-            if message == "抱歉您所在地区不可观看！":
-                raise GlobalException(message = message, code = status_code, json_data = data)
+            if message != "抱歉您所在地区不可观看！":
+                return
+
+            raise GlobalException(message = message, code = status_code, json_data = data)
 
     def parse_episodes(self):
         if self.url_type == "season_id":

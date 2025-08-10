@@ -147,7 +147,7 @@ class Utils:
     def show_cover(self):
         self.ui.show_cover(f"{self.task_info.cover_url}@.jpeg")
 
-    def destory_panel(self, remove_file: bool = False, user_action: bool = False):
+    def destroy_panel(self, remove_file: bool = False, user_action: bool = False):
         if hasattr(self, "downloader"):
             self.downloader.stop_download()
 
@@ -166,7 +166,7 @@ class Utils:
 
     def move_panel(self):
         def worker():
-            self.destory_panel(remove_file = False)
+            self.destroy_panel(remove_file = False)
 
             self.parent.download_window.right_panel.move_to_completed_page(self.task_info)
 
@@ -233,7 +233,7 @@ class Utils:
 
             self.show_task_info()
 
-        if not self.parent.panel_destory and not self.parent.show_info:
+        if not self.parent.panel_destroy and not self.parent.show_info:
             wx.CallAfter(worker)
 
     def onDownloading(self, speed_label: str):
@@ -245,7 +245,7 @@ class Utils:
 
             self.ui.update()
 
-        if not self.parent.panel_destory:
+        if not self.parent.panel_destroy:
             wx.CallAfter(worker)
 
     def onDownloadVideoComplete(self):
@@ -347,6 +347,8 @@ class Utils:
             case DownloadStatus.DownloadError:
                 self.ui.set_pause_btn(IconID.Retry, "重试")
                 self.ui.set_speed_label("下载失败，点击查看详情", error = True)
+
+        self.ui.update()
 
     def get_downloader_callback(self):
         class callback(DownloaderCallback):
@@ -477,7 +479,7 @@ class DownloadTaskItemPanel(Panel):
         self.SetSizer(self.panel_vbox)
     
     def Bind_EVT(self):
-        self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestoryEVT)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
 
         self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onCoverEVT)
         self.speed_lab.Bind(wx.EVT_LEFT_DOWN, self.onErrorDialogEVT)
@@ -488,23 +490,23 @@ class DownloadTaskItemPanel(Panel):
     def init_utils(self):
         self.utils = Utils(self, self.task_info)
 
-        self.panel_destory = False
+        self.panel_destroy = False
         self.show_info = False
 
-    def onDestoryEVT(self, event):
-        self.panel_destory = True
+    def onDestroyEVT(self, event: wx.CommandEvent):
+        self.panel_destroy = True
 
         event.Skip()
 
-    def onCoverEVT(self, event):
+    def onCoverEVT(self, event: wx.MouseEvent):
         Cover.view_cover(self.download_window, self.task_info.cover_url)
 
-    def onErrorDialogEVT(self, event):
+    def onErrorDialogEVT(self, event: wx.MouseEvent):
         if self.task_info.error_info:
             dlg = ErrorInfoDialog(self.download_window, self.task_info.error_info)
             dlg.ShowModal()
 
-    def onPauseEVT(self, event):
+    def onPauseEVT(self, event: wx.CommandEvent):
         match DownloadStatus(self.task_info.status):
             case DownloadStatus.Waiting:
                 self.utils.start_download()
@@ -524,8 +526,8 @@ class DownloadTaskItemPanel(Panel):
             case DownloadStatus.DownloadError:
                 self.utils.start_download()
 
-    def onStopEVT(self, event):
-        self.utils.destory_panel(remove_file = True, user_action = True)
+    def onStopEVT(self, event: wx.CommandEvent):
+        self.utils.destroy_panel(remove_file = True, user_action = True)
 
     def get_progress_bar_size(self):
         match Platform(Config.Sys.platform):

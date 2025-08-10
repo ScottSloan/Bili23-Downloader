@@ -14,9 +14,124 @@ from gui.component.button.bitmap_button import BitmapButton
 
 from gui.component.panel.panel import Panel
 
+class Utils:
+    class UI:
+        def __init__(self, parent: wx.Window):
+            self.parent: LiveRoomItemPanel = parent
+
+        def show_cover(self, cover_url: str):
+            def worker():
+                self.parent.cover_bmp.SetBitmap(bitmap)
+
+            size = self.parent.cover_bmp.GetSize()
+
+            image = Cover.crop_cover(Cover.get_cover_raw_contents(cover_url))
+
+            bitmap = Cover.get_scaled_bitmap_from_image(image, size)
+
+            wx.CallAfter(worker)
+
+        def set_up_name(self, up_name: str):
+            self.parent.up_name_lab.SetLabel(up_name)
+
+        def set_title(self, title: str):
+            self.parent.title_lab.SetLabel(title)
+
+        def set_room_id(self, room_id: int):
+            self.parent.room_id_lab.SetLabel(f"ID {room_id}")
+
+        def set_area(self, parent_area: str, area: str):
+            self.parent.area_lab.SetLabel(f"{parent_area} · {area}")
+
+        def set_pause_btn(self, icon_id: IconID, tool_tip: str):
+            self.parent.pause_btn.SetBitmap(Icon.get_icon_bitmap(icon_id))
+
+            self.parent.pause_btn.SetToolTip(tool_tip)
+        
+        def show_recording_label(self, show: bool):
+            self.parent.rec_bmp.Show(show)
+            self.parent.recording_lab.Show(show)
+
+        def update(self):
+            self.parent.Layout()
+
+    def __init__(self, parent: wx.Window, room_info: LiveRoomInfo):
+        self.parent: LiveRoomItemPanel = parent
+        self.room_info = room_info
+
+        self.ui = Utils.UI(parent)
+
+    def show_room_info(self):
+        self.ui.set_up_name(self.room_info.up_name)
+        self.ui.set_title(self.room_info.title)
+
+        self.ui.set_room_id(self.room_info.room_id)
+        self.ui.set_area(self.room_info.parent_area, self.room_info.area)
+
+        self.ui.update()
+
+    def show_cover(self):
+        self.ui.show_cover(f"{self.room_info.cover_url}@.jpeg")
+
+    def destroy_panel(self):
+        self.parent.Destroy()
+
+        self.parent.live_recording_window.remove_item()
+
+    def start_recording(self):
+        if self.check_live_status():
+            return
+        
+        if self.check_option_setup():
+            return
+        
+        self.set_recording_status(LiveRecordingStatus.Recording)
+
+    def stop_recording(self):
+        self.set_recording_status(LiveRecordingStatus.Free)
+
+    def check_live_status(self):
+        if LiveStatus(self.room_info.live_status) == LiveStatus.Not_Started:
+            wx.MessageDialog(self.parent, "录制失败\n\n直播间未开播，无法进行录制", "警告", wx.ICON_WARNING).ShowModal()
+            return True
+        
+    def check_option_setup(self):
+        if not self.room_info.option_setuped:
+            dlg = LiveRecordingOptionDialog(self.parent.live_recording_window, self.room_info.room_id)
+
+            if dlg.ShowModal() != wx.ID_OK:
+                return True
+            
+            self.room_info.option_setuped = True
+
+    def set_recording_status(self, status: LiveRecordingStatus):
+        def worker():
+            self.update_pause_btn(status)
+
+        self.room_info.recording_status = status
+
+        wx.CallAfter(worker)
+
+    def update_pause_btn(self, status: LiveRecordingStatus):
+        match LiveRecordingStatus(status):
+            case LiveRecordingStatus.Free:
+                self.ui.set_pause_btn(IconID.Start_Recording, "开始录制")
+
+                self.ui.show_recording_label(False)
+
+            case LiveRecordingStatus.Recording:
+                self.ui.set_pause_btn(IconID.Stop_Recording, "停止录制")
+
+                self.ui.show_recording_label(True)
+
+        self.ui.update()
+
 class LiveRoomItemPanel(Panel):
-    def __init__(self, parent, info: LiveRoomInfo, live_recording_window):
-        self.info, self.live_recording_window = info, live_recording_window
+    def __init__(self, parent, room_info: LiveRoomInfo, live_recording_window):
+        from gui.window.live_recording import LiveRecordingWindow
+
+        self.room_info = room_info
+        self.live_recording_window: LiveRecordingWindow = live_recording_window
 
         Panel.__init__(self, parent)
 
@@ -84,87 +199,33 @@ class LiveRoomItemPanel(Panel):
         self.SetSizer(panel_vbox)
 
     def Bind_EVT(self):
-        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onViewCoverEVT)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestroyEVT)
+
+        self.cover_bmp.Bind(wx.EVT_LEFT_DOWN, self.onCoverEVT)
+
         self.pause_btn.Bind(wx.EVT_BUTTON, self.onPauseEVT)
         self.stop_btn.Bind(wx.EVT_BUTTON, self.onStopEVT)
 
     def init_utils(self):
-        self.show_live_room_info()
+        self.utils = Utils(self, self.room_info)
 
-        Thread(target = self.show_cover).start()
+        self.panel_destroy = False
 
-    def show_live_room_info(self):
-        self.up_name_lab.SetLabel(self.info.up_name)
-        self.title_lab.SetLabel(self.info.title)
+    def onDestroyEVT(self, event: wx.CommandEvent):
+        self.panel_destory = True
 
-        self.room_id_lab.SetLabel(f"ID {self.info.room_id}")
-        self.area_lab.SetLabel(f"{self.info.parent_area} · {self.info.area}")
+        event.Skip()
 
-    def show_cover(self):
-        def setBitmap():
-            self.cover_bmp.SetBitmap(bitmap)
+    def onCoverEVT(self, event: wx.MouseEvent):
+        Cover.view_cover(self.live_recording_window, self.room_info.cover_url)
 
-        if not self.cover_bmp.GetBitmap():
-            size = wx.Size(self.FromDIP(112), self.FromDIP(63))
-
-            image = Cover.crop_cover(Cover.get_cover_raw_contents(self.info.cover_url))
-
-            bitmap = Cover.get_scaled_bitmap_from_image(image, size)
-
-            wx.CallAfter(setBitmap)
-
-    def start_recording(self):
-        def start():
-            self.set_recording_status(LiveRecordingStatus.Recording.value)
-
-        if LiveStatus(self.info.live_status) == LiveStatus.Not_Started:
-            wx.MessageDialog(self, "录制失败\n\n直播间未开播，无法进行录制", "警告", wx.ICON_WARNING).ShowModal()
-            return
-        
-        if not self.info.option_setuped:
-            dlg = LiveRecordingOptionDialog(self.live_recording_window, self.info.room_id)
-
-            if dlg.ShowModal() == wx.ID_OK:
-                self.info.option_setuped = True
-                start()
-        else:
-            start()
-
-    def stop_recording(self):
-        self.set_recording_status(LiveRecordingStatus.Free.value)
-
-    def onPauseEVT(self, event):
-        match LiveRecordingStatus(self.info.recording_status):
+    def onPauseEVT(self, event: wx.CommandEvent):
+        match LiveRecordingStatus(self.room_info.recording_status):
             case LiveRecordingStatus.Free:
-                self.start_recording()
+                self.utils.start_recording()
 
             case LiveRecordingStatus.Recording:
-                self.stop_recording()
-
-    def onViewCoverEVT(self, event):
-        Cover.view_cover(self.live_recording_window, self.info.cover_url)
+                self.utils.stop_recording()
 
     def onStopEVT(self, event):
-        self.Destroy()
-
-        self.live_recording_window.remove_live_room()
-
-    def set_recording_status(self, status: int):
-        self.info.recording_status = status
-
-        match LiveRecordingStatus(status):
-            case LiveRecordingStatus.Recording:
-                self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Stop_Recording))
-
-                self.pause_btn.SetToolTip("停止录制")
-                self.rec_bmp.Show()
-                self.recording_lab.Show()
-
-            case LiveRecordingStatus.Free:
-                self.pause_btn.SetBitmap(Icon.get_icon_bitmap(IconID.Start_Recording))
-
-                self.pause_btn.SetToolTip("开始录制")
-                self.rec_bmp.Hide()
-                self.recording_lab.Hide()
-
-        self.GetSizer().Layout()
+        self.utils.destroy_panel()

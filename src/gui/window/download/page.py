@@ -56,7 +56,7 @@ class BasePage(Panel):
 
         for panel in self.panel_items:
             if isinstance(panel, DownloadTaskItemPanel):
-                panel.utils.destory_panel(remove_file = True)
+                panel.utils.destroy_panel(remove_file = True)
 
         self.scroller.remove_more_panel()
         self.scroller.Remove()
