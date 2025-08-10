@@ -3,8 +3,10 @@ import wx
 from utils.common.model.data_type import LiveRoomInfo
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import LiveRecordingStatus, LiveStatus
+from utils.common.thread import Thread
 
 from utils.module.pic.cover import Cover
+from utils.module.recorder import Recorder
 
 from gui.dialog.live_recording_option import LiveRecordingOptionDialog
 
@@ -85,6 +87,11 @@ class Utils:
             return
         
         self.set_recording_status(LiveRecordingStatus.Recording)
+
+        Thread(target = self.recording_thread).start()
+
+    def recording_thread(self):
+        self.recorder = Recorder(self.room_info, None)
 
     def stop_recording(self):
         self.set_recording_status(LiveRecordingStatus.Free)

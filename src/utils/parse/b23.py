@@ -1,6 +1,6 @@
 from utils.common.regex import Regex
 
-from utils.common.model.data_type import ParseCallback
+from utils.common.model.callback import ParseCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
 from utils.common.request import RequestUtils

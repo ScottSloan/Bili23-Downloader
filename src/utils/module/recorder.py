@@ -2,6 +2,7 @@ import time
 from threading import Event
 
 from utils.common.request import RequestUtils
+from utils.common.model.data_type import LiveRoomInfo
 
 class Utils:
     def __init__(self, parent):
@@ -12,8 +13,8 @@ class Utils:
             pass
 
 class Recorder:
-    def __init__(self):
-        pass
+    def __init__(self, room_info: LiveRoomInfo, callback):
+        self.room_info = room_info
 
     def init_utils(self):
         self.stop_event = Event()
@@ -27,7 +28,7 @@ class Recorder:
         file = ""
 
         with open(file, "r+b") as f:
-            with RequestUtils.request_get("", stream = True) as req:
+            with RequestUtils.request_get(self.room_info.stream_url, stream = True) as req:
                 for chunk in req.iter_content(chunk_size = 1024):
                     if chunk:
                         if self.stop_event.is_set():

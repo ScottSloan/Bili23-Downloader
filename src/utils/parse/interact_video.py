@@ -1,12 +1,12 @@
 import json
 import time
-from typing import List, Callable
+from typing import List
 
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
-from utils.common.model.data_type import ParseCallback
+from utils.common.model.callback import ParseCallback
 from utils.common.enums import ProcessingType
 
 from utils.parse.parser import Parser

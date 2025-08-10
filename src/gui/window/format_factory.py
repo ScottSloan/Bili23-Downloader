@@ -4,7 +4,8 @@ import os
 from utils.config import Config
 
 from utils.common.style.icon_v4 import Icon, IconID, IconSize
-from utils.common.model.data_type import Callback, Process, PlayerCallback, RealTimeCallback
+from utils.common.model.data_type import Process
+from utils.common.model.callback import Callback, PlayerCallback, ConsoleCallback
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.io.directory import Directory
 from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_windows_map, ffmpeg_video_gpu_linux_map, ffmpeg_video_gpu_darwin_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
@@ -542,7 +543,7 @@ class ContainerPage(Panel):
             wx.CallAfter(worker)
 
         def get_callback(self, success_message: str):
-            class callback(RealTimeCallback):
+            class callback(ConsoleCallback):
                 @staticmethod
                 def onReadOutput(output: str):
                     self.onUpdateInfo(FFmpeg.Utils.parse_progress_info(output))

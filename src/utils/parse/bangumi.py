@@ -3,7 +3,7 @@ from utils.config import Config
 from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_map
 from utils.common.enums import StatusCode
-from utils.common.model.data_type import ParseCallback
+from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex

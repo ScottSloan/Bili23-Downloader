@@ -1,12 +1,12 @@
 import math
 import time
-from typing import Dict, List
+from typing import Dict
 
 from utils.auth.wbi import WbiUtils
 from utils.config import Config
 
 from utils.common.request import RequestUtils
-from utils.common.model.data_type import ParseCallback
+from utils.common.model.callback import ParseCallback
 from utils.common.enums import StatusCode, ProcessingType
 
 from utils.parse.parser import Parser

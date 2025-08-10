@@ -1,7 +1,8 @@
 from utils.config import Config
 
 from utils.common.enums import StatusCode
-from utils.common.model.data_type import ParseCallback, LiveRoomInfo
+from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser

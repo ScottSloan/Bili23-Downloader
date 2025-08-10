@@ -3,7 +3,9 @@ import os
 
 from utils.config import Config
 
-from utils.common.model.data_type import DownloadTaskInfo, DownloaderCallback, Callback
+from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.callback import DownloaderCallback
+from utils.common.model.callback import Callback
 from utils.common.enums import Platform, ParseType, DownloadStatus
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.map import extra_map, video_quality_map, video_codec_map, audio_quality_map, get_mapping_key_by_value

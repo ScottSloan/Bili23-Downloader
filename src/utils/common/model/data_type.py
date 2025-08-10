@@ -1,7 +1,6 @@
 import os
 import json
 from typing import List, Dict
-from abc import ABC, abstractmethod
 
 from utils.config import Config
 
@@ -287,59 +286,6 @@ class RangeDownloadInfo:
         self.file_path: str = ""
         self.range: List[int] = []
 
-class DownloaderCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onStart():
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onDownloading(speed: str):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onComplete():
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onError():
-        pass
-
-class TaskPanelCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onStartNextTask():
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onUpdateCountTitle(show_toast = False):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onAddPanel(task_info: DownloadTaskInfo):
-        pass
-
-class DownloadPageCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onSetTitle(name: str, count: int):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onAddPanel(task_info: DownloadTaskInfo):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onStartNextTask():
-        pass
-
 class NotificationMessage:
     def __init__(self):
         self.video_title: str = ""
@@ -438,70 +384,6 @@ class Process:
     output: str = None
     return_code: int = None
 
-class Callback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onSuccess(*process: Process):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onError(*process: Process):
-        pass
-
-class ParseCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onError():
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onJump(url: str):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onChangeProcessingType(type):
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def onUpdateName(name: str):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def onUpdateTitle(title: str):
-        pass
-
-class PlayerCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onLengthChange(length: int):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def onReset():
-        pass
-
-class RealTimeCallback(ABC):
-    @staticmethod
-    @abstractmethod
-    def onReadOutput(output: str):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def onSuccess(process):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def onError(process):
-        pass
-
 class CommentData:
     start_time: int = 0
     end_time: int = 0
@@ -560,6 +442,8 @@ class LiveRoomInfo:
         self.directory: str = ""
         self.quality: int = 0
         self.codec: int = 0
+
+        self.stream_url: str = ""
 
     def to_dict(self):
         return {
