@@ -137,9 +137,9 @@ class Parser:
     def set_video_quality_id(self):
         data = VideoPreview.get_download_json(self.parse_type)
 
-        self.video_quality_id_list, self.video_quality_desc_list = VideoPreview.get_video_quality_id_desc_list(data)
+        self.video_quality_data_dict = VideoPreview.get_video_quality_data_dict(data)
 
-        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else max(VideoPreview.get_video_available_quality_id_list(data))
+        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_data_dict.id_list() else max(VideoPreview.get_video_available_quality_id_list(data))
 
         self.video_codec_id = Config.Download.video_codec_id
 
@@ -978,5 +978,5 @@ class MainWindow(Frame):
         return self.parser.video_quality_id
     
     @property
-    def video_quality_desc_list(self):
-        return self.parser.video_quality_desc_list
+    def video_quality_data_dict(self):
+        return self.parser.video_quality_data_dict

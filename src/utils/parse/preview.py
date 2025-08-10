@@ -1,11 +1,12 @@
-from utils.common.enums import ParseType, VideoQualityID, AudioQualityID, StreamType, VideoCodecID
+from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodecID
 from utils.common.request import RequestUtils
 from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.dict_info import DictInfo
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
-from utils.parse.live import LiveInfo, LiveParser
+from utils.parse.live import LiveParser
 from utils.parse.audio import AudioInfo
 
 from utils.module.web.cdn import CDN
@@ -135,14 +136,9 @@ class VideoPreview:
 
     @staticmethod
     def get_audio_quality_id(audio_quality_id: int, data: dict):
-        audio_quality_id_list, audio_quality_desc_list = AudioInfo.get_audio_quality_id_desc_list(data)
+        audio_quality_data_dict = AudioInfo.get_audio_quality_id_desc_list(data, auto = False)
 
-        audio_quality_id_list.remove(AudioQualityID._Auto.value)
-
-        if audio_quality_id in audio_quality_id_list:
-            return audio_quality_id
-        else:
-            return audio_quality_id_list[0] if audio_quality_id_list else None
+        return audio_quality_data_dict.check_id(audio_quality_id)
         
     @staticmethod
     def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: dict):
@@ -180,13 +176,14 @@ class VideoPreview:
                 pass
 
     @classmethod
-    def get_video_quality_id_desc_list(cls, data: dict):
-        video_quality_id_list, video_quality_desc_list = [VideoQualityID._Auto.value], ["自动"]
+    def get_video_quality_data_dict(cls, data: dict):
+        video_quality_data_dict = DictInfo()
 
-        video_quality_id_list.extend(data["accept_quality"])
-        video_quality_desc_list.extend(data["accept_description"])
+        video_quality_data_dict["自动"] = VideoQualityID._Auto.value
 
-        return video_quality_id_list, video_quality_desc_list
+        video_quality_data_dict.update(dict(zip(data["accept_description"], data["accept_quality"])))
+
+        return video_quality_data_dict
 
     @staticmethod
     def get_video_available_quality_id_list(data: dict):
@@ -256,5 +253,20 @@ class LivePreview:
     def get_live_stream_json(self):
         self.stream_json = LiveParser.get_live_stream_info(self.room_id)
 
-    def get_quality_desc_list(self):
-        return [entry["media_base_desc"]["detail_desc"]["desc"] for entry in self.stream_json.get("g_qn_desc") if entry.get("media_base_desc")]
+    def get_quality_data_dict(self):
+        data = {}
+
+        for entry in self.stream_json.get("g_qn_desc"):
+            if entry.get("media_base_desc"):
+                desc = entry["media_base_desc"]["detail_desc"]["desc"]
+                qn = entry["media_base_desc"]["qn"]
+
+                data[desc] = qn
+
+        return data
+    
+    def get_codec_data_dict(self):
+        return {
+            "AVC/H.264": "avc",
+            "HEVC/H.265": "hevc"
+        }

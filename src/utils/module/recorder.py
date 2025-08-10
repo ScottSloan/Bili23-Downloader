@@ -20,6 +20,9 @@ class Recorder:
 
         self.current_downloaded_size = 0
 
+    def start_recording(self):
+        pass
+
     def record_thread(self):
         file = ""
 
@@ -32,6 +35,9 @@ class Recorder:
 
                         f.write(chunk)
 
+    def stop_recording(self):
+        self.stop_event.set()
+
     def listener(self):
         while self.stop_event.is_set():
             temp_downloaded_size = self.current_downloaded_size
@@ -39,5 +45,4 @@ class Recorder:
             time.sleep(1)
 
             speed = self.current_downloaded_size - temp_downloaded_size
-
             

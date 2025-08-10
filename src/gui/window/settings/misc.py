@@ -112,7 +112,7 @@ class MiscPage(Page):
             self.restart()
     
     def onResetToDefaultEVT(self, event):
-        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否要恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             File.remove_file(Config.APP.app_config_path)

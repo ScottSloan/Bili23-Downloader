@@ -557,6 +557,10 @@ class LiveRoomInfo:
 
         self.option_setuped: bool = False
 
+        self.directory: str = ""
+        self.quality: int = 0
+        self.codec: int = 0
+
     def to_dict(self):
         return {
             "cover_url": self.cover_url,
@@ -580,3 +584,28 @@ class LiveRoomInfo:
         self.live_status = data.get("live_status")
         self.recording_status = data.get("recording_status")
         self.option_setuped = data.get("option_setuped")
+
+    def load_from_file(self, file_path: str):
+        with open(file_path, "r", encoding = "utf-8") as f:
+            data = json.loads(f.read())
+
+            self.load_from_dict(data)
+
+    def update(self):
+        self.min_version = Config.APP.live_file_min_version_code
+
+        self.write(self.to_dict())
+
+    def remove_file(self):
+        File.remove_file(self.file_path)
+
+    def write(self, contents: dict):
+        with open(self.file_path, "w", encoding = "utf-8") as f:
+            f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
+
+    def is_valid(self):
+        return self.min_version >= Config.APP.live_file_min_version_code
+
+    @property
+    def file_path(self):
+        return os.path.join(Config.User.live_file_directory, f"info_{self.room_id}.json")

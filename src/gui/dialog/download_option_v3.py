@@ -21,6 +21,7 @@ from gui.dialog.error import ErrorInfoDialog
 from gui.component.staticbox.extra import ExtraStaticBox
 from gui.component.label.info_label import InfoLabel
 from gui.component.misc.tooltip import ToolTip
+from gui.component.choice.choice import Choice
 
 class MediaInfoPanel(Panel):
     def __init__(self, parent):
@@ -46,7 +47,7 @@ class MediaInfoPanel(Panel):
         stream_type_hbox.Add(stream_type_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
-        self.video_quality_choice = wx.Choice(self, -1)
+        self.video_quality_choice = Choice(self)
         video_quality_tooltip = ToolTip(self)
         video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
         
@@ -64,7 +65,7 @@ class MediaInfoPanel(Panel):
         video_quality_info_hbox.Add(self.video_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.audio_quality_lab = wx.StaticText(self, -1, "音质")
-        self.audio_quality_choice = wx.Choice(self, -1)
+        self.audio_quality_choice = Choice(self)
         self.audio_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.audio_quality_warn_icon.Hide()
         self.audio_quality_warn_icon.SetToolTip("当前所选的音质与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
@@ -75,7 +76,7 @@ class MediaInfoPanel(Panel):
         audio_quality_info_hbox.Add(self.audio_quality_info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_codec_lab = wx.StaticText(self, -1, "编码格式")
-        self.video_codec_choice = wx.Choice(self, -1)
+        self.video_codec_choice = Choice(self)
         self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_codec_warn_icon.Hide()
         self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n杜比视界和HDR 视频仅支持 H.265 编码。")
@@ -116,14 +117,14 @@ class MediaInfoPanel(Panel):
         self.parent: DownloadOptionDialog = parent
         self.main_window: MainWindow = self.parent.GetParent()
 
-        self.video_quality_choice.Set(self.main_window.video_quality_desc_list)
-        self.video_quality_choice.SetStringSelection(get_mapping_key_by_value(video_quality_map, self.main_window.video_quality_id))
+        self.video_quality_choice.SetChoices(self.main_window.video_quality_data_dict)
+        self.video_quality_choice.SetCurrentSelection(self.main_window.video_quality_id)
 
-        self.audio_quality_choice.Set(AudioInfo.audio_quality_desc_list)
-        self.audio_quality_choice.SetStringSelection(get_mapping_key_by_value(audio_quality_map, AudioInfo.audio_quality_id))
+        self.audio_quality_choice.SetChoices(AudioInfo.audio_quality_data_dict)
+        self.audio_quality_choice.SetCurrentSelection(AudioInfo.audio_quality_id)
 
-        self.video_codec_choice.Set(list(video_codec_preference_map.keys()))
-        self.video_codec_choice.Select(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
+        self.video_codec_choice.SetChoices(video_codec_preference_map)
+        self.video_codec_choice.SetCurrentSelection(Config.Download.video_codec_id)
 
         self.preview = VideoPreview(self.main_window.parser.parse_type, self.main_window.stream_type)
 
@@ -177,7 +178,7 @@ class MediaInfoPanel(Panel):
                 self.video_quality_info_lab.SetLabel(get_label())
                 self.video_codec_info_lab.SetLabel(get_mapping_key_by_value(video_codec_map, info["codec"]))
 
-                video_quality_id = self.video_quality_id if self.video_quality_id != VideoQualityID._Auto.value else video_quality_map.get(self.video_quality_choice.GetString(1))
+                video_quality_id = self.video_quality_id if self.video_quality_id != VideoQualityID._Auto.value else self.video_quality_choice.GetClientData(1)
 
                 self.video_quality_warn_icon.Show(info["id"] != video_quality_id)
                 self.video_codec_warn_icon.Show(info["codec"] != self.video_codec_id)
@@ -219,7 +220,7 @@ class MediaInfoPanel(Panel):
                 self.audio_quality_info_lab.SetLabel(get_label())
 
                 if info not in [None, "FLV", "MP4"]:
-                    audio_quality_id = self.audio_quality_id if self.audio_quality_id != AudioQualityID._Auto.value else audio_quality_map.get(self.audio_quality_choice.GetString(1))
+                    audio_quality_id = self.audio_quality_id if self.audio_quality_id != AudioQualityID._Auto.value else self.audio_quality_choice.GetClientData(1)
 
                     self.audio_quality_warn_icon.Show(info["id"] != audio_quality_id)
 
@@ -293,15 +294,15 @@ class MediaInfoPanel(Panel):
 
     @property
     def video_quality_id(self):
-        return video_quality_map.get(self.video_quality_choice.GetStringSelection())
+        return self.video_quality_choice.GetCurrentClientData()
 
     @property
     def audio_quality_id(self):
-        return audio_quality_map.get(self.audio_quality_choice.GetStringSelection())
+        return self.audio_quality_choice.GetCurrentClientData()
     
     @property
     def video_codec_id(self):
-        return video_codec_preference_map.get(self.video_codec_choice.GetStringSelection())
+        return self.video_codec_choice.GetCurrentClientData()
 
     @property
     def is_warn_show(self):

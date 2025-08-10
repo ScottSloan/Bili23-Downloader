@@ -1,14 +1,15 @@
 import wx
 
 from utils.config import Config
-
 from utils.common.thread import Thread
+from utils.common.model.data_type import LiveRoomInfo
 
 from utils.parse.preview import LivePreview
 
 from gui.component.panel.panel import Panel
-
 from gui.component.window.dialog import Dialog
+
+from gui.component.choice.choice import Choice
 
 class DirectoryStaticBox(Panel):
     def __init__(self, parent: wx.Window):
@@ -52,13 +53,13 @@ class MediaInfoStaticBox(Panel):
         media_box = wx.StaticBox(self, -1, "媒体信息设置")
 
         protocol_lab = wx.StaticText(media_box, -1, "直播协议")
-        self.protocol_choice = wx.Choice(media_box, -1)
+        self.protocol_choice = Choice(media_box, -1)
 
         quality_lab = wx.StaticText(media_box, -1, "清晰度")
-        self.quality_choice = wx.Choice(media_box, -1)
+        self.quality_choice = Choice(media_box, -1)
 
         codec_lab = wx.StaticText(media_box, -1, "编码格式")
-        self.codec_chocie = wx.Choice(media_box, -1)
+        self.codec_chocie = Choice(media_box, -1)
 
         media_grid_box = wx.FlexGridSizer(3, 2, 0, 0)
         media_grid_box.Add(protocol_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -88,15 +89,22 @@ class MediaInfoStaticBox(Panel):
             self.protocol_choice.Set(["http_stream"])
             self.protocol_choice.SetSelection(0)
 
-            self.quality_choice.Set(quality_desc_list)
-            self.quality_choice.SetSelection(0)
+            self.quality_choice.SetChoices(quality_data_dict)
 
-            self.codec_chocie.Set(["AVC/H.264", "HEVC/H.265"])
-            self.codec_chocie.SetSelection(0)
+            self.codec_chocie.SetChoices(codec_data_dict)
 
-        quality_desc_list = self.preview.get_quality_desc_list()
+        quality_data_dict = self.preview.get_quality_data_dict()
+        codec_data_dict = self.preview.get_codec_data_dict()
 
         wx.CallAfter(worker)
+
+    @property
+    def quality_id(self):
+        return self.quality_choice.GetCurrentClientData()
+
+    @property
+    def codec_id(self):
+        return self.codec_chocie.GetCurrentClientData()
 
 class SplitStaticBox(Panel):
     def __init__(self, parent: wx.Window):
@@ -154,8 +162,8 @@ class SplitStaticBox(Panel):
             self.split_unit_right_lab.SetLabel("MB 分为一段")
 
 class LiveRecordingOptionDialog(Dialog):
-    def __init__(self, parent: wx.Window, room_id: int):
-        self.room_id = room_id
+    def __init__(self, parent: wx.Window, room_info: LiveRoomInfo):
+        self.room_info = room_info
 
         Dialog.__init__(self, parent, "录制选项")
 
@@ -193,10 +201,15 @@ class LiveRecordingOptionDialog(Dialog):
 
     def init_utils(self):
         self.dir_box.load_data()
-        self.media_box.load_data(self.room_id)
+        self.media_box.load_data(self.room_info.room_id)
         self.split_box.load_data()
 
     def onOKEVT(self):
         if not self.dir_box.path_box.GetValue():
             wx.MessageDialog(self, "保存设置失败\n\n工作目录不能为空", "警告", wx.ICON_WARNING).Show()
             return True
+        
+        self.room_info.directory = self.dir_box.path_box.GetValue()
+
+        self.room_info.quality = self.media_box.quality_id
+        self.room_info.codec = self.media_box.codec_id

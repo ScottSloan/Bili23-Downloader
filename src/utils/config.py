@@ -117,6 +117,7 @@ class Config:
         version_code: int = 165000
 
         task_file_min_version_code: int = 165000
+        live_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 165000
         user_config_file_min_version_code: int = 1620
 
@@ -188,6 +189,7 @@ class Config:
     class User:
         directory: str = ""
         download_file_directory: str = ""
+        live_file_directory: str = ""
         user_config_path: str = ""
 
         face_path: str = ""
@@ -420,7 +422,7 @@ class Config:
         cls.app_config = Config.APPConfig()
         cls.user_config = Config.UserConfig()
 
-        Directory.create_directory(Config.User.download_file_directory)
+        Directory.create_directories([Config.User.download_file_directory, Config.User.live_file_directory])
 
     @staticmethod
     def init_path():
@@ -433,6 +435,7 @@ class Config:
 
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
+        Config.User.live_file_directory = os.path.join(Config.User.directory, "live")
 
     @classmethod
     def save_app_config(cls):
