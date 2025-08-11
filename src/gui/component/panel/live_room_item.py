@@ -1,6 +1,7 @@
 import wx
 
 from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.callback import LiveRecordingCallback
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import LiveRecordingStatus, LiveStatus
 from utils.common.thread import Thread
@@ -43,6 +44,9 @@ class Utils:
 
         def set_area(self, parent_area: str, area: str):
             self.parent.area_lab.SetLabel(f"{parent_area} · {area}")
+
+        def set_speed(self, speed: str):
+            self.parent.speed_lab.SetLabel(speed)
 
         def set_pause_btn(self, icon_id: IconID, tool_tip: str):
             self.parent.pause_btn.SetBitmap(Icon.get_icon_bitmap(icon_id))
@@ -91,10 +95,20 @@ class Utils:
         Thread(target = self.recording_thread).start()
 
     def recording_thread(self):
-        self.recorder = Recorder(self.room_info, None)
+        self.recorder = Recorder(self.room_info, self.get_recorder_callback())
+
+        self.recorder.start_recording()
 
     def stop_recording(self):
         self.set_recording_status(LiveRecordingStatus.Free)
+
+    def onRecording(self, speed: str):
+        def worker():
+            self.ui.set_speed(speed)
+
+            self.ui.update()
+
+        wx.CallAfter(worker)
 
     def check_live_status(self):
         if LiveStatus(self.room_info.live_status) == LiveStatus.Not_Started:
@@ -132,6 +146,13 @@ class Utils:
 
         self.ui.update()
 
+    def get_recorder_callback(self):
+        class RecorderCallback(LiveRecordingCallback):
+            def onRecording(speed: str):
+                self.onRecording(speed)
+        
+        return RecorderCallback
+
 class LiveRoomItemPanel(Panel):
     def __init__(self, parent, room_info: LiveRoomInfo, live_recording_window):
         from gui.window.live_recording import LiveRecordingWindow
@@ -167,16 +188,18 @@ class LiveRoomItemPanel(Panel):
         self.live_status_lab = InfoLabel(self, "直播中", size = self.FromDIP((50, 16)))
         self.rec_bmp = wx.StaticBitmap(self, -1, bitmap = Icon.get_icon_bitmap(IconID.Rec))
         self.rec_bmp.Hide()
-        self.recording_lab = wx.StaticText(self, -1, "录制中")
+        self.recording_lab = wx.StaticText(self, -1, "录制中", size = self.FromDIP((50, 16)))
         self.recording_lab.SetForegroundColour(wx.Colour(235, 54, 67))
         self.recording_lab.Hide()
+        self.speed_lab = InfoLabel(self, "")
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.room_id_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.area_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.live_status_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
-        info_hbox.Add(self.rec_bmp, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.RIGHT) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
-        info_hbox.Add(self.recording_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        info_hbox.Add(self.rec_bmp, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
+        info_hbox.Add(self.recording_lab, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
+        info_hbox.Add(self.speed_lab, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
 
         room_info_vbox = wx.BoxSizer(wx.VERTICAL)
         room_info_vbox.Add(self.up_name_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))

@@ -8,7 +8,7 @@ from utils.common.model.data_type import Process
 from utils.common.model.callback import Callback, PlayerCallback, ConsoleCallback
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.io.directory import Directory
-from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_windows_map, ffmpeg_video_gpu_linux_map, ffmpeg_video_gpu_darwin_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
+from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
 from utils.common.regex import Regex
 from utils.common.enums import Platform
 from utils.common.thread import Thread
@@ -328,17 +328,6 @@ class ContainerPage(Panel):
             self.Bind_EVT()
 
         def init_UI(self):
-            def get_gpu_list():
-                match Platform(Config.Sys.platform):
-                    case Platform.Windows:
-                        return ffmpeg_video_gpu_windows_map.keys()
-                    
-                    case Platform.Linux:
-                        return ffmpeg_video_gpu_linux_map.keys()
-                    
-                    case Platform.macOS:
-                        return ffmpeg_video_gpu_darwin_map.keys()
-                    
             output_box = wx.StaticBox(self, -1, "输出设置")
 
             output_lab = wx.StaticText(output_box, -1, "输出")
@@ -361,7 +350,7 @@ class ContainerPage(Panel):
             self.video_stream_crf_choice.SetStringSelection("关闭")
 
             self.video_stream_gpu_lab = wx.StaticText(video_stream_box, -1, "GPU")
-            self.video_stream_gpu_choice = wx.Choice(video_stream_box, -1, choices = list(get_gpu_list()))
+            self.video_stream_gpu_choice = wx.Choice(video_stream_box, -1, choices = list(ffmpeg_video_gpu_map.get(Config.Sys.platform).keys()))
             self.video_stream_gpu_choice.SetStringSelection("关闭")
 
             self.video_stream_bitrate_lab = wx.StaticText(video_stream_box, -1, "比特率")

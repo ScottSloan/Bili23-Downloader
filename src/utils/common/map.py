@@ -395,6 +395,22 @@ ffmpeg_video_crf_map = {
     "28（低质量）": 28,
 }
 
+ffmpeg_video_gpu_map = {
+    "windows": {
+        "关闭": 0,
+        "NVIDIA": 1,
+        "AMD": 2,
+        "Intel": 3,
+    },
+    "linux": {
+        "关闭": 0,
+        "VAAPI": 1,
+    },
+    "darwin": {
+        "关闭": 0,
+        "Apple": 1,
+    }
+}
 ffmpeg_video_gpu_windows_map = {
     "关闭": 0,
     "NVIDIA": 1,
@@ -506,9 +522,3 @@ def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
     return mapping_reversed.get(value, default)
-
-def get_mapping_index_by_value(mapping: dict, value: Any):
-    return list(mapping.values()).index(value)
-
-def get_mapping_index_by_key(mapping: dict, key: Any):
-    return list(mapping.keys()).index(key)

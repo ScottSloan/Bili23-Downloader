@@ -805,7 +805,10 @@ class MainWindow(Frame):
 
                 event.Skip()
 
-    def onShowDownloadWindowEVT(self, event):
+    def onShowDownloadWindowEVT(self, event: wx.CommandEvent = None):
+        if not event and not Config.Basic.auto_show_download_window:
+            return
+
         if not self.download_window.IsShown():
             self.download_window.Show()
         
@@ -813,9 +816,7 @@ class MainWindow(Frame):
             if Config.Basic.auto_show_download_window:
                 self.download_window.Iconize(False)
         
-        if Config.Basic.auto_show_download_window:
-            #self.download_window.downloading_page_btn.onClickEVT(event)
-            self.download_window.Raise()
+        self.download_window.Raise()
 
     def onShowLiveRecordingWindowEVT(self, event):
         if not self.live_recording_window.IsShown():
@@ -827,27 +828,23 @@ class MainWindow(Frame):
         self.live_recording_window.Raise()
 
     def onDownloadEVT(self, event):
-        def download_video():
-            def after_show_items_callback():
-                self.utils.hide_processing_window()
-                self.onShowDownloadWindowEVT(event)
-
-            # 确认下载选项
-            if Config.Basic.auto_popup_option_dialog:
-                if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
-                    return
-
-            self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
-
-            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
-
-            self.utils.show_processing_window(ProcessingType.Process)
+        def after_show_items_callback():
+            self.utils.hide_processing_window()
+            self.onShowDownloadWindowEVT()
 
         if self.utils.check_download_items():
             return
         
-        download_video()
+        if Config.Basic.auto_popup_option_dialog:
+            if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+                return
 
+        self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
+
+        Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
+
+        self.utils.show_processing_window(ProcessingType.Process)
+        
     def onParseEVT(self, event):
         url = self.url_box.GetValue()
 

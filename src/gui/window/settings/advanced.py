@@ -1,7 +1,7 @@
 import wx
 
 from utils.config import Config
-from utils.common.map import webpage_option_map, get_mapping_index_by_value
+from utils.common.map import webpage_option_map
 
 from gui.component.misc.tooltip import ToolTip
 from gui.component.text_ctrl.int_ctrl import IntCtrl
@@ -123,7 +123,7 @@ class AdvancedPage(Page):
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
         Config.Temp.user_agent = Config.Advanced.user_agent
 
-        self.webpage_option_choice.SetSelection(get_mapping_index_by_value(webpage_option_map, Config.Advanced.webpage_option))
+        self.webpage_option_choice.SetSelection(Config.Advanced.webpage_option)
         self.ws_port_box.SetValue(str(Config.Advanced.websocket_port))
 
         self.onEnableSwitchCDNEVT(0)

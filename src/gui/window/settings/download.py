@@ -1,7 +1,7 @@
 import wx
 
 from utils.config import Config
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, number_type_map, get_mapping_index_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, number_type_map
 
 from utils.module.notification import NotificationManager
 
@@ -10,6 +10,7 @@ from gui.dialog.setting.custom_file_name_v2 import CustomFileNameDialog
 
 from gui.component.misc.tooltip import ToolTip
 from gui.component.text_ctrl.int_ctrl import IntCtrl
+from gui.component.choice.choice import Choice
 
 class DownloadPage(Page):
     def __init__(self, parent: wx.Window):
@@ -41,7 +42,8 @@ class DownloadPage(Page):
         self.max_download_slider = wx.Slider(download_box, -1, 1, 1, 10)
 
         video_lab = wx.StaticText(download_box, -1, "默认下载清晰度")
-        self.video_quality_choice = wx.Choice(download_box, -1, choices = list(video_quality_map.keys()))
+        self.video_quality_choice = Choice(download_box)
+        self.video_quality_choice.SetChoices(video_quality_map)
         self.video_quality_tip = ToolTip(download_box)
         self.video_quality_tip.set_tooltip("指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度")
 
@@ -51,7 +53,8 @@ class DownloadPage(Page):
         video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         audio_lab = wx.StaticText(download_box, -1, "默认下载音质")
-        self.audio_quality_choice = wx.Choice(download_box, -1, choices = list(audio_quality_map.keys()))
+        self.audio_quality_choice = Choice(download_box)
+        self.audio_quality_choice.SetChoices(audio_quality_map)
         self.audio_quality_tip = ToolTip(download_box)
         self.audio_quality_tip.set_tooltip("指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质")
 
@@ -61,7 +64,8 @@ class DownloadPage(Page):
         sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
-        self.codec_choice = wx.Choice(download_box, -1, choices = list(video_codec_preference_map.keys()))
+        self.codec_choice = Choice(download_box)
+        self.codec_choice.SetChoices(video_codec_preference_map)
         self.codec_tip = ToolTip(download_box)
         self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认使用 AVC/H.264 编码\n\n杜比视界和HDR 视频仅支持 HEVC/H.265 编码")
 
@@ -146,11 +150,10 @@ class DownloadPage(Page):
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download_count))
         self.max_download_slider.SetValue(Config.Download.max_download_count)
         
-        self.video_quality_choice.SetSelection(get_mapping_index_by_value(video_quality_map, Config.Download.video_quality_id))
-        self.audio_quality_choice.SetSelection(get_mapping_index_by_value(audio_quality_map, Config.Download.audio_quality_id))
-
-        self.codec_choice.SetSelection(get_mapping_index_by_value(video_codec_preference_map, Config.Download.video_codec_id))
-
+        self.video_quality_choice.SetCurrentSelection(Config.Download.video_quality_id)
+        self.audio_quality_choice.SetCurrentSelection(Config.Download.audio_quality_id)
+        self.codec_choice.SetCurrentSelection(Config.Download.video_codec_id)
+        
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
         self.number_type_choice.SetSelection(Config.Download.number_type)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
@@ -164,9 +167,9 @@ class DownloadPage(Page):
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
-        Config.Download.video_quality_id = video_quality_map[self.video_quality_choice.GetStringSelection()]
-        Config.Download.audio_quality_id = audio_quality_map[self.audio_quality_choice.GetStringSelection()]
-        Config.Download.video_codec_id = video_codec_preference_map[self.codec_choice.GetStringSelection()]
+        Config.Download.video_quality_id = self.video_quality_choice.GetCurrentClientData()
+        Config.Download.audio_quality_id = self.audio_quality_choice.GetCurrentClientData()
+        Config.Download.video_codec_id = self.codec_choice.GetCurrentClientData()
         Config.Download.number_type = self.number_type_choice.GetSelection()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()

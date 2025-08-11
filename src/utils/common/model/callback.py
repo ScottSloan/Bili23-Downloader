@@ -88,4 +88,7 @@ class ConsoleCallback(ABC):
         pass
 
 class LiveRecordingCallback(ABC):
-    pass
+    @staticmethod
+    @abstractmethod
+    def onRecording(speed: str):
+        pass

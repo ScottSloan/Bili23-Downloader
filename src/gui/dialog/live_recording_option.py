@@ -209,7 +209,7 @@ class LiveRecordingOptionDialog(Dialog):
             wx.MessageDialog(self, "保存设置失败\n\n工作目录不能为空", "警告", wx.ICON_WARNING).Show()
             return True
         
-        self.room_info.directory = self.dir_box.path_box.GetValue()
+        self.room_info.base_directory = self.dir_box.path_box.GetValue()
 
         self.room_info.quality = self.media_box.quality_id
         self.room_info.codec = self.media_box.codec_id

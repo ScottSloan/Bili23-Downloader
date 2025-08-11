@@ -439,35 +439,66 @@ class LiveRoomInfo:
 
         self.option_setuped: bool = False
 
-        self.directory: str = ""
+        self.base_directory: str = ""
+        self.working_directory: str = ""
         self.quality: int = 0
         self.codec: int = 0
 
         self.stream_url: str = ""
 
+        self.index: int = 1
+
     def to_dict(self):
         return {
             "cover_url": self.cover_url,
+
             "room_id": self.room_id,
+
             "up_name": self.up_name,
             "title": self.title,
+
             "parent_area": self.parent_area,
             "area": self.area,
+
             "live_status": self.live_status,
             "recording_status": self.recording_status,
-            "option_setuped": self.option_setuped
+
+            "option_setuped": self.option_setuped,
+
+            "base_directory": self.base_directory,
+            "working_directory": self.working_directory,
+            "quality": self.quality,
+            "codec": self.codec,
+
+            "stream_url": self.stream_url,
+
+            "index": self.index
         }
 
     def load_from_dict(self, data: dict):
-        self.cover_url = data.get("cover_url")
-        self.room_id = data.get("room_id")
-        self.up_name = data.get("up_name")
-        self.title = data.get("title")
-        self.parent_area = data.get("parent_area")
-        self.area = data.get("area")
-        self.live_status = data.get("live_status")
-        self.recording_status = data.get("recording_status")
-        self.option_setuped = data.get("option_setuped")
+        self.cover_url = data.get("cover_url", self.cover_url)
+
+        self.room_id = data.get("room_id", self.room_id)
+
+        self.up_name = data.get("up_name", self.up_name)
+        self.title = data.get("title", self.title)
+
+        self.parent_area = data.get("parent_area", self.parent_area)
+        self.area = data.get("area", self.area)
+
+        self.live_status = data.get("live_status", self.live_status)
+        self.recording_status = data.get("recording_status", self.recording_status)
+
+        self.option_setuped = data.get("option_setuped", self.option_setuped)
+
+        self.base_directory = data.get("base_directory", self.base_directory)
+        self.working_directory = data.get("working_directory", self.working_directory)
+        self.quality = data.get("quality", self.quality)
+        self.codec = data.get("codec", self.codec)
+
+        self.stream_url = data.get("stream_url", self.stream_url)
+
+        self.index = data.get("index", self.index)
 
     def load_from_file(self, file_path: str):
         with open(file_path, "r", encoding = "utf-8") as f:
