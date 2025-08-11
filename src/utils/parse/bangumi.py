@@ -165,8 +165,6 @@ class BangumiParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        cls.dumps_json("download5.json", resp)
-
         BangumiInfo.download_json = resp["result"].copy()
 
         if not qn:

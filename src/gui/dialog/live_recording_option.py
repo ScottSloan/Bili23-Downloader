@@ -53,13 +53,13 @@ class MediaInfoStaticBox(Panel):
         media_box = wx.StaticBox(self, -1, "媒体信息设置")
 
         protocol_lab = wx.StaticText(media_box, -1, "直播协议")
-        self.protocol_choice = Choice(media_box, -1)
+        self.protocol_choice = Choice(media_box)
 
         quality_lab = wx.StaticText(media_box, -1, "清晰度")
-        self.quality_choice = Choice(media_box, -1)
+        self.quality_choice = Choice(media_box)
 
         codec_lab = wx.StaticText(media_box, -1, "编码格式")
-        self.codec_chocie = Choice(media_box, -1)
+        self.codec_chocie = Choice(media_box)
 
         media_grid_box = wx.FlexGridSizer(3, 2, 0, 0)
         media_grid_box.Add(protocol_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))

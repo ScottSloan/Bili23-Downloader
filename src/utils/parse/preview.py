@@ -259,7 +259,7 @@ class LivePreview:
         for entry in self.stream_json.get("g_qn_desc"):
             if entry.get("media_base_desc"):
                 desc = entry["media_base_desc"]["detail_desc"]["desc"]
-                qn = entry["media_base_desc"]["qn"]
+                qn = entry["qn"]
 
                 data[desc] = qn
 

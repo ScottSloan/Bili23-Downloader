@@ -246,6 +246,7 @@ class DownloadParser(Parser):
         except Exception as e:
             raise GlobalException(callback = self.callback) from e
 
+    @staticmethod
     def check_cid(task_info: DownloadTaskInfo):
         if not task_info.cid:
             task_info.cid = VideoParser.get_video_cid(task_info.bvid)

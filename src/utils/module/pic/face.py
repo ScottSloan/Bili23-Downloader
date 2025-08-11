@@ -49,5 +49,5 @@ class Face:
     
     @staticmethod
     def remove():
-        File.remove_file(Config.user_config.file_path)
+        File.remove_file(Config.User.face_path)
     

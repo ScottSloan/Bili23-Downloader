@@ -9,6 +9,8 @@ from utils.common.thread import Thread
 from utils.module.pic.cover import Cover
 from utils.module.recorder import Recorder
 
+from utils.parse.live_stream import LiveStream
+
 from gui.dialog.live_recording_option import LiveRecordingOptionDialog
 
 from gui.component.label.info_label import InfoLabel
@@ -79,6 +81,11 @@ class Utils:
         self.ui.show_cover(f"{self.room_info.cover_url}@.jpeg")
 
     def destroy_panel(self):
+        if hasattr(self, "recorder"):
+            self.recorder.stop_recording()
+
+        self.room_info.remove_file()
+
         self.parent.Destroy()
 
         self.parent.live_recording_window.remove_item()
@@ -97,10 +104,17 @@ class Utils:
     def recording_thread(self):
         self.recorder = Recorder(self.room_info, self.get_recorder_callback())
 
+        live_stream = LiveStream(self.room_info)
+        recorder_info = live_stream.get_recorder_info()
+
+        self.recorder.set_recorder_info(recorder_info)
+
         self.recorder.start_recording()
 
     def stop_recording(self):
         self.set_recording_status(LiveRecordingStatus.Free)
+
+        self.recorder.stop_recording()
 
     def onRecording(self, speed: str):
         def worker():
@@ -128,7 +142,7 @@ class Utils:
         def worker():
             self.update_pause_btn(status)
 
-        self.room_info.recording_status = status
+        self.room_info.recording_status = status.value
 
         wx.CallAfter(worker)
 
@@ -239,6 +253,8 @@ class LiveRoomItemPanel(Panel):
         self.utils = Utils(self, self.room_info)
 
         self.panel_destroy = False
+
+        self.room_info.update()
 
     def onDestroyEVT(self, event: wx.CommandEvent):
         self.panel_destory = True

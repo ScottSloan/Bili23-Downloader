@@ -69,7 +69,7 @@ class LiveParser(Parser):
         LiveInfo.status = info["live_status"]
 
     @classmethod
-    def get_live_stream_info(cls, room_id):
+    def get_live_stream_info(cls, room_id: int):
         params = {
             "room_id": room_id,
             "protocol": 0,

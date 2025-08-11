@@ -107,7 +107,8 @@ class WebPage:
         
     @staticmethod
     def update_ws_port(file_path: str):
-        with open(file_path, "w") as f:
+        with open(file_path, "r") as f:
             contents = Regex.sub(r"port = ([0-9]+)", f"port = {Config.Advanced.websocket_port}", f.read())
 
+        with open(file_path, "w") as f:
             f.write(contents)

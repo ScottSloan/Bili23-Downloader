@@ -1,7 +1,9 @@
 import os
 import time
-from io import FileIO
+from io import BytesIO
 from threading import Event, Lock
+
+from utils.config import Config
 
 from utils.common.request import RequestUtils
 from utils.common.model.data_type import LiveRoomInfo
@@ -16,6 +18,10 @@ class Utils:
 
     def get_file_buffer(self):
         path = os.path.join(self.parent.room_info.working_directory, "1.flv")
+
+        if not os.path.exists(path):
+            with open(path, "wb") as f:
+                f.write(b"\0")
 
         self.parent.file_buffer = open(path, "r+b")
 
@@ -42,25 +48,33 @@ class Recorder:
         self.room_info = room_info
         self.callback = callback
 
+        self.init_utils()
+
     def init_utils(self):
         self.utils = Utils(self)
 
         self.lock = Lock()
         self.stop_event = Event()
 
-        self.file_buffer = FileIO()
+        self.file_buffer = BytesIO()
+
+        self.recorder_info: dict = {}
 
         self.current_downloaded_size = 0
+
+    def set_recorder_info(self, recorder_info: dict):
+        self.recorder_info = recorder_info
 
     def start_recording(self):
         self.utils.check_working_directory()
 
         self.utils.get_file_buffer()
 
+        Thread(target = self.listener).start()
         Thread(target = self.record_thread).start()
 
     def record_thread(self):
-        with RequestUtils.request_get(self.room_info.stream_url, stream = True) as req:
+        with RequestUtils.request_get(self.recorder_info.get("stream_url"), headers = RequestUtils.get_headers(referer_url = self.recorder_info.get("referer_url"), sessdata = Config.User.SESSDATA), stream = True) as req:
             for chunk in req.iter_content(chunk_size = 1024):
                 if chunk:
                     with self.lock:
@@ -77,7 +91,7 @@ class Recorder:
         self.file_buffer.close()
 
     def listener(self):
-        while self.stop_event.is_set():
+        while not self.stop_event.is_set():
             temp_downloaded_size = self.current_downloaded_size
 
             time.sleep(1)
