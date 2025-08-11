@@ -180,7 +180,7 @@ class Parser:
     def live_recording(self):
         self.main_window.onShowLiveRecordingWindowEVT(0)
 
-        self.main_window.live_recording_window.add_new_live_room(self.parser.get_live_info())
+        self.main_window.live_recording_window.add_to_live_list([self.parser.get_live_info()], create_local_file = True)
 
     def onError(self):
         def worker():
@@ -818,7 +818,7 @@ class MainWindow(Frame):
         
         self.download_window.Raise()
 
-    def onShowLiveRecordingWindowEVT(self, event):
+    def onShowLiveRecordingWindowEVT(self, event: wx.CommandEvent):
         if not self.live_recording_window.IsShown():
             self.live_recording_window.Show()
 

@@ -112,6 +112,8 @@ class SplitStaticBox(Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
     def init_UI(self):
         split_box = wx.StaticBox(self, -1, "自动分段设置")
 

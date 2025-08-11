@@ -1,4 +1,5 @@
 import wx
+import os
 from typing import List, Callable, Tuple
 
 from utils.config import Config
@@ -6,6 +7,7 @@ from utils.config import Config
 from utils.common.enums import Platform
 from utils.common.model.data_type import LiveRoomInfo
 from utils.common.thread import Thread
+from utils.common.datetime_util import DateTime
 
 from gui.component.panel.panel import Panel
 from gui.component.panel.live_room_item import LiveRoomItemPanel
@@ -13,13 +15,45 @@ from gui.component.panel.scrolled_panel_list import ScrolledPanelList
 
 from gui.component.window.frame import Frame
 
+class Utils:
+    @staticmethod
+    def create_live_file(live_list: List[LiveRoomInfo]):
+        for entry in live_list:
+            entry.timestamp = DateTime.get_timestamp()
+
+            entry.update()
+
+    @staticmethod
+    def read_live_files():
+        temp_live_info_list: List[LiveRoomInfo] = []
+
+        for file_name in os.listdir(Config.User.live_file_directory):
+            file_path = os.path.join(Config.User.live_file_directory, file_name)
+
+            if file_name.startswith("info_") and file_name.endswith(".json"):
+                task_info = LiveRoomInfo()
+                task_info.load_from_file(file_path)
+
+                if task_info.is_valid():
+                    temp_live_info_list.append(task_info)
+                else:
+                    task_info.remove_file()
+
+        temp_live_info_list.sort(key = lambda x: x.timestamp, reverse = False)
+
+        return temp_live_info_list
+
 class LiveRecordingWindow(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
         Frame.__init__(self, parent, "直播录制")
 
         self.set_window_params()
 
         self.init_UI()
+
+        self.Bind_EVT()
+
+        self.init_utils()
 
         self.CenterOnParent()
 
@@ -72,7 +106,20 @@ class LiveRecordingWindow(Frame):
         self.SetSizer(vbox)
     
     def init_utils(self):
+        def worker():
+            live_list = Utils.read_live_files()
+
+            self.add_to_live_list(live_list)
+
         self.temp_panel_items: List[Tuple[LiveRoomItemPanel, int, int]] = []
+
+        Thread(target = worker).start()
+
+    def Bind_EVT(self):
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+    def onCloseEVT(self, event: wx.CloseEvent):
+        self.Hide()
 
     def add_panel_item(self, temp_info_list: List[LiveRoomInfo]):
         self.temp_panel_items = [(LiveRoomItemPanel(self.scroller, entry, self), 0, wx.EXPAND) for entry in temp_info_list]
@@ -95,8 +142,11 @@ class LiveRecordingWindow(Frame):
 
         Thread(target = worker).start()
 
-    def add_new_live_room(self, info: LiveRoomInfo):
-        self.scroller.info_list.append(info)
+    def add_to_live_list(self, live_list = List[LiveRoomInfo], create_local_file: bool = False):
+        if create_local_file:
+            Utils.create_live_file(live_list)
+
+        self.scroller.info_list.extend(live_list)
 
         wx.CallAfter(self.ShowItems)
 

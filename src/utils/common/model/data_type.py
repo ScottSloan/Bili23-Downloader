@@ -424,6 +424,8 @@ class ASSStyle:
 
 class LiveRoomInfo:
     def __init__(self):
+        self.min_version: int = 0
+
         self.cover_url: str = ""
 
         self.room_id: int = 0
@@ -444,15 +446,17 @@ class LiveRoomInfo:
         self.quality: int = 0
         self.codec: int = 0
 
-        self.index: int = 1
-
         self.total_size: int = 0
 
         self.file_split: int = 0
         self.split_unit: int = 100
 
+        self.timestamp: int = 0
+
     def to_dict(self):
         return {
+            "min_version": self.min_version,
+
             "cover_url": self.cover_url,
 
             "room_id": self.room_id,
@@ -473,12 +477,17 @@ class LiveRoomInfo:
             "quality": self.quality,
             "codec": self.codec,
 
-            "index": self.index,
+            "total_size": self.total_size,
 
-            "total_size": self.total_size
+            "file_split": self.file_split,
+            "split_unit": self.split_unit,
+
+            "timestamp": self.timestamp
         }
 
     def load_from_dict(self, data: dict):
+        self.min_version = data.get("min_version", self.min_version)
+        
         self.cover_url = data.get("cover_url", self.cover_url)
 
         self.room_id = data.get("room_id", self.room_id)
@@ -499,9 +508,12 @@ class LiveRoomInfo:
         self.quality = data.get("quality", self.quality)
         self.codec = data.get("codec", self.codec)
 
-        self.index = data.get("index", self.index)
-
         self.total_size = data.get("total_size", self.total_size)
+
+        self.file_split = data.get("file_split", self.file_split)
+        self.split_unit = data.get("split_unit", self.split_unit)
+
+        self.timestamp = data.get("timestamp", self.timestamp)
 
     def load_from_file(self, file_path: str):
         with open(file_path, "r", encoding = "utf-8") as f:

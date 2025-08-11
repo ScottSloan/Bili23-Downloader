@@ -109,10 +109,13 @@ class Utils:
         Thread(target = self.recording_thread).start()
 
     def recording_thread(self):
-        self.recorder = Recorder(self.room_info, self.get_recorder_callback())
+        if not hasattr(self, "recorder"):
+            self.recorder = Recorder(self.room_info, self.get_recorder_callback())
 
-        live_stream = LiveStream(self.room_info)
-        recorder_info = live_stream.get_recorder_info()
+        if not hasattr(self, "live_stream"):
+            self.live_stream = LiveStream(self.room_info)
+
+        recorder_info = self.live_stream.get_recorder_info()
 
         self.recorder.set_recorder_info(recorder_info)
 

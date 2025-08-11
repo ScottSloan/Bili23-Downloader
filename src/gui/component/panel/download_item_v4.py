@@ -187,10 +187,13 @@ class Utils:
                 Thread(target = self.start_extra_download_thread).start()
 
     def start_video_download_thread(self):
-        self.downloader = Downloader(self.task_info, self.get_downloader_callback())
+        if not hasattr(self, "downloader"):
+            self.downloader = Downloader(self.task_info, self.get_downloader_callback())
 
-        download_parser = DownloadParser(self.task_info, self.onDownloadError)
-        downloader_info = download_parser.get_download_url()
+        if not hasattr(self, "download_parser"):
+            self.download_parser = DownloadParser(self.task_info, self.onDownloadError)
+
+        downloader_info = self.download_parser.get_download_url()
 
         self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
         self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
