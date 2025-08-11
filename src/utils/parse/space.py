@@ -165,12 +165,12 @@ class SpaceParser(Parser):
         if "list" in url:
             if "space" in url:
                 if "type" in url:
-                    seaason_series_id = self.get_season_series_id(url)
+                    season_series_id = self.get_season_series_id(url)
 
                     if "season" in url:
-                        self.parse_season_info(mid, seaason_series_id)
+                        self.parse_season_info(mid, season_series_id)
                     else:
-                        self.parse_series_info(mid, seaason_series_id)
+                        self.parse_series_info(mid, season_series_id)
                 else:
                     self.parse_season_series_info(mid)
             else:

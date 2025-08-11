@@ -316,7 +316,6 @@ class Downloader:
 
             with self.lock:
                 speed = self.current_downloaded_size - temp_downloaded_size
-                # current_progress = (self.task_info.current_downloaded_size / self.current_file_size) * 100
                 total_progress = (self.total_downloaded_size / self.task_info.total_file_size) * 100
 
                 self.utils.update_download_progress(total_progress, FormatUtils.format_speed(speed))

@@ -3,6 +3,8 @@ import time
 from typing import List
 
 class File:
+    MAX_REMOVE_ATTEMPS = 30
+
     @classmethod
     def remove_files(cls, file_path_list: List[str]):
         for file_path in file_path_list:
@@ -10,7 +12,7 @@ class File:
 
     @staticmethod
     def remove_file(file_path: str):
-        for i in range(30):
+        for i in range(File.MAX_REMOVE_ATTEMPS):
             if not os.path.exists(file_path):
                 break
 

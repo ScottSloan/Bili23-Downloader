@@ -163,3 +163,8 @@ class WebPageOption(Enum):
 class LiveRecordingStatus(Enum):
     Free = 0                      # 未录制
     Recording = 1                 # 录制中
+
+class LiveFileSplit(Enum):
+    Disable = 0                   # 不分段
+    ByDuration = 1                # 按直播时长分段
+    BySize = 2                    # 按文件大小分段

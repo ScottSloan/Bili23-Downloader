@@ -11,12 +11,15 @@ from utils.common.model.callback import LiveRecordingCallback
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.thread import Thread
 from utils.common.io.directory import Directory
+from utils.common.enums import LiveFileSplit
 
 class Utils:
     def __init__(self, parent):
         self.parent: Recorder = parent
 
     def get_file_buffer(self):
+        file_name = "直播录制_20250811_165348_242544"
+        
         path = os.path.join(self.parent.room_info.working_directory, "1.flv")
 
         if not os.path.exists(path):
@@ -33,6 +36,20 @@ class Utils:
 
             self.parent.room_info.update()
 
+    def check_file_split(self):
+        match LiveFileSplit(self.parent.room_info.file_split):
+            case LiveFileSplit.Disable:
+                return
+            
+            case LiveFileSplit.ByDuration:
+                self.check_duration()
+
+            case LiveFileSplit.BySize:
+                self.check_file_size()
+
+    def check_duration(self):
+        pass
+
     def check_file_size(self):
         if self.parent.current_downloaded_size > 100 * 1024 * 1024:
             pass
@@ -41,6 +58,8 @@ class Utils:
         self.parent.current_downloaded_size += chunk_size
 
     def update_recording_speed(self, speed: str):
+        self.parent.room_info.total_size = self.parent.current_downloaded_size
+
         self.parent.callback.onRecording(speed)
 
 class Recorder:
@@ -100,5 +119,5 @@ class Recorder:
 
             self.utils.update_recording_speed(FormatUtils.format_speed(speed))
 
-            self.utils.check_file_size()
+            self.utils.check_file_split()
             

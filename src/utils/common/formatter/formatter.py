@@ -1,6 +1,7 @@
 import datetime
 
 from utils.config import Config
+from utils.common.const import Const
 
 class FormatUtils:
     @classmethod
@@ -20,14 +21,14 @@ class FormatUtils:
     
     @staticmethod
     def format_speed(speed: int):
-        if speed > 1024 * 1024 * 1024:
-            return "{:.1f} GB/s".format(speed / 1024 / 1024 / 1024)
+        if speed > Const.Size_1GB:
+            return "{:.1f} GB/s".format(speed / Const.Size_1GB)
         
-        elif speed > 1024 * 1024:
-            return "{:.1f} MB/s".format(speed / 1024 / 1024)
+        elif speed > Const.Size_1MB:
+            return "{:.1f} MB/s".format(speed / Const.Size_1MB)
         
-        elif speed > 1024:
-            return "{:.1f} KB/s".format(speed / 1024)
+        elif speed > Const.Size_1KB:
+            return "{:.1f} KB/s".format(speed / Const.Size_1KB)
         
         else:
             return "0 KB/s"
@@ -37,14 +38,17 @@ class FormatUtils:
         if not size:
             return "0 MB"
         
-        elif size > 1024 * 1024 * 1024:
-            return "{:.2f} GB".format(size / 1024 / 1024 / 1024)
+        elif size > Const.Size_1GB:
+            return "{:.2f} GB".format(size / Const.Size_1GB)
         
-        elif size > 1024 * 1024:
-            return "{:.1f} MB".format(size / 1024 / 1024)
+        elif size > Const.Size_1MB:
+            return "{:.1f} MB".format(size / Const.Size_1MB)
+        
+        elif size > Const.Size_1KB:
+            return "{:.1f} KB".format(size / Const.Size_1KB)
         
         else:
-            return "{:.1f} KB".format(size / 1024)
+            return "{:.1f} B".format(size)
 
     @staticmethod
     def format_bangumi_title(episode: dict):
@@ -82,11 +86,11 @@ class FormatUtils:
 
     @staticmethod
     def format_bandwidth(bandwidth: int):
-        if bandwidth > 1024 * 1024:
-            return "{:.1f} mbps".format(bandwidth / 1024 / 1024)
+        if bandwidth > Const.Size_1MB:
+            return "{:.1f} mbps".format(bandwidth / Const.Size_1MB)
         
         else:
-            return "{:.1f} kbps".format(bandwidth / 1024)
+            return "{:.1f} kbps".format(bandwidth / Const.Size_1KB)
 
     @staticmethod
     def format_srt_line(start_time: float, end_time: float):

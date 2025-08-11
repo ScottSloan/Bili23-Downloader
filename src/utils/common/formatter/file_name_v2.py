@@ -124,7 +124,9 @@ class FileNameFormatter:
 
     @staticmethod
     def get_legal_file_name(file_name: str):
-        return re.sub(r'[:*?"<>|\\/]', "_", file_name)
+        escape = re.sub(r'[\r\n\t]', "", file_name)
+
+        return re.sub(r'[:*?"<>|\\/]', "_", escape)
     
     @staticmethod
     def remove_slash(path: str):

@@ -213,3 +213,12 @@ class LiveRecordingOptionDialog(Dialog):
 
         self.room_info.quality = self.media_box.quality_id
         self.room_info.codec = self.media_box.codec_id
+
+        if self.split_box.no_split_radiobtn.GetValue():
+            self.room_info.file_split = 0
+        
+        elif self.split_box.split_by_duration_radiobtn.GetValue():
+            self.room_info.file_split = 1
+
+        elif self.split_box.split_by_size_radiobtn.GetValue():
+            self.room_info.file_split = 2

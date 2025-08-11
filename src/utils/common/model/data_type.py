@@ -444,9 +444,12 @@ class LiveRoomInfo:
         self.quality: int = 0
         self.codec: int = 0
 
-        self.stream_url: str = ""
-
         self.index: int = 1
+
+        self.total_size: int = 0
+
+        self.file_split: int = 0
+        self.split_unit: int = 100
 
     def to_dict(self):
         return {
@@ -470,9 +473,9 @@ class LiveRoomInfo:
             "quality": self.quality,
             "codec": self.codec,
 
-            "stream_url": self.stream_url,
+            "index": self.index,
 
-            "index": self.index
+            "total_size": self.total_size
         }
 
     def load_from_dict(self, data: dict):
@@ -496,9 +499,9 @@ class LiveRoomInfo:
         self.quality = data.get("quality", self.quality)
         self.codec = data.get("codec", self.codec)
 
-        self.stream_url = data.get("stream_url", self.stream_url)
-
         self.index = data.get("index", self.index)
+
+        self.total_size = data.get("total_size", self.total_size)
 
     def load_from_file(self, file_path: str):
         with open(file_path, "r", encoding = "utf-8") as f:

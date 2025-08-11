@@ -5,6 +5,7 @@ from utils.common.model.callback import LiveRecordingCallback
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import LiveRecordingStatus, LiveStatus
 from utils.common.thread import Thread
+from utils.common.formatter.formatter import FormatUtils
 
 from utils.module.pic.cover import Cover
 from utils.module.recorder import Recorder
@@ -47,6 +48,9 @@ class Utils:
         def set_area(self, parent_area: str, area: str):
             self.parent.area_lab.SetLabel(f"{parent_area} · {area}")
 
+        def set_size(self, size: str):
+            self.parent.size_lab.SetLabel(size)
+
         def set_speed(self, speed: str):
             self.parent.speed_lab.SetLabel(speed)
 
@@ -58,6 +62,9 @@ class Utils:
         def show_recording_label(self, show: bool):
             self.parent.rec_bmp.Show(show)
             self.parent.recording_lab.Show(show)
+
+            self.parent.size_lab.Show(show)
+            self.parent.speed_lab.Show(show)
 
         def update(self):
             self.parent.Layout()
@@ -118,6 +125,7 @@ class Utils:
 
     def onRecording(self, speed: str):
         def worker():
+            self.ui.set_size(FormatUtils.format_size(self.room_info.total_size))
             self.ui.set_speed(speed)
 
             self.ui.update()
@@ -205,6 +213,7 @@ class LiveRoomItemPanel(Panel):
         self.recording_lab = wx.StaticText(self, -1, "录制中", size = self.FromDIP((50, 16)))
         self.recording_lab.SetForegroundColour(wx.Colour(235, 54, 67))
         self.recording_lab.Hide()
+        self.size_lab = InfoLabel(self, "", size = self.FromDIP((60, 16)))
         self.speed_lab = InfoLabel(self, "")
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -213,6 +222,7 @@ class LiveRoomItemPanel(Panel):
         info_hbox.Add(self.live_status_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.rec_bmp, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.recording_lab, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
+        info_hbox.Add(self.size_lab, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
         info_hbox.Add(self.speed_lab, 0, wx.RIGHT | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
 
         room_info_vbox = wx.BoxSizer(wx.VERTICAL)
