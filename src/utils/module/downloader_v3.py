@@ -139,6 +139,8 @@ class Utils:
         self.parent.retry_times = 0
         self.parent.suspend_interval = 0
 
+        self.parent.shutdown = True
+
     def update_download_progress(self, progress: int = None, speed: str = None):
         if self.parent.stop_event.is_set():
             return
@@ -162,11 +164,12 @@ class Utils:
 
     def on_thread_exit(self):
         with self.parent.lock:
-            self.task_info.current_downloaded_size = self.parent.total_downloaded_size
-            self.task_info.total_downloaded_size = self.parent.total_downloaded_size
-            self.task_info.thread_info = self.parent.thread_info
+            if not self.parent.shutdown:
+                self.task_info.current_downloaded_size = self.parent.total_downloaded_size
+                self.task_info.total_downloaded_size = self.parent.total_downloaded_size
+                self.task_info.thread_info = self.parent.thread_info
 
-            self.task_info.update()
+                self.task_info.update()
 
     def check_speed_limit(self, start_time: float):
         if Config.Download.enable_speed_limit:
@@ -238,6 +241,8 @@ class Downloader:
         self.current_downloaded_size = 0
         self.total_downloaded_size = 0
 
+        self.shutdown = False
+
         self.download_path = FileNameFormatter.get_download_path(self.task_info)
 
     def set_downloader_info(self, downloader_info: List[dict]):
@@ -303,8 +308,9 @@ class Downloader:
 
         self.utils.on_thread_exit()
 
-    def stop_download(self):
+    def stop_download(self, shutdown: bool = False):
         self.stop_event.set()
+        self.shutdown = shutdown
 
         self.utils.cache.clear()
 

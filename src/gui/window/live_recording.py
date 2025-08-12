@@ -19,6 +19,9 @@ class Utils:
     @staticmethod
     def create_live_file(live_list: List[LiveRoomInfo]):
         for entry in live_list:
+            if os.path.exists(entry.file_path):
+                return True
+
             entry.timestamp = DateTime.get_timestamp()
 
             entry.update()
@@ -144,7 +147,8 @@ class LiveRecordingWindow(Frame):
 
     def add_to_live_list(self, live_list = List[LiveRoomInfo], create_local_file: bool = False):
         if create_local_file:
-            Utils.create_live_file(live_list)
+            if Utils.create_live_file(live_list):
+                return
 
         self.scroller.info_list.extend(live_list)
 
@@ -152,6 +156,8 @@ class LiveRecordingWindow(Frame):
 
     def remove_item(self):
         self.scroller.Remove()
+
+        self.scroller.Layout()
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):

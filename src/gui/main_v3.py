@@ -528,7 +528,7 @@ class Utils:
 
     def show_welcome_dialog(self):
         def worker():
-            dlg = wx.MessageDialog(self.main_window, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析、批量直播录制", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg = wx.MessageDialog(self.main_window, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
             dlg.SetYesNoLabels("说明文档", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:

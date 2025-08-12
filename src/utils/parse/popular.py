@@ -26,7 +26,7 @@ class PopularParser(Parser):
 
         self.callback = callback
 
-    def get_one_number(self, url: str):
+    def get_weekly_number(self, url: str):
         number = self.re_find_str(r"num=([0-9]+)", url)
 
         PopularInfo.number = number[0]
@@ -80,9 +80,9 @@ class PopularParser(Parser):
     def parse_worker(self, url: str):
         self.clear_popular_info()
 
-        match Regex.find_string(r"one|rank", url):
-            case "one":
-                self.get_one_number(url)
+        match Regex.find_string(r"weekly|rank", url):
+            case "weekly":
+                self.get_weekly_number(url)
 
                 self.get_popular_one_list()
 
