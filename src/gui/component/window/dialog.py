@@ -22,6 +22,10 @@ class Dialog(wx.Dialog):
         if not Config.Sys.dark_mode:
             self.SetBackgroundColour("white")
 
+    def raise_top(self):
+        self.SetWindowStyle(wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
+        self.SetWindowStyle(wx.DEFAULT_DIALOG_STYLE)
+
     def onCloseEVT(self, event):
         match event.GetId():
             case wx.ID_OK:

@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.font import SysFont
+from utils.common.style.font import SysFont
 
 from gui.component.panel.panel import Panel
 

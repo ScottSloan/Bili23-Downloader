@@ -6,13 +6,12 @@ import webbrowser
 from utils.config import Config
 
 from utils.common.map import scope_map, field_map, get_mapping_key_by_value
-from utils.common.file_name_v2 import FileNameFormatter
-from utils.common.data_type import DownloadTaskInfo
-from utils.common.font import SysFont
+from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.style.font import SysFont
 from utils.common.regex import Regex
 
 from gui.component.window.dialog import Dialog
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.misc.tooltip import ToolTip
 
 class AddNewTemplateDialog(Dialog):
@@ -50,7 +49,7 @@ class AddNewTemplateDialog(Dialog):
 
         font = self.GetFont()
         font.SetFaceName(SysFont.get_monospaced_font())
-        self.template_box = TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
+        self.template_box = wx.TextCtrl(self, -1, size = self.FromDIP((750 if self.scope_id in [0, 4] else 680, 24)))
         self.template_box.SetFont(font)
 
         preview_lab = wx.StaticText(self, -1, "预览")
@@ -163,7 +162,7 @@ class AddNewTemplateDialog(Dialog):
             task_info.series_title = "孤独摇滚！"
             task_info.section_title = "正片"
             task_info.part_title = "分节"
-            task_info.list_title = "合集"
+            task_info.collection_title = "合集"
             task_info.video_quality_id = 120
             task_info.audio_quality_id = 30251
             task_info.video_codec_id = 12

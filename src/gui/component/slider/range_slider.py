@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 class SliderThumb:
     def __init__(self, parent: wx.Window, value):

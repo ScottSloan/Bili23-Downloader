@@ -4,7 +4,6 @@ from utils.config import Config
 
 from gui.component.window.dialog import Dialog
 
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.misc.tooltip import ToolTip
 
 class RequireVideoResolutionDialog(Dialog):
@@ -42,9 +41,9 @@ class RequireVideoResolutionDialog(Dialog):
         self.custom_radio_btn = wx.RadioButton(self, -1, "手动输入")
         self.custom_radio_btn.SetValue(True if self.flv_mp4 else Config.Temp.ass_custom_resolution)
 
-        self.video_width_box = TextCtrl(self, -1, str(Config.Temp.ass_video_width), size = self.FromDIP((60, 24)))
+        self.video_width_box = wx.TextCtrl(self, -1, str(Config.Temp.ass_video_width), size = self.FromDIP((60, 24)))
         self.x_lab = wx.StaticText(self, -1, "x")
-        self.video_height_box = TextCtrl(self, -1, str(Config.Temp.ass_video_height), size = self.FromDIP((60, 24)))
+        self.video_height_box = wx.TextCtrl(self, -1, str(Config.Temp.ass_video_height), size = self.FromDIP((60, 24)))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
         resolution_hbox.Add(self.video_width_box, 0, wx.ALL, self.FromDIP(6))

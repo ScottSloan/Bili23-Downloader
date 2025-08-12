@@ -70,3 +70,7 @@ class Regex:
             result.append(''.join(current).strip())
         
         return result
+    
+    @staticmethod
+    def sub(pattern: str, repl: str, string: str):
+        return re.sub(pattern, repl, string)

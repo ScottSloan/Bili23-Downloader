@@ -1,9 +1,9 @@
 import wx
 import os
 
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 from gui.component.window.frame import Frame
 

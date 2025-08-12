@@ -2,7 +2,6 @@ import wx
 
 from utils.config import Config
 
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
 class UpdateDialog(Dialog):
@@ -12,6 +11,8 @@ class UpdateDialog(Dialog):
         Dialog.__init__(self, parent, "检查更新")
 
         self.init_UI()
+
+        self.init_utils()
 
         self.CenterOnParent()
 
@@ -33,15 +34,18 @@ class UpdateDialog(Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.changelog = TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.changelog = wx.TextCtrl(self, -1, size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
         self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
+
+        self.ignore_version_chk = wx.CheckBox(self, -1, "忽略此版本，下次不再提示")
 
         self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((90, 28)))
         self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((90, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_hbox.Add(self.ignore_version_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         bottom_hbox.AddStretchSpacer()
         bottom_hbox.Add(self.update_btn, 0, wx.ALL, self.FromDIP(6))
         bottom_hbox.Add(self.ignore_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
@@ -58,12 +62,20 @@ class UpdateDialog(Dialog):
 
         self.set_dark_mode()
     
+    def init_utils(self):
+        self.ignore_version_chk.SetValue(Config.Misc.ignore_version == self.info.get("version_code"))
+        
     def onOKEVT(self):
         import webbrowser
 
         webbrowser.open(self.info["url"])
 
         self.Hide()
+
+    def onCancelEVT(self):
+        Config.Misc.ignore_version = self.info.get("version_code") if self.ignore_version_chk.GetValue() else 0
+
+        Config.save_app_config()
 
     def showUpdateInfo(self):
         self.SetTitle("检查更新")

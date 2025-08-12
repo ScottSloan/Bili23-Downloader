@@ -3,9 +3,9 @@ from utils.config import Config
 from utils.common.exception import GlobalException
 from utils.common.map import bangumi_type_map
 from utils.common.enums import StatusCode
-from utils.common.data_type import ParseCallback
+from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex
 
 from utils.parse.audio import AudioInfo
@@ -36,6 +36,7 @@ class BangumiInfo:
     type_name: str = ""
 
     payment: bool = False
+    play_check: str = ""
 
     stream_type: str = "DASH"
 
@@ -72,6 +73,7 @@ class BangumiInfo:
         cls.up_mid = 0
 
         cls.payment = False
+        cls.play_check = ""
 
         cls.info_json.clear()
         cls.download_json.clear()
@@ -178,7 +180,9 @@ class BangumiParser(Parser):
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"
 
-        self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        BangumiInfo.play_check = resp.get("result").get("play_check").get("play_detail")
 
     def get_bangumi_type(self):
         BangumiInfo.type_name = bangumi_type_map.get(BangumiInfo.type_id, "未知")
@@ -211,10 +215,10 @@ class BangumiParser(Parser):
         message = data["message"]
 
         if status_code != StatusCode.Success.value:
-            if status_code == StatusCode.Area_Limit.value and message == "大会员专享限制":
+            if message != "抱歉您所在地区不可观看！":
                 return
-            
-            raise GlobalException(message = message, code = status_code)
+
+            raise GlobalException(message = message, code = status_code, json_data = data)
 
     def parse_episodes(self):
         if self.url_type == "season_id":

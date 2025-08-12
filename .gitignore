@@ -6,7 +6,7 @@ config.ini
 .venv
 
 # 下载目录
-download
+/download
 
 # VLC
 VLC

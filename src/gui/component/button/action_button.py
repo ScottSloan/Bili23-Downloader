@@ -2,15 +2,15 @@ import wx
 
 from utils.config import Config
 
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 from gui.component.panel.panel import Panel
 
 class ActionButton(Panel):
-    def __init__(self, parent, title):
+    def __init__(self, parent: wx.Window, title: str, name: str = wx.PanelNameStr):
         self._title = title
 
-        Panel.__init__(self, parent)
+        Panel.__init__(self, parent, name)
 
         self.init_UI()
 

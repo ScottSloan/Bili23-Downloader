@@ -1,5 +1,4 @@
-from typing import Any
-from datetime import datetime
+from utils.common.datetime_util import DateTime
 
 bangumi_type_map = {
     1: "番剧",
@@ -69,16 +68,6 @@ video_codec_short_map = {
     "AV1": 13
 }
 
-live_quality_map = {
-    "自动": 40000,
-    "杜比": 30000,
-    "4K": 20000,
-    "原画": 10000,
-    "蓝光": 400,
-    "高清": 150,
-    "流畅": 80
-}
-
 live_status_map = {
     0: "未开播",
     1: "直播中",
@@ -126,7 +115,7 @@ status_code_map = {
     602: "无效的链接",
     603: "跳转链接",
     610: "执行外部命令失败",
-    611: "下载时出现问题",
+    611: "下载失败",
     612: "下载失败达到最大重试次数",
     62002: "稿件不可见",
     62004: "稿件审核中",
@@ -162,7 +151,8 @@ number_type_map = {
 exit_option_map = {
     "隐藏到托盘": 0,
     "直接退出": 1,
-    "总是询问": 2
+    "总是询问": 2,
+    "首次询问": 3
 }
 
 scope_map = {
@@ -177,19 +167,19 @@ field_map = {
     "datetime": {
         "name": "{time:%H-%M-%S}",
         "description": "当前时间（%H-%M-%S）",
-        "example": "{time:%H-%M-%S}".format(time = datetime.now()),
+        "example": "{time:%H-%M-%S}".format(time = DateTime.now()),
         "scope": [0, 1, 2, 3, 4]
     },
     "timestamp": {
         "name": "{timestamp}",
         "description": "当前时间戳",
-        "example": str(int(datetime.now().timestamp())),
+        "example": str(DateTime.get_timestamp()),
         "scope": [0, 1, 2, 3, 4]
     },
     "pubdatetime": {
         "name": "{pubtime:%Y-%m-%d}",
         "description": "视频发布时间（%Y-%m-%d）",
-        "example": "{pubtime:%Y-%m-%d}".format(pubtime = datetime.fromtimestamp(1667061000)),
+        "example": "{pubtime:%Y-%m-%d}".format(pubtime = DateTime.from_timestamp(1667061000)),
         "scope": [0, 1, 2, 3, 4]
     },
     "pubtimestamp": {
@@ -246,8 +236,8 @@ field_map = {
         "example": "分节（请参考说明文档）",
         "scope": [1]
     },
-    "list_title": {
-        "name": "{list_title}",
+    "collection_title": {
+        "name": "{collection_title}",
         "description": "合集标题",
         "example": "合集（请参考说明文档）",
         "scope": [1],
@@ -404,6 +394,22 @@ ffmpeg_video_crf_map = {
     "28（低质量）": 28,
 }
 
+ffmpeg_video_gpu_map = {
+    "windows": {
+        "关闭": 0,
+        "NVIDIA": 1,
+        "AMD": 2,
+        "Intel": 3,
+    },
+    "linux": {
+        "关闭": 0,
+        "VAAPI": 1,
+    },
+    "darwin": {
+        "关闭": 0,
+        "Apple": 1,
+    }
+}
 ffmpeg_video_gpu_windows_map = {
     "关闭": 0,
     "NVIDIA": 1,
@@ -442,13 +448,76 @@ ffmpeg_audio_channel_map = {
     "8 (7.1)": 8
 }
 
+webpage_option_map = {
+    "自动选择": 0,
+    "使用系统 Webview 组件": 1,
+    "使用系统默认浏览器": 2
+}
+
+rid_map = {
+    "all": {
+        "rid": 0,
+        "desc": "全部"
+    },
+    "cinephile": {
+        "rid": 1001,
+        "desc": "影视"
+    },
+    "ent": {
+        "rid": 1002,
+        "desc": "娱乐"
+    },
+    "music": {
+        "rid": 1003,
+        "desc": "音乐"
+    },
+    "dance": {
+        "rid": 1004,
+        "desc": "舞蹈"
+    },
+    "douga": {
+        "rid": 1005,
+        "desc": "动画"
+    },
+    "kichiku": {
+        "rid": 1007,
+        "desc": "鬼畜"
+    },
+    "game": {
+        "rid": 1008,
+        "desc": "游戏"
+    },
+    "knowledge": {
+        "rid": 1010,
+        "desc": "知识"
+    },
+    "tech": {
+        "rid": 1012,
+        "desc": "科技数码"
+    },
+    "car": {
+        "rid": 1013,
+        "desc": "汽车"
+    },
+    "fasion": {
+        "rid": 1014,
+        "desc": "时尚美妆"
+    },
+    "sports": {
+        "rid": 1018,
+        "desc": "体育运动"
+    },
+    "food": {
+        "rid": 1020,
+        "desc": "美食"
+    },
+    "animal": {
+        "rid": 1024,
+        "desc": "动物"
+    }
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 
     return mapping_reversed.get(value, default)
-
-def get_mapping_index_by_value(mapping: dict, value: Any):
-    return list(mapping.values()).index(value)
-
-def get_mapping_index_by_key(mapping: dict, key: Any):
-    return list(mapping.keys()).index(key)

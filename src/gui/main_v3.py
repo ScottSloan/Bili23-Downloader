@@ -1,20 +1,23 @@
 import wx
+import asyncio
 import webbrowser
 
-from utils.config import Config, app_config_group
-from utils.auth.login import QRLogin
+from utils.config import Config
+from utils.auth.login_v2 import Login
+
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, Platform, EpisodeDisplayType, ProcessingType, StatusCode, ExitOption, ParseStatus, LiveStatus
-from utils.common.data_type import ParseCallback, Callback
-from utils.common.icon_v4 import Icon, IconID
+from utils.common.model.callback import ParseCallback
+from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.thread import Thread
 from utils.common.update import Update
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 
-from utils.module.face import Face
+from utils.module.pic.face import Face
 from utils.module.clipboard import ClipBoard
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 from utils.module.ffmpeg_v2 import FFmpeg
+from utils.module.web.page import WebPage
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -22,31 +25,30 @@ from utils.parse.live import LiveInfo, LiveParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
-from utils.parse.preview import Preview
-from utils.parse.episode_v2 import Episode
+from utils.parse.preview import VideoPreview
+from utils.parse.popular import PopularParser
+from utils.parse.space import SpaceParser
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
 from gui.id import ID
 
-from gui.dialog.about import AboutWindow
-from gui.dialog.processing import ProcessingWindow
+from gui.dialog.misc.about import AboutWindow
+from gui.dialog.misc.processing import ProcessingWindow
 from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.misc.changelog import ChangeLogDialog
 from gui.dialog.error import ErrorInfoDialog
 from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
-from gui.dialog.live import LiveRecordingDialog
-from gui.dialog.confirm.duplicate import DuplicateDialog
+from gui.dialog.login.login_v2 import LoginDialog
 
-from gui.window.graph import GraphWindow
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
-from gui.window.settings import SettingWindow
-from gui.window.download_v3 import DownloadManagerWindow
-from gui.window.login import LoginWindow
+from gui.window.settings.settings_v2 import SettingWindow
+from gui.window.download.download_v4 import DownloadManagerWindow
+from gui.window.live_recording import LiveRecordingWindow
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
@@ -58,6 +60,7 @@ from gui.component.tree_list_v2 import TreeListCtrl
 
 from gui.component.menu.episode_option import EpisodeOptionMenu
 from gui.component.menu.user import UserMenu
+from gui.component.menu.url import URLMenu
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -70,11 +73,16 @@ class Parser:
     def parse_url(self, url: str):
         self.url = url
 
-        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
             case "cheese":
                 self.set_parse_type(ParseType.Cheese)
 
                 self.parser = CheeseParser(self.parser_callback)
+
+            case "space" | "list":
+                self.set_parse_type(ParseType.Video)
+
+                self.parser = SpaceParser(self.parser_callback)
 
             case "av" | "BV":
                 self.set_parse_type(ParseType.Video)
@@ -97,6 +105,11 @@ class Parser:
             case "blackboard" | "festival":
                 self.parser = ActivityParser(self.parser_callback)
 
+            case "popular":
+                self.set_parse_type(ParseType.Video)
+
+                self.parser = PopularParser(self.parser_callback)
+
             case _:
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
     
@@ -108,20 +121,25 @@ class Parser:
     def parse_success(self):
         self.main_window.utils.set_status(ParseStatus.Success)
 
-        self.parse_type_str = self.get_parse_type_str()
+        match self.parse_type:
+            case ParseType.Live:
+                wx.CallAfter(self.live_recording)
 
-        self.main_window.show_episode_list()
+            case _:
+                self.parse_type_str = self.get_parse_type_str()
 
-        self.set_video_quality_id()
+                self.main_window.show_episode_list(from_menu = False)
 
-        self.set_stream_type()
+                self.set_video_quality_id()
+
+                self.set_stream_type()
 
     def set_video_quality_id(self):
-        data = Preview.get_download_json(self.parse_type)
+        data = VideoPreview.get_download_json(self.parse_type)
 
-        self.video_quality_id_list, self.video_quality_desc_list = Preview.get_video_quality_id_desc_list(data)
+        self.video_quality_data_dict = VideoPreview.get_video_quality_data_dict(data)
 
-        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_id_list else max(Preview.get_video_available_quality_id_list(data))
+        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_data_dict.id_list() else max(VideoPreview.get_video_available_quality_id_list(data))
 
         self.video_codec_id = Config.Download.video_codec_id
 
@@ -159,29 +177,23 @@ class Parser:
     def parse_episode(self):
         self.parser.parse_episodes()
 
+    def live_recording(self):
+        self.main_window.onShowLiveRecordingWindowEVT(0)
+
+        self.main_window.live_recording_window.add_to_live_list([self.parser.get_live_info()], create_local_file = True)
+
     def onError(self):
         def worker():
             self.main_window.utils.set_status(ParseStatus.Error)
 
             info = GlobalExceptionInfo.info.copy()
 
-            dlg = wx.MessageDialog(self.main_window, f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
-            dlg.SetYesNoLabels("详细信息", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                dlg = ErrorInfoDialog(self.main_window, info)
-                dlg.ShowModal()
+            self.main_window.utils.show_error_message_dialog(f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", info)
 
         wx.CallAfter(worker)
 
     def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, )).start()
-
-    def onInteractVideo(self):
-        def worker():
-            self.main_window.processing_window.SetType(ProcessingType.Interact)
-
-        wx.CallAfter(worker)
 
     @property
     def parser_callback(self):
@@ -195,12 +207,16 @@ class Parser:
                 self.onJump(url)
 
             @staticmethod
-            def onInteractVideo():
-                self.onInteractVideo()
+            def onChangeProcessingType(type: ProcessingType):
+                self.main_window.processing_window.SetType(type)
 
             @staticmethod
-            def onUpdateInteractVideo(title: str):
-                self.main_window.processing_window.onUpdateNode(title)
+            def onUpdateName(name: str):
+                self.main_window.processing_window.UpdateName(name)
+
+            @staticmethod
+            def onUpdateTitle(title: str):
+                self.main_window.processing_window.UpdateTitle(title)
 
         return Callback
 
@@ -209,32 +225,46 @@ class Utils:
         self.main_window: MainWindow = parent
         self.status = ParseStatus.Success
 
+        self.copy_from_menu = False
+        self.dialog_show = False
+
+    def init_timer(self):
+        if Config.Basic.listen_clipboard:
+            if not self.main_window.clipboard_timer.IsRunning():
+                self.main_window.clipboard_timer.Start(1000)
+        else:
+            if self.main_window.clipboard_timer.IsRunning():
+                self.main_window.clipboard_timer.Stop()
+
     def check_url(self, url: str):
         if not url:
             self.show_message_dialog("解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True
 
-    def check_update(self, info_bar: bool = False):
+    def check_update(self, from_menu: bool = False):
+        def onError():
+            self.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
+
         def show_update_dialog():
             window = UpdateDialog(self.main_window, info)
             window.ShowModal()
 
-        info = Update.get_update_json()
+        try:
+            info = Update.get_update_json()
 
-        if info:
-            if info["version_code"] > Config.APP.version_code:
-                if info_bar:
-                    self.show_infobar_message("检查更新：有新的更新可用。", wx.ICON_INFORMATION)
-                else:
-                    wx.CallAfter(show_update_dialog)
+            version = info.get("version_code")
+
+            if (version > Config.APP.version_code and version != Config.Misc.ignore_version) or from_menu:
+                wx.CallAfter(show_update_dialog)
             else:
-                if not info_bar:
+                if from_menu:
                     self.show_message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
-        else:
-            if info_bar:
-                self.show_infobar_message("检查更新：当前无法检查更新，请稍候再试。", wx.ICON_ERROR)
-            else:
-                self.show_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", wx.ICON_ERROR)
+
+        except Exception as e:
+            raise GlobalException(callback = onError) from e
+
+    async def check_update_async(self):
+        self.check_update()
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
@@ -250,29 +280,39 @@ class Utils:
         return True
 
     def check_parse_status(self):
+        if self.main_window.utils.copy_from_menu:
+            return False
+        
+        if self.main_window.utils.dialog_show:
+            return False
+
         if self.main_window.IsShown():
             if self.status != ParseStatus.Parsing:
                 return True
 
     def get_changelog(self):
         def show_changelog_dialog():
-            dlg = ChangeLogDialog(self.main_window)
+            dlg = ChangeLogDialog(self.main_window, info)
             dlg.ShowModal()
 
-        info = Update.get_changelog()
+        def onError():
+            self.show_error_message_dialog("获取更新日志失败\n\n当前无法获取更新日志，请稍候再试。", "获取更新日志", GlobalExceptionInfo.info.copy())
 
-        if info:
+        try:
+            info = Update.get_changelog()
+
             wx.CallAfter(show_changelog_dialog)
-        else:
-            self.show_message_dialog("获取更新日志失败\n\n当前无法获取更新日志，请稍候再试", "获取更新日志", wx.ICON_ERROR)
+
+        except Exception as e:
+            raise GlobalException(callback = onError) from e
 
     def user_logout(self):
-        QRLogin().logout()
+        Login.logout()
 
         self.show_user_info()
 
     def user_refresh(self):
-        QRLogin().refresh
+        Login.refresh()
 
         self.show_user_info()
 
@@ -308,6 +348,9 @@ class Utils:
 
         wx.CallAfter(worker)
 
+    async def show_user_info_async(self):
+        self.show_user_info()
+
     def set_episode_display_mode(self, mode: EpisodeDisplayType):
         Config.Misc.episode_display_mode = mode.value
 
@@ -330,6 +373,8 @@ class Utils:
 
         if url and url != self.main_window.parser.url:
             if self.validate_url(url) and self.check_parse_status():
+                self.main_window.utils.copy_from_menu = False
+
                 self.main_window.url_box.SetValue(url)
 
                 wx.CallAfter(self.main_window.onParseEVT, event)
@@ -337,7 +382,7 @@ class Utils:
     def validate_url(self, url: str):
         if url.startswith(("http", "https")) and "bilibili.com" in url:
             if url != self.main_window.url_box.GetValue():
-                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival", url):
+                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
                     return True
 
     def get_episode_title(self):
@@ -360,7 +405,7 @@ class Utils:
                 Config.Basic.exit_option = ExitOption.Exit.value
 
         if save:
-            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+            Config.save_app_config()
 
     def save_window_params_settings(self):
         if Config.Basic.remember_window_status:
@@ -368,26 +413,33 @@ class Utils:
             Config.Basic.window_size = list(self.main_window.GetSize())
             Config.Basic.window_maximized = self.main_window.IsMaximized()
 
-            Config.save_config_group(Config, app_config_group, Config.APP.app_config_path)
+            Config.save_app_config()
 
     def check_ffmpeg(self):
-        class FFmpegCallback(Callback):
-            @staticmethod
-            def onSuccess(*process):
-                pass
+        def worker():
+            dlg = wx.MessageDialog(self.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
             
-            @staticmethod
-            def onError(*process):
-                def worker():
-                    dlg = wx.MessageDialog(self.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
-                    dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+        result = FFmpeg.Env.check_availability()
 
-                    if dlg.ShowModal() == wx.ID_YES:
-                        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
-                    
-                wx.CallAfter(worker)
+        if result:
+            wx.CallAfter(worker)
 
-        FFmpeg.Env.check_availability(FFmpegCallback)
+    async def check_ffmpeg_async(self):
+        if Config.Merge.ffmpeg_check_available_when_launch:
+            self.check_ffmpeg()
+
+    async def async_worker(self):
+        tasks = [
+            asyncio.create_task(self.show_user_info_async()),
+            asyncio.create_task(self.check_ffmpeg_async()),
+            asyncio.create_task(self.check_update_async())
+        ]
+
+        await asyncio.gather(*tasks, return_exceptions = True)
 
     def set_status(self, status: ParseStatus):
         def update():
@@ -397,23 +449,13 @@ class Utils:
             self.main_window.detail_btn.Show(detail_btn)
             self.main_window.graph_btn.Show(graph_btn)
 
-        def enable_controls(enable: bool, option_enable: bool = True):
+        def enable_controls(enable: bool, option_enable: bool = True, not_live: bool = True):
             self.main_window.url_box.Enable(enable)
             self.main_window.get_btn.Enable(enable)
             self.main_window.episode_list.Enable(enable)
-            self.main_window.download_btn.Enable(enable)
-            self.main_window.episode_option_btn.Enable(enable and option_enable and not graph_btn)
-            self.main_window.download_option_btn.Enable(enable and option_enable)
-
-        def set_label():
-            match self.main_window.parser.parse_type:
-                case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                    self.main_window.download_btn.SetLabel("开始下载")
-
-                case ParseType.Live:
-                    self.main_window.episode_option_btn.Enable(False)
-                    self.main_window.download_option_btn.Enable(False)
-                    self.main_window.download_btn.SetLabel("直播录制")
+            self.main_window.download_btn.Enable(enable and not_live)
+            self.main_window.episode_option_btn.Enable(enable and option_enable and not graph_btn and not_live)
+            self.main_window.download_option_btn.Enable(enable and option_enable and not_live)
 
         self.status = status
 
@@ -433,11 +475,12 @@ class Utils:
                 processing_icon = False
                 type_lab = ""
 
-                detail_btn = True
+                not_live = self.main_window.parser.parse_type != ParseType.Live
+
+                detail_btn = True and not_live
                 graph_btn = VideoInfo.is_interactive
 
-                enable_controls(True)
-                set_label()
+                enable_controls(True, not_live = not_live)
 
                 self.hide_processing_window()
 
@@ -463,6 +506,17 @@ class Utils:
 
         wx.CallAfter(worker)
 
+    def show_error_message_dialog(self, message: str, caption: str, info: dict):
+        def worker():
+            dlg = wx.MessageDialog(self.main_window, message, caption, wx.ICON_ERROR | wx.YES_NO)
+            dlg.SetYesNoLabels("详细信息", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                err_dlg = ErrorInfoDialog(self.main_window, info)
+                err_dlg.ShowModal()
+
+        wx.CallAfter(worker)
+
     def show_infobar_message(self, message: str, flag: int):
         wx.CallAfter(self.main_window.infobar.ShowMessage, message, flag)
 
@@ -471,6 +525,21 @@ class Utils:
 
     def hide_processing_window(self):
         wx.CallAfter(self.main_window.processing_window.Close)
+
+    def show_welcome_dialog(self):
+        def worker():
+            dlg = wx.MessageDialog(self.main_window, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg.SetYesNoLabels("说明文档", "确定")
+
+            if dlg.ShowModal() == wx.ID_YES:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+            
+            Config.Basic.is_new_user = False
+
+            Config.save_app_config()
+        
+        if Config.Basic.is_new_user:
+            wx.CallAfter(worker)
 
 class MainWindow(Frame):
     def __init__(self, parent):
@@ -494,7 +563,9 @@ class MainWindow(Frame):
         self.infobar = InfoBar(self.panel)
 
         url_lab = wx.StaticText(self.panel, -1, "链接")
-        self.url_box = SearchCtrl(self.panel, "在此处粘贴链接进行解析", search = False, clear = True)
+        self.url_box = SearchCtrl(self.panel, "在此处粘贴链接进行解析", search_btn = True, clear_btn = True)
+        self.url_box.SetMenu(URLMenu())
+
         self.get_btn = wx.Button(self.panel, -1, "Get")
 
         url_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -564,31 +635,35 @@ class MainWindow(Frame):
     def init_menubar(self):
         menu_bar = wx.MenuBar()
 
-        tool_manu = wx.Menu()
+        tool_menu = wx.Menu()
         help_menu = wx.Menu()
 
         if Config.User.login:
-            tool_manu.Append(ID.LOGOUT_MENU, "注销(&L)")
+            tool_menu.Append(ID.LOGOUT_MENU, "注销(&L)")
         else:
-            tool_manu.Append(ID.LOGIN_MENU, "登录(&L)")
+            tool_menu.Append(ID.LOGIN_MENU, "登录(&L)")
 
-        tool_manu.AppendSeparator()
+        tool_menu.AppendSeparator()
 
         if Config.Misc.enable_debug:
-            tool_manu.Append(ID.DEBUG_MENU, "调试(&D)")
+            tool_menu.Append(ID.DEBUG_MENU, "调试(&D)")
 
-        tool_manu.Append(ID.FORMAT_FACTORY_MENU, "视频工具箱(&F)")
-        tool_manu.AppendSeparator()
-        tool_manu.Append(ID.SETTINGS_MENU, "设置(&S)")
+        tool_menu.Append(ID.LIVE_RECORDING_MENU, "直播录制(&R)")
+        tool_menu.Append(ID.FORMAT_FACTORY_MENU, "视频工具箱(&F)")
+        tool_menu.AppendSeparator()
+        tool_menu.Append(ID.SETTINGS_MENU, "设置(&S)")
 
         help_menu.Append(ID.CHECK_UPDATE_MENU, "检查更新(&U)")
         help_menu.Append(ID.CHANGELOG_MENU, "更新日志(&P)")
         help_menu.AppendSeparator()
         help_menu.Append(ID.HELP_MENU, "使用帮助(&C)")
-        help_menu.Append(ID.FEEDBACK_MENU, "意见反馈(&B)")
+        help_menu.AppendSeparator()
+        help_menu.Append(ID.FEEDBACK_MENU, "报告问题(&B)")
+        help_menu.Append(ID.COMMUNITY_MENU, "社区交流(&G)")
+        help_menu.AppendSeparator()
         help_menu.Append(ID.ABOUT_MENU, "关于(&A)")
 
-        menu_bar.Append(tool_manu, "工具(&T)")
+        menu_bar.Append(tool_menu, "工具(&T)")
         menu_bar.Append(help_menu, "帮助(&H)")
 
         self.SetMenuBar(menu_bar)
@@ -596,8 +671,8 @@ class MainWindow(Frame):
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onMenuEVT)
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
-
-        self.url_box.Bind(wx.EVT_SEARCH, self.onParseEVT)
+        
+        self.url_box.Bind(wx.EVT_KEY_DOWN, self.onSearchKeyDownEVT)
         self.get_btn.Bind(wx.EVT_BUTTON, self.onParseEVT)
 
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadWindowEVT)
@@ -617,35 +692,28 @@ class MainWindow(Frame):
         self.Bind(wx.EVT_TIMER, self.utils.read_clipboard, self.clipboard_timer)
 
     def init_utils(self):
-        def init_timer():
-            if Config.Basic.listen_clipboard:
-                self.clipboard_timer.Start(1000)
-
-        def start_thread():
+        def worker():
             FFmpeg.Env.detect()
 
-            if Config.Merge.ffmpeg_check_available_when_launch:
-                Thread(target = self.utils.check_ffmpeg).start()
+            asyncio.run(self.utils.async_worker())
 
-            if Config.Misc.check_update_when_launch:
-                Thread(target = self.utils.check_update, args = (True, )).start()
-
-            Thread(target = self.utils.show_user_info).start()
+            self.utils.show_welcome_dialog()
 
         self.parser = Parser(self)
 
         self.processing_window = ProcessingWindow(self)
         self.download_window = DownloadManagerWindow(self)
+        self.live_recording_window = LiveRecordingWindow(self)
 
-        init_timer()
+        self.utils.init_timer()
 
-        start_thread()
+        Thread(target = worker).start()
 
     def onMenuEVT(self, event):
         match event.GetId():
             case ID.LOGIN_MENU:
-                window = LoginWindow(self)
-                window.Show()
+                dlg = LoginDialog(self)
+                dlg.ShowModal()
 
             case ID.LOGOUT_MENU:
                 dlg = wx.MessageDialog(self, '退出登录\n\n是否要退出登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
@@ -660,16 +728,23 @@ class MainWindow(Frame):
                 window = DebugWindow(self)
                 window.Show()
 
+            case ID.LIVE_RECORDING_MENU:
+                self.onShowLiveRecordingWindowEVT(event)
+
             case ID.FORMAT_FACTORY_MENU:
                 window = FormatFactoryWindow(self)
                 window.Show()
 
             case ID.SETTINGS_MENU:
+                self.utils.dialog_show = True
+
                 window = SettingWindow(self)
                 window.ShowModal()
 
+                self.utils.dialog_show = False
+
             case ID.CHECK_UPDATE_MENU:
-                Thread(target = self.utils.check_update).start()
+                Thread(target = self.utils.check_update, args = (True,)).start()
 
             case ID.CHANGELOG_MENU:
                 Thread(target = self.utils.get_changelog).start()
@@ -679,6 +754,12 @@ class MainWindow(Frame):
 
             case ID.FEEDBACK_MENU:
                 webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader/issues")
+
+            case ID.COMMUNITY_MENU:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/community.html")
+
+            case ID.SUPPORTTED_URL_MENU:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/url.html")
 
             case ID.ABOUT_MENU:
                 dlg = AboutWindow(self)
@@ -724,7 +805,10 @@ class MainWindow(Frame):
 
                 event.Skip()
 
-    def onShowDownloadWindowEVT(self, event):
+    def onShowDownloadWindowEVT(self, event: wx.CommandEvent = None):
+        if not event and not Config.Basic.auto_show_download_window:
+            return
+
         if not self.download_window.IsShown():
             self.download_window.Show()
         
@@ -732,51 +816,35 @@ class MainWindow(Frame):
             if Config.Basic.auto_show_download_window:
                 self.download_window.Iconize(False)
         
-        if Config.Basic.auto_show_download_window:
-            self.download_window.downloading_page_btn.onClickEVT(event)
-            self.download_window.Raise()
+        self.download_window.Raise()
+
+    def onShowLiveRecordingWindowEVT(self, event: wx.CommandEvent):
+        if not self.live_recording_window.IsShown():
+            self.live_recording_window.Show()
+
+        elif self.live_recording_window.IsIconized():
+            self.Iconize(False)
+
+        self.live_recording_window.Raise()
 
     def onDownloadEVT(self, event):
-        def video():
-            def download_callback():
-                self.utils.hide_processing_window()
-                self.onShowDownloadWindowEVT(event)
-
-            # 确认下载选项
-            if Config.Basic.auto_popup_option_dialog:
-                if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
-                    return
-
-            self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
-
-            # 确认重复下载项
-            duplicate_episode_list = self.download_window.find_duplicate_tasks(self.episode_list.download_task_info_list)
-
-            if duplicate_episode_list:
-                if DuplicateDialog(self, duplicate_episode_list).ShowModal() != wx.ID_OK:
-                    return
-
-            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, download_callback, )).start()
-
-            self.processing_window.ShowModal(ProcessingType.Process)
-
-        def live():
-            if self.utils.check_live_status():
-                return
-            
-            dlg = LiveRecordingDialog(self)
-            dlg.ShowModal()
+        def after_show_items_callback():
+            self.utils.hide_processing_window()
+            self.onShowDownloadWindowEVT()
 
         if self.utils.check_download_items():
             return
         
-        match self.parser.parse_type:
-            case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                video()
+        if Config.Basic.auto_popup_option_dialog:
+            if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+                return
 
-            case ParseType.Live:
-                live()
+        self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
 
+        Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
+
+        self.utils.show_processing_window(ProcessingType.Process)
+        
     def onParseEVT(self, event):
         url = self.url_box.GetValue()
 
@@ -785,9 +853,15 @@ class MainWindow(Frame):
 
         self.episode_list.init_episode_list()
 
+        self.utils.set_status(ParseStatus.Parsing)
+
         Thread(target = self.parser.parse_url, args = (url, )).start()
 
-        self.utils.set_status(ParseStatus.Parsing)
+    def onSearchKeyDownEVT(self, event: wx.KeyEvent):
+        if event.GetKeyCode() == wx.WXK_RETURN:
+            self.onParseEVT(event)
+        
+        event.Skip()
 
     def onShowEpisodeOptionMenuEVT(self, event):
         menu = EpisodeOptionMenu()
@@ -815,11 +889,11 @@ class MainWindow(Frame):
                 ClipBoard.Write(self.utils.get_episode_title())
 
             case ID.EPISODE_LIST_COPY_URL_MENU:
+                self.utils.copy_from_menu = True
+
                 item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
 
-                url = Episode.Utils.get_share_url(item_data)
-
-                ClipBoard.Write(url)
+                ClipBoard.Write(item_data.link)
 
             case ID.EPISODE_LIST_EDIT_TITLE_MENU:
                 item = self.episode_list.GetSelection()
@@ -836,24 +910,25 @@ class MainWindow(Frame):
                 self.episode_list.CollapseCurrentItem()
 
     def onShowGraphWindowEVT(self):
-        window = GraphWindow(self)
-        window.Show()
+        WebPage.show_webpage(self, "graph.html")
 
     def onShowDetailInfoDialogEVT(self):
-        match self.parser.parse_type:
-            case ParseType.Live:
-                wx.MessageDialog(self, "暂不支持查看\n\n目前暂不支持查看直播的详细信息", "警告", wx.ICON_WARNING).ShowModal()
-
-            case _:
-                dlg = DetailDialog(self, self.parser.parse_type)
-                dlg.ShowModal()
+        dlg = DetailDialog(self, self.parser.parse_type)
+        dlg.ShowModal()
 
     def onShowDownloadOptionDialogEVT(self, event):
+        self.utils.dialog_show = True
+
         dlg = DownloadOptionDialog(self)
-        return dlg.ShowModal()
+        rtn = dlg.ShowModal()
+
+        self.utils.dialog_show = False
+
+        return rtn
     
-    def show_episode_list(self):
-        self.parser.parse_episode()
+    def show_episode_list(self, from_menu: bool = True):
+        if from_menu:
+            self.parser.parse_episode()
 
         self.episode_list.show_episode_list()
 
@@ -885,10 +960,11 @@ class MainWindow(Frame):
     def get_sys_settings(self):
         Config.Sys.dark_mode = False if Platform(Config.Sys.platform) == Platform.Windows else wx.SystemSettings.GetAppearance().IsDark()
         Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
+        Config.Sys.default_font = self.GetFont().GetFaceName()
 
         for key in ["danmaku", "subtitle"]:
             if Config.Basic.ass_style.get(key).get("font_name") == "default":
-                Config.Basic.ass_style[key]["font_name"] = self.GetFont().GetFaceName()
+                Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
 
     @property
     def stream_type(self):
@@ -899,5 +975,5 @@ class MainWindow(Frame):
         return self.parser.video_quality_id
     
     @property
-    def video_quality_desc_list(self):
-        return self.parser.video_quality_desc_list
+    def video_quality_data_dict(self):
+        return self.parser.video_quality_data_dict

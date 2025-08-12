@@ -1,15 +1,15 @@
-import json
 from typing import Callable
 
-from utils.common.data_type import DownloadTaskInfo, DownloaderInfo
-from utils.common.enums import ParseType, StreamType, VideoQualityID, VideoCodecID, AudioQualityID
+from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.enums import ParseType, StreamType, VideoCodecID, AudioQualityID
 from utils.common.map import audio_file_type_map
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
-from utils.parse.preview import Preview
+from utils.parse.preview import VideoPreview
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
+from utils.parse.video import VideoParser
 
 from utils.auth.wbi import WbiUtils
 from utils.config import Config
@@ -39,12 +39,9 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-            data = json.loads(req.text)
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
-            cls.check_json(data)
-
-            return check_stream_type(data["data"])
+            return data["data"]
 
         def get_bangumi_json():
             params = {
@@ -58,12 +55,9 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-            data = json.loads(req.text)
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
-            cls.check_json(data)
-
-            return check_stream_type(data["result"])
+            return data["result"]
 
         def get_cheese_json():
             params = {
@@ -77,22 +71,23 @@ class DownloadParser(Parser):
 
             url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
-            req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-            data = json.loads(req.text)
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
 
-            cls.check_json(data)
+            return data["data"]
 
-            return check_stream_type(data["data"])
+        cls.check_cid(task_info)
 
         match ParseType(task_info.parse_type):
             case ParseType.Video:
-                return get_video_json()
+                data = get_video_json()
 
             case ParseType.Bangumi:
-                return get_bangumi_json()
+                data = get_bangumi_json()
 
             case ParseType.Cheese:
-                return get_cheese_json()
+                data = get_cheese_json()
+        
+        return check_stream_type(data)
 
     def parse_download_stream_json(self, data: dict):
         match StreamType(self.task_info.stream_type):
@@ -167,95 +162,63 @@ class DownloadParser(Parser):
         return self.parse_mp4_stream(data)
 
     def parse_video_stream(self, data: list):
-        def get_video_downloader_info(entry: dict):
-            info = DownloaderInfo()
-            info.url_list = Preview.get_stream_download_url_list(entry)
-            info.type = "video"
-            info.file_name = f"video_{self.task_info.id}.m4s"
-
-            return info.to_dict()
-        
         self.task_info.video_type = "m4s"
 
-        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
-        self.task_info.video_codec_id = Preview.get_video_codec_id(self.task_info.video_quality_id, self.task_info.video_codec_id, self.task_info.stream_type, data)
+        self.task_info.video_quality_id = VideoPreview.get_video_quality_id(self.task_info.video_quality_id, data)
+        self.task_info.video_codec_id = VideoPreview.get_video_codec_id(self.task_info.video_quality_id, self.task_info.video_codec_id, self.task_info.stream_type, data)
 
         for entry in data["dash"]["video"]:
             if entry["id"] == self.task_info.video_quality_id and entry["codecid"] == self.task_info.video_codec_id:
-                return get_video_downloader_info(entry)
-            
-        return get_video_downloader_info()
+                return {
+                    "url_list": VideoPreview.get_stream_download_url_list(entry),
+                    "file_name": f"video_{self.task_info.id}.m4s",
+                    "type": "video"
+                }
 
     def parse_audio_stream(self, data: dict):
-        def get_audio_downloader_info(entry: dict):
-            info = DownloaderInfo()
-            info.url_list = Preview.get_stream_download_url_list(entry)
-            info.type = "audio"
-            info.file_name = f"audio_{self.task_info.id}.{self.task_info.audio_type}"
-
-            return info.to_dict()
-
-        self.task_info.audio_quality_id = Preview.get_audio_quality_id(self.task_info.audio_quality_id, data["dash"])
-
+        self.task_info.audio_quality_id = VideoPreview.get_audio_quality_id(self.task_info.audio_quality_id, data["dash"])
         self.task_info.audio_type = audio_file_type_map.get(self.task_info.audio_quality_id)
 
         all_url_list = AudioInfo.get_all_audio_url_list(data["dash"])
 
         for entry in all_url_list:
             if entry["id"] == self.task_info.audio_quality_id:
-                return get_audio_downloader_info(entry)
+                return {
+                    "url_list": VideoPreview.get_stream_download_url_list(entry),
+                    "file_name": f"audio_{self.task_info.id}.{self.task_info.audio_type}",
+                    "type": "audio"
+                }
     
     def parse_flv_stream(self, data: dict):
         def get_flv_downloader_info(index: int):
-            if url_list:
-                info = DownloaderInfo()
-                info.url_list = url_list
-                info.type = f"flv_{index}"
-
-                if self.task_info.flv_video_count > 1:
-                    info.file_name = f"flv_{self.task_info.id}_part{index}.flv"
-                else:
-                    info.file_name = f"flv_{self.task_info.id}.flv"
-
-                return info.to_dict()
-            else:
-                return None
+            return {
+                "url_list": url_list,
+                "file_name": f"flv_{self.task_info.id}_part{index}.flv" if self.task_info.flv_video_count > 1 else f"flv_{self.task_info.id}.flv",
+                "type": f"flv_{index}"
+            }
 
         self.task_info.video_type = "flv"
         self.task_info.output_type = "flv"
 
-        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
+        self.task_info.video_quality_id = VideoPreview.get_video_quality_id(self.task_info.video_quality_id, data)
         self.task_info.video_codec_id = VideoCodecID.AVC.value
 
         downloader_info = []
 
         for index, entry in enumerate(data["durl"]):
             if f"flv_{index + 1}" in self.task_info.download_items:
-                url_list = Preview.get_stream_download_url_list(entry)
+                url_list = VideoPreview.get_stream_download_url_list(entry)
 
                 downloader_info.append(get_flv_downloader_info(index + 1))
 
         return downloader_info
 
     def parse_mp4_stream(self, data: dict):
-        def get_mp4_downloader_info():
-            if url_list:
-                info = DownloaderInfo()
-                info.url_list = url_list
-                info.type = "video"
-                info.file_name = f"video_{self.task_info.id}.mp4"
-
-                return info.to_dict()
-            else:
-                return None
-
         self.task_info.video_type = "mp4"
         self.task_info.output_type = "mp4"
 
-        self.task_info.video_quality_id = Preview.get_video_quality_id(self.task_info.video_quality_id, data)
+        self.task_info.video_quality_id = VideoPreview.get_video_quality_id(self.task_info.video_quality_id, data)
         self.task_info.video_codec_id = VideoCodecID.AVC.value
-
-        downloader_info = []
 
         if data["durls"]:
             for entry in data["durls"]:
@@ -264,11 +227,15 @@ class DownloadParser(Parser):
         else:
             node = data["durl"][0]
 
-        url_list = Preview.get_stream_download_url_list(node)
+        url_list = VideoPreview.get_stream_download_url_list(node)
 
-        downloader_info.append(get_mp4_downloader_info())
-
-        return downloader_info
+        return [
+            {
+                "url_list": url_list,
+                "file_name": f"video_{self.task_info.id}.mp4",
+                "type": "video"
+            }
+        ]
 
     def get_download_url(self):
         try:
@@ -278,3 +245,8 @@ class DownloadParser(Parser):
         
         except Exception as e:
             raise GlobalException(callback = self.callback) from e
+
+    @staticmethod
+    def check_cid(task_info: DownloadTaskInfo):
+        if not task_info.cid:
+            task_info.cid = VideoParser.get_video_cid(task_info.bvid)

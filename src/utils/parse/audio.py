@@ -2,14 +2,14 @@ from utils.config import Config
 
 from utils.common.map import audio_quality_map, audio_quality_sort_map, get_mapping_key_by_value
 from utils.common.enums import AudioQualityID
+from utils.common.model.dict_info import DictInfo
 
 class AudioInfo:
     audio: bool = False
 
     audio_quality_id: int = 0
 
-    audio_quality_id_list: list = []
-    audio_quality_desc_list: list = []
+    audio_quality_data_dict: DictInfo = {}
 
     @classmethod
     def get_all_audio_url_list(cls, data: dict):
@@ -44,18 +44,18 @@ class AudioInfo:
 
     @classmethod
     def get_audio_quality_list(cls, json_dash: dict):
-        audio_quality_id_list, audio_quality_desc_list = cls.get_audio_quality_id_desc_list(json_dash)
+        cls.audio_quality_data_dict = cls.get_audio_quality_id_desc_list(json_dash, auto = True)
 
-        cls.audio_quality_id_list = audio_quality_id_list.copy()
-        cls.audio_quality_desc_list = audio_quality_desc_list.copy()
+        cls.audio_quality_id = cls.audio_quality_data_dict.get_id(Config.Download.audio_quality_id)
 
-        cls.audio_quality_id = Config.Download.audio_quality_id if Config.Download.audio_quality_id in cls.audio_quality_id_list else cls.audio_quality_id_list[1]
-
-        cls.audio = len(cls.audio_quality_id_list) != 1
+        cls.audio = len(cls.audio_quality_data_dict) != 1
 
     @classmethod
-    def get_audio_quality_id_desc_list(cls, json_dash: dict):
-        audio_quality_id_list, audio_quality_desc_list = [AudioQualityID._Auto.value], ["自动"]
+    def get_audio_quality_id_desc_list(cls, json_dash: dict, auto: bool = True):
+        audio_quality_data_dict = DictInfo()
+
+        if auto:
+            audio_quality_data_dict["自动"] = AudioQualityID._Auto.value
 
         all_url_list = cls.get_all_audio_url_list(json_dash)
 
@@ -64,14 +64,14 @@ class AudioInfo:
             desc = get_mapping_key_by_value(audio_quality_map, id)
 
             if desc:
-                audio_quality_id_list.append(id)
-                audio_quality_desc_list.append(desc)
-
-        return audio_quality_id_list, audio_quality_desc_list
+                audio_quality_data_dict[desc] = id
+    
+        return audio_quality_data_dict
 
     @classmethod
     def clear_audio_info(cls):
+        cls.audio  = False
+
         cls.audio_quality_id = 0
 
-        cls.audio_quality_id_list.clear()
-        cls.audio_quality_desc_list.clear()
+        cls.audio_quality_data_dict.clear()

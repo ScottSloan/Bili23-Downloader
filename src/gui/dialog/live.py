@@ -8,10 +8,9 @@ from utils.config import Config
 from utils.parse.live import LiveInfo
 
 from utils.common.thread import Thread
-from utils.common.directory import DirectoryUtils
-from utils.common.formatter import FormatUtils
+from utils.common.io.directory import Directory
+from utils.common.formatter.formatter import FormatUtils
 
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.window.dialog import Dialog
 
 class LiveRecordingDialog(Dialog):
@@ -34,11 +33,11 @@ class LiveRecordingDialog(Dialog):
         self.title_lab.SetFont(font)
 
         m3u8_link_lab = wx.StaticText(self, -1, "m3u8 链接")
-        self.m3u8_link_box = TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
+        self.m3u8_link_box = wx.TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
         self.copy_link_btn = wx.Button(self, -1, "复制", size = self.get_scaled_size((60, 24)))
 
         recording_lab = wx.StaticText(self, -1, "保存位置")
-        self.recording_path_box = TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
+        self.recording_path_box = wx.TextCtrl(self, -1, size = self.get_scaled_size((400, -1)))
         self.browse_path_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
         bag_box = wx.FlexGridSizer(2, 3, 0, 0)
@@ -143,7 +142,7 @@ class LiveRecordingDialog(Dialog):
             wx.MessageDialog(self, f"文件不存在\n\n无法打开文件：{os.path.basename(path)}\n\n文件不存在。", "警告", wx.ICON_WARNING).ShowModal()
             return
         
-        DirectoryUtils.open_file_location(path)
+        Directory.open_file_location(path)
 
     def onPlayStreamEVT(self, event):
         pass

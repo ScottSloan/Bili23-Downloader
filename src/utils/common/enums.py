@@ -120,15 +120,6 @@ class ParseStatus(Enum):
     Parsing = 1                   # 解析中
     Error = 2                     # 解析失败
 
-class LiveQualityID(Enum):
-    _Auto = 40000                 # 自动
-    _Dolby_Vision = 30000         # 杜比视界
-    _4K = 20000                   # 4K
-    _1080P = 10000                # 1080P
-    _blue_ray = 400               # 蓝光
-    _hd = 150                     # HD
-    _sd = 80                      # SD
-
 class NumberType(Enum):
     From_1 = 0                    # 从 1 开始
     Coherent = 1                  # 连续序号
@@ -138,6 +129,7 @@ class ProcessingType(Enum):
     Process = 1                   # 处理
     Parse = 2                     # 解析
     Interact = 3                  # 解析互动视频
+    Page = 4                      # 解析分页
 
 class ExitOption(Enum):
     TaskIcon = 0                  # 托盘图标
@@ -156,3 +148,23 @@ class ScopeID(Enum):
     Bangumi = 2                   # 剧集
     Cheese = 3                    # 课程
     Default = 4                   # 默认
+
+class QRCodeStatus(Enum):
+    Success = 0                   # 成功
+    Confirm = 86090               # 未确认
+    Outdated = 86038              # 已失效
+    NotScan = 86101               # 未扫码
+
+class WebPageOption(Enum):
+    Auto = 0                      # 自动检测
+    Webview = 1                   # 使用 Webview
+    Websocket = 2                 # 使用 Websocket
+
+class LiveRecordingStatus(Enum):
+    Free = 0                      # 未录制
+    Recording = 1                 # 录制中
+
+class LiveFileSplit(Enum):
+    Disable = 0                   # 不分段
+    ByDuration = 1                # 按直播时长分段
+    BySize = 2                    # 按文件大小分段

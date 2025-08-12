@@ -10,7 +10,7 @@ class Parser:
     bilibili_url = "https://www.bilibili.com"
 
     def __init__(self):
-        self.json_data = None
+        self.json_data: dict = None
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
         result = re.findall(pattern, string)

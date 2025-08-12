@@ -3,15 +3,16 @@ import os
 
 from utils.config import Config
 
-from utils.common.icon_v4 import Icon, IconID, IconSize
-from utils.common.data_type import Callback, Process, PlayerCallback, RealTimeCallback
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
+from utils.common.model.data_type import Process
+from utils.common.model.callback import Callback, PlayerCallback, ConsoleCallback
 from utils.common.exception import GlobalExceptionInfo
-from utils.common.directory import DirectoryUtils
-from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_windows_map, ffmpeg_video_gpu_linux_map, ffmpeg_video_gpu_darwin_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
+from utils.common.io.directory import Directory
+from utils.common.map import time_ratio_map, ffmpeg_video_codec_map, ffmpeg_video_crf_map, ffmpeg_video_gpu_map, ffmpeg_audio_codec_map, ffmpeg_audio_samplerate_map, ffmpeg_audio_channel_map
 from utils.common.regex import Regex
 from utils.common.enums import Platform
 from utils.common.thread import Thread
-from utils.common.color import Color
+from utils.common.style.color import Color
 
 from utils.module.ffmpeg_v2 import FFmpeg
 
@@ -21,7 +22,6 @@ from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 from gui.component.button.large_bitmap_button import LargeBitmapButton
 from gui.component.button.bitmap_button import BitmapButton
-from gui.component.text_ctrl.text_ctrl import TextCtrl
 from gui.component.text_ctrl.time_ctrl import TimeCtrl
 from gui.component.player import Player, vlc_available
 from gui.component.slider.range_slider import RangeSlider
@@ -164,7 +164,7 @@ class ContainerPage(Panel):
         def __init__(self, parent):
             Panel.__init__(self, parent)
 
-            self.output_box: TextCtrl = None
+            self.output_box: wx.TextCtrl = None
 
         def init_utils(self):
             pass
@@ -197,7 +197,7 @@ class ContainerPage(Panel):
                         dlg.SetYesNoLabels("打开所在位置", "确定")
 
                         if dlg.ShowModal() == wx.ID_YES:
-                            DirectoryUtils.open_file_location(self.output_path)
+                            Directory.open_file_location(self.output_path)
 
                         dlg.Destroy()
 
@@ -328,21 +328,10 @@ class ContainerPage(Panel):
             self.Bind_EVT()
 
         def init_UI(self):
-            def get_gpu_list():
-                match Platform(Config.Sys.platform):
-                    case Platform.Windows:
-                        return ffmpeg_video_gpu_windows_map.keys()
-                    
-                    case Platform.Linux:
-                        return ffmpeg_video_gpu_linux_map.keys()
-                    
-                    case Platform.macOS:
-                        return ffmpeg_video_gpu_darwin_map.keys()
-                    
             output_box = wx.StaticBox(self, -1, "输出设置")
 
             output_lab = wx.StaticText(output_box, -1, "输出")
-            self.output_box = TextCtrl(output_box, -1)
+            self.output_box = wx.TextCtrl(output_box, -1)
             self.output_browse_btn = wx.Button(output_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
             output_sbox = wx.StaticBoxSizer(output_box, wx.HORIZONTAL)
@@ -361,11 +350,11 @@ class ContainerPage(Panel):
             self.video_stream_crf_choice.SetStringSelection("关闭")
 
             self.video_stream_gpu_lab = wx.StaticText(video_stream_box, -1, "GPU")
-            self.video_stream_gpu_choice = wx.Choice(video_stream_box, -1, choices = list(get_gpu_list()))
+            self.video_stream_gpu_choice = wx.Choice(video_stream_box, -1, choices = list(ffmpeg_video_gpu_map.get(Config.Sys.platform).keys()))
             self.video_stream_gpu_choice.SetStringSelection("关闭")
 
             self.video_stream_bitrate_lab = wx.StaticText(video_stream_box, -1, "比特率")
-            self.video_stream_bitrate_box = TextCtrl(video_stream_box, -1, "1500")
+            self.video_stream_bitrate_box = wx.TextCtrl(video_stream_box, -1, "1500")
             self.video_stream_bitrate_unit_lab = wx.StaticText(video_stream_box, -1, "kb/s")
 
             video_stream_grid_box = wx.FlexGridSizer(4, 3, 0, 0)
@@ -400,7 +389,7 @@ class ContainerPage(Panel):
             self.audio_stream_channel_choice.SetStringSelection("2 (Stereo)")
 
             self.audio_stream_bitrate_lab = wx.StaticText(audio_stream_box, -1, "比特率")
-            self.audio_stream_bitrate_box = TextCtrl(audio_stream_box, -1, "128")
+            self.audio_stream_bitrate_box = wx.TextCtrl(audio_stream_box, -1, "128")
             self.audio_stream_bitrate_unit_lab = wx.StaticText(audio_stream_box, -1, "kb/s")
 
             audio_stream_grid_box = wx.FlexGridSizer(4, 3, 0, 0)
@@ -543,7 +532,7 @@ class ContainerPage(Panel):
             wx.CallAfter(worker)
 
         def get_callback(self, success_message: str):
-            class callback(RealTimeCallback):
+            class callback(ConsoleCallback):
                 @staticmethod
                 def onReadOutput(output: str):
                     self.onUpdateInfo(FFmpeg.Utils.parse_progress_info(output))
@@ -555,7 +544,7 @@ class ContainerPage(Panel):
                         dlg.SetYesNoLabels("打开所在位置", "确定")
 
                         if dlg.ShowModal() == wx.ID_YES:
-                            DirectoryUtils.open_file_location(self.output_path)
+                            Directory.open_file_location(self.output_path)
 
                         dlg.Destroy()
 
@@ -616,7 +605,7 @@ class ContainerPage(Panel):
             time_hbox.Add(ratio_vbox, 0, wx.EXPAND)
 
             output_lab = wx.StaticText(self, -1, "输出")
-            self.output_box = TextCtrl(self, -1)
+            self.output_box = wx.TextCtrl(self, -1)
             self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
             output_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -729,7 +718,7 @@ class ContainerPage(Panel):
 
         def init_UI(self):
             output_lab = wx.StaticText(self, -1, "输出")
-            self.output_box = TextCtrl(self, -1)
+            self.output_box = wx.TextCtrl(self, -1)
             self.output_browse_btn = wx.Button(self, -1, "浏览", size = self.get_scaled_size((60, 24)))
 
             output_hbox = wx.BoxSizer(wx.HORIZONTAL)

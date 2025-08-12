@@ -6,6 +6,7 @@ class ID:
     LOGOUT_MENU = wx.NewIdRef()
     DEBUG_MENU = wx.NewIdRef()
     CONVERTER_MENU = wx.NewIdRef()
+    LIVE_RECORDING_MENU = wx.NewIdRef()
     FORMAT_FACTORY_MENU = wx.NewIdRef()
     SETTINGS_MENU = wx.NewIdRef()
 
@@ -13,6 +14,7 @@ class ID:
     CHANGELOG_MENU = wx.NewIdRef()
     HELP_MENU = wx.NewIdRef()
     FEEDBACK_MENU = wx.NewIdRef()
+    COMMUNITY_MENU = wx.NewIdRef()
     ABOUT_MENU = wx.NewIdRef()
 
     EPISODE_SINGLE_MENU = wx.NewIdRef()
@@ -27,4 +29,5 @@ class ID:
     EPISODE_LIST_CHECK_MENU = wx.NewIdRef()
     EPISODE_LIST_COLLAPSE_MENU = wx.NewIdRef()
 
-    USER_INFO_BOXSIZER = wx.NewIdRef()
+    SUPPORTTED_URL_MENU = wx.NewIdRef()
+    HISTORY_MENU = wx.NewIdRef()

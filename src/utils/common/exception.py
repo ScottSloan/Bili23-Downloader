@@ -3,9 +3,9 @@ import json
 import threading
 import traceback
 from typing import Callable
-from datetime import datetime
 
 from utils.common.map import status_code_map
+from utils.common.datetime_util import DateTime
 
 class GlobalExceptionInfo:
     info = {}
@@ -41,7 +41,7 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
 
     def update_exception_info():
         GlobalExceptionInfo.info = {
-            "timestamp": int(datetime.now().timestamp()),
+            "timestamp": DateTime.get_timestamp(),
             "exception_name": exception.__class__.__name__,
             "message": message,
             "stack_trace": stack_trace,

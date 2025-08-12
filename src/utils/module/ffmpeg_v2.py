@@ -2,16 +2,17 @@ import os
 import re
 import subprocess
 
-from utils.common.data_type import Command, Process, Callback, DownloadTaskInfo, RealTimeCallback
+from utils.common.model.data_type import Command, Process, DownloadTaskInfo
+from utils.common.model.callback import Callback, ConsoleCallback
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException
-from utils.common.file_name_v2 import FileNameFormatter
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
 from utils.common.regex import Regex
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
+from utils.common.io.file import File
 
 from utils.config import Config
-from utils.tool_v2 import UniversalTool
 
 class FFmpeg:
     class Command:
@@ -185,14 +186,6 @@ class FFmpeg:
             return command.format()
 
         @staticmethod
-        def get_test_command():
-            command = Command()
-
-            command.add(f'"{Config.Merge.ffmpeg_path}" -version')
-
-            return command.format()
-
-        @staticmethod
         def get_rename_command(src: str, dst: str):
             command = Command()
 
@@ -225,7 +218,7 @@ class FFmpeg:
                 raise GlobalException(code = StatusCode.CallError.value, stack_trace = get_output(), callback = callback.onError, args = (process,))
 
         @staticmethod
-        def run_realtime(command: str, callback: RealTimeCallback, cwd: str = None):
+        def run_realtime(command: str, callback: ConsoleCallback, cwd: str = None):
             def run_process():
                 p = subprocess.Popen(command, shell = True, cwd = cwd, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, text = True, universal_newlines = True, bufsize = 1, encoding = "utf-8")
                 
@@ -303,10 +296,8 @@ class FFmpeg:
                     Config.Merge.ffmpeg_path = cwd_path
 
         @staticmethod
-        def check_availability(callback: Callback):
-            command = FFmpeg.Command.get_test_command()
-
-            FFmpeg.Command.run(command, callback)
+        def check_availability():
+            return not os.path.exists(Config.Merge.ffmpeg_path)
 
     class Utils:
         temp_duration = 0
@@ -334,7 +325,7 @@ class FFmpeg:
             FFmpeg.Command.run(command, callback, cwd = task_info.download_path)
 
         @staticmethod
-        def convert(info: dict, callback: RealTimeCallback):
+        def convert(info: dict, callback: ConsoleCallback):
             command = FFmpeg.Command.get_convert_video_and_audio_command(info)
 
             FFmpeg.Command.run_realtime(command, callback)
@@ -460,7 +451,7 @@ class FFmpeg:
                     case StreamType.Mp4:
                         mp4()
 
-                UniversalTool.remove_files(temp_files)
+                File.remove_files(temp_files)
 
             Thread(target = worker).start()
         
@@ -492,7 +483,7 @@ class FFmpeg:
                         FFmpeg.Command.run(command, callback)
 
                     case OverrideOption.Override:
-                        UniversalTool.remove_files([dst])
+                        File.remove_file(dst)
 
         @staticmethod
         def get_empty_callback():

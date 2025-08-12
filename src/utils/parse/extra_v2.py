@@ -8,18 +8,18 @@ import utils.module.danmaku.dm_pb2 as dm_pb2
 
 from utils.config import Config
 
-from utils.common.data_type import DownloadTaskInfo, Callback, ASSStyle
+from utils.common.model.data_type import DownloadTaskInfo, ASSStyle
+from utils.common.model.callback import Callback
 from utils.common.enums import DanmakuType, SubtitleType, SubtitleLanOption, StatusCode
 from utils.common.request import RequestUtils
-from utils.common.file_name_v2 import FileNameFormatter
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.formatter.formatter import FormatUtils
 from utils.common.exception import GlobalException
-from utils.tool_v2 import DownloadFileTool
 
-from utils.parse.preview import Preview
+from utils.parse.preview import VideoPreview
 from utils.parse.download import DownloadParser
 
-from utils.module.cover import Cover
+from utils.module.pic.cover import Cover
 from utils.module.danmaku.ass_file import ASS
 from utils.module.danmaku.danmaku import Danmaku
 from utils.module.danmaku.xml_file import XML
@@ -96,7 +96,13 @@ class ExtraParser:
         @staticmethod
         def get_all_protobuf_contents(task_info: DownloadTaskInfo):
             def get_contents(cid: int, index: int):
-                url = f"https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid={cid}&segment_index={index}"
+                params = {
+                    "type": 1,
+                    "oid": cid,
+                    "segment_index": index
+                }
+
+                url = f"https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?{WbiUtils.encWbi(params)}"
 
                 return ExtraParser.Utils.request_get(url).content
 
@@ -293,12 +299,12 @@ class ExtraParser:
 
     class Utils:
         @staticmethod
-        def download(task_info: DownloadTaskInfo, callback: Callback, file_tool: DownloadFileTool):
+        def download(task_info: DownloadTaskInfo, callback: Callback):
             def update_task_info():
                 task_info.download_path = FileNameFormatter.get_download_path(task_info)
                 task_info.file_name = FileNameFormatter.format_file_basename(task_info)
 
-                file_tool.update_info("task_info", task_info.to_dict())
+                task_info.update()
 
             try:
                 if task_info.extra_option.get("download_danmaku_file"):
@@ -343,7 +349,7 @@ class ExtraParser:
             else:
                 data = DownloadParser.get_download_stream_json(task_info)
 
-                width, height = Preview.get_video_resolution(task_info, data)
+                width, height = VideoPreview.get_video_resolution(task_info, data)
 
             return {
                 "width": width,

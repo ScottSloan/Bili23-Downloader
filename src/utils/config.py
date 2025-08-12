@@ -1,9 +1,11 @@
 import os
 import json
 import platform
-from typing import Dict
+from typing import Dict, List
 
 from utils.common.enums import Platform
+from utils.common.io.file import File
+from utils.common.io.directory import Directory
 
 app_config_group = {
     "Basic": [
@@ -23,6 +25,7 @@ app_config_group = {
         "window_pos",
         "window_size",
         "window_maximized",
+        "is_new_user",
         "ass_style"
     ],
     "Download": [
@@ -35,7 +38,6 @@ app_config_group = {
         "video_codec_id",
         "enable_notification",
         "delete_history",
-        "auto_add_number",
         "enable_speed_limit",
         "speed_mbps"
     ],
@@ -47,8 +49,9 @@ app_config_group = {
         "retry_when_download_suspend",
         "download_suspend_retry_interval",
         "always_use_https_protocol",
-        "check_md5",
-        "user_agent"
+        "user_agent",
+        "webpage_option",
+        "websocket_port"
     ],
     "Merge": [
         "ffmpeg_path",
@@ -69,8 +72,8 @@ app_config_group = {
         "show_episode_full_name",
         "auto_check_episode_item",
         "show_user_info",
-        "check_update_when_launch",
-        "enable_debug"
+        "enable_debug",
+        "ignore_version"
     ],
 }
 
@@ -97,19 +100,25 @@ user_config_group = {
 }
 
 class Config:
+    app_config = None
+    user_config = None
+
     class Sys:
         platform: str = platform.system().lower()
         dark_mode: bool = False
         dpi_scale_factor: float = 1
 
+        default_font: str = ""
+
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.64.0"
-        version_code: int = 164000
+        version: str = "1.65.0"
+        version_code: int = 165000
 
-        task_file_min_version_code: int = 1640
-        app_config_file_min_version_code: int = 1640
+        task_file_min_version_code: int = 165000
+        live_file_min_version_code: int = 165000
+        app_config_file_min_version_code: int = 165000
         user_config_file_min_version_code: int = 1620
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
@@ -166,6 +175,8 @@ class Config:
         window_size: list = []
         window_maximized: bool = False
 
+        is_new_user: bool = True
+
     class Proxy:
         proxy_mode: int = 1
         enable_auth: bool = False
@@ -178,6 +189,7 @@ class Config:
     class User:
         directory: str = ""
         download_file_directory: str = ""
+        live_file_directory: str = ""
         user_config_path: str = ""
 
         face_path: str = ""
@@ -193,13 +205,14 @@ class Config:
         bili_jct = ""
 
     class Misc:
-        episode_display_mode: int = 2
+        episode_display_mode: int = 3
 
         show_episode_full_name: bool = False
         auto_check_episode_item: bool = False
         enable_debug: bool = False
-        check_update_when_launch: bool = True
         show_user_info: bool = True
+
+        ignore_version: int = 0
 
     class Download:
         path: str = os.path.join(os.getcwd(), "download")
@@ -227,7 +240,6 @@ class Config:
 
         enable_notification: bool = False
         delete_history: bool = False
-        auto_add_number: bool = True
         number_type: int = 1
 
         enable_speed_limit: bool = False
@@ -299,131 +311,138 @@ class Config:
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
-        check_md5: bool = True
 
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
 
+        webpage_option: int = 0
+        websocket_port: int = 8765
+
+    class ConfigBase:
+        def __init__(self):
+            self.config: Dict[str, dict] = {}
+
+            self.file_path = ""
+            self.min_version = 0
+
+            self.config_group: Dict[str, List[str]] = {}
+
+        def init_config(self):
+            self.read()
+            self.check()
+
+            self.make()
+
+            self.read_group()
+
+        def read(self):
+            try:
+                with open(self.file_path, "r", encoding = "utf-8") as f:
+                    self.config = json.loads(f.read())
+
+            except Exception:
+                    self.config = {}
+
+        def read_group(self):
+            for section, name_list in self.config_group.items():
+                for name in name_list:
+                    setattr(getattr(Config, section), name, self.config.get(section.lower()).get(name, getattr(getattr(Config, section), name)))
+
+        def save(self):
+            for section, name_list in self.config_group.items():
+                for name in name_list:
+                    self.config[section.lower()][name] = getattr(getattr(Config, section), name)
+
+            with open(self.file_path, "w", encoding = "utf-8") as f:
+                f.write(json.dumps(self.config, ensure_ascii = False, indent = 4))
+        
+        def make(self):
+            if not os.path.exists(self.file_path):
+                self.save()
+
+        def check(self):
+            if self.check_version():
+                self.reset()
+
+                File.remove_file(self.file_path)
+
+        def check_version(self):
+            min_version = self.config.get("header", {"min_version": 0}).get("min_version", 0)
+
+            if min_version < self.min_version:
+                return True
+            
+    class APPConfig(ConfigBase):
+        def __init__(self):
+            Config.ConfigBase.__init__(self)
+
+            self.file_path = Config.APP.app_config_path
+            self.min_version = Config.APP.app_config_file_min_version_code
+
+            self.config_group = app_config_group
+
+            self.init_config()
+
+        def reset(self):
+            self.config = {
+                "header": {
+                    "min_version": self.min_version
+                },
+                "basic": {},
+                "download": {},
+                "advanced": {},
+                "merge": {},
+                "proxy": {},
+                "misc": {}
+            }
+    
+    class UserConfig(ConfigBase):
+        def __init__(self):
+            Config.ConfigBase.__init__(self)
+
+            self.file_path = Config.User.user_config_path
+            self.min_version = Config.APP.user_config_file_min_version_code
+
+            self.config_group = user_config_group
+
+            self.init_config()
+
+        def reset(self):
+            self.config = {
+                "header": {
+                    "min_version": self.min_version
+                },
+                "user": {},
+                "auth": {}
+            }
+            
     @classmethod
     def load_config(cls):
-        def after_load_config():
-            cls.create_folder([Config.User.download_file_directory])
-
-            cls.create_config(app_config, Config.APP.app_config_path, app_config_group)
-            cls.create_config(user_config, Config.User.user_config_path, user_config_group)
+        cls.init_path()
         
-        def get_path():
-            match Platform(Config.Sys.platform):
-                case Platform.Windows:
-                    Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
+        cls.app_config = Config.APPConfig()
+        cls.user_config = Config.UserConfig()
 
-                case Platform.Linux | Platform.macOS:
-                    Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
+        Directory.create_directories([Config.User.download_file_directory, Config.User.live_file_directory])
 
-            Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
-            Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
-        
-        get_path()
+    @staticmethod
+    def init_path():
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
 
-        app_config: Dict[str, dict] = cls.read_config_json(Config.APP.app_config_path)
-        user_config: Dict[str, dict] = cls.read_config_json(Config.User.user_config_path)
+            case Platform.Linux | Platform.macOS:
+                Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
 
-        app_config, user_config = cls.check_config(app_config, user_config)
-
-        cls.read_config_group(Config, app_config, app_config_group)
-        cls.read_config_group(Config, user_config, user_config_group)
-
-        after_load_config()
+        Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
+        Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
+        Config.User.live_file_directory = os.path.join(Config.User.directory, "live")
 
     @classmethod
-    def create_config(cls, config: dict, config_path: str, config_group: dict):
-        if not os.path.exists(config_path):
-            
-            cls.write_config_json(config_path, config)
-
-            cls.read_config_group(Config, config, config_group)
-            cls.save_config_group(Config, config_group, config_path)
-
-    @staticmethod
-    def create_folder(path_list: list):
-        for path in path_list:
-            if not os.path.exists(path):
-                os.makedirs(path)
+    def save_app_config(cls):
+        cls.app_config.save()
 
     @classmethod
-    def check_config(cls, app_config, user_config):
-        def check_config_version(config: Dict[str, dict], file_path: str, version_code: int):
-            min_version = config.get("header", {"min_version": 0}).get("min_version", 0)
-            
-            if min_version < version_code:
-                cls.remove_config_file(file_path)
-
-                config.clear()
-
-        check_config_version(app_config, Config.APP.app_config_path, Config.APP.app_config_file_min_version_code)
-        check_config_version(user_config, Config.User.user_config_path, Config.APP.user_config_file_min_version_code)
-
-        return cls.get_initial_app_config(app_config), cls.get_initial_user_config(user_config)
-
-    @staticmethod
-    def read_config_group(object, config: Dict[str, dict], config_group: Dict[str, list]):
-        for section, name_list in config_group.items():
-            for name in name_list:
-                setattr(getattr(object, section), name, config.get(section.lower()).get(name, getattr(getattr(object, section), name)))
-
-    @classmethod
-    def save_config_group(cls, object, config_group: Dict[str, list], config_file_path: str):
-        config = cls.read_config_json(config_file_path)
-
-        for section, name_list in config_group.items():
-            for name in name_list:
-                config[section.lower()][name] = getattr(getattr(object, section), name)
-
-        cls.write_config_json(config_file_path, config)
-
-    @staticmethod
-    def remove_config_file(file_path: str):
-        from utils.tool_v2 import UniversalTool
-
-        UniversalTool.remove_files([file_path])
-
-    @staticmethod
-    def read_config_json(file_path: str):
-        try:
-            with open(file_path, "r", encoding = "utf-8") as f:
-                return json.loads(f.read())
-
-        except Exception:
-                return {}
-
-    @staticmethod
-    def write_config_json(file_path: str, contents: dict):
-        with open(file_path, "w", encoding = "utf-8") as f:
-            f.write(json.dumps(contents, ensure_ascii = False, indent = 4))
-
-    @staticmethod
-    def get_initial_app_config(config: dict):
-        return config if config else {
-            "header": {
-                "min_version": Config.APP.app_config_file_min_version_code,
-                "platform": Config.Sys.platform
-            },
-            "basic": {},
-            "download": {},
-            "advanced": {},
-            "merge": {},
-            "proxy": {},
-            "misc": {}
-        }
-    
-    @staticmethod
-    def get_initial_user_config(config: dict):
-        return config if config else {
-            "header": {
-                "min_version": Config.APP.user_config_file_min_version_code,
-                "platform": Config.Sys.platform
-            },
-            "user": {},
-            "auth": {}
-        }
+    def save_user_config(cls):
+        cls.user_config.save()
 
 Config.load_config()

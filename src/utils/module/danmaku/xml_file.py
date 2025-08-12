@@ -1,6 +1,6 @@
 from typing import List
 
-from utils.common.formatter import FormatUtils
+from utils.common.formatter.formatter import FormatUtils
 
 class XML:
     @classmethod

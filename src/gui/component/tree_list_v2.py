@@ -3,9 +3,9 @@ import wx.dataview
 from utils.config import Config
 
 from utils.common.enums import Platform, ParseType
-from utils.common.data_type import TreeListItemInfo
-from utils.common.formatter import FormatUtils
-from utils.common.download_info import DownloadInfo
+from utils.common.model.data_type import TreeListItemInfo
+from utils.common.formatter.formatter import FormatUtils
+from utils.common.model.download_info import DownloadInfo
 
 from utils.parse.episode_v2 import EpisodeInfo
 
@@ -163,8 +163,20 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
                     item_data = self.GetItemData(item)
 
-                    if item_data.cid:
-                        self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id, video_codec_id))
+                    self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, parse_type, video_quality_id, video_codec_id))
+    
+    def CheckItemBadgePaid(self):
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    item_data: TreeListItemInfo = self.GetItemData(item)
+
+                    if item_data.badge == "会员":
+                        return True
 
     def GetCurrentItemType(self):
         item = self.GetSelection()
