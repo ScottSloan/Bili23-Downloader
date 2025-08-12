@@ -254,7 +254,7 @@ class Utils:
 
             version = info.get("version_code")
 
-            if (version > Config.APP.version_code and version != Config.Misc.ignore_version) or from_menu:
+            if version > Config.APP.version_code and version != Config.Misc.ignore_version:
                 wx.CallAfter(show_update_dialog)
             else:
                 if from_menu:
