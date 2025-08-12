@@ -9,13 +9,13 @@
         return `https://github.com/ScottSloan/Bili23-Downloader/releases/download/v${version}/${file}`
     }
 
-    let release_asset_url = 'https://wwx.lanzout.com/i3etU33cvtnc'
-    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/i9YEz33cw19g'
-    let release_asset_win_url = 'https://wwx.lanzout.com/iGeLO33cw4mh'
+    let release_asset_url = 'https://wwx.lanzout.com/ilBBQ33e819e'
+    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/i96lE33e82kb'
+    let release_asset_win_url = 'https://wwx.lanzout.com/ih6nn33e83ah'
 
-    let release_asset_sha1 = 'f5ae1fa4b50c3ffe25fa7adcae1bc30cde28f58b'
-    let release_asset_win_ffmpeg_sha1 = '0160486b4940951ed8223ca141a4ca15c77bb9e1'
-    let release_asset_win_sha1 = '3de469f0a0ba907d4dc54cbbed304df21a13a9b6'
+    let release_asset_sha1 = '95c5d8e3441b19e0be061ee4209cff8e5c3948a0'
+    let release_asset_win_ffmpeg_sha1 = '1e89fc33c51f7950d29d9b914e810673fb8dad36'
+    let release_asset_win_sha1 = '3f03ada655e66d90b1a2a609ffff82ec906a3fed'
 
 </script>
 
@@ -52,7 +52,7 @@
 
 本程序发行版使用 Nuitka 编译，可能会被防病毒软件误报。如果对防病毒软件报毒有疑问的，请删除本程序，使用其他同类工具。  
 
-VirScan 在线病毒检测报告请[点此查看](https://www.virscan.org/report/25510a81bc68d643d23245e3cb6b876b955b46894c82e8a65869e81f0b9b9a8b)。
+VirScan 在线病毒检测报告请[点此查看](https://www.virscan.org/report/c38475156fc01dd2c4f5c0291151ef872e38d1749e3cc01e438393f9aa545c3c)。
 :::
 
 ### 如何选择下载版本
