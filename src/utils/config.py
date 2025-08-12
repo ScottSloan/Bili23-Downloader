@@ -114,7 +114,7 @@ class Config:
         name: str = "Bili23 Downloader"
 
         version: str = "1.65.0"
-        version_code: int = 165000
+        version_code: int = 165001
 
         task_file_min_version_code: int = 165000
         live_file_min_version_code: int = 165000
@@ -419,10 +419,10 @@ class Config:
     def load_config(cls):
         cls.init_path()
         
+        Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
+
         cls.app_config = Config.APPConfig()
         cls.user_config = Config.UserConfig()
-
-        Directory.create_directories([Config.User.download_file_directory, Config.User.live_file_directory])
 
     @staticmethod
     def init_path():
