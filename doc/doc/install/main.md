@@ -9,13 +9,13 @@
         return `https://github.com/ScottSloan/Bili23-Downloader/releases/download/v${version}/${file}`
     }
 
-    let release_asset_url = 'https://wwx.lanzout.com/igKWy31g92cj'
-    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/iM0Kd31g8z6f'
-    let release_asset_win_url = 'https://wwx.lanzout.com/iMnzd31g927e'
+    let release_asset_url = 'https://wwx.lanzout.com/i3etU33cvtnc'
+    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/i9YEz33cw19g'
+    let release_asset_win_url = 'https://wwx.lanzout.com/iGeLO33cw4mh'
 
-    let release_asset_sha1 = '67510aa5e15950319b0dc657c64d62164ecba29f'
-    let release_asset_win_ffmpeg_sha1 = '1baa55515ca2d96136bbb44ca921441768d84333'
-    let release_asset_win_sha1 = '8e0d9791f5cec5d7b39e1ddb98813efe9ba2f0ea'
+    let release_asset_sha1 = 'f5ae1fa4b50c3ffe25fa7adcae1bc30cde28f58b'
+    let release_asset_win_ffmpeg_sha1 = '0160486b4940951ed8223ca141a4ca15c77bb9e1'
+    let release_asset_win_sha1 = '3de469f0a0ba907d4dc54cbbed304df21a13a9b6'
 
 </script>
 
@@ -131,7 +131,7 @@ pip install -r requirements.txt
 
 用户也可以手动安装：
 ```bash
-pip install wxPython==4.2.3 qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0
+pip install wxPython==4.2.3 qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0 websockets==15.0.1
 ```
 #### Linux
 由于 Linux 平台各发行版存在差异，wxPython 安装较为繁琐，以下提供最简便的安装方式。
@@ -144,7 +144,7 @@ pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu
 
 随后再安装其他依赖：
 ```bash
-pip install qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0
+pip install qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0 websockets==15.0.1
 ```
 
 ### 安装 FFmpeg
