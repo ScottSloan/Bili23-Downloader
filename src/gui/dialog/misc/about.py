@@ -52,7 +52,9 @@ class AboutWindow(Dialog):
         app_name_lab = wx.StaticText(self, -1, f"{Config.APP.name}")
         app_name_lab.SetFont(font.MakeBold())
 
-        version_lab = wx.StaticText(self, -1, f"{Config.APP.version}{f" (Beta {beta_ver})" if beta_flag else ""}")
+        beta_ver = f" (Beta {beta_ver})" if beta_flag else ""
+
+        version_lab = wx.StaticText(self, -1, f"{Config.APP.version}{beta_ver}")
         version_lab.SetFont(font)
 
         desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片等资源")

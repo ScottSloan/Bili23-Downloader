@@ -24,7 +24,7 @@ class Utils:
         ms = DateTime.now().microsecond // 1000
         title = FileNameFormatter.get_legal_file_name(self.parent.room_info.title)
 
-        file_name = f"直播录制_{DateTime.time_str("%Y%m%d_%H%M%S_")}_{ms:03d}_{title}.flv"
+        file_name = f"直播录制_{DateTime.time_str('%Y%m%d_%H%M%S_')}_{ms:03d}_{title}.flv"
 
         path = os.path.join(self.parent.room_info.working_directory, file_name)
 

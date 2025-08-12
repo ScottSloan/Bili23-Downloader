@@ -1,5 +1,3 @@
-from typing import Any
-
 from utils.common.datetime_util import DateTime
 
 bangumi_type_map = {
@@ -153,7 +151,8 @@ number_type_map = {
 exit_option_map = {
     "隐藏到托盘": 0,
     "直接退出": 1,
-    "总是询问": 2
+    "总是询问": 2,
+    "首次询问": 3
 }
 
 scope_map = {
