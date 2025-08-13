@@ -6,6 +6,7 @@ from typing import Dict, List
 from utils.common.enums import Platform
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
+from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 app_config_group = {
     "Basic": [
@@ -26,6 +27,7 @@ app_config_group = {
         "window_size",
         "window_maximized",
         "is_new_user",
+        "no_paid_check",
         "ass_style"
     ],
     "Download": [
@@ -176,6 +178,7 @@ class Config:
         window_maximized: bool = False
 
         is_new_user: bool = True
+        no_paid_check: bool = False
 
     class Proxy:
         proxy_mode: int = 1
@@ -417,12 +420,16 @@ class Config:
             
     @classmethod
     def load_config(cls):
-        cls.init_path()
-        
-        Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
+        try:
+            cls.init_path()
+            
+            Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
 
-        cls.app_config = Config.APPConfig()
-        cls.user_config = Config.UserConfig()
+            cls.app_config = Config.APPConfig()
+            cls.user_config = Config.UserConfig()
+
+        except Exception as e:
+            raise GlobalException(callback = cls.on_error) from e
 
     @staticmethod
     def init_path():
@@ -439,10 +446,26 @@ class Config:
 
     @classmethod
     def save_app_config(cls):
-        cls.app_config.save()
+        try:
+            cls.app_config.save()
+        
+        except Exception as e:
+            raise GlobalException(callback = cls.on_error) from e
 
     @classmethod
     def save_user_config(cls):
-        cls.user_config.save()
+        try:
+            cls.user_config.save()
+
+        except Exception as e: 
+            raise GlobalException(callback = cls.on_error) from e
+
+    @staticmethod
+    def on_error():
+        from utils.module.messagebox import show_message
+
+        info = GlobalExceptionInfo.info.copy()
+
+        show_message("Fatal Error", f"读取\保存配置文件时出错\n{info.get('stack_trace')}")
 
 Config.load_config()

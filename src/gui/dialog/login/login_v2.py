@@ -347,8 +347,18 @@ class LoginDialog(Dialog):
         self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Left_22))
         self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Right_33))
 
+        info_lab = wx.StaticText(self, -1, "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序")
+        info_lab.SetFont(self.GetFont().MakeBold())
+
+        info_vbox = wx.BoxSizer(wx.VERTICAL)
+        info_vbox.AddStretchSpacer()
+        info_vbox.Add(info_lab, 0, wx.ALL, self.FromDIP(6))
+        info_vbox.AddStretchSpacer()
+
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.left_bmp, 0, wx.EXPAND)
+        bottom_hbox.AddStretchSpacer()
+        bottom_hbox.Add(info_vbox, 0, wx.EXPAND)
         bottom_hbox.AddStretchSpacer()
         bottom_hbox.Add(self.right_bmp, 0, wx.EXPAND)
 

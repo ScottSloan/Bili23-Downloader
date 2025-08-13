@@ -832,18 +832,22 @@ class MainWindow(Frame):
             self.utils.hide_processing_window()
             self.onShowDownloadWindowEVT()
 
-        if self.utils.check_download_items():
-            return
-        
-        if Config.Basic.auto_popup_option_dialog:
-            if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+        try:
+            if self.utils.check_download_items():
                 return
+            
+            if Config.Basic.auto_popup_option_dialog:
+                if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+                    return
 
-        self.episode_list.GetAllCheckedItem(self.parser.video_quality_id, self.parser.video_codec_id)
+            self.episode_list.GetAllCheckedItem(self.parser.video_quality_id, self.parser.video_codec_id)
 
-        Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
+            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 
-        self.utils.show_processing_window(ProcessingType.Process)
+            self.utils.show_processing_window(ProcessingType.Process)
+        
+        except Exception as e:
+            raise GlobalException(callback = self.parser.onError) from e
         
     def onParseEVT(self, event):
         url = self.url_box.GetValue()
