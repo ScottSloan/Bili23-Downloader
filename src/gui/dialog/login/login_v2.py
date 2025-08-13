@@ -387,6 +387,8 @@ class LoginDialog(Dialog):
 
             self.parent.utils.show_user_info()
 
+            wx.MessageDialog(self.parent, "登录成功\n\n账号登录成功，建议重启程序刷新登录信息。", "提示", wx.ICON_INFORMATION).ShowModal()
+
         wx.CallAfter(worker)
 
         event = wx.PyCommandEvent(wx.EVT_CLOSE.typeId, self.GetId())

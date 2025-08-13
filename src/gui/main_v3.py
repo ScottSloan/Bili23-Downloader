@@ -307,14 +307,28 @@ class Utils:
             raise GlobalException(callback = onError) from e
 
     def user_logout(self):
-        Login.logout()
+        def on_error():
+            self.show_error_message_dialog("注销登录失败\n\n无法完成注销登录操作", "错误", GlobalExceptionInfo.info.copy())
 
-        self.show_user_info()
+        try:
+            Login.logout()
+
+            self.show_user_info()
+
+        except Exception as e:
+            raise GlobalException(callback = on_error) from e
 
     def user_refresh(self):
-        Login.refresh()
+        def on_error():
+            self.show_error_message_dialog("刷新登录信息失败\n\n无法刷新登录信息", "错误", GlobalExceptionInfo.info.copy())
 
-        self.show_user_info()
+        try:
+            Login.refresh()
+
+            self.show_user_info()
+
+        except Exception as e:
+            raise GlobalException(callback = on_error) from e
 
     def show_user_info(self):
         def show_user_face():

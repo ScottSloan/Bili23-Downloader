@@ -1,24 +1,33 @@
-try:
-    import wx
-
-except ImportError:
+def message_box(message: str, caption: str):
     import platform
 
     if platform.platform().startswith("Windows"):
-        import sys
         from utils.module.messagebox import show_message
 
-        show_message("Runtime Error", "缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。")
+        show_message(caption, message)
 
-        sys.exit()
+try:
+    import wx
 
-import os
+except ImportError as e:
+    message_box("缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。", "Runtime Error")
 
-from utils.config import Config
-from utils.common.enums import Platform
-from utils.auth.cookie import CookieUtils
+    raise e
 
-from gui.main_v3 import MainWindow
+try:
+    import os
+
+    from utils.config import Config
+    from utils.common.enums import Platform
+    from utils.auth.cookie import CookieUtils
+
+    from gui.main_v3 import MainWindow
+
+except Exception as e:
+    import traceback
+    message_box(f"初始化程序失败\n\n{traceback.format_exc()}", "Fatal Error")
+
+    raise e
 
 class APP(wx.App):
     def __init__(self):

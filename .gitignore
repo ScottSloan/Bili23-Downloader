@@ -25,6 +25,7 @@ cheese*.json
 choices.json
 node.json
 episode.json
+/.config
 
 # commitizen
 cz.json

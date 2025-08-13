@@ -6,7 +6,6 @@ from typing import Dict, List
 from utils.common.enums import Platform
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
-from utils.common.exception import GlobalException, GlobalExceptionInfo
 
 app_config_group = {
     "Basic": [
@@ -429,16 +428,11 @@ class Config:
             cls.user_config = Config.UserConfig()
 
         except Exception as e:
-            raise GlobalException(callback = cls.on_error) from e
+            cls.on_error(e)
 
     @staticmethod
     def init_path():
-        match Platform(Config.Sys.platform):
-            case Platform.Windows:
-                Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
-
-            case Platform.Linux | Platform.macOS:
-                Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
+        Config.User.directory = os.path.join(os.getcwd(), ".config")
 
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
@@ -450,22 +444,24 @@ class Config:
             cls.app_config.save()
         
         except Exception as e:
-            raise GlobalException(callback = cls.on_error) from e
+            cls.on_error(e)
 
     @classmethod
     def save_user_config(cls):
         try:
             cls.user_config.save()
 
-        except Exception as e: 
-            raise GlobalException(callback = cls.on_error) from e
+        except Exception as e:
+            cls.on_error(e)
 
     @staticmethod
-    def on_error():
+    def on_error(e):
+        import traceback
+
         from utils.module.messagebox import show_message
 
-        info = GlobalExceptionInfo.info.copy()
+        show_message("Fatal Error", f"读取\保存配置文件时出错\n{traceback.format_exc()}")
 
-        show_message("Fatal Error", f"读取\保存配置文件时出错\n{info.get('stack_trace')}")
+        raise e
 
 Config.load_config()
