@@ -139,7 +139,7 @@ class Login:
         return data
     
     @classmethod
-    def request_post(cls, url: str, headers: dict = None, params = None):
+    def request_post(cls, url: str, headers: dict = None, params = None, check: bool = True):
         if not headers:
             headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA)
 
@@ -147,7 +147,8 @@ class Login:
 
         data = json.loads(req.text)
 
-        cls.check_json(data)
+        if check:
+            cls.check_json(data)
 
         return data
 
@@ -207,7 +208,7 @@ class Login:
             "biliCSRF": Config.User.bili_jct
         }
 
-        cls.request_post(url, params = form, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+        cls.request_post(url, params = form, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA), check = False)
 
         cls.clear_login_info()
 

@@ -27,7 +27,7 @@ from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.preview import VideoPreview
 from utils.parse.popular import PopularParser
-from utils.parse.space import SpaceParser
+from utils.parse.space_list import SpaceListParser
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -82,7 +82,7 @@ class Parser:
             case "space" | "list":
                 self.set_parse_type(ParseType.Video)
 
-                self.parser = SpaceParser(self.parser_callback)
+                self.parser = SpaceListParser(self.parser_callback)
 
             case "av" | "BV":
                 self.set_parse_type(ParseType.Video)

@@ -1,4 +1,17 @@
-import wx
+try:
+    import wx
+
+except ImportError:
+    import platform
+
+    if platform.platform().startswith("Windows"):
+        import sys
+        from utils.module.messagebox import show_message
+
+        show_message("Runtime Error", "缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。")
+
+        sys.exit()
+
 import os
 
 from utils.config import Config
@@ -49,3 +62,4 @@ if __name__ == "__main__":
     main_window.Show()
 
     app.MainLoop()
+    

@@ -55,10 +55,6 @@ class DownloadInfo:
             "zone": VideoInfo.zone,
             "subzone": VideoInfo.subzone
         }
-        info["up_info"] = {
-            "up_name": VideoInfo.up_name,
-            "up_mid": VideoInfo.up_mid
-        }
 
         return info
     
@@ -70,10 +66,6 @@ class DownloadInfo:
         info["download_type"] = ParseType.Bangumi.value
         info["area"] = BangumiInfo.area
         info["series_title"] = BangumiInfo.series_title
-        info["up_info"] = {
-            "up_name": BangumiInfo.up_name,
-            "up_mid": BangumiInfo.up_mid
-        }
 
         return info
 
@@ -84,10 +76,6 @@ class DownloadInfo:
         info["parse_type"] = ParseType.Cheese.value
         info["download_type"] = ParseType.Cheese.value
         info["series_title"] = CheeseInfo.title
-        info["up_info"] = {
-            "up_name": CheeseInfo.up_name,
-            "up_mid": CheeseInfo.up_mid
-        }
 
         return info
     
@@ -108,7 +96,11 @@ class DownloadInfo:
             "section_title": item_info.section_title,
             "part_title": item_info.part_title,
             "collection_title": item_info.collection_title,
-            "referer_url": "https://www.bilibili.com"
+            "referer_url": "https://www.bilibili.com",
+            "up_info": {
+                "up_name": item_info.up_name,
+                "up_mid": item_info.up_mid
+            }
         }
     
     @staticmethod
