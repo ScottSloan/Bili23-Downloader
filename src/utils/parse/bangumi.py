@@ -18,10 +18,8 @@ class BangumiInfo:
     epid: int = 0 
     cid: int = 0
     season_id: int = 0
-    mid: int = 0
 
     title: str = ""
-    series_title: str = ""
 
     cover: str = ""
     views: str = ""
@@ -40,10 +38,6 @@ class BangumiInfo:
 
     stream_type: str = "DASH"
 
-    area: str = ""
-    up_name: str = ""
-    up_mid: int = 0
-
     info_json: dict = {}
     download_json: dict = {}
 
@@ -52,9 +46,11 @@ class BangumiInfo:
         cls.url = ""
         cls.bvid = ""
         cls.title = ""
-        cls.series_title = ""
         cls.cover = ""
+
+        cls.type_id = 0
         cls.type_name = ""
+
         cls.views = 0
         cls.danmakus = 0
         cls.followers = 0
@@ -65,12 +61,8 @@ class BangumiInfo:
         cls.epid = 0
         cls.cid = 0
         cls.season_id = 0
-        cls.mid = 0
-        cls.type_id = 0
+        
         cls.stream_type = 0
-        cls.area = ""
-        cls.up_name = ""
-        cls.up_mid = 0
 
         cls.payment = False
         cls.play_check = ""
@@ -115,7 +107,6 @@ class BangumiParser(Parser):
         BangumiInfo.payment = True if "payment" in info_result else False
         
         BangumiInfo.title = info_result["title"]
-        BangumiInfo.series_title = info_result["season_title"]
 
         first_episode = info_result["episodes"][0] if info_result.get("episodes") else info_result["section"][0]["episodes"][0]
 
@@ -123,8 +114,6 @@ class BangumiParser(Parser):
         BangumiInfo.bvid = first_episode["bvid"]
         BangumiInfo.cid = first_episode["cid"]
         BangumiInfo.epid = first_episode["id"]
-
-        BangumiInfo.mid = info_result["media_id"]
 
         BangumiInfo.type_id = info_result["type"]
 
@@ -136,12 +125,6 @@ class BangumiParser(Parser):
         BangumiInfo.new_ep = info_result["new_ep"]["desc"]
         BangumiInfo.actors = info_result["actors"].replace("\n", " ")
         BangumiInfo.evaluate = info_result["evaluate"]
-
-        BangumiInfo.area = info_result["areas"][0]["name"]
-
-        if "up_info" in info_result:
-            BangumiInfo.up_name = info_result["up_info"]["uname"]
-            BangumiInfo.up_mid = info_result["up_info"]["mid"]
 
         BangumiInfo.info_json = info_result.copy()
 

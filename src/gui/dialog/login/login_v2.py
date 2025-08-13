@@ -132,8 +132,6 @@ class QRCodePanel(Panel):
         info = Login.get_user_info(login = True)
         Login.login(info)
 
-        time.sleep(1)
-
         self.parent.onSuccess()
 
     def status_confirm(self):

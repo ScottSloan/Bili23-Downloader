@@ -3,7 +3,6 @@ import json
 import platform
 from typing import Dict, List
 
-from utils.common.enums import Platform
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
 
@@ -293,9 +292,9 @@ class Config:
         enable_switch_cdn: bool = True
         cdn_list: list = [
             "upos-sz-estgoss.bilivideo.com",
+            "upos-sz-mirrorali02.bilivideo.com",
             "upos-sz-mirror08c.bilivideo.com",
             "upos-sz-mirrorcoso1.bilivideo.com",
-            "upos-sz-mirrorali02.bilivideo.com",
             "upos-sz-mirrorhw.bilivideo.com",
             "upos-sz-mirror08h.bilivideo.com",
             "upos-sz-mirrorcos.bilivideo.com",

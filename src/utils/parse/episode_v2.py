@@ -242,7 +242,7 @@ class Episode:
 
         @staticmethod
         def get_entry_info(episode: dict, info_json: dict):
-            episode["title"] = FormatUtils.format_bangumi_title(episode)
+            episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title") if info_json["type"] == 2 else None)
             episode["pubtime"] = episode.get("pub_time")
             episode["duration"] = episode.get("duration", 0) / 1000
             episode["cover_url"] = episode.get("cover")
