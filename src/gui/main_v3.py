@@ -839,7 +839,7 @@ class MainWindow(Frame):
             if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
                 return
 
-        self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
+        self.episode_list.GetAllCheckedItem(self.parser.video_quality_id, self.parser.video_codec_id)
 
         Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 

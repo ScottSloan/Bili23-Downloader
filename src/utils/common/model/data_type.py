@@ -317,7 +317,11 @@ class TreeListItemInfo:
         self.section_title: str = ""
         self.part_title: str = ""
         self.collection_title: str = ""
+        self.series_title: str = ""
 
+        self.area: str = ""
+        self.zone: str = ""
+        self.subzone: str = ""
         self.up_name: str = ""
         self.up_mid: int = 0
 
@@ -349,7 +353,11 @@ class TreeListItemInfo:
             "section_title": self.section_title,
             "part_title": self.part_title,
             "collection_title": self.collection_title,
+            "series_title": self.series_title,
 
+            "area": self.area,
+            "zone": self.zone,
+            "subzone": self.subzone,
             "up_name": self.up_name,
             "up_mid": self.up_mid,
 
@@ -381,7 +389,11 @@ class TreeListItemInfo:
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
         self.collection_title = data.get("collection_title", self.collection_title)
+        self.series_title = data.get("series_title", self.series_title)
 
+        self.area = data.get("area", self.area)
+        self.zone = data.get("zone", self.zone)
+        self.subzone = data.get("subzone", self.subzone)
         self.up_name = data.get("up_name", self.up_name)
         self.up_mid = data.get("up_mid", self.up_mid)
 

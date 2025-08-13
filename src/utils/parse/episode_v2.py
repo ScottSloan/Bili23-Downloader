@@ -68,6 +68,10 @@ class EpisodeInfo:
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
             "collection_title": episode.get("collection_title", ""),
+            "series_title": episode.get("series_title", ""),
+            "area": episode.get("area", ""),
+            "zone": episode.get("zone", ""),
+            "subzone": episode.get("subzone", ""),
             "up_name": episode.get("up_name", ""),
             "up_mid": episode.get("up_mid", 0),
             "item_type": "item",
@@ -169,13 +173,23 @@ class Episode:
                 else:
                     return 0
 
-            episode["title"] = episode["title"] if "title" in episode else episode["part"]
-            episode["badge"] = "充电专属" if info_json["is_upower_exclusive"] else ""
+            def get_link():
+                page = episode.get("page", 0)
+
+                if page > 1:
+                    return f"https://www.bilibili.com/video/{episode.get('bvid')}?p={episode.get('page')}"
+                else:
+                    return f"https://www.bilibili.com/video/{episode.get('bvid')}"
+            
+            episode["title"] = episode.get("title", episode.get("part", ""))
+            episode["badge"] = "充电专属" if info_json.get("is_upower_exclusive", "") else ""
             episode["duration"] = get_duration()
-            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}?p={episode.get('page')}" if episode.get("page", 0) > 1 else f"https://www.bilibili.com/video/{episode.get('bvid')}"
+            episode["link"] = get_link()
             episode["type"] = ParseType.Video.value
-            episode["up_name"] = info_json["owner"]["name"]
-            episode["up_mid"] = info_json["owner"]["mid"]
+            episode["zone"] = info_json.get("tname", "")
+            episode["subzone"] = info_json.get("tname_v2", "")
+            episode["up_name"] = info_json.get("owner", {"name": ""}).get("name", "")
+            episode["up_mid"] = info_json.get("owner", {"mid": 0}).get("mid", 0)
 
             return EpisodeInfo.get_entry_info(episode)
 
@@ -234,6 +248,8 @@ class Episode:
             episode["cover_url"] = episode.get("cover")
             episode["link"] = f"https://www.bilibili.com/bangumi/play/ep{episode.get('ep_id')}"
             episode["type"] = ParseType.Bangumi.value
+            episode["series_title"] = info_json.get("season_title")
+            episode["area"] = info_json.get("areas", [{"name": ""}])[0].get("name", "")
             episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
             episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
 
@@ -288,8 +304,9 @@ class Episode:
             episode["cover_url"] = episode.get("cover")
             episode["link"] = f"https://www.bilibili.com/cheese/play/ep{episode.get('id')}"
             episode["type"] = ParseType.Cheese.value
-            episode["up_name"] = info_json["up_info"]["uname"]
-            episode["up_mid"] = info_json["up_info"]["mid"]
+            episode["series_title"] = info_json.get("title")
+            episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
+            episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
 
             return EpisodeInfo.get_entry_info(episode)
     
