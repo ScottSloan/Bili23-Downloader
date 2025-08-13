@@ -38,3 +38,6 @@ uv.toml
 
 .DS_Store
 example.md
+
+# log
+error_log.txt

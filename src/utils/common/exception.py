@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import threading
@@ -8,6 +9,7 @@ from utils.common.map import status_code_map
 from utils.common.datetime_util import DateTime
 
 class GlobalExceptionInfo:
+    lock = threading.Lock()
     info = {}
 
 class GlobalException(Exception):
@@ -33,9 +35,14 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
     def get_exception_info(exception, exc_type, exc_value, exc_tb):
         stack_trace = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
 
-        traceback.print_exception(exc_type, exc_value, exc_tb)
+        with GlobalExceptionInfo.lock:
+            with open(os.path.join(os.getcwd(), "error_log.txt"), "a", encoding = "utf-8") as f:
+                header = f"{'=' * 80}\n>>> Caused Time: {DateTime.time_str()}\n{'='*80}\n"
+                f.write(header)
+                f.write(stack_trace)
+                f.write(f"{'=' * 80}\n\n")
 
-        print()
+            sys.__excepthook__(exc_type, exc_value, exc_tb)
 
         return exception, stack_trace
 
