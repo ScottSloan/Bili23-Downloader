@@ -51,17 +51,15 @@ class FormatUtils:
             return "{:.1f} B".format(size)
 
     @staticmethod
-    def format_bangumi_title(episode: dict):
+    def format_bangumi_title(episode: dict, series_title: str = None):
         def get_share_copy():
             if "share_copy" in episode:
                 return episode["share_copy"]
             else:
                 return episode["report"]["ep_title"]
         
-        from utils.parse.bangumi import BangumiInfo
-
-        if BangumiInfo.type_id == 2:
-            return f"《{BangumiInfo.series_title}》{episode.get('show_title')}"
+        if series_title: 
+            return f"《{series_title}》{episode.get('show_title')}"
         
         long_title = episode.get("long_title")
 

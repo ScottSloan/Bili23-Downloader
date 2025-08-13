@@ -25,6 +25,7 @@ cheese*.json
 choices.json
 node.json
 episode.json
+/.config
 
 # commitizen
 cz.json
@@ -38,3 +39,6 @@ uv.toml
 
 .DS_Store
 example.md
+
+# log
+error_log.txt

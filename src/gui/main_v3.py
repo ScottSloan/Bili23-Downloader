@@ -27,7 +27,7 @@ from utils.parse.b23 import B23Parser
 from utils.parse.activity import ActivityParser
 from utils.parse.preview import VideoPreview
 from utils.parse.popular import PopularParser
-from utils.parse.space import SpaceParser
+from utils.parse.space_list import SpaceListParser
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -82,7 +82,7 @@ class Parser:
             case "space" | "list":
                 self.set_parse_type(ParseType.Video)
 
-                self.parser = SpaceParser(self.parser_callback)
+                self.parser = SpaceListParser(self.parser_callback)
 
             case "av" | "BV":
                 self.set_parse_type(ParseType.Video)
@@ -307,14 +307,28 @@ class Utils:
             raise GlobalException(callback = onError) from e
 
     def user_logout(self):
-        Login.logout()
+        def on_error():
+            self.show_error_message_dialog("注销登录失败\n\n无法完成注销登录操作", "错误", GlobalExceptionInfo.info.copy())
 
-        self.show_user_info()
+        try:
+            Login.logout()
+
+            self.show_user_info()
+
+        except Exception as e:
+            raise GlobalException(callback = on_error) from e
 
     def user_refresh(self):
-        Login.refresh()
+        def on_error():
+            self.show_error_message_dialog("刷新登录信息失败\n\n无法刷新登录信息", "错误", GlobalExceptionInfo.info.copy())
 
-        self.show_user_info()
+        try:
+            Login.refresh()
+
+            self.show_user_info()
+
+        except Exception as e:
+            raise GlobalException(callback = on_error) from e
 
     def show_user_info(self):
         def show_user_face():
@@ -832,18 +846,22 @@ class MainWindow(Frame):
             self.utils.hide_processing_window()
             self.onShowDownloadWindowEVT()
 
-        if self.utils.check_download_items():
-            return
-        
-        if Config.Basic.auto_popup_option_dialog:
-            if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+        try:
+            if self.utils.check_download_items():
                 return
+            
+            if Config.Basic.auto_popup_option_dialog:
+                if self.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
+                    return
 
-        self.episode_list.GetAllCheckedItem(self.parser.parse_type, self.parser.video_quality_id, self.parser.video_codec_id)
+            self.episode_list.GetAllCheckedItem(self.parser.video_quality_id, self.parser.video_codec_id)
 
-        Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
+            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 
-        self.utils.show_processing_window(ProcessingType.Process)
+            self.utils.show_processing_window(ProcessingType.Process)
+        
+        except Exception as e:
+            raise GlobalException(callback = self.parser.onError) from e
         
     def onParseEVT(self, event):
         url = self.url_box.GetValue()

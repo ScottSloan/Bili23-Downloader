@@ -132,8 +132,6 @@ class QRCodePanel(Panel):
         info = Login.get_user_info(login = True)
         Login.login(info)
 
-        time.sleep(1)
-
         self.parent.onSuccess()
 
     def status_confirm(self):
@@ -347,8 +345,18 @@ class LoginDialog(Dialog):
         self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Left_22))
         self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Right_33))
 
+        info_lab = wx.StaticText(self, -1, "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序")
+        info_lab.SetFont(self.GetFont().MakeBold())
+
+        info_vbox = wx.BoxSizer(wx.VERTICAL)
+        info_vbox.AddStretchSpacer()
+        info_vbox.Add(info_lab, 0, wx.ALL, self.FromDIP(6))
+        info_vbox.AddStretchSpacer()
+
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.left_bmp, 0, wx.EXPAND)
+        bottom_hbox.AddStretchSpacer()
+        bottom_hbox.Add(info_vbox, 0, wx.EXPAND)
         bottom_hbox.AddStretchSpacer()
         bottom_hbox.Add(self.right_bmp, 0, wx.EXPAND)
 
@@ -376,6 +384,8 @@ class LoginDialog(Dialog):
             self.parent.init_menubar()
 
             self.parent.utils.show_user_info()
+
+            wx.MessageDialog(self.parent, "登录成功\n\n账号登录成功，建议重启程序刷新登录信息。", "提示", wx.ICON_INFORMATION).ShowModal()
 
         wx.CallAfter(worker)
 

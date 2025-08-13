@@ -563,7 +563,10 @@ class DownloadOptionDialog(Dialog):
         load_download_option()
 
     def warn(self, message: str, flag: int = None):
-        return wx.MessageDialog(self, message, "警告", wx.ICON_WARNING | flag).ShowModal()
+        dlg = wx.MessageDialog(self, message, "警告", wx.ICON_WARNING | flag)
+        dlg.SetYesNoCancelLabels("是", "否", "不再提示")
+
+        return dlg.ShowModal()
 
     def check_ass_only(self):
         not_dash = StreamType(self.parent.stream_type) != StreamType.Dash
@@ -585,17 +588,28 @@ class DownloadOptionDialog(Dialog):
                 return True
 
     def check_login_paid(self):
-        if not Config.User.login:
-            return self.warn("账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？", wx.YES_NO) == wx.ID_NO
+        def show_dialog(message: str):
+            rtn = self.warn(message,  wx.YES_NO | wx.CANCEL)
+
+            if rtn == wx.ID_CANCEL:
+                Config.Basic.no_paid_check = True
+
+                Config.save_app_config()
+
+            return rtn == wx.ID_NO
         
-        if self.parent.episode_list.CheckItemBadgePaid() and self.parent.parser.parse_type == ParseType.Bangumi:
-            from utils.parse.bangumi import BangumiInfo
+        if not Config.Basic.no_paid_check:
+            if not Config.User.login:
+                return show_dialog("账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？")
+            
+            if self.parent.episode_list.CheckItemBadgePaid() and self.parent.parser.parse_type == ParseType.Bangumi:
+                from utils.parse.bangumi import BangumiInfo
 
-            if BangumiInfo.play_check == "PLAY_PREVIEW":
-                return self.warn("账号未开通大会员\n\n账号未开通大会员，无法完整下载全片，仅能下载 6 分钟试看部分，是否继续下载？", wx.YES_NO) == wx.ID_NO
+                if BangumiInfo.play_check == "PLAY_PREVIEW":
+                    return show_dialog("账号未开通大会员\n\n账号未开通大会员，无法完整下载全片，仅能下载 6 分钟试看部分，是否继续下载？")
 
-        if self.media_info_box.is_warn_show:
-            return self.warn("账号未开通大会员\n\n账号未开通大会员，无法下载 1080P 以上清晰度视频、杜比无损音质，是否继续下载？", wx.YES_NO) == wx.ID_NO
+            if self.media_info_box.is_warn_show:
+                return show_dialog("账号未开通大会员\n\n账号未开通大会员，无法下载 1080P 以上清晰度视频、杜比无损音质，是否继续下载？")
 
     def onOKEVT(self):
         if not self.path_box.path_box.GetValue():

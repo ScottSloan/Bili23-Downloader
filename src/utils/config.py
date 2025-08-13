@@ -3,7 +3,6 @@ import json
 import platform
 from typing import Dict, List
 
-from utils.common.enums import Platform
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
 
@@ -26,6 +25,7 @@ app_config_group = {
         "window_size",
         "window_maximized",
         "is_new_user",
+        "no_paid_check",
         "ass_style"
     ],
     "Download": [
@@ -113,8 +113,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.65.0"
-        version_code: int = 165001
+        version: str = "1.65.1"
+        version_code: int = 165100
 
         task_file_min_version_code: int = 165000
         live_file_min_version_code: int = 165000
@@ -176,6 +176,7 @@ class Config:
         window_maximized: bool = False
 
         is_new_user: bool = True
+        no_paid_check: bool = False
 
     class Proxy:
         proxy_mode: int = 1
@@ -291,9 +292,9 @@ class Config:
         enable_switch_cdn: bool = True
         cdn_list: list = [
             "upos-sz-estgoss.bilivideo.com",
+            "upos-sz-mirrorali02.bilivideo.com",
             "upos-sz-mirror08c.bilivideo.com",
             "upos-sz-mirrorcoso1.bilivideo.com",
-            "upos-sz-mirrorali02.bilivideo.com",
             "upos-sz-mirrorhw.bilivideo.com",
             "upos-sz-mirror08h.bilivideo.com",
             "upos-sz-mirrorcos.bilivideo.com",
@@ -417,21 +418,20 @@ class Config:
             
     @classmethod
     def load_config(cls):
-        cls.init_path()
-        
-        Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
+        try:
+            cls.init_path()
+            
+            Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
 
-        cls.app_config = Config.APPConfig()
-        cls.user_config = Config.UserConfig()
+            cls.app_config = Config.APPConfig()
+            cls.user_config = Config.UserConfig()
+
+        except Exception as e:
+            cls.on_error(e)
 
     @staticmethod
     def init_path():
-        match Platform(Config.Sys.platform):
-            case Platform.Windows:
-                Config.User.directory = os.path.join(os.getenv("LOCALAPPDATA"), "Bili23 Downloader")
-
-            case Platform.Linux | Platform.macOS:
-                Config.User.directory = os.path.join(os.path.expanduser("~"), ".Bili23 Downloader")
+        Config.User.directory = os.path.join(os.getcwd(), ".config")
 
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
@@ -439,10 +439,28 @@ class Config:
 
     @classmethod
     def save_app_config(cls):
-        cls.app_config.save()
+        try:
+            cls.app_config.save()
+        
+        except Exception as e:
+            cls.on_error(e)
 
     @classmethod
     def save_user_config(cls):
-        cls.user_config.save()
+        try:
+            cls.user_config.save()
+
+        except Exception as e:
+            cls.on_error(e)
+
+    @staticmethod
+    def on_error(e):
+        import traceback
+
+        from utils.module.messagebox import show_message
+
+        show_message("Fatal Error", f"读取\保存配置文件时出错\n{traceback.format_exc()}")
+
+        raise e
 
 Config.load_config()

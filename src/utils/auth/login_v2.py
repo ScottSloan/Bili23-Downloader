@@ -139,7 +139,7 @@ class Login:
         return data
     
     @classmethod
-    def request_post(cls, url: str, headers: dict = None, params = None):
+    def request_post(cls, url: str, headers: dict = None, params = None, check: bool = True):
         if not headers:
             headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA)
 
@@ -147,7 +147,8 @@ class Login:
 
         data = json.loads(req.text)
 
-        cls.check_json(data)
+        if check:
+            cls.check_json(data)
 
         return data
 
@@ -166,12 +167,12 @@ class Login:
 
         if login:
             info = {
-                "username": data["uname"],
-                "face_url": data["face"],
-                "SESSDATA": RequestUtils.session.cookies["SESSDATA"],
-                "DedeUserID": RequestUtils.session.cookies["DedeUserID"],
-                "DedeUserID__ckMd5": RequestUtils.session.cookies["DedeUserID__ckMd5"],
-                "bili_jct": RequestUtils.session.cookies["bili_jct"],
+                "username": data.get("uname"),
+                "face_url": data.get("face"),
+                "SESSDATA": RequestUtils.session.cookies.get("SESSDATA"),
+                "DedeUserID": RequestUtils.session.cookies.get("DedeUserID"),
+                "DedeUserID__ckMd5": RequestUtils.session.cookies.get("DedeUserID__ckMd5"),
+                "bili_jct": RequestUtils.session.cookies.get("bili_jct"),
             }
 
             if login:
@@ -180,12 +181,14 @@ class Login:
             return info
         else:
             return {
-                "username": data["uname"],
-                "face_url": data["face"],
+                "username": data.get("uname"),
+                "face_url": data.get("face"),
             }
 
-    @staticmethod
-    def login(info: dict):
+    @classmethod
+    def login(cls, info: dict):
+        cls.check_cookie(info)
+
         Config.User.login = True
         Config.User.face_url = info.get("face_url") + "@.jpg"
         Config.User.username = info.get("username")
@@ -207,7 +210,7 @@ class Login:
             "biliCSRF": Config.User.bili_jct
         }
 
-        cls.request_post(url, params = form, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+        cls.request_post(url, params = form, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA), check = False)
 
         cls.clear_login_info()
 
@@ -249,6 +252,12 @@ class Login:
     def check_json(cls, data: dict):
         if data.get("code") != StatusCode.Success.value:
             raise GlobalException(message = data.get("message"), code = data.get("code"), callback = cls.on_error, json_data = data)
+
+    @classmethod
+    def check_cookie(cls, cookie: dict):
+        for key, value in cookie.items():
+            if not value:
+                raise GlobalException(message = f"Cookie 字段 {key} 无效：{value}", callback = cls.on_error, json_data = cookie)
 
     @classmethod
     def set_on_error_callback(cls, callback):

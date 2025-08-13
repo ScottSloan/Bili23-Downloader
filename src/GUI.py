@@ -1,11 +1,33 @@
-import wx
-import os
+def message_box(message: str, caption: str):
+    import platform
 
-from utils.config import Config
-from utils.common.enums import Platform
-from utils.auth.cookie import CookieUtils
+    if platform.platform().startswith("Windows"):
+        from utils.module.messagebox import show_message
 
-from gui.main_v3 import MainWindow
+        show_message(caption, message)
+
+try:
+    import wx
+
+except ImportError as e:
+    message_box("缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。", "Runtime Error")
+
+    raise e
+
+try:
+    import os
+
+    from utils.config import Config
+    from utils.common.enums import Platform
+    from utils.auth.cookie import CookieUtils
+
+    from gui.main_v3 import MainWindow
+
+except Exception as e:
+    import traceback
+    message_box(f"初始化程序失败\n\n{traceback.format_exc()}", "Fatal Error")
+
+    raise e
 
 class APP(wx.App):
     def __init__(self):

@@ -24,9 +24,6 @@ class CheeseInfo:
 
     stream_type: str = "DASH"
 
-    up_name: str = ""
-    up_mid: int = 0
-
     info_json: dict = {}
     download_json: dict = {}
 
@@ -42,9 +39,7 @@ class CheeseInfo:
         cls.ep_id = 0
         cls.cid = 0
         cls.season_id = 0
-        cls.up_name = ""
-        cls.up_mid = 0
-
+    
         cls.info_json.clear()
         cls.download_json.clear()
 
@@ -81,9 +76,6 @@ class CheeseParser(Parser):
         CheeseInfo.release = info_data["release_info"]
         CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
         CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
-
-        CheeseInfo.up_name = info_data["up_info"]["uname"]
-        CheeseInfo.up_mid = info_data["up_info"]["mid"]
 
         CheeseInfo.info_json = info_data.copy()
 

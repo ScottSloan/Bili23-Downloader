@@ -31,10 +31,6 @@ class VideoInfo:
     is_interactive: bool = False
 
     pubtime: int = 0
-    zone: str = ""
-    subzone: str = ""
-    up_name: str = ""
-    up_mid: int = 0
 
     info_json: dict = {}
     download_json: dict = {}
@@ -53,10 +49,6 @@ class VideoInfo:
         cls.cid = 0
         cls.stream_type = 0
         cls.pubtime = 0
-        cls.zone = ""
-        cls.subzone = ""
-        cls.up_name = ""
-        cls.up_mid = 0
 
         cls.is_interactive = False
 
@@ -117,10 +109,6 @@ class VideoParser(Parser):
         VideoInfo.danmakus = FormatUtils.format_data_quantity(info["stat"]["danmaku"])
 
         VideoInfo.pubtime = info["pubdate"]
-        VideoInfo.zone = info["tname"]
-        VideoInfo.subzone = info["tname_v2"]
-        VideoInfo.up_name = info["owner"]["name"]
-        VideoInfo.up_mid = info["owner"]["mid"]
 
         VideoInfo.is_interactive = "stein_guide_cid" in info
 

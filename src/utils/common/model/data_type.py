@@ -317,6 +317,13 @@ class TreeListItemInfo:
         self.section_title: str = ""
         self.part_title: str = ""
         self.collection_title: str = ""
+        self.series_title: str = ""
+
+        self.area: str = ""
+        self.zone: str = ""
+        self.subzone: str = ""
+        self.up_name: str = ""
+        self.up_mid: int = 0
 
         self.item_type: str = "node"
         self.type: str = 0
@@ -325,22 +332,35 @@ class TreeListItemInfo:
         return {
             "number": self.number,
             "page": self.page,
+
             "title": self.title,
+
             "cid": self.cid,
             "aid": self.aid,
             "bvid": self.bvid,
             "ep_id": self.ep_id,
             "season_id": self.season_id,
             "media_id": self.media_id,
+
             "pubtime": self.pubtime,
             "badge": self.badge,
             "duration": self.duration,
             "cover_url": self.cover_url,
             "link": self.link,
+
             "pid": self.pid,
+
             "section_title": self.section_title,
             "part_title": self.part_title,
             "collection_title": self.collection_title,
+            "series_title": self.series_title,
+
+            "area": self.area,
+            "zone": self.zone,
+            "subzone": self.subzone,
+            "up_name": self.up_name,
+            "up_mid": self.up_mid,
+
             "item_type": self.item_type,
             "type": self.type
         }
@@ -348,22 +368,35 @@ class TreeListItemInfo:
     def load_from_dict(self, data: dict):
         self.number = data.get("number", self.number)
         self.page = data.get("page", self.page)
+
         self.title = data.get("title", self.title)
+
         self.cid = data.get("cid", self.cid)
         self.aid = data.get("aid", self.aid)
         self.bvid = data.get("bvid", self.bvid)
         self.ep_id = data.get("ep_id", self.ep_id)
         self.season_id = data.get("season_id", self.season_id)
         self.media_id = data.get("media_id", self.media_id)
+
         self.pubtime = data.get("pubtime", self.pubtime)
         self.badge = data.get("badge", self.badge)
         self.duration = data.get("duration", self.duration)
         self.cover_url = data.get("cover_url", self.cover_url)
         self.link = data.get("link", self.link)
+
         self.pid = data.get("pid", self.pid)
+
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
         self.collection_title = data.get("collection_title", self.collection_title)
+        self.series_title = data.get("series_title", self.series_title)
+
+        self.area = data.get("area", self.area)
+        self.zone = data.get("zone", self.zone)
+        self.subzone = data.get("subzone", self.subzone)
+        self.up_name = data.get("up_name", self.up_name)
+        self.up_mid = data.get("up_mid", self.up_mid)
+
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
 
