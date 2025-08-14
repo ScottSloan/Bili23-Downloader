@@ -15,7 +15,6 @@ from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
 
 from utils.parse.video import VideoInfo
-from utils.parse.live import LiveInfo
 
 from gui.dialog.misc.about import AboutWindow
 from gui.dialog.setting.edit_title import EditTitleDialog
@@ -39,7 +38,7 @@ class Window:
     
     def show_dialog(func):
         def function(*args, **kwargs):
-            if not Utils.dialog_show:
+            if not Window.dialog_show:
                 Window.dialog_show = True
 
                 rtn = func(*args, **kwargs)
@@ -74,10 +73,18 @@ class Window:
     @staticmethod
     @show_dialog
     def welcome_dialog(parent: wx.Window):
-        dlg = wx.MessageDialog(parent, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
-        dlg.SetYesNoLabels("说明文档", "确定")
+        def worker():
+            dlg = wx.MessageDialog(parent, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg.SetYesNoLabels("说明文档", "确定")
 
-        return dlg.ShowModal()
+            if dlg.ShowModal() == wx.ID_YES:
+                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+
+            Config.Basic.is_new_user = False
+
+            Config.save_app_config()
+
+        wx.CallAfter(worker)
     
     @staticmethod
     def message_dialog(parent: wx.Window, message: str, caption: str, style: int):
@@ -126,6 +133,12 @@ class Window:
         window.ShowModal()
 
     @staticmethod
+    @show_dialog
+    def update_dialog(parent: wx.Window, info: dict):
+        dlg = UpdateDialog(parent, info)
+        dlg.ShowModal()
+
+    @staticmethod
     @show_frame
     def debug_window(parent: wx.Window):
         return DebugWindow(parent)
@@ -148,9 +161,37 @@ class Window:
 
         event.Skip()
 
-class Utils:
-    dialog_show = False
+class TheClipBoard:
+    @staticmethod
+    def write(text: str):
+        ClipBoard.Write(text)
 
+    @staticmethod
+    def read():
+        pass
+
+class Async:
+    async def check_update_async():
+        Utils.check_update()
+
+    async def check_ffmpeg_async():
+        if Config.Merge.ffmpeg_check_available_when_launch:
+            Utils.check_ffmpeg()
+
+    async def show_user_info_async():
+        Utils.show_user_info()
+
+    @classmethod
+    async def async_worker(cls):
+        tasks = [
+            asyncio.create_task(cls.show_user_info_async()),
+            asyncio.create_task(cls.check_ffmpeg_async()),
+            asyncio.create_task(cls.check_update_async())
+        ]
+
+        await asyncio.gather(*tasks, return_exceptions = True)
+
+class Utils:
     def __init__(self, parent: wx.Window):
         from gui.window.main.main_v3 import MainWindow
 
@@ -158,7 +199,6 @@ class Utils:
         self.status = ParseStatus.Success
 
         self.copy_from_menu = False
-        self.dialog_show = False
 
     def init_timer(self):
         if Config.Basic.listen_clipboard:
@@ -173,13 +213,10 @@ class Utils:
             Window.message_dialog("解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True
 
-    def check_update(self, from_menu: bool = False):
+    @classmethod
+    def check_update(cls, from_menu: bool = False):
         def onError():
-            self.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
-
-        def show_update_dialog():
-            window = UpdateDialog(self.main_window, info)
-            window.ShowModal()
+            cls.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
 
         try:
             info = Update.get_update_json()
@@ -187,16 +224,13 @@ class Utils:
             version = info.get("version_code")
 
             if version > Config.APP.version_code and version != Config.Misc.ignore_version:
-                wx.CallAfter(show_update_dialog)
+                wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
             else:
                 if from_menu:
                     Window.message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
 
         except Exception as e:
             raise GlobalException(callback = onError) from e
-
-    async def check_update_async(self):
-        self.check_update()
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
@@ -207,7 +241,7 @@ class Utils:
         if self.main_window.utils.copy_from_menu:
             return False
         
-        if self.main_window.utils.dialog_show:
+        if Window.dialog_show:
             return False
 
         if self.main_window.IsShown():
@@ -254,40 +288,19 @@ class Utils:
         except Exception as e:
             raise GlobalException(callback = on_error) from e
 
-    def show_user_info(self):
-        def show_user_face():
-            self.main_window.face_icon.Show()
-            self.main_window.face_icon.SetBitmap(Face.crop_round_face_bmp(image))
-            self.main_window.uname_lab.SetLabel(Config.User.username)
-
-            self.main_window.panel.GetSizer().Layout()
-
-        def hide_user_info():
-            self.main_window.face_icon.Hide()
-            self.main_window.uname_lab.Hide()
-
-            self.main_window.panel.Layout()
-
-        def not_login():
-            self.main_window.uname_lab.SetLabel("未登录")
-            self.main_window.face_icon.Hide()
-
-            self.main_window.panel.Layout()
+    @classmethod
+    def show_user_info(cls):
+        main_window = cls.get_main_window()
 
         if Config.Misc.show_user_info:
             if Config.User.login:
-                image = Face.get_scaled_face(self.main_window.FromDIP((32, 32)))
-
-                worker = show_user_face
+                worker = main_window.bottom_box.show_user_info
             else:
-                worker = not_login
+                worker = main_window.bottom_box.set_not_login
         else:
-            worker = hide_user_info
+            worker = main_window.bottom_box.hide_user_info
 
         wx.CallAfter(worker)
-
-    async def show_user_info_async(self):
-        self.show_user_info()
 
     def set_episode_display_mode(self, mode: EpisodeDisplayType):
         Config.Misc.episode_display_mode = mode.value
@@ -302,7 +315,7 @@ class Utils:
     def update_checked_item_count(self, count: int):
         label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
 
-        self.main_window.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
+        self.main_window.top_box.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
 
         self.main_window.panel.Layout()
 
@@ -313,24 +326,15 @@ class Utils:
             if self.validate_url(url) and self.check_parse_status():
                 self.main_window.utils.copy_from_menu = False
 
-                self.main_window.url_box.SetValue(url)
+                self.main_window.top_box.url_box.SetValue(url)
 
                 wx.CallAfter(self.main_window.onParseEVT, event)
 
     def validate_url(self, url: str):
         if url.startswith(("http", "https")) and "bilibili.com" in url:
-            if url != self.main_window.url_box.GetValue():
+            if url != self.main_window.top_box.url_box.GetValue():
                 if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
                     return True
-
-    def get_episode_title(self):
-        return self.main_window.episode_list.GetItemText(self.main_window.episode_list.GetSelection(), 1)
-    
-    def set_episode_title(self, item, title: str):
-        self.main_window.episode_list.SetItemTitle(item, title)
-
-        if self.main_window.parser.parse_type == ParseType.Live:
-            LiveInfo.title = title
 
     def save_exit_dialog_settings(self, flag: int): 
         save = ExitOption(Config.Basic.exit_option) == ExitOption.AskOnce
@@ -353,9 +357,10 @@ class Utils:
 
             Config.save_app_config()
 
-    def check_ffmpeg(self):
+    @classmethod
+    def check_ffmpeg(cls):
         def worker():
-            dlg = wx.MessageDialog(self.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+            dlg = wx.MessageDialog(cls.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
             dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
             if dlg.ShowModal() == wx.ID_YES:
@@ -366,34 +371,21 @@ class Utils:
         if result:
             wx.CallAfter(worker)
 
-    async def check_ffmpeg_async(self):
-        if Config.Merge.ffmpeg_check_available_when_launch:
-            self.check_ffmpeg()
-
-    async def async_worker(self):
-        tasks = [
-            asyncio.create_task(self.show_user_info_async()),
-            asyncio.create_task(self.check_ffmpeg_async()),
-            asyncio.create_task(self.check_update_async())
-        ]
-
-        await asyncio.gather(*tasks, return_exceptions = True)
-
     def set_status(self, status: ParseStatus):
         def update():
-            self.main_window.processing_icon.Show(processing_icon)
-            self.main_window.type_lab.SetLabel(type_lab)
+            self.main_window.top_box.processing_icon.Show(processing_icon)
+            self.main_window.top_box.type_lab.SetLabel(type_lab)
 
-            self.main_window.detail_btn.Show(detail_btn)
-            self.main_window.graph_btn.Show(graph_btn)
+            self.main_window.top_box.detail_btn.Show(detail_btn)
+            self.main_window.top_box.graph_btn.Show(graph_btn)
 
         def enable_controls(enable: bool, option_enable: bool = True, not_live: bool = True):
-            self.main_window.url_box.Enable(enable)
-            self.main_window.get_btn.Enable(enable)
+            self.main_window.top_box.url_box.Enable(enable)
+            self.main_window.top_box.get_btn.Enable(enable)
             self.main_window.episode_list.Enable(enable)
-            self.main_window.download_btn.Enable(enable and not_live)
-            self.main_window.episode_option_btn.Enable(enable and option_enable and not graph_btn and not_live)
-            self.main_window.download_option_btn.Enable(enable and option_enable and not_live)
+            self.main_window.bottom_box.download_btn.Enable(enable and not_live)
+            self.main_window.top_box.episode_option_btn.Enable(enable and option_enable and not graph_btn and not_live)
+            self.main_window.top_box.download_option_btn.Enable(enable and option_enable and not_live)
 
         self.status = status
 
@@ -454,14 +446,10 @@ class Utils:
     def hide_processing_window(self):
         wx.CallAfter(self.main_window.processing_window.Close)
 
-    def show_welcome_dialog(self):
-        def worker():
-            if Window.welcome_dialog(self.main_window) == wx.ID_YES:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
-            
-            Config.Basic.is_new_user = False
+    @staticmethod
+    def get_main_window():
+        from gui.window.main.main_v3 import MainWindow
 
-            Config.save_app_config()
-        
-        if Config.Basic.is_new_user:
-            wx.CallAfter(worker)
+        main_window: MainWindow = wx.FindWindowByName("main")
+
+        return main_window

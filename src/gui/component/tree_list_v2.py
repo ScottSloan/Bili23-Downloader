@@ -242,3 +242,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.SetItemText(item, 1, title)
         self.SetItemData(item, item_data)
+
+    def GetItemTitle(self):
+        return self.GetItemText(self.GetSelection(), 1)
