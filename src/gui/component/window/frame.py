@@ -5,8 +5,8 @@ from utils.common.enums import Platform
 from utils.config import Config
 
 class Frame(wx.Frame):
-    def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE):
-        wx.Frame.__init__(self, parent, -1, title, style = style)
+    def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE, name = wx.FrameNameStr):
+        wx.Frame.__init__(self, parent, -1, title, style = style, name = name)
 
         self.SetIcon(wx.Icon(Icon.get_app_icon_bitmap(IconID.App_Small)))
 

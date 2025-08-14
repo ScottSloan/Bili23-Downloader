@@ -10,7 +10,7 @@ class DebugWindow(Frame):
         
         self.parent: MainWindow = parent
 
-        Frame.__init__(self, parent, "Debug")
+        Frame.__init__(self, parent, "Debug", name = "debug")
 
         self.init_UI()
 

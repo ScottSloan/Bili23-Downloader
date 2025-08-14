@@ -28,7 +28,7 @@ class SearchEpisodeListDialog(Frame):
 
         self.parent: MainWindow = parent
 
-        Frame.__init__(self, parent, "搜索", style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_TOOL_WINDOW | wx.FRAME_FLOAT_ON_PARENT)
+        Frame.__init__(self, parent, "搜索", style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_TOOL_WINDOW | wx.FRAME_FLOAT_ON_PARENT, name = "search")
 
         self.init_UI()
 
@@ -37,17 +37,18 @@ class SearchEpisodeListDialog(Frame):
         self.CenterOnParent()
 
     def init_UI(self):
-        self.panel = Panel(self)
-        self.search_box = SearchCtrl(self.panel, "在剧集列表中搜索", size = self.FromDIP((200, 24)), search_btn = True, clear_btn = True)
+        panel = Panel(self)
 
-        self.search_result_lab = wx.StaticText(self.panel, -1, "无结果")
-        self.previous_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.Up))
+        self.search_box = SearchCtrl(panel, "在剧集列表中搜索", size = self.FromDIP((300, 24)), search_btn = True, clear_btn = True)
+
+        self.search_result_lab = wx.StaticText(panel, -1, "无结果")
+        self.previous_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Up))
         self.previous_btn.SetToolTip("上一匹配项")
         self.previous_btn.Enable(False)
-        self.next_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.Down))
+        self.next_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Down))
         self.next_btn.SetToolTip("下一匹配项")
         self.next_btn.Enable(False)
-        self.search_btn = wx.Button(self.panel, wx.ID_OK, "搜索", size = self.get_scaled_size((80, 30)))
+        self.search_btn = wx.Button(panel, wx.ID_OK, "搜索", size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -61,9 +62,12 @@ class SearchEpisodeListDialog(Frame):
         vbox.Add(self.search_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
-        self.panel.SetSizerAndFit(vbox)
+        panel.SetSizer(vbox)
 
-        self.FitInside()
+        dlg_vbox = wx.BoxSizer(wx.VERTICAL)
+        dlg_vbox.Add(panel, 0, wx.EXPAND)
+
+        self.SetSizerAndFit(dlg_vbox)
 
     def Bind_EVT(self):
         self.search_btn.Bind(wx.EVT_BUTTON, self.onSearchEVT)
@@ -109,4 +113,4 @@ class SearchEpisodeListDialog(Frame):
 
         self.search_result_lab.SetLabel(f"第 {self.search_result.index + 1} 项，共 {len} 项" if len else "无结果")
 
-        self.panel.Layout()
+        self.Layout()
