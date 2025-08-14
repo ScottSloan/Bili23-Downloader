@@ -120,6 +120,10 @@ class MiscPage(Page):
             self.restart()
 
     def restart(self):
-        subprocess.Popen([sys.executable] + sys.argv)
+        if not sys.argv[0].endswith(".py"):
+            subprocess.Popen(sys.argv)
+
+        else:
+            subprocess.Popen([sys.executable] + sys.argv)
 
         sys.exit()

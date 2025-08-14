@@ -21,7 +21,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 case Platform.Linux | Platform.macOS:
                     return self.FromDIP((775, 350))
         
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.main_window: MainWindow = main_window
 
@@ -165,6 +165,26 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                     self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data, video_quality_id, video_codec_id))
     
+    def SearchItem(self, keywords: str):
+        result = []
+
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                item_data = self.GetItemData(item)
+
+                if item_data.item_type == "item" and keywords in item_data.title:
+                    result.append(item)
+
+        return result
+    
+    def FocusItem(self, item):
+        self.EnsureVisible(item)
+        self.Select(item)
+
     def CheckItemBadgePaid(self):
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 

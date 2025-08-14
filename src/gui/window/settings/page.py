@@ -5,7 +5,7 @@ from gui.component.panel.panel import Panel
 
 class Page(Panel):
     def __init__(self, parent: wx.Window, name: str):
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent.GetParent().GetParent()
 

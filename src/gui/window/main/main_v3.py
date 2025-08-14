@@ -43,6 +43,7 @@ from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
 from gui.dialog.login.login_v2 import LoginDialog
+from gui.dialog.search_episode_list import SearchEpisodeListDialog
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
@@ -54,7 +55,6 @@ from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.button.button import Button
-from gui.component.misc.info_bar import InfoBar
 from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
 
@@ -531,9 +531,6 @@ class Utils:
 
         wx.CallAfter(worker)
 
-    def show_infobar_message(self, message: str, flag: int):
-        wx.CallAfter(self.main_window.infobar.ShowMessage, message, flag)
-
     def show_processing_window(self, type: ProcessingType):
         wx.CallAfter(self.main_window.processing_window.ShowModal, type)
 
@@ -574,8 +571,6 @@ class MainWindow(Frame):
     def init_UI(self):
         self.panel = Panel(self)
 
-        self.infobar = InfoBar(self.panel)
-
         url_lab = wx.StaticText(self.panel, -1, "链接")
         self.url_box = SearchCtrl(self.panel, "在此处粘贴链接进行解析", search_btn = True, clear_btn = True)
         self.url_box.SetMenu(URLMenu())
@@ -596,6 +591,8 @@ class MainWindow(Frame):
         self.graph_btn = FlatButton(self.panel, "剧情树", IconID.Tree_Structure)
         self.graph_btn.setToolTip("查看互动视频剧情树")
         self.graph_btn.Hide()
+        self.search_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.Search))
+        self.search_btn.SetToolTip("搜索剧集列表")
         self.episode_option_btn = BitmapButton(self.panel, Icon.get_icon_bitmap(IconID.List))
         self.episode_option_btn.SetToolTip("剧集列表显示设置")
         self.episode_option_btn.Enable(False)
@@ -610,6 +607,7 @@ class MainWindow(Frame):
         info_hbox.Add(self.detail_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.Add(self.graph_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.AddStretchSpacer()
+        info_hbox.Add(self.search_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.episode_option_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.download_option_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
@@ -632,7 +630,6 @@ class MainWindow(Frame):
         bottom_hbox.Add(self.download_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.infobar, 0, wx.EXPAND)
         vbox.Add(url_hbox, 0, wx.EXPAND)
         vbox.Add(info_hbox, 0, wx.EXPAND)
         vbox.Add(self.episode_list, 1, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
@@ -692,6 +689,7 @@ class MainWindow(Frame):
         self.download_mgr_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadWindowEVT)
         self.download_btn.Bind(wx.EVT_BUTTON, self.onDownloadEVT)
 
+        self.search_btn.Bind(wx.EVT_BUTTON, self.onShowSearchDialogEVT)
         self.episode_option_btn.Bind(wx.EVT_BUTTON, self.onShowEpisodeOptionMenuEVT)
         self.download_option_btn.Bind(wx.EVT_BUTTON, self.onShowDownloadOptionDialogEVT)
 
@@ -880,6 +878,10 @@ class MainWindow(Frame):
             self.onParseEVT(event)
         
         event.Skip()
+
+    def onShowSearchDialogEVT(self, event: wx.CommandEvent):
+        dlg = SearchEpisodeListDialog(self)
+        dlg.Show()
 
     def onShowEpisodeOptionMenuEVT(self, event):
         menu = EpisodeOptionMenu()

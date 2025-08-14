@@ -113,8 +113,8 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.65.1"
-        version_code: int = 165100
+        version: str = "1.66.0"
+        version_code: int = 166000
 
         task_file_min_version_code: int = 165000
         live_file_min_version_code: int = 165000
@@ -179,7 +179,7 @@ class Config:
         no_paid_check: bool = False
 
     class Proxy:
-        proxy_mode: int = 1
+        proxy_mode: int = 0
         enable_auth: bool = False
 
         proxy_ip: str = ""

@@ -112,7 +112,7 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
     def load_data(self, parent):
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.parent: DownloadOptionDialog = parent
         self.main_window: MainWindow = self.parent.GetParent()
@@ -495,7 +495,7 @@ class OtherStaticBox(Panel):
 
 class DownloadOptionDialog(Dialog):
     def __init__(self, parent):
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent
 

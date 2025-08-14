@@ -21,7 +21,7 @@ try:
     from utils.common.enums import Platform
     from utils.auth.cookie import CookieUtils
 
-    from gui.main_v3 import MainWindow
+    from gui.window.main.main_v3 import MainWindow
 
 except Exception as e:
     import traceback

@@ -19,7 +19,7 @@ class DetailDialog(Dialog):
     def __init__(self, parent, parse_type: ParseType):
         self.parse_type = parse_type
 
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.main_window: MainWindow = parent
 
