@@ -27,8 +27,6 @@ class VideoInfo:
     desc: str = ""
     tag_list: list = []
 
-    stream_type: str = "DASH"
-
     is_interactive: bool = False
 
     pubtime: int = 0
@@ -47,7 +45,6 @@ class VideoInfo:
         cls.views = 0
         cls.danmakus = 0
         cls.cid = 0
-        cls.stream_type = 0
         cls.pubtime = 0
 
         cls.is_interactive = False
@@ -154,8 +151,6 @@ class VideoParser(Parser):
         PreviewInfo.download_json = resp["data"].copy()
 
         if not qn:
-            VideoInfo.stream_type = "DASH" if "dash" in PreviewInfo.download_json else "FLV"
-
             AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
     @classmethod

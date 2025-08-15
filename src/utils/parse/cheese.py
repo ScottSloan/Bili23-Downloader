@@ -23,8 +23,6 @@ class CheeseInfo:
     release: str = ""
     expiry: str = ""
 
-    stream_type: str = "DASH"
-
     info_json: dict = {}
 
     @classmethod
@@ -100,8 +98,6 @@ class CheeseParser(Parser):
         PreviewInfo.download_json = resp["data"].copy()
 
         if not qn:
-            CheeseInfo.stream_type = PreviewInfo.download_json.get("type")
-
             AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
     def parse_worker(self, url: str):

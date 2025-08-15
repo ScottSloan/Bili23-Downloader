@@ -37,8 +37,6 @@ class BangumiInfo:
     payment: bool = False
     play_check: str = ""
 
-    stream_type: str = "DASH"
-
     info_json: dict = {}
 
     @classmethod
@@ -62,8 +60,6 @@ class BangumiInfo:
         cls.cid = 0
         cls.season_id = 0
         
-        cls.stream_type = 0
-
         cls.payment = False
         cls.play_check = ""
 
@@ -150,8 +146,6 @@ class BangumiParser(Parser):
         PreviewInfo.download_json = resp["result"].copy()
 
         if not qn:
-            BangumiInfo.stream_type = PreviewInfo.download_json.get("type")
-
             AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
             if not PreviewInfo.download_json.get("dash") and not PreviewInfo.download_json.get("durl"):

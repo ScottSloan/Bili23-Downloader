@@ -257,7 +257,7 @@ class MainWindow(Frame):
                 if self.top_box.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
                     return
 
-            self.episode_list.GetAllCheckedItem(self.parser.video_quality_id, self.parser.video_codec_id)
+            self.episode_list.GetAllCheckedItem()
 
             Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 
@@ -347,15 +347,3 @@ class MainWindow(Frame):
         for key in ["danmaku", "subtitle"]:
             if Config.Basic.ass_style.get(key).get("font_name") == "default":
                 Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
-
-    @property
-    def stream_type(self):
-        return self.parser.stream_type
-
-    @property
-    def video_quality_id(self):
-        return self.parser.video_quality_id
-    
-    @property
-    def video_quality_data_dict(self):
-        return self.parser.video_quality_data_dict

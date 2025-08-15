@@ -81,28 +81,6 @@ class Parser:
 
                 self.main_window.show_episode_list(from_menu = False)
 
-                self.set_video_quality_id()
-
-                self.set_stream_type()
-
-    def set_video_quality_id(self):
-        self.video_quality_data_dict = VideoPreview.get_video_quality_data_dict(PreviewInfo.download_json)
-
-        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_data_dict.id_list() else max(VideoPreview.get_video_available_quality_id_list(PreviewInfo.download_json))
-
-        self.video_codec_id = Config.Download.video_codec_id
-
-    def set_stream_type(self):
-        match self.parse_type:
-            case ParseType.Video:
-                self.stream_type = VideoInfo.stream_type
-            
-            case ParseType.Bangumi:
-                self.stream_type = BangumiInfo.stream_type
-            
-            case ParseType.Cheese:
-                self.stream_type = CheeseInfo.stream_type
-
     def parse_episode(self):
         self.parser.parse_episodes()
 
