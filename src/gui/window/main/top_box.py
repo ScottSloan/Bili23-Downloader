@@ -1,7 +1,8 @@
 import wx
 
+from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
-
+from utils.common.enums import EpisodeDisplayType
 from utils.module.web.page import WebPage
 
 from gui.window.main.utils import Window
@@ -15,10 +16,10 @@ from gui.component.menu.url import URLMenu
 from gui.component.menu.episode_option import EpisodeOptionMenu
 
 class TopBox(Panel):
-    def __init__(self, parent: wx.Window, main_window: wx.Window):
+    def __init__(self, parent: wx.Window):
         from gui.window.main.main_v3 import MainWindow
 
-        self.main_window: MainWindow = main_window
+        self.main_window: MainWindow = wx.FindWindowByName("main")
 
         Panel.__init__(self, parent)
 
@@ -84,7 +85,7 @@ class TopBox(Panel):
         self.detail_btn.onClickCustomEVT = self.onShowDetailInfoDialogEVT
 
     def onShowSearchDialogEVT(self, event: wx.CommandEvent):
-        Window.search_dialog(self)
+        Window.search_dialog(self.main_window)
 
     def onShowEpisodeOptionMenuEVT(self, event: wx.CommandEvent):
         menu = EpisodeOptionMenu()
@@ -92,7 +93,7 @@ class TopBox(Panel):
         self.PopupMenu(menu)
 
     def onShowDownloadOptionDialogEVT(self, event: wx.CommandEvent):
-        return Window.download_option_dialog(self)
+        return Window.download_option_dialog(self.main_window)
     
     def onSearchKeyDownEVT(self, event: wx.KeyEvent):
         if event.GetKeyCode() == wx.WXK_RETURN:
@@ -101,7 +102,24 @@ class TopBox(Panel):
         event.Skip()
 
     def onShowGraphWindowEVT(self):
-        WebPage.show_webpage(self, "graph.html")
+        WebPage.show_webpage(self.main_window, "graph.html")
 
     def onShowDetailInfoDialogEVT(self):
-        Window.detail_dialog(self, self.main_window.parser.parse_type)
+        Window.detail_dialog(self.main_window, self.main_window.parser.parse_type)
+
+    def update_checked_item_count(self, count: int):
+        label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
+
+        self.main_window.top_box.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
+
+        self.GetSizer().Layout()
+
+    def set_episode_full_name(self):
+        Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
+
+        self.main_window.show_episode_list()
+
+    def set_episode_display_mode(self, mode: EpisodeDisplayType):
+        Config.Misc.episode_display_mode = mode.value
+
+        self.main_window.show_episode_list()

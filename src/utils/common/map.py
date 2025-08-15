@@ -410,22 +410,6 @@ ffmpeg_video_gpu_map = {
         "Apple": 1,
     }
 }
-ffmpeg_video_gpu_windows_map = {
-    "关闭": 0,
-    "NVIDIA": 1,
-    "AMD": 2,
-    "Intel": 3,
-}
-
-ffmpeg_video_gpu_linux_map = {
-    "关闭": 0,
-    "VAAPI": 1,
-}
-
-ffmpeg_video_gpu_darwin_map = {
-    "关闭": 0,
-    "Apple": 1,
-}
 
 ffmpeg_audio_codec_map = {
     "AAC": "aac",
@@ -516,6 +500,17 @@ rid_map = {
         "desc": "动物"
     }
 }
+
+url_pattern_map = [
+    ("video", r"bilibili\.com/video/([a-zA-Z0-9]+)"),
+    ("bangumi", r"bilibili\.com/bangumi/(play|media)/(ss\d+|ep\d+|md\d+)"),
+    ("cheese", r"bilibili\.com/cheese/play/(ss\d+|ep\d+)"),
+    ("live", r"live\.bilibili\.com/(\d+)"),
+    ("space_list", r"space\.bilibili\.com/(\d+)/lists"),
+    ("space", r"space\.bilibili\.com/(\d+)"),
+    ("space_list", r"bilibili\.com/list/(\d+)")
+]
+
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))

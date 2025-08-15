@@ -48,9 +48,9 @@ class MainWindow(Frame):
     def init_UI(self):
         self.panel = Panel(self)
 
-        self.top_box = TopBox(self.panel, self)
+        self.top_box = TopBox(self.panel)
 
-        self.episode_list = TreeListCtrl(self.panel, self)
+        self.episode_list = TreeListCtrl(self.panel)
 
         self.bottom_box = BottomBox(self.panel)
 
@@ -183,16 +183,16 @@ class MainWindow(Frame):
                 Window.about_window(self)
 
             case ID.EPISODE_SINGLE_MENU:
-                self.utils.set_episode_display_mode(EpisodeDisplayType.Single)
+                self.top_box.set_episode_display_mode(EpisodeDisplayType.Single)
 
             case ID.EPISODE_IN_SECTION_MENU:
-                self.utils.set_episode_display_mode(EpisodeDisplayType.In_Section)
+                self.top_box.set_episode_display_mode(EpisodeDisplayType.In_Section)
 
             case ID.EPISODE_ALL_SECTIONS_MENU:
-                self.utils.set_episode_display_mode(EpisodeDisplayType.All)
+                self.top_box.set_episode_display_mode(EpisodeDisplayType.All)
                 
             case ID.EPISODE_FULL_NAME_MENU:
-                self.utils.set_episode_full_name()
+                self.top_box.set_episode_full_name()
 
     def onCloseEVT(self, event: wx.CloseEvent):
         def show_exit_dialog():
@@ -317,7 +317,7 @@ class MainWindow(Frame):
         if Config.Misc.auto_check_episode_item or self.episode_list.count == 1:
             self.episode_list.CheckAllItems()
 
-        self.utils.update_checked_item_count(self.episode_list.GetCheckedItemCount())
+        self.top_box.update_checked_item_count(self.episode_list.GetCheckedItemCount())
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):

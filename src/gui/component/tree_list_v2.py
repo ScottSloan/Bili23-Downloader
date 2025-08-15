@@ -12,7 +12,7 @@ from utils.parse.episode_v2 import EpisodeInfo
 from gui.component.menu.episode_list import EpisodeListMenu
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
-    def __init__(self, parent, main_window: wx.Window):
+    def __init__(self, parent: wx.Window):
         def get_size():
             match Platform(Config.Sys.platform):
                 case Platform.Windows:
@@ -23,7 +23,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         
         from gui.window.main.main_v3 import MainWindow
 
-        self.main_window: MainWindow = main_window
+        self.main_window: MainWindow = wx.FindWindowByName("main")
 
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
@@ -109,7 +109,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
-        self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
+        self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
 
     def onItemContextMenuEVT(self, event):
         if self.GetSelection().IsOk():
@@ -138,7 +138,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.UpdateItemParentStateRecursively(item)
 
-        self.main_window.utils.update_checked_item_count(self.GetCheckedItemCount())
+        self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
 
     def CollapseCurrentItem(self):
         item = self.GetSelection()

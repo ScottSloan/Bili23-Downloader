@@ -5,12 +5,11 @@ import webbrowser
 from utils.config import Config
 from utils.auth.login_v2 import Login
 
-from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType, EpisodeDisplayType
+from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.update import Update
 from utils.common.regex import Regex
 
-from utils.module.pic.face import Face
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
 
@@ -139,6 +138,12 @@ class Window:
         dlg.ShowModal()
 
     @staticmethod
+    @show_dialog
+    def changelog_dialog(parent: wx.Window, info: dict):
+        dlg = ChangeLogDialog(parent, info)
+        dlg.ShowModal()
+
+    @staticmethod
     @show_frame
     def debug_window(parent: wx.Window):
         return DebugWindow(parent)
@@ -249,17 +254,13 @@ class Utils:
                 return True
 
     def get_changelog(self):
-        def show_changelog_dialog():
-            dlg = ChangeLogDialog(self.main_window, info)
-            dlg.ShowModal()
-
         def onError():
             self.show_error_message_dialog("获取更新日志失败\n\n当前无法获取更新日志，请稍候再试。", "获取更新日志", GlobalExceptionInfo.info.copy())
 
         try:
             info = Update.get_changelog()
 
-            wx.CallAfter(show_changelog_dialog)
+            wx.CallAfter(Window.changelog_dialog, self.main_window, info)
 
         except Exception as e:
             raise GlobalException(callback = onError) from e
@@ -302,23 +303,6 @@ class Utils:
 
         wx.CallAfter(worker)
 
-    def set_episode_display_mode(self, mode: EpisodeDisplayType):
-        Config.Misc.episode_display_mode = mode.value
-
-        self.main_window.show_episode_list()
-
-    def set_episode_full_name(self):
-        Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
-
-        self.main_window.show_episode_list()
-
-    def update_checked_item_count(self, count: int):
-        label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
-
-        self.main_window.top_box.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
-
-        self.main_window.panel.Layout()
-
     def read_clipboard(self, event):
         url: str = ClipBoard.Read()
 
@@ -360,7 +344,7 @@ class Utils:
     @classmethod
     def check_ffmpeg(cls):
         def worker():
-            dlg = wx.MessageDialog(cls.main_window, "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
+            dlg = wx.MessageDialog(cls.get_main_window(), "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
             dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
             if dlg.ShowModal() == wx.ID_YES:

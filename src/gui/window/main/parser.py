@@ -7,6 +7,7 @@ from utils.common.enums import ParseType, ParseStatus, ProcessingType, StatusCod
 from utils.common.model.callback import ParseCallback
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException, GlobalExceptionInfo
+from utils.common.map import url_pattern_map
 
 from utils.parse.video import VideoInfo, VideoParser
 from utils.parse.bangumi import BangumiInfo, BangumiParser
@@ -18,6 +19,9 @@ from utils.parse.preview import VideoPreview
 from utils.parse.popular import PopularParser
 from utils.parse.space_list import SpaceListParser
 
+class URLParser:
+    pass
+
 class Parser:
     def __init__(self, parent: wx.Window):
         from gui.window.main.main_v3 import MainWindow
@@ -28,48 +32,57 @@ class Parser:
     def init_utils(self):
         self.parse_type: ParseType = None
 
+    def get_parse_type(self, url: str):
+        for (type, url_pattern) in url_pattern_map:
+            if match := Regex.search(url_pattern, url):
+                return type
+
     def parse_url(self, url: str):
         self.url = url
 
-        match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
-            case "cheese":
-                self.set_parse_type(ParseType.Cheese)
-
-                self.parser = CheeseParser(self.parser_callback)
-
-            case "space" | "list":
-                self.set_parse_type(ParseType.Video)
-
-                self.parser = SpaceListParser(self.parser_callback)
-
-            case "av" | "BV":
+        match self.get_parse_type(url):
+            case "video":
                 self.set_parse_type(ParseType.Video)
 
                 self.parser = VideoParser(self.parser_callback)
 
-            case "ep" | "ss" | "md":
+            case "bangumi":
                 self.set_parse_type(ParseType.Bangumi)
 
                 self.parser = BangumiParser(self.parser_callback)
+
+            case "cheese":
+                self.set_parse_type(ParseType.Cheese)
+
+                self.parser = CheeseParser(self.parser_callback)
 
             case "live":
                 self.set_parse_type(ParseType.Live)
 
                 self.parser = LiveParser(self.parser_callback)
 
-            case "b23.tv" | "bili2233.cn":
-                self.parser = B23Parser(self.parser_callback)
+            case "space":
+                pass
 
-            case "blackboard" | "festival":
-                self.parser = ActivityParser(self.parser_callback)
-
-            case "popular":
+            case "space_list":
                 self.set_parse_type(ParseType.Video)
 
-                self.parser = PopularParser(self.parser_callback)
+                self.parser = SpaceListParser(self.parser_callback)
 
             case _:
                 raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
+
+        # match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
+        #     case "b23.tv" | "bili2233.cn":
+        #         self.parser = B23Parser(self.parser_callback)
+
+        #     case "blackboard" | "festival":
+        #         self.parser = ActivityParser(self.parser_callback)
+
+        #     case "popular":
+        #         self.set_parse_type(ParseType.Video)
+
+        #         self.parser = PopularParser(self.parser_callback)
     
         rtnVal = self.parser.parse_url(url)
 
