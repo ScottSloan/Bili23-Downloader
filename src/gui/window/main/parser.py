@@ -1,7 +1,5 @@
 import wx
 
-from utils.config import Config
-
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, ParseStatus, ProcessingType, StatusCode
 from utils.common.model.callback import ParseCallback
@@ -9,13 +7,12 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalException, GlobalExceptionInfo
 from utils.common.map import url_pattern_map
 
-from utils.parse.video import VideoInfo, VideoParser
-from utils.parse.bangumi import BangumiInfo, BangumiParser
+from utils.parse.video import VideoParser
+from utils.parse.bangumi import BangumiParser
 from utils.parse.live import LiveParser
-from utils.parse.cheese import CheeseInfo, CheeseParser
+from utils.parse.cheese import CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.festival import FestivalParser
-from utils.parse.preview import VideoPreview, PreviewInfo
 from utils.parse.popular import PopularParser
 from utils.parse.space_list import SpaceListParser
 from utils.parse.space import SpaceParser
@@ -25,7 +22,6 @@ class Parser:
         from gui.window.main.main_v3 import MainWindow
 
         self.main_window: MainWindow = parent
-        self.url = None
 
     def init_utils(self):
         self.parse_type: ParseType = None
@@ -55,7 +51,7 @@ class Parser:
         return parser
 
     def parse_url(self, url: str):
-        self.url = url
+        self.main_window.utils.set_status(ParseStatus.Parsing)
 
         type = self.get_parse_type(url)
 

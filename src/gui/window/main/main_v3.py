@@ -4,7 +4,7 @@ import webbrowser
 
 from utils.config import Config
 
-from utils.common.enums import Platform, EpisodeDisplayType, ProcessingType, ExitOption, ParseStatus
+from utils.common.enums import Platform, EpisodeDisplayType, ProcessingType, ExitOption
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException
 
@@ -31,6 +31,8 @@ from gui.component.tree_list_v2 import TreeListCtrl
 
 class MainWindow(Frame):
     def __init__(self, parent):
+        self.url = None
+
         self.utils = Utils(self)
 
         Frame.__init__(self, parent, Config.APP.name, name = "main")
@@ -114,7 +116,7 @@ class MainWindow(Frame):
 
         self.episode_list.Bind(wx.EVT_MENU, self.onEpisodeListContextMenuEVT)
 
-        self.Bind(wx.EVT_TIMER, self.utils.read_clipboard, self.clipboard_timer)
+        self.Bind(wx.EVT_TIMER, TheClipBoard.read, self.clipboard_timer)
 
     def init_utils(self):
         def worker():
@@ -246,11 +248,12 @@ class MainWindow(Frame):
 
     def onDownloadEVT(self, event):
         def after_show_items_callback():
-            self.utils.hide_processing_window()
+            Window.processing_window(show = False)
+            
             self.onShowDownloadWindowEVT()
 
         try:
-            if self.utils.check_download_items():
+            if self.episode_list.check_download_items():
                 return
             
             if Config.Basic.auto_popup_option_dialog:
@@ -261,7 +264,7 @@ class MainWindow(Frame):
 
             Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
 
-            self.utils.show_processing_window(ProcessingType.Process)
+            Window.processing_window(show = True)
         
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
@@ -269,14 +272,14 @@ class MainWindow(Frame):
     def onParseEVT(self, event):
         url = self.top_box.url_box.GetValue()
 
-        if self.utils.check_url(url):
+        if self.top_box.check_url():
             return
 
         self.episode_list.init_episode_list()
 
-        self.utils.set_status(ParseStatus.Parsing)
-
         Thread(target = self.parser.parse_url, args = (url, )).start()
+
+        self.url = url
 
     def onEpisodeListContextMenuEVT(self, event: wx.MenuEvent):
         match event.GetId():

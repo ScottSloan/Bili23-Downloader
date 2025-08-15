@@ -2,7 +2,7 @@ import wx.dataview
 
 from utils.config import Config
 
-from utils.common.enums import Platform, ParseType
+from utils.common.enums import Platform
 from utils.common.model.data_type import TreeListItemInfo
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.model.download_info import DownloadInfo
@@ -254,3 +254,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
             if item.IsOk():
                 return self.GetItemData(item)
+            
+    def check_download_items(self):
+        if not self.main_window.episode_list.GetCheckedItemCount():
+            from gui.window.main.main_v3 import Window
+
+            Window.message_dialog(self.main_window, "下载失败\n\n请选择要下载的项目。", "警告", wx.ICON_WARNING)
+            
+            return True

@@ -8,7 +8,6 @@ from utils.auth.login_v2 import Login
 from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType
 from utils.common.exception import GlobalExceptionInfo, GlobalException
 from utils.common.update import Update
-from utils.common.regex import Regex
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
@@ -166,14 +165,56 @@ class Window:
 
         event.Skip()
 
+    @staticmethod
+    def processing_window(show: bool):
+        main_window = Utils.get_main_window()
+
+        if show:
+            wx.CallAfter(main_window.processing_window.ShowModal, ProcessingType.Parse)
+        else:
+            wx.CallAfter(main_window.processing_window.Close)
+
 class TheClipBoard:
     @staticmethod
     def write(text: str):
         ClipBoard.Write(text)
 
+    @classmethod
+    def read(cls, event: wx.TimerEvent):
+        url: str = ClipBoard.Read()
+
+        if url:
+            main_window = Utils.get_main_window()
+
+            if cls.validate_url(url) and cls.check_parse_status():
+                main_window.utils.copy_from_menu = False
+
+                main_window.top_box.url_box.SetValue(url)
+
+                wx.CallAfter(main_window.onParseEVT, event)
+
     @staticmethod
-    def read():
-        pass
+    def validate_url(url: str):
+        main_window = Utils.get_main_window()
+
+        if url != main_window.url:
+            if hasattr(main_window, "parser"):
+                if main_window.parser.get_parse_type(url):
+                    return True
+            
+    @staticmethod
+    def check_parse_status():
+        main_window = Utils.get_main_window()
+
+        if main_window.utils.copy_from_menu:
+            return False
+        
+        if Window.dialog_show:
+            return False
+
+        if main_window.IsShown():
+            if main_window.utils.status != ParseStatus.Parsing:
+                return True
 
 class Async:
     async def check_update_async():
@@ -213,11 +254,6 @@ class Utils:
             if self.main_window.clipboard_timer.IsRunning():
                 self.main_window.clipboard_timer.Stop()
 
-    def check_url(self, url: str):
-        if not url:
-            Window.message_dialog("解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
-            return True
-
     @classmethod
     def check_update(cls, from_menu: bool = False):
         def onError():
@@ -232,26 +268,10 @@ class Utils:
                 wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
             else:
                 if from_menu:
-                    Window.message_dialog("当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
+                    Window.message_dialog(cls.get_main_window(), "当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
 
         except Exception as e:
             raise GlobalException(callback = onError) from e
-
-    def check_download_items(self):
-        if not self.main_window.episode_list.GetCheckedItemCount():
-            Window.message_dialog("下载失败\n\n请选择要下载的项目。", "警告", wx.ICON_WARNING)
-            return True
-
-    def check_parse_status(self):
-        if self.main_window.utils.copy_from_menu:
-            return False
-        
-        if Window.dialog_show:
-            return False
-
-        if self.main_window.IsShown():
-            if self.status != ParseStatus.Parsing:
-                return True
 
     def get_changelog(self):
         def onError():
@@ -302,23 +322,6 @@ class Utils:
             worker = main_window.bottom_box.hide_user_info
 
         wx.CallAfter(worker)
-
-    def read_clipboard(self, event):
-        url: str = ClipBoard.Read()
-
-        if url and url != self.main_window.parser.url:
-            if self.validate_url(url) and self.check_parse_status():
-                self.main_window.utils.copy_from_menu = False
-
-                self.main_window.top_box.url_box.SetValue(url)
-
-                wx.CallAfter(self.main_window.onParseEVT, event)
-
-    def validate_url(self, url: str):
-        if url.startswith(("http", "https")) and "bilibili.com" in url:
-            if url != self.main_window.top_box.url_box.GetValue():
-                if self.main_window.parser.get_parse_type(url):
-                    return True
 
     def save_exit_dialog_settings(self, flag: int): 
         save = ExitOption(Config.Basic.exit_option) == ExitOption.AskOnce
@@ -383,8 +386,8 @@ class Utils:
 
                 enable_controls(False)
 
-                self.show_processing_window(ProcessingType.Parse)
-
+                Window.processing_window(show = True)
+                
             case ParseStatus.Success:
                 processing_icon = False
                 type_lab = ""
@@ -396,7 +399,7 @@ class Utils:
 
                 enable_controls(True, not_live = not_live)
 
-                self.hide_processing_window()
+                Window.processing_window(show = False)
 
             case ParseStatus.Error:
                 processing_icon = False
@@ -407,7 +410,7 @@ class Utils:
 
                 enable_controls(True, option_enable = False)
 
-                self.hide_processing_window()
+                Window.processing_window(show = False)
 
         update()
 
@@ -423,12 +426,6 @@ class Utils:
                 err_dlg.ShowModal()
 
         wx.CallAfter(worker)
-
-    def show_processing_window(self, type: ProcessingType):
-        wx.CallAfter(self.main_window.processing_window.ShowModal, type)
-
-    def hide_processing_window(self):
-        wx.CallAfter(self.main_window.processing_window.Close)
 
     @staticmethod
     def get_main_window():

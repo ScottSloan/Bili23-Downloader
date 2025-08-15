@@ -96,9 +96,11 @@ class TopBox(Panel):
         return Window.download_option_dialog(self.main_window)
     
     def onSearchKeyDownEVT(self, event: wx.KeyEvent):
-        if event.GetKeyCode() == wx.WXK_RETURN:
+        keycode = event.GetKeyCode()
+
+        if keycode in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:
             self.main_window.onParseEVT(event)
-        
+                    
         event.Skip()
 
     def onShowGraphWindowEVT(self):
@@ -123,3 +125,8 @@ class TopBox(Panel):
         Config.Misc.episode_display_mode = mode.value
 
         self.main_window.show_episode_list()
+
+    def check_url(self):
+        if not self.url_box.GetValue():
+            Window.message_dialog(self.main_window, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
+            return True
