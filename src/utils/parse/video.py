@@ -5,6 +5,7 @@ from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
+from utils.parse.preview import PreviewInfo
 
 from utils.common.enums import StatusCode, EpisodeDisplayType
 from utils.common.exception import GlobalException
@@ -33,7 +34,6 @@ class VideoInfo:
     pubtime: int = 0
 
     info_json: dict = {}
-    download_json: dict = {}
 
     @classmethod
     def clear_video_info(cls):
@@ -55,7 +55,6 @@ class VideoInfo:
         cls.tag_list.clear()
 
         cls.info_json.clear()
-        cls.download_json.clear()
 
 class VideoParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -152,12 +151,12 @@ class VideoParser(Parser):
         
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
 
-        VideoInfo.download_json = resp["data"].copy()
+        PreviewInfo.download_json = resp["data"].copy()
 
         if not qn:
-            VideoInfo.stream_type = "DASH" if "dash" in VideoInfo.download_json else "FLV"
+            VideoInfo.stream_type = "DASH" if "dash" in PreviewInfo.download_json else "FLV"
 
-            AudioInfo.get_audio_quality_list(VideoInfo.download_json.get("dash", {}))
+            AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
     @classmethod
     def get_video_cid(cls, bvid: str):
@@ -222,3 +221,9 @@ class VideoParser(Parser):
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
+
+    def get_parse_type_str(self):
+        if VideoInfo.is_interactive:
+            return "互动视频"
+        else:
+            return "投稿视频"

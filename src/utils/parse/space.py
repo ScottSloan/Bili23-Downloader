@@ -96,3 +96,6 @@ class SpaceParser(Parser):
 
     def get_total_page(self, total: int):
         return math.ceil(total / 42)
+    
+    def get_parse_type_str(self):
+        return "个人主页"

@@ -105,3 +105,6 @@ class LiveParser(Parser):
         info.live_status = LiveInfo.status
 
         return info
+    
+    def get_parse_type_str(self):
+        return "直播"

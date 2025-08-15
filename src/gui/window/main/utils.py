@@ -317,7 +317,7 @@ class Utils:
     def validate_url(self, url: str):
         if url.startswith(("http", "https")) and "bilibili.com" in url:
             if url != self.main_window.top_box.url_box.GetValue():
-                if Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
+                if self.main_window.parser.get_parse_type(url):
                     return True
 
     def save_exit_dialog_settings(self, flag: int): 

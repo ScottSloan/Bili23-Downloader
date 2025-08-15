@@ -508,9 +508,11 @@ url_pattern_map = [
     ("live", r"live\.bilibili\.com/(\d+)"),
     ("space_list", r"space\.bilibili\.com/(\d+)/lists"),
     ("space", r"space\.bilibili\.com/(\d+)"),
-    ("space_list", r"bilibili\.com/list/(\d+)")
+    ("space_list", r"bilibili\.com/list/(\d+)"),
+    ("popular", r"bilibili\.com/v/popular"),
+    ("b23", r"(b23\.tv|bili2233\.cn)"),
+    ("festival", r"bilibili\.com/festival")
 ]
-
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))

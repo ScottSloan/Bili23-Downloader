@@ -8,6 +8,7 @@ from utils.common.regex import Regex
 from utils.parse.episode_v2 import Episode
 from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
+from utils.parse.preview import PreviewInfo
 
 class CheeseInfo:
     url: str = ""
@@ -25,7 +26,6 @@ class CheeseInfo:
     stream_type: str = "DASH"
 
     info_json: dict = {}
-    download_json: dict = {}
 
     @classmethod
     def clear_cheese_info(cls):
@@ -41,7 +41,6 @@ class CheeseInfo:
         cls.season_id = 0
     
         cls.info_json.clear()
-        cls.download_json.clear()
 
 class CheeseParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -98,12 +97,12 @@ class CheeseParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        CheeseInfo.download_json = resp["data"].copy()
+        PreviewInfo.download_json = resp["data"].copy()
 
         if not qn:
-            CheeseInfo.stream_type = CheeseInfo.download_json.get("type")
+            CheeseInfo.stream_type = PreviewInfo.download_json.get("type")
 
-            AudioInfo.get_audio_quality_list(CheeseInfo.download_json.get("dash", {}))
+            AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
     def parse_worker(self, url: str):
         self.clear_cheese_info()
@@ -133,3 +132,6 @@ class CheeseParser(Parser):
         CheeseInfo.clear_cheese_info()
 
         AudioInfo.clear_audio_info()
+
+    def get_parse_type_str(self):
+        return "课程"

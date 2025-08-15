@@ -257,3 +257,6 @@ class SpaceListParser(Parser):
 
     def get_total_page(self, total: int):
         return math.ceil(total / 30)
+    
+    def get_parse_type_str(self):
+        return "合集列表"

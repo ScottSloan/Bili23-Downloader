@@ -3,36 +3,29 @@ from utils.common.request import RequestUtils
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.model.dict_info import DictInfo
 
-from utils.parse.video import VideoInfo, VideoParser
-from utils.parse.bangumi import BangumiInfo, BangumiParser
-from utils.parse.cheese import CheeseInfo, CheeseParser
+
 from utils.parse.live import LiveParser
 from utils.parse.audio import AudioInfo
 
 from utils.module.web.cdn import CDN
 
+class PreviewInfo:
+    download_json: dict = {}
+
 class VideoPreview:
     def __init__(self, parse_type: ParseType, stream_type: int):
         self.parse_type, self.stream_type = parse_type, stream_type
 
-        self.download_json = self.get_download_json(parse_type)
+        self.download_json = PreviewInfo.download_json.copy()
 
         self.video_size_cache = {}
         self.audio_size_cache = {}
-
-    @staticmethod
-    def get_download_json(parse_type: ParseType):
-        match parse_type:
-            case ParseType.Video:
-                return VideoInfo.download_json
-
-            case ParseType.Bangumi:
-                return BangumiInfo.download_json
-
-            case ParseType.Cheese:
-                return CheeseInfo.download_json
             
     def refresh_download_json(self, video_quality_id: int):
+        from utils.parse.video import VideoParser
+        from utils.parse.bangumi import BangumiParser
+        from utils.parse.cheese import CheeseParser
+
         match self.parse_type:
             case ParseType.Video:
                 VideoParser.get_video_available_media_info(video_quality_id)
@@ -43,7 +36,7 @@ class VideoPreview:
             case ParseType.Cheese:
                 CheeseParser.get_cheese_available_media_info(video_quality_id)
 
-        self.download_json = self.get_download_json(self.parse_type)
+        self.download_json = PreviewInfo.download_json.copy()
 
     def get_video_stream_info(self, video_quality_id: int, video_codec_id: int, requery: bool = False):
         def get_info(data: dict):

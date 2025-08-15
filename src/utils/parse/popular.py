@@ -104,4 +104,7 @@ class PopularParser(Parser):
         PopularInfo.rid_desc = ""
 
         PopularInfo.info_json.clear()
+
+    def get_parse_type_str(self):
+        return "热榜"
         

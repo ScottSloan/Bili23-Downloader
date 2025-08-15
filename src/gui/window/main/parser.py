@@ -14,13 +14,11 @@ from utils.parse.bangumi import BangumiInfo, BangumiParser
 from utils.parse.live import LiveParser
 from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.b23 import B23Parser
-from utils.parse.activity import ActivityParser
-from utils.parse.preview import VideoPreview
+from utils.parse.festival import FestivalParser
+from utils.parse.preview import VideoPreview, PreviewInfo
 from utils.parse.popular import PopularParser
 from utils.parse.space_list import SpaceListParser
-
-class URLParser:
-    pass
+from utils.parse.space import SpaceParser
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -37,56 +35,38 @@ class Parser:
             if match := Regex.search(url_pattern, url):
                 return type
 
+    def get_parser(self, type: str):
+        parser_map = {
+            "video": (ParseType.Video, VideoParser(self.parser_callback)),
+            "bangumi": (ParseType.Bangumi, BangumiParser(self.parser_callback)),
+            "cheese": (ParseType.Cheese, CheeseParser(self.parser_callback)),
+            "live": (ParseType.Live, LiveParser(self.parser_callback)),
+            "space": (ParseType.Space, SpaceParser(self.parser_callback)),
+            "space_list": (ParseType.List, SpaceListParser(self.parser_callback)),
+            "popular": (ParseType.Popular, PopularParser(self.parser_callback)),
+            "b23": (ParseType.B23, B23Parser(self.parser_callback)),
+            "festival": (ParseType.Festival, FestivalParser(self.parser_callback))
+        }
+
+        (parse_type, parser) = parser_map.get(type)
+
+        self.parse_type = parse_type
+
+        return parser
+
     def parse_url(self, url: str):
         self.url = url
 
-        match self.get_parse_type(url):
-            case "video":
-                self.set_parse_type(ParseType.Video)
+        type = self.get_parse_type(url)
 
-                self.parser = VideoParser(self.parser_callback)
-
-            case "bangumi":
-                self.set_parse_type(ParseType.Bangumi)
-
-                self.parser = BangumiParser(self.parser_callback)
-
-            case "cheese":
-                self.set_parse_type(ParseType.Cheese)
-
-                self.parser = CheeseParser(self.parser_callback)
-
-            case "live":
-                self.set_parse_type(ParseType.Live)
-
-                self.parser = LiveParser(self.parser_callback)
-
-            case "space":
-                pass
-
-            case "space_list":
-                self.set_parse_type(ParseType.Video)
-
-                self.parser = SpaceListParser(self.parser_callback)
-
-            case _:
-                raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
-
-        # match Regex.find_string(r"cheese|av|BV|ep|ss|md|live|b23.tv|bili2233.cn|blackboard|festival|popular|space|list", url):
-        #     case "b23.tv" | "bili2233.cn":
-        #         self.parser = B23Parser(self.parser_callback)
-
-        #     case "blackboard" | "festival":
-        #         self.parser = ActivityParser(self.parser_callback)
-
-        #     case "popular":
-        #         self.set_parse_type(ParseType.Video)
-
-        #         self.parser = PopularParser(self.parser_callback)
+        if not type:
+            raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
+            
+        self.parser: VideoParser = self.get_parser(type)
     
-        rtnVal = self.parser.parse_url(url)
+        rtn_val = self.parser.parse_url(url)
 
-        if StatusCode(rtnVal) == StatusCode.Success:
+        if StatusCode(rtn_val) == StatusCode.Success:
             wx.CallAfter(self.parse_success)
     
     def parse_success(self):
@@ -97,7 +77,7 @@ class Parser:
                 wx.CallAfter(self.live_recording)
 
             case _:
-                self.parse_type_str = self.get_parse_type_str()
+                self.parse_type_str = self.parser.get_parse_type_str()
 
                 self.main_window.show_episode_list(from_menu = False)
 
@@ -106,11 +86,9 @@ class Parser:
                 self.set_stream_type()
 
     def set_video_quality_id(self):
-        data = VideoPreview.get_download_json(self.parse_type)
+        self.video_quality_data_dict = VideoPreview.get_video_quality_data_dict(PreviewInfo.download_json)
 
-        self.video_quality_data_dict = VideoPreview.get_video_quality_data_dict(data)
-
-        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_data_dict.id_list() else max(VideoPreview.get_video_available_quality_id_list(data))
+        self.video_quality_id =  Config.Download.video_quality_id if Config.Download.video_quality_id in self.video_quality_data_dict.id_list() else max(VideoPreview.get_video_available_quality_id_list(PreviewInfo.download_json))
 
         self.video_codec_id = Config.Download.video_codec_id
 
@@ -124,26 +102,6 @@ class Parser:
             
             case ParseType.Cheese:
                 self.stream_type = CheeseInfo.stream_type
-
-    def set_parse_type(self, parse_type: ParseType):
-        self.parse_type = parse_type
-
-    def get_parse_type_str(self):
-        match self.parse_type:
-            case ParseType.Video:
-                if VideoInfo.is_interactive:
-                    return "互动视频"
-                else:
-                    return "投稿视频"
-
-            case ParseType.Bangumi:
-                return BangumiInfo.type_name
-            
-            case ParseType.Live:
-                return "直播"
-            
-            case ParseType.Cheese:
-                return "课程"
 
     def parse_episode(self):
         self.parser.parse_episodes()

@@ -11,6 +11,7 @@ from utils.common.regex import Regex
 from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
 from utils.parse.parser import Parser
+from utils.parse.preview import PreviewInfo
 
 class BangumiInfo:
     url: str = ""
@@ -39,7 +40,6 @@ class BangumiInfo:
     stream_type: str = "DASH"
 
     info_json: dict = {}
-    download_json: dict = {}
 
     @classmethod
     def clear_bangumi_info(cls):
@@ -68,7 +68,6 @@ class BangumiInfo:
         cls.play_check = ""
 
         cls.info_json.clear()
-        cls.download_json.clear()
 
 class BangumiParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -148,14 +147,14 @@ class BangumiParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        BangumiInfo.download_json = resp["result"].copy()
+        PreviewInfo.download_json = resp["result"].copy()
 
         if not qn:
-            BangumiInfo.stream_type = BangumiInfo.download_json.get("type")
+            BangumiInfo.stream_type = PreviewInfo.download_json.get("type")
 
-            AudioInfo.get_audio_quality_list(BangumiInfo.download_json.get("dash", {}))
+            AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
-            if not BangumiInfo.download_json.get("dash") and not BangumiInfo.download_json.get("durl"):
+            if not PreviewInfo.download_json.get("dash") and not PreviewInfo.download_json.get("durl"):
                 code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
 
                 raise GlobalException(code = code)
@@ -217,3 +216,6 @@ class BangumiParser(Parser):
 
         # 重置音质信息
         AudioInfo.clear_audio_info()
+
+    def get_parse_type_str(self):
+        return BangumiInfo.type_name

@@ -85,3 +85,6 @@ class Parser:
     @staticmethod
     def url_encode(params: dict):
         return urllib.parse.urlencode(params)
+    
+    def get_parse_type_str(self):
+        pass
