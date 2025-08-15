@@ -6,11 +6,12 @@ from utils.config import Config
 from utils.auth.login_v2 import Login
 
 from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType
-from utils.common.exception import GlobalExceptionInfo, GlobalException
+from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
+from utils.module.pic.cover import Cover
 
 from utils.parse.video import VideoInfo
 
@@ -24,10 +25,12 @@ from gui.dialog.search_episode_list import SearchEpisodeListDialog
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings.settings_v2 import SettingWindow
+from gui.window.download.download_v4 import DownloadManagerWindow
+from gui.window.live_recording import LiveRecordingWindow
 
 from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.misc.changelog import ChangeLogDialog
-from gui.dialog.error import ErrorInfoDialog
+from gui.dialog.misc.processing import ProcessingWindow
 
 class Window:
     dialog_show = False
@@ -174,6 +177,18 @@ class Window:
         else:
             wx.CallAfter(main_window.processing_window.Close)
 
+    @staticmethod
+    def create_processing_window(parent: wx.Window):
+        return ProcessingWindow(parent)
+    
+    @staticmethod
+    def create_download_window(parent: wx.Window):
+        return DownloadManagerWindow(parent)
+    
+    @staticmethod
+    def create_live_window(parent: wx.Window):
+        return LiveRecordingWindow(parent)
+
 class TheClipBoard:
     @staticmethod
     def write(text: str):
@@ -217,13 +232,16 @@ class TheClipBoard:
                 return True
 
 class Async:
+    @staticmethod
     async def check_update_async():
         Utils.check_update()
 
+    @staticmethod
     async def check_ffmpeg_async():
         if Config.Merge.ffmpeg_check_available_when_launch:
             Utils.check_ffmpeg()
 
+    @staticmethod
     async def show_user_info_async():
         Utils.show_user_info()
 
@@ -236,6 +254,10 @@ class Async:
         ]
 
         await asyncio.gather(*tasks, return_exceptions = True)
+
+    @classmethod
+    def run(cls):
+        asyncio.run(cls.async_worker())
 
 class Utils:
     def __init__(self, parent: wx.Window):
@@ -257,7 +279,7 @@ class Utils:
     @classmethod
     def check_update(cls, from_menu: bool = False):
         def onError():
-            cls.show_error_message_dialog("检查更新失败\n\n当前无法检查更新，请稍候再试。", "检查更新", GlobalExceptionInfo.info.copy())
+            show_error_message_dialog("检查更新失败", "当前无法检查更新，请稍候再试。", cls.get_main_window())
 
         try:
             info = Update.get_update_json()
@@ -275,7 +297,7 @@ class Utils:
 
     def get_changelog(self):
         def onError():
-            self.show_error_message_dialog("获取更新日志失败\n\n当前无法获取更新日志，请稍候再试。", "获取更新日志", GlobalExceptionInfo.info.copy())
+            show_error_message_dialog("获取更新日志失败", "当前无法获取更新日志，请稍候再试。", self.main_window)
 
         try:
             info = Update.get_changelog()
@@ -287,7 +309,7 @@ class Utils:
 
     def user_logout(self):
         def on_error():
-            self.show_error_message_dialog("注销登录失败\n\n无法完成注销登录操作", "错误", GlobalExceptionInfo.info.copy())
+            show_error_message_dialog("注销登录失败", "无法完成注销登录操作", self.main_window)
 
         try:
             Login.logout()
@@ -299,7 +321,7 @@ class Utils:
 
     def user_refresh(self):
         def on_error():
-            self.show_error_message_dialog("刷新登录信息失败\n\n无法刷新登录信息", "错误", GlobalExceptionInfo.info.copy())
+            show_error_message_dialog("刷新登录信息失败", "无法刷新登录信息", self.main_window)
 
         try:
             Login.refresh()
@@ -322,6 +344,9 @@ class Utils:
             worker = main_window.bottom_box.hide_user_info
 
         wx.CallAfter(worker)
+
+    def view_cover(self, url: str):
+        Cover.view_cover(self.main_window, url)
 
     def save_exit_dialog_settings(self, flag: int): 
         save = ExitOption(Config.Basic.exit_option) == ExitOption.AskOnce
@@ -365,6 +390,8 @@ class Utils:
 
             self.main_window.top_box.detail_btn.Show(detail_btn)
             self.main_window.top_box.graph_btn.Show(graph_btn)
+
+            self.main_window.panel.Layout()
 
         def enable_controls(enable: bool, option_enable: bool = True, not_live: bool = True):
             self.main_window.top_box.url_box.Enable(enable)
@@ -412,20 +439,7 @@ class Utils:
 
                 Window.processing_window(show = False)
 
-        update()
-
-        self.main_window.panel.Layout()
-
-    def show_error_message_dialog(self, message: str, caption: str, info: dict):
-        def worker():
-            dlg = wx.MessageDialog(self.main_window, message, caption, wx.ICON_ERROR | wx.YES_NO)
-            dlg.SetYesNoLabels("详细信息", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                err_dlg = ErrorInfoDialog(self.main_window, info)
-                err_dlg.ShowModal()
-
-        wx.CallAfter(worker)
+        wx.CallAfter(update)
 
     @staticmethod
     def get_main_window():

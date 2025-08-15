@@ -1,30 +1,21 @@
 import wx
-import asyncio
 import webbrowser
 
 from utils.config import Config
 
-from utils.common.enums import Platform, EpisodeDisplayType, ProcessingType, ExitOption
+from utils.common.enums import Platform, EpisodeDisplayType, ExitOption
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException
-
-from utils.module.pic.cover import Cover
-from utils.module.ffmpeg_v2 import FFmpeg
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
 from gui.id import ID
 
-from gui.dialog.misc.processing import ProcessingWindow
-
 from gui.window.main.parser import Parser
 from gui.window.main.utils import Utils, Window, TheClipBoard, Async
 from gui.window.main.top_box import TopBox
 from gui.window.main.bottom_box import BottomBox
-
-from gui.window.download.download_v4 import DownloadManagerWindow
-from gui.window.live_recording import LiveRecordingWindow
 
 from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
@@ -120,18 +111,16 @@ class MainWindow(Frame):
 
     def init_utils(self):
         def worker():
-            FFmpeg.Env.detect()
-
-            asyncio.run(Async.async_worker())
+            Async.run()
 
             if Config.Basic.is_new_user:
                 Window.welcome_dialog(self)
 
         self.parser = Parser(self)
 
-        self.processing_window = ProcessingWindow(self)
-        self.download_window = DownloadManagerWindow(self)
-        self.live_recording_window = LiveRecordingWindow(self)
+        self.processing_window = Window.create_processing_window(self)
+        self.download_window = Window.create_download_window(self)
+        self.live_recording_window = Window.create_live_window(self)
 
         self.utils.init_timer()
 
@@ -249,7 +238,7 @@ class MainWindow(Frame):
     def onDownloadEVT(self, event):
         def after_show_items_callback():
             Window.processing_window(show = False)
-            
+
             self.onShowDownloadWindowEVT()
 
         try:
@@ -287,7 +276,7 @@ class MainWindow(Frame):
                 item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
 
                 if item_data.cover_url:
-                    Cover.view_cover(self, item_data.cover_url)
+                    self.utils.view_cover(item_data.cover_url)
                 
             case ID.EPISODE_LIST_COPY_TITLE_MENU:
                 TheClipBoard.write(self.episode_list.GetItemTitle())

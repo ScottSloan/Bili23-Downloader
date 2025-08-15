@@ -7,7 +7,7 @@ from utils.common.map import number_type_map, video_quality_map, video_codec_pre
 from utils.common.enums import StreamType, VideoQualityID, AudioQualityID, ParseType
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
-from utils.common.exception import GlobalException, GlobalExceptionInfo
+from utils.common.exception import GlobalException, show_error_message_dialog
 
 from utils.parse.preview import VideoPreview
 from utils.parse.audio import AudioInfo
@@ -16,7 +16,6 @@ from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
 from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
-from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.staticbox.extra import ExtraStaticBox
 from gui.component.label.info_label import InfoLabel
@@ -286,17 +285,7 @@ class MediaInfoPanel(Panel):
         self.parent.media_option_box.enable_audio_download_option(False)
 
     def onError(self):
-        def worker():
-            dlg = wx.MessageDialog(self.GetParent(), f"获取媒体信息失败\n\n错误原因：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
-            dlg.SetYesNoLabels("详细信息", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                err_dlg = ErrorInfoDialog(self.main_window, info)
-                err_dlg.ShowModal()
-
-        info = GlobalExceptionInfo.info.copy()
-
-        wx.CallAfter(worker)
+        show_error_message_dialog("获取媒体信息失败", parent = self.parent)
 
     @property
     def video_quality_id(self):

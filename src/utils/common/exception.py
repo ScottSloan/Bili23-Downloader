@@ -1,4 +1,5 @@
 import os
+import wx
 import sys
 import json
 import threading
@@ -82,6 +83,26 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
 
 def thread_exception_handler(args):
     exception_handler(args.exc_type, args.exc_value, args.exc_traceback)
+
+def show_error_message_dialog(caption: str, message: str = None, parent: wx.Window = None):
+    def worker():
+        info = GlobalExceptionInfo.info.copy()
+
+        if message:
+            msg = f"{caption}\n\n{message}"
+        else:
+            msg = f"{caption}\n\n描述：{info.get('message')}"
+
+        dlg = wx.MessageDialog(parent, msg, "错误", wx.ICON_ERROR | wx.YES_NO)
+        dlg.SetYesNoLabels("详细信息", "确定")
+
+        if dlg.ShowModal() == wx.ID_YES:
+            from gui.dialog.error import ErrorInfoDialog
+
+            err_dlg = ErrorInfoDialog(parent, info)
+            err_dlg.ShowModal()
+
+    wx.CallAfter(worker)
 
 sys.excepthook = exception_handler
 threading.excepthook = thread_exception_handler

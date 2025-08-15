@@ -4,7 +4,7 @@ from utils.common.regex import Regex
 from utils.common.enums import ParseType, ParseStatus, ProcessingType, StatusCode
 from utils.common.model.callback import ParseCallback
 from utils.common.thread import Thread
-from utils.common.exception import GlobalException, GlobalExceptionInfo
+from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.map import url_pattern_map
 
 from utils.parse.video import VideoParser
@@ -86,14 +86,9 @@ class Parser:
         self.main_window.live_recording_window.add_to_live_list([self.parser.get_live_info()], create_local_file = True)
 
     def onError(self):
-        def worker():
-            self.main_window.utils.set_status(ParseStatus.Error)
+        self.main_window.utils.set_status(ParseStatus.Error)
 
-            info = GlobalExceptionInfo.info.copy()
-
-            self.main_window.utils.show_error_message_dialog(f"解析失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", info)
-
-        wx.CallAfter(worker)
+        show_error_message_dialog("解析失败", parent = self.main_window)
 
     def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, )).start()
