@@ -11,7 +11,6 @@ from utils.common.enums import StatusCode, ProcessingType
 
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
-from utils.parse.video import VideoInfo, VideoParser
 
 class SpaceListInfo:
     mid: int = 0
@@ -144,12 +143,11 @@ class SpaceListParser(Parser):
         return items_list["page"]["total"]
     
     def get_video_available_media_info(self):
-        episode = list(Section.info_json["archives"].values())[0]["episodes"][0]
+        from utils.parse.video import VideoParser
+        
+        episode: dict = list(Section.info_json["archives"].values())[0]["episodes"][0]
 
-        VideoInfo.bvid = episode["bvid"]
-        VideoInfo.cid = VideoParser.get_video_cid(episode["bvid"])
-
-        VideoParser.get_video_available_media_info()
+        VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_cid(episode.get("bvid")))
 
     def parse_worker(self, url: str):
         self.clear_space_info()

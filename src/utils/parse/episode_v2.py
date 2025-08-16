@@ -83,10 +83,12 @@ class Episode:
         target_section_title: str = ""
 
         @classmethod
-        def parse_episodes(cls, info_json: dict, target_cid: int):
+        def parse_episodes(cls, info_json: dict):
             EpisodeInfo.clear_episode_data()
 
-            match Episode.Utils.get_episode_display_type():
+            target_cid = info_json.get("cid")
+
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     cls.pages_parser(info_json, target_cid)
 
@@ -205,7 +207,7 @@ class Episode:
             if "section" in info_json:
                 cls.section_parser(info_json, ep_id)
 
-            match Episode.Utils.get_episode_display_type():
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
@@ -264,7 +266,7 @@ class Episode:
     
             cls.sections_parser(info_json, ep_id)
 
-            match Episode.Utils.get_episode_display_type():
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
@@ -373,17 +375,6 @@ class Episode:
             return EpisodeInfo.get_entry_info(episode)
         
     class Utils:
-        @staticmethod
-        def get_episode_display_type():
-            from utils.parse.video import VideoInfo
-
-            mode = Config.Misc.episode_display_mode
-
-            if VideoInfo.is_interactive:
-                mode = EpisodeDisplayType.In_Section.value
-
-            return EpisodeDisplayType(mode)
-        
         @staticmethod
         def display_episodes_in_section(section_title: str):
             for section in EpisodeInfo.data.get("entries"):
