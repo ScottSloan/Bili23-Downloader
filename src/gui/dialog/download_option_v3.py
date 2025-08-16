@@ -613,15 +613,6 @@ class DownloadOptionDialog(Dialog):
         if not Config.Basic.no_paid_check:
             if not Config.User.login:
                 return show_dialog("账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？")
-            
-            if self.parent.episode_list.CheckItemBadgePaid() and self.parent.parser.parse_type == ParseType.Bangumi:
-                from utils.parse.bangumi import BangumiInfo
-
-                if BangumiInfo.play_check == "PLAY_PREVIEW":
-                    return show_dialog("账号未开通大会员\n\n账号未开通大会员，无法完整下载全片，仅能下载 6 分钟试看部分，是否继续下载？")
-
-            if self.media_info_box.is_warn_show:
-                return show_dialog("账号未开通大会员\n\n账号未开通大会员，无法下载 1080P 以上清晰度视频、杜比无损音质，是否继续下载？")
 
     def onOKEVT(self):
         if not self.path_box.path_box.GetValue():

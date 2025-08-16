@@ -12,18 +12,6 @@ from utils.common.enums import StatusCode, ProcessingType
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
 
-class SpaceListInfo:
-    mid: int = 0
-
-    type: str = ""
-
-    season_id: int = 0
-    series_id: int = 0
-
-    total: int = 0
-
-    info_json: dict = {}
-
 class Section:
     info_json: Dict[str, Dict[str, Dict[str, list]]] = {
         "archives": {}
@@ -144,7 +132,7 @@ class SpaceListParser(Parser):
     
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
-        
+
         episode: dict = list(Section.info_json["archives"].values())[0]["episodes"][0]
 
         VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_cid(episode.get("bvid")))
@@ -158,21 +146,20 @@ class SpaceListParser(Parser):
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
 
-        if "list" in url:
-            if "space" in url:
-                if "type" in url:
-                    season_series_id = self.get_season_series_id(url)
+        if "space" in url:
+            if "type" in url:
+                season_series_id = self.get_season_series_id(url)
 
-                    if "season" in url:
-                        self.parse_season_info(mid, season_series_id)
-                    else:
-                        self.parse_series_info(mid, season_series_id)
+                if "season" in url:
+                    self.parse_season_info(mid, season_series_id)
                 else:
-                    self.parse_season_series_info(mid)
+                    self.parse_series_info(mid, season_series_id)
             else:
-                series_id = self.get_sid(url)
+                self.parse_season_series_info(mid)
+        else:
+            series_id = self.get_sid(url)
 
-                self.parse_series_info(mid, series_id)
+            self.parse_series_info(mid, series_id)
         
         self.parse_episodes()
 

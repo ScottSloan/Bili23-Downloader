@@ -10,23 +10,6 @@ from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
 
-class CheeseInfo:
-    aid: int = 0
-    ep_id: int = 0
-    cid: int = 0
-    season_id: int = 0
-
-    info_json: dict = {}
-
-    @classmethod
-    def clear_cheese_info(cls):
-        cls.aid = 0
-        cls.ep_id = 0
-        cls.cid = 0
-        cls.season_id = 0
-            
-        cls.info_json.clear()
-
 class CheeseParser(Parser):
     def __init__(self, callback: ParseCallback):
         super().__init__()
@@ -36,34 +19,36 @@ class CheeseParser(Parser):
     def get_epid(self, url: str):
         epid = self.re_find_str(r"ep([0-9]+)", url)
 
-        self.url_type, self.url_type_value = "ep_id", epid[0]
+        return f"ep_id={epid[0]}"
 
     def get_season_id(self, url: str):
         season_id = self.re_find_str(r"ss([0-9]+)", url)
 
-        self.url_type, self.url_type_value, CheeseInfo.season_id = "season_id", season_id[0], season_id[0]
+        return f"season_id={season_id[0]}"
 
-    def get_cheese_info(self):
-        url = f"https://api.bilibili.com/pugv/view/web/season/v2?{self.url_type}={self.url_type_value}"
+    def get_cheese_info(self, param: str):
+        url = f"https://api.bilibili.com/pugv/view/web/season/v2?{param}"
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        info_data = resp["data"]
+        self.info_json: dict = resp["data"].copy()
 
-        if len(info_data["sections"]) > 1:
-            info_data["sections"] = [section for section in info_data["sections"] if section["title"] != "默认章节"]
+        if len(self.info_json["sections"]) > 1:
+            self.info_json["sections"] = [section for section in self.info_json["sections"] if section["title"] != "默认章节"]
 
-        CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
+        episode = self.info_json["sections"][0]["episodes"][0]
 
-        CheeseInfo.info_json = info_data.copy()
+        self.ep_id = episode.get("id")
 
         self.parse_episodes()
 
-    def get_cheese_available_media_info(self):
+        return episode.get("aid"), episode.get("cid")
+
+    def get_cheese_available_media_info(self, aid: int, ep_id: int, cid: int):
         params = {
-            "avid": CheeseInfo.aid,
-            "ep_id": CheeseInfo.ep_id,
-            "cid": CheeseInfo.cid,
+            "avid": aid,
+            "ep_id": ep_id,
+            "cid": cid,
             "fnver": 0,
             "fnval": 4048,
             "fourk": 1
@@ -80,28 +65,21 @@ class CheeseParser(Parser):
 
         match Regex.find_string(r"ep|ss", url):
             case "ep":
-                self.get_epid(url)
+                param = self.get_epid(url)
 
             case "ss":
-                self.get_season_id(url)
+                param = self.get_season_id(url)
 
-        self.get_cheese_info()
+        aid, cid = self.get_cheese_info(param)
 
-        self.get_cheese_available_media_info()
+        self.get_cheese_available_media_info(aid, self.ep_id, cid)
 
         return StatusCode.Success.value
 
     def parse_episodes(self):
-        if self.url_type == "season_id":
-            ep_id = CheeseInfo.ep_id
-        else:
-            ep_id = int(self.url_type_value)
-
-        Episode.Cheese.parse_episodes(CheeseInfo.info_json, ep_id)
+        Episode.Cheese.parse_episodes(self.info_json, self.ep_id)
 
     def clear_cheese_info(self):
-        CheeseInfo.clear_cheese_info()
-
         AudioInfo.clear_audio_info()
 
     def get_parse_type_str(self):

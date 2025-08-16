@@ -251,7 +251,7 @@ class Episode:
             episode["link"] = f"https://www.bilibili.com/bangumi/play/ep{episode.get('ep_id')}"
             episode["type"] = ParseType.Bangumi.value
             episode["series_title"] = info_json.get("season_title")
-            episode["area"] = area.get("name", "") if (area := info_json.get("areas")) else ""
+            episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
             episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
             episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
 
