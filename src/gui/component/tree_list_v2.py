@@ -7,7 +7,7 @@ from utils.common.model.data_type import TreeListItemInfo
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.model.download_info import DownloadInfo
 
-from utils.parse.episode_v2 import EpisodeInfo
+from utils.parse.episode_v2 import EpisodeInfo, Episode
 
 from gui.component.menu.episode_list import EpisodeListMenu
 
@@ -56,8 +56,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
                 set_item(data, item)
 
-                for value in data.values():
-                    add_item(value, item)
+                if (entries := data.get("entries")):
+                    for value in entries:
+                        add_item(value, item)
 
             elif isinstance(data, list):
                 for entry in data:
@@ -247,13 +248,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return self.GetItemText(self.GetSelection(), 1)
     
     def GetCurrentEpisodeInfo(self):
-        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
-
-        while item.IsOk():
-            item = self.GetNextItem(item)
-
-            if item.IsOk():
-                return self.GetItemData(item)
+        return Episode.Utils.get_current_episode()
             
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():

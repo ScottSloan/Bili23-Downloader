@@ -22,8 +22,8 @@ from gui.component.tree_list_v2 import TreeListCtrl
 
 class MainWindow(Frame):
     def __init__(self, parent):
-        self.url = None
-        self.url_manual = False
+        self.url, self.url_manual = None, False
+        self.search_keywords = ""
 
         self.utils = Utils(self)
 

@@ -6,7 +6,6 @@ from utils.common.formatter.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}
-    cid_dict: dict = {}
 
     @classmethod
     def clear_episode_data(cls, title: str = "视频"):
@@ -17,8 +16,6 @@ class EpisodeInfo:
             "entries": []
         }
         
-        cls.cid_dict.clear()
-
     @classmethod
     def add_item(cls, pid: str, entry_data: dict):
         def add(data: list | dict):
@@ -430,3 +427,22 @@ class Episode:
         @staticmethod
         def is_single_mode():
             return Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value
+        
+        @staticmethod
+        def get_current_episode():
+            def get_episode(data: dict | list):
+                if isinstance(data, dict):
+                    if "entries" not in data:
+                        if data.get("current_episode"):
+                            return data
+                    else:
+                        for value in data["entries"]:
+                            if episode := get_episode(value):
+                                return episode
+
+                elif isinstance(data, list):
+                    for entry in data:
+                        if episode := get_episode(entry):
+                            return episode
+
+            return get_episode(EpisodeInfo.data)

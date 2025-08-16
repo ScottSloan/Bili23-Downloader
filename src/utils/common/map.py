@@ -508,6 +508,7 @@ url_pattern_map = [
     ("live", r"live\.bilibili\.com/(\d+)"),
     ("space_list", r"space\.bilibili\.com/(\d+)/lists"),
     ("space", r"space\.bilibili\.com/(\d+)"),
+    ("space", r"www\.bilibili\.com/medialist/play/(\d+)"),
     ("space_list", r"bilibili\.com/list/(\d+)"),
     ("popular", r"bilibili\.com/v/popular"),
     ("b23", r"(b23\.tv|bili2233\.cn)"),

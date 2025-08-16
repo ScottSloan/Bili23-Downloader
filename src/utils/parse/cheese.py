@@ -45,8 +45,6 @@ class CheeseParser(Parser):
 
         self.parse_episodes()
 
-        return episode.get("aid"), episode.get("cid")
-
     def get_cheese_available_media_info(self, aid: int, ep_id: int, cid: int):
         params = {
             "avid": aid,
@@ -73,9 +71,11 @@ class CheeseParser(Parser):
             case "ss":
                 param = self.get_season_id(url)
 
-        aid, cid = self.get_cheese_info(param)
+        self.get_cheese_info(param)
 
-        self.get_cheese_available_media_info(aid, self.ep_id, cid)
+        episode: dict = Episode.Utils.get_current_episode()
+
+        self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))
 
         return StatusCode.Success.value
 

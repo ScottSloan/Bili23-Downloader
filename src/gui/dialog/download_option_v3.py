@@ -49,12 +49,12 @@ class MediaInfoPanel(Panel):
 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = Choice(self)
-        video_quality_tooltip = ToolTip(self)
-        video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
+        self.video_quality_tooltip = ToolTip(self)
+        self.video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
         
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        video_quality_hbox.Add(video_quality_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_hbox.Add(self.video_quality_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_quality_warn_icon.Hide()
@@ -188,6 +188,8 @@ class MediaInfoPanel(Panel):
                 self.video_quality_warn_icon.Show(info["id"] != video_quality_id)
                 self.video_codec_warn_icon.Show(info["codec"] != self.video_codec_id)
 
+                self.video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确\n\n当前显示的媒体信息所对应的视频：{}".format(self.parent.episode_info.get("title")))
+
                 self.set_stream_type(self.stream_type)
 
                 self.Layout()
@@ -312,10 +314,10 @@ class MediaInfoPanel(Panel):
     @property
     def episode_params(self):
         return {
-            "bvid": self.parent.episode_info.bvid,
-            "cid": self.parent.episode_info.cid,
-            "aid": self.parent.episode_info.aid,
-            "ep_id": self.parent.episode_info.ep_id,
+            "bvid": self.parent.episode_info.get("bvid"),
+            "cid": self.parent.episode_info.get("cid"),
+            "aid": self.parent.episode_info.get("aid"),
+            "ep_id": self.parent.episode_info.get("ep_id"),
             "qn": self.video_quality_id,
             "codec": self.video_codec_id
         }

@@ -59,8 +59,6 @@ class BangumiParser(Parser):
         self.type_id = self.info_json["type"]
 
         self.parse_episodes()
-
-        return first_episode.get("bvid"), first_episode.get("cid")
     
     def get_bangumi_available_media_info(self, bvid: str, cid: str):
         params = {
@@ -99,8 +97,11 @@ class BangumiParser(Parser):
         # 先检查视频是否存在区域限制
         self.check_bangumi_can_play(param)
 
-        bvid, cid = self.get_bangumi_info(param)
-        self.get_bangumi_available_media_info(bvid, cid)
+        self.get_bangumi_info(param)
+
+        episode: dict = Episode.Utils.get_current_episode()
+
+        self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
 
         return StatusCode.Success.value
     

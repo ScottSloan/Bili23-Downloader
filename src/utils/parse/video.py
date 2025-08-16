@@ -19,14 +19,11 @@ class VideoParser(Parser):
 
         self.callback = callback
     
-    def get_part(self, url: str):
-        part = self.re_find_str(r"p=([0-9]+)", url, check = False)
+    def get_page(self, url: str):
+        page = self.re_find_str(r"p=([0-9]+)", url, check = False)
 
-        if part:
-            self.part = True
-            self.part_num = int(part[0])
-        else:
-            self.part = False
+        self.page = bool(page)
+        self.page_num = int(page[0]) if page else None
 
     def get_aid(self, url: str):
         aid = self.re_find_str(r"av([0-9]+)", url)
@@ -61,9 +58,12 @@ class VideoParser(Parser):
 
             self.interact_video_parser.get_video_interactive_graph_version(title = self.info_json.get("title"), bvid = bvid, cid = self.info_json.get("cid"), aid = self.info_json.get("aid"))
 
-        self.parse_episodes()
+        if self.page:
+            for page in self.info_json.get("pages"):
+                if page.get("page") == self.page_num:
+                    self.info_json["cid"] = page.get("cid")
 
-        return self.info_json.get("cid")
+        self.parse_episodes()
 
     @classmethod
     def get_video_available_media_info(cls, bvid: str, cid: int):
@@ -101,7 +101,7 @@ class VideoParser(Parser):
     def parse_worker(self, url: str):
         self.clear_video_info()
 
-        self.get_part(url)
+        self.get_page(url)
 
         match Regex.find_string(r"av|BV", url):
             case "av":
@@ -110,9 +110,11 @@ class VideoParser(Parser):
             case "BV":
                 bvid = self.get_bvid(url)
 
-        cid = self.get_video_info(bvid)
+        self.get_video_info(bvid)
+
+        episode: dict = Episode.Utils.get_current_episode()
         
-        self.get_video_available_media_info(bvid, cid)
+        self.get_video_available_media_info(episode.get("bvid"), episode.get("cid"))
 
         return StatusCode.Success.value
 

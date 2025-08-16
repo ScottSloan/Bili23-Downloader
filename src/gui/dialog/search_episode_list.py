@@ -40,6 +40,7 @@ class SearchEpisodeListDialog(Frame):
         panel = Panel(self)
 
         self.search_box = SearchCtrl(panel, "在剧集列表中搜索", size = self.FromDIP((300, 24)), search_btn = True, clear_btn = True)
+        self.search_box.SetValue(self.parent.search_keywords)
 
         self.search_result_lab = wx.StaticText(panel, -1, "无结果")
         self.previous_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Up))
@@ -70,12 +71,19 @@ class SearchEpisodeListDialog(Frame):
         self.SetSizerAndFit(dlg_vbox)
 
     def Bind_EVT(self):
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
         self.search_btn.Bind(wx.EVT_BUTTON, self.onSearchEVT)
         self.search_box.Bind(wx.EVT_SEARCH, self.onSearchEVT)
 
         self.previous_btn.Bind(wx.EVT_BUTTON, self.onPreviousItemEVT)
         self.next_btn.Bind(wx.EVT_BUTTON, self.onNextItemEVT)
+    
+    def onCloseEVT(self, event: wx.CloseEvent):
+        self.parent.search_keywords = self.search_box.GetValue()
         
+        event.Skip()
+
     def onSearchEVT(self, event: wx.CommandEvent):
         keywords = self.search_box.GetValue()
 
