@@ -2,6 +2,7 @@ import datetime
 
 from utils.config import Config
 from utils.common.const import Const
+from utils.common.regex import Regex
 
 class FormatUtils:
     @classmethod
@@ -18,6 +19,14 @@ class FormatUtils:
             return str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2)
         else:
             return str(mins).zfill(2) + ":" + str(secs).zfill(2)
+        
+    @staticmethod
+    def format_str_duration(duration: str):
+        match = Regex.search(r"(\d+):(\d+)", duration)
+
+        mins, secs = int(match[1]), int(match[2])
+
+        return mins * 60 + secs
     
     @staticmethod
     def format_speed(speed: int):

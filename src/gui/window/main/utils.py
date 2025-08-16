@@ -396,6 +396,17 @@ class Utils:
 
             self.main_window.top_box.graph_btn.Show(graph)
 
+        def get_episode_enable():
+            match self.main_window.parser.parse_type:
+                case ParseType.Video:
+                    return not self.main_window.parser.parser.is_interactive_video()
+
+                case ParseType.Bangumi:
+                    return True
+                
+                case _:
+                    return False
+                
         self.status = status
 
         match status:
@@ -414,7 +425,7 @@ class Utils:
                 not_live = self.main_window.parser.parse_type != ParseType.Live
 
                 enable_url_box(True)
-                enable_buttons(download = not not_live, episode = not is_interactive and not_live, option = not_live, graph = is_interactive)
+                enable_buttons(download = not_live, episode = get_episode_enable(), option = not_live, graph = is_interactive)
 
                 Window.processing_window(show = False)
 

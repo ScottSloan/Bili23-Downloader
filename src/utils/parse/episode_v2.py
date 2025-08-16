@@ -369,8 +369,13 @@ class Episode:
         
         @staticmethod
         def get_entry_info(episode: dict):
-            episode["up_name"] = episode["author"]
-            episode["up_mid"] = episode["mid"]
+            episode["cover_url"] = episode.get("pic")
+            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
+            episode["duration"] = FormatUtils.format_str_duration(episode.get("length"))
+            episode["up_name"] = episode.get("author")
+            episode["up_mid"] = episode.get("mid")
+            episode["pubtime"] = episode.get("created")
+            episode["type"] = ParseType.Video.value
 
             return EpisodeInfo.get_entry_info(episode)
         

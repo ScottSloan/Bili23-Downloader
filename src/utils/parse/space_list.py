@@ -135,7 +135,7 @@ class SpaceListParser(Parser):
 
         episode: dict = list(Section.info_json["archives"].values())[0]["episodes"][0]
 
-        VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_cid(episode.get("bvid")))
+        VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_extra_info(episode.get("bvid")).get("cid"))
 
     def parse_worker(self, url: str):
         self.clear_space_info()

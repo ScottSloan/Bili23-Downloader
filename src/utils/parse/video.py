@@ -83,7 +83,7 @@ class VideoParser(Parser):
         PreviewInfo.download_json = resp["data"].copy()
 
     @classmethod
-    def get_video_cid(cls, bvid: str):
+    def get_video_extra_info(cls, bvid: str):
         params = {
             "bvid": bvid
         }
@@ -92,7 +92,11 @@ class VideoParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        return resp["data"]["cid"]
+        return {
+            "cid": resp["data"]["cid"],
+            "up_name": resp["data"]["owner"]["name"],
+            "up_mid": resp["data"]["owner"]["mid"]
+        }
 
     def parse_worker(self, url: str):
         self.clear_video_info()

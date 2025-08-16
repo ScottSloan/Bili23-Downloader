@@ -511,7 +511,9 @@ url_pattern_map = [
     ("space_list", r"bilibili\.com/list/(\d+)"),
     ("popular", r"bilibili\.com/v/popular"),
     ("b23", r"(b23\.tv|bili2233\.cn)"),
-    ("festival", r"bilibili\.com/festival")
+    ("festival", r"bilibili\.com/festival"),
+    ("video", r"(BV[a-zA-Z0-9]+|av[0-9]+)"),
+    ("bangumi", r"(ep[0-9]+|ss[0-9]+)|md[0-9]+")
 ]
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):

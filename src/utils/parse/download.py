@@ -187,4 +187,11 @@ class DownloadParser(Parser):
     @staticmethod
     def check_cid(task_info: DownloadTaskInfo):
         if not task_info.cid:
-            task_info.cid = VideoParser.get_video_cid(task_info.bvid)
+            info = VideoParser.get_video_extra_info(task_info.bvid)
+
+            task_info.cid = info.get("cid")
+        
+            task_info.up_info = {
+                "up_name": info.get("up_name"),
+                "up_mid": info.get("up_mid")
+            }

@@ -7,33 +7,6 @@ from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser
 
-class LiveInfo:
-    cover_url: str = ""
-
-    room_id: int = 0
-
-    up_name: str = ""
-    title: str = ""
-
-    parent_area: str = ""
-    area: str = ""
-
-    status: int = 0
-
-    @classmethod
-    def clear_live_info(cls):
-        cls.cover_url = ""
-
-        cls.room_id = 0
-
-        cls.up_name = ""
-        cls.title = ""
-
-        cls.parent_area = ""
-        cls.area = ""
-
-        cls.status = 0
-
 class LiveParser(Parser):
     def __init__(self, callback: ParseCallback):
         super().__init__()
@@ -43,30 +16,20 @@ class LiveParser(Parser):
     def get_room_id(self, url: str):
         room_id = self.re_find_str(r"live.bilibili.com/([0-9]+)", url)
 
-        LiveInfo.room_id = room_id[0]
+        return int(room_id[0])
 
-    def get_live_room_info(self):
+    def get_live_room_info(self, room_id: int):
         # 获取直播间信息
         params = {
             "req_biz": "web_room_componet",
-            "room_ids": LiveInfo.room_id
+            "room_ids": room_id
         }
 
         url = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?{self.url_encode(params)}"
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        info = resp["data"]["by_room_ids"][LiveInfo.room_id]
-
-        LiveInfo.cover_url = info["cover"]
-
-        LiveInfo.up_name = info["uname"]
-        LiveInfo.title = info["title"]
-
-        LiveInfo.parent_area = info["parent_area_name"]
-        LiveInfo.area = info["area_name"]
-
-        LiveInfo.status = info["live_status"]
+        self.info_json: dict = resp["data"]["by_room_ids"][room_id]
 
     @classmethod
     def get_live_stream_info(cls, room_id: int):
@@ -84,25 +47,23 @@ class LiveParser(Parser):
         return data["data"]["playurl_info"]["playurl"]
 
     def parse_worker(self, url: str):
-        LiveInfo.clear_live_info()
+        self.room_id = self.get_room_id(url)
 
-        self.get_room_id(url)
-
-        self.get_live_room_info()
+        self.get_live_room_info(self.room_id)
 
         return StatusCode.Success.value
 
     def get_live_info(self):
         info = LiveRoomInfo()
 
-        info.cover_url = LiveInfo.cover_url
-        info.room_id = LiveInfo.room_id
-        info.up_name = LiveInfo.up_name
-        info.title = LiveInfo.title
-        info.parent_area = LiveInfo.parent_area
-        info.area = LiveInfo.area
+        info.cover_url = self.info_json.get("cover")
+        info.room_id = self.room_id
+        info.up_name = self.info_json.get("uname")
+        info.title = self.info_json.get("title")
+        info.parent_area = self.info_json.get("parent_area_name")
+        info.area = self.info_json.get("area_name")
 
-        info.live_status = LiveInfo.status
+        info.live_status = self.info_json.get("live_status")
 
         return info
     

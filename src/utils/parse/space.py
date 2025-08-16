@@ -6,7 +6,7 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, ProcessingType
 from utils.common.model.callback import ParseCallback
 
 from utils.parse.parser import Parser
@@ -57,10 +57,18 @@ class SpaceParser(Parser):
 
         return resp["data"]["page"]["count"]
     
+    def get_video_available_media_info(self):
+        from utils.parse.video import VideoParser
+
+        episode = SpaceInfo.info_json["episodes"][0]
+
+        VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_extra_info(episode.get("bvid")).get("cid"))
+
     def parse_space_info(self, mid: int):
         total = self.get_search_arc_info(mid)
         total_page = self.get_total_page(total)
 
+        self.onUpdateName("个人主页")
         self.onUpdateTitle(1, total_page, SpaceInfo.total_data)
 
         for i in range(1, total_page):
@@ -68,16 +76,22 @@ class SpaceParser(Parser):
 
             self.get_search_arc_info(mid, page)
 
-            self.onUpdateTitle(total, total_page, SpaceInfo.total_data)
+            self.onUpdateTitle(page, total_page, SpaceInfo.total_data)
     
     def parse_worker(self, url: str):
         self.clear_space_info()
 
         mid = self.get_mid(url)
 
+        time.sleep(0.5)
+
+        self.callback.onChangeProcessingType(ProcessingType.Page)
+
         self.parse_space_info(mid)
 
         self.parse_episodes()
+
+        self.get_video_available_media_info()
 
         return StatusCode.Success.value
     
@@ -88,6 +102,9 @@ class SpaceParser(Parser):
         SpaceInfo.info_json = {
             "episodes": []
         }
+
+    def onUpdateName(self, name: str):
+        self.callback.onUpdateName(name)
 
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
