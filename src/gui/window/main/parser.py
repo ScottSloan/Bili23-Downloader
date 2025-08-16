@@ -68,14 +68,13 @@ class Parser:
     def parse_success(self):
         self.main_window.utils.set_status(ParseStatus.Success)
 
-        match self.parse_type:
-            case ParseType.Live:
-                wx.CallAfter(self.live_recording)
+        if self.parse_type == ParseType.Live:
+            wx.CallAfter(self.live_recording)
 
-            case _:
-                self.parse_type_str = self.parser.get_parse_type_str()
+        else:
+            self.parse_type_str = self.parser.get_parse_type_str()
 
-                self.main_window.show_episode_list(from_menu = False)
+            wx.CallAfter(self.main_window.show_episode_list, False)
 
     def parse_episode(self):
         self.parser.parse_episodes()

@@ -5,7 +5,6 @@ from utils.common.map import bangumi_type_map
 from utils.common.enums import StatusCode
 from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex
 
 from utils.parse.audio import AudioInfo
@@ -14,22 +13,10 @@ from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
 
 class BangumiInfo:
-    url: str = ""
     bvid: str = ""
-    epid: int = 0 
+    epid: int = 0
     cid: int = 0
     season_id: int = 0
-
-    title: str = ""
-
-    cover: str = ""
-    views: str = ""
-    danmakus: str = ""
-    followers: str = ""
-    styles: str = ""
-    new_ep: str = ""
-    actors: str = ""
-    evaluate: str = ""
 
     type_id: int = 0
     type_name: str = ""
@@ -41,25 +28,14 @@ class BangumiInfo:
 
     @classmethod
     def clear_bangumi_info(cls):
-        cls.url = ""
         cls.bvid = ""
-        cls.title = ""
-        cls.cover = ""
+        cls.epid = 0
+        cls.cid = 0
+        cls.season_id = 0
 
         cls.type_id = 0
         cls.type_name = ""
 
-        cls.views = 0
-        cls.danmakus = 0
-        cls.followers = 0
-        cls.styles = 0
-        cls.new_ep = ""
-        cls.actors = ""
-        cls.evaluate = ""
-        cls.epid = 0
-        cls.cid = 0
-        cls.season_id = 0
-        
         cls.payment = False
         cls.play_check = ""
 
@@ -101,25 +77,13 @@ class BangumiParser(Parser):
 
         BangumiInfo.payment = True if "payment" in info_result else False
         
-        BangumiInfo.title = info_result["title"]
-
         first_episode = info_result["episodes"][0] if info_result.get("episodes") else info_result["section"][0]["episodes"][0]
 
-        BangumiInfo.url = first_episode["link"]
         BangumiInfo.bvid = first_episode["bvid"]
         BangumiInfo.cid = first_episode["cid"]
         BangumiInfo.epid = first_episode["id"]
 
         BangumiInfo.type_id = info_result["type"]
-
-        BangumiInfo.cover = info_result["cover"]
-        BangumiInfo.views = info_result["icon_font"]["text"]
-        BangumiInfo.danmakus = FormatUtils.format_data_quantity(info_result["stat"]["danmakus"])
-        BangumiInfo.followers = info_result["stat"]["follow_text"]
-        BangumiInfo.styles = " / ".join(info_result["styles"])
-        BangumiInfo.new_ep = info_result["new_ep"]["desc"]
-        BangumiInfo.actors = info_result["actors"].replace("\n", " ")
-        BangumiInfo.evaluate = info_result["evaluate"]
 
         BangumiInfo.info_json = info_result.copy()
 
@@ -127,8 +91,7 @@ class BangumiParser(Parser):
 
         self.get_bangumi_type()
     
-    @classmethod
-    def get_bangumi_available_media_info(cls, qn: int = None):
+    def get_bangumi_available_media_info(self):
         params = {
             "bvid": BangumiInfo.bvid,
             "cid": BangumiInfo.cid,
@@ -137,21 +100,16 @@ class BangumiParser(Parser):
             "fourk": 1
         }
 
-        if qn: params["qn"] = qn
+        url = f"https://api.bilibili.com/pgc/player/web/playurl?{self.url_encode(params)}"
 
-        url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
-
-        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         PreviewInfo.download_json = resp["result"].copy()
 
-        if not qn:
-            AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
+        if not PreviewInfo.download_json.get("dash") and not PreviewInfo.download_json.get("durl"):
+            code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
 
-            if not PreviewInfo.download_json.get("dash") and not PreviewInfo.download_json.get("durl"):
-                code = StatusCode.Pay.value if BangumiInfo.payment and Config.User.login else StatusCode.Vip.value
-
-                raise GlobalException(code = code)
+            raise GlobalException(code = code)
 
     def check_bangumi_can_play(self):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{self.url_type}={self.url_type_value}"

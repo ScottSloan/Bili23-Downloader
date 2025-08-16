@@ -11,7 +11,6 @@ from utils.common.enums import StatusCode, EpisodeDisplayType
 from utils.common.exception import GlobalException
 from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex
 
 class VideoInfo:
@@ -21,15 +20,8 @@ class VideoInfo:
     cid: int = 0
 
     title: str = ""
-    cover: str = ""
-    views: str = ""
-    danmakus: str = ""
-    desc: str = ""
-    tag_list: list = []
 
     is_interactive: bool = False
-
-    pubtime: int = 0
 
     info_json: dict = {}
 
@@ -39,17 +31,12 @@ class VideoInfo:
         cls.bvid = ""
         cls.aid = 0
         cls.bvid = ""
+        
         cls.title = ""
-        cls.cover = ""
-        cls.desc = ""
-        cls.views = 0
-        cls.danmakus = 0
+
         cls.cid = 0
-        cls.pubtime = 0
 
         cls.is_interactive = False
-
-        cls.tag_list.clear()
 
         cls.info_json.clear()
 
@@ -88,7 +75,7 @@ class VideoParser(Parser):
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         info = resp["data"]
 
@@ -96,15 +83,8 @@ class VideoParser(Parser):
             raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (info["redirect_url"], ))
 
         VideoInfo.title = info["title"]
-        VideoInfo.cover = info["pic"]
         VideoInfo.aid = info["aid"]
         VideoInfo.cid = info["cid"]
-
-        VideoInfo.desc = info["desc"]
-        VideoInfo.views = FormatUtils.format_data_quantity(info["stat"]["view"])
-        VideoInfo.danmakus = FormatUtils.format_data_quantity(info["stat"]["danmaku"])
-
-        VideoInfo.pubtime = info["pubdate"]
 
         VideoInfo.is_interactive = "stein_guide_cid" in info
 
@@ -124,15 +104,8 @@ class VideoParser(Parser):
 
         self.parse_episodes()
 
-    def get_video_tag(self):
-        url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
-        
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
-
-        VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
-
     @classmethod
-    def get_video_available_media_info(cls, qn: int = None):
+    def get_video_available_media_info(cls):
         # 获取视频清晰度
         params = {
             "bvid": VideoInfo.bvid,
@@ -142,16 +115,11 @@ class VideoParser(Parser):
             "fourk": 1,
         }
 
-        if qn: params["qn"] = qn
-
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
         
-        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
         PreviewInfo.download_json = resp["data"].copy()
-
-        if not qn:
-            AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
     @classmethod
     def get_video_cid(cls, bvid: str):
@@ -222,3 +190,6 @@ class VideoParser(Parser):
             return "互动视频"
         else:
             return "投稿视频"
+        
+    def is_interactive_video(self):
+        return VideoInfo.is_interactive

@@ -42,10 +42,7 @@ class TopBox(Panel):
         self.processing_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self, -1, "")
-        self.detail_btn = FlatButton(self, "详细信息", IconID.Info, split = True)
-        self.detail_btn.setToolTip("查看视频详细信息")
-        self.detail_btn.Hide()
-        self.graph_btn = FlatButton(self, "剧情树", IconID.Tree_Structure)
+        self.graph_btn = FlatButton(self, "剧情树", IconID.Tree_Structure, split = True)
         self.graph_btn.setToolTip("查看互动视频剧情树")
         self.graph_btn.Hide()
         self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search))
@@ -61,7 +58,6 @@ class TopBox(Panel):
         info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.Add(self.type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         info_hbox.AddSpacer(self.FromDIP(6))
-        info_hbox.Add(self.detail_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.Add(self.graph_btn, 0, wx.EXPAND, self.FromDIP(6))
         info_hbox.AddStretchSpacer()
         info_hbox.Add(self.search_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -82,7 +78,6 @@ class TopBox(Panel):
         self.url_box.Bind(wx.EVT_KEY_DOWN, self.onSearchKeyDownEVT)
 
         self.graph_btn.onClickCustomEVT = self.onShowGraphWindowEVT
-        self.detail_btn.onClickCustomEVT = self.onShowDetailInfoDialogEVT
 
     def onShowSearchDialogEVT(self, event: wx.CommandEvent):
         Window.search_dialog(self.main_window)
@@ -112,9 +107,9 @@ class TopBox(Panel):
     def update_checked_item_count(self, count: int):
         label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
 
-        self.main_window.top_box.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
+        self.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
 
-        self.GetSizer().Layout()
+        self.Layout()
 
     def set_episode_full_name(self):
         Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name

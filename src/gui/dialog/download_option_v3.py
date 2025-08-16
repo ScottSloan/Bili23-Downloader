@@ -9,7 +9,7 @@ from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.exception import GlobalException, show_error_message_dialog
 
-from utils.parse.preview import VideoPreview
+from utils.parse.preview import VideoPreview, PreviewInfo
 from utils.parse.audio import AudioInfo
 
 from gui.component.window.dialog import Dialog
@@ -119,6 +119,8 @@ class MediaInfoPanel(Panel):
         self.main_window: MainWindow = self.parent.GetParent()
 
         self.preview = VideoPreview(self.main_window.parser.parse_type)
+
+        AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
         video_quality_id = self.preview.get_video_quality_id(Config.Download.video_quality_id, self.preview.download_json) if Config.Download.video_quality_id != VideoQualityID._Auto.value else Config.Download.video_quality_id
         video_quality_data_dict = self.preview.get_video_quality_data_dict(self.preview.download_json)

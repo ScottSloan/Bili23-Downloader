@@ -13,11 +13,8 @@ from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
 from utils.module.pic.cover import Cover
 
-from utils.parse.video import VideoInfo
-
 from gui.dialog.misc.about import AboutWindow
 from gui.dialog.setting.edit_title import EditTitleDialog
-from gui.dialog.detail import DetailDialog
 from gui.dialog.download_option_v3 import DownloadOptionDialog
 from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
@@ -108,12 +105,6 @@ class Window:
 
         if dlg.ShowModal() == wx.ID_OK:
             return dlg.title_box.GetValue() 
-
-    @staticmethod
-    @show_dialog
-    def detail_dialog(parent: wx.Window, parse_type: ParseType):
-        dlg = DetailDialog(parent, parse_type)
-        dlg.ShowModal()
 
     @staticmethod
     @show_dialog
@@ -384,62 +375,58 @@ class Utils:
             wx.CallAfter(worker)
 
     def set_status(self, status: ParseStatus):
-        def update():
-            self.main_window.top_box.processing_icon.Show(processing_icon)
-            self.main_window.top_box.type_lab.SetLabel(type_lab)
+        wx.CallAfter(self.set_status_worker, status)
 
-            self.main_window.top_box.detail_btn.Show(detail_btn)
-            self.main_window.top_box.graph_btn.Show(graph_btn)
+    def set_status_worker(self, status: ParseStatus):
+        def set_type_lab(enable: bool, label: str):
+            self.main_window.top_box.processing_icon.Show(enable)
+            self.main_window.top_box.type_lab.SetLabel(label)
 
-            self.main_window.panel.Layout()
-
-        def enable_controls(enable: bool, option_enable: bool = True, not_live: bool = True):
+        def enable_url_box(enable: bool):
             self.main_window.top_box.url_box.Enable(enable)
             self.main_window.top_box.get_btn.Enable(enable)
+
             self.main_window.episode_list.Enable(enable)
-            self.main_window.bottom_box.download_btn.Enable(enable and not_live)
-            self.main_window.top_box.episode_option_btn.Enable(enable and option_enable and not graph_btn and not_live)
-            self.main_window.top_box.download_option_btn.Enable(enable and option_enable and not_live)
+            
+        def enable_buttons(download: bool, episode: bool, option: bool, graph: bool):
+            self.main_window.bottom_box.download_btn.Enable(download)
+
+            self.main_window.top_box.episode_option_btn.Enable(episode)
+            self.main_window.top_box.download_option_btn.Enable(option)
+
+            self.main_window.top_box.graph_btn.Show(graph)
 
         self.status = status
 
         match status:
             case ParseStatus.Parsing:
-                processing_icon = True
-                type_lab = "正在解析中"
+                set_type_lab(True, "正在解析中")
 
-                detail_btn = False
-                graph_btn = False
-
-                enable_controls(False)
+                enable_url_box(True)
+                enable_buttons(download = False, episode = False, option = False, graph = False)
 
                 Window.processing_window(show = True)
                 
             case ParseStatus.Success:
-                processing_icon = False
-                type_lab = ""
+                set_type_lab(False, "")
 
+                is_interactive = self.main_window.parser.parser.is_interactive_video()
                 not_live = self.main_window.parser.parse_type != ParseType.Live
 
-                detail_btn = True and not_live
-                graph_btn = VideoInfo.is_interactive
-
-                enable_controls(True, not_live = not_live)
+                enable_url_box(True)
+                enable_buttons(download = not not_live, episode = not is_interactive and not_live, option = not_live, graph = is_interactive)
 
                 Window.processing_window(show = False)
 
             case ParseStatus.Error:
-                processing_icon = False
-                type_lab = ""
+                set_type_lab(False, "")
 
-                detail_btn = False
-                graph_btn = False
-
-                enable_controls(True, option_enable = False)
+                enable_url_box(False)
+                enable_buttons(download = False, episode = False, option = False, graph = False)
 
                 Window.processing_window(show = False)
 
-        wx.CallAfter(update)
+        self.main_window.panel.Layout()
 
     @staticmethod
     def get_main_window():

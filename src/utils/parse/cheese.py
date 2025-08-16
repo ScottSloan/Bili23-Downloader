@@ -11,33 +11,20 @@ from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
 
 class CheeseInfo:
-    url: str = ""
     aid: int = 0
     ep_id: int = 0
     cid: int = 0
     season_id: int = 0
 
-    title: str = ""
-    subtitle: str = ""
-    views: str = ""
-    release: str = ""
-    expiry: str = ""
-
     info_json: dict = {}
 
     @classmethod
     def clear_cheese_info(cls):
-        cls.url = ""
-        cls.title = ""
-        cls.subtitle = ""
-        cls.views = 0
-        cls.release = ""
-        cls.expiry = ""
         cls.aid = 0
         cls.ep_id = 0
         cls.cid = 0
         cls.season_id = 0
-    
+            
         cls.info_json.clear()
 
 class CheeseParser(Parser):
@@ -66,20 +53,13 @@ class CheeseParser(Parser):
         if len(info_data["sections"]) > 1:
             info_data["sections"] = [section for section in info_data["sections"] if section["title"] != "默认章节"]
 
-        CheeseInfo.url = info_data["share_url"]
-        CheeseInfo.title = info_data["title"]
-        CheeseInfo.subtitle = info_data["subtitle"]
-        CheeseInfo.views = info_data["stat"]["play_desc"]
-        CheeseInfo.release = info_data["release_info"]
-        CheeseInfo.expiry = info_data["user_status"]["user_expiry_content"]
         CheeseInfo.ep_id = info_data["sections"][0]["episodes"][0]["id"]
 
         CheeseInfo.info_json = info_data.copy()
 
         self.parse_episodes()
 
-    @classmethod
-    def get_cheese_available_media_info(cls, qn: int = None):
+    def get_cheese_available_media_info(self):
         params = {
             "avid": CheeseInfo.aid,
             "ep_id": CheeseInfo.ep_id,
@@ -89,16 +69,11 @@ class CheeseParser(Parser):
             "fourk": 1
         }
 
-        if qn: params["qn"] = qn
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?{self.url_encode(params)}"
 
-        url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
-
-        resp = cls.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         PreviewInfo.download_json = resp["data"].copy()
-
-        if not qn:
-            AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
     def parse_worker(self, url: str):
         self.clear_cheese_info()
