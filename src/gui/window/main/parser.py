@@ -50,16 +50,17 @@ class Parser:
 
         return parser
 
-    def parse_url(self, url: str):
-        self.main_window.utils.set_status(ParseStatus.Parsing)
+    def parse_url(self, url: str, set_status: bool = True):
+        if set_status:
+            self.main_window.utils.set_status(ParseStatus.Parsing)
 
         type = self.get_parse_type(url)
 
         if not type:
             raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
-            
+        
         self.parser: VideoParser = self.get_parser(type)
-    
+
         rtn_val = self.parser.parse_url(url)
 
         if StatusCode(rtn_val) == StatusCode.Success:
@@ -90,7 +91,7 @@ class Parser:
         show_error_message_dialog("解析失败", parent = self.main_window)
 
     def onJump(self, url: str):
-        Thread(target = self.parse_url, args = (url, )).start()
+        Thread(target = self.parse_url, args = (url, False, )).start()
 
     @property
     def parser_callback(self):

@@ -197,7 +197,7 @@ class TheClipBoard:
 
                 main_window.top_box.url_box.SetValue(url)
 
-                wx.CallAfter(main_window.onParseEVT, event)
+                wx.CallAfter(main_window.onParseEVT, event, False)
 
     @staticmethod
     def validate_url(url: str):
@@ -216,6 +216,9 @@ class TheClipBoard:
             return False
         
         if Window.dialog_show:
+            return False
+        
+        if main_window.url_manual:
             return False
 
         if main_window.IsShown():
@@ -401,7 +404,7 @@ class Utils:
                 case ParseType.Video:
                     return not self.main_window.parser.parser.is_interactive_video()
 
-                case ParseType.Bangumi:
+                case ParseType.Bangumi | ParseType.Cheese | ParseType.List:
                     return True
                 
                 case _:
@@ -432,7 +435,7 @@ class Utils:
             case ParseStatus.Error:
                 set_type_lab(False, "")
 
-                enable_url_box(False)
+                enable_url_box(True)
                 enable_buttons(download = False, episode = False, option = False, graph = False)
 
                 Window.processing_window(show = False)

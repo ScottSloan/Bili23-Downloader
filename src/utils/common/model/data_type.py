@@ -325,6 +325,7 @@ class TreeListItemInfo:
         self.up_name: str = ""
         self.up_mid: int = 0
 
+        self.current_episode: bool = False
         self.item_type: str = "node"
         self.type: str = 0
 
@@ -361,6 +362,7 @@ class TreeListItemInfo:
             "up_name": self.up_name,
             "up_mid": self.up_mid,
 
+            "current_episode": self.current_episode,
             "item_type": self.item_type,
             "type": self.type
         }
@@ -397,6 +399,7 @@ class TreeListItemInfo:
         self.up_name = data.get("up_name", self.up_name)
         self.up_mid = data.get("up_mid", self.up_mid)
 
+        self.current_episode = data.get("current_episode", self.current_episode)
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
 

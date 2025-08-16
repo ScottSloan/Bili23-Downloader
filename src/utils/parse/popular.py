@@ -51,20 +51,22 @@ class PopularParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        resp["config"] = {
+        self.info_json: dict = resp["data"].copy()
+
+        self.info_json["config"] = {
             "label": f"{desc}排行榜"
         }
-
-        self.info_json: dict = resp["data"].copy()
 
     def get_popular_available_media_info(self):
         from utils.parse.video import VideoParser
 
         episode: dict = self.info_json["list"][0]
 
-        VideoParser.get_video_available_media_info(episode.get("bvid"), episode.get("cid"))
+        bvid, self.cid = episode.get("bvid"), episode.get("cid")
 
         self.parse_episodes()
+
+        VideoParser.get_video_available_media_info(bvid, self.cid)
 
     def parse_worker(self, url: str):
         match Regex.find_string(r"weekly|rank", url):
@@ -83,7 +85,7 @@ class PopularParser(Parser):
         return StatusCode.Success.value
 
     def parse_episodes(self):
-        Episode.Popular.parse_episodes(self.info_json)
+        Episode.Popular.parse_episodes(self.info_json, self.cid)
 
     def get_parse_type_str(self):
         return "热榜"

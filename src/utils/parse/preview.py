@@ -258,7 +258,7 @@ class VideoPreview(Parser):
 
             return available_list
         else:
-            if data["durls"]:
+            if data.get("durls"):
                 for entry in data["durls"]:
                     id = entry.get("quality")
 

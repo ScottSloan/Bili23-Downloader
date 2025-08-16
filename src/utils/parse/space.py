@@ -62,7 +62,12 @@ class SpaceParser(Parser):
 
         episode = SpaceInfo.info_json["episodes"][0]
 
-        VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_extra_info(episode.get("bvid")).get("cid"))
+        self.bvid = episode.get("bvid")
+        cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
+
+        VideoParser.get_video_available_media_info(self.bvid, cid)
+
+        self.parse_episodes()
 
     def parse_space_info(self, mid: int):
         total = self.get_search_arc_info(mid)
@@ -89,14 +94,12 @@ class SpaceParser(Parser):
 
         self.parse_space_info(mid)
 
-        self.parse_episodes()
-
         self.get_video_available_media_info()
 
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Episode.Space.parse_episodes(SpaceInfo.info_json)
+        Episode.Space.parse_episodes(SpaceInfo.info_json, self.bvid)
 
     def clear_space_info(self):
         SpaceInfo.info_json = {

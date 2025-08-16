@@ -43,7 +43,7 @@ def exception_handler(exc_type, exc_value: GlobalException, exc_tb):
                 f.write(stack_trace)
                 f.write(f"{'=' * 80}\n\n")
 
-            sys.__excepthook__(exc_type, exc_value, exc_tb)
+            print(stack_trace)
 
         return exception, stack_trace
 

@@ -8,6 +8,7 @@ from utils.config import Config
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
 from utils.common.enums import StatusCode, ProcessingType
+from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
@@ -42,8 +43,13 @@ class SpaceListParser(Parser):
 
         self.callback = callback
 
+    def get_bvid(self, url: str):
+        bvid = self.re_find_str(r"bvid=(BV\w+)", url)
+
+        return bvid[0]
+    
     def get_mid(self, url: str):
-        mid = self.re_find_str(r"/([0-9]+)/", url)
+        mid = self.re_find_str(r"/([0-9]+)", url)
 
         return mid[0]
 
@@ -130,13 +136,24 @@ class SpaceListParser(Parser):
 
         return items_list["page"]["total"]
     
-    def get_video_available_media_info(self):
+    def get_video_available_media_info(self, bvid: str, cid: int):
+        from utils.parse.video import VideoParser
+
+        VideoParser.get_video_available_media_info(bvid, cid)
+
+    def get_episode_bvid_cid(self, bvid: str, cid: int):
         from utils.parse.video import VideoParser
 
         episode: dict = list(Section.info_json["archives"].values())[0]["episodes"][0]
 
-        VideoParser.get_video_available_media_info(episode.get("bvid"), VideoParser.get_video_extra_info(episode.get("bvid")).get("cid"))
+        if not bvid:
+            bvid = episode.get("bvid")
+        
+        if not cid:
+            cid = VideoParser.get_video_extra_info(bvid).get("cid")
 
+        return bvid, cid
+        
     def parse_worker(self, url: str):
         self.clear_space_info()
 
@@ -145,6 +162,8 @@ class SpaceListParser(Parser):
         time.sleep(0.5)
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
+
+        bvid, cid = None, None
 
         if "space" in url:
             if "type" in url:
@@ -157,13 +176,22 @@ class SpaceListParser(Parser):
             else:
                 self.parse_season_series_info(mid)
         else:
-            series_id = self.get_sid(url)
+            bvid = self.get_bvid(url)
+
+            if "sid" in url:
+                series_id = self.get_sid(url)
+            else:
+                self.callback.onChangeProcessingType(ProcessingType.Parse)
+
+                raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (bvid, ))
 
             self.parse_series_info(mid, series_id)
+
+        self.bvid, cid = self.get_episode_bvid_cid(bvid, cid)
         
         self.parse_episodes()
 
-        self.get_video_available_media_info()
+        self.get_video_available_media_info(self.bvid, cid)
 
         return StatusCode.Success.value
 
@@ -220,7 +248,7 @@ class SpaceListParser(Parser):
             time.sleep(1)
 
     def parse_episodes(self):
-        Episode.List.parse_episodes(Section.info_json)
+        Episode.List.parse_episodes(Section.info_json, self.bvid)
 
     def clear_space_info(self):
         Section.info_json = {

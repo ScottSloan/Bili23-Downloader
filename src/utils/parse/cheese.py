@@ -19,6 +19,8 @@ class CheeseParser(Parser):
     def get_epid(self, url: str):
         epid = self.re_find_str(r"ep([0-9]+)", url)
 
+        self.ep_id = int(epid[0])
+
         return f"ep_id={epid[0]}"
 
     def get_season_id(self, url: str):
@@ -36,9 +38,10 @@ class CheeseParser(Parser):
         if len(self.info_json["sections"]) > 1:
             self.info_json["sections"] = [section for section in self.info_json["sections"] if section["title"] != "默认章节"]
 
-        episode = self.info_json["sections"][0]["episodes"][0]
+        episode: dict = self.info_json["sections"][0]["episodes"][0]
 
-        self.ep_id = episode.get("id")
+        if param.startswith("season_id"):
+            self.ep_id = episode.get("id")
 
         self.parse_episodes()
 

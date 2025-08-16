@@ -23,6 +23,7 @@ from gui.component.tree_list_v2 import TreeListCtrl
 class MainWindow(Frame):
     def __init__(self, parent):
         self.url = None
+        self.url_manual = False
 
         self.utils = Utils(self)
 
@@ -258,7 +259,7 @@ class MainWindow(Frame):
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
         
-    def onParseEVT(self, event):
+    def onParseEVT(self, event, url_manual = True):
         url = self.top_box.url_box.GetValue()
 
         if self.top_box.check_url():
@@ -269,6 +270,7 @@ class MainWindow(Frame):
         Thread(target = self.parser.parse_url, args = (url, )).start()
 
         self.url = url
+        self.url_manual = url_manual
 
     def onEpisodeListContextMenuEVT(self, event: wx.MenuEvent):
         match event.GetId():
