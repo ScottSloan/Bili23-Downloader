@@ -9,13 +9,13 @@
         return `https://github.com/ScottSloan/Bili23-Downloader/releases/download/v${version}/${file}`
     }
 
-    let release_asset_url = 'https://wwx.lanzout.com/ikfrj33h8hnc'
-    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/iP7BR33h8lve'
-    let release_asset_win_url = 'https://wwx.lanzout.com/imadW33h8o3e'
+    let release_asset_url = 'https://wwx.lanzout.com/ihBmF33qkvih'
+    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/ip8nr33qky6d'
+    let release_asset_win_url = 'https://wwx.lanzout.com/iAuq433qkzjc'
 
-    let release_asset_sha1 = 'bed8b5c9aca0cdb426b511a70b66a5f6f2db073e'
-    let release_asset_win_ffmpeg_sha1 = 'ec19d17dcb4952bb8ca5954badd6b93b7810918a'
-    let release_asset_win_sha1 = '1a81fb7bc69ed21168cded61bec4231667bb041d'
+    let release_asset_sha1 = '8f6c21b6f28162056b4ed0ad3c4fbb95aa9191e3'
+    let release_asset_win_ffmpeg_sha1 = 'ebbfe12dfe9189bcc833f6bde5d16e4d4b3724c1'
+    let release_asset_win_sha1 = 'bbcd2cc5e2853d7559b7f42f99212cfcda336199'
 
 </script>
 
