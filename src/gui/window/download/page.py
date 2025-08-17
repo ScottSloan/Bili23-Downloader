@@ -186,7 +186,7 @@ class DownloadingPage(BasePage):
                 if panel.task_info.status == DownloadStatus.Pause.value and start_all:
                     panel.utils.set_download_status(DownloadStatus.Waiting)
 
-                if panel.task_info.status == DownloadStatus.Waiting.value:
+                if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.DownloadError.value, DownloadStatus.MergeError.value]:
                     if self.get_panel_items_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.utils.resume_download()
     

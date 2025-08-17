@@ -98,8 +98,12 @@ class Parser:
         Thread(target = self.parse_url, args = (url, False, )).start()
 
     def validate_url(self, url: str):
-        if match := Regex.search(r"https?://(([a-z0-9-]+)\.)?(bilibili|b23|bili2233)\.(com|tv|cn)/[\w\?=/._&%-]*", url):
+        if url.startswith(("BV", "av", "ep", "ss", "md")):
+            return url
+        
+        elif match := Regex.search(r"https?://(([a-z0-9-]+)\.)?(bilibili|b23|bili2233)\.(com|tv|cn)/[\w\?=/._&%-]*", url):
             return match[0]
+        
         else:
             return ""
 

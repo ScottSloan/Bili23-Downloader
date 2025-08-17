@@ -1,6 +1,5 @@
 import math
 import time
-from typing import Dict, List
 
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
@@ -11,11 +10,6 @@ from utils.common.model.callback import ParseCallback
 
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
-
-class SpaceInfo:
-    info_json: Dict[str, List[Dict[str, str]]] = {}
-
-    total_data: int = 0
 
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -51,16 +45,16 @@ class SpaceParser(Parser):
 
         vlist = resp["data"]["list"]["vlist"]
 
-        SpaceInfo.info_json["episodes"].extend(vlist)
+        self.info_json["episodes"].extend(vlist)
 
-        SpaceInfo.total_data += len(vlist)
+        self.total_data += len(vlist)
 
         return resp["data"]["page"]["count"]
     
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
-        episode: dict = SpaceInfo.info_json["episodes"][0]
+        episode: dict = self.info_json["episodes"][0]
 
         self.bvid = episode.get("bvid")
         cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
@@ -74,14 +68,14 @@ class SpaceParser(Parser):
         total_page = self.get_total_page(total)
 
         self.onUpdateName("个人主页")
-        self.onUpdateTitle(1, total_page, SpaceInfo.total_data)
+        self.onUpdateTitle(1, total_page, self.total_data)
 
         for i in range(1, total_page):
             page = i + 1
 
             self.get_search_arc_info(mid, page)
 
-            self.onUpdateTitle(page, total_page, SpaceInfo.total_data)
+            self.onUpdateTitle(page, total_page, self.total_data)
     
     def parse_worker(self, url: str):
         self.clear_space_info()
@@ -99,14 +93,14 @@ class SpaceParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Episode.Space.parse_episodes(SpaceInfo.info_json, self.bvid)
+        Episode.Space.parse_episodes(self.info_json, self.bvid)
 
     def clear_space_info(self):
-        SpaceInfo.info_json = {
+        self.info_json = {
             "episodes": []
         }
 
-        SpaceInfo.total_data = 0
+        self.total_data = 0
 
     def onUpdateName(self, name: str):
         self.callback.onUpdateName(name)

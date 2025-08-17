@@ -113,13 +113,13 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.66.0"
-        version_code: int = 166000
+        version: str = "1.65.2"
+        version_code: int = 165200
 
         task_file_min_version_code: int = 165000
         live_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 165000
-        user_config_file_min_version_code: int = 1620
+        user_config_file_min_version_code: int = 165200
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
