@@ -124,7 +124,7 @@ class Config:
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
     class Basic:
-        listen_clipboard: bool = True
+        listen_clipboard: bool = False
         exit_option: int = 3
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True

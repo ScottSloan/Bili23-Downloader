@@ -72,13 +72,18 @@ class Window:
     @show_dialog
     def welcome_dialog(parent: wx.Window):
         def worker():
-            dlg = wx.MessageDialog(parent, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg = wx.MessageDialog(parent, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、UP 个人主页解析、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
             dlg.SetYesNoLabels("说明文档", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:
                 webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
 
             Config.Basic.is_new_user = False
+
+            dlg2 = wx.MessageDialog(parent, "是否自动读取剪切板？\n\n开启后，当复制 B 站相关链接时，程序将自动开始解析。", "提示", wx.ICON_INFORMATION | wx.YES_NO)
+
+            if dlg2.ShowModal() == wx.ID_YES:
+                Config.Basic.listen_clipboard = True
 
             Config.save_app_config()
 
