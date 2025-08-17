@@ -60,7 +60,7 @@ class SpaceParser(Parser):
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
-        episode = SpaceInfo.info_json["episodes"][0]
+        episode: dict = SpaceInfo.info_json["episodes"][0]
 
         self.bvid = episode.get("bvid")
         cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
@@ -105,6 +105,8 @@ class SpaceParser(Parser):
         SpaceInfo.info_json = {
             "episodes": []
         }
+
+        SpaceInfo.total_data = 0
 
     def onUpdateName(self, name: str):
         self.callback.onUpdateName(name)

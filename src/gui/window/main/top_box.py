@@ -122,6 +122,8 @@ class TopBox(Panel):
         self.main_window.show_episode_list()
 
     def check_url(self):
-        if not self.url_box.GetValue():
+        url = self.url_box.GetValue()
+
+        if not url:
             Window.message_dialog(self.main_window, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True

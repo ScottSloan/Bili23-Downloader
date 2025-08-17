@@ -8,6 +8,7 @@ class ParseType(Enum):
     List = 5                      # 合集列表
     Space = 6                     # 个人主页
     Popular = 7                   # 热榜
+    FavList = 8                   # 收藏夹
     Extra = 100                   # 弹幕、字幕、封面等类型文件
     B23 = 101                     # 短链接
     Festival = 102                # 活动专题

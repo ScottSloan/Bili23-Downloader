@@ -388,7 +388,24 @@ class Episode:
             episode["current_episode"] = episode.get("bvid") == bvid
 
             return EpisodeInfo.get_entry_info(episode)
-        
+    
+    class FavList:
+        @classmethod
+        def parse_episodes(cls, info_json: dict, bvid: str):
+            EpisodeInfo.clear_episode_data()
+
+            for episode in info_json.get("episodes"):
+                EpisodeInfo.add_item("视频", cls.get_entry_info(episode.copy(), bvid))
+
+        def get_entry_info(episode: dict, bvid: str):
+            episode["cover_url"] = episode.get("cover")
+            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
+            episode["up_name"] = episode["upper"]["name"]
+            episode["up_mid"] = episode["upper"]["mid"]
+            episode["current_episode"] = episode.get("bvid") == bvid
+            
+            return EpisodeInfo.get_entry_info(episode)
+
     class Utils:
         @staticmethod
         def display_episodes_in_section(section_title: str):

@@ -313,6 +313,8 @@ class MainWindow(Frame):
 
         self.top_box.update_checked_item_count(self.episode_list.GetCheckedItemCount())
 
+        self.top_box.url_box.SelectNone()
+
     def set_window_params(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows | Platform.macOS:

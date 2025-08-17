@@ -14,8 +14,9 @@ from utils.parse.cheese import CheeseParser
 from utils.parse.b23 import B23Parser
 from utils.parse.festival import FestivalParser
 from utils.parse.popular import PopularParser
-from utils.parse.space_list import SpaceListParser
-from utils.parse.space import SpaceParser
+from utils.parse.space.list import SpaceListParser
+from utils.parse.space.space import SpaceParser
+from utils.parse.space.favlist import FavListParser
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -40,6 +41,7 @@ class Parser:
             "space": (ParseType.Space, SpaceParser(self.parser_callback)),
             "space_list": (ParseType.List, SpaceListParser(self.parser_callback)),
             "popular": (ParseType.Popular, PopularParser(self.parser_callback)),
+            "favlist": (ParseType.FavList, FavListParser(self.parser_callback)),
             "b23": (ParseType.B23, B23Parser(self.parser_callback)),
             "festival": (ParseType.Festival, FestivalParser(self.parser_callback))
         }
@@ -53,6 +55,8 @@ class Parser:
     def parse_url(self, url: str, set_status: bool = True):
         if set_status:
             self.main_window.utils.set_status(ParseStatus.Parsing)
+
+        url = self.validate_url(url)
 
         type = self.get_parse_type(url)
 
@@ -92,6 +96,12 @@ class Parser:
 
     def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, False, )).start()
+
+    def validate_url(self, url: str):
+        if match := Regex.search(r"https?://(([a-z0-9-]+)\.)?(bilibili|b23|bili2233)\.(com|tv|cn)/[\w\?=/._&%-]*", url):
+            return match[0]
+        else:
+            return ""
 
     @property
     def parser_callback(self):

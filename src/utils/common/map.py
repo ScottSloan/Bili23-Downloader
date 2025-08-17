@@ -507,6 +507,7 @@ url_pattern_map = [
     ("cheese", r"bilibili\.com/cheese/play/(ss\d+|ep\d+)"),
     ("live", r"live\.bilibili\.com/(\d+)"),
     ("space_list", r"space\.bilibili\.com/(\d+)/lists"),
+    ("favlist", r"space\.bilibili\.com/(\d+)/favlist"),
     ("space", r"space\.bilibili\.com/(\d+)"),
     ("space", r"www\.bilibili\.com/medialist/play/(\d+)"),
     ("space_list", r"bilibili\.com/list/(\d+)"),
