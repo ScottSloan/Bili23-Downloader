@@ -6,7 +6,6 @@ from utils.common.formatter.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}
-    cid_dict: dict = {}
 
     @classmethod
     def clear_episode_data(cls, title: str = "视频"):
@@ -17,8 +16,6 @@ class EpisodeInfo:
             "entries": []
         }
         
-        cls.cid_dict.clear()
-
     @classmethod
     def add_item(cls, pid: str, entry_data: dict):
         def add(data: list | dict):
@@ -74,6 +71,7 @@ class EpisodeInfo:
             "subzone": episode.get("subzone", ""),
             "up_name": episode.get("up_name", ""),
             "up_mid": episode.get("up_mid", 0),
+            "current_episode": episode.get("current_episode", False),
             "item_type": "item",
             "type": episode.get("type", 0)
         }
@@ -83,10 +81,12 @@ class Episode:
         target_section_title: str = ""
 
         @classmethod
-        def parse_episodes(cls, info_json: dict, target_cid: int):
+        def parse_episodes(cls, info_json: dict):
             EpisodeInfo.clear_episode_data()
 
-            match Episode.Utils.get_episode_display_type():
+            target_cid = info_json.get("cid")
+
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     cls.pages_parser(info_json, target_cid)
 
@@ -101,7 +101,7 @@ class Episode:
             pages_cnt = len(info_json["pages"])
 
             for page in info_json["pages"]:
-                if Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value:
+                if Episode.Utils.is_single_mode():
                     if page["cid"] != target_cid:
                         continue
 
@@ -190,6 +190,7 @@ class Episode:
             episode["subzone"] = info_json.get("tname_v2", "")
             episode["up_name"] = info_json.get("owner", {"name": ""}).get("name", "")
             episode["up_mid"] = info_json.get("owner", {"mid": 0}).get("mid", 0)
+            episode["current_episode"] = info_json.get("cid") == episode.get("cid")
 
             return EpisodeInfo.get_entry_info(episode)
 
@@ -205,7 +206,7 @@ class Episode:
             if "section" in info_json:
                 cls.section_parser(info_json, ep_id)
 
-            match Episode.Utils.get_episode_display_type():
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
@@ -219,7 +220,7 @@ class Episode:
                 episode["media_id"] = info_json["media_id"]
                 episode["section_title"] = pid
 
-                EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), info_json))
+                EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), info_json, ep_id))
 
                 if episode["ep_id"] == ep_id:
                     cls.target_section_title = pid
@@ -241,7 +242,7 @@ class Episode:
                 cls.episodes_parser(section["episodes"], section_title, ep_id, info_json)
 
         @staticmethod
-        def get_entry_info(episode: dict, info_json: dict):
+        def get_entry_info(episode: dict, info_json: dict, ep_id: int):
             episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title") if info_json["type"] == 2 else None)
             episode["pubtime"] = episode.get("pub_time")
             episode["duration"] = episode.get("duration", 0) / 1000
@@ -249,9 +250,10 @@ class Episode:
             episode["link"] = f"https://www.bilibili.com/bangumi/play/ep{episode.get('ep_id')}"
             episode["type"] = ParseType.Bangumi.value
             episode["series_title"] = info_json.get("season_title")
-            episode["area"] = info_json.get("areas", [{"name": ""}])[0].get("name", "")
+            episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
             episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
             episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
+            episode["current_episode"] = episode.get("ep_id") == ep_id
 
             return EpisodeInfo.get_entry_info(episode)
 
@@ -264,7 +266,7 @@ class Episode:
     
             cls.sections_parser(info_json, ep_id)
 
-            match Episode.Utils.get_episode_display_type():
+            match EpisodeDisplayType(Config.Misc.episode_display_mode):
                 case EpisodeDisplayType.Single:
                     Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
 
@@ -282,13 +284,13 @@ class Episode:
                     episode["section_title"] = section_title
                     episode["season_id"] = info_json["season_id"]
 
-                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), info_json))
+                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), info_json, ep_id))
 
                     if episode["id"] == ep_id:
                         cls.target_section_title = section_title
 
         @staticmethod
-        def get_entry_info(episode: dict, info_json: dict):
+        def get_entry_info(episode: dict, info_json: dict, ep_id: int):
             def get_badge():
                 if "label" in episode:
                     return episode["label"]
@@ -307,12 +309,13 @@ class Episode:
             episode["series_title"] = info_json.get("title")
             episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
             episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
+            episode["current_episode"] = episode.get("ep_id") == ep_id
 
             return EpisodeInfo.get_entry_info(episode)
     
     class Popular:
         @classmethod
-        def parse_episodes(cls, info_json: dict):
+        def parse_episodes(cls, info_json: dict, cid: int):
             EpisodeInfo.clear_episode_data()
 
             section_title = info_json["config"]["label"]
@@ -322,68 +325,88 @@ class Episode:
             for episode in info_json["list"]:
                 episode["section_title"] = section_title
                 
-                EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
+                EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), cid))
             
         @staticmethod
-        def get_entry_info(episode: dict):
+        def get_entry_info(episode: dict, cid: int):
             episode["pubtime"] = episode.get("pubdate")
             episode["link"] = f"https://www/bilibili.com/video/{episode.get('bvid')}"
             episode["cover_url"] = episode.get("pic")
             episode["type"] = ParseType.Video.value
+            episode["current_episode"] = episode.get("cid") == cid
 
             return EpisodeInfo.get_entry_info(episode)
 
     class List:
         @classmethod
-        def parse_episodes(cls, info_json: dict):
+        def parse_episodes(cls, info_json: dict, bvid: str):
             EpisodeInfo.clear_episode_data()
 
             for section_title, entry in info_json["archives"].items():
                 EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
 
-                for episode  in entry["episodes"]:
+                for episode in entry["episodes"]:
+                    if Episode.Utils.is_single_mode():
+                        if episode["bvid"] != bvid:
+                            continue
+                    
                     episode["section_title"] = section_title
                     episode["collection_title"] = section_title
                     
-                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy()))
+                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), bvid))
+
+            if Episode.Utils.is_single_mode():
+                Episode.Utils.check_episode_list()
         
         @staticmethod
-        def get_entry_info(episode: dict):
+        def get_entry_info(episode: dict, bvid: str):
             episode["pubtime"] = episode["pubdate"]
             episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
             episode["cover_url"] = episode.get("pic")
             episode["type"] = ParseType.Video.value
+            episode["current_episode"] = episode.get("bvid") == bvid
 
             return EpisodeInfo.get_entry_info(episode)
 
     class Space:
         @classmethod
-        def parse_episodes(cls, info_json: dict):
+        def parse_episodes(cls, info_json: dict, bvid: str):
             EpisodeInfo.clear_episode_data()
 
             for episode in info_json.get("episodes"):
-
-                EpisodeInfo.add_item("视频", cls.get_entry_info(episode))
+                EpisodeInfo.add_item("视频", cls.get_entry_info(episode.copy(), bvid))
         
         @staticmethod
-        def get_entry_info(episode: dict):
-            episode["up_name"] = episode["author"]
-            episode["up_mid"] = episode["mid"]
+        def get_entry_info(episode: dict, bvid: str):
+            episode["cover_url"] = episode.get("pic")
+            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
+            episode["duration"] = FormatUtils.format_str_duration(episode.get("length"))
+            episode["up_name"] = episode.get("author")
+            episode["up_mid"] = episode.get("mid")
+            episode["pubtime"] = episode.get("created")
+            episode["type"] = ParseType.Video.value
+            episode["current_episode"] = episode.get("bvid") == bvid
 
             return EpisodeInfo.get_entry_info(episode)
-        
+    
+    class FavList:
+        @classmethod
+        def parse_episodes(cls, info_json: dict, bvid: str):
+            EpisodeInfo.clear_episode_data()
+
+            for episode in info_json.get("episodes"):
+                EpisodeInfo.add_item("视频", cls.get_entry_info(episode.copy(), bvid))
+
+        def get_entry_info(episode: dict, bvid: str):
+            episode["cover_url"] = episode.get("cover")
+            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
+            episode["up_name"] = episode["upper"]["name"]
+            episode["up_mid"] = episode["upper"]["mid"]
+            episode["current_episode"] = episode.get("bvid") == bvid
+            
+            return EpisodeInfo.get_entry_info(episode)
+
     class Utils:
-        @staticmethod
-        def get_episode_display_type():
-            from utils.parse.video import VideoInfo
-
-            mode = Config.Misc.episode_display_mode
-
-            if VideoInfo.is_interactive:
-                mode = EpisodeDisplayType.In_Section.value
-
-            return EpisodeDisplayType(mode)
-        
         @staticmethod
         def display_episodes_in_section(section_title: str):
             for section in EpisodeInfo.data.get("entries"):
@@ -393,7 +416,7 @@ class Episode:
                     EpisodeInfo.add_item("视频", section)
 
                     break
-        
+
         @staticmethod
         def display_episodes_in_single(section_title: str, ep_id: int):
             for section in EpisodeInfo.data.get("entries"):
@@ -405,3 +428,38 @@ class Episode:
                             EpisodeInfo.add_item("视频", episode)
 
                             break
+        
+        @staticmethod
+        def check_episode_list():
+            for section in EpisodeInfo.data.get("entries"):
+                entries = section.get("entries")
+
+                if len(entries) == 1:
+                    EpisodeInfo.clear_episode_data()
+
+                    EpisodeInfo.add_item("视频", entries[0])
+
+                    break
+
+        @staticmethod
+        def is_single_mode():
+            return Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value
+        
+        @staticmethod
+        def get_current_episode():
+            def get_episode(data: dict | list):
+                if isinstance(data, dict):
+                    if "entries" not in data:
+                        if data.get("current_episode"):
+                            return data
+                    else:
+                        for value in data["entries"]:
+                            if episode := get_episode(value):
+                                return episode
+
+                elif isinstance(data, list):
+                    for entry in data:
+                        if episode := get_episode(entry):
+                            return episode
+
+            return get_episode(EpisodeInfo.data)

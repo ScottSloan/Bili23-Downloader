@@ -2,7 +2,9 @@ import wx
 import json
 import wx.html2
 
+from utils.config import Config
 from utils.auth.login_v2 import LoginInfo
+from utils.common.enums import Platform
 
 from gui.component.window.dialog import Dialog
 from gui.component.webview import Webview
@@ -24,7 +26,7 @@ class CaptchaDialog(Dialog):
     def init_UI(self):
         self.webview = Webview(self)
 
-        self.webview.browser.LoadURL(self.webview.get_page("captcha.html"))
+        self.webview.get_page("captcha.html")
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.webview.browser, 1, wx.ALL | wx.EXPAND)

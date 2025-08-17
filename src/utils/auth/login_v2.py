@@ -61,10 +61,10 @@ class Login:
         @staticmethod
         def get_qrcode_size():
             match Platform(Config.Sys.platform):
-                case Platform.Windows:
+                case Platform.Windows | Platform.macOS:
                     size = wx.Size(150, 150) if Config.Sys.dpi_scale_factor <= 1.5 else wx.Size(75, 75)
 
-                case Platform.Linux | Platform.macOS:
+                case Platform.Linux:
                     size = wx.Size(150, 150)
 
             factor = Config.Sys.dpi_scale_factor

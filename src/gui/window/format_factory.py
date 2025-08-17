@@ -888,7 +888,7 @@ class ContainerPage(Panel):
 
 class FormatFactoryWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "视频工具箱")
+        Frame.__init__(self, parent, "视频工具箱", name = "format_factory")
 
         self.SetSize(self.FromDIP((850, 500)))
 

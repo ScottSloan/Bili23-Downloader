@@ -1,51 +1,109 @@
+from utils.config import Config
+from utils.auth.wbi import WbiUtils
+
 from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodecID
 from utils.common.request import RequestUtils
+
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.model.dict_info import DictInfo
 
-from utils.parse.video import VideoInfo, VideoParser
-from utils.parse.bangumi import BangumiInfo, BangumiParser
-from utils.parse.cheese import CheeseInfo, CheeseParser
 from utils.parse.live import LiveParser
 from utils.parse.audio import AudioInfo
+from utils.parse.parser import Parser
 
 from utils.module.web.cdn import CDN
 
-class VideoPreview:
-    def __init__(self, parse_type: ParseType, stream_type: int):
-        self.parse_type, self.stream_type = parse_type, stream_type
+class PreviewInfo:
+    download_json: dict = {}
 
-        self.download_json = self.get_download_json(parse_type)
+class VideoPreview(Parser):
+    def __init__(self, parse_type: ParseType):
+        super().__init__()
+
+        self.parse_type = parse_type
+
+        self.download_json = PreviewInfo.download_json.copy()
 
         self.video_size_cache = {}
         self.audio_size_cache = {}
+            
+    def refresh_download_json(self, episode_params: dict):
+        bvid = episode_params.get("bvid")
+        cid = episode_params.get("cid")
+        aid = episode_params.get("aid")
+        ep_id = episode_params.get("ep_id")
+        qn = episode_params.get("qn")
+
+        self.download_json = self.get_download_json(self.parse_type, bvid, cid, aid, ep_id, qn)
+
+    @classmethod
+    def get_download_json(cls, parse_type: ParseType, bvid: str = None, cid: int = None, aid: int = None, ep_id: int = None, qn: int = 0):
+        referer_url = "https://www.bilibili.com"
+
+        def get_video_json():
+            params = {
+                "bvid": bvid,
+                "cid": cid,
+                "qn": qn,
+                "fnver": 0,
+                "fnval": 4048,
+                "fourk": 1
+            }
+
+            url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
+
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = referer_url, sessdata = Config.User.SESSDATA))
+
+            return data["data"]
+
+        def get_bangumi_json():
+            params = {
+                "bvid": bvid,
+                "cid": cid,
+                "qn": qn,
+                "fnver": 0,
+                "fnval": 12240,
+                "fourk": 1
+            }
+
+            url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
+
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = referer_url, sessdata = Config.User.SESSDATA))
+
+            return data["result"]
+        
+        def get_cheese_json():
+            params = {
+                "avid": aid,
+                "ep_id": ep_id,
+                "cid": cid,
+                "qn": qn,
+                "fnver": 0,
+                "fnval": 4048,
+                "fourk": 1
+            }
+
+            url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
+
+            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = referer_url, sessdata = Config.User.SESSDATA))
+
+            return data["data"]
+
+        match ParseType(parse_type):
+            case ParseType.Video:
+                return get_video_json()
+            
+            case ParseType.Bangumi:
+                return get_bangumi_json()
+            
+            case ParseType.Cheese:
+                return get_cheese_json()
 
     @staticmethod
-    def get_download_json(parse_type: ParseType):
-        match parse_type:
-            case ParseType.Video:
-                return VideoInfo.download_json
-
-            case ParseType.Bangumi:
-                return BangumiInfo.download_json
-
-            case ParseType.Cheese:
-                return CheeseInfo.download_json
-            
-    def refresh_download_json(self, video_quality_id: int):
-        match self.parse_type:
-            case ParseType.Video:
-                VideoParser.get_video_available_media_info(video_quality_id)
-
-            case ParseType.Bangumi:
-                BangumiParser.get_bangumi_available_media_info(video_quality_id)
-
-            case ParseType.Cheese:
-                CheeseParser.get_cheese_available_media_info(video_quality_id)
-
-        self.download_json = self.get_download_json(self.parse_type)
-
-    def get_video_stream_info(self, video_quality_id: int, video_codec_id: int, requery: bool = False):
+    def get_stream_type(data: dict):
+        return data.get("type", "DASH" if "dash" in data else "FLV")
+    
+    def get_video_stream_info(self, episode_params: dict, requery: bool = False):
         def get_info(data: dict):
             match StreamType(self.stream_type):
                 case StreamType.Dash:
@@ -87,11 +145,14 @@ class VideoPreview:
                         "size": node["size"]
                     }
 
-        if requery:
-            self.refresh_download_json(video_quality_id)
+        qn = episode_params.get("qn")
+        codec = episode_params.get("codec")
 
-        video_quality_id = self.get_video_quality_id(video_quality_id, self.download_json)
-        video_codec_id = self.get_video_codec_id(video_quality_id, video_codec_id, self.stream_type, self.download_json)
+        if requery:
+            self.refresh_download_json(episode_params)
+
+        video_quality_id = self.get_video_quality_id(qn, self.download_json)
+        video_codec_id = self.get_video_codec_id(video_quality_id, codec, self.stream_type, self.download_json)
 
         key = f"{video_quality_id} - {video_codec_id}"
 
@@ -197,7 +258,7 @@ class VideoPreview:
 
             return available_list
         else:
-            if data["durls"]:
+            if data.get("durls"):
                 for entry in data["durls"]:
                     id = entry.get("quality")
 
@@ -243,6 +304,10 @@ class VideoPreview:
             data[key] = data
 
         data.get(key)
+
+    @property
+    def stream_type(self):
+        return self.get_stream_type(self.download_json)
 
 class LivePreview:
     def __init__(self, room_id: int):

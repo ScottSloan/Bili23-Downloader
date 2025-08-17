@@ -561,3 +561,5 @@ class FFmpeg:
                 
                 case Platform.Linux | Platform.macOS:
                     return "mv"
+                
+FFmpeg.Env.detect()

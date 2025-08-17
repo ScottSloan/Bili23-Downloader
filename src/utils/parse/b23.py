@@ -1,5 +1,3 @@
-from utils.common.regex import Regex
-
 from utils.common.model.callback import ParseCallback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
@@ -14,9 +12,7 @@ class B23Parser(Parser):
         self.callback = callback
 
     def get_redirect_url(self, url: str):
-        b23_url = Regex.find_string(f"(http.*?)$", url)
-
-        req = RequestUtils.request_get(b23_url, headers = RequestUtils.get_headers())
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers())
     
         return req.url
 

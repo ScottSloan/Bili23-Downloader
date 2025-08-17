@@ -5,13 +5,10 @@ from utils.common.style.color import Color
 from utils.common.style.pic_v2 import Pic, PicID
 from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
-from utils.common.exception import GlobalExceptionInfo
+from utils.common.exception import show_error_message_dialog
 
 from utils.auth.login_v2 import Login, LoginInfo
-
 from utils.module.web.page import WebPage
-
-from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
@@ -310,7 +307,7 @@ class SMSPanel(Panel):
 
 class LoginDialog(Dialog):
     def __init__(self, parent):
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent
 
@@ -396,13 +393,6 @@ class LoginDialog(Dialog):
         def worker():
             self.raise_top()
 
-            info = GlobalExceptionInfo.info.copy()
-
-            dlg = wx.MessageDialog(self, f"登录失败\n\n错误码：{info.get('code')}\n描述：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
-            dlg.SetYesNoLabels("详细信息", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                err_dlg = ErrorInfoDialog(self, info)
-                err_dlg.ShowModal()
+            show_error_message_dialog("登录失败", parent = self)
 
         wx.CallAfter(worker)

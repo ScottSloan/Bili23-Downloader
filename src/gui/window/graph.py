@@ -22,7 +22,7 @@ class GraphWindow(Frame):
     def init_UI(self):
         self.webview = Webview(self)
 
-        self.webview.browser.LoadURL(self.webview.get_page("graph.html"))
+        self.webview.get_page("graph.html")
         self.webview.browser.EnableAccessToDevTools(True)
 
         vbox = wx.BoxSizer(wx.VERTICAL)

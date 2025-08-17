@@ -44,7 +44,6 @@ class InteractVideoInfo:
     aid: int = 0
     cid: int = 0
     bvid: str = ""
-    url: str = ""
     title: str = ""
     graph_version: int = 0
 
@@ -97,7 +96,6 @@ class InteractVideoInfo:
         cls.aid = 0
         cls.cid = 0
         cls.bvid = ""
-        cls.url = ""
         cls.title = ""
         cls.graph_version = 0
 
@@ -109,7 +107,12 @@ class InteractVideoParser(Parser):
 
         self.callback = callback
 
-    def get_video_interactive_graph_version(self):
+    def get_video_interactive_graph_version(self, title: str, bvid: str, cid: int, aid: int):
+        InteractVideoInfo.title = title
+        InteractVideoInfo.bvid = bvid
+        InteractVideoInfo.cid = cid
+        InteractVideoInfo.aid = aid
+
         # 获取互动视频 graph_version
         params = {
             "aid": InteractVideoInfo.aid,
@@ -118,7 +121,7 @@ class InteractVideoParser(Parser):
 
         url = f"https://api.bilibili.com/x/player/wbi/v2?aid={InteractVideoInfo.aid}&cid={InteractVideoInfo.cid}&{WbiUtils.encWbi(params)}"
 
-        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = InteractVideoInfo.url, sessdata = Config.User.SESSDATA))
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -132,7 +135,7 @@ class InteractVideoParser(Parser):
         # 获取互动视频模块信息
         url = f"https://api.bilibili.com/x/stein/edgeinfo_v2?bvid={InteractVideoInfo.bvid}&graph_version={InteractVideoInfo.graph_version}&edge_id={edge_id}"
 
-        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = InteractVideoInfo.url, sessdata = Config.User.SESSDATA))
+        req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)

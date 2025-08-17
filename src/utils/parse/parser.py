@@ -22,6 +22,9 @@ class Parser:
     @classmethod
     def request_get(cls, url: str, headers: dict) -> dict:
         req = RequestUtils.request_get(url, headers)
+
+        req.raise_for_status()
+
         resp = json.loads(req.text)
 
         cls.check_json(resp)
@@ -32,6 +35,9 @@ class Parser:
     
     def request_post(self, url: str, headers: dict, raw_json: dict):
         req = RequestUtils.request_post(url, headers, json = raw_json)
+
+        req.raise_for_status()
+
         resp = json.loads(req.text)
 
         self.check_json(resp)
@@ -85,3 +91,9 @@ class Parser:
     @staticmethod
     def url_encode(params: dict):
         return urllib.parse.urlencode(params)
+    
+    def get_parse_type_str(self):
+        pass
+
+    def is_interactive_video(self):
+        return False

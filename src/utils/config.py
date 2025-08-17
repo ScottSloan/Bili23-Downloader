@@ -113,18 +113,18 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.65.1"
-        version_code: int = 165100
+        version: str = "1.65.2"
+        version_code: int = 165200
 
         task_file_min_version_code: int = 165000
         live_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 165000
-        user_config_file_min_version_code: int = 1620
+        user_config_file_min_version_code: int = 165200
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
 
     class Basic:
-        listen_clipboard: bool = True
+        listen_clipboard: bool = False
         exit_option: int = 3
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
@@ -179,7 +179,7 @@ class Config:
         no_paid_check: bool = False
 
     class Proxy:
-        proxy_mode: int = 1
+        proxy_mode: int = 0
         enable_auth: bool = False
 
         proxy_ip: str = ""

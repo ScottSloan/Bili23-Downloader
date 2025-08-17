@@ -7,16 +7,15 @@ from utils.common.map import number_type_map, video_quality_map, video_codec_pre
 from utils.common.enums import StreamType, VideoQualityID, AudioQualityID, ParseType
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
-from utils.common.exception import GlobalException, GlobalExceptionInfo
+from utils.common.exception import GlobalException, show_error_message_dialog
 
-from utils.parse.preview import VideoPreview
+from utils.parse.preview import VideoPreview, PreviewInfo
 from utils.parse.audio import AudioInfo
 
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
 from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
-from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.staticbox.extra import ExtraStaticBox
 from gui.component.label.info_label import InfoLabel
@@ -24,7 +23,9 @@ from gui.component.misc.tooltip import ToolTip
 from gui.component.choice.choice import Choice
 
 class MediaInfoPanel(Panel):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
+        self.parent: DownloadOptionDialog = parent
+
         Panel.__init__(self, parent)
 
         self.init_UI()
@@ -48,12 +49,12 @@ class MediaInfoPanel(Panel):
 
         self.video_quality_lab = wx.StaticText(self, -1, "清晰度")
         self.video_quality_choice = Choice(self)
-        video_quality_tooltip = ToolTip(self)
-        video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
+        self.video_quality_tooltip = ToolTip(self)
+        self.video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
         
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        video_quality_hbox.Add(video_quality_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_hbox.Add(self.video_quality_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
         self.video_quality_warn_icon.Hide()
@@ -112,13 +113,20 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
     def load_data(self, parent):
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
 
         self.parent: DownloadOptionDialog = parent
         self.main_window: MainWindow = self.parent.GetParent()
 
-        self.video_quality_choice.SetChoices(self.main_window.video_quality_data_dict)
-        self.video_quality_choice.SetCurrentSelection(self.main_window.video_quality_id)
+        self.preview = VideoPreview(self.main_window.parser.parse_type)
+
+        AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
+
+        video_quality_id = self.preview.get_video_quality_id(Config.Download.video_quality_id, self.preview.download_json) if Config.Download.video_quality_id != VideoQualityID._Auto.value else Config.Download.video_quality_id
+        video_quality_data_dict = self.preview.get_video_quality_data_dict(self.preview.download_json)
+
+        self.video_quality_choice.SetChoices(video_quality_data_dict)
+        self.video_quality_choice.SetCurrentSelection(video_quality_id)
 
         self.audio_quality_choice.SetChoices(AudioInfo.audio_quality_data_dict)
         self.audio_quality_choice.SetCurrentSelection(AudioInfo.audio_quality_id)
@@ -126,19 +134,16 @@ class MediaInfoPanel(Panel):
         self.video_codec_choice.SetChoices(video_codec_preference_map)
         self.video_codec_choice.SetCurrentSelection(Config.Download.video_codec_id)
 
-        self.preview = VideoPreview(self.main_window.parser.parse_type, self.main_window.stream_type)
-
         self.onChangeVideoQualityEVT(0)
         self.onChangeAudioQualityEVT(0)
 
     def save(self):
-        self.main_window.parser.video_quality_id = self.video_quality_id
+        Config.Download.video_quality_id = self.video_quality_id
         AudioInfo.audio_quality_id = self.audio_quality_id
-        self.main_window.parser.video_codec_id = self.video_codec_id
+        Config.Download.video_codec_id = self.video_codec_id
 
     def set_stream_type(self, stream_type: str):
         self.stream_type_lab.SetLabel(stream_type)
-        self.stream_type = stream_type
 
     def parse_worker(self, worker: Callable):
         try:
@@ -183,9 +188,13 @@ class MediaInfoPanel(Panel):
                 self.video_quality_warn_icon.Show(info["id"] != video_quality_id)
                 self.video_codec_warn_icon.Show(info["codec"] != self.video_codec_id)
 
+                self.video_quality_tooltip.set_tooltip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确\n\n当前显示的媒体信息所对应的视频：{}".format(self.parent.episode_info.get("title")))
+
+                self.set_stream_type(self.stream_type)
+
                 self.Layout()
 
-            info = self.preview.get_video_stream_info(self.video_quality_id, self.video_codec_id, self.requery)
+            info = self.preview.get_video_stream_info(self.episode_params, self.requery)
 
             self.requery = StreamType(self.stream_type) != StreamType.Dash
 
@@ -280,17 +289,7 @@ class MediaInfoPanel(Panel):
         self.parent.media_option_box.enable_audio_download_option(False)
 
     def onError(self):
-        def worker():
-            dlg = wx.MessageDialog(self.GetParent(), f"获取媒体信息失败\n\n错误原因：{info.get('message')}", "错误", wx.ICON_ERROR | wx.YES_NO)
-            dlg.SetYesNoLabels("详细信息", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                err_dlg = ErrorInfoDialog(self.main_window, info)
-                err_dlg.ShowModal()
-
-        info = GlobalExceptionInfo.info.copy()
-
-        wx.CallAfter(worker)
+        show_error_message_dialog("获取媒体信息失败", parent = self.parent)
 
     @property
     def video_quality_id(self):
@@ -305,8 +304,23 @@ class MediaInfoPanel(Panel):
         return self.video_codec_choice.GetCurrentClientData()
 
     @property
+    def stream_type(self):
+        return self.preview.stream_type
+    
+    @property
     def is_warn_show(self):
         return self.video_quality_warn_icon.Shown or self.audio_quality_warn_icon.Shown
+    
+    @property
+    def episode_params(self):
+        return {
+            "bvid": self.parent.episode_info.get("bvid"),
+            "cid": self.parent.episode_info.get("cid"),
+            "aid": self.parent.episode_info.get("aid"),
+            "ep_id": self.parent.episode_info.get("ep_id"),
+            "qn": self.video_quality_id,
+            "codec": self.video_codec_id
+        }
     
 class MediaOptionStaticBox(Panel):
     def __init__(self, parent):
@@ -494,10 +508,12 @@ class OtherStaticBox(Panel):
         Config.Download.number_type = self.number_type_choice.GetSelection()
 
 class DownloadOptionDialog(Dialog):
-    def __init__(self, parent):
-        from gui.main_v3 import MainWindow
+    def __init__(self, parent: wx.Window):
+        from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent
+
+        self.episode_info = self.parent.episode_list.GetCurrentEpisodeInfo()
 
         Dialog.__init__(self, parent, "下载选项")
 
@@ -558,8 +574,6 @@ class DownloadOptionDialog(Dialog):
 
             self.other_box.load_data()
 
-        self.media_info_box.set_stream_type(self.parent.stream_type)
-
         load_download_option()
 
     def warn(self, message: str, flag: int = None):
@@ -569,7 +583,7 @@ class DownloadOptionDialog(Dialog):
         return dlg.ShowModal()
 
     def check_ass_only(self):
-        not_dash = StreamType(self.parent.stream_type) != StreamType.Dash
+        not_dash = StreamType(self.media_info_box.stream_type) != StreamType.Dash
         ass_danmaku = self.extra_box.danmaku_file_type_choice.GetStringSelection() == "ass" and self.extra_box.download_danmaku_file_chk.GetValue()
         ass_subtitle = self.extra_box.subtitle_file_type_choice.GetStringSelection() == "ass" and self.extra_box.download_subtitle_file_chk.GetValue()
 
@@ -601,15 +615,6 @@ class DownloadOptionDialog(Dialog):
         if not Config.Basic.no_paid_check:
             if not Config.User.login:
                 return show_dialog("账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？")
-            
-            if self.parent.episode_list.CheckItemBadgePaid() and self.parent.parser.parse_type == ParseType.Bangumi:
-                from utils.parse.bangumi import BangumiInfo
-
-                if BangumiInfo.play_check == "PLAY_PREVIEW":
-                    return show_dialog("账号未开通大会员\n\n账号未开通大会员，无法完整下载全片，仅能下载 6 分钟试看部分，是否继续下载？")
-
-            if self.media_info_box.is_warn_show:
-                return show_dialog("账号未开通大会员\n\n账号未开通大会员，无法下载 1080P 以上清晰度视频、杜比无损音质，是否继续下载？")
 
     def onOKEVT(self):
         if not self.path_box.path_box.GetValue():

@@ -1,18 +1,14 @@
 from typing import Callable
 
 from utils.common.model.data_type import DownloadTaskInfo
-from utils.common.enums import ParseType, StreamType, VideoCodecID, AudioQualityID
+from utils.common.enums import StreamType, VideoCodecID, AudioQualityID
 from utils.common.map import audio_file_type_map
 from utils.common.exception import GlobalException
-from utils.common.request import RequestUtils
 
 from utils.parse.preview import VideoPreview
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
 from utils.parse.video import VideoParser
-
-from utils.auth.wbi import WbiUtils
-from utils.config import Config
 
 class DownloadParser(Parser):
     def __init__(self, task_info: DownloadTaskInfo, callback: Callable):
@@ -23,71 +19,13 @@ class DownloadParser(Parser):
 
     @classmethod
     def get_download_stream_json(cls, task_info: DownloadTaskInfo):
-        def check_stream_type(data: dict):
-            task_info.stream_type = data.get("type", "DASH" if "dash" in data else "FLV")
-
-            return data
-
-        def get_video_json():
-            params = {
-                "bvid": task_info.bvid,
-                "cid": task_info.cid,
-                "fnver": 0,
-                "fnval": 4048,
-                "fourk": 1
-            }
-
-            url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
-
-            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-
-            return data["data"]
-
-        def get_bangumi_json():
-            params = {
-                "bvid": task_info.bvid,
-                "cid": task_info.cid,
-                "qn": task_info.video_quality_id,
-                "fnver": 0,
-                "fnval": 12240,
-                "fourk": 1
-            }
-
-            url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
-
-            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-
-            return data["result"]
-
-        def get_cheese_json():
-            params = {
-                "avid": task_info.aid,
-                "ep_id": task_info.ep_id,
-                "cid": task_info.cid,
-                "fnver": 0,
-                "fnval": 4048,
-                "fourk": 1
-            }
-
-            url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
-
-            data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = task_info.referer_url, sessdata = Config.User.SESSDATA))
-
-            return data["data"]
-
         cls.check_cid(task_info)
 
-        match ParseType(task_info.parse_type):
-            case ParseType.Video:
-                data = get_video_json()
+        data = VideoPreview.get_download_json(task_info.parse_type, task_info.bvid, task_info.cid, task_info.aid, task_info.ep_id, task_info.video_quality_id)
 
-            case ParseType.Bangumi:
-                data = get_bangumi_json()
+        task_info.stream_type = VideoPreview.get_stream_type(data)
 
-            case ParseType.Cheese:
-                data = get_cheese_json()
-        
-        return check_stream_type(data)
+        return data
 
     def parse_download_stream_json(self, data: dict):
         match StreamType(self.task_info.stream_type):
@@ -249,4 +187,11 @@ class DownloadParser(Parser):
     @staticmethod
     def check_cid(task_info: DownloadTaskInfo):
         if not task_info.cid:
-            task_info.cid = VideoParser.get_video_cid(task_info.bvid)
+            info = VideoParser.get_video_extra_info(task_info.bvid)
+
+            task_info.cid = info.get("cid")
+        
+            task_info.up_info = {
+                "up_name": info.get("up_name"),
+                "up_mid": info.get("up_mid")
+            }

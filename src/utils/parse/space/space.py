@@ -1,21 +1,15 @@
 import math
 import time
-from typing import Dict, List
 
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, ProcessingType
 from utils.common.model.callback import ParseCallback
 
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
-
-class SpaceInfo:
-    info_json: Dict[str, List[Dict[str, str]]] = {}
-
-    total_data: int = 0
 
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -51,43 +45,65 @@ class SpaceParser(Parser):
 
         vlist = resp["data"]["list"]["vlist"]
 
-        SpaceInfo.info_json["episodes"].extend(vlist)
+        self.info_json["episodes"].extend(vlist)
 
-        SpaceInfo.total_data += len(vlist)
+        self.total_data += len(vlist)
 
         return resp["data"]["page"]["count"]
     
+    def get_video_available_media_info(self):
+        from utils.parse.video import VideoParser
+
+        episode: dict = self.info_json["episodes"][0]
+
+        self.bvid = episode.get("bvid")
+        cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
+
+        VideoParser.get_video_available_media_info(self.bvid, cid)
+
+        self.parse_episodes()
+
     def parse_space_info(self, mid: int):
         total = self.get_search_arc_info(mid)
         total_page = self.get_total_page(total)
 
-        self.onUpdateTitle(1, total_page, SpaceInfo.total_data)
+        self.onUpdateName("个人主页")
+        self.onUpdateTitle(1, total_page, self.total_data)
 
         for i in range(1, total_page):
             page = i + 1
 
             self.get_search_arc_info(mid, page)
 
-            self.onUpdateTitle(total, total_page, SpaceInfo.total_data)
+            self.onUpdateTitle(page, total_page, self.total_data)
     
     def parse_worker(self, url: str):
         self.clear_space_info()
 
         mid = self.get_mid(url)
 
+        time.sleep(0.5)
+
+        self.callback.onChangeProcessingType(ProcessingType.Page)
+
         self.parse_space_info(mid)
 
-        self.parse_episodes()
+        self.get_video_available_media_info()
 
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Episode.Space.parse_episodes(SpaceInfo.info_json)
+        Episode.Space.parse_episodes(self.info_json, self.bvid)
 
     def clear_space_info(self):
-        SpaceInfo.info_json = {
+        self.info_json = {
             "episodes": []
         }
+
+        self.total_data = 0
+
+    def onUpdateName(self, name: str):
+        self.callback.onUpdateName(name)
 
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
@@ -96,3 +112,6 @@ class SpaceParser(Parser):
 
     def get_total_page(self, total: int):
         return math.ceil(total / 42)
+    
+    def get_parse_type_str(self):
+        return "个人主页"

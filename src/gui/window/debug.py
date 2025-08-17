@@ -6,11 +6,11 @@ from gui.component.window.frame import Frame
 
 class DebugWindow(Frame):
     def __init__(self, parent):
-        from gui.main_v3 import MainWindow
+        from gui.window.main.main_v3 import MainWindow
         
         self.parent: MainWindow = parent
 
-        Frame.__init__(self, parent, "Debug")
+        Frame.__init__(self, parent, "Debug", name = "debug")
 
         self.init_UI()
 

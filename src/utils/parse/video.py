@@ -5,57 +5,13 @@ from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
 from utils.parse.episode_v2 import Episode
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
+from utils.parse.preview import PreviewInfo
 
 from utils.common.enums import StatusCode, EpisodeDisplayType
 from utils.common.exception import GlobalException
 from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
-from utils.common.formatter.formatter import FormatUtils
 from utils.common.regex import Regex
-
-class VideoInfo:
-    url: str = ""
-    aid: str = ""
-    bvid: str = ""
-    cid: int = 0
-
-    title: str = ""
-    cover: str = ""
-    views: str = ""
-    danmakus: str = ""
-    desc: str = ""
-    tag_list: list = []
-
-    stream_type: str = "DASH"
-
-    is_interactive: bool = False
-
-    pubtime: int = 0
-
-    info_json: dict = {}
-    download_json: dict = {}
-
-    @classmethod
-    def clear_video_info(cls):
-        cls.url = ""
-        cls.bvid = ""
-        cls.aid = 0
-        cls.bvid = ""
-        cls.title = ""
-        cls.cover = ""
-        cls.desc = ""
-        cls.views = 0
-        cls.danmakus = 0
-        cls.cid = 0
-        cls.stream_type = 0
-        cls.pubtime = 0
-
-        cls.is_interactive = False
-
-        cls.tag_list.clear()
-
-        cls.info_json.clear()
-        cls.download_json.clear()
 
 class VideoParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -63,104 +19,71 @@ class VideoParser(Parser):
 
         self.callback = callback
     
-    def get_part(self, url: str):
-        part = self.re_find_str(r"p=([0-9]+)", url, check = False)
+    def get_page(self, url: str):
+        page = self.re_find_str(r"p=([0-9]+)", url, check = False)
 
-        if part:
-            self.part = True
-            self.part_num = int(part[0])
-        else:
-            self.part = False
+        self.page = bool(page)
+        self.page_num = int(page[0]) if page else None
 
     def get_aid(self, url: str):
         aid = self.re_find_str(r"av([0-9]+)", url)
 
-        bvid = self.aid_to_bvid(int(aid[0]))
-
-        self.set_bvid(bvid)
+        return self.aid_to_bvid(int(aid[0]))
 
     def get_bvid(self, url: str):
         bvid = self.re_find_str(r"BV\w+", url)
 
-        self.set_bvid(bvid[0])
+        return bvid[0]
 
-    def get_video_info(self):
+    def get_video_info(self, bvid: str):
         # 获取视频信息
         params = {
-            "bvid": VideoInfo.bvid
+            "bvid": bvid
         }
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        info = resp["data"]
+        self.info_json: dict = resp["data"]
 
-        if "redirect_url" in info:
-            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (info["redirect_url"], ))
+        if "redirect_url" in self.info_json:
+            raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (self.info_json["redirect_url"], ))
 
-        VideoInfo.title = info["title"]
-        VideoInfo.cover = info["pic"]
-        VideoInfo.aid = info["aid"]
-        VideoInfo.cid = info["cid"]
-
-        VideoInfo.desc = info["desc"]
-        VideoInfo.views = FormatUtils.format_data_quantity(info["stat"]["view"])
-        VideoInfo.danmakus = FormatUtils.format_data_quantity(info["stat"]["danmaku"])
-
-        VideoInfo.pubtime = info["pubdate"]
-
-        VideoInfo.is_interactive = "stein_guide_cid" in info
-
-        VideoInfo.info_json = info.copy()
+        self.is_interactive = "stein_guide_cid" in self.info_json
 
         # 判断是否为互动视频
-        if VideoInfo.is_interactive:
+        if self.is_interactive:
             self.interact_video_parser = InteractVideoParser(self.callback)
 
-            InteractVideoInfo.aid = VideoInfo.aid
-            InteractVideoInfo.cid = VideoInfo.cid
-            InteractVideoInfo.bvid = VideoInfo.bvid
-            InteractVideoInfo.url = VideoInfo.url
-            InteractVideoInfo.title = VideoInfo.title
+            self.interact_video_parser.get_video_interactive_graph_version(title = self.info_json.get("title"), bvid = bvid, cid = self.info_json.get("cid"), aid = self.info_json.get("aid"))
 
-            self.interact_video_parser.get_video_interactive_graph_version()
+        if self.page:
+            for page in self.info_json.get("pages"):
+                if page.get("page") == self.page_num:
+                    self.info_json["cid"] = page.get("cid")
 
         self.parse_episodes()
 
-    def get_video_tag(self):
-        url = f"https://api.bilibili.com/x/tag/archive/tags?bvid={VideoInfo.bvid}"
-        
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
-
-        VideoInfo.tag_list = [entry["tag_name"] for entry in resp["data"]]
-
     @classmethod
-    def get_video_available_media_info(cls, qn: int = None):
+    def get_video_available_media_info(cls, bvid: str, cid: int):
         # 获取视频清晰度
         params = {
-            "bvid": VideoInfo.bvid,
-            "cid": VideoInfo.cid,
+            "bvid": bvid,
+            "cid": cid,
             "fnver": 0,
             "fnval": 4048,
             "fourk": 1,
         }
 
-        if qn: params["qn"] = qn
-
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{WbiUtils.encWbi(params)}"
         
-        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = VideoInfo.url, sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        VideoInfo.download_json = resp["data"].copy()
-
-        if not qn:
-            VideoInfo.stream_type = "DASH" if "dash" in VideoInfo.download_json else "FLV"
-
-            AudioInfo.get_audio_quality_list(VideoInfo.download_json.get("dash", {}))
+        PreviewInfo.download_json = resp["data"].copy()
 
     @classmethod
-    def get_video_cid(cls, bvid: str):
+    def get_video_extra_info(cls, bvid: str):
         params = {
             "bvid": bvid
         }
@@ -169,56 +92,64 @@ class VideoParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        return resp["data"]["cid"]
+        return {
+            "cid": resp["data"]["cid"],
+            "up_name": resp["data"]["owner"]["name"],
+            "up_mid": resp["data"]["owner"]["mid"]
+        }
 
     def parse_worker(self, url: str):
-        # 先检查是否为分 P 视频
-        self.get_part(url)
-
-        # 清除当前的视频信息
         self.clear_video_info()
+
+        self.get_page(url)
 
         match Regex.find_string(r"av|BV", url):
             case "av":
-                self.get_aid(url)
+                bvid = self.get_aid(url)
 
             case "BV":
-                self.get_bvid(url)
+                bvid = self.get_bvid(url)
 
-        self.get_video_info()
+        self.get_video_info(bvid)
+
+        episode: dict = Episode.Utils.get_current_episode()
         
-        self.get_video_available_media_info()
+        self.get_video_available_media_info(episode.get("bvid"), episode.get("cid"))
 
         return StatusCode.Success.value
 
-    def set_bvid(self, bvid: str):
-        VideoInfo.bvid, VideoInfo.url = bvid, f"https://www.bilibili.com/video/{bvid}"
-
     def parse_episodes(self):
-        if VideoInfo.is_interactive:
+        if self.is_interactive:
             Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
-            self.parse_interact_video()
-            
-        Episode.Video.parse_episodes(VideoInfo.info_json, VideoInfo.cid)
 
-    def parse_interact_video(self):
+            self.parse_interact_video(self.info_json)
+            
+        Episode.Video.parse_episodes(self.info_json)
+
+    def parse_interact_video(self, info_json: dict):
         def get_page():
             return {
                 "part": node.title,
                 "cid": node.cid
             }
         
-        VideoInfo.info_json["pages"].clear()
+        info_json["pages"].clear()
 
         self.interact_video_parser.parse_interactive_video_episodes()
 
         for node in InteractVideoInfo.node_list:
-            VideoInfo.info_json["pages"].append(get_page())
+            info_json["pages"].append(get_page())
 
     def clear_video_info(self):
-        # 清除视频信息
-        VideoInfo.clear_video_info()
         InteractVideoInfo.clear_video_info()
 
-        # 重置音质信息
         AudioInfo.clear_audio_info()
+
+    def get_parse_type_str(self):
+        if self.is_interactive:
+            return "互动视频"
+        else:
+            return "投稿视频"
+        
+    def is_interactive_video(self):
+        return self.is_interactive

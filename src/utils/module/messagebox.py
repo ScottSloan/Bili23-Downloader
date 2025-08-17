@@ -1,6 +1,8 @@
 import ctypes
 from ctypes import wintypes
 
+ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
 MessageBoxW = ctypes.windll.user32.MessageBoxW
 MessageBoxW.argtypes = (
     wintypes.HWND,

@@ -8,22 +8,10 @@ from utils.config import Config
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
 from utils.common.enums import StatusCode, ProcessingType
+from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
 from utils.parse.episode_v2 import Episode
-from utils.parse.video import VideoInfo, VideoParser
-
-class SpaceListInfo:
-    mid: int = 0
-
-    type: str = ""
-
-    season_id: int = 0
-    series_id: int = 0
-
-    total: int = 0
-
-    info_json: dict = {}
 
 class Section:
     info_json: Dict[str, Dict[str, Dict[str, list]]] = {
@@ -55,8 +43,13 @@ class SpaceListParser(Parser):
 
         self.callback = callback
 
+    def get_bvid(self, url: str):
+        bvid = self.re_find_str(r"bvid=(BV\w+)", url)
+
+        return bvid[0]
+    
     def get_mid(self, url: str):
-        mid = self.re_find_str(r"/([0-9]+)/", url)
+        mid = self.re_find_str(r"/([0-9]+)", url)
 
         return mid[0]
 
@@ -143,14 +136,24 @@ class SpaceListParser(Parser):
 
         return items_list["page"]["total"]
     
-    def get_video_available_media_info(self):
-        episode = list(Section.info_json["archives"].values())[0]["episodes"][0]
+    def get_video_available_media_info(self, bvid: str, cid: int):
+        from utils.parse.video import VideoParser
 
-        VideoInfo.bvid = episode["bvid"]
-        VideoInfo.cid = VideoParser.get_video_cid(episode["bvid"])
+        VideoParser.get_video_available_media_info(bvid, cid)
 
-        VideoParser.get_video_available_media_info()
+    def get_episode_bvid_cid(self, bvid: str, cid: int):
+        from utils.parse.video import VideoParser
 
+        episode: dict = list(Section.info_json["archives"].values())[0]["episodes"][0]
+
+        if not bvid:
+            bvid = episode.get("bvid")
+        
+        if not cid:
+            cid = VideoParser.get_video_extra_info(bvid).get("cid")
+
+        return bvid, cid
+        
     def parse_worker(self, url: str):
         self.clear_space_info()
 
@@ -160,25 +163,35 @@ class SpaceListParser(Parser):
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
 
-        if "list" in url:
-            if "space" in url:
-                if "type" in url:
-                    season_series_id = self.get_season_series_id(url)
+        bvid, cid = None, None
 
-                    if "season" in url:
-                        self.parse_season_info(mid, season_series_id)
-                    else:
-                        self.parse_series_info(mid, season_series_id)
+        if "space" in url:
+            if "type" in url:
+                season_series_id = self.get_season_series_id(url)
+
+                if "season" in url:
+                    self.parse_season_info(mid, season_series_id)
                 else:
-                    self.parse_season_series_info(mid)
+                    self.parse_series_info(mid, season_series_id)
             else:
-                series_id = self.get_sid(url)
+                self.parse_season_series_info(mid)
+        else:
+            bvid = self.get_bvid(url)
 
-                self.parse_series_info(mid, series_id)
+            if "sid" in url:
+                series_id = self.get_sid(url)
+            else:
+                self.callback.onChangeProcessingType(ProcessingType.Parse)
+
+                raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (bvid, ))
+
+            self.parse_series_info(mid, series_id)
+
+        self.bvid, cid = self.get_episode_bvid_cid(bvid, cid)
         
         self.parse_episodes()
 
-        self.get_video_available_media_info()
+        self.get_video_available_media_info(self.bvid, cid)
 
         return StatusCode.Success.value
 
@@ -235,7 +248,7 @@ class SpaceListParser(Parser):
             time.sleep(1)
 
     def parse_episodes(self):
-        Episode.List.parse_episodes(Section.info_json)
+        Episode.List.parse_episodes(Section.info_json, self.bvid)
 
     def clear_space_info(self):
         Section.info_json = {
@@ -257,3 +270,6 @@ class SpaceListParser(Parser):
 
     def get_total_page(self, total: int):
         return math.ceil(total / 30)
+    
+    def get_parse_type_str(self):
+        return "合集列表"
