@@ -10,8 +10,8 @@
 | 课程 | https://www.bilibili.com/cheese/play/ep69165 <br> https://www.bilibili.com/cheese/play/ss1512 |
 | 直播 | https://live.bilibili.com/1 |
 | 合集列表 | https://www.bilibili.com/list/485163549/?sid=2196248&oid=114799761492950&bvid=BV1At3XzNEeL |
-| UP 个人空间 <br>（含全部投稿视频、合集列表）| https://space.bilibili.com/63231 <br> https://space.bilibili.com/63231/lists <br> https://space.bilibili.com/63231/lists/19833?type=season <br> https://space.bilibili.com/63231/lists/1973035?type=series |
-| 收藏夹 | https://space.bilibili.com/63231/favlist?fid=44241231&ftype=create |
+| UP 个人空间 <br>（含投稿视频、合集列表）| https://space.bilibili.com/63231 <br> https://space.bilibili.com/63231/lists <br> https://space.bilibili.com/63231/lists/19833?type=season <br> https://space.bilibili.com/63231/lists/1973035?type=series |
+| 收藏夹 <br> **当前版本 1.65.2 暂未支持** <br> **请等待 1.66.0 版本** | https://space.bilibili.com/63231/favlist?fid=44241231&ftype=create |
 | 每周必看、排行榜 | https://www.bilibili.com/v/popular/weekly?num=333 <br> https://www.bilibili.com/v/popular/rank/all |
 | b23.tv 短链接 <br> bili2233.cn 短链接 | https://b23.tv/BV1UG411f7K1 <br> https://bili2233.cn/LPB6kY1 |
 | 活动专题页（拜年祭、二游新春会等） | https://www.bilibili.com/festival/bnj2025 <br> https://www.bilibili.com/festival/genshin2024 |
