@@ -241,7 +241,7 @@ class MainWindow(Frame):
             Window.processing_window(show = False)
 
             self.onShowDownloadWindowEVT()
-
+        
         try:
             if self.episode_list.check_download_items():
                 return
@@ -249,6 +249,8 @@ class MainWindow(Frame):
             if Config.Basic.auto_popup_option_dialog:
                 if self.top_box.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
                     return
+                
+            self.bottom_box.download_tip()
 
             self.episode_list.GetAllCheckedItem()
 

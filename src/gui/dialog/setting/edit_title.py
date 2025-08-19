@@ -36,7 +36,13 @@ class EditTitleDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.title_box.Bind(wx.EVT_TEXT_ENTER, self.onCloseEVT)
+        self.title_box.Bind(wx.EVT_TEXT_ENTER, self.onEnterEVT)
+
+    def onEnterEVT(self, event: wx.CommandEvent):
+        event = wx.PyCommandEvent(wx.EVT_BUTTON.typeId, self.ok_btn.GetId())
+        event.SetEventObject(self.ok_btn)
+
+        wx.PostEvent(self.ok_btn.GetEventHandler(), event)
 
     def onOKEVT(self):
         if not self.title_box.GetValue():

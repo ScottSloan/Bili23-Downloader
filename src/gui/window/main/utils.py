@@ -36,13 +36,15 @@ class Window:
     
     def show_dialog(func):
         def function(*args, **kwargs):
+            rtn = None
+
             if not Window.dialog_show:
                 Window.dialog_show = True
 
                 rtn = func(*args, **kwargs)
 
             Window.dialog_show = False
-
+            
             return rtn
 
         return function

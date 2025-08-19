@@ -1,6 +1,8 @@
 import wx
+import time
 
 from utils.config import Config
+from utils.common.thread import Thread
 
 from utils.module.pic.face import Face
 
@@ -74,3 +76,14 @@ class BottomBox(Panel):
         self.uname_lab.SetLabel("未登录")
 
         self.GetSizer().Layout()
+
+    def download_tip(self):
+        def worker():
+            wx.CallAfter(self.download_btn.SetLabel, "✔️已开始下载")
+            
+            time.sleep(1)
+
+            wx.CallAfter(self.download_btn.SetLabel, "开始下载")
+
+        if not Config.Basic.auto_show_download_window:
+            Thread(target = worker).start()

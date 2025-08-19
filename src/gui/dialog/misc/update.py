@@ -1,4 +1,6 @@
 import wx
+import sys
+import webbrowser
 
 from utils.config import Config
 
@@ -7,8 +9,11 @@ from gui.component.window.dialog import Dialog
 class UpdateDialog(Dialog):
     def __init__(self, parent, info: dict):
         self.info = info
+        self.force = False
 
-        Dialog.__init__(self, parent, "检查更新")
+        style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) if self.force else wx.DEFAULT_DIALOG_STYLE
+
+        Dialog.__init__(self, parent, "检查更新", style = style)
 
         self.init_UI()
 
@@ -40,9 +45,12 @@ class UpdateDialog(Dialog):
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
         self.ignore_version_chk = wx.CheckBox(self, -1, "忽略此版本，下次不再提示")
+        self.ignore_version_chk.Enable(not self.force)
+        self.ignore_version_chk.SetValue(not self.force)
 
         self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((90, 28)))
         self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((90, 28)))
+        self.ignore_btn.Enable(not self.force)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.ignore_version_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -64,13 +72,14 @@ class UpdateDialog(Dialog):
     
     def init_utils(self):
         self.ignore_version_chk.SetValue(Config.Misc.ignore_version == self.info.get("version_code"))
-        
+    
     def onOKEVT(self):
-        import webbrowser
-
         webbrowser.open(self.info["url"])
 
-        self.Hide()
+        if self.force:
+            sys.exit()
+        else:
+            self.Hide()
 
     def onCancelEVT(self):
         Config.Misc.ignore_version = self.info.get("version_code") if self.ignore_version_chk.GetValue() else 0
