@@ -7,7 +7,7 @@ from utils.common.model.data_type import TreeListItemInfo
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.model.download_info import DownloadInfo
 
-from utils.parse.episode_v2 import EpisodeInfo, Episode
+from utils.parse.episode.episode_v2 import EpisodeInfo, Episode
 
 from gui.component.menu.episode_list import EpisodeListMenu
 

@@ -1,3 +1,4 @@
+import random
 from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType, ParseType
@@ -6,18 +7,33 @@ from utils.common.formatter.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}
+    pid_list: list = []
+    root_pid: int = 0
 
     @classmethod
+    def get_pid(cls):
+        while True:
+            pid = random.randint(1, 99999999)
+
+            if pid not in cls.pid_list:
+                cls.pid_list.append(pid)
+                return pid
+            
+    @classmethod
     def clear_episode_data(cls, title: str = "视频"):
+        cls.root_pid = cls.get_pid()
+
+        cls.pid_list = [cls.root_pid]
+
         cls.data = {
             "label": title,
             "title": "",
-            "pid": title,
+            "pid": cls.root_pid,
             "entries": []
         }
         
     @classmethod
-    def add_item(cls, pid: str, entry_data: dict):
+    def add_item(cls, pid: int, entry_data: dict):
         def add(data: list | dict):
             if isinstance(data, dict):
                 if data["pid"] == pid:
@@ -32,14 +48,16 @@ class EpisodeInfo:
                     add(entry)
 
         add(EpisodeInfo.data)
-
-    @staticmethod
-    def get_node_info(title: str, duration: int = 0, label: str = ""):
+        
+        return entry_data.get("pid", 0)
+        
+    @classmethod
+    def get_node_info(cls, title: str, duration: int = 0, label: str = ""):
         return {
             "label": label,
             "title": title,
             "duration": duration,
-            "pid": title,
+            "pid": cls.get_pid(),
             "entries": [],
             "item_type": "node"
         }
@@ -61,7 +79,7 @@ class EpisodeInfo:
             "duration": episode.get("duration", 0),
             "cover_url": episode.get("cover_url", ""),
             "link": episode.get("link"),
-            "pid": "",
+            "pid": 0,
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
             "collection_title": episode.get("collection_title", ""),
@@ -79,6 +97,7 @@ class EpisodeInfo:
 class Episode:
     class Video:
         target_section_title: str = ""
+        target_chapter_ttile: str = ""
 
         @classmethod
         def parse_episodes(cls, info_json: dict):
@@ -114,7 +133,7 @@ class Episode:
                 EpisodeInfo.add_item("视频", cls.get_entry_info(page.copy(), info_json))
 
         @classmethod
-        def ugc_season_parser(cls, info_json: dict, target_cid: int):
+        def ugc_season_parser(cls, info_json: dict, target_cid: int = None):
             for section in info_json["ugc_season"]["sections"]:
                 collection_title = info_json["ugc_season"]["title"]
                 section_title = section["title"]
@@ -155,10 +174,10 @@ class Episode:
 
                             EpisodeInfo.add_item(part_title, cls.get_entry_info(page.copy(), info_json))
 
-                    if cid == target_cid:
+                    if cid and cid == target_cid:
                         cls.target_chapter_ttile = section_title
 
-            if Config.Misc.episode_display_mode == EpisodeDisplayType.In_Section.value:
+            if Config.Misc.episode_display_mode == EpisodeDisplayType.In_Section.value and cid:
                 Episode.Utils.display_episodes_in_section(cls.target_chapter_ttile)
         
         @staticmethod
@@ -368,27 +387,6 @@ class Episode:
 
             return EpisodeInfo.get_entry_info(episode)
 
-    class Space:
-        @classmethod
-        def parse_episodes(cls, info_json: dict, bvid: str):
-            EpisodeInfo.clear_episode_data()
-
-            for episode in info_json.get("episodes"):
-                EpisodeInfo.add_item("视频", cls.get_entry_info(episode.copy(), bvid))
-        
-        @staticmethod
-        def get_entry_info(episode: dict, bvid: str):
-            episode["cover_url"] = episode.get("pic")
-            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
-            episode["duration"] = FormatUtils.format_str_duration(episode.get("length"))
-            episode["up_name"] = episode.get("author")
-            episode["up_mid"] = episode.get("mid")
-            episode["pubtime"] = episode.get("created")
-            episode["type"] = ParseType.Video.value
-            episode["current_episode"] = episode.get("bvid") == bvid
-
-            return EpisodeInfo.get_entry_info(episode)
-    
     class FavList:
         @classmethod
         def parse_episodes(cls, info_json: dict, bvid: str):

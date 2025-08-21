@@ -11,7 +11,7 @@ from utils.common.enums import StatusCode, ProcessingType
 from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.episode_v2 import Episode
 
 class Section:
     info_json: Dict[str, Dict[str, Dict[str, list]]] = {

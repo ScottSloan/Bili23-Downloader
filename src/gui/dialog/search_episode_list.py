@@ -51,24 +51,32 @@ class SearchEpisodeListDialog(Frame):
         self.next_btn.Enable(False)
         self.search_btn = wx.Button(panel, wx.ID_OK, "搜索", size = self.get_scaled_size((80, 30)))
 
-        bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        search_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        bottom_hbox.Add(self.search_result_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        bottom_hbox.Add(self.previous_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        bottom_hbox.Add(self.next_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
-        bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.search_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        search_hbox.Add(self.search_result_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        search_hbox.Add(self.previous_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        search_hbox.Add(self.next_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        search_hbox.AddStretchSpacer()
+        search_hbox.Add(self.search_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+
+        self.show_matches_only_chk = wx.CheckBox(panel, -1, "仅显示匹配项")
+        self.auto_check_matches_chk = wx.CheckBox(panel, -1, "自动勾选匹配项")
+
+        option_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        option_hbox.Add(self.show_matches_only_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        option_hbox.Add(self.auto_check_matches_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.search_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(bottom_hbox, 0, wx.EXPAND)
+        vbox.Add(search_hbox, 0, wx.EXPAND)
+        vbox.Add(option_hbox, 0, wx.EXPAND)
 
         panel.SetSizer(vbox)
 
         dlg_vbox = wx.BoxSizer(wx.VERTICAL)
         dlg_vbox.Add(panel, 0, wx.EXPAND)
 
-        self.SetSizerAndFit(dlg_vbox)
+        self.SetSizerAndFit(dlg_vbox)        
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)

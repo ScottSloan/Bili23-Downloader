@@ -3,7 +3,7 @@ from utils.auth.wbi import WbiUtils
 
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.episode_v2 import Episode
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 from utils.parse.preview import PreviewInfo
 

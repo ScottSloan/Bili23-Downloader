@@ -9,7 +9,7 @@ from utils.common.enums import StatusCode, ProcessingType
 from utils.common.model.callback import ParseCallback
 
 from utils.parse.parser import Parser
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.space import Space
 
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -51,6 +51,19 @@ class SpaceParser(Parser):
 
         return resp["data"]["page"]["count"]
     
+    def get_collection_video_info(self, bvid: str):
+        params = {
+            "bvid": bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        info_json: dict = resp["data"]
+
+        return info_json
+
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
@@ -76,7 +89,21 @@ class SpaceParser(Parser):
             self.get_search_arc_info(mid, page)
 
             self.onUpdateTitle(page, total_page, self.total_data)
+
+        self.parse_collection_video()
     
+    def parse_collection_video(self):
+        self.season_dict = {}
+
+        for entry in self.info_json.get("episodes"):
+            if (season_id := entry["season_id"]) and season_id not in self.season_dict:
+                self.onUpdateName(f"合集·{entry['meta']['title']}")
+                self.onUpdateTitle(1, 1, self.total_data)
+
+                self.season_dict[season_id] = self.get_collection_video_info(entry.get("bvid"))
+
+                time.sleep(0.3)
+
     def parse_worker(self, url: str):
         self.clear_space_info()
 
@@ -93,7 +120,7 @@ class SpaceParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Episode.Space.parse_episodes(self.info_json, self.bvid)
+        Space.parse_episodes(self.info_json, self.bvid, self.season_dict)
 
     def clear_space_info(self):
         self.info_json = {

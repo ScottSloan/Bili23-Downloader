@@ -10,7 +10,7 @@ from utils.common.regex import Regex
 from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.episode_v2 import Episode
 
 class PopularParser(Parser):
     def __init__(self, callback: ParseCallback):
