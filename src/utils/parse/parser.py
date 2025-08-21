@@ -6,6 +6,8 @@ from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
+from utils.parse.episode.episode_v2 import Filter
+
 class Parser:
     bilibili_url = "https://www.bilibili.com"
 
@@ -97,3 +99,9 @@ class Parser:
 
     def is_interactive_video(self):
         return False
+    
+    def is_in_section_option_enable(self):
+        return True
+
+    def update_episode(self):
+        Filter.episode_display_mode()

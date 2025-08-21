@@ -83,7 +83,7 @@ class TopBox(Panel):
         Window.search_dialog(self.main_window)
 
     def onShowEpisodeOptionMenuEVT(self, event: wx.CommandEvent):
-        menu = EpisodeOptionMenu()
+        menu = EpisodeOptionMenu(self.main_window.parser.parser.is_in_section_option_enable())
 
         self.PopupMenu(menu)
 
@@ -105,7 +105,7 @@ class TopBox(Panel):
         Window.detail_dialog(self.main_window, self.main_window.parser.parse_type)
 
     def update_checked_item_count(self, count: int):
-        label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
+        label = f"(共 {self.main_window.episode_list.count} 项{f'，已选择 {count} 项)' if count else ')'}"
 
         self.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
 
@@ -114,12 +114,12 @@ class TopBox(Panel):
     def set_episode_full_name(self):
         Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
 
-        self.main_window.show_episode_list()
+        self.main_window.show_episode_list(reparse = True)
 
     def set_episode_display_mode(self, mode: EpisodeDisplayType):
         Config.Misc.episode_display_mode = mode.value
 
-        self.main_window.show_episode_list()
+        self.main_window.show_episode_list(reparse = False)
 
     def check_url(self):
         url = self.url_box.GetValue()

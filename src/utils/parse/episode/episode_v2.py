@@ -1,14 +1,19 @@
 import random
+from typing import Callable
+
 from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType, ParseType
-from utils.common.map import cheese_status_map
 from utils.common.formatter.formatter import FormatUtils
 
 class EpisodeInfo:
     data: dict = {}
+    filted_data: dict = {}
+
     pid_list: list = []
     root_pid: int = 0
+
+    parser = None
 
     @classmethod
     def get_pid(cls):
@@ -31,9 +36,18 @@ class EpisodeInfo:
             "pid": cls.root_pid,
             "entries": []
         }
-        
+    
     @classmethod
-    def add_item(cls, pid: int, entry_data: dict):
+    def clear_filter_data(cls, title: str = "视频"):
+        cls.filted_data = {
+            "label": title,
+            "title": "",
+            "pid": cls.root_pid,
+            "entries": []
+        }
+
+    @classmethod
+    def add_item(cls, pid: int, entry_data: dict, target_data: dict = None):
         def add(data: list | dict):
             if isinstance(data, dict):
                 if data["pid"] == pid:
@@ -47,7 +61,10 @@ class EpisodeInfo:
                 for entry in data:
                     add(entry)
 
-        add(EpisodeInfo.data)
+        if not target_data:
+            target_data = EpisodeInfo.data
+
+        add(target_data)
         
         return entry_data.get("pid", 0)
         
@@ -276,117 +293,6 @@ class Episode:
 
             return EpisodeInfo.get_entry_info(episode)
 
-    class Cheese:
-        target_section_title: str = ""
-
-        @classmethod
-        def parse_episodes(cls, info_json: dict, ep_id: int):
-            EpisodeInfo.clear_episode_data()
-    
-            cls.sections_parser(info_json, ep_id)
-
-            match EpisodeDisplayType(Config.Misc.episode_display_mode):
-                case EpisodeDisplayType.Single:
-                    Episode.Utils.display_episodes_in_single(cls.target_section_title, ep_id)
-
-                case EpisodeDisplayType.In_Section:
-                    Episode.Utils.display_episodes_in_section(cls.target_section_title)
-        
-        @classmethod
-        def sections_parser(cls, info_json: dict, ep_id: int):
-            for section in info_json["sections"]:
-                section_title = section["title"]
-
-                EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
-
-                for episode in section["episodes"]:
-                    episode["section_title"] = section_title
-                    episode["season_id"] = info_json["season_id"]
-
-                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), info_json, ep_id))
-
-                    if episode["id"] == ep_id:
-                        cls.target_section_title = section_title
-
-        @staticmethod
-        def get_entry_info(episode: dict, info_json: dict, ep_id: int):
-            def get_badge():
-                if "label" in episode:
-                    return episode["label"]
-                else:
-                    if episode["status"] != 1:
-                        return cheese_status_map.get(episode.get("status"))
-                    else:
-                        return ""
-
-            episode["pubtime"] = episode.get("release_date")
-            episode["ep_id"] = episode.get("id")
-            episode["badge"] = get_badge()
-            episode["cover_url"] = episode.get("cover")
-            episode["link"] = f"https://www.bilibili.com/cheese/play/ep{episode.get('id')}"
-            episode["type"] = ParseType.Cheese.value
-            episode["series_title"] = info_json.get("title")
-            episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
-            episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
-            episode["current_episode"] = episode.get("ep_id") == ep_id
-
-            return EpisodeInfo.get_entry_info(episode)
-    
-    class Popular:
-        @classmethod
-        def parse_episodes(cls, info_json: dict, cid: int):
-            EpisodeInfo.clear_episode_data()
-
-            section_title = info_json["config"]["label"]
-
-            EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
-
-            for episode in info_json["list"]:
-                episode["section_title"] = section_title
-                
-                EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), cid))
-            
-        @staticmethod
-        def get_entry_info(episode: dict, cid: int):
-            episode["pubtime"] = episode.get("pubdate")
-            episode["link"] = f"https://www/bilibili.com/video/{episode.get('bvid')}"
-            episode["cover_url"] = episode.get("pic")
-            episode["type"] = ParseType.Video.value
-            episode["current_episode"] = episode.get("cid") == cid
-
-            return EpisodeInfo.get_entry_info(episode)
-
-    class List:
-        @classmethod
-        def parse_episodes(cls, info_json: dict, bvid: str):
-            EpisodeInfo.clear_episode_data()
-
-            for section_title, entry in info_json["archives"].items():
-                EpisodeInfo.add_item("视频", EpisodeInfo.get_node_info(section_title, label = "章节"))
-
-                for episode in entry["episodes"]:
-                    if Episode.Utils.is_single_mode():
-                        if episode["bvid"] != bvid:
-                            continue
-                    
-                    episode["section_title"] = section_title
-                    episode["collection_title"] = section_title
-                    
-                    EpisodeInfo.add_item(section_title, cls.get_entry_info(episode.copy(), bvid))
-
-            if Episode.Utils.is_single_mode():
-                Episode.Utils.check_episode_list()
-        
-        @staticmethod
-        def get_entry_info(episode: dict, bvid: str):
-            episode["pubtime"] = episode["pubdate"]
-            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
-            episode["cover_url"] = episode.get("pic")
-            episode["type"] = ParseType.Video.value
-            episode["current_episode"] = episode.get("bvid") == bvid
-
-            return EpisodeInfo.get_entry_info(episode)
-
     class FavList:
         @classmethod
         def parse_episodes(cls, info_json: dict, bvid: str):
@@ -428,18 +334,6 @@ class Episode:
                             break
         
         @staticmethod
-        def check_episode_list():
-            for section in EpisodeInfo.data.get("entries"):
-                entries = section.get("entries")
-
-                if len(entries) == 1:
-                    EpisodeInfo.clear_episode_data()
-
-                    EpisodeInfo.add_item("视频", entries[0])
-
-                    break
-
-        @staticmethod
         def is_single_mode():
             return Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value
         
@@ -461,3 +355,44 @@ class Episode:
                             return episode
 
             return get_episode(EpisodeInfo.data)
+        
+class Filter:
+    @staticmethod
+    def travarsal_episode(condition: Callable):
+        def traveral(data: list | dict):
+            if isinstance(data, dict):
+                r = condition(data)
+
+                if r:
+                    return data
+                
+                if "entries" in data:
+                    rtn = traveral(data.get("entries"))
+
+                    if rtn:
+                        return rtn
+
+            elif isinstance(data, list):
+                for entry in data:
+                    rtn = traveral(entry)
+                    if rtn:
+                        return rtn
+        
+        return traveral(EpisodeInfo.data.copy())
+
+    @classmethod
+    def episode_display_mode(cls):
+        EpisodeInfo.clear_filter_data()
+
+        match EpisodeDisplayType(Config.Misc.episode_display_mode):
+            case EpisodeDisplayType.Single:
+                episode = cls.travarsal_episode(EpisodeInfo.parser.condition_single)
+
+            case EpisodeDisplayType.In_Section:
+                episode = cls.travarsal_episode(EpisodeInfo.parser.condition_in_section)
+
+            case EpisodeDisplayType.All:
+                EpisodeInfo.filted_data = EpisodeInfo.data.copy()
+                return
+            
+        EpisodeInfo.add_item(EpisodeInfo.root_pid, episode, target_data = EpisodeInfo.filted_data)

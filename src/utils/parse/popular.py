@@ -10,7 +10,7 @@ from utils.common.regex import Regex
 from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
-from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.popular import Popular
 
 class PopularParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -85,7 +85,7 @@ class PopularParser(Parser):
         return StatusCode.Success.value
 
     def parse_episodes(self):
-        Episode.Popular.parse_episodes(self.info_json, self.cid)
+        Popular.parse_episodes(self.info_json, self.cid)
 
     def get_parse_type_str(self):
         return "热榜"

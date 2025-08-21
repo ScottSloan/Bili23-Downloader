@@ -79,7 +79,7 @@ class Parser:
         else:
             self.parse_type_str = self.parser.get_parse_type_str()
 
-            wx.CallAfter(self.main_window.show_episode_list, False)
+            wx.CallAfter(self.main_window.show_episode_list, False, False)
 
     def parse_episode(self):
         self.parser.parse_episodes()

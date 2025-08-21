@@ -6,6 +6,7 @@ from utils.common.request import RequestUtils
 from utils.common.regex import Regex
 
 from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.cheese import Cheese
 from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
@@ -35,24 +36,20 @@ class CheeseParser(Parser):
 
         self.info_json: dict = resp["data"].copy()
 
-        if len(self.info_json["sections"]) > 1:
-            self.info_json["sections"] = [section for section in self.info_json["sections"] if section["title"] != "默认章节"]
-
-        episode: dict = self.info_json["sections"][0]["episodes"][0]
-
         if param.startswith("season_id"):
-            self.ep_id = episode.get("id")
+            self.ep_id = self.get_sections_epid()
 
         self.parse_episodes()
 
     def get_cheese_available_media_info(self, aid: int, ep_id: int, cid: int):
         params = {
             "avid": aid,
-            "ep_id": ep_id,
             "cid": cid,
+            "qn": 0,
             "fnver": 0,
-            "fnval": 4048,
-            "fourk": 1
+            "fnval": 16,
+            "fourk": 1,
+            "ep_id": ep_id,
         }
 
         url = f"https://api.bilibili.com/pugv/player/web/playurl?{self.url_encode(params)}"
@@ -75,15 +72,21 @@ class CheeseParser(Parser):
 
         episode: dict = Episode.Utils.get_current_episode()
 
-        self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))
+        if episode:
+            self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))
 
         return StatusCode.Success.value
 
     def parse_episodes(self):
-        Episode.Cheese.parse_episodes(self.info_json, self.ep_id)
+        Cheese.parse_episodes(self.info_json, self.ep_id)
 
     def clear_cheese_info(self):
         AudioInfo.clear_audio_info()
 
     def get_parse_type_str(self):
         return "课程"
+
+    def get_sections_epid(self):
+        for section in self.info_json["sections"]:
+            for episode in section["episodes"]:
+                return episode.get("id")

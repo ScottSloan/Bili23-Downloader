@@ -11,7 +11,7 @@ from utils.common.enums import StatusCode, ProcessingType
 from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
-from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.list import List
 
 class Section:
     info_json: Dict[str, Dict[str, Dict[str, list]]] = {
@@ -248,7 +248,7 @@ class SpaceListParser(Parser):
             time.sleep(1)
 
     def parse_episodes(self):
-        Episode.List.parse_episodes(Section.info_json, self.bvid)
+        List.parse_episodes(Section.info_json, self.bvid)
 
     def clear_space_info(self):
         Section.info_json = {
@@ -270,6 +270,9 @@ class SpaceListParser(Parser):
 
     def get_total_page(self, total: int):
         return math.ceil(total / 30)
+    
+    def is_in_section_option_enable(self):
+        return False
     
     def get_parse_type_str(self):
         return "合集列表"

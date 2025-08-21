@@ -94,7 +94,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.count = 0
 
-        add_item(EpisodeInfo.data, self.GetRootItem())
+        add_item(EpisodeInfo.filted_data, self.GetRootItem())
 
     def onItemActivatedEVT(self, event):
         item = self.GetSelection()
