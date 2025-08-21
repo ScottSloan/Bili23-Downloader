@@ -4,6 +4,7 @@ from utils.auth.wbi import WbiUtils
 from utils.parse.parser import Parser
 from utils.parse.audio import AudioInfo
 from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.video import Video
 from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
 from utils.parse.preview import PreviewInfo
 
@@ -123,8 +124,8 @@ class VideoParser(Parser):
             Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
 
             self.parse_interact_video(self.info_json)
-            
-        Episode.Video.parse_episodes(self.info_json)
+
+        Video.parse_episodes(self.info_json)
 
     def parse_interact_video(self, info_json: dict):
         def get_page():
@@ -150,6 +151,9 @@ class VideoParser(Parser):
             return "互动视频"
         else:
             return "投稿视频"
-        
+    
+    def is_in_section_option_enable(self):
+        return len(self.info_json["pages"]) > 1 or "ugc_season" in self.info_json
+
     def is_interactive_video(self):
         return self.is_interactive

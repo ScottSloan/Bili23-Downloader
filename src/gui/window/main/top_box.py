@@ -114,12 +114,12 @@ class TopBox(Panel):
     def set_episode_full_name(self):
         Config.Misc.show_episode_full_name = not Config.Misc.show_episode_full_name
 
-        self.main_window.show_episode_list(reparse = True)
+        self.main_window.show_episode_list()
 
     def set_episode_display_mode(self, mode: EpisodeDisplayType):
         Config.Misc.episode_display_mode = mode.value
 
-        self.main_window.show_episode_list(reparse = False)
+        self.main_window.show_episode_list()
 
     def check_url(self):
         url = self.url_box.GetValue()

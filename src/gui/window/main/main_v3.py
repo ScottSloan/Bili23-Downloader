@@ -304,12 +304,9 @@ class MainWindow(Frame):
             case ID.EPISODE_LIST_COLLAPSE_MENU:
                 self.episode_list.CollapseCurrentItem()
 
-    def show_episode_list(self, reparse: bool = False, from_menu: bool = True):
+    def show_episode_list(self, from_menu: bool = True):
         if from_menu:
-            if reparse:
-                self.parser.parse_episode()
-            else:
-                self.parser.parser.update_episode()
+            self.parser.parse_episode()
 
         self.episode_list.show_episode_list()
 

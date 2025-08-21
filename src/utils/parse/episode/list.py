@@ -1,6 +1,4 @@
-from utils.config import Config
-
-from utils.common.enums import ParseType, EpisodeDisplayType
+from utils.common.enums import ParseType
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -22,10 +20,7 @@ class List:
                 
                 EpisodeInfo.add_item(section_pid, cls.get_entry_info(episode.copy()))
 
-        if EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section:
-            Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
-
-        Filter.episode_display_mode()
+        Filter.episode_display_mode(reset = True)
 
     @classmethod
     def get_entry_info(cls, episode: dict):

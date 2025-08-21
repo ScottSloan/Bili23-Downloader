@@ -9,6 +9,7 @@ from utils.common.regex import Regex
 
 from utils.parse.audio import AudioInfo
 from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.bangumi import Bangumi
 from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
 
@@ -101,7 +102,8 @@ class BangumiParser(Parser):
 
         episode: dict = Episode.Utils.get_current_episode()
 
-        self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
+        if episode:
+            self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
 
         return StatusCode.Success.value
     
@@ -117,7 +119,7 @@ class BangumiParser(Parser):
             raise GlobalException(message = message, code = status_code, json_data = data)
 
     def parse_episodes(self):
-        Episode.Bangumi.parse_episodes(self.info_json, self.ep_id)
+        Bangumi.parse_episodes(self.info_json, self.ep_id)
 
     def clear_bangumi_info(self):
         # 重置音质信息

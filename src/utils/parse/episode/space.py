@@ -1,7 +1,7 @@
 from utils.common.enums import ParseType
 from utils.common.formatter.formatter import FormatUtils
 
-from utils.parse.episode.episode_v2 import EpisodeInfo
+from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
 class Space:
     season_dict: dict = {}
@@ -20,6 +20,8 @@ class Space:
                     cls.ugc_season_parser(episode.copy(), episode.get("bvid"), season_id)
             else:
                 EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(episode.copy(), bvid))
+
+        Filter.episode_display_mode(reset = True)
 
     @classmethod
     def ugc_season_parser(cls, info_json: dict, target_bvid: str, season_id: int):

@@ -1,10 +1,14 @@
-from utils.common.enums import ParseType
+from utils.config import Config
+from utils.common.enums import ParseType, EpisodeDisplayType
 
-from utils.parse.episode.episode_v2 import EpisodeInfo
+from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
 class Popular:
+    target_cid: int = 0
+
     @classmethod
-    def parse_episodes(cls, info_json: dict, cid: int):
+    def parse_episodes(cls, info_json: dict, target_cid: int):
+        cls.target_cid = target_cid
         EpisodeInfo.clear_episode_data()
 
         section_title = info_json["config"]["label"]
@@ -14,14 +18,16 @@ class Popular:
         for episode in info_json["list"]:
             episode["section_title"] = section_title
             
-            EpisodeInfo.add_item(section_pid, cls.get_entry_info(episode.copy(), cid))
+            EpisodeInfo.add_item(section_pid, cls.get_entry_info(episode.copy()))
 
-    @staticmethod
-    def get_entry_info(episode: dict, cid: int):
+        Filter.episode_display_mode(reset = True)
+
+    @classmethod
+    def get_entry_info(cls, episode: dict):
         episode["pubtime"] = episode.get("pubdate")
         episode["link"] = f"https://www/bilibili.com/video/{episode.get('bvid')}"
         episode["cover_url"] = episode.get("pic")
         episode["type"] = ParseType.Video.value
-        episode["current_episode"] = episode.get("cid") == cid
+        episode["current_episode"] = episode.get("cid") == cls.target_cid
 
         return EpisodeInfo.get_entry_info(episode)
