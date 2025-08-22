@@ -8,7 +8,7 @@ class EmptyItemPanel(Panel):
     def __init__(self, parent, label: str, name: str):
         self.label = label
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.init_UI()
 
@@ -36,7 +36,7 @@ class LoadMoreTaskItemPanel(Panel):
     def __init__(self, parent, left_count: int, load_more_callback: Callable, name: str):
         self.count, self.callback = left_count, load_more_callback
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.init_UI()
 

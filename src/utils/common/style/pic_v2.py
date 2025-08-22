@@ -26,11 +26,7 @@ class Pic:
 
         decode_string = base64.b64decode(entry.get("data"))
 
-        img = wx.Image(BytesIO(decode_string))
-
-        width, height = cls.get_scaled_size(entry.get("size"))
-
-        return img.Scale(width, height).ConvertToBitmap()
+        return wx.Image(BytesIO(decode_string))
     
     @staticmethod
     def get_scaled_size(size: wx.Size):

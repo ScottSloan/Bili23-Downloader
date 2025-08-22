@@ -60,6 +60,19 @@ class FavListParser(Parser):
 
         return info_json
     
+    def get_bangumi_info(self, season_id: int):
+        params = {
+            "season_id": season_id
+        }
+
+        url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_encode(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        
+        info_json: dict = resp["result"]
+
+        return info_json
+
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
@@ -89,16 +102,24 @@ class FavListParser(Parser):
         self.parse_video_info()
 
     def parse_video_info(self):
-        self.season_dict = {}
+        self.season_dict = {
+            "video": {},
+            "bangumi": {}
+        }
 
         for entry in self.info_json.get("episodes"):
+            self.onUpdateName(entry['title'])
+            self.onUpdateTitle(1, 1, self.total_data)
+
             if entry.get("page") != 0:
                 bvid = entry.get("bvid")
 
-                self.onUpdateName(entry['title'])
-                self.onUpdateTitle(1, 1, self.total_data)
+                self.season_dict["video"][bvid] = self.get_video_info(bvid)
+            
+            elif entry.get("ogv"):
+                season_id = entry["ogv"]["season_id"]
 
-                self.season_dict[bvid] = self.get_video_info(bvid)
+                self.season_dict["bangumi"][season_id] = self.get_bangumi_info(season_id)
 
             time.sleep(0.1)
     

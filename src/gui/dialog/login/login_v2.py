@@ -11,6 +11,7 @@ from utils.auth.login_v2 import Login, LoginInfo
 from utils.module.web.page import WebPage
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
@@ -33,7 +34,7 @@ class QRCodePanel(Panel):
         scan_lab.SetFont(font)
         scan_lab.SetForegroundColour(Color.get_text_color())
 
-        self.qrcode = wx.StaticBitmap(self, -1, size = self.FromDIP((150, 150)))
+        self.qrcode = StaticBitmap(self, size = self.FromDIP((150, 150)))
 
         qrcode_hbox = wx.BoxSizer(wx.HORIZONTAL)
         qrcode_hbox.AddStretchSpacer()
@@ -70,7 +71,7 @@ class QRCodePanel(Panel):
 
     def set_tip(self, text: list):
         font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
         bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
         dc = wx.MemoryDC(bmp)
@@ -92,18 +93,18 @@ class QRCodePanel(Panel):
 
         dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
 
-        wx.CallAfter(self.qrcode.SetBitmap, bmp)
+        wx.CallAfter(self.qrcode.SetBitmap, image = bmp.ConvertToImage())
 
     def show_qrcode(self):
+        def worker():
+            self.qrcode.SetBitmap(image = wx.Image(img_io))
+            self.qrcode.SetSize(self.FromDIP((149, 149)))
+
         Login.QRCode.generate_qrcode()
 
         img_io = Login.QRCode.get_qrcode_img_io()
 
-        width, height = Login.QRCode.get_qrcode_size()
-
-        bmp = wx.Image(img_io).Scale(width, height, quality = wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
-
-        wx.CallAfter(self.qrcode.SetBitmap, bmp)
+        wx.CallAfter(worker)
 
     def onTimerEVT(self, event):
         resp = Login.QRCode.check_scan_status()
@@ -339,8 +340,10 @@ class LoginDialog(Dialog):
         hbox.Add(self.sms_panel, 0, wx.EXPAND)
         hbox.AddSpacer(self.FromDIP(60))
 
-        self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Left_22))
-        self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Right_33))
+        self.left_bmp = StaticBitmap(self, size = self.FromDIP((116, 105)))
+        self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22))
+        self.right_bmp = StaticBitmap(self, size = self.FromDIP((108, 106)))
+        self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33))
 
         info_lab = wx.StaticText(self, -1, "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序")
         info_lab.SetFont(self.GetFont().MakeBold())

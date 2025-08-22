@@ -3,6 +3,7 @@ import wx.html2
 
 from utils.config import Config
 from utils.common.enums import Platform
+from utils.common.exception import GlobalException, show_error_message_dialog
 
 from utils.module.web.page import WebPage
 
@@ -29,10 +30,11 @@ class Webview:
             dlg.ShowModal()
 
         except Exception as e:
-            dlg = wx.MessageDialog(self.parent, "无法读取静态文件\n\n在读取静态文件时出错", "警告", wx.ICON_WARNING)
-
-            dlg.ShowModal()
+            raise GlobalException(callback = self.onError) from e
 
     def osx_get_page(self, path: str):
         with open(path, "r", encoding = "utf-8") as f:
             return f.read()
+        
+    def onError(self):
+        show_error_message_dialog("无法读取静态文件", "在读取静态文件时出错")

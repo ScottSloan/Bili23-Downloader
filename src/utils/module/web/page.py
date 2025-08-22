@@ -1,7 +1,7 @@
 import wx
 import wx.html2
 import webbrowser
-from importlib.resources import files, as_file
+import importlib.resources
 
 from utils.config import Config
 from utils.auth.login_v2 import LoginInfo
@@ -100,10 +100,8 @@ class WebPage:
 
     @staticmethod
     def get_static_file_path(file_name: str):
-        resource = files("static").joinpath(file_name)
-
-        with as_file(resource) as path:
-            return path.resolve()
+        with importlib.resources.path("static", file_name) as file_path:
+            return file_path
         
     @staticmethod
     def update_ws_port(file_path: str):

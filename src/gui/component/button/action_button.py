@@ -10,7 +10,7 @@ class ActionButton(Panel):
     def __init__(self, parent: wx.Window, title: str, name: str = wx.PanelNameStr):
         self._title = title
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.init_UI()
 
