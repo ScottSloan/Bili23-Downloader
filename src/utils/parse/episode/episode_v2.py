@@ -3,8 +3,7 @@ from typing import Callable
 
 from utils.config import Config
 
-from utils.common.enums import EpisodeDisplayType, ParseType
-from utils.common.formatter.formatter import FormatUtils
+from utils.common.enums import EpisodeDisplayType
 
 class EpisodeInfo:
     data: dict = {}
@@ -112,17 +111,6 @@ class EpisodeInfo:
         }
 
 class Episode:
-    class Video:
-        target_section_title: str = ""
-        target_chapter_ttile: str = ""
-
-        
-
-        
-
-        
-
-
     class FavList:
         @classmethod
         def parse_episodes(cls, info_json: dict, bvid: str):
@@ -141,32 +129,6 @@ class Episode:
             return EpisodeInfo.get_entry_info(episode)
 
     class Utils:
-        @staticmethod
-        def display_episodes_in_section(section_title: str):
-            for section in EpisodeInfo.data.get("entries"):
-                if section.get("pid") == section_title:
-                    EpisodeInfo.clear_episode_data()
-
-                    EpisodeInfo.add_item("视频", section)
-
-                    break
-
-        @staticmethod
-        def display_episodes_in_single(section_title: str, ep_id: int):
-            for section in EpisodeInfo.data.get("entries"):
-                if section.get("pid") == section_title:
-                    for episode in section.get("entries"):
-                        if episode.get("ep_id") == ep_id:
-                            EpisodeInfo.clear_episode_data()
-
-                            EpisodeInfo.add_item("视频", episode)
-
-                            break
-        
-        @staticmethod
-        def is_single_mode():
-            return Config.Misc.episode_display_mode == EpisodeDisplayType.Single.value
-        
         @staticmethod
         def get_current_episode():
             def get_episode(data: dict | list):

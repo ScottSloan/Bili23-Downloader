@@ -2,12 +2,14 @@ import math
 import time
 
 from utils.config import Config
+from utils.auth.wbi import WbiUtils
+
 from utils.common.enums import StatusCode, ProcessingType
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
 
 from utils.parse.parser import Parser
-from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.favlist import FavList
 
 class FavListParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -45,6 +47,19 @@ class FavListParser(Parser):
 
         return info["media_count"], info["title"]
 
+    def get_video_info(self, bvid: str):
+        params = {
+            "bvid": bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        info_json: dict = resp["data"]
+
+        return info_json
+    
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
@@ -70,6 +85,22 @@ class FavListParser(Parser):
             self.get_favlist_info(media_id, page)
 
             self.onUpdateTitle(page, total_page, self.total_data)
+
+        self.parse_video_info()
+
+    def parse_video_info(self):
+        self.season_dict = {}
+
+        for entry in self.info_json.get("episodes"):
+            if entry.get("page") != 0:
+                bvid = entry.get("bvid")
+
+                self.onUpdateName(entry['title'])
+                self.onUpdateTitle(1, 1, self.total_data)
+
+                self.season_dict[bvid] = self.get_video_info(bvid)
+
+            time.sleep(0.1)
     
     def parse_worker(self, url: str):
         self.clear_favlist_info()
@@ -87,7 +118,7 @@ class FavListParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Episode.FavList.parse_episodes(self.info_json, self.bvid)
+        FavList.parse_episodes(self.info_json, self.bvid, self.season_dict)
     
     def clear_favlist_info(self):
         self.info_json = {

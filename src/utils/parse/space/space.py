@@ -90,19 +90,24 @@ class SpaceParser(Parser):
 
             self.onUpdateTitle(page, total_page, self.total_data)
 
-        self.parse_collection_video()
+        self.parse_video_info()
     
-    def parse_collection_video(self):
-        self.season_dict = {}
+    def parse_video_info(self):
+        self.video_info_dict = {}
 
         for entry in self.info_json.get("episodes"):
-            if (season_id := entry["season_id"]) and season_id not in self.season_dict:
-                self.onUpdateName(f"合集·{entry['meta']['title']}")
-                self.onUpdateTitle(1, 1, self.total_data)
+            bvid = entry.get("bvid")
 
-                self.season_dict[season_id] = self.get_collection_video_info(entry.get("bvid"))
+            self.onUpdateName(entry["title"])
+            self.onUpdateTitle(1, 1, self.total_data)
 
-                time.sleep(0.3)
+            if (season_id := entry["season_id"]) and season_id not in self.video_info_dict:
+                self.video_info_dict[season_id] = self.get_collection_video_info(bvid).copy()
+
+            else:
+                self.video_info_dict[bvid] = self.get_collection_video_info(bvid).copy()
+
+            time.sleep(0.1)
 
     def parse_worker(self, url: str):
         self.clear_space_info()
@@ -120,7 +125,7 @@ class SpaceParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Space.parse_episodes(self.info_json, self.bvid, self.season_dict)
+        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict)
 
     def clear_space_info(self):
         self.info_json = {
