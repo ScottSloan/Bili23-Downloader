@@ -3,6 +3,7 @@ import wx
 from utils.common.style.icon_v4 import Icon, IconID
 
 from gui.component.panel.panel import Panel
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class FlatButton(Panel):
     def __init__(self, parent, label: str, icon_id: IconID, split: bool = False):
@@ -20,7 +21,7 @@ class FlatButton(Panel):
         if self.split:
             self.split_line = wx.StaticLine(self, -1, style = wx.LI_VERTICAL)
 
-        self.btn_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(self.icon_id), size = self.FromDIP((24, 24)))
+        self.btn_icon = StaticBitmap(self, bmp = Icon.get_icon_bitmap(self.icon_id), size = self.FromDIP((16, 16)))
         self.btn_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.btn_lab = wx.StaticText(self, -1, self.label)
@@ -31,7 +32,7 @@ class FlatButton(Panel):
         if self.split:
             hbox.Add(self.split_line, 0, wx.ALL & (~wx.LEFT) & (~wx.RIGHT) | wx.EXPAND, self.FromDIP(10))
 
-        hbox.Add(self.btn_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        hbox.Add(self.btn_icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         hbox.Add(self.btn_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.SetSizerAndFit(hbox)

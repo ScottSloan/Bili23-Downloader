@@ -5,10 +5,13 @@ from utils.common.style.color import Color
 from gui.component.panel.panel import Panel
 
 class StaticBitmap(Panel):
-    def __init__(self, parent: wx.Window, size: wx.Size):
+    def __init__(self, parent: wx.Window, bmp: wx.Bitmap = None, image: wx.Image = None, size: wx.Size = None):
         Panel.__init__(self, parent, size = size)
 
         self.SetBackgroundColour(parent.GetBackgroundColour())
+
+        if bmp or image:
+            self.SetBitmap(bmp = bmp, image = image)
 
     def get_bmp(self):
         width, height = self.GetClientSize()

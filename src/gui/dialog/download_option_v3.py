@@ -4,7 +4,7 @@ from typing import Callable
 from utils.config import Config
 
 from utils.common.map import number_type_map, video_quality_map, video_codec_preference_map, video_codec_map, audio_quality_map, get_mapping_key_by_value
-from utils.common.enums import StreamType, VideoQualityID, AudioQualityID, ParseType
+from utils.common.enums import StreamType, VideoQualityID, AudioQualityID
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.exception import GlobalException, show_error_message_dialog
@@ -21,6 +21,7 @@ from gui.component.staticbox.extra import ExtraStaticBox
 from gui.component.label.info_label import InfoLabel
 from gui.component.misc.tooltip import ToolTip
 from gui.component.choice.choice import Choice
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class MediaInfoPanel(Panel):
     def __init__(self, parent: wx.Window):
@@ -56,7 +57,7 @@ class MediaInfoPanel(Panel):
         video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         video_quality_hbox.Add(self.video_quality_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.video_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.video_quality_warn_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
         self.video_quality_warn_icon.Hide()
         self.video_quality_warn_icon.SetToolTip("当前所选的清晰度与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
         self.video_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((340, 16)), color = label_color)
@@ -67,7 +68,7 @@ class MediaInfoPanel(Panel):
 
         self.audio_quality_lab = wx.StaticText(self, -1, "音质")
         self.audio_quality_choice = Choice(self)
-        self.audio_quality_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.audio_quality_warn_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
         self.audio_quality_warn_icon.Hide()
         self.audio_quality_warn_icon.SetToolTip("当前所选的音质与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
         self.audio_quality_info_lab = InfoLabel(self, "", size = self.FromDIP((340, 16)), color = label_color)
@@ -78,7 +79,7 @@ class MediaInfoPanel(Panel):
 
         self.video_codec_lab = wx.StaticText(self, -1, "编码格式")
         self.video_codec_choice = Choice(self)
-        self.video_codec_warn_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))))
+        self.video_codec_warn_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
         self.video_codec_warn_icon.Hide()
         self.video_codec_warn_icon.SetToolTip("当前所选的编码与实际获取到的不符。\n\n杜比视界和HDR 视频仅支持 H.265 编码。")
         self.video_codec_info_lab = InfoLabel(self, "", size = self.FromDIP((340, 16)), color = label_color)

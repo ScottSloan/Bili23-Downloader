@@ -16,6 +16,7 @@ from gui.dialog.live_recording_option import LiveRecordingOptionDialog
 
 from gui.component.label.info_label import InfoLabel
 from gui.component.button.bitmap_button import BitmapButton
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 from gui.component.panel.panel import Panel
 
@@ -199,7 +200,7 @@ class LiveRoomItemPanel(Panel):
         font = self.GetFont()
         font.SetFractionalPointSize(font.GetFractionalPointSize() + 2)
 
-        self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover_bmp = StaticBitmap(self, size = self.FromDIP((112, 63)))
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.cover_bmp.SetToolTip("查看封面")
 
@@ -211,7 +212,7 @@ class LiveRoomItemPanel(Panel):
         self.room_id_lab = InfoLabel(self, "ID 123456", size = self.FromDIP((90, 16)))
         self.area_lab = InfoLabel(self, "分区", size = self.FromDIP((150, 16)))
         self.live_status_lab = InfoLabel(self, "直播中", size = self.FromDIP((50, 16)))
-        self.rec_bmp = wx.StaticBitmap(self, -1, bitmap = Icon.get_icon_bitmap(IconID.Rec))
+        self.rec_bmp = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.Rec), size = self.FromDIP((16, 16)))
         self.rec_bmp.Hide()
         self.recording_lab = wx.StaticText(self, -1, "录制中", size = self.FromDIP((50, 16)))
         self.recording_lab.SetForegroundColour(wx.Colour(235, 54, 67))

@@ -5,6 +5,7 @@ from utils.common.exception import GlobalExceptionInfo
 from utils.common.datetime_util import DateTime
 
 from gui.component.window.dialog import Dialog
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class ErrorInfoDialog(Dialog):
     def __init__(self, parent, exception_info = GlobalExceptionInfo.info):
@@ -19,7 +20,7 @@ class ErrorInfoDialog(Dialog):
         wx.Bell()
 
     def init_UI(self):
-        err_icon = wx.StaticBitmap(self, -1, wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))))
+        err_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_ERROR, size = self.FromDIP((28, 28))), size = self.FromDIP((28, 28)))
 
         time_lab = wx.StaticText(self, -1, "记录时间：{}".format(DateTime.time_str_from_timestamp(self.exception_info.get("timestamp"))))
         error_type = wx.StaticText(self, -1, "异常类型：{}".format(self.exception_info.get("exception_name")))

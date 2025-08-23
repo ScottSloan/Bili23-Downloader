@@ -5,6 +5,7 @@ from utils.config import Config
 from utils.common.style.color import Color
 
 from gui.component.panel.panel import Panel
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class LargeBitmapButton(Panel):
     def __init__(self, parent, bitmap: wx.Bitmap, label: str):
@@ -17,7 +18,7 @@ class LargeBitmapButton(Panel):
         self.lab_hover = False
         
     def init_UI(self, bitmap: wx.Bitmap, label: str):
-        self.bitmap = wx.StaticBitmap(self, -1, bitmap)
+        self.bitmap = StaticBitmap(self, bmp = bitmap, size = self.FromDIP((48, 48)))
         self.label = wx.StaticText(self, -1, label)
 
         bitmap_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -4,12 +4,13 @@ import webbrowser
 from utils.config import Config
 
 from utils.common.style.icon_v4 import Icon, IconID
-from utils.common.compile_data import date, compile, beta_flag, beta_ver
+from utils.common.compile_data import date, compile, beta_flag
 from utils.common.style.color import Color
 
 from gui.dialog.misc.license import LicenseWindow
 
 from gui.component.window.dialog import Dialog
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class AboutWindow(Dialog):
     def __init__(self, parent):
@@ -26,25 +27,9 @@ class AboutWindow(Dialog):
         wx.Bell()
     
     def init_UI(self):
-        def set_icon_background(image: wx.Image):
-            _width, _height = image.GetSize()
-
-            if Config.Sys.dark_mode:
-                color = Color.get_panel_background_color()
-
-                for x in range(_width):
-                    for y in range(_height):
-                        r, g, b = image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y)
-
-                        if r > 200 and g > 200 and b > 200:
-                            # 选取背景颜色填充
-                            image.SetRGB(x, y, color[0], color[1], color[2])
-
-            return image
-
         self.set_dark_mode()
 
-        logo = wx.StaticBitmap(self, -1, set_icon_background(Icon.get_app_icon_bitmap(IconID.App_Default)).ConvertToBitmap())
+        logo = StaticBitmap(self, image = self.set_icon_background(Icon.get_app_icon_bitmap(IconID.App_Default)), size = 0)
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
@@ -122,3 +107,18 @@ class AboutWindow(Dialog):
 
     def onOpenHomeLink(self, event):
         webbrowser.open("https://bili23.scott-sloan.cn/")
+
+    def set_icon_background(self, image: wx.Image):
+        width, height = image.GetSize()
+
+        if Config.Sys.dark_mode:
+            color = Color.get_panel_background_color()
+
+            for x in range(width):
+                for y in range(height):
+                    r, g, b = image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y)
+
+                    if r > 200 and g > 200 and b > 200:
+                        image.SetRGB(x, y, color[0], color[1], color[2])
+
+        return image

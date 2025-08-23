@@ -26,6 +26,7 @@ from gui.dialog.error import ErrorInfoDialog
 
 from gui.component.label.info_label import InfoLabel
 from gui.component.button.bitmap_button import BitmapButton
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 from gui.component.panel.panel import Panel
 
@@ -420,7 +421,7 @@ class DownloadTaskItemPanel(Panel):
     def init_UI(self):
         self.set_dark_mode()
 
-        self.cover_bmp = wx.StaticBitmap(self, -1, size = self.FromDIP((112, 63)))
+        self.cover_bmp = StaticBitmap(self, size = self.FromDIP((112, 63)))
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.cover_bmp.SetToolTip("查看封面")
 

@@ -189,5 +189,5 @@ class Filter:
             case EpisodeDisplayType.All:
                 EpisodeInfo.filted_data = EpisodeInfo.data.copy()
                 return
-            
+        
         EpisodeInfo.add_item(EpisodeInfo.root_pid, episode, target_data = EpisodeInfo.filted_data)

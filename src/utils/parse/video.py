@@ -121,7 +121,7 @@ class VideoParser(Parser):
 
     def parse_episodes(self):
         if self.is_interactive:
-            Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
+            Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
             self.parse_interact_video(self.info_json)
 

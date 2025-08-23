@@ -9,9 +9,9 @@ if Platform(Config.Sys.platform) == Platform.Windows:
 else:
     impl = wx.BitmapButton
 
-class BitmapButton(impl):
+class BitmapButton(wx.BitmapButton):
     def __init__(self, parent: wx.Window, bitmap: wx.Bitmap, enable: bool = True, tooltip: str = ""):
-        impl.__init__(self, parent, -1, bitmap = bitmap, size = parent.FromDIP((24, 24)), style = self.get_style())
+        wx.BitmapButton.__init__(self, parent, -1, bitmap = bitmap, size = parent.FromDIP((24, 24)), style = self.get_style())
 
         self.Enable(enable)
         self.SetToolTip(tooltip)
@@ -23,3 +23,12 @@ class BitmapButton(impl):
 
             case Platform.Linux | Platform.macOS:
                 return wx.BORDER_NONE
+            
+    def SetBitmap(self, bitmap: wx.Bitmap, dir = wx.LEFT):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                self.SetBitmapLabel(bitmap)
+
+            case Platform.Linux | Platform.macOS:
+                return super().SetBitmap(bitmap, dir)
+        

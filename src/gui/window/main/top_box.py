@@ -11,6 +11,7 @@ from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.panel.panel import Panel
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 from gui.component.menu.url import URLMenu
 from gui.component.menu.episode_option import EpisodeOptionMenu
@@ -39,7 +40,7 @@ class TopBox(Panel):
         url_hbox.Add(self.url_box, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.processing_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((24, 24)))
+        self.processing_icon = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((24, 24)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self, -1, "")
         self.graph_btn = FlatButton(self, "剧情树", IconID.Tree_Structure, split = True)
