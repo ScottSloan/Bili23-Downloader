@@ -2,9 +2,13 @@ import wx
 
 from utils.common.style.icon_v4 import Icon, IconID
 
-class ToolTip(wx.StaticBitmap):
-    def __init__(self, parent):
-        wx.StaticBitmap.__init__(self, parent, -1, Icon.get_icon_bitmap(IconID.Info))
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
+
+class ToolTip(StaticBitmap):
+    def __init__(self, parent: wx.Window):
+        StaticBitmap.__init__(self, parent, size = parent.FromDIP((16, 16)))
+
+        self.SetBitmap(bmp = Icon.get_icon_bitmap(IconID.Info))
 
     def set_tooltip(self, string: str):
         tooltip = wx.ToolTip(string)
@@ -12,3 +16,5 @@ class ToolTip(wx.StaticBitmap):
         tooltip.SetAutoPop(30000)
 
         self.SetToolTip(tooltip)
+
+        self.Refresh()

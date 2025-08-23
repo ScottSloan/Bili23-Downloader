@@ -79,10 +79,7 @@ class Icon:
 
         size = cls.get_scale_size(icon_size)
 
-        sx = size.width / img.width
-        sy = size.height / img.height
-
-        scale = min(sx, sy)
+        scale = min(size.width / img.width, size.height / img.height)
         
         return img.ConvertToBitmap(scale = scale, width = size.width, height = size.height)
     
@@ -100,26 +97,18 @@ class Icon:
                 return wx.Image(BytesIO(base64.b64decode(base64_string))).ConvertToBitmap()
 
     @staticmethod
-    def get_scale_size(size: IconSize):
-        def get_base_size():
-            match size:
-                case IconSize.SMALL:
-                    return wx.Size(16, 16)
-                
-                case IconSize.MEDIUM:
-                    return wx.Size(48, 48)
-                
-                case IconSize.LARGE:
-                    return wx.Size(128, 128)
+    def get_scale_size(icon_size: IconSize):
+        match icon_size:
+            case IconSize.SMALL:
+                size = wx.Size(16, 16)
+            
+            case IconSize.MEDIUM:
+                size = wx.Size(48, 48)
+            
+            case IconSize.LARGE:
+                size = wx.Size(128, 128)
 
-        base_size = get_base_size()
+        size.Scale(Config.Sys.dpi_scale_factor, Config.Sys.dpi_scale_factor)
 
-        if Config.Sys.dpi_scale_factor <= 1:
-            return base_size
-
-        elif Config.Sys.dpi_scale_factor <= 1.5:
-            return base_size.Scale(1.5, 1.5)
-
-        else:
-            return base_size
+        return size
         

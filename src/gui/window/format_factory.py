@@ -826,7 +826,7 @@ class ContainerPage(Panel):
         font = self.GetFont()
         font.SetFractionalPointSize(font.GetFractionalPointSize() + 3)
 
-        self.back_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.Back, icon_size = IconSize.SMALL))
+        self.back_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.Back))
 
         self.title_lab = wx.StaticText(self, -1, "Title")
         self.title_lab.SetFont(font)

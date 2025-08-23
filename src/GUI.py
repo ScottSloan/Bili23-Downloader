@@ -60,6 +60,7 @@ class APP(wx.App):
 
     def init_linux_env(self):
         os.environ['GDK_BACKEND'] = "x11"
+        #os.environ['GDK_DPI_SCALE'] = "1.25"
 
     def init_vlc_env(self):
         os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"

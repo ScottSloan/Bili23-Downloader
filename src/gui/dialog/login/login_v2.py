@@ -63,37 +63,11 @@ class QRCodePanel(Panel):
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
-        wx.CallAfter(self.set_tip, ["正在加载"])
+        wx.CallAfter(self.qrcode.SetTextTip, ["正在加载"])
         
         self.show_qrcode()
 
         wx.CallAfter(self.timer.Start, 1000)
-
-    def set_tip(self, text: list):
-        font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
-
-        bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
-        dc = wx.MemoryDC(bmp)
-        dc.SetFont(font)
-        dc.Clear()
-
-        client_height = self.FromDIP(150)
-        total_text_height = sum(dc.GetTextExtent(line).height for line in text) + self.FromDIP(4) * (len(text) - 1)
-        y_start = (client_height - total_text_height) // 2
-
-        for line in text:
-            text_width, text_height = dc.GetTextExtent(line)
-            x = (self.FromDIP(150) - text_width) // 2
-            dc.DrawText(line, x, y_start)
-            y_start += text_height + self.FromDIP(4)
-
-        dc.SetPen(wx.Pen(Color.get_border_color(), width = 1))
-        dc.SetBrush(wx.TRANSPARENT_BRUSH)
-
-        dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
-
-        wx.CallAfter(self.qrcode.SetBitmap, image = bmp.ConvertToImage())
 
     def show_qrcode(self):
         def worker():
@@ -125,7 +99,7 @@ class QRCodePanel(Panel):
     def status_success(self):
         self.timer.Stop()
 
-        wx.CallAfter(self.set_tip, ["登录成功"])
+        wx.CallAfter(self.qrcode.SetTextTip, ["登录成功"])
 
         info = Login.get_user_info(login = True)
         Login.login(info)
@@ -138,7 +112,7 @@ class QRCodePanel(Panel):
 
     def status_outdated(self):
         def worker():
-            self.set_tip(["二维码已过期", "点击重新加载"])
+            self.qrcode.SetTextTip(["二维码已过期", "点击重新加载"])
 
             self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
@@ -216,6 +190,9 @@ class SMSPanel(Panel):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCodeEVT)
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLoginEVT)
 
+        self.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onSetFocusEVT)
+        self.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onKillFocusEVT)
+
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
@@ -270,6 +247,16 @@ class SMSPanel(Panel):
             return
 
         Thread(target = worker).start()
+
+    def onSetFocusEVT(self, event: wx.FocusEvent):
+        self.parent.set_2233_mask()
+        
+        event.Skip()
+
+    def onKillFocusEVT(self, event: wx.FocusEvent):
+        self.parent.set_2233_normal()
+        
+        event.Skip()
 
     def check_captcha_status(self):
         if not LoginInfo.Captcha.seccode:
@@ -340,10 +327,9 @@ class LoginDialog(Dialog):
         hbox.Add(self.sms_panel, 0, wx.EXPAND)
         hbox.AddSpacer(self.FromDIP(60))
 
-        self.left_bmp = StaticBitmap(self, size = self.FromDIP((116, 105)))
-        self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22))
-        self.right_bmp = StaticBitmap(self, size = self.FromDIP((108, 106)))
-        self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33))
+        self.left_bmp = StaticBitmap(self, size = self.FromDIP((104, 95)))
+        self.right_bmp = StaticBitmap(self, size = self.FromDIP((97, 95)))
+        self.set_2233_normal()
 
         info_lab = wx.StaticText(self, -1, "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序")
         info_lab.SetFont(self.GetFont().MakeBold())
@@ -399,3 +385,11 @@ class LoginDialog(Dialog):
             show_error_message_dialog("登录失败", parent = self)
 
         wx.CallAfter(worker)
+
+    def set_2233_normal(self):
+        self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22))
+        self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33))
+
+    def set_2233_mask(self):
+        self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22_Mask))
+        self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33_Mask))
