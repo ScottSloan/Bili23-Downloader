@@ -6,7 +6,7 @@ from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.data.file_name import preview_data, field_data, preview_data_ex
 from utils.common.regex import Regex
 from utils.common.formatter.file_name_v2 import FileNameFormatter
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.datetime_util import DateTime
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
@@ -32,7 +32,7 @@ class TemplateValidator:
 
             return {
                 "result": False,
-                "msg": self.get_msg(e),
+                "msg": self.get_err_msg(e),
                 "file_name": ""
             }
 
@@ -46,7 +46,7 @@ class TemplateValidator:
         if self.check_sep_starts():
             raise ValueError("sep starts")
         
-        if Regex.find_illegal_chars(self.template):
+        if self.check_illegal_chars():
             raise ValueError("illegal")
         
     def check_sep(self):
@@ -55,10 +55,24 @@ class TemplateValidator:
     def check_sep_starts(self):
         return self.template.startswith("/")
 
+    def check_illegal_chars(self):
+        pattern = r"{time:|{pubtime:"
+
+        if Regex.search(pattern, self.template):
+            temp = Regex.sub(pattern, "", self.template)
+        else:
+            temp = self.template
+        
+        if Regex.find_illegal_chars(temp):
+            return True
+
     def get_file_name(self):
+        self.field_dict["time"] = DateTime.now()
+        self.field_dict["pubtime"] = DateTime.from_timestamp(1755633699)
+
         return FileNameFormatter.format_file_name(self.template, field_dict = self.field_dict)
     
-    def get_msg(self, e: Exception):
+    def get_err_msg(self, e: Exception):
         match e:
             case ValueError():
                 match str(e):
@@ -74,11 +88,20 @@ class TemplateValidator:
                     case "illegal":
                         return """不能包含 <>:"|?* 之中任何字符"""
                     
+                    case msg if msg.startswith(("Single", "expected", "unexpected", "unmatched")):
+                        return "字段名必须以 {} 包裹"
+                    
+                    case "Invalid format string":
+                        raise "时间格式无效"
+                    
                     case _:
                         return str(e)
                     
             case KeyError():
                 return f"未知字段 {str(e)}"
+            
+            case IndexError():
+                return "字段名不能为空"
                     
             case _:
                 return str(e)
@@ -171,11 +194,15 @@ class EditTemplateDialog(Dialog):
 
         self.field_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
 
+        self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
+
     def init_data(self):
         self.init_list_column()
         self.init_list_data()
 
         self.field_dict = self.get_field_dict()
+
+        self.template_box.SetValue(self.data.get("template"))
 
     def init_list_column(self):
         self.field_list.AppendColumn("字段名称", width = self.FromDIP(210))
@@ -241,3 +268,6 @@ class EditTemplateDialog(Dialog):
         field_dict.update(preview_data_ex.get(self.type))
 
         return field_dict
+    
+    def onHelpEVT(self, event: wx.CommandEvent):
+        wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/advanced/custom_file_name.html")

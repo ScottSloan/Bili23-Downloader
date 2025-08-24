@@ -1,5 +1,6 @@
 import wx
 
+from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.data.file_name import template_list
 
@@ -49,9 +50,12 @@ class CustomFileNameDialog(Dialog):
     def Bind_EVT(self):
         self.template_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onEditTemplateEVT)
 
+        self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
+
     def init_data(self):
         self.item_data_dict = {}
 
+        self.update_template_list()
         self.init_list_column()
         self.init_list_data()
 
@@ -79,9 +83,36 @@ class CustomFileNameDialog(Dialog):
 
         self.template_list.SetColumnWidth(3, width = -1)
 
+    def update_template_list(self):
+        for entry in Config.Temp.file_name_template_list:
+            type = entry.get("type")
+            template = entry.get("template")
+
+            for list_entry in template_list:
+                if list_entry.get("type") == type:
+                    list_entry["template"] = template
+
     def onEditTemplateEVT(self, event: wx.ListEvent):
-        type = self.template_list.GetItemData(self.template_list.GetFocusedItem())
+        item = self.template_list.GetFocusedItem()
+
+        type = self.template_list.GetItemData(item)
         item_data = self.item_data_dict.get(type)
 
         dlg = EditTemplateDialog(self, item_data)
-        dlg.ShowModal()
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.template_list.SetItem(item, 3, dlg.get_template())
+
+        self.template_list.SetColumnWidth(3, width = -1)
+
+    def onOKEVT(self):
+        Config.Temp.file_name_template_list.clear()
+
+        for item in range(self.template_list.GetItemCount()):
+            Config.Temp.file_name_template_list.append({
+                "template": self.template_list.GetItemText(item, 3),
+                "type": self.template_list.GetItemData(item)
+            })
+
+    def onHelpEVT(self, event: wx.CommandEvent):
+        wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/advanced/custom_file_name.html")
