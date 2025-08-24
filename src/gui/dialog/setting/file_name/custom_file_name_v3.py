@@ -71,7 +71,8 @@ class CustomFileNameDialog(Dialog):
             self.item_data_dict[type] = {
                 "type": type,
                 "template": template,
-                "link": entry.get("link")
+                "link": entry.get("link"),
+                "link_label": entry.get("link_label")
             }
 
             self.template_list.SetItemData(index, type)

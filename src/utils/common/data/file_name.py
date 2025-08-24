@@ -5,37 +5,43 @@ template_list = [
         "type": 1,
         "category": "投稿视频",
         "subcategory": "普通",
-        "link": "https://www.bilibili.com/video/BV1sHePzWEbG"
+        "link": "https://www.bilibili.com/video/BV1sHePzWEbG",
+        "link_label": "BV1sHePzWEbG"
     },
     {
         "type": 2,
         "category": "投稿视频",
         "subcategory": "分P",
-        "link": "https://www.bilibili.com/video/BV1Rb4y1t7gc?p=4"
+        "link": "https://www.bilibili.com/video/BV1Rb4y1t7gc?p=4",
+        "link_label": "BV1Rb4y1t7gc P4"
     },
     {
         "type": 3,
         "category": "投稿视频",
         "subcategory": "合集",
-        "link": "https://www.bilibili.com/video/BV1zA7TzLEQe"
+        "link": "https://www.bilibili.com/video/BV1zA7TzLEQe",
+        "link_label": "BV1zA7TzLEQe"
     },
     {
         "type": 4,
         "category": "投稿视频",
         "subcategory": "互动视频",
-        "link": "https://www.bilibili.com/video/BV1k4411B7KE"
+        "link": "https://www.bilibili.com/video/BV1k4411B7KE",
+        "link_label": "BV1k4411B7KE"
     },
     {
         "type": 5,
         "category": "剧集",
         "subcategory": "-",
-        "link": "https://www.bilibili.com/bangumi/play/ep693247"
+        "link": "https://www.bilibili.com/bangumi/play/ep693247",
+        "link_label": "ep693247"
     },
     {
         "type": 6,
         "category": "课程",
         "subcategory": "-",
-        "link": "https://www.bilibili.com/cheese/play/ep158662"
+        "link": "https://www.bilibili.com/cheese/play/ep158662",
+        "link_label": "ep158662"
     }
 ]
 
@@ -62,6 +68,8 @@ preview_data = {
         "collection_title": "",
         "series_title": "",
         "interact_title": "",
+        "badge": "充电专属/最新/合作",
+        "bangumi_type": "",
         "aid": 115056436060087,
         "bvid": "BV1sHePzWEbG",
         "cid": 31809079869,
@@ -85,6 +93,8 @@ preview_data = {
         "collection_title": "",
         "series_title": "",
         "interact_title": "",
+        "badge": "充电专属/最新/合作",
+        "bangumi_type": "",
         "aid": 634233546,
         "bvid": "BV1Rb4y1t7gc",
         "cid": 442845594,
@@ -108,6 +118,8 @@ preview_data = {
         "collection_title": "单机游戏",
         "series_title": "",
         "interact_title": "",
+        "badge": "充电专属/最新/合作",
+        "bangumi_type": "",
         "aid": 114602645920814,
         "bvid": "BV1zA7TzLEQe",
         "cid": 30249781848,
@@ -131,6 +143,8 @@ preview_data = {
         "collection_title": "",
         "series_title": "",
         "interact_title": "【互动视频】8种结局，你怎样弄到钱？",
+        "badge": "充电专属/最新/合作",
+        "bangumi_type": "",
         "aid": 65584193,
         "bvid": "BV1k4411B7KE",
         "cid": 113798528,
@@ -154,6 +168,8 @@ preview_data = {
         "collection_title": "",
         "series_title": "孤独摇滚！",
         "interact_title": "",
+        "badge": "限免/会员/预告/付费",
+        "bangumi_type": "番剧/电影/纪录片/国创/电视剧/综艺",
         "aid": 944573356,
         "bvid": "BV1yW4y1j7Ft",
         "cid": 875212290,
@@ -177,6 +193,8 @@ preview_data = {
         "collection_title": "",
         "series_title": "【618限时价】清华梁爽：0-N1日语精讲高级班",
         "interact_title": "",
+        "badge": "全集试看/部分试看/付费",
+        "bangumi_type": "",
         "aid": 315163535,
         "bvid": "",
         "cid": 1639897333,
@@ -193,32 +211,32 @@ field_data = {
     "time": {
         "name": "{time:%H-%M-%S}",
         "description": "当前时间（%H-%M-%S）",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "timestamp": {
         "name": "{timestamp}",
         "description": "当前时间戳",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "pubtime": {
         "name": "{pubtime:%Y-%m-%d}",
         "description": "视频发布时间（%Y-%m-%d）",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "pubtimestamp": {
         "name": "{pubtimestamp}",
         "description": "视频发布时间戳",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "number": {
         "name": "{number}",
         "description": "序号",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "zero_padding_number": {
         "name": "{zero_padding_number}",
         "description": "补零序号",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "zone": {
         "name": "{zone}",
@@ -233,7 +251,7 @@ field_data = {
     "area": {
         "name": "{area}",
         "description": "地区",
-        "type": []
+        "type": [5]
     },
     "page": {
         "name": "{page}",
@@ -243,16 +261,16 @@ field_data = {
     "title": {
         "name": "{title}",
         "description": "视频标题",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "section_title": {
         "name": "{section_title}",
         "description": "章节标题",
-        "type": [3]
+        "type": [3, 5, 6]
     },
     "part_title": {
         "name": "{part_title}",
-        "description": "分节\分P总标题",
+        "description": "分节/分P总标题",
         "type": [2, 3]
     },
     "collection_title": {
@@ -262,72 +280,82 @@ field_data = {
     },
     "series_title": {
         "name": "{series_title}",
-        "description": "剧集名称\课程名称",
-        "type": []
+        "description": "剧集名称/课程名称",
+        "type": [5, 6]
     },
     "interact_title": {
         "name": "{interact_title}",
         "description": "互动视频总标题",
         "type": [4]
     },
+    "badge": {
+        "name": "{badge}",
+        "description": '剧集列表中“备注”一栏的值',
+        "type": [1, 2, 3, 4, 5, 6]
+    },
+    "bangumi_type": {
+        "name": "{bangumi_type}",
+        "description": "剧集类型",
+        "type": [5]
+    },
     "aid": {
         "name": "{aid}",
         "description": "视频 av 号",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "bvid": {
         "name": "{bvid}",
         "description": "视频 BV 号",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5]
     },
     "cid": {
         "name": "{cid}",
         "description": "视频 cid",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "ep_id": {
         "name": "{ep_id}",
         "description": "视频 ep_id",
-        "type": [],
+        "type": [5, 6],
     },
     "season_id": {
         "name": "{season_id}",
         "description": "视频 season_id",
-        "type": []
+        "type": [5, 6]
     },
     "media_id": {
         "name": "{media_id}",
         "description": "视频 media_id",
-        "type": []
+        "type": [5]
     },
     "video_quality": {
         "name": "{video_quality}",
         "description": "视频清晰度",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "audio_quality": {
         "name": "{audio_quality}",
         "description": "音质",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "video_codec": {
         "name": "{video_codec}",
         "description": "视频编码",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "duration": {
         "name": "{duration}",
         "description": "视频时长，单位为秒",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "up_name": {
         "name": "{up_name}",
         "description": "UP 主名称",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 6]
     },
     "up_uid": {
         "name": "{up_uid}",
         "description": "UP 主 uid",
-        "type": [1, 2, 3, 4]
+        "type": [1, 2, 3, 4, 6]
     }
 }

@@ -1,6 +1,5 @@
 import wx
 import wx.html2
-import webbrowser
 import importlib.resources
 
 from utils.config import Config
@@ -96,7 +95,7 @@ class WebPage:
 
         cls.update_ws_port(path)
 
-        webbrowser.open(f"file://{path}")
+        wx.LaunchDefaultBrowser(f"file://{path}")
 
     @staticmethod
     def get_static_file_path(file_name: str):

@@ -10,7 +10,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
 
         wx.adv.TaskBarIcon.__init__(self)
 
-        self.SetIcon(wx.Icon(Icon.get_app_icon_bitmap(IconID.App_Small)), Config.APP.name)
+        self.SetIcon(wx.BitmapBundle.FromBitmap(Icon.get_icon_bitmap(IconID.App_Default)), Config.APP.name)
 
         self.init_id()
 

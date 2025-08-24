@@ -1,6 +1,5 @@
 import wx
 import sys
-import webbrowser
 
 from utils.config import Config
 
@@ -74,7 +73,7 @@ class UpdateDialog(Dialog):
         self.ignore_version_chk.SetValue(Config.Misc.ignore_version == self.info.get("version_code"))
     
     def onOKEVT(self):
-        webbrowser.open(self.info["url"])
+        wx.LaunchDefaultBrowser(self.info.get("url"))
 
         if self.force:
             sys.exit()

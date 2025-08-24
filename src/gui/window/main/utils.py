@@ -1,6 +1,5 @@
 import wx
 import asyncio
-import webbrowser
 
 from utils.config import Config
 from utils.auth.login_v2 import Login
@@ -78,7 +77,7 @@ class Window:
             dlg.SetYesNoLabels("说明文档", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/basic.html")
 
             Config.Basic.is_new_user = False
 
@@ -377,7 +376,7 @@ class Utils:
             dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
             if dlg.ShowModal() == wx.ID_YES:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
             
         result = FFmpeg.Env.check_availability()
 

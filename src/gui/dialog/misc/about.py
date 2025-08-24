@@ -1,9 +1,8 @@
 import wx
-import webbrowser
 
 from utils.config import Config
 
-from utils.common.style.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.compile_data import date, compile, beta_flag
 from utils.common.style.color import Color
 
@@ -29,7 +28,7 @@ class AboutWindow(Dialog):
     def init_UI(self):
         self.set_dark_mode()
 
-        logo = StaticBitmap(self, image = self.set_icon_background(Icon.get_app_icon_bitmap(IconID.App_Default)), size = 0)
+        logo = StaticBitmap(self, bmp = self.set_icon_background(Icon.get_icon_bitmap(IconID.App_Default, IconSize.MEDIUM)), size = self.FromDIP((48, 48)))
 
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
@@ -103,10 +102,10 @@ class AboutWindow(Dialog):
         license_window.ShowModal()
 
     def onOpenGithubLink(self, event):
-        webbrowser.open("https://www.github.com/ScottSloan/Bili23-Downloader")
+        wx.LaunchDefaultBrowser("https://www.github.com/ScottSloan/Bili23-Downloader")
 
     def onOpenHomeLink(self, event):
-        webbrowser.open("https://bili23.scott-sloan.cn/")
+        wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/")
 
     def set_icon_background(self, image: wx.Image):
         width, height = image.GetSize()

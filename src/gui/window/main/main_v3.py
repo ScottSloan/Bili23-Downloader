@@ -1,5 +1,4 @@
 import wx
-import webbrowser
 
 from utils.config import Config
 
@@ -160,16 +159,16 @@ class MainWindow(Frame):
                 Thread(target = self.utils.get_changelog).start()
 
             case ID.HELP_MENU:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/basic.html")
 
             case ID.FEEDBACK_MENU:
-                webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader/issues")
+                wx.LaunchDefaultBrowser("https://github.com/ScottSloan/Bili23-Downloader/issues")
 
             case ID.COMMUNITY_MENU:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/community.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/community.html")
 
             case ID.SUPPORTTED_URL_MENU:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/url.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/url.html")
 
             case ID.ABOUT_MENU:
                 Window.about_window(self)
