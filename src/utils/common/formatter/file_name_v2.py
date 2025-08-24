@@ -10,11 +10,9 @@ from utils.common.datetime_util import DateTime
 
 class FileNameFormatter:
     @classmethod
-    def format_file_name(cls, task_info: DownloadTaskInfo, template: str = None):
-        if not template:
-            template = cls.get_template(task_info)
-
-        field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
+    def format_file_name(cls, template: str, task_info: DownloadTaskInfo = None, field_dict: dict = None):
+        if not field_dict:
+            field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
 
         file_name = template.format(**field_dict)
 
@@ -22,7 +20,7 @@ class FileNameFormatter:
     
     @classmethod
     def format_file_basename(cls, task_info: DownloadTaskInfo, template: str = None):
-        return os.path.basename(cls.format_file_name(task_info, template))
+        return os.path.basename(cls.format_file_name(template, task_info = task_info))
 
     @classmethod
     def get_download_path(cls, task_info: DownloadTaskInfo):
@@ -96,12 +94,13 @@ class FileNameFormatter:
         return check({
             "time": DateTime.now(),
             "timestamp": str(DateTime.get_timestamp()),
-            "pubtime": DateTime.from_timestamp(task_info.pubtime),
-            "pubtimestamp": task_info.pubtime,
+            "pubtime": DateTime.from_timestamp(task_info.pubtimestamp),
+            "pubtimestamp": task_info.pubtimestamp,
             "number": task_info.number,
             "zero_padding_number": task_info.zero_padding_number,
-            "zone": task_info.zone_info.get("zone"),
-            "subzone": task_info.zone_info.get("subzone"),
+            "page": task_info.page,
+            "zone": task_info.zone,
+            "subzone": task_info.subzone,
             "area": task_info.area,
             "title": FileNameFormatter.get_legal_file_name(task_info.title),
             "aid": task_info.aid,
@@ -114,12 +113,15 @@ class FileNameFormatter:
             "section_title": FileNameFormatter.get_legal_file_name(task_info.section_title),
             "part_title": FileNameFormatter.get_legal_file_name(task_info.part_title),
             "collection_title": FileNameFormatter.get_legal_file_name(task_info.collection_title),
+            "interact_title": FileNameFormatter.get_legal_file_name(task_info.interact_title),
+            "badge": task_info.badge,
+            "bangumi_type": task_info.bangumi_type,
             "video_quality": get_mapping_key_by_value(video_quality_map, task_info.video_quality_id),
             "audio_quality": get_mapping_key_by_value(audio_quality_map, task_info.audio_quality_id),
             "video_codec": get_mapping_key_by_value(video_codec_short_map, task_info.video_codec_id),
             "duration": task_info.duration,
-            "up_name": FileNameFormatter.get_legal_file_name(task_info.up_info.get("up_name")),
-            "up_mid": task_info.up_info.get("up_mid")
+            "up_name": FileNameFormatter.get_legal_file_name(task_info.up_name),
+            "up_uid": task_info.up_uid
         })
 
     @staticmethod

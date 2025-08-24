@@ -112,7 +112,7 @@ preview_data = {
         "subzone": "其他游戏",
         "area": "",
         "page": 1,
-        "title": "00 重生 / 重启",
+        "title": "00 重生 _ 重启",
         "section_title": "死亡之门",
         "part_title": "【单机】勿忘我 Remember Me",
         "collection_title": "单机游戏",
@@ -290,7 +290,7 @@ field_data = {
     },
     "badge": {
         "name": "{badge}",
-        "description": '剧集列表中“备注”一栏的值',
+        "description": '备注（仅供预览，以实际显示为准）',
         "type": [1, 2, 3, 4, 5, 6]
     },
     "bangumi_type": {
@@ -357,5 +357,27 @@ field_data = {
         "name": "{up_uid}",
         "description": "UP 主 uid",
         "type": [1, 2, 3, 4, 6]
+    }
+}
+
+preview_data_ex = {
+    1: {
+        "badge": "最新"
+    },
+    2: {
+        "badge": "合作",
+    },
+    3: {
+        "badge": "充电专属",
+    },
+    4: {
+        "badge": "最新",
+    },
+    5: {
+        "badge": "会员",
+        "bangumi_type": "番剧"
+    },
+    6: {
+        "badge": "全集试看"
     }
 }

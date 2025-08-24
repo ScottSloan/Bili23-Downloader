@@ -183,7 +183,7 @@ class AddNewTemplateDialog(Dialog):
         if self.check_sep(template):
             raise ValueError("sep")
         
-        file_name = FileNameFormatter.format_file_name(get_task_info(), template)
+        file_name = FileNameFormatter.format_file_name(template, get_task_info())
 
         if Regex.find_illegal_chars(file_name):
             raise ValueError("illegal")

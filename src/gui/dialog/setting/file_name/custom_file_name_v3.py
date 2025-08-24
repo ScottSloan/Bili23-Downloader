@@ -59,7 +59,7 @@ class CustomFileNameDialog(Dialog):
         self.template_list.AppendColumn("序号", width = self.FromDIP(50))
         self.template_list.AppendColumn("类别", width = self.FromDIP(75))
         self.template_list.AppendColumn("子类别", width = self.FromDIP(75))
-        self.template_list.AppendColumn("文件名模板", width = self.FromDIP(300))
+        self.template_list.AppendColumn("文件名模板", width = -1)
 
     def init_list_data(self):
         for index, entry in enumerate(template_list):
@@ -76,6 +76,8 @@ class CustomFileNameDialog(Dialog):
             }
 
             self.template_list.SetItemData(index, type)
+
+        self.template_list.SetColumnWidth(3, width = -1)
 
     def onEditTemplateEVT(self, event: wx.ListEvent):
         type = self.template_list.GetItemData(self.template_list.GetFocusedItem())

@@ -22,6 +22,8 @@ class DownloadTaskInfo:
         self.list_number: int = 0
         # 时间戳
         self.timestamp: int = 0
+        # 分P序号
+        self.page: int = 0
         
         # Referer URL
         self.referer_url: str = ""
@@ -46,6 +48,8 @@ class DownloadTaskInfo:
         self.part_title: str = ""
         # 合集标题
         self.collection_title: str = ""
+        # 互动视频标题
+        self.interact_title: str = ""
 
         # 视频时长
         self.duration: int = 0
@@ -97,13 +101,21 @@ class DownloadTaskInfo:
         self.extra_option: dict = {}
 
         # 视频发布时间戳
-        self.pubtime: int = 0
+        self.pubtimestamp: int = 0
         # 地区
         self.area: str = ""
         # 分区信息
-        self.zone_info: dict = {}
-        # UP 主信息
-        self.up_info: dict = {}
+        self.zone: str = ""
+        # 子分区信息
+        self.subzone: str = ""
+        # UP 主名称
+        self.up_name: str = ""
+        # UP 主uid
+        self.up_uid: int = 0
+        # 备注
+        self.badge: str = ""
+        # 剧集类型
+        self.bangumi_type: str = ""
 
         # 视频宽度
         self.video_width: int = 0
@@ -124,6 +136,7 @@ class DownloadTaskInfo:
             "zero_padding_number": self.zero_padding_number,
             "list_number": self.list_number,
             "timestamp": self.timestamp,
+            "page": self.page,
 
             "referer_url": self.referer_url,
             "cover_url": self.cover_url,
@@ -140,6 +153,7 @@ class DownloadTaskInfo:
             "section_title": self.section_title,
             "part_title": self.part_title,
             "collection_title": self.collection_title,
+            "interact_title": self.interact_title,
 
             "duration": self.duration,
 
@@ -171,10 +185,14 @@ class DownloadTaskInfo:
 
             "extra_option": self.extra_option,
 
-            "pubtime": self.pubtime,
+            "pubtimestamp": self.pubtimestamp,
             "area": self.area,
-            "zone_info": self.zone_info,
-            "up_info": self.up_info,
+            "zone": self.zone,
+            "subzone": self.subzone,
+            "up_name": self.up_name,
+            "up_uid": self.up_uid,
+            "badge": self.badge,
+            "bangumi_type": self.bangumi_type,
 
             "video_width": self.video_width,
             "video_height": self.video_height,
@@ -193,6 +211,7 @@ class DownloadTaskInfo:
         self.zero_padding_number = data.get("zero_padding_number", self.zero_padding_number)
         self.list_number = data.get("list_number", self.list_number)
         self.timestamp = data.get("timestamp", self.timestamp)
+        self.page = data.get("page", self.page)
 
         self.referer_url = data.get("referer_url", self.referer_url)
         self.cover_url = data.get("cover_url", self.cover_url)
@@ -209,6 +228,7 @@ class DownloadTaskInfo:
         self.section_title = data.get("section_title", self.section_title)
         self.part_title = data.get("part_title", self.part_title)
         self.collection_title = data.get("collection_title", self.collection_title)
+        self.interact_title = data.get("interact_title", self.interact_title)
 
         self.duration = data.get("duration", self.duration)
 
@@ -240,10 +260,14 @@ class DownloadTaskInfo:
 
         self.extra_option = data.get("extra_option", self.extra_option)
         
-        self.pubtime = data.get("pubtime", self.pubtime)
+        self.pubtimestamp = data.get("pubtimestamp", self.pubtimestamp)
         self.area = data.get("area", self.area)
-        self.zone_info = data.get("zone_info", self.zone_info)
-        self.up_info = data.get("up_info", self.up_info)
+        self.zone = data.get("zone", self.zone)
+        self.subzone = data.get("subzone", self.subzone)
+        self.up_name = data.get("up_name", self.up_name)
+        self.up_uid = data.get("up_uid", self.up_uid)
+        self.badge = data.get("badge", self.badge)
+        self.bangumi_type = data.get("bangumi_type", self.bangumi_type)
 
         self.video_width = data.get("video_width", self.video_width)
         self.video_height = data.get("video_height", self.video_height)

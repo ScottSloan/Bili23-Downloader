@@ -45,10 +45,8 @@ class DownloadInfo:
             "collection_title": item_info.collection_title,
             "series_title": item_info.series_title,
             "referer_url": "https://www.bilibili.com",
-            "up_info": {
-                "up_name": item_info.up_name,
-                "up_mid": item_info.up_mid
-            },
+            "up_name": item_info.up_name,
+            "up_uid": item_info.up_mid,
             "parse_type": item_info.type,
             "download_type": item_info.type,
             "download_base_path": Config.Download.path

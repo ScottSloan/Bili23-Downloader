@@ -1,11 +1,87 @@
 import wx
+import os
 import wx.adv
 
 from utils.common.style.icon_v4 import Icon, IconID
-from utils.common.data.file_name import preview_data, field_data
+from utils.common.data.file_name import preview_data, field_data, preview_data_ex
+from utils.common.regex import Regex
+from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.model.data_type import DownloadTaskInfo
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
+
+class TemplateValidator:
+    def __init__(self, template: str, field_dict: dict):
+        self.template = template
+        self.field_dict = field_dict
+    
+    def validate(self):
+        try:
+            self.check()
+
+            return {
+                "result": True,
+                "msg": "success",
+                "file_name": self.get_file_name()
+            }
+
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+
+            return {
+                "result": False,
+                "msg": self.get_msg(e),
+                "file_name": ""
+            }
+
+    def check(self):
+        if not self.template:
+            raise ValueError("empty")
+        
+        if self.check_sep():
+            raise ValueError("sep")
+        
+        if self.check_sep_starts():
+            raise ValueError("sep starts")
+        
+        if Regex.find_illegal_chars(self.template):
+            raise ValueError("illegal")
+        
+    def check_sep(self):
+        return "\\" in self.template
+    
+    def check_sep_starts(self):
+        return self.template.startswith("/")
+
+    def get_file_name(self):
+        return FileNameFormatter.format_file_name(self.template, field_dict = self.field_dict)
+    
+    def get_msg(self, e: Exception):
+        match e:
+            case ValueError():
+                match str(e):
+                    case "empty":
+                        return "模板名不能为空"
+                    
+                    case "sep":
+                        return "路径分隔符不正确，请使用正斜杠 /"
+                    
+                    case "sep starts":
+                        return "不能以 / 开头"
+                    
+                    case "illegal":
+                        return """不能包含 <>:"|?* 之中任何字符"""
+                    
+                    case _:
+                        return str(e)
+                    
+            case KeyError():
+                return f"未知字段 {str(e)}"
+                    
+            case _:
+                return str(e)
 
 class EditTemplateDialog(Dialog):
     def __init__(self, parent: wx.Window, data: dict):
@@ -36,7 +112,26 @@ class EditTemplateDialog(Dialog):
         preview_lab = wx.StaticText(self, -1, "预览")
 
         preview_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        preview_hbox.Add(preview_lab, 0, wx.ALL, self.FromDIP(6))
+        preview_hbox.Add(preview_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        directory_lab = wx.StaticText(self, -1, "子目录：")
+        self.directory_lab = wx.StaticText(self, -1, style = wx.ST_ELLIPSIZE_START)
+
+        file_name_lab = wx.StaticText(self, -1, "文件名：")
+        self.file_name_lab = wx.StaticText(self, -1, style = wx.ST_ELLIPSIZE_START)
+
+        directory_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        directory_hbox.Add(directory_lab, 0, wx.ALL & (~wx.RIGHT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        directory_hbox.Add(self.directory_lab, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        file_name_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        file_name_hbox.Add(file_name_lab, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        file_name_hbox.Add(self.file_name_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        preview_vbox = wx.BoxSizer(wx.VERTICAL)
+        preview_vbox.Add(preview_hbox, 0, wx.EXPAND)
+        preview_vbox.Add(directory_hbox, 0, wx.EXPAND)
+        preview_vbox.Add(file_name_hbox, 0, wx.EXPAND)
 
         field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
         link_lab = wx.StaticText(self, -1, "示例视频：")
@@ -65,23 +160,27 @@ class EditTemplateDialog(Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)
         vbox.Add(self.template_box, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(preview_hbox, 0, wx.EXPAND)
+        vbox.Add(preview_vbox, 0, wx.EXPAND)
         vbox.Add(field_vbox, 0, wx.EXPAND)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        pass
+        self.template_box.Bind(wx.EVT_TEXT, self.onTextEVT)
+
+        self.field_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
 
     def init_data(self):
         self.init_list_column()
         self.init_list_data()
 
+        self.field_dict = self.get_field_dict()
+
     def init_list_column(self):
         self.field_list.AppendColumn("字段名称", width = self.FromDIP(210))
         self.field_list.AppendColumn("说明", width = self.FromDIP(240))
-        self.field_list.AppendColumn("示例", width = self.FromDIP(200))
+        self.field_list.AppendColumn("示例", width = -1)
 
     def init_list_data(self):
         for type in [0, self.type]:
@@ -91,3 +190,54 @@ class EditTemplateDialog(Dialog):
         for entry in field_data.values():
             if self.type in entry.get("type"):
                 self.field_list.Append([entry.get("name"), entry.get("description"), entry.get("example")])
+
+        self.field_list.SetColumnWidth(2, width = -1)
+
+    def onTextEVT(self, event: wx.CommandEvent):
+        validator = TemplateValidator(self.get_template(), self.field_dict)
+
+        result = validator.validate()
+
+        if result.get("result"):
+            self.show_file_name(result.get("file_name"))
+
+        else:
+            self.show_error_tip(result.get("msg"))
+            self.show_file_name("")
+
+        self.file_name_lab.Wrap(self.file_name_lab.GetSize().width)
+        self.Layout()
+
+        event.Skip()
+
+    def onAddFieldEVT(self, event: wx.ListEvent):
+        field = self.field_list.GetItemText(self.field_list.GetFocusedItem(), 0)
+
+        self.template_box.AppendText(field)
+
+    def show_file_name(self, file_name: str):
+        dirname = os.path.dirname(file_name)
+        basename = os.path.basename(file_name)
+
+        self.directory_lab.SetLabel(dirname)
+        self.directory_lab.SetToolTip(dirname)
+        self.file_name_lab.SetLabel(basename)
+        self.file_name_lab.SetToolTip(basename)
+
+    def show_error_tip(self, msg: str):
+        tip = wx.adv.RichToolTip("模板格式错误", msg)
+        tip.SetIcon(wx.ICON_ERROR)
+
+        tip.ShowFor(self.template_box)
+
+        wx.Bell()
+
+    def get_template(self):
+        return self.template_box.GetValue()
+    
+    def get_field_dict(self):
+        field_dict = preview_data.get(self.type)
+        field_dict.update(preview_data.get(0))
+        field_dict.update(preview_data_ex.get(self.type))
+
+        return field_dict
