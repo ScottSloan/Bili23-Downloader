@@ -116,6 +116,8 @@ class DownloadTaskInfo:
         self.badge: str = ""
         # 剧集类型
         self.bangumi_type: str = ""
+        # 模板类型
+        self.template_type: int = 0
 
         # 视频宽度
         self.video_width: int = 0
@@ -193,6 +195,7 @@ class DownloadTaskInfo:
             "up_uid": self.up_uid,
             "badge": self.badge,
             "bangumi_type": self.bangumi_type,
+            "template_type": self.template_type,
 
             "video_width": self.video_width,
             "video_height": self.video_height,
@@ -268,6 +271,7 @@ class DownloadTaskInfo:
         self.up_uid = data.get("up_uid", self.up_uid)
         self.badge = data.get("badge", self.badge)
         self.bangumi_type = data.get("bangumi_type", self.bangumi_type)
+        self.template_type = data.get("template_type", self.template_type)
 
         self.video_width = data.get("video_width", self.video_width)
         self.video_height = data.get("video_height", self.video_height)
@@ -354,6 +358,7 @@ class TreeListItemInfo:
         self.item_type: str = "node"
         self.type: int = 0
         self.bangumi_type: str = ""
+        self.template_type: int = 0
 
     def to_dict(self):
         return {
@@ -392,7 +397,8 @@ class TreeListItemInfo:
             "current_episode": self.current_episode,
             "item_type": self.item_type,
             "type": self.type,
-            "bangumi_type": self.bangumi_type
+            "bangumi_type": self.bangumi_type,
+            "template_type": self.template_type
         }
 
     def load_from_dict(self, data: dict):
@@ -432,6 +438,7 @@ class TreeListItemInfo:
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
         self.bangumi_type = data.get("bangumi_type", self.bangumi_type)
+        self.template_type = data.get("template_type", self.template_type)
 
 class Command:
     def __init__(self):

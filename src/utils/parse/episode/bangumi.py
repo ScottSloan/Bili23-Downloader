@@ -1,5 +1,6 @@
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, TemplateType
 from utils.common.formatter.formatter import FormatUtils
+from utils.common.map import bangumi_type_map
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -8,21 +9,25 @@ class Bangumi:
     target_ep_id: int = 0
 
     @classmethod
-    def parse_episodes(cls, info_json: dict, target_ep_id: int):
+    def parse_episodes(cls, info_json: dict, target_ep_id: int = None):
         cls.target_ep_id = target_ep_id
         EpisodeInfo.parser = cls
 
-        EpisodeInfo.clear_episode_data()
+        if target_ep_id:
+            EpisodeInfo.clear_episode_data()
+
+        bangumi_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(info_json.get("title"), label = bangumi_type_map.get(info_json.get("type"))))
 
         if info_json.get("episodes"):
-            main_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info("正片", label = "章节"))
+            main_pid = EpisodeInfo.add_item(bangumi_pid, EpisodeInfo.get_node_info("正片", label = "章节"))
 
             cls.episodes_parser(info_json["episodes"], main_pid, "正片", info_json)
 
         if "section" in info_json:
-            cls.section_parser(info_json)
+            cls.section_parser(info_json, bangumi_pid)
 
-        Filter.episode_display_mode()
+        if target_ep_id:
+            Filter.episode_display_mode()
 
     @classmethod
     def episodes_parser(cls, episodes: list, pid: int, section_title: str, info_json: dict):
@@ -36,11 +41,11 @@ class Bangumi:
             cls.update_target_section_title(episode, section_title)
 
     @classmethod
-    def section_parser(cls, info_json: dict):
+    def section_parser(cls, info_json: dict, pid: str):
         for section in info_json["section"]:
             section_title = section["title"]
 
-            section_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
+            section_pid = EpisodeInfo.add_item(pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
 
             cls.episodes_parser(section["episodes"], section_pid, section_title, info_json)
 
@@ -57,6 +62,8 @@ class Bangumi:
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
         episode["current_episode"] = episode.get("ep_id") == cls.target_ep_id
+        episode["bangumi_type"] = bangumi_type_map.get(info_json.get("type"))
+        episode["template_type"] = TemplateType.Bangumi.value
 
         return EpisodeInfo.get_entry_info(episode)
     
@@ -72,3 +79,4 @@ class Bangumi:
     @classmethod
     def condition_in_section(cls, episode: dict):
         return episode.get("item_type") == "node" and episode.get("title") == cls.target_section_title
+    

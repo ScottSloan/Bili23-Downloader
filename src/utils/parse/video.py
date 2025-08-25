@@ -142,7 +142,7 @@ class VideoParser(Parser):
         return self.info_json.get("title")
     
     def is_in_section_option_enable(self):
-        return len(self.info_json["pages"]) > 1 or "ugc_season" in self.info_json
+        return "ugc_season" in self.info_json
 
     def is_interactive_video(self):
         return self.is_interactive

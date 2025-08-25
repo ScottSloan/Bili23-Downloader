@@ -1,5 +1,5 @@
 from utils.config import Config
-from utils.common.enums import ParseType, EpisodeDisplayType
+from utils.common.enums import ParseType, EpisodeDisplayType, TemplateType
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -20,33 +20,46 @@ class Video:
             case EpisodeDisplayType.In_Section | EpisodeDisplayType.All:
                 if "ugc_season" in info_json:
                     cls.ugc_season_parser(info_json)
+
                 elif "node_list" in info_json:
                     cls.interact_parser(info_json)
                 else:
                     cls.pages_parser(info_json)
 
-        Filter.episode_display_mode(reset = not (len(info_json["pages"]) > 1 or "ugc_season" in info_json) and EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section)
+        Filter.episode_display_mode(reset = EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section)
 
     @classmethod
     def pages_parser(cls, info_json: dict):
         pages_cnt = len(info_json["pages"])
+
+        part_title = info_json.get("title")
+
+        if pages_cnt > 1:
+            page_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(part_title, label = "分P"))
+        else:
+            page_pid = EpisodeInfo.root_pid
 
         for page in info_json["pages"]:
             page["cover_url"] = info_json["pic"]
             page["aid"] = info_json["aid"]
             page["bvid"] = info_json["bvid"]
             page["pubtime"] = info_json["pubdate"]
-            page["title"] = info_json["title"] if pages_cnt == 1 else page["part"]
+            page["title"] = page["part"] if pages_cnt > 1 else info_json["title"]
+            page["part_title"] = part_title if pages_cnt > 1 else ""
+            page["template_type"] = TemplateType.Video_Part.value if pages_cnt > 1 else TemplateType.Video_Normal.value
 
-            EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(page.copy(), info_json))
+            EpisodeInfo.add_item(page_pid, cls.get_entry_info(page.copy(), info_json))
 
     @classmethod
     def ugc_season_parser(cls, info_json: dict):
+        collection_title = info_json["ugc_season"]["title"]
+
+        collection_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(collection_title, label = "合集"))
+
         for section in info_json["ugc_season"]["sections"]:
-            collection_title = info_json["ugc_season"]["title"]
             section_title = section["title"]
 
-            section_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
+            section_pid = EpisodeInfo.add_item(collection_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
 
             for episode in section["episodes"]:
                 cover_url = episode["arc"]["pic"]
@@ -62,6 +75,7 @@ class Video:
                     episode["pubtime"] = pubtime
                     episode["section_title"] = section_title
                     episode["collection_title"] = collection_title
+                    episode["template_type"] = TemplateType.Video_Collection.value
 
                     EpisodeInfo.add_item(section_pid, cls.get_entry_info(episode.copy(), info_json))
 
@@ -78,6 +92,7 @@ class Video:
                         page["section_title"] = section_title
                         page["part_title"] = part_title
                         page["collection_title"] = collection_title
+                        page["template_type"] = TemplateType.Video_Collection.value
 
                         EpisodeInfo.add_item(part_pid, cls.get_entry_info(page.copy(), info_json))
 
@@ -85,18 +100,23 @@ class Video:
 
     @classmethod
     def interact_parser(cls, info_json: dict):
-        info_json["pages"].clear()
+        interact_title = info_json.get("title")
+
+        interact_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(interact_title, label = "互动"))
 
         for node in info_json.get("node_list"):
             page = {
-                "part": node.title,
+                "cover_url": info_json["pic"],
+                "aid": info_json["aid"],
+                "bvid": info_json["bvid"],
+                "pubtime": info_json["pubdate"],
+                "title": node.title,
                 "cid": node.cid,
-                "interact_title": info_json.get("title")
+                "interact_title": interact_title,
+                "template_type": TemplateType.Video_Interact.value
             }
 
-            info_json["pages"].append(page)
-
-        cls.pages_parser(info_json)
+            EpisodeInfo.add_item(interact_pid, cls.get_entry_info(page.copy(), info_json))
 
     @staticmethod
     def get_entry_info(episode: dict, info_json: dict):

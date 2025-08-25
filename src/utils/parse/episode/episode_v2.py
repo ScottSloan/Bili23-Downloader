@@ -96,10 +96,12 @@ class EpisodeInfo:
             "cover_url": episode.get("cover_url", ""),
             "link": episode.get("link"),
             "pid": 0,
+            "badge": episode.get("badge", ""),
             "section_title": episode.get("section_title", ""),
             "part_title": episode.get("part_title", ""),
             "collection_title": episode.get("collection_title", ""),
             "series_title": episode.get("series_title", ""),
+            "interact_title": episode.get("interact_title", ""),
             "area": episode.get("area", ""),
             "zone": episode.get("zone", ""),
             "subzone": episode.get("subzone", ""),
@@ -107,7 +109,9 @@ class EpisodeInfo:
             "up_mid": episode.get("up_mid", 0),
             "current_episode": episode.get("current_episode", False),
             "item_type": "item",
-            "type": episode.get("type", 0)
+            "type": episode.get("type", 0),
+            "bangumi_type": episode.get("bangumi_type", ""),
+            "template_type": episode.get("template_type", 0)
         }
 
 class Episode:

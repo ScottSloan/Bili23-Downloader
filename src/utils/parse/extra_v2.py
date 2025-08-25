@@ -162,7 +162,11 @@ class ExtraParser:
         def query_all_subtitles(task_info: DownloadTaskInfo):
             params = {
                 "bvid": task_info.bvid,
-                "cid": task_info.cid
+                "cid": task_info.cid,
+                "dm_img_list": "[]",
+                "dm_img_str": "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ",
+                "dm_cover_img_str": "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ",
+                "dm_img_inter": '{"ds":[],"wh":[5231,6067,75],"of":[475,950,475]}',
             }
 
             url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"

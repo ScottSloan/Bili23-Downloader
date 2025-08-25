@@ -5,7 +5,7 @@ from utils.config import Config
 
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
-from utils.common.enums import ParseType, ScopeID
+from utils.common.enums import ParseType, ScopeID, TemplateType
 from utils.common.datetime_util import DateTime
 
 class FileNameFormatter:
@@ -55,32 +55,14 @@ class FileNameFormatter:
         
         return file_name
 
-    @staticmethod
-    def get_template(task_info: DownloadTaskInfo):
-        def get_specific_template(scope_id) -> str:
-            for entry in Config.Download.file_name_template_list:
-                if entry["scope"] == scope_id:
-                    return entry["template"]
-                
-        template = get_specific_template(ScopeID.All.value)
-        
-        if template:
-            return template
-        else:
-            match ParseType(task_info.parse_type):
-                case ParseType.Video:
-                    template = get_specific_template(ScopeID.Video.value)
+    @classmethod
+    def get_template(cls, task_info: DownloadTaskInfo):
+        template = cls.get_specific_template(task_info.template_type)
 
-                case ParseType.Bangumi:
-                    template = get_specific_template(ScopeID.Bangumi.value)
+        if not template:
+            template = cls.get_specific_template(TemplateType.Video_Normal.value)
 
-                case ParseType.Cheese:
-                    template = get_specific_template(ScopeID.Cheese.value)
-
-        if template:
-            return template
-        else:
-            return get_specific_template(ScopeID.Default.value)
+        return template
 
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):
@@ -133,3 +115,9 @@ class FileNameFormatter:
     @staticmethod
     def remove_slash(path: str):
         return path.lstrip("\\/").rstrip("\\/")
+    
+    @staticmethod
+    def get_specific_template(template_type: int):
+        for entry in Config.Download.file_name_template_list:
+            if entry["type"] == template_type:
+                return entry["template"]

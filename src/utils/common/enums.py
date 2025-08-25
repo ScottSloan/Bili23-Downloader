@@ -174,3 +174,13 @@ class LiveFileSplit(Enum):
     Disable = 0                   # 不分段
     ByDuration = 1                # 按直播时长分段
     BySize = 2                    # 按文件大小分段
+
+class TemplateType(Enum):
+    Video_Normal = 1
+    Video_Part = 2
+    Video_Collection = 3
+    Video_Interact = 4
+    Bangumi = 5
+    Cheese = 6
+    Space = 7
+    Favlist = 8

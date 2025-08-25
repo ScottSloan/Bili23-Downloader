@@ -1,4 +1,4 @@
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, TemplateType
 from utils.common.map import cheese_status_map
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
@@ -20,11 +20,13 @@ class Cheese:
 
     @classmethod
     def sections_parser(cls, info_json: dict):
+        cheese_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(info_json.get("title"), label = "课程"))
+
         for section in info_json["sections"]:
             if section["episodes"]:
                 section_title = section["title"]
 
-                section_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
+                section_pid = EpisodeInfo.add_item(cheese_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
 
                 for episode in section["episodes"]:
                     episode["section_title"] = section_title
@@ -55,6 +57,7 @@ class Cheese:
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
         episode["current_episode"] = episode.get("ep_id") == cls.target_ep_id
+        episode["template_type"] = TemplateType.Cheese.value
 
         return EpisodeInfo.get_entry_info(episode)
     

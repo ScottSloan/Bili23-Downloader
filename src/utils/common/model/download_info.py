@@ -46,6 +46,7 @@ class DownloadInfo:
             "series_title": item_info.series_title,
             "interact_title": item_info.interact_title,
             "bangumi_type": item_info.bangumi_type,
+            "template_type": item_info.template_type,
             "badge": item_info.badge,
             "page": item_info.page,
             "referer_url": "https://www.bilibili.com",
