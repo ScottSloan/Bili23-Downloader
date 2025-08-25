@@ -42,7 +42,7 @@ class DownloadOptionDialog(Dialog):
         left_vbox.Add(self.media_option_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         left_vbox.Add(self.path_box, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
-        self.extra_box = ExtraStaticBox(self, show_more = False)
+        self.extra_box = ExtraStaticBox(self, is_setting_page = False)
 
         self.other_box = OtherStaticBox(self)
 

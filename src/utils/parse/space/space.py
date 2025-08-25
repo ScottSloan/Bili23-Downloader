@@ -64,6 +64,23 @@ class SpaceParser(Parser):
 
         return info_json
 
+    def get_uname_by_mid(self, mid: int):
+        params = {
+            "mid": mid,
+            "token": "",
+            "platform": "web",
+            "dm_img_list": "[]",
+            "dm_img_str": "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ",
+            "dm_cover_img_str": "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ",
+            "dm_img_inter": '{"ds":[],"wh":[5231,6067,75],"of":[475,950,475]}',
+        }
+
+        url = f"https://api.bilibili.com/x/space/wbi/acc/info?{WbiUtils.encWbi(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        return resp["data"]["name"]
+
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
@@ -112,22 +129,24 @@ class SpaceParser(Parser):
     def parse_worker(self, url: str):
         self.clear_space_info()
 
-        mid = self.get_mid(url)
+        self.mid = self.get_mid(url)
 
         time.sleep(0.5)
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
 
-        self.parse_space_info(mid)
+        self.parse_space_info(self.mid)
+
+        self.uname = self.get_uname_by_mid(self.mid)
 
         self.get_video_available_media_info()
 
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        parent_title = ""
+        parent_title = f"{self.uname}_{self.mid}"
 
-        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict)
+        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict, parent_title)
 
     def clear_space_info(self):
         self.info_json = {

@@ -171,13 +171,20 @@ class MediaInfoPanel(Panel):
     def get_video_quality_info(self):
         def worker():
             def update_ui():
-                video_quality_id = self.video_quality_id if self.video_quality_id != VideoQualityID._Auto.value else self.video_codec_info.choice.GetClientData(1)
+                is_drm = wx.FindWindowByName("main").parser.parser.is_drm
+
+                video_quality_id = self.video_quality_id if self.video_quality_id != VideoQualityID._Auto.value else self.video_quality_info.choice.GetClientData(1)
                 
                 self.video_quality_info.SetInfoLabel(info_label)
                 self.video_codec_info.SetInfoLabel(get_mapping_key_by_value(video_codec_map, info["codec"]))
 
-                self.video_quality_info.ShowWarnIcon(info["id"] != video_quality_id)
+                self.video_quality_info.ShowWarnIcon(info["id"] != video_quality_id or is_drm)
                 self.video_codec_info.ShowWarnIcon(info["codec"] != self.video_codec_id)
+
+                if is_drm:
+                    self.video_quality_info.SetBottomToolTip("此视频采用 WideVine DRM 技术加密，不支持下载 1080P 以上的清晰度。")
+                else:
+                    self.video_quality_info.SetBottomToolTip("当前所选的清晰度与实际获取到的不符。\n\n这可能是未登录或账号未开通大会员所致。")
 
                 self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确\n\n当前显示的媒体信息所对应的视频：{}".format(self.parent.episode_info.get("title")))
 
@@ -289,23 +296,15 @@ class MediaInfoPanel(Panel):
         Thread(target = self.get_audio_quality_info).start()
 
     def enable_video_quality_group(self, enable: bool):
-        return
         self.video_quality_lab.Enable(enable)
-        self.video_quality_choice.Enable(enable)
-        self.video_quality_warn_icon.Enable(enable)
-        self.video_quality_info_lab.Enable(enable)
+        self.video_quality_info.SetEnable(enable)
 
         self.video_codec_lab.Enable(enable)
-        self.video_codec_choice.Enable(enable)
-        self.video_codec_warn_icon.Enable(enable)
-        self.video_codec_info_lab.Enable(enable)
+        self.video_codec_info.SetEnable(enable)
 
     def enable_audio_quality_group(self, enable: bool):
-        return
         self.audio_quality_lab.Enable(enable)
-        self.audio_quality_choice.Enable(enable)
-        self.audio_quality_warn_icon.Enable(enable)
-        self.audio_quality_info_lab.Enable(enable)
+        self.audio_quality_info.SetEnable(enable)
 
     def disable_download_audio_option(self):
         self.parent.media_option_box.enable_audio_download_option(False)
@@ -339,4 +338,3 @@ class MediaInfoPanel(Panel):
             "qn": self.video_quality_id,
             "codec": self.video_codec_id
         }
-    
