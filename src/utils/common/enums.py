@@ -81,6 +81,7 @@ class StatusCode(Enum):
     DownloadError = 611           # 下载失败
     MaxRetry = 612                # 最大重试
     Cancel = 613                  # 取消解析
+    DRM = 614                     # DRM 加密
     Area_Limit = -10403           # 区域限制
     OtherError = None             # 其他错误
 

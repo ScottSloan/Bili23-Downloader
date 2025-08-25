@@ -13,7 +13,8 @@ class Video:
         cls.parent_title = parent_title
         EpisodeInfo.parser = cls
 
-        EpisodeInfo.clear_episode_data()
+        if not parent_title:
+            EpisodeInfo.clear_episode_data()
 
         match EpisodeDisplayType(Config.Misc.episode_display_mode):
             case EpisodeDisplayType.Single:
@@ -28,7 +29,8 @@ class Video:
                 else:
                     cls.pages_parser(info_json)
 
-        Filter.episode_display_mode(reset = EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section)
+        if not parent_title:
+            Filter.episode_display_mode(reset = EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section)
 
     @classmethod
     def pages_parser(cls, info_json: dict):

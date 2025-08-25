@@ -125,6 +125,8 @@ class SpaceParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
+        parent_title = ""
+
         Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict)
 
     def clear_space_info(self):

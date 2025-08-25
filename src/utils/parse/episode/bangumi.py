@@ -15,7 +15,7 @@ class Bangumi:
         cls.parent_title = parent_title
         EpisodeInfo.parser = cls
 
-        if target_ep_id:
+        if not parent_title:
             EpisodeInfo.clear_episode_data()
 
         bangumi_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(info_json.get("title"), label = bangumi_type_map.get(info_json.get("type"))))
@@ -28,7 +28,7 @@ class Bangumi:
         if "section" in info_json:
             cls.section_parser(info_json, bangumi_pid)
 
-        if target_ep_id:
+        if not parent_title:
             Filter.episode_display_mode()
 
     @classmethod

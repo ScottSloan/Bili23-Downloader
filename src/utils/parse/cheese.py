@@ -56,7 +56,11 @@ class CheeseParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        PreviewInfo.download_json = resp["data"].copy()
+        data = resp["data"].copy()
+
+        self.check_drm_protection(data)
+
+        PreviewInfo.download_json = data
 
     def parse_worker(self, url: str):
         self.clear_cheese_info()

@@ -13,6 +13,7 @@ class Parser:
 
     def __init__(self):
         self.json_data: dict = None
+        self.is_drm: bool = False
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
         result = re.findall(pattern, string)
@@ -103,5 +104,9 @@ class Parser:
     def is_in_section_option_enable(self):
         return True
 
-    def update_episode(self):
-        Filter.episode_display_mode()
+    def check_drm_protection(self, data: dict):
+        if data.get("drm_type"):
+            raise GlobalException(code = StatusCode.DRM.value)
+        
+        if data.get("is_drm"):
+            self.is_drm = True

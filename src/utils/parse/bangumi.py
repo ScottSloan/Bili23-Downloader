@@ -74,7 +74,11 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        PreviewInfo.download_json = resp["result"].copy()
+        data = resp["result"].copy()
+
+        self.check_drm_protection(data)
+
+        PreviewInfo.download_json = data
 
     def check_bangumi_can_play(self, param: str):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{param}"

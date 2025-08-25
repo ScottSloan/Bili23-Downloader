@@ -7,6 +7,7 @@ from utils.auth.wbi import WbiUtils
 from utils.common.enums import StatusCode, ProcessingType
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 
 from utils.parse.parser import Parser
 from utils.parse.episode.favlist import FavList
@@ -41,11 +42,15 @@ class FavListParser(Parser):
         info = req["data"]["info"]
         medias = req["data"]["medias"]
 
+        self.fav_title = info["title"]
+        self.owner_name = info["upper"]["name"]
+        self.owner_mid = info["upper"]["mid"]
+
         self.info_json["episodes"].extend(medias)
 
         self.total_data += len(medias)
 
-        return info["media_count"], info["title"]
+        return info["media_count"]
 
     def get_video_info(self, bvid: str):
         params = {
@@ -86,10 +91,10 @@ class FavListParser(Parser):
         self.parse_episodes()
 
     def parse_favlist_info(self, media_id: int):
-        total, title = self.get_favlist_info(media_id)
+        total = self.get_favlist_info(media_id)
         total_page = self.get_total_page(total)
 
-        self.onUpdateName(title)
+        self.onUpdateName(self.fav_title)
         self.onUpdateTitle(1, total_page, self.total_data)
 
         for i in range(1, total_page):
@@ -139,7 +144,9 @@ class FavListParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        FavList.parse_episodes(self.info_json, self.season_dict)
+        parent_title = "{}_{}/{}".format(FileNameFormatter.get_legal_file_name(self.owner_name), self.owner_mid, FileNameFormatter.get_legal_file_name(self.fav_title))
+
+        FavList.parse_episodes(self.info_json, self.season_dict, parent_title)
     
     def clear_favlist_info(self):
         self.info_json = {
@@ -154,7 +161,7 @@ class FavListParser(Parser):
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
     def get_total_page(self, total: int):
         return math.ceil(total / 40)

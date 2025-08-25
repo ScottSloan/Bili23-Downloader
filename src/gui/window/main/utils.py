@@ -14,7 +14,7 @@ from utils.module.pic.cover import Cover
 
 from gui.dialog.misc.about import AboutWindow
 from gui.dialog.setting.edit_title import EditTitleDialog
-from gui.dialog.download_option_v3 import DownloadOptionDialog
+from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
 from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
 
