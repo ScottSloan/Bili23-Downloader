@@ -176,11 +176,11 @@ class LiveFileSplit(Enum):
     BySize = 2                    # 按文件大小分段
 
 class TemplateType(Enum):
-    Video_Normal = 1
-    Video_Part = 2
-    Video_Collection = 3
-    Video_Interact = 4
-    Bangumi = 5
-    Cheese = 6
+    Video_Normal = 1              # 普通
+    Video_Part = 2                # 分P
+    Video_Collection = 3          # 合集
+    Video_Interact = 4            # 互动视频
+    Bangumi = 5                   # 剧集
+    Cheese = 6                    # 课程
     Space = 7
     Favlist = 8

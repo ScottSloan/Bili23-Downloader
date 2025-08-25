@@ -28,7 +28,6 @@ class List:
         episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
         episode["cover_url"] = episode.get("pic")
         episode["type"] = ParseType.Video.value
-        episode["current_episode"] = episode.get("bvid") == cls.target_bvid
 
         return EpisodeInfo.get_entry_info(episode)
     

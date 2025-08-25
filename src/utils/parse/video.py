@@ -111,10 +111,7 @@ class VideoParser(Parser):
 
         self.get_video_info(self.bvid)
 
-        episode: dict = Episode.Utils.get_current_episode()
-
-        if episode:
-            self.get_video_available_media_info(episode.get("bvid"), episode.get("cid"))
+        self.get_video_available_media_info(self.info_json.get("bvid"), self.info_json.get("cid"))
 
         return StatusCode.Success.value
 

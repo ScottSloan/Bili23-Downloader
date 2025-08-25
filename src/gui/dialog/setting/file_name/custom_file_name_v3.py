@@ -25,7 +25,7 @@ class CustomFileNameDialog(Dialog):
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板（双击列表项目修改）")
         template_tip = ToolTip(self)
-        template_tip.set_tooltip("建议详细阅读说明文档，再进行设置。\n\n收藏夹、个人主页中的合集、分P视频、互动视频按投稿视频中对应的的设置命名，且会自动创建目录。")
+        template_tip.set_tooltip("建议详细阅读说明文档，再进行设置。\n\n对于收藏夹、个人空间和热榜，程序会自动识别视频类型（普通、分P、合集、剧集），按照相应的模板命名。")
         self.help_btn = BitmapButton(self, bitmap = Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -65,7 +65,7 @@ class CustomFileNameDialog(Dialog):
 
     def init_list_column(self):
         self.template_list.AppendColumn("序号", width = self.FromDIP(50))
-        self.template_list.AppendColumn("类别", width = self.FromDIP(75))
+        self.template_list.AppendColumn("类别", width = self.FromDIP(85))
         self.template_list.AppendColumn("子类别", width = self.FromDIP(75))
         self.template_list.AppendColumn("文件名模板", width = -1)
 

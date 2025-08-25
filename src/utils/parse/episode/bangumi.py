@@ -7,10 +7,12 @@ from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 class Bangumi:
     target_section_title: str = ""
     target_ep_id: int = 0
+    parent_title: str = ""
 
     @classmethod
-    def parse_episodes(cls, info_json: dict, target_ep_id: int = None):
+    def parse_episodes(cls, info_json: dict, target_ep_id: int = None, parent_title: str = ""):
         cls.target_ep_id = target_ep_id
+        cls.parent_title = parent_title
         EpisodeInfo.parser = cls
 
         if target_ep_id:
@@ -61,9 +63,9 @@ class Bangumi:
         episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
-        episode["current_episode"] = episode.get("ep_id") == cls.target_ep_id
         episode["bangumi_type"] = bangumi_type_map.get(info_json.get("type"))
         episode["template_type"] = TemplateType.Bangumi.value
+        episode["parent_title"] = cls.parent_title
 
         return EpisodeInfo.get_entry_info(episode)
     

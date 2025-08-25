@@ -139,7 +139,7 @@ class FavListParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        FavList.parse_episodes(self.info_json, self.bvid, self.season_dict)
+        FavList.parse_episodes(self.info_json, self.season_dict)
     
     def clear_favlist_info(self):
         self.info_json = {

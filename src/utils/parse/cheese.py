@@ -70,7 +70,7 @@ class CheeseParser(Parser):
 
         self.get_cheese_info(param)
 
-        episode: dict = Episode.Utils.get_current_episode()
+        episode: dict = Episode.Utils.get_first_episode()
 
         if episode:
             self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))

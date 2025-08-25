@@ -5,10 +5,12 @@ from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
 class Video:
     target_cid: int = 0
+    parent_title: str = ""
 
     @classmethod
-    def parse_episodes(cls, info_json: dict):
+    def parse_episodes(cls, info_json: dict, parent_title: str = ""):
         cls.target_cid = info_json.get("cid")
+        cls.parent_title = parent_title
         EpisodeInfo.parser = cls
 
         EpisodeInfo.clear_episode_data()
@@ -118,37 +120,19 @@ class Video:
 
             EpisodeInfo.add_item(interact_pid, cls.get_entry_info(page.copy(), info_json))
 
-    @staticmethod
-    def get_entry_info(episode: dict, info_json: dict):
-        def get_duration():
-            if "duration" in episode:
-                return episode["duration"]
-            
-            elif "arc" in episode:
-                return episode["arc"]["duration"]
-            
-            else:
-                return 0
-
-        def get_link():
-            page = episode.get("page", 0)
-
-            if page > 1:
-                return f"https://www.bilibili.com/video/{episode.get('bvid')}?p={episode.get('page')}"
-            else:
-                return f"https://www.bilibili.com/video/{episode.get('bvid')}"
-        
+    @classmethod
+    def get_entry_info(cls, episode: dict, info_json: dict):
         episode["title"] = episode.get("title", episode.get("part", ""))
         episode["badge"] = "充电专属" if info_json.get("is_upower_exclusive", "") else ""
-        episode["duration"] = get_duration()
-        episode["link"] = get_link()
+        episode["duration"] = cls.get_duration(episode.copy())
+        episode["link"] = cls.get_link(episode.copy())
         episode["type"] = ParseType.Video.value
         episode["zone"] = info_json.get("tname", "")
         episode["subzone"] = info_json.get("tname_v2", "")
         episode["up_name"] = info_json.get("owner", {"name": ""}).get("name", "")
         episode["up_mid"] = info_json.get("owner", {"mid": 0}).get("mid", 0)
-        episode["current_episode"] = info_json.get("cid") == episode.get("cid")
         episode["interact_title"] = episode.get("interact_title", "")
+        episode["parent_title"] = cls.parent_title
 
         return EpisodeInfo.get_entry_info(episode)
     
@@ -164,3 +148,23 @@ class Video:
     @classmethod
     def condition_in_section(cls, episode: dict):
         return episode.get("item_type") == "node" and episode.get("title") == cls.target_section_title
+    
+    @staticmethod
+    def get_duration(episode: dict):
+        if "duration" in episode:
+            return episode["duration"]
+        
+        elif "arc" in episode:
+            return episode["arc"]["duration"]
+        
+        else:
+            return 0
+        
+    @staticmethod
+    def get_link(episode: dict):
+        page = episode.get("page", 0)
+
+        if page > 1:
+            return f"https://www.bilibili.com/video/{episode.get('bvid')}?p={episode.get('page')}"
+        else:
+            return f"https://www.bilibili.com/video/{episode.get('bvid')}"

@@ -56,7 +56,6 @@ class Cheese:
         episode["series_title"] = info_json.get("title")
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
-        episode["current_episode"] = episode.get("ep_id") == cls.target_ep_id
         episode["template_type"] = TemplateType.Cheese.value
 
         return EpisodeInfo.get_entry_info(episode)

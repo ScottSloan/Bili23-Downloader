@@ -50,6 +50,8 @@ class DownloadTaskInfo:
         self.collection_title: str = ""
         # 互动视频标题
         self.interact_title: str = ""
+        # parent_title
+        self.parent_title: str = ""
 
         # 视频时长
         self.duration: int = 0
@@ -156,6 +158,7 @@ class DownloadTaskInfo:
             "part_title": self.part_title,
             "collection_title": self.collection_title,
             "interact_title": self.interact_title,
+            "parent_title": self.parent_title,
 
             "duration": self.duration,
 
@@ -232,6 +235,7 @@ class DownloadTaskInfo:
         self.part_title = data.get("part_title", self.part_title)
         self.collection_title = data.get("collection_title", self.collection_title)
         self.interact_title = data.get("interact_title", self.interact_title)
+        self.parent_title = data.get("parent_title", self.parent_title)
 
         self.duration = data.get("duration", self.duration)
 
@@ -347,6 +351,7 @@ class TreeListItemInfo:
         self.collection_title: str = ""
         self.series_title: str = ""
         self.interact_title: str = ""
+        self.parent_title: str = ""
 
         self.area: str = ""
         self.zone: str = ""
@@ -354,7 +359,6 @@ class TreeListItemInfo:
         self.up_name: str = ""
         self.up_mid: int = 0
 
-        self.current_episode: bool = False
         self.item_type: str = "node"
         self.type: int = 0
         self.bangumi_type: str = ""
@@ -387,6 +391,7 @@ class TreeListItemInfo:
             "collection_title": self.collection_title,
             "series_title": self.series_title,
             "interact_title": self.interact_title,
+            "parent_title": self.parent_title,
 
             "area": self.area,
             "zone": self.zone,
@@ -394,7 +399,6 @@ class TreeListItemInfo:
             "up_name": self.up_name,
             "up_mid": self.up_mid,
 
-            "current_episode": self.current_episode,
             "item_type": self.item_type,
             "type": self.type,
             "bangumi_type": self.bangumi_type,
@@ -427,6 +431,7 @@ class TreeListItemInfo:
         self.collection_title = data.get("collection_title", self.collection_title)
         self.series_title = data.get("series_title", self.series_title)
         self.interact_title = data.get("interact_title", self.interact_title)
+        self.parent_title = data.get("parent_title", self.parent_title)
 
         self.area = data.get("area", self.area)
         self.zone = data.get("zone", self.zone)
@@ -434,7 +439,6 @@ class TreeListItemInfo:
         self.up_name = data.get("up_name", self.up_name)
         self.up_mid = data.get("up_mid", self.up_mid)
 
-        self.current_episode = data.get("current_episode", self.current_episode)
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
         self.bangumi_type = data.get("bangumi_type", self.bangumi_type)

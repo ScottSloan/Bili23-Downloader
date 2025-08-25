@@ -19,7 +19,9 @@ class FileNameFormatter:
         return cls.remove_slash(file_name)
     
     @classmethod
-    def format_file_basename(cls, task_info: DownloadTaskInfo, template: str = None):
+    def format_file_basename(cls, task_info: DownloadTaskInfo):
+        template = cls.get_template(task_info)
+
         return os.path.basename(cls.format_file_name(template, task_info = task_info))
 
     @classmethod

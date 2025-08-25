@@ -162,7 +162,7 @@ class EditTemplateDialog(Dialog):
 
         field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
         field_tip = ToolTip(self)
-        field_tip.set_tooltip("同一字段可重复添加多次，且可同时用于子目录和文件名部分。\n\n对于时间字段的格式设置，请参考说明文档。\n\n建议对照示例视频，以便深入了解字段与视频信息的对应关系。")
+        field_tip.set_tooltip("同一字段可重复添加多次，且可同时用于子目录和文件名部分。\n\n对于时间字段的格式设置，请参考说明文档。\n\n建议对照示例视频和说明文档进行设置。")
         link_lab = wx.StaticText(self, -1, "示例视频：")
         self.video_link = wx.adv.HyperlinkCtrl(self, -1, label = self.data.get("link_label"), url = self.data.get("link"))
 

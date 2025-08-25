@@ -45,6 +45,7 @@ class DownloadInfo:
             "collection_title": item_info.collection_title,
             "series_title": item_info.series_title,
             "interact_title": item_info.interact_title,
+            "parent_title": item_info.parent_title,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
             "badge": item_info.badge,

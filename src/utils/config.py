@@ -116,9 +116,9 @@ class Config:
         version: str = "1.66.0"
         version_code: int = 166000
 
-        task_file_min_version_code: int = 165000
+        task_file_min_version_code: int = 166000
         live_file_min_version_code: int = 165000
-        app_config_file_min_version_code: int = 165000
+        app_config_file_min_version_code: int = 166000
         user_config_file_min_version_code: int = 165200
 
         app_config_path: str = os.path.join(os.getcwd(), "config.json")
@@ -219,18 +219,30 @@ class Config:
         path: str = os.path.join(os.getcwd(), "download")
         file_name_template_list: list = [
             {
-                "template":  os.sep + "{series_title}" + os.sep + "{title}",
-                "scope": 2
-            },
-            {
-                "template": os.sep + "{series_title}" + os.sep + "{title}",
-                "scope": 3
-            },
-            {
                 "template": "{zero_padding_number} - {title}",
-                "scope": 4
+                "type": 1
+            },
+            {
+                "template": "{part_title}/P{page} - {title}",
+                "type": 2
+            },
+            {
+                "template": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}",
+                "type": 3
+            },
+            {
+                "template": "{interact_title}/{title}",
+                "type": 4
+            },
+            {
+                "template": "{series_title}/{title}",
+                "type": 5
+            },
+            {
+                "template": "{series_title}/{section_title}/{title}",
+                "type": 6
             }
-        ]
+        ],
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300

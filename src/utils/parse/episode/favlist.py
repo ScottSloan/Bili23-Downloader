@@ -7,8 +7,7 @@ class FavList:
     season_dict: dict = {}
 
     @classmethod
-    def parse_episodes(cls, info_json: dict, target_bvid: str, season_dict: dict):
-        cls.target_bvid = target_bvid
+    def parse_episodes(cls, info_json: dict, season_dict: dict):
         cls.season_dict = season_dict
 
         EpisodeInfo.clear_episode_data()
@@ -32,7 +31,6 @@ class FavList:
     @classmethod
     def video_parser(cls, episode_info: dict):
         bvid = episode_info.get("bvid")
-
         video_info = cls.season_dict["video"][bvid]
 
         if "ugc_season" in video_info:
@@ -53,6 +51,5 @@ class FavList:
         episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
         episode["up_name"] = episode["upper"]["name"]
         episode["up_mid"] = episode["upper"]["mid"]
-        episode["current_episode"] = episode.get("bvid") == cls.target_bvid
         
         return EpisodeInfo.get_entry_info(episode)

@@ -248,7 +248,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return self.GetItemText(self.GetSelection(), 1)
     
     def GetCurrentEpisodeInfo(self):
-        return Episode.Utils.get_current_episode()
+        return Episode.Utils.get_first_episode()
             
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():

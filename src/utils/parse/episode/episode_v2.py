@@ -107,7 +107,6 @@ class EpisodeInfo:
             "subzone": episode.get("subzone", ""),
             "up_name": episode.get("up_name", ""),
             "up_mid": episode.get("up_mid", 0),
-            "current_episode": episode.get("current_episode", False),
             "item_type": "item",
             "type": episode.get("type", 0),
             "bangumi_type": episode.get("bangumi_type", ""),
@@ -115,43 +114,14 @@ class EpisodeInfo:
         }
 
 class Episode:
-    class FavList:
-        @classmethod
-        def parse_episodes(cls, info_json: dict, bvid: str):
-            EpisodeInfo.clear_episode_data()
-
-            for episode in info_json.get("episodes"):
-                EpisodeInfo.add_item("视频", cls.get_entry_info(episode.copy(), bvid))
-
-        def get_entry_info(episode: dict, bvid: str):
-            episode["cover_url"] = episode.get("cover")
-            episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
-            episode["up_name"] = episode["upper"]["name"]
-            episode["up_mid"] = episode["upper"]["mid"]
-            episode["current_episode"] = episode.get("bvid") == bvid
-            
-            return EpisodeInfo.get_entry_info(episode)
-
     class Utils:
         @staticmethod
-        def get_current_episode():
-            def get_episode(data: dict | list):
-                if isinstance(data, dict):
-                    if "entries" not in data:
-                        if data.get("current_episode"):
-                            return data
-                    else:
-                        for value in data["entries"]:
-                            if episode := get_episode(value):
-                                return episode
+        def get_first_episode():
+            def condition(episode: dict):
+                return episode.get("item_type") == "item"
+            
+            return Filter.travarsal_episode(condition)
 
-                elif isinstance(data, list):
-                    for entry in data:
-                        if episode := get_episode(entry):
-                            return episode
-
-            return get_episode(EpisodeInfo.data)
-        
 class Filter:
     @staticmethod
     def travarsal_episode(condition: Callable):
