@@ -20,6 +20,8 @@ class Video:
             case EpisodeDisplayType.In_Section | EpisodeDisplayType.All:
                 if "ugc_season" in info_json:
                     cls.ugc_season_parser(info_json)
+                elif "node_list" in info_json:
+                    cls.interact_parser(info_json)
                 else:
                     cls.pages_parser(info_json)
 
@@ -81,6 +83,21 @@ class Video:
 
                 cls.update_target_section_title(episode, section_title)
 
+    @classmethod
+    def interact_parser(cls, info_json: dict):
+        info_json["pages"].clear()
+
+        for node in info_json.get("node_list"):
+            page = {
+                "part": node.title,
+                "cid": node.cid,
+                "interact_title": info_json.get("title")
+            }
+
+            info_json["pages"].append(page)
+
+        cls.pages_parser(info_json)
+
     @staticmethod
     def get_entry_info(episode: dict, info_json: dict):
         def get_duration():
@@ -111,6 +128,7 @@ class Video:
         episode["up_name"] = info_json.get("owner", {"name": ""}).get("name", "")
         episode["up_mid"] = info_json.get("owner", {"mid": 0}).get("mid", 0)
         episode["current_episode"] = info_json.get("cid") == episode.get("cid")
+        episode["interact_title"] = episode.get("interact_title", "")
 
         return EpisodeInfo.get_entry_info(episode)
     

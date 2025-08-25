@@ -8,6 +8,7 @@ from gui.dialog.setting.file_name.edit_template import EditTemplateDialog
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
+from gui.component.misc.tooltip import ToolTip
 
 class CustomFileNameDialog(Dialog):
     def __init__(self, parent: wx.Window):
@@ -23,10 +24,13 @@ class CustomFileNameDialog(Dialog):
 
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板（双击列表项目修改）")
+        template_tip = ToolTip(self)
+        template_tip.set_tooltip("建议详细阅读说明文档，再进行设置。\n\n收藏夹、个人主页中的合集、分P视频、互动视频按投稿视频中对应的的设置命名，且会自动创建目录。")
         self.help_btn = BitmapButton(self, bitmap = Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(template_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER)
         top_hbox.AddStretchSpacer()
         top_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 

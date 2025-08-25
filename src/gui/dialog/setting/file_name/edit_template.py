@@ -10,6 +10,7 @@ from utils.common.datetime_util import DateTime
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
+from gui.component.misc.tooltip import ToolTip
 
 class TemplateValidator:
     def __init__(self, template: str, field_dict: dict):
@@ -123,10 +124,13 @@ class EditTemplateDialog(Dialog):
 
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板")
+        template_tip = ToolTip(self)
+        template_tip.set_tooltip("文件名模板由子目录（可选）和文件名两个部分组成。\n\n若未添加子目录，文件将直接保存至下载目录；添加子目录部分后，系统会在下载目录中自动创建对应子目录，文件将保存至该子目录。\n子目录层级间必须使用正斜杠 / 分隔，最后一部分视为文件名。（示例：{up_name}/{title}，下载到以 UP 主名称命名的子文件夹中，视频名称为 {title}）\n支持分隔多层级目录。（示例：{collection_title}/{section_title}/{part_title}）\n若路径中某层级字段为空，例如 {collection_title}/{section_title}/{part_title}/{title}，当 {section_title} 字段为空时，系统将自动忽略该空层级，文件实际将下载到 {collection_title}/{part_title} 的子目录中。也就是说在下载合集视频时，如果合集没有章节部分，那么章节标题（{section_title}）部分的层级就会自动忽略，分节标题（{part_title}）同理。")
         self.help_btn = BitmapButton(self, bitmap = Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(template_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddStretchSpacer()
         top_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
@@ -135,7 +139,7 @@ class EditTemplateDialog(Dialog):
         preview_lab = wx.StaticText(self, -1, "预览")
 
         preview_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        preview_hbox.Add(preview_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        preview_hbox.Add(preview_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         directory_lab = wx.StaticText(self, -1, "子目录：")
         self.directory_lab = wx.StaticText(self, -1, style = wx.ST_ELLIPSIZE_START)
@@ -157,11 +161,14 @@ class EditTemplateDialog(Dialog):
         preview_vbox.Add(file_name_hbox, 0, wx.EXPAND)
 
         field_lab = wx.StaticText(self, -1, "可用字段列表（双击列表项目可添加字段）")
+        field_tip = ToolTip(self)
+        field_tip.set_tooltip("同一字段可重复添加多次，且可同时用于子目录和文件名部分。\n\n对于时间字段的格式设置，请参考说明文档。\n\n建议对照示例视频，以便深入了解字段与视频信息的对应关系。")
         link_lab = wx.StaticText(self, -1, "示例视频：")
         self.video_link = wx.adv.HyperlinkCtrl(self, -1, label = self.data.get("link_label"), url = self.data.get("link"))
 
         field_hbox = wx.BoxSizer(wx.HORIZONTAL)
         field_hbox.Add(field_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        field_hbox.Add(field_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         field_hbox.AddStretchSpacer()
         field_hbox.Add(link_lab, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         field_hbox.Add(self.video_link, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
