@@ -7,7 +7,6 @@ from utils.common.regex import Regex
 
 from utils.parse.episode.episode_v2 import Episode
 from utils.parse.episode.cheese import Cheese
-from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
 
@@ -63,8 +62,6 @@ class CheeseParser(Parser):
         PreviewInfo.download_json = data
 
     def parse_worker(self, url: str):
-        self.clear_cheese_info()
-
         match Regex.find_string(r"ep|ss", url):
             case "ep":
                 param = self.get_epid(url)
@@ -83,9 +80,6 @@ class CheeseParser(Parser):
 
     def parse_episodes(self):
         Cheese.parse_episodes(self.info_json, self.ep_id)
-
-    def clear_cheese_info(self):
-        AudioInfo.clear_audio_info()
 
     def get_parse_type_str(self):
         return "课程"

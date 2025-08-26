@@ -146,6 +146,8 @@ class MediaInfoPanel(Panel):
 
         self.preview = VideoPreview(self.main_window.parser.parse_type)
 
+        AudioInfo.clear_audio_info()
+
         AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
         video_quality_id = self.preview.get_video_quality_id(Config.Download.video_quality_id, self.preview.download_json) if Config.Download.video_quality_id != VideoQualityID._Auto.value else Config.Download.video_quality_id
@@ -160,7 +162,7 @@ class MediaInfoPanel(Panel):
 
     def save(self):
         Config.Download.video_quality_id = self.video_quality_id
-        AudioInfo.audio_quality_id = self.audio_quality_id
+        Config.Download.audio_quality_id = self.audio_quality_id
         Config.Download.video_codec_id = self.video_codec_id
 
     def set_stream_type(self, stream_type: str):

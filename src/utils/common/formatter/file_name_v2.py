@@ -17,7 +17,7 @@ class FileNameFormatter:
 
         file_name = template.format(**field_dict)
 
-        return cls.remove_slash(file_name)
+        return cls.check_slash(file_name)
     
     @classmethod
     def format_file_basename(cls, task_info: DownloadTaskInfo):
@@ -32,7 +32,7 @@ class FileNameFormatter:
 
         template_path = template.format(**field_dict)
 
-        path = os.path.join(task_info.download_base_path, task_info.parent_title, cls.remove_slash(template_path))
+        path = os.path.join(task_info.download_base_path, task_info.parent_title, cls.check_slash(template_path))
         
         download_path = os.path.dirname(path)
 
@@ -115,8 +115,11 @@ class FileNameFormatter:
         return re.sub(r'[:*?"<>|\\/]', "_", escape)
     
     @staticmethod
-    def remove_slash(path: str):
-        return path.lstrip("\\/").rstrip("\\/")
+    def check_slash(path: str):
+        path = path.lstrip("\\/").rstrip("\\/")
+        path = path.replace("/", os.sep)
+
+        return path
     
     @staticmethod
     def get_specific_template(template_type: int):

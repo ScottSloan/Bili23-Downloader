@@ -51,7 +51,7 @@ class SpaceParser(Parser):
 
         return resp["data"]["page"]["count"]
     
-    def get_collection_video_info(self, bvid: str):
+    def get_video_info(self, bvid: str):
         params = {
             "bvid": bvid
         }
@@ -63,6 +63,19 @@ class SpaceParser(Parser):
         info_json: dict = resp["data"]
 
         return info_json
+
+    def get_cheese_info(self, season_id: int):
+        params = {
+            "season_id": season_id
+        }
+
+        url = f"https://api.bilibili.com/pugv/view/web/season/v2?{self.url_encode(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+
+        data: dict = resp["data"]
+
+        return data
 
     def get_uname_by_mid(self, mid: int):
         params = {
@@ -111,6 +124,7 @@ class SpaceParser(Parser):
     
     def parse_video_info(self):
         self.video_info_dict = {}
+        self.cheese_info_dict = {}
 
         for entry in self.info_json.get("episodes"):
             bvid = entry.get("bvid")
@@ -118,11 +132,20 @@ class SpaceParser(Parser):
             self.onUpdateName(entry["title"])
             self.onUpdateTitle(1, 1, self.total_data)
 
-            if (season_id := entry["season_id"]) and season_id not in self.video_info_dict:
-                self.video_info_dict[season_id] = self.get_collection_video_info(bvid).copy()
+            if (season_id := entry["season_id"]):
+                if entry["is_lesson_video"]:
+                    if season_id not in self.cheese_info_dict:
+                        self.cheese_info_dict[season_id] = self.get_cheese_info(season_id).copy()
+                    else:
+                        continue
+                else:
+                    if season_id not in self.video_info_dict:
+                        self.video_info_dict[season_id] = self.get_video_info(bvid).copy()
+                    else:
+                        continue
 
             else:
-                self.video_info_dict[bvid] = self.get_collection_video_info(bvid).copy()
+                self.video_info_dict[bvid] = self.get_video_info(bvid).copy()
 
             time.sleep(0.1)
 
@@ -146,7 +169,7 @@ class SpaceParser(Parser):
     def parse_episodes(self):
         parent_title = f"{self.uname}_{self.mid}"
 
-        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict, parent_title)
+        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict, self.cheese_info_dict, parent_title)
 
     def clear_space_info(self):
         self.info_json = {

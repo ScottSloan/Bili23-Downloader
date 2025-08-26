@@ -7,7 +7,6 @@ from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.regex import Regex
 
-from utils.parse.audio import AudioInfo
 from utils.parse.episode.episode_v2 import Episode
 from utils.parse.episode.bangumi import Bangumi
 from utils.parse.parser import Parser
@@ -86,9 +85,6 @@ class BangumiParser(Parser):
         self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
     def parse_worker(self, url: str):
-        # 清除当前的番组信息
-        self.clear_bangumi_info()
-
         match Regex.find_string(r"ep|ss|md", url):
             case "ep":
                 param = self.get_epid(url)
@@ -124,10 +120,6 @@ class BangumiParser(Parser):
 
     def parse_episodes(self):
         Bangumi.parse_episodes(self.info_json, self.ep_id)
-
-    def clear_bangumi_info(self):
-        # 重置音质信息
-        AudioInfo.clear_audio_info()
 
     def get_parse_type_str(self):
         return bangumi_type_map.get(self.type_id, "未知")

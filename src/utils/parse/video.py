@@ -2,8 +2,6 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.parse.parser import Parser
-from utils.parse.audio import AudioInfo
-from utils.parse.episode.episode_v2 import Episode
 from utils.parse.episode.video import Video
 from utils.parse.interact_video import InteractVideoParser
 from utils.parse.preview import PreviewInfo
@@ -98,8 +96,6 @@ class VideoParser(Parser):
         }
 
     def parse_worker(self, url: str):
-        self.clear_video_info()
-
         self.get_page(url)
 
         match Regex.find_string(r"av|BV", url):
@@ -125,9 +121,6 @@ class VideoParser(Parser):
         self.interact_video_parser.get_video_interactive_graph_version(self.info_json)
 
         self.info_json["node_list"] = self.interact_video_parser.parse_interactive_video_episodes()
-
-    def clear_video_info(self):
-        AudioInfo.clear_audio_info()
 
     def get_parse_type_str(self):
         if self.is_interactive:

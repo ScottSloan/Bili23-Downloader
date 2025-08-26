@@ -6,17 +6,21 @@ from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 class Cheese:
     target_section_title: str = ""
     target_ep_id: int = 0
+    parent_title: str = ""
 
     @classmethod
-    def parse_episodes(cls, info_json: dict, target_ep_id: int):
+    def parse_episodes(cls, info_json: dict, target_ep_id: int = None, parent_title: str = ""):
         cls.target_ep_id = target_ep_id
+        cls.parent_title = parent_title
         EpisodeInfo.parser = cls
 
-        EpisodeInfo.clear_episode_data()
+        if not parent_title:
+            EpisodeInfo.clear_episode_data()
 
         cls.sections_parser(info_json)
 
-        Filter.episode_display_mode()
+        if not parent_title:
+            Filter.episode_display_mode()
 
     @classmethod
     def sections_parser(cls, info_json: dict):
@@ -57,6 +61,7 @@ class Cheese:
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
         episode["template_type"] = TemplateType.Cheese.value
+        episode["parent_title"] = cls.parent_title
 
         return EpisodeInfo.get_entry_info(episode)
     

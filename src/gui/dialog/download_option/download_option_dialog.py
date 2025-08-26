@@ -104,24 +104,26 @@ class DownloadOptionDialog(Dialog):
             
             if dlg.ShowModal() == wx.ID_OK:
                 self.media_info_box.video_codec_info.choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())
-                self.parent.parser.video_quality_id = self.media_info_box.video_quality_id
             else:
                 return True
 
     def check_login_paid(self):
-        def show_dialog(message: str):
-            rtn = self.warn(message,  wx.YES_NO | wx.CANCEL)
-
-            if rtn == wx.ID_CANCEL:
-                Config.Basic.no_paid_check = True
-
-                Config.save_app_config()
-
-            return rtn == wx.ID_NO
-        
         if not Config.Basic.no_paid_check:
             if not Config.User.login:
-                return show_dialog("账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？")
+                return self.show_dialog()
+            
+    def show_dialog(self):
+        dlg = wx.RichMessageDialog(self, "账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？", "警告", wx.YES_NO | wx.ICON_WARNING)
+        dlg.ShowCheckBox("不再提示")
+
+        rtn = dlg.ShowModal()
+
+        if dlg.IsCheckBoxChecked():
+            Config.Basic.no_paid_check = True
+
+            Config.save_app_config()
+
+        return rtn == wx.ID_NO
 
     def onOKEVT(self):
         if not self.path_box.path_box.GetValue():

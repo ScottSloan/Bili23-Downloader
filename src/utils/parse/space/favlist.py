@@ -8,6 +8,7 @@ from utils.common.enums import StatusCode, ProcessingType
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
 from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.regex import Regex
 
 from utils.parse.parser import Parser
 from utils.parse.episode.favlist import FavList
@@ -19,9 +20,12 @@ class FavListParser(Parser):
         self.callback = callback
 
     def get_media_id(self, url: str):
-        fid = self.re_find_str(r"fid=(\d+)", url)
+        if (match := Regex.search(r"fid=(\d+)", url)):
+            fid = match[1]
+        elif (match := Regex.search(r"ml(\d+)", url)):
+            fid = match[1]
 
-        return int(fid[0])
+        return int(fid)
     
     def get_favlist_info(self, media_id: int, pn: int = 1):
         params = {
