@@ -8,6 +8,7 @@ from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, video_codec_preference_map, get_mapping_key_by_value
 from utils.common.thread import Thread
 from utils.common.style.color import Color
+from utils.common.style.icon_v4 import Icon, IconID
 
 from utils.parse.preview import VideoPreview, PreviewInfo
 from utils.parse.audio import AudioInfo, AudioQualityID
@@ -17,6 +18,7 @@ from gui.component.misc.tooltip import ToolTip
 from gui.component.choice.choice import Choice
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 from gui.component.label.info_label import InfoLabel
+from gui.component.button.bitmap_button import BitmapButton
 
 class InfoGroup(Panel):
     def __init__(self, parent: wx.Window):
@@ -94,11 +96,14 @@ class MediaInfoPanel(Panel):
         self.stream_type_lab = wx.StaticText(media_info_box, -1)
         stream_type_tooltip = ToolTip(media_info_box)
         stream_type_tooltip.set_tooltip("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质\nMP4：同 FLV 格式")
+        self.help_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")
 
         stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         stream_type_hbox.Add(stream_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         stream_type_hbox.Add(self.stream_type_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         stream_type_hbox.Add(stream_type_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        stream_type_hbox.AddStretchSpacer()
+        stream_type_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.video_quality_lab = wx.StaticText(media_info_box, -1, "清晰度")
         self.video_quality_info = InfoGroup(media_info_box)
@@ -114,13 +119,13 @@ class MediaInfoPanel(Panel):
         self.video_codec_info.SetBottomToolTip("当前所选的编码与实际获取到的不符。\n\n杜比视界和HDR 视频仅支持 H.265 编码。")
 
         flex_grid_box = wx.FlexGridSizer(3, 2, 0, 0)
-        flex_grid_box.Add(self.video_quality_lab, 0, wx.ALL, self.FromDIP(6))
+        flex_grid_box.Add(self.video_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_grid_box.Add(self.video_quality_info, 0, wx.EXPAND)
 
-        flex_grid_box.Add(self.audio_quality_lab, 0, wx.ALL, self.FromDIP(6))
+        flex_grid_box.Add(self.audio_quality_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_grid_box.Add(self.audio_quality_info, 0, wx.EXPAND)
 
-        flex_grid_box.Add(self.video_codec_lab, 0, wx.ALL, self.FromDIP(6))
+        flex_grid_box.Add(self.video_codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_grid_box.Add(self.video_codec_info, 0, wx.EXPAND)
 
         media_info_sbox = wx.StaticBoxSizer(media_info_box, wx.VERTICAL)

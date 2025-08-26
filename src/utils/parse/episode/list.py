@@ -1,4 +1,4 @@
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, TemplateType
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -28,6 +28,7 @@ class List:
         episode["link"] = f"https://www.bilibili.com/video/{episode.get('bvid')}"
         episode["cover_url"] = episode.get("pic")
         episode["type"] = ParseType.Video.value
+        episode["template_type"] = TemplateType.Video_Collection.value
 
         return EpisodeInfo.get_entry_info(episode)
     

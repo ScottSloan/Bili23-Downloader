@@ -95,6 +95,8 @@ class ExtraStaticBox(Panel):
         self.custom_ass_style_btn.Bind(wx.EVT_BUTTON, self.onCustomASSStyleEVT)
 
     def load_data(self):
+        Config.Temp.ass_style = Config.Basic.ass_style.copy()
+
         self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
         self.danmaku_file_type_choice.Select(Config.Basic.danmaku_file_type)
         self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
@@ -107,6 +109,8 @@ class ExtraStaticBox(Panel):
         self.onCheckDownloadCoverEVT(0)
     
     def save(self):
+        Config.Basic.ass_style = Config.Temp.ass_style.copy()
+
         Config.Basic.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
         Config.Basic.danmaku_file_type = self.danmaku_file_type_choice.GetSelection()
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()

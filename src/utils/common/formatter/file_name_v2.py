@@ -5,14 +5,15 @@ from utils.config import Config
 
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
-from utils.common.enums import ParseType, ScopeID, TemplateType
+from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime
+from utils.common.io.directory import Directory
 
 class FileNameFormatter:
     @classmethod
     def format_file_name(cls, template: str, task_info: DownloadTaskInfo = None, field_dict: dict = None):
         if not field_dict:
-            field_dict = cls.check_empty_field(cls.get_field_dict(task_info))
+            field_dict = cls.get_field_dict(task_info)
 
         file_name = template.format(**field_dict)
 
@@ -26,19 +27,18 @@ class FileNameFormatter:
 
     @classmethod
     def get_download_path(cls, task_info: DownloadTaskInfo):
-        def check_path(path: str):
-            if not os.path.exists(path):
-                os.makedirs(path)
-
         field_dict = cls.get_field_dict(task_info)
+        template = cls.get_template(task_info)
 
-        temp_path = cls.get_template(task_info).format(**field_dict)
+        template_path = template.format(**field_dict)
 
-        path = os.path.dirname(os.path.join(task_info.download_base_path, cls.remove_slash(temp_path)))
+        path = os.path.join(task_info.download_base_path, task_info.parent_title, cls.remove_slash(template_path))
+        
+        download_path = os.path.dirname(path)
 
-        check_path(path)
+        Directory.create_directory(download_path)
 
-        return path
+        return download_path
 
     @staticmethod
     def check_empty_field(field_dict: dict):
@@ -58,7 +58,7 @@ class FileNameFormatter:
         return file_name
 
     @classmethod
-    def get_template(cls, task_info: DownloadTaskInfo):
+    def get_template(cls, task_info: DownloadTaskInfo) -> str:
         template = cls.get_specific_template(task_info.template_type)
 
         if not template:

@@ -95,14 +95,15 @@ class DownloadOptionDialog(Dialog):
 
         Config.Temp.ass_resolution_confirm = (not self.media_option_box.download_video_steam_chk.GetValue() or not_dash) and (ass_danmaku or ass_subtitle)
 
-        video_quality_desc_list = self.media_info_box.video_quality_choice.GetItems()
-        video_quality_desc = self.media_info_box.video_quality_choice.GetStringSelection()
 
         if Config.Temp.ass_resolution_confirm and not Config.Temp.remember_resolution_settings:
+            video_quality_desc_list = self.media_info_box.video_quality_info.choice.GetItems()
+            video_quality_desc = self.media_info_box.video_quality_info.choice.GetStringSelection()
+
             dlg = RequireVideoResolutionDialog(self, video_quality_desc_list, video_quality_desc, not_dash)
             
             if dlg.ShowModal() == wx.ID_OK:
-                self.media_info_box.video_quality_choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())
+                self.media_info_box.video_codec_info.choice.SetStringSelection(dlg.video_quality_choice.GetStringSelection())
                 self.parent.parser.video_quality_id = self.media_info_box.video_quality_id
             else:
                 return True

@@ -5,6 +5,8 @@ from utils.config import Config
 from utils.common.enums import Platform
 
 class SysFont:
+    sys_font_list: list = []
+
     @classmethod
     def get_monospaced_font(cls):
         font_list = cls.get_sys_monospaced_font_list()
@@ -38,7 +40,5 @@ class SysFont:
                 return [
                     "Menlo"
                 ]
-
-    @staticmethod
-    def get_sys_font_list():
-        return sorted(wx.FontEnumerator().GetFacenames())
+    
+    

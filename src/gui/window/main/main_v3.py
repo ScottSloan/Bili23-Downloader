@@ -5,6 +5,7 @@ from utils.config import Config
 from utils.common.enums import Platform, EpisodeDisplayType, ExitOption
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException
+from utils.common.style.font import SysFont
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -344,3 +345,5 @@ class MainWindow(Frame):
         for key in ["danmaku", "subtitle"]:
             if Config.Basic.ass_style.get(key).get("font_name") == "default":
                 Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
+
+        SysFont.sys_font_list = sorted(wx.FontEnumerator().GetFacenames())
