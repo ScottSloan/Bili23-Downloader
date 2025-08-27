@@ -1,5 +1,6 @@
 from utils.config import Config
 from utils.common.enums import ParseType, EpisodeDisplayType, TemplateType
+from utils.common.data.badge import badge_dict
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -125,7 +126,7 @@ class Video:
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict):
         episode["title"] = episode.get("title", episode.get("part", ""))
-        episode["badge"] = "充电专属" if info_json.get("is_upower_exclusive", "") else ""
+        episode["badge"] = cls.get_badge(episode.get("attribute", 0))
         episode["duration"] = cls.get_duration(episode.copy())
         episode["link"] = cls.get_link(episode.copy())
         episode["type"] = ParseType.Video.value
@@ -170,3 +171,11 @@ class Video:
             return f"https://www.bilibili.com/video/{episode.get('bvid')}?p={episode.get('page')}"
         else:
             return f"https://www.bilibili.com/video/{episode.get('bvid')}"
+        
+    @staticmethod
+    def get_badge(attribute: int):
+        for i in badge_dict.keys():
+            if attribute & (1 << i):
+                return badge_dict.get(i, "")
+        
+        return ""

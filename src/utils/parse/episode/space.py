@@ -33,14 +33,14 @@ class Space:
                     if episode.get("is_avoided"):
                         Video.ugc_season_parser(season_info.copy())
                     else:
-                        cls.ugc_season_pages_parser(season_info.copy(), bvid)
+                        cls.ugc_season_pages_parser(episode.copy(), season_info.copy(), bvid)
             else:
                 Video.pages_parser(cls.video_info_dict.get(bvid).copy())
 
         Filter.episode_display_mode(reset = True)
 
     @classmethod
-    def ugc_season_pages_parser(cls, season_info: dict, target_bvid: str):
+    def ugc_season_pages_parser(cls, episode_info: dict, season_info: dict, target_bvid: str):
         for section in season_info["ugc_season"]["sections"]:
             for episode in section.get("episodes"):
                 if (bvid := episode.get("bvid")) == target_bvid:
@@ -48,12 +48,14 @@ class Space:
                     aid = episode["aid"]
                     bvid = episode["bvid"]
                     pubtime = episode["arc"]["pubdate"]
+                    badge = cls.get_badge(episode_info)
 
                     if len(episode.get("pages")) == 1:
                         episode["cover_url"] = cover_url
                         episode["aid"] = aid
                         episode["bvid"] = bvid
                         episode["pubtime"] = pubtime
+                        episode["badge"] = badge
 
                         EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_ugc_entry_info(episode.copy(), season_info, multiple = False))
                     else:
@@ -66,6 +68,7 @@ class Space:
                             page["bvid"] = bvid
                             page["aid"] = aid
                             page["collection_title"] = part_title
+                            page["badge"] = badge
 
                             EpisodeInfo.add_item(page_pid, cls.get_ugc_entry_info(page.copy(), season_info, multiple = True))
 
@@ -94,3 +97,14 @@ class Space:
         
         else:
             return 0
+    
+    @staticmethod
+    def get_badge(episode: dict):
+        if episode.get("is_charging_arc"):
+            return "充电专属"
+        
+        elif episode.get("is_union_video"):
+            return "合作"
+        
+        else:
+            return ""

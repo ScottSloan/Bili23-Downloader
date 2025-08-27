@@ -62,6 +62,8 @@ class SpaceParser(Parser):
 
         info_json: dict = resp["data"]
 
+        self.total_data += 1
+
         return info_json
 
     def get_cheese_info(self, season_id: int):
@@ -74,6 +76,8 @@ class SpaceParser(Parser):
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
         data: dict = resp["data"]
+
+        self.total_data += 1
 
         return data
 
@@ -119,6 +123,7 @@ class SpaceParser(Parser):
             self.get_search_arc_info(mid, page)
 
             self.onUpdateTitle(page, total_page, self.total_data)
+            time.sleep(0.1)
 
         self.parse_video_info()
     
@@ -183,8 +188,6 @@ class SpaceParser(Parser):
 
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
-
-        time.sleep(0.3)
 
     def get_total_page(self, total: int):
         return math.ceil(total / 42)

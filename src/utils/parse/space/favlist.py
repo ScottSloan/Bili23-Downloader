@@ -129,8 +129,6 @@ class FavListParser(Parser):
                 season_id = entry["ogv"]["season_id"]
 
                 self.season_dict["bangumi"][season_id] = self.get_bangumi_info(season_id)
-
-            time.sleep(0.1)
     
     def parse_worker(self, url: str):
         self.clear_favlist_info()
