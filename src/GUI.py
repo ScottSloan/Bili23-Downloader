@@ -14,17 +14,30 @@ except ImportError as e:
 
     raise e
 
+
+import google.protobuf
+
+protobuf_version = google.protobuf.__version__
+
+if not protobuf_version.startswith("6"):
+    msg = f"请更新 protobuf 至最新版本\n当前版本：{protobuf_version}\n建议版本：6.32.0 或更高"
+    message_box(f"{msg}\n\n执行：pip install protobuf --upgrade", "Fatal Error")
+
+    raise ImportError(msg)
+
 try:
     import os
 
     from utils.config import Config
     from utils.common.enums import Platform
-    from utils.auth.cookie import CookieUtils
+    from utils.auth.cookie import Cookie
 
     from gui.window.main.main_v3 import MainWindow
 
 except Exception as e:
     import traceback
+
+    traceback
     message_box(f"初始化程序失败\n\n{traceback.format_exc()}", "Fatal Error")
 
     raise e
@@ -49,7 +62,7 @@ class APP(wx.App):
 
         self.init_vlc_env()
 
-        CookieUtils.init_cookie_params()
+        Cookie.init_cookie_params()
 
     def init_msw_env(self):
         import ctypes

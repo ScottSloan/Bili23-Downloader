@@ -95,7 +95,8 @@ user_config_group = {
         "b_nut",
         "bili_ticket",
         "bili_ticket_expires",
-        "uuid"
+        "uuid",
+        "refresh_token"
     ]
 }
 
@@ -299,6 +300,8 @@ class Config:
         bili_ticket_expires: int = 0
         uuid: str = ""
         b_lsid: str = ""
+
+        refresh_token: str = ""
 
     class Advanced:
         enable_switch_cdn: bool = True

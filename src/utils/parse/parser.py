@@ -6,8 +6,6 @@ from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
-from utils.parse.episode.episode_v2 import Filter
-
 class Parser:
     bilibili_url = "https://www.bilibili.com"
 

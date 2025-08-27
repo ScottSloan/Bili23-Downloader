@@ -53,6 +53,8 @@ class Login:
 
             data = Login.request_get(url)
 
+            Config.Auth.refresh_token = data["data"]["refresh_token"]
+
             return {
                 "message": data["data"]["message"],
                 "code": data["data"]["code"]
@@ -109,10 +111,15 @@ class Login:
                 "tel": tel,
                 "code": validate_code,
                 "source": "main-fe-header",
-                "captcha_key": LoginInfo.Captcha.captcha_key
+                "captcha_key": LoginInfo.Captcha.captcha_key,
+                "go_url": "https://www.bilibili.com"
             }
 
-            return Login.request_post(url, params = form)
+            data = Login.request_post(url, params = form)
+
+            Config.Auth.refresh_token = data["data"]["refresh_token"]
+
+            return data
 
     class Captcha:
         @staticmethod

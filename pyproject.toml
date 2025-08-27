@@ -7,11 +7,12 @@ license = "MIT License"
 requires-python = ">=3.9"
 dependencies = [
     "qrcode[pil]==7.4.2",
-    "requests==2.32.4",
+    "requests==2.32.5",
     "wxpython==4.2.3",
     "python-vlc==3.0.21203",
     "protobuf==6.32.0",
-    "websockets==15.0.1"
+    "websockets==15.0.1",
+    "pycryptodome==3.23.0"
 ]
 authors = [
     {name = "ScottSloan", email = "scottsloan@petalmail.com"},
