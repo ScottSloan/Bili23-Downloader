@@ -6,7 +6,7 @@ from utils.common.style.pic_v2 import Pic, PicID
 from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
 from utils.common.exception import show_error_message_dialog
-from utils.common.data.exclimbwuzhi import data
+from utils.common.data.exclimbwuzhi import ex_data
 
 from utils.auth.cookie import Utils
 from utils.auth.login_v2 import Login, LoginInfo
@@ -368,8 +368,8 @@ class LoginDialog(Dialog):
             self.qrcode_panel.init_utils()
             self.sms_panel.init_utils()
 
-            Utils.exclimbwuzhi(data[2])
-            Utils.exclimbwuzhi(data[3])
+            Utils.exclimbwuzhi(ex_data[2])
+            Utils.exclimbwuzhi(ex_data[3])
         
         Login.set_on_error_callback(self.onError)
 

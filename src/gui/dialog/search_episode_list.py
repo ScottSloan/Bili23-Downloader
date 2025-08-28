@@ -60,11 +60,11 @@ class SearchEpisodeListDialog(Frame):
         search_hbox.Add(self.search_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         self.show_matches_only_chk = wx.CheckBox(panel, -1, "仅显示匹配项")
-        self.auto_check_matches_chk = wx.CheckBox(panel, -1, "自动勾选匹配项")
+        self.loop_search_chk = wx.CheckBox(panel, -1, "循环搜索")
 
         option_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        option_hbox.Add(self.show_matches_only_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        option_hbox.Add(self.auto_check_matches_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        option_hbox.Add(self.show_matches_only_chk, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        option_hbox.Add(self.loop_search_chk, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.search_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))

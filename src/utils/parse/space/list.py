@@ -110,7 +110,7 @@ class SpaceListParser(Parser):
 
         url = f"https://api.bilibili.com/x/series/archives?{self.url_encode(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = "https://www.bilibili.com"))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
         archives = resp["data"]["archives"]
 

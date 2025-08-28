@@ -25,7 +25,7 @@ class CustomFileNameDialog(Dialog):
     def init_UI(self):
         template_lab = wx.StaticText(self, -1, "文件名模板（双击列表项目修改）")
         template_tip = ToolTip(self)
-        template_tip.set_tooltip("建议详细阅读说明文档，再进行设置。\n\n对于收藏夹、个人空间和热榜，程序会自动识别视频类型（普通、分P、合集、剧集），按照相应的模板命名。")
+        template_tip.set_tooltip("建议详细阅读说明文档，再进行设置。\n\n对于收藏夹、个人空间和热榜，程序会自动识别其中的视频类型，按照相应的模板命名。")
         self.help_btn = BitmapButton(self, bitmap = Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)

@@ -48,7 +48,7 @@ class DownloadInfo:
             "template_type": item_info.template_type,
             "badge": item_info.badge,
             "page": item_info.page,
-            "referer_url": "https://www.bilibili.com",
+            "referer_url": "https://www.bilibili.com/",
             "up_name": item_info.up_name,
             "up_uid": item_info.up_mid,
             "parse_type": item_info.type,

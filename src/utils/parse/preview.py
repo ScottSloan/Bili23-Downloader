@@ -38,7 +38,7 @@ class VideoPreview(Parser):
 
     @classmethod
     def get_download_json(cls, parse_type: ParseType, bvid: str = None, cid: int = None, aid: int = None, ep_id: int = None, qn: int = 0):
-        referer_url = "https://www.bilibili.com"
+        referer_url = "https://www.bilibili.com/"
 
         def get_video_json():
             params = {

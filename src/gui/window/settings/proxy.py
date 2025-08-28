@@ -154,7 +154,7 @@ class ProxyPage(Page):
             try:
                 start_time = time.time()
 
-                url = "https://www.bilibili.com"
+                url = "https://www.bilibili.com/"
                 req = RequestUtils.request_get(url, proxies = proxy, auth = _auth)
                 
                 end_time = time.time()

@@ -17,12 +17,12 @@ from utils.auth.login_v2 import Login
 from utils.common.request import RequestUtils
 from utils.common.datetime_util import DateTime
 from utils.common.data.rsa_key import correspond_path_key
-from utils.common.data.exclimbwuzhi import data
+from utils.common.data.exclimbwuzhi import ex_data
 from utils.common.regex import Regex
 from utils.common.enums import StatusCode
 
 class Utils:
-    referer_url = "https://www.bilibili.com"
+    referer_url = "https://www.bilibili.com/"
 
     @staticmethod
     def hmac_sha256(key: str, message: str):
@@ -324,7 +324,7 @@ class Cookie:
         Utils.get_b_lsid()
         Utils.get_nav_info()
 
-        Utils.exclimbwuzhi(data[1])
+        Utils.exclimbwuzhi(ex_data[1])
 
         cls.refresh_cookie()
 

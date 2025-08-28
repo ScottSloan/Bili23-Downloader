@@ -7,7 +7,7 @@ from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
 class Parser:
-    bilibili_url = "https://www.bilibili.com"
+    bilibili_url = "https://www.bilibili.com/"
 
     def __init__(self):
         self.json_data: dict = None

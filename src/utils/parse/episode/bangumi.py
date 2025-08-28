@@ -1,6 +1,7 @@
 from utils.common.enums import ParseType, TemplateType
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.map import bangumi_type_map
+from utils.common.regex import Regex
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -38,7 +39,7 @@ class Bangumi:
             episode["media_id"] = info_json["media_id"]
             episode["section_title"] = section_title
 
-            EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), info_json))
+            EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), info_json, section_title))
 
             cls.update_target_section_title(episode, section_title)
 
@@ -52,19 +53,20 @@ class Bangumi:
             cls.episodes_parser(section["episodes"], section_pid, section_title, info_json)
 
     @classmethod
-    def get_entry_info(cls, episode: dict, info_json: dict):
-        episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title") if info_json["type"] == 2 else None)
+    def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
+        episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title"), section_title, info_json["type"] == 2)
+        episode["bvid"] = cls.get_bvid(episode.copy())
         episode["pubtime"] = episode.get("pub_time")
         episode["duration"] = episode.get("duration", 0) / 1000
         episode["cover_url"] = episode.get("cover")
-        episode["link"] = f"https://www.bilibili.com/bangumi/play/ep{episode.get('ep_id')}"
+        episode["link"] = cls.get_link(episode.copy())
         episode["type"] = ParseType.Bangumi.value
         episode["series_title"] = info_json.get("season_title")
         episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
         episode["bangumi_type"] = bangumi_type_map.get(info_json.get("type"))
-        episode["template_type"] = TemplateType.Bangumi.value
+        episode["template_type"] = TemplateType.Bangumi.value if episode.get("ep_id") else TemplateType.Video_Normal.value
         episode["parent_title"] = cls.parent_title
 
         return EpisodeInfo.get_entry_info(episode)
@@ -82,3 +84,18 @@ class Bangumi:
     def condition_in_section(cls, episode: dict):
         return episode.get("item_type") == "node" and episode.get("title") == cls.target_section_title
     
+    @staticmethod
+    def get_bvid(episode: dict):
+        if (bvid := episode.get("bvid")):
+            return bvid
+        else:
+            match = Regex.search(r"(BV\w+)", episode.get("link"))
+            return match[1]
+
+    @staticmethod
+    def get_link(episode: dict):
+        if (ep_id := episode.get("ep_id")):
+            return f"https://www.bilibili.com/bangumi/play/ep{ep_id}"
+        else:
+            return episode.get("link")
+        

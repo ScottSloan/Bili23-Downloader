@@ -16,7 +16,6 @@ except ImportError as e:
 
     raise e
 
-
 import google.protobuf
 
 protobuf_version = google.protobuf.__version__
@@ -35,6 +34,8 @@ try:
     from utils.auth.cookie import Cookie
 
     from gui.window.main.main_v3 import MainWindow
+
+    Cookie.init_cookie_params()
 
 except Exception as e:
     import traceback
@@ -63,8 +64,6 @@ class APP(wx.App):
                 self.init_linux_env()
 
         self.init_vlc_env()
-
-        Cookie.init_cookie_params()
 
     def init_msw_env(self):
         import ctypes

@@ -119,7 +119,7 @@ class Login:
                 "code": validate_code,
                 "source": "main-fe-header",
                 "captcha_key": LoginInfo.Captcha.captcha_key,
-                "go_url": "https://www.bilibili.com"
+                "go_url": "https://www.bilibili.com/"
             }
 
             data = Login.request_post(url, params = form)
@@ -250,11 +250,11 @@ class Login:
     @classmethod
     def on_login_success(cls):
         from utils.auth.cookie import Utils
-        from utils.common.data.exclimbwuzhi import data
+        from utils.common.data.exclimbwuzhi import ex_data
 
         correspond_path = Utils.get_correspond_path()
 
-        Utils.exclimbwuzhi(data[4], correspond_path)
+        Utils.exclimbwuzhi(ex_data[4], correspond_path)
 
     @staticmethod
     def clear_login_info():
