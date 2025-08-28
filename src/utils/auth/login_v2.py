@@ -1,6 +1,7 @@
 import wx
 import json
 import qrcode
+import urllib.parse
 from io import BytesIO
 
 from utils.config import Config
@@ -32,7 +33,13 @@ class Login:
     class QRCode:
         @staticmethod
         def generate_qrcode():
-            url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
+            params = {
+                "source": "main-fe-header",
+                "go_url": "https://www.bilibili.com/",
+                "web_location": "333.1007"
+            }
+
+            url = f"https://passport.bilibili.com/x/passport-login/web/qrcode/generate?{params}"
 
             data = Login.request_get(url)
 
@@ -137,7 +144,11 @@ class Login:
         if not headers:
             headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA)
 
-        req = RequestUtils.request_get(url, headers = headers)
+        try:
+            req = RequestUtils.request_get(url, headers = headers)
+
+        except Exception as e:
+            raise GlobalException(callback = cls.on_error) from e
 
         data = json.loads(req.text)
 
@@ -150,7 +161,11 @@ class Login:
         if not headers:
             headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA)
 
-        req = RequestUtils.request_post(url, headers = headers, params = params)
+        try:
+            req = RequestUtils.request_post(url, headers = headers, params = params)
+
+        except Exception as e:
+            raise GlobalException(callback = cls.on_error) from e
 
         data = json.loads(req.text)
 
@@ -208,6 +223,8 @@ class Login:
             Config.User.login_expires = info.get("login_expires")
 
         Config.save_user_config()
+
+        cls.on_login_success()
     
     @classmethod
     def logout(cls):
@@ -229,6 +246,15 @@ class Login:
         Config.User.username = info["username"]
 
         Face.remove()
+
+    @classmethod
+    def on_login_success(cls):
+        from utils.auth.cookie import Utils
+        from utils.common.data.exclimbwuzhi import data
+
+        correspond_path = Utils.get_correspond_path()
+
+        Utils.exclimbwuzhi(data[4], correspond_path)
 
     @staticmethod
     def clear_login_info():
@@ -269,3 +295,7 @@ class Login:
     @classmethod
     def set_on_error_callback(cls, callback):
         cls.on_error = callback
+
+    @staticmethod
+    def url_encode(params: dict):
+        return urllib.parse.urlencode(params)

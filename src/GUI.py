@@ -5,6 +5,8 @@ def message_box(message: str, caption: str):
         from utils.module.messagebox import show_message
 
         show_message(caption, message)
+    else:
+        wx.LogError(message)
 
 try:
     import wx

@@ -26,6 +26,7 @@ choices.json
 node.json
 episode.json
 temp.json
+exclimbwuzhi*.json
 /.config
 
 # commitizen

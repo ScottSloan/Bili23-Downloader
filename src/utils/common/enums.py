@@ -83,6 +83,9 @@ class StatusCode(Enum):
     Cancel = 613                  # 取消解析
     DRM = 614                     # DRM 加密
     Area_Limit = -10403           # 区域限制
+    NotLogin = -101               # 未登录
+    CSRFError = -111              # CSRF 校验失败
+    RefreshTokenError = 86095     # Refresh Token 不匹配
     OtherError = None             # 其他错误
 
 class VideoQualityID(Enum):

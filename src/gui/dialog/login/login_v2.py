@@ -6,7 +6,9 @@ from utils.common.style.pic_v2 import Pic, PicID
 from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
 from utils.common.exception import show_error_message_dialog
+from utils.common.data.exclimbwuzhi import data
 
+from utils.auth.cookie import Utils
 from utils.auth.login_v2 import Login, LoginInfo
 from utils.module.web.page import WebPage
 
@@ -354,12 +356,20 @@ class LoginDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        pass
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+    def onCloseEVT(self, event):
+        self.qrcode_panel.timer.Stop()
+
+        super().onCloseEVT(wx.CloseEvent(wx.EVT_CLOSE.typeId, id = wx.ID_OK))
 
     def init_utils(self):
         def worker():
             self.qrcode_panel.init_utils()
             self.sms_panel.init_utils()
+
+            Utils.exclimbwuzhi(data[2])
+            Utils.exclimbwuzhi(data[3])
         
         Login.set_on_error_callback(self.onError)
 
@@ -375,8 +385,7 @@ class LoginDialog(Dialog):
 
         wx.CallAfter(worker)
 
-        event = wx.PyCommandEvent(wx.EVT_CLOSE.typeId, self.GetId())
-        wx.PostEvent(self.GetEventHandler(), event)
+        self.PostEvent()
 
     def onError(self):
         def worker():
@@ -393,3 +402,7 @@ class LoginDialog(Dialog):
     def set_2233_mask(self):
         self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22_Mask))
         self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33_Mask))
+
+    def PostEvent(self):
+        event = wx.CommandEvent(wx.EVT_CLOSE.typeId, id = wx.ID_OK)
+        wx.PostEvent(self.GetEventHandler(), event)
