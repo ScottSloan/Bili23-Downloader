@@ -123,3 +123,7 @@ class TopBox(Panel):
         if not url:
             Window.message_dialog(self.main_window, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True
+
+    def reset_search_window(self):
+        if search_dialog := wx.FindWindowByName("search"):
+            search_dialog.reset()

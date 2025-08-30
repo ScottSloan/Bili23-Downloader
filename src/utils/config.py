@@ -39,7 +39,8 @@ app_config_group = {
         "enable_notification",
         "delete_history",
         "enable_speed_limit",
-        "speed_mbps"
+        "speed_mbps",
+        "number_type"
     ],
     "Advanced": [
         "enable_switch_cdn",

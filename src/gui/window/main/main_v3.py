@@ -21,7 +21,7 @@ from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
 
 class MainWindow(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
         self.url, self.url_manual = None, False
         self.search_keywords = ""
 
@@ -236,7 +236,7 @@ class MainWindow(Frame):
 
         self.live_recording_window.Raise()
 
-    def onDownloadEVT(self, event):
+    def onDownloadEVT(self, event: wx.CommandEvent):
         def after_show_items_callback():
             Window.processing_window(show = False)
 
@@ -261,7 +261,7 @@ class MainWindow(Frame):
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
         
-    def onParseEVT(self, event, url_manual = True):
+    def onParseEVT(self, event: wx.CommandEvent, url_manual = True):
         url = self.top_box.url_box.GetValue()
 
         if self.top_box.check_url():
@@ -273,6 +273,8 @@ class MainWindow(Frame):
 
         self.url = url
         self.url_manual = url_manual
+
+        self.top_box.reset_search_window()
 
     def onEpisodeListContextMenuEVT(self, event: wx.MenuEvent):
         match event.GetId():

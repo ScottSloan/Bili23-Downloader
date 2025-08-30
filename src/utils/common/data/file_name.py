@@ -157,28 +157,29 @@ preview_data = {
     },
     5: {
         "pubtime": "{pubtime:%Y-%m-%d}".format(pubtime = DateTime.from_timestamp(1667061000)),
-        "pubtimestamp": 1667061000,
+        "pubtimestamp": 474611955,
         "zone": "",
         "subzone": "",
         "area": "日本",
         "page": "",
-        "title": "第1话 孤独的转机",
+        "title": "第3话 救星赶来",
         "section_title": "正片",
         "part_title": "",
         "collection_title": "",
         "series_title": "孤独摇滚！",
         "interact_title": "",
         "badge": "限免/会员/预告/付费",
+        "episode_num": 3,
         "bangumi_type": "番剧/电影/纪录片/国创/电视剧/综艺",
         "aid": 944573356,
-        "bvid": "BV1yW4y1j7Ft",
-        "cid": 875212290,
-        "ep_id": 693247,
+        "bvid": "BV1PK411S7zb",
+        "cid": 892361614,
+        "ep_id": 693249,
         "season_id": 43164,
         "media_id": 28339735,
-        "duration": 1415,
-        "up_name": "",
-        "up_uid": ""
+        "duration": 1419,
+        "up_name": "哔哩哔哩番剧",
+        "up_uid": "928123"
     },
     6: {
         "pubtime": "{pubtime:%Y-%m-%d}".format(pubtime = DateTime.from_timestamp(1687748405)),
@@ -290,8 +291,13 @@ field_data = {
     },
     "badge": {
         "name": "{badge}",
-        "description": '备注（仅供预览，以实际显示为准）',
+        "description": '标识（仅供预览，以实际显示为准）',
         "type": [1, 2, 3, 4, 5, 6]
+    },
+    "episode_num": {
+        "name": "{episode_num}",
+        "description": "剧集编号",
+        "type": [5]
     },
     "bangumi_type": {
         "name": "{bangumi_type}",
@@ -351,12 +357,12 @@ field_data = {
     "up_name": {
         "name": "{up_name}",
         "description": "UP 主名称",
-        "type": [1, 2, 3, 4, 6]
+        "type": [1, 2, 3, 4, 5, 6]
     },
     "up_uid": {
         "name": "{up_uid}",
         "description": "UP 主 uid",
-        "type": [1, 2, 3, 4, 6]
+        "type": [1, 2, 3, 4, 5, 6]
     }
 }
 

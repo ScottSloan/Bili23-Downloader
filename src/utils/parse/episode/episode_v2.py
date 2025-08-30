@@ -83,6 +83,7 @@ class EpisodeInfo:
         return {
             "number": 0,
             "page": episode.get("page", 0),
+            "episode_num": episode.get("episode_num", 0),
             "title": episode.get("title", ""),
             "cid": episode.get("cid", 0),
             "aid": episode.get("aid", 0),
@@ -122,30 +123,55 @@ class Episode:
                 return episode.get("item_type") == "item"
             
             return Filter.travarsal_episode(condition)
+        
+        @staticmethod
+        def search_episode(keywords: str, show_matches_only: bool):
+            def condition(episode: dict):
+                title = episode.get("title")
+
+                return keywords in title
+            
+            EpisodeInfo.clear_filter_data()
+
+            if keywords and show_matches_only:
+                Filter.travarsal_episode_all(condition)
+            else:
+                EpisodeInfo.filted_data = EpisodeInfo.data.copy()
 
 class Filter:
     @staticmethod
     def travarsal_episode(condition: Callable):
         def traveral(data: list | dict):
             if isinstance(data, dict):
-                r = condition(data)
-
-                if r:
+                if condition(data):
                     return data
                 
-                if "entries" in data:
-                    rtn = traveral(data.get("entries"))
-
-                    if rtn:
+                if entries := data.get("entries"):
+                    if rtn := traveral(entries):
                         return rtn
 
             elif isinstance(data, list):
                 for entry in data:
-                    rtn = traveral(entry)
-                    if rtn:
+                    if rtn := traveral(entry):
                         return rtn
         
         return traveral(EpisodeInfo.data.copy())
+    
+    @staticmethod
+    def travarsal_episode_all(condition: Callable):
+        def traveral(data: list | dict):
+            if isinstance(data, dict):
+                if condition(data):
+                    EpisodeInfo.add_item(EpisodeInfo.root_pid, data, target_data = EpisodeInfo.filted_data)
+                else:
+                    if entries := data.get("entries"):
+                        traveral(entries)
+
+            elif isinstance(data, list):
+                for entry in data:
+                    traveral(entry)
+
+        traveral(EpisodeInfo.data.copy())
 
     @classmethod
     def episode_display_mode(cls, reset: bool = False):

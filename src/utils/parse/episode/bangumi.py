@@ -54,6 +54,7 @@ class Bangumi:
 
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
+        episode["episode_num"] = int(episode.get("title")) if (episode_num := episode.get("title")) and episode_num.isnumeric() else 0
         episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title"), section_title, info_json["type"] == 2)
         episode["bvid"] = cls.get_bvid(episode.copy())
         episode["pubtime"] = episode.get("pub_time")

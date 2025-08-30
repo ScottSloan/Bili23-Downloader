@@ -99,6 +99,7 @@ class FileNameFormatter:
             "collection_title": FileNameFormatter.get_legal_file_name(task_info.collection_title),
             "interact_title": FileNameFormatter.get_legal_file_name(task_info.interact_title),
             "badge": task_info.badge,
+            "episode_num": task_info.episode_num,
             "bangumi_type": task_info.bangumi_type,
             "video_quality": get_mapping_key_by_value(video_quality_map, task_info.video_quality_id),
             "audio_quality": get_mapping_key_by_value(audio_quality_map, task_info.audio_quality_id),

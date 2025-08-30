@@ -2,11 +2,16 @@ import wx
 
 from utils.common.style.icon_v4 import Icon, IconID
 
+from utils.parse.episode.episode_v2 import Episode
+
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
+
+class Flag:
+    loop = False
 
 class SearchResult:
     def __init__(self, data: list):
@@ -15,11 +20,19 @@ class SearchResult:
         self.index = -1
 
     def next(self):
-        self.index = min(self.index + 1, self.length - 1)
+        if Flag.loop and self.index + 1 > self.length - 1:
+            self.index = 0
+        else:
+            self.index = min(self.index + 1, self.length - 1)
+
         return self.data[self.index]
     
     def prev(self):
-        self.index = max(0, self.index - 1)
+        if Flag.loop and self.index - 1 < 0:
+            self.index = self.length - 1
+        else:
+            self.index = max(0, self.index - 1)
+
         return self.data[self.index]
 
 class SearchEpisodeListDialog(Frame):
@@ -35,6 +48,8 @@ class SearchEpisodeListDialog(Frame):
         self.Bind_EVT()
 
         self.CenterOnParent()
+
+        self.search_result = SearchResult([])
 
     def init_UI(self):
         panel = Panel(self)
@@ -61,10 +76,12 @@ class SearchEpisodeListDialog(Frame):
 
         self.show_matches_only_chk = wx.CheckBox(panel, -1, "仅显示匹配项")
         self.loop_search_chk = wx.CheckBox(panel, -1, "循环搜索")
+        self.check_all_chk = wx.CheckBox(panel, -1, "全选")
 
         option_hbox = wx.BoxSizer(wx.HORIZONTAL)
         option_hbox.Add(self.show_matches_only_chk, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         option_hbox.Add(self.loop_search_chk, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        option_hbox.Add(self.check_all_chk, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.search_box, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -86,7 +103,11 @@ class SearchEpisodeListDialog(Frame):
 
         self.previous_btn.Bind(wx.EVT_BUTTON, self.onPreviousItemEVT)
         self.next_btn.Bind(wx.EVT_BUTTON, self.onNextItemEVT)
-    
+
+        self.show_matches_only_chk.Bind(wx.EVT_CHECKBOX, self.onShowMatchesOnlyEVT)
+        self.loop_search_chk.Bind(wx.EVT_CHECKBOX, self.onLoopEVT)
+        self.check_all_chk.Bind(wx.EVT_CHECKBOX, self.onCheckAllEVT)
+
     def onCloseEVT(self, event: wx.CloseEvent):
         self.parent.search_keywords = self.search_box.GetValue()
         
@@ -94,6 +115,8 @@ class SearchEpisodeListDialog(Frame):
 
     def onSearchEVT(self, event: wx.CommandEvent):
         keywords = self.search_box.GetValue()
+
+        self.update_episode_list(keywords)
 
         if keywords:
             result = self.parent.episode_list.SearchItem(keywords)
@@ -106,6 +129,8 @@ class SearchEpisodeListDialog(Frame):
             self.onNextItemEVT(0)
 
         self.update_index()
+
+        self.onCheckAllEVT(event)
 
     def onPreviousItemEVT(self, event: wx.CommandEvent):
         item = self.search_result.prev()
@@ -121,6 +146,20 @@ class SearchEpisodeListDialog(Frame):
 
         self.update_index()
 
+    def onShowMatchesOnlyEVT(self, event: wx.CommandEvent):
+        if self.search_result.length:
+            self.onSearchEVT(event)
+
+    def onLoopEVT(self, event: wx.CommandEvent):
+        Flag.loop = self.loop_search_chk.GetValue()
+
+    def onCheckAllEVT(self, event: wx.CommandEvent):
+        if data := self.search_result.data.copy():
+            if self.check_all_chk.GetValue():
+                self.parent.episode_list.CheckItems(data)
+            else:
+                self.parent.episode_list.UnCheckItems(data)
+
     def update_index(self):
         len = self.search_result.length
 
@@ -130,3 +169,13 @@ class SearchEpisodeListDialog(Frame):
         self.search_result_lab.SetLabel(f"第 {self.search_result.index + 1} 项，共 {len} 项" if len else "无结果")
 
         self.Layout()
+
+    def update_episode_list(self, keywords: str):
+        Episode.Utils.search_episode(keywords, show_matches_only = self.show_matches_only_chk.GetValue())
+
+        self.parent.show_episode_list(from_menu = False)
+
+    def reset(self):
+        self.search_result = SearchResult([])
+
+        self.update_index()

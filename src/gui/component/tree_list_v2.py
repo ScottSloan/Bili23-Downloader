@@ -94,7 +94,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.count = 0
 
-        add_item(EpisodeInfo.filted_data, self.GetRootItem())
+        add_item(EpisodeInfo.filted_data.copy(), self.GetRootItem())
 
     def onItemActivatedEVT(self, event):
         item = self.GetSelection()
@@ -177,7 +177,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if item.IsOk():
                 item_data = self.GetItemData(item)
 
-                if item_data.item_type == "item" and keywords in item_data.title:
+                if keywords in item_data.title:
                     result.append(item)
 
         return result
@@ -249,7 +249,15 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     
     def GetCurrentEpisodeInfo(self):
         return Episode.Utils.get_first_episode()
-            
+    
+    def CheckItems(self, items: list):
+        for item in items:
+            self.CheckItem(item, wx.CHK_CHECKED)
+
+    def UnCheckItems(self, items: list):
+        for item in items:
+            self.CheckItem(item, wx.CHK_UNCHECKED)
+
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
             from gui.window.main.main_v3 import Window
