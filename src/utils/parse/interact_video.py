@@ -122,7 +122,7 @@ class InteractVideoParser(Parser):
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = self.json_get(resp, "data")
 
         if "interaction" in info:
             self.graph_version = info["interaction"]["graph_version"]
@@ -141,7 +141,7 @@ class InteractVideoParser(Parser):
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = self.json_get(resp, "data")
 
         InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"])
 

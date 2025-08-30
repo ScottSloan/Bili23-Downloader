@@ -60,7 +60,7 @@ class SpaceParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        info_json: dict = resp["data"]
+        info_json: dict = self.json_get(resp, "data")
 
         self.total_data += 1
 
@@ -75,7 +75,7 @@ class SpaceParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        data: dict = resp["data"]
+        data: dict = self.json_get(resp, "data")
 
         self.total_data += 1
 
@@ -96,7 +96,9 @@ class SpaceParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        return resp["data"]["name"]
+        data = self.json_get(resp, "data")
+
+        return data["name"]
 
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser

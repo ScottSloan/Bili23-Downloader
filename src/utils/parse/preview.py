@@ -54,8 +54,8 @@ class VideoPreview(Parser):
 
             data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = referer_url, sessdata = Config.User.SESSDATA))
 
-            return data["data"]
-
+            return cls.json_get(data, "data")
+        
         def get_bangumi_json():
             params = {
                 "bvid": bvid,
@@ -70,7 +70,7 @@ class VideoPreview(Parser):
 
             data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = referer_url, sessdata = Config.User.SESSDATA))
 
-            return data["result"]
+            return cls.json_get(data, "result")
         
         def get_cheese_json():
             params = {
@@ -87,7 +87,7 @@ class VideoPreview(Parser):
 
             data = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = referer_url, sessdata = Config.User.SESSDATA))
 
-            return data["data"]
+            return cls.json_get(data, "data")
 
         match ParseType(parse_type):
             case ParseType.Video:

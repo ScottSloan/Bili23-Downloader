@@ -39,7 +39,7 @@ class PopularParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"].copy()
+        self.info_json: dict = self.json_get(resp, "data")
 
     def get_popular_rank_list(self, rid: int, desc: str):
         params = {
@@ -51,7 +51,7 @@ class PopularParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"].copy()
+        self.info_json: dict = self.json_get(resp, "data")
 
         self.info_json["config"] = {
             "label": f"{desc}排行榜"

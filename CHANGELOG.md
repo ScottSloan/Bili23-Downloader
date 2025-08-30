@@ -15,4 +15,4 @@
 * 修复部分视频无法下载弹幕的问题
 
 ### 特别提醒
-protobuf 依赖版本变更，请执行 `pip install protobuf --upgrade` 更新
+protobuf 依赖版本变更，请执行 `pip install protobuf --upgrade` 更新至最新版本

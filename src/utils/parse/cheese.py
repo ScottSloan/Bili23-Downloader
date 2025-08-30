@@ -33,7 +33,7 @@ class CheeseParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"].copy()
+        self.info_json: dict = self.json_get(resp, "data")
 
         if param.startswith("season_id"):
             self.ep_id = self.get_sections_epid()
@@ -55,7 +55,7 @@ class CheeseParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        data = resp["data"].copy()
+        data = self.json_get(resp, "data")
 
         self.check_drm_protection(data)
 

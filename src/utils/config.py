@@ -271,8 +271,6 @@ class Config:
         keep_original_files: bool = False
 
     class Temp:
-        need_login: bool = False
-
         cdn_list: list = []
 
         user_agent: str = ""

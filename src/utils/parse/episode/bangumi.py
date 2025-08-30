@@ -90,8 +90,10 @@ class Bangumi:
         if (bvid := episode.get("bvid")):
             return bvid
         else:
-            match = Regex.search(r"(BV\w+)", episode.get("link"))
-            return match[1]
+            if match := Regex.search(r"(BV\w+)", episode.get("link")):
+                return match[1]
+            else:
+                return ""
 
     @staticmethod
     def get_link(episode: dict):

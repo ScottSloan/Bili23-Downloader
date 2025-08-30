@@ -75,15 +75,17 @@ class SpaceListParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        section_title = resp["data"]["meta"]["name"]
-        episodes = resp["data"]["archives"]
+        data = self.json_get(resp, "data")
+
+        section_title = data["meta"]["name"]
+        episodes = data["archives"]
 
         Section.add_section(section_title)
         Section.update_section(section_title, episodes)
 
         Section.total_entries += len(episodes)
 
-        return section_title, resp["data"]["meta"]["total"]
+        return section_title, data["meta"]["total"]
 
     def get_series_meta_info(self, series_id: int):
         params = {
@@ -94,11 +96,13 @@ class SpaceListParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        section_title = resp["data"]["meta"]["name"]
+        data = self.json_get(resp, "data")
+
+        section_title = data["meta"]["name"]
 
         Section.add_section(section_title)
 
-        return section_title, resp["data"]["meta"]["total"]
+        return section_title, data["meta"]["total"]
 
     def get_series_archives_info(self, mid: int, series_id: int, section_title: str, pn: int = 1):
         params = {
@@ -112,7 +116,9 @@ class SpaceListParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        archives = resp["data"]["archives"]
+        data = self.json_get(resp, "data")
+
+        archives = data["archives"]
 
         Section.update_section(section_title, archives)
 
@@ -129,7 +135,9 @@ class SpaceListParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        items_list = resp["data"]["items_lists"]
+        data = self.json_get(resp, "data")
+
+        items_list = data["items_lists"]
 
         Section.seasons_list.extend([entry["meta"]["season_id"] for entry in items_list.get("seasons_list")])
         Section.series_list.extend([entry["meta"]["series_id"] for entry in items_list.get("series_list")])

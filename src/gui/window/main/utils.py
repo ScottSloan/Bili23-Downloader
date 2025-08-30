@@ -7,6 +7,7 @@ from utils.auth.login_v2 import Login
 from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType
 from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
+from utils.common.data.welcome_message import welcome_message
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
@@ -73,7 +74,7 @@ class Window:
     @show_dialog
     def welcome_dialog(parent: wx.Window):
         def worker():
-            dlg = wx.MessageDialog(parent, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、UP 个人主页解析、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg = wx.MessageDialog(parent, welcome_message, "Guide", wx.ICON_INFORMATION | wx.YES_NO)
             dlg.SetYesNoLabels("说明文档", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:

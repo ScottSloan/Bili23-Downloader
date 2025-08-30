@@ -108,3 +108,10 @@ class Parser:
         
         if data.get("is_drm"):
             self.is_drm = True
+
+    @staticmethod
+    def json_get(json_data: dict, key: str):
+        if data := json_data.get(key):
+            return data
+        else:
+            raise GlobalException(message = f"Key '{key}' is not present", json_data = json_data)

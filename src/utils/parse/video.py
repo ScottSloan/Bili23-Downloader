@@ -44,7 +44,7 @@ class VideoParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"]
+        self.info_json: dict = self.json_get(resp, "data")
 
         if "redirect_url" in self.info_json:
             raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (self.info_json["redirect_url"], ))
@@ -77,7 +77,7 @@ class VideoParser(Parser):
         
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        PreviewInfo.download_json = resp["data"].copy()
+        PreviewInfo.download_json = cls.json_get(resp, "data")
 
     @classmethod
     def get_video_extra_info(cls, bvid: str):

@@ -343,7 +343,7 @@ class Cookie:
         Utils.get_buvid3_buvid4()
         Utils.get_bili_ticket()
 
-        Utils.exclimbwuzhi(Config.Auth.uuid)
+        Utils.exclimbwuzhi(ex_data[1])
 
         Config.save_user_config()
 

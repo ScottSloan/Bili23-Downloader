@@ -252,11 +252,13 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
     
     def CheckItems(self, items: list):
         for item in items:
-            self.CheckItem(item, wx.CHK_CHECKED)
+            self.CheckItemRecursively(item, wx.CHK_CHECKED)
+            self.UpdateItemParentStateRecursively(item)
 
     def UnCheckItems(self, items: list):
         for item in items:
-            self.CheckItem(item, wx.CHK_UNCHECKED)
+            self.CheckItemRecursively(item, wx.CHK_UNCHECKED)
+            self.UpdateItemParentStateRecursively(item)
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():

@@ -41,7 +41,7 @@ class SearchEpisodeListDialog(Frame):
 
         self.parent: MainWindow = parent
 
-        Frame.__init__(self, parent, "搜索", style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_TOOL_WINDOW | wx.FRAME_FLOAT_ON_PARENT, name = "search")
+        Frame.__init__(self, parent, "搜索", style = wx.DEFAULT_FRAME_STYLE & (~wx.RESIZE_BORDER) | wx.FRAME_TOOL_WINDOW | wx.FRAME_FLOAT_ON_PARENT, name = "search")
 
         self.init_UI()
 
@@ -173,7 +173,8 @@ class SearchEpisodeListDialog(Frame):
     def update_episode_list(self, keywords: str):
         Episode.Utils.search_episode(keywords, show_matches_only = self.show_matches_only_chk.GetValue())
 
-        self.parent.show_episode_list(from_menu = False)
+        if keywords:
+            self.parent.show_episode_list(from_menu = False)
 
     def reset(self):
         self.search_result = SearchResult([])

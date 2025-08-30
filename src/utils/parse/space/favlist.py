@@ -41,10 +41,12 @@ class FavListParser(Parser):
 
         url = f"https://api.bilibili.com/x/v3/fav/resource/list?{self.url_encode(params)}"
 
-        req = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        data = self.json_get(resp, "data")
         
-        info = req["data"]["info"]
-        medias = req["data"]["medias"]
+        info = data["info"]
+        medias = data["medias"]
 
         self.fav_title = info["title"]
         self.owner_name = info["upper"]["name"]
@@ -65,7 +67,9 @@ class FavListParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        info_json: dict = resp["data"]
+        info_json: dict = self.json_get(resp, "data")
+
+        self.total_data += 1
 
         return info_json
     
@@ -78,7 +82,9 @@ class FavListParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
-        info_json: dict = resp["result"]
+        info_json: dict = self.json_get(resp, "result")
+
+        self.total_data += 1
 
         return info_json
 

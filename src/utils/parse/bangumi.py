@@ -41,7 +41,11 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        return f"season_id={resp.get('result').get('media').get('season_id')}"
+        data = self.json_get(resp, "result")
+
+        season_id = data["media"]["season_id"]
+
+        return f"season_id={season_id}"
 
     def get_bangumi_info(self, param: str):
         # 获取番组信息
@@ -49,7 +53,7 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
-        self.info_json: dict = resp["result"].copy()
+        self.info_json: dict = self.json_get(resp, "result")
         
         first_episode = self.info_json["episodes"][0] if self.info_json.get("episodes") else self.info_json["section"][0]["episodes"][0]
 
@@ -73,7 +77,7 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        data = resp["result"].copy()
+        data = self.json_get(resp, "result")
 
         self.check_drm_protection(data)
 
