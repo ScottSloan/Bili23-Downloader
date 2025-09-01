@@ -244,7 +244,7 @@ class Config:
                 "template": "{series_title}/{section_title}/{title}",
                 "type": 6
             }
-        ],
+        ]
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300

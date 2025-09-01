@@ -123,7 +123,7 @@ class FileNameFormatter:
         return path
     
     @staticmethod
-    def get_specific_template(template_type: int):
+    def get_specific_template(template_type: int):        
         for entry in Config.Download.file_name_template_list:
             if entry["type"] == template_type:
                 return entry["template"]

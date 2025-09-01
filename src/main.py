@@ -8,11 +8,16 @@ def message_box(message: str, caption: str):
     else:
         wx.LogError(message)
 
+def get_traceback():
+    import traceback
+
+    return traceback.format_exc()
+
 try:
     import wx
 
 except ImportError as e:
-    message_box("缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。", "Runtime Error")
+    message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
 
     raise e
 
@@ -38,10 +43,7 @@ try:
     Cookie.init_cookie_params()
 
 except Exception as e:
-    import traceback
-
-    traceback
-    message_box(f"初始化程序失败\n\n{traceback.format_exc()}", "Fatal Error")
+    message_box(f"初始化程序失败\n\n{get_traceback()}", "Fatal Error")
 
     raise e
 
@@ -54,6 +56,9 @@ class APP(wx.App):
         # 设置语言环境为中文
         self.locale = wx.Locale(wx.LANGUAGE_CHINESE_SIMPLIFIED)
         self.SetAppName(Config.APP.name)
+
+        main_window = MainWindow(None)
+        main_window.Show()
 
     def init_env(self):
         match Platform(Config.Sys.platform):
@@ -81,8 +86,5 @@ class APP(wx.App):
 
 if __name__ == "__main__":
     app = APP()
-
-    main_window = MainWindow(None)
-    main_window.Show()
-
     app.MainLoop()
+    

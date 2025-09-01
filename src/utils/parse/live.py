@@ -29,9 +29,13 @@ class LiveParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        data = self.json_get(resp, "data")
+        data: dict = self.json_get(resp, "data")["by_room_ids"]
 
-        self.info_json: dict = data["by_room_ids"][room_id]
+        if json_data := data.get(room_id):
+            self.info_json: dict = json_data
+
+        elif json_data := data.get(str(room_id)):
+            self.info_json: dict = json_data
 
     @classmethod
     def get_live_stream_info(cls, room_id: int):
