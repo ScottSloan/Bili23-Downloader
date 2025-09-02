@@ -358,10 +358,12 @@ class LoginDialog(Dialog):
     def Bind_EVT(self):
         self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
 
-    def onCloseEVT(self, event):
+    def onCloseEVT(self, event: wx.CloseEvent):
         self.qrcode_panel.timer.Stop()
 
         super().onCloseEVT(wx.CloseEvent(wx.EVT_CLOSE.typeId, id = wx.ID_OK))
+
+        event.Skip()
 
     def init_utils(self):
         def worker():
@@ -383,9 +385,9 @@ class LoginDialog(Dialog):
 
             wx.MessageDialog(self.parent, "登录成功\n\n账号登录成功，建议重启程序刷新登录信息。", "提示", wx.ICON_INFORMATION).ShowModal()
 
-        wx.CallAfter(worker)
+            self.PostEvent()
 
-        self.PostEvent()
+        wx.CallAfter(worker)
 
     def onError(self):
         def worker():
