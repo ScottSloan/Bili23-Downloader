@@ -81,7 +81,11 @@ class StatusCode(Enum):
     DownloadError = 611           # 下载失败
     MaxRetry = 612                # 最大重试
     Cancel = 613                  # 取消解析
+    DRM = 614                     # DRM 加密
     Area_Limit = -10403           # 区域限制
+    NotLogin = -101               # 未登录
+    CSRFError = -111              # CSRF 校验失败
+    RefreshTokenError = 86095     # Refresh Token 不匹配
     OtherError = None             # 其他错误
 
 class VideoQualityID(Enum):
@@ -174,3 +178,13 @@ class LiveFileSplit(Enum):
     Disable = 0                   # 不分段
     ByDuration = 1                # 按直播时长分段
     BySize = 2                    # 按文件大小分段
+
+class TemplateType(Enum):
+    Video_Normal = 1              # 普通
+    Video_Part = 2                # 分P
+    Video_Collection = 3          # 合集
+    Video_Interact = 4            # 互动视频
+    Bangumi = 5                   # 剧集
+    Cheese = 6                    # 课程
+    Space = 7
+    Favlist = 8

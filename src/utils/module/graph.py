@@ -1,15 +1,19 @@
-from utils.parse.video import InteractVideoInfo
+import wx
 
 class Graph:
     @classmethod
     def get_graph_json(cls, font_name: str):
+        main_window = wx.FindWindowByName("main")
+
+        node_list = main_window.parser.parser.info_json.get("node_list")
+
         return {
-            "graph": cls.get_graph_viz_dot(font_name),
-            "title": InteractVideoInfo.title
+            "graph": cls.get_graph_viz_dot(font_name, node_list),
+            "title": main_window.parser.parser.get_interact_title()
         }
     
     @staticmethod
-    def get_graph_viz_dot(font_name: str):
+    def get_graph_viz_dot(font_name: str, node_list: list):
         dot = [
             "rankdir=LR;",
             f'node [shape = box, fontname = "{font_name}", width=1.5, height = 0.5];',
@@ -18,7 +22,7 @@ class Graph:
 
         node_name = {}
 
-        for node in InteractVideoInfo.node_list:
+        for node in node_list:
             node_name[node.cid] = node.title
 
             for option in node.options:

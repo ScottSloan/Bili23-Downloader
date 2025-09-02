@@ -41,12 +41,6 @@ class Option:
         }
 
 class InteractVideoInfo:
-    aid: int = 0
-    cid: int = 0
-    bvid: str = ""
-    title: str = ""
-    graph_version: int = 0
-
     node_list: List[Node] = []
 
     @classmethod
@@ -93,11 +87,7 @@ class InteractVideoInfo:
 
     @classmethod
     def clear_video_info(cls):
-        cls.aid = 0
-        cls.cid = 0
-        cls.bvid = ""
         cls.title = ""
-        cls.graph_version = 0
 
         cls.node_list.clear()
 
@@ -107,40 +97,51 @@ class InteractVideoParser(Parser):
 
         self.callback = callback
 
-    def get_video_interactive_graph_version(self, title: str, bvid: str, cid: int, aid: int):
-        InteractVideoInfo.title = title
-        InteractVideoInfo.bvid = bvid
-        InteractVideoInfo.cid = cid
-        InteractVideoInfo.aid = aid
+    def get_video_interactive_graph_version(self, info_json: dict):
+        self.title = info_json.get("title")
+        self.bvid = info_json.get("bvid")
+        self.cid = info_json.get("cid")
+        self.aid = info_json.get("aid")
+
+        InteractVideoInfo.clear_video_info()
 
         # 获取互动视频 graph_version
         params = {
-            "aid": InteractVideoInfo.aid,
-            "cid": InteractVideoInfo.cid
+            "aid": self.aid,
+            "cid": self.cid,
+            "dm_img_list": "[]",
+            "dm_img_str": "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ",
+            "dm_cover_img_str": "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ",
+            "dm_img_inter": '{"ds":[],"wh":[5231,6067,75],"of":[475,950,475]}',
         }
 
-        url = f"https://api.bilibili.com/x/player/wbi/v2?aid={InteractVideoInfo.aid}&cid={InteractVideoInfo.cid}&{WbiUtils.encWbi(params)}"
+        url = f"https://api.bilibili.com/x/player/wbi/v2?{WbiUtils.encWbi(params)}"
 
         req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = self.json_get(resp, "data")
 
         if "interaction" in info:
-            InteractVideoInfo.graph_version = info["interaction"]["graph_version"]
+            self.graph_version = info["interaction"]["graph_version"]
 
     def get_video_interactive_edge_info(self, cid: int, edge_id: int = 0):
         # 获取互动视频模块信息
-        url = f"https://api.bilibili.com/x/stein/edgeinfo_v2?bvid={InteractVideoInfo.bvid}&graph_version={InteractVideoInfo.graph_version}&edge_id={edge_id}"
+        params = {
+            "bvid": self.bvid,
+            "graph_version": self.graph_version,
+            "edge_id": edge_id
+        }
+        url = f"https://api.bilibili.com/x/stein/edgeinfo_v2?{self.url_encode(params)}"
 
         req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         resp = json.loads(req.text)
 
         self.check_json(resp)
 
-        info = resp["data"]
+        info = self.json_get(resp, "data")
 
         InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"])
 
@@ -152,12 +153,14 @@ class InteractVideoParser(Parser):
         self.callback.onChangeProcessingType(ProcessingType.Interact)
         self.callback.onUpdateName("互动视频")
 
-        option = self.get_video_interactive_edge_info(cid = InteractVideoInfo.cid)
+        option = self.get_video_interactive_edge_info(cid = self.cid)
         
         while option:
             option = self.get_video_interactive_edge_info(option.target_node_cid, option.edge_id)
             
             time.sleep(0.1)
+
+        return InteractVideoInfo.node_list
 
     def onUpdateTitle(self, title: str):
         self.callback.onUpdateTitle(f"节点：{title}")

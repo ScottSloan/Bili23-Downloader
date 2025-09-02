@@ -1,6 +1,5 @@
 import wx
 import asyncio
-import webbrowser
 
 from utils.config import Config
 from utils.auth.login_v2 import Login
@@ -8,6 +7,7 @@ from utils.auth.login_v2 import Login
 from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType
 from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
+from utils.common.data.welcome_message import welcome_message
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
@@ -15,7 +15,7 @@ from utils.module.pic.cover import Cover
 
 from gui.dialog.misc.about import AboutWindow
 from gui.dialog.setting.edit_title import EditTitleDialog
-from gui.dialog.download_option_v3 import DownloadOptionDialog
+from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
 from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
 
@@ -36,13 +36,15 @@ class Window:
     
     def show_dialog(func):
         def function(*args, **kwargs):
+            rtn = None
+
             if not Window.dialog_show:
                 Window.dialog_show = True
 
                 rtn = func(*args, **kwargs)
 
             Window.dialog_show = False
-
+            
             return rtn
 
         return function
@@ -72,11 +74,11 @@ class Window:
     @show_dialog
     def welcome_dialog(parent: wx.Window):
         def worker():
-            dlg = wx.MessageDialog(parent, "欢迎使用 Bili23 Downloader\n\n为了帮助您快速上手并充分利用所有功能，请先阅读程序说明文档。\n\n近期版本更新：\nASS 弹幕/字幕下载、自定义下载文件名/自动分类、UP 个人主页解析、合集列表解析\n\n如遇到问题，欢迎加入社区，或在 Github 提出 issue 进行反馈。", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg = wx.MessageDialog(parent, welcome_message, "Guide", wx.ICON_INFORMATION | wx.YES_NO)
             dlg.SetYesNoLabels("说明文档", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/basic.html")
 
             Config.Basic.is_new_user = False
 
@@ -285,8 +287,9 @@ class Utils:
 
             version = info.get("version_code")
 
-            if version > Config.APP.version_code and version != Config.Misc.ignore_version:
-                wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
+            if version > Config.APP.version_code:
+                if info.get("force") or version != Config.Misc.ignore_version:
+                    wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
             else:
                 if from_menu:
                     Window.message_dialog(cls.get_main_window(), "当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
@@ -375,7 +378,7 @@ class Utils:
             dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
 
             if dlg.ShowModal() == wx.ID_YES:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
             
         result = FFmpeg.Env.check_availability()
 

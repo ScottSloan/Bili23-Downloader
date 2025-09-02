@@ -6,11 +6,14 @@ from utils.common.style.pic_v2 import Pic, PicID
 from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
 from utils.common.exception import show_error_message_dialog
+from utils.common.data.exclimbwuzhi import ex_data
 
+from utils.auth.cookie import Utils
 from utils.auth.login_v2 import Login, LoginInfo
 from utils.module.web.page import WebPage
 
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
@@ -33,7 +36,7 @@ class QRCodePanel(Panel):
         scan_lab.SetFont(font)
         scan_lab.SetForegroundColour(Color.get_text_color())
 
-        self.qrcode = wx.StaticBitmap(self, -1, size = self.FromDIP((150, 150)))
+        self.qrcode = StaticBitmap(self, size = self.FromDIP((150, 150)))
 
         qrcode_hbox = wx.BoxSizer(wx.HORIZONTAL)
         qrcode_hbox.AddStretchSpacer()
@@ -62,48 +65,22 @@ class QRCodePanel(Panel):
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
-        wx.CallAfter(self.set_tip, ["正在加载"])
+        wx.CallAfter(self.qrcode.SetTextTip, ["正在加载"])
         
         self.show_qrcode()
 
         wx.CallAfter(self.timer.Start, 1000)
 
-    def set_tip(self, text: list):
-        font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 5))
-
-        bmp = wx.Bitmap(self.FromDIP(150), self.FromDIP(150))
-        dc = wx.MemoryDC(bmp)
-        dc.SetFont(font)
-        dc.Clear()
-
-        client_height = self.FromDIP(150)
-        total_text_height = sum(dc.GetTextExtent(line).height for line in text) + self.FromDIP(4) * (len(text) - 1)
-        y_start = (client_height - total_text_height) // 2
-
-        for line in text:
-            text_width, text_height = dc.GetTextExtent(line)
-            x = (self.FromDIP(150) - text_width) // 2
-            dc.DrawText(line, x, y_start)
-            y_start += text_height + self.FromDIP(4)
-
-        dc.SetPen(wx.Pen(Color.get_border_color(), width = 1))
-        dc.SetBrush(wx.TRANSPARENT_BRUSH)
-
-        dc.DrawRectangle(2, 2, bmp.GetWidth() - 4, bmp.GetHeight() - 4)
-
-        wx.CallAfter(self.qrcode.SetBitmap, bmp)
-
     def show_qrcode(self):
+        def worker():
+            self.qrcode.SetBitmap(image = wx.Image(img_io))
+            self.qrcode.SetSize(self.FromDIP((149, 149)))
+
         Login.QRCode.generate_qrcode()
 
         img_io = Login.QRCode.get_qrcode_img_io()
 
-        width, height = Login.QRCode.get_qrcode_size()
-
-        bmp = wx.Image(img_io).Scale(width, height, quality = wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
-
-        wx.CallAfter(self.qrcode.SetBitmap, bmp)
+        wx.CallAfter(worker)
 
     def onTimerEVT(self, event):
         resp = Login.QRCode.check_scan_status()
@@ -124,7 +101,7 @@ class QRCodePanel(Panel):
     def status_success(self):
         self.timer.Stop()
 
-        wx.CallAfter(self.set_tip, ["登录成功"])
+        wx.CallAfter(self.qrcode.SetTextTip, ["登录成功"])
 
         info = Login.get_user_info(login = True)
         Login.login(info)
@@ -137,7 +114,7 @@ class QRCodePanel(Panel):
 
     def status_outdated(self):
         def worker():
-            self.set_tip(["二维码已过期", "点击重新加载"])
+            self.qrcode.SetTextTip(["二维码已过期", "点击重新加载"])
 
             self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
@@ -215,6 +192,9 @@ class SMSPanel(Panel):
         self.get_validate_code_btn.Bind(wx.EVT_BUTTON, self.onGetValidateCodeEVT)
         self.login_btn.Bind(wx.EVT_BUTTON, self.onLoginEVT)
 
+        self.validate_code_box.Bind(wx.EVT_SET_FOCUS, self.onSetFocusEVT)
+        self.validate_code_box.Bind(wx.EVT_KILL_FOCUS, self.onKillFocusEVT)
+
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
@@ -269,6 +249,16 @@ class SMSPanel(Panel):
             return
 
         Thread(target = worker).start()
+
+    def onSetFocusEVT(self, event: wx.FocusEvent):
+        self.parent.set_2233_mask()
+        
+        event.Skip()
+
+    def onKillFocusEVT(self, event: wx.FocusEvent):
+        self.parent.set_2233_normal()
+        
+        event.Skip()
 
     def check_captcha_status(self):
         if not LoginInfo.Captcha.seccode:
@@ -339,8 +329,9 @@ class LoginDialog(Dialog):
         hbox.Add(self.sms_panel, 0, wx.EXPAND)
         hbox.AddSpacer(self.FromDIP(60))
 
-        self.left_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Left_22))
-        self.right_bmp = wx.StaticBitmap(self, -1, Pic.get_pic_bitmap(PicID.Right_33))
+        self.left_bmp = StaticBitmap(self, size = self.FromDIP((104, 95)))
+        self.right_bmp = StaticBitmap(self, size = self.FromDIP((97, 95)))
+        self.set_2233_normal()
 
         info_lab = wx.StaticText(self, -1, "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序")
         info_lab.SetFont(self.GetFont().MakeBold())
@@ -365,12 +356,20 @@ class LoginDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        pass
+        self.Bind(wx.EVT_CLOSE, self.onCloseEVT)
+
+    def onCloseEVT(self, event):
+        self.qrcode_panel.timer.Stop()
+
+        super().onCloseEVT(wx.CloseEvent(wx.EVT_CLOSE.typeId, id = wx.ID_OK))
 
     def init_utils(self):
         def worker():
             self.qrcode_panel.init_utils()
             self.sms_panel.init_utils()
+
+            Utils.exclimbwuzhi(ex_data[2])
+            Utils.exclimbwuzhi(ex_data[3])
         
         Login.set_on_error_callback(self.onError)
 
@@ -386,8 +385,7 @@ class LoginDialog(Dialog):
 
         wx.CallAfter(worker)
 
-        event = wx.PyCommandEvent(wx.EVT_CLOSE.typeId, self.GetId())
-        wx.PostEvent(self.GetEventHandler(), event)
+        self.PostEvent()
 
     def onError(self):
         def worker():
@@ -396,3 +394,15 @@ class LoginDialog(Dialog):
             show_error_message_dialog("登录失败", parent = self)
 
         wx.CallAfter(worker)
+
+    def set_2233_normal(self):
+        self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22))
+        self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33))
+
+    def set_2233_mask(self):
+        self.left_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Left_22_Mask))
+        self.right_bmp.SetBitmap(image = Pic.get_pic_bitmap(PicID.Right_33_Mask))
+
+    def PostEvent(self):
+        event = wx.CommandEvent(wx.EVT_CLOSE.typeId, id = wx.ID_OK)
+        wx.PostEvent(self.GetEventHandler(), event)

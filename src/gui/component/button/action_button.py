@@ -1,26 +1,28 @@
 import wx
 
 from utils.config import Config
-
 from utils.common.style.color import Color
 
 from gui.component.panel.panel import Panel
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class ActionButton(Panel):
     def __init__(self, parent: wx.Window, title: str, name: str = wx.PanelNameStr):
         self._title = title
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.init_UI()
 
         self.Bind_EVT()
 
-        self._active = False
-        self._lab_hover = False
+        self.active_flag = False
+        self.lab_hover_flag = False
+
+        self.set_unactive_bgcolor()
 
     def init_UI(self):
-        self.icon = wx.StaticBitmap(self, -1, size = self.FromDIP((20, 20)))
+        self.icon = StaticBitmap(self, size = self.FromDIP((16, 16)))
 
         self.lab = wx.StaticText(self, -1, self._title)
 
@@ -51,7 +53,7 @@ class ActionButton(Panel):
         self.icon.Bind(wx.EVT_LEFT_DOWN, self.onClickEVT)
 
     def onHoverEVT(self, event):
-        if not self._active:
+        if not self.active_flag:
             self.set_hover_bgcolor()
 
             self.Refresh()
@@ -59,12 +61,12 @@ class ActionButton(Panel):
         event.Skip()
 
     def onLabHoverEVT(self, event):
-        self._lab_hover = True
+        self.lab_hover_flag = True
 
         event.Skip()
     
     def onLeaveEVT(self, event):
-        if not self._active and not self._lab_hover:
+        if not self.active_flag and not self.lab_hover_flag:
             self.set_unactive_bgcolor()
 
             self.Refresh()
@@ -72,16 +74,14 @@ class ActionButton(Panel):
         event.Skip()
 
     def onLabLeaveEVT(self, event):
-        self._lab_hover = False
+        self.lab_hover_flag = False
 
         event.Skip()
     
     def onClickEVT(self, event):
         self.set_active_bgcolor()
 
-        self.Refresh()
-
-        self._active = True
+        self.active_flag = True
 
         self.onClickCustomEVT()
 
@@ -89,16 +89,14 @@ class ActionButton(Panel):
             event.Skip()
     
     def setActiveState(self):
-        self._active = True
+        self.active_flag = True
+
         self.set_active_bgcolor()
 
-        self.Refresh()
-
     def setUnactiveState(self):
-        self._active = False
-        self.set_unactive_bgcolor()
+        self.active_flag = False
 
-        self.Refresh()
+        self.set_unactive_bgcolor()
 
     def set_active_bgcolor(self):
         if Config.Sys.dark_mode:
@@ -106,11 +104,15 @@ class ActionButton(Panel):
         else:
             self.SetBackgroundColour(wx.Colour(210, 210, 210))
 
+        self.Refresh()
+
     def set_unactive_bgcolor(self):
         if Config.Sys.dark_mode:
             self.SetBackgroundColour(Color.get_panel_background_color())
         else:
             self.SetBackgroundColour("white")
+
+        self.Refresh()
 
     def set_hover_bgcolor(self):
         if Config.Sys.dark_mode:
@@ -118,8 +120,10 @@ class ActionButton(Panel):
         else:
             self.SetBackgroundColour(wx.Colour(220, 220, 220))
 
+        self.Refresh()
+
     def setBitmap(self, bitmap):
-        self.icon.SetBitmap(bitmap)
+        self.icon.SetBitmap(bmp = bitmap)
 
     def setTitle(self, title):
         self.lab.SetLabel(title)

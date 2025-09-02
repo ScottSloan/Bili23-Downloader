@@ -1,5 +1,4 @@
 import wx
-import webbrowser
 from enum import Enum
 
 from utils.common.style.icon_v4 import Icon, IconID
@@ -74,12 +73,9 @@ class Player(Panel):
         self.player: vlc.MediaPlayer = self.Instance.media_player_new()
 
     def init_unavailable_UI(self):
-        def onHelpEVT(self, event):
-            webbrowser.open("https://bili23.scott-sloan.cn/doc/install/vlc.html")
-
         tip_lab = wx.StaticText(self, -1, "VLC Media Player 不可用，无法显示预览")
         self.help_btn = wx.Button(self, -1, "帮助", size = self.get_scaled_size((100, 28)))
-        self.help_btn.Bind(wx.EVT_BUTTON, onHelpEVT)
+        self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
 
         tip_vbox = wx.BoxSizer(wx.HORIZONTAL)
         tip_vbox.AddStretchSpacer()
@@ -255,3 +251,6 @@ class Player(Panel):
 
     def unregister_callback(self, event_type, callback):
         self.player.event_manager().event_detach(event_type, callback)
+
+    def onHelpEVT(self, event: wx.CommandEvent):
+        wx.LaunchDefaultBrowser(url = "https://bili23.scott-sloan.cn/doc/install/vlc.html")

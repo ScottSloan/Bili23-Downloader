@@ -13,7 +13,7 @@ class FontStaticBox(Panel):
     def init_UI(self):
         font_box = wx.StaticBox(self, -1, "字体")
 
-        self.font_name_choice = wx.Choice(font_box, -1, choices = SysFont.get_sys_font_list())
+        self.font_name_choice = wx.Choice(font_box, -1, choices = SysFont.sys_font_list)
 
         self.font_size_box = wx.SpinCtrl(font_box, -1, min = 1, max = 100, initial = 0)
         font_size_unit_lab = wx.StaticText(font_box, -1, "pt")

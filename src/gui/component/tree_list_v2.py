@@ -7,7 +7,7 @@ from utils.common.model.data_type import TreeListItemInfo
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.model.download_info import DownloadInfo
 
-from utils.parse.episode_v2 import EpisodeInfo, Episode
+from utils.parse.episode.episode_v2 import EpisodeInfo, Episode
 
 from gui.component.menu.episode_list import EpisodeListMenu
 
@@ -94,7 +94,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.count = 0
 
-        add_item(EpisodeInfo.data, self.GetRootItem())
+        add_item(EpisodeInfo.filted_data.copy(), self.GetRootItem())
 
     def onItemActivatedEVT(self, event):
         item = self.GetSelection()
@@ -177,7 +177,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             if item.IsOk():
                 item_data = self.GetItemData(item)
 
-                if item_data.item_type == "item" and keywords in item_data.title:
+                if keywords in item_data.title:
                     result.append(item)
 
         return result
@@ -248,8 +248,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         return self.GetItemText(self.GetSelection(), 1)
     
     def GetCurrentEpisodeInfo(self):
-        return Episode.Utils.get_current_episode()
-            
+        return Episode.Utils.get_first_episode()
+    
+    def CheckItems(self, items: list):
+        for item in items:
+            self.CheckItemRecursively(item, wx.CHK_CHECKED)
+            self.UpdateItemParentStateRecursively(item)
+
+    def UnCheckItems(self, items: list):
+        for item in items:
+            self.CheckItemRecursively(item, wx.CHK_UNCHECKED)
+            self.UpdateItemParentStateRecursively(item)
+
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():
             from gui.window.main.main_v3 import Window

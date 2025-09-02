@@ -6,7 +6,7 @@ from utils.common.map import video_quality_map, audio_quality_map, video_codec_p
 from utils.module.notification import NotificationManager
 
 from gui.window.settings.page import Page
-from gui.dialog.setting.custom_file_name_v2 import CustomFileNameDialog
+from gui.dialog.setting.file_name.custom_file_name_v3 import CustomFileNameDialog
 
 from gui.component.misc.tooltip import ToolTip
 from gui.component.text_ctrl.int_ctrl import IntCtrl

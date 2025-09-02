@@ -7,10 +7,11 @@ from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
 class Parser:
-    bilibili_url = "https://www.bilibili.com"
+    bilibili_url = "https://www.bilibili.com/"
 
     def __init__(self):
         self.json_data: dict = None
+        self.is_drm: bool = False
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
         result = re.findall(pattern, string)
@@ -97,3 +98,20 @@ class Parser:
 
     def is_interactive_video(self):
         return False
+    
+    def is_in_section_option_enable(self):
+        return True
+
+    def check_drm_protection(self, data: dict):
+        if data.get("drm_type"):
+            raise GlobalException(code = StatusCode.DRM.value)
+        
+        if data.get("is_drm"):
+            self.is_drm = True
+
+    @staticmethod
+    def json_get(json_data: dict, key: str):
+        if data := json_data.get(key):
+            return data
+        else:
+            raise GlobalException(message = f"Key '{key}' is not present", json_data = json_data)

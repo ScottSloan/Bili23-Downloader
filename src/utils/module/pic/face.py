@@ -20,33 +20,46 @@ class Face:
 
         return Config.User.face_path
     
+    @classmethod
+    def get_user_face_image(cls):
+        return wx.Image(cls.get_user_face_path(), wx.BITMAP_TYPE_ANY)
+    
     @staticmethod
     def crop_round_face_bmp(image: wx.Image):
         width, height = image.GetSize()
         diameter = min(width, height)
-        
-        image = image.Scale(diameter, diameter, wx.IMAGE_QUALITY_HIGH)
+
+        center = radius = diameter / 2.0
         
         circle_image = wx.Image(diameter, diameter)
         circle_image.InitAlpha()
         
-        for x in range(diameter):
-            for y in range(diameter):
-                dist = ((x - diameter / 2) ** 2 + (y - diameter / 2) ** 2) ** 0.5
-                if dist <= diameter / 2:
-                    circle_image.SetRGB(x, y, image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y))
-                    circle_image.SetAlpha(x, y, 255)
+        feather_radius = 1.5
+        max_alpha = 255
+        
+        for y in range(diameter):
+            dy = y - center
+            for x in range(diameter):
+                dx = x - center
+                dist = (dx * dx + dy * dy) ** 0.5
+                
+                if dist <= radius - feather_radius:
+                    alpha_val = max_alpha
+
+                elif dist >= radius + feather_radius:
+                    alpha_val = 0
+
                 else:
-                    circle_image.SetAlpha(x, y, 0)
+                    ratio = (dist - (radius - feather_radius)) / (2 * feather_radius)
+                    alpha_val = int(max_alpha * (1 - ratio))
+                
+                r, g, b = image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y)
+                
+                circle_image.SetRGB(x, y, r, g, b)
+                circle_image.SetAlpha(x, y, alpha_val)
         
         return circle_image.ConvertToBitmap()
-    
-    @classmethod
-    def get_scaled_face(cls, scaled_size: wx.Size):
-        width, height = scaled_size
 
-        return wx.Image(cls.get_user_face_path(), wx.BITMAP_TYPE_ANY).Scale(width, height, wx.IMAGE_QUALITY_HIGH)
-    
     @staticmethod
     def remove():
         File.remove_file(Config.User.face_path)

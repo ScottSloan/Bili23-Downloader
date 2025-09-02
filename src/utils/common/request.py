@@ -25,7 +25,7 @@ class RequestUtils:
     def request_head(cls, url: str, headers = None, proxies = None, auth = None):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return cls.session.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth)
+        return cls.session.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, timeout = 5)
     
     @classmethod
     def get_params(cls, headers = None, proxies = None, auth = None):

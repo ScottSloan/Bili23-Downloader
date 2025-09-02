@@ -1,6 +1,8 @@
 import wx
+import time
 
 from utils.config import Config
+from utils.common.thread import Thread
 
 from utils.module.pic.face import Face
 
@@ -9,6 +11,7 @@ from gui.id import ID
 from gui.component.panel.panel import Panel
 from gui.component.button.button import Button
 from gui.component.menu.user import UserMenu
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 class BottomBox(Panel):
     def __init__(self, parent):
@@ -19,7 +22,7 @@ class BottomBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        self.face_icon = wx.StaticBitmap(self, -1, size = self.FromDIP((32, 32)))
+        self.face_icon = StaticBitmap(self, size = self.FromDIP((32, 32)))
         self.face_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.face_icon.Hide()
         self.uname_lab = wx.StaticText(self, -1, "未登录")
@@ -54,11 +57,9 @@ class BottomBox(Panel):
         self.face_icon.Show()
         self.uname_lab.Show()
 
-        main_window = wx.FindWindowByName("main")
-
-        image = Face.get_scaled_face(main_window.FromDIP((32, 32)))
+        image = Face.get_user_face_image()
         
-        self.face_icon.SetBitmap(Face.crop_round_face_bmp(image))
+        self.face_icon.SetBitmap(bmp = Face.crop_round_face_bmp(image))
         self.uname_lab.SetLabel(Config.User.username)
 
         self.GetSizer().Layout()
@@ -74,3 +75,14 @@ class BottomBox(Panel):
         self.uname_lab.SetLabel("未登录")
 
         self.GetSizer().Layout()
+
+    def download_tip(self):
+        def worker():
+            wx.CallAfter(self.download_btn.SetLabel, "✔️已开始下载")
+            
+            time.sleep(1)
+
+            wx.CallAfter(self.download_btn.SetLabel, "开始下载")
+
+        if not Config.Basic.auto_show_download_window:
+            Thread(target = worker).start()

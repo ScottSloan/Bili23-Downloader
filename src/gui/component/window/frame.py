@@ -8,7 +8,7 @@ class Frame(wx.Frame):
     def __init__(self, parent, title, style = wx.DEFAULT_FRAME_STYLE, name = wx.FrameNameStr):
         wx.Frame.__init__(self, parent, -1, title, style = style, name = name)
 
-        self.SetIcon(wx.Icon(Icon.get_app_icon_bitmap(IconID.App_Small)))
+        self.SetIcon(wx.Icon(Icon.get_app_icon_bitmap(IconID.App_Default)))
 
     def get_scaled_size(self, size: tuple):
         match Platform(Config.Sys.platform):

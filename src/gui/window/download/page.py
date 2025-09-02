@@ -13,7 +13,7 @@ from gui.component.panel.download_item_v4 import DownloadTaskItemPanel
 
 class BasePage(Panel):
     def __init__(self, parent: wx.Window, name: str):
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.scroller: ScrolledPanelList = None
         self.temp_panel_list: List[Tuple[DownloadTaskItemPanel, int, int]] = []

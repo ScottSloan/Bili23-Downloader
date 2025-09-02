@@ -1,15 +1,37 @@
 import wx
-import webbrowser
+import os
+import wx.adv
 
 from utils.config import Config
 
-from utils.common.style.icon_v4 import Icon, IconID
-from utils.common.compile_data import date, compile, beta_flag, beta_ver
-from utils.common.style.color import Color
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
+from utils.common.compile_data import date
 
 from gui.dialog.misc.license import LicenseWindow
 
 from gui.component.window.dialog import Dialog
+from gui.component.panel.panel import Panel
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
+from gui.component.label.info_label import InfoLabel
+
+class URLBox(Panel):
+    def __init__(self, parent: wx.Window, label: str, url: str):
+        self.label = label
+        self.url = url
+
+        Panel.__init__(self, parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        lab = wx.StaticText(self, -1, self.label)
+        link = wx.adv.HyperlinkCtrl(self, url = self.url)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(lab, 0, wx.ALIGN_CENTER)
+        hbox.Add(link, 0, wx.ALIGN_CENTER)
+
+        self.SetSizer(hbox)
 
 class AboutWindow(Dialog):
     def __init__(self, parent):
@@ -19,106 +41,72 @@ class AboutWindow(Dialog):
 
         self.init_UI()
 
-        self.Bind_EVT()
 
         self.CenterOnParent()
 
         wx.Bell()
     
     def init_UI(self):
-        def set_icon_background(image: wx.Image):
-            _width, _height = image.GetSize()
-
-            if Config.Sys.dark_mode:
-                color = Color.get_panel_background_color()
-
-                for x in range(_width):
-                    for y in range(_height):
-                        r, g, b = image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y)
-
-                        if r > 200 and g > 200 and b > 200:
-                            # 选取背景颜色填充
-                            image.SetRGB(x, y, color[0], color[1], color[2])
-
-            return image
-
         self.set_dark_mode()
 
-        logo = wx.StaticBitmap(self, -1, set_icon_background(Icon.get_app_icon_bitmap(IconID.App_Default)).ConvertToBitmap())
+        logo = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.App_Default, IconSize.MEDIUM), size = self.FromDIP((48, 48)))
 
         font: wx.Font = self.GetFont()
-        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
-        app_name_lab = wx.StaticText(self, -1, f"{Config.APP.name}")
+        app_name_lab = wx.StaticText(self, -1, Config.APP.name)
         app_name_lab.SetFont(font.MakeBold())
 
-        beta_ver = f" (Beta {beta_ver})" if beta_flag else ""
+        top_vbox = wx.BoxSizer(wx.HORIZONTAL)
+        top_vbox.Add(logo, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_vbox.Add(app_name_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        version_lab = wx.StaticText(self, -1, f"{Config.APP.version}{beta_ver}")
-        version_lab.SetFont(font)
+        version_lab = wx.StaticText(self, -1, f"软件版本：{self.GetVersion()}")
+        date_lab = wx.StaticText(self, -1, self.GetDateLabel())
+        license_lab = wx.StaticText(self, -1, "本软件为开源免费软件，在 MIT License 许可协议下进行发布。")
 
-        desc_lab = wx.StaticText(self, -1, "下载 B 站视频/番剧/电影/纪录片等资源")
+        homepage_link = URLBox(self, "官方网站；", "https://bili23.scott-sloan.cn")
+        github_link = URLBox(self, "项目首页：", "https://www.github.com/ScottSloan/Bili23-Downloader")
 
-        date_lab = wx.StaticText(self, -1, f"构建日期：{date}" if compile else f"发布日期：{date}")
+        body_vbox = wx.BoxSizer(wx.VERTICAL)
+        body_vbox.Add(version_lab, 0, wx.ALL, self.FromDIP(6))
+        body_vbox.Add(date_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        body_vbox.Add(license_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        body_vbox.Add(homepage_link, 0, wx.ALL, self.FromDIP(6))
+        body_vbox.Add(github_link, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        if beta_flag:
-            dev_lab = wx.StaticText(self, -1, "开发中，不代表最终品质")
+        copyright_lab = InfoLabel(self, "Copyright © 2022-2025 Scott Sloan")
 
-        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan")
-
-        copyright_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        copyright_hbox.AddSpacer(self.FromDIP(16))
-        copyright_hbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        copyright_hbox.AddSpacer(self.FromDIP(16))
-
-        self.github_link = wx.StaticText(self, -1, "GitHub 主页")
-        self.github_link.SetForegroundColour(wx.Colour(0, 102, 209))
-        self.github_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.github_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
-
-        self.home_link = wx.StaticText(self, -1, "项目官网")
-        self.home_link.SetForegroundColour(wx.Colour(0, 102, 209))
-        self.home_link.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.home_link.SetFont(copyright_lab.GetFont().MakeUnderlined())
-
-        self.license_btn = wx.Button(self, -1, "授权", size = self.get_scaled_size((80, 26)))
-        self.close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 26)))
+        opensource_lab = wx.adv.HyperlinkCtrl(self, -1, "开源许可", url = "https://bili23.scott-sloan.cn/doc/license.html")
+        disclaimer_lab = wx.adv.HyperlinkCtrl(self, -1, "免责声明", url = "https://bili23.scott-sloan.cn/doc/announcement.html")
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        bottom_hbox.Add(self.license_btn, 0, wx.ALL, self.FromDIP(6))
-        bottom_hbox.AddStretchSpacer()
-        bottom_hbox.Add(self.close_btn, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(opensource_lab, 0, wx.ALL, self.FromDIP(6))
+        bottom_hbox.Add(disclaimer_lab, 0, wx.ALL, self.FromDIP(6))
+
+        bottom_vbox = wx.BoxSizer(wx.VERTICAL)
+        bottom_vbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.CENTER, self.FromDIP(10))
+        bottom_vbox.Add(bottom_hbox, 0, wx.CENTER)
 
         about_vbox = wx.BoxSizer(wx.VERTICAL)
-        about_vbox.Add(logo, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
-        about_vbox.Add(app_name_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.CENTER, self.FromDIP(6))
-        about_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
-        about_vbox.Add(desc_lab, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
-        about_vbox.Add(date_lab, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
-
-        if beta_flag:
-            about_vbox.Add(dev_lab, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
-
-        about_vbox.AddSpacer(self.FromDIP(13))
-        about_vbox.Add(copyright_hbox, 0, wx.CENTER)
-        about_vbox.Add(self.home_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
-        about_vbox.Add(self.github_link, 0, wx.ALL & (~wx.TOP) | wx.CENTER, self.FromDIP(6))
-        about_vbox.Add(bottom_hbox, 0, wx.EXPAND)
+        about_vbox.Add(top_vbox, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
+        about_vbox.Add(body_vbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(10))
+        about_vbox.Add(bottom_vbox, 0, wx.EXPAND)
+        about_vbox.AddSpacer(self.FromDIP(6))
 
         self.SetSizerAndFit(about_vbox)
-
-    def Bind_EVT(self):
-        self.github_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenGithubLink)
-        self.home_link.Bind(wx.EVT_LEFT_DOWN, self.onOpenHomeLink)
-
-        self.license_btn.Bind(wx.EVT_BUTTON, self.onShowLicense)
 
     def onShowLicense(self, event):
         license_window = LicenseWindow(self)
         license_window.ShowModal()
 
-    def onOpenGithubLink(self, event):
-        webbrowser.open("https://www.github.com/ScottSloan/Bili23-Downloader")
+    def GetVersion(self):
+        version = f"{Config.APP.version} ({Config.APP.version_code})"
 
-    def onOpenHomeLink(self, event):
-        webbrowser.open("https://bili23.scott-sloan.cn/")
+        return version
+
+    def GetDateLabel(self):
+        if build_time := os.environ.get("PYSTAND_BUILD_TIME"):
+            return f"构建时间：{build_time}"
+        else:
+            return f"发布时间：{date}"

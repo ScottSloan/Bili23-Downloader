@@ -39,7 +39,8 @@ app_config_group = {
         "enable_notification",
         "delete_history",
         "enable_speed_limit",
-        "speed_mbps"
+        "speed_mbps",
+        "number_type"
     ],
     "Advanced": [
         "enable_switch_cdn",
@@ -95,7 +96,8 @@ user_config_group = {
         "b_nut",
         "bili_ticket",
         "bili_ticket_expires",
-        "uuid"
+        "uuid",
+        "refresh_token"
     ]
 }
 
@@ -113,15 +115,15 @@ class Config:
     class APP:
         name: str = "Bili23 Downloader"
 
-        version: str = "1.65.2"
-        version_code: int = 165200
+        version: str = "1.66.0"
+        version_code: int = 166000
 
-        task_file_min_version_code: int = 165000
+        task_file_min_version_code: int = 166000
         live_file_min_version_code: int = 165000
-        app_config_file_min_version_code: int = 165000
-        user_config_file_min_version_code: int = 165200
+        app_config_file_min_version_code: int = 166000
+        user_config_file_min_version_code: int = 166000
 
-        app_config_path: str = os.path.join(os.getcwd(), "config.json")
+        app_config_path: str = ""
 
     class Basic:
         listen_clipboard: bool = False
@@ -219,16 +221,28 @@ class Config:
         path: str = os.path.join(os.getcwd(), "download")
         file_name_template_list: list = [
             {
-                "template":  os.sep + "{series_title}" + os.sep + "{title}",
-                "scope": 2
-            },
-            {
-                "template": os.sep + "{series_title}" + os.sep + "{title}",
-                "scope": 3
-            },
-            {
                 "template": "{zero_padding_number} - {title}",
-                "scope": 4
+                "type": 1
+            },
+            {
+                "template": "{part_title}/P{page} - {title}",
+                "type": 2
+            },
+            {
+                "template": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}",
+                "type": 3
+            },
+            {
+                "template": "{interact_title}/{title}",
+                "type": 4
+            },
+            {
+                "template": "{series_title}/{title}",
+                "type": 5
+            },
+            {
+                "template": "{series_title}/{section_title}/{title}",
+                "type": 6
             }
         ]
         
@@ -257,8 +271,6 @@ class Config:
         keep_original_files: bool = False
 
     class Temp:
-        need_login: bool = False
-
         cdn_list: list = []
 
         user_agent: str = ""
@@ -288,6 +300,8 @@ class Config:
         uuid: str = ""
         b_lsid: str = ""
 
+        refresh_token: str = ""
+
     class Advanced:
         enable_switch_cdn: bool = True
         cdn_list: list = [
@@ -313,7 +327,7 @@ class Config:
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
 
-        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
+        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
 
         webpage_option: int = 0
         websocket_port: int = 8765
@@ -433,6 +447,7 @@ class Config:
     def init_path():
         Config.User.directory = os.path.join(os.getcwd(), ".config")
 
+        Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         Config.User.live_file_directory = os.path.join(Config.User.directory, "live")
@@ -455,11 +470,10 @@ class Config:
 
     @staticmethod
     def on_error(e):
+        import wx
         import traceback
 
-        from utils.module.messagebox import show_message
-
-        show_message("Fatal Error", f"读取\保存配置文件时出错\n{traceback.format_exc()}")
+        wx.LogError(f"读取\保存配置文件时出错\n{traceback.format_exc()}")
 
         raise e
 

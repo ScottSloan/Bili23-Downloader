@@ -60,14 +60,14 @@ class FormatUtils:
             return "{:.1f} B".format(size)
 
     @staticmethod
-    def format_bangumi_title(episode: dict, series_title: str = None):
+    def format_bangumi_title(episode: dict, series_title: str, section_title: str, is_movie: bool):
         def get_share_copy():
             if "share_copy" in episode:
                 return episode["share_copy"]
             else:
                 return episode["report"]["ep_title"]
         
-        if series_title: 
+        if section_title == "正片" and is_movie:
             return f"《{series_title}》{episode.get('show_title')}"
         
         long_title = episode.get("long_title")

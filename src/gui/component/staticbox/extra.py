@@ -12,8 +12,8 @@ from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
 
 class ExtraStaticBox(Panel):
-    def __init__(self, parent, show_more = True):
-        self.show_more = show_more
+    def __init__(self, parent, is_setting_page: bool):
+        self.is_setting_page = is_setting_page
 
         Panel.__init__(self, parent)
 
@@ -29,7 +29,7 @@ class ExtraStaticBox(Panel):
         self.danmaku_file_type_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
         danmaku_tooltip = ToolTip(extra_box)
         danmaku_tooltip.set_tooltip("ASS 格式弹幕支持自定义样式，请在设置窗口中进行修改\n\n找不到设置窗口的，请仔细阅读程序使用说明")
-        danmaku_tooltip.Show(not self.show_more)
+        danmaku_tooltip.Show(not self.is_setting_page)
 
         danmaku_hbox = wx.BoxSizer(wx.HORIZONTAL)
         danmaku_hbox.AddSpacer(self.FromDIP(20))
@@ -42,7 +42,7 @@ class ExtraStaticBox(Panel):
         self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
         subtitle_tooltip = ToolTip(extra_box)
         subtitle_tooltip.set_tooltip("ASS 格式字幕支持自定义样式，请在设置窗口中进行修改\n\n找不到设置窗口的，请仔细阅读程序使用说明")
-        subtitle_tooltip.Show(not self.show_more)
+        subtitle_tooltip.Show(not self.is_setting_page)
 
         subtitle_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         subtitle_type_hbox.Add(self.subtitle_file_type_choice, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT), self.FromDIP(6))
@@ -71,7 +71,6 @@ class ExtraStaticBox(Panel):
         cover_hbox.Add(self.cover_file_type_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.custom_ass_style_btn = wx.Button(extra_box, -1, "自定义 ASS 样式", size = self.get_scaled_size((120, 28)))
-        self.custom_ass_style_btn.Show(self.show_more)
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.AddStretchSpacer()
@@ -96,6 +95,8 @@ class ExtraStaticBox(Panel):
         self.custom_ass_style_btn.Bind(wx.EVT_BUTTON, self.onCustomASSStyleEVT)
 
     def load_data(self):
+        Config.Temp.ass_style = Config.Basic.ass_style.copy()
+
         self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
         self.danmaku_file_type_choice.Select(Config.Basic.danmaku_file_type)
         self.download_subtitle_file_chk.SetValue(Config.Basic.download_subtitle_file)
@@ -108,6 +109,8 @@ class ExtraStaticBox(Panel):
         self.onCheckDownloadCoverEVT(0)
     
     def save(self):
+        Config.Basic.ass_style = Config.Temp.ass_style.copy()
+
         Config.Basic.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
         Config.Basic.danmaku_file_type = self.danmaku_file_type_choice.GetSelection()
         Config.Basic.download_subtitle_file = self.download_subtitle_file_chk.GetValue()

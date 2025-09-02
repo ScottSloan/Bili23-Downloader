@@ -1,7 +1,5 @@
 import wx
-import wx.html2
-import webbrowser
-from importlib.resources import files, as_file
+import importlib.resources
 
 from utils.config import Config
 from utils.auth.login_v2 import LoginInfo
@@ -13,7 +11,12 @@ from utils.module.web.ws import WebSocketServer
 class WebPage:
     @classmethod
     def get_webview_availability(cls):
-        return wx.html2.WebView.IsBackendAvailable(cls.get_webview_backend())
+        try:
+            import wx.html2
+            
+            return wx.html2.WebView.IsBackendAvailable(cls.get_webview_backend())
+        except:
+            return False
     
     @classmethod
     def show_webpage(cls, parent: wx.Window, file_name: str):
@@ -96,14 +99,12 @@ class WebPage:
 
         cls.update_ws_port(path)
 
-        webbrowser.open(f"file://{path}")
+        wx.LaunchDefaultBrowser(f"file://{path}")
 
     @staticmethod
     def get_static_file_path(file_name: str):
-        resource = files("static").joinpath(file_name)
-
-        with as_file(resource) as path:
-            return path.resolve()
+        with importlib.resources.path("static", file_name) as file_path:
+            return file_path
         
     @staticmethod
     def update_ws_port(file_path: str):

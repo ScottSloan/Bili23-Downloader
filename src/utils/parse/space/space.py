@@ -9,7 +9,7 @@ from utils.common.enums import StatusCode, ProcessingType
 from utils.common.model.callback import ParseCallback
 
 from utils.parse.parser import Parser
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.space import Space
 
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -51,6 +51,55 @@ class SpaceParser(Parser):
 
         return resp["data"]["page"]["count"]
     
+    def get_video_info(self, bvid: str):
+        params = {
+            "bvid": bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        info_json: dict = self.json_get(resp, "data")
+
+        self.total_data += 1
+
+        return info_json
+
+    def get_cheese_info(self, season_id: int):
+        params = {
+            "season_id": season_id
+        }
+
+        url = f"https://api.bilibili.com/pugv/view/web/season/v2?{self.url_encode(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+
+        data: dict = self.json_get(resp, "data")
+
+        self.total_data += 1
+
+        return data
+
+    def get_uname_by_mid(self, mid: int):
+        params = {
+            "mid": mid,
+            "token": "",
+            "platform": "web",
+            "dm_img_list": "[]",
+            "dm_img_str": "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ",
+            "dm_cover_img_str": "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgUlRYIDQwNjAgTGFwdG9wIEdQVSAoMHgwMDAwMjhFMCkgRGlyZWN0M0QxMSB2c181XzAgcHNfNV8wLCBEM0QxMSlHb29nbGUgSW5jLiAoTlZJRElBKQ",
+            "dm_img_inter": '{"ds":[],"wh":[5231,6067,75],"of":[475,950,475]}',
+        }
+
+        url = f"https://api.bilibili.com/x/space/wbi/acc/info?{WbiUtils.encWbi(params)}"
+
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        data = self.json_get(resp, "data")
+
+        return data["name"]
+
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
 
@@ -76,24 +125,58 @@ class SpaceParser(Parser):
             self.get_search_arc_info(mid, page)
 
             self.onUpdateTitle(page, total_page, self.total_data)
+            time.sleep(0.1)
+
+        self.parse_video_info()
     
+    def parse_video_info(self):
+        self.video_info_dict = {}
+        self.cheese_info_dict = {}
+
+        for entry in self.info_json.get("episodes"):
+            bvid = entry.get("bvid")
+
+            self.onUpdateName(entry["title"])
+            self.onUpdateTitle(1, 1, self.total_data)
+
+            if (season_id := entry["season_id"]):
+                if entry["is_lesson_video"]:
+                    if season_id not in self.cheese_info_dict:
+                        self.cheese_info_dict[season_id] = self.get_cheese_info(season_id).copy()
+                    else:
+                        continue
+                else:
+                    if season_id not in self.video_info_dict:
+                        self.video_info_dict[season_id] = self.get_video_info(bvid).copy()
+                    else:
+                        continue
+
+            else:
+                self.video_info_dict[bvid] = self.get_video_info(bvid).copy()
+
+            time.sleep(0.1)
+
     def parse_worker(self, url: str):
         self.clear_space_info()
 
-        mid = self.get_mid(url)
+        self.mid = self.get_mid(url)
 
         time.sleep(0.5)
 
         self.callback.onChangeProcessingType(ProcessingType.Page)
 
-        self.parse_space_info(mid)
+        self.parse_space_info(self.mid)
+
+        self.uname = self.get_uname_by_mid(self.mid)
 
         self.get_video_available_media_info()
 
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        Episode.Space.parse_episodes(self.info_json, self.bvid)
+        parent_title = f"{self.uname}_{self.mid}"
+
+        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict, self.cheese_info_dict, parent_title)
 
     def clear_space_info(self):
         self.info_json = {
@@ -107,8 +190,6 @@ class SpaceParser(Parser):
 
     def onUpdateTitle(self, page: int, total_page: int, total_data: int):
         self.callback.onUpdateTitle(f"当前第 {page} 页，共 {total_page} 页，已解析 {total_data} 条数据")
-
-        time.sleep(0.3)
 
     def get_total_page(self, total: int):
         return math.ceil(total / 42)

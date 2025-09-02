@@ -84,7 +84,7 @@ class AdvancedPage(Page):
         webpage_hbox.Add(webpage_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         ws_port_lab = wx.StaticText(webpage_box, -1, "Websocket 端口")
-        self.ws_port_box = IntCtrl(webpage_box, size = self.get_scaled_size((70, 24)))
+        self.ws_port_box = IntCtrl(webpage_box, size = self.get_scaled_size((70, -1)))
 
         ws_port_hbox = wx.BoxSizer(wx.HORIZONTAL)
         ws_port_hbox.Add(ws_port_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))

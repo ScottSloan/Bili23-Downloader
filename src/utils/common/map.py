@@ -1,4 +1,3 @@
-from utils.common.datetime_util import DateTime
 
 bangumi_type_map = {
     1: "番剧",
@@ -28,6 +27,7 @@ audio_quality_map = {
     "自动": 30300,
     "Hi-Res 无损": 30251,
     "杜比全景声": 30250,
+    "杜比全景声 ": 30255,
     "192K": 30280,
     "132K": 30232,
     "64K": 30216
@@ -35,11 +35,12 @@ audio_quality_map = {
 
 audio_quality_sort_map = {
     30300: 1,
-    30251: 2,
-    30250: 3,
-    30280: 4,
-    30232: 5,
-    30216: 6
+    30255: 2,
+    30251: 3,
+    30250: 4,
+    30280: 5,
+    30232: 6,
+    30216: 7
 }
 
 audio_file_type_map = {
@@ -117,6 +118,8 @@ status_code_map = {
     610: "执行外部命令失败",
     611: "下载失败",
     612: "下载失败达到最大重试次数",
+    613: "用户终止解析操作",
+    614: "该内容采用 WideVine DRM 技术加密，不支持下载",
     62002: "稿件不可见",
     62004: "稿件审核中",
     62012: "仅 UP 主自己可见",
@@ -153,173 +156,6 @@ exit_option_map = {
     "直接退出": 1,
     "总是询问": 2,
     "首次询问": 3
-}
-
-scope_map = {
-    "所有类型": 0,
-    "投稿视频": 1,
-    "剧集": 2,
-    "课程": 3,
-    "默认": 4
-}
-
-field_map = {
-    "datetime": {
-        "name": "{time:%H-%M-%S}",
-        "description": "当前时间（%H-%M-%S）",
-        "example": "{time:%H-%M-%S}".format(time = DateTime.now()),
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "timestamp": {
-        "name": "{timestamp}",
-        "description": "当前时间戳",
-        "example": str(DateTime.get_timestamp()),
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "pubdatetime": {
-        "name": "{pubtime:%Y-%m-%d}",
-        "description": "视频发布时间（%Y-%m-%d）",
-        "example": "{pubtime:%Y-%m-%d}".format(pubtime = DateTime.from_timestamp(1667061000)),
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "pubtimestamp": {
-        "name": "{pubtimestamp}",
-        "description": "视频发布时间戳",
-        "example": "1667061000",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "number": {
-        "name": "{number}",
-        "description": "序号",
-        "example": "1",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "zero_padding_number": {
-        "name": "{zero_padding_number}",
-        "description": "补零序号",
-        "example": "01",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "zone": {
-        "name": "{zone}",
-        "description": "视频分区",
-        "example": "综合",
-        "scope": [1]
-    },
-    "subzone": {
-        "name": "{subzone}",
-        "description": "视频子分区",
-        "example": "动漫剪辑",
-        "scope": [1]
-    },
-    "area": {
-        "name": "{area}",
-        "description": "地区",
-        "example": "日本",
-        "scope": [2]
-    },
-    "title": {
-        "name": "{title}",
-        "description": "视频标题",
-        "example": "第1话 孤独的转机",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "section_title": {
-        "name": "{section_title}",
-        "description": "章节标题",
-        "example": "正片",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "part_title": {
-        "name": "{part_title}",
-        "description": "分节标题",
-        "example": "分节（请参考说明文档）",
-        "scope": [1]
-    },
-    "collection_title": {
-        "name": "{collection_title}",
-        "description": "合集标题",
-        "example": "合集（请参考说明文档）",
-        "scope": [1],
-    },
-    "series_title": {
-        "name": "{series_title}",
-        "description": "剧集名称或课程名称",
-        "example": "孤独摇滚！",
-        "scope": [2, 3]
-    },
-    "aid": {
-        "name": "{aid}",
-        "description": "视频 av 号",
-        "example": "944573356",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "bvid": {
-        "name": "{bvid}",
-        "description": "视频 BV 号",
-        "example": "BV1yW4y1j7Ft",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "cid": {
-        "name": "{cid}",
-        "description": "视频 cid",
-        "example": "875212290",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "ep_id": {
-        "name": "{ep_id}",
-        "description": "视频 ep_id",
-        "example": "693247",
-        "scope": [2, 3],
-    },
-    "season_id": {
-        "name": "{season_id}",
-        "description": "视频 season_id",
-        "example": "43164",
-        "scope": [2, 3]
-    },
-    "media_id": {
-        "name": "{media_id}",
-        "description": "视频 media_id",
-        "example": "28339735",
-        "scope": [2]
-    },
-    "video_quality": {
-        "name": "{video_quality}",
-        "description": "视频清晰度",
-        "example": "超清 4K",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "audio_quality": {
-        "name": "{audio_quality}",
-        "description": "音质",
-        "example": "Hi-Res 无损",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "video_codec": {
-        "name": "{video_codec}",
-        "description": "视频编码",
-        "example": "H265",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "duration": {
-        "name": "{duration}",
-        "description": "视频时长，单位为秒",
-        "example": "256",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "up_name": {
-        "name": "{up_name}",
-        "description": "UP 主名称",
-        "example": "哔哩哔哩番剧",
-        "scope": [0, 1, 2, 3, 4]
-    },
-    "up_mid": {
-        "name": "{up_mid}",
-        "description": "UP 主 mid",
-        "example": "928123",
-        "scope": [0, 1, 2, 3, 4]
-    }
 }
 
 time_ratio_map = {
@@ -508,6 +344,7 @@ url_pattern_map = [
     ("live", r"live\.bilibili\.com/(\d+)"),
     ("space_list", r"space\.bilibili\.com/(\d+)/lists"),
     ("favlist", r"space\.bilibili\.com/(\d+)/favlist"),
+    ("favlist", r"www.bilibili\.com/list/ml(\d+)"),
     ("space", r"space\.bilibili\.com/(\d+)"),
     ("space", r"www\.bilibili\.com/medialist/play/(\d+)"),
     ("space_list", r"bilibili\.com/list/(\d+)"),

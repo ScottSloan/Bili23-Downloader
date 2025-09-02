@@ -11,6 +11,7 @@ from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.button.flat_button import FlatButton
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.panel.panel import Panel
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 from gui.component.menu.url import URLMenu
 from gui.component.menu.episode_option import EpisodeOptionMenu
@@ -39,20 +40,15 @@ class TopBox(Panel):
         url_hbox.Add(self.url_box, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
         url_hbox.Add(self.get_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.processing_icon = wx.StaticBitmap(self, -1, Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((24, 24)))
+        self.processing_icon = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((16, 16)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self, -1, "")
         self.graph_btn = FlatButton(self, "剧情树", IconID.Tree_Structure, split = True)
         self.graph_btn.setToolTip("查看互动视频剧情树")
         self.graph_btn.Hide()
-        self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search))
-        self.search_btn.SetToolTip("搜索剧集列表")
-        self.episode_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.List))
-        self.episode_option_btn.SetToolTip("剧集列表显示设置")
-        self.episode_option_btn.Enable(False)
-        self.download_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting))
-        self.download_option_btn.SetToolTip("下载选项")
-        self.download_option_btn.Enable(False)
+        self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search), tooltip = "搜索剧集列表")
+        self.episode_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.List), enable = False, tooltip = "剧集列表显示设置")
+        self.download_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), enable = False, tooltip = "下载选项")
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -83,7 +79,7 @@ class TopBox(Panel):
         Window.search_dialog(self.main_window)
 
     def onShowEpisodeOptionMenuEVT(self, event: wx.CommandEvent):
-        menu = EpisodeOptionMenu()
+        menu = EpisodeOptionMenu(self.main_window.parser.parser.is_in_section_option_enable())
 
         self.PopupMenu(menu)
 
@@ -105,7 +101,7 @@ class TopBox(Panel):
         Window.detail_dialog(self.main_window, self.main_window.parser.parse_type)
 
     def update_checked_item_count(self, count: int):
-        label = f"(共 {self.main_window.episode_list.count} 个{f'，已选择 {count} 个)' if count else ')'}"
+        label = f"(共 {self.main_window.episode_list.count} 项{f'，已选择 {count} 项)' if count else ')'}"
 
         self.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
 
@@ -127,3 +123,7 @@ class TopBox(Panel):
         if not url:
             Window.message_dialog(self.main_window, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
             return True
+
+    def reset_search_window(self):
+        if search_dialog := wx.FindWindowByName("search"):
+            search_dialog.reset()

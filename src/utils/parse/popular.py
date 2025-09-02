@@ -10,7 +10,7 @@ from utils.common.regex import Regex
 from utils.common.exception import GlobalException
 
 from utils.parse.parser import Parser
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.popular import Popular
 
 class PopularParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -39,7 +39,7 @@ class PopularParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"].copy()
+        self.info_json: dict = self.json_get(resp, "data")
 
     def get_popular_rank_list(self, rid: int, desc: str):
         params = {
@@ -51,7 +51,7 @@ class PopularParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"].copy()
+        self.info_json: dict = self.json_get(resp, "data")
 
         self.info_json["config"] = {
             "label": f"{desc}排行榜"
@@ -85,7 +85,7 @@ class PopularParser(Parser):
         return StatusCode.Success.value
 
     def parse_episodes(self):
-        Episode.Popular.parse_episodes(self.info_json, self.cid)
+        Popular.parse_episodes(self.info_json, self.cid)
 
     def get_parse_type_str(self):
         return "热榜"

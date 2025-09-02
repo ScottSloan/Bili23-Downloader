@@ -26,21 +26,4 @@ class Pic:
 
         decode_string = base64.b64decode(entry.get("data"))
 
-        img = wx.Image(BytesIO(decode_string))
-
-        width, height = cls.get_scaled_size(entry.get("size"))
-
-        return img.Scale(width, height).ConvertToBitmap()
-    
-    @staticmethod
-    def get_scaled_size(size: wx.Size):
-        if Config.Sys.dpi_scale_factor > 1.5:
-            factor = 0.9
-
-        elif Config.Sys.dpi_scale_factor > 1:
-            factor = 1.2
-
-        else:
-            factor = 0.8
-
-        return size.Scale(factor, factor)
+        return wx.Image(BytesIO(decode_string))

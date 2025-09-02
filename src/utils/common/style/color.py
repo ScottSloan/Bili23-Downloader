@@ -22,6 +22,10 @@ class Color:
         return wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUTEXT)
     
     @staticmethod
+    def get_label_text_color():
+        return wx.Colour(64, 64, 64)
+    
+    @staticmethod
     def get_border_color():
         if Config.Sys.dark_mode:
             return wx.Colour("white")

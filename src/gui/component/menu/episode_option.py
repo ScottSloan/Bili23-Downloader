@@ -7,11 +7,12 @@ from utils.common.enums import EpisodeDisplayType
 from gui.id import ID
 
 class EpisodeOptionMenu(wx.Menu):
-    def __init__(self):
+    def __init__(self, enable_in_section_option: bool = True):
         wx.Menu.__init__(self)
 
         single_menuitem = wx.MenuItem(self, ID.EPISODE_SINGLE_MENU, "显示单个视频", kind = wx.ITEM_RADIO)
         in_section_menuitem = wx.MenuItem(self, ID.EPISODE_IN_SECTION_MENU, "显示视频所在的列表", kind = wx.ITEM_RADIO)
+        in_section_menuitem.Enable(enable_in_section_option)
         all_section_menuitem = wx.MenuItem(self, ID.EPISODE_ALL_SECTIONS_MENU, "显示全部相关视频", kind = wx.ITEM_RADIO)
         show_episode_full_name = wx.MenuItem(self, ID.EPISODE_FULL_NAME_MENU, "显示完整剧集名称", kind = wx.ITEM_CHECK)
 

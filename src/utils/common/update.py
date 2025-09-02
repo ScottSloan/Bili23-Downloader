@@ -3,7 +3,6 @@ import json
 from utils.config import Config
 
 from utils.common.request import RequestUtils
-from utils.common.exception import GlobalException
 
 class Update:
     @classmethod
@@ -20,6 +19,6 @@ class Update:
     
     @staticmethod
     def get_update_json():
-        url = "https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion"
+        url = f"https://api.scott-sloan.cn/Bili23-Downloader/getLatestVersion?ver={Config.APP.version_code}"
 
         return Update.get_json(url)

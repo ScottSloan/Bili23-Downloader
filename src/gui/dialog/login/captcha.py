@@ -1,10 +1,7 @@
 import wx
 import json
-import wx.html2
 
-from utils.config import Config
 from utils.auth.login_v2 import LoginInfo
-from utils.common.enums import Platform
 
 from gui.component.window.dialog import Dialog
 from gui.component.webview import Webview
@@ -34,6 +31,8 @@ class CaptchaDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
+        import wx.html2
+
         self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self.onMessageEVT)
 
         self.webview.browser.Bind(wx.html2.EVT_WEBVIEW_LOADED, self.onLoadedEVT)

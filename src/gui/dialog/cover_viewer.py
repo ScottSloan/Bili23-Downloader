@@ -100,7 +100,7 @@ class CoverViewerDialog(Frame):
     def onExitEVT(self, event):
         self.Destroy()
 
-    def onResizeEVT(self, event):
+    def onResizeEVT(self, event: wx.SizeEvent):
         scaled_cover: wx.Bitmap = self.show_cover(self.GetClientSize())
 
         width, height = scaled_cover.GetSize()

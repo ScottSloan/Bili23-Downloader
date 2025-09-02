@@ -29,7 +29,13 @@ class LiveParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"]["by_room_ids"][room_id]
+        data: dict = self.json_get(resp, "data")["by_room_ids"]
+
+        if json_data := data.get(room_id):
+            self.info_json: dict = json_data
+
+        elif json_data := data.get(str(room_id)):
+            self.info_json: dict = json_data
 
     @classmethod
     def get_live_stream_info(cls, room_id: int):
@@ -42,9 +48,11 @@ class LiveParser(Parser):
 
         url = f"https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?{cls.url_encode(params)}"
 
-        data = cls.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(sessdata = Config.User.SESSDATA))
 
-        return data["data"]["playurl_info"]["playurl"]
+        data = cls.json_get(resp, "data")
+
+        return data["playurl_info"]["playurl"]
 
     def parse_worker(self, url: str):
         self.room_id = self.get_room_id(url)

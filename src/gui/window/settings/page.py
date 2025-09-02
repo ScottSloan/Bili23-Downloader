@@ -9,7 +9,7 @@ class Page(Panel):
 
         self.parent: MainWindow = parent.GetParent().GetParent()
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.scrolled_panel = ScrolledPanel(self)
         self.panel = Panel(self.scrolled_panel)

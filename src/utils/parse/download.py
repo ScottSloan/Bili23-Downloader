@@ -190,8 +190,6 @@ class DownloadParser(Parser):
             info = VideoParser.get_video_extra_info(task_info.bvid)
 
             task_info.cid = info.get("cid")
-        
-            task_info.up_info = {
-                "up_name": info.get("up_name"),
-                "up_mid": info.get("up_mid")
-            }
+
+            task_info.up_name = info["owner"]["name"]
+            task_info.up_uid = info["owner"]["mid"]

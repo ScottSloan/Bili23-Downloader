@@ -2,9 +2,8 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.parse.parser import Parser
-from utils.parse.audio import AudioInfo
-from utils.parse.episode_v2 import Episode
-from utils.parse.interact_video import InteractVideoInfo, InteractVideoParser
+from utils.parse.episode.video import Video
+from utils.parse.interact_video import InteractVideoParser
 from utils.parse.preview import PreviewInfo
 
 from utils.common.enums import StatusCode, EpisodeDisplayType
@@ -45,7 +44,7 @@ class VideoParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        self.info_json: dict = resp["data"]
+        self.info_json: dict = self.json_get(resp, "data")
 
         if "redirect_url" in self.info_json:
             raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (self.info_json["redirect_url"], ))
@@ -54,10 +53,8 @@ class VideoParser(Parser):
 
         # 判断是否为互动视频
         if self.is_interactive:
-            self.interact_video_parser = InteractVideoParser(self.callback)
-
-            self.interact_video_parser.get_video_interactive_graph_version(title = self.info_json.get("title"), bvid = bvid, cid = self.info_json.get("cid"), aid = self.info_json.get("aid"))
-
+            self.parse_interact_video()
+            
         if self.page:
             for page in self.info_json.get("pages"):
                 if page.get("page") == self.page_num:
@@ -80,7 +77,7 @@ class VideoParser(Parser):
         
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        PreviewInfo.download_json = resp["data"].copy()
+        PreviewInfo.download_json = cls.json_get(resp, "data")
 
     @classmethod
     def get_video_extra_info(cls, bvid: str):
@@ -99,57 +96,43 @@ class VideoParser(Parser):
         }
 
     def parse_worker(self, url: str):
-        self.clear_video_info()
-
         self.get_page(url)
 
         match Regex.find_string(r"av|BV", url):
             case "av":
-                bvid = self.get_aid(url)
+                self.bvid = self.get_aid(url)
 
             case "BV":
-                bvid = self.get_bvid(url)
+                self.bvid = self.get_bvid(url)
 
-        self.get_video_info(bvid)
+        self.get_video_info(self.bvid)
 
-        episode: dict = Episode.Utils.get_current_episode()
-        
-        self.get_video_available_media_info(episode.get("bvid"), episode.get("cid"))
+        self.get_video_available_media_info(self.info_json.get("bvid"), self.info_json.get("cid"))
 
         return StatusCode.Success.value
 
     def parse_episodes(self):
-        if self.is_interactive:
-            Config.Misc.episode_display_mode = EpisodeDisplayType.In_Section.value
+        Video.parse_episodes(self.info_json)
 
-            self.parse_interact_video(self.info_json)
-            
-        Episode.Video.parse_episodes(self.info_json)
+    def parse_interact_video(self):
+        Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
 
-    def parse_interact_video(self, info_json: dict):
-        def get_page():
-            return {
-                "part": node.title,
-                "cid": node.cid
-            }
-        
-        info_json["pages"].clear()
+        self.interact_video_parser = InteractVideoParser(self.callback)
+        self.interact_video_parser.get_video_interactive_graph_version(self.info_json)
 
-        self.interact_video_parser.parse_interactive_video_episodes()
-
-        for node in InteractVideoInfo.node_list:
-            info_json["pages"].append(get_page())
-
-    def clear_video_info(self):
-        InteractVideoInfo.clear_video_info()
-
-        AudioInfo.clear_audio_info()
+        self.info_json["node_list"] = self.interact_video_parser.parse_interactive_video_episodes()
 
     def get_parse_type_str(self):
         if self.is_interactive:
             return "互动视频"
         else:
             return "投稿视频"
-        
+    
+    def get_interact_title(self):
+        return self.info_json.get("title")
+    
+    def is_in_section_option_enable(self):
+        return "ugc_season" in self.info_json
+
     def is_interactive_video(self):
         return self.is_interactive

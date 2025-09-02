@@ -7,8 +7,8 @@ from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.regex import Regex
 
-from utils.parse.audio import AudioInfo
-from utils.parse.episode_v2 import Episode
+from utils.parse.episode.episode_v2 import Episode
+from utils.parse.episode.bangumi import Bangumi
 from utils.parse.parser import Parser
 from utils.parse.preview import PreviewInfo
 
@@ -41,7 +41,11 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        return f"season_id={resp.get('result').get('media').get('season_id')}"
+        data = self.json_get(resp, "result")
+
+        season_id = data["media"]["season_id"]
+
+        return f"season_id={season_id}"
 
     def get_bangumi_info(self, param: str):
         # 获取番组信息
@@ -49,7 +53,7 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
-        self.info_json: dict = resp["result"].copy()
+        self.info_json: dict = self.json_get(resp, "result")
         
         first_episode = self.info_json["episodes"][0] if self.info_json.get("episodes") else self.info_json["section"][0]["episodes"][0]
 
@@ -73,7 +77,11 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        PreviewInfo.download_json = resp["result"].copy()
+        data = self.json_get(resp, "result")
+
+        self.check_drm_protection(data)
+
+        PreviewInfo.download_json = data
 
     def check_bangumi_can_play(self, param: str):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{param}"
@@ -81,9 +89,6 @@ class BangumiParser(Parser):
         self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
     def parse_worker(self, url: str):
-        # 清除当前的番组信息
-        self.clear_bangumi_info()
-
         match Regex.find_string(r"ep|ss|md", url):
             case "ep":
                 param = self.get_epid(url)
@@ -99,9 +104,10 @@ class BangumiParser(Parser):
 
         self.get_bangumi_info(param)
 
-        episode: dict = Episode.Utils.get_current_episode()
-
-        self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
+        episode: dict = Episode.Utils.get_first_episode()
+        
+        if episode:
+            self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
 
         return StatusCode.Success.value
     
@@ -117,11 +123,7 @@ class BangumiParser(Parser):
             raise GlobalException(message = message, code = status_code, json_data = data)
 
     def parse_episodes(self):
-        Episode.Bangumi.parse_episodes(self.info_json, self.ep_id)
-
-    def clear_bangumi_info(self):
-        # 重置音质信息
-        AudioInfo.clear_audio_info()
+        Bangumi.parse_episodes(self.info_json, self.ep_id)
 
     def get_parse_type_str(self):
         return bangumi_type_map.get(self.type_id, "未知")

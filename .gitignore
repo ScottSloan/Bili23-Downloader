@@ -18,6 +18,7 @@ live.json
 download*.json
 ffmpeg.exe
 build.ps1
+test.ps1
 test*.py
 bilidanmu.proto
 config.json
@@ -25,6 +26,8 @@ cheese*.json
 choices.json
 node.json
 episode.json
+temp.json
+exclimbwuzhi*.json
 /.config
 
 # commitizen
@@ -42,3 +45,12 @@ example.md
 
 # log
 error_log.txt
+
+# PyStand
+PyStand
+_pystand_static.int
+
+setup.iss
+
+temp
+test

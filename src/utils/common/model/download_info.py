@@ -5,8 +5,6 @@ from utils.config import Config
 from utils.common.model.data_type import TreeListItemInfo, DownloadTaskInfo
 from utils.common.enums import ParseType
 
-from utils.parse.audio import AudioInfo
-
 class DownloadInfo:
     @classmethod
     def get_download_info(cls, item_info: TreeListItemInfo):
@@ -44,11 +42,15 @@ class DownloadInfo:
             "part_title": item_info.part_title,
             "collection_title": item_info.collection_title,
             "series_title": item_info.series_title,
-            "referer_url": "https://www.bilibili.com",
-            "up_info": {
-                "up_name": item_info.up_name,
-                "up_mid": item_info.up_mid
-            },
+            "interact_title": item_info.interact_title,
+            "parent_title": item_info.parent_title,
+            "bangumi_type": item_info.bangumi_type,
+            "template_type": item_info.template_type,
+            "badge": item_info.badge,
+            "page": item_info.page,
+            "referer_url": "https://www.bilibili.com/",
+            "up_name": item_info.up_name,
+            "up_uid": item_info.up_mid,
             "parse_type": item_info.type,
             "download_type": item_info.type,
             "download_base_path": Config.Download.path
@@ -58,7 +60,7 @@ class DownloadInfo:
     def get_download_params_info(info: dict):
         info["download_option"] = Config.Download.stream_download_option
         info["video_quality_id"] = Config.Download.video_quality_id
-        info["audio_quality_id"] = AudioInfo.audio_quality_id
+        info["audio_quality_id"] = Config.Download.audio_quality_id
         info["video_codec_id"] = Config.Download.video_codec_id
         info["further_processing"] = True
         info["ffmpeg_merge"] = Config.Download.ffmpeg_merge

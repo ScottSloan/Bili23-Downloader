@@ -20,9 +20,11 @@ class LiveStream(Parser):
 
         url = f"https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?{self.url_encode(params)}"
 
-        data = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        stream_info = data["data"]["playurl_info"]["playurl"]["stream"][0]["format"][0]["codec"]
+        data = self.json_get(resp, "data")
+
+        stream_info = data["playurl_info"]["playurl"]["stream"][0]["format"][0]["codec"]
 
         for entry in stream_info:
             if entry["current_qn"] == self.room_info.quality and entry["codec_name"] == self.room_info.codec:

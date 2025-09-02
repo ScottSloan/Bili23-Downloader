@@ -1,11 +1,11 @@
 import wx
-import webbrowser
 
 from utils.config import Config
 
 from utils.common.enums import Platform, EpisodeDisplayType, ExitOption
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException
+from utils.common.style.font import SysFont
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -21,7 +21,7 @@ from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
 
 class MainWindow(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
         self.url, self.url_manual = None, False
         self.search_keywords = ""
 
@@ -160,16 +160,16 @@ class MainWindow(Frame):
                 Thread(target = self.utils.get_changelog).start()
 
             case ID.HELP_MENU:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/basic.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/basic.html")
 
             case ID.FEEDBACK_MENU:
-                webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader/issues")
+                wx.LaunchDefaultBrowser("https://github.com/ScottSloan/Bili23-Downloader/issues")
 
             case ID.COMMUNITY_MENU:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/community.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/community.html")
 
             case ID.SUPPORTTED_URL_MENU:
-                webbrowser.open("https://bili23.scott-sloan.cn/doc/use/url.html")
+                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/url.html")
 
             case ID.ABOUT_MENU:
                 Window.about_window(self)
@@ -236,12 +236,12 @@ class MainWindow(Frame):
 
         self.live_recording_window.Raise()
 
-    def onDownloadEVT(self, event):
+    def onDownloadEVT(self, event: wx.CommandEvent):
         def after_show_items_callback():
             Window.processing_window(show = False)
 
             self.onShowDownloadWindowEVT()
-
+        
         try:
             if self.episode_list.check_download_items():
                 return
@@ -249,6 +249,8 @@ class MainWindow(Frame):
             if Config.Basic.auto_popup_option_dialog:
                 if self.top_box.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
                     return
+                
+            self.bottom_box.download_tip()
 
             self.episode_list.GetAllCheckedItem()
 
@@ -259,7 +261,7 @@ class MainWindow(Frame):
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
         
-    def onParseEVT(self, event, url_manual = True):
+    def onParseEVT(self, event: wx.CommandEvent, url_manual = True):
         url = self.top_box.url_box.GetValue()
 
         if self.top_box.check_url():
@@ -271,6 +273,8 @@ class MainWindow(Frame):
 
         self.url = url
         self.url_manual = url_manual
+
+        self.top_box.reset_search_window()
 
     def onEpisodeListContextMenuEVT(self, event: wx.MenuEvent):
         match event.GetId():
@@ -343,3 +347,5 @@ class MainWindow(Frame):
         for key in ["danmaku", "subtitle"]:
             if Config.Basic.ass_style.get(key).get("font_name") == "default":
                 Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
+
+        SysFont.sys_font_list = sorted(wx.FontEnumerator().GetFacenames())

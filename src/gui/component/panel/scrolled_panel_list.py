@@ -8,7 +8,7 @@ class EmptyItemPanel(Panel):
     def __init__(self, parent, label: str, name: str):
         self.label = label
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.init_UI()
 
@@ -36,7 +36,7 @@ class LoadMoreTaskItemPanel(Panel):
     def __init__(self, parent, left_count: int, load_more_callback: Callable, name: str):
         self.count, self.callback = left_count, load_more_callback
 
-        Panel.__init__(self, parent, name)
+        Panel.__init__(self, parent, name = name)
 
         self.init_UI()
 
@@ -151,9 +151,7 @@ class ScrolledPanelList(ScrolledPanel):
 
     def remove_empty_panel(self):
         if self.empty and not self.sizer.IsEmpty():
-            empty_panel: EmptyItemPanel = wx.FindWindowByName("empty_panel", self)
-
-            if empty_panel:
+            if empty_panel := wx.FindWindowByName("empty_panel", self):
                 empty_panel.destroy_panel()
 
             self.empty = False
@@ -167,9 +165,7 @@ class ScrolledPanelList(ScrolledPanel):
 
     def remove_more_panel(self):
         if self.more:
-            more_panel: LoadMoreTaskItemPanel = wx.FindWindowByName("more_panel", self)
-
-            if more_panel:
+            if more_panel := wx.FindWindowByName("more_panel", self):
                 more_panel.destroy_panel()
 
             self.more = False

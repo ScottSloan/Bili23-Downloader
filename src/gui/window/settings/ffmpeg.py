@@ -128,6 +128,4 @@ class FFmpegPage(Page):
             self.path_box.SetValue(detect_window.getPath())
 
     def onTutorialEVT(self, event: wx.CommandEvent):
-        import webbrowser
-
-        webbrowser.open("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
+        wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
