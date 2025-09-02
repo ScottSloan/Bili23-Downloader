@@ -1,22 +1,12 @@
 <script setup>
-    import { version } from '../../package.json'
+    import { version, zip_url, setup_url, setup_passwd, zip_sha1, setup_sha1 } from '../../project.json'
     
-    let release_asset_file_name = `Bili23_Downloader_v${version}_release.zip`
-    let release_asset_win_ffmpeg_file_name = `Bili23_Downloader_v${version}_win_ffmpeg_release.zip`
-    let release_asset_win_file_name = `Bili23_Downloader_v${version}_win_release.zip`
+    let release_asset_zip = `Bili23_Downloader-${version}-windows-x64.zip`
+    let release_asset_setup = `Bili23_Downloader-${version}-windows-x64-setup.exe`
 
     let release_asset_github = (version, file)=> {
         return `https://github.com/ScottSloan/Bili23-Downloader/releases/download/v${version}/${file}`
     }
-
-    let release_asset_url = 'https://wwx.lanzout.com/ihBmF33qkvih'
-    let release_asset_win_ffmpeg_url = 'https://wwx.lanzout.com/ip8nr33qky6d'
-    let release_asset_win_url = 'https://wwx.lanzout.com/iAuq433qkzjc'
-
-    let release_asset_sha1 = '8f6c21b6f28162056b4ed0ad3c4fbb95aa9191e3'
-    let release_asset_win_ffmpeg_sha1 = 'ebbfe12dfe9189bcc833f6bde5d16e4d4b3724c1'
-    let release_asset_win_sha1 = 'bbcd2cc5e2853d7559b7f42f99212cfcda336199'
-
 </script>
 
 # 安装程序
@@ -25,9 +15,9 @@
 
 | 文件名 | 平台架构 | 下载地址 | 备注 |
 | --- | --- | --- | --- |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>_release.zip</span> | 通用 | <a :href="release_asset_github(version, release_asset_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="release_asset_url" target="_blank" rel="noreferer">蓝奏云</a> | 源码版，需要 Python 环境，并安装 FFmpeg |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_ffmpeg_release.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="release_asset_win_ffmpeg_url" target="_blank" rel="noreferer">蓝奏云</a> | 编译版，附带 FFmpeg |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_release.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="release_asset_win_url" target="_blank" rel="noreferer">蓝奏云</a> | 编译版，不附带 FFmpeg |
+| Bili23 Downloader | Windows、Linux、macOS | <a href="https://github.com/ScottSloan/Bili23-Downloader" target="_blank" rel="noreferer">GitHub</a>| 源代码 |
+| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="zip_url" target="_blank" rel="noreferer">蓝奏云（密码：{{ setup_passwd }}）</a> | 解压即用 |
+| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64-setup.exe</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="setup_url" target="_blank" rel="noreferer">蓝奏云</a> | 独立安装程序 |
 
 ::: warning 重要提示
 若您使用的是编译版，请先确保安装 Microsoft Visual C++ 2015-2022 运行库，否则无法运行本程序。
@@ -41,9 +31,8 @@
 文件 SHA1 值校验
 | 文件名 | SHA1 |
 | -- | -- |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>_release.zip</span> | {{ release_asset_sha1 }} |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_ffmpeg_release.zip</span> | {{ release_asset_win_ffmpeg_sha1 }} |
-| <span>Bili23_Downloader_v{{ version }}_</span><br><span>win_release.zip</span> | {{ release_asset_win_sha1 }} |
+| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64.zip</span> | {{ zip_sha1 }} |
+| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64-setup.exe</span> | {{ setup_sha1 }} |
 
 :::tip
 下载完成后建议校验 SHA1 值，防止程序被篡改。  
@@ -54,16 +43,6 @@
 
 VirScan 在线病毒检测报告请[点此查看](https://www.virscan.org/report/c38475156fc01dd2c4f5c0291151ef872e38d1749e3cc01e438393f9aa545c3c)。
 :::
-
-### 如何选择下载版本
-+ 未安装 Python 环境  
-    + Windows  
-        -> 编译版，建议选择附带 FFmpeg 的版本  
-    + Linux & macOS  
-        -> 源码版  
-
-+ 已安装 Python 环境  
-    -> 源码版
 
 ### 如何校验 SHA1
 ::: details 查看校验方法
@@ -122,16 +101,17 @@ pip install -r requirements.txt
 下表为程序所需依赖：
 | 包 | 版本 | 备注 |
 | -- | -- | -- |
-| requests | ==2.32.4 | - |
+| requests | ==2.32.5 | - |
 | wxPython | ==4.2.3 | - |
 | qrcode[pil] | ==7.4.2 | 必须附带 [pil]（Pillow），否则程序可能无法运行 |
 | python-vlc | ==3.0.21203 | - |
-| protobuf | ==3.19.0 | 高于 3.19.0 的版本无法正常解析 protobuf 文件 |
+| protobuf | ==6.32.0 | - |
 | websockets | ==15.0.1 | -- |
+| pycryptodome | ==3.23.0 | -- |
 
 用户也可以手动安装：
 ```bash
-pip install wxPython==4.2.3 qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0 websockets==15.0.1
+pip install wxPython==4.2.3 qrcode[pil]==7.4.2 requests==2.32.5 python-vlc==3.0.21203 protobuf==6.32.0 websockets==15.0.1 pycryptodome==3.23.0
 ```
 #### Linux
 由于 Linux 平台各发行版存在差异，wxPython 安装较为繁琐，以下提供最简便的安装方式。
@@ -144,7 +124,7 @@ pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu
 
 随后再安装其他依赖：
 ```bash
-pip install qrcode[pil]==7.4.2 requests==2.32.4 python-vlc==3.0.21203 protobuf==3.19.0 websockets==15.0.1
+pip install qrcode[pil]==7.4.2 requests==2.32.5 python-vlc==3.0.21203 protobuf==6.32.0 websockets==15.0.1 pycryptodome==3.23.0
 ```
 
 ### 安装 FFmpeg

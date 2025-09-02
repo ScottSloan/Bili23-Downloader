@@ -1,15 +1,14 @@
 {
-  "name": "bili23_downloader_docs",
-  "version": "1.65.2",
-  "scripts": {
-    "docs:dev": "vitepress dev",
-    "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
-  },
-  "author": "Scott Sloan",
-  "license": "MIT",
-  "dependencies": {
-    "vitepress": "^1.6.3",
-    "vue": "^3.5.13"
-  }
+	"name": "bili23_downloader_docs",
+	"scripts": {
+		"docs:dev": "vitepress dev",
+		"docs:build": "vitepress build",
+		"docs:preview": "vitepress preview"
+	},
+	"author": "Scott Sloan",
+	"license": "MIT",
+	"dependencies": {
+		"vitepress": "^1.6.3",
+		"vue": "^3.5.13"
+	}
 }

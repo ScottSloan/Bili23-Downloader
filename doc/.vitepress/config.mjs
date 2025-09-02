@@ -112,10 +112,6 @@ export default defineConfig({
             link: '/doc/faq/download'
           },
           {
-            text: '剧集列表相关',
-            link: '/doc/faq/episode'
-          },
-          {
             text: '其他问题',
             link: '/doc/faq/other'
           }
