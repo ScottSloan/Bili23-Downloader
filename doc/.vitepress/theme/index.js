@@ -15,7 +15,7 @@ export default {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
     })
   },
-  enhanceApp({ app, router, siteData }) {
+  enhanceApp(ctx) {
     DefaultTheme.enhanceApp(ctx);
     // Register global components, if you don't want to use it, you don't need to add it
     ctx.app.component('vImageViewer', vImageViewer);
