@@ -37,11 +37,9 @@
 :::tip
 下载完成后建议校验 SHA1 值，防止程序被篡改。  
 
-本程序完全开源免费，若是从其他渠道付费获取的，无法保证其安全性和完整性。  
+本程序完全开源免费，若是通过其他渠道付费获取的，无法保证其安全性和完整性。  
 
 本程序发行版使用 Nuitka 编译，可能会被防病毒软件误报。如果对防病毒软件报毒有疑问的，请删除本程序，使用其他同类工具。  
-
-VirScan 在线病毒检测报告请[点此查看](https://www.virscan.org/report/c38475156fc01dd2c4f5c0291151ef872e38d1749e3cc01e438393f9aa545c3c)。
 :::
 
 ### 如何校验 SHA1
@@ -133,20 +131,20 @@ pip install qrcode[pil]==7.4.2 requests==2.32.5 python-vlc==3.0.21203 protobuf==
 有关 FFmpeg 的安装，请参考[下一页](https://bili23.scott-sloan.cn/doc/install/ffmpeg.html)内容。  
 
 :::tip
-若使用的是附带 FFmpeg 的编译版，无需再次安装。
+若使用的是编译版，无需再次安装。
 :::
 
 ### 运行程序
-直接运行 GUI.py 即可打开程序：
+直接运行 main.py 即可打开程序：
 
 ```bash
 cd src
-python3 GUI.py
+python3 main.py
 ```
 
 ## 编译版使用
-下载完成后，解压压缩包，`以管理员身份`运行 GUI.exe，即可开始使用。 
+运行 `Bili23.exe`，即可开始使用。 
 
 :::tip
-若出现应用程序错误等问题，请尝试修复 DirectX 和 C++ 运行库。  
+如提示缺少 Microsoft Visual C++ 运行库，请前往[此处](https://aka.ms/vs/17/release/vc_redist.x64.exe)下载。
 :::

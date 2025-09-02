@@ -82,7 +82,7 @@
 
 对于**课程**，提供**课程标题**（`{series_title}`）、**章节标题**（`{section_title}`）和**标识**（`{badge}`）字段，如图 8 所示。
 
-<img src="https://s21.ax1x.com/2025/09/02/pVgkkcD.png" alt="课程">
+<img src="https://s21.ax1x.com/2025/09/02/pVgKvRA.png" alt="课程">
 
 *图8* 课程示意图
 
