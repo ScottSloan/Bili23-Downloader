@@ -69,7 +69,7 @@ class MediaOptionStaticBox(Panel):
 
         self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onEnableKeepFilesEVT)
 
-    def load_data(self, parent):
+    def load_data(self):
         self.download_video_steam_chk.SetValue("video" in Config.Download.stream_download_option)
         self.download_audio_steam_chk.SetValue("audio" in Config.Download.stream_download_option)
 
