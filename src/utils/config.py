@@ -123,7 +123,7 @@ class Config:
         app_config_file_min_version_code: int = 166000
         user_config_file_min_version_code: int = 166000
 
-        app_config_path: str = os.path.join(os.getcwd(), "config.json")
+        app_config_path: str = ""
 
     class Basic:
         listen_clipboard: bool = False
@@ -447,6 +447,7 @@ class Config:
     def init_path():
         Config.User.directory = os.path.join(os.getcwd(), ".config")
 
+        Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         Config.User.live_file_directory = os.path.join(Config.User.directory, "live")
@@ -469,11 +470,10 @@ class Config:
 
     @staticmethod
     def on_error(e):
+        import wx
         import traceback
 
-        from utils.module.messagebox import show_message
-
-        show_message("Fatal Error", f"读取\保存配置文件时出错\n{traceback.format_exc()}")
+        wx.LogError(f"读取\保存配置文件时出错\n{traceback.format_exc()}")
 
         raise e
 

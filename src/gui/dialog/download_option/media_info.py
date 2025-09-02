@@ -79,6 +79,7 @@ class InfoGroup(Panel):
 class MediaInfoPanel(Panel):
     def __init__(self, parent: wx.Window):
         from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
+
         self.parent: DownloadOptionDialog = parent
 
         Panel.__init__(self, parent)
@@ -139,7 +140,9 @@ class MediaInfoPanel(Panel):
         self.audio_quality_info.choice.Bind(wx.EVT_CHOICE, self.onChangeAudioQualityEVT)
         self.video_codec_info.choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
-    def load_data(self, parent: wx.Window):
+        self.help_btn.Bind(wx.EVT_CHOICE, self.onHelpEVT)
+
+    def load_data(self):
         from gui.window.main.main_v3 import MainWindow
 
         self.main_window: MainWindow = self.parent.GetParent()
@@ -291,13 +294,13 @@ class MediaInfoPanel(Panel):
 
                 return "   ".join([f"[{value}]" for value in label_info.values()])
 
-    def onChangeVideoQualityEVT(self, event):
+    def onChangeVideoQualityEVT(self, event: wx.CommandEvent):
         self.video_quality_info.SetCheckingStatus()
         self.video_codec_info.SetCheckingStatus()
 
         Thread(target = self.get_video_quality_info).start()
 
-    def onChangeAudioQualityEVT(self, event):
+    def onChangeAudioQualityEVT(self, event: wx.CommandEvent):
         self.audio_quality_info.SetCheckingStatus()
 
         Thread(target = self.get_audio_quality_info).start()
@@ -318,6 +321,9 @@ class MediaInfoPanel(Panel):
 
     def onError(self):
         show_error_message_dialog("获取媒体信息失败", parent = self.parent)
+
+    def onHelpEVT(self, event: wx.CommandEvent):
+        wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/faq/download.html#%E8%A7%86%E9%A2%91%E6%B8%85%E6%99%B0%E5%BA%A6%E4%B8%8E%E4%B8%8B%E8%BD%BD%E8%AE%BE%E7%BD%AE%E4%B8%8D%E7%AC%A6")
 
     @property
     def video_quality_id(self):

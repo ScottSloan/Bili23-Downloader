@@ -6,7 +6,11 @@ from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
 
 class MediaOptionStaticBox(Panel):
-    def __init__(self, parent):
+    def __init__(self, parent: wx.Window):
+        from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
+
+        self.parent: DownloadOptionDialog = parent
+
         Panel.__init__(self, parent)
 
         self.init_UI()
@@ -66,9 +70,6 @@ class MediaOptionStaticBox(Panel):
         self.ffmpeg_merge_chk.Bind(wx.EVT_CHECKBOX, self.onEnableKeepFilesEVT)
 
     def load_data(self, parent):
-        from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
-        self.parent: DownloadOptionDialog = parent
-
         self.download_video_steam_chk.SetValue("video" in Config.Download.stream_download_option)
         self.download_audio_steam_chk.SetValue("audio" in Config.Download.stream_download_option)
 

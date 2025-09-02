@@ -120,7 +120,10 @@ class MiscPage(Page):
             self.restart()
 
     def restart(self):
-        if not sys.argv[0].endswith(".py"):
+        if pystand := os.environ.get("PYSTAND"):
+            subprocess.Popen(pystand)
+
+        elif not sys.argv[0].endswith(".py"):
             subprocess.Popen(sys.argv)
 
         else:

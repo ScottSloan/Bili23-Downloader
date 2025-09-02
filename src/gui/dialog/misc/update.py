@@ -1,5 +1,4 @@
 import wx
-import sys
 
 from utils.config import Config
 
@@ -78,6 +77,7 @@ class UpdateDialog(Dialog):
         wx.LaunchDefaultBrowser(self.info.get("url"))
 
         if self.force:
+            import sys
             sys.exit()
         else:
             self.Hide()

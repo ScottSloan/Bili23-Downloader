@@ -1,5 +1,4 @@
 import wx
-import wx.html2
 
 from utils.config import Config
 from utils.common.enums import Platform
@@ -10,6 +9,8 @@ from utils.module.web.page import WebPage
 class Webview:
     def __init__(self, parent):
         self.parent = parent
+
+        import wx.html2
 
         self.browser = wx.html2.WebView = wx.html2.WebView.New(parent, -1, backend = WebPage.get_webview_backend())
 

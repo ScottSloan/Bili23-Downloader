@@ -70,9 +70,9 @@ class DownloadOptionDialog(Dialog):
 
     def init_utils(self):
         def load_download_option():
-            self.media_info_box.load_data(self)
+            self.media_info_box.load_data()
 
-            self.media_option_box.load_data(self)
+            self.media_option_box.load_data()
 
             self.path_box.load_data()
 

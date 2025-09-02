@@ -1,10 +1,10 @@
+import os
+import platform
+
 def message_box(message: str, caption: str):
-    import platform
-
     if platform.platform().startswith("Windows"):
-        from utils.module.messagebox import show_message
-
-        show_message(caption, message)
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(0, message, caption, 0x0 | 0x30)
     else:
         wx.LogError(message)
 
@@ -17,7 +17,8 @@ try:
     import wx
 
 except ImportError as e:
-    message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
+    if platform.platform().startswith("Windows"):
+        message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
 
     raise e
 
@@ -32,8 +33,6 @@ if not protobuf_version.startswith("6"):
     raise ImportError(msg)
 
 try:
-    import os
-
     from utils.config import Config
     from utils.common.enums import Platform
     from utils.auth.cookie import Cookie
@@ -71,10 +70,11 @@ class APP(wx.App):
         self.init_vlc_env()
 
     def init_msw_env(self):
-        import ctypes
-        import subprocess
+        if not os.environ.get("PYSTAND"):
+            import ctypes
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
-        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        import subprocess
         subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
 
     def init_linux_env(self):

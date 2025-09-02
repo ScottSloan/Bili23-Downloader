@@ -1,5 +1,4 @@
 import wx
-import wx.html2
 import importlib.resources
 
 from utils.config import Config
@@ -12,7 +11,12 @@ from utils.module.web.ws import WebSocketServer
 class WebPage:
     @classmethod
     def get_webview_availability(cls):
-        return wx.html2.WebView.IsBackendAvailable(cls.get_webview_backend())
+        try:
+            import wx.html2
+            
+            return wx.html2.WebView.IsBackendAvailable(cls.get_webview_backend())
+        except:
+            return False
     
     @classmethod
     def show_webpage(cls, parent: wx.Window, file_name: str):
