@@ -16,8 +16,8 @@
 | 文件名 | 平台架构 | 下载地址 | 备注 |
 | --- | --- | --- | --- |
 | Bili23 Downloader | Windows、Linux、macOS | <a href="https://github.com/ScottSloan/Bili23-Downloader" target="_blank" rel="noreferer">GitHub</a>| 源代码 |
-| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="zip_url" target="_blank" rel="noreferer">蓝奏云（密码：{{ setup_passwd }}）</a> | 解压即用 |
-| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64-setup.exe</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="setup_url" target="_blank" rel="noreferer">蓝奏云</a> | 独立安装程序 |
+| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64.zip</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="zip_url" target="_blank" rel="noreferer">蓝奏云</a> | 解压即用 |
+| <span>Bili23_Downloader-{{ version }}-</span><br><span>windows-x64-setup.exe</span> | Windows x64 | <a :href="release_asset_github(version, release_asset_win_ffmpeg_file_name)" target="_blank" rel="noreferer">GitHub</a> <br> <a :href="setup_url" target="_blank" rel="noreferer">蓝奏云</a> | 独立安装程序 <br> 密码：{{ setup_passwd }} |
 
 ::: warning 重要提示
 若您使用的是编译版，请先确保安装 Microsoft Visual C++ 2015-2022 运行库，否则无法运行本程序。
