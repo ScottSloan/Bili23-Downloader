@@ -65,7 +65,7 @@ class AboutWindow(Dialog):
         date_lab = wx.StaticText(self, -1, self.GetDateLabel())
         license_lab = wx.StaticText(self, -1, "本软件为开源免费软件，在 MIT License 许可协议下进行发布。")
 
-        homepage_link = URLBox(self, "官方网站；", "https://bili23.scott-sloan.cn")
+        homepage_link = URLBox(self, "官方网站：", "https://bili23.scott-sloan.cn")
         github_link = URLBox(self, "项目首页：", "https://www.github.com/ScottSloan/Bili23-Downloader")
 
         body_vbox = wx.BoxSizer(wx.VERTICAL)

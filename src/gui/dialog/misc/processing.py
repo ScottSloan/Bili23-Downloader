@@ -61,6 +61,8 @@ class ProcessingWindow(Dialog):
     def ShowModal(self, type: ProcessingType):
         self.SetType(type)
 
+        self.reset()
+
         return super().ShowModal()
     
     def SetType(self, type: ProcessingType):
@@ -102,3 +104,7 @@ class ProcessingWindow(Dialog):
         self.Fit()
 
         self.CenterOnParent()
+
+    def reset(self):
+        self.name_lab.SetLabel("")
+        self.node_title_label.SetLabel("节点：--")

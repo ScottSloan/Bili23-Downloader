@@ -85,14 +85,22 @@ class FavListParser(Parser):
         return resp.get("result")
 
     def get_video_available_media_info(self):
-        from utils.parse.video import VideoParser
-
         episode: dict = self.info_json["episodes"][0]
-
         self.bvid = episode.get("bvid")
-        cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
 
-        VideoParser.get_video_available_media_info(self.bvid, cid)
+        if episode.get("page") != 0:
+            from utils.parse.video import VideoParser
+
+            cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
+
+            VideoParser.get_video_available_media_info(self.bvid, cid)
+        
+        elif episode.get("ogv"):
+            from utils.parse.bangumi import BangumiParser
+
+            data = BangumiParser.get_bangumi_extra_info(episode.get("id"))
+
+            BangumiParser.get_bangumi_available_media_info(data["bvid"], data["cid"])
 
         self.parse_episodes()
 

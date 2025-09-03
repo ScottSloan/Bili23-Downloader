@@ -53,9 +53,11 @@ class BangumiParser(Parser):
 
         resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
         
-        self.info_json: dict = self.json_get(resp, "result")
+        info_json: dict = self.json_get(resp, "result")
+
+        self.info_json = self.get_sections(info_json)
         
-        first_episode = self.info_json["episodes"][0] if self.info_json.get("episodes") else self.info_json["section"][0]["episodes"][0]
+        first_episode = self.get_first_episode(self.info_json)
 
         if param.startswith("season_id"):
             self.ep_id = first_episode["id"]
@@ -64,7 +66,8 @@ class BangumiParser(Parser):
 
         self.parse_episodes()
     
-    def get_bangumi_available_media_info(self, bvid: str, cid: str):
+    @classmethod
+    def get_bangumi_available_media_info(cls, bvid: str, cid: str):
         params = {
             "bvid": bvid,
             "cid": cid,
@@ -73,15 +76,36 @@ class BangumiParser(Parser):
             "fourk": 1
         }
 
-        url = f"https://api.bilibili.com/pgc/player/web/playurl?{self.url_encode(params)}"
+        url = f"https://api.bilibili.com/pgc/player/web/playurl?{cls.url_encode(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        data = self.json_get(resp, "result")
+        data = cls.json_get(resp, "result")
 
-        self.check_drm_protection(data)
+        cls.check_drm_protection(data)
 
         PreviewInfo.download_json = data
+
+    @classmethod
+    def get_bangumi_extra_info(cls, ep_id: int):
+        params = {
+            "ep_id": ep_id
+        }
+
+        url = f"https://api.bilibili.com/pgc/view/web/season?{cls.url_encode(params)}"
+
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        data: dict = cls.json_get(resp, "result")
+
+        data = cls.get_sections(data)
+
+        first_episode = cls.get_first_episode(data)
+
+        return {
+            "bvid": first_episode.get("bvid"),
+            "cid": first_episode.get("cid")
+        }
 
     def check_bangumi_can_play(self, param: str):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{param}"
@@ -127,3 +151,22 @@ class BangumiParser(Parser):
 
     def get_parse_type_str(self):
         return bangumi_type_map.get(self.type_id, "未知")
+    
+    @staticmethod
+    def get_sections(info_json: dict):
+        info_json["sections"] = [
+            {
+                "episodes": info_json.get("episodes")
+            }
+        ]
+
+        if section := info_json["section"]:
+            info_json["sections"].extend(section)
+
+        return info_json
+    
+    @staticmethod
+    def get_first_episode(info_json: dict):
+        for section in info_json.get("sections"):
+            for episode in section.get("episodes"):
+                return episode

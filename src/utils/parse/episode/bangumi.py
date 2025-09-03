@@ -46,11 +46,13 @@ class Bangumi:
 
         for section in info_json["sections"]:
             for episode in section["episodes"]:
-                if episode["bvid"] == target_bvid:
+                if episode.get("bvid") == target_bvid:
                     episode["season_id"] = info_json["season_id"]
                     episode["media_id"] = info_json["media_id"]
 
                     EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(episode.copy(), info_json, section["title"]))
+
+                    return
 
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
@@ -107,7 +109,7 @@ class Bangumi:
         info_json["sections"] = [
             {
                 "title": "正片",
-                "episodes": info_json["episodes"]
+                "episodes": info_json.get("episodes")
             }
         ]
 

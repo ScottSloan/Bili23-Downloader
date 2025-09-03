@@ -19,14 +19,6 @@ class FavList:
 
         EpisodeInfo.clear_episode_data()
 
-        Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
-
-        cls.favlist_parser(info_json)
-
-        Filter.episode_display_mode()
-
-    @classmethod
-    def favlist_parser(cls, info_json: dict):
         for episode in info_json.get("episodes"):
             if episode.get("page") != 0:
                 cls.video_parser(episode.copy())
@@ -36,6 +28,8 @@ class FavList:
 
             else:
                 EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(episode.copy()))
+
+        Filter.episode_display_mode(reset = True)
 
     @classmethod
     def video_parser(cls, episode_info: dict):

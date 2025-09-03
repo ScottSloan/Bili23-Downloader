@@ -103,12 +103,13 @@ class Parser:
     def is_in_section_option_enable(self):
         return True
 
-    def check_drm_protection(self, data: dict):
+    @classmethod
+    def check_drm_protection(cls, data: dict):
         if data.get("drm_type"):
             raise GlobalException(code = StatusCode.DRM.value)
         
         if data.get("is_drm"):
-            self.is_drm = True
+            cls.is_drm = True
 
     @staticmethod
     def json_get(json_data: dict, key: str):
