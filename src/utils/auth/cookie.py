@@ -355,8 +355,7 @@ class Cookie:
     def refresh_cookie():
         if Config.User.login:
             if Utils.check_cookie_info():
-                pass
-                # raise ValueError("need refresh cookie")
+                raise ValueError("need refresh cookie")
             
                 # correspond_path = Utils.get_correspond_path()
 
@@ -366,5 +365,4 @@ class Cookie:
                 #     Utils.confirm_refresh_cookie()
 
             else:
-                pass
-                # print("no need refresh cookie")
+                print("no need refresh cookie")

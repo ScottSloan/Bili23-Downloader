@@ -114,9 +114,10 @@ class Config:
 
     class APP:
         name: str = "Bili23 Downloader"
+        id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.66.0"
-        version_code: int = 166000
+        version: str = "1.66.1"
+        version_code: int = 166100
 
         task_file_min_version_code: int = 166000
         live_file_min_version_code: int = 165000
@@ -471,10 +472,11 @@ class Config:
     @staticmethod
     def on_error(e):
         import wx
+        import sys
         import traceback
 
         wx.LogError(f"读取\保存配置文件时出错\n{traceback.format_exc()}")
 
-        raise e
+        sys.exit()
 
 Config.load_config()

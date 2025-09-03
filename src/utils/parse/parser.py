@@ -10,7 +10,7 @@ class Parser:
     bilibili_url = "https://www.bilibili.com/"
 
     def __init__(self):
-        self.json_data: dict = None
+        self.json_data: dict = {}
         self.is_drm: bool = False
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
@@ -21,14 +21,15 @@ class Parser:
         return result
 
     @classmethod
-    def request_get(cls, url: str, headers: dict) -> dict:
+    def request_get(cls, url: str, headers: dict, check: bool = True) -> dict:
         req = RequestUtils.request_get(url, headers)
 
         req.raise_for_status()
 
         resp = json.loads(req.text)
 
-        cls.check_json(resp)
+        if check:
+            cls.check_json(resp)
 
         cls.json_data = resp.copy()
 

@@ -58,35 +58,31 @@ class FavListParser(Parser):
 
         return info["media_count"]
 
-    def get_video_info(self, bvid: str):
+    def get_video_info(self, bvid: str) -> dict:
         params = {
             "bvid": bvid
         }
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{WbiUtils.encWbi(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
-
-        info_json: dict = self.json_get(resp, "data")
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA), check = False)
 
         self.total_data += 1
 
-        return info_json
+        return resp.get("data")
     
-    def get_bangumi_info(self, season_id: int):
+    def get_bangumi_info(self, season_id: int) -> dict:
         params = {
             "season_id": season_id
         }
 
         url = f"https://api.bilibili.com/pgc/view/web/season?{self.url_encode(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA), check = False)
         
-        info_json: dict = self.json_get(resp, "result")
-
         self.total_data += 1
 
-        return info_json
+        return resp.get("result")
 
     def get_video_available_media_info(self):
         from utils.parse.video import VideoParser
