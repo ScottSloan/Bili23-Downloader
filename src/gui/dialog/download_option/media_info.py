@@ -94,7 +94,7 @@ class MediaInfoPanel(Panel):
         media_info_box = wx.StaticBox(self, -1, "媒体信息")
 
         stream_lab = wx.StaticText(media_info_box, -1, "当前视频类型：")
-        self.stream_type_lab = wx.StaticText(media_info_box, -1)
+        self.stream_type_lab = wx.StaticText(media_info_box, -1, "正在检测...")
         stream_type_tooltip = ToolTip(media_info_box)
         stream_type_tooltip.set_tooltip("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质\nMP4：同 FLV 格式")
         self.help_btn = BitmapButton(media_info_box, Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")

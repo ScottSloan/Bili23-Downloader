@@ -13,6 +13,7 @@ app_config_group = {
         "auto_popup_option_dialog",
         "auto_show_download_window",
         "remember_window_status",
+        "always_on_top",
         "download_danmaku_file",
         "danmaku_file_type",
         "download_subtitle_file",
@@ -114,9 +115,10 @@ class Config:
 
     class APP:
         name: str = "Bili23 Downloader"
+        id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.66.0"
-        version_code: int = 166000
+        version: str = "1.66.1"
+        version_code: int = 166100
 
         task_file_min_version_code: int = 166000
         live_file_min_version_code: int = 165000
@@ -131,6 +133,7 @@ class Config:
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
         remember_window_status: bool = False
+        always_on_top: bool = False
 
         download_danmaku_file: bool = False
         danmaku_file_type: int = 0
@@ -250,7 +253,7 @@ class Config:
         audio_quality_id: int = 30300
         video_codec_id: int = 7
 
-        max_thread_count: int = 2
+        max_thread_count: int = 4
         max_download_count: int = 1
 
         enable_notification: bool = False
@@ -471,10 +474,11 @@ class Config:
     @staticmethod
     def on_error(e):
         import wx
+        import sys
         import traceback
 
         wx.LogError(f"读取\保存配置文件时出错\n{traceback.format_exc()}")
 
-        raise e
+        sys.exit()
 
 Config.load_config()

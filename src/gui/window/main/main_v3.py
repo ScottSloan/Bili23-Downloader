@@ -27,7 +27,7 @@ class MainWindow(Frame):
 
         self.utils = Utils(self)
 
-        Frame.__init__(self, parent, Config.APP.name, name = "main")
+        Frame.__init__(self, parent, Config.APP.name, style = self.get_window_style(), name = "main")
 
         self.set_window_params()
 
@@ -338,6 +338,14 @@ class MainWindow(Frame):
                 
                 if Config.Basic.window_pos:
                     self.SetPosition(Config.Basic.window_pos)
+
+    def get_window_style(self):
+        style = wx.DEFAULT_FRAME_STYLE
+
+        if Config.Basic.always_on_top:
+            style |= wx.STAY_ON_TOP
+
+        return style
 
     def get_sys_settings(self):
         Config.Sys.dark_mode = False if Platform(Config.Sys.platform) == Platform.Windows else wx.SystemSettings.GetAppearance().IsDark()

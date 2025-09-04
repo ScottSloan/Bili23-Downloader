@@ -14,17 +14,11 @@ class FavList:
     def parse_episodes(cls, info_json: dict, season_dict: dict, parent_title: str):
         cls.season_dict = season_dict
         cls.parent_title = parent_title
+        Video.parent_title = parent_title
+        Bangumi.parent_title = parent_title
 
         EpisodeInfo.clear_episode_data()
 
-        Config.Misc.episode_display_mode = EpisodeDisplayType.All.value
-
-        cls.favlist_parser(info_json)
-
-        Filter.episode_display_mode()
-
-    @classmethod
-    def favlist_parser(cls, info_json: dict):
         for episode in info_json.get("episodes"):
             if episode.get("page") != 0:
                 cls.video_parser(episode.copy())
@@ -35,19 +29,25 @@ class FavList:
             else:
                 EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(episode.copy()))
 
+        Filter.episode_display_mode(reset = True)
+
     @classmethod
     def video_parser(cls, episode_info: dict):
         bvid = episode_info.get("bvid")
-        video_info = cls.season_dict["video"][bvid]
 
-        Video.parse_episodes(video_info, cls.parent_title)
+        if info_json := cls.season_dict["video"][bvid]:
+            if "ugc_season" in info_json:
+                Video.ugc_season_pages_parser({}, info_json, bvid)
+                
+            else:
+                Video.pages_parser(info_json)
 
     @classmethod
     def bangumi_parser(cls, episode_info: dict):
         season_id = episode_info["ogv"]["season_id"]
-        info_json = cls.season_dict["bangumi"][season_id]
 
-        Bangumi.parse_episodes(info_json, parent_title = cls.parent_title)
+        if info_json := cls.season_dict["bangumi"][season_id]:
+            Bangumi.episodes_single_parser(info_json, episode_info["bvid"])
 
     @classmethod
     def get_entry_info(cls, episode: dict):

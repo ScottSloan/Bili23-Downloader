@@ -10,7 +10,7 @@ class Parser:
     bilibili_url = "https://www.bilibili.com/"
 
     def __init__(self):
-        self.json_data: dict = None
+        self.json_data: dict = {}
         self.is_drm: bool = False
 
     def re_find_str(self, pattern: str, string: str, check: bool = True):
@@ -21,14 +21,15 @@ class Parser:
         return result
 
     @classmethod
-    def request_get(cls, url: str, headers: dict) -> dict:
+    def request_get(cls, url: str, headers: dict, check: bool = True) -> dict:
         req = RequestUtils.request_get(url, headers)
 
         req.raise_for_status()
 
         resp = json.loads(req.text)
 
-        cls.check_json(resp)
+        if check:
+            cls.check_json(resp)
 
         cls.json_data = resp.copy()
 
@@ -102,12 +103,13 @@ class Parser:
     def is_in_section_option_enable(self):
         return True
 
-    def check_drm_protection(self, data: dict):
+    @classmethod
+    def check_drm_protection(cls, data: dict):
         if data.get("drm_type"):
             raise GlobalException(code = StatusCode.DRM.value)
         
         if data.get("is_drm"):
-            self.is_drm = True
+            cls.is_drm = True
 
     @staticmethod
     def json_get(json_data: dict, key: str):

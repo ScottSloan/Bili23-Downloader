@@ -10,7 +10,7 @@ class DebugWindow(Frame):
         
         self.parent: MainWindow = parent
 
-        Frame.__init__(self, parent, "Debug", name = "debug")
+        Frame.__init__(self, parent, "Debug", style = self.get_window_style(), name = "debug")
 
         self.init_UI()
 
@@ -70,3 +70,11 @@ class DebugWindow(Frame):
 
     def onStopWSEVT(self, event):
         self.websocket_server.stop()
+
+    def get_window_style(self):
+        style = wx.DEFAULT_FRAME_STYLE
+
+        if self.parent.config.Basic.always_on_top:
+            style |= wx.STAY_ON_TOP
+
+        return style

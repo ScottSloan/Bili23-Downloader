@@ -1,4 +1,5 @@
 import os
+import sys
 import platform
 
 def message_box(message: str, caption: str):
@@ -19,8 +20,8 @@ try:
 except ImportError as e:
     if platform.platform().startswith("Windows"):
         message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
-
-    raise e
+    else:
+        raise e
 
 import google.protobuf
 
@@ -44,7 +45,7 @@ try:
 except Exception as e:
     message_box(f"初始化程序失败\n\n{get_traceback()}", "Fatal Error")
 
-    raise e
+    sys.exit()
 
 class APP(wx.App):
     def __init__(self):
@@ -67,22 +68,57 @@ class APP(wx.App):
             case Platform.Linux:
                 self.init_linux_env()
 
+            case Platform.macOS:
+                self.init_macos_env()
+
         self.init_vlc_env()
 
     def init_msw_env(self):
+        import ctypes
+        import subprocess
+
         if not os.environ.get("PYSTAND"):
-            import ctypes
             ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
-        import subprocess
+        ctypes.windll.kernel32.CreateMutexW(None, False, Config.APP.id)
+
+        if ctypes.windll.kernel32.GetLastError() == 183:
+            message_box("Bili23 Downloader 已在运行！", "警告")
+            sys.exit()
+        
         subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
 
     def init_linux_env(self):
+        self.lock_file()
+        
         os.environ['GDK_BACKEND'] = "x11"
         #os.environ['GDK_DPI_SCALE'] = "1.25"
 
+    def init_macos_env(self):
+        self.lock_file()
+
     def init_vlc_env(self):
         os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"
+
+    def lock_file(self):
+        import fcntl
+
+        LOCK_FILE = os.path.join(os.getcwd(), "app.lock")
+
+        try:
+            fd = os.open(LOCK_FILE, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
+
+        except Exception as e:
+            wx.LogError("无法创建锁文件")
+            sys.exit()
+
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        except IOError:
+            os.close(fd)
+            wx.LogError("Bili23 Downloader 已在运行！")
+            sys.exit()
 
 if __name__ == "__main__":
     app = APP()

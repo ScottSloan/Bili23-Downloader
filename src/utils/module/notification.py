@@ -1,5 +1,8 @@
 import wx
+import os
 import wx.adv
+
+from utils.config import Config
 
 class NotificationManager:
     def __init__(self, parent):

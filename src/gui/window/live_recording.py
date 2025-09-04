@@ -48,7 +48,7 @@ class Utils:
 
 class LiveRecordingWindow(Frame):
     def __init__(self, parent: wx.Window):
-        Frame.__init__(self, parent, "直播录制")
+        Frame.__init__(self, parent, "直播录制", style = self.get_window_style())
 
         self.set_window_params()
 
@@ -174,3 +174,11 @@ class LiveRecordingWindow(Frame):
                 size = self.FromDIP((1070, 650))
 
         self.SetSize(size)
+
+    def get_window_style(self):
+        style = wx.DEFAULT_FRAME_STYLE
+
+        if Config.Basic.always_on_top:
+            style |= wx.STAY_ON_TOP
+
+        return style

@@ -36,7 +36,7 @@ class DownloadInfo:
             "ep_id": item_info.ep_id,
             "season_id": item_info.season_id,
             "media_id": item_info.media_id,
-            "pubtime": item_info.pubtime,
+            "pubtimestamp": item_info.pubtime,
             "title": item_info.title,
             "section_title": item_info.section_title,
             "part_title": item_info.part_title,

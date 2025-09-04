@@ -11,46 +11,48 @@ class Bangumi:
     parent_title: str = ""
 
     @classmethod
-    def parse_episodes(cls, info_json: dict, target_ep_id: int = None, parent_title: str = ""):
+    def parse_episodes(cls, info_json: dict, target_ep_id: int = None):
         cls.target_ep_id = target_ep_id
-        cls.parent_title = parent_title
         EpisodeInfo.parser = cls
 
-        if not parent_title:
-            EpisodeInfo.clear_episode_data()
+        EpisodeInfo.clear_episode_data()
 
         bangumi_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(info_json.get("title"), label = bangumi_type_map.get(info_json.get("type"))))
 
-        if info_json.get("episodes"):
-            main_pid = EpisodeInfo.add_item(bangumi_pid, EpisodeInfo.get_node_info("正片", label = "章节"))
+        info_json = cls.get_sections(info_json.copy())
 
-            cls.episodes_parser(info_json["episodes"], main_pid, "正片", info_json)
+        for section in info_json["sections"]:
+            cls.episodes_parser(section, info_json, bangumi_pid)
 
-        if "section" in info_json:
-            cls.section_parser(info_json, bangumi_pid)
-
-        if not parent_title:
-            Filter.episode_display_mode()
+        Filter.episode_display_mode()
 
     @classmethod
-    def episodes_parser(cls, episodes: list, pid: int, section_title: str, info_json: dict):
-        for episode in episodes:
+    def episodes_parser(cls, section: dict, info_json: dict, bangumi_pid: int):
+        section_title = section["title"]
+        section_pid = EpisodeInfo.add_item(bangumi_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
+
+        for episode in section["episodes"]:
             episode["season_id"] = info_json["season_id"]
             episode["media_id"] = info_json["media_id"]
             episode["section_title"] = section_title
 
-            EpisodeInfo.add_item(pid, cls.get_entry_info(episode.copy(), info_json, section_title))
+            EpisodeInfo.add_item(section_pid, cls.get_entry_info(episode.copy(), info_json, section_title))
 
             cls.update_target_section_title(episode, section_title)
 
     @classmethod
-    def section_parser(cls, info_json: dict, pid: str):
-        for section in info_json["section"]:
-            section_title = section["title"]
+    def episodes_single_parser(cls, info_json: dict, target_bvid: str):
+        info_json = cls.get_sections(info_json.copy())
 
-            section_pid = EpisodeInfo.add_item(pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
+        for section in info_json["sections"]:
+            for episode in section["episodes"]:
+                if episode.get("bvid") == target_bvid:
+                    episode["season_id"] = info_json["season_id"]
+                    episode["media_id"] = info_json["media_id"]
 
-            cls.episodes_parser(section["episodes"], section_pid, section_title, info_json)
+                    EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(episode.copy(), info_json, section["title"]))
+
+                    return
 
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
@@ -101,4 +103,18 @@ class Bangumi:
             return f"https://www.bilibili.com/bangumi/play/ep{ep_id}"
         else:
             return episode.get("link")
+        
+    @staticmethod
+    def get_sections(info_json: dict):
+        info_json["sections"] = [
+            {
+                "title": "正片",
+                "episodes": info_json.get("episodes")
+            }
+        ]
+
+        if section := info_json.get("section"):
+            info_json["sections"].extend(section)
+
+        return info_json
         
