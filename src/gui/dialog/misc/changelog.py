@@ -15,7 +15,11 @@ class ChangeLogDialog(Dialog):
         wx.Bell()
 
     def init_UI(self):
-        changelog_box = wx.TextCtrl(self, -1, self.info["changelog"], size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        font: wx.Font = self.GetFont()
+        font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
+
+        changelog_box = wx.TextCtrl(self, -1, self.info.get("changelog"), size = self.FromDIP((500, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        changelog_box.SetFont(font)
 
         close_btn = wx.Button(self, wx.ID_CANCEL, "关闭", size = self.get_scaled_size((80, 28)))
 

@@ -92,7 +92,7 @@ class AboutWindow(Dialog):
         about_vbox.Add(top_vbox, 0, wx.ALL | wx.CENTER, self.FromDIP(6))
         about_vbox.Add(body_vbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(10))
         about_vbox.Add(bottom_vbox, 0, wx.EXPAND)
-        about_vbox.AddSpacer(self.FromDIP(6))
+        about_vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizerAndFit(about_vbox)
 

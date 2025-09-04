@@ -30,6 +30,7 @@ class BasicPage(Page):
         self.auto_popup_option_chk = wx.CheckBox(basic_box, 0, "下载前自动弹出下载选项对话框")
         self.auto_show_download_window_chk = wx.CheckBox(basic_box, 0, "下载时自动切换到下载窗口")
         self.remember_window_status_chk = wx.CheckBox(basic_box, 0, "记住窗口的大小和位置")
+        self.always_on_top_chk = wx.CheckBox(basic_box, 0, "窗口总在最前")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
@@ -37,6 +38,7 @@ class BasicPage(Page):
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         basic_sbox.Add(self.remember_window_status_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        basic_sbox.Add(self.always_on_top_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         self.extra_box = ExtraStaticBox(self.panel, is_setting_page = True)
 
@@ -56,6 +58,7 @@ class BasicPage(Page):
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
         self.remember_window_status_chk.SetValue(Config.Basic.remember_window_status)
+        self.always_on_top_chk.SetValue(Config.Basic.always_on_top)
 
         self.extra_box.load_data()
 
@@ -65,6 +68,7 @@ class BasicPage(Page):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
         Config.Basic.remember_window_status = self.remember_window_status_chk.GetValue()
+        Config.Basic.always_on_top = self.always_on_top_chk.GetValue()
 
         self.extra_box.save()
 
