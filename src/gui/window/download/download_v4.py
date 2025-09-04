@@ -270,7 +270,7 @@ class Utils:
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "下载管理")
+        Frame.__init__(self, parent, "下载管理", style = self.get_window_style())
 
         self.set_window_params()
 
@@ -398,3 +398,11 @@ class DownloadManagerWindow(Frame):
             
             case "下载完成":
                 return self.right_panel.completed_page
+            
+    def get_window_style(self):
+        style = wx.DEFAULT_FRAME_STYLE
+
+        if Config.Basic.always_on_top:
+            style |= wx.STAY_ON_TOP
+
+        return style

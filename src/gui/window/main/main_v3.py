@@ -343,8 +343,8 @@ class MainWindow(Frame):
         style = wx.DEFAULT_FRAME_STYLE
 
         if Config.Basic.always_on_top:
-            style = style | wx.STAY_ON_TOP
-        
+            style |= wx.STAY_ON_TOP
+
         return style
 
     def get_sys_settings(self):

@@ -888,7 +888,7 @@ class ContainerPage(Panel):
 
 class FormatFactoryWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "视频工具箱", name = "format_factory")
+        Frame.__init__(self, parent, "视频工具箱", style = self.get_window_style(), name = "format_factory")
 
         self.SetSize(self.FromDIP((850, 500)))
 
@@ -981,3 +981,11 @@ class FormatFactoryWindow(Frame):
 
     def set_target_page(self, page: int):
         self.target_page = page
+
+    def get_window_style(self):
+        style = wx.DEFAULT_FRAME_STYLE
+
+        if Config.Basic.always_on_top:
+            style |= wx.STAY_ON_TOP
+
+        return style

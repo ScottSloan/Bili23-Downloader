@@ -1,5 +1,6 @@
 import wx
 
+from utils.config import Config
 from utils.module.graph import Graph
 
 from gui.component.webview import Webview
@@ -7,7 +8,7 @@ from gui.component.window.frame import Frame
 
 class GraphWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, f"Graph Viewer")
+        Frame.__init__(self, parent, "Graph Viewer", style = self.get_window_style())
 
         self.init_UI()
 
@@ -48,3 +49,11 @@ class GraphWindow(Frame):
 
         if msg == "fullscreen":
             self.Maximize(not self.IsMaximized())
+
+    def get_window_style(self):
+        style = wx.DEFAULT_FRAME_STYLE
+
+        if Config.Basic.always_on_top:
+            style |= wx.STAY_ON_TOP
+
+        return style
