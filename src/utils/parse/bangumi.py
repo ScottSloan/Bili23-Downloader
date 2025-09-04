@@ -160,7 +160,7 @@ class BangumiParser(Parser):
             }
         ]
 
-        if section := info_json["section"]:
+        if section := info_json.get("section"):
             info_json["sections"].extend(section)
 
         return info_json
