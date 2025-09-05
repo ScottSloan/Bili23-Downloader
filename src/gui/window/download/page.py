@@ -7,9 +7,10 @@ from utils.common.enums import DownloadStatus
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.thread import Thread
 
+from gui.window.download.item_panel_v4 import DownloadTaskItemPanel
+
 from gui.component.panel.scrolled_panel_list import ScrolledPanelList
 from gui.component.panel.panel import Panel
-from gui.component.panel.download_item_v4 import DownloadTaskItemPanel
 
 class BasePage(Panel):
     def __init__(self, parent: wx.Window, name: str):

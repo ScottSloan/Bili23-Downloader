@@ -59,7 +59,7 @@ class MainWindow(Frame):
 
         self.clipboard_timer = wx.Timer(self, -1)
 
-        self.taskbar_icon = TaskBarIcon(self)
+        self.taskbar_icon = TaskBarIcon()
 
     def init_menubar(self):
         menu_bar = wx.MenuBar()
