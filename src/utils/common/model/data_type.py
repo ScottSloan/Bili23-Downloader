@@ -469,11 +469,12 @@ class Process:
     return_code: int = None
 
 class CommentData:
-    start_time: int = 0
-    end_time: int = 0
-    text: str = ""
-    width: int = 0
-    row: int = 0
+    def __init__(self):
+        self.start_time: int = 0
+        self.end_time: int = 0
+        self.text: str = ""
+        self.width: int = 0
+        self.row: int = 0
 
 class ASSStyle:
     Name: str = "Default"

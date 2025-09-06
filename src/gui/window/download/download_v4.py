@@ -367,7 +367,8 @@ class DownloadManagerWindow(Frame):
 
         if page.is_need_load_more():
             wx.CallAfter(worker)
-        elif callback:
+
+        if callback:
             callback()
 
     def adjust_download_item_count(self, selection: int):

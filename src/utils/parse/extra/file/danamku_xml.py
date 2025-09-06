@@ -11,7 +11,7 @@ class DanmakuXMLFile:
         contents = ""
 
         contents += """<?xml version="1.0" encoding="UTF-8"?>\n"""
-        contents += f"<i>{self.get_i_element()}{self.get_d_elements()}</i>\n"
+        contents += f"<i>\n    {self.get_i_element()}\n{self.get_d_elements()}</i>"
 
         return contents
 
@@ -26,7 +26,7 @@ class DanmakuXMLFile:
             "source": "k-v"
         }
 
-        return "\n".join([f'<{k}>{v}</{k}>' for k, v in attr.items()])
+        return "\n    ".join([f'<{k}>{v}</{k}>' for k, v in attr.items()])
     
     def get_d_elements(self):
         comments = ""
@@ -40,9 +40,10 @@ class DanmakuXMLFile:
                 str(entry.get("ctime")),
                 "0",
                 str(entry.get("midHash")),
-                str(entry.get("id"))
+                str(entry.get("id")),
+                str(entry.get("weight"))
             ]
 
-            comments += f'<d p="{",".join(p_attr)}">{entry.get("content")}</d>\n'
+            comments += f'    <d p="{",".join(p_attr)}">{entry.get("content")}</d>\n'
 
         return comments

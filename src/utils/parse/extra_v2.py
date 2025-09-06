@@ -20,9 +20,7 @@ from utils.parse.preview import VideoPreview
 from utils.parse.download import DownloadParser
 
 from utils.module.pic.cover import Cover
-from utils.module.danmaku.ass_file import ASS
 from utils.module.danmaku.danmaku import Danmaku
-from utils.module.danmaku.xml_file import XML
 
 from utils.auth.wbi import WbiUtils
 
@@ -55,7 +53,7 @@ class ExtraParser:
         def get_xml_file(cls, io_buffer: List[BytesIO], task_info: DownloadTaskInfo, base_file_name: str):
             protobuf_dict = cls.get_protobuf_entry_list(io_buffer)
 
-            contents = XML.make(protobuf_dict, task_info.cid)
+            contents = 0
             
             ExtraParser.Utils.save_to_file(f"{base_file_name}.xml", contents, task_info, "w")
 
@@ -89,9 +87,9 @@ class ExtraParser:
             dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
             style = danmaku.get_ass_style()
 
-            contents = ASS.make(dialogue_list, style, resolution)
+            #contents = ASS.make(dialogue_list, style, resolution)
 
-            ExtraParser.Utils.save_to_file(f"{base_file_name}.ass", contents, task_info, "w")
+            ExtraParser.Utils.save_to_file(f"{base_file_name}.ass", "", task_info, "w")
             
         @staticmethod
         def get_all_protobuf_contents(task_info: DownloadTaskInfo):
@@ -255,9 +253,9 @@ class ExtraParser:
             dialogue_list = [(FormatUtils.format_ass_timestamp(entry["from"]), FormatUtils.format_ass_timestamp(entry["to"]), entry["content"]) for entry in subtitle_json["body"]]
             style = cls.get_ass_style()
 
-            contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_video_resolution(task_info))
+            #contents = ASS.make(dialogue_list, style, ExtraParser.Utils.get_video_resolution(task_info))
 
-            ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.ass", contents, task_info, "w")
+            ExtraParser.Utils.save_to_file(f"{base_file_name}_{lan}.ass", "", task_info, "w")
 
         @staticmethod
         def get_ass_style():

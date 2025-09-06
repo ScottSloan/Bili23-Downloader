@@ -10,8 +10,8 @@ class ExtraParser:
     def download(task_info: DownloadTaskInfo, callback: Callback):
         try:
             if task_info.extra_option.get("download_danmaku_file"):
-                parser = DanmakuParser()
-                parser.parse(task_info)
+                parser = DanmakuParser(task_info)
+                parser.parse()
 
             task_info.total_downloaded_size = task_info.total_file_size
             

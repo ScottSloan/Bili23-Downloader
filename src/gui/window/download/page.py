@@ -187,13 +187,19 @@ class DownloadingPage(BasePage):
                 if panel.task_info.status == DownloadStatus.Pause.value and start_all:
                     panel.utils.set_download_status(DownloadStatus.Waiting)
 
-                if panel.task_info.status in [DownloadStatus.Waiting.value, DownloadStatus.DownloadError.value, DownloadStatus.MergeError.value]:
+                if panel.task_info.status in self.get_start_all_condition(start_all):
                     if self.get_panel_items_count([DownloadStatus.Downloading.value]) < Config.Download.max_download_count:
                         panel.utils.resume_download()
     
     def set_info_list_status(self, status: int):
         for info in self.scroller.info_list:
             info.status = status
+
+    def get_start_all_condition(self, start_all: bool):
+        if start_all:
+            return [DownloadStatus.Waiting.value, DownloadStatus.DownloadError.value, DownloadStatus.MergeError.value]
+        else:
+            return [DownloadStatus.Waiting.value]
 
     @property
     def total_item_count(self):

@@ -182,19 +182,15 @@ class Utils:
         if not hasattr(self, "downloader"):
             self.downloader = Downloader(self.task_info, self.get_downloader_callback())
 
-        if not hasattr(self, "download_parser"):
-            self.download_parser = DownloadParser(self.task_info, self.onDownloadError)
-
-        downloader_info = self.download_parser.get_download_url()
-
-        self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
-        self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
+        downloader_info = self.get_downloader_info()
 
         self.downloader.set_downloader_info(downloader_info)
 
         self.downloader.start_download()
 
     def start_extra_download_thread(self):
+        self.get_downloader_info()
+
         ExtraParser.download(self.task_info, self.get_extra_callback())
 
     def pause_download(self, set_waiting_status: bool = False):
@@ -394,3 +390,13 @@ class Utils:
     def get_full_file_name(self):
         return FileNameFormatter.check_file_name_length(f"{self.task_info.file_name}.{self.task_info.output_type}")
     
+    def get_downloader_info(self):
+        if not hasattr(self, "download_parser"):
+            self.download_parser = DownloadParser(self.task_info, self.onDownloadError)
+
+        downloader_info = self.download_parser.get_download_url()
+
+        self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
+        self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
+
+        return downloader_info
