@@ -26,17 +26,7 @@ class Parser:
         self.total_file_size += os.stat(file_path).st_size
 
     def get_video_resolution(self):
-        if self.task_info.video_width:
-            return {
-                "width": self.task_info.video_width,
-                "height": self.task_info.video_height
-            }
-        else:
-            data = DownloadParser.get_download_stream_json(self.task_info)
-
-            width, height = VideoPreview.get_video_resolution(self.task_info, data)
-
-            return {
-                "width": width,
-                "height": height
-            }
+        return {
+            "width": self.task_info.video_width,
+            "height": self.task_info.video_height
+        }

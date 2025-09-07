@@ -1,3 +1,5 @@
+import math
+
 from typing import List, Dict, Union
 
 from utils.config import Config
@@ -15,8 +17,9 @@ class Json2ASS:
 
         self.font_size = danmaku_style.get("font_size")
 
-        self.scroll_duration = danmaku_style.get("scroll_duration")
-        self.stay_duration = danmaku_style.get("stay_duration")
+        self.scroll_duration = 2 * danmaku_style.get("speed", 3) + 2
+        self.stay_duration = 1.5 * danmaku_style.get("speed", 3) + 0.5
+        self.density = 1 - 0.5 * danmaku_style.get("density", 1)
 
         rows = {i + 1: None for i in range(int(self.video_height / self.font_size))}
 
@@ -29,20 +32,20 @@ class Json2ASS:
             match entry["mode"]:
                 case 1 | 2 | 3:
                     # 普通弹幕
-                    dialogue = self.process_comment(entry, 1, self.scroll_duration)
+                    comment = self.process_comment(entry, 1, self.scroll_duration)
 
                 case 4:
                     # 底部弹幕
-                    dialogue = self.process_comment(entry, 3, self.stay_duration)
+                    comment = self.process_comment(entry, 3, self.stay_duration)
 
                 case 5:
                     # 顶部弹幕
-                    dialogue = self.process_comment(entry, 2, self.stay_duration)
+                    comment = self.process_comment(entry, 2, self.stay_duration)
 
                 case _:
-                    dialogue = None
+                    comment = None
 
-            dialogue_list.append(dialogue)
+            dialogue_list.append(comment)
 
         dialogue_list = [entry for entry in dialogue_list.copy() if entry]
 
@@ -51,18 +54,18 @@ class Json2ASS:
     def process_comment(self, data: dict, type: int, duration: int):
         start_time = data.get("progress") / 1000
         end_time = start_time + duration
-        text = data.get("content")
+        content = data.get("content")
         color = data.get("color")
 
-        comment_data = self.check_row(type, self.get_comment_data(start_time, end_time, text))
+        comment_data = self.check_row(type, self.get_comment_data(start_time, end_time, content))
 
         if comment_data:
-            height = self.calc_row(comment_data.row)
+            height = self.calc_row_height(comment_data.row)
 
             match type:
                 case 1:
                     # 普通弹幕
-                    style = f"\\move({self.video_width}, {height}, -{len(text) * self.font_size}, {height})"
+                    style = f"\\move({self.video_width}, {height}, -{len(content) * self.font_size}, {height})"
 
                 case 2:
                     # 顶部弹幕
@@ -79,65 +82,77 @@ class Json2ASS:
             if color and color != 16777215:
                 style += f"\\c{Color.convert_to_ass_color(hex(color)[2:])}"
 
-            return (FormatUtils.format_ass_timestamp(start_time), FormatUtils.format_ass_timestamp(comment_data.end_time), f"{{{style}}}{text}")    
+            return (
+                FormatUtils.format_ass_timestamp(start_time),
+                FormatUtils.format_ass_timestamp(comment_data.end_time),
+                f"{{{style}}}{content}"
+            )
 
     def calc_pos(self, row: int):
-        return int(self.video_width / 2), self.calc_row(row)
+        return int(self.video_width / 2), self.calc_row_height(row)
     
-    def calc_row(self, row: int):
+    def calc_row_height(self, row: int):
         return (row - 1) * self.font_size
     
-    def check_row(self, type: int, new_row: CommentData):
+    def check_row(self, type: int, new_comment: CommentData):
         def set_row(new_row: CommentData, row: int):
             new_row.row = row
 
             self.data.get(type)[row] = new_row
 
-        def type_normal():
-            for key, value in self.data.get(type).items():
-                if value:
-                    speed = int((value.width + self.video_width) / (value.end_time - value.start_time))
+            return new_row
 
-                    if new_row.start_time >= value.start_time + value.width / speed:
-                        new_row.end_time = new_row.start_time + (new_row.width + self.video_width) / speed
+        def check_normal_comment():
+            for row, previous_comment in self.data.get(type).items():
+                if previous_comment:
+                    previous_speed = math.ceil((previous_comment.width + self.video_width) / (previous_comment.end_time - previous_comment.start_time))
 
-                        set_row(new_row, key)
-                        return new_row
+                    if self.density == 3:
+                        previous_shown_time = new_comment.start_time
+                    else:
+                        previous_shown_time = (previous_comment.start_time + previous_comment.width / previous_speed) + self.density
+
+                    if new_comment.start_time >= previous_shown_time:
+                        duration = max((new_comment.width + self.video_width) / previous_speed, self.scroll_duration)
+                        distance = math.ceil((new_comment.start_time - previous_comment.start_time) * previous_speed)
+                        
+                        # 速度补偿
+                        ratio = distance / self.video_width
+                        offset = 0.2 - 0.2 * math.exp(-2.77 * ratio)
+
+                        duration -= offset
+
+                        new_comment.end_time = new_comment.start_time + duration
+
+                        return set_row(new_comment, row)
                 else:
-                    set_row(new_row, key)
-                    return new_row
+                    return set_row(new_comment, row)
         
-        def type_top():
-            for key, value in self.data.get(type).items():
-                if value:
-                    if new_row.start_time >= value.end_time:
-                        set_row(new_row, key)
-                        return new_row
-
+        def check_top_comment():
+            for row, previous_comment in self.data.get(type).items():
+                if previous_comment:
+                    if new_comment.start_time >= previous_comment.end_time:
+                        return set_row(new_comment, row)
                 else:
-                    set_row(new_row, key)
-                    return new_row
+                    return set_row(new_comment, row)
         
-        def type_btm():
-            for key, value in reversed(list(self.data.get(2).items())):
-                if value:
-                    if new_row.start_time >= value.end_time:
-                        set_row(new_row, key)
-                        return new_row
-
+        def check_bottom_comment():
+            for row, previous_comment in reversed(list(self.data.get(2).items())):
+                if previous_comment:
+                    if new_comment.start_time >= previous_comment.end_time:
+                        return set_row(new_comment, row)
                 else:
-                    set_row(new_row, key)
-                    return new_row
+                    return set_row(new_comment, row)
     
         match type:
             case 1:
-                return type_normal()
+                return check_normal_comment()
 
             case 2:
-                return type_top()
+                return check_top_comment()
             
             case 3:
-                return type_btm()
+                return check_bottom_comment()
             
             case _:
                 return None
@@ -150,13 +165,6 @@ class Json2ASS:
         data.width = len(text) * self.font_size
 
         return data
-
-    def get_dialogue_data(self, from_time: int, to_time: int, text: str):
-        return {
-            "from": from_time,
-            "to": to_time,
-            "text": text
-        }
     
 class DanmakuASSFile:
     def __init__(self, json_data: List[dict], resolution: dict):

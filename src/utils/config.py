@@ -117,8 +117,8 @@ class Config:
         name: str = "Bili23 Downloader"
         id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.66.1"
-        version_code: int = 166100
+        version: str = "1.67.0"
+        version_code: int = 167000
 
         task_file_min_version_code: int = 166000
         live_file_min_version_code: int = 165000
@@ -282,12 +282,8 @@ class Config:
 
         ass_style: Dict[str, Dict] = {}
 
-        ass_resolution_confirm: bool = False
-
-        ass_custom_resolution: bool = False
-        ass_video_width: int = 1920
-        ass_video_height: int = 1080
-
+        video_width: int = 1920
+        video_height: int = 1080
         remember_resolution_settings: bool = False
 
     class Auth:

@@ -18,6 +18,8 @@ class DanmakuPage(Panel):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.init_data()
 
     def init_UI(self):
@@ -25,32 +27,42 @@ class DanmakuPage(Panel):
 
         self.border_sbox = BorderStaticBox(self)
 
-        misc_box = wx.StaticBox(self, -1, "杂项")
+        misc_box = wx.StaticBox(self, -1, "高级设置")
 
-        scroll_duration_lab = wx.StaticText(misc_box, -1, "普通弹幕滚动时长")
-        self.scroll_duration_box = wx.SpinCtrl(misc_box, -1, min = 1, max = 15, initial = 0)
-        scroll_duration_unit_lab = wx.StaticText(misc_box, -1, "s")
+        self.subtitle_obstruct_chk = wx.CheckBox(misc_box, -1, "防遮挡字幕")
 
-        scroll_duration_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        scroll_duration_hbox.Add(self.scroll_duration_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        scroll_duration_hbox.Add(scroll_duration_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        alpha_lab = wx.StaticText(misc_box, -1, "不透明度")
+        self.alpha_slider = wx.Slider(misc_box, -1, value = 80, minValue = 10, maxValue = 100)
+        self.alpha_indicator_lab = wx.StaticText(misc_box, -1, "80%")
 
-        stay_duration_lab = wx.StaticText(misc_box, -1, "顶部/底部弹幕停留时长")
-        self.stay_duration_box = wx.SpinCtrl(misc_box, -1, min = 1, max = 30, initial = 0)
-        stay_duration_unit_lab = wx.StaticText(misc_box, -1, "s")
+        alpha_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        alpha_hbox.Add(alpha_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        alpha_hbox.Add(self.alpha_slider, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM)| wx.EXPAND, self.FromDIP(6))
+        alpha_hbox.Add(self.alpha_indicator_lab, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        stay_duration_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        stay_duration_hbox.Add(self.stay_duration_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        stay_duration_hbox.Add(stay_duration_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_speed_lab = wx.StaticText(misc_box, -1, "弹幕速度")
+        self.danmaku_speed_slider = wx.Slider(misc_box, -1, value = 3, minValue = 1, maxValue = 5)
+        self.danmaku_speed_indicator_lab = wx.StaticText(misc_box, -1, "适中")
 
-        misc_grid_box = wx.FlexGridSizer(2, 2, 0, 0)
-        misc_grid_box.Add(scroll_duration_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        misc_grid_box.Add(scroll_duration_hbox, 0, wx.EXPAND)
-        misc_grid_box.Add(stay_duration_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        misc_grid_box.Add(stay_duration_hbox, 0, wx.EXPAND)
+        danmaku_speed_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        danmaku_speed_hbox.Add(danmaku_speed_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_speed_hbox.Add(self.danmaku_speed_slider, 1, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
+        danmaku_speed_hbox.Add(self.danmaku_speed_indicator_lab, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        danmaku_density_lab = wx.StaticText(misc_box, -1, "弹幕密度")
+        self.danmaku_density_slider = wx.Slider(misc_box, -1, value = 2, minValue = 1, maxValue = 3)
+        self.danmaku_density_indicator_lab = wx.StaticText(misc_box, -1, "较多")
+
+        danmaku_density_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        danmaku_density_hbox.Add(danmaku_density_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        danmaku_density_hbox.Add(self.danmaku_density_slider, 1, wx.ALL & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
+        danmaku_density_hbox.Add(self.danmaku_density_indicator_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        
         misc_sbox = wx.StaticBoxSizer(misc_box, wx.VERTICAL)
-        misc_sbox.Add(misc_grid_box, 0, wx.EXPAND)
+        misc_sbox.Add(self.subtitle_obstruct_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        misc_sbox.Add(alpha_hbox, 0, wx.EXPAND)
+        misc_sbox.Add(danmaku_speed_hbox, 0, wx.EXPAND)
+        misc_sbox.Add(danmaku_density_hbox, 0, wx.EXPAND)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.font_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -59,15 +71,26 @@ class DanmakuPage(Panel):
 
         self.SetSizer(vbox)
 
+    def Bind_EVT(self):
+        self.alpha_slider.Bind(wx.EVT_SLIDER, self.onAlphaSliderEVT)
+        self.danmaku_speed_slider.Bind(wx.EVT_SLIDER, self.onDanmakuSpeedSliderEVT)
+        self.danmaku_density_slider.Bind(wx.EVT_SLIDER, self.onDanmakuDensitySliderEVT)
+
     def init_data(self):
-        danmaku = Config.Temp.ass_style.get("danmaku")
+        danmaku_style = Config.Temp.ass_style.get("danmaku")
 
-        self.font_sbox.init_data(danmaku)
-        self.border_sbox.init_data(danmaku)
+        self.font_sbox.init_data(danmaku_style)
+        self.border_sbox.init_data(danmaku_style)
 
-        self.scroll_duration_box.SetValue(danmaku.get("scroll_duration"))
-        self.stay_duration_box.SetValue(danmaku.get("stay_duration"))
-    
+        self.subtitle_obstruct_chk.SetValue(danmaku_style.get("subtitle_obstruct", False))
+        self.alpha_slider.SetValue(danmaku_style.get("alpha", 80))
+        self.danmaku_speed_slider.SetValue(danmaku_style.get("speed", 3))
+        self.danmaku_density_slider.SetValue(danmaku_style.get("density", 1))
+
+        self.onAlphaSliderEVT(0)
+        self.onDanmakuSpeedSliderEVT(0)
+        self.onDanmakuDensitySliderEVT(0)
+
     def get_option(self):
         font_option = self.font_sbox.get_option()
         border_option = self.border_sbox.get_option()
@@ -75,10 +98,38 @@ class DanmakuPage(Panel):
         return "danmaku", {
             **font_option,
             **border_option,
-            "scroll_duration": self.scroll_duration_box.GetValue(),
-            "stay_duration": self.stay_duration_box.GetValue()
+            "subtitle_obstruct": self.subtitle_obstruct_chk.GetValue(),
+            "alpha": self.alpha_slider.GetValue(),
+            "speed": self.danmaku_speed_slider.GetValue(),
+            "density": self.danmaku_density_slider.GetValue()
         }
 
+    def onAlphaSliderEVT(self, event):
+        self.alpha_indicator_lab.SetLabel(f"{self.alpha_slider.GetValue()}%")
+
+    def onDanmakuSpeedSliderEVT(self, event):
+        match self.danmaku_speed_slider.GetValue():
+            case 1:
+                self.danmaku_speed_indicator_lab.SetLabel("极慢")
+            case 2:
+                self.danmaku_speed_indicator_lab.SetLabel("较慢")
+            case 3:
+                self.danmaku_speed_indicator_lab.SetLabel("适中")
+            case 4:
+                self.danmaku_speed_indicator_lab.SetLabel("较快")
+            case 5:
+                self.danmaku_speed_indicator_lab.SetLabel("极快")
+
+    def onDanmakuDensitySliderEVT(self, event):
+        match self.danmaku_density_slider.GetValue():
+            case 1:
+                self.danmaku_density_indicator_lab.SetLabel("正常")
+            case 2:
+                self.danmaku_density_indicator_lab.SetLabel("较多")
+            case 3:
+                self.danmaku_density_indicator_lab.SetLabel("重叠")
+
+        self.Layout()
 class SubtitlePage(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
