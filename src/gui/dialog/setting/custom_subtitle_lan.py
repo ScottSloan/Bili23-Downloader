@@ -1,11 +1,10 @@
 import wx
-import json
 
 from utils.config import Config
 
-from utils.common.thread import Thread
 from utils.common.enums import SubtitleLanOption
-from utils.common.request import RequestUtils
+
+from utils.common.data.subtitle_lan import subtitle_lan_list
 
 from gui.component.window.dialog import Dialog
 
@@ -46,29 +45,21 @@ class CustomLanDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def init_utils(self):
-        def worker():
-            self.get_lan_list()
+        self.lan_list = {entry["doc_zh"]: entry["lan"] for entry in subtitle_lan_list}
 
-            wx.CallAfter(init_data)
+        match SubtitleLanOption(Config.Basic.subtitle_lan_option):
+            case SubtitleLanOption.All_Subtitles:
+                self.select_all_radio.SetValue(True)
 
-        def init_data():
-            match SubtitleLanOption(Config.Basic.subtitle_lan_option):
-                case SubtitleLanOption.All_Subtitles:
-                    self.select_all_radio.SetValue(True)
+            case SubtitleLanOption.Custom:
+                self.custom_radio.SetValue(True)
 
-                case SubtitleLanOption.Custom:
-                    self.custom_radio.SetValue(True)
+        self.lan_box.Set(list(self.lan_list.keys()))
 
-            self.lan_box.Set(list(self.lan_list.keys()))
+        for lan in Config.Basic.subtitle_lan_custom_type:
+            self.lan_box.Check(list(self.lan_list.values()).index(lan), True)
 
-            for lan in Config.Basic.subtitle_lan_custom_type:
-                self.lan_box.Check(list(self.lan_list.values()).index(lan), True)
-
-            self.onChangeOptionEVT(0)
-
-        self.lan_list = {"中文（AI）":"ai-zh", "英语（AI）": "ai-en"}
-
-        Thread(target = worker).start()
+        self.onChangeOptionEVT(0)
 
     def Bind_EVT(self):
         self.select_all_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeOptionEVT)
@@ -78,14 +69,6 @@ class CustomLanDialog(Dialog):
         enable = self.custom_radio.GetValue()
 
         self.lan_box.Enable(enable)
-
-    def get_lan_list(self):
-        url = "https://i0.hdslb.com/bfs/subtitle/subtitle_lan.json"
-
-        req = RequestUtils.request_get(url)
-        data = json.loads(req.text)
-
-        self.lan_list.update({entry["doc_zh"]: entry["lan"] for entry in data})
 
     def get_selected_lan_list(self):
         return [list(self.lan_list.values())[index] for index in self.lan_box.GetCheckedItems()]

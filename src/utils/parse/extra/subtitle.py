@@ -33,7 +33,7 @@ class SubtitleParser(Parser):
 
             self.generate_subtitle(json_data, language)
 
-        self.task_info.total_file_size = self.total_file_size
+        self.task_info.total_file_size += self.total_file_size
 
     def generate_subtitle(self, json_data: dict, language: str):
         match SubtitleType(self.task_info.extra_option.get("subtitle_file_type")):

@@ -43,7 +43,7 @@ class DanmakuParser(Parser):
                 self.task_info.output_type = "ass"
                 self.generate_ass()
 
-        self.task_info.total_file_size = self.total_file_size
+        self.task_info.total_file_size += self.total_file_size
 
     def generate_xml(self):
         json_data = self.get_all_protobuf_json_data()

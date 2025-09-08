@@ -34,7 +34,7 @@ class Cover:
         return cls.get_cover_raw_contents(url)
             
     @staticmethod
-    def get_cover_type(cover_type: int = Config.Basic.cover_file_type):
+    def get_cover_type(cover_type: int):
         match CoverType(cover_type):
             case CoverType.JPG:
                 return ".jpg"

@@ -5,6 +5,7 @@ from utils.common.enums import StatusCode
 
 from utils.parse.extra.danmaku import DanmakuParser
 from utils.parse.extra.subtitle import SubtitleParser
+from utils.parse.extra.cover import CoverParser
 
 class ExtraParser:
     @staticmethod
@@ -12,15 +13,17 @@ class ExtraParser:
         try:
             if task_info.extra_option.get("download_danmaku_file"):
                 parser = DanmakuParser(task_info)
+                parser.parse()
 
             if task_info.extra_option.get("download_subtitle_file"):
                 parser = SubtitleParser(task_info)
-
-            if parser:
                 parser.parse()
-            else:
-                raise GlobalException(code = StatusCode.DownloadError.value, message = "未指定下载类型", callback = callback.onError)
 
+            if task_info.extra_option.get("download_cover_file"):
+                parser = CoverParser(task_info)
+                parser.parse()
+
+            task_info.total_file_size = parser.total_file_size
             task_info.total_downloaded_size = task_info.total_file_size
             
             callback.onSuccess()
