@@ -23,7 +23,6 @@ class CustomLanDialog(Dialog):
 
     def init_UI(self):
         lan_lab = wx.StaticText(self, -1, "字幕语言下载选项")
-        self.select_all_with_ai_radio = wx.RadioButton(self, -1, "下载包含 AI 字幕在内的全部可用字幕")
         self.select_all_radio = wx.RadioButton(self, -1, "下载全部可用字幕")
         self.custom_radio = wx.RadioButton(self, -1, "手动选择")
 
@@ -39,7 +38,6 @@ class CustomLanDialog(Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(lan_lab, 0, wx.ALL, self.FromDIP(6))
-        vbox.Add(self.select_all_with_ai_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(self.select_all_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(self.custom_radio, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         vbox.Add(self.lan_box, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
@@ -55,14 +53,11 @@ class CustomLanDialog(Dialog):
 
         def init_data():
             match SubtitleLanOption(Config.Basic.subtitle_lan_option):
-                case SubtitleLanOption.All_Subtitles_With_AI:
-                    self.select_all_with_ai_radio.SetValue(True)
-
                 case SubtitleLanOption.All_Subtitles:
                     self.select_all_radio.SetValue(True)
 
                 case SubtitleLanOption.Custom:
-                    self.custom_radio.GetValue(True)
+                    self.custom_radio.SetValue(True)
 
             self.lan_box.Set(list(self.lan_list.keys()))
 
@@ -76,7 +71,6 @@ class CustomLanDialog(Dialog):
         Thread(target = worker).start()
 
     def Bind_EVT(self):
-        self.select_all_with_ai_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeOptionEVT)
         self.select_all_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeOptionEVT)
         self.custom_radio.Bind(wx.EVT_RADIOBUTTON, self.onChangeOptionEVT)
 
@@ -97,10 +91,7 @@ class CustomLanDialog(Dialog):
         return [list(self.lan_list.values())[index] for index in self.lan_box.GetCheckedItems()]
     
     def set_option(self):
-        if self.select_all_with_ai_radio.GetValue():
-            Config.Basic.subtitle_lan_option = SubtitleLanOption.All_Subtitles_With_AI.value
-        
-        elif self.select_all_radio.GetValue():
+        if self.select_all_radio.GetValue():
             Config.Basic.subtitle_lan_option = SubtitleLanOption.All_Subtitles.value
 
         else:

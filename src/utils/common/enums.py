@@ -147,16 +147,8 @@ class ExitOption(Enum):
     AskOnce = 3                   # 询问一次
 
 class SubtitleLanOption(Enum):
-    All_Subtitles_With_AI = 0     # 下载全部字幕 + AI 字幕
-    All_Subtitles = 1             # 下载全部字幕
-    Custom = 2                    # 自定义
-
-class ScopeID(Enum):
-    All = 0                       # 所有类型
-    Video = 1                     # 投稿视频
-    Bangumi = 2                   # 剧集
-    Cheese = 3                    # 课程
-    Default = 4                   # 默认
+    All_Subtitles = 0             # 下载全部字幕
+    Custom = 1                    # 自定义
 
 class QRCodeStatus(Enum):
     Success = 0                   # 成功

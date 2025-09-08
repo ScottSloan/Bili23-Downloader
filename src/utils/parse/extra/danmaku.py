@@ -118,8 +118,6 @@ class DanmakuParser(Parser):
 
         req = self.request_get(url)
 
-        req.raise_for_status()
-
         return BytesIO(req.content)
     
     def get_protobuf_file_name(self, segments: int, index: int):
