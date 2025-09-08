@@ -82,12 +82,6 @@ class Login:
 
     class SMS:
         @staticmethod
-        def get_country_list():
-            url = "https://passport.bilibili.com/x/passport-login/web/country"
-
-            return Login.request_get(url)["data"]["list"]
-
-        @staticmethod
         def send_sms(tel: int, cid: int):
             url = "https://passport.bilibili.com/x/passport-login/web/sms/send"
 

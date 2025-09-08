@@ -7,6 +7,7 @@ from utils.common.thread import Thread
 from utils.common.enums import QRCodeStatus
 from utils.common.exception import show_error_message_dialog
 from utils.common.data.exclimbwuzhi import ex_data
+from utils.common.data.country import country_list
 
 from utils.auth.cookie import Utils
 from utils.auth.login_v2 import Login, LoginInfo
@@ -200,9 +201,7 @@ class SMSPanel(Panel):
     def init_utils(self):
         self.countdown = 60
 
-        country_data = Login.SMS.get_country_list()
-
-        wx.CallAfter(self.set_country_list, country_data)
+        wx.CallAfter(self.set_country_list, country_list)
 
     def onGetValidateCodeEVT(self, event):
         def worker():
@@ -367,8 +366,8 @@ class LoginDialog(Dialog):
 
     def init_utils(self):
         def worker():
-            self.qrcode_panel.init_utils()
             self.sms_panel.init_utils()
+            self.qrcode_panel.init_utils()
 
             Utils.exclimbwuzhi(ex_data[2])
             Utils.exclimbwuzhi(ex_data[3])
