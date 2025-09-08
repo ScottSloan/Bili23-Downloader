@@ -20,7 +20,6 @@ from utils.parse.preview import VideoPreview
 from utils.parse.download import DownloadParser
 
 from utils.module.pic.cover import Cover
-from utils.module.danmaku.danmaku import Danmaku
 
 from utils.auth.wbi import WbiUtils
 
@@ -82,10 +81,10 @@ class ExtraParser:
 
             resolution = ExtraParser.Utils.get_video_resolution(task_info)
 
-            danmaku = Danmaku(resolution)
+            #danmaku = Danmaku(resolution)
 
-            dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
-            style = danmaku.get_ass_style()
+            #dialogue_list = danmaku.get_dialogue_list(protobuf_dict)
+            #style = danmaku.get_ass_style()
 
             #contents = ASS.make(dialogue_list, style, resolution)
 

@@ -258,7 +258,7 @@ class Utils:
             if DownloadStatus(task_info.status) == DownloadStatus.Complete:
                 temp_completed_list.append(task_info)
             else:
-                if DownloadStatus(task_info.status) in [DownloadStatus.Downloading, DownloadStatus.Waiting, DownloadStatus.Merging, DownloadStatus.Generating]:
+                if DownloadStatus(task_info.status) in [DownloadStatus.Downloading, DownloadStatus.Waiting, DownloadStatus.Merging]:
                     task_info.status = DownloadStatus.Pause.value
 
                 temp_downloading_list.append(task_info)

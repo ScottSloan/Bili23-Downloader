@@ -154,8 +154,10 @@ class Config:
                 "strikeout": 0,
                 "border": 2.0,
                 "shadow": 0.0,
-                "scroll_duration": 10,
-                "stay_duration": 5
+                "subtitle_obstruct": False,
+                "alpha": 80,
+                "speed": 3,
+                "density": 2
             },
             "subtitle": {
                 "font_name": "default",

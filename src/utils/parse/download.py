@@ -191,5 +191,5 @@ class DownloadParser(Parser):
 
             task_info.cid = info.get("cid")
 
-            task_info.up_name = info["owner"]["name"]
-            task_info.up_uid = info["owner"]["mid"]
+            task_info.up_name = info.get("up_name")
+            task_info.up_uid = info.get("up_mid")

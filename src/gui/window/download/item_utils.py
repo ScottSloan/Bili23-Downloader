@@ -29,14 +29,15 @@ class Utils:
         def show_cover(self, cover_url: str):
             def worker():
                 self.parent.cover_bmp.SetBitmap(bitmap)
-            
-            size = self.parent.cover_bmp.GetSize()
 
-            image = Cover.crop_cover(Cover.get_cover_raw_contents(cover_url))
+            if not self.parent.panel_destroy:
+                size = self.parent.cover_bmp.GetSize()
 
-            bitmap = Cover.get_scaled_bitmap_from_image(image, size)
+                image = Cover.crop_cover(Cover.get_cover_raw_contents(cover_url))
 
-            wx.CallAfter(worker)
+                bitmap = Cover.get_scaled_bitmap_from_image(image, size)
+
+                wx.CallAfter(worker)
 
         def set_title(self, title: str):
             self.parent.title_lab.SetLabel(title)
@@ -167,15 +168,13 @@ class Utils:
         wx.CallAfter(worker)
 
     def start_download(self):
+        self.set_download_status(DownloadStatus.Downloading)
+
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                self.set_download_status(DownloadStatus.Downloading)
-
                 Thread(target = self.start_video_download_thread).start()
 
             case ParseType.Extra:
-                self.set_download_status(DownloadStatus.Generating)
-
                 Thread(target = self.start_extra_download_thread).start()
 
     def start_video_download_thread(self):
@@ -270,7 +269,8 @@ class Utils:
         def worker():
             self.move_panel()
 
-        self.set_download_status(DownloadStatus.Complete)
+        self.task_info.status = DownloadStatus.Complete.value
+        self.task_info.update()
 
         wx.CallAfter(worker)
 
@@ -282,9 +282,9 @@ class Utils:
     def onDownloadExtraSuccess(self):
         self.task_info.progress = 100
 
-        self.task_info.update()
-
         self.onMergeSuccess()
+        
+        self.parent.download_window.start_next_task()
 
     def clear_temp_files(self):
         match ParseType(self.task_info.download_type):
@@ -316,10 +316,6 @@ class Utils:
             case DownloadStatus.Downloading:
                 self.ui.set_pause_btn(IconID.Pause, "暂停下载")
                 self.ui.set_speed_label("正在获取下载链接...")
-
-            case DownloadStatus.Generating:
-                self.ui.set_pause_btn(IconID.Pause, "", False)
-                self.ui.set_speed_label("正在生成中...")
 
             case DownloadStatus.Pause:
                 self.ui.set_pause_btn(IconID.Play, "继续下载")

@@ -60,7 +60,6 @@ class StreamType(Enum):
 class DownloadStatus(Enum):
     Waiting = 0                   # 等待下载
     Downloading = 1               # 下载中
-    Generating = 10               # 生成中
     Pause = 2                     # 暂停中
     Merging = 3                   # 合成中
     Complete = 4                  # 下载完成

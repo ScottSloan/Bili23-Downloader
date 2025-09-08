@@ -46,6 +46,7 @@ audio_quality_sort_map = {
 audio_file_type_map = {
     30251: "flac",
     30250: "ec3",
+    30255: "ec3",
     30280: "m4a",
     30232: "m4a",
     30216: "m4a"
