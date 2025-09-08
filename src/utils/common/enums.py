@@ -52,6 +52,10 @@ class CoverType(Enum):
     WEBP = 2                      # Webp 格式
     AVIF = 3                      # avif 格式
 
+class MetadataType(Enum):
+    NFO = 0                       # NFO 格式
+    JSON = 1                      # JSON 格式
+
 class StreamType(Enum):
     Dash = "DASH"                 # dash 流
     Flv = "FLV"                   # flv 流
@@ -177,5 +181,5 @@ class TemplateType(Enum):
     Video_Interact = 4            # 互动视频
     Bangumi = 5                   # 剧集
     Cheese = 6                    # 课程
-    Space = 7
-    Favlist = 8
+    Space = 7                     # 个人主页
+    Favlist = 8                   # 收藏夹

@@ -98,6 +98,11 @@ cover_format_map = {
     "avif": 3
 }
 
+metadata_format_map = {
+    "nfo": 0,
+    "json": 1,
+}
+
 cheese_status_map = {
     1: "全集试看",
     2: "付费",

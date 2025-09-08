@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 
-from utils.common.map import danmaku_format_map, subtitle_format_map, cover_format_map
+from utils.common.map import danmaku_format_map, subtitle_format_map, cover_format_map, metadata_format_map
 
 from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
 from gui.dialog.setting.custom_ass_style import CustomASSStyleDialog
@@ -70,6 +70,15 @@ class ExtraStaticBox(Panel):
         cover_hbox.Add(self.cover_file_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         cover_hbox.Add(self.cover_file_type_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
+        self.download_metadata_file_chk = wx.CheckBox(extra_box, -1, "下载视频元数据")
+        self.metadata_file_type_lab = wx.StaticText(extra_box, -1, "元数据文件格式")
+        self.metadata_file_type_choice = wx.Choice(extra_box, -1, choices = list(metadata_format_map.keys()))
+
+        metadata_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        metadata_hbox.AddSpacer(self.FromDIP(20))
+        metadata_hbox.Add(self.metadata_file_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        metadata_hbox.Add(self.metadata_file_type_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+
         self.custom_ass_style_btn = wx.Button(extra_box, -1, "自定义 ASS 样式", size = self.get_scaled_size((120, 28)))
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
@@ -80,6 +89,8 @@ class ExtraStaticBox(Panel):
         extra_sbox.Add(subtitle_grid_box, 0, wx.EXPAND)
         extra_sbox.Add(self.download_cover_file_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         extra_sbox.Add(cover_hbox, 0, wx.EXPAND)
+        extra_sbox.Add(self.download_metadata_file_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        extra_sbox.Add(metadata_hbox, 0, wx.EXPAND)
         extra_sbox.Add(self.custom_ass_style_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.AddStretchSpacer()
 
@@ -89,6 +100,7 @@ class ExtraStaticBox(Panel):
         self.download_danmaku_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadDanmakuEVT)
         self.download_subtitle_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadSubtitleEVT)
         self.download_cover_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadCoverEVT)
+        self.download_metadata_file_chk.Bind(wx.EVT_CHECKBOX, self.onCheckDownloadMetadataEVT)
 
         self.subtitle_file_lan_type_btn.Bind(wx.EVT_BUTTON, self.onCustomSubtitleLanEVT)
 
@@ -103,11 +115,14 @@ class ExtraStaticBox(Panel):
         self.subtitle_file_type_choice.Select(Config.Basic.subtitle_file_type)
         self.download_cover_file_chk.SetValue(Config.Basic.download_cover_file)
         self.cover_file_type_choice.Select(Config.Basic.cover_file_type)
+        self.download_metadata_file_chk.SetValue(Config.Basic.download_metadata_file)
+        self.metadata_file_type_choice.Select(Config.Basic.metadata_file_type)
 
         self.onCheckDownloadDanmakuEVT(0)
         self.onCheckDownloadSubtitleEVT(0)
         self.onCheckDownloadCoverEVT(0)
-    
+        self.onCheckDownloadMetadataEVT(0)
+
     def save(self):
         Config.Basic.ass_style = Config.Temp.ass_style.copy()
 
@@ -117,6 +132,8 @@ class ExtraStaticBox(Panel):
         Config.Basic.subtitle_file_type = self.subtitle_file_type_choice.GetSelection()
         Config.Basic.download_cover_file = self.download_cover_file_chk.GetValue()
         Config.Basic.cover_file_type = self.cover_file_type_choice.GetSelection()
+        Config.Basic.download_metadata_file = self.download_metadata_file_chk.GetValue()
+        Config.Basic.metadata_file_type = self.metadata_file_type_choice.GetSelection()
 
     def onCheckDownloadDanmakuEVT(self, event):
         enable = self.download_danmaku_file_chk.GetValue()
@@ -137,6 +154,12 @@ class ExtraStaticBox(Panel):
 
         self.cover_file_type_lab.Enable(enable)
         self.cover_file_type_choice.Enable(enable)
+
+    def onCheckDownloadMetadataEVT(self, event):
+        enable = self.download_metadata_file_chk.GetValue()
+
+        self.metadata_file_type_lab.Enable(enable)
+        self.metadata_file_type_choice.Enable(enable)
 
     def onCustomSubtitleLanEVT(self, event):
         dlg = CustomLanDialog(self.GetParent())

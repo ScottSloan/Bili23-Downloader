@@ -22,6 +22,8 @@ app_config_group = {
         "subtitle_lan_custom_type",
         "download_cover_file",
         "cover_file_type",
+        "download_metadata_file",
+        "metadata_file_type",
         "window_pos",
         "window_size",
         "window_maximized",
@@ -143,6 +145,8 @@ class Config:
         subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
         cover_file_type: int = 0
+        download_metadata_file: bool = False
+        metadata_file_type: int = 0
 
         ass_style: Dict[str, Dict] = {
             "danmaku": {

@@ -129,7 +129,6 @@ class DanmakuPage(Panel):
             case 3:
                 self.danmaku_density_indicator_lab.SetLabel("重叠")
 
-        self.Layout()
 class SubtitlePage(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)

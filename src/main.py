@@ -22,7 +22,7 @@ except ImportError as e:
         message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
     else:
         raise e
-    
+
 except Exception as e:
     message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error")
 
