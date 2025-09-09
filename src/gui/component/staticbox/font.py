@@ -13,7 +13,7 @@ class FontStaticBox(Panel):
     def init_UI(self):
         font_box = wx.StaticBox(self, -1, "字体")
 
-        self.font_name_choice = wx.Choice(font_box, -1, choices = SysFont.sys_font_list)
+        self.font_name_choice = wx.ComboBox(font_box, -1, choices = SysFont.sys_font_list)
 
         self.font_size_box = wx.SpinCtrl(font_box, -1, min = 1, max = 100, initial = 0)
         font_size_unit_lab = wx.StaticText(font_box, -1, "pt")
@@ -43,17 +43,17 @@ class FontStaticBox(Panel):
     def init_data(self, data: dict):
         self.font_name_choice.SetStringSelection(data.get("font_name"))
         self.font_size_box.SetValue(data.get("font_size"))
-        self.bold_chk.SetValue(data.get("bold"))
-        self.italic_chk.SetValue(data.get("italic"))
-        self.underline_chk.SetValue(data.get("underline"))
-        self.strikeout_chk.SetValue(data.get("strikeout"))
+        self.bold_chk.SetValue(abs(data.get("bold")))
+        self.italic_chk.SetValue(abs(data.get("italic")))
+        self.underline_chk.SetValue(abs(data.get("underline")))
+        self.strikeout_chk.SetValue(abs(data.get("strikeout")))
 
     def get_option(self):
         return {
             "font_name": self.font_name_choice.GetStringSelection(),
             "font_size": self.font_size_box.GetValue(),
-            "bold": int(self.bold_chk.GetValue()),
-            "italic": int(self.italic_chk.GetValue()),
-            "underline": int(self.underline_chk.GetValue()),
-            "strikeout": int(self.strikeout_chk.GetValue())
+            "bold": -int(self.bold_chk.GetValue()),
+            "italic": -int(self.italic_chk.GetValue()),
+            "underline": -int(self.underline_chk.GetValue()),
+            "strikeout": -int(self.strikeout_chk.GetValue())
         }

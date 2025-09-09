@@ -12,7 +12,8 @@ from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
 
 class ExtraStaticBox(Panel):
-    def __init__(self, parent, is_setting_page: bool):
+    def __init__(self, parent: wx.Window, parent_window: wx.Window, is_setting_page: bool):
+        self.parent_window = parent_window
         self.is_setting_page = is_setting_page
 
         Panel.__init__(self, parent)
@@ -168,5 +169,5 @@ class ExtraStaticBox(Panel):
             dlg.set_option()
 
     def onCustomASSStyleEVT(self, event):
-        dlg = CustomASSStyleDialog(self.GetParent())
+        dlg = CustomASSStyleDialog(self.parent_window)
         dlg.ShowModal()

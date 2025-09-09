@@ -124,7 +124,7 @@ class Config:
 
         task_file_min_version_code: int = 166000
         live_file_min_version_code: int = 165000
-        app_config_file_min_version_code: int = 166000
+        app_config_file_min_version_code: int = 167000
         user_config_file_min_version_code: int = 166000
 
         app_config_path: str = ""
@@ -172,9 +172,9 @@ class Config:
                 "strikeout": 0,
                 "border": 2.0,
                 "shadow": 2.0,
-                "primary_color": "&H00FFFFFF",
-                "border_color": "&H00000000",
-                "shadow_color": "&H00000000",
+                "primary_color": "&H00FFFFFF&",
+                "border_color": "&H00000000&",
+                "shadow_color": "&H00000000&",
                 "marginL": 10,
                 "marginR": 10,
                 "marginV": 10,

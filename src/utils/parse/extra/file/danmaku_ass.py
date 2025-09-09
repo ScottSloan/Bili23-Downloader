@@ -17,11 +17,22 @@ class Json2ASS:
 
         self.font_size = danmaku_style.get("font_size")
 
+        self.subtitle_obstruct = danmaku_style.get("subtitle_obstruct")
+        self.alpha = danmaku_style.get("alpha", 80)
+
         self.scroll_duration = 2 * danmaku_style.get("speed", 3) + 2
         self.stay_duration = 1.5 * danmaku_style.get("speed", 3) + 0.5
         self.density = 1 - 0.5 * danmaku_style.get("density", 1)
 
-        rows = {i + 1: None for i in range(int(self.video_height / self.font_size))}
+        self.init_data_table()
+
+    def init_data_table(self):
+        if self.subtitle_obstruct:
+            row_count = math.floor(0.85 * (self.video_height / self.font_size))
+        else:
+            row_count = math.floor(self.video_height / self.font_size)
+
+        rows = {i + 1: None for i in range(row_count)}
 
         self.data: Dict[int, Dict[int, Union[None, CommentData]]] = {i + 1: rows.copy() for i in range(3)}
 
@@ -80,7 +91,7 @@ class Json2ASS:
                     style = f"\\an2\\pos({left}, {top})"
 
             if color and color != 16777215:
-                style += f"\\c{Color.convert_to_ass_color(hex(color)[2:])}"
+                style += f"\\c{Color.convert_to_ass_style_color(Color.dec_to_hex(color), Color.dec_to_hex(self.alpha))}"
 
             return (
                 FormatUtils.format_ass_timestamp(start_time),

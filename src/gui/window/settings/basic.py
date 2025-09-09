@@ -40,7 +40,7 @@ class BasicPage(Page):
         basic_sbox.Add(self.remember_window_status_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         basic_sbox.Add(self.always_on_top_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        self.extra_box = ExtraStaticBox(self.panel, is_setting_page = True)
+        self.extra_box = ExtraStaticBox(self.panel, self.parent, is_setting_page = True)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(basic_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))

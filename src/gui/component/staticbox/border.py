@@ -17,11 +17,14 @@ class BorderStaticBox(Panel):
         self.border_box.SetToolTip("边框宽度")
         self.shadow_box = LabelSpinCtrl(border_box, "阴影", 2.0, "px", wx.HORIZONTAL, float = True)
         self.shadow_box.SetToolTip("阴影距离")
+        self.non_alpha_chk = wx.CheckBox(border_box, -1, "不透明背景")
+        self.non_alpha_chk.SetToolTip("文字背景不透明")
 
         border_sbox = wx.StaticBoxSizer(border_box, wx.HORIZONTAL)
-        border_sbox.Add(self.border_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        border_sbox.Add(self.border_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
         border_sbox.AddSpacer(self.FromDIP(10))
-        border_sbox.Add(self.shadow_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        border_sbox.Add(self.shadow_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        border_sbox.Add(self.non_alpha_chk, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.SetSizer(border_sbox)
 

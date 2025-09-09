@@ -1,10 +1,11 @@
 import wx
 
 from gui.component.panel.panel import Panel
+from gui.component.spinctrl.spinctrl import SpinCtrl
 
 class LabelSpinCtrl(Panel):
-    def __init__(self, parent, label: str, value: int | float, unit: str, orient: int = wx.HORIZONTAL, float: int = False):
-        self.label, self.value, self.unit, self.float = label, value, unit, float
+    def __init__(self, parent, label: str, value: int | float, unit: str, orient: int = wx.HORIZONTAL, float: int = False, max: int = 100, min: int = 0):
+        self.label, self.value, self.unit, self.float, self.max, self.min = label, value, unit, float, max, min
 
         Panel.__init__(self, parent)
 
@@ -23,11 +24,11 @@ class LabelSpinCtrl(Panel):
         lab_hbox.Add(label, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         lab_hbox.AddStretchSpacer()
 
-        self.spinctrl = wx.SpinCtrl(self, -1, min = 0, max = 100, initial = self.value)
+        self.spinctrl = self.get_spinctrl()
         unit_lab = wx.StaticText(self, -1, self.unit)
 
         spin_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        spin_hbox.Add(self.spinctrl, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        spin_hbox.Add(self.spinctrl, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         spin_hbox.Add(unit_lab, 0, wx.ALL & (~wx.LEFT) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -38,12 +39,12 @@ class LabelSpinCtrl(Panel):
 
     def init_horizontal_UI(self):
         label = wx.StaticText(self, -1, self.label)
-        self.spinctrl = wx.SpinCtrlDouble(self, -1, min = 0.0, max = 100.0, initial = self.value, inc = 0.1)
+        self.spinctrl = self.get_spinctrl()
         unit_lab = wx.StaticText(self, -1, self.unit)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(label, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        hbox.Add(self.spinctrl, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        hbox.Add(self.spinctrl, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         hbox.Add(unit_lab, 0, wx.ALL & (~wx.LEFT) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.SetSizer(hbox)
@@ -56,3 +57,13 @@ class LabelSpinCtrl(Panel):
     
     def SetToolTip(self, tip: str):
         self.spinctrl.SetToolTip(tip)
+
+    def get_spinctrl(self):
+        if self.float:
+            spinctrl = wx.SpinCtrlDouble(self, -1, value = str(self.value), min = self.min, max = self.max, inc = 0.1)
+            spinctrl.SetDigits(1)
+        
+        else:
+            spinctrl = SpinCtrl(self, self.value, self.max, self.min)
+
+        return spinctrl

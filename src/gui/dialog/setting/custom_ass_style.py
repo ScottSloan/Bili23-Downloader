@@ -11,6 +11,7 @@ from gui.component.misc.ass_color_picker import ASSColorPicker
 from gui.component.misc.label_spinctrl import LabelSpinCtrl
 from gui.component.staticbox.font import FontStaticBox
 from gui.component.staticbox.border import BorderStaticBox
+from gui.component.staticbox.misc_style import MiscStyleStaticBox
 
 class DanmakuPage(Panel):
     def __init__(self, parent):
@@ -26,6 +27,8 @@ class DanmakuPage(Panel):
         self.font_sbox = FontStaticBox(self)
 
         self.border_sbox = BorderStaticBox(self)
+
+        self.misc_sbox = MiscStyleStaticBox(self)
 
         misc_box = wx.StaticBox(self, -1, "高级设置")
 
@@ -67,6 +70,7 @@ class DanmakuPage(Panel):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.font_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(self.border_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(self.misc_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(misc_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
 
         self.SetSizer(vbox)
