@@ -1,10 +1,10 @@
 import wx
+from wx.lib.intctrl import IntCtrl
 
 from utils.config import Config
 from utils.common.map import webpage_option_map
 
 from gui.component.misc.tooltip import ToolTip
-from gui.component.text_ctrl.int_ctrl import IntCtrl
 
 from gui.window.settings.page import Page
 from gui.dialog.setting.custom_cdn_host import CustomCDNDialog
@@ -12,7 +12,7 @@ from gui.dialog.setting.custom_user_agent import CustomUADialog
 
 class AdvancedPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "高级")
+        Page.__init__(self, parent, "高级", 2)
 
         self.init_UI()
 
@@ -84,7 +84,8 @@ class AdvancedPage(Page):
         webpage_hbox.Add(webpage_tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         ws_port_lab = wx.StaticText(webpage_box, -1, "Websocket 端口")
-        self.ws_port_box = IntCtrl(webpage_box, size = self.get_scaled_size((70, -1)))
+        self.ws_port_box = IntCtrl(webpage_box, size = self.get_scaled_size((70, -1)), max = 65535, min = 1)
+        self.ws_port_box.SetLimited(True)
 
         ws_port_hbox = wx.BoxSizer(wx.HORIZONTAL)
         ws_port_hbox.Add(ws_port_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -124,7 +125,7 @@ class AdvancedPage(Page):
         Config.Temp.user_agent = Config.Advanced.user_agent
 
         self.webpage_option_choice.SetSelection(Config.Advanced.webpage_option)
-        self.ws_port_box.SetValue(str(Config.Advanced.websocket_port))
+        self.ws_port_box.SetValue(Config.Advanced.websocket_port)
 
         self.onEnableSwitchCDNEVT(0)
         self.onChangeRetryEVT(0)
@@ -145,9 +146,9 @@ class AdvancedPage(Page):
         Config.Advanced.websocket_port = int(self.ws_port_box.GetValue())
 
     def onValidate(self):
-        if not self.ws_port_box.GetValue().isnumeric():
-            return self.warn("Websocket 端口无效")
-        
+        if (value := self.ws_port_box.GetValue()) and value not in range(1, 65536):
+            return self.warn(f"Websocket 端口无效：{value}")
+
         self.save_data()
     
     def onEnableSwitchCDNEVT(self, event: wx.CommandEvent):

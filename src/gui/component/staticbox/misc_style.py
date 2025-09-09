@@ -1,7 +1,7 @@
 import wx
 
 from gui.component.panel.panel import Panel
-from gui.component.misc.label_spinctrl import LabelSpinCtrl
+from gui.component.spinctrl.label_spinctrl import LabelSpinCtrl
 
 class MiscStyleStaticBox(Panel):
     def __init__(self, parent: wx.Window):
@@ -36,9 +36,13 @@ class MiscStyleStaticBox(Panel):
     def init_data(self, data: dict):
         self.scale_x_box.SetValue(data.get("scale_x"))
         self.scale_y_box.SetValue(data.get("scale_y"))
+        self.angle_box.SetValue(data.get("angle"))
+        self.spacing_box.SetValue(data.get("spacing"))
 
     def get_option(self):
         return {
             "scale_x": self.scale_x_box.GetValue(),
-            "scale_y": self.scale_y_box.GetValue()
+            "scale_y": self.scale_y_box.GetValue(),
+            "angle": self.angle_box.GetValue(),
+            "spacing": self.spacing_box.GetValue()
         }

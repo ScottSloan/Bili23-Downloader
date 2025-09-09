@@ -2,7 +2,7 @@ import wx
 
 from gui.component.panel.panel import Panel
 
-from gui.component.misc.label_spinctrl import LabelSpinCtrl
+from gui.component.spinctrl.label_spinctrl import LabelSpinCtrl
 
 class BorderStaticBox(Panel):
     def __init__(self, parent):
@@ -20,20 +20,25 @@ class BorderStaticBox(Panel):
         self.non_alpha_chk = wx.CheckBox(border_box, -1, "不透明背景")
         self.non_alpha_chk.SetToolTip("文字背景不透明")
 
-        border_sbox = wx.StaticBoxSizer(border_box, wx.HORIZONTAL)
-        border_sbox.Add(self.border_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        border_sbox.AddSpacer(self.FromDIP(10))
-        border_sbox.Add(self.shadow_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        border_sbox.Add(self.non_alpha_chk, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        vbox = wx.BoxSizer(wx.HORIZONTAL)
+        vbox.Add(self.border_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        vbox.AddSpacer(self.FromDIP(10))
+        vbox.Add(self.shadow_box, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        border_sbox = wx.StaticBoxSizer(border_box, wx.VERTICAL)
+        border_sbox.Add(vbox, 0, wx.EXPAND)
+        border_sbox.Add(self.non_alpha_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
         self.SetSizer(border_sbox)
 
     def init_data(self, data: dict):
         self.border_box.SetValue(data.get("border"))
         self.shadow_box.SetValue(data.get("shadow"))
+        self.non_alpha_chk.SetValue(data.get("non_alpha", False))
 
     def get_option(self):
         return {
             "border": self.border_box.GetValue(),
-            "shadow": self.shadow_box.GetValue()
+            "shadow": self.shadow_box.GetValue(),
+            "non_alpha": self.non_alpha_chk.GetValue()
         }

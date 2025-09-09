@@ -8,7 +8,7 @@ from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
 from gui.component.misc.ass_color_picker import ASSColorPicker
-from gui.component.misc.label_spinctrl import LabelSpinCtrl
+from gui.component.spinctrl.label_spinctrl import LabelSpinCtrl
 from gui.component.staticbox.font import FontStaticBox
 from gui.component.staticbox.border import BorderStaticBox
 from gui.component.staticbox.misc_style import MiscStyleStaticBox
@@ -85,6 +85,7 @@ class DanmakuPage(Panel):
 
         self.font_sbox.init_data(danmaku_style)
         self.border_sbox.init_data(danmaku_style)
+        self.misc_sbox.init_data(danmaku_style)
 
         self.subtitle_obstruct_chk.SetValue(danmaku_style.get("subtitle_obstruct", False))
         self.alpha_slider.SetValue(danmaku_style.get("alpha", 80))
@@ -98,10 +99,12 @@ class DanmakuPage(Panel):
     def get_option(self):
         font_option = self.font_sbox.get_option()
         border_option = self.border_sbox.get_option()
+        misc_option = self.misc_sbox.get_option()
 
         return "danmaku", {
             **font_option,
             **border_option,
+            **misc_option,
             "subtitle_obstruct": self.subtitle_obstruct_chk.GetValue(),
             "alpha": self.alpha_slider.GetValue(),
             "speed": self.danmaku_speed_slider.GetValue(),
@@ -157,6 +160,8 @@ class SubtitlePage(Panel):
         color_sbox.Add(self.border_color_picker, 0, wx.EXPAND)
         color_sbox.Add(self.shadow_color_picker, 0, wx.EXPAND)
 
+        self.misc_sbox = MiscStyleStaticBox(self)
+
         margin_box = wx.StaticBox(self, -1, "边距")
 
         self.left_margin_box = LabelSpinCtrl(self, "左边距", 10, "px", wx.VERTICAL)
@@ -182,6 +187,7 @@ class SubtitlePage(Panel):
         vbox.Add(self.font_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
         vbox.Add(self.border_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(color_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(self.misc_sbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
         vbox.Add(hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
@@ -191,6 +197,7 @@ class SubtitlePage(Panel):
 
         self.font_sbox.init_data(subtitle)
         self.border_sbox.init_data(subtitle)
+        self.misc_sbox.init_data(subtitle)
 
         self.primary_color_picker.SetColour(subtitle.get("primary_color"))
         self.border_color_picker.SetColour(subtitle.get("border_color"))
@@ -209,10 +216,12 @@ class SubtitlePage(Panel):
 
         font_option = self.font_sbox.get_option()
         border_option = self.border_sbox.get_option()
+        misc_option = self.misc_sbox.get_option()
 
         return "subtitle", {
             **font_option,
             **border_option,
+            **misc_option,
             "primary_color": get_ass_style_color(self.primary_color_picker),
             "border_color": get_ass_style_color(self.border_color_picker),
             "shadow_color": get_ass_style_color(self.shadow_color_picker),

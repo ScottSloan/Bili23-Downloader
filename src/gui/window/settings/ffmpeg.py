@@ -11,7 +11,7 @@ from gui.component.misc.tooltip import ToolTip
 
 class FFmpegPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "FFmpeg")
+        Page.__init__(self, parent, "FFmpeg", 3)
 
         self.init_UI()
 

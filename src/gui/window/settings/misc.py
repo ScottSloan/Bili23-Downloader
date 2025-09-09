@@ -12,7 +12,7 @@ from gui.window.settings.page import Page
 
 class MiscPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "其他")
+        Page.__init__(self, parent, "其他", 5)
 
         self.init_UI()
 

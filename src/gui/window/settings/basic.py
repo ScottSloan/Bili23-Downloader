@@ -10,7 +10,7 @@ from gui.component.staticbox.extra import ExtraStaticBox
 
 class BasicPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "基本")
+        Page.__init__(self, parent, "基本", 0)
 
         self.init_UI()
 

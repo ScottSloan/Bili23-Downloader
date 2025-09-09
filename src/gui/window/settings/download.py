@@ -14,7 +14,7 @@ from gui.component.choice.choice import Choice
 
 class DownloadPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "下载")
+        Page.__init__(self, parent, "下载", 1)
 
         self.init_UI()
 

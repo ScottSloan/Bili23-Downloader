@@ -1,7 +1,6 @@
 import wx
 
 from gui.component.panel.panel import Panel
-from gui.component.spinctrl.spinctrl import SpinCtrl
 
 class LabelSpinCtrl(Panel):
     def __init__(self, parent, label: str, value: int | float, unit: str, orient: int = wx.HORIZONTAL, float: int = False, max: int = 100, min: int = 0):
@@ -64,6 +63,6 @@ class LabelSpinCtrl(Panel):
             spinctrl.SetDigits(1)
         
         else:
-            spinctrl = SpinCtrl(self, self.value, self.max, self.min)
+            spinctrl = wx.SpinCtrl(self, -1, str(self.value), min = self.min, max = self.max)
 
         return spinctrl
