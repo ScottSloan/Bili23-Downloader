@@ -20,9 +20,9 @@ class RequireVideoResolutionDialog(Dialog):
         tip_lab = wx.StaticText(self, -1, "单独下载 .ass 格式弹幕或字幕时，请手动确认视频分辨率。\n若分辨率设置与实际视频不符，可能导致文字位置偏移或显示大小异常。")
         resolution_box = wx.StaticText(self, -1, "视频分辨率（长度 x 宽度）：")
 
-        self.video_width_box = wx.TextCtrl(self, -1, str(Config.Temp.video_width), size = self.FromDIP((60, 24)))
+        self.video_width_box = wx.TextCtrl(self, -1, str(Config.Temp.video_width), size = self.FromDIP((60, -1)))
         self.x_lab = wx.StaticText(self, -1, "x")
-        self.video_height_box = wx.TextCtrl(self, -1, str(Config.Temp.video_height), size = self.FromDIP((60, 24)))
+        self.video_height_box = wx.TextCtrl(self, -1, str(Config.Temp.video_height), size = self.FromDIP((60, -1)))
 
         resolution_hbox = wx.BoxSizer(wx.HORIZONTAL)
         resolution_hbox.Add(self.video_width_box, 0, wx.ALL, self.FromDIP(6))

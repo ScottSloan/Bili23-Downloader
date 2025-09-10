@@ -1,5 +1,6 @@
 import wx
 import time
+from wx.lib.intctrl import IntCtrl
 from requests.auth import HTTPProxyAuth
 
 from utils.config import Config
@@ -37,7 +38,8 @@ class ProxyPage(Page):
         ip_lab = wx.StaticText(proxy_box, -1, "地址")
         self.ip_box = wx.TextCtrl(proxy_box, -1)
         port_lab = wx.StaticText(proxy_box, -1, "端口")
-        self.port_box = wx.TextCtrl(proxy_box, -1)
+        self.port_box = IntCtrl(proxy_box, -1, size = self.FromDIP((80, -1)), min = 1, max = 65535)
+        self.port_box.SetLimited(True)
 
         self.auth_chk = wx.CheckBox(proxy_box, -1, "启用代理身份验证")
 
@@ -50,7 +52,7 @@ class ProxyPage(Page):
         flex_sizer.Add(ip_lab, pos = (0, 0), flag =  wx.ALL | wx.ALIGN_CENTER, border = self.FromDIP(6))
         flex_sizer.Add(self.ip_box, pos = (0, 1), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
         flex_sizer.Add(port_lab, pos = (1, 0), flag = wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, border = self.FromDIP(6))
-        flex_sizer.Add(self.port_box, pos = (1, 1), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
+        flex_sizer.Add(self.port_box, pos = (1, 1), flag = wx.ALL & (~wx.TOP) & (~wx.LEFT), border = self.FromDIP(6))
         flex_sizer.Add(self.auth_chk, pos = (2, 0), span = (1, 2), flag = wx.ALL, border = self.FromDIP(6))
         flex_sizer.Add(uname_lab, pos = (3, 0), flag = wx.ALL | wx.ALIGN_CENTER, border = self.FromDIP(6))
         flex_sizer.Add(self.uname_box, pos = (3, 1), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND, border = self.FromDIP(6))
@@ -96,7 +98,7 @@ class ProxyPage(Page):
                 self.proxy_custom_radio.SetValue(True)
 
         self.ip_box.SetValue(Config.Proxy.proxy_ip)
-        self.port_box.SetValue(str(Config.Proxy.proxy_port) if Config.Proxy.proxy_port is not None else "")
+        self.port_box.SetValue(Config.Proxy.proxy_port)
     
         self.auth_chk.SetValue(Config.Proxy.enable_auth)
         self.uname_box.SetValue(Config.Proxy.auth_username)
@@ -117,15 +119,15 @@ class ProxyPage(Page):
 
         Config.Proxy.proxy_mode = proxy
         Config.Proxy.proxy_ip = self.ip_box.GetValue()
-        Config.Proxy.proxy_port = int(self.port_box.GetValue()) if self.port_box.GetValue() != "" else None
+        Config.Proxy.proxy_port = self.port_box.GetValue()
         Config.Proxy.enable_auth = self.auth_chk.GetValue()
         Config.Proxy.auth_username = self.uname_box.GetValue()
         Config.Proxy.auth_password = self.passwd_box.GetValue()
 
     def onValidate(self):
-        if not self.port_box.GetValue().isnumeric() and self.proxy_custom_radio.GetValue():
-            return self.warn("端口无效")
-        
+        if self.port_box.GetValue() not in range(1, 65536):
+            return self.warn("端口无效，请输入 1 到 65535 之间的整数")
+
         self.save_data()
 
     def onChangeProxyModeEVT(self, event: wx.CommandEvent):

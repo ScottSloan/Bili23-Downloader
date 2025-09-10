@@ -17,7 +17,7 @@ class EditTitleDialog(Dialog):
     def init_UI(self):
         title_lab = wx.StaticText(self, -1, "请输入新标题，新标题将作为 {title} 字段")
 
-        self.title_box = wx.TextCtrl(self, -1, self.title, size = self.get_scaled_size((350, 24)), style = wx.TE_PROCESS_ENTER)
+        self.title_box = wx.TextCtrl(self, -1, self.title, size = self.FromDIP((350, -1)), style = wx.TE_PROCESS_ENTER)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))

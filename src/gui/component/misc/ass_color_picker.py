@@ -29,9 +29,9 @@ class ASSColorPicker(Panel):
         self.SetSizer(vbox)
 
     def SetColour(self, color_str: str):
-        color = wx.Colour()
-        color.SetRGBA(Color.convert_to_abgr_color(color_str))
+        r, g, b, a = Color.convert_to_abgr_color(color_str)
 
+        color = wx.Colour(r, g, b)
         self.color_picker.SetColour(color)
 
     def GetColour(self):

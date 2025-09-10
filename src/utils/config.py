@@ -204,7 +204,7 @@ class Config:
         enable_auth: bool = False
 
         proxy_ip: str = ""
-        proxy_port: int = None
+        proxy_port: int = 1
         auth_username: str = ""
         auth_password: str = ""
     

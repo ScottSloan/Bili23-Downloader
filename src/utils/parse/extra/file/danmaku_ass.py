@@ -18,11 +18,11 @@ class Json2ASS:
         self.font_size = danmaku_style.get("font_size")
 
         self.subtitle_obstruct = danmaku_style.get("subtitle_obstruct")
-        self.alpha = danmaku_style.get("alpha", 80)
+        self.alpha = math.ceil(255 - 2.55 * danmaku_style.get("alpha", 80)) # alpha = 255 - 2.55 * percent
 
-        self.scroll_duration = 2 * danmaku_style.get("speed", 3) + 2
-        self.stay_duration = 1.5 * danmaku_style.get("speed", 3) + 0.5
-        self.density = 1 - 0.5 * danmaku_style.get("density", 1)
+        self.scroll_duration = 17 - 2 * danmaku_style.get("speed", 3) # value = 17 - 2 * speed
+        self.stay_duration = 8 - danmaku_style.get("speed", 3) # value = 8 - speed
+        self.density = 2 - danmaku_style.get("density", 1) # value = 2 - density
 
         self.init_data_table()
 
@@ -90,8 +90,9 @@ class Json2ASS:
 
                     style = f"\\an2\\pos({left}, {top})"
 
-            if color and color != 16777215:
-                style += f"\\c{Color.convert_to_ass_style_color(Color.dec_to_hex(color), Color.dec_to_hex(self.alpha))}"
+            if color:
+                style += f"\\c{Color.convert_to_ass_bgr_color(Color.dec_to_hex(color))}"
+                style += f"\\1a{Color.convert_to_ass_a_color(self.alpha)}"
 
             return (
                 FormatUtils.format_ass_timestamp(start_time),
@@ -129,7 +130,7 @@ class Json2ASS:
                         
                         # 速度补偿
                         ratio = distance / self.video_width
-                        offset = 0.2 - 0.2 * math.exp(-2.77 * ratio)
+                        offset = 0.3 - 0.2 * math.exp(-2.77 * ratio)
 
                         duration -= offset
 

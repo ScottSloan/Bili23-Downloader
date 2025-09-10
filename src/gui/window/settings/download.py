@@ -1,4 +1,5 @@
 import wx
+from wx.lib.intctrl import IntCtrl
 
 from utils.config import Config
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, number_type_map
@@ -9,7 +10,6 @@ from gui.window.settings.page import Page
 from gui.dialog.setting.file_name.custom_file_name_v3 import CustomFileNameDialog
 
 from gui.component.misc.tooltip import ToolTip
-from gui.component.text_ctrl.int_ctrl import IntCtrl
 from gui.component.choice.choice import Choice
 
 class DownloadPage(Page):
@@ -76,7 +76,8 @@ class DownloadPage(Page):
 
         self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
-        self.speed_limit_box = IntCtrl(download_box, size = self.FromDIP((50, 24)))
+        self.speed_limit_box = IntCtrl(download_box, size = self.FromDIP((50, -1)), min = 1, max = 1000)
+        self.speed_limit_box.SetLimited(True)
         self.speed_limit_unit_lab = wx.StaticText(download_box, -1, "MB/s")
 
         speed_limit_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -159,7 +160,7 @@ class DownloadPage(Page):
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
 
-        self.speed_limit_box.SetValue(str(Config.Download.speed_mbps))
+        self.speed_limit_box.SetValue(Config.Download.speed_mbps)
 
         self.onChangeSpeedLimitEVT(0)
 
@@ -174,7 +175,7 @@ class DownloadPage(Page):
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()
         Config.Download.enable_speed_limit = self.speed_limit_chk.GetValue()
-        Config.Download.speed_mbps = int(self.speed_limit_box.GetValue())
+        Config.Download.speed_mbps = self.speed_limit_box.GetValue()
 
         Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
 
@@ -184,8 +185,8 @@ class DownloadPage(Page):
         if not self.path_box.GetValue():
             return self.warn("下载目录不能为空")
         
-        if not self.speed_limit_box.GetValue().isnumeric() and self.speed_limit_chk.GetValue():
-            return self.warn("速度值无效，需要为一个正整数")
+        if self.speed_limit_box.GetValue() not in range(1, 1001):
+            return self.warn("速度值无效，请输入 1 到 1000 之间的整数")
 
         self.save_data()
     

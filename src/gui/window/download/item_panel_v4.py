@@ -36,10 +36,10 @@ class DownloadTaskItemPanel(Panel):
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.cover_bmp.SetToolTip("查看封面")
 
-        self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, 24)), style = wx.ST_ELLIPSIZE_MIDDLE)
+        self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, -1)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((85, 16)))
-        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((85, 16)))
+        self.video_quality_lab = InfoLabel(self, "--", size = self.FromDIP((85, -1)))
+        self.video_codec_lab = InfoLabel(self, "--", size = self.FromDIP((85, -1)))
         self.video_size_lab = InfoLabel(self, "--", size = self.FromDIP((-1, -1)))
 
         video_info_hbox = wx.BoxSizer(wx.HORIZONTAL)

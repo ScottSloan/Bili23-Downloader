@@ -1,5 +1,9 @@
 import wx
 
+from utils.config import Config
+
+from utils.common.enums import Platform
+
 from gui.component.panel.panel import Panel
 
 class LabelSpinCtrl(Panel):
@@ -59,10 +63,18 @@ class LabelSpinCtrl(Panel):
 
     def get_spinctrl(self):
         if self.float:
-            spinctrl = wx.SpinCtrlDouble(self, -1, value = str(self.value), min = self.min, max = self.max, inc = 0.1)
+            spinctrl = wx.SpinCtrlDouble(self, -1, value = str(self.value), size = self.get_size(), min = self.min, max = self.max, inc = 0.1)
             spinctrl.SetDigits(1)
         
         else:
-            spinctrl = wx.SpinCtrl(self, -1, str(self.value), min = self.min, max = self.max)
+            spinctrl = wx.SpinCtrl(self, -1, str(self.value), size = self.get_size(), min = self.min, max = self.max)
 
         return spinctrl
+
+    def get_size(self):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows | Platform.macOS:
+                return self.FromDIP((55, -1))
+            
+            case Platform.Linux:
+                return self.FromDIP((130, -1))

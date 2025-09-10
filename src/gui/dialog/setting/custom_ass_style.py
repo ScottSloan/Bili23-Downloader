@@ -212,7 +212,7 @@ class SubtitlePage(Panel):
     def get_option(self):
         def get_ass_style_color(window: wx.Window):
             color: wx.Colour = window.GetColour()
-            return Color.convert_to_ass_style_color(color.GetAsString(wx.C2S_HTML_SYNTAX))
+            return Color.convert_to_ass_abgr_color(color.GetAsString(wx.C2S_HTML_SYNTAX))
 
         font_option = self.font_sbox.get_option()
         border_option = self.border_sbox.get_option()

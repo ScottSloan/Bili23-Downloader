@@ -22,11 +22,13 @@ class MiscStyleStaticBox(Panel):
         self.spacing_box = LabelSpinCtrl(misc_box, "字符间距", 0, "px", wx.HORIZONTAL, float = True, max = 100)
         self.spacing_box.SetToolTip("字符间距")
 
-        flex_sizer = wx.FlexGridSizer(2, 2, 0, 0)
-        flex_sizer.Add(self.scale_x_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        flex_sizer.Add(self.scale_y_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        flex_sizer.Add(self.angle_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
-        flex_sizer.Add(self.spacing_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        flex_sizer = wx.FlexGridSizer(2, 3, 0, 0)
+        flex_sizer.Add(self.scale_x_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        flex_sizer.AddSpacer(self.FromDIP(10))
+        flex_sizer.Add(self.scale_y_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        flex_sizer.Add(self.angle_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
+        flex_sizer.AddSpacer(self.FromDIP(10))
+        flex_sizer.Add(self.spacing_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         
         misc_sbox = wx.StaticBoxSizer(misc_box, wx.VERTICAL)
         misc_sbox.Add(flex_sizer, 0, wx.EXPAND)
