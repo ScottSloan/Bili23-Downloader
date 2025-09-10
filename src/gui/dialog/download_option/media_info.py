@@ -37,7 +37,7 @@ class InfoGroup(Panel):
 
         self.warn_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
         self.warn_icon.Hide()
-        self.info_lab = InfoLabel(self, "", size = self.FromDIP((400, 16)), color = Color.get_label_text_color())
+        self.info_lab = InfoLabel(self, "", size = self.FromDIP((400, -1)), color = Color.get_label_text_color())
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.warn_icon, 0, wx.ALL & (~wx.TOP) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))

@@ -5,7 +5,7 @@ from utils.config import Config
 from utils.common.map import danmaku_format_map, subtitle_format_map, cover_format_map, metadata_format_map
 
 from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
-from gui.dialog.setting.custom_ass_style import CustomASSStyleDialog
+from gui.dialog.setting.ass_style.custom_ass_style_v2 import CustomASSStyleDialog
 
 from gui.component.panel.panel import Panel
 

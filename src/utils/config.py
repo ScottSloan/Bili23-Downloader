@@ -156,7 +156,7 @@ class Config:
                 "italic": 0,
                 "underline": 0,
                 "strikeout": 0,
-                "border": 2.0,
+                "border": 1.0,
                 "shadow": 0.0,
                 "non_alpha": False,
                 "scale_x": 100,
@@ -164,6 +164,7 @@ class Config:
                 "angle": 0,
                 "spacing": 0.0,
                 "subtitle_obstruct": False,
+                "area": 5,
                 "alpha": 80,
                 "speed": 3,
                 "density": 2
@@ -187,7 +188,7 @@ class Config:
                 "spacing": 0.0,
                 "marginL": 10,
                 "marginR": 10,
-                "marginV": 10,
+                "marginV": 20,
                 "alignment": 2
             }
         }

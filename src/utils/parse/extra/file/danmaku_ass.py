@@ -18,6 +18,7 @@ class Json2ASS:
         self.font_size = danmaku_style.get("font_size")
 
         self.subtitle_obstruct = danmaku_style.get("subtitle_obstruct")
+        self.area = (danmaku_style.get("area", 5) * 20) / 100
         self.alpha = math.ceil(255 - 2.55 * danmaku_style.get("alpha", 80)) # alpha = 255 - 2.55 * percent
 
         self.scroll_duration = 17 - 2 * danmaku_style.get("speed", 3) # value = 17 - 2 * speed
@@ -27,10 +28,14 @@ class Json2ASS:
         self.init_data_table()
 
     def init_data_table(self):
+        ratio = 1.0
+
         if self.subtitle_obstruct:
-            row_count = math.floor(0.85 * (self.video_height / self.font_size))
-        else:
-            row_count = math.floor(self.video_height / self.font_size)
+            ratio = 0.85
+
+        ratio = min(ratio, self.area)
+
+        row_count = math.floor(ratio * (self.video_height / self.font_size))
 
         rows = {i + 1: None for i in range(row_count)}
 
