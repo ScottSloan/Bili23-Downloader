@@ -13,20 +13,20 @@ class RequestUtils:
     def request_get(cls, url: str, headers = None, proxies = None, auth = None, stream = False):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return cls.session.get(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream, timeout = 5)
+        return cls.session.get(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream, verify = Config.Advanced.enable_ssl_verify, timeout = 5)
     
     @classmethod
     def request_post(cls, url: str, headers = None, proxies = None, auth = None, params = None, json = None):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
-        
-        return cls.session.post(cls.get_protocol(url), headers = headers, params = params, json = json, proxies = proxies, auth = auth, timeout = 5)
+
+        return cls.session.post(cls.get_protocol(url), headers = headers, params = params, json = json, proxies = proxies, auth = auth, verify = Config.Advanced.enable_ssl_verify, timeout = 5)
 
     @classmethod
     def request_head(cls, url: str, headers = None, proxies = None, auth = None):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
-        
-        return cls.session.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, timeout = 5)
-    
+
+        return cls.session.head(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, verify = Config.Advanced.enable_ssl_verify, timeout = 5)
+
     @classmethod
     def get_params(cls, headers = None, proxies = None, auth = None):
         if not headers:

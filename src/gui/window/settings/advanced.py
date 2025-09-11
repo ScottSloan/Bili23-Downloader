@@ -61,6 +61,7 @@ class AdvancedPage(Page):
         download_suspend_retry_hbox.Add(self.download_suspend_retry_unit_lab, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.always_use_https_protocol_chk = wx.CheckBox(advanced_download_box, -1, "始终使用 HTTPS 发起请求")
+        self.ssl_verify_chk = wx.CheckBox(advanced_download_box, -1, "启用 SSL 证书验证")
         self.custom_ua_btn = wx.Button(advanced_download_box, -1, "自定义 User-Agent", size = self.get_scaled_size((130, 28)))
 
         advanced_download_sbox = wx.StaticBoxSizer(advanced_download_box, wx.VERTICAL)
@@ -69,6 +70,7 @@ class AdvancedPage(Page):
         advanced_download_sbox.Add(self.download_suspend_retry_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(download_suspend_retry_hbox, 0, wx.EXPAND)
         advanced_download_sbox.Add(self.always_use_https_protocol_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        advanced_download_sbox.Add(self.ssl_verify_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         advanced_download_sbox.Add(self.custom_ua_btn, 0, wx.ALL, self.FromDIP(6))
 
         webpage_box = wx.StaticBox(self.panel, -1, "Web 页面显示设置")
@@ -122,6 +124,8 @@ class AdvancedPage(Page):
         self.download_suspend_retry_chk.SetValue(Config.Advanced.retry_when_download_suspend)
         self.download_suspend_retry_box.SetValue(Config.Advanced.download_suspend_retry_interval)
         self.always_use_https_protocol_chk.SetValue(Config.Advanced.always_use_https_protocol)
+        self.ssl_verify_chk.SetValue(Config.Advanced.enable_ssl_verify)
+
         Config.Temp.user_agent = Config.Advanced.user_agent
 
         self.webpage_option_choice.SetSelection(Config.Advanced.webpage_option)
@@ -140,6 +144,7 @@ class AdvancedPage(Page):
         Config.Advanced.retry_when_download_suspend = self.download_suspend_retry_chk.GetValue()
         Config.Advanced.download_suspend_retry_interval = self.download_suspend_retry_box.GetValue()
         Config.Advanced.always_use_https_protocol = self.always_use_https_protocol_chk.GetValue()
+        Config.Advanced.enable_ssl_verify = self.ssl_verify_chk.GetValue()
         Config.Advanced.user_agent = Config.Temp.user_agent
 
         Config.Advanced.webpage_option = self.webpage_option_choice.GetSelection()

@@ -157,29 +157,46 @@ class ProxyPage(Page):
                 start_time = time.time()
 
                 url = "https://www.bilibili.com/"
-                req = RequestUtils.request_get(url, proxies = proxy, auth = _auth)
+                req = RequestUtils.request_get(url, headers = RequestUtils.get_headers(), proxies = proxy, auth = auth)
                 
                 end_time = time.time()
 
-                wx.MessageDialog(self, f"测试成功\n\n请求站点：{url}\n状态码：{req.status_code}\n耗时：{round(end_time - start_time, 1)}s", "提示", wx.ICON_INFORMATION).ShowModal()
+                self.show_messagebox(f"测试成功\n\n请求站点：{url}\n状态码：{req.status_code}\n耗时：{round(end_time - start_time, 1)}s", "提示", wx.ICON_INFORMATION)
 
             except Exception as e:
-                wx.MessageDialog(self, f"测试失败\n\n请求站点：{url}\n错误信息：\n\n{e}", "测试代理", wx.ICON_WARNING).ShowModal()
+                self.show_messagebox(f"测试失败\n\n请求站点：{url}\n错误信息：\n\n{e}", "提示", wx.ICON_WARNING)
 
+        proxy = self.get_proxy_option()
+        auth = self.get_auth_option()
+
+        Thread(target = test).start()
+
+    def get_proxy_option(self):
         if self.proxy_custom_radio.GetValue():
             proxy = {
                 "http": f"{self.ip_box.GetValue()}:{self.port_box.GetValue()}",
                 "https": f"{self.ip_box.GetValue()}:{self.port_box.GetValue()}"
             }
+        elif self.proxy_follow_radio.GetValue():
+            proxy = None
         else:
             proxy = {}
 
+        return proxy
+
+    def get_auth_option(self):
         if self.auth_chk.GetValue():
-            _auth = HTTPProxyAuth(
+            auth = HTTPProxyAuth(
                 self.uname_box.GetValue(),
                 self.passwd_box.GetValue()
             )
         else:
-            _auth = HTTPProxyAuth(None, None)
+            auth = HTTPProxyAuth(None, None)
 
-        Thread(target = test).start()
+        return auth
+    
+    def show_messagebox(self, message: str, caption: str, style: int):
+        def worker():
+            wx.MessageDialog(self, message, caption, style).ShowModal()
+
+        wx.CallAfter(worker)

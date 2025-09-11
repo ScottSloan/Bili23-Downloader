@@ -5,6 +5,7 @@ from typing import Dict, List
 
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
+from utils.common.enums import Platform
 
 app_config_group = {
     "Basic": [
@@ -53,6 +54,7 @@ app_config_group = {
         "retry_when_download_suspend",
         "download_suspend_retry_interval",
         "always_use_https_protocol",
+        "enable_ssl_verify",
         "user_agent",
         "webpage_option",
         "websocket_port"
@@ -342,6 +344,7 @@ class Config:
         download_error_retry_count: int = 3
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
+        enable_ssl_verify: bool = True
         always_use_https_protocol: bool = True
 
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
@@ -462,7 +465,15 @@ class Config:
 
     @staticmethod
     def init_path():
-        Config.User.directory = os.path.join(os.getcwd(), ".config")
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                Config.User.directory = os.path.join(os.environ["APPDATA"], "Bili23 Downloader")
+
+            case Platform.Linux:
+                Config.User.directory = os.path.join(os.path.expanduser("~"), ".config", "Bili23 Downloader")
+
+            case Platform.macOS:
+                Config.User.directory = os.path.join(os.path.expanduser("~/Library/Application Support"), "Bili23 Downloader")
 
         Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")

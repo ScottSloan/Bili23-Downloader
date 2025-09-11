@@ -151,7 +151,7 @@ class SMSPanel(Panel):
         self.country_id_choice = wx.Choice(self, -1)
 
         phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = SearchCtrl(self, "请输入手机号", size = self.FromDIP((150, 16)))
+        self.phone_number_box = SearchCtrl(self, "请输入手机号", size = self.FromDIP((150, -1)))
         self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
 
         phone_hbox = wx.BoxSizer(wx.HORIZONTAL)

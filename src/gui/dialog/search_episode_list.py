@@ -54,7 +54,7 @@ class SearchEpisodeListDialog(Frame):
     def init_UI(self):
         panel = Panel(self)
 
-        self.search_box = SearchCtrl(panel, "在剧集列表中搜索", size = self.FromDIP((300, 24)), search_btn = True, clear_btn = True)
+        self.search_box = SearchCtrl(panel, "在剧集列表中搜索", size = self.FromDIP((300, -1)), search_btn = True, clear_btn = True)
         self.search_box.SetValue(self.parent.search_keywords)
 
         self.search_result_lab = wx.StaticText(panel, -1, "无结果")
