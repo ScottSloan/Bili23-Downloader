@@ -74,7 +74,7 @@ class SubtitleASSFile:
             "Fontname": subtitle_style.get("font_name"),
             "Fontsize": subtitle_style.get("font_size"),
             "PrimaryColour": subtitle_style.get("primary_color"),
-            "SecondaryColour": "&H00FFFFFF",
+            "SecondaryColour": subtitle_style.get("secondary_color"),
             "OutlineColour": subtitle_style.get("border_color"),
             "BackColour": subtitle_style.get("shadow_color"),
             "Bold": subtitle_style.get("bold"),

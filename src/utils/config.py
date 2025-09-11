@@ -150,8 +150,8 @@ class Config:
 
         ass_style: Dict[str, Dict] = {
             "danmaku": {
-                "font_name": "default",
-                "font_size": 48,
+                "font_name": "黑体",
+                "font_size": 40,
                 "bold": 0,
                 "italic": 0,
                 "underline": 0,
@@ -167,10 +167,10 @@ class Config:
                 "area": 5,
                 "alpha": 80,
                 "speed": 3,
-                "density": 2
+                "density": 1
             },
             "subtitle": {
-                "font_name": "default",
+                "font_name": "黑体",
                 "font_size": 48,
                 "bold": 0,
                 "italic": 0,
@@ -180,6 +180,7 @@ class Config:
                 "shadow": 1.0,
                 "non_alpha": False,
                 "primary_color": "&H00FFFFFF&",
+                "secondary_color": "&H00FFFFFF&",
                 "border_color": "&H00000000&",
                 "shadow_color": "&H00000000&",
                 "scale_x": 100,

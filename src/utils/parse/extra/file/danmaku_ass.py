@@ -97,7 +97,7 @@ class Json2ASS:
 
             if color:
                 style += f"\\c{Color.convert_to_ass_bgr_color(Color.dec_to_hex(color))}"
-                style += f"\\1a{Color.convert_to_ass_a_color(self.alpha)}"
+                style += f"\\alpha{Color.convert_to_ass_a_color(self.alpha)}"
 
             return (
                 FormatUtils.format_ass_timestamp(start_time),

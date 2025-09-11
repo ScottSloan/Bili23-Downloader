@@ -352,8 +352,4 @@ class MainWindow(Frame):
         Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
         Config.Sys.default_font = self.GetFont().GetFaceName()
 
-        for key in ["danmaku", "subtitle"]:
-            if Config.Basic.ass_style.get(key).get("font_name") == "default":
-                Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
-
         SysFont.sys_font_list = sorted(wx.FontEnumerator().GetFacenames())

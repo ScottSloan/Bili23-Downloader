@@ -45,7 +45,7 @@ class CustomASSStyleDialog(Dialog):
     def get_book_size(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
-                return self.FromDIP((400, 450))
+                return self.FromDIP((350, 450))
             
             case Platform.Linux | Platform.macOS:
-                return self.FromDIP((470, 470))
+                return self.FromDIP((500, 570))

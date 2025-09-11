@@ -41,7 +41,11 @@ class FontStaticBox(Panel):
         self.SetSizer(font_sbox)
 
     def init_data(self, data: dict):
-        self.font_name_choice.SetStringSelection(data.get("font_name"))
+        if (font_name := data.get("font_name")) and font_name in SysFont.sys_font_list:
+            self.font_name_choice.SetStringSelection(data.get("font_name"))
+        else:
+            self.font_name_choice.SetStringSelection(self.GetFont().GetFaceName())
+
         self.font_size_box.SetValue(data.get("font_size"))
         self.bold_chk.SetValue(abs(data.get("bold")))
         self.italic_chk.SetValue(abs(data.get("italic")))

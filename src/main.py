@@ -128,4 +128,5 @@ class APP(wx.App):
 if __name__ == "__main__":
     app = APP()
     app.MainLoop()
-    
+    import idlelib.util
+    idlelib.util.fix_win_hidpi

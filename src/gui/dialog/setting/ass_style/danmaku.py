@@ -26,6 +26,7 @@ class DanmakuPage(Page):
         misc_box = wx.StaticBox(self.panel, -1, "高级设置")
 
         self.subtitle_obstruct_chk = wx.CheckBox(misc_box, -1, "防遮挡字幕")
+        self.subtitle_obstruct_chk.SetToolTip("视频底部15%部分为空白保留区")
 
         self.danmaku_area_slider = LabelSlider(misc_box, area_data)
         self.danmaku_alpha_slider = LabelSlider(misc_box, alpha_data)
