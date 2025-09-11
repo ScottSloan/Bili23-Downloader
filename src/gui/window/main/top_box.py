@@ -83,8 +83,8 @@ class TopBox(Panel):
 
         self.PopupMenu(menu)
 
-    def onShowDownloadOptionDialogEVT(self, event: wx.CommandEvent):
-        return Window.download_option_dialog(self.main_window)
+    def onShowDownloadOptionDialogEVT(self, event: wx.CommandEvent, source: str = "menu"):
+        return Window.download_option_dialog(self.main_window, source)
     
     def onSearchKeyDownEVT(self, event: wx.KeyEvent):
         keycode = event.GetKeyCode()
@@ -127,3 +127,15 @@ class TopBox(Panel):
     def reset_search_window(self):
         if search_dialog := wx.FindWindowByName("search"):
             search_dialog.reset()
+
+    def show_download_option_dialog(self, parent: wx.Window):
+        if Config.Basic.auto_popup_option_dialog:
+            if self.onShowDownloadOptionDialogEVT(0, "main") != wx.ID_OK:
+                return True
+        else:
+            from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
+
+            dialog = DownloadOptionDialog(parent, "main")
+            
+            if dialog.check_ass_only():
+                return True

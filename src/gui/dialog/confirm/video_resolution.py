@@ -5,9 +5,7 @@ from utils.config import Config
 from gui.component.window.dialog import Dialog
 
 class RequireVideoResolutionDialog(Dialog):
-    def __init__(self, parent, video_quality_desc_list: list, video_quality_desc: str, flv_mp4: bool = False):
-        self.video_quality_desc_list, self.video_quality_desc, self.flv_mp4 = video_quality_desc_list, video_quality_desc, flv_mp4
-
+    def __init__(self, parent: wx.Window):
         Dialog.__init__(self, parent, "确认视频分辨率")
 
         self.init_UI()

@@ -22,10 +22,15 @@ except ImportError as e:
         message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
     else:
         raise e
+    
+    sys.exit()
 
 except Exception as e:
-    message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error")
-
+    if platform.platform().startswith("Windows"):
+        message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error")    
+    else:
+        raise e
+    
     sys.exit()
 
 import google.protobuf
@@ -45,7 +50,7 @@ try:
 
     from gui.window.main.main_v3 import MainWindow
 
-    Cookie.init_cookie_params()
+    #Cookie.init_cookie_params()
 
 except Exception as e:
     message_box(f"初始化程序失败\n\n{get_traceback()}", "Fatal Error")

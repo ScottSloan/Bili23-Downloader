@@ -14,10 +14,11 @@ from gui.component.window.dialog import Dialog
 from gui.component.staticbox.extra import ExtraStaticBox
 
 class DownloadOptionDialog(Dialog):
-    def __init__(self, parent: wx.Window):
+    def __init__(self, parent: wx.Window, source: str):
         from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent
+        self.source = source
 
         self.episode_info = self.parent.episode_list.GetCurrentEpisodeInfo()
 
@@ -96,10 +97,7 @@ class DownloadOptionDialog(Dialog):
         require_resolution = (not self.media_option_box.download_video_steam_chk.GetValue() or not_dash) and (ass_danmaku or ass_subtitle)
 
         if require_resolution and not Config.Temp.remember_resolution_settings:
-            video_quality_desc_list = self.media_info_box.video_quality_info.choice.GetItems()
-            video_quality_desc = self.media_info_box.video_quality_info.choice.GetStringSelection()
-
-            dlg = RequireVideoResolutionDialog(self, video_quality_desc_list, video_quality_desc, not_dash)
+            dlg = RequireVideoResolutionDialog(self)
             
             if dlg.ShowModal() != wx.ID_OK:
                 return True
@@ -135,8 +133,9 @@ class DownloadOptionDialog(Dialog):
 
         Config.save_app_config()
 
-        if self.check_ass_only():
-            return True
-        
-        if self.check_login_paid():
-            return True
+        if self.source == "main":
+            if self.check_ass_only():
+                return True
+            
+            if self.check_login_paid():
+                return True

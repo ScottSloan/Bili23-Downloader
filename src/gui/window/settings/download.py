@@ -3,11 +3,13 @@ from wx.lib.intctrl import IntCtrl
 
 from utils.config import Config
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, number_type_map
+from utils.common.data.priority import video_quality_priority, audio_quality_priority, video_codec_priority
 
 from utils.module.notification import NotificationManager
 
 from gui.window.settings.page import Page
 from gui.dialog.setting.file_name.custom_file_name_v3 import CustomFileNameDialog
+from gui.dialog.setting.priority.edit import EditPriorityDialog
 
 from gui.component.misc.tooltip import ToolTip
 from gui.component.choice.choice import Choice
@@ -41,38 +43,26 @@ class DownloadPage(Page):
         self.max_download_lab = wx.StaticText(download_box, -1, "并行下载数：1")
         self.max_download_slider = wx.Slider(download_box, -1, 1, 1, 10)
 
-        video_lab = wx.StaticText(download_box, -1, "默认下载清晰度")
-        self.video_quality_choice = Choice(download_box)
-        self.video_quality_choice.SetChoices(video_quality_map)
-        self.video_quality_tip = ToolTip(download_box)
-        self.video_quality_tip.set_tooltip("指定下载视频的清晰度，取决于视频的支持情况；若视频无所选的清晰度，则自动下载最高可用的清晰度\n\n自动：自动下载每个视频的最高可用的清晰度")
+        video_lab = wx.StaticText(download_box, -1, "画质优先级")
+        self.video_quality_priority_btn = wx.Button(download_box, -1, "设置优先级", size = self.get_scaled_size((80, 24)))
 
         video_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_quality_hbox.Add(video_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        video_quality_hbox.Add(self.video_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        video_quality_hbox.Add(self.video_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        video_quality_hbox.Add(self.video_quality_priority_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        audio_lab = wx.StaticText(download_box, -1, "默认下载音质")
-        self.audio_quality_choice = Choice(download_box)
-        self.audio_quality_choice.SetChoices(audio_quality_map)
-        self.audio_quality_tip = ToolTip(download_box)
-        self.audio_quality_tip.set_tooltip("指定下载视频的音质，取决于视频的支持情况；若视频无所选的音质，则自动下载最高可用的音质\n\n自动：自动下载每个视频的最高可用音质")
+        audio_lab = wx.StaticText(download_box, -1, "音质优先级")
+        self.audio_quality_priority_btn = wx.Button(download_box, -1, "设置优先级", size = self.get_scaled_size((80, 24)))
 
-        sound_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        sound_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        sound_quality_hbox.Add(self.audio_quality_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        sound_quality_hbox.Add(self.audio_quality_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_quality_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        audio_quality_hbox.Add(audio_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        audio_quality_hbox.Add(self.audio_quality_priority_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        codec_lab = wx.StaticText(download_box, -1, "视频编码格式")
-        self.codec_choice = Choice(download_box)
-        self.codec_choice.SetChoices(video_codec_preference_map)
-        self.codec_tip = ToolTip(download_box)
-        self.codec_tip.set_tooltip("指定下载视频的编码格式，取决于视频的支持情况；若视频无所选的编码格式，则默认使用 AVC/H.264 编码\n\n杜比视界和HDR 视频仅支持 HEVC/H.265 编码")
+        codec_lab = wx.StaticText(download_box, -1, "编码格式优先级")
+        self.codec_priority_btn = wx.Button(download_box, -1, "设置优先级", size = self.get_scaled_size((80, 24)))
 
         codec_hbox = wx.BoxSizer(wx.HORIZONTAL)
         codec_hbox.Add(codec_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        codec_hbox.Add(self.codec_choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        codec_hbox.Add(self.codec_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        codec_hbox.Add(self.codec_priority_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
         self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
@@ -114,7 +104,7 @@ class DownloadPage(Page):
         download_sbox.Add(self.max_download_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(self.max_download_slider, 0, wx.EXPAND | wx.ALL & (~wx.TOP), self.FromDIP(6))
         download_sbox.Add(video_quality_hbox, 0, wx.EXPAND)
-        download_sbox.Add(sound_quality_hbox, 0, wx.EXPAND)
+        download_sbox.Add(audio_quality_hbox, 0, wx.EXPAND)
         download_sbox.Add(codec_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(speed_limit_hbox, 0, wx.EXPAND)
@@ -136,6 +126,10 @@ class DownloadPage(Page):
         self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadSliderEVT)
         self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadSliderEVT)
 
+        self.video_quality_priority_btn.Bind(wx.EVT_BUTTON, self.onSetVideoQualityPriorityEVT)
+        self.audio_quality_priority_btn.Bind(wx.EVT_BUTTON, self.onSetAudioQualityPriorityEVT)
+        self.codec_priority_btn.Bind(wx.EVT_BUTTON, self.onSetCodecPriorityEVT)
+
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
 
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestToastEVT)
@@ -150,11 +144,7 @@ class DownloadPage(Page):
 
         self.max_download_lab.SetLabel("并行下载数：{}".format(Config.Download.max_download_count))
         self.max_download_slider.SetValue(Config.Download.max_download_count)
-        
-        self.video_quality_choice.SetCurrentSelection(Config.Download.video_quality_id)
-        self.audio_quality_choice.SetCurrentSelection(Config.Download.audio_quality_id)
-        self.codec_choice.SetCurrentSelection(Config.Download.video_codec_id)
-        
+                
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
         self.number_type_choice.SetSelection(Config.Download.number_type)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
@@ -205,6 +195,18 @@ class DownloadPage(Page):
 
     def onDownloadSliderEVT(self, event: wx.ScrollEvent):
         self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
+
+    def onSetVideoQualityPriorityEVT(self, event: wx.CommandEvent):
+        dlg = EditPriorityDialog(self, "画质", list(video_quality_priority.keys()))
+        dlg.ShowModal()
+
+    def onSetAudioQualityPriorityEVT(self, event: wx.CommandEvent):
+        dlg = EditPriorityDialog(self, "音质", list(audio_quality_priority.keys()))
+        dlg.ShowModal()
+
+    def onSetCodecPriorityEVT(self, event: wx.CommandEvent):
+        dlg = EditPriorityDialog(self, "编码格式", list(video_codec_priority.keys()))
+        dlg.ShowModal()
 
     def onChangeSpeedLimitEVT(self, event: wx.CommandEvent):
         self.speed_limit_box.Enable(self.speed_limit_chk.GetValue())

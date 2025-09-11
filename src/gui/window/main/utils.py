@@ -115,8 +115,8 @@ class Window:
 
     @staticmethod
     @show_dialog
-    def download_option_dialog(parent: wx.Window):
-        dlg = DownloadOptionDialog(parent)
+    def download_option_dialog(parent: wx.Window, source: str):
+        dlg = DownloadOptionDialog(parent, source)
         return dlg.ShowModal()
     
     @staticmethod

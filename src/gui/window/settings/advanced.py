@@ -112,6 +112,7 @@ class AdvancedPage(Page):
 
         self.download_error_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRetryEVT)
         self.download_suspend_retry_chk.Bind(wx.EVT_CHECKBOX, self.onChangeRestartEVT)
+        self.always_use_https_protocol_chk.Bind(wx.EVT_CHECKBOX, self.onChangeHTTPEVT)
 
         self.custom_ua_btn.Bind(wx.EVT_BUTTON, self.onCustomUAEVT)
 
@@ -176,6 +177,12 @@ class AdvancedPage(Page):
         self.download_suspend_retry_lab.Enable(enable)
         self.download_suspend_retry_box.Enable(enable)
         self.download_suspend_retry_unit_lab.Enable(enable)
+
+    def onChangeHTTPEVT(self, event: wx.CommandEvent):
+        enable = self.always_use_https_protocol_chk.GetValue()
+
+        self.ssl_verify_chk.SetValue(enable)
+        self.ssl_verify_chk.Enable(enable)
 
     def onCustomUAEVT(self, event: wx.CommandEvent):
         dlg = CustomUADialog(self)

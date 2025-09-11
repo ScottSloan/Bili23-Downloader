@@ -344,8 +344,8 @@ class Config:
         download_error_retry_count: int = 3
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
-        enable_ssl_verify: bool = True
         always_use_https_protocol: bool = True
+        enable_ssl_verify: bool = True
 
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
 

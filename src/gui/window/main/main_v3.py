@@ -246,10 +246,9 @@ class MainWindow(Frame):
             if self.episode_list.check_download_items():
                 return
             
-            if Config.Basic.auto_popup_option_dialog:
-                if self.top_box.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
-                    return
-                
+            if self.top_box.show_download_option_dialog(self):
+                return
+
             self.bottom_box.download_tip()
 
             self.episode_list.GetAllCheckedItem()
