@@ -37,6 +37,9 @@ app_config_group = {
         "file_name_template_list",
         "max_download_count",
         "max_thread_count",
+        "video_quality_priority",
+        "audio_quality_priority",
+        "video_codec_priority",
         "video_quality_id",
         "audio_quality_id",
         "video_codec_id",
@@ -268,6 +271,32 @@ class Config:
                 "type": 6
             }
         ]
+
+        video_quality_priority: list = [
+            127,
+            126,
+            125,
+            120,
+            116,
+            112,
+            100,
+            80,
+            64,
+            32,
+            16
+        ]
+        audio_quality_priority: list = [
+            30251,
+            30250,
+            30280,
+            30232,
+            30216
+        ]
+        video_codec_priority: list = [
+            7,
+            12,
+            13
+        ]
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
@@ -294,6 +323,10 @@ class Config:
         keep_original_files: bool = False
 
     class Temp:
+        video_quality_priority: list = []
+        audio_quality_priority: list = []
+        video_codec_priority: list = []
+
         cdn_list: list = []
 
         user_agent: str = ""

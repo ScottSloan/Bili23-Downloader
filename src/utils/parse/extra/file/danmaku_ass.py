@@ -23,7 +23,7 @@ class Json2ASS:
 
         self.scroll_duration = 17 - 2 * danmaku_style.get("speed", 3) # value = 17 - 2 * speed
         self.stay_duration = 8 - danmaku_style.get("speed", 3) # value = 8 - speed
-        self.density = 2 - danmaku_style.get("density", 1) # value = 2 - density
+        self.density = 4 - 2 * danmaku_style.get("density", 1) # value = 4 - 2 * density
 
         self.init_data_table()
 

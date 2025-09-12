@@ -9,6 +9,13 @@ if Platform(Config.Sys.platform) == Platform.Windows:
 else:
     impl = wx.BitmapButton
 
+class T(wx.BitmapButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def Bind(self, event, handler, source=None, id=wx.ID_ANY, id2=wx.ID_ANY):
+        return super().Bind(event, handler, source, id, id2)
+
 class BitmapButton(impl):
     def __init__(self, parent: wx.Window, bitmap: wx.Bitmap, size = None, enable: bool = True, tooltip: str = ""):
         if not size:
@@ -18,6 +25,9 @@ class BitmapButton(impl):
 
         self.Enable(enable)
         self.SetToolTip(tooltip)
+
+    def Bind(self, event, handler, source = None, id = wx.ID_ANY, id2 = wx.ID_ANY):
+        return super().Bind(event, handler, source, id, id2)
 
     def get_style(self):
         match Platform(Config.Sys.platform):

@@ -1,4 +1,3 @@
-
 bangumi_type_map = {
     1: "番剧",
     2: "电影",

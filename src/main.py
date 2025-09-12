@@ -50,7 +50,7 @@ try:
 
     from gui.window.main.main_v3 import MainWindow
 
-    #Cookie.init_cookie_params()
+    Cookie.init_cookie_params()
 
 except Exception as e:
     message_box(f"初始化程序失败\n\n{get_traceback()}", "Fatal Error")
