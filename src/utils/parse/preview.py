@@ -4,10 +4,9 @@ from utils.auth.wbi import WbiUtils
 from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodecID, AudioQualityID
 from utils.common.request import RequestUtils
 from utils.common.model.data_type import DownloadTaskInfo
-from utils.common.map import audio_quality_sort_map, audio_quality_map, get_mapping_key_by_value
+from utils.common.map import audio_quality_sort_map, audio_quality_map
 
 from utils.parse.live import LiveParser
-from utils.parse.audio import AudioInfo
 from utils.parse.parser import Parser
 
 from utils.module.web.cdn import CDN
@@ -162,7 +161,7 @@ class VideoPreview(Parser):
 
     def get_audio_stream_info(self, audio_quality_id: int):
         def get_info(data: dict):
-            all_url_list = AudioInfo.get_all_audio_url_list(data)
+            all_url_list = self.get_audio_all_url_list(data)
 
             for entry in all_url_list:
                 if entry["id"] == audio_quality_id:
@@ -221,22 +220,23 @@ class VideoPreview(Parser):
         else:
             return max(audio_quality_id_list)
         
-    @staticmethod
-    def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: dict):
-        def check_codec_id():
-            match StreamType(stream_type):
-                case StreamType.Dash:
-                    return [entry["codecid"] for entry in data["dash"]["video"] if entry["id"] == video_quality_id]
-                    
-                case StreamType.Flv | StreamType.Mp4:
-                    return [VideoCodecID.AVC.value]
+    @classmethod
+    def get_video_codec_id(cls, video_quality_id: int, video_codec_id: int, stream_type: int, data: dict, priority_setting: list = None):
+        if not priority_setting:
+            priority_setting = Config.Temp.video_codec_priority.copy()
                 
-        codec_id_list = check_codec_id()
+        video_codec_id_list = cls.get_video_available_codec_id_list(video_quality_id, stream_type, data)
 
-        if video_codec_id not in codec_id_list:
-            video_codec_id = codec_id_list[0]
-        
-        return video_codec_id
+        if video_codec_id == VideoCodecID.Auto.value:
+            for value in priority_setting:
+                if value in video_codec_id_list:
+                    return value
+
+        elif video_codec_id in video_codec_id_list:
+            return video_codec_id
+
+        else:
+            return video_codec_id_list[0]
 
     @classmethod
     def get_video_resolution(cls, task_info: DownloadTaskInfo, data: dict):
@@ -272,15 +272,22 @@ class VideoPreview(Parser):
             "按优先级自动选择": AudioQualityID._Auto.value
         }
 
-        audio_quality_id_list = cls.get_audio_available_quality_id_list(data)
+        audio_quality_id_list = cls.get_audio_available_quality_id_list(data.get("dash", {}))
 
         for id in audio_quality_id_list:
-            desc = get_mapping_key_by_value(audio_quality_map, id)
-
-            if desc:
+            if desc := audio_quality_map.get(id):
                 audio_quality_data_dict[desc] = id
 
         return audio_quality_data_dict
+
+    @staticmethod
+    def get_video_codec_data_dict():
+        return  {
+            "按优先级自动选择": 20,
+            "AVC/H.264": 7,
+            "HEVC/H.265": 12,
+            "AV1": 13
+        }
 
     @staticmethod
     def get_video_available_quality_id_list(data: dict):
@@ -312,8 +319,17 @@ class VideoPreview(Parser):
         for entry in cls.get_audio_all_url_list(data):
             available_list.append(entry["id"])
 
-        return list(set(available_list))
+        return available_list
 
+    @classmethod
+    def get_video_available_codec_id_list(cls, video_quality_id: int, stream_type: StreamType, data: dict):
+        match StreamType(stream_type):
+            case StreamType.Dash:
+                return [entry["codecid"] for entry in data["dash"]["video"] if entry["id"] == video_quality_id]
+                
+            case StreamType.Flv | StreamType.Mp4:
+                return [VideoCodecID.AVC.value]
+            
     @staticmethod
     def get_file_size(url_list: list):
         def request_head(url: str, cdn: str):

@@ -118,6 +118,7 @@ class VideoCodecID(Enum):
     AVC = 7                       # H264
     HEVC = 12                     # H265
     AV1 = 13                      # AV1
+    Auto = 20                     # 自动
 
 class OverrideOption(Enum):
     Override = 0                  # 覆盖文件

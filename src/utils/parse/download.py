@@ -7,7 +7,6 @@ from utils.common.exception import GlobalException
 
 from utils.parse.preview import VideoPreview
 from utils.parse.parser import Parser
-from utils.parse.audio import AudioInfo
 from utils.parse.video import VideoParser
 
 class DownloadParser(Parser):
@@ -117,7 +116,7 @@ class DownloadParser(Parser):
         self.task_info.audio_quality_id = VideoPreview.get_audio_quality_id(self.task_info.audio_quality_id, data["dash"])
         self.task_info.audio_type = audio_file_type_map.get(self.task_info.audio_quality_id)
 
-        all_url_list = AudioInfo.get_all_audio_url_list(data["dash"])
+        all_url_list = VideoPreview.get_audio_all_url_list(data["dash"])
 
         for entry in all_url_list:
             if entry["id"] == self.task_info.audio_quality_id:

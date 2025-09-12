@@ -4,7 +4,7 @@ import re
 from utils.config import Config
 
 from utils.common.model.data_type import DownloadTaskInfo
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map
 from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime
 from utils.common.io.directory import Directory
@@ -101,9 +101,9 @@ class FileNameFormatter:
             "badge": task_info.badge,
             "episode_num": task_info.episode_num,
             "bangumi_type": task_info.bangumi_type,
-            "video_quality": get_mapping_key_by_value(video_quality_map, task_info.video_quality_id),
-            "audio_quality": get_mapping_key_by_value(audio_quality_map, task_info.audio_quality_id),
-            "video_codec": get_mapping_key_by_value(video_codec_short_map, task_info.video_codec_id),
+            "video_quality": video_quality_map.get(task_info.video_quality_id),
+            "audio_quality": audio_quality_map.get(task_info.audio_quality_id),
+            "video_codec": video_codec_short_map.get(task_info.video_codec_id),
             "duration": task_info.duration,
             "up_name": FileNameFormatter.get_legal_file_name(task_info.up_name),
             "up_uid": task_info.up_uid

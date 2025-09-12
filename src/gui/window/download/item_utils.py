@@ -4,7 +4,7 @@ import os
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.model.data_type import DownloadTaskInfo
 from utils.common.enums import ParseType, DownloadStatus
-from utils.common.map import video_quality_map, video_codec_map, audio_quality_map, extra_map, get_mapping_key_by_value
+from utils.common.map import video_quality_map, video_codec_map, audio_quality_map, extra_map
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.thread import Thread
@@ -78,7 +78,7 @@ class Utils:
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                     if "video" in self.task_info.download_option:
-                        return get_mapping_key_by_value(video_quality_map, self.task_info.video_quality_id, "--")
+                        return video_quality_map.get(self.task_info.video_quality_id, "--")
                     else:
                         return "音频"
 
@@ -92,9 +92,9 @@ class Utils:
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                     if "video" in self.task_info.download_option:
-                        return get_mapping_key_by_value(video_codec_map, self.task_info.video_codec_id, "--")
+                        return video_codec_map.get(self.task_info.video_codec_id, "--")
                     else:
-                        return get_mapping_key_by_value(audio_quality_map, self.task_info.audio_quality_id, "--")
+                        return audio_quality_map.get(self.task_info.audio_quality_id, "--")
                 
                 case _:
                     return ""

@@ -40,9 +40,6 @@ app_config_group = {
         "video_quality_priority",
         "audio_quality_priority",
         "video_codec_priority",
-        "video_quality_id",
-        "audio_quality_id",
-        "video_codec_id",
         "enable_notification",
         "delete_history",
         "enable_speed_limit",
@@ -293,14 +290,14 @@ class Config:
             30216
         ]
         video_codec_priority: list = [
-            7,
+            13,
             12,
-            13
+            7
         ]
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
-        video_codec_id: int = 7
+        video_codec_id: int = 20
 
         max_thread_count: int = 8
         max_download_count: int = 1
