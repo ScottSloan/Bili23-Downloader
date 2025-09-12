@@ -8,7 +8,7 @@ bangumi_type_map = {
 }
 
 video_quality_map = {
-    "自动": 200,
+    "按优先级自动选择": 200,
     "超高清 8K": 127,
     "杜比视界": 126,
     "真彩 HDR": 125,
@@ -23,7 +23,7 @@ video_quality_map = {
 }
 
 audio_quality_map = {
-    "自动": 30300,
+    "按优先级自动选择": 30300,
     "Hi-Res 无损": 30251,
     "杜比全景声": 30250,
     "杜比全景声 ": 30255,
@@ -52,15 +52,10 @@ audio_file_type_map = {
 }
 
 video_codec_map = {
+    "按优先级自动选择": 20,
     "AVC/H.264": 7,
     "HEVC/H.265": 12,
     "AV1": 13
-}
-
-video_codec_preference_map = {
-    "AVC/H.264 优先": 7,
-    "HEVC/H.265 优先": 12,
-    "AV1 优先": 13
 }
 
 video_codec_short_map = {

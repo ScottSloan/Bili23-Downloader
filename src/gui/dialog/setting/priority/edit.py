@@ -32,7 +32,7 @@ class EditPriorityDialog(Dialog):
         top_hbox.Add(tip_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.Add(tooltip, 0, wx.ALL & (~wx.BOTTOM) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.data_list = wx.ListCtrl(self, -1, size = self.FromDIP((180, 220)), style = wx.LC_REPORT)
+        self.data_list = wx.ListCtrl(self, -1, size = self.FromDIP((190, 220)), style = wx.LC_REPORT)
 
         list_vbox = wx.BoxSizer(wx.VERTICAL)
         list_vbox.Add(top_hbox, 0, wx.EXPAND)
@@ -100,27 +100,39 @@ class EditPriorityDialog(Dialog):
             self.data_list.Append([str(index + 1), label])
 
     def onUpEVT(self, event: wx.CommandEvent):
+        if self.check_item_focused():
+            return
+        
         self.move_to(self.data_list.GetFocusedItem() - 1)
 
         self.update_priority()
 
     def onDownEVT(self, event: wx.CommandEvent):
+        if self.check_item_focused():
+            return
+        
         self.move_to(self.data_list.GetFocusedItem() + 1)
 
         self.update_priority()
 
     def onToTopEVT(self, event: wx.CommandEvent):
+        if self.check_item_focused():
+            return
+        
         self.move_to(0)
 
         self.update_priority()
 
     def onToBottomEVT(self, event: wx.CommandEvent):
+        if self.check_item_focused():
+            return
+        
         self.move_to(self.data_list.GetItemCount() - 1)
 
         self.update_priority()
     
     def onResetEVT(self, event: wx.CommandEvent):
-        dlg = wx.MessageDialog(self, "重置优先级\n\n确定要重置优先级设置吗？", "重置", wx.YES_NO | wx.ICON_WARNING)
+        dlg = wx.MessageDialog(self, "重置优先级\n\n确定要重置优先级设置吗？", "警告", wx.YES_NO | wx.ICON_WARNING)
 
         if dlg.ShowModal() == wx.ID_YES:
             self.data_list.DeleteAllItems()
@@ -160,3 +172,8 @@ class EditPriorityDialog(Dialog):
             priority_list.append(self.priority_data.get(label))
 
         return priority_list
+    
+    def check_item_focused(self):
+        if self.data_list.GetFocusedItem() == -1:
+            wx.MessageDialog(self, "未选择项目\n\n请选择要调整的项目", "警告", wx.ICON_WARNING).ShowModal()
+            return True

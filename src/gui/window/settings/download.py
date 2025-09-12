@@ -2,7 +2,7 @@ import wx
 from wx.lib.intctrl import IntCtrl
 
 from utils.config import Config
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_preference_map, number_type_map
+from utils.common.map import number_type_map
 from utils.common.data.priority import video_quality_priority, audio_quality_priority, video_codec_priority
 
 from utils.module.notification import NotificationManager
@@ -121,7 +121,7 @@ class DownloadPage(Page):
 
         self.video_quality_priority_btn.Bind(wx.EVT_BUTTON, self.onSetVideoQualityPriorityEVT)
         self.audio_quality_priority_btn.Bind(wx.EVT_BUTTON, self.onSetAudioQualityPriorityEVT)
-        self.codec_priority_btn.Bind(wx.EVT_BUTTON, self.onSetCodecPriorityEVT)
+        self.codec_priority_btn.Bind(wx.EVT_BUTTON, self.onSetVideoCodecPriorityEVT)
 
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
 
@@ -206,7 +206,7 @@ class DownloadPage(Page):
         if dlg.ShowModal() == wx.ID_OK:
             Config.Temp.audio_quality_priority = dlg.get_priority()
 
-    def onSetCodecPriorityEVT(self, event: wx.CommandEvent):
+    def onSetVideoCodecPriorityEVT(self, event: wx.CommandEvent):
         dlg = EditPriorityDialog(self, "编码格式", video_codec_priority, Config.Temp.video_codec_priority)
 
         if dlg.ShowModal() == wx.ID_OK:

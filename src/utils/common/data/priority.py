@@ -1,7 +1,7 @@
 video_quality_priority = {
-    "超高清 8K": 127,
+    "8K 超高清": 127,
     "杜比视界": 126,
-    "真彩 HDR": 125,
+    "HDR 真彩": 125,
     "4K 超高清": 120,
     "1080P 60帧": 116,
     "1080P 高码率": 112,
@@ -9,7 +9,7 @@ video_quality_priority = {
     "1080P 高清": 80,
     "720P 准高清": 64,
     "480P 标清": 32,
-    "360P 流畅": 16,
+    "360P 流畅": 16
 }
 
 audio_quality_priority = {
@@ -21,7 +21,7 @@ audio_quality_priority = {
 }
 
 video_codec_priority = {
+    "AV1": 13,
     "AVC/H.264": 7,
-    "HEVC/H.265": 12,
-    "AV1": 13
+    "HEVC/H.265": 12
 }

@@ -302,7 +302,7 @@ class Config:
         audio_quality_id: int = 30300
         video_codec_id: int = 7
 
-        max_thread_count: int = 4
+        max_thread_count: int = 8
         max_download_count: int = 1
 
         enable_notification: bool = False

@@ -5,13 +5,16 @@ from utils.config import Config
 from utils.common.enums import StreamType, VideoQualityID
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.exception import GlobalException, show_error_message_dialog
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, video_codec_preference_map, get_mapping_key_by_value
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_map, video_codec_map, get_mapping_key_by_value
+from utils.common.data.priority import video_quality_priority, audio_quality_priority, video_codec_priority
 from utils.common.thread import Thread
 from utils.common.style.color import Color
 from utils.common.style.icon_v4 import Icon, IconID
 
 from utils.parse.preview import VideoPreview, PreviewInfo
 from utils.parse.audio import AudioInfo, AudioQualityID
+
+from gui.dialog.setting.priority.edit import EditPriorityDialog
 
 from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
@@ -30,10 +33,15 @@ class InfoGroup(Panel):
         self.choice = Choice(self)
         self.tooltip = ToolTip(self)
         self.tooltip.Hide()
+        priority_lab = wx.StaticText(self, -1, "优先级")
+        self.priority_btn = wx.Button(self, -1, "设置...", size = self.FromDIP((60, 24)))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(self.choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.Add(self.tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.AddStretchSpacer()
+        top_hbox.Add(priority_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        top_hbox.Add(self.priority_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.warn_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
         self.warn_icon.Hide()
@@ -56,9 +64,9 @@ class InfoGroup(Panel):
     def SetBottomToolTip(self, tooltip: str):
         self.warn_icon.SetToolTip(tooltip)
 
-    def SetChoice(self, choices: dict, selection: int):
+    def SetChoice(self, choices: dict, selection: int = 0):
         self.choice.SetChoices(choices)
-        self.choice.SetCurrentSelection(selection)
+        self.choice.SetSelection(selection)
 
     def SetCheckingStatus(self):
         self.info_lab.SetLabel("正在检测...")
@@ -140,6 +148,10 @@ class MediaInfoPanel(Panel):
         self.audio_quality_info.choice.Bind(wx.EVT_CHOICE, self.onChangeAudioQualityEVT)
         self.video_codec_info.choice.Bind(wx.EVT_CHOICE, self.onChangeVideoQualityEVT)
 
+        self.video_quality_info.priority_btn.Bind(wx.EVT_BUTTON, self.onSetVideoQualityPriorityEVT)
+        self.audio_quality_info.priority_btn.Bind(wx.EVT_BUTTON, self.onSetAudioQualityPriorityEVT)
+        self.video_codec_info.priority_btn.Bind(wx.EVT_BUTTON, self.onSetVideoCodecPriorityEVT)
+
         self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
 
     def load_data(self):
@@ -153,17 +165,22 @@ class MediaInfoPanel(Panel):
 
         AudioInfo.get_audio_quality_list(PreviewInfo.download_json.get("dash", {}))
 
-        video_quality_id = self.preview.get_video_quality_id(Config.Download.video_quality_id, self.preview.download_json) if Config.Download.video_quality_id != VideoQualityID._Auto.value else Config.Download.video_quality_id
-        video_quality_data_dict = self.preview.get_video_quality_data_dict(self.preview.download_json)
+        Config.Temp.video_quality_priority = Config.Download.video_quality_priority.copy()
+        Config.Temp.audio_quality_priority = Config.Download.audio_quality_priority.copy()
+        Config.Temp.video_codec_priority = Config.Download.video_codec_priority.copy()
 
-        self.video_quality_info.SetChoice(video_quality_data_dict, video_quality_id)
-        self.audio_quality_info.SetChoice(AudioInfo.audio_quality_data_dict, AudioInfo.audio_quality_id)
-        self.video_codec_info.SetChoice(video_codec_preference_map, Config.Download.video_codec_id)
+        self.video_quality_info.SetChoice(self.preview.get_video_quality_data_dict(self.preview.download_json))
+        self.audio_quality_info.SetChoice(self.preview.get_audio_quality_data_dict(self.preview.download_json))
+        self.video_codec_info.SetChoice(video_codec_map)
 
         self.onChangeVideoQualityEVT(0)
         self.onChangeAudioQualityEVT(0)
 
     def save(self):
+        Config.Download.video_quality_priority = Config.Temp.video_quality_priority.copy()
+        Config.Download.audio_quality_priority = Config.Temp.audio_quality_priority.copy()
+        Config.Download.video_codec_priority = Config.Temp.video_codec_priority.copy()
+
         Config.Download.video_quality_id = self.video_quality_id
         Config.Download.audio_quality_id = self.audio_quality_id
         Config.Download.video_codec_id = self.video_codec_id
@@ -324,6 +341,24 @@ class MediaInfoPanel(Panel):
 
     def onHelpEVT(self, event: wx.CommandEvent):
         wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/faq/download.html#%E8%A7%86%E9%A2%91%E6%B8%85%E6%99%B0%E5%BA%A6%E4%B8%8E%E4%B8%8B%E8%BD%BD%E8%AE%BE%E7%BD%AE%E4%B8%8D%E7%AC%A6")
+
+    def onSetVideoQualityPriorityEVT(self, event: wx.CommandEvent):
+        dlg = EditPriorityDialog(self.parent, "画质", video_quality_priority, Config.Temp.video_quality_priority)
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            Config.Temp.video_quality_priority = dlg.get_priority()
+
+    def onSetAudioQualityPriorityEVT(self, event: wx.CommandEvent):
+        dlg = EditPriorityDialog(self.parent, "音质", audio_quality_priority, Config.Temp.audio_quality_priority)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            Config.Temp.audio_quality_priority = dlg.get_priority()
+
+    def onSetVideoCodecPriorityEVT(self, event: wx.CommandEvent):
+        dlg = EditPriorityDialog(self.parent, "编码格式", video_codec_priority, Config.Temp.video_codec_priority)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            Config.Temp.video_codec_priority = dlg.get_priority()
 
     @property
     def video_quality_id(self):

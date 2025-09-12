@@ -1,11 +1,10 @@
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
-from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodecID
+from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodecID, AudioQualityID
 from utils.common.request import RequestUtils
-
 from utils.common.model.data_type import DownloadTaskInfo
-from utils.common.model.dict_info import DictInfo
+from utils.common.map import audio_quality_sort_map, audio_quality_map, get_mapping_key_by_value
 
 from utils.parse.live import LiveParser
 from utils.parse.audio import AudioInfo
@@ -187,19 +186,40 @@ class VideoPreview(Parser):
                 return video_codec_id
 
     @classmethod
-    def get_video_quality_id(cls, video_quality_id: int, data: dict):
+    def get_video_quality_id(cls, video_quality_id: int, data: dict, priority_setting: list = None):
+        if not priority_setting:
+            priority_setting = Config.Temp.video_quality_priority.copy()
+
         video_quality_id_list = cls.get_video_available_quality_id_list(data)
 
-        if video_quality_id in video_quality_id_list:
+        if video_quality_id == VideoQualityID._Auto.value:
+            for value in priority_setting:
+                if value in video_quality_id_list:
+                    return value
+                
+        elif video_quality_id in video_quality_id_list:
             return video_quality_id
+        
         else:
             return max(video_quality_id_list)
+        
+    @classmethod
+    def get_audio_quality_id(cls, audio_quality_id: int, data: dict, priority_setting: list = None):
+        if not priority_setting:
+            priority_setting = Config.Temp.audio_quality_priority.copy()
 
-    @staticmethod
-    def get_audio_quality_id(audio_quality_id: int, data: dict):
-        audio_quality_data_dict = AudioInfo.get_audio_quality_id_desc_list(data, auto = False)
+        audio_quality_id_list = cls.get_audio_available_quality_id_list(data)
 
-        return audio_quality_data_dict.check_id(audio_quality_id)
+        if audio_quality_id == AudioQualityID._Auto.value:
+            for value in priority_setting:
+                if value in audio_quality_id_list:
+                    return value
+        
+        elif audio_quality_id in audio_quality_id_list:
+            return audio_quality_id
+        
+        else:
+            return max(audio_quality_id_list)
         
     @staticmethod
     def get_video_codec_id(video_quality_id: int, video_codec_id: int, stream_type: int, data: dict):
@@ -238,13 +258,29 @@ class VideoPreview(Parser):
 
     @classmethod
     def get_video_quality_data_dict(cls, data: dict):
-        video_quality_data_dict = DictInfo()
-
-        video_quality_data_dict["自动"] = VideoQualityID._Auto.value
+        video_quality_data_dict = {
+            "按优先级自动选择": VideoQualityID._Auto.value
+        }
 
         video_quality_data_dict.update(dict(zip(data["accept_description"], data["accept_quality"])))
 
         return video_quality_data_dict
+
+    @classmethod
+    def get_audio_quality_data_dict(cls, data: dict):
+        audio_quality_data_dict = {
+            "按优先级自动选择": AudioQualityID._Auto.value
+        }
+
+        audio_quality_id_list = cls.get_audio_available_quality_id_list(data)
+
+        for id in audio_quality_id_list:
+            desc = get_mapping_key_by_value(audio_quality_map, id)
+
+            if desc:
+                audio_quality_data_dict[desc] = id
+
+        return audio_quality_data_dict
 
     @staticmethod
     def get_video_available_quality_id_list(data: dict):
@@ -256,18 +292,27 @@ class VideoPreview(Parser):
 
                 available_list.append(id)
 
-            return available_list
+            return list(set(available_list))
         else:
             if data.get("durls"):
                 for entry in data["durls"]:
                     id = entry.get("quality")
 
                     available_list.append(id)
-            
-                return available_list
-            
+
+                return list(set(available_list))
+
             else:
                 return data["accept_quality"]
+
+    @classmethod
+    def get_audio_available_quality_id_list(cls, data: dict):
+        available_list = []
+
+        for entry in cls.get_audio_all_url_list(data):
+            available_list.append(entry["id"])
+
+        return list(set(available_list))
 
     @staticmethod
     def get_file_size(url_list: list):
@@ -298,6 +343,37 @@ class VideoPreview(Parser):
 
         return [i for i in generator([data[n] for n in ["backupUrl", "backup_url", "baseUrl", "base_url", "url"] if n in data])]
     
+    @staticmethod
+    def get_audio_all_url_list(data: dict):
+        all_url_list = []
+        
+        audio_node = data.get("audio")
+        dolby_node = data.get("dolby", {"audio": None})
+        flac_node = data.get("flac", {"audio": None})
+
+        dolby_node = dolby_node["audio"] if dolby_node else None
+        flac_node = flac_node["audio"] if flac_node else None
+
+        if audio_node:
+            if isinstance(audio_node, list):
+                all_url_list.extend(audio_node)
+
+        if dolby_node:
+            if isinstance(dolby_node, list):
+                all_url_list.extend(dolby_node)
+            else:
+                all_url_list.append(dolby_node)
+
+        if flac_node:
+            if isinstance(flac_node, list):
+                all_url_list.extend(flac_node)
+            else:
+                all_url_list.append(flac_node)
+
+        all_url_list.sort(key = lambda x: audio_quality_sort_map.get(x["id"]))
+
+        return all_url_list
+
     @staticmethod
     def get_cache(key: int, cache: dict, data: dict):
         if key not in cache:
