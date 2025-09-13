@@ -32,7 +32,7 @@ class InfoGroup(Panel):
         self.tooltip = ToolTip(self)
         self.tooltip.Hide()
         priority_lab = wx.StaticText(self, -1, "优先级")
-        self.priority_btn = wx.Button(self, -1, "设置...", size = self.FromDIP((60, 24)))
+        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), tooltip = "设置优先级")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(self.choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))

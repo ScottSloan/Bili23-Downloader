@@ -26,7 +26,7 @@ class EditPriorityDialog(Dialog):
     def init_UI(self):
         tip_lab = wx.StaticText(self, -1, "优先级列表")
         tooltip = ToolTip(self)
-        tooltip.set_tooltip(f"列表从上到下表示优先级递减，优先级高的{self.category}将优先下载，若无可用{self.category}则依次向下查找，直到找到可用{self.category}为止。")
+        tooltip.set_tooltip(f"列表按优先级从高到低排列（顶部为最高优先级）。程序将优先下载最高可用{self.category}；若不可用，则自动尝试列表中下一个优先级{self.category}，直到找到可用的{self.category}为止。")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(tip_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -163,7 +163,7 @@ class EditPriorityDialog(Dialog):
         for index in range(self.data_list.GetItemCount()):
             self.data_list.SetItem(index, 0, str(index + 1))
 
-    def get_priority(self) -> dict:
+    def get_priority(self) -> list:
         priority_list = []
 
         for index in range(self.data_list.GetItemCount()):

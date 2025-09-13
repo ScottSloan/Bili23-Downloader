@@ -11,6 +11,7 @@ from gui.dialog.setting.file_name.custom_file_name_v3 import CustomFileNameDialo
 
 from gui.component.panel.panel import Panel
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
+from gui.component.button.bitmap_button import BitmapButton
 
 class PathStaticBox(Panel):
     def __init__(self, parent):
@@ -24,7 +25,7 @@ class PathStaticBox(Panel):
         path_box = wx.StaticBox(self, -1, "下载目录设置")
 
         self.path_box = wx.TextCtrl(path_box, -1)
-        self.browse_btn = wx.Button(path_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+        self.browse_btn = BitmapButton(path_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = "浏览")
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))

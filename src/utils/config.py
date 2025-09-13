@@ -140,9 +140,9 @@ class Config:
         always_on_top: bool = False
 
         download_danmaku_file: bool = False
-        danmaku_file_type: int = 0
+        danmaku_file_type: int = 3
         download_subtitle_file: bool = False
-        subtitle_file_type: int = 0
+        subtitle_file_type: int = 4
         subtitle_lan_option: int = 0
         subtitle_lan_custom_type: list = []
         download_cover_file: bool = False
