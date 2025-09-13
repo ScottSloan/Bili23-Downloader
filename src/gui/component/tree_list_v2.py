@@ -3,7 +3,7 @@ import wx.dataview
 from utils.config import Config
 
 from utils.common.enums import Platform
-from utils.common.model.data_type import TreeListItemInfo
+from utils.common.model.list_item_info import TreeListItemInfo
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.model.download_info import DownloadInfo
 

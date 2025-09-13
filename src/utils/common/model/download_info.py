@@ -2,7 +2,7 @@ import random
 
 from utils.config import Config
 
-from utils.common.model.data_type import TreeListItemInfo
+from utils.common.model.list_item_info import TreeListItemInfo
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import ParseType
 
@@ -18,7 +18,9 @@ class DownloadInfo:
 
             download_info_list.append(cls.get_task_info_obj(info))
 
-        if Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file:
+        download_extra_option = Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file or Config.Basic.download_metadata_file
+
+        if download_extra_option:
             info = cls.get_extra_download_info(info)
 
             download_info_list.append(cls.get_task_info_obj(info))
@@ -47,6 +49,8 @@ class DownloadInfo:
             "parent_title": item_info.parent_title,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
+            "zone": item_info.zone,
+            "subzone": item_info.subzone,
             "badge": item_info.badge,
             "page": item_info.page,
             "referer_url": "https://www.bilibili.com/",
@@ -80,7 +84,9 @@ class DownloadInfo:
             "download_subtitle_file": Config.Basic.download_subtitle_file,
             "subtitle_file_type": Config.Basic.subtitle_file_type,
             "download_cover_file": Config.Basic.download_cover_file,
-            "cover_file_type": Config.Basic.cover_file_type
+            "cover_file_type": Config.Basic.cover_file_type,
+            "download_metadata_file": Config.Basic.download_metadata_file,
+            "metadata_file_type": Config.Basic.metadata_file_type
         }
         info["video_width"] = Config.Temp.video_width
         info["video_height"] = Config.Temp.video_height

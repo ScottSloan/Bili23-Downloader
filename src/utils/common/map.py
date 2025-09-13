@@ -131,7 +131,8 @@ override_option_map = {
 extra_map = {
     "download_danmaku_file": "弹幕",
     "download_subtitle_file": "字幕",
-    "download_cover_file": "封面"
+    "download_cover_file": "封面",
+    "download_metadata_file": "元数据"
 }
 
 download_type_map = {
