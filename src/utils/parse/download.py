@@ -1,6 +1,6 @@
 from typing import Callable
 
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import StreamType, VideoCodecID, AudioQualityID
 from utils.common.map import audio_file_type_map
 from utils.common.exception import GlobalException

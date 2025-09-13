@@ -3,7 +3,7 @@ import re
 
 from utils.config import Config
 
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map
 from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime

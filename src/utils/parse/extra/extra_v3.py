@@ -1,4 +1,4 @@
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.model.callback import Callback
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode

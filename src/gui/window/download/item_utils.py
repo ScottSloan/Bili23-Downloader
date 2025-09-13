@@ -2,7 +2,7 @@ import wx
 import os
 
 from utils.common.style.icon_v4 import Icon, IconID
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import ParseType, DownloadStatus
 from utils.common.map import video_quality_map, video_codec_map, audio_quality_map, extra_map
 from utils.common.formatter.formatter import FormatUtils

@@ -3,7 +3,7 @@ from utils.auth.wbi import WbiUtils
 
 from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodecID, AudioQualityID
 from utils.common.request import RequestUtils
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.map import audio_quality_sort_map, audio_quality_map
 
 from utils.parse.live import LiveParser

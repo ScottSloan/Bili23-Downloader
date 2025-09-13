@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 from utils.common.model.callback import LiveRecordingCallback
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import LiveRecordingStatus, LiveStatus

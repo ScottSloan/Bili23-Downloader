@@ -7,7 +7,7 @@ from utils.config import Config
 from utils.common.enums import Platform, NumberType, DownloadStatus
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.io.directory import Directory
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.thread import Thread
 from utils.common.datetime_util import DateTime
 

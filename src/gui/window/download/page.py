@@ -4,7 +4,7 @@ from typing import List, Tuple, Callable
 from utils.config import Config
 
 from utils.common.enums import DownloadStatus
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.thread import Thread
 
 from gui.window.download.item_panel_v4 import DownloadTaskItemPanel

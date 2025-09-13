@@ -2,7 +2,8 @@ import os
 import re
 import subprocess
 
-from utils.common.model.data_type import Command, Process, DownloadTaskInfo
+from utils.common.model.data_type import Command, Process
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.model.callback import Callback, ConsoleCallback
 from utils.common.enums import StatusCode, Platform, StreamType, OverrideOption
 from utils.common.exception import GlobalException

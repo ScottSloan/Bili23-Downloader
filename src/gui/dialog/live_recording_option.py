@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 from utils.common.thread import Thread
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 
 from utils.parse.preview import LivePreview
 

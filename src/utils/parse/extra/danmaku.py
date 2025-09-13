@@ -5,7 +5,7 @@ from typing import List
 from google.protobuf import json_format
 
 from utils.auth.wbi import WbiUtils
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import DanmakuType
 
 import utils.module.danmaku.dm_pb2 as dm_pb2

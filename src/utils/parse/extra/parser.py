@@ -3,7 +3,7 @@ import json
 
 from utils.config import Config
 from utils.common.request import RequestUtils
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 

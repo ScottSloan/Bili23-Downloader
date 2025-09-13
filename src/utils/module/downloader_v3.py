@@ -9,7 +9,8 @@ from utils.config import Config
 from utils.common.thread import DaemonThreadPoolExecutor
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
-from utils.common.model.data_type import DownloadTaskInfo, RangeDownloadInfo
+from utils.common.model.data_type import RangeDownloadInfo
+from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.model.callback import DownloaderCallback
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread

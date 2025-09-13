@@ -1,5 +1,5 @@
 from utils.config import Config
-from utils.common.model.data_type import DownloadTaskInfo
+from utils.common.model.task_info import DownloadTaskInfo
 
 from utils.module.pic.cover import Cover
 
