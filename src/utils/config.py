@@ -35,6 +35,7 @@ app_config_group = {
     "Download": [
         "path",
         "file_name_template_list",
+        "use_tmdb",
         "max_download_count",
         "max_thread_count",
         "video_quality_priority",
@@ -121,12 +122,12 @@ class Config:
         name: str = "Bili23 Downloader"
         id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.67.0"
-        version_code: int = 167000
+        version: str = "1.70.0"
+        version_code: int = 170000
 
-        task_file_min_version_code: int = 166000
+        task_file_min_version_code: int = 170000
         live_file_min_version_code: int = 165000
-        app_config_file_min_version_code: int = 167000
+        app_config_file_min_version_code: int = 170000
         user_config_file_min_version_code: int = 166000
 
         app_config_path: str = ""
@@ -266,8 +267,13 @@ class Config:
             {
                 "template": "{series_title}/{section_title}/{title}",
                 "type": 6
+            },
+            {
+                "template": "{series_title}/{section_title}/{title}",
+                "type": 7
             }
         ]
+        use_tmdb: bool = False
 
         video_quality_priority: list = [
             127,
@@ -329,6 +335,7 @@ class Config:
         user_agent: str = ""
 
         file_name_template_list: list = []
+        use_tmdb: bool = False
 
         ass_style: Dict[str, Dict] = {}
 

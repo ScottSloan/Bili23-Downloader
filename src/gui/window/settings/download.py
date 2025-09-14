@@ -217,6 +217,7 @@ class DownloadPage(Page):
         Config.Temp.video_codec_priority = Config.Download.video_codec_priority.copy()
 
         Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
+        Config.Temp.use_tmdb = Config.Download.use_tmdb
         
         self.max_thread_slider.SetValue(Config.Download.max_thread_count)
         self.max_download_slider.SetValue(Config.Download.max_download_count)
@@ -249,6 +250,7 @@ class DownloadPage(Page):
         Config.Download.speed_mbps = self.speed_limit_box.GetValue()
 
         Config.Download.file_name_template_list = Config.Temp.file_name_template_list.copy()
+        Config.Download.use_tmdb = Config.Temp.use_tmdb
 
         self.parent.download_window.adjust_download_item_count(self.max_download_slider.GetValue())
 

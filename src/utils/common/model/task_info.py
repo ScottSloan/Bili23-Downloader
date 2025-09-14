@@ -132,6 +132,16 @@ class DownloadTaskInfo:
         self.thread_info: dict = {}
         self.error_info: dict = {}
 
+        # 元数据额外信息，不保存到文件
+        # 标签
+        self.tags: List[str] = []
+        # UP 主头像
+        self.up_face_url: str = ""
+        # 视频简介
+        self.description: str = ""
+        # 演员列表
+        self.actors: str = ""
+
     def to_dict(self):
         return {
             "min_version": self.min_version,

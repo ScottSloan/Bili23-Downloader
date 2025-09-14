@@ -57,7 +57,7 @@ class TemplateValidator:
         return self.template.startswith("/")
 
     def check_illegal_chars(self):
-        pattern = r"{time:|{pubtime:"
+        pattern = r"{time:|{pubtime:|{season_num:|{episode_num:"
 
         if Regex.search(pattern, self.template):
             temp = Regex.sub(pattern, "", self.template)

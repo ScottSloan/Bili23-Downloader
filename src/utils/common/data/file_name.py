@@ -32,12 +32,19 @@ template_list = [
     {
         "type": 5,
         "category": "剧集",
-        "subcategory": "-",
+        "subcategory": "非规范命名",
         "link": "https://www.bilibili.com/bangumi/play/ep693247",
         "link_label": "ep693247"
     },
     {
         "type": 6,
+        "category": "剧集",
+        "subcategory": "刮削软件规范命名",
+        "link": "https://www.bilibili.com/bangumi/play/ep693247",
+        "link_label": "ep693247"
+    },
+    {
+        "type": 7,
         "category": "课程",
         "subcategory": "-",
         "link": "https://www.bilibili.com/cheese/play/ep158662",
@@ -163,12 +170,13 @@ preview_data = {
         "area": "日本",
         "page": "",
         "title": "第3话 救星赶来",
-        "section_title": "正片",
+        "section_title": "Season 01",
         "part_title": "",
         "collection_title": "",
         "series_title": "孤独摇滚！",
         "interact_title": "",
         "badge": "限免/会员/预告/付费",
+        "season_num": 1,
         "episode_num": 3,
         "bangumi_type": "番剧/电影/纪录片/国创/电视剧/综艺",
         "aid": 944573356,
@@ -294,9 +302,14 @@ field_data = {
         "description": '标识（仅供预览，以实际显示为准）',
         "type": [1, 2, 3, 4, 5, 6]
     },
+    "season_num": {
+        "name": "{season_num}",
+        "description": "季编号（例如第 n 季）",
+        "type": [5]
+    },
     "episode_num": {
         "name": "{episode_num}",
-        "description": "剧集编号",
+        "description": "集编号（例如第 n 集）",
         "type": [5]
     },
     "bangumi_type": {

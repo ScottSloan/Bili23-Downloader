@@ -36,6 +36,8 @@ class CustomFileNameDialog(Dialog):
 
         self.template_list = wx.ListCtrl(self, -1, size = self.FromDIP((550, 210)), style = wx.LC_REPORT)
 
+        self.use_tmdb_chk = wx.CheckBox(self, -1, "下载剧集时，使用刮削软件规范命名模板")
+
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
 
@@ -46,7 +48,8 @@ class CustomFileNameDialog(Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)
-        vbox.Add(self.template_list, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(self.template_list, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(self.use_tmdb_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -56,25 +59,34 @@ class CustomFileNameDialog(Dialog):
 
         self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
 
+        self.use_tmdb_chk.Bind(wx.EVT_CHECKBOX, self.onUseTMDBCheckEVT)
+
     def init_data(self):
         self.item_data_dict = {}
+
+        self.use_tmdb_chk.SetValue(Config.Temp.use_tmdb)
 
         self.update_template_list()
         self.init_list_column()
         self.init_list_data()
 
+        self.onUseTMDBCheckEVT(0)
+
     def init_list_column(self):
-        self.template_list.AppendColumn("序号", width = self.FromDIP(50))
+        self.template_list.AppendColumn("序号", width = self.FromDIP(40))
         self.template_list.AppendColumn("类别", width = self.FromDIP(85))
-        self.template_list.AppendColumn("子类别", width = self.FromDIP(75))
+        self.template_list.AppendColumn("子类别", width = self.FromDIP(120))
+        self.template_list.AppendColumn("生效", width = self.FromDIP(40))
         self.template_list.AppendColumn("文件名模板", width = -1)
 
     def init_list_data(self):
         for index, entry in enumerate(template_list):
             type = entry.get("type")
             template = entry.get("template", "")
+            category = entry.get("category", "")
+            subcategory = entry.get("subcategory", "")
 
-            self.template_list.Append([type, entry.get("category"), entry.get("subcategory"), template])
+            self.template_list.Append([type, category, subcategory, "√", template])
 
             self.item_data_dict[type] = {
                 "type": type,
@@ -85,7 +97,7 @@ class CustomFileNameDialog(Dialog):
 
             self.template_list.SetItemData(index, type)
 
-        self.template_list.SetColumnWidth(3, width = -1)
+        self.template_list.SetColumnWidth(4, width = -1)
 
     def update_template_list(self):
         for entry in Config.Temp.file_name_template_list:
@@ -105,18 +117,31 @@ class CustomFileNameDialog(Dialog):
         dlg = EditTemplateDialog(self, item_data)
 
         if dlg.ShowModal() == wx.ID_OK:
-            self.template_list.SetItem(item, 3, dlg.get_template())
+            self.template_list.SetItem(item, 4, dlg.get_template())
 
-        self.template_list.SetColumnWidth(3, width = -1)
+        self.template_list.SetColumnWidth(4, width = -1)
 
     def onOKEVT(self):
         Config.Temp.file_name_template_list.clear()
 
         for item in range(self.template_list.GetItemCount()):
             Config.Temp.file_name_template_list.append({
-                "template": self.template_list.GetItemText(item, 3),
+                "template": self.template_list.GetItemText(item, 4),
                 "type": self.template_list.GetItemData(item)
             })
+            
+        Config.Temp.use_tmdb = self.use_tmdb_chk.GetValue()
 
     def onHelpEVT(self, event: wx.CommandEvent):
         wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/advanced/custom_file_name.html")
+
+    def onUseTMDBCheckEVT(self, event: wx.CommandEvent):
+        # reset
+        self.template_list.SetItem(4, 3, "")
+        self.template_list.SetItem(5, 3, "")
+
+        # set
+        if self.use_tmdb_chk.GetValue():
+            self.template_list.SetItem(5, 3, "√")
+        else:
+            self.template_list.SetItem(4, 3, "√")
