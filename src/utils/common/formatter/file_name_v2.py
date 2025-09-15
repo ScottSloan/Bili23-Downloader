@@ -9,6 +9,11 @@ from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime
 from utils.common.io.directory import Directory
 
+class StrictNaming:
+    @classmethod
+    def get_episode_badge(cls, task_info: DownloadTaskInfo):
+        return f"S{task_info.season_num:02}E{task_info.episode_num:02}"
+
 class FileNameFormatter:
     @classmethod
     def format_file_name(cls, template: str, task_info: DownloadTaskInfo = None, field_dict: dict = None):

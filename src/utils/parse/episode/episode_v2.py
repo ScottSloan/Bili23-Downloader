@@ -83,6 +83,7 @@ class EpisodeInfo:
         return {
             "number": 0,
             "page": page if (page := episode.get("page", 0)) and str(page).isnumeric() else 0,
+            "season_num": episode.get("season_num", 0),
             "episode_num": episode.get("episode_num", 0),
             "title": episode.get("title", ""),
             "cid": episode.get("cid", 0),

@@ -353,6 +353,21 @@ url_pattern_map = [
     ("bangumi", r"(ep[0-9]+|ss[0-9]+)|md[0-9]+")
 ]
 
+cn_num_map = {
+    "一": 1,
+    "二": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+    "零": 0,
+    "百": 100
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

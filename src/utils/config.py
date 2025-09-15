@@ -35,7 +35,7 @@ app_config_group = {
     "Download": [
         "path",
         "file_name_template_list",
-        "use_tmdb",
+        "strict_naming",
         "max_download_count",
         "max_thread_count",
         "video_quality_priority",
@@ -267,13 +267,9 @@ class Config:
             {
                 "template": "{series_title}/{section_title}/{title}",
                 "type": 6
-            },
-            {
-                "template": "{series_title}/{section_title}/{title}",
-                "type": 7
             }
         ]
-        use_tmdb: bool = False
+        strict_naming: bool = False
 
         video_quality_priority: list = [
             127,
@@ -335,7 +331,7 @@ class Config:
         user_agent: str = ""
 
         file_name_template_list: list = []
-        use_tmdb: bool = False
+        strict_naming: bool = False
 
         ass_style: Dict[str, Dict] = {}
 

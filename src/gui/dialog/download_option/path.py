@@ -66,7 +66,7 @@ class PathStaticBox(Panel):
         self.update_disk_space()
 
         Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
-        Config.Temp.use_tmdb = Config.Download.use_tmdb
+        Config.Temp.strict_naming = Config.Download.strict_naming
 
         self.path_box.SetValue(Config.Download.path)
 

@@ -2,6 +2,7 @@ class TreeListItemInfo:
     def __init__(self):
         self.number: int = 0
         self.page: int = 0
+        self.season_num: int = 0
         self.episode_num: int = 0
 
         self.title: str = ""
@@ -43,6 +44,7 @@ class TreeListItemInfo:
         return {
             "number": self.number,
             "page": self.page,
+            "season_num": self.season_num,
             "episode_num": self.episode_num,
 
             "title": self.title,
@@ -84,6 +86,7 @@ class TreeListItemInfo:
     def load_from_dict(self, data: dict):
         self.number = data.get("number", self.number)
         self.page = data.get("page", self.page)
+        self.season_num = data.get("season_num", self.season_num)
         self.episode_num = data.get("episode_num", self.episode_num)
 
         self.title = data.get("title", self.title)

@@ -115,7 +115,9 @@ class DownloadTaskInfo:
         self.up_uid: int = 0
         # 标识
         self.badge: str = ""
-        # 剧集编号
+        # 季编号
+        self.season_num: int = 0
+        # 集编号
         self.episode_num: int = 0
         # 剧集类型
         self.bangumi_type: str = ""
@@ -208,6 +210,7 @@ class DownloadTaskInfo:
             "up_name": self.up_name,
             "up_uid": self.up_uid,
             "badge": self.badge,
+            "season_num": self.season_num,
             "episode_num": self.episode_num,
             "bangumi_type": self.bangumi_type,
             "template_type": self.template_type,
@@ -286,6 +289,7 @@ class DownloadTaskInfo:
         self.up_name = data.get("up_name", self.up_name)
         self.up_uid = data.get("up_uid", self.up_uid)
         self.badge = data.get("badge", self.badge)
+        self.season_num = data.get("season_num", self.season_num)
         self.episode_num = data.get("episode_num", self.episode_num)
         self.bangumi_type = data.get("bangumi_type", self.bangumi_type)
         self.template_type = data.get("template_type", self.template_type)

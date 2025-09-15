@@ -1,4 +1,5 @@
 import wx
+import textwrap
 
 from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
@@ -30,13 +31,19 @@ class CustomFileNameDialog(Dialog):
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(template_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        top_hbox.Add(template_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER)
+        top_hbox.Add(template_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.AddStretchSpacer()
         top_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.template_list = wx.ListCtrl(self, -1, size = self.FromDIP((550, 210)), style = wx.LC_REPORT)
 
-        self.use_tmdb_chk = wx.CheckBox(self, -1, "下载剧集时，使用刮削软件规范命名模板")
+        self.strict_naming_chk = wx.CheckBox(self, -1, "下载剧集时，严格规范命名文件，便于刮削软件识别")
+        strict_naming_tip = ToolTip(self)
+        strict_naming_tip.set_tooltip("启用后，下载剧集时会自动识别季数，自动创建 Season xx 目录，并在每集文件名后添加 SxxExx 标识，符合刮削软件的命名规范。\n\n配合下载元数据选项，可同时生成剧集 tvshow 元数据文件，和单集 episodedetail 元数据文件，方便刮削软件识别。")
+
+        strict_naming_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        strict_naming_hbox.Add(self.strict_naming_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        strict_naming_hbox.Add(strict_naming_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.FromDIP((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.FromDIP((80, 30)))
@@ -49,7 +56,7 @@ class CustomFileNameDialog(Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)
         vbox.Add(self.template_list, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
-        vbox.Add(self.use_tmdb_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        vbox.Add(strict_naming_hbox, 0, wx.EXPAND)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
@@ -59,18 +66,14 @@ class CustomFileNameDialog(Dialog):
 
         self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
 
-        self.use_tmdb_chk.Bind(wx.EVT_CHECKBOX, self.onUseTMDBCheckEVT)
-
     def init_data(self):
         self.item_data_dict = {}
 
-        self.use_tmdb_chk.SetValue(Config.Temp.use_tmdb)
+        self.strict_naming_chk.SetValue(Config.Temp.strict_naming)
 
         self.update_template_list()
         self.init_list_column()
         self.init_list_data()
-
-        self.onUseTMDBCheckEVT(0)
 
     def init_list_column(self):
         self.template_list.AppendColumn("序号", width = self.FromDIP(40))
@@ -129,19 +132,8 @@ class CustomFileNameDialog(Dialog):
                 "template": self.template_list.GetItemText(item, 4),
                 "type": self.template_list.GetItemData(item)
             })
-            
-        Config.Temp.use_tmdb = self.use_tmdb_chk.GetValue()
+
+        Config.Temp.strict_naming = self.strict_naming_chk.GetValue()
 
     def onHelpEVT(self, event: wx.CommandEvent):
         wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/advanced/custom_file_name.html")
-
-    def onUseTMDBCheckEVT(self, event: wx.CommandEvent):
-        # reset
-        self.template_list.SetItem(4, 3, "")
-        self.template_list.SetItem(5, 3, "")
-
-        # set
-        if self.use_tmdb_chk.GetValue():
-            self.template_list.SetItem(5, 3, "√")
-        else:
-            self.template_list.SetItem(4, 3, "√")

@@ -32,19 +32,12 @@ template_list = [
     {
         "type": 5,
         "category": "剧集",
-        "subcategory": "非规范命名",
+        "subcategory": "-",
         "link": "https://www.bilibili.com/bangumi/play/ep693247",
         "link_label": "ep693247"
     },
     {
         "type": 6,
-        "category": "剧集",
-        "subcategory": "刮削软件规范命名",
-        "link": "https://www.bilibili.com/bangumi/play/ep693247",
-        "link_label": "ep693247"
-    },
-    {
-        "type": 7,
         "category": "课程",
         "subcategory": "-",
         "link": "https://www.bilibili.com/cheese/play/ep158662",
@@ -170,7 +163,7 @@ preview_data = {
         "area": "日本",
         "page": "",
         "title": "第3话 救星赶来",
-        "section_title": "Season 01",
+        "section_title": "正片",
         "part_title": "",
         "collection_title": "",
         "series_title": "孤独摇滚！",
