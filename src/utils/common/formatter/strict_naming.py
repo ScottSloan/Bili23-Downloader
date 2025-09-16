@@ -2,6 +2,7 @@ import re
 
 from utils.common.map import cn_num_map
 from utils.common.regex import Regex
+from utils.common.model.task_info import DownloadTaskInfo
 
 class StrictNaming:
     @classmethod
@@ -23,6 +24,23 @@ class StrictNaming:
         
         # 未匹配到季编号，则默认返回 1 代表第一季
         return 1
+    
+    @classmethod
+    def add_episode_badge(cls, task_info: DownloadTaskInfo):
+        season_string = "S{season_num:02}".format(season_num = task_info.season_num)
+        episode_string = "E{episode_num:0>{width}}".format(episode_num = task_info.episode_num, width = len(str(task_info.total_count)) if task_info.total_count > 9 else 2)
+
+        task_info.title = "{title} - {season_string}{episode_string}".format(title = task_info.title, season_string = season_string, episode_string = episode_string)
+
+    @classmethod
+    def add_season_section_badge(cls, task_info: DownloadTaskInfo):
+        if task_info.bangumi_type != "电影":
+            if task_info.section_title == "正片":
+                section_title = "Season {season_num:02}".format(season_num = task_info.season_num)
+            else:
+                section_title = "Extra/" + task_info.section_title
+
+            task_info.section_title = section_title
     
     @staticmethod
     def convert_cn_num_to_arabic(cn_num: str):

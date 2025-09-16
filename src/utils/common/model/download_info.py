@@ -5,6 +5,7 @@ from utils.config import Config
 from utils.common.model.list_item_info import TreeListItemInfo
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import ParseType
+from utils.common.formatter.strict_naming import StrictNaming
 
 class DownloadInfo:
     @classmethod
@@ -27,8 +28,8 @@ class DownloadInfo:
 
         return download_info_list
     
-    @staticmethod
-    def get_base_download_info(item_info: TreeListItemInfo):
+    @classmethod
+    def get_base_download_info(cls, item_info: TreeListItemInfo):
         return {
             "list_number": item_info.number,
             "cover_url": item_info.cover_url,
@@ -51,11 +52,13 @@ class DownloadInfo:
             "parent_title": item_info.parent_title,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
+            "template": cls.get_specific_template(item_info.template_type),
             "area": item_info.area,
             "zone": item_info.zone,
             "subzone": item_info.subzone,
             "badge": item_info.badge,
             "page": item_info.page,
+            "total_count": item_info.total_count,
             "referer_url": "https://www.bilibili.com/",
             "up_name": item_info.up_name,
             "up_uid": item_info.up_mid,
@@ -96,11 +99,29 @@ class DownloadInfo:
 
         return info
     
-    @staticmethod
-    def get_task_info_obj(info: dict):
+    @classmethod
+    def get_task_info_obj(cls, info: dict):
         task_info = DownloadTaskInfo()
         task_info.load_from_dict(info)
 
         task_info.id = random.randint(10000000, 99999999)
 
+        cls.check_strict_naming(task_info)
+
         return task_info
+    
+    @staticmethod
+    def check_strict_naming(task_info: DownloadTaskInfo):
+        if ParseType(task_info.parse_type) == ParseType.Bangumi and Config.Download.strict_naming:
+            if task_info.season_num:
+                task_info.template = "{series_title}/{section_title}/{title}"
+                
+                StrictNaming.add_episode_badge(task_info)
+
+                StrictNaming.add_season_section_badge(task_info)
+
+    @staticmethod
+    def get_specific_template(template_type: int):
+        for entry in Config.Download.file_name_template_list:
+            if entry["type"] == template_type:
+                return entry["template"]

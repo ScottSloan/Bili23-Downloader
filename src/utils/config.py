@@ -493,8 +493,8 @@ class Config:
             cls.app_config = Config.APPConfig()
             cls.user_config = Config.UserConfig()
 
-        except Exception as e:
-            cls.on_error(e)
+        except Exception:
+            cls.on_error()
 
     @staticmethod
     def init_path():
@@ -518,19 +518,19 @@ class Config:
         try:
             cls.app_config.save()
         
-        except Exception as e:
-            cls.on_error(e)
+        except Exception:
+            cls.on_error()
 
     @classmethod
     def save_user_config(cls):
         try:
             cls.user_config.save()
 
-        except Exception as e:
-            cls.on_error(e)
+        except Exception:
+            cls.on_error()
 
     @staticmethod
-    def on_error(e):
+    def on_error():
         import wx
         import sys
         import traceback

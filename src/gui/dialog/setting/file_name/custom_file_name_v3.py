@@ -39,7 +39,7 @@ class CustomFileNameDialog(Dialog):
 
         self.strict_naming_chk = wx.CheckBox(self, -1, "下载剧集时，严格规范命名文件，便于刮削软件识别")
         strict_naming_tip = ToolTip(self)
-        strict_naming_tip.set_tooltip("启用后，下载剧集时会自动识别季数，自动创建 Season xx 目录，并在每集文件名后添加 SxxExx 标识，符合刮削软件的命名规范。\n\n配合下载元数据选项，可同时生成剧集 tvshow 元数据文件，和单集 episodedetail 元数据文件，方便刮削软件识别。")
+        strict_naming_tip.set_tooltip("启用后，下载剧集时会自动识别季数，自动创建 Season xx 目录，并在每集文件名后添加 SxxExx 标识，符合刮削软件的命名规范。\n\n配合下载元数据选项，可同时生成剧集 tvshow 元数据文件，和单集 episodedetail 元数据文件，方便刮削软件识别。\n\n剧集是指番剧、电影、记录片、电视剧、国创和综艺等类型的视频。")
 
         strict_naming_hbox = wx.BoxSizer(wx.HORIZONTAL)
         strict_naming_hbox.Add(self.strict_naming_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))

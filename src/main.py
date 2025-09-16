@@ -2,12 +2,17 @@ import os
 import sys
 import platform
 
-def message_box(message: str, caption: str):
+def message_box(message: str, caption: str, wx_status: bool = True, e = None):
     if platform.platform().startswith("Windows"):
         import ctypes
         ctypes.windll.user32.MessageBoxW(0, message, caption, 0x0 | 0x30)
     else:
-        wx.LogError(message)
+        if wx_status:
+            wx.LogError(message)
+        else:
+            raise e
+        
+    sys.exit()
 
 def get_traceback():
     import traceback
@@ -18,21 +23,11 @@ try:
     import wx
 
 except ImportError as e:
-    if platform.platform().startswith("Windows"):
-        message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error")
-    else:
-        raise e
-    
-    sys.exit()
+    message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error", False, e)
 
 except Exception as e:
-    if platform.platform().startswith("Windows"):
-        message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error")    
-    else:
-        raise e
+    message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error", False, e)
     
-    sys.exit()
-
 import google.protobuf
 
 protobuf_version = google.protobuf.__version__
@@ -54,8 +49,6 @@ try:
 
 except Exception as e:
     message_box(f"初始化程序失败\n\n{get_traceback()}", "Fatal Error")
-
-    sys.exit()
 
 class APP(wx.App):
     def __init__(self):

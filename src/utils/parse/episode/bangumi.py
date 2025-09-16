@@ -62,6 +62,7 @@ class Bangumi:
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
         episode["season_num"] = cls.season_num
         episode["episode_num"] = int(episode.get("title")) if (episode_num := episode.get("title")) and episode_num.isnumeric() else 0
+        episode["total_count"] = info_json.get("total", 0)
         episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title"), section_title, info_json["type"] == 2)
         episode["bvid"] = cls.get_bvid(episode.copy())
         episode["pubtime"] = episode.get("pub_time")
@@ -69,7 +70,7 @@ class Bangumi:
         episode["cover_url"] = episode.get("cover")
         episode["link"] = cls.get_link(episode.copy())
         episode["type"] = ParseType.Bangumi.value
-        episode["series_title"] = info_json.get("season_title")
+        episode["series_title"] = info_json["series"]["series_title"]
         episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)

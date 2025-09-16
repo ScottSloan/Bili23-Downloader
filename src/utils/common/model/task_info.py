@@ -123,6 +123,10 @@ class DownloadTaskInfo:
         self.bangumi_type: str = ""
         # 模板类型
         self.template_type: int = 0
+        # 模板
+        self.template: str = ""
+        # 正片视频个数
+        self.total_count: int = 0
 
         # 视频宽度
         self.video_width: int = 0
@@ -214,6 +218,8 @@ class DownloadTaskInfo:
             "episode_num": self.episode_num,
             "bangumi_type": self.bangumi_type,
             "template_type": self.template_type,
+            "template": self.template,
+            "total_count": self.total_count,
 
             "video_width": self.video_width,
             "video_height": self.video_height,
@@ -293,6 +299,8 @@ class DownloadTaskInfo:
         self.episode_num = data.get("episode_num", self.episode_num)
         self.bangumi_type = data.get("bangumi_type", self.bangumi_type)
         self.template_type = data.get("template_type", self.template_type)
+        self.template = data.get("template", self.template)
+        self.total_count = data.get("total_count", self.total_count)
 
         self.video_width = data.get("video_width", self.video_width)
         self.video_height = data.get("video_height", self.video_height)

@@ -9,11 +9,6 @@ from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime
 from utils.common.io.directory import Directory
 
-class StrictNaming:
-    @classmethod
-    def get_episode_badge(cls, task_info: DownloadTaskInfo):
-        return f"S{task_info.season_num:02}E{task_info.episode_num:02}"
-
 class FileNameFormatter:
     @classmethod
     def format_file_name(cls, template: str, task_info: DownloadTaskInfo = None, field_dict: dict = None):
@@ -26,14 +21,12 @@ class FileNameFormatter:
     
     @classmethod
     def format_file_basename(cls, task_info: DownloadTaskInfo):
-        template = cls.get_template(task_info)
-
-        return os.path.basename(cls.format_file_name(template, task_info = task_info))
+        return os.path.basename(cls.format_file_name(task_info.template, task_info = task_info))
 
     @classmethod
     def get_download_path(cls, task_info: DownloadTaskInfo):
         field_dict = cls.get_field_dict(task_info)
-        template = cls.get_template(task_info)
+        template = task_info.template
 
         template_path = template.format(**field_dict)
 
@@ -61,15 +54,6 @@ class FileNameFormatter:
             return base_name[:max_length - len(ext)] + ext
         
         return file_name
-
-    @classmethod
-    def get_template(cls, task_info: DownloadTaskInfo) -> str:
-        template = cls.get_specific_template(task_info.template_type)
-
-        if not template:
-            template = cls.get_specific_template(TemplateType.Video_Normal.value)
-
-        return template
 
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):
@@ -126,9 +110,3 @@ class FileNameFormatter:
         path = path.replace("/", os.sep)
 
         return path
-    
-    @staticmethod
-    def get_specific_template(template_type: int):        
-        for entry in Config.Download.file_name_template_list:
-            if entry["type"] == template_type:
-                return entry["template"]

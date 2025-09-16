@@ -34,6 +34,7 @@ class TreeListItemInfo:
         self.subzone: str = ""
         self.up_name: str = ""
         self.up_mid: int = 0
+        self.total_count: int = 0
 
         self.item_type: str = "node"
         self.type: int = 0
@@ -76,6 +77,7 @@ class TreeListItemInfo:
             "subzone": self.subzone,
             "up_name": self.up_name,
             "up_mid": self.up_mid,
+            "total_count": self.total_count,
 
             "item_type": self.item_type,
             "type": self.type,
@@ -118,6 +120,7 @@ class TreeListItemInfo:
         self.subzone = data.get("subzone", self.subzone)
         self.up_name = data.get("up_name", self.up_name)
         self.up_mid = data.get("up_mid", self.up_mid)
+        self.total_count = data.get("total_count", self.total_count)
 
         self.item_type = data.get("item_type", self.item_type)
         self.type = data.get("type", self.type)
