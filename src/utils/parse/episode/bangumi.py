@@ -70,7 +70,8 @@ class Bangumi:
         episode["cover_url"] = episode.get("cover")
         episode["link"] = cls.get_link(episode.copy())
         episode["type"] = ParseType.Bangumi.value
-        episode["series_title"] = info_json["series"]["series_title"]
+        episode["series_title"] = info_json["season_title"]
+        episode["series_title_original"] = info_json["series"]["series_title"]
         episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)

@@ -28,6 +28,7 @@ class TreeListItemInfo:
         self.series_title: str = ""
         self.interact_title: str = ""
         self.parent_title: str = ""
+        self.series_title_original: str = ""
 
         self.area: str = ""
         self.zone: str = ""
@@ -71,6 +72,7 @@ class TreeListItemInfo:
             "series_title": self.series_title,
             "interact_title": self.interact_title,
             "parent_title": self.parent_title,
+            "series_title_original": self.series_title_original,
 
             "area": self.area,
             "zone": self.zone,
@@ -114,6 +116,7 @@ class TreeListItemInfo:
         self.series_title = data.get("series_title", self.series_title)
         self.interact_title = data.get("interact_title", self.interact_title)
         self.parent_title = data.get("parent_title", self.parent_title)
+        self.series_title_original = data.get("series_title_original", self.series_title_original)
 
         self.area = data.get("area", self.area)
         self.zone = data.get("zone", self.zone)

@@ -1,12 +1,12 @@
 import wx
 
 from utils.config import Config
-
-from utils.common.map import exit_option_map
+from utils.common.map import exit_option_map, language_map
 
 from gui.window.settings.page import Page
 
 from gui.component.staticbox.extra import ExtraStaticBox
+from gui.component.choice.choice import Choice
 
 class BasicPage(Page):
     def __init__(self, parent: wx.Window):
@@ -18,6 +18,14 @@ class BasicPage(Page):
 
     def init_UI(self):
         basic_box = wx.StaticBox(self.panel, -1, "基本设置")
+
+        language_lab = wx.StaticText(basic_box, -1, "语言")
+        self.language_choice = Choice(basic_box)
+        self.language_choice.SetChoices(language_map)
+
+        language_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        language_hbox.Add(language_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        language_hbox.Add(self.language_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, "自动监听剪切板")
         exit_option_lab = wx.StaticText(basic_box, -1, "当关闭窗口时")
@@ -33,6 +41,7 @@ class BasicPage(Page):
         self.always_on_top_chk = wx.CheckBox(basic_box, 0, "窗口总在最前")
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
+        basic_sbox.Add(language_hbox, 0, wx.EXPAND)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(exit_option_hbox, 0, wx.EXPAND)
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))
@@ -53,6 +62,7 @@ class BasicPage(Page):
     def load_data(self):
         Config.Temp.ass_style = Config.Basic.ass_style.copy()
         
+        self.language_choice.SetCurrentSelection(Config.Basic.language)
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
         self.exit_option_chk.SetSelection(Config.Basic.exit_option)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
@@ -63,6 +73,7 @@ class BasicPage(Page):
         self.extra_box.load_data()
 
     def save_data(self):
+        Config.Basic.language = self.language_choice.GetCurrentSelection()
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
         Config.Basic.exit_option = self.exit_option_chk.GetSelection()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()

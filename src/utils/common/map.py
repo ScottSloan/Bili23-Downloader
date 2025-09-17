@@ -368,6 +368,11 @@ cn_num_map = {
     "百": 100
 }
 
+language_map = {
+    "English": "en_US",
+    "简体中文": "zh_CN",
+}
+
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))
 

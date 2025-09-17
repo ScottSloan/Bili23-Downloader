@@ -50,6 +50,7 @@ class DownloadInfo:
             "series_title": item_info.series_title,
             "interact_title": item_info.interact_title,
             "parent_title": item_info.parent_title,
+            "series_title_original": item_info.series_title_original,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
             "template": cls.get_specific_template(item_info.template_type),
@@ -114,11 +115,7 @@ class DownloadInfo:
     def check_strict_naming(task_info: DownloadTaskInfo):
         if ParseType(task_info.parse_type) == ParseType.Bangumi and Config.Download.strict_naming:
             if task_info.season_num:
-                task_info.template = "{series_title}/{section_title}/{title}"
-                
-                StrictNaming.add_episode_badge(task_info)
-
-                StrictNaming.add_season_section_badge(task_info)
+                StrictNaming.check_strict_naming(task_info)
 
     @staticmethod
     def get_specific_template(template_type: int):

@@ -376,9 +376,9 @@ class VideoPreview(Parser):
 
         if dolby_node:
             if isinstance(dolby_node, list):
+                dolby_node[0]["id"] = AudioQualityID._Dolby_Atoms.value
+                
                 all_url_list.extend(dolby_node)
-            else:
-                all_url_list.append(dolby_node)
 
         if flac_node:
             if isinstance(flac_node, list):

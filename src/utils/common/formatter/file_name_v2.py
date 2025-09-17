@@ -83,11 +83,15 @@ class FileNameFormatter:
             "season_id": task_info.season_id,
             "media_id": task_info.media_id,
             "series_title": FileNameFormatter.get_legal_file_name(task_info.series_title),
+            "series_title_original": FileNameFormatter.get_legal_file_name(task_info.series_title_original),
             "section_title": FileNameFormatter.get_legal_file_name(task_info.section_title),
+            "section_title_ex": FileNameFormatter.get_legal_file_name(task_info.section_title_ex),
             "part_title": FileNameFormatter.get_legal_file_name(task_info.part_title),
             "collection_title": FileNameFormatter.get_legal_file_name(task_info.collection_title),
             "interact_title": FileNameFormatter.get_legal_file_name(task_info.interact_title),
+            "episode_tag": task_info.episode_tag,
             "badge": task_info.badge,
+            "season_num": task_info.season_num,
             "episode_num": task_info.episode_num,
             "bangumi_type": task_info.bangumi_type,
             "video_quality": video_quality_map.get(task_info.video_quality_id),
@@ -95,7 +99,11 @@ class FileNameFormatter:
             "video_codec": video_codec_short_map.get(task_info.video_codec_id),
             "duration": task_info.duration,
             "up_name": FileNameFormatter.get_legal_file_name(task_info.up_name),
-            "up_uid": task_info.up_uid
+            "up_uid": task_info.up_uid,
+            "total_count": task_info.total_count,
+            "episode_tag": task_info.episode_tag,
+            "series_title_original": task_info.series_title_original,
+            "section_title_ex": task_info.section_title_ex,
         })
 
     @staticmethod

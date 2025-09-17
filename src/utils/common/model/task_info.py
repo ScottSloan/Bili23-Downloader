@@ -148,6 +148,11 @@ class DownloadTaskInfo:
         # 演员列表
         self.actors: str = ""
 
+        # 仅在严格命名中使用
+        self.series_title_original: str = ""
+        self.section_title_ex: str = ""
+        self.episode_tag: str = ""
+
     def to_dict(self):
         return {
             "min_version": self.min_version,
@@ -227,7 +232,11 @@ class DownloadTaskInfo:
             "source": self.source,
 
             "thread_info": self.thread_info,
-            "error_info": self.error_info
+            "error_info": self.error_info,
+
+            "series_title_original": self.series_title_original,
+            "section_title_ex": self.section_title_ex,
+            "episode_tag": self.episode_tag
         }
 
     def load_from_dict(self, data: dict):
@@ -309,6 +318,10 @@ class DownloadTaskInfo:
 
         self.thread_info = data.get("thread_info", self.thread_info)
         self.error_info = data.get("error_info", self.error_info)
+
+        self.series_title_original = data.get("series_title_original", self.series_title_original)
+        self.section_title_ex = data.get("section_title_ex", self.section_title_ex)
+        self.episode_tag = data.get("episode_tag", self.episode_tag)
 
     def load_from_file(self, file_path: str):
         with open(file_path, "r", encoding = "utf-8") as f:

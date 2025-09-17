@@ -9,6 +9,7 @@ from utils.common.enums import Platform
 
 app_config_group = {
     "Basic": [
+        "language",
         "listen_clipboard",
         "exit_option",
         "auto_popup_option_dialog",
@@ -133,6 +134,8 @@ class Config:
         app_config_path: str = ""
 
     class Basic:
+        language: str = "zh_CN"
+
         listen_clipboard: bool = False
         exit_option: int = 3
         auto_popup_option_dialog: bool = True
@@ -265,8 +268,12 @@ class Config:
                 "type": 5
             },
             {
-                "template": "{series_title}/{section_title}/{title}",
+                "template": "{series_title_original}/{section_title_ex}/{title} - {episode_tag}",
                 "type": 6
+            },
+            {
+                "template": "{series_title}/{section_title}/{title}",
+                "type": 7
             }
         ]
         strict_naming: bool = False
