@@ -204,4 +204,4 @@ class DownloadParser(Parser):
 
                 task_info.up_face_url = info.get("up_face")
                 task_info.description = info.get("description")
-                task_info.tags = VideoParser.get_video_tags(task_info.bvid)
+                task_info.video_tags = VideoParser.get_video_tags(task_info.bvid)

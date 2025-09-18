@@ -4,7 +4,7 @@ from utils.config import Config
 
 from utils.common.model.list_item_info import TreeListItemInfo
 from utils.common.model.task_info import DownloadTaskInfo
-from utils.common.enums import ParseType
+from utils.common.enums import ParseType, TemplateType
 from utils.common.formatter.strict_naming import StrictNaming
 
 class DownloadInfo:
@@ -111,11 +111,14 @@ class DownloadInfo:
 
         return task_info
     
-    @staticmethod
-    def check_strict_naming(task_info: DownloadTaskInfo):
+    @classmethod
+    def check_strict_naming(cls, task_info: DownloadTaskInfo):
         if ParseType(task_info.parse_type) == ParseType.Bangumi and Config.Download.strict_naming:
             if task_info.season_num:
                 StrictNaming.check_strict_naming(task_info)
+
+                task_info.template_type = TemplateType.Bangumi_strict.value
+                task_info.template = cls.get_specific_template(task_info.template_type)
 
     @staticmethod
     def get_specific_template(template_type: int):

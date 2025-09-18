@@ -79,7 +79,6 @@ class CustomFileNameDialog(Dialog):
         self.template_list.AppendColumn("序号", width = self.FromDIP(40))
         self.template_list.AppendColumn("类别", width = self.FromDIP(85))
         self.template_list.AppendColumn("子类别", width = self.FromDIP(120))
-        self.template_list.AppendColumn("生效", width = self.FromDIP(40))
         self.template_list.AppendColumn("文件名模板", width = -1)
 
     def init_list_data(self):
@@ -89,7 +88,7 @@ class CustomFileNameDialog(Dialog):
             category = entry.get("category", "")
             subcategory = entry.get("subcategory", "")
 
-            self.template_list.Append([type, category, subcategory, "√", template])
+            self.template_list.Append([type, category, subcategory, template])
 
             self.item_data_dict[type] = {
                 "type": type,
@@ -100,7 +99,7 @@ class CustomFileNameDialog(Dialog):
 
             self.template_list.SetItemData(index, type)
 
-        self.template_list.SetColumnWidth(4, width = -1)
+        self.template_list.SetColumnWidth(3, width = -1)
 
     def update_template_list(self):
         for entry in Config.Temp.file_name_template_list:
@@ -120,16 +119,20 @@ class CustomFileNameDialog(Dialog):
         dlg = EditTemplateDialog(self, item_data)
 
         if dlg.ShowModal() == wx.ID_OK:
-            self.template_list.SetItem(item, 4, dlg.get_template())
+            template = dlg.get_template()
 
-        self.template_list.SetColumnWidth(4, width = -1)
+            self.template_list.SetItem(item, 3, template)
+
+            self.item_data_dict[type]["template"] = template
+
+        self.template_list.SetColumnWidth(3, width = -1)
 
     def onOKEVT(self):
         Config.Temp.file_name_template_list.clear()
 
         for item in range(self.template_list.GetItemCount()):
             Config.Temp.file_name_template_list.append({
-                "template": self.template_list.GetItemText(item, 4),
+                "template": self.template_list.GetItemText(item, 3),
                 "type": self.template_list.GetItemData(item)
             })
 

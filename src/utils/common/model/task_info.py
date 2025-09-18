@@ -139,14 +139,18 @@ class DownloadTaskInfo:
         self.error_info: dict = {}
 
         # 元数据额外信息，不保存到文件
-        # 标签
-        self.tags: List[str] = []
+        # 视频标签
+        self.video_tags: List[str] = []
         # UP 主头像
         self.up_face_url: str = ""
         # 视频简介
         self.description: str = ""
         # 演员列表
         self.actors: str = ""
+        # 海报链接
+        self.poster_url: str = ""
+        # 剧集标签
+        self.bangumi_tags: List[str] = []
 
         # 仅在严格命名中使用
         self.series_title_original: str = ""

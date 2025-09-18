@@ -106,6 +106,25 @@ class BangumiParser(Parser):
             "bvid": first_episode.get("bvid"),
             "cid": first_episode.get("cid")
         }
+    
+    @classmethod
+    def get_bangumi_season_info(cls, media_id: int):
+        url = f"https://www.bilibili.com/bangumi/media/md{media_id}"
+
+        req = RequestUtils.request_get(url)
+        req.encoding = "utf-8"
+
+        poster_match = Regex.search(r"<meta property=\"og:image\" content=\"(https://i0\.hdslb\.com/bfs/bangumi/image/[^\"]+)\">", req.text)
+        description_match = Regex.search(r"\"evaluate\":\"([^\"]+)\"", req.text)
+        actors_match = Regex.search(r"\"actors\":\"([^\"]+)\"", req.text)
+        tags_match = Regex.findall(r"class=\"media-tag\">(.*?)</span>", req.text)
+
+        return {
+            "poster_url": poster_match.group(1) if poster_match else "",
+            "description": description_match.group(1) if description_match else "",
+            "actors": actors_match.group(1) if actors_match else "",
+            "tags": tags_match
+        }
 
     def check_bangumi_can_play(self, param: str):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{param}"

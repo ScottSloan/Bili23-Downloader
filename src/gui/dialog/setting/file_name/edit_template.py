@@ -7,16 +7,18 @@ from utils.common.data.file_name import preview_data, field_data, preview_data_e
 from utils.common.regex import Regex
 from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.datetime_util import DateTime
+from utils.common.enums import TemplateType
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.misc.tooltip import ToolTip
 
 class TemplateValidator:
-    def __init__(self, template: str, field_dict: dict):
+    def __init__(self, template: str, field_dict: dict, strict_naming: bool):
         self.template = template
         self.field_dict = field_dict
-    
+        self.strict_naming = strict_naming
+
     def validate(self):
         try:
             self.check()
@@ -50,6 +52,9 @@ class TemplateValidator:
         if self.check_illegal_chars():
             raise ValueError("illegal")
         
+        if self.check_strict_naming():
+            raise ValueError("strict naming")
+        
     def check_sep(self):
         return "\\" in self.template
     
@@ -66,6 +71,10 @@ class TemplateValidator:
         
         if Regex.find_illegal_chars(temp):
             return True
+
+    def check_strict_naming(self):
+        if self.strict_naming:
+            return not Regex.search(r"^{series_title_original}/{section_title_ex}", self.template)
 
     def get_file_name(self):
         self.field_dict["time"] = DateTime.now()
@@ -93,7 +102,10 @@ class TemplateValidator:
                         return "字段名必须以 {} 包裹"
                     
                     case "Invalid format string":
-                        raise "时间格式无效"
+                        return "时间格式无效"
+                    
+                    case "strict naming":
+                        return "编辑严格规范命名模板时，必须以 {series_title_original} 开头"
                     
                     case _:
                         return str(e)
@@ -228,16 +240,19 @@ class EditTemplateDialog(Dialog):
         self.field_list.SetColumnWidth(2, width = -1)
 
     def onTextEVT(self, event: wx.CommandEvent):
-        validator = TemplateValidator(self.get_template(), self.field_dict)
+        validator = TemplateValidator(self.get_template(), self.field_dict, self.type == TemplateType.Bangumi_strict.value)
 
         result = validator.validate()
+        flag = result.get("result")
 
-        if result.get("result"):
+        if flag:
             self.show_file_name(result.get("file_name"))
 
         else:
             self.show_error_tip(result.get("msg"))
             self.show_file_name("")
+
+        self.ok_btn.Enable(flag)
 
         self.file_name_lab.Wrap(self.file_name_lab.GetSize().width)
         self.Layout()

@@ -3,6 +3,7 @@ import textwrap
 
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.datetime_util import DateTime
+from utils.common.enums import ParseType
 
 class MetadataNFOFile:
     class Video:
@@ -20,7 +21,7 @@ class MetadataNFOFile:
                 "cid": task_info.cid,
                 "zone": task_info.zone,
                 "subzone": task_info.subzone,
-                "tags": "\n                    ".join([f"<tag>{tag}</tag>" for tag in task_info.tags])
+                "tags": self.get_tags(task_info.video_tags)
             }
 
         def get_contents(self):
@@ -44,36 +45,91 @@ class MetadataNFOFile:
                     <genre>{zone}</genre>
                     <genre>{subzone}</genre>
                     {tags}
-                </movie>\
-                """.format(**self.data))
+                </movie>""".format(**self.data))
+
+        def get_tags(self, tags: list[str]):
+            tags_elements = []
+
+            for tag in tags:
+                tag_element = """\
+                    <tag>{tag}</tag>"""
+                
+                tags_elements.append(tag_element.format(tag = tag))
+
+            return "\n".join(tags_elements).removeprefix("                    ")
 
     class BangumiSeason:
         def __init__(self, task_info: DownloadTaskInfo):
-            pass
+
+            self.data = {
+                "series_title_original": task_info.series_title_original,
+                "description": task_info.description.replace("\n", "&#10;"),
+                "genres": self.get_genres(task_info.bangumi_tags),
+                "actors": self.get_actors(task_info.actors),
+                "season_id": task_info.season_id,
+                "season_num": task_info.season_num,
+                "area": task_info.area,
+                "poster_url": task_info.cover_url
+            }
 
         def get_contents(self):
             return textwrap.dedent("""\
                 <?xml version="1.0" encoding="UTF-8"?>
                 <tvshow>
-                    <title>{series_title}</title>
+                    <title>{series_title_original}</title>
+                    <plot>{description}</plot>
+                    {genres}
                     <studio>Bilibili</studio>
-                    <actor>
-                        <name>示例UP主</name>
-                        <role>UP主</role>
-                    </actor>
-                    <episodeguide>
-                        <url>https://www.bilibili.com/bangumi/play/ss12345</url>
-                    </episodeguide>
-                    <season>1</season>
-                    <uniqueid type="season">12345</uniqueid>
-                    """.format(**self.data))
+                    {actors}
+                    <season>{season_num}</season>
+                    <country>{area}</country>
+                    <poster>{poster_url}</poster>
+                    <uniqueid type="season">{season_id}</uniqueid>
+                </tvshow>""".format(**self.data))
         
-        def get_actors(self):
-            pass
+        def get_genres(self, tags: list[str]):
+            genres = []
+
+            for tag in tags:
+                genre_element = """\
+                    <genre>{tag}</genre>"""
+                
+                genres.append(genre_element.format(tag = tag))
+
+            return "\n".join(genres).removeprefix("                    ")
+        
+        def get_actors(self, actors_list: str):
+           actors = []
+
+           for index, entry in enumerate(actors_list.split("\\n")):
+                role_name = entry.split("：")
+
+                actor_element = """\
+                    <actor>
+                        <name>{name}</name>
+                        <role>{role}</role>
+                        <order>{index}</order>
+                    </actor>""".format(name = role_name[1], role = role_name[0], index = index + 1)
+
+                actors.append(actor_element)
+
+           return "\n".join(actors).removeprefix("                    ")
 
     def __init__(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
 
     def get_contents(self):
-        return self.Video(self.task_info).get_contents()
+        match ParseType(self.task_info.parse_type):
+            case ParseType.Video:
+                file = self.Video(self.task_info)
+
+            case ParseType.Bangumi:
+                return ""
+                file = self.BangumiSeason(self.task_info)
+                
+        return file.get_contents()
     
+    def get_bangumi_season_contents(self):
+        file = self.BangumiSeason(self.task_info)
+
+        return file.get_contents()

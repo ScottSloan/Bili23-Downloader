@@ -5,8 +5,6 @@ from utils.common.model.task_info import DownloadTaskInfo
 class StrictNaming:
     @classmethod
     def check_strict_naming(cls, task_info: DownloadTaskInfo):
-        task_info.template = "{series_title_original}/{section_title_ex}/{title}{episode_tag}"
-
         cls.get_episode_tag(task_info)
 
         cls.get_section_title_ex(task_info)
@@ -37,7 +35,7 @@ class StrictNaming:
         episode_string = "E{episode_num:0>{width}}".format(episode_num = task_info.episode_num, width = len(str(task_info.total_count)) if task_info.total_count > 9 else 2)
 
         if task_info.episode_num != 0:
-            task_info.episode_tag = " - {season_string}{episode_string}".format(title = task_info.title, season_string = season_string, episode_string = episode_string)
+            task_info.episode_tag = "{season_string}{episode_string}".format(title = task_info.title, season_string = season_string, episode_string = episode_string)
         else:
             task_info.episode_tag = ""
 

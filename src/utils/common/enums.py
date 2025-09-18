@@ -181,6 +181,7 @@ class TemplateType(Enum):
     Video_Collection = 3          # 合集
     Video_Interact = 4            # 互动视频
     Bangumi = 5                   # 剧集
-    Cheese = 6                    # 课程
-    Space = 7                     # 个人主页
-    Favlist = 8                   # 收藏夹
+    Bangumi_strict = 6            # 剧集（严格命名）
+    Cheese = 7                    # 课程
+    Space = 8                     # 个人主页
+    Favlist = 9                   # 收藏夹
