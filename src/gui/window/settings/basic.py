@@ -73,7 +73,7 @@ class BasicPage(Page):
         self.extra_box.load_data()
 
     def save_data(self):
-        Config.Basic.language = self.language_choice.GetCurrentSelection()
+        Config.Basic.language = self.language_choice.GetCurrentClientData()
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
         Config.Basic.exit_option = self.exit_option_chk.GetSelection()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()

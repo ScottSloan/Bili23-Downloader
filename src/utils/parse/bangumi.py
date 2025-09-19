@@ -114,16 +114,18 @@ class BangumiParser(Parser):
         req = RequestUtils.request_get(url)
         req.encoding = "utf-8"
 
-        poster_match = Regex.search(r"<meta property=\"og:image\" content=\"(https://i0\.hdslb\.com/bfs/bangumi/image/[^\"]+)\">", req.text)
+        poster_match = Regex.search(r"<meta property=\"og:image\" content=\"(.*?)\">", req.text)
         description_match = Regex.search(r"\"evaluate\":\"([^\"]+)\"", req.text)
         actors_match = Regex.search(r"\"actors\":\"([^\"]+)\"", req.text)
         tags_match = Regex.findall(r"class=\"media-tag\">(.*?)</span>", req.text)
+        pubdate_match = Regex.search(r"\"pub_date\":\"(.*?)\"", req.text)
 
         return {
             "poster_url": poster_match.group(1) if poster_match else "",
             "description": description_match.group(1) if description_match else "",
             "actors": actors_match.group(1) if actors_match else "",
-            "tags": tags_match
+            "tags": tags_match,
+            "pubdate": pubdate_match.group(1) if pubdate_match else ""
         }
 
     def check_bangumi_can_play(self, param: str):
@@ -131,7 +133,7 @@ class BangumiParser(Parser):
 
         self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-    def parse_worker(self, url: str):
+    def parse_worker(self, url: str):        
         match Regex.find_string(r"ep|ss|md", url):
             case "ep":
                 param = self.get_epid(url)
@@ -154,16 +156,12 @@ class BangumiParser(Parser):
 
         return StatusCode.Success.value
     
-    @staticmethod
     def check_json(data: dict):
         status_code = data["code"]
         message = data["message"]
 
         if status_code != StatusCode.Success.value:
-            if message != "抱歉您所在地区不可观看！":
-                return
-
-            raise GlobalException(message = message, code = status_code, json_data = data)
+            raise GlobalException(message = message, code = status_code, json_data = data, parse_url = Parser.url)
 
     def parse_episodes(self):
         Bangumi.parse_episodes(self.info_json, self.ep_id)

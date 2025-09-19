@@ -1,5 +1,6 @@
 from utils.config import Config
 from utils.common.model.task_info import DownloadTaskInfo
+from utils.common.enums import TemplateType
 
 from utils.module.pic.cover import Cover
 
@@ -22,4 +23,9 @@ class CoverParser(Parser):
 
         contents = Cover.download_cover(self.task_info.cover_url)
 
-        self.save_file(f"{self.task_info.file_name}{cover_type}", contents, "wb")
+        if self.task_info.extra_option.get("download_metadata_file") and TemplateType.Bangumi_strict.value and self.task_info.episode_tag:
+            file_name = f"{self.task_info.episode_tag}{cover_type}"
+        else:
+            file_name = f"{self.task_info.file_name}{cover_type}"
+
+        self.save_file(file_name, contents, "wb")

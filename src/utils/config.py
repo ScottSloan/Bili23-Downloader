@@ -145,14 +145,18 @@ class Config:
 
         download_danmaku_file: bool = False
         danmaku_file_type: int = 3
+
         download_subtitle_file: bool = False
         subtitle_file_type: int = 4
         subtitle_lan_option: int = 0
         subtitle_lan_custom_type: list = []
+
         download_cover_file: bool = False
         cover_file_type: int = 0
+
         download_metadata_file: bool = False
         metadata_file_type: int = 0
+        nfo_file_type: int = 0
 
         ass_style: Dict[str, Dict] = {
             "danmaku": {

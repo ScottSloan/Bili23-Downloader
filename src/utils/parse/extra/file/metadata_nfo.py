@@ -1,9 +1,13 @@
 import math
 import textwrap
 
+from utils.config import Config
+
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.datetime_util import DateTime
 from utils.common.enums import ParseType
+
+from utils.module.pic.cover import Cover
 
 class MetadataNFOFile:
     class Video:
@@ -58,18 +62,19 @@ class MetadataNFOFile:
 
             return "\n".join(tags_elements).removeprefix("                    ")
 
-    class BangumiSeason:
+    class BangumiTVShow:
         def __init__(self, task_info: DownloadTaskInfo):
-
             self.data = {
                 "series_title_original": task_info.series_title_original,
                 "description": task_info.description.replace("\n", "&#10;"),
+                "year": task_info.bangumi_pubdate[:4],
+                "pubdate": task_info.bangumi_pubdate,
                 "genres": self.get_genres(task_info.bangumi_tags),
                 "actors": self.get_actors(task_info.actors),
                 "season_id": task_info.season_id,
                 "season_num": task_info.season_num,
                 "area": task_info.area,
-                "poster_url": task_info.cover_url
+                "poster_url": f"poster{MetadataNFOFile.get_cover_type()}"
             }
 
         def get_contents(self):
@@ -78,6 +83,8 @@ class MetadataNFOFile:
                 <tvshow>
                     <title>{series_title_original}</title>
                     <plot>{description}</plot>
+                    <year>{year}</year>
+                    <premiered>{pubdate}</premiered>
                     {genres}
                     <studio>Bilibili</studio>
                     {actors}
@@ -115,6 +122,55 @@ class MetadataNFOFile:
 
            return "\n".join(actors).removeprefix("                    ")
 
+    class BangumiSeason:
+        def __init__(self, task_info: DownloadTaskInfo):
+            self.data = {}
+
+        def get_contents(self):
+            return textwrap.dedent("""\
+                <?xml version="1.0" encoding="UTF-8"?>
+                <season>
+                    <title></title>
+                    <plot></plot>
+                </season>""")
+
+    class EpisodeDetails:
+        def __init__(self, task_info: DownloadTaskInfo):
+            self.data = {
+                "title": task_info.title,
+                "season_num": task_info.season_num,
+                "episode_num": task_info.episode_num,
+                "aired": DateTime.time_str_from_timestamp(task_info.pubtimestamp, "%Y-%m-%d"),
+                "thumb": self.get_thumb(task_info),
+                "cid": task_info.cid,
+                "ep_id": task_info.ep_id
+            }
+
+        def get_contents(self):
+            return textwrap.dedent("""\
+                <?xml version="1.0" encoding="UTF-8"?>
+                <episodedetails>
+                    <title>{title}</title>
+                    <season>{season_num}</season>
+                    <episode>{episode_num}</episode>
+                    <runtime>0</runtime>
+                    <aired>{aired}</aired>
+                    <art>
+                        <thumb>{thumb}</thumb>
+                    </art>
+                    <uniqueid type="cid">{cid}</uniqueid>
+                    <uniqueid type="ep_id">{ep_id}</uniqueid>
+                </episodedetails>""".format(**self.data))
+        
+        def get_thumb(self, task_info: DownloadTaskInfo):
+            if task_info.extra_option.get("download_cover_file"):
+                if task_info.episode_tag:
+                    return f"{task_info.episode_tag}{MetadataNFOFile.get_cover_type()}"
+                else:
+                    return f"{task_info.file_name}{MetadataNFOFile.get_cover_type()}"
+            else:
+                return task_info.cover_url
+
     def __init__(self, task_info: DownloadTaskInfo):
         self.task_info = task_info
 
@@ -124,12 +180,15 @@ class MetadataNFOFile:
                 file = self.Video(self.task_info)
 
             case ParseType.Bangumi:
-                return ""
-                file = self.BangumiSeason(self.task_info)
+                file = self.EpisodeDetails(self.task_info)
                 
         return file.get_contents()
     
     def get_bangumi_season_contents(self):
-        file = self.BangumiSeason(self.task_info)
+        file = self.BangumiTVShow(self.task_info)
 
         return file.get_contents()
+    
+    @staticmethod
+    def get_cover_type():
+        return Cover.get_cover_type(Config.Basic.cover_file_type)

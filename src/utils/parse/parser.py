@@ -7,6 +7,7 @@ from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 
 class Parser:
+    url: str = None
     bilibili_url = "https://www.bilibili.com/"
 
     def __init__(self):
@@ -70,9 +71,11 @@ class Parser:
         status_code = data["code"]
 
         if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code, json_data = data)
+            raise GlobalException(message = data["message"], code = status_code, json_data = data, parse_url = Parser.url)
         
     def parse_url(self, url: str):
+        Parser.url = url
+
         try:
             return self.parse_worker(url)
         

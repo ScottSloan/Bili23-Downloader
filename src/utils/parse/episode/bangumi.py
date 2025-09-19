@@ -128,6 +128,6 @@ class Bangumi:
     @classmethod
     def get_season_num(cls, info_json: dict):
         if (season_title := info_json.get("season_title")):
-            cls.season_num = StrictNaming.get_season_num(season_title)
+            cls.season_num = StrictNaming.get_season_num_ex(info_json.copy())
         else:
             cls.season_num = 1

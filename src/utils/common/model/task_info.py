@@ -151,6 +151,8 @@ class DownloadTaskInfo:
         self.poster_url: str = ""
         # 剧集标签
         self.bangumi_tags: List[str] = []
+        # 剧集发布时间
+        self.bangumi_pubdate: str = ""
 
         # 仅在严格命名中使用
         self.series_title_original: str = ""

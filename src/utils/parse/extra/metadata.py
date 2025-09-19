@@ -1,7 +1,12 @@
 import os
 
+from utils.config import Config
 from utils.common.model.task_info import DownloadTaskInfo
-from utils.common.enums import MetadataType, ParseType
+from utils.common.enums import MetadataType, ParseType, CoverType
+from utils.parse.bangumi import BangumiParser
+from utils.common.formatter.file_name_v2 import FileNameFormatter
+
+from utils.module.pic.cover import Cover
 
 from utils.parse.extra.parser import Parser
 from utils.parse.extra.file.metadata_nfo import MetadataNFOFile
@@ -28,13 +33,18 @@ class MetadataParser(Parser):
         file = MetadataNFOFile(self.task_info)
         contents = file.get_contents()
 
-        self.save_file(f"{self.task_info.file_name}.nfo", contents, "w")
+        if self.task_info.episode_tag:
+            file_name = f"{self.task_info.episode_tag}.nfo"
+        else:
+            file_name = f"{FileNameFormatter.get_legal_file_name(self.task_info.title)}.nfo"
+
+        self.save_file(file_name, contents, "w")
 
     def generate_json(self):
         pass
 
     def generate_bangumi_season_nfo(self):
-        if ParseType(self.task_info.parse_type) == ParseType.Bangumi:
+        if ParseType(self.task_info.parse_type) == ParseType.Bangumi and Config.Download.strict_naming:
             download_path = os.path.join(self.task_info.download_base_path, self.task_info.series_title_original)
 
             if os.path.exists(os.path.join(download_path, f"tvshow.nfo")):
@@ -42,19 +52,23 @@ class MetadataParser(Parser):
 
             self.get_bangumi_season_info()
 
-            self.task_info.download_path = download_path
-
             file = MetadataNFOFile(self.task_info)
             contents = file.get_bangumi_season_contents()
 
-            self.save_file(f"tvshow.nfo", contents, "w")
+            self.save_file_ex(download_path, f"tvshow.nfo", contents, "w")
+
+            self.save_bangumi_season_poster(download_path)
 
     def get_bangumi_season_info(self):
-        from utils.parse.bangumi import BangumiParser
-
         season_info = BangumiParser.get_bangumi_season_info(self.task_info.media_id)
 
         self.task_info.poster_url = season_info.get("poster_url")
         self.task_info.description = season_info.get("description")
         self.task_info.actors = season_info.get("actors")
         self.task_info.bangumi_tags = season_info.get("tags")
+        self.task_info.bangumi_pubdate = season_info.get("pubdate")
+
+    def save_bangumi_season_poster(self, download_path: str = None):
+        contents = Cover.download_cover(self.task_info.poster_url, CoverType.JPG)
+
+        self.save_file_ex(download_path, f"poster.jpg", contents, "wb")

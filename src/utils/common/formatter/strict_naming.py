@@ -1,3 +1,5 @@
+from typing import List
+
 from utils.common.map import cn_num_map
 from utils.common.regex import Regex
 from utils.common.model.task_info import DownloadTaskInfo
@@ -28,6 +30,13 @@ class StrictNaming:
         
         # 未匹配到季编号，则默认返回 1 代表第一季
         return 1
+    
+    @classmethod
+    def get_season_num_ex(cls, info_json: dict):
+        # 获取当前番剧的季编号
+        for index, entry in enumerate(info_json.get("seasons")):
+            if entry["season_id"] == info_json.get("season_id"):
+                return index + 1
     
     @classmethod
     def get_episode_tag(cls, task_info: DownloadTaskInfo):
