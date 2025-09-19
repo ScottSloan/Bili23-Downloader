@@ -156,7 +156,25 @@ class Config:
 
         download_metadata_file: bool = False
         metadata_file_type: int = 0
-        nfo_file_type: int = 0
+        scrape_option: dict = {
+            "video": {
+                "nfo_file_type": 0,
+            },
+            "episode": {
+                "nfo_file_type": 0,
+                "download_tvshow_nfo": True,
+                "download_season_nfo": True,
+                "download_episode_nfo": True
+            },
+            "movie": {
+                "nfo_file_type": 0,
+                "download_movie_nfo": True,
+                "download_episode_nfo": True
+            },
+            "lesson": {
+                "nfo_file_type": 0,
+            }
+        }
 
         ass_style: Dict[str, Dict] = {
             "danmaku": {
@@ -333,6 +351,8 @@ class Config:
         keep_original_files: bool = False
 
     class Temp:
+        scrape_option: dict = {}
+
         video_quality_priority: list = []
         audio_quality_priority: list = []
         video_codec_priority: list = []

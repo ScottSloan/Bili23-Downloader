@@ -39,7 +39,7 @@ template_list = [
     {
         "type": 6,
         "category": "剧集",
-        "subcategory": "严格规范命名",
+        "subcategory": "严格刮削命名",
         "link": "https://www.bilibili.com/bangumi/play/ep21280",
         "link_label": "ep21280"
     },

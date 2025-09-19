@@ -105,7 +105,7 @@ class TemplateValidator:
                         return "时间格式无效"
                     
                     case "strict naming":
-                        return "编辑严格规范命名模板时，必须以 {series_title_original} 开头"
+                        return "编辑严格刮削命名模板时，必须以 {series_title_original}/{section_title_ex} 开头"
                     
                     case _:
                         return str(e)

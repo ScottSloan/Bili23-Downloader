@@ -6,7 +6,7 @@ from utils.common.map import danmaku_format_map, subtitle_format_map, cover_form
 from utils.common.style.icon_v4 import Icon, IconID
 
 from gui.dialog.setting.custom_subtitle_lan import CustomLanDialog
-from gui.dialog.setting.scrape_option import ScrapeOptionDialog
+from gui.dialog.setting.scrape_option.scrape_option import ScrapeOptionDialog
 from gui.dialog.setting.ass_style.custom_ass_style_v2 import CustomASSStyleDialog
 
 from gui.component.panel.panel import Panel
@@ -87,8 +87,11 @@ class ExtraStaticBox(Panel):
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.AddStretchSpacer()
         extra_sbox.Add(danmuku_vbox, 0, wx.EXPAND)
+        extra_sbox.AddSpacer(self.FromDIP(6))
         extra_sbox.Add(subtitle_vbox, 0, wx.EXPAND)
+        extra_sbox.AddSpacer(self.FromDIP(6))
         extra_sbox.Add(cover_vbox, 0, wx.EXPAND)
+        extra_sbox.AddSpacer(self.FromDIP(6))
         extra_sbox.Add(metadata_vbox, 0, wx.EXPAND)
         extra_sbox.Add(self.custom_ass_style_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         extra_sbox.AddStretchSpacer()
@@ -107,6 +110,7 @@ class ExtraStaticBox(Panel):
         self.custom_ass_style_btn.Bind(wx.EVT_BUTTON, self.onCustomASSStyleEVT)
 
     def load_data(self):
+        Config.Temp.scrape_option = Config.Basic.scrape_option.copy()
         Config.Temp.ass_style = Config.Basic.ass_style.copy()
 
         self.download_danmaku_file_chk.SetValue(Config.Basic.download_danmaku_file)
@@ -124,6 +128,7 @@ class ExtraStaticBox(Panel):
         self.onCheckDownloadMetadataEVT(0)
 
     def save(self):
+        Config.Basic.scrape_option = Config.Temp.scrape_option.copy()
         Config.Basic.ass_style = Config.Temp.ass_style.copy()
 
         Config.Basic.download_danmaku_file = self.download_danmaku_file_chk.GetValue()
@@ -169,9 +174,7 @@ class ExtraStaticBox(Panel):
 
     def onMetaDataScrapeOptionEVT(self, event):
         dlg = ScrapeOptionDialog(self.parent_window)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            dlg.set_option()
+        dlg.ShowModal()
 
     def onCustomASSStyleEVT(self, event):
         dlg = CustomASSStyleDialog(self.parent_window)
