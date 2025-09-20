@@ -53,7 +53,7 @@ class DownloadInfo:
             "series_title_original": item_info.series_title_original,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
-            "template": cls.get_specific_template(item_info.template_type),
+            "template": cls.get_specific_template(item_info.template_type)["0"],
             "area": item_info.area,
             "zone": item_info.zone,
             "subzone": item_info.subzone,
@@ -118,7 +118,7 @@ class DownloadInfo:
                 StrictNaming.check_strict_naming(task_info)
 
                 task_info.template_type = TemplateType.Bangumi_strict.value
-                task_info.template = cls.get_specific_template(task_info.template_type)
+                task_info.template = cls.get_specific_template(task_info.template_type)["0"]
 
     @staticmethod
     def get_specific_template(template_type: int):

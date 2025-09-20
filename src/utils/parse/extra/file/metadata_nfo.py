@@ -124,15 +124,25 @@ class MetadataNFOFile:
 
     class BangumiSeason:
         def __init__(self, task_info: DownloadTaskInfo):
-            self.data = {}
+            self.data = {
+                "title": task_info.series_title_original,
+                "description": task_info.description.replace("\n", "&#10;"),
+                "year": task_info.bangumi_pubdate[:4],
+                "pubdate": task_info.bangumi_pubdate,
+                "poster_url": task_info.poster_url
+            }
 
         def get_contents(self):
             return textwrap.dedent("""\
                 <?xml version="1.0" encoding="UTF-8"?>
                 <season>
-                    <title></title>
-                    <plot></plot>
-                </season>""")
+                    <title>{title}</title>
+                    <showtitle>{title}</showtitle>
+                    <plot>{description}</plot>
+                    <year>{year}</year>
+                    <thumb aspect="poster">{poster_url}</thumb>
+                    <premiered>{pubdate}</premiered>
+                </season>""".format(**self.data))
 
     class EpisodeDetails:
         def __init__(self, task_info: DownloadTaskInfo):

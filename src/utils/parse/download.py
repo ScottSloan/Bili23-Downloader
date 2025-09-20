@@ -186,8 +186,6 @@ class DownloadParser(Parser):
     @staticmethod
     def get_extra_info(task_info: DownloadTaskInfo):
         if ParseType(task_info.parse_type) == ParseType.Video:
-            download_metadata = task_info.extra_option.get("download_metadata_file")
-
             if not task_info.cid:
                 info = VideoParser.get_video_extra_info(task_info.bvid)
 
@@ -195,13 +193,3 @@ class DownloadParser(Parser):
 
                 task_info.up_name = info.get("up_name")
                 task_info.up_uid = info.get("up_mid")
-
-            if download_metadata:
-                try:
-                    info.get("up_face")
-                except:
-                    info = VideoParser.get_video_extra_info(task_info.bvid)
-
-                task_info.up_face_url = info.get("up_face")
-                task_info.description = info.get("description")
-                task_info.video_tags = VideoParser.get_video_tags(task_info.bvid)

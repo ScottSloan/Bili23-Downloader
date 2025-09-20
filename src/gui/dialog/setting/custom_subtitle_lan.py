@@ -73,7 +73,7 @@ class CustomLanDialog(Dialog):
     def get_selected_lan_list(self):
         return [list(self.lan_list.values())[index] for index in self.lan_box.GetCheckedItems()]
     
-    def set_option(self):
+    def onOKEVT(self):
         if self.select_all_radio.GetValue():
             Config.Basic.subtitle_lan_option = SubtitleLanOption.All_Subtitles.value
 

@@ -270,32 +270,60 @@ class Config:
         path: str = os.path.join(os.getcwd(), "download")
         file_name_template_list: list = [
             {
-                "template": "{zero_padding_number} - {title}",
+                "template": {
+                    "0": "{zero_padding_number} - {title}"
+                },
                 "type": 1
             },
             {
-                "template": "{part_title}/P{page} - {title}",
+                "template": {
+                    "0": "{part_title}/P{page} - {title}"
+                },
                 "type": 2
             },
             {
-                "template": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}",
+                "template": {
+                    "0": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}"
+                },
                 "type": 3
             },
             {
-                "template": "{interact_title}/{title}",
+                "template": {
+                    "0": "{interact_title}/{title}"
+                },
                 "type": 4
             },
             {
-                "template": "{series_title}/{title}",
+                "template": {
+                    "0": "{series_title}/{section_title}/{title}",
+                    "1": "{series_title}/{section_title}/{title}"
+                },
                 "type": 5
             },
             {
-                "template": "{series_title_original}/{section_title_ex}/{title} - {episode_tag}",
+                "template": {
+                    "0": "{series_title_original}/{section_title_ex}/{episode_tag} - {title}",
+                    "1": "{series_title_original}/{section_title_ex}/{title}"
+                },
                 "type": 6
             },
             {
-                "template": "{series_title}/{section_title}/{title}",
+                "template": {
+                    "0": "{series_title}/{section_title}/{title}"
+                },
                 "type": 7
+            },
+            {
+                "template": {
+                    "0": "{title}"
+                },
+                "type": 8
+            },
+            {
+                "template": {
+                    "0": "{title}"
+                },
+                "type": 9
             }
         ]
         strict_naming: bool = False

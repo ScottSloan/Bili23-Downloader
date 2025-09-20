@@ -168,9 +168,7 @@ class ExtraStaticBox(Panel):
 
     def onCustomSubtitleLanEVT(self, event):
         dlg = CustomLanDialog(self.parent_window)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            dlg.set_option()
+        dlg.ShowModal()
 
     def onMetaDataScrapeOptionEVT(self, event):
         dlg = ScrapeOptionDialog(self.parent_window)

@@ -29,7 +29,8 @@ class GlobalException(Exception):
 
     def get_message(self):
         if self.code:
-            self.message = status_code_map.get(self.code, self.message)
+            if not self.message:
+                self.message = status_code_map.get(self.code, self.message)
         else:
             self.code = 500
 

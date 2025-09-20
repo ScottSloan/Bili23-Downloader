@@ -72,6 +72,7 @@ class CustomFileNameDialog(Dialog):
         self.strict_naming_chk.SetValue(Config.Temp.strict_naming)
 
         self.update_template_list()
+
         self.init_list_column()
         self.init_list_data()
 
@@ -84,11 +85,11 @@ class CustomFileNameDialog(Dialog):
     def init_list_data(self):
         for index, entry in enumerate(template_list):
             type = entry.get("type")
-            template = entry.get("template", "")
-            category = entry.get("category", "")
-            subcategory = entry.get("subcategory", "")
+            template = entry.get("template")
+            category = entry.get("category")
+            subcategory = entry.get("subcategory")
 
-            self.template_list.Append([type, category, subcategory, template])
+            self.template_list.Append([type, category, subcategory, template["0"]])
 
             self.item_data_dict[type] = {
                 "type": type,
@@ -121,7 +122,7 @@ class CustomFileNameDialog(Dialog):
         if dlg.ShowModal() == wx.ID_OK:
             template = dlg.get_template()
 
-            self.template_list.SetItem(item, 3, template)
+            self.template_list.SetItem(item, 3, template["0"])
 
             self.item_data_dict[type]["template"] = template
 
@@ -131,9 +132,11 @@ class CustomFileNameDialog(Dialog):
         Config.Temp.file_name_template_list.clear()
 
         for item in range(self.template_list.GetItemCount()):
+            type = self.template_list.GetItemData(item)
+
             Config.Temp.file_name_template_list.append({
-                "template": self.template_list.GetItemText(item, 3),
-                "type": self.template_list.GetItemData(item)
+                "template": self.item_data_dict[type]["template"],
+                "type": type
             })
 
         Config.Temp.strict_naming = self.strict_naming_chk.GetValue()

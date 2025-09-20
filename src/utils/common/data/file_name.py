@@ -49,12 +49,26 @@ template_list = [
         "subcategory": "-",
         "link": "https://www.bilibili.com/cheese/play/ep158662",
         "link_label": "ep158662"
+    },
+    {
+        "type": 8,
+        "category": "个人主页",
+        "subcategory": "文件夹名称",
+        "link": "",
+        "link_label": ""
+    },
+    {
+        "type": 9,
+        "category": "收藏夹",
+        "subcategory": "文件夹名称",
+        "link": "",
+        "link_label": ""
     }
 ]
 
 preview_data = {
     0: {
-        "time": "{time:%H-%M-%S}".format(time = DateTime.now()),
+        "time": DateTime.time_str_from_timestamp(DateTime.get_timestamp(), "%H-%M-%S"),
         "timestamp": DateTime.get_timestamp(),
         "number": "1",
         "zero_padding_number": "01",
@@ -466,4 +480,30 @@ preview_data_ex = {
     7: {
         "badge": "全集试看"
     }
+}
+
+apply_to_data = {
+    1: {
+        "默认": 0
+    },
+    2: {
+        "默认": 0
+    },
+    3: {
+        "默认": 0
+    },
+    4: {
+        "默认": 0
+    },
+    5: {
+        "正片": 0,
+        "非正片": 1
+    },
+    6: {
+        "正片": 0,
+        "非正片": 1
+    },
+    7: {
+        "默认": 0,
+    },
 }
