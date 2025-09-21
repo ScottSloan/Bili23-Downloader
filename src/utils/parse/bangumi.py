@@ -108,24 +108,27 @@ class BangumiParser(Parser):
         }
     
     @classmethod
-    def get_bangumi_season_info(cls, media_id: int):
-        url = f"https://www.bilibili.com/bangumi/media/md{media_id}"
+    def get_bangumi_season_info(cls, season_id: int):
+        params = {
+            "season_id": season_id
+        }
 
-        req = RequestUtils.request_get(url)
-        req.encoding = "utf-8"
+        url = f"https://api.bilibili.com/pgc/view/web/season?{cls.url_encode(params)}"
 
-        poster_match = Regex.search(r"<meta property=\"og:image\" content=\"(.*?)\">", req.text)
-        description_match = Regex.search(r"\"evaluate\":\"([^\"]+)\"", req.text)
-        actors_match = Regex.search(r"\"actors\":\"([^\"]+)\"", req.text)
-        tags_match = Regex.findall(r"class=\"media-tag\">(.*?)</span>", req.text)
-        pubdate_match = Regex.search(r"\"pub_date\":\"(.*?)\"", req.text)
+        req = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        info_json: dict = cls.json_get(req, "result")
 
         return {
-            "poster_url": poster_match.group(1) if poster_match else "",
-            "description": description_match.group(1) if description_match else "",
-            "actors": actors_match.group(1) if actors_match else "",
-            "tags": tags_match,
-            "pubdate": pubdate_match.group(1) if pubdate_match else ""
+            "poster_url": info_json["cover"],
+            "description": info_json["evaluate"].replace("\n", "&#10;"),
+            "actors": info_json["actors"],
+            "tags": info_json["styles"],
+            "pubdate": info_json["publish"]["pub_time"][:10],
+            "seasons": info_json["seasons"],
+            "rating": info_json["rating"]["score"],
+            "rating_count": info_json["rating"]["count"],
+            "areas": info_json["areas"]
         }
 
     def check_bangumi_can_play(self, param: str):

@@ -303,7 +303,7 @@ class Config:
             {
                 "template": {
                     "0": "{series_title_original}/{section_title_ex}/{episode_tag} - {title}",
-                    "1": "{series_title_original}/{section_title_ex}/{title}"
+                    "1": "{series_title_original}/Extra/{section_title}/{title}"
                 },
                 "type": 6
             },

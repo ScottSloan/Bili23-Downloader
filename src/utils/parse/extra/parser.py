@@ -44,6 +44,8 @@ class Parser:
         with open(file_path, mode, encoding = encoding) as file:
             file.write(contents)
 
+        self.total_file_size += os.stat(file_path).st_size
+
     def get_video_resolution(self):
         return {
             "width": self.task_info.video_width,

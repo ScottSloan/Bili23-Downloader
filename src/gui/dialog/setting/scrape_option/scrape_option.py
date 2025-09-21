@@ -18,7 +18,7 @@ class ScrapeOptionDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        self.tree_book = wx.Treebook(self, -1, size = self.FromDIP((310, 180)))
+        self.tree_book = wx.Treebook(self, -1, size = self.FromDIP((400, 200)))
 
         self.tree_book.AddPage(wx.Panel(self.tree_book), "刮削设置          ")
         self.tree_book.AddSubPage(VideoPage(self.tree_book), "投稿视频")

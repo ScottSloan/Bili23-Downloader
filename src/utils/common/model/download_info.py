@@ -118,7 +118,12 @@ class DownloadInfo:
                 StrictNaming.check_strict_naming(task_info)
 
                 task_info.template_type = TemplateType.Bangumi_strict.value
-                task_info.template = cls.get_specific_template(task_info.template_type)["0"]
+
+                template = cls.get_specific_template(task_info.template_type)
+                if task_info.section_title == "正片":
+                    task_info.template = template["0"]
+                else:
+                    task_info.template = template["1"]
 
     @staticmethod
     def get_specific_template(template_type: int):

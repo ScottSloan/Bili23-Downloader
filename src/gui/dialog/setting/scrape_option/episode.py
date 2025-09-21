@@ -50,7 +50,7 @@ class EpisodePage(Panel):
         nfo_file_vbox.Add(nfo_file_hbox, 0, wx.EXPAND)
 
         self.warning_icon = StaticBitmap(self, bmp = wx.ArtProvider.GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
-        self.warning_lab = wx.StaticText(self, -1, "未启用严格刮削命名模板，无\n法更改设置")
+        self.warning_lab = wx.StaticText(self, -1, "未启用严格刮削命名模板，无法更改设置")
         self.warning_lab.Wrap(self.FromDIP(200))
 
         warning_hbox = wx.BoxSizer(wx.HORIZONTAL)

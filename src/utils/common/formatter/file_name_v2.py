@@ -74,7 +74,6 @@ class FileNameFormatter:
             "page": task_info.page,
             "zone": task_info.zone,
             "subzone": task_info.subzone,
-            "area": task_info.area,
             "title": FileNameFormatter.get_legal_file_name(task_info.title),
             "aid": task_info.aid,
             "bvid": task_info.bvid,

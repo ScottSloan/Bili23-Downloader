@@ -103,8 +103,6 @@ class DownloadTaskInfo:
 
         # 视频发布时间戳
         self.pubtimestamp: int = 0
-        # 地区
-        self.area: str = ""
         # 分区信息
         self.zone: str = ""
         # 子分区信息
@@ -153,6 +151,14 @@ class DownloadTaskInfo:
         self.bangumi_tags: List[str] = []
         # 剧集发布时间
         self.bangumi_pubdate: str = ""
+        # 剧集季信息
+        self.seasons: List[dict] = []
+        # 剧集评分
+        self.rating: float = 0.0
+        # 剧集评分人数
+        self.rating_count: int = 0
+        # 地区
+        self.areas: List[str] = []
 
         # 仅在严格命名中使用
         self.series_title_original: str = ""
@@ -219,7 +225,6 @@ class DownloadTaskInfo:
             "extra_option": self.extra_option,
 
             "pubtimestamp": self.pubtimestamp,
-            "area": self.area,
             "zone": self.zone,
             "subzone": self.subzone,
             "up_name": self.up_name,
@@ -304,7 +309,6 @@ class DownloadTaskInfo:
         self.extra_option = data.get("extra_option", self.extra_option)
         
         self.pubtimestamp = data.get("pubtimestamp", self.pubtimestamp)
-        self.area = data.get("area", self.area)
         self.zone = data.get("zone", self.zone)
         self.subzone = data.get("subzone", self.subzone)
         self.up_name = data.get("up_name", self.up_name)

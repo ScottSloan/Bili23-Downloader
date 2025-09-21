@@ -280,6 +280,8 @@ class Utils:
 
         data = cls.request_post(url, params = params)
 
+        print(data)
+
         if data["code"] != StatusCode.Success:
             Login.logout()
 
@@ -355,16 +357,9 @@ class Cookie:
     def refresh_cookie():
         if Config.User.login:
             if Utils.check_cookie_info():
-                pass
-                # raise ValueError("need refresh cookie")
-            
-                # correspond_path = Utils.get_correspond_path()
+                correspond_path = Utils.get_correspond_path()
 
-                # refresh_csrf = Utils.get_refresh_csrf(correspond_path = correspond_path)
+                refresh_csrf = Utils.get_refresh_csrf(correspond_path = correspond_path)
 
-                # if Utils.refresh_cookie(refresh_csrf):
-                #     Utils.confirm_refresh_cookie()
-
-            else:
-                pass
-                # print("no need refresh cookie")
+                if Utils.refresh_cookie(refresh_csrf):
+                    Utils.confirm_refresh_cookie()

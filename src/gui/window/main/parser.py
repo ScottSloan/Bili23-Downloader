@@ -46,9 +46,7 @@ class Parser:
             "festival": (ParseType.Festival, FestivalParser(self.parser_callback))
         }
 
-        (parse_type, parser) = parser_map.get(type)
-
-        self.parse_type = parse_type
+        (self.parse_type, parser) = parser_map.get(type)
 
         return parser
 
@@ -56,16 +54,16 @@ class Parser:
         if set_status:
             self.main_window.utils.set_status(ParseStatus.Parsing)
 
-        url = self.validate_url(url)
+        new_url = self.validate_url(url)
 
-        type = self.get_parse_type(url)
+        type = self.get_parse_type(new_url)
 
         if not type:
-            raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
-        
+            raise GlobalException(code = StatusCode.URL.value, callback = self.onError, parse_url = url)
+
         self.parser: VideoParser = self.get_parser(type)
 
-        rtn_val = self.parser.parse_url(url)
+        rtn_val = self.parser.parse_url(new_url)
 
         if StatusCode(rtn_val) == StatusCode.Success:
             wx.CallAfter(self.parse_success)

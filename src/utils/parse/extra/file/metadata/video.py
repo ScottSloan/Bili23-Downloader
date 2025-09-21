@@ -4,11 +4,13 @@ import textwrap
 from utils.common.model.download_info import DownloadTaskInfo
 from utils.common.datetime_util import DateTime
 
+from utils.parse.extra.file.metadata.utils import Utils
+
 class VideoMetadataFile:
     def __init__(self, task_info: DownloadTaskInfo):
         self.data = {
             "title": task_info.title,
-            "description": task_info.description.replace("\n", "&#10;"),
+            "description": task_info.description,
             "runtime": math.floor(task_info.duration / 60),
             "pubtime": DateTime.from_timestamp(task_info.pubtimestamp),
             "year": DateTime.from_timestamp(task_info.pubtimestamp),
@@ -24,7 +26,7 @@ class VideoMetadataFile:
 
     def get_nfo_contents(self):
         return textwrap.dedent("""\
-            <?xml version="1.0" encoding="UTF-8"?>
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
             <movie>
                 <title>{title}</title>
                 <plot>{description}</plot>
@@ -50,8 +52,8 @@ class VideoMetadataFile:
 
         for tag in tags:
             tag_element = """\
-                <tag>{tag}</tag>"""
-            
-            tags_elements.append(tag_element.format(tag = tag))
+                <tag>{tag}</tag>""".format(tag = tag)
+
+            tags_elements.append(Utils.indent(tag_element, "                "))
 
         return "\n".join(tags_elements).removeprefix("                ")

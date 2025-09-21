@@ -15,10 +15,11 @@ from gui.component.misc.tooltip import ToolTip
 from gui.component.choice.choice import Choice
 
 class TemplateValidator:
-    def __init__(self, template: str, field_dict: dict, strict_naming: bool):
+    def __init__(self, template: str, field_dict: dict, strict_naming: bool, apply_to: int):
         self.template = template
         self.field_dict = field_dict
         self.strict_naming = strict_naming
+        self.apply_to = apply_to
 
     def validate(self):
         try:
@@ -53,9 +54,9 @@ class TemplateValidator:
         if self.check_illegal_chars():
             raise ValueError("illegal")
         
-        if self.check_strict_naming():
-            raise ValueError("strict naming")
-        
+        if result := self.check_strict_naming():
+            raise ValueError(result)
+
     def check_sep(self):
         return "\\" in self.template
     
@@ -75,7 +76,9 @@ class TemplateValidator:
 
     def check_strict_naming(self):
         if self.strict_naming:
-            return not Regex.search(r"^{series_title_original}/{section_title_ex}", self.template)
+            if self.apply_to == 0:
+                if not Regex.search(r"^{series_title_original}/{section_title_ex}", self.template):
+                    return "strict naming main"
 
     def get_file_name(self):
         self.field_dict["time"] = DateTime.now()
@@ -255,7 +258,7 @@ class EditTemplateDialog(Dialog):
     def onTextEVT(self, event: wx.CommandEvent):
         template = self.template_box.GetValue()
 
-        validator = TemplateValidator(template, self.field_dict, self.type == TemplateType.Bangumi_strict.value)
+        validator = TemplateValidator(template, self.field_dict, self.type == TemplateType.Bangumi_strict.value, self.apply_to_choice.GetSelection())
 
         result = validator.validate()
         flag = result.get("result")
