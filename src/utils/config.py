@@ -173,6 +173,8 @@ class Config:
             },
             "lesson": {
                 "nfo_file_type": 0,
+                "download_tvshow_nfo": True,
+                "download_episode_nfo": True
             }
         }
 

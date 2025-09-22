@@ -114,7 +114,7 @@ class EpisodePage(Panel):
 
             self.tvshow_nfo_chk.SetValue(False)
             self.season_nfo_chk.SetValue(False)
-            self.episode_nfo_chk.SetValue(False)
+            self.episode_nfo_chk.SetValue(True)
 
             self.show_warn_icon(True)
         else:

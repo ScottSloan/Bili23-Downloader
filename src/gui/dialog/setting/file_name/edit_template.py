@@ -53,9 +53,6 @@ class TemplateValidator:
         
         if self.check_illegal_chars():
             raise ValueError("illegal")
-        
-        if result := self.check_strict_naming():
-            raise ValueError(result)
 
     def check_sep(self):
         return "\\" in self.template
@@ -73,12 +70,6 @@ class TemplateValidator:
         
         if Regex.find_illegal_chars(temp):
             return True
-
-    def check_strict_naming(self):
-        if self.strict_naming:
-            if self.apply_to == 0:
-                if not Regex.search(r"^{series_title_original}/{section_title_ex}", self.template):
-                    return "strict naming main"
 
     def get_file_name(self):
         self.field_dict["time"] = DateTime.now()
@@ -107,10 +98,7 @@ class TemplateValidator:
                     
                     case "Invalid format string":
                         return "时间格式无效"
-                    
-                    case "strict naming":
-                        return "编辑严格刮削命名模板时，必须以 {series_title_original}/{section_title_ex} 开头"
-                    
+                                        
                     case _:
                         return str(e)
                     

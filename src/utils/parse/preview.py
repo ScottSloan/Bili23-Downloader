@@ -5,6 +5,7 @@ from utils.common.enums import ParseType, VideoQualityID, StreamType, VideoCodec
 from utils.common.request import RequestUtils
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.map import audio_quality_sort_map, audio_quality_map
+from utils.common.data.priority import video_quality_priority
 
 from utils.parse.live import LiveParser
 from utils.parse.parser import Parser
@@ -262,7 +263,11 @@ class VideoPreview(Parser):
             "按优先级自动选择": VideoQualityID._Auto.value
         }
 
-        video_quality_data_dict.update(dict(zip(data["accept_description"], data["accept_quality"])))
+        for key, value in video_quality_priority.items():
+            if value in data["accept_quality"]:
+                video_quality_data_dict[key] = value
+
+        #video_quality_data_dict.update(dict(zip(data["accept_description"], data["accept_quality"])))
 
         return video_quality_data_dict
 

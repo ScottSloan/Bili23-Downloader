@@ -90,7 +90,7 @@ class MoviePage(Panel):
             self.episode_nfo_chk.Disable()
 
             self.movie_nfo_chk.SetValue(False)
-            self.episode_nfo_chk.SetValue(False)
+            self.episode_nfo_chk.SetValue(True)
 
             self.show_warn_icon(True)
         else:

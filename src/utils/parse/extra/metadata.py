@@ -6,6 +6,7 @@ from utils.parse.extra.parser import Parser
 from utils.parse.extra.nfo.video import VideoNFOParser
 from utils.parse.extra.nfo.movie import MovieNFOParser
 from utils.parse.extra.nfo.episode import EpisodeNFOParser
+from utils.parse.extra.nfo.lesson import LessonNFOParser
 
 class MetadataParser(Parser):
     def __init__(self, task_info: DownloadTaskInfo):
@@ -66,11 +67,11 @@ class MetadataParser(Parser):
 
         parser = EpisodeNFOParser(self.task_info)
 
-        if option.get("download_tvshow_nfo") and self.task_info.template_type == TemplateType.Bangumi_strict.value:
+        if option.get("download_tvshow_nfo"):
             # tvshow
             parser.download_tvshow_nfo()
 
-        if option.get("download_season_nfo") and self.task_info.template_type == TemplateType.Bangumi_strict.value:
+        if option.get("download_season_nfo"):
             # season
             parser.download_season_nfo()
 
@@ -81,7 +82,19 @@ class MetadataParser(Parser):
         self.total_file_size += parser.total_file_size
 
     def generate_lesson_nfo(self):
-        pass
+        option = Config.Basic.scrape_option.get("lesson")
+
+        parser = LessonNFOParser(self.task_info)
+
+        if option.get("download_tvshow_nfo"):
+            # tvshow
+            parser.download_tvshow_nfo()
+
+        if option.get("download_episode_nfo"):
+            # episode
+            parser.download_episode_nfo()
+
+        self.total_file_size += parser.total_file_size
 
     def generate_json(self):
         pass

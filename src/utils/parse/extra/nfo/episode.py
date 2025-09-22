@@ -1,13 +1,14 @@
 import os
 
 from utils.common.model.task_info import DownloadTaskInfo
-from utils.common.enums import CoverType
+from utils.common.enums import CoverType, TemplateType
 
 from utils.module.pic.cover import Cover
 
 from utils.parse.extra.parser import Parser
 from utils.parse.bangumi import BangumiParser
 from utils.parse.extra.file.metadata.episode import TVShowMetaDataParser, SeasonMetadataParser, EpisodeMetadataParser
+from utils.parse.extra.file.metadata.utils import Utils
 
 class EpisodeNFOParser(Parser):
     def __init__(self, task_info: DownloadTaskInfo):
@@ -16,7 +17,7 @@ class EpisodeNFOParser(Parser):
         self.task_info = task_info
 
     def download_tvshow_nfo(self):
-        file_path = self.tvshow_file_path
+        file_path = Utils.get_root_path(self.task_info)
         file_name = "tvshow.nfo"
 
         if self.check_file(file_path, file_name):
@@ -38,7 +39,7 @@ class EpisodeNFOParser(Parser):
             return
 
         self.get_bangumi_season_info()
-        self.get_bangumi_poster(self.tvshow_file_path, f"season{self.task_info.season_num:02}-poster.jpg")
+        self.get_bangumi_poster(Utils.get_root_path(self.task_info), f"season{self.task_info.season_num:02}-poster.jpg")
 
         file = SeasonMetadataParser(self.task_info)
         contents = file.get_nfo_contents()
@@ -72,7 +73,3 @@ class EpisodeNFOParser(Parser):
         contents = Cover.download_cover(self.task_info.poster_url, CoverType.JPG)
 
         self.save_file_ex(file_path, file_name, contents, "wb")
-
-    @property
-    def tvshow_file_path(self):
-        return os.path.join(self.task_info.download_base_path, self.task_info.series_title_original)
