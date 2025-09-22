@@ -13,21 +13,13 @@ from gui.component.menu.episode_list import EpisodeListMenu
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent: wx.Window):
-        def get_size():
-            match Platform(Config.Sys.platform):
-                case Platform.Windows:
-                    return self.FromDIP((775, 300))
-                
-                case Platform.Linux | Platform.macOS:
-                    return self.FromDIP((775, 350))
-        
         from gui.window.main.main_v3 import MainWindow
 
         self.main_window: MainWindow = wx.FindWindowByName("main")
 
         wx.dataview.TreeListCtrl.__init__(self, parent, -1, style = wx.dataview.TL_3STATE)
 
-        self.SetSize(get_size())
+        self.init_list_params()
 
         self.Bind_EVT()
 
@@ -48,6 +40,8 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn("标题", width = self.FromDIP(385))
         self.AppendColumn("备注", width = self.FromDIP(75))
         self.AppendColumn("时长", width = self.FromDIP(75))
+
+        self.shift_down_items: list[int] = []
 
     def show_episode_list(self):
         def add_item(data: dict | list, item: wx.dataview.TreeListItem):
@@ -104,30 +98,19 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
     def onItemCheckedEVT(self, event: wx.dataview.TreeListEvent):
         item = event.GetItem()
-        total_checked_count = self.GetCheckedItemCount()
 
         self.UpdateItemParentStateRecursively(item)
 
         if wx.GetKeyState(wx.WXK_SHIFT):
-            current_checked_count = self.GetCheckedItemCountEx(item)
+            current = self.GetItemData(item).number
 
-            if total_checked_count > 1:
-                if total_checked_count == current_checked_count:
-                    # 向下选中
-                    target_count = total_checked_count - 1
+            self.shift_down_items.append(current)
 
-                    start_item = self.FindItemRange(target_count)
+            first = self.shift_down_items[0]
+            last = self.shift_down_items[-1]
 
-                    self.CheckItemRange(start_item, item)
-                
-                elif total_checked_count > current_checked_count:
-                    # 向上选中
-                    target_count = current_checked_count + 1
-
-                    end_item = self.FindItemRange(target_count)
-
-                    self.CheckItemRange(item, end_item)
-
+            self.CheckItemRange(min(first, last), max(first, last))
+            
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
 
@@ -162,7 +145,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
 
-    def CheckItemRange(self, start_item: wx.dataview.TreeListItem, end_item: wx.dataview.TreeListItem):
+    def CheckItemRange(self, start_number: int, end_number: int):
+        self.UnCheckAllItems()
+
         item = wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
         start_flag = False
 
@@ -170,32 +155,19 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             item = self.GetNextItem(item)
 
             if item.IsOk() and self.GetItemData(item).item_type == "item":
-                if item == start_item:
+                data = self.GetItemData(item)
+
+                if data.number == start_number:
                     start_flag = True
 
                 if start_flag:
                     self.CheckItemRecursively(item, wx.CHK_CHECKED)
                     self.UpdateItemParentStateRecursively(item)
 
-                if item == end_item:
+                if data.number == end_number:
                     break
 
         self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
-
-    def FindItemRange(self, target_count: int):
-        count = 0
-
-        item = wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
-
-        while item.IsOk():
-            item = self.GetNextItem(item)
-
-            if item.IsOk():
-                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    count += 1
-
-                    if count == target_count:
-                        return item
 
     def CollapseCurrentItem(self):
         item = self.GetSelection()
@@ -207,6 +179,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
     def CheckAllItems(self):
         self.CheckItemRecursively(self.GetFirstItem(), wx.CHK_CHECKED)
+
+    def UnCheckAllItems(self):
+        self.CheckItemRecursively(self.GetFirstItem(), wx.CHK_UNCHECKED)
 
     def GetAllCheckedItem(self):
         self.download_task_info_list = []
@@ -274,6 +249,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
                     count += 1
 
+        if not count:
+            self.shift_down_items.clear()
+
         return count
     
     def GetCheckedItemCountEx(self, target_item: wx.dataview.TreeListItem):
@@ -328,3 +306,11 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             Window.message_dialog(self.main_window, "下载失败\n\n请选择要下载的项目。", "警告", wx.ICON_WARNING)
             
             return True
+        
+    def init_list_params(self):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                self.SetSize(self.FromDIP((775, 300)))
+            
+            case Platform.Linux | Platform.macOS:
+                self.SetSize(self.FromDIP((775, 350)))
