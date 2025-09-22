@@ -104,8 +104,29 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
     def onItemCheckedEVT(self, event: wx.dataview.TreeListEvent):
         item = event.GetItem()
+        total_checked_count = self.GetCheckedItemCount()
 
         self.UpdateItemParentStateRecursively(item)
+
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            current_checked_count = self.GetCheckedItemCountEx(item)
+
+            if total_checked_count > 1:
+                if total_checked_count == current_checked_count:
+                    # 向下选中
+                    target_count = total_checked_count - 1
+
+                    start_item = self.FindItemRange(target_count)
+
+                    self.CheckItemRange(start_item, item)
+                
+                elif total_checked_count > current_checked_count:
+                    # 向上选中
+                    target_count = current_checked_count + 1
+
+                    end_item = self.FindItemRange(target_count)
+
+                    self.CheckItemRange(item, end_item)
 
         if self.GetFirstChild(item).IsOk():
             self.CheckItemRecursively(item, state = wx.CHK_UNCHECKED if event.GetOldCheckedState() else wx.CHK_CHECKED)
@@ -140,6 +161,41 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.UpdateItemParentStateRecursively(item)
 
         self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
+
+    def CheckItemRange(self, start_item: wx.dataview.TreeListItem, end_item: wx.dataview.TreeListItem):
+        item = wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+        start_flag = False
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk() and self.GetItemData(item).item_type == "item":
+                if item == start_item:
+                    start_flag = True
+
+                if start_flag:
+                    self.CheckItemRecursively(item, wx.CHK_CHECKED)
+                    self.UpdateItemParentStateRecursively(item)
+
+                if item == end_item:
+                    break
+
+        self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
+
+    def FindItemRange(self, target_count: int):
+        count = 0
+
+        item = wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    count += 1
+
+                    if count == target_count:
+                        return item
 
     def CollapseCurrentItem(self):
         item = self.GetSelection()
@@ -186,19 +242,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.EnsureVisible(item)
         self.Select(item)
 
-    def CheckItemBadgePaid(self):
-        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
-
-        while item.IsOk():
-            item = self.GetNextItem(item)
-
-            if item.IsOk():
-                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    item_data: TreeListItemInfo = self.GetItemData(item)
-
-                    if item_data.badge == "会员":
-                        return True
-
     def GetCurrentItemType(self):
         item = self.GetSelection()
 
@@ -225,6 +268,24 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
         while item.IsOk():
+            item = self.GetNextItem(item)
+
+            if item.IsOk():
+                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                    count += 1
+
+        return count
+    
+    def GetCheckedItemCountEx(self, target_item: wx.dataview.TreeListItem):
+        # 计算从头到指定项目之间被选中的子节点数量
+        count = 0
+
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            if item == target_item:
+                break
+
             item = self.GetNextItem(item)
 
             if item.IsOk():
