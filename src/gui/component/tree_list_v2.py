@@ -145,8 +145,9 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
 
-    def CheckItemRange(self, start_number: int, end_number: int):
-        self.UnCheckAllItems()
+    def CheckItemRange(self, start_number: int, end_number: int, uncheck_all: bool = True):
+        if uncheck_all:
+            self.UnCheckAllItems()
 
         item = wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
         start_flag = False
@@ -254,24 +255,6 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
 
         return count
     
-    def GetCheckedItemCountEx(self, target_item: wx.dataview.TreeListItem):
-        # 计算从头到指定项目之间被选中的子节点数量
-        count = 0
-
-        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
-
-        while item.IsOk():
-            if item == target_item:
-                break
-
-            item = self.GetNextItem(item)
-
-            if item.IsOk():
-                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    count += 1
-
-        return count
-
     def GetItemData(self, item) -> TreeListItemInfo:
         return super().GetItemData(item)
 

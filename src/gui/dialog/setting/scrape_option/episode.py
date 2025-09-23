@@ -72,8 +72,6 @@ class EpisodePage(Panel):
         self.season_nfo_chk.SetValue(option.get("download_season_nfo", False))
         self.episode_nfo_chk.SetValue(option.get("download_episode_nfo", False))
 
-        self.check_strict_naming()
-
     def save(self):
         return {
             "episode": {
@@ -95,27 +93,3 @@ class EpisodePage(Panel):
     def disable_episode_chk(self):
         self.episode_nfo_lab.Disable()
         self.episode_nfo_chk.Disable()
-
-    def show_warn_icon(self, show: bool):
-        if show:
-            self.warning_icon.Show()
-            self.warning_lab.Show()
-        else:
-            self.warning_icon.Hide()
-            self.warning_lab.Hide()
-
-        self.Layout()
-    
-    def check_strict_naming(self):
-        if not Config.Temp.strict_naming:
-            self.disable_tvshow_chk()
-            self.disable_season_chk()
-            self.disable_episode_chk()
-
-            self.tvshow_nfo_chk.SetValue(False)
-            self.season_nfo_chk.SetValue(False)
-            self.episode_nfo_chk.SetValue(True)
-
-            self.show_warn_icon(True)
-        else:
-            self.show_warn_icon(False)

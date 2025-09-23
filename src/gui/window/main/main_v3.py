@@ -293,6 +293,11 @@ class MainWindow(Frame):
 
                 TheClipBoard.write(item_data.link)
 
+            case ID.EPISODE_LIST_OPEN_IN_BROWSER_MENU:
+                item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
+
+                wx.LaunchDefaultBrowser(item_data.link)
+
             case ID.EPISODE_LIST_EDIT_TITLE_MENU:
                 item = self.episode_list.GetSelection()
 
@@ -304,6 +309,9 @@ class MainWindow(Frame):
 
             case ID.EPISODE_LIST_COLLAPSE_MENU:
                 self.episode_list.CollapseCurrentItem()
+
+            case ID.EPISODE_LIST_SELECT_BATCH_MENU:
+                Window.select_batch_dialog(self)
 
     def show_episode_list(self, from_menu: bool = True):
         if from_menu:

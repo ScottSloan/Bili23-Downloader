@@ -18,6 +18,7 @@ from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
 from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
+from gui.dialog.setting.select_batch import SelectBatchDialog
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
@@ -142,6 +143,14 @@ class Window:
     def changelog_dialog(parent: wx.Window, info: dict):
         dlg = ChangeLogDialog(parent, info)
         dlg.ShowModal()
+
+    @staticmethod
+    @show_dialog
+    def select_batch_dialog(parent: wx.Window):
+        dlg = SelectBatchDialog(parent)
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            return dlg.range_box.GetValue()
 
     @staticmethod
     @show_frame
