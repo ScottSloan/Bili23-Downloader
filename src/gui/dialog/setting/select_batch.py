@@ -21,7 +21,7 @@ class SelectBatchDialog(Dialog):
     def init_UI(self):
         title_lab = wx.StaticText(self, -1, "序号区间")
         tooltip = ToolTip(self)
-        tooltip.set_tooltip("序号区间支持输入多个，如 1-3,5,7-10 表示选取第 1 至 3 项、第 5 项和第 7 至 10 项")
+        tooltip.set_tooltip("序号区间支持输入多个，以英文逗号分隔，如 1-3,5,7-10 表示选取第 1 至 3 项、第 5 项和第 7 至 10 项")
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(title_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -51,7 +51,7 @@ class SelectBatchDialog(Dialog):
     def Bind_EVT(self):
         self.range_box.Bind(wx.EVT_KEY_DOWN, self.onEnterEVT)
 
-    def onEnterEVT(self, event: wx.CommandEvent):
+    def onEnterEVT(self, event: wx.KeyEvent):
         keycode = event.GetKeyCode()
 
         if keycode in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:

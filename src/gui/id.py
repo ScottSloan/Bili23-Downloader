@@ -30,6 +30,7 @@ class ID:
     EPISODE_LIST_CHECK_MENU = wx.NewIdRef()
     EPISODE_LIST_COLLAPSE_MENU = wx.NewIdRef()
     EPISODE_LIST_SELECT_BATCH_MENU = wx.NewIdRef()
+    EPISODE_LIST_REFRESH_MEDIA_INFO_MENU = wx.NewIdRef()
 
     SUPPORTTED_URL_MENU = wx.NewIdRef()
     HISTORY_MENU = wx.NewIdRef()

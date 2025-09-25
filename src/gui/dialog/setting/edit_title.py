@@ -1,6 +1,7 @@
 import wx
 
 from gui.component.window.dialog import Dialog
+from gui.component.text_ctrl.search_ctrl import SearchCtrl
 
 class EditTitleDialog(Dialog):
     def __init__(self, parent, title: str):
@@ -15,9 +16,10 @@ class EditTitleDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        title_lab = wx.StaticText(self, -1, "请输入新标题，新标题将作为 {title} 字段")
+        title_lab = wx.StaticText(self, -1, "新标题将作为 {title} 字段")
 
-        self.title_box = wx.TextCtrl(self, -1, self.title, size = self.FromDIP((350, -1)), style = wx.TE_PROCESS_ENTER)
+        self.title_box = SearchCtrl(self, "请输入新标题", size = self.FromDIP((350, -1)), clear_btn = True)
+        self.title_box.SetValue(self.title)
 
         self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
@@ -36,13 +38,18 @@ class EditTitleDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
-        self.title_box.Bind(wx.EVT_TEXT_ENTER, self.onEnterEVT)
+        self.title_box.Bind(wx.EVT_KEY_DOWN, self.onEnterEVT)
 
-    def onEnterEVT(self, event: wx.CommandEvent):
-        event = wx.PyCommandEvent(wx.EVT_BUTTON.typeId, self.ok_btn.GetId())
-        event.SetEventObject(self.ok_btn)
+    def onEnterEVT(self, event: wx.KeyEvent):
+        keycode = event.GetKeyCode()
 
-        wx.PostEvent(self.ok_btn.GetEventHandler(), event)
+        if keycode in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:
+            ok_event = wx.PyCommandEvent(wx.EVT_BUTTON.typeId, self.ok_btn.GetId())
+            ok_event.SetEventObject(self.ok_btn)
+
+            wx.PostEvent(self.ok_btn.GetEventHandler(), ok_event)
+
+        event.Skip()
 
     def onOKEVT(self):
         if not self.title_box.GetValue():

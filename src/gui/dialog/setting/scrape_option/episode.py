@@ -49,18 +49,18 @@ class EpisodePage(Panel):
         nfo_file_vbox.Add(nfo_file_lab, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP), self.FromDIP(6))
         nfo_file_vbox.Add(nfo_file_hbox, 0, wx.EXPAND)
 
-        self.warning_icon = StaticBitmap(self, bmp = wx.ArtProvider.GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
-        self.warning_lab = wx.StaticText(self, -1, "未启用严格刮削命名模板，无法更改设置")
-        self.warning_lab.Wrap(self.FromDIP(200))
+        tip_icon = StaticBitmap(self, bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
+        tip_lab = wx.StaticText(self, -1, "如果需要将剧集分季存放至不同文件夹\n请启用“严格刮削命名模板”选项")
 
-        warning_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        warning_hbox.Add(self.warning_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        warning_hbox.Add(self.warning_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        
+        tip_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        tip_hbox.Add(tip_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        tip_hbox.Add(tip_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(nfo_type_hbox, 0, wx.EXPAND)
         vbox.Add(nfo_file_vbox, 0, wx.EXPAND)
-        vbox.Add(warning_hbox, 0, wx.EXPAND)
+        vbox.AddSpacer(self.FromDIP(5))
+        vbox.Add(tip_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
 

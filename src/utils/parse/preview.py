@@ -15,6 +15,9 @@ from utils.module.web.cdn import CDN
 class PreviewInfo:
     download_json: dict = {}
 
+    video_size_cache: dict = {}
+    audio_size_cache: dict = {}
+
 class VideoPreview(Parser):
     def __init__(self, parse_type: ParseType):
         super().__init__()
@@ -155,10 +158,10 @@ class VideoPreview(Parser):
 
         key = f"{video_quality_id} - {video_codec_id}"
 
-        if key not in self.video_size_cache:
-            self.video_size_cache[key] = get_info(self.download_json)
-        
-        return self.video_size_cache.get(key)
+        if key not in PreviewInfo.video_size_cache:
+            PreviewInfo.video_size_cache[key] = get_info(self.download_json)
+
+        return PreviewInfo.video_size_cache.get(key)
 
     def get_audio_stream_info(self, audio_quality_id: int):
         def get_info(data: dict):
@@ -175,11 +178,11 @@ class VideoPreview(Parser):
 
         audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
         
-        if audio_quality_id not in self.audio_size_cache:
-            self.audio_size_cache[audio_quality_id] = get_info(self.download_json["dash"])
+        if audio_quality_id not in PreviewInfo.audio_size_cache:
+            PreviewInfo.audio_size_cache[audio_quality_id] = get_info(self.download_json["dash"])
 
-        return self.audio_size_cache.get(audio_quality_id)
-    
+        return PreviewInfo.audio_size_cache.get(audio_quality_id)
+
     def get_video_stream_codec(self, video_quality_id: int, video_codec_id: int):
         for entry in self.download_json["dash"]["video"]:
             if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
@@ -266,8 +269,6 @@ class VideoPreview(Parser):
         for key, value in video_quality_priority.items():
             if value in data["accept_quality"]:
                 video_quality_data_dict[key] = value
-
-        #video_quality_data_dict.update(dict(zip(data["accept_description"], data["accept_quality"])))
 
         return video_quality_data_dict
 

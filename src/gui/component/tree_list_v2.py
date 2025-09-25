@@ -153,20 +153,18 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         start_flag = False
 
         while item.IsOk():
-            item = self.GetNextItem(item)
-
-            if item.IsOk() and self.GetItemData(item).item_type == "item":
-                data = self.GetItemData(item)
-
-                if data.number == start_number:
+            if (item_data := self.GetItemData(item)) and item_data.item_type == "item":
+                if item_data.number == start_number:
                     start_flag = True
 
                 if start_flag:
                     self.CheckItemRecursively(item, wx.CHK_CHECKED)
                     self.UpdateItemParentStateRecursively(item)
 
-                if data.number == end_number:
+                if item_data.number == end_number:
                     break
+
+            item = self.GetNextItem(item)
 
         self.main_window.top_box.update_checked_item_count(self.GetCheckedItemCount())
 
@@ -190,13 +188,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
         while item.IsOk():
+            if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                item_data = self.GetItemData(item)
+
+                self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data))
+
             item = self.GetNextItem(item)
-
-            if item.IsOk():
-                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    item_data = self.GetItemData(item)
-
-                    self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data))
     
     def SearchItem(self, keywords: str):
         result = []
@@ -204,13 +201,12 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
         while item.IsOk():
+            item_data = self.GetItemData(item)
+
+            if keywords in item_data.title:
+                result.append(item)
+
             item = self.GetNextItem(item)
-
-            if item.IsOk():
-                item_data = self.GetItemData(item)
-
-                if keywords in item_data.title:
-                    result.append(item)
 
         return result
     
@@ -244,11 +240,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
         while item.IsOk():
-            item = self.GetNextItem(item)
+            if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                count += 1
 
-            if item.IsOk():
-                if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
-                    count += 1
+            item = self.GetNextItem(item)
 
         if not count:
             self.shift_down_items.clear()
@@ -281,6 +276,17 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         for item in items:
             self.CheckItemRecursively(item, wx.CHK_UNCHECKED)
             self.UpdateItemParentStateRecursively(item)
+
+    def GetFirstCheckedItem(self):
+        item = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            if (item_data := self.GetItemData(item)) and item_data.item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                return item
+            
+            item = self.GetNextItem(item)
+
+        return None
 
     def check_download_items(self):
         if not self.main_window.episode_list.GetCheckedItemCount():

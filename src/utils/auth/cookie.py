@@ -280,10 +280,9 @@ class Utils:
 
         data = cls.request_post(url, params = params)
 
-        print(data)
-
         if data["code"] != StatusCode.Success:
-            Login.logout()
+            print("refresh cookie failed:", data)
+            #Login.logout()
 
             return False
         else:

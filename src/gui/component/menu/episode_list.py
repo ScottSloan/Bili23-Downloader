@@ -16,6 +16,7 @@ class EpisodeListMenu(wx.Menu):
         check_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_CHECK_MENU, "取消选择(&N)" if checked_state else "选择(&S)")
         collapse_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_COLLAPSE_MENU, "展开(&X)" if collapsed_state else "折叠(&O)")
         select_batch_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_SELECT_BATCH_MENU, "批量选取项目(&P)")
+        refresh_media_info_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_REFRESH_MEDIA_INFO_MENU, "刷新媒体信息(&R)")
 
         if item_type == "node":
             view_cover_menuitem.Enable(False)
@@ -37,3 +38,4 @@ class EpisodeListMenu(wx.Menu):
         self.Append(collapse_menuitem)
         self.AppendSeparator()
         self.Append(select_batch_menuitem)
+        self.Append(refresh_media_info_menuitem)

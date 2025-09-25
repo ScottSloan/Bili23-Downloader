@@ -185,7 +185,7 @@ class MediaInfoPanel(Panel):
                 self.video_quality_info.SetInfoLabel(info_label)
                 self.video_codec_info.SetInfoLabel(video_codec_map.get(info["codec"], "--"))
 
-                self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确\n\n当前显示的媒体信息所对应的视频：{}".format(self.parent.episode_info.get("title")))
+                self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：{}\n\n右键点击剧集列表项目，可更换为其他视频的媒体信息".format(self.parent.episode_info.get("title")))
 
                 self.set_stream_type(self.stream_type)
 
@@ -233,11 +233,6 @@ class MediaInfoPanel(Panel):
             def update_ui():
                 self.audio_quality_info.SetInfoLabel(info_label)
 
-                if info in [None, "FLV", "MP4"]:
-                    self.enable_audio_quality_group(False)
-
-                    self.disable_download_audio_option()
-
             match StreamType(self.stream_type):
                 case StreamType.Dash:
                     if not self.audio_quality_info.isEmpty():
@@ -260,7 +255,7 @@ class MediaInfoPanel(Panel):
     def get_audio_quality_label(self, info: dict):
         match info:
             case None:
-                return "此视频无音轨"
+                return "当前视频无音轨"
             
             case "FLV":
                 return "FLV 格式视频流中已包含音轨，不支持自定义"
