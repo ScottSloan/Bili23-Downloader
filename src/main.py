@@ -27,16 +27,18 @@ except ImportError as e:
 
 except Exception as e:
     message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error", False, e)
+
+try:
+    import google.protobuf
+
+    if (protobuf_version := google.protobuf.__version__) and not protobuf_version.startswith("6"):
+        msg = f"请更新 protobuf 至最新版本\n当前版本：{protobuf_version}\n建议版本：6.32.0 或更高"
+        message_box(f"{msg}\n\n执行：pip install protobuf --upgrade", "Fatal Error")
+
+        raise ImportError(msg)
     
-import google.protobuf
-
-protobuf_version = google.protobuf.__version__
-
-if not protobuf_version.startswith("6"):
-    msg = f"请更新 protobuf 至最新版本\n当前版本：{protobuf_version}\n建议版本：6.32.0 或更高"
-    message_box(f"{msg}\n\n执行：pip install protobuf --upgrade", "Fatal Error")
-
-    raise ImportError(msg)
+except Exception as e:
+    message_box(f"初始化 protobuf 失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
 try:
     from utils.config import Config

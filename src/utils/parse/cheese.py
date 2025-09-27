@@ -41,7 +41,8 @@ class CheeseParser(Parser):
 
         self.parse_episodes()
 
-    def get_cheese_available_media_info(self, aid: int, ep_id: int, cid: int):
+    @classmethod
+    def get_cheese_available_media_info(cls, aid: int, ep_id: int, cid: int):
         params = {
             "avid": aid,
             "cid": cid,
@@ -52,13 +53,13 @@ class CheeseParser(Parser):
             "ep_id": ep_id,
         }
 
-        url = f"https://api.bilibili.com/pugv/player/web/playurl?{self.url_encode(params)}"
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        data = self.json_get(resp, "data")
+        data = cls.json_get(resp, "data")
 
-        self.check_drm_protection(data)
+        cls.check_drm_protection(data)
 
         PreviewInfo.download_json = data
 
@@ -93,7 +94,7 @@ class CheeseParser(Parser):
         episode: dict = Episode.Utils.get_first_episode()
 
         if episode:
-            self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))
+            self.start_thread(self.get_cheese_available_media_info, args = (episode.get("aid"), episode.get("ep_id"), episode.get("cid")))
 
         return StatusCode.Success.value
 

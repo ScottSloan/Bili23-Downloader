@@ -11,7 +11,7 @@ from utils.common.thread import Thread
 from utils.common.style.color import Color
 from utils.common.style.icon_v4 import Icon, IconID
 
-from utils.parse.preview import VideoPreview
+from utils.parse.preview import VideoPreview, PreviewInfo
 
 from gui.dialog.setting.priority.edit import EditPriorityDialog
 
@@ -86,8 +86,6 @@ class MediaInfoPanel(Panel):
         self.init_UI()
 
         self.Bind_EVT()
-
-        self.requery = False
 
     def init_UI(self):
         media_info_box = wx.StaticBox(self, -1, "媒体信息")
@@ -181,23 +179,11 @@ class MediaInfoPanel(Panel):
 
     def get_video_quality_info(self):
         def worker():
-            def update_ui():                
-                self.video_quality_info.SetInfoLabel(info_label)
-                self.video_codec_info.SetInfoLabel(video_codec_map.get(info["codec"], "--"))
-
-                self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：{}\n\n右键点击剧集列表项目，可更换为其他视频的媒体信息".format(self.parent.episode_info.get("title")))
-
-                self.set_stream_type(self.stream_type)
-
-                self.Layout()
-
-            info = self.preview.get_video_stream_info(self.episode_params, self.requery)
-
-            self.requery = StreamType(self.stream_type) != StreamType.Dash
+            info = self.preview.get_video_stream_info(self.episode_params)
 
             info_label = self.get_video_quality_label(info)
 
-            wx.CallAfter(update_ui)
+            wx.CallAfter(self.update_video_info_box_ui, info_label, info["codec"])
 
         self.parse_worker(worker)
 
@@ -230,15 +216,9 @@ class MediaInfoPanel(Panel):
 
     def get_audio_quality_info(self):
         def worker():
-            def update_ui():
-                self.audio_quality_info.SetInfoLabel(info_label)
-
             match StreamType(self.stream_type):
                 case StreamType.Dash:
-                    if not self.audio_quality_info.isEmpty():
-                        info = self.preview.get_audio_stream_info(self.audio_quality_id)
-                    else:
-                        info = None
+                    info = self.preview.get_audio_stream_info(self.audio_quality_id)
 
                 case StreamType.Flv:
                     info = "FLV"
@@ -248,14 +228,14 @@ class MediaInfoPanel(Panel):
 
             info_label = self.get_audio_quality_label(info)
 
-            wx.CallAfter(update_ui)
+            wx.CallAfter(self.update_audio_info_box_ui, info_label)
 
         self.parse_worker(worker)
 
     def get_audio_quality_label(self, info: dict):
         match info:
             case None:
-                return "当前视频无音轨"
+                return "当前视频无音轨，将使用优先级设置作为全局设置"
             
             case "FLV":
                 return "FLV 格式视频流中已包含音轨，不支持自定义"
@@ -297,6 +277,21 @@ class MediaInfoPanel(Panel):
 
     def disable_download_audio_option(self):
         self.parent.media_option_box.enable_audio_download_option(False)
+
+    def update_video_info_box_ui(self, info_label: str, codec: str):
+        self.video_quality_info.SetInfoLabel(info_label)
+        self.video_codec_info.SetInfoLabel(video_codec_map.get(codec, "--"))
+
+        self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：{}\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。".format(PreviewInfo.episode_info.get("title")))
+
+        self.set_stream_type(self.stream_type)
+
+        self.Layout()
+
+    def update_audio_info_box_ui(self, info_label: str):
+        self.audio_quality_info.SetInfoLabel(info_label)
+
+        self.Layout()
 
     def onError(self):
         show_error_message_dialog("获取媒体信息失败", parent = self.parent)
@@ -347,10 +342,10 @@ class MediaInfoPanel(Panel):
     @property
     def episode_params(self):
         return {
-            "bvid": self.parent.episode_info.get("bvid"),
-            "cid": self.parent.episode_info.get("cid"),
-            "aid": self.parent.episode_info.get("aid"),
-            "ep_id": self.parent.episode_info.get("ep_id"),
+            "bvid": PreviewInfo.episode_info.get("bvid"),
+            "cid": PreviewInfo.episode_info.get("cid"),
+            "aid": PreviewInfo.episode_info.get("aid"),
+            "ep_id": PreviewInfo.episode_info.get("ep_id"),
             "qn": self.video_quality_id,
             "codec": self.video_codec_id
         }

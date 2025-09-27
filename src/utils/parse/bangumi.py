@@ -155,7 +155,7 @@ class BangumiParser(Parser):
         episode: dict = Episode.Utils.get_first_episode()
         
         if episode:
-            self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
+            self.start_thread(self.get_bangumi_available_media_info, args = (episode.get("bvid"), episode.get("cid")))
 
         return StatusCode.Success.value
     

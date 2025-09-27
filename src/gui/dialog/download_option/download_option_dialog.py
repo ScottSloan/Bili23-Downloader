@@ -3,6 +3,8 @@ import wx
 from utils.config import Config
 from utils.common.enums import StreamType
 
+from utils.parse.preview import PreviewInfo
+
 from gui.dialog.download_option.media_info import MediaInfoPanel
 from gui.dialog.download_option.media_option import MediaOptionStaticBox
 from gui.dialog.download_option.path import PathStaticBox
@@ -19,8 +21,6 @@ class DownloadOptionDialog(Dialog):
 
         self.parent: MainWindow = parent
         self.source = source
-
-        self.episode_info = self.parent.episode_list.GetCurrentEpisodeInfo()
 
         Dialog.__init__(self, parent, "下载选项")
 

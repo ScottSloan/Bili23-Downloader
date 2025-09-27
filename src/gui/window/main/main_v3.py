@@ -313,6 +313,11 @@ class MainWindow(Frame):
             case ID.EPISODE_LIST_SELECT_BATCH_MENU:
                 Window.select_batch_dialog(self)
 
+            case ID.EPISODE_LIST_REFRESH_MEDIA_INFO_MENU:
+                item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
+
+                self.parser.refresh_media_info(item_data)
+
     def show_episode_list(self, from_menu: bool = True):
         if from_menu:
             self.parser.parse_episode()

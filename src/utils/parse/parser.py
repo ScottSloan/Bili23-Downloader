@@ -5,6 +5,7 @@ import urllib.parse
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
+from utils.common.thread import Thread
 
 class Parser:
     url: str = None
@@ -46,6 +47,10 @@ class Parser:
         self.check_json(resp)
 
         return resp
+
+    @staticmethod
+    def start_thread(target, args = ()):
+        return Thread(target = target, args = args).start()
 
     def aid_to_bvid(self, aid: int):
         XOR_CODE = 23442827791579

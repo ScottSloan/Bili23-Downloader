@@ -2,7 +2,6 @@ import os
 import time
 import threading
 from typing import List, Dict
-from urllib.parse import urlparse, urlunparse
 
 from utils.config import Config
 
@@ -16,6 +15,8 @@ from utils.common.request import RequestUtils
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.formatter.file_name_v2 import FileNameFormatter
+
+from utils.module.web.cdn import CDN
 
 class Utils:
     def __init__(self, parent, task_info: DownloadTaskInfo):
@@ -36,7 +37,7 @@ class Utils:
         for entry in self.parent.downloader_info_list:
             url_list, file_name = entry.get("url_list"), entry.get("file_name")
 
-            (url, file_size) = self.get_file_size(url_list)
+            (url, file_size) = CDN.get_file_size(url_list)
 
             total_size += file_size
 
@@ -47,22 +48,6 @@ class Utils:
 
         if not self.task_info.total_file_size:
             self.task_info.total_file_size = total_size
-
-    def get_file_size(self, url_list: List[str]):
-        for download_url in url_list:
-            if self.parent.cdn_host_list:
-                for cdn_host in self.parent.cdn_host_list:
-                    new_url = self.replace_host(download_url, cdn_host)
-
-                    file_size = self.request_head(new_url)
-
-                    if file_size:
-                        return (new_url, file_size)
-            else:
-                file_size = self.request_head(download_url)
-
-                if file_size:
-                    return (download_url, file_size)
     
     def get_file_range_list(self, file_name: str, file_path: str):
         entry = self.cache.get(file_name)
@@ -98,20 +83,6 @@ class Utils:
                 f.seek(file_size - 1)
                 f.write(b"\0")
 
-    def request_head(self, url: str):
-        req = RequestUtils.request_head(url, headers = RequestUtils.get_headers(self.task_info.referer_url))
-
-        return int(req.headers.get("Content-Length", 0))
-
-    def get_cdn_host_list(self):
-        if Config.Advanced.enable_switch_cdn:
-            return Config.Advanced.cdn_list
-        
-    def replace_host(self, url: str, cdn_host: str):
-        parsed_url = urlparse(url)._replace(netloc = cdn_host)
-
-        return urlunparse(parsed_url)
-    
     def get_range_info(self, index: int, file_path: str, url: str, range: list):
         info = RangeDownloadInfo()
         info.index = str(index)
@@ -233,7 +204,7 @@ class Downloader:
 
         self.downloader_info_list: List[dict] = []
         self.thread_info = {}
-        self.cdn_host_list = self.utils.get_cdn_host_list()
+        self.cdn_host_list = CDN.get_cdn_host_list()
 
         self.retry_times = 0
         self.suspend_interval = 0

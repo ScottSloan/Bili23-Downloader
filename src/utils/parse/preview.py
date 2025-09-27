@@ -18,6 +18,8 @@ class PreviewInfo:
     video_size_cache: dict = {}
     audio_size_cache: dict = {}
 
+    episode_info: dict = {}
+
 class VideoPreview(Parser):
     def __init__(self, parse_type: ParseType):
         super().__init__()
@@ -29,15 +31,6 @@ class VideoPreview(Parser):
         self.video_size_cache = {}
         self.audio_size_cache = {}
             
-    def refresh_download_json(self, episode_params: dict):
-        bvid = episode_params.get("bvid")
-        cid = episode_params.get("cid")
-        aid = episode_params.get("aid")
-        ep_id = episode_params.get("ep_id")
-        qn = episode_params.get("qn")
-
-        self.download_json = self.get_download_json(self.parse_type, bvid, cid, aid, ep_id, qn)
-
     @classmethod
     def get_download_json(cls, parse_type: ParseType, bvid: str = None, cid: int = None, aid: int = None, ep_id: int = None, qn: int = 0):
         referer_url = "https://www.bilibili.com/"
@@ -105,53 +98,9 @@ class VideoPreview(Parser):
     def get_stream_type(data: dict):
         return data.get("type", "DASH" if "dash" in data else "FLV")
     
-    def get_video_stream_info(self, episode_params: dict, requery: bool = False):
-        def get_info(data: dict):
-            match StreamType(self.stream_type):
-                case StreamType.Dash:
-                    for entry in data["dash"]["video"]:
-                        if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
-                            return {
-                                "id": video_quality_id,
-                                "codec": entry["codecid"],
-                                "framerate": entry["frame_rate"],
-                                "bandwidth": entry["bandwidth"],
-                                "size": self.get_file_size(self.get_stream_download_url_list(entry))
-                            }
-                        
-                case StreamType.Flv:
-                    size = 0
-
-                    for entry in data["durl"]:
-                        size += entry["size"]
-
-                    return {
-                        "id": video_quality_id,
-                        "codec": video_codec_id,
-                        "seg": len(data["durl"]),
-                        "size": size
-                    }
-                
-                case StreamType.Mp4:
-                    if data["durls"]:
-                        for entry in data["durls"]:
-                            if entry["quality"] == video_quality_id:
-                                node = entry["durl"][0]
-
-                    else:
-                        node = data["durl"][0]
-
-                    return {
-                        "id": video_quality_id,
-                        "codec": video_codec_id,
-                        "size": node["size"]
-                    }
-
+    def get_video_stream_info(self, episode_params: dict):
         qn = episode_params.get("qn")
         codec = episode_params.get("codec")
-
-        if requery:
-            self.refresh_download_json(episode_params)
 
         video_quality_id = self.get_video_quality_id(qn, self.download_json)
         video_codec_id = self.get_video_codec_id(video_quality_id, codec, self.stream_type, self.download_json)
@@ -159,29 +108,90 @@ class VideoPreview(Parser):
         key = f"{video_quality_id} - {video_codec_id}"
 
         if key not in PreviewInfo.video_size_cache:
-            PreviewInfo.video_size_cache[key] = get_info(self.download_json)
+            PreviewInfo.video_size_cache[key] = self.format_video_stream_info(video_quality_id, video_codec_id, self.download_json)
 
         return PreviewInfo.video_size_cache.get(key)
 
+    def format_video_stream_info(self, video_quality_id: int, video_codec_id: int, data: dict):
+        def get_file_size():
+            if "size" in entry:
+                return entry["size"]
+            else:
+               url_list = self.get_stream_download_url_list(entry)
+
+               download_url, file_size = CDN.get_file_size(url_list)
+
+               return file_size
+
+        match StreamType(self.stream_type):
+            case StreamType.Dash:
+                for entry in data["dash"]["video"]:
+                    if entry["id"] == video_quality_id and entry["codecid"] == video_codec_id:
+                        return {
+                            "id": video_quality_id,
+                            "codec": entry["codecid"],
+                            "framerate": entry["frame_rate"],
+                            "bandwidth": entry["bandwidth"],
+                            "size": get_file_size()
+                        }
+                    
+            case StreamType.Flv:
+                size = 0
+
+                for entry in data["durl"]:
+                    size += entry["size"]
+
+                return {
+                    "id": video_quality_id,
+                    "codec": video_codec_id,
+                    "seg": len(data["durl"]),
+                    "size": size
+                }
+            
+            case StreamType.Mp4:
+                if data["durls"]:
+                    for entry in data["durls"]:
+                        if entry["quality"] == video_quality_id:
+                            node = entry["durl"][0]
+
+                else:
+                    node = data["durl"][0]
+
+                return {
+                    "id": video_quality_id,
+                    "codec": video_codec_id,
+                    "size": node["size"]
+                }
+
     def get_audio_stream_info(self, audio_quality_id: int):
-        def get_info(data: dict):
-            all_url_list = self.get_audio_all_url_list(data)
-
-            for entry in all_url_list:
-                if entry["id"] == audio_quality_id:
-                    return {
-                        "id": audio_quality_id,
-                        "codec": "m4a" if entry["codecs"].startswith("mp4a") else entry["codecs"],
-                        "bandwidth": entry["bandwidth"],
-                        "size": self.get_file_size(self.get_stream_download_url_list(entry))
-                    }
-
         audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
         
         if audio_quality_id not in PreviewInfo.audio_size_cache:
-            PreviewInfo.audio_size_cache[audio_quality_id] = get_info(self.download_json["dash"])
+            PreviewInfo.audio_size_cache[audio_quality_id] = self.format_audio_stream_info(audio_quality_id, self.download_json["dash"])
 
         return PreviewInfo.audio_size_cache.get(audio_quality_id)
+
+    def format_audio_stream_info(self, audio_quality_id: int, data: dict):
+        def get_file_size():
+            if "size" in entry:
+                return entry["size"]
+            else:
+                url_list = self.get_stream_download_url_list(entry)
+
+                download_url, file_size = CDN.get_file_size(url_list)
+
+                return file_size
+
+        all_url_list = self.get_audio_all_url_list(data)
+
+        for entry in all_url_list:
+            if entry["id"] == audio_quality_id:
+                return {
+                    "id": audio_quality_id,
+                    "codec": "m4a" if entry["codecs"].startswith("mp4a") else entry["codecs"],
+                    "bandwidth": entry["bandwidth"],
+                    "size": get_file_size()
+                }
 
     def get_video_stream_codec(self, video_quality_id: int, video_codec_id: int):
         for entry in self.download_json["dash"]["video"]:
@@ -335,23 +345,6 @@ class VideoPreview(Parser):
                 
             case StreamType.Flv | StreamType.Mp4:
                 return [VideoCodecID.AVC.value]
-            
-    @staticmethod
-    def get_file_size(url_list: list):
-        def request_head(url: str, cdn: str):
-            return RequestUtils.request_head(CDN.replace_cdn(url, cdn), headers = RequestUtils.get_headers(referer_url = "https://www.bilibili.com"))
-
-        cdn_list = CDN.get_cdn_list()
-
-        for url in url_list:
-            for cdn in cdn_list:
-                req = request_head(url, cdn)
-
-                if "Content-Length" in req.headers:
-                    file_size = int(req.headers.get("Content-Length"))
-
-                    if file_size:
-                        return file_size
 
     @staticmethod
     def get_stream_download_url_list(data: dict):
@@ -403,6 +396,11 @@ class VideoPreview(Parser):
 
         data.get(key)
 
+    @staticmethod
+    def clear_cache():
+        PreviewInfo.video_size_cache.clear()
+        PreviewInfo.audio_size_cache.clear()
+    
     @property
     def stream_type(self):
         return self.get_stream_type(self.download_json)
