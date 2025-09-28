@@ -373,11 +373,9 @@ language_map = {
     "简体中文": "zh_CN",
 }
 
-nfo_type_map = {
-    "Kodi": 0,
-    "Emby": 1,
-    "Jellyfin": 2,
-    "Plex": 3
+nfo_add_date_map = {
+    "文件创建日期": 0,
+    "上映日期": 1
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):

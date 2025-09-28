@@ -1,6 +1,8 @@
+import json
+
 from utils.config import Config
 from utils.common.model.task_info import DownloadTaskInfo
-from utils.common.enums import MetadataType, ParseType, TemplateType
+from utils.common.enums import MetadataType, ParseType
 
 from utils.parse.extra.parser import Parser
 from utils.parse.extra.nfo.video import VideoNFOParser
@@ -97,4 +99,8 @@ class MetadataParser(Parser):
         self.total_file_size += parser.total_file_size
 
     def generate_json(self):
-        pass
+        metadata = self.task_info.to_dict()
+
+        contents = json.dumps(metadata, ensure_ascii = False, indent = 4)
+ 
+        self.save_file(f"{self.task_info.file_name}.json", contents, "w")

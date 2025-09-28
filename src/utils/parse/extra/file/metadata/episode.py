@@ -20,7 +20,8 @@ class TVShowMetaDataParser:
             "season_num": task_info.season_num,
             "area": self.get_countries(task_info.areas),
             "poster_url": task_info.poster_url,
-            "named_seasons": self.get_named_season(task_info.seasons, task_info.series_title_original)
+            "named_seasons": self.get_named_season(task_info.seasons, task_info.series_title_original),
+            "dateadded": Utils.get_dateadded(task_info.pubtimestamp)
         }
 
     def get_nfo_contents(self):
@@ -40,6 +41,7 @@ class TVShowMetaDataParser:
                 <thumb aspect="poster">{poster_url}</thumb>
                 {named_seasons}
                 <uniqueid type="season">{season_id}</uniqueid>
+                {dateadded}
             </tvshow>""".format(**self.data))
     
     def get_ratings(self, rating: float, votes: int):
@@ -143,7 +145,8 @@ class EpisodeMetadataParser:
             "aired": DateTime.time_str_from_timestamp(task_info.pubtimestamp, "%Y-%m-%d"),
             "thumb": task_info.cover_url,
             "cid": task_info.cid,
-            "ep_id": task_info.ep_id
+            "ep_id": task_info.ep_id,
+            "dateadded": Utils.get_dateadded(task_info.pubtimestamp)
         }
 
     def get_nfo_contents(self):
@@ -160,4 +163,5 @@ class EpisodeMetadataParser:
                 <thumb>{thumb}</thumb>
                 <uniqueid type="cid">{cid}</uniqueid>
                 <uniqueid type="ep_id">{ep_id}</uniqueid>
+                {dateadded}
             </episodedetails>""".format(**self.data))

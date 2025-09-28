@@ -17,7 +17,8 @@ class MovieMetaDataParser:
             "pubdate": task_info.bangumi_pubdate,
             "poster_url": task_info.poster_url,
             "countrys": self.get_countries(task_info.areas),
-            "actors": self.get_actors(task_info.actors)
+            "actors": self.get_actors(task_info.actors),
+            "dateadded": Utils.get_dateadded(task_info.pubtimestamp)
         }
 
     def get_nfo_contents(self):
@@ -35,6 +36,7 @@ class MovieMetaDataParser:
                 <thumb aspect="poster">{poster_url}</thumb>
                 {countrys}
                 {actors}
+                {dateadded}
             </movie>""".format(**self.data))
     
     def get_genres(self, tags: list[str]):

@@ -158,21 +158,25 @@ class Config:
         metadata_file_type: int = 0
         scrape_option: dict = {
             "video": {
-                "nfo_file_type": 0,
+                "add_date": True,
+                "add_date_source": 0
             },
             "episode": {
-                "nfo_file_type": 0,
+                "add_date": True,
+                "add_date_source": 0,
                 "download_tvshow_nfo": True,
                 "download_season_nfo": True,
                 "download_episode_nfo": True
             },
             "movie": {
-                "nfo_file_type": 0,
+                "add_date": True,
+                "add_date_source": 0,
                 "download_movie_nfo": True,
                 "download_episode_nfo": True
             },
             "lesson": {
-                "nfo_file_type": 0,
+                "add_date": True,
+                "add_date_source": 0,
                 "download_tvshow_nfo": True,
                 "download_episode_nfo": True
             }

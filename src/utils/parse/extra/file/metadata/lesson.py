@@ -4,6 +4,8 @@ import textwrap
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.datetime_util import DateTime
 
+from utils.parse.extra.file.metadata.utils import Utils
+
 class TVShowMetaDataParser:
     def __init__(self, task_info: DownloadTaskInfo):
         self.data = {
@@ -13,7 +15,8 @@ class TVShowMetaDataParser:
             "pubdate": task_info.bangumi_pubdate,
             "up_name": task_info.up_name,
             "poster_url": task_info.poster_url,
-            "season_id": task_info.season_id
+            "season_id": task_info.season_id,
+            "dateadded": Utils.get_dateadded(task_info.pubtimestamp)
         }
 
     def get_nfo_contents(self):
@@ -33,6 +36,7 @@ class TVShowMetaDataParser:
                 <thumb aspect="poster">{poster_url}</thumb>
                 <namedseason number="1">{series_title}</namedseason>
                 <uniqueid type="season">{season_id}</uniqueid>
+                {dateadded}
             </tvshow>""".format(**self.data))
     
 class EpisodeMetaDataParser:
@@ -44,6 +48,7 @@ class EpisodeMetaDataParser:
             "thumb": task_info.cover_url,
             "cid": task_info.cid,
             "ep_id": task_info.ep_id,
+            "dateadded": Utils.get_dateadded(task_info.pubtimestamp)
         }
 
     def get_nfo_contents(self):
@@ -58,5 +63,6 @@ class EpisodeMetaDataParser:
                 <thumb>{thumb}</thumb>
                 <uniqueid type="cid">{cid}</uniqueid>
                 <uniqueid type="ep_id">{ep_id}</uniqueid>
+                {dateadded}
             </episodedetails>""".format(**self.data))
         

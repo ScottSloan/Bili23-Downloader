@@ -21,7 +21,8 @@ class VideoMetadataFile:
             "cid": task_info.cid,
             "zone": task_info.zone,
             "subzone": task_info.subzone,
-            "tags": self.get_tags(task_info.video_tags)
+            "tags": self.get_tags(task_info.video_tags),
+            "dateadded": Utils.get_dateadded(task_info.pubtimestamp)
         }
 
     def get_nfo_contents(self):
@@ -45,6 +46,7 @@ class VideoMetadataFile:
                 <genre>{zone}</genre>
                 <genre>{subzone}</genre>
                 {tags}
+                {dateadded}>
             </movie>""".format(**self.data))
     
     def get_tags(self, tags: list[str]):
@@ -57,3 +59,4 @@ class VideoMetadataFile:
             tags_elements.append(Utils.indent(tag_element, "                "))
 
         return "\n".join(tags_elements).removeprefix("                ")
+    
