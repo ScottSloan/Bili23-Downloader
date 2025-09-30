@@ -5,7 +5,6 @@ from typing import List, Dict
 
 from utils.config import Config
 
-from utils.common.thread import DaemonThreadPoolExecutor
 from utils.common.exception import GlobalException
 from utils.common.enums import StatusCode
 from utils.common.model.data_type import RangeDownloadInfo
@@ -15,6 +14,7 @@ from utils.common.request import RequestUtils
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.const import Const
 
 from utils.module.web.cdn import CDN
 
@@ -64,18 +64,26 @@ class Utils:
         else:
             return self.calc_file_ranges(self.parent.current_file_size)
 
-    def calc_file_ranges(self, file_size: str):
-        num_threads = Config.Download.max_thread_count if file_size > 1024 * 1024 else 1
-        part_size = file_size // num_threads
-
+    def calc_file_ranges(self, file_size: int):
+        piece_size = self.get_piece_size(file_size)
         ranges = []
 
-        for i in range(num_threads):
-            start = i * part_size
-            end = start + part_size - 1 if i != num_threads - 1 else file_size - 1
-            ranges.append([start, end])
-        
+        for start in range(0, file_size, piece_size):
+            end = min(start + piece_size - 1, file_size - 1)
+
+            ranges.append((start, end))
+
         return ranges
+    
+    def get_piece_size(self, file_size: int):
+        if file_size <= Const.Size_100MB:
+            return 10 * Const.Size_1MB
+        
+        elif file_size <= Const.Size_1GB:
+            return 25 * Const.Size_1MB
+        
+        else:
+            return 40 * Const.Size_1MB
     
     def create_local_file(self, file_path: str, file_size: int):
         if not os.path.exists(file_path):
@@ -129,10 +137,9 @@ class Utils:
         if speed:
             self.parent.callback.onDownloading(speed)
 
-    def update_thread_info(self, index: int, chunk_size: int):
+    def update_thread_info(self, chunk_size: int):
         self.parent.current_downloaded_size += chunk_size
         self.parent.total_downloaded_size += chunk_size
-        self.parent.thread_info[index][0] += chunk_size
 
     def on_thread_exit(self):
         with self.parent.lock:
@@ -200,7 +207,6 @@ class Downloader:
 
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
-        self.executor = DaemonThreadPoolExecutor()
 
         self.downloader_info_list: List[dict] = []
         self.thread_info = {}
@@ -237,17 +243,10 @@ class Downloader:
 
             Thread(target = self.listener).start()
 
-            future_list = []
+            for index, range in enumerate(file_range_list):
+                range_info = self.utils.get_range_info(index, file_path, url, range)
 
-            with DaemonThreadPoolExecutor(max_workers = Config.Download.max_thread_count) as self.executor:
-                for index, range in enumerate(file_range_list):
-                    if range[0] < range[1]:
-                        self.thread_info[str(index)] = range
-                        range_info = self.utils.get_range_info(index, file_path, url, range)
-
-                        future_list.append(self.executor.submit(self.range_download, range_info))
-
-            self.utils.check_future_exception(future_list)
+                self.range_download(range_info)
 
         except Exception as e:
             raise GlobalException(code = StatusCode.DownloadError.value, callback = self.utils.onDownloadError) from e
@@ -268,15 +267,15 @@ class Downloader:
 
                                 f.write(chunk)
 
-                                self.utils.update_thread_info(info.index, len(chunk))
+                                self.utils.update_thread_info(len(chunk))
 
                                 self.utils.check_speed_limit(start_time)
 
         except Exception as e:
-            self.utils.retry_download(e)
+            raise e
+            #self.utils.retry_download(e)
             
-            info.range = self.thread_info[info.index]
-            self.range_download(info)
+            #self.range_download(info)
 
         self.utils.on_thread_exit()
 
