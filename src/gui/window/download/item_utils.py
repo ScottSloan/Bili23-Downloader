@@ -144,7 +144,7 @@ class Utils:
 
     def destroy_panel(self, remove_file: bool = False, user_action: bool = False):
         if hasattr(self, "downloader"):
-            self.downloader.stop_download(shutdown = remove_file)
+            self.downloader.stop_download()
 
         if remove_file:
             self.task_info.remove_file()

@@ -38,7 +38,6 @@ app_config_group = {
         "file_name_template_list",
         "strict_naming",
         "max_download_count",
-        "max_thread_count",
         "video_quality_priority",
         "audio_quality_priority",
         "video_codec_priority",
@@ -364,7 +363,6 @@ class Config:
         audio_quality_id: int = 30300
         video_codec_id: int = 20
 
-        max_thread_count: int = 8
         max_download_count: int = 1
 
         enable_notification: bool = False

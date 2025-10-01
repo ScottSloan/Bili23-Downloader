@@ -13,7 +13,6 @@ from gui.dialog.setting.file_name.custom_file_name_v3 import CustomFileNameDialo
 from gui.dialog.setting.priority.edit import EditPriorityDialog
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
-
 from gui.component.misc.tooltip import ToolTip
 
 class SliderBox(Panel):
@@ -134,12 +133,10 @@ class DownloadPage(Page):
         path_vbox.Add(path_hbox, 0, wx.EXPAND)
         path_vbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        self.max_thread_slider = SliderBox(download_box, "多线程数", 1, 16)
         self.max_download_slider = SliderBox(download_box, "并行下载数", 1, 10)
 
         slider_vbox = wx.BoxSizer(wx.VERTICAL)
-        slider_vbox.Add(self.max_thread_slider, 0, wx.ALL & (~wx.BOTTOM) | wx.EXPAND, self.FromDIP(6))
-        slider_vbox.Add(self.max_download_slider, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        slider_vbox.Add(self.max_download_slider, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
         self.video_quality_priority_box = PriorityBox(download_box, self.parent, "画质优先级", "画质", video_quality_priority, video_quality_priority_short, "video_quality_priority")
         self.audio_quality_priority_box = PriorityBox(download_box, self.parent, "音质优先级", "音质", audio_quality_priority, audio_quality_priority_short, "audio_quality_priority")
@@ -202,9 +199,6 @@ class DownloadPage(Page):
         self.browse_btn.Bind(wx.EVT_BUTTON, self.onBrowsePathEVT)
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
 
-        self.max_thread_slider.Bind(wx.EVT_SLIDER, self.onThreadSliderEVT)
-        self.max_download_slider.Bind(wx.EVT_SLIDER, self.onDownloadSliderEVT)
-
         self.speed_limit_chk.Bind(wx.EVT_CHECKBOX, self.onChangeSpeedLimitEVT)
 
         self.test_btn.Bind(wx.EVT_BUTTON, self.onTestToastEVT)
@@ -219,7 +213,6 @@ class DownloadPage(Page):
         Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
         Config.Temp.strict_naming = Config.Download.strict_naming
         
-        self.max_thread_slider.SetValue(Config.Download.max_thread_count)
         self.max_download_slider.SetValue(Config.Download.max_download_count)
 
         self.video_quality_priority_box.init_data()
@@ -241,7 +234,6 @@ class DownloadPage(Page):
         Config.Download.video_codec_priority = Config.Temp.video_codec_priority.copy()
 
         Config.Download.path = self.path_box.GetValue()
-        Config.Download.max_thread_count = self.max_thread_slider.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
@@ -272,12 +264,6 @@ class DownloadPage(Page):
     def onCustomFileNameEVT(self, event: wx.CommandEvent):
         dlg = CustomFileNameDialog(self)
         dlg.ShowModal()
-
-    def onThreadSliderEVT(self, event: wx.ScrollEvent):
-        self.max_thread_lab.SetLabel("多线程数：{}".format(self.max_thread_slider.GetValue()))
-
-    def onDownloadSliderEVT(self, event: wx.ScrollEvent):
-        self.max_download_lab.SetLabel("并行下载数：{}".format(self.max_download_slider.GetValue()))
 
     def onChangeSpeedLimitEVT(self, event: wx.CommandEvent):
         self.speed_limit_box.Enable(self.speed_limit_chk.GetValue())

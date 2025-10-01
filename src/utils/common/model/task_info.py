@@ -133,7 +133,7 @@ class DownloadTaskInfo:
         # 源
         self.source: str = ""
 
-        self.thread_info: dict = {}
+        self.thread_info: list = []
         self.error_info: dict = {}
 
         # 元数据额外信息，不保存到文件
@@ -242,12 +242,12 @@ class DownloadTaskInfo:
 
             "source": self.source,
 
-            "thread_info": self.thread_info,
-            "error_info": self.error_info,
-
             "series_title_original": self.series_title_original,
             "section_title_ex": self.section_title_ex,
-            "episode_tag": self.episode_tag
+            "episode_tag": self.episode_tag,
+
+            "thread_info": self.thread_info,
+            "error_info": self.error_info
         }
 
     def load_from_dict(self, data: dict):

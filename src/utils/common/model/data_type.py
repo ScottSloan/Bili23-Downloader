@@ -1,13 +1,3 @@
-from typing import List
-
-class RangeDownloadInfo:
-    def __init__(self):
-        self.index: str = ""
-        self.type: str = ""
-        self.url: str = ""
-        self.file_path: str = ""
-        self.range: List[int] = []
-
 class NotificationMessage:
     def __init__(self):
         self.video_title: str = ""

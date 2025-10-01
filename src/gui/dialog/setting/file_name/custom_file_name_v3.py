@@ -1,5 +1,4 @@
 import wx
-import textwrap
 
 from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
