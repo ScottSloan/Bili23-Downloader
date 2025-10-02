@@ -1,4 +1,4 @@
-## 1.70.0 (2025-09-30) EN
+## 1.70.0 (2025-10-02) EN
 ### Added
 * Support for setting ASS danmaku display area, opacity, danmaku speed, danmaku density, and anti-overlap subtitles
 * Support for scaling, rotating, and adjusting character spacing for ASS danmaku/subtitles

@@ -148,7 +148,7 @@ class Json2ASS:
         def check_top_comment():
             for row, previous_comment in self.data.get(type).items():
                 if previous_comment:
-                    if new_comment.start_time >= previous_comment.end_time:
+                    if new_comment.start_time >= (previous_comment.end_time + self.density):
                         return set_row(new_comment, row)
                 else:
                     return set_row(new_comment, row)
@@ -156,7 +156,7 @@ class Json2ASS:
         def check_bottom_comment():
             for row, previous_comment in reversed(list(self.data.get(2).items())):
                 if previous_comment:
-                    if new_comment.start_time >= previous_comment.end_time:
+                    if new_comment.start_time >= (previous_comment.end_time + self.density):
                         return set_row(new_comment, row)
                 else:
                     return set_row(new_comment, row)

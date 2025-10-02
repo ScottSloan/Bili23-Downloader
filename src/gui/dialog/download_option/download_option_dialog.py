@@ -1,15 +1,13 @@
 import wx
+from threading import Event
 
 from utils.config import Config
 from utils.common.enums import StreamType
-
-from utils.parse.preview import PreviewInfo
 
 from gui.dialog.download_option.media_info import MediaInfoPanel
 from gui.dialog.download_option.media_option import MediaOptionStaticBox
 from gui.dialog.download_option.path import PathStaticBox
 from gui.dialog.download_option.other import OtherStaticBox
-
 from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
 
 from gui.component.window.dialog import Dialog
@@ -26,9 +24,14 @@ class DownloadOptionDialog(Dialog):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.init_utils()
 
         self.CenterOnParent()
+
+    def Bind_EVT(self):
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.onDestoryEVT)
 
     def init_UI(self):
         self.media_info_box = MediaInfoPanel(self)
@@ -80,6 +83,8 @@ class DownloadOptionDialog(Dialog):
             self.extra_box.load_data()
 
             self.other_box.load_data()
+
+        self.stop_event = Event()
 
         load_download_option()
 
@@ -139,3 +144,8 @@ class DownloadOptionDialog(Dialog):
             
             if self.check_login_paid():
                 return True
+            
+    def onDestoryEVT(self, event: wx.CloseEvent):
+        self.stop_event.set()
+
+        event.Skip()

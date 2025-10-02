@@ -279,19 +279,21 @@ class MediaInfoPanel(Panel):
         self.parent.media_option_box.enable_audio_download_option(False)
 
     def update_video_info_box_ui(self, info_label: str, codec: str):
-        self.video_quality_info.SetInfoLabel(info_label)
-        self.video_codec_info.SetInfoLabel(video_codec_map.get(codec, "--"))
+        if not self.parent.stop_event.is_set():
+            self.video_quality_info.SetInfoLabel(info_label)
+            self.video_codec_info.SetInfoLabel(video_codec_map.get(codec, "--"))
 
-        self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：{}\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。".format(PreviewInfo.episode_info.get("title")))
+            self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：{}\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。".format(PreviewInfo.episode_info.get("title")))
 
-        self.set_stream_type(self.stream_type)
+            self.set_stream_type(self.stream_type)
 
-        self.Layout()
+            self.Layout()
 
     def update_audio_info_box_ui(self, info_label: str):
-        self.audio_quality_info.SetInfoLabel(info_label)
+        if not self.parent.stop_event.is_set():
+            self.audio_quality_info.SetInfoLabel(info_label)
 
-        self.Layout()
+            self.Layout()
 
     def onError(self):
         show_error_message_dialog("获取媒体信息失败", parent = self.parent)

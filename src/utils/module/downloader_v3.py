@@ -24,10 +24,6 @@ class Utils:
 
         self.cache: Dict[str, dict] = {}
 
-    def get_downloader_info_batch(self):
-        for entry in self.parent.downloader_info_list[:1]:
-            return entry
-        
     def get_total_file_size(self):
         total_size = 0
 
@@ -69,13 +65,13 @@ class Utils:
     
     def get_piece_size(self, file_size: int):
         if file_size <= Const.Size_100MB:
-            return 10 * Const.Size_1MB
+            return 20 * Const.Size_1MB
         
         elif file_size <= Const.Size_1GB:
-            return 25 * Const.Size_1MB
+            return 35 * Const.Size_1MB
         
         else:
-            return 40 * Const.Size_1MB
+            return 50 * Const.Size_1MB
     
     def create_local_file(self, file_path: str, file_size: int):
         if not os.path.exists(file_path):
@@ -95,6 +91,8 @@ class Utils:
             self.parent.stop_event.set()
 
             raise GlobalException(code = StatusCode.DownloadError.value, callback = self.onDownloadError) from e
+        
+        self.parent.start_next_thread()
 
     def reset_flag(self):
         self.parent.stop_event.clear()
@@ -125,7 +123,7 @@ class Utils:
     def check_speed_limit(self, start_time: float):
         if Config.Download.enable_speed_limit:
             elapsed_time = time.time() - start_time
-            expected_time = self.task_info.current_downloaded_size / self.get_speed_bps()
+            expected_time = self.task_info.current_downloaded_size / self.speed_bps
 
             if elapsed_time < expected_time:
                 time.sleep(expected_time - elapsed_time)
@@ -145,12 +143,9 @@ class Utils:
     def update_start_time(self):
         if Config.Download.enable_speed_limit:
             if self.task_info.current_downloaded_size:
-                return time.time() - self.task_info.current_downloaded_size / self.get_speed_bps()
+                return time.time() - self.task_info.current_downloaded_size / self.speed_bps
             else:
                 return time.time()
-
-    def get_speed_bps(self):
-        return Config.Download.speed_mbps * 1024 * 1024
 
     def restart_download(self):
         time.sleep(1)
@@ -162,6 +157,10 @@ class Utils:
 
         self.parent.callback.onError()
 
+    @property
+    def speed_bps(self):
+        return Config.Download.speed_mbps * 1024 * 1024
+    
 class Downloader:
     def __init__(self, task_info: DownloadTaskInfo, callback: DownloaderCallback):
         self.task_info = task_info
@@ -182,6 +181,7 @@ class Downloader:
         self.suspend_interval: int = 0
         self.current_file_size: int = 0
         self.current_thread_info: list = []
+        self.download_type: str = ""
 
         self.url: str = ""
         self.file_path: str = ""
@@ -192,7 +192,9 @@ class Downloader:
         self.downloader_info_list = downloader_info
 
     def start_download(self):
-        downloader_info = self.utils.get_downloader_info_batch()
+        downloader_info = self.downloader_info_list[:1][0]
+
+        self.download_type = downloader_info.get("type")
 
         file_name = downloader_info.get("file_name")
         self.file_path = os.path.join(self.download_path, file_name)
@@ -246,10 +248,7 @@ class Downloader:
                                 self.utils.check_speed_limit(start_time)
 
         except Exception as e:
-            raise e
-            #self.utils.retry_download(e)
-            
-            #self.range_download(info)
+            self.utils.retry_download(e)
 
         self.start_next_thread()
 
@@ -276,9 +275,7 @@ class Downloader:
             self.download_complete()
 
     def download_complete(self):
-        downloader_info = self.utils.get_downloader_info_batch()
-
-        self.task_info.download_items.remove(downloader_info.get("type"))
+        self.task_info.download_items.remove(self.download_type)
         self.task_info.current_downloaded_size = 0
         self.task_info.thread_info.clear()
         self.current_thread_info.clear()
