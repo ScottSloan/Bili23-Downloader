@@ -1,2 +1,3 @@
 src/static/svg-pan-zoom.min.js linguist-detectable=false
 src/static/viz-standalone.js linguist-detectable=false
+src/Locale/* linguist-generated=false

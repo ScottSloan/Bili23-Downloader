@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.model.task_info import DownloadTaskInfo
@@ -13,6 +14,8 @@ from gui.component.panel.panel import Panel
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 from gui.component.label.info_label import InfoLabel
 from gui.component.button.bitmap_button import BitmapButton
+
+_ = gettext.gettext
 
 class DownloadTaskItemPanel(Panel):
     def __init__(self, parent: wx.Window, task_info: DownloadTaskInfo, download_window: wx.Window):
@@ -34,7 +37,7 @@ class DownloadTaskItemPanel(Panel):
 
         self.cover_bmp = StaticBitmap(self, size = self.FromDIP((112, 63)))
         self.cover_bmp.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.cover_bmp.SetToolTip("查看封面")
+        self.cover_bmp.SetToolTip(_("查看封面"))
 
         self.title_lab = wx.StaticText(self, -1, size = self.FromDIP((300, -1)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
@@ -60,7 +63,7 @@ class DownloadTaskItemPanel(Panel):
         progress_bar_hbox = wx.BoxSizer(wx.HORIZONTAL)
         progress_bar_hbox.Add(self.progress_bar, 0, wx.ALL & (~wx.BOTTOM) & (~wx.TOP) | wx.ALIGN_CENTER, 10)
 
-        self.speed_lab = InfoLabel(self, "等待下载...", size = self.FromDIP((-1, -1)))
+        self.speed_lab = InfoLabel(self, _("等待下载..."), size = self.FromDIP((-1, -1)))
 
         speed_hbox = wx.BoxSizer(wx.HORIZONTAL)
         speed_hbox.Add(self.speed_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER, 10)
@@ -73,10 +76,10 @@ class DownloadTaskItemPanel(Panel):
         progress_bar_vbox.AddSpacer(self.FromDIP(8))
 
         self.pause_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Play))
-        self.pause_btn.SetToolTip("开始下载")
+        self.pause_btn.SetToolTip(_("开始下载"))
 
         self.stop_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Close))
-        self.stop_btn.SetToolTip("取消下载")
+        self.stop_btn.SetToolTip(_("取消下载"))
 
         panel_hbox = wx.BoxSizer(wx.HORIZONTAL)
         panel_hbox.Add(self.cover_bmp, 0, wx.ALL, self.FromDIP(6))

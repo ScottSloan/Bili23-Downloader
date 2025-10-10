@@ -1,4 +1,5 @@
 import wx
+import gettext
 from wx.lib.intctrl import IntCtrl
 
 from utils.config import Config
@@ -14,6 +15,8 @@ from gui.dialog.setting.priority.edit import EditPriorityDialog
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.misc.tooltip import ToolTip
+
+_ = gettext.gettext
 
 class SliderBox(Panel):
     def __init__(self, parent: wx.Window, label: str, min_value: int, max_value: int):
@@ -69,7 +72,7 @@ class PriorityBox(Panel):
     def init_UI(self):
         lab = wx.StaticText(self, -1, self.label)
         self.priority_box = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY)
-        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), tooltip="设置优先级")
+        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("设置优先级"))
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -107,7 +110,7 @@ class PriorityBox(Panel):
 
 class DownloadPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "下载", 1)
+        Page.__init__(self, parent, _("下载"), 1)
 
         self.init_UI()
 
@@ -116,13 +119,13 @@ class DownloadPage(Page):
         self.load_data()
 
     def init_UI(self):
-        download_box = wx.StaticBox(self.panel, -1, "下载设置")
+        download_box = wx.StaticBox(self.panel, -1, _("下载设置"))
 
-        path_lab = wx.StaticText(download_box, -1, "下载目录")
+        path_lab = wx.StaticText(download_box, -1, _("下载目录"))
         self.path_box = wx.TextCtrl(download_box, -1)
-        self.browse_btn = BitmapButton(download_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = "浏览")
+        self.browse_btn = BitmapButton(download_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = _("浏览"))
 
-        self.custom_file_name_btn = wx.Button(download_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
+        self.custom_file_name_btn = wx.Button(download_box, -1, _("自定义下载文件名"), size = self.get_scaled_size((120, 28)))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -133,22 +136,22 @@ class DownloadPage(Page):
         path_vbox.Add(path_hbox, 0, wx.EXPAND)
         path_vbox.Add(self.custom_file_name_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        self.max_download_slider = SliderBox(download_box, "并行下载数", 1, 10)
+        self.max_download_slider = SliderBox(download_box, _("并行下载数"), 1, 10)
 
         slider_vbox = wx.BoxSizer(wx.VERTICAL)
         slider_vbox.Add(self.max_download_slider, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
 
-        self.video_quality_priority_box = PriorityBox(download_box, self.parent, "画质优先级", "画质", video_quality_priority, video_quality_priority_short, "video_quality_priority")
-        self.audio_quality_priority_box = PriorityBox(download_box, self.parent, "音质优先级", "音质", audio_quality_priority, audio_quality_priority_short, "audio_quality_priority")
-        self.video_codec_priority_box = PriorityBox(download_box, self.parent, "编码优先级", "编码", video_codec_priority, video_codec_priority_short, "video_codec_priority")
+        self.video_quality_priority_box = PriorityBox(download_box, self.parent, _("画质优先级"), _("画质"), video_quality_priority, video_quality_priority_short, "video_quality_priority")
+        self.audio_quality_priority_box = PriorityBox(download_box, self.parent, _("音质优先级"), _("音质"), audio_quality_priority, audio_quality_priority_short, "audio_quality_priority")
+        self.video_codec_priority_box = PriorityBox(download_box, self.parent, _("编码优先级"), _("编码"), video_codec_priority, video_codec_priority_short, "video_codec_priority")
 
         priority_vbox = wx.BoxSizer(wx.VERTICAL)
         priority_vbox.Add(self.video_quality_priority_box, 0, wx.EXPAND)
         priority_vbox.Add(self.audio_quality_priority_box, 0, wx.EXPAND)
         priority_vbox.Add(self.video_codec_priority_box, 0, wx.EXPAND)
 
-        self.speed_limit_chk = wx.CheckBox(download_box, -1, "对单个下载任务进行限速")
-        self.speed_limit_lab = wx.StaticText(download_box, -1, "最高")
+        self.speed_limit_chk = wx.CheckBox(download_box, -1, _("对单个下载任务进行限速"))
+        self.speed_limit_lab = wx.StaticText(download_box, -1, _("最高"))
         self.speed_limit_box = IntCtrl(download_box, size = self.FromDIP((50, -1)), min = 1, max = 1000)
         self.speed_limit_box.SetLimited(True)
         self.speed_limit_unit_lab = wx.StaticText(download_box, -1, "MB/s")
@@ -159,20 +162,20 @@ class DownloadPage(Page):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.number_type_lab = wx.StaticText(download_box, -1, "序号类型")
+        self.number_type_lab = wx.StaticText(download_box, -1, _("序号类型"))
         self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
         number_type_tip = ToolTip(download_box)
-        number_type_tip.set_tooltip("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示")
+        number_type_tip.set_tooltip(_("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示"))
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.Add(self.number_type_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
         number_type_hbox.Add(number_type_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.delete_history_chk = wx.CheckBox(download_box, -1, "下载完成后清除本地下载记录")
+        self.delete_history_chk = wx.CheckBox(download_box, -1, _("下载完成后清除本地下载记录"))
 
-        self.show_toast_chk = wx.CheckBox(download_box, -1, "允许弹出通知提示")
-        self.test_btn = wx.Button(download_box, -1, "测试", size = self.get_scaled_size((60, 24)))
+        self.show_toast_chk = wx.CheckBox(download_box, -1, _("允许弹出通知提示"))
+        self.test_btn = wx.Button(download_box, -1, _("测试"), size = self.get_scaled_size((60, 24)))
 
         toast_hbox = wx.BoxSizer(wx.HORIZONTAL)
         toast_hbox.Add(self.show_toast_chk, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -256,7 +259,7 @@ class DownloadPage(Page):
         self.save_data()
     
     def onBrowsePathEVT(self, event: wx.CommandEvent):
-        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = self.path_box.GetValue())
+        dlg = wx.DirDialog(self, _("选择下载目录"), defaultPath = self.path_box.GetValue())
 
         if dlg.ShowModal() == wx.ID_OK:
             self.path_box.SetValue(dlg.GetPath())
@@ -273,4 +276,4 @@ class DownloadPage(Page):
     def onTestToastEVT(self, event: wx.CommandEvent):
         notification = NotificationManager(self)
 
-        notification.show_toast("测试通知", "这是一则测试通知", wx.ICON_INFORMATION)
+        notification.show_toast(_("测试通知"), _("这是一则测试通知"), wx.ICON_INFORMATION)

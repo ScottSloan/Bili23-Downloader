@@ -1,4 +1,5 @@
 import wx
+import gettext
 from typing import List, Tuple, Callable
 
 from utils.config import Config
@@ -11,6 +12,8 @@ from gui.window.download.item_panel_v4 import DownloadTaskItemPanel
 
 from gui.component.panel.scrolled_panel_list import ScrolledPanelList
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class BasePage(Panel):
     def __init__(self, parent: wx.Window, name: str):
@@ -99,13 +102,13 @@ class DownloadingPage(BasePage):
     def init_UI(self):
         self.set_dark_mode()
 
-        max_download_lab = wx.StaticText(self, -1, "并行下载数")
+        max_download_lab = wx.StaticText(self, -1, _("并行下载数"))
         self.max_download_choice = wx.Choice(self, -1, choices = [f"{i + 1}" for i in range(10)])
         self.max_download_choice.SetSelection(Config.Download.max_download_count - 1)
 
-        self.start_all_btn = wx.Button(self, -1, "全部开始")
-        self.pause_all_btn = wx.Button(self, -1, "全部暂停")
-        self.cancel_all_btn = wx.Button(self, -1, "全部取消")
+        self.start_all_btn = wx.Button(self, -1, _("全部开始"))
+        self.pause_all_btn = wx.Button(self, -1, _("全部暂停"))
+        self.cancel_all_btn = wx.Button(self, -1, _("全部取消"))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(max_download_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -119,7 +122,7 @@ class DownloadingPage(BasePage):
 
         info = {
             "max_items": 50,
-            "empty_label": "没有正在下载的项目",
+            "empty_label": _("没有正在下载的项目"),
             "add_panel_item": self.add_panel_item,
             "load_more_item": self.ShowItems
         }
@@ -218,7 +221,7 @@ class CompletedPage(BasePage):
     def init_UI(self):
         self.set_dark_mode()
 
-        self.clear_history_btn = wx.Button(self, -1, "清除下载记录")
+        self.clear_history_btn = wx.Button(self, -1, _("清除下载记录"))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.AddStretchSpacer()
@@ -228,7 +231,7 @@ class CompletedPage(BasePage):
 
         info = {
             "max_items": 50,
-            "empty_label": "没有下载完成的项目",
+            "empty_label": _("没有下载完成的项目"),
             "add_panel_item": self.add_panel_item,
             "load_more_item": self.ShowItems
         }

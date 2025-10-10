@@ -1,5 +1,6 @@
 import wx
 import os
+import gettext
 from typing import List, Callable
 
 from utils.config import Config
@@ -20,6 +21,8 @@ from gui.component.button.action_button import ActionButton
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
+_ = gettext.gettext
+
 class TopPanel(Panel):
     def __init__(self, parent: wx.Window):
         self.parent: DownloadManagerWindow = parent
@@ -34,7 +37,7 @@ class TopPanel(Panel):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 4))
 
-        self.top_title_lab = wx.StaticText(self, -1, "下载管理")
+        self.top_title_lab = wx.StaticText(self, -1, _("下载管理"))
         self.top_title_lab.SetFont(font)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -58,9 +61,14 @@ class TopPanel(Panel):
             self.top_title_lab.SetLabel(title)
 
         if count:
-            title = f"{count} 个任务{source}"
+            match source:
+                case "正在下载":
+                    title = _("%s个任务正在下载") % count
+
+                case "下载完成":
+                    title = _("%s个任务下载完成") % count
         else:
-            title = "下载管理"
+            title = _("下载管理")
 
         if source == self.GetCurrentPageName():
             wx.CallAfter(worker)
@@ -83,12 +91,12 @@ class LeftPanel(Panel):
     def init_UI(self):
         self.set_dark_mode()
 
-        self.downloading_page_btn = ActionButton(self, "正在下载(0)", name = "正在下载")
+        self.downloading_page_btn = ActionButton(self, _("正在下载(%s)") % 0, name = "正在下载")
         self.downloading_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.Downloading))
-        self.completed_page_btn = ActionButton(self, "下载完成(0)", name = "下载完成")
+        self.completed_page_btn = ActionButton(self, _("下载完成(%s)") % 0, name = "下载完成")
         self.completed_page_btn.setBitmap(Icon.get_icon_bitmap(IconID.Complete))
 
-        self.open_download_dir_btn = wx.Button(self, -1, "打开下载目录", size = self.FromDIP((120, 28)))
+        self.open_download_dir_btn = wx.Button(self, -1, _("打开下载目录"), size = self.FromDIP((120, 28)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
@@ -131,8 +139,8 @@ class LeftPanel(Panel):
 
     def UpdateButtonTitle(self):
         def worker():
-            self.downloading_page_btn.setTitle(f"正在下载({self.GetTotalDownloadingCount()})")
-            self.completed_page_btn.setTitle(f"下载完成({self.GetTotalCompletedCount()})")
+            self.downloading_page_btn.setTitle(_("正在下载(%s)") % self.GetTotalDownloadingCount())
+            self.completed_page_btn.setTitle(_("下载完成(%s)") % self.GetTotalCompletedCount())
 
         wx.CallAfter(worker)
 
@@ -270,7 +278,7 @@ class Utils:
 
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, "下载管理", style = self.get_window_style())
+        Frame.__init__(self, parent, _("下载管理"), style = self.get_window_style())
 
         self.set_window_params()
 
@@ -349,7 +357,7 @@ class DownloadManagerWindow(Frame):
 
         if count == 0 and source == "正在下载" and not user_action and Config.Download.enable_notification:
             notification = NotificationManager(self)
-            notification.show_toast("下载完成", "所有任务已下载完成", flags = wx.ICON_INFORMATION)
+            notification.show_toast(_("下载完成"), _("所有任务已下载完成"), flags = wx.ICON_INFORMATION)
 
     def remove_item(self, source: str):
         page = self.get_page(source)
@@ -380,9 +388,9 @@ class DownloadManagerWindow(Frame):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
                 if self.GetDPIScaleFactor() >= 1.5:
-                    size = self.FromDIP((930, 550))
+                    size = self.FromDIP((940, 550))
                 else:
-                    size = self.FromDIP((960, 580))
+                    size = self.FromDIP((970, 580))
             
             case Platform.macOS:
                 size = self.FromDIP((1000, 600))

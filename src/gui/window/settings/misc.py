@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 import shutil
+import gettext
 import subprocess
 
 from utils.config import Config
@@ -10,9 +11,11 @@ from utils.common.io.file import File
 
 from gui.window.settings.page import Page
 
+_ = gettext.gettext
+
 class MiscPage(Page):
     def __init__(self, parent: wx.Window):
-        Page.__init__(self, parent, "其他", 5)
+        Page.__init__(self, parent, _("其他"), 5)
 
         self.init_UI()
 
@@ -21,14 +24,14 @@ class MiscPage(Page):
         self.load_data()
 
     def init_UI(self):
-        episodes_box = wx.StaticBox(self.panel, -1, "剧集列表显示设置")
+        episodes_box = wx.StaticBox(self.panel, -1, _("剧集列表显示设置"))
 
-        self.episodes_single_choice = wx.RadioButton(episodes_box, -1, "显示单个视频")
-        self.episodes_in_section_choice = wx.RadioButton(episodes_box, -1, "显示视频所在的合集")
-        self.episodes_all_sections_choice = wx.RadioButton(episodes_box, -1, "显示全部相关视频 (包括 PV、OP、ED 等)")
+        self.episodes_single_choice = wx.RadioButton(episodes_box, -1, _("显示单个视频"))
+        self.episodes_in_section_choice = wx.RadioButton(episodes_box, -1, _("显示视频所在的合集"))
+        self.episodes_all_sections_choice = wx.RadioButton(episodes_box, -1, _("显示全部相关视频 (包括 PV、OP、ED 等)"))
 
-        self.show_episode_full_name = wx.CheckBox(episodes_box, -1, "显示完整剧集名称")
-        self.auto_select_chk = wx.CheckBox(episodes_box, -1, "自动勾选全部视频")
+        self.show_episode_full_name = wx.CheckBox(episodes_box, -1, _("显示完整剧集名称"))
+        self.auto_select_chk = wx.CheckBox(episodes_box, -1, _("自动勾选全部视频"))
 
         episodes_sbox = wx.StaticBoxSizer(episodes_box, wx.VERTICAL)
         episodes_sbox.Add(self.episodes_single_choice, 0, wx.ALL, self.FromDIP(6))
@@ -37,14 +40,14 @@ class MiscPage(Page):
         episodes_sbox.Add(self.show_episode_full_name, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         episodes_sbox.Add(self.auto_select_chk, 0, wx.ALL, self.FromDIP(6))
 
-        other_box = wx.StaticBox(self.panel, -1, "杂项")
+        other_box = wx.StaticBox(self.panel, -1, _("杂项"))
 
-        self.show_user_info_chk = wx.CheckBox(other_box, -1, "在主界面显示用户头像和昵称")
-        self.debug_chk = wx.CheckBox(other_box, -1, "启用调试模式")
+        self.show_user_info_chk = wx.CheckBox(other_box, -1, _("在主界面显示用户头像和昵称"))
+        self.debug_chk = wx.CheckBox(other_box, -1, _("启用调试模式"))
 
-        self.clear_userdata_btn = wx.Button(other_box, -1, "清除用户数据", size = self.get_scaled_size((100, 28)))
-        self.reset_default_btn = wx.Button(other_box, -1, "恢复默认设置", size = self.get_scaled_size((100, 28)))
-        
+        self.clear_userdata_btn = wx.Button(other_box, -1, _("清除用户数据"), size = self.get_scaled_size((100, 28)))
+        self.reset_default_btn = wx.Button(other_box, -1, _("恢复默认设置"), size = self.get_scaled_size((100, 28)))
+
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, self.FromDIP(6))
         btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
@@ -102,7 +105,7 @@ class MiscPage(Page):
         self.save_data()
         
     def onClearUserDataEVT(self, event):
-        dlg = wx.MessageDialog(self, "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, _("清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             File.remove_file(Config.APP.app_config_path)
@@ -112,7 +115,7 @@ class MiscPage(Page):
             self.restart()
     
     def onResetToDefaultEVT(self, event):
-        dlg = wx.MessageDialog(self, "恢复默认设置\n\n是否恢复默认设置？\n\n程序将会重新启动。", "警告", wx.ICON_WARNING | wx.YES_NO)
+        dlg = wx.MessageDialog(self, _("恢复默认设置\n\n是否恢复默认设置？\n\n程序将会重新启动。"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             File.remove_file(Config.APP.app_config_path)

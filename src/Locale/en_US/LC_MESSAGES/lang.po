@@ -12,8 +12,171 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.7\n"
 
+# -------------- basic --------------
+
+msgid "警告"
+msgstr "Warning"
+
+msgid "提示"
+msgstr "Info"
+
+msgid "确定"
+msgstr "OK"
+ 
+msgid "取消"
+msgstr "Cancel"
+
+msgid "忽略"
+msgstr "Ignore"
+
+msgid "重试"
+msgstr "Retry"
+
+# -------------- src/gui/component/tree_list_v2.py --------------
+
+msgid "序号"
+msgstr "Number"
+
+msgid "标题"
+msgstr "Title"
+
+msgid "备注"
+msgstr "Tag"
+
+msgid "时长"
+msgstr "Duration"
+
+# -------------- src/gui/window/download/download_v4.py --------------
+
+msgid "正在下载(%s)"
+msgstr "Downloading(%s)"
+
+msgid "下载完成(%s)"
+msgstr "Completed(%s)"
+
+msgid "打开下载目录"
+msgstr "Open directory"
+
+msgid "%s个任务正在下载"
+msgstr "%s tasks currently downloading"
+
+msgid "%s个任务下载完成"
+msgstr "%s tasks completed"
+
+msgid "下载完成"
+msgstr "Download completed"
+
+msgid "所有任务已下载完成"
+msgstr "All tasks have been downloaded"
+
+# -------------- src/gui/window/download/item_panel_v4.py --------------
+
+msgid "查看封面"
+msgstr "View cover"
+
+msgid "等待下载..."
+msgstr "Waiting to download..."
+
+msgid "取消下载"
+msgstr "Cancel download"
+
+# -------------- src/gui/window/download/item_utils_v4.py --------------
+
+msgid "音频"
+msgstr "Audio"
+
+msgid "未知"
+msgstr "Unknown"
+
+msgid "正在合并视频..."
+msgstr "Merging video..."
+
+msgid "正在转换音频..."
+msgstr "Converting audio..."
+
+msgid "合并视频失败，点击查看详情"
+msgstr "Failed to merge video, click for details"
+
+msgid "转换音频失败，点击查看详情"
+msgstr "Failed to convert audio, click for details"
+
+msgid "暂停下载"
+msgstr "Pause download"
+
+msgid "正在获取下载链接..."
+msgstr "Fetching download link..."
+
+msgid "继续下载"
+msgstr "Resume download"
+
+msgid "暂停中..."
+msgstr "Paused..."
+
+msgid "打开文件所在位置"
+msgstr "Open file location"
+
+msgid "下载失败，点击查看详情"
+msgstr "Failed to download, click for details"
+
+# -------------- src/gui/window/download/page.py --------------
+
+msgid "并行下载数"
+msgstr "Parallel Downloads"
+
+msgid "全部开始"
+msgstr "Start all"
+
+msgid "全部暂停"
+msgstr "Pause all"
+
+msgid "全部取消"
+msgstr "Cancel all"
+
+msgid "没有正在下载的项目"
+msgstr "No items currently downloading"
+
+msgid "清除下载记录"
+msgstr "Clear history"
+
+msgid "没有下载完成的项目"
+msgstr "No completed downloads"
+
+# -------------- src/gui/window/main/bottom_box.py --------------
+
+msgid "未登录"
+msgstr "Not logged in"
+
+msgid "下载管理"
+msgstr "Downloads"
+
+msgid "开始下载"
+msgstr "Start Download"
+
+msgid "✔️已开始下载"
+msgstr "Started"
+
+# -------------- src/gui/window/main/main_v3.py --------------
+
 msgid "工具(&T)"
 msgstr "Tools(&T)"
+
+msgid "注销(&L)"
+msgstr "Logout(&L)"
+
+msgid "登录(&L)"
+msgstr "Login(&L)"
+
+msgid "调试(&D)"
+msgstr "Debug(&D)"
+
+msgid "直播录制(&R)"
+msgstr "Live Recording(&R)"
+
+msgid "视频工具箱(&F)"
+msgstr "Video Toolbox(&F)"
+
+msgid "设置(&S)"
+msgstr "Settings(&S)"
 
 msgid "帮助(&H)"
 msgstr "Help(&H)"
@@ -36,3 +199,387 @@ msgstr "Community(&G)"
 msgid "关于(&A)"
 msgstr "About(&A)"
 
+msgid "退出登录\n\n是否要退出登录？"
+msgstr "Log out\n\nDo you want to log out?"
+
+msgid "退出程序\n\n确定要退出程序吗？"
+msgstr "Exit Application\n\nAre you sure you want to exit?"
+
+msgid "最小化到托盘"
+msgstr "Minimize to Tray"
+
+msgid "退出程序"
+msgstr "Exit Application"
+
+# -------------- src/gui/window/main/parser.py --------------
+
+msgid "解析失败"
+msgstr "Failed to parse"
+
+# -------------- src/gui/window/main/top_box.py --------------
+
+msgid "链接"
+msgstr "Link"
+
+msgid "在此处粘贴链接进行解析"
+msgstr "Paste the link here to parse"
+
+msgid "(共 %s 项，已选择 %s 项)"
+msgstr "(Total %s items, %s selected)"
+
+msgid "(共 %s 项)"
+msgstr "(Total %s items)"
+
+msgid "剧情树"
+msgstr "Story tree"
+
+msgid "查看互动视频剧情树"
+msgstr "View interactive video story tree"
+
+msgid "搜索剧集列表"
+msgstr "Search episode list"
+
+msgid "剧集列表显示设置"
+msgstr "Episode List Display Settings"
+
+msgid "下载选项"
+msgstr "Download options"
+
+msgid "解析失败\n\n链接不能为空"
+msgstr "Failed to parse\n\nLink cannot be empty"
+
+# -------------- src/gui/window/main/utils.py --------------
+
+msgid "检查更新失败"
+msgstr "Failed to check for updates"
+
+msgid "当前无法检查更新，请稍候再试。"
+msgstr "Unable to check for updates at the moment. Please try again later."
+
+msgid "当前没有可用的更新。"
+msgstr "There are currently no updates available."
+
+msgid "检查更新"
+msgstr "Check for Updates"
+
+msgid "获取更新日志失败"
+msgstr "Failed to retrieve changelog"
+
+msgid "当前无法获取更新日志，请稍候再试。"
+msgstr "Unable to retrieve the changelog at the moment. Please try again later."
+
+msgid "注销登录失败"
+msgstr "Failed to log out"
+
+msgid "无法完成注销登录操作"
+msgstr "Unable to complete the logout process"
+
+msgid "刷新登录信息失败"
+msgstr "Failed to refresh login information"
+
+msgid "无法刷新登录信息"
+msgstr "Unable to refresh login information"
+
+msgid "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。"
+msgstr "FFmpeg Not Detected\n\nFFmpeg was not detected. Video merging, clipping, and conversion are unavailable.\n\nPlease check if an environment variable for FFmpeg has been set or if FFmpeg is present in the application directory."
+
+msgid "安装 FFmpeg"
+msgstr "Install FFmpeg"
+
+msgid "正在解析中"
+msgstr "Parsing..."
+
+# -------------- src/gui/window/settings/advanced.py --------------
+
+msgid "CDN 节点设置"
+msgstr "CDN Node Settings"
+
+msgid "替换音视频流 CDN 节点"
+msgstr "Replace audio/video stream CDN nodes"
+
+msgid "由于B站默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n\n请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。"
+msgstr "Bilibili's default assigned CDN routes may have stability issues, causing audio/video stream download failures. It is recommended to enable the `Replace audio/video stream CDN nodes` feature. This function automatically selects available CDN nodes based on your configured priority order, improving access speed and success rate.\n\nNote: When using a proxy tool, please disable this feature to avoid conflicts between CDN nodes and proxy routes that could lead to connection failures."
+
+msgid "自定义 CDN 节点"
+msgstr "Custom CDN Nodes"
+
+msgid "高级下载设置"
+msgstr "Advanced Download Settings"
+
+msgid "下载出错时自动重试"
+msgstr "Automatically retry when download fails"
+
+msgid "重试次数"
+msgstr "Retry count"
+
+msgid "次"
+msgstr "times"
+
+msgid "下载停滞时自动重启下载"
+msgstr "Automatically restart download when stalled"
+
+msgid "重启间隔"
+msgstr "Restart interval"
+
+msgid "秒"
+msgstr "seconds"
+
+msgid "始终使用 HTTPS 发起请求"
+msgstr "Always use HTTPS for requests"
+
+msgid "启用 SSL 证书验证"
+msgstr "Enable SSL certificate verification"
+
+msgid "自定义 User-Agent"
+msgstr "Custom User-Agent"
+
+msgid "Web 页面显示设置"
+msgstr "Web Page Display Settings"
+
+msgid "显示方式"
+msgstr "Display Method"
+
+msgid "设置 Web 页面的显示方式\n\n自动检测：自动选择可用的显示方式\n使用系统 Webview 组件：在窗口中内嵌显示页面\n使用系统默认浏览器：在外部浏览器中显示页面"
+msgstr "Auto-detect: Automatically select an available display method\nUse system Webview component: Display the page embedded within the window\nUse system default browser: Display the page in an external browser"
+
+msgid "Websocket 端口"
+msgstr "Websocket Port"
+
+msgid "Websocket 端口无效：%s"
+msgstr "Invalid Websocket port: %s"
+
+# -------------- src/gui/window/settings/basic.py --------------
+
+msgid "基本设置"
+msgstr "Basic Settings"
+
+msgid "语言"
+msgstr "Language"
+
+msgid "自动监听剪切板"
+msgstr "Automatically monitor clipboard"
+
+msgid "当关闭窗口时"
+msgstr "When closing the window"
+
+msgid "下载前自动弹出下载选项对话框"
+msgstr "Automatically show download options dialog before downloading"
+
+msgid "下载时自动切换到下载窗口"
+msgstr "Automatically switch to download window when downloading"
+
+msgid "记住窗口的大小和位置"
+msgstr "Remember window size and position"
+
+msgid "窗口总在最前"
+msgstr "Keep window always on top"
+
+# -------------- src/gui/window/settings/download.py --------------
+
+msgid "设置优先级"
+msgstr "Set Priority"
+
+msgid "下载设置"
+msgstr "Download Settings"
+
+msgid "下载目录"
+msgstr "Download Directory"
+
+msgid "浏览"
+msgstr "Browse"
+
+msgid "自定义下载文件名"
+msgstr "Custom Filename"
+
+msgid "画质优先级"
+msgstr "Video Quality Priority"
+
+msgid "画质"
+msgstr "Video Quality"
+
+msgid "音质优先级"
+msgstr "Audio Quality Priority"
+
+msgid "音质"
+msgstr "Audio Quality"
+
+msgid "编码优先级"
+msgstr "Codec Priority"
+
+msgid "编码"
+msgstr "Codec"
+
+msgid "对单个下载任务进行限速"
+msgstr "Limit speed for individual download tasks"
+
+msgid "最高"
+msgstr "Maximum"
+
+msgid "序号类型"
+msgstr "Numbering Type"
+
+msgid "总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示"
+msgstr "Always start from 1: The number starts from 1 and increments each time you download\nContinuous increment: The number continuously increments with each download and resets after restarting the program\nUse episode list number: Use the number displayed in the episode list\n\nNote: The numbering will only appear if the custom filename template includes relevant numbering fields"
+
+msgid "下载完成后清除本地下载记录"
+msgstr "Clear local download history after download completion"
+
+msgid "允许弹出通知提示"
+msgstr "Allow popup notifications"
+
+msgid "测试"
+msgstr "Test"
+
+msgid "选择下载目录"
+msgstr "Select Download Path"
+
+msgid "测试通知"
+msgstr "Test Notification"
+
+msgid "这是一则测试通知"
+msgstr "This is a test notification"
+
+# -------------- src/gui/window/settings/ffmpeg.py --------------
+
+msgid "FFmpeg 设置"
+msgstr "FFmpeg Settings"
+
+msgid "FFmpeg 路径"
+msgstr "FFmpeg Path"
+
+msgid "自动检测"
+msgstr "Auto-detect"
+
+msgid "安装教程"
+msgstr "Tutorial"
+
+msgid "启动时自动检查 FFmpeg 可用性"
+msgstr "Automatically check FFmpeg availability on startup"
+
+msgid "音视频合并选项"
+msgstr "Audio/Video Merging Options"
+
+msgid "合并完成后保留原始文件"
+msgstr "Keep original files after merging"
+
+msgid "合并完成后，保留原始的视频和音频文件"
+msgstr "After merging, keep the original video and audio files"
+
+msgid "存在同名文件时"
+msgstr "When a file with the same name exists"
+
+msgid "FFmpeg 路径无效"
+msgstr "Invalid FFmpeg Path"
+
+msgid "选择 FFmpeg 路径"
+msgstr "Select FFmpeg Path"
+
+# -------------- src/gui/window/settings/settings_v2.py --------------
+
+msgid "显示单个视频"
+msgstr "Show individual videos"
+
+msgid "显示视频所在的合集"
+msgstr "Show videos within their collection"
+
+msgid "显示全部相关视频 (包括 PV、OP、ED 等)"
+msgstr "Show all related videos (including PVs, OPs, EDs, etc.)"
+
+msgid "显示完整剧集名称"
+msgstr "Show full episode names"
+
+msgid "自动勾选全部视频"
+msgstr "Automatically select all videos"
+
+msgid "杂项"
+msgstr "Miscellaneous"
+
+msgid "在主界面显示用户头像和昵称"
+msgstr "Display user avatar and nickname on the main interface"
+
+msgid "启用调试模式"
+msgstr "Enable debug mode"
+
+msgid "清除用户数据"
+msgstr "Clear User Data"
+
+msgid "恢复默认设置"
+msgstr "Restore Default"
+
+msgid "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。"
+msgstr "Clear User Data\n\nThis will clear user login information, download history, and application settings. Continue?\n\nThe application will restart."
+
+msgid "恢复默认设置\n\n是否恢复默认设置？\n\n程序将会重新启动。"
+msgstr "Restore Default\n\nRestore default settings?\n\nThe application will restart."
+
+# -------------- src/gui/window/settings/page.py --------------
+
+msgid "保存设置失败\n\n所在页面：%s\n错误原因：%s"
+msgstr "Failed to save settings\n\nPage: %s\nError: %s"
+
+# -------------- src/gui/window/settings/proxy.py --------------
+
+msgid "代理设置"
+msgstr "Proxy Settings"
+
+msgid "代理选项"
+msgstr "Proxy Options"
+
+msgid "注意：使用代理时，请在高级选项卡中\n手动关闭`替换音视频流 CDN 选项`"
+msgstr "Note: When using a proxy, please manually disable the \n`Replace audio/video stream CDN` option in the Advanced tab"
+
+msgid "不使用代理"
+msgstr "Disable"
+
+msgid "跟随系统"
+msgstr "Use System Proxy"
+
+msgid "手动设置"
+msgstr "Manual Setup"
+
+msgid "地址"
+msgstr "Address"
+
+msgid "端口"
+msgstr "Port"
+
+msgid "启用代理身份验证"
+msgstr "Enable Proxy Authentication"
+
+msgid "用户名"
+msgstr "Username"
+
+msgid "密码"
+msgstr "Password"
+
+msgid "端口无效，请输入 1 到 65535 之间的整数"
+msgstr "Invalid port, please enter an integer between 1 and 65535"
+
+msgid "测试成功\n\n请求站点：%s\n状态码：%s\n耗时：%ss"
+msgstr "Test Successful\n\nRequest URL: %s\nStatus Code: %s\nDuration: %ss"
+
+msgid "测试失败\n\n请求站点：%s\n错误信息：%s"
+msgstr "Test Failed\n\nRequest URL: %s\nError: %s"
+
+# -------------- src/gui/window/settings/settings_v2.py --------------
+
+msgid "设置"
+msgstr "Settings"
+
+msgid "基本"
+msgstr "Basic"
+
+msgid "下载"
+msgstr "Download"
+
+msgid "高级"
+msgstr "Advanced"
+
+msgid "代理"
+msgstr "Proxy"
+
+msgid "其他"
+msgstr "Misc"
+
+msgid "保存失败"
+msgstr "Failed to save"

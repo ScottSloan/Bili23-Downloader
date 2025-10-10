@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, ParseStatus, ProcessingType, StatusCode
@@ -19,6 +20,8 @@ from utils.parse.space.list import SpaceListParser
 from utils.parse.space.space import SpaceParser
 from utils.parse.space.favlist import FavListParser
 from utils.parse.preview import VideoPreview, PreviewInfo
+
+_ = gettext.gettext
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -96,7 +99,7 @@ class Parser:
     def onError(self):
         self.main_window.utils.set_status(ParseStatus.Error)
 
-        show_error_message_dialog("解析失败", parent = self.main_window)
+        show_error_message_dialog(_("解析失败"), parent = self.main_window)
 
     def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, False, )).start()

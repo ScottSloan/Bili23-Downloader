@@ -1,5 +1,6 @@
 import wx
 import os
+import gettext
 
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.model.task_info import DownloadTaskInfo
@@ -20,6 +21,8 @@ from utils.parse.download import DownloadParser
 from utils.parse.extra.extra_v3 import ExtraParser
 
 from gui.window.download.item_panel_v4 import DownloadTaskItemPanel
+
+_ = gettext.gettext
 
 class Utils:
     class UI:
@@ -80,14 +83,14 @@ class Utils:
                     if "video" in self.task_info.download_option:
                         return video_quality_map.get(self.task_info.video_quality_id, "--")
                     else:
-                        return "音频"
+                        return _("音频")
 
                 case ParseType.Extra:
                     return " ".join([value for key, value in extra_map.items() if self.task_info.extra_option.get(key)])
                 
                 case _:
-                    return "未知"
-                
+                    return _("未知")
+
         def get_codec_label(self):
             match ParseType(self.task_info.download_type):
                 case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
@@ -111,14 +114,15 @@ class Utils:
         
         def get_merging_label(self):
             if "video" in self.task_info.download_option:
-                return "正在合并视频..."
+                return _("正在合并视频...")
             else:
-                return "正在转换音频..."
-            
-        def get_merge_error_label(self):
-            reason = "合并视频" if "video" in self.task_info.download_option else "转换音频"
+                return _("正在转换音频...")
 
-            return f"{reason}失败，点击查看详情"
+        def get_merge_error_label(self):
+            if "video" in self.task_info.download_option:
+                return _("合并视频失败，点击查看详情")
+            else:
+                return _("转换音频失败，点击查看详情")
 
     def __init__(self, parent: wx.Window, task_info: DownloadTaskInfo):
         self.parent: DownloadTaskItemPanel = parent
@@ -310,32 +314,32 @@ class Utils:
     def update_pause_btn(self, status: int):
         match DownloadStatus(status):
             case DownloadStatus.Waiting:
-                self.ui.set_pause_btn(IconID.Play, "开始下载")
-                self.ui.set_speed_label("等待下载...")
+                self.ui.set_pause_btn(IconID.Play, _("开始下载"))
+                self.ui.set_speed_label(_("等待下载..."))
 
             case DownloadStatus.Downloading:
-                self.ui.set_pause_btn(IconID.Pause, "暂停下载")
-                self.ui.set_speed_label("正在获取下载链接...")
+                self.ui.set_pause_btn(IconID.Pause, _("暂停下载"))
+                self.ui.set_speed_label(_("正在获取下载链接..."))
 
             case DownloadStatus.Pause:
-                self.ui.set_pause_btn(IconID.Play, "继续下载")
-                self.ui.set_speed_label("暂停中...")
+                self.ui.set_pause_btn(IconID.Play, _("继续下载"))
+                self.ui.set_speed_label(_("暂停中..."))
 
             case DownloadStatus.Merging:
                 self.ui.set_pause_btn(IconID.Pause, "", False)
                 self.ui.set_speed_label(self.info.get_merging_label())
 
             case DownloadStatus.Complete:
-                self.ui.set_pause_btn(IconID.Folder, "打开文件所在位置")
-                self.ui.set_speed_label("下载完成")
+                self.ui.set_pause_btn(IconID.Folder, _("打开文件所在位置"))
+                self.ui.set_speed_label(_("下载完成")) 
 
             case DownloadStatus.MergeError:
-                self.ui.set_pause_btn(IconID.Retry, "重试")
+                self.ui.set_pause_btn(IconID.Retry, _("重试"))
                 self.ui.set_speed_label(self.info.get_merge_error_label(), error = True)
 
             case DownloadStatus.DownloadError:
-                self.ui.set_pause_btn(IconID.Retry, "重试")
-                self.ui.set_speed_label("下载失败，点击查看详情", error = True)
+                self.ui.set_pause_btn(IconID.Retry, _("重试"))
+                self.ui.set_speed_label(_("下载失败，点击查看详情"), error = True)
 
         self.ui.update()
 

@@ -1,5 +1,6 @@
 import wx
 import asyncio
+import gettext
 
 from utils.config import Config
 from utils.auth.login_v2 import Login
@@ -29,6 +30,8 @@ from gui.window.live_recording import LiveRecordingWindow
 from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.misc.changelog import ChangeLogDialog
 from gui.dialog.misc.processing import ProcessingWindow
+
+_ = gettext.gettext
 
 class Window:
     dialog_show = False
@@ -289,7 +292,7 @@ class Utils:
     @classmethod
     def check_update(cls, from_menu: bool = False):
         def onError():
-            show_error_message_dialog("检查更新失败", "当前无法检查更新，请稍候再试。", cls.get_main_window())
+            show_error_message_dialog(_("检查更新失败"), _("当前无法检查更新，请稍候再试。"), cls.get_main_window())
 
         try:
             info = Update.get_update_json()
@@ -301,14 +304,14 @@ class Utils:
                     wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
             else:
                 if from_menu:
-                    Window.message_dialog(cls.get_main_window(), "当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
+                    Window.message_dialog(cls.get_main_window(), _("当前没有可用的更新。"), _("检查更新"), wx.ICON_INFORMATION)
 
         except Exception as e:
             raise GlobalException(callback = onError) from e
 
     def get_changelog(self):
         def onError():
-            show_error_message_dialog("获取更新日志失败", "当前无法获取更新日志，请稍候再试。", self.main_window)
+            show_error_message_dialog(_("获取更新日志失败"), _("当前无法获取更新日志，请稍候再试。"), self.main_window)
 
         try:
             info = Update.get_changelog()
@@ -320,7 +323,7 @@ class Utils:
 
     def user_logout(self):
         def on_error():
-            show_error_message_dialog("注销登录失败", "无法完成注销登录操作", self.main_window)
+            show_error_message_dialog(_("注销登录失败"), _("无法完成注销登录操作"), self.main_window)
 
         try:
             Login.logout()
@@ -332,7 +335,7 @@ class Utils:
 
     def user_refresh(self):
         def on_error():
-            show_error_message_dialog("刷新登录信息失败", "无法刷新登录信息", self.main_window)
+            show_error_message_dialog(_("刷新登录信息失败"), _("无法刷新登录信息"), self.main_window)
 
         try:
             Login.refresh()
@@ -383,8 +386,8 @@ class Utils:
     @classmethod
     def check_ffmpeg(cls):
         def worker():
-            dlg = wx.MessageDialog(cls.get_main_window(), "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
-            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+            dlg = wx.MessageDialog(cls.get_main_window(), _("未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
+            dlg.SetYesNoLabels(_("安装 FFmpeg"), _("忽略"))
 
             if dlg.ShowModal() == wx.ID_YES:
                 wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
@@ -431,7 +434,7 @@ class Utils:
 
         match status:
             case ParseStatus.Parsing:
-                set_type_lab(True, "正在解析中")
+                set_type_lab(True, _("正在解析中"))
 
                 enable_url_box(True)
                 enable_buttons(download = False, episode = False, option = False, graph = False)

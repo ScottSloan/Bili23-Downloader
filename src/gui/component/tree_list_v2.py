@@ -1,3 +1,4 @@
+import gettext
 import wx.dataview
 
 from utils.config import Config
@@ -10,6 +11,8 @@ from utils.common.model.download_info import DownloadInfo
 from utils.parse.episode.episode_v2 import EpisodeInfo, Episode
 
 from gui.component.menu.episode_list import EpisodeListMenu
+
+_ = gettext.gettext
 
 class TreeListCtrl(wx.dataview.TreeListCtrl):
     def __init__(self, parent: wx.Window):
@@ -36,10 +39,10 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.ClearColumns()
         self.DeleteAllItems()
 
-        self.AppendColumn("序号", width = self.FromDIP(100 if Platform(Config.Sys.platform) != Platform.Linux else 125))
-        self.AppendColumn("标题", width = self.FromDIP(385))
-        self.AppendColumn("备注", width = self.FromDIP(75))
-        self.AppendColumn("时长", width = self.FromDIP(75))
+        self.AppendColumn(_("序号"), width = self.FromDIP(100 if Platform(Config.Sys.platform) != Platform.Linux else 125))
+        self.AppendColumn(_("标题"), width = self.FromDIP(385))
+        self.AppendColumn(_("备注"), width = self.FromDIP(75))
+        self.AppendColumn(_("时长"), width = self.FromDIP(75))
 
         self.shift_down_items: list[int] = []
 
