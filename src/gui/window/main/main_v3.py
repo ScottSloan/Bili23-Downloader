@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 
@@ -19,6 +20,8 @@ from gui.window.main.bottom_box import BottomBox
 
 from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
+
+_ = gettext.gettext
 
 class MainWindow(Frame):
     def __init__(self, parent: wx.Window):
@@ -82,18 +85,18 @@ class MainWindow(Frame):
         tool_menu.AppendSeparator()
         tool_menu.Append(ID.SETTINGS_MENU, "设置(&S)")
 
-        help_menu.Append(ID.CHECK_UPDATE_MENU, "检查更新(&U)")
-        help_menu.Append(ID.CHANGELOG_MENU, "更新日志(&P)")
+        help_menu.Append(ID.CHECK_UPDATE_MENU, _("检查更新(&U)"))
+        help_menu.Append(ID.CHANGELOG_MENU, _("更新日志(&P)"))
         help_menu.AppendSeparator()
-        help_menu.Append(ID.HELP_MENU, "使用帮助(&C)")
+        help_menu.Append(ID.HELP_MENU, _("使用帮助(&C)"))
         help_menu.AppendSeparator()
-        help_menu.Append(ID.FEEDBACK_MENU, "报告问题(&B)")
-        help_menu.Append(ID.COMMUNITY_MENU, "社区交流(&G)")
+        help_menu.Append(ID.FEEDBACK_MENU, _("报告问题(&B)"))
+        help_menu.Append(ID.COMMUNITY_MENU, _("社区交流(&G)"))
         help_menu.AppendSeparator()
-        help_menu.Append(ID.ABOUT_MENU, "关于(&A)")
+        help_menu.Append(ID.ABOUT_MENU, _("关于(&A)"))
 
-        menu_bar.Append(tool_menu, "工具(&T)")
-        menu_bar.Append(help_menu, "帮助(&H)")
+        menu_bar.Append(tool_menu, _("工具(&T)"))
+        menu_bar.Append(help_menu, _("帮助(&H)"))
 
         self.SetMenuBar(menu_bar)
 

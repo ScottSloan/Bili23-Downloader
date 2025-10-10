@@ -57,9 +57,9 @@ class APP(wx.App):
         self.init_env()
 
         wx.App.__init__(self)
-        
-        # 设置语言环境为中文
-        self.locale = wx.Locale(wx.LANGUAGE_CHINESE_SIMPLIFIED)
+
+        self.init_lang()
+
         self.SetAppName(Config.APP.name)
 
         main_window = MainWindow(None)
@@ -105,6 +105,20 @@ class APP(wx.App):
     def init_vlc_env(self):
         os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"
 
+    def init_lang(self):
+        import gettext
+
+        if Config.Basic.language == "zh_CN":
+            self.locale = wx.Locale(wx.LANGUAGE_CHINESE_SIMPLIFIED)
+
+        else:
+            self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
+        
+        os.environ["LANGUAGE"] = Config.Basic.language
+
+        gettext.bindtextdomain("lang", self.locale_dir)
+        gettext.textdomain("lang")
+
     def lock_file(self):
         import fcntl
 
@@ -124,6 +138,13 @@ class APP(wx.App):
             os.close(fd)
             wx.LogError("Bili23 Downloader 已在运行！")
             sys.exit()
+
+    @property
+    def locale_dir(self):
+        import importlib.resources
+
+        with importlib.resources.path("Locale", "0") as file_path:
+            return os.path.dirname(file_path)
 
 if __name__ == "__main__":
     app = APP()

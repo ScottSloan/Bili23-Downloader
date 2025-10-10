@@ -4,10 +4,12 @@ import os
 from utils.config import Config
 from utils.common.map import override_option_map
 from utils.common.enums import Platform
+from utils.common.style.icon_v4 import Icon, IconID
 
 from gui.window.settings.page import Page
 from gui.dialog.setting.ffmpeg import DetectDialog
 from gui.component.misc.tooltip import ToolTip
+from gui.component.button.bitmap_button import BitmapButton
 
 class FFmpegPage(Page):
     def __init__(self, parent: wx.Window):
@@ -24,7 +26,7 @@ class FFmpegPage(Page):
 
         ffmpeg_path_label = wx.StaticText(ffmpeg_box, -1, "FFmpeg 路径")
         self.path_box = wx.TextCtrl(ffmpeg_box, -1)
-        self.browse_btn = wx.Button(ffmpeg_box, -1, "浏览", size = self.get_scaled_size((60, 24)))
+        self.browse_btn = BitmapButton(ffmpeg_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = "浏览")
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
