@@ -1,3 +1,7 @@
+import gettext
+
+_ = gettext.gettext
+
 bangumi_type_map = {
     1: "番剧",
     2: "电影",
@@ -124,8 +128,8 @@ status_code_map = {
 }
 
 override_option_map = {
-    "覆盖原文件": 0,
-    "重命名文件": 1
+    _("覆盖原文件"): 0,
+    _("重命名文件"): 1
 }
 
 extra_map = {
@@ -144,16 +148,16 @@ download_type_map = {
 }
 
 number_type_map = {
-    "总是从 1 开始": 0,
-    "连贯递增": 1,
-    "使用剧集列表序号": 2
+    _("总是从 1 开始"): 0,
+    _("连贯递增"): 1,
+    _("使用剧集列表序号"): 2
 }
 
 exit_option_map = {
-    "隐藏到托盘": 0,
-    "直接退出": 1,
-    "总是询问": 2,
-    "首次询问": 3
+    _("隐藏到托盘"): 0,
+    _("直接退出"): 1,
+    _("总是询问"): 2,
+    _("首次询问"): 3
 }
 
 time_ratio_map = {
@@ -267,9 +271,9 @@ ffmpeg_audio_channel_map = {
 }
 
 webpage_option_map = {
-    "自动选择": 0,
-    "使用系统 Webview 组件": 1,
-    "使用系统默认浏览器": 2
+    _("自动选择"): 0,
+    _("使用系统 Webview 组件"): 1,
+    _("使用系统默认浏览器"): 2
 }
 
 rid_map = {

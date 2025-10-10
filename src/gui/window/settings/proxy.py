@@ -14,6 +14,7 @@ from gui.window.settings.page import Page
 _ = gettext.gettext
 
 class ProxyPage(Page):
+    
     def __init__(self, parent: wx.Window):
         Page.__init__(self, parent, _("代理"), 4)
 

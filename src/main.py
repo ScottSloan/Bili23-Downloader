@@ -1,5 +1,6 @@
 import os
 import sys
+import gettext
 import platform
 
 def message_box(message: str, caption: str, wx_status: bool = True, e = None):
@@ -18,6 +19,18 @@ def get_traceback():
     import traceback
 
     return traceback.format_exc()
+
+def init_lang():
+    locale_dir = os.path.join(os.path.dirname(__file__), "Locale")
+
+    gettext.bindtextdomain("lang", locale_dir)
+    gettext.textdomain("lang")
+
+    os.environ["LANGUAGE"] = "en_US"
+
+    print(__file__)
+
+init_lang()
 
 try:
     import wx
@@ -106,8 +119,6 @@ class APP(wx.App):
         os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"
 
     def init_lang(self):
-        import gettext
-
         if Config.Basic.language == "zh_CN":
             self.locale = wx.Locale(wx.LANGUAGE_CHINESE_SIMPLIFIED)
 
@@ -115,9 +126,6 @@ class APP(wx.App):
             self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
         
         os.environ["LANGUAGE"] = Config.Basic.language
-
-        gettext.bindtextdomain("lang", self.locale_dir)
-        gettext.textdomain("lang")
 
     def lock_file(self):
         import fcntl

@@ -1,5 +1,6 @@
 import wx
 import shutil
+import gettext
 
 from utils.config import Config
 from utils.common.enums import Platform
@@ -13,6 +14,8 @@ from gui.component.panel.panel import Panel
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 from gui.component.button.bitmap_button import BitmapButton
 
+_ = gettext.gettext
+
 class PathStaticBox(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -22,20 +25,20 @@ class PathStaticBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        path_box = wx.StaticBox(self, -1, "下载目录设置")
+        path_box = wx.StaticBox(self, -1, _("下载目录设置"))
 
         self.path_box = wx.TextCtrl(path_box, -1)
-        self.browse_btn = BitmapButton(path_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = "浏览")
+        self.browse_btn = BitmapButton(path_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = _("浏览"))
 
         path_hbox = wx.BoxSizer(wx.HORIZONTAL)
         path_hbox.Add(self.path_box, 1, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
         path_hbox.Add(self.browse_btn, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.disk_space_lab = wx.StaticText(path_box, -1, "磁盘可用空间：计算中...")
+        self.disk_space_lab = wx.StaticText(path_box, -1, _("磁盘可用空间：计算中..."))
         self.warn_icon = StaticBitmap(path_box, bmp = wx.ArtProvider().GetBitmap(wx.ART_WARNING, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
-        self.warn_icon.SetToolTip("当前下载目录磁盘空间不足 5 GB，可能会导致下载失败，请腾出足够的磁盘空间。")
+        self.warn_icon.SetToolTip(_("当前下载目录磁盘空间不足 5 GB，可能会导致下载失败，请腾出足够的磁盘空间。"))
         self.warn_icon.Hide()
-        self.custom_file_name_btn = wx.Button(path_box, -1, "自定义下载文件名", size = self.get_scaled_size((120, 28)))
+        self.custom_file_name_btn = wx.Button(path_box, -1, _("自定义下载文件名"), size = self.get_scaled_size((120, 28)))
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.disk_space_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -55,7 +58,7 @@ class PathStaticBox(Panel):
         self.custom_file_name_btn.Bind(wx.EVT_BUTTON, self.onCustomFileNameEVT)
 
     def onBrowsePathEVT(self, event):
-        dlg = wx.DirDialog(self, "选择下载目录", defaultPath = self.path_box.GetValue())
+        dlg = wx.DirDialog(self, _("选择下载目录"), defaultPath = self.path_box.GetValue())
 
         if dlg.ShowModal() == wx.ID_OK:
             self.path_box.SetValue(dlg.GetPath())
@@ -82,7 +85,7 @@ class PathStaticBox(Panel):
 
         free_str = FormatUtils.format_size(free)
 
-        self.disk_space_lab.SetLabel(f"磁盘可用空间：{free_str}")
+        self.disk_space_lab.SetLabel(_("磁盘可用空间：%s") % free_str)
 
         self.check_disk_space(free)
 

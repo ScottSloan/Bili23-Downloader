@@ -1,9 +1,11 @@
+# Bili23 Downloader
+# en_US
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.70.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-09 23:35+0800\n"
-"PO-Revision-Date: 2025-10-09 23:36+0800\n"
+"PO-Revision-Date: 2025-10-10 22:09+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -13,7 +15,6 @@ msgstr ""
 "X-Generator: Poedit 3.7\n"
 
 # -------------- basic --------------
-
 msgid "警告"
 msgstr "Warning"
 
@@ -22,9 +23,18 @@ msgstr "Info"
 
 msgid "确定"
 msgstr "OK"
- 
+
 msgid "取消"
 msgstr "Cancel"
+
+msgid "是"
+msgstr "Yes"
+
+msgid "否"
+msgstr "No"
+
+msgid "不再提示"
+msgstr "No"
 
 msgid "忽略"
 msgstr "Ignore"
@@ -32,8 +42,105 @@ msgstr "Ignore"
 msgid "重试"
 msgstr "Retry"
 
-# -------------- src/gui/component/tree_list_v2.py --------------
+msgid "关闭"
+msgstr "Close"
 
+# -------------- src/gui/component/menu/episode_list.py --------------
+msgid "查看视频封面(&V)"
+msgstr "View Video Cover(&V)"
+
+msgid "复制标题名称(&C)"
+msgstr "Copy Title Name(&C)"
+
+msgid "复制视频链接(&U)"
+msgstr "Copy Video Link(&U)"
+
+msgid "在浏览器中打开(&B)"
+msgstr "Open in Browser(&B)"
+
+msgid "修改标题名称(&E)"
+msgstr "Edit Title Name(&E)"
+
+msgid "取消选择(&N)"
+msgstr "Unselect(&N)"
+
+msgid "选择(&S)"
+msgstr "Select(&S)"
+
+msgid "展开(&X)"
+msgstr "Expand(&X)"
+
+msgid "折叠(&O)"
+msgstr "Collapse(&O)"
+
+msgid "批量选取项目(&P)"
+msgstr "Batch Select Items(&P)"
+
+msgid "刷新媒体信息(&R)"
+msgstr "Refresh Media Information(&R)"
+
+# -------------- src/gui/component/menu/episode_option.py --------------
+msgid "显示单个视频"
+msgstr "Show individual videos"
+
+msgid "显示视频所在的列表"
+msgstr "Show videos within their list"
+
+msgid "显示全部相关视频"
+msgstr "Show all related videos"
+
+msgid "显示完整剧集名称"
+msgstr "Show full episode names"
+
+msgid "剧集列表显示设置"
+msgstr "Episode List Display Settings"
+
+# -------------- src/gui/component/menu/url.py --------------
+msgid "支持解析的链接(&U)"
+msgstr "Supported Links(&U)"
+
+# -------------- src/gui/component/menu/user.py --------------
+msgid "刷新(&R)"
+msgstr "Refresh(&R)"
+
+# -------------- src/gui/component/staticbox/extra.py --------------
+msgid "附加内容下载选项"
+msgstr "Additional Content Download Options"
+
+msgid "下载视频弹幕"
+msgstr "Download video danmaku"
+
+msgid "弹幕文件格式"
+msgstr "Danmaku file format"
+
+msgid "下载视频字幕"
+msgstr "Download video subtitles"
+
+msgid "字幕文件格式"
+msgstr "Subtitle file format"
+
+msgid "自定义字幕语言"
+msgstr "Custom subtitle language"
+
+msgid "下载视频封面"
+msgstr "Download video cover"
+
+msgid "封面文件格式"
+msgstr "Cover file format"
+
+msgid "下载视频元数据"
+msgstr "Download video metadata"
+
+msgid "元数据文件格式"
+msgstr "Metadata file format"
+
+msgid "刮削设置"
+msgstr "Scrape Settings"
+
+msgid "自定义 ASS 样式"
+msgstr "Custom ASS Style"
+
+# -------------- src/gui/component/tree_list_v2.py --------------
 msgid "序号"
 msgstr "Number"
 
@@ -46,8 +153,295 @@ msgstr "Tag"
 msgid "时长"
 msgstr "Duration"
 
-# -------------- src/gui/window/download/download_v4.py --------------
+# -------------- src/gui/dialog/download_option/download_option_dialog.py --------------
+msgid "下载选项"
+msgstr "Download Options"
 
+msgid ""
+"保存设置失败\n"
+"\n"
+"下载目录不能为空"
+msgstr ""
+"Failed to save settings\n"
+"\n"
+"Download directory cannot be empty"
+
+# -------------- src/gui/dialog/download_option/media_info.py --------------
+msgid "优先级"
+msgstr "Priority"
+
+msgid "正在检测..."
+msgstr "Checking..."
+
+msgid "媒体信息"
+msgstr "Media Information"
+
+msgid "当前视频类型："
+msgstr "Current Video Type:"
+
+msgid ""
+"视频格式说明：\n"
+"\n"
+"DASH：视频与音频分开存储，需要合并为一个文件\n"
+"FLV：视频与音频已合并，因此无需选择音质\n"
+"MP4：同 FLV 格式"
+msgstr ""
+"Video Format Explanation:\n"
+"\n"
+"DASH: Video and audio are stored separately and need to be merged into a single file.\n"
+"FLV: Video and audio are already merged, so audio quality selection is not required.\n"
+"MP4: Same as FLV format."
+
+msgid "查看帮助"
+msgstr "View Help"
+
+msgid ""
+"此处显示的媒体信息为解析链接对应的单个视频\n"
+"\n"
+"若存在多个视频媒体信息不一致的情况，可能会不准确"
+msgstr ""
+"The media information displayed here corresponds to the single video from the parsed link.\n"
+"\n"
+"If multiple videos have inconsistent media information, it may be inaccurate."
+
+msgid "当前视频无音轨，将使用优先级设置作为全局设置"
+msgstr "The current video has no audio track; priority settings will be used as global settings."
+
+msgid "FLV 格式视频流中已包含音轨，不支持自定义"
+msgstr "FLV format video streams already contain audio tracks and do not support customization."
+
+msgid "MP4 格式视频流中已包含音轨，不支持自定义"
+msgstr "MP4 format video streams already contain audio tracks and do not support customization."
+
+msgid ""
+"此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n"
+"\n"
+"当前显示的媒体信息所对应的视频：%s\n"
+"\n"
+"若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。"
+msgstr ""
+"The media information displayed here corresponds to a single video from the parsed link. If multiple videos have inconsistent media information, it may be inaccurate.\n"
+"\n"
+"Video corresponding to the currently displayed media information:%s\n"
+"\n"
+"To preview another video, right-click the episode list item and refresh the media information."
+
+msgid "获取媒体信息失败"
+msgstr "Failed to retrieve media information"
+
+# -------------- src/gui/dialog/download_option/media_option.py --------------
+msgid "媒体下载选项"
+msgstr "Media Download Options"
+
+msgid "视频流"
+msgstr "Video Stream"
+
+msgid ""
+"下载独立的视频流文件\n"
+"\n"
+"视频和音频分开存储，需要合并为一个完整的视频文件"
+msgstr ""
+"Download standalone video stream file\n"
+"\n"
+"Video and audio are stored separately and need to be merged into a complete video file"
+
+msgid "音频流"
+msgstr "Audio Stream"
+
+msgid "下载独立的音频流文件"
+msgstr "Download standalone audio stream file"
+
+msgid "合并视频和音频"
+msgstr "Merge video and audio"
+
+msgid "选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件"
+msgstr "When checked, the program will automatically merge the separate video and audio files into a single complete video file upon download completion"
+
+msgid "合并完成后，保留原始的视频和音频文件"
+msgstr "After merging is complete, keep the original video and audio files"
+
+# -------------- src/gui/dialog/download_option/other.py --------------
+msgid "其他选项"
+msgstr "Other Options"
+
+msgid "下载时自动弹出此对话框"
+msgstr "Automatically pop up this dialog"
+
+msgid "自动跳转下载窗口"
+msgstr "Automatically switch to download window"
+
+msgid ""
+"序号由文件名模板控制，如需取消序号显示，请自定义下载文件名。\n"
+"\n"
+"总是从 1 开始：每次下载时，序号都从 1 开始递增\n"
+"连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n"
+"使用剧集列表序号：使用在剧集列表中显示的序号"
+msgstr ""
+"The numbering is controlled by the filename template. To disable numbering, please customize the download filename.\n"
+"\n"
+"Always start from 1: Each download starts numbering from 1 and increments sequentially.\n"
+"Continuous increment: Numbers increment continuously with each download and reset after restarting the program.\n"
+"Use episode list number: Use the number displayed in the episode list."
+
+# -------------- src/gui/dialog/download_option/path.py --------------
+msgid "下载目录设置"
+msgstr "Download Directory Settings"
+
+msgid "磁盘可用空间：计算中..."
+msgstr "Disk free space: Calculating..."
+
+msgid "磁盘可用空间：%s"
+msgstr "Disk free space: %s"
+
+msgid "当前下载目录磁盘空间不足 5 GB，可能会导致下载失败，请腾出足够的磁盘空间。"
+msgstr "The current download directory has less than 5 GB of free disk space, which may cause download failures. Please free up sufficient disk space."
+
+# -------------- src/gui/dialog/misc/about.py --------------
+msgid "关于 %s"
+msgstr "About %s"
+
+msgid "软件版本：%s"
+msgstr "Version: %s"
+
+msgid "本软件为开源免费软件，在 MIT License 许可协议下进行发布。"
+msgstr "This software is open-source and free, released under the MIT License."
+
+msgid "官方网站："
+msgstr "Official Website: "
+
+msgid "项目首页："
+msgstr "Project Homepage: "
+
+msgid "开源许可"
+msgstr "Open Source License"
+
+msgid "免责声明"
+msgstr "Disclaimer"
+
+msgid "构建时间：%s"
+msgstr "Build Time: %s"
+
+msgid "发布时间：%s"
+msgstr "Release Date: %s"
+
+# -------------- src/gui/dialog/misc/changelog.py --------------
+msgid "当前版本更新日志"
+msgstr "Changelog for Current Version"
+
+# -------------- src/gui/dialog/misc/processing.py --------------
+msgid "解析中"
+msgstr "Parsing"
+
+msgid "正在解析中，请稍候"
+msgstr "Parsing in progress, please wait"
+
+msgid "节点：--"
+msgstr "Node: --"
+
+msgid "处理中"
+msgstr "Processing"
+
+msgid "正在处理中，请稍候"
+msgstr "Processing in progress, please wait"
+
+msgid "互动视频"
+msgstr "Interactive Video"
+
+msgid "正在探查所有节点，请稍候"
+msgstr "Probing all nodes, please wait"
+
+msgid "正在获取所有分页数据，请稍候"
+msgstr "Fetching all page data, please wait"
+
+# -------------- src/gui/dialog/misc/update.py --------------
+msgid "发现新版本"
+msgstr "New Version Available"
+
+msgid "忽略此版本，下次不再提示"
+msgstr "Ignore this version and do not show again"
+
+msgid "更新"
+msgstr "Update"
+
+# -------------- src/gui/dialog/cover_viewer.py --------------
+msgid "视频封面"
+msgstr "Video Cover"
+
+msgid "文件(&F)"
+msgstr "File(&F)"
+
+msgid "选项(&O)"
+msgstr "Options(&O)"
+
+msgid "保存原图(&S)\tCtrl+S"
+msgstr "Save Original Image(&S)\tCtrl+S"
+
+msgid "关闭(&X)\tAlt+F4"
+msgstr "Close(&X)\tAlt+F4"
+
+msgid "显示原图(&R)"
+msgstr "Show Original Image(&R)"
+
+msgid "窗口适应图片尺寸(&A)"
+msgstr "Fit Window to Image Size(&A)"
+
+msgid "原图尺寸：%sx%s"
+msgstr "Original Image Size: %sx%s"
+
+msgid "保存封面"
+msgstr "Save Cover"
+
+msgid "JPG 文件(*.jpg)|*.jpg|PNG 文件|*.png|WEBP 文件|*.webp|AVIF 文件|*.avif"
+msgstr "JPG File(*.jpg)|*.jpg|PNG File|*.png|WEBP File|*.webp|AVIF File|*.avif"
+
+msgid "缩放尺寸：%sx%s"
+msgstr "Scaled Size: %sx%s"
+
+# -------------- src/gui/dialog/error.py --------------
+msgid "错误日志"
+msgstr "Error Log"
+
+msgid "记录时间：%s"
+msgstr "Timestamp: %s"
+
+msgid "异常类型：%s"
+msgstr "Exception Type: %s"
+
+msgid "错误码：%s"
+msgstr "Error Code: %s"
+
+msgid "描述：%s"
+msgstr "Description: %s"
+
+# -------------- src/gui/dialog/search_episode_list.py --------------
+msgid "搜索"
+msgstr "Search"
+
+msgid "在剧集列表中搜索"
+msgstr "Search in episode list"
+
+msgid "无结果"
+msgstr "No results"
+
+msgid "上一匹配项"
+msgstr "Previous match"
+
+msgid "下一匹配项"
+msgstr "Next match"
+
+msgid "仅显示匹配项"
+msgstr "Show only matches"
+
+msgid "循环搜索"
+msgstr "Loop search"
+
+msgid "全选"
+msgstr "Select all"
+
+msgid "第 %s 项，共 %s 项"
+msgstr "Items %s of %s"
+
+# -------------- src/gui/window/download/download_v4.py --------------
 msgid "正在下载(%s)"
 msgstr "Downloading(%s)"
 
@@ -70,7 +464,6 @@ msgid "所有任务已下载完成"
 msgstr "All tasks have been downloaded"
 
 # -------------- src/gui/window/download/item_panel_v4.py --------------
-
 msgid "查看封面"
 msgstr "View cover"
 
@@ -81,7 +474,6 @@ msgid "取消下载"
 msgstr "Cancel download"
 
 # -------------- src/gui/window/download/item_utils_v4.py --------------
-
 msgid "音频"
 msgstr "Audio"
 
@@ -119,7 +511,6 @@ msgid "下载失败，点击查看详情"
 msgstr "Failed to download, click for details"
 
 # -------------- src/gui/window/download/page.py --------------
-
 msgid "并行下载数"
 msgstr "Parallel Downloads"
 
@@ -142,7 +533,6 @@ msgid "没有下载完成的项目"
 msgstr "No completed downloads"
 
 # -------------- src/gui/window/main/bottom_box.py --------------
-
 msgid "未登录"
 msgstr "Not logged in"
 
@@ -156,7 +546,6 @@ msgid "✔️已开始下载"
 msgstr "Started"
 
 # -------------- src/gui/window/main/main_v3.py --------------
-
 msgid "工具(&T)"
 msgstr "Tools(&T)"
 
@@ -199,11 +588,23 @@ msgstr "Community(&G)"
 msgid "关于(&A)"
 msgstr "About(&A)"
 
-msgid "退出登录\n\n是否要退出登录？"
-msgstr "Log out\n\nDo you want to log out?"
+msgid ""
+"退出登录\n"
+"\n"
+"是否要退出登录？"
+msgstr ""
+"Log out\n"
+"\n"
+"Do you want to log out?"
 
-msgid "退出程序\n\n确定要退出程序吗？"
-msgstr "Exit Application\n\nAre you sure you want to exit?"
+msgid ""
+"退出程序\n"
+"\n"
+"确定要退出程序吗？"
+msgstr ""
+"Exit Application\n"
+"\n"
+"Are you sure you want to exit?"
 
 msgid "最小化到托盘"
 msgstr "Minimize to Tray"
@@ -212,12 +613,10 @@ msgid "退出程序"
 msgstr "Exit Application"
 
 # -------------- src/gui/window/main/parser.py --------------
-
 msgid "解析失败"
 msgstr "Failed to parse"
 
 # -------------- src/gui/window/main/top_box.py --------------
-
 msgid "链接"
 msgstr "Link"
 
@@ -239,17 +638,16 @@ msgstr "View interactive video story tree"
 msgid "搜索剧集列表"
 msgstr "Search episode list"
 
-msgid "剧集列表显示设置"
-msgstr "Episode List Display Settings"
-
-msgid "下载选项"
-msgstr "Download options"
-
-msgid "解析失败\n\n链接不能为空"
-msgstr "Failed to parse\n\nLink cannot be empty"
+msgid ""
+"解析失败\n"
+"\n"
+"链接不能为空"
+msgstr ""
+"Failed to parse\n"
+"\n"
+"Link cannot be empty"
 
 # -------------- src/gui/window/main/utils.py --------------
-
 msgid "检查更新失败"
 msgstr "Failed to check for updates"
 
@@ -280,8 +678,18 @@ msgstr "Failed to refresh login information"
 msgid "无法刷新登录信息"
 msgstr "Unable to refresh login information"
 
-msgid "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。"
-msgstr "FFmpeg Not Detected\n\nFFmpeg was not detected. Video merging, clipping, and conversion are unavailable.\n\nPlease check if an environment variable for FFmpeg has been set or if FFmpeg is present in the application directory."
+msgid ""
+"未检测到 FFmpeg\n"
+"\n"
+"未检测到 FFmpeg，无法进行视频合并、截取和转换。\n"
+"\n"
+"请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。"
+msgstr ""
+"FFmpeg Not Detected\n"
+"\n"
+"FFmpeg was not detected. Video merging, clipping, and conversion are unavailable.\n"
+"\n"
+"Please check if an environment variable for FFmpeg has been set or if FFmpeg is present in the application directory."
 
 msgid "安装 FFmpeg"
 msgstr "Install FFmpeg"
@@ -290,15 +698,20 @@ msgid "正在解析中"
 msgstr "Parsing..."
 
 # -------------- src/gui/window/settings/advanced.py --------------
-
 msgid "CDN 节点设置"
 msgstr "CDN Node Settings"
 
 msgid "替换音视频流 CDN 节点"
 msgstr "Replace audio/video stream CDN nodes"
 
-msgid "由于B站默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n\n请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。"
-msgstr "Bilibili's default assigned CDN routes may have stability issues, causing audio/video stream download failures. It is recommended to enable the `Replace audio/video stream CDN nodes` feature. This function automatically selects available CDN nodes based on your configured priority order, improving access speed and success rate.\n\nNote: When using a proxy tool, please disable this feature to avoid conflicts between CDN nodes and proxy routes that could lead to connection failures."
+msgid ""
+"由于B站默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n"
+"\n"
+"请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。"
+msgstr ""
+"Bilibili's default assigned CDN routes may have stability issues, causing audio/video stream download failures. It is recommended to enable the `Replace audio/video stream CDN nodes` feature. This function automatically selects available CDN nodes based on your configured priority order, improving access speed and success rate.\n"
+"\n"
+"Note: When using a proxy tool, please disable this feature to avoid conflicts between CDN nodes and proxy routes that could lead to connection failures."
 
 msgid "自定义 CDN 节点"
 msgstr "Custom CDN Nodes"
@@ -339,8 +752,16 @@ msgstr "Web Page Display Settings"
 msgid "显示方式"
 msgstr "Display Method"
 
-msgid "设置 Web 页面的显示方式\n\n自动检测：自动选择可用的显示方式\n使用系统 Webview 组件：在窗口中内嵌显示页面\n使用系统默认浏览器：在外部浏览器中显示页面"
-msgstr "Auto-detect: Automatically select an available display method\nUse system Webview component: Display the page embedded within the window\nUse system default browser: Display the page in an external browser"
+msgid ""
+"设置 Web 页面的显示方式\n"
+"\n"
+"自动检测：自动选择可用的显示方式\n"
+"使用系统 Webview 组件：在窗口中内嵌显示页面\n"
+"使用系统默认浏览器：在外部浏览器中显示页面"
+msgstr ""
+"Auto-detect: Automatically select an available display method\n"
+"Use system Webview component: Display the page embedded within the window\n"
+"Use system default browser: Display the page in an external browser"
 
 msgid "Websocket 端口"
 msgstr "Websocket Port"
@@ -349,7 +770,6 @@ msgid "Websocket 端口无效：%s"
 msgstr "Invalid Websocket port: %s"
 
 # -------------- src/gui/window/settings/basic.py --------------
-
 msgid "基本设置"
 msgstr "Basic Settings"
 
@@ -375,7 +795,6 @@ msgid "窗口总在最前"
 msgstr "Keep window always on top"
 
 # -------------- src/gui/window/settings/download.py --------------
-
 msgid "设置优先级"
 msgstr "Set Priority"
 
@@ -418,9 +837,6 @@ msgstr "Maximum"
 msgid "序号类型"
 msgstr "Numbering Type"
 
-msgid "总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号\n\n请注意：自定义下载文件名模板需添加序号相关字段才会显示"
-msgstr "Always start from 1: The number starts from 1 and increments each time you download\nContinuous increment: The number continuously increments with each download and resets after restarting the program\nUse episode list number: Use the number displayed in the episode list\n\nNote: The numbering will only appear if the custom filename template includes relevant numbering fields"
-
 msgid "下载完成后清除本地下载记录"
 msgstr "Clear local download history after download completion"
 
@@ -440,7 +856,6 @@ msgid "这是一则测试通知"
 msgstr "This is a test notification"
 
 # -------------- src/gui/window/settings/ffmpeg.py --------------
-
 msgid "FFmpeg 设置"
 msgstr "FFmpeg Settings"
 
@@ -462,9 +877,6 @@ msgstr "Audio/Video Merging Options"
 msgid "合并完成后保留原始文件"
 msgstr "Keep original files after merging"
 
-msgid "合并完成后，保留原始的视频和音频文件"
-msgstr "After merging, keep the original video and audio files"
-
 msgid "存在同名文件时"
 msgstr "When a file with the same name exists"
 
@@ -474,19 +886,9 @@ msgstr "Invalid FFmpeg Path"
 msgid "选择 FFmpeg 路径"
 msgstr "Select FFmpeg Path"
 
-# -------------- src/gui/window/settings/settings_v2.py --------------
-
-msgid "显示单个视频"
-msgstr "Show individual videos"
-
-msgid "显示视频所在的合集"
-msgstr "Show videos within their collection"
-
+# -------------- src/gui/window/settings/misc.py --------------
 msgid "显示全部相关视频 (包括 PV、OP、ED 等)"
 msgstr "Show all related videos (including PVs, OPs, EDs, etc.)"
-
-msgid "显示完整剧集名称"
-msgstr "Show full episode names"
 
 msgid "自动勾选全部视频"
 msgstr "Automatically select all videos"
@@ -506,27 +908,57 @@ msgstr "Clear User Data"
 msgid "恢复默认设置"
 msgstr "Restore Default"
 
-msgid "清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。"
-msgstr "Clear User Data\n\nThis will clear user login information, download history, and application settings. Continue?\n\nThe application will restart."
+msgid ""
+"清除用户数据\n"
+"\n"
+"将清除用户登录信息、下载记录和程序设置，是否继续？\n"
+"\n"
+"程序将会重新启动。"
+msgstr ""
+"Clear User Data\n"
+"\n"
+"This will clear user login information, download history, and application settings. Continue?\n"
+"\n"
+"The application will restart."
 
-msgid "恢复默认设置\n\n是否恢复默认设置？\n\n程序将会重新启动。"
-msgstr "Restore Default\n\nRestore default settings?\n\nThe application will restart."
+msgid ""
+"恢复默认设置\n"
+"\n"
+"是否恢复默认设置？\n"
+"\n"
+"程序将会重新启动。"
+msgstr ""
+"Restore Default\n"
+"\n"
+"Restore default settings?\n"
+"\n"
+"The application will restart."
 
 # -------------- src/gui/window/settings/page.py --------------
-
-msgid "保存设置失败\n\n所在页面：%s\n错误原因：%s"
-msgstr "Failed to save settings\n\nPage: %s\nError: %s"
+msgid ""
+"保存设置失败\n"
+"\n"
+"所在页面：%s\n"
+"错误原因：%s"
+msgstr ""
+"Failed to save settings\n"
+"\n"
+"Page: %s\n"
+"Error: %s"
 
 # -------------- src/gui/window/settings/proxy.py --------------
-
 msgid "代理设置"
 msgstr "Proxy Settings"
 
 msgid "代理选项"
 msgstr "Proxy Options"
 
-msgid "注意：使用代理时，请在高级选项卡中\n手动关闭`替换音视频流 CDN 选项`"
-msgstr "Note: When using a proxy, please manually disable the \n`Replace audio/video stream CDN` option in the Advanced tab"
+msgid ""
+"注意：使用代理时，请在高级选项卡中\n"
+"手动关闭`替换音视频流 CDN 选项`"
+msgstr ""
+"Note: When using a proxy, please manually disable the \n"
+"`Replace audio/video stream CDN` option in the Advanced tab"
 
 msgid "不使用代理"
 msgstr "Disable"
@@ -555,14 +987,31 @@ msgstr "Password"
 msgid "端口无效，请输入 1 到 65535 之间的整数"
 msgstr "Invalid port, please enter an integer between 1 and 65535"
 
-msgid "测试成功\n\n请求站点：%s\n状态码：%s\n耗时：%ss"
-msgstr "Test Successful\n\nRequest URL: %s\nStatus Code: %s\nDuration: %ss"
+msgid ""
+"测试成功\n"
+"\n"
+"请求站点：%s\n"
+"状态码：%s\n"
+"耗时：%ss"
+msgstr ""
+"Test Successful\n"
+"\n"
+"Request URL: %s\n"
+"Status Code: %s\n"
+"Duration: %ss"
 
-msgid "测试失败\n\n请求站点：%s\n错误信息：%s"
-msgstr "Test Failed\n\nRequest URL: %s\nError: %s"
+msgid ""
+"测试失败\n"
+"\n"
+"请求站点：%s\n"
+"错误信息：%s"
+msgstr ""
+"Test Failed\n"
+"\n"
+"Request URL: %s\n"
+"Error: %s"
 
 # -------------- src/gui/window/settings/settings_v2.py --------------
-
 msgid "设置"
 msgstr "Settings"
 
@@ -583,3 +1032,40 @@ msgstr "Misc"
 
 msgid "保存失败"
 msgstr "Failed to save"
+
+# -------------- src/utils/common/map.py --------------
+msgid "覆盖原文件"
+msgstr "Overwrite existing file"
+
+msgid "重命名文件"
+msgstr "Rename file"
+
+msgid "总是从 1 开始"
+msgstr "Always start from 1"
+
+msgid "连贯递增"
+msgstr "Continuous increment"
+
+msgid "使用剧集列表序号"
+msgstr "Use episode list number"
+
+msgid "隐藏到托盘"
+msgstr "Minimize to tray"
+
+msgid "直接退出"
+msgstr "Exit directly"
+
+msgid "总是询问"
+msgstr "Always ask"
+
+msgid "首次询问"
+msgstr "Ask only the first time"
+
+msgid "自动选择"
+msgstr "Auto-detect"
+
+msgid "使用系统 Webview 组件"
+msgstr "Use system Webview component"
+
+msgid "使用系统默认浏览器"
+msgstr "Use system default browser"

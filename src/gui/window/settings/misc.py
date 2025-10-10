@@ -27,7 +27,7 @@ class MiscPage(Page):
         episodes_box = wx.StaticBox(self.panel, -1, _("剧集列表显示设置"))
 
         self.episodes_single_choice = wx.RadioButton(episodes_box, -1, _("显示单个视频"))
-        self.episodes_in_section_choice = wx.RadioButton(episodes_box, -1, _("显示视频所在的合集"))
+        self.episodes_in_section_choice = wx.RadioButton(episodes_box, -1, _("显示视频所在的列表"))
         self.episodes_all_sections_choice = wx.RadioButton(episodes_box, -1, _("显示全部相关视频 (包括 PV、OP、ED 等)"))
 
         self.show_episode_full_name = wx.CheckBox(episodes_box, -1, _("显示完整剧集名称"))

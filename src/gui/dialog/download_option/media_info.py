@@ -1,4 +1,5 @@
 import wx
+import gettext
 from typing import Callable
 
 from utils.config import Config
@@ -21,6 +22,8 @@ from gui.component.choice.choice import Choice
 from gui.component.label.info_label import InfoLabel
 from gui.component.button.bitmap_button import BitmapButton
 
+_ = gettext.gettext
+
 class InfoGroup(Panel):
     def __init__(self, parent: wx.Window):
         Panel.__init__(self, parent)
@@ -31,8 +34,8 @@ class InfoGroup(Panel):
         self.choice = Choice(self)
         self.tooltip = ToolTip(self)
         self.tooltip.Hide()
-        priority_lab = wx.StaticText(self, -1, "优先级")
-        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), tooltip = "设置优先级")
+        priority_lab = wx.StaticText(self, -1, _("优先级"))
+        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("设置优先级"))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(self.choice, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -61,7 +64,7 @@ class InfoGroup(Panel):
         self.choice.SetSelection(selection)
 
     def SetCheckingStatus(self):
-        self.info_lab.SetLabel("正在检测...")
+        self.info_lab.SetLabel(_("正在检测..."))
 
     def SetEnable(self, enable: bool):
         self.choice.Enable(enable)
@@ -88,13 +91,13 @@ class MediaInfoPanel(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        media_info_box = wx.StaticBox(self, -1, "媒体信息")
+        media_info_box = wx.StaticBox(self, -1, _("媒体信息"))
 
-        stream_lab = wx.StaticText(media_info_box, -1, "当前视频类型：")
-        self.stream_type_lab = wx.StaticText(media_info_box, -1, "正在检测...")
+        stream_lab = wx.StaticText(media_info_box, -1, _("当前视频类型："))
+        self.stream_type_lab = wx.StaticText(media_info_box, -1, _("正在检测..."))
         stream_type_tooltip = ToolTip(media_info_box)
-        stream_type_tooltip.set_tooltip("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质\nMP4：同 FLV 格式")
-        self.help_btn = BitmapButton(media_info_box, Icon.get_icon_bitmap(IconID.Help), tooltip = "查看帮助")
+        stream_type_tooltip.set_tooltip(_("视频格式说明：\n\nDASH：视频与音频分开存储，需要合并为一个文件\nFLV：视频与音频已合并，因此无需选择音质\nMP4：同 FLV 格式"))
+        self.help_btn = BitmapButton(media_info_box, Icon.get_icon_bitmap(IconID.Help), tooltip = _("查看帮助"))
 
         stream_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         stream_type_hbox.Add(stream_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -103,14 +106,14 @@ class MediaInfoPanel(Panel):
         stream_type_hbox.AddStretchSpacer()
         stream_type_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.video_quality_lab = wx.StaticText(media_info_box, -1, "清晰度")
+        self.video_quality_lab = wx.StaticText(media_info_box, -1, _("画质"))
         self.video_quality_info = InfoGroup(media_info_box)
-        self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确")
+        self.video_quality_info.SetTopToolTip(_("此处显示的媒体信息为解析链接对应的单个视频\n\n若存在多个视频媒体信息不一致的情况，可能会不准确"))
 
-        self.audio_quality_lab = wx.StaticText(media_info_box, -1, "音质")
+        self.audio_quality_lab = wx.StaticText(media_info_box, -1, _("音质"))
         self.audio_quality_info = InfoGroup(media_info_box)
 
-        self.video_codec_lab = wx.StaticText(media_info_box, -1, "编码格式")
+        self.video_codec_lab = wx.StaticText(media_info_box, -1, _("编码"))
         self.video_codec_info = InfoGroup(media_info_box)
 
         flex_grid_box = wx.FlexGridSizer(3, 2, 0, 0)
@@ -202,7 +205,6 @@ class MediaInfoPanel(Panel):
             case StreamType.Flv:
                 label_info = {
                     "desc": desc,
-                    "seg": "分段" if info["seg"] > 1 else "连贯",
                     "size": FormatUtils.format_size(info["size"])
                 }
 
@@ -235,14 +237,14 @@ class MediaInfoPanel(Panel):
     def get_audio_quality_label(self, info: dict):
         match info:
             case None:
-                return "当前视频无音轨，将使用优先级设置作为全局设置"
+                return _("当前视频无音轨，将使用优先级设置作为全局设置")
             
             case "FLV":
-                return "FLV 格式视频流中已包含音轨，不支持自定义"
-            
+                return _("FLV 格式视频流中已包含音轨，不支持自定义")
+
             case "MP4":
-                return "MP4 格式视频流中已包含音轨，不支持自定义"
-            
+                return _("MP4 格式视频流中已包含音轨，不支持自定义")
+
             case _:
                 label_info = {
                     "desc": audio_quality_map.get(info["id"]),
@@ -283,7 +285,7 @@ class MediaInfoPanel(Panel):
             self.video_quality_info.SetInfoLabel(info_label)
             self.video_codec_info.SetInfoLabel(video_codec_map.get(codec, "--"))
 
-            self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：{}\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。".format(PreviewInfo.episode_info.get("title")))
+            self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：%s\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。" % PreviewInfo.episode_info.get("title"))
 
             self.set_stream_type(self.stream_type)
 
@@ -296,13 +298,13 @@ class MediaInfoPanel(Panel):
             self.Layout()
 
     def onError(self):
-        show_error_message_dialog("获取媒体信息失败", parent = self.parent)
+        show_error_message_dialog(_("获取媒体信息失败"), parent = self.parent)
 
     def onHelpEVT(self, event: wx.CommandEvent):
         wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/faq/download.html#%E8%A7%86%E9%A2%91%E6%B8%85%E6%99%B0%E5%BA%A6%E4%B8%8E%E4%B8%8B%E8%BD%BD%E8%AE%BE%E7%BD%AE%E4%B8%8D%E7%AC%A6")
 
     def onSetVideoQualityPriorityEVT(self, event: wx.CommandEvent):
-        dlg = EditPriorityDialog(self.parent, "画质", video_quality_priority, Config.Temp.video_quality_priority)
+        dlg = EditPriorityDialog(self.parent, _("画质"), video_quality_priority, Config.Temp.video_quality_priority)
         
         if dlg.ShowModal() == wx.ID_OK:
             Config.Temp.video_quality_priority = dlg.get_priority()
@@ -310,7 +312,7 @@ class MediaInfoPanel(Panel):
         self.onChangeVideoQualityEVT(0)
 
     def onSetAudioQualityPriorityEVT(self, event: wx.CommandEvent):
-        dlg = EditPriorityDialog(self.parent, "音质", audio_quality_priority, Config.Temp.audio_quality_priority)
+        dlg = EditPriorityDialog(self.parent, _("音质"), audio_quality_priority, Config.Temp.audio_quality_priority)
 
         if dlg.ShowModal() == wx.ID_OK:
             Config.Temp.audio_quality_priority = dlg.get_priority()
@@ -318,7 +320,7 @@ class MediaInfoPanel(Panel):
         self.onChangeAudioQualityEVT(0)
 
     def onSetVideoCodecPriorityEVT(self, event: wx.CommandEvent):
-        dlg = EditPriorityDialog(self.parent, "编码格式", video_codec_priority, Config.Temp.video_codec_priority)
+        dlg = EditPriorityDialog(self.parent, _("编码"), video_codec_priority, Config.Temp.video_codec_priority)
 
         if dlg.ShowModal() == wx.ID_OK:
             Config.Temp.video_codec_priority = dlg.get_priority()

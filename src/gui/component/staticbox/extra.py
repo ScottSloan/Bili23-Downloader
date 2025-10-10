@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 
@@ -12,6 +13,8 @@ from gui.dialog.setting.ass_style.custom_ass_style_v2 import CustomASSStyleDialo
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
 
+_ = gettext.gettext
+
 class ExtraStaticBox(Panel):
     def __init__(self, parent: wx.Window, parent_window: wx.Window, is_setting_page: bool):
         self.parent_window = parent_window
@@ -24,25 +27,25 @@ class ExtraStaticBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        extra_box = wx.StaticBox(self, -1, "附加内容下载选项")
+        extra_box = wx.StaticBox(self, -1, _("附加内容下载选项"))
 
-        self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, "下载视频弹幕")
-        self.danmaku_file_type_lab = wx.StaticText(extra_box, -1, "弹幕文件格式")
+        self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, _("下载视频弹幕"))
+        self.danmaku_file_type_lab = wx.StaticText(extra_box, -1, _("弹幕文件格式"))
         self.danmaku_file_type_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
 
-        self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, "下载视频字幕")
-        self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, "字幕文件格式")
+        self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, _("下载视频字幕"))
+        self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, _("字幕文件格式"))
         self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
-        self.subtitle_file_lan_type_btn = BitmapButton(extra_box, Icon.get_icon_bitmap(IconID.Setting), tooltip = "自定义字幕语言")
+        self.subtitle_file_lan_type_btn = BitmapButton(extra_box, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("自定义字幕语言"))
 
-        self.download_cover_file_chk = wx.CheckBox(extra_box, -1, "下载视频封面")
-        self.cover_file_type_lab = wx.StaticText(extra_box, -1, "封面文件格式")
+        self.download_cover_file_chk = wx.CheckBox(extra_box, -1, _("下载视频封面"))
+        self.cover_file_type_lab = wx.StaticText(extra_box, -1, _("封面文件格式"))
         self.cover_file_type_choice = wx.Choice(extra_box, -1, choices = list(cover_format_map.keys()))
 
-        self.download_metadata_file_chk = wx.CheckBox(extra_box, -1, "下载视频元数据")
-        self.metadata_file_type_lab = wx.StaticText(extra_box, -1, "元数据文件格式")
+        self.download_metadata_file_chk = wx.CheckBox(extra_box, -1, _("下载视频元数据"))
+        self.metadata_file_type_lab = wx.StaticText(extra_box, -1, _("元数据文件格式"))
         self.metadata_file_type_choice = wx.Choice(extra_box, -1, choices = list(metadata_format_map.keys()))
-        self.metadata_file_scrape_option_btn = BitmapButton(extra_box, Icon.get_icon_bitmap(IconID.Setting), tooltip = "刮削设置")
+        self.metadata_file_scrape_option_btn = BitmapButton(extra_box, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("刮削设置"))
 
         extra_grid_sizer = wx.GridBagSizer(0, 0)
         extra_grid_sizer.Add(self.download_danmaku_file_chk, pos = (0, 0), span = (0, 3), flag = wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTRE_VERTICAL, border = self.FromDIP(6))
@@ -67,7 +70,7 @@ class ExtraStaticBox(Panel):
         extra_grid_sizer.Add(self.metadata_file_type_choice, pos = (7, 2), flag = wx.ALL & (~wx.LEFT) | wx.EXPAND | wx.ALIGN_CENTRE_VERTICAL, border = self.FromDIP(6))
         extra_grid_sizer.Add(self.metadata_file_scrape_option_btn, pos = (7, 3), flag = wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTRE_VERTICAL, border = self.FromDIP(6))
 
-        self.custom_ass_style_btn = wx.Button(extra_box, -1, "自定义 ASS 样式", size = self.get_scaled_size((120, 28)))
+        self.custom_ass_style_btn = wx.Button(extra_box, -1, _("自定义 ASS 样式"), size = self.get_scaled_size((120, 28)))
 
         extra_sbox = wx.StaticBoxSizer(extra_box, wx.VERTICAL)
         extra_sbox.AddStretchSpacer()

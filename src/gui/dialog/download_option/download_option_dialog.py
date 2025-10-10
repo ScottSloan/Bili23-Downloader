@@ -1,4 +1,5 @@
 import wx
+import gettext
 from threading import Event
 
 from utils.config import Config
@@ -13,6 +14,8 @@ from gui.dialog.confirm.video_resolution import RequireVideoResolutionDialog
 from gui.component.window.dialog import Dialog
 from gui.component.staticbox.extra import ExtraStaticBox
 
+_ = gettext.gettext
+
 class DownloadOptionDialog(Dialog):
     def __init__(self, parent: wx.Window, source: str):
         from gui.window.main.main_v3 import MainWindow
@@ -20,7 +23,7 @@ class DownloadOptionDialog(Dialog):
         self.parent: MainWindow = parent
         self.source = source
 
-        Dialog.__init__(self, parent, "下载选项")
+        Dialog.__init__(self, parent, _("下载选项"))
 
         self.init_UI()
 
@@ -58,8 +61,8 @@ class DownloadOptionDialog(Dialog):
         hbox.Add(left_vbox, 0, wx.EXPAND)
         hbox.Add(right_vbox, 0, wx.EXPAND)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()
@@ -89,8 +92,7 @@ class DownloadOptionDialog(Dialog):
         load_download_option()
 
     def warn(self, message: str, flag: int = None):
-        dlg = wx.MessageDialog(self, message, "警告", wx.ICON_WARNING | flag)
-        dlg.SetYesNoCancelLabels("是", "否", "不再提示")
+        dlg = wx.MessageDialog(self, message, _("警告"), wx.ICON_WARNING | flag)
 
         return dlg.ShowModal()
 
@@ -127,7 +129,7 @@ class DownloadOptionDialog(Dialog):
 
     def onOKEVT(self):
         if not self.path_box.path_box.GetValue():
-            self.warn("保存设置失败\n\n下载目录不能为空", wx.OK)
+            self.warn(_("保存设置失败\n\n下载目录不能为空"), wx.OK)
             return True
 
         self.media_info_box.save()

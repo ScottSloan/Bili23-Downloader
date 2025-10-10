@@ -1,9 +1,12 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
+
+_ = gettext.gettext
 
 class MediaOptionStaticBox(Panel):
     def __init__(self, parent: wx.Window):
@@ -18,35 +21,35 @@ class MediaOptionStaticBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        media_box = wx.StaticBox(self, -1, "媒体下载选项")
+        media_box = wx.StaticBox(self, -1, _("媒体下载选项"))
 
-        self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
+        self.download_video_steam_chk = wx.CheckBox(media_box, -1, _("视频流"))
         self.video_stream_tip = ToolTip(media_box)
-        self.video_stream_tip.set_tooltip('下载独立的视频流文件\n\n视频和音频分开存储，需要合并为一个完整的视频文件')
+        self.video_stream_tip.set_tooltip(_('下载独立的视频流文件\n\n视频和音频分开存储，需要合并为一个完整的视频文件'))
 
         video_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_stream_hbox.Add(self.download_video_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         video_stream_hbox.Add(self.video_stream_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.download_audio_steam_chk = wx.CheckBox(media_box, -1, "音频流")
+        self.download_audio_steam_chk = wx.CheckBox(media_box, -1, _("音频流"))
         self.audio_stream_tip = ToolTip(media_box)
-        self.audio_stream_tip.set_tooltip('下载独立的音频流文件')
+        self.audio_stream_tip.set_tooltip(_('下载独立的音频流文件'))
 
         audio_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         audio_stream_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         audio_stream_hbox.Add(self.audio_stream_tip, 0, wx.ALL & (~wx.LEFT)| wx.ALIGN_CENTER, self.FromDIP(6))
-        
-        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "合并视频和音频")
+
+        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, _("合并视频和音频"))
         ffmpeg_merge_tip = ToolTip(media_box)
-        ffmpeg_merge_tip.set_tooltip("选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件")
+        ffmpeg_merge_tip.set_tooltip(_("选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件"))
 
         ffmpeg_merge_hbox = wx.BoxSizer(wx.HORIZONTAL)
         ffmpeg_merge_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         ffmpeg_merge_hbox.Add(ffmpeg_merge_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.keep_original_files_chk = wx.CheckBox(media_box, -1, "合并完成后保留原始文件")
+        self.keep_original_files_chk = wx.CheckBox(media_box, -1, _("合并完成后保留原始文件"))
         keep_original_files_tip = ToolTip(media_box)
-        keep_original_files_tip.set_tooltip("合并完成后，保留原始的视频和音频文件")
+        keep_original_files_tip.set_tooltip(_("合并完成后，保留原始的视频和音频文件"))
 
         keep_original_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
         keep_original_files_hbox.Add(self.keep_original_files_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
