@@ -5,8 +5,10 @@ import urllib.parse
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
+from utils.common.thread import Thread
 
 class Parser:
+    url: str = None
     bilibili_url = "https://www.bilibili.com/"
 
     def __init__(self):
@@ -46,6 +48,10 @@ class Parser:
 
         return resp
 
+    @staticmethod
+    def start_thread(target, args = ()):
+        return Thread(target = target, args = args).start()
+
     def aid_to_bvid(self, aid: int):
         XOR_CODE = 23442827791579
         MAX_AID = 1 << 51
@@ -70,9 +76,11 @@ class Parser:
         status_code = data["code"]
 
         if status_code != StatusCode.Success.value:
-            raise GlobalException(message = data["message"], code = status_code, json_data = data)
+            raise GlobalException(message = data["message"], code = status_code, json_data = data, parse_url = Parser.url)
         
     def parse_url(self, url: str):
+        Parser.url = url
+
         try:
             return self.parse_worker(url)
         

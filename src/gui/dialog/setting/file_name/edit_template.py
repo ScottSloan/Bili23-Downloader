@@ -3,20 +3,24 @@ import os
 import wx.adv
 
 from utils.common.style.icon_v4 import Icon, IconID
-from utils.common.data.file_name import preview_data, field_data, preview_data_ex
+from utils.common.data.file_name import preview_data, field_data, preview_data_ex, apply_to_data
 from utils.common.regex import Regex
 from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.datetime_util import DateTime
+from utils.common.enums import TemplateType
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.misc.tooltip import ToolTip
+from gui.component.choice.choice import Choice
 
 class TemplateValidator:
-    def __init__(self, template: str, field_dict: dict):
+    def __init__(self, template: str, field_dict: dict, strict_naming: bool, apply_to: int):
         self.template = template
         self.field_dict = field_dict
-    
+        self.strict_naming = strict_naming
+        self.apply_to = apply_to
+
     def validate(self):
         try:
             self.check()
@@ -49,7 +53,7 @@ class TemplateValidator:
         
         if self.check_illegal_chars():
             raise ValueError("illegal")
-        
+
     def check_sep(self):
         return "\\" in self.template
     
@@ -57,7 +61,7 @@ class TemplateValidator:
         return self.template.startswith("/")
 
     def check_illegal_chars(self):
-        pattern = r"{time:|{pubtime:"
+        pattern = r"{time:|{pubtime:|{season_num:|{episode_num:"
 
         if Regex.search(pattern, self.template):
             temp = Regex.sub(pattern, "", self.template)
@@ -93,8 +97,8 @@ class TemplateValidator:
                         return "字段名必须以 {} 包裹"
                     
                     case "Invalid format string":
-                        raise "时间格式无效"
-                    
+                        return "时间格式无效"
+                                        
                     case _:
                         return str(e)
                     
@@ -134,7 +138,15 @@ class EditTemplateDialog(Dialog):
         top_hbox.AddStretchSpacer()
         top_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        self.apply_to_choice = Choice(self)
+        self.apply_to_choice.SetChoices(apply_to_data.get(self.type))
+        self.apply_to_choice.SetToolTip("剧集类支持设置正片和非正片两种不同的命名模板，其他类型仅支持默认模板。")
+
         self.template_box = wx.TextCtrl(self, -1)
+
+        template_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        template_hbox.Add(self.apply_to_choice, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
+        template_hbox.Add(self.template_box, 1, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         preview_lab = wx.StaticText(self, -1, "预览")
 
@@ -189,7 +201,7 @@ class EditTemplateDialog(Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(top_hbox, 0, wx.EXPAND)
-        vbox.Add(self.template_box, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(6))
+        vbox.Add(template_hbox, 0, wx.EXPAND)
         vbox.Add(preview_vbox, 0, wx.EXPAND)
         vbox.Add(field_vbox, 0, wx.EXPAND)
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
@@ -197,6 +209,7 @@ class EditTemplateDialog(Dialog):
         self.SetSizerAndFit(vbox)
 
     def Bind_EVT(self):
+        self.apply_to_choice.Bind(wx.EVT_CHOICE, self.onChangeApplyToEVT)
         self.template_box.Bind(wx.EVT_TEXT, self.onTextEVT)
 
         self.field_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
@@ -209,7 +222,7 @@ class EditTemplateDialog(Dialog):
 
         self.field_dict = self.get_field_dict()
 
-        self.template_box.SetValue(self.data.get("template"))
+        self.init_template()
 
     def init_list_column(self):
         self.field_list.AppendColumn("字段名称", width = self.FromDIP(210))
@@ -227,17 +240,25 @@ class EditTemplateDialog(Dialog):
 
         self.field_list.SetColumnWidth(2, width = -1)
 
+    def init_template(self):
+        self.template_box.SetValue(self.data["template"]["0"])
+
     def onTextEVT(self, event: wx.CommandEvent):
-        validator = TemplateValidator(self.get_template(), self.field_dict)
+        template = self.template_box.GetValue()
+
+        validator = TemplateValidator(template, self.field_dict, self.type == TemplateType.Bangumi_strict.value, self.apply_to_choice.GetSelection())
 
         result = validator.validate()
+        flag = result.get("result")
 
-        if result.get("result"):
+        if flag:
             self.show_file_name(result.get("file_name"))
-
+            self.update_template()
         else:
             self.show_error_tip(result.get("msg"))
             self.show_file_name("")
+
+        self.ok_btn.Enable(flag)
 
         self.file_name_lab.Wrap(self.file_name_lab.GetSize().width)
         self.Layout()
@@ -248,6 +269,11 @@ class EditTemplateDialog(Dialog):
         field = self.field_list.GetItemText(self.field_list.GetFocusedItem(), 0)
 
         self.template_box.AppendText(field)
+
+    def onChangeApplyToEVT(self, event: wx.CommandEvent):
+        index = str(self.apply_to_choice.GetSelection())
+
+        self.template_box.SetValue(self.data["template"][index])
 
     def show_file_name(self, file_name: str):
         dirname = os.path.dirname(file_name)
@@ -267,7 +293,12 @@ class EditTemplateDialog(Dialog):
         wx.Bell()
 
     def get_template(self):
-        return self.template_box.GetValue()
+        return self.data["template"]
+    
+    def update_template(self):
+        index = str(self.apply_to_choice.GetSelection())
+
+        self.data["template"][index] = self.template_box.GetValue()
     
     def get_field_dict(self):
         field_dict = preview_data.get(self.type)

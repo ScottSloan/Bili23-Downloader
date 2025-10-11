@@ -25,7 +25,7 @@ class CustomCDNDialog(Dialog):
         self.cdn_list = wx.ListCtrl(self, -1, size = self.FromDIP((670, 250)), style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
         custom_lab = wx.StaticText(self, -1, "自定义")
-        self.custom_box = wx.TextCtrl(self, -1, size = self.get_scaled_size((240, 24)))
+        self.custom_box = wx.TextCtrl(self, -1, size = self.FromDIP((240, -1)))
         self.add_btn = wx.Button(self, -1, "添加", size = self.get_scaled_size((80, 28)))
         self.delete_btn = wx.Button(self, -1, "删除", size = self.get_scaled_size((80, 28)))
         self.up_btn = wx.Button(self, -1, "↑", size = self.get_scaled_size((28, 28)))

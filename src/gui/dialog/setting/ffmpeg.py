@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
@@ -8,9 +9,11 @@ from utils.module.ffmpeg_v2 import FFmpeg
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
 
+_ = gettext.gettext
+
 class DetectDialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "自动检测")
+        Dialog.__init__(self, parent, _("自动检测"))
 
         self.init_UI()
 
@@ -21,23 +24,23 @@ class DetectDialog(Dialog):
         self.init_utils()
 
     def init_UI(self):
-        select_lab = wx.StaticText(self, -1, "请选择 FFmpeg 路径")
+        select_lab = wx.StaticText(self, -1, _("请选择 FFmpeg 路径"))
 
         self.refresh_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Refresh))
-        self.refresh_btn.SetToolTip("刷新")
+        self.refresh_btn.SetToolTip(_("刷新"))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(select_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.Add(self.refresh_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.env_chk = wx.RadioButton(self, -1, "环境变量")
-        self.env_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((450, 20)), style = wx.ST_ELLIPSIZE_MIDDLE)
+        self.env_chk = wx.RadioButton(self, -1, _("环境变量"))
+        self.env_path_lab = wx.StaticText(self, -1, _("未检测到 FFmpeg"), size = self.FromDIP((450, 20)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.cwd_chk = wx.RadioButton(self, -1, "运行目录")
-        self.cwd_path_lab = wx.StaticText(self, -1, "未检测到 FFmpeg", size = self.FromDIP((450, 20)), style = wx.ST_ELLIPSIZE_MIDDLE)
+        self.cwd_chk = wx.RadioButton(self, -1, _("运行目录"))
+        self.cwd_path_lab = wx.StaticText(self, -1, _("未检测到 FFmpeg"), size = self.FromDIP((450, 20)), style = wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -70,7 +73,7 @@ class DetectDialog(Dialog):
             chk_control.Enable(enable)
             lab_control.Enable(enable)
 
-            lab = path if enable else "未检测到 FFmpeg"
+            lab = path if enable else _("未检测到 FFmpeg")
 
             lab_control.SetLabel(lab)
             lab_control.SetToolTip(lab)

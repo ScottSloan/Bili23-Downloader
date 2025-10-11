@@ -5,6 +5,10 @@ class Regex:
     def search(pattern: str, string: str):
         return re.search(pattern, string)
     
+    @staticmethod
+    def findall(pattern: str, string: str):
+        return re.findall(pattern, string)
+    
     @classmethod
     def re_findall_in_group(cls, pattern: str, string: str, group: int):
         result = re.findall(pattern, string)

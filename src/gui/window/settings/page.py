@@ -1,13 +1,17 @@
 import wx
+import gettext
 
 from gui.component.panel.scrolled_panel import ScrolledPanel
 from gui.component.panel.panel import Panel
 
+_ = gettext.gettext
+
 class Page(Panel):
-    def __init__(self, parent: wx.Window, name: str):
+    def __init__(self, parent: wx.Window, name: str, index: int):
         from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent.GetParent().GetParent()
+        self.index = index
 
         Panel.__init__(self, parent, name = name)
 
@@ -28,6 +32,13 @@ class Page(Panel):
         pass
 
     def warn(self, message: str):
-        wx.MessageDialog(self.GetParent(), f"保存设置失败\n\n所在页面：{self.GetName()}\n错误原因：{message}", "警告", wx.ICON_WARNING).ShowModal()
+        wx.MessageDialog(self.GetParent(), _("保存设置失败\n\n所在页面：%s\n错误原因：%s" % (self.GetName(), message)), _("警告"), wx.ICON_WARNING).ShowModal()
+
+        self.change_to_current_page()
 
         return True
+    
+    def change_to_current_page(self):
+        parent: wx.Notebook = self.GetParent()
+
+        parent.SetSelection(self.index)

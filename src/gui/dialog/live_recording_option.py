@@ -2,7 +2,7 @@ import wx
 
 from utils.config import Config
 from utils.common.thread import Thread
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 
 from utils.parse.preview import LivePreview
 
@@ -122,7 +122,7 @@ class SplitStaticBox(Panel):
         self.split_by_size_radiobtn = wx.RadioButton(split_box, -1, "按文件大小自动分段")
 
         self.split_unit_left_lab = wx.StaticText(split_box, -1, "每")
-        self.split_unit_box = wx.TextCtrl(split_box, -1, "100", size = self.FromDIP((50, 24)))
+        self.split_unit_box = wx.TextCtrl(split_box, -1, "100", size = self.FromDIP((50, -1)))
         self.split_unit_right_lab = wx.StaticText(split_box, -1, "MB 分为一段")
 
         split_unit_hbox = wx.BoxSizer(wx.HORIZONTAL)

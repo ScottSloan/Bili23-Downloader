@@ -1,3 +1,6 @@
+import gettext
+
+_ = gettext.gettext
 
 bangumi_type_map = {
     1: "番剧",
@@ -9,38 +12,36 @@ bangumi_type_map = {
 }
 
 video_quality_map = {
-    "自动": 200,
-    "超高清 8K": 127,
-    "杜比视界": 126,
-    "真彩 HDR": 125,
-    "超清 4K": 120,
-    "高清 1080P60": 116,
-    "高清 1080P+": 112,
-    "智能修复": 100,
-    "高清 1080P": 80,
-    "高清 720P": 64,
-    "清晰 480P": 32,
-    "流畅 360P": 16,
+    200: "自动",
+    127: "超高清 8K",
+    126: "杜比视界",
+    125: "HDR 真彩",
+    120: "4K 超高清",
+    116: "1080P 60帧",
+    112: "1080P 高码率",
+    100: "智能修复",
+    80: "1080P 高清",
+    64: "720P 准高清",
+    32: "480P 标清",
+    16: "360P 流畅",
 }
 
 audio_quality_map = {
-    "自动": 30300,
-    "Hi-Res 无损": 30251,
-    "杜比全景声": 30250,
-    "杜比全景声 ": 30255,
-    "192K": 30280,
-    "132K": 30232,
-    "64K": 30216
+    30300: "自动",
+    30251: "Hi-Res 无损",
+    30250: "杜比全景声",
+    30280: "192K",
+    30232: "132K",
+    30216: "64K"
 }
 
 audio_quality_sort_map = {
     30300: 1,
-    30255: 2,
-    30251: 3,
-    30250: 4,
-    30280: 5,
-    30232: 6,
-    30216: 7
+    30251: 2,
+    30250: 3,
+    30280: 4,
+    30232: 5,
+    30216: 6
 }
 
 audio_file_type_map = {
@@ -52,21 +53,16 @@ audio_file_type_map = {
 }
 
 video_codec_map = {
-    "AVC/H.264": 7,
-    "HEVC/H.265": 12,
-    "AV1": 13
-}
-
-video_codec_preference_map = {
-    "AVC/H.264 优先": 7,
-    "HEVC/H.265 优先": 12,
-    "AV1 优先": 13
+    20: "自动",
+    7: "AVC/H.264",
+    12: "HEVC/H.265",
+    13: "AV1"
 }
 
 video_codec_short_map = {
-    "H264": 7,
-    "H265": 12,
-    "AV1": 13
+    7: "H264",
+    12: "H265",
+    13: "AV1"
 }
 
 live_status_map = {
@@ -95,6 +91,11 @@ cover_format_map = {
     "png": 1,
     "webp": 2,
     "avif": 3
+}
+
+metadata_format_map = {
+    "nfo": 0,
+    "json": 1,
 }
 
 cheese_status_map = {
@@ -127,14 +128,15 @@ status_code_map = {
 }
 
 override_option_map = {
-    "覆盖原文件": 0,
-    "重命名文件": 1
+    _("覆盖原文件"): 0,
+    _("重命名文件"): 1
 }
 
 extra_map = {
     "download_danmaku_file": "弹幕",
     "download_subtitle_file": "字幕",
-    "download_cover_file": "封面"
+    "download_cover_file": "封面",
+    "download_metadata_file": "元数据"
 }
 
 download_type_map = {
@@ -146,16 +148,16 @@ download_type_map = {
 }
 
 number_type_map = {
-    "总是从 1 开始": 0,
-    "连贯递增": 1,
-    "使用剧集列表序号": 2
+    _("总是从 1 开始"): 0,
+    _("连贯递增"): 1,
+    _("使用剧集列表序号"): 2
 }
 
 exit_option_map = {
-    "隐藏到托盘": 0,
-    "直接退出": 1,
-    "总是询问": 2,
-    "首次询问": 3
+    _("隐藏到托盘"): 0,
+    _("直接退出"): 1,
+    _("总是询问"): 2,
+    _("首次询问"): 3
 }
 
 time_ratio_map = {
@@ -269,9 +271,9 @@ ffmpeg_audio_channel_map = {
 }
 
 webpage_option_map = {
-    "自动选择": 0,
-    "使用系统 Webview 组件": 1,
-    "使用系统默认浏览器": 2
+    _("自动选择"): 0,
+    _("使用系统 Webview 组件"): 1,
+    _("使用系统默认浏览器"): 2
 }
 
 rid_map = {
@@ -354,6 +356,31 @@ url_pattern_map = [
     ("video", r"(BV[a-zA-Z0-9]+|av[0-9]+)"),
     ("bangumi", r"(ep[0-9]+|ss[0-9]+)|md[0-9]+")
 ]
+
+cn_num_map = {
+    "一": 1,
+    "二": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+    "零": 0,
+    "百": 100
+}
+
+language_map = {
+    "English": "en_US",
+    "简体中文": "zh_CN",
+}
+
+nfo_add_date_map = {
+    "文件创建日期": 0,
+    "上映日期": 1
+}
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):
     mapping_reversed = dict(map(reversed, mapping.items()))

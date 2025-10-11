@@ -1,18 +1,19 @@
 import wx
 import os
 import wx.adv
+import gettext
 
 from utils.config import Config
 
 from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.compile_data import date
 
-from gui.dialog.misc.license import LicenseWindow
-
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 from gui.component.label.info_label import InfoLabel
+
+_ = gettext.gettext
 
 class URLBox(Panel):
     def __init__(self, parent: wx.Window, label: str, url: str):
@@ -35,7 +36,7 @@ class URLBox(Panel):
 
 class AboutWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, f"关于 {Config.APP.name}")
+        Dialog.__init__(self, parent, _("关于 %s") % Config.APP.name)
 
         self._enale_dark_mode = True
 
@@ -61,12 +62,12 @@ class AboutWindow(Dialog):
         top_vbox.Add(logo, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         top_vbox.Add(app_name_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        version_lab = wx.StaticText(self, -1, f"软件版本：{self.GetVersion()}")
+        version_lab = wx.StaticText(self, -1, _("软件版本：%s") % self.GetVersion())
         date_lab = wx.StaticText(self, -1, self.GetDateLabel())
-        license_lab = wx.StaticText(self, -1, "本软件为开源免费软件，在 MIT License 许可协议下进行发布。")
+        license_lab = wx.StaticText(self, -1, _("本软件为开源免费软件，在 MIT License 许可协议下进行发布。"))
 
-        homepage_link = URLBox(self, "官方网站：", "https://bili23.scott-sloan.cn")
-        github_link = URLBox(self, "项目首页：", "https://www.github.com/ScottSloan/Bili23-Downloader")
+        homepage_link = URLBox(self, _("官方网站："), "https://bili23.scott-sloan.cn")
+        github_link = URLBox(self, _("项目首页："), "https://www.github.com/ScottSloan/Bili23-Downloader")
 
         body_vbox = wx.BoxSizer(wx.VERTICAL)
         body_vbox.Add(version_lab, 0, wx.ALL, self.FromDIP(6))
@@ -77,8 +78,8 @@ class AboutWindow(Dialog):
 
         copyright_lab = InfoLabel(self, "Copyright © 2022-2025 Scott Sloan")
 
-        opensource_lab = wx.adv.HyperlinkCtrl(self, -1, "开源许可", url = "https://bili23.scott-sloan.cn/doc/license.html")
-        disclaimer_lab = wx.adv.HyperlinkCtrl(self, -1, "免责声明", url = "https://bili23.scott-sloan.cn/doc/announcement.html")
+        opensource_lab = wx.adv.HyperlinkCtrl(self, -1, _("开源许可"), url = "https://bili23.scott-sloan.cn/doc/license.html")
+        disclaimer_lab = wx.adv.HyperlinkCtrl(self, -1, _("免责声明"), url = "https://bili23.scott-sloan.cn/doc/announcement.html")
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(opensource_lab, 0, wx.ALL, self.FromDIP(6))
@@ -96,10 +97,6 @@ class AboutWindow(Dialog):
 
         self.SetSizerAndFit(about_vbox)
 
-    def onShowLicense(self, event):
-        license_window = LicenseWindow(self)
-        license_window.ShowModal()
-
     def GetVersion(self):
         version = f"{Config.APP.version} ({Config.APP.version_code})"
 
@@ -107,6 +104,6 @@ class AboutWindow(Dialog):
 
     def GetDateLabel(self):
         if build_time := os.environ.get("PYSTAND_BUILD_TIME"):
-            return f"构建时间：{build_time}"
+            return _("构建时间：%s") % build_time
         else:
-            return f"发布时间：{date}"
+            return _("发布时间：%s") % date

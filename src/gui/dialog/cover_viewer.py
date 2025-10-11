@@ -1,5 +1,6 @@
 import wx
 import os
+import gettext
 
 from utils.module.pic.cover import Cover
 
@@ -7,12 +8,14 @@ from utils.common.style.color import Color
 
 from gui.component.window.frame import Frame
 
+_ = gettext.gettext
+
 class CoverViewerDialog(Frame):
     def __init__(self, parent, cover_raw_contents: bytes, cover_url: str):
         self.cover_raw_contents = cover_raw_contents
         self.cover_url = cover_url
 
-        Frame.__init__(self, parent, "视频封面")
+        Frame.__init__(self, parent, _("视频封面"))
 
         self.init_utils()
 
@@ -48,16 +51,16 @@ class CoverViewerDialog(Frame):
         self.file_menu = wx.Menu()
         self.options_menu = wx.Menu()
 
-        menu_bar.Append(self.file_menu, "文件(&F)")
-        menu_bar.Append(self.options_menu, "选项(&O)")
+        menu_bar.Append(self.file_menu, _("文件(&F)"))
+        menu_bar.Append(self.options_menu, _("选项(&O)"))
 
-        self.file_menu.Append(self.ID_SAVE, "保存原图(&S)\tCtrl+S")
+        self.file_menu.Append(self.ID_SAVE, _("保存原图(&S)\tCtrl+S"))
         self.file_menu.AppendSeparator()
-        self.file_menu.Append(self.ID_CLOSE, "关闭(&X)\tAlt+F4")
+        self.file_menu.Append(self.ID_CLOSE, _("关闭(&X)\tAlt+F4"))
 
-        self.options_menu.Append(self.ID_ORIGINAL_SIZE, "显示原图(&R)")
+        self.options_menu.Append(self.ID_ORIGINAL_SIZE, _("显示原图(&R)"))
         self.options_menu.AppendSeparator()
-        self.options_menu.Append(self.ID_FIT_SIZE, "窗口适应图片尺寸(&A)")
+        self.options_menu.Append(self.ID_FIT_SIZE, _("窗口适应图片尺寸(&A)"))
 
         self.SetMenuBar(menu_bar)
 
@@ -67,10 +70,10 @@ class CoverViewerDialog(Frame):
         self.status_bar: wx.StatusBar = self.CreateStatusBar()
 
         self.status_bar.SetFieldsCount(2)
-        self.status_bar.SetStatusWidths([250, 250])
+        self.status_bar.SetStatusWidths([self.FromDIP(250), self.FromDIP(250)])
 
         self.status_bar.SetStatusText("Ready", 0)
-        self.status_bar.SetStatusText(f"原图尺寸：{width}x{height}", 1)
+        self.status_bar.SetStatusText(_("原图尺寸：%sx%s") % (width, height), 1)
 
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onSaveEVT, id = self.ID_SAVE)
@@ -87,7 +90,7 @@ class CoverViewerDialog(Frame):
         self.ID_FIT_SIZE = wx.NewIdRef()
 
     def onSaveEVT(self, event):
-        dlg = wx.FileDialog(self, "保存封面", os.getcwd(), wildcard = "JPG 文件(*.jpg)|*.jpg|PNG 文件|*.png|WEBP 文件|*.webp|AVIF 文件|*.avif", style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        dlg = wx.FileDialog(self, _("保存封面"), os.getcwd(), wildcard = _("JPG 文件(*.jpg)|*.jpg|PNG 文件|*.png|WEBP 文件|*.webp|AVIF 文件|*.avif"), style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 
         if dlg.ShowModal() == wx.ID_OK:
             save_path = dlg.GetPath()
@@ -107,7 +110,7 @@ class CoverViewerDialog(Frame):
 
         self.cover_bmp.SetBitmap(scaled_cover)
 
-        self.status_bar.SetStatusText(f"缩放尺寸：{width}x{height}", 0)
+        self.status_bar.SetStatusText(_("缩放尺寸：%sx%s") % (width, height), 0)
 
         event.Skip()
 

@@ -1,6 +1,6 @@
 from utils.config import Config
 
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 from utils.common.request import RequestUtils
 
 from utils.parse.parser import Parser

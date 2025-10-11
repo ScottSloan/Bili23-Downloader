@@ -3,8 +3,8 @@ import re
 
 from utils.config import Config
 
-from utils.common.model.data_type import DownloadTaskInfo
-from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map, get_mapping_key_by_value
+from utils.common.model.task_info import DownloadTaskInfo
+from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map
 from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime
 from utils.common.io.directory import Directory
@@ -21,14 +21,12 @@ class FileNameFormatter:
     
     @classmethod
     def format_file_basename(cls, task_info: DownloadTaskInfo):
-        template = cls.get_template(task_info)
-
-        return os.path.basename(cls.format_file_name(template, task_info = task_info))
+        return os.path.basename(cls.format_file_name(task_info.template, task_info = task_info))
 
     @classmethod
     def get_download_path(cls, task_info: DownloadTaskInfo):
         field_dict = cls.get_field_dict(task_info)
-        template = cls.get_template(task_info)
+        template = task_info.template
 
         template_path = template.format(**field_dict)
 
@@ -57,15 +55,6 @@ class FileNameFormatter:
         
         return file_name
 
-    @classmethod
-    def get_template(cls, task_info: DownloadTaskInfo) -> str:
-        template = cls.get_specific_template(task_info.template_type)
-
-        if not template:
-            template = cls.get_specific_template(TemplateType.Video_Normal.value)
-
-        return template
-
     @staticmethod
     def get_field_dict(task_info: DownloadTaskInfo):
         def check(data: dict):
@@ -85,7 +74,6 @@ class FileNameFormatter:
             "page": task_info.page,
             "zone": task_info.zone,
             "subzone": task_info.subzone,
-            "area": task_info.area,
             "title": FileNameFormatter.get_legal_file_name(task_info.title),
             "aid": task_info.aid,
             "bvid": task_info.bvid,
@@ -94,19 +82,27 @@ class FileNameFormatter:
             "season_id": task_info.season_id,
             "media_id": task_info.media_id,
             "series_title": FileNameFormatter.get_legal_file_name(task_info.series_title),
+            "series_title_original": FileNameFormatter.get_legal_file_name(task_info.series_title_original),
             "section_title": FileNameFormatter.get_legal_file_name(task_info.section_title),
+            "section_title_ex": FileNameFormatter.get_legal_file_name(task_info.section_title_ex),
             "part_title": FileNameFormatter.get_legal_file_name(task_info.part_title),
             "collection_title": FileNameFormatter.get_legal_file_name(task_info.collection_title),
             "interact_title": FileNameFormatter.get_legal_file_name(task_info.interact_title),
+            "episode_tag": task_info.episode_tag,
             "badge": task_info.badge,
+            "season_num": task_info.season_num,
             "episode_num": task_info.episode_num,
             "bangumi_type": task_info.bangumi_type,
-            "video_quality": get_mapping_key_by_value(video_quality_map, task_info.video_quality_id),
-            "audio_quality": get_mapping_key_by_value(audio_quality_map, task_info.audio_quality_id),
-            "video_codec": get_mapping_key_by_value(video_codec_short_map, task_info.video_codec_id),
+            "video_quality": video_quality_map.get(task_info.video_quality_id),
+            "audio_quality": audio_quality_map.get(task_info.audio_quality_id),
+            "video_codec": video_codec_short_map.get(task_info.video_codec_id),
             "duration": task_info.duration,
             "up_name": FileNameFormatter.get_legal_file_name(task_info.up_name),
-            "up_uid": task_info.up_uid
+            "up_uid": task_info.up_uid,
+            "total_count": task_info.total_count,
+            "episode_tag": task_info.episode_tag,
+            "series_title_original": task_info.series_title_original,
+            "section_title_ex": task_info.section_title_ex,
         })
 
     @staticmethod
@@ -121,9 +117,3 @@ class FileNameFormatter:
         path = path.replace("/", os.sep)
 
         return path
-    
-    @staticmethod
-    def get_specific_template(template_type: int):        
-        for entry in Config.Download.file_name_template_list:
-            if entry["type"] == template_type:
-                return entry["template"]

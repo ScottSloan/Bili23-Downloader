@@ -28,13 +28,16 @@ class Cover:
         return req.content
 
     @classmethod
-    def download_cover(cls, cover_url: str, cover_type: int = Config.Basic.cover_file_type):
+    def download_cover(cls, cover_url: str, cover_type: int = None):
+        if not cover_type:
+            cover_type = Config.Basic.cover_file_type
+
         url = f"{cover_url}@{cls.get_cover_type(cover_type)}"
 
         return cls.get_cover_raw_contents(url)
             
     @staticmethod
-    def get_cover_type(cover_type: int = Config.Basic.cover_file_type):
+    def get_cover_type(cover_type: int):
         match CoverType(cover_type):
             case CoverType.JPG:
                 return ".jpg"

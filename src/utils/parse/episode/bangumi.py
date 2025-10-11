@@ -2,6 +2,7 @@ from utils.common.enums import ParseType, TemplateType
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.map import bangumi_type_map
 from utils.common.regex import Regex
+from utils.common.formatter.strict_naming import StrictNaming
 
 from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
@@ -9,6 +10,7 @@ class Bangumi:
     target_section_title: str = ""
     target_ep_id: int = 0
     parent_title: str = ""
+    season_num: int = 0
 
     @classmethod
     def parse_episodes(cls, info_json: dict, target_ep_id: int = None):
@@ -20,6 +22,7 @@ class Bangumi:
         bangumi_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(info_json.get("title"), label = bangumi_type_map.get(info_json.get("type"))))
 
         info_json = cls.get_sections(info_json.copy())
+        cls.get_season_num(info_json)
 
         for section in info_json["sections"]:
             cls.episodes_parser(section, info_json, bangumi_pid)
@@ -43,6 +46,7 @@ class Bangumi:
     @classmethod
     def episodes_single_parser(cls, info_json: dict, target_bvid: str):
         info_json = cls.get_sections(info_json.copy())
+        cls.get_season_num(info_json)
 
         for section in info_json["sections"]:
             for episode in section["episodes"]:
@@ -56,7 +60,9 @@ class Bangumi:
 
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
+        episode["season_num"] = cls.season_num
         episode["episode_num"] = int(episode.get("title")) if (episode_num := episode.get("title")) and episode_num.isnumeric() else 0
+        episode["total_count"] = info_json.get("total", 0)
         episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title"), section_title, info_json["type"] == 2)
         episode["bvid"] = cls.get_bvid(episode.copy())
         episode["pubtime"] = episode.get("pub_time")
@@ -64,7 +70,8 @@ class Bangumi:
         episode["cover_url"] = episode.get("cover")
         episode["link"] = cls.get_link(episode.copy())
         episode["type"] = ParseType.Bangumi.value
-        episode["series_title"] = info_json.get("season_title")
+        episode["series_title"] = info_json["season_title"]
+        episode["series_title_original"] = info_json["series"]["series_title"]
         episode["area"] = area[0].get("name", "") if (area := info_json.get("areas")) else ""
         episode["up_name"] = info_json.get("up_info", {"uname": ""}).get("uname", "")
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
@@ -117,4 +124,10 @@ class Bangumi:
             info_json["sections"].extend(section)
 
         return info_json
-        
+
+    @classmethod
+    def get_season_num(cls, info_json: dict):
+        if (season_title := info_json.get("season_title")):
+            cls.season_num = StrictNaming.get_season_num_ex(info_json.copy())
+        else:
+            cls.season_num = 1

@@ -72,7 +72,8 @@
 本项目在 **MIT License** 许可协议下进行发布。
 
 wbi 签名、部分接口以及 buvid3 等参数生成参考 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)  
-编译版提供的 FFmpeg 来源于 [gyan.dev](https://www.gyan.dev/ffmpeg/builds/)  
+
+编译版提供的 FFmpeg 来源于 [https://github.com/ScottSloan/FFmpeg](https://github.com/ScottSloan/FFmpeg) 编译配置参见 gccconf 文件。
 
 ## 🛠️ 参与贡献
 欢迎提出新的点子~

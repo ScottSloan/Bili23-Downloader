@@ -1,8 +1,11 @@
 import wx
+import gettext
 
 from utils.common.style.font import SysFont
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class FontStaticBox(Panel):
     def __init__(self, parent):
@@ -11,9 +14,9 @@ class FontStaticBox(Panel):
         self.init_UI()
 
     def init_UI(self):
-        font_box = wx.StaticBox(self, -1, "字体")
+        font_box = wx.StaticBox(self, -1, _("字体"))
 
-        self.font_name_choice = wx.Choice(font_box, -1, choices = SysFont.sys_font_list)
+        self.font_name_choice = wx.ComboBox(font_box, -1, choices = SysFont.sys_font_list)
 
         self.font_size_box = wx.SpinCtrl(font_box, -1, min = 1, max = 100, initial = 0)
         font_size_unit_lab = wx.StaticText(font_box, -1, "pt")
@@ -23,10 +26,10 @@ class FontStaticBox(Panel):
         font_hbox.Add(self.font_size_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         font_hbox.Add(font_size_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.bold_chk = wx.CheckBox(font_box, -1, "粗体")
-        self.italic_chk = wx.CheckBox(font_box, -1, "斜体")
-        self.underline_chk = wx.CheckBox(font_box, -1, "下划线")
-        self.strikeout_chk = wx.CheckBox(font_box, -1, "删除线")
+        self.bold_chk = wx.CheckBox(font_box, -1, _("粗体"))
+        self.italic_chk = wx.CheckBox(font_box, -1, _("斜体"))
+        self.underline_chk = wx.CheckBox(font_box, -1, _("下划线"))
+        self.strikeout_chk = wx.CheckBox(font_box, -1, _("删除线"))
 
         shape_hbox = wx.BoxSizer(wx.HORIZONTAL)
         shape_hbox.Add(self.bold_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
@@ -41,19 +44,23 @@ class FontStaticBox(Panel):
         self.SetSizer(font_sbox)
 
     def init_data(self, data: dict):
-        self.font_name_choice.SetStringSelection(data.get("font_name"))
+        if (font_name := data.get("font_name")) and font_name in SysFont.sys_font_list:
+            self.font_name_choice.SetStringSelection(data.get("font_name"))
+        else:
+            self.font_name_choice.SetStringSelection(self.GetFont().GetFaceName())
+
         self.font_size_box.SetValue(data.get("font_size"))
-        self.bold_chk.SetValue(data.get("bold"))
-        self.italic_chk.SetValue(data.get("italic"))
-        self.underline_chk.SetValue(data.get("underline"))
-        self.strikeout_chk.SetValue(data.get("strikeout"))
+        self.bold_chk.SetValue(abs(data.get("bold")))
+        self.italic_chk.SetValue(abs(data.get("italic")))
+        self.underline_chk.SetValue(abs(data.get("underline")))
+        self.strikeout_chk.SetValue(abs(data.get("strikeout")))
 
     def get_option(self):
         return {
             "font_name": self.font_name_choice.GetStringSelection(),
             "font_size": self.font_size_box.GetValue(),
-            "bold": int(self.bold_chk.GetValue()),
-            "italic": int(self.italic_chk.GetValue()),
-            "underline": int(self.underline_chk.GetValue()),
-            "strikeout": int(self.strikeout_chk.GetValue())
+            "bold": -int(self.bold_chk.GetValue()),
+            "italic": -int(self.italic_chk.GetValue()),
+            "underline": -int(self.underline_chk.GetValue()),
+            "strikeout": -int(self.strikeout_chk.GetValue())
         }
