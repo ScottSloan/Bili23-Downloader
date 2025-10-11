@@ -1,8 +1,11 @@
 import wx
+import gettext
 
 from gui.component.window.dialog import Dialog
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
 from gui.component.misc.tooltip import ToolTip
+
+_ = gettext.gettext
 
 class SelectBatchDialog(Dialog):
     def __init__(self, parent: wx.Window):
@@ -10,7 +13,7 @@ class SelectBatchDialog(Dialog):
 
         self.parent: MainWindow = parent
 
-        Dialog.__init__(self, parent, "批量选取项目")
+        Dialog.__init__(self, parent, _("批量选取项目"))
 
         self.init_UI()
 
@@ -19,20 +22,20 @@ class SelectBatchDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        title_lab = wx.StaticText(self, -1, "序号区间")
+        title_lab = wx.StaticText(self, -1, _("序号区间"))
         tooltip = ToolTip(self)
-        tooltip.set_tooltip("序号区间支持输入多个，以英文逗号分隔，如 1-3,5,7-10 表示选取第 1 至 3 项、第 5 项和第 7 至 10 项")
+        tooltip.set_tooltip(_("序号区间支持输入多个，以英文逗号分隔，如 1-3,5,7-10 表示选取第 1 至 3 项、第 5 项和第 7 至 10 项"))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(title_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.Add(tooltip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.range_box = SearchCtrl(self, "请输入序号区间，以英文逗号分隔", size = self.FromDIP((350, -1)), clear_btn = True)
+        self.range_box = SearchCtrl(self, _("请输入序号区间，以英文逗号分隔"), size = self.FromDIP((350, -1)), clear_btn = True)
 
-        shift_tip = wx.StaticText(self, -1, "提示：按住 Shift 键也可批量选取项目")
+        shift_tip = wx.StaticText(self, -1, _("提示：按住 Shift 键也可批量选取项目"))
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -64,7 +67,7 @@ class SelectBatchDialog(Dialog):
 
     def onOKEVT(self):
         if not self.range_box.GetValue():
-            wx.MessageDialog(self, "选取剧集失败\n\n序号区间不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, _("选取剧集失败\n\n序号区间不能为空"), _("警告"), wx.ICON_WARNING).ShowModal()
             return True
         
         self.parent.episode_list.UnCheckAllItems()

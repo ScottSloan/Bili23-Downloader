@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.data.danmaku_ass_style import area_data, alpha_data, speed_data, density_data
@@ -9,6 +10,8 @@ from gui.component.staticbox.font import FontStaticBox
 from gui.component.staticbox.border import BorderStaticBox
 from gui.component.staticbox.misc_style import MiscStyleStaticBox
 from gui.component.slider.label_slider import LabelSlider
+
+_ = gettext.gettext
 
 class DanmakuPage(Page):
     def __init__(self, parent: wx.Window):
@@ -23,10 +26,10 @@ class DanmakuPage(Page):
         self.border_sbox = BorderStaticBox(self.panel)
         self.misc_sbox = MiscStyleStaticBox(self.panel)
 
-        misc_box = wx.StaticBox(self.panel, -1, "高级设置")
+        misc_box = wx.StaticBox(self.panel, -1, _("高级设置"))
 
-        self.subtitle_obstruct_chk = wx.CheckBox(misc_box, -1, "防遮挡字幕")
-        self.subtitle_obstruct_chk.SetToolTip("视频底部15%部分为空白保留区")
+        self.subtitle_obstruct_chk = wx.CheckBox(misc_box, -1, _("防遮挡字幕"))
+        self.subtitle_obstruct_chk.SetToolTip(_("视频底部15%部分为空白保留区"))
 
         self.danmaku_area_slider = LabelSlider(misc_box, area_data)
         self.danmaku_alpha_slider = LabelSlider(misc_box, alpha_data)

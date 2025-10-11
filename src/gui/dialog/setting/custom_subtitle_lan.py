@@ -1,16 +1,18 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from utils.common.enums import SubtitleLanOption
-
 from utils.common.data.subtitle_lan import subtitle_lan_list
 
 from gui.component.window.dialog import Dialog
 
+_ = gettext.gettext
+
 class CustomLanDialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "自定义字幕语言")
+        Dialog.__init__(self, parent, _("自定义字幕语言"))
 
         self.init_UI()
 
@@ -21,14 +23,14 @@ class CustomLanDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        lan_lab = wx.StaticText(self, -1, "字幕语言下载选项")
-        self.select_all_radio = wx.RadioButton(self, -1, "下载全部可用字幕")
-        self.custom_radio = wx.RadioButton(self, -1, "手动选择")
+        lan_lab = wx.StaticText(self, -1, _("字幕语言下载选项"))
+        self.select_all_radio = wx.RadioButton(self, -1, _("下载全部可用字幕"))
+        self.custom_radio = wx.RadioButton(self, -1, _("手动选择"))
 
         self.lan_box = wx.CheckListBox(self, -1, size = self.FromDIP((200, 150)))
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer()

@@ -1,13 +1,16 @@
 import wx
+import gettext
 
 from gui.component.window.dialog import Dialog
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
+
+_ = gettext.gettext
 
 class EditTitleDialog(Dialog):
     def __init__(self, parent, title: str):
         self.title = title
 
-        Dialog.__init__(self, parent, "修改标题")
+        Dialog.__init__(self, parent, _("修改标题"))
 
         self.init_UI()
 
@@ -16,13 +19,13 @@ class EditTitleDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        title_lab = wx.StaticText(self, -1, "新标题将作为 {title} 字段")
+        title_lab = wx.StaticText(self, -1, _("新标题将作为 {title} 字段"))
 
-        self.title_box = SearchCtrl(self, "请输入新标题", size = self.FromDIP((350, -1)), clear_btn = True)
+        self.title_box = SearchCtrl(self, _("请输入新标题"), size = self.FromDIP((350, -1)), clear_btn = True)
         self.title_box.SetValue(self.title)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)

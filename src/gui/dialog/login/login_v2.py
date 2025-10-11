@@ -1,5 +1,6 @@
 import wx
 import time
+import gettext
 
 from utils.common.style.color import Color
 from utils.common.style.pic_v2 import Pic, PicID
@@ -19,6 +20,8 @@ from gui.component.staticbitmap.staticbitmap import StaticBitmap
 from gui.component.window.dialog import Dialog
 from gui.component.panel.panel import Panel
 
+_ = gettext.gettext
+
 class QRCodePanel(Panel):
     def __init__(self, parent):
         self.parent: LoginDialog = parent
@@ -33,7 +36,7 @@ class QRCodePanel(Panel):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
-        scan_lab = wx.StaticText(self, -1, "扫描二维码登录")
+        scan_lab = wx.StaticText(self, -1, _("扫描二维码登录"))
         scan_lab.SetFont(font)
         scan_lab.SetForegroundColour(Color.get_text_color())
 
@@ -47,7 +50,7 @@ class QRCodePanel(Panel):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.scan_tip_lab = wx.StaticText(self, -1, "请使用哔哩哔哩客户端扫码登录")
+        self.scan_tip_lab = wx.StaticText(self, -1, _("请使用哔哩哔哩客户端扫码登录"))
         self.scan_tip_lab.SetFont(font)
         self.scan_tip_lab.SetForegroundColour(Color.get_text_color())
 
@@ -66,7 +69,7 @@ class QRCodePanel(Panel):
         self.Bind(wx.EVT_TIMER, self.onTimerEVT)
 
     def init_utils(self):
-        wx.CallAfter(self.qrcode.SetTextTip, ["正在加载"])
+        wx.CallAfter(self.qrcode.SetTextTip, [_("正在加载")])
         
         self.show_qrcode()
 
@@ -102,7 +105,7 @@ class QRCodePanel(Panel):
     def status_success(self):
         self.timer.Stop()
 
-        wx.CallAfter(self.qrcode.SetTextTip, ["登录成功"])
+        wx.CallAfter(self.qrcode.SetTextTip, [_("登录成功")])
 
         info = Login.get_user_info(login = True)
         Login.login(info)
@@ -110,12 +113,12 @@ class QRCodePanel(Panel):
         self.parent.onSuccess()
 
     def status_confirm(self):
-        self.scan_tip_lab.SetLabel("请在设备侧确认登录")
+        self.scan_tip_lab.SetLabel(_("请在设备侧确认登录"))
         self.Layout()
 
     def status_outdated(self):
         def worker():
-            self.qrcode.SetTextTip(["二维码已过期", "点击重新加载"])
+            self.qrcode.SetTextTip([_("二维码已过期"), _("点击重新加载")])
 
             self.qrcode.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
@@ -137,7 +140,7 @@ class SMSPanel(Panel):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 3))
 
-        self.sms_login_btn = wx.StaticText(self, -1, "短信登录")
+        self.sms_login_btn = wx.StaticText(self, -1, _("短信登录"))
         self.sms_login_btn.SetFont(font)
         self.sms_login_btn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.sms_login_btn.SetForegroundColour(wx.Colour(79, 165, 217))
@@ -147,19 +150,19 @@ class SMSPanel(Panel):
         swicher_hbox.Add(self.sms_login_btn, 0, wx.ALL, self.FromDIP(6))
         swicher_hbox.AddStretchSpacer()
 
-        country_lab = wx.StaticText(self, -1, "区号")
+        country_lab = wx.StaticText(self, -1, _("区号"))
         self.country_id_choice = wx.Choice(self, -1)
 
-        phone_number_lab = wx.StaticText(self, -1, "手机号")
-        self.phone_number_box = SearchCtrl(self, "请输入手机号", size = self.FromDIP((150, -1)))
-        self.get_validate_code_btn = wx.Button(self, -1, "获取验证码")
+        phone_number_lab = wx.StaticText(self, -1, _("手机号"))
+        self.phone_number_box = SearchCtrl(self, _("请输入手机号"), size = self.FromDIP((150, -1)))
+        self.get_validate_code_btn = wx.Button(self, -1, _("获取验证码"))
 
         phone_hbox = wx.BoxSizer(wx.HORIZONTAL)
         phone_hbox.Add(self.phone_number_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
         phone_hbox.Add(self.get_validate_code_btn, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        validate_code_lab = wx.StaticText(self, -1, "验证码")
-        self.validate_code_box = SearchCtrl(self, "请输入验证码")
+        validate_code_lab = wx.StaticText(self, -1, _("验证码"))
+        self.validate_code_box = SearchCtrl(self, _("请输入验证码"))
 
         flex_sizer = wx.FlexGridSizer(3, 2, 0, 0)
 
@@ -170,7 +173,7 @@ class SMSPanel(Panel):
         flex_sizer.Add(validate_code_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         flex_sizer.Add(self.validate_code_box, 0, wx.ALL & (~wx.TOP) & (~wx.LEFT) | wx.EXPAND, self.FromDIP(6))
 
-        self.login_btn = wx.Button(self, -1, "登录", size = self.get_scaled_size((120, 30)))
+        self.login_btn = wx.Button(self, -1, _("登录"), size = self.get_scaled_size((120, 30)))
 
         login_hbox = wx.BoxSizer(wx.HORIZONTAL)
         login_hbox.AddStretchSpacer()
@@ -212,20 +215,20 @@ class SMSPanel(Panel):
             wx.CallAfter(self.start_countdown)
     
         if not self.phone_number_box.GetValue():
-            wx.MessageDialog(self.parent, "发送验证码失败\n\n手机号不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self.parent, _("发送验证码失败\n\n手机号不能为空"), _("警告"), wx.ICON_WARNING).ShowModal()
             return
         
         Thread(target = worker).start()
 
     def onTimerEVT(self, event):
         def update():
-            self.get_validate_code_btn.SetLabel(f"重新发送({self.countdown})")
+            self.get_validate_code_btn.SetLabel(_("重新发送(%s)") % self.countdown)
 
         def reset():
             self.timer.Stop()
             self.countdown = 60
 
-            self.get_validate_code_btn.SetLabel("重新发送")
+            self.get_validate_code_btn.SetLabel(_("重新发送"))
             self.get_validate_code_btn.Enable(True)
 
         self.countdown -= 1
@@ -244,7 +247,7 @@ class SMSPanel(Panel):
             self.parent.onSuccess()
 
         if not self.validate_code_box.GetValue():
-            wx.MessageDialog(self.parent, "登录失败\n\n验证码不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self.parent, _("登录失败\n\n验证码不能为空"), _("警告"), wx.ICON_WARNING).ShowModal()
             return
 
         Thread(target = worker).start()
@@ -271,7 +274,7 @@ class SMSPanel(Panel):
     def start_countdown(self):
         self.parent.raise_top()
 
-        self.get_validate_code_btn.SetLabel("重新发送(60)")
+        self.get_validate_code_btn.SetLabel(_("重新发送(%s)") % 60)
         self.get_validate_code_btn.Enable(False)
 
         self.timer.Start(1000)
@@ -300,7 +303,7 @@ class LoginDialog(Dialog):
 
         self.parent: MainWindow = parent
 
-        Dialog.__init__(self, parent, "登录")
+        Dialog.__init__(self, parent, _("登录"))
 
         self.init_UI()
 
@@ -332,7 +335,7 @@ class LoginDialog(Dialog):
         self.right_bmp = StaticBitmap(self, size = self.FromDIP((97, 95)))
         self.set_2233_normal()
 
-        info_lab = wx.StaticText(self, -1, "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序")
+        info_lab = wx.StaticText(self, -1, _("重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序"))
         info_lab.SetFont(self.GetFont().MakeBold())
 
         info_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -382,7 +385,7 @@ class LoginDialog(Dialog):
 
             self.parent.utils.show_user_info()
 
-            wx.MessageDialog(self.parent, "登录成功\n\n账号登录成功，建议重启程序刷新登录信息。", "提示", wx.ICON_INFORMATION).ShowModal()
+            wx.MessageDialog(self.parent, _("登录成功\n\n账号登录成功，建议重启程序刷新登录信息。"), _("提示"), wx.ICON_INFORMATION).ShowModal()
 
             self.PostEvent()
 
@@ -392,7 +395,7 @@ class LoginDialog(Dialog):
         def worker():
             self.raise_top()
 
-            show_error_message_dialog("登录失败", parent = self)
+            show_error_message_dialog(_("登录失败"), parent = self)
 
         wx.CallAfter(worker)
 

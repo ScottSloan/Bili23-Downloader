@@ -1,8 +1,11 @@
 import wx
+import gettext
 
 from utils.common.style.font import SysFont
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class FontStaticBox(Panel):
     def __init__(self, parent):
@@ -11,7 +14,7 @@ class FontStaticBox(Panel):
         self.init_UI()
 
     def init_UI(self):
-        font_box = wx.StaticBox(self, -1, "字体")
+        font_box = wx.StaticBox(self, -1, _("字体"))
 
         self.font_name_choice = wx.ComboBox(font_box, -1, choices = SysFont.sys_font_list)
 
@@ -23,10 +26,10 @@ class FontStaticBox(Panel):
         font_hbox.Add(self.font_size_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         font_hbox.Add(font_size_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.bold_chk = wx.CheckBox(font_box, -1, "粗体")
-        self.italic_chk = wx.CheckBox(font_box, -1, "斜体")
-        self.underline_chk = wx.CheckBox(font_box, -1, "下划线")
-        self.strikeout_chk = wx.CheckBox(font_box, -1, "删除线")
+        self.bold_chk = wx.CheckBox(font_box, -1, _("粗体"))
+        self.italic_chk = wx.CheckBox(font_box, -1, _("斜体"))
+        self.underline_chk = wx.CheckBox(font_box, -1, _("下划线"))
+        self.strikeout_chk = wx.CheckBox(font_box, -1, _("删除线"))
 
         shape_hbox = wx.BoxSizer(wx.HORIZONTAL)
         shape_hbox.Add(self.bold_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))

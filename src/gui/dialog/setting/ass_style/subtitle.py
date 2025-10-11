@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.style.color import Color
@@ -12,6 +13,8 @@ from gui.component.misc.ass_color_picker import ASSColorPicker
 from gui.component.spinctrl.label_spinctrl import LabelSpinCtrl
 from gui.component.panel.panel import Panel
 
+_ = gettext.gettext
+
 class ColorStaticBox(Panel):
     def __init__(self, parent: wx.Window):
         Panel.__init__(self, parent)
@@ -19,12 +22,12 @@ class ColorStaticBox(Panel):
         self.init_UI()
 
     def init_UI(self):
-        color_box = wx.StaticBox(self, -1, "颜色")
+        color_box = wx.StaticBox(self, -1, _("颜色"))
 
-        self.primary_color_picker = ASSColorPicker(color_box, "主要颜色", wx.HORIZONTAL)
-        self.secondary_color_picker = ASSColorPicker(color_box, "次要颜色", wx.HORIZONTAL)
-        self.border_color_picker = ASSColorPicker(color_box, "边框颜色", wx.HORIZONTAL)
-        self.shadow_color_picker = ASSColorPicker(color_box, "阴影颜色", wx.HORIZONTAL)
+        self.primary_color_picker = ASSColorPicker(color_box, _("主要颜色"), wx.HORIZONTAL)
+        self.secondary_color_picker = ASSColorPicker(color_box, _("次要颜色"), wx.HORIZONTAL)
+        self.border_color_picker = ASSColorPicker(color_box, _("边框颜色"), wx.HORIZONTAL)
+        self.shadow_color_picker = ASSColorPicker(color_box, _("阴影颜色"), wx.HORIZONTAL)
 
         flex_grid_box = wx.FlexGridSizer(2, 2, 0, 0)
         flex_grid_box.Add(self.primary_color_picker, 0, wx.ALIGN_RIGHT)
@@ -62,14 +65,14 @@ class MarginStaticBox(Panel):
         self.init_UI()
 
     def init_UI(self):
-        margin_box = wx.StaticBox(self, -1, "边距")
+        margin_box = wx.StaticBox(self, -1, _("边距"))
 
-        self.left_margin_box = LabelSpinCtrl(margin_box, "左边距", 10, "px", wx.HORIZONTAL)
-        self.left_margin_box.SetToolTip("与画面左边界的距离")
-        self.right_margin_box = LabelSpinCtrl(margin_box, "右边距", 10, "px", wx.HORIZONTAL)
-        self.right_margin_box.SetToolTip("与画面右边界的距离")
-        self.vertical_margin_box = LabelSpinCtrl(margin_box, "垂直边距", 10, "px", wx.HORIZONTAL)
-        self.vertical_margin_box.SetToolTip("与画面上/下边界的距离")
+        self.left_margin_box = LabelSpinCtrl(margin_box, _("左边距"), 10, "px", wx.HORIZONTAL)
+        self.left_margin_box.SetToolTip(_("与画面左边界的距离"))
+        self.right_margin_box = LabelSpinCtrl(margin_box, _("右边距"), 10, "px", wx.HORIZONTAL)
+        self.right_margin_box.SetToolTip(_("与画面右边界的距离"))
+        self.vertical_margin_box = LabelSpinCtrl(margin_box, _("垂直边距"), 10, "px", wx.HORIZONTAL)
+        self.vertical_margin_box.SetToolTip(_("与画面上/下边界的距离"))
 
         flex_grid_box = wx.FlexGridSizer(2, 3, 0, 0)
         flex_grid_box.Add(self.left_margin_box, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_RIGHT, self.FromDIP(6))
@@ -111,8 +114,8 @@ class SubtitlePage(Page):
         self.misc_sbox = MiscStyleStaticBox(self.panel)
         self.margin_sbox = MarginStaticBox(self.panel)
 
-        self.align_radio_box = wx.RadioBox(self.panel, -1, "对齐方式", choices = ["7", "8", "9", "4", "5", "6", "1", "2", "3"], majorDimension = 3)
-        self.align_radio_box.SetToolTip("字幕在画面中位置的对齐方式，按照小键盘区布局")
+        self.align_radio_box = wx.RadioBox(self.panel, -1, _("对齐方式"), choices = ["7", "8", "9", "4", "5", "6", "1", "2", "3"], majorDimension = 3)
+        self.align_radio_box.SetToolTip(_("字幕在画面中位置的对齐方式，按照小键盘区布局"))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.font_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))

@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.map import get_mapping_key_by_value
@@ -7,13 +8,15 @@ from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.misc.tooltip import ToolTip
 
+_ = gettext.gettext
+
 class EditPriorityDialog(Dialog):
     def __init__(self, parent: wx.Window, category: str, priority_data: dict, priority_setting: list):
         self.category = category
         self.priority_data = priority_data
         self.priority_setting = priority_setting
 
-        Dialog.__init__(self, parent, title = f"{category}优先级设置")
+        Dialog.__init__(self, parent, title = _("%s优先级设置") % category)
 
         self.init_UI()
 
@@ -24,9 +27,9 @@ class EditPriorityDialog(Dialog):
         self.CenterOnParent()
 
     def init_UI(self):
-        tip_lab = wx.StaticText(self, -1, "优先级列表")
+        tip_lab = wx.StaticText(self, -1, _("优先级列表"))
         tooltip = ToolTip(self)
-        tooltip.set_tooltip(f"列表按优先级从高到低排列（顶部为最高优先级）。程序将优先下载最高可用{self.category}；若不可用，则自动尝试列表中下一个优先级{self.category}，直到找到可用的{self.category}为止。")
+        tooltip.set_tooltip(_("列表按优先级从高到低排列（顶部为最高优先级）。程序将优先下载最高可用%s；若不可用，则自动尝试列表中下一个优先级%s，直到找到可用的%s为止。") % (self.category, self.category, self.category))
 
         top_hbox = wx.BoxSizer(wx.HORIZONTAL)
         top_hbox.Add(tip_lab, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -39,15 +42,15 @@ class EditPriorityDialog(Dialog):
         list_vbox.Add(self.data_list, 0, wx.ALL, self.FromDIP(6))
 
         self.to_top_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.To_Top))
-        self.to_top_btn.SetToolTip("移至顶部")
+        self.to_top_btn.SetToolTip(_("移至顶部"))
         self.up_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Up))
-        self.up_btn.SetToolTip("上移")
+        self.up_btn.SetToolTip(_("上移"))
         self.down_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Down))
-        self.down_btn.SetToolTip("下移")
+        self.down_btn.SetToolTip(_("下移"))
         self.to_bottom_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.To_Bottom))
-        self.to_bottom_btn.SetToolTip("移至底部")
+        self.to_bottom_btn.SetToolTip(_("移至底部"))
         self.reset_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Refresh))
-        self.reset_btn.SetToolTip("重置")
+        self.reset_btn.SetToolTip(_("重置"))
 
         action_vbox = wx.BoxSizer(wx.VERTICAL)
         action_vbox.AddStretchSpacer()
@@ -62,8 +65,8 @@ class EditPriorityDialog(Dialog):
         hbox.Add(list_vbox, 0, wx.EXPAND)
         hbox.Add(action_vbox, 0, wx.EXPAND)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -90,7 +93,7 @@ class EditPriorityDialog(Dialog):
         self.init_list_data()
 
     def init_list_columns(self):
-        self.data_list.AppendColumn("优先级", width = self.FromDIP(45))
+        self.data_list.AppendColumn(_("优先级"), width = self.FromDIP(45))
         self.data_list.AppendColumn(self.category, width = self.FromDIP(120))
 
     def init_list_data(self):
@@ -132,7 +135,7 @@ class EditPriorityDialog(Dialog):
         self.update_priority()
     
     def onResetEVT(self, event: wx.CommandEvent):
-        dlg = wx.MessageDialog(self, "重置优先级\n\n确定要重置优先级设置吗？", "警告", wx.YES_NO | wx.ICON_WARNING)
+        dlg = wx.MessageDialog(self, _("重置优先级\n\n确定要重置优先级设置吗？"), _("警告"), wx.YES_NO | wx.ICON_WARNING)
 
         if dlg.ShowModal() == wx.ID_YES:
             self.data_list.DeleteAllItems()
@@ -175,5 +178,5 @@ class EditPriorityDialog(Dialog):
     
     def check_item_focused(self):
         if self.data_list.GetFocusedItem() == -1:
-            wx.MessageDialog(self, "未选择项目\n\n请选择要调整的项目", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, _("未选择项目\n\n请选择要调整的项目"), _("警告"), wx.ICON_WARNING).ShowModal()
             return True

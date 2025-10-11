@@ -103,6 +103,26 @@ msgstr "Supported Links(&U)"
 msgid "刷新(&R)"
 msgstr "Refresh(&R)"
 
+# -------------- src/gui/component/staticbox/border.py --------------
+
+msgid "边框"
+msgstr "Border"
+
+msgid "边框宽度"
+msgstr "Border width"
+
+msgid "阴影"
+msgstr "Shadow"
+
+msgid "阴影距离"
+msgstr "Shadow distance"
+
+msgid "不透明背景"
+msgstr "Opaque background"
+
+msgid "文字背景不透明"
+msgstr "Text background is opaque"
+
 # -------------- src/gui/component/staticbox/extra.py --------------
 msgid "附加内容下载选项"
 msgstr "Additional Content Download Options"
@@ -139,6 +159,43 @@ msgstr "Scrape Settings"
 
 msgid "自定义 ASS 样式"
 msgstr "Custom ASS Style"
+
+# -------------- src/gui/component/staticbox/font.py --------------
+
+msgid "字体"
+msgstr "Font"
+
+msgid "粗体"
+msgstr "Bold"
+
+msgid "斜体"
+msgstr "Italic"
+
+msgid "下划线"
+msgstr "Underline"
+
+msgid "删除线"
+msgstr "Strikeout"
+
+# -------------- src/gui/component/staticbox/misc_style.py --------------
+
+msgid "水平缩放"
+msgstr "Horizontal Scale"
+
+msgid "水平缩放百分比"
+msgstr "Percentage of horizontal scaling"
+
+msgid "垂直缩放"
+msgstr "Vertical Scale"
+
+msgid "垂直缩放百分比"
+msgstr "Percentage of vertical scaling"
+
+msgid "旋转角度"
+msgstr "Rotation Angle"
+
+msgid "字符间距"
+msgstr "Character Spacing"
 
 # -------------- src/gui/component/tree_list_v2.py --------------
 msgid "序号"
@@ -296,6 +353,79 @@ msgstr "Disk free space: %s"
 msgid "当前下载目录磁盘空间不足 5 GB，可能会导致下载失败，请腾出足够的磁盘空间。"
 msgstr "The current download directory has less than 5 GB of free disk space, which may cause download failures. Please free up sufficient disk space."
 
+# -------------- src/gui/dialog/login/captcha.py --------------
+
+msgid "请完成验证"
+msgstr "Please Complete Verification"
+
+# -------------- src/gui/dialog/login/login_v2.py --------------
+
+msgid "扫描二维码登录"
+msgstr "Scan QR Code to Log In"
+
+msgid "请使用哔哩哔哩客户端扫码登录"
+msgstr "Use the Bilibili app to scan the QR code"
+
+msgid "正在加载"
+msgstr "Loading"
+
+msgid "登录成功"
+msgstr "Login successful"
+
+msgid "请在设备侧确认登录"
+msgstr "Please confirm login on your device"
+
+msgid "二维码已过期"
+msgstr "QR code has expired"
+
+msgid "点击重新加载"
+msgstr "Click to reload"
+
+msgid "短信登录"
+msgstr "SMS Login"
+
+msgid "区号"
+msgstr "Country Code"
+
+msgid "手机号"
+msgstr "Phone Number"
+
+msgid "请输入手机号"
+msgstr "Please enter your phone number"
+
+msgid "获取验证码"
+msgstr "Send SMS"
+
+msgid "验证码"
+msgstr "Verification Code"
+
+msgid "请输入验证码"
+msgstr "Please enter the verification code"
+
+msgid "登录"
+msgstr "Login"
+
+msgid "发送验证码失败\n\n手机号不能为空"
+msgstr "Failed to send verification code\n\nPhone number cannot be empty"
+
+msgid "重新发送"
+msgstr "Resend"
+
+msgid "重新发送(%s)"
+msgstr "Resend(%s)"
+
+msgid "登录失败\n\n验证码不能为空"
+msgstr "Failed to login\n\nVerification code cannot be empty"
+
+msgid "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序"
+msgstr "Important: Please log in on the Bilibili website before continuing to use this application."
+
+msgid "登录成功\n\n账号登录成功，建议重启程序刷新登录信息。"
+msgstr "Login successful\n\nAccount login successful. It is recommended to restart the application to refresh login information."
+
+msgid "登录失败"
+msgstr "Failed to login"
+
 # -------------- src/gui/dialog/misc/about.py --------------
 msgid "关于 %s"
 msgstr "About %s"
@@ -352,6 +482,165 @@ msgstr "Probing all nodes, please wait"
 
 msgid "正在获取所有分页数据，请稍候"
 msgstr "Fetching all page data, please wait"
+
+# -------------- src/gui/dialog/setting/ass_style/custom_ass_style_v2.py --------------
+
+msgid "弹幕"
+msgstr "Danmaku"
+
+msgid "字幕"
+msgstr "Subtitle"
+
+# -------------- src/gui/dialog/setting/ass_style/danmaku.py --------------
+
+msgid "高级设置"
+msgstr "Advanced Settings"
+
+msgid "防遮挡字幕"
+msgstr "Anti-occlusion subtitles"
+
+msgid "视频底部15%部分为空白保留区"
+msgstr "The bottom 15% of the video is reserved as a blank area"
+
+# -------------- src/gui/dialog/setting/ass_style/subtitle.py --------------
+
+msgid "颜色"
+msgstr "Color"
+
+msgid "主要颜色"
+msgstr "Primary Color"
+
+msgid "次要颜色"
+msgstr "Secondary Color"
+
+msgid "边框颜色"
+msgstr "Border Color"
+
+msgid "阴影颜色"
+msgstr "Shadow Color"
+
+msgid "边距"
+msgstr "Margin"
+
+msgid "左边距"
+msgstr "Left Margin"
+
+msgid "与画面左边界的距离"
+msgstr "Distance from the left edge of the screen"
+
+msgid "右边距"
+msgstr "Right Margin"
+
+msgid "与画面右边界的距离"
+msgstr "Distance from the right edge of the screen"
+
+msgid "垂直边距"
+msgstr "Vertical Margin"
+
+msgid "与画面上/下边界的距离"
+msgstr "Distance from the top/bottom edge of the screen"
+
+msgid "对齐方式"
+msgstr "Alignment"
+
+msgid "字幕在画面中位置的对齐方式，按照小键盘区布局"
+msgstr "The alignment of subtitles in the screen, follows the numeric keypad layout"
+
+# -------------- src/gui/dialog/setting/priority/edit.py --------------
+
+msgid "%s优先级设置"
+msgstr "%s Priority Settings"
+
+msgid "优先级列表"
+msgstr "Priority List"
+
+msgid "列表按优先级从高到低排列（顶部为最高优先级）。程序将优先下载最高可用%s；若不可用，则自动尝试列表中下一个优先级%s，直到找到可用的%s为止。"
+msgstr "The list is arranged from highest to lowest priority (top is highest priority). The program will prioritize downloading the highest available %s; if it is unavailable, it will automatically try the next priority %s in the list until a usable %s is found."
+
+msgid "移至顶部"
+msgstr "Move to Top"
+
+msgid "上移"
+msgstr "Move Up"
+
+msgid "下移"
+msgstr "Move Down"
+
+msgid "移至底部"
+msgstr "Move to Bottom"
+
+msgid "重置"
+msgstr "Reset"
+
+msgid "重置优先级\n\n确定要重置优先级设置吗？"
+msgstr "Reset Priority\n\nAre you sure you want to reset the priority settings?"
+
+msgid "未选择项目\n\n请选择要调整的项目"
+msgstr "No item selected\n\nPlease select the item to adjust"
+
+# -------------- src/gui/dialog/setting/custom_subtitle_lan.py.py --------------
+
+msgid "字幕语言下载选项"
+msgstr "Subtitle Language Download Options"
+
+msgid "下载全部可用字幕"
+msgstr "Download all available subtitles"
+
+msgid "手动选择"
+msgstr "Manual selection"
+
+# -------------- src/gui/dialog/setting/custom_user_agent.py.py --------------
+
+msgid "User-Agent 无效\n\nUser-Agent 不能为空"
+msgstr "Invalid User-Agent\n\nUser-Agent cannot be empty"
+
+# -------------- src/gui/dialog/setting/edit_title.py --------------
+
+msgid "修改标题"
+msgstr "Edit Title"
+
+msgid "新标题将作为 {title} 字段"
+msgstr "The new title will be used as the {title} field"
+
+msgid "请输入新标题"
+msgstr "Please enter the new title"
+
+# -------------- src/gui/dialog/setting/ffmpeg.py --------------
+
+msgid "请选择 FFmpeg 路径"
+msgstr "Please select the FFmpeg path"
+
+msgid "刷新"
+msgstr "Refresh"
+
+msgid "环境变量"
+msgstr "Environment Variable"
+
+msgid "未检测到 FFmpeg"
+msgstr "FFmpeg not detected"
+
+msgid "运行目录"
+msgstr "Running Directory"
+
+# -------------- src/gui/dialog/setting/select_batch.py --------------
+
+msgid "批量选取项目"
+msgstr "Select Multiple Items"
+
+msgid "序号区间"
+msgstr "Number Range"
+
+msgid "序号区间支持输入多个，以英文逗号分隔，如 1-3,5,7-10 表示选取第 1 至 3 项、第 5 项和第 7 至 10 项"
+msgstr "Multiple ranges are supported, separated by commas. For example, 1-3,5,7-10 means selecting items 1 to 3, item 5, and items 7 to 10."
+
+msgid "请输入序号区间，以英文逗号分隔"
+msgstr "Please enter number ranges, separated by commas"
+
+msgid "提示：按住 Shift 键也可批量选取项目"
+msgstr "Tip: Hold down the Shift key to select multiple items"
+
+msgid "选取剧集失败\n\n序号区间不能为空"
+msgstr "Failed to select episodes\n\nNumber range cannot be empty"
 
 # -------------- src/gui/dialog/misc/update.py --------------
 msgid "发现新版本"
@@ -534,7 +823,7 @@ msgstr "No completed downloads"
 
 # -------------- src/gui/window/main/bottom_box.py --------------
 msgid "未登录"
-msgstr "Not logged in"
+msgstr "Login"
 
 msgid "下载管理"
 msgstr "Downloads"
@@ -1032,6 +1321,84 @@ msgstr "Misc"
 
 msgid "保存失败"
 msgstr "Failed to save"
+
+# -------------- src/utils/common/data/danmaku_ass_style.py --------------
+msgid "显示区域"
+msgstr "Display Area"
+
+msgid "不透明度"
+msgstr "Opacity"
+
+msgid "弹幕速度"
+msgstr "Danmaku Speed"
+
+msgid "极慢"
+msgstr "Very Slow"
+
+msgid "较慢"
+msgstr "Slow"
+
+msgid "适中"
+msgstr "Normal"
+
+msgid "较快"
+msgstr "Fast"
+
+msgid "极快"
+msgstr "Very Fast"
+
+msgid "弹幕密度"
+msgstr "Danmaku Density"
+
+msgid "正常"
+msgstr "Normal"
+
+msgid "较多"
+msgstr "More"
+
+msgid "重叠"
+msgstr "Overlapping"
+
+# -------------- src/utils/common/data/priority.py --------------
+
+msgid "8K 超高清"
+msgstr "8K"
+
+msgid "杜比视界"
+msgstr "Dolby Vision"
+
+msgid "HDR 真彩"
+msgstr "HDR"
+
+msgid "4K 超高清"
+msgstr "4K"
+
+msgid "1080P 60帧"
+msgstr "1080P 60fps"
+
+msgid "1080P 高码率"
+msgstr "1080P High Bitrate"
+
+msgid "智能修复"
+msgstr "Intelligent Repair"
+
+msgid "1080P 高清"
+msgstr "1080P"
+
+msgid "720P 准高清"
+msgstr "720P"
+
+msgid "480P 标清"
+msgstr "480P"
+
+msgid "360P 流畅"
+msgstr "360P"
+
+msgid "Hi-Res 无损"
+msgstr "Hi-Res Lossless"
+
+msgid "杜比全景声"
+msgstr "Dolby Atmos"
 
 # -------------- src/utils/common/map.py --------------
 msgid "覆盖原文件"

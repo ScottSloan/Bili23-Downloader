@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.enums import Platform
@@ -8,9 +9,11 @@ from gui.dialog.setting.ass_style.subtitle import SubtitlePage
 
 from gui.component.window.dialog import Dialog
 
+_ = gettext.gettext
+
 class CustomASSStyleDialog(Dialog):
     def __init__(self, parent: wx.Window):
-        Dialog.__init__(self, parent, "自定义 ASS 样式")
+        Dialog.__init__(self, parent, _("自定义 ASS 样式"))
 
         self.init_UI()
 
@@ -19,11 +22,11 @@ class CustomASSStyleDialog(Dialog):
     def init_UI(self):
         self.notebook = wx.Notebook(self, -1, size = self.get_book_size())
 
-        self.notebook.AddPage(DanmakuPage(self.notebook), "弹幕")
-        self.notebook.AddPage(SubtitlePage(self.notebook), "字幕")
+        self.notebook.AddPage(DanmakuPage(self.notebook), _("弹幕"))
+        self.notebook.AddPage(SubtitlePage(self.notebook), _("字幕"))
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -45,7 +48,10 @@ class CustomASSStyleDialog(Dialog):
     def get_book_size(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
-                return self.FromDIP((350, 450))
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((350, 450))
+                else:
+                    return self.FromDIP((450, 450))
             
             case Platform.Linux | Platform.macOS:
                 return self.FromDIP((500, 570))
