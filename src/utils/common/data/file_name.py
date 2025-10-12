@@ -1,66 +1,70 @@
+import gettext
+
 from utils.common.datetime_util import DateTime
+
+_ = gettext.gettext
 
 template_list = [
     {
         "type": 1,
-        "category": "投稿视频",
-        "subcategory": "普通",
+        "category": _("投稿视频"),
+        "subcategory": _("普通"),
         "link": "https://www.bilibili.com/video/BV1sHePzWEbG",
         "link_label": "BV1sHePzWEbG"
     },
     {
         "type": 2,
-        "category": "投稿视频",
-        "subcategory": "分P",
+        "category": _("投稿视频"),
+        "subcategory": _("分P"),
         "link": "https://www.bilibili.com/video/BV1Rb4y1t7gc?p=4",
         "link_label": "BV1Rb4y1t7gc P4"
     },
     {
         "type": 3,
-        "category": "投稿视频",
-        "subcategory": "合集",
+        "category": _("投稿视频"),
+        "subcategory": _("合集"),
         "link": "https://www.bilibili.com/video/BV1zA7TzLEQe",
         "link_label": "BV1zA7TzLEQe"
     },
     {
         "type": 4,
-        "category": "投稿视频",
-        "subcategory": "互动视频",
+        "category": _("投稿视频"),
+        "subcategory": _("互动视频"),
         "link": "https://www.bilibili.com/video/BV1k4411B7KE",
         "link_label": "BV1k4411B7KE"
     },
     {
         "type": 5,
-        "category": "剧集",
-        "subcategory": "默认命名",
+        "category": _("剧集"),
+        "subcategory": _("默认命名"),
         "link": "https://www.bilibili.com/bangumi/play/ep21280",
         "link_label": "ep21280"
     },
     {
         "type": 6,
-        "category": "剧集",
-        "subcategory": "严格刮削命名",
+        "category": _("剧集"),
+        "subcategory": _("严格刮削命名"),
         "link": "https://www.bilibili.com/bangumi/play/ep21280",
         "link_label": "ep21280"
     },
     {
         "type": 7,
-        "category": "课程",
+        "category": _("课程"),
         "subcategory": "-",
         "link": "https://www.bilibili.com/cheese/play/ep158662",
         "link_label": "ep158662"
     },
     {
         "type": 8,
-        "category": "个人主页",
-        "subcategory": "文件夹名称",
+        "category": _("个人主页"),
+        "subcategory": _("文件夹名称"),
         "link": "",
         "link_label": ""
     },
     {
         "type": 9,
-        "category": "收藏夹",
-        "subcategory": "文件夹名称",
+        "category": _("收藏夹"),
+        "subcategory": _("文件夹名称"),
         "link": "",
         "link_label": ""
     }

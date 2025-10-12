@@ -108,15 +108,11 @@ class EditPriorityDialog(Dialog):
         
         self.move_to(self.data_list.GetFocusedItem() - 1)
 
-        self.update_priority()
-
     def onDownEVT(self, event: wx.CommandEvent):
         if self.check_item_focused():
             return
         
         self.move_to(self.data_list.GetFocusedItem() + 1)
-
-        self.update_priority()
 
     def onToTopEVT(self, event: wx.CommandEvent):
         if self.check_item_focused():
@@ -124,15 +120,11 @@ class EditPriorityDialog(Dialog):
         
         self.move_to(0)
 
-        self.update_priority()
-
     def onToBottomEVT(self, event: wx.CommandEvent):
         if self.check_item_focused():
             return
         
         self.move_to(self.data_list.GetItemCount() - 1)
-
-        self.update_priority()
     
     def onResetEVT(self, event: wx.CommandEvent):
         dlg = wx.MessageDialog(self, _("重置优先级\n\n确定要重置优先级设置吗？"), _("警告"), wx.YES_NO | wx.ICON_WARNING)
@@ -161,6 +153,8 @@ class EditPriorityDialog(Dialog):
             wx.Bell()
 
         self.data_list.SetFocus()
+
+        self.update_priority()
 
     def update_priority(self):
         for index in range(self.data_list.GetItemCount()):

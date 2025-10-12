@@ -1,3 +1,5 @@
+import gettext
+
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
@@ -11,6 +13,8 @@ from utils.parse.live import LiveParser
 from utils.parse.parser import Parser
 
 from utils.module.web.cdn import CDN
+
+_ = gettext.gettext
 
 class PreviewInfo:
     download_json: dict = {}
@@ -273,7 +277,7 @@ class VideoPreview(Parser):
     @classmethod
     def get_video_quality_data_dict(cls, data: dict):
         video_quality_data_dict = {
-            "按优先级自动选择": VideoQualityID._Auto.value
+            _("按优先级自动选择"): VideoQualityID._Auto.value
         }
 
         for key, value in video_quality_priority.items():
@@ -285,7 +289,7 @@ class VideoPreview(Parser):
     @classmethod
     def get_audio_quality_data_dict(cls, data: dict):
         audio_quality_data_dict = {
-            "按优先级自动选择": AudioQualityID._Auto.value
+            _("按优先级自动选择"): AudioQualityID._Auto.value
         }
 
         audio_quality_id_list = cls.get_audio_available_quality_id_list(data.get("dash", {}))
@@ -299,7 +303,7 @@ class VideoPreview(Parser):
     @staticmethod
     def get_video_codec_data_dict():
         return  {
-            "按优先级自动选择": 20,
+            _("按优先级自动选择"): 20,
             "AVC/H.264": 7,
             "HEVC/H.265": 12,
             "AV1": 13

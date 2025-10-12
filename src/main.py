@@ -26,11 +26,33 @@ def init_lang():
     gettext.bindtextdomain("lang", locale_dir)
     gettext.textdomain("lang")
 
-    os.environ["LANGUAGE"] = "en_US"
+    os.environ["LANGUAGE"] = Config.Basic.language
 
-    print(__file__)
+def update_lang():
+    arg = sys.argv[1]
+    lang = sys.argv[2]
 
-init_lang()
+    if arg == "--set":
+        Config.Basic.language = lang
+        Config.save_app_config()
+
+try:
+    from utils.config import Config
+
+except Exception as e:
+    message_box(f"读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
+
+if len(sys.argv) > 1:
+    # 更新配置文件
+    update_lang()
+
+    sys.exit()
+
+try:
+    init_lang()
+
+except Exception as e:
+    message_box(f"加载语言文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
 try:
     import wx
@@ -54,7 +76,6 @@ except Exception as e:
     message_box(f"初始化 protobuf 失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
 try:
-    from utils.config import Config
     from utils.common.enums import Platform
     from utils.auth.cookie import Cookie
 

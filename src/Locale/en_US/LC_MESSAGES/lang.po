@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: 1.70.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-09 23:35+0800\n"
-"PO-Revision-Date: 2025-10-10 22:09+0800\n"
+"PO-Revision-Date: 2025-10-12 16:45+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -104,7 +104,6 @@ msgid "刷新(&R)"
 msgstr "Refresh(&R)"
 
 # -------------- src/gui/component/staticbox/border.py --------------
-
 msgid "边框"
 msgstr "Border"
 
@@ -161,7 +160,6 @@ msgid "自定义 ASS 样式"
 msgstr "Custom ASS Style"
 
 # -------------- src/gui/component/staticbox/font.py --------------
-
 msgid "字体"
 msgstr "Font"
 
@@ -178,7 +176,6 @@ msgid "删除线"
 msgstr "Strikeout"
 
 # -------------- src/gui/component/staticbox/misc_style.py --------------
-
 msgid "水平缩放"
 msgstr "Horizontal Scale"
 
@@ -354,12 +351,10 @@ msgid "当前下载目录磁盘空间不足 5 GB，可能会导致下载失败�
 msgstr "The current download directory has less than 5 GB of free disk space, which may cause download failures. Please free up sufficient disk space."
 
 # -------------- src/gui/dialog/login/captcha.py --------------
-
 msgid "请完成验证"
 msgstr "Please Complete Verification"
 
 # -------------- src/gui/dialog/login/login_v2.py --------------
-
 msgid "扫描二维码登录"
 msgstr "Scan QR Code to Log In"
 
@@ -405,8 +400,14 @@ msgstr "Please enter the verification code"
 msgid "登录"
 msgstr "Login"
 
-msgid "发送验证码失败\n\n手机号不能为空"
-msgstr "Failed to send verification code\n\nPhone number cannot be empty"
+msgid ""
+"发送验证码失败\n"
+"\n"
+"手机号不能为空"
+msgstr ""
+"Failed to send verification code\n"
+"\n"
+"Phone number cannot be empty"
 
 msgid "重新发送"
 msgstr "Resend"
@@ -414,14 +415,26 @@ msgstr "Resend"
 msgid "重新发送(%s)"
 msgstr "Resend(%s)"
 
-msgid "登录失败\n\n验证码不能为空"
-msgstr "Failed to login\n\nVerification code cannot be empty"
+msgid ""
+"登录失败\n"
+"\n"
+"验证码不能为空"
+msgstr ""
+"Failed to login\n"
+"\n"
+"Verification code cannot be empty"
 
 msgid "重要提示：请先在 B 站网页端完成一次登录操作，再继续使用本程序"
 msgstr "Important: Please log in on the Bilibili website before continuing to use this application."
 
-msgid "登录成功\n\n账号登录成功，建议重启程序刷新登录信息。"
-msgstr "Login successful\n\nAccount login successful. It is recommended to restart the application to refresh login information."
+msgid ""
+"登录成功\n"
+"\n"
+"账号登录成功，建议重启程序刷新登录信息。"
+msgstr ""
+"Login successful\n"
+"\n"
+"Account login successful. It is recommended to restart the application to refresh login information."
 
 msgid "登录失败"
 msgstr "Failed to login"
@@ -484,7 +497,6 @@ msgid "正在获取所有分页数据，请稍候"
 msgstr "Fetching all page data, please wait"
 
 # -------------- src/gui/dialog/setting/ass_style/custom_ass_style_v2.py --------------
-
 msgid "弹幕"
 msgstr "Danmaku"
 
@@ -492,7 +504,6 @@ msgid "字幕"
 msgstr "Subtitle"
 
 # -------------- src/gui/dialog/setting/ass_style/danmaku.py --------------
-
 msgid "高级设置"
 msgstr "Advanced Settings"
 
@@ -503,7 +514,6 @@ msgid "视频底部15%部分为空白保留区"
 msgstr "The bottom 15% of the video is reserved as a blank area"
 
 # -------------- src/gui/dialog/setting/ass_style/subtitle.py --------------
-
 msgid "颜色"
 msgstr "Color"
 
@@ -546,8 +556,96 @@ msgstr "Alignment"
 msgid "字幕在画面中位置的对齐方式，按照小键盘区布局"
 msgstr "The alignment of subtitles in the screen, follows the numeric keypad layout"
 
-# -------------- src/gui/dialog/setting/priority/edit.py --------------
+# -------------- src/gui/dialog/setting/file_name/custom_file_name_v3.py --------------
+msgid "文件名模板（双击列表项目修改）"
+msgstr "Filename Template (Double-click list item to edit)"
 
+msgid "建议详细阅读说明文档，再进行设置"
+msgstr "It is recommended to read the documentation carefully before making settings."
+
+msgid "下载剧集时，使用严格刮削命名模板"
+msgstr "Use strict scraping naming template when downloading series"
+
+msgid ""
+"启用后，在下载剧集时，将会自动识别季数，并添加 SxxExx 标识。\n"
+"配合`下载视频元数据`选项，可同时刮削剧集信息，便于 Kodi、Plex 等媒体库软件的识别。"
+msgstr "When enabled, season numbers will be automatically detected when downloading series, and SxxExx identifiers will be added. Combined with the `Download video metadata` option, it can scrape episode information, facilitating recognition by media library software such as Kodi and Plex."
+
+msgid "类别"
+msgstr "Category"
+
+msgid "子类别"
+msgstr "Subcategory"
+
+msgid "文件名模板"
+msgstr "Filename Template"
+
+# -------------- src/gui/dialog/setting/file_name/edit_template.py --------------
+
+msgid "模板名不能为空"
+msgstr "Template name cannot be empty"
+
+msgid "路径分隔符不正确，请使用正斜杠 /"
+msgstr "Path separator is incorrect, please use forward slash /"
+
+msgid "不能以 / 开头"
+msgstr "Cannot start with /"
+
+msgid "不能包含 <>:\"|?* 之中任何字符"
+msgstr "Cannot contain any of the characters <>:\"|?*"
+
+msgid "字段名必须以 {} 包裹"
+msgstr "Field name must be enclosed in {}"
+
+msgid "时间格式无效"
+msgstr "Invalid time format"
+
+msgid "未知字段 %s"
+msgstr "Unknown field %s"
+
+msgid "字段名不能为空"
+msgstr "Field name cannot be empty"
+
+msgid "编辑模板"
+msgstr "Edit Template"
+
+msgid "有关文件名模板的详细设置，请参考说明文档。"
+msgstr "For detailed settings on filename templates, please refer to the documentation."
+
+msgid "剧集类支持设置正片和非正片两种不同的命名模板，其他类型仅支持默认模板。"
+msgstr "Series support setting two different naming templates for main content and non-main content, while other types only support the default template."
+
+msgid "预览"
+msgstr "Preview"
+
+msgid "子目录："
+msgstr "Subdirectory: "
+
+msgid "文件名："
+msgstr "Filename: "
+
+msgid "可用字段列表（双击列表项目可添加字段）"
+msgstr "Available Fields List (Double-click an item to add the field)"
+
+msgid "同一字段可重复添加多次，且可同时用于子目录和文件名部分。\n\n对于时间字段的格式设置，请参考说明文档。"
+msgstr "The same field can be added multiple times and can be used in both the subdirectory and filename sections.\n\nFor formatting settings of time fields, please refer to the documentation."
+
+msgid "示例视频："
+msgstr "Example Video: "
+
+msgid "字段名称"
+msgstr "Field Name"
+
+msgid "说明"
+msgstr "Description"
+
+msgid "示例"
+msgstr "Example"
+
+msgid "模板格式错误"
+msgstr "Template Format Error"
+
+# -------------- src/gui/dialog/setting/priority/edit.py --------------
 msgid "%s优先级设置"
 msgstr "%s Priority Settings"
 
@@ -572,14 +670,63 @@ msgstr "Move to Bottom"
 msgid "重置"
 msgstr "Reset"
 
-msgid "重置优先级\n\n确定要重置优先级设置吗？"
-msgstr "Reset Priority\n\nAre you sure you want to reset the priority settings?"
+msgid ""
+"重置优先级\n"
+"\n"
+"确定要重置优先级设置吗？"
+msgstr ""
+"Reset Priority\n"
+"\n"
+"Are you sure you want to reset the priority settings?"
 
-msgid "未选择项目\n\n请选择要调整的项目"
-msgstr "No item selected\n\nPlease select the item to adjust"
+msgid ""
+"未选择项目\n"
+"\n"
+"请选择要调整的项目"
+msgstr ""
+"No item selected\n"
+"\n"
+"Please select the item to adjust"
+
+# -------------- src/gui/dialog/setting/custom_cdn_host.py.py --------------
+
+msgid "CDN 节点列表"
+msgstr "CDN Node List"
+
+msgid "自定义"
+msgstr "Custom"
+
+msgid "添加"
+msgstr "Add"
+
+msgid "删除"
+msgstr "Delete"
+
+msgid "Ping 测试"
+msgstr "Ping Test"
+
+msgid "CDN 节点"
+msgstr "CDN Node"
+
+msgid "延迟"
+msgstr "Latency"
+
+msgid "未检测"
+msgstr "Not Tested"
+
+msgid "保存失败\n\n至少需要添加一个 CDN 节点"
+msgstr "Save failed\n\nAt least one CDN node must be added"
+
+msgid "添加失败\n\n请输入要添加的 CDN 节点"
+msgstr "Add failed\n\nPlease enter the CDN node to add"
+
+msgid "添加失败\n\n无法重复添加已存在的项目"
+msgstr "Add failed\n\nCannot add an existing item again"
+
+msgid "删除项目\n\n确定要删除选定的项目吗？"
+msgstr "Delete item\n\nAre you sure you want to delete the selected item?"
 
 # -------------- src/gui/dialog/setting/custom_subtitle_lan.py.py --------------
-
 msgid "字幕语言下载选项"
 msgstr "Subtitle Language Download Options"
 
@@ -590,12 +737,16 @@ msgid "手动选择"
 msgstr "Manual selection"
 
 # -------------- src/gui/dialog/setting/custom_user_agent.py.py --------------
-
-msgid "User-Agent 无效\n\nUser-Agent 不能为空"
-msgstr "Invalid User-Agent\n\nUser-Agent cannot be empty"
+msgid ""
+"User-Agent 无效\n"
+"\n"
+"User-Agent 不能为空"
+msgstr ""
+"Invalid User-Agent\n"
+"\n"
+"User-Agent cannot be empty"
 
 # -------------- src/gui/dialog/setting/edit_title.py --------------
-
 msgid "修改标题"
 msgstr "Edit Title"
 
@@ -606,7 +757,6 @@ msgid "请输入新标题"
 msgstr "Please enter the new title"
 
 # -------------- src/gui/dialog/setting/ffmpeg.py --------------
-
 msgid "请选择 FFmpeg 路径"
 msgstr "Please select the FFmpeg path"
 
@@ -623,7 +773,6 @@ msgid "运行目录"
 msgstr "Running Directory"
 
 # -------------- src/gui/dialog/setting/select_batch.py --------------
-
 msgid "批量选取项目"
 msgstr "Select Multiple Items"
 
@@ -639,8 +788,14 @@ msgstr "Please enter number ranges, separated by commas"
 msgid "提示：按住 Shift 键也可批量选取项目"
 msgstr "Tip: Hold down the Shift key to select multiple items"
 
-msgid "选取剧集失败\n\n序号区间不能为空"
-msgstr "Failed to select episodes\n\nNumber range cannot be empty"
+msgid ""
+"选取剧集失败\n"
+"\n"
+"序号区间不能为空"
+msgstr ""
+"Failed to select episodes\n"
+"\n"
+"Number range cannot be empty"
 
 # -------------- src/gui/dialog/misc/update.py --------------
 msgid "发现新版本"
@@ -1065,6 +1220,9 @@ msgstr "Basic Settings"
 msgid "语言"
 msgstr "Language"
 
+msgid "更改语言后需要重启软件才能生效"
+msgstr "The change in language will take effect only after restarting the software"
+
 msgid "自动监听剪切板"
 msgstr "Automatically monitor clipboard"
 
@@ -1359,8 +1517,42 @@ msgstr "More"
 msgid "重叠"
 msgstr "Overlapping"
 
-# -------------- src/utils/common/data/priority.py --------------
+# -------------- src/utils/common/data/file_name.py --------------
 
+msgid "投稿视频"
+msgstr "Uploaded Videos"
+
+msgid "普通"
+msgstr "Normal"
+
+msgid "分P"
+msgstr "Multi-part"
+
+msgid "合集"
+msgstr "Collection"
+
+msgid "剧集"
+msgstr "Series"
+
+msgid "默认命名"
+msgstr "Default Naming"
+
+msgid "严格刮削命名"
+msgstr "Strict Scraping Naming"
+
+msgid "课程"
+msgstr "Courses"
+
+msgid "个人主页"
+msgstr "Space"
+
+msgid "文件夹名称"
+msgstr "Folder Name"
+
+msgid "收藏夹"
+msgstr "Favorites"
+
+# -------------- src/utils/common/data/priority.py --------------
 msgid "8K 超高清"
 msgstr "8K"
 
@@ -1436,3 +1628,7 @@ msgstr "Use system Webview component"
 
 msgid "使用系统默认浏览器"
 msgstr "Use system default browser"
+
+# -------------- src/utils/parse/preview.py --------------
+msgid "按优先级自动选择"
+msgstr "Determined by priority"

@@ -8,6 +8,7 @@ from gui.window.settings.page import Page
 
 from gui.component.staticbox.extra import ExtraStaticBox
 from gui.component.choice.choice import Choice
+from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
 _ = gettext.gettext
 
@@ -30,6 +31,17 @@ class BasicPage(Page):
         language_hbox.Add(language_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         language_hbox.Add(self.language_choice, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
+        info_icon = StaticBitmap(basic_box, bmp = wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
+        language_tip = wx.StaticText(basic_box, -1, _("更改语言后需要重启软件才能生效"))
+
+        language_tip_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        language_tip_hbox.Add(info_icon, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        language_tip_hbox.Add(language_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        language_vbox = wx.BoxSizer(wx.VERTICAL)
+        language_vbox.Add(language_hbox, 0, wx.EXPAND)
+        language_vbox.Add(language_tip_hbox, 0, wx.EXPAND)
+
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, _("自动监听剪切板"))
         exit_option_lab = wx.StaticText(basic_box, -1, _("当关闭窗口时"))
         self.exit_option_chk = wx.Choice(basic_box, -1, choices = list(exit_option_map.keys()))
@@ -44,7 +56,7 @@ class BasicPage(Page):
         self.always_on_top_chk = wx.CheckBox(basic_box, 0, _("窗口总在最前"))
 
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
-        basic_sbox.Add(language_hbox, 0, wx.EXPAND)
+        basic_sbox.Add(language_vbox, 0, wx.EXPAND)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(exit_option_hbox, 0, wx.EXPAND)
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))

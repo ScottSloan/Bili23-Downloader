@@ -548,16 +548,12 @@ class Config:
             
     @classmethod
     def load_config(cls):
-        try:
-            cls.init_path()
-            
-            Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
+        cls.init_path()
+        
+        Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
 
-            cls.app_config = Config.APPConfig()
-            cls.user_config = Config.UserConfig()
-
-        except Exception:
-            cls.on_error()
+        cls.app_config = Config.APPConfig()
+        cls.user_config = Config.UserConfig()
 
     @staticmethod
     def init_path():
@@ -578,28 +574,10 @@ class Config:
 
     @classmethod
     def save_app_config(cls):
-        try:
-            cls.app_config.save()
-        
-        except Exception:
-            cls.on_error()
+        cls.app_config.save()
 
     @classmethod
     def save_user_config(cls):
-        try:
-            cls.user_config.save()
-
-        except Exception:
-            cls.on_error()
-
-    @staticmethod
-    def on_error():
-        import wx
-        import sys
-        import traceback
-
-        wx.LogError(f"读取\保存配置文件时出错\n{traceback.format_exc()}")
-
-        sys.exit()
+        cls.user_config.save()
 
 Config.load_config()
