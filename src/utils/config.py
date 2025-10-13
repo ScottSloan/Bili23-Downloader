@@ -320,13 +320,13 @@ class Config:
             },
             {
                 "template": {
-                    "0": "{title}"
+                    "0": "{up_mid}_{up_name}"
                 },
                 "type": 8
             },
             {
                 "template": {
-                    "0": "{title}"
+                    "0": "{favlist_name}"
                 },
                 "type": 9
             }

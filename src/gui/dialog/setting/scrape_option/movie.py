@@ -1,10 +1,13 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.dialog.setting.scrape_option.add_date_box import AddDateBox
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class MoviePage(Panel):
     def __init__(self, parent: wx.Window):
@@ -17,10 +20,10 @@ class MoviePage(Panel):
     def init_UI(self):
         self.add_date_source_box = AddDateBox(self)
 
-        nfo_file_lab = wx.StaticText(self, -1, "创建 NFO 文件")
+        nfo_file_lab = wx.StaticText(self, -1, _("创建 NFO 文件"))
         
         self.movie_nfo_chk = wx.CheckBox(self, -1, "movie.nfo")
-        self.episode_nfo_chk = wx.CheckBox(self, -1, "<电影文件名>.nfo")
+        self.episode_nfo_chk = wx.CheckBox(self, -1, _("<电影文件名>.nfo"))
 
         nfo_file_grid_box = wx.FlexGridSizer(2, 1, 0, 0)
         nfo_file_grid_box.Add(self.movie_nfo_chk, 0, wx.ALL, self.FromDIP(6))

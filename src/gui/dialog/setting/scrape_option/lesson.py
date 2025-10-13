@@ -1,10 +1,13 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.dialog.setting.scrape_option.add_date_box import AddDateBox
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class LessonPage(Panel):
     def __init__(self, parent: wx.Window):
@@ -17,12 +20,12 @@ class LessonPage(Panel):
     def init_UI(self):
         self.add_date_source_box = AddDateBox(self)
 
-        nfo_file_lab = wx.StaticText(self, -1, "创建 NFO 文件")
+        nfo_file_lab = wx.StaticText(self, -1, _("创建 NFO 文件"))
         
-        self.tvshow_nfo_lab = wx.StaticText(self, -1, "课程")
+        self.tvshow_nfo_lab = wx.StaticText(self, -1, _("课程"))
         self.tvshow_nfo_chk = wx.CheckBox(self, -1, "tvshow.nfo")
-        self.episode_nfo_lab = wx.StaticText(self, -1, "课")
-        self.episode_nfo_chk = wx.CheckBox(self, -1, "<视频文件名>.nfo")
+        self.episode_nfo_lab = wx.StaticText(self, -1, _("课"))
+        self.episode_nfo_chk = wx.CheckBox(self, -1, _("<视频文件名>.nfo"))
 
         nfo_file_grid_box = wx.FlexGridSizer(3, 2, 0, 0)
         nfo_file_grid_box.Add(self.tvshow_nfo_lab, 0, wx.ALL, self.FromDIP(6))

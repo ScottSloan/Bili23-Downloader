@@ -28,7 +28,7 @@ class ProxyPage(Page):
         proxy_box = wx.StaticBox(self.panel, -1, _("代理设置"))
 
         proxy_tip = wx.StaticText(proxy_box, -1, _("代理选项"))
-        proxy_warning_tip = wx.StaticText(proxy_box, -1, _('注意：使用代理时，请在高级选项卡中\n手动关闭`替换音视频流 CDN 选项`'))
+        proxy_warning_tip = wx.StaticText(proxy_box, -1, _("注意：使用代理时，请在高级选项卡中\n手动关闭'替换音视频流 CDN 选项'"))
 
         self.proxy_disable_radio = wx.RadioButton(proxy_box, -1, _("不使用代理"))
         self.proxy_follow_radio = wx.RadioButton(proxy_box, -1, _("跟随系统"))

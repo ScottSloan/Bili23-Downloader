@@ -36,44 +36,59 @@ def update_lang():
         Config.Basic.language = lang
         Config.save_app_config()
 
+def check_lang():
+    if Config.Basic.is_new_user and not os.environ.get("PYSTAND_BUILD_TIME"):
+        import locale
+
+        lang = locale.getlocale()[1]
+
+        if lang not in ["936", "950"]:
+            Config.Basic.language = "en_US"
+            Config.save_app_config()
+
 try:
     from utils.config import Config
 
 except Exception as e:
-    message_box(f"读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
+    message_box(f"Failed to read config file\n读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
 if len(sys.argv) > 1:
     # 更新配置文件
     update_lang()
 
     sys.exit()
+else:
+    check_lang()
 
 try:
     init_lang()
 
+    _ = gettext.gettext
+
 except Exception as e:
-    message_box(f"加载语言文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
+    message_box(f"Failed to load language files\n加载语言文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
 try:
     import wx
 
 except ImportError as e:
-    message_box(f"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n{get_traceback()}", "Runtime Error", False, e)
+    message_box("缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n%s" % get_traceback(), "Runtime Error", False, e)
 
 except Exception as e:
-    message_box(f"初始化 wxPython 失败\n\n{get_traceback()}", "Fatal Error", False, e)
+    message_box("初始化 wxPython 失败\n\n%s" % get_traceback(), "Fatal Error", False, e)
 
 try:
     import google.protobuf
 
     if (protobuf_version := google.protobuf.__version__) and not protobuf_version.startswith("6"):
-        msg = f"请更新 protobuf 至最新版本\n当前版本：{protobuf_version}\n建议版本：6.32.0 或更高"
-        message_box(f"{msg}\n\n执行：pip install protobuf --upgrade", "Fatal Error")
+        msg = "请更新 protobuf 至最新版本\n当前版本：%s\n建议版本：6.32.0 或更高" % protobuf_version
+
+        message_box("%s\n\n执行：pip install protobuf --upgrade" % msg, "Fatal Error")
 
         raise ImportError(msg)
     
 except Exception as e:
-    message_box(f"初始化 protobuf 失败\n\n{get_traceback()}", "Fatal Error", False, e)
+    message_box("初始化 protobuf 失败\n\n%s" % get_traceback(), "Fatal Error", False, e)
 
 try:
     from utils.common.enums import Platform
@@ -84,7 +99,7 @@ try:
     Cookie.init_cookie_params()
 
 except Exception as e:
-    message_box(f"初始化程序失败\n\n{get_traceback()}", "Fatal Error")
+    message_box("初始化程序失败\n\n%s" % get_traceback(), "Fatal Error")
 
 class APP(wx.App):
     def __init__(self):

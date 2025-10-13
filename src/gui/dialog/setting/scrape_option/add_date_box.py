@@ -1,9 +1,12 @@
 import wx
+import gettext
 
 from utils.common.map import nfo_add_date_map
 
 from gui.component.panel.panel import Panel
 from gui.component.choice.choice import Choice
+
+_ = gettext.gettext
 
 class AddDateBox(Panel):
     def __init__(self, parent: wx.Window):
@@ -14,8 +17,8 @@ class AddDateBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        self.add_date_chk = wx.CheckBox(self, -1, "将 <添加日期> 添加到 NFO")
-        self.add_date_source_lab = wx.StaticText(self, -1, "<添加日期> 来源")
+        self.add_date_chk = wx.CheckBox(self, -1, _("将 <添加日期> 添加到 NFO"))
+        self.add_date_source_lab = wx.StaticText(self, -1, _("<添加日期> 来源"))
         self.add_date_source_choice = Choice(self)
         self.add_date_source_choice.SetChoices(nfo_add_date_map)
 

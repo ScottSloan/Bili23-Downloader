@@ -4,8 +4,10 @@ import gettext
 from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.data.file_name import template_list
+from utils.common.enums import TemplateType
 
 from gui.dialog.setting.file_name.edit_template import EditTemplateDialog
+from gui.dialog.setting.file_name.edit_folder import EditFolderDialog
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
@@ -41,7 +43,7 @@ class CustomFileNameDialog(Dialog):
 
         self.strict_naming_chk = wx.CheckBox(self, -1, _("下载剧集时，使用严格刮削命名模板"))
         strict_naming_tip = ToolTip(self)
-        strict_naming_tip.set_tooltip(_("启用后，在下载剧集时，将会自动识别季数，并添加 SxxExx 标识。\n配合`下载视频元数据`选项，可同时刮削剧集信息，便于 Kodi、Plex 等媒体库软件的识别。"))
+        strict_naming_tip.set_tooltip(_("启用后，在下载剧集时，将会自动识别季数，并添加 SxxExx 标识。\n配合'下载视频元数据'选项，可同时刮削剧集信息，便于 Kodi、Plex 等媒体库软件的识别。"))
 
         strict_naming_hbox = wx.BoxSizer(wx.HORIZONTAL)
         strict_naming_hbox.Add(self.strict_naming_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -119,7 +121,10 @@ class CustomFileNameDialog(Dialog):
         type = self.template_list.GetItemData(item)
         item_data = self.item_data_dict.get(type)
 
-        dlg = EditTemplateDialog(self, item_data)
+        if TemplateType(type) in [TemplateType.Favlist, TemplateType.Space]:
+            dlg = EditFolderDialog(self, item_data)
+        else:
+            dlg = EditTemplateDialog(self, item_data)
 
         if dlg.ShowModal() == wx.ID_OK:
             template = dlg.get_template()

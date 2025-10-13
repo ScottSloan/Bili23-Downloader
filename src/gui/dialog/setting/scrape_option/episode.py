@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 
@@ -6,6 +7,8 @@ from gui.dialog.setting.scrape_option.add_date_box import AddDateBox
 
 from gui.component.panel.panel import Panel
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
+
+_ = gettext.gettext
 
 class EpisodePage(Panel):
     def __init__(self, parent: wx.Window):
@@ -18,14 +21,14 @@ class EpisodePage(Panel):
     def init_UI(self):
         self.add_date_source_box = AddDateBox(self)
 
-        nfo_file_lab = wx.StaticText(self, -1, "创建 NFO 文件")
+        nfo_file_lab = wx.StaticText(self, -1, _("创建 NFO 文件"))
         
-        self.tvshow_nfo_lab = wx.StaticText(self, -1, "剧集")
+        self.tvshow_nfo_lab = wx.StaticText(self, -1, _("剧集"))
         self.tvshow_nfo_chk = wx.CheckBox(self, -1, "tvshow.nfo")
-        self.season_nfo_lab = wx.StaticText(self, -1, "季")
+        self.season_nfo_lab = wx.StaticText(self, -1, _("季"))
         self.season_nfo_chk = wx.CheckBox(self, -1, "season.nfo")
-        self.episode_nfo_lab = wx.StaticText(self, -1, "集")
-        self.episode_nfo_chk = wx.CheckBox(self, -1, "<剧集文件名>.nfo")
+        self.episode_nfo_lab = wx.StaticText(self, -1, _("集"))
+        self.episode_nfo_chk = wx.CheckBox(self, -1, _("<剧集文件名>.nfo"))
 
         nfo_file_grid_box = wx.FlexGridSizer(3, 2, 0, 0)
         nfo_file_grid_box.Add(self.tvshow_nfo_lab, 0, wx.ALL, self.FromDIP(6))
@@ -44,7 +47,7 @@ class EpisodePage(Panel):
         nfo_file_vbox.Add(nfo_file_hbox, 0, wx.EXPAND)
 
         tip_icon = StaticBitmap(self, bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((16, 16))), size = self.FromDIP((16, 16)))
-        tip_lab = wx.StaticText(self, -1, "如果需要将剧集分季存放至不同文件夹\n请启用“严格刮削命名模板”选项")
+        tip_lab = wx.StaticText(self, -1, _("如果需要将剧集分季存放至不同文件夹\n请启用'严格刮削命名模板'选项"))
 
         tip_hbox = wx.BoxSizer(wx.HORIZONTAL)
         tip_hbox.Add(tip_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))

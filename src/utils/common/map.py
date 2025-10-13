@@ -378,8 +378,8 @@ language_map = {
 }
 
 nfo_add_date_map = {
-    "文件创建日期": 0,
-    "上映日期": 1
+    _("文件创建日期"): 0,
+    _("上映日期"): 1
 }
 
 def get_mapping_key_by_value(mapping: dict, value: int, default = None):

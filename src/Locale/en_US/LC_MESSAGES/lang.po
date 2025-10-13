@@ -568,8 +568,8 @@ msgstr "Use strict scraping naming template when downloading series"
 
 msgid ""
 "启用后，在下载剧集时，将会自动识别季数，并添加 SxxExx 标识。\n"
-"配合`下载视频元数据`选项，可同时刮削剧集信息，便于 Kodi、Plex 等媒体库软件的识别。"
-msgstr "When enabled, season numbers will be automatically detected when downloading series, and SxxExx identifiers will be added. Combined with the `Download video metadata` option, it can scrape episode information, facilitating recognition by media library software such as Kodi and Plex."
+"配合'下载视频元数据'选项，可同时刮削剧集信息，便于 Kodi、Plex 等媒体库软件的识别。"
+msgstr "When enabled, season numbers will be automatically detected when downloading series, and SxxExx identifiers will be added. Combined with the 'Download video metadata' option, it can scrape episode information, facilitating recognition by media library software such as Kodi and Plex."
 
 msgid "类别"
 msgstr "Category"
@@ -687,6 +687,52 @@ msgstr ""
 "No item selected\n"
 "\n"
 "Please select the item to adjust"
+
+# -------------- src/gui/dialog/setting/priority/scrape_option/add_date_box.py --------------
+
+msgid "将 <添加日期> 添加到 NFO"
+msgstr "Add <dateadded> to NFO"
+
+msgid "<添加日期> 来源"
+msgstr "<dateadded> Source"
+
+# -------------- src/gui/dialog/setting/priority/scrape_option/episode.py --------------
+
+msgid "创建 NFO 文件"
+msgstr "Create NFO file"
+
+msgid "季"
+msgstr "Season"
+
+msgid "集"
+msgstr "Episode"
+
+msgid "<剧集文件名>.nfo"
+msgstr "<episode_filename>.nfo"
+
+msgid "如果需要将剧集分季存放至不同文件夹\n请启用'严格刮削命名模板'选项"
+msgstr "If you need to store episodes of different seasons in separate folders, please enable the 'Strict Scraping Naming Template' option"
+
+# -------------- src/gui/dialog/setting/priority/scrape_option/lesson.py --------------
+
+msgid "课"
+msgstr "Episode"
+
+msgid "<视频文件名>.nfo"
+msgstr "<video_filename>.nfo"
+
+# -------------- src/gui/dialog/setting/priority/scrape_option/movie.py --------------
+
+msgid "<电影文件名>.nfo"
+msgstr "<movie_filename>.nfo"
+
+# -------------- src/gui/dialog/setting/priority/scrape_option/scrape_option.py --------------
+
+msgid "刮削设置          "
+msgstr "Scrape Settings  "
+
+msgid "电影"
+msgstr "Movie"
 
 # -------------- src/gui/dialog/setting/custom_cdn_host.py.py --------------
 
@@ -1149,11 +1195,11 @@ msgid "替换音视频流 CDN 节点"
 msgstr "Replace audio/video stream CDN nodes"
 
 msgid ""
-"由于B站默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启`替换音视频流 CDN 节点`功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n"
+"由于B站默认分配的 CDN 线路可能存在稳定性问题，导致音视频流下载失败，建议开启'替换音视频流 CDN 节点'功能。该功能会根据您设置的优先级顺序，自动选择可用的 CDN 节点，以提升访问速度和成功率。\n"
 "\n"
 "请注意：开启代理工具时，请务必关闭此功能，避免 CDN 节点与代理线路冲突导致连接失败。"
 msgstr ""
-"Bilibili's default assigned CDN routes may have stability issues, causing audio/video stream download failures. It is recommended to enable the `Replace audio/video stream CDN nodes` feature. This function automatically selects available CDN nodes based on your configured priority order, improving access speed and success rate.\n"
+"Bilibili's default assigned CDN routes may have stability issues, causing audio/video stream download failures. It is recommended to enable the 'Replace audio/video stream CDN nodes' feature. This function automatically selects available CDN nodes based on your configured priority order, improving access speed and success rate.\n"
 "\n"
 "Note: When using a proxy tool, please disable this feature to avoid conflicts between CDN nodes and proxy routes that could lead to connection failures."
 
@@ -1402,10 +1448,10 @@ msgstr "Proxy Options"
 
 msgid ""
 "注意：使用代理时，请在高级选项卡中\n"
-"手动关闭`替换音视频流 CDN 选项`"
+"手动关闭'替换音视频流 CDN 选项'"
 msgstr ""
 "Note: When using a proxy, please manually disable the \n"
-"`Replace audio/video stream CDN` option in the Advanced tab"
+"'Replace audio/video stream CDN' option in the Advanced tab"
 
 msgid "不使用代理"
 msgstr "Disable"
@@ -1629,6 +1675,31 @@ msgstr "Use system Webview component"
 msgid "使用系统默认浏览器"
 msgstr "Use system default browser"
 
+msgid "文件创建日期"
+msgstr "File Creation Date"
+
+msgid "上映日期"
+msgstr "Release Date"
+
 # -------------- src/utils/parse/preview.py --------------
 msgid "按优先级自动选择"
 msgstr "Determined by priority"
+
+# -------------- src/main.py --------------
+msgid "缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n%s"
+msgstr "Microsoft Visual C++ Runtime Library is missing, unable to run this program.\n\nPlease go to https://aka.ms/vs/17/release/vc_redist.x64.exe to download and install the Microsoft Visual C++ 2015-2022 Runtime Library.\n\n%s"
+
+msgid "初始化 wxPython 失败\n\n%s"
+msgstr "Failed to initialize wxPython\n\n%s"
+
+msgid "请更新 protobuf 至最新版本\n当前版本：%s\n建议版本：6.32.0 或更高"
+msgstr "Please update protobuf to the latest version\nCurrent version: %s\nRecommended version: 6.32.0 or higher"
+
+msgid "执行：pip install protobuf --upgrade"
+msgstr "Execute: pip install protobuf --upgrade"
+
+msgid "初始化 protobuf 失败\n\n%s"
+msgstr "Failed to initialize protobuf\n\n%s"
+
+msgid "初始化程序失败\n\n%s"
+msgstr "Failed to initialize the program\n\n%s"

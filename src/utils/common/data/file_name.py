@@ -448,6 +448,33 @@ field_data = {
     }
 }
 
+field_data_folder = {
+    "up_name": {
+        "name": "{up_name}",
+        "description": "UP 主名称",
+        "type": [8],
+        "example": ""
+    },
+    "up_uid": {
+        "name": "{up_uid}",
+        "description": "UP 主 uid",
+        "type": [8],
+        "example": ""
+    },
+    "favlist_name": {
+        "name": "{favlist_name}",
+        "description": "收藏夹名称",
+        "type": [9],
+        "example": ""
+    },
+    "favlist_fid": {
+        "name": "{favlist_fid}",
+        "description": "收藏夹 fid",
+        "type": [9],
+        "example": ""
+    }
+}
+
 preview_data_ex = {
     1: {
         "badge": "最新"
