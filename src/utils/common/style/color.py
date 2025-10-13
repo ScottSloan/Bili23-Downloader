@@ -33,6 +33,13 @@ class Color:
             return wx.Colour(227, 229, 231)
         
     @staticmethod
+    def get_frame_text_color():
+        if Config.Sys.dark_mode:
+            return wx.Colour("white")
+        else:
+            return wx.Colour(90, 90, 90)
+        
+    @staticmethod
     def convert_to_ass_abgr_color(hex_color: str, alpha: str = None):
         hex_new = hex_color.lstrip("#").upper()
 

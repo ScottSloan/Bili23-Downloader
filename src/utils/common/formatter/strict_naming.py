@@ -31,7 +31,7 @@ class StrictNaming:
         if task_info.bangumi_type != "电影":
             section_title_ex = "Season {season_num:02}".format(season_num = task_info.season_num)
         else:
-            section_title_ex = f"{task_info.series_title} ({DateTime.time_str_from_timestamp(task_info.pubtimestamp, "%Y")})"
+            section_title_ex = f"{task_info.series_title} ({DateTime.time_str_from_timestamp(task_info.pubtimestamp, '%Y')})"
 
         task_info.section_title_ex = section_title_ex
     

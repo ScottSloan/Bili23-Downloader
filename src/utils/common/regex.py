@@ -26,6 +26,10 @@ class Regex:
         return re.findall(r'[<>:"|?*\x00-\x1F]', string)
     
     @classmethod
+    def find_illegal_chars_ex(cls, string: str):
+        return re.findall(r'[<>:"\\/|?*\x00-\x1F]', string)
+    
+    @classmethod
     def find_output_format(cls, acodec: str):
         return re.findall(r"\w+", acodec)
     

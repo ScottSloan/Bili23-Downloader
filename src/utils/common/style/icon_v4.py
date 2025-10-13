@@ -86,6 +86,8 @@ class Icon:
         size = cls.get_scale_size(icon_size)
 
         scale = min(size.width / img.width, size.height / img.height)
+
+        print(size.width, size.height)
         
         return img.ConvertToBitmap(scale = scale, width = size.width, height = size.height)
     

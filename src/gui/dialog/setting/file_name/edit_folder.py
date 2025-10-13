@@ -1,13 +1,83 @@
 import wx
+import wx.adv
 import gettext
 
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.data.file_name import preview_data, field_data_folder
+from utils.common.regex import Regex
+from utils.common.formatter.file_name_v2 import FileNameFormatter
+from utils.common.enums import TemplateType
+
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.misc.tooltip import ToolTip
 
 _ = gettext.gettext
+
+class TemplateValidator:
+    def __init__(self, template: str, field_dict: dict, strict_naming: bool):
+        self.template = template
+        self.field_dict = field_dict
+        self.strict_naming = strict_naming
+
+    def validate(self):
+        try:
+            self.check()
+
+            return {
+                "result": True,
+                "msg": "success",
+                "folder_name": self.get_folder_name()
+            }
+
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+
+            return {
+                "result": False,
+                "msg": self.get_err_msg(e),
+                "folder_name": ""
+            }
+
+    def check(self):
+        if not self.template:
+            raise ValueError("empty")
+        
+        if self.check_illegal_chars():
+            raise ValueError("illegal")
+
+    def check_illegal_chars(self):        
+        if Regex.find_illegal_chars_ex(self.template):
+            return True
+
+    def get_folder_name(self):
+        return FileNameFormatter.format_file_name(self.template, field_dict = self.field_dict)
+    
+    def get_err_msg(self, e: Exception):
+        match e:
+            case ValueError():
+                match str(e):
+                    case "empty":
+                        return _("模板名不能为空")
+
+                    case "illegal":
+                        return _("不能包含 <>:\"\\/|?* 之中任何字符")
+
+                    case msg if msg.startswith(("Single", "expected", "unexpected", "unmatched")):
+                        return _("字段名必须以 {} 包裹")
+
+                    case _:
+                        return str(e)
+                    
+            case KeyError():
+                return _("未知字段 %s" % str(e))
+            
+            case IndexError():
+                return _("字段名不能为空")
+
+            case _:
+                return str(e)
 
 class EditFolderDialog(Dialog):
     def __init__(self, parent: wx.Window, data: dict):
@@ -17,6 +87,8 @@ class EditFolderDialog(Dialog):
         Dialog.__init__(self, parent, _("编辑模板"))
 
         self.init_UI()
+
+        self.Bind_EVT()
 
         self.init_data()
 
@@ -86,9 +158,20 @@ class EditFolderDialog(Dialog):
 
         self.SetSizerAndFit(vbox)
 
+    def Bind_EVT(self):
+        self.template_box.Bind(wx.EVT_TEXT, self.onTextEVT)
+
+        self.field_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onAddFieldEVT)
+
+        self.help_btn.Bind(wx.EVT_BUTTON, self.onHelpEVT)
+
     def init_data(self):
         self.init_list_column()
         self.init_list_data()
+
+        self.field_dict = self.get_field_dict()
+
+        self.init_template()
 
     def init_list_column(self):
         self.field_list.AppendColumn(_("字段名称"), width = self.FromDIP(210))
@@ -101,3 +184,61 @@ class EditFolderDialog(Dialog):
                 self.field_list.Append([entry.get("name"), entry.get("description"), entry.get("example")])
 
         self.field_list.SetColumnWidth(2, width = -1)
+
+    def init_template(self):
+        self.template_box.SetValue(self.data["template"]["0"])
+
+    def onTextEVT(self, event: wx.CommandEvent):
+        template = self.template_box.GetValue()
+
+        validator = TemplateValidator(template, self.field_dict, self.type == TemplateType.Bangumi_strict.value)
+
+        result = validator.validate()
+        flag = result.get("result")
+
+        if flag:
+            self.show_file_name(result.get("folder_name"))
+            self.update_template()
+        else:
+            self.show_error_tip(result.get("msg"))
+            self.show_file_name("")
+
+        self.ok_btn.Enable(flag)
+
+        self.folder_name_lab.Wrap(self.folder_name_lab.GetSize().width)
+        self.Layout()
+
+        event.Skip()
+
+    def show_file_name(self, folder_name: str):
+        self.folder_name_lab.SetLabel(folder_name)
+        self.folder_name_lab.SetToolTip(folder_name)
+
+    def show_error_tip(self, msg: str):
+        tip = wx.adv.RichToolTip(_("模板格式错误"), msg)
+        tip.SetIcon(wx.ICON_ERROR)
+
+        tip.ShowFor(self.template_box)
+
+        wx.Bell()
+
+    def onAddFieldEVT(self, event: wx.ListEvent):
+        field = self.field_list.GetItemText(self.field_list.GetFocusedItem(), 0)
+
+        self.template_box.AppendText(field)
+
+    def get_template(self):
+        print(self.data["template"])
+        return self.data["template"]
+    
+    def update_template(self):
+        self.data["template"]["0"] = self.template_box.GetValue()
+
+    def get_field_dict(self):
+        field_dict = preview_data.get(self.type)
+        field_dict.update(preview_data.get(0))
+
+        return field_dict
+    
+    def onHelpEVT(self, event: wx.CommandEvent):
+        wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/advanced/custom_file_name.html")

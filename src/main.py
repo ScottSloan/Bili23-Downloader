@@ -4,7 +4,7 @@ import gettext
 import platform
 
 def message_box(message: str, caption: str, wx_status: bool = True, e = None):
-    if platform.platform().startswith("Windows"):
+    if platform.system() == "Windows":
         import ctypes
         ctypes.windll.user32.MessageBoxW(0, message, caption, 0x0 | 0x30)
     else:
@@ -37,14 +37,22 @@ def update_lang():
         Config.save_app_config()
 
 def check_lang():
+    def set_en_US():
+        Config.Basic.language = "en_US"   
+        Config.save_app_config()
+
     if Config.Basic.is_new_user and not os.environ.get("PYSTAND_BUILD_TIME"):
         import locale
 
-        lang = locale.getlocale()[1]
+        lang = locale.getlocale()
 
-        if lang not in ["936", "950"]:
-            Config.Basic.language = "en_US"
-            Config.save_app_config()
+        if platform.system() == "Windows":
+            if not lang[0].startswith("Chinese"):
+                set_en_US()
+                
+        elif platform.system() == "Linux":
+            if not lang[0].startswith("zh"):
+                set_en_US()
 
 try:
     from utils.config import Config
@@ -160,8 +168,6 @@ class APP(wx.App):
 
         else:
             self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
-        
-        os.environ["LANGUAGE"] = Config.Basic.language
 
     def lock_file(self):
         import fcntl

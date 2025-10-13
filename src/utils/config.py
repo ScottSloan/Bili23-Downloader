@@ -320,7 +320,7 @@ class Config:
             },
             {
                 "template": {
-                    "0": "{up_mid}_{up_name}"
+                    "0": "{up_uid}_{up_name}"
                 },
                 "type": 8
             },

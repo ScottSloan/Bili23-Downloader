@@ -76,8 +76,8 @@ class PriorityBox(Panel):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        hbox.Add(self.priority_box, 1, wx.ALL & (~wx.LEFT), self.FromDIP(6))
-        hbox.Add(self.priority_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
+        hbox.Add(self.priority_box, 1, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+        hbox.Add(self.priority_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.SetSizer(hbox)
 

@@ -71,4 +71,7 @@ class SettingWindow(Dialog):
                     return self.FromDIP((500, 400))
             
             case Platform.Linux | Platform.macOS:
-                return self.FromDIP((360, 470))
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((360, 470))
+                else:
+                    return self.FromDIP((550, 470))

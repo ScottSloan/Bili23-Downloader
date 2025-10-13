@@ -40,5 +40,3 @@ class SysFont:
                 return [
                     "Menlo"
                 ]
-    
-    

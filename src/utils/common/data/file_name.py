@@ -272,6 +272,14 @@ preview_data = {
         "duration": 275,
         "up_name": "清华梁爽老师",
         "up_uid": 400971040
+    },
+    8: {
+        "up_name": "泛式",
+        "up_uid": "63231"
+    },
+    9: {
+        "favlist_name": "默认收藏夹",
+        "favlist_fid": "44241231"
     }
 }
 
@@ -453,25 +461,25 @@ field_data_folder = {
         "name": "{up_name}",
         "description": "UP 主名称",
         "type": [8],
-        "example": ""
+        "example": "泛式"
     },
     "up_uid": {
         "name": "{up_uid}",
         "description": "UP 主 uid",
         "type": [8],
-        "example": ""
+        "example": "63231"
     },
     "favlist_name": {
         "name": "{favlist_name}",
         "description": "收藏夹名称",
         "type": [9],
-        "example": ""
+        "example": "默认收藏夹"
     },
     "favlist_fid": {
         "name": "{favlist_fid}",
         "description": "收藏夹 fid",
         "type": [9],
-        "example": ""
+        "example": "44241231"
     }
 }
 
