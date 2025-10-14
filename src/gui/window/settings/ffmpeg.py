@@ -63,12 +63,15 @@ class FFmpegPage(Page):
         override_lab = wx.StaticText(merge_option_box, -1, _("存在同名文件时"))
         self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
 
+        self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, _("仅下载音频时，将 m4a 音频转换为 mp3 格式"))
+
         override_hbox = wx.BoxSizer(wx.HORIZONTAL)
         override_hbox.Add(override_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         override_hbox.Add(self.override_option_choice, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         merge_option_sbox = wx.StaticBoxSizer(merge_option_box, wx.VERTICAL)
         merge_option_sbox.Add(override_hbox, 0, wx.EXPAND)
+        merge_option_sbox.Add(self.m4a_to_mp3_chk, 0, wx.ALL, self.FromDIP(6))
         merge_option_sbox.Add(keep_original_files_hbox, 0, wx.EXPAND)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -91,12 +94,14 @@ class FFmpegPage(Page):
         self.check_ffmpeg_chk.SetValue(Config.Merge.ffmpeg_check_available_when_launch)
         
         self.override_option_choice.SetSelection(Config.Merge.override_option)
+        self.m4a_to_mp3_chk.SetValue(Config.Merge.m4a_to_mp3)
         self.keep_original_files_chk.SetValue(Config.Merge.keep_original_files)
 
     def save_data(self):
         Config.Merge.ffmpeg_path = self.path_box.GetValue()
         Config.Merge.ffmpeg_check_available_when_launch = self.check_ffmpeg_chk.GetValue()
         Config.Merge.override_option = self.override_option_choice.GetSelection()
+        Config.Merge.m4a_to_mp3 = self.m4a_to_mp3_chk.GetValue()
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
     def onValidate(self):

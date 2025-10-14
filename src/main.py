@@ -130,9 +130,6 @@ class APP(wx.App):
             case Platform.Linux:
                 self.init_linux_env()
 
-            case Platform.macOS:
-                self.init_macos_env()
-
         self.init_vlc_env()
 
     def init_msw_env(self):
@@ -155,9 +152,6 @@ class APP(wx.App):
         
         os.environ['GDK_BACKEND'] = "x11"
         #os.environ['GDK_DPI_SCALE'] = "1.25"
-
-    def init_macos_env(self):
-        self.lock_file()
 
     def init_vlc_env(self):
         os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc"

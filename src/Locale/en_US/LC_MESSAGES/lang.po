@@ -443,29 +443,26 @@ msgstr "Failed to login"
 msgid "关于 %s"
 msgstr "About %s"
 
-msgid "软件版本：%s"
-msgstr "Version: %s"
+msgid "版本 %s"
+msgstr "Version %s"
 
-msgid "本软件为开源免费软件，在 MIT License 许可协议下进行发布。"
+msgid "本程序为免费开源软件，遵循 MIT 许可证发布"
 msgstr "This software is open-source and free, released under the MIT License."
 
-msgid "官方网站："
-msgstr "Official Website: "
+msgid "官方网站"
+msgstr "Website"
 
-msgid "项目首页："
-msgstr "Project Homepage: "
+msgid "开源地址"
+msgstr "Github"
 
 msgid "开源许可"
-msgstr "Open Source License"
+msgstr "License"
 
 msgid "免责声明"
 msgstr "Disclaimer"
 
-msgid "构建时间：%s"
-msgstr "Build Time: %s"
-
-msgid "发布时间：%s"
-msgstr "Release Date: %s"
+msgid "跨平台的 B 站视频下载工具"
+msgstr "Cross-platform Bilibili video downloader"
 
 # -------------- src/gui/dialog/misc/changelog.py --------------
 msgid "当前版本更新日志"
@@ -1372,6 +1369,9 @@ msgstr "Keep original files after merging"
 
 msgid "存在同名文件时"
 msgstr "When a file with the same name exists"
+
+msgid "仅下载音频时，将 m4a 音频转换为 mp3 格式"
+msgstr "When downloading only audio, convert m4a audio to mp3 format"
 
 msgid "FFmpeg 路径无效"
 msgstr "Invalid FFmpeg Path"

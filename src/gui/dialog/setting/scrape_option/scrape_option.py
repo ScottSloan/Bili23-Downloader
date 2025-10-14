@@ -2,6 +2,7 @@ import wx
 import gettext
 
 from utils.config import Config
+from utils.common.enums import Platform
 
 from gui.dialog.setting.scrape_option.video import VideoPage
 from gui.dialog.setting.scrape_option.episode import EpisodePage
@@ -56,7 +57,15 @@ class ScrapeOptionDialog(Dialog):
         Config.Temp.scrape_option = scrape_option
 
     def get_book_size(self):
-        if Config.Basic.language == "zh_CN":
-            return self.FromDIP((400, 200))
-        else:
-            return self.FromDIP((500, 200))
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((400, 200))
+                else:
+                    return self.FromDIP((500, 200))
+            
+            case Platform.Linux | Platform.macOS:
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((500, 280))
+                else:
+                    return self.FromDIP((600, 280))

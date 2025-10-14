@@ -54,4 +54,7 @@ class CustomASSStyleDialog(Dialog):
                     return self.FromDIP((450, 450))
             
             case Platform.Linux | Platform.macOS:
-                return self.FromDIP((500, 570))
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((500, 570))
+                else:
+                    return self.FromDIP((600, 570))

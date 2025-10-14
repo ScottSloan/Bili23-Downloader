@@ -64,6 +64,7 @@ app_config_group = {
         "ffmpeg_path",
         "ffmpeg_check_available_when_launch",
         "override_option",
+        "m4a_to_mp3",
         "keep_original_files",
     ],
     "Proxy": [
@@ -380,6 +381,7 @@ class Config:
         ffmpeg_check_available_when_launch: bool = True
 
         override_option: int = 1
+        m4a_to_mp3: bool = True
         keep_original_files: bool = False
 
     class Temp:

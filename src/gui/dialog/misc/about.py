@@ -8,50 +8,32 @@ from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.style.color import Color
 from utils.common.compile_data import date
+from utils.common.enums import Platform
 
 from gui.component.window.dialog import Dialog
-from gui.component.panel.panel import Panel
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
-from gui.component.label.info_label import InfoLabel
 
 _ = gettext.gettext
 
-class URLBox(Panel):
-    def __init__(self, parent: wx.Window, label: str, url: str):
-        self.label = label
-        self.url = url
-
-        Panel.__init__(self, parent)
-
-        self.init_UI()
-
-    def init_UI(self):
-        lab = wx.StaticText(self, -1, self.label)
-        link = wx.adv.HyperlinkCtrl(self, url = self.url)
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(lab, 0, wx.ALIGN_CENTER)
-        hbox.Add(link, 0, wx.ALIGN_CENTER)
-
-        self.SetSizer(hbox)
-
 class AboutWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, _("关于 %s") % Config.APP.name, style = wx.DEFAULT_DIALOG_STYLE & (~wx.CAPTION) | wx.RESIZE_BORDER)
+        Dialog.__init__(self, parent, "")
 
         self.init_UI()
+
+        self.init_utils()
+
+        self.DWMExtendFrameIntoClientArea()
 
         self.CenterOnParent()
 
         wx.Bell()
     
     def init_UI(self):
-        self.set_dark_mode()
-
-        logo = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.App_Default, IconSize.LARGE), size = self.FromDIP((64, 64)))
+        self.logo = StaticBitmap(self, size = self.FromDIP((64, 64)))
 
         logo_vbox = wx.BoxSizer(wx.VERTICAL)
-        logo_vbox.Add(logo, 0, wx.ALL, self.FromDIP(6))
+        logo_vbox.Add(self.logo, 0, wx.ALL, self.FromDIP(6))
 
         title_font: wx.Font = self.GetFont()
         title_font.SetFractionalPointSize(int(title_font.GetFractionalPointSize() + 4))
@@ -63,7 +45,7 @@ class AboutWindow(Dialog):
         title_lab.SetForegroundColour(Color.get_frame_text_color())
         title_lab.SetFont(title_font.MakeBold())
 
-        desc_lab = wx.StaticText(self, -1, _("跨平台的B站视频下载工具"))
+        desc_lab = wx.StaticText(self, -1, _("跨平台的 B 站视频下载工具"))
         desc_lab.SetForegroundColour(Color.get_frame_text_color())
 
         version_lab = wx.StaticText(self, -1, _("版本 %s") % self.GetVersion())
@@ -77,7 +59,7 @@ class AboutWindow(Dialog):
         copyright_lab.SetForegroundColour(Color.get_frame_text_color())
 
         homepage_link = wx.adv.HyperlinkCtrl(self, -1, _("官方网站"), url = "https://bili23.scott-sloan.cn")
-        github_link = wx.adv.HyperlinkCtrl(self, -1, _("项目首页"), url = "https://www.github.com/ScottSloan/Bili23-Downloader")
+        github_link = wx.adv.HyperlinkCtrl(self, -1, _("开源地址"), url = "https://www.github.com/ScottSloan/Bili23-Downloader")
 
         opensource_link = wx.adv.HyperlinkCtrl(self, -1, _("开源许可"), url = "https://bili23.scott-sloan.cn/doc/license.html")
         disclaimer_link = wx.adv.HyperlinkCtrl(self, -1, _("免责声明"), url = "https://bili23.scott-sloan.cn/doc/announcement.html")
@@ -100,7 +82,7 @@ class AboutWindow(Dialog):
         body_vbox = wx.BoxSizer(wx.VERTICAL)
         body_vbox.Add(title_lab, 0, wx.ALL, self.FromDIP(6))
         body_vbox.Add(desc_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        body_vbox.AddSpacer(self.FromDIP(6))
+        body_vbox.AddSpacer(self.FromDIP(10))
         body_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         body_vbox.Add(license_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         body_vbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
@@ -110,15 +92,26 @@ class AboutWindow(Dialog):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(logo_vbox, 0, wx.EXPAND, self.FromDIP(6))
-        hbox.AddSpacer(self.FromDIP(6))
+        hbox.AddSpacer(self.FromDIP(15))
         hbox.Add(body_vbox, 0, wx.EXPAND, self.FromDIP(6))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(hbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(20))
+        vbox.AddSpacer(self.FromDIP(20) if Platform(Config.Sys.platform) != Platform.Windows else 1)
+        vbox.Add(hbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(20))
 
         self.SetSizerAndFit(vbox)
 
         self.SetMaxSize(self.GetSize())
+
+        self.set_dark_mode()
+
+    def init_utils(self):
+        def worker():
+            self.logo.SetBitmap(bmp = Icon.get_icon_bitmap(IconID.App_Default, IconSize.LARGE))
+
+            self.Refresh()
+
+        wx.CallAfter(worker)
 
     def GetVersion(self):
         version = f"{Config.APP.version} ({Config.APP.version_code})"
@@ -130,3 +123,27 @@ class AboutWindow(Dialog):
             return _("构建时间：%s") % build_time
         else:
             return _("发布时间：%s") % date
+        
+    def DWMExtendFrameIntoClientArea(self):
+        if Platform(Config.Sys.platform) == Platform.Windows:
+            import ctypes
+            import ctypes.wintypes
+
+            hwnd = self.GetHandle()
+
+            class MARGINS(ctypes.Structure):
+                _fields_ = [
+                    ("cxLeftWidth", ctypes.c_int),
+                    ("cxRightWidth", ctypes.c_int),
+                    ("cyTopHeight", ctypes.c_int),
+                    ("cyBottomHeight", ctypes.c_int)
+                ]
+
+            margins = MARGINS(1, 1, 1, 1)
+            colorref = ctypes.wintypes.RGB(255, 255, 255)
+
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(ctypes.c_int(colorref)), ctypes.sizeof(ctypes.c_int(colorref)))
+            ctypes.windll.dwmapi.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(margins))
+
+        else:
+            self.SetTitle(_("关于 %s") % Config.APP.name)
