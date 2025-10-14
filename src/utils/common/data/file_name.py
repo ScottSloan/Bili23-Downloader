@@ -279,7 +279,8 @@ preview_data = {
     },
     9: {
         "favlist_name": "默认收藏夹",
-        "favlist_fid": "44241231"
+        "up_name": "泛式",
+        "up_uid": "63231"
     }
 }
 
@@ -460,13 +461,13 @@ field_data_folder = {
     "up_name": {
         "name": "{up_name}",
         "description": "UP 主名称",
-        "type": [8],
+        "type": [8, 9],
         "example": "泛式"
     },
     "up_uid": {
         "name": "{up_uid}",
         "description": "UP 主 uid",
-        "type": [8],
+        "type": [8, 9],
         "example": "63231"
     },
     "favlist_name": {
@@ -474,12 +475,6 @@ field_data_folder = {
         "description": "收藏夹名称",
         "type": [9],
         "example": "默认收藏夹"
-    },
-    "favlist_fid": {
-        "name": "{favlist_fid}",
-        "description": "收藏夹 fid",
-        "type": [9],
-        "example": "44241231"
     }
 }
 

@@ -24,24 +24,30 @@ class FFmpeg:
                     command.add(FFmpeg.Command.get_convert_audio_command(task_info, "flac"))
 
                     return FFmpeg.Prop.dash_output_temp_file(task_info)
+                
+                elif task_info.output_type == "m4a":
+                    if Config.Merge.m4a_to_mp3:
+                        task_info.output_type = "mp3"
+
+                        command.add(FFmpeg.Command.get_convert_audio_command(task_info, "libmp3lame"))
+
+                        return FFmpeg.Prop.dash_output_temp_file(task_info)
                 else:
                     return FFmpeg.Prop.dash_audio_temp_file(task_info)
 
             command = Command()
 
-            full_file_name = FFmpeg.Prop.full_file_name(task_info)
-
             match task_info.download_option.copy():
                 case ["video", "audio"]:
                     command.add(FFmpeg.Command.get_merge_video_and_audio_command(task_info))
-                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_output_temp_file(task_info), full_file_name))
+                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_output_temp_file(task_info), FFmpeg.Prop.full_file_name(task_info)))
 
                 case ["video"]:
-                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), full_file_name))
+                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), FFmpeg.Prop.full_file_name(task_info)))
 
                 case ["audio"]:
                     src = convert_audio()
-                    command.add(FFmpeg.Command.get_rename_command(src, full_file_name))
+                    command.add(FFmpeg.Command.get_rename_command(src, FFmpeg.Prop.full_file_name(task_info)))
 
             return command.format()
 
@@ -562,5 +568,5 @@ class FFmpeg:
                 
                 case Platform.Linux | Platform.macOS:
                     return "mv"
-                
+
 FFmpeg.Env.detect()

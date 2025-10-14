@@ -579,6 +579,17 @@ msgstr "Filename Template"
 
 # -------------- src/gui/dialog/setting/file_name/edit_template.py --------------
 
+msgid "不能包含 <>:\"\\|?* 之中任何字符"
+msgstr "Cannot contain any of the characters <>:\"\\|?*"
+
+msgid "文件夹名称模板"
+msgstr "Folder Name Template"
+
+msgid "文件夹名称："
+msgstr "Folder Name: "
+
+# -------------- src/gui/dialog/setting/file_name/edit_template.py --------------
+
 msgid "模板名不能为空"
 msgstr "Template name cannot be empty"
 

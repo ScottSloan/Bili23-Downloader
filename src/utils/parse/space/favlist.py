@@ -4,7 +4,7 @@ import time
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
-from utils.common.enums import StatusCode, ProcessingType
+from utils.common.enums import StatusCode, ProcessingType, TemplateType
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
 from utils.common.formatter.file_name_v2 import FileNameFormatter
@@ -156,8 +156,16 @@ class FavListParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        parent_title = "{}_{}/{}".format(FileNameFormatter.get_legal_file_name(self.owner_name), self.owner_mid, FileNameFormatter.get_legal_file_name(self.fav_title))
+        template = FileNameFormatter.get_folder_template(TemplateType.Favlist.value)
 
+        field_dict = {
+            "up_name": FileNameFormatter.get_legal_file_name(self.owner_name),
+            "up_uid": self.owner_mid,
+            "favlist_name": FileNameFormatter.get_legal_file_name(self.fav_title)
+        }
+
+        parent_title = template.format(**field_dict)
+        
         FavList.parse_episodes(self.info_json, self.season_dict, parent_title)
     
     def clear_favlist_info(self):

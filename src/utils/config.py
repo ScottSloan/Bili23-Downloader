@@ -327,7 +327,7 @@ class Config:
             },
             {
                 "template": {
-                    "0": "{favlist_name}"
+                    "0": "{up_uid}_{up_name}/{favlist_name}"
                 },
                 "type": 9
             }

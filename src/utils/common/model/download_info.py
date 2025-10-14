@@ -53,7 +53,7 @@ class DownloadInfo:
             "series_title_original": item_info.series_title_original,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
-            "template": cls.get_specific_template(item_info.template_type)["0"],
+            "template": cls.get_template(item_info),
             "area": item_info.area,
             "zone": item_info.zone,
             "subzone": item_info.subzone,
@@ -107,26 +107,29 @@ class DownloadInfo:
 
         task_info.id = random.randint(10000000, 99999999)
 
-        cls.check_strict_naming(task_info)
-
         return task_info
     
-    @classmethod
-    def check_strict_naming(cls, task_info: DownloadTaskInfo):
-        if ParseType(task_info.parse_type) == ParseType.Bangumi and Config.Download.strict_naming:
-            if task_info.season_num:
-                StrictNaming.check_strict_naming(task_info)
-
-                task_info.template_type = TemplateType.Bangumi_strict.value
-
-                template = cls.get_specific_template(task_info.template_type)
-                if task_info.section_title == "正片":
-                    task_info.template = template["0"]
-                else:
-                    task_info.template = template["1"]
-
     @staticmethod
     def get_specific_template(template_type: int):
         for entry in Config.Download.file_name_template_list:
             if entry["type"] == template_type:
                 return entry["template"]
+            
+    @classmethod
+    def get_template(cls, task_info: DownloadTaskInfo):
+        template = cls.get_specific_template(task_info.template_type)
+
+        if task_info.template_type == TemplateType.Bangumi.value:
+            if Config.Download.strict_naming and task_info.season_num:
+                task_info.template_type = TemplateType.Bangumi_strict.value
+                template = cls.get_specific_template(task_info.template_type)
+
+                StrictNaming.check_strict_naming(task_info)
+
+            if task_info.section_title == "正片":
+                return template["0"]
+            else:
+                return template["1"]
+        
+        else:
+            return template["0"]

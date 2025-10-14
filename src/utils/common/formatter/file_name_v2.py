@@ -5,7 +5,6 @@ from utils.config import Config
 
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.map import video_quality_map, audio_quality_map, video_codec_short_map
-from utils.common.enums import TemplateType
 from utils.common.datetime_util import DateTime
 from utils.common.io.directory import Directory
 
@@ -37,14 +36,6 @@ class FileNameFormatter:
         Directory.create_directory(download_path)
 
         return download_path
-
-    @staticmethod
-    def check_empty_field(field_dict: dict):
-        for value in field_dict.values():
-            if not value:
-                value = "null"
-
-        return field_dict
 
     @staticmethod
     def check_file_name_length(file_name: str, max_length: int = 255):
@@ -117,3 +108,9 @@ class FileNameFormatter:
         path = path.replace("/", os.sep)
 
         return path
+    
+    @staticmethod
+    def get_folder_template(template_type: int):
+        for entry in Config.Download.file_name_template_list:
+            if entry["type"] == template_type:
+                return entry["template"]["0"]

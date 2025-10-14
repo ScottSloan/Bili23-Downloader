@@ -5,8 +5,9 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
-from utils.common.enums import StatusCode, ProcessingType
+from utils.common.enums import StatusCode, ProcessingType, TemplateType
 from utils.common.model.callback import ParseCallback
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 
 from utils.parse.parser import Parser
 from utils.parse.episode.space import Space
@@ -174,7 +175,14 @@ class SpaceParser(Parser):
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        parent_title = f"{self.uname}_{self.mid}"
+        template = FileNameFormatter.get_folder_template(TemplateType.Space.value)
+
+        field_dict = {
+            "up_name": self.uname,
+            "up_uid": self.mid,
+        }
+
+        parent_title = template.format(**field_dict)
 
         Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict, self.cheese_info_dict, parent_title)
 

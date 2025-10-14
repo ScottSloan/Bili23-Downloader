@@ -44,8 +44,20 @@ class TemplateValidator:
         if not self.template:
             raise ValueError("empty")
         
+        if self.check_sep():
+            raise ValueError("sep")
+        
+        if self.check_sep_starts():
+            raise ValueError("sep starts")
+        
         if self.check_illegal_chars():
             raise ValueError("illegal")
+        
+    def check_sep(self):
+        return "\\" in self.template
+    
+    def check_sep_starts(self):
+        return self.template.startswith("/")
 
     def check_illegal_chars(self):        
         if Regex.find_illegal_chars_ex(self.template):
@@ -60,9 +72,15 @@ class TemplateValidator:
                 match str(e):
                     case "empty":
                         return _("模板名不能为空")
+                    
+                    case "sep":
+                        return _("路径分隔符不正确，请使用正斜杠 /")
+                    
+                    case "sep starts":
+                        return _("不能以 / 开头")
 
                     case "illegal":
-                        return _("不能包含 <>:\"\\/|?* 之中任何字符")
+                        return _("不能包含 <>:\"\\|?* 之中任何字符")
 
                     case msg if msg.startswith(("Single", "expected", "unexpected", "unmatched")):
                         return _("字段名必须以 {} 包裹")
@@ -228,7 +246,6 @@ class EditFolderDialog(Dialog):
         self.template_box.AppendText(field)
 
     def get_template(self):
-        print(self.data["template"])
         return self.data["template"]
     
     def update_template(self):
