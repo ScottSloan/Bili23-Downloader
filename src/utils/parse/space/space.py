@@ -170,7 +170,7 @@ class SpaceParser(Parser):
 
         self.uname = self.get_uname_by_mid(self.mid)
 
-        self.get_video_available_media_info()
+        self.start_thread(self.get_video_available_media_info)
 
         return StatusCode.Success.value
     

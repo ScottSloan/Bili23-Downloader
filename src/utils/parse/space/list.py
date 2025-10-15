@@ -199,7 +199,7 @@ class SpaceListParser(Parser):
         
         self.parse_episodes()
 
-        self.get_video_available_media_info(self.bvid, cid)
+        self.start_thread(self.get_video_available_media_info, (self.bvid, cid))
 
         return StatusCode.Success.value
 

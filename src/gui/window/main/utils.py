@@ -9,6 +9,7 @@ from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingTyp
 from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
 from utils.common.data.welcome_message import welcome_message
+from utils.common.thread import Thread
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
@@ -119,9 +120,11 @@ class Window:
 
     @staticmethod
     @show_dialog
-    def download_option_dialog(parent: wx.Window, source: str):
-        dlg = DownloadOptionDialog(parent, source)
-        return dlg.ShowModal()
+    def download_option_dialog(parent: wx.Window, source: str, init: bool = True):
+        dlg = DownloadOptionDialog(parent, source, init)
+
+        if init:
+            return dlg.ShowModal()
     
     @staticmethod
     @show_dialog
@@ -180,12 +183,12 @@ class Window:
 
     @staticmethod
     def processing_window(show: bool):
-        main_window = Utils.get_main_window()
+        window = wx.FindWindowByName("processing")
 
         if show:
-            wx.CallAfter(main_window.processing_window.ShowModal, ProcessingType.Parse)
+            wx.CallAfter(window.ShowModal, ProcessingType.Parse)
         else:
-            wx.CallAfter(main_window.processing_window.Close)
+            wx.CallAfter(window.Close)
 
     @staticmethod
     def create_processing_window(parent: wx.Window):
@@ -469,3 +472,15 @@ class Utils:
         main_window: MainWindow = wx.FindWindowByName("main")
 
         return main_window
+    
+    def download(self):
+        Window.processing_window(show = True)
+
+        if self.main_window.parser.parse_type in [ParseType.FavList, ParseType.Space]:
+            video_info_to_parse = self.main_window.episode_list.GetAllCheckedItemEx()
+
+            Thread(target = self.main_window.parser.parser.parse_video_info, args = (video_info_to_parse,)).start()
+        else:
+            self.main_window.episode_list.GetAllCheckedItem()
+
+            Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, self.main_window.on_add_to_download_list_callback, True, True)).start()

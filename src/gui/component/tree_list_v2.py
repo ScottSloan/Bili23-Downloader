@@ -197,6 +197,21 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
                 self.download_task_info_list.extend(DownloadInfo.get_download_info(item_data))
 
             item = self.GetNextItem(item)
+
+    def GetAllCheckedItemEx(self):
+        video_info_to_parse = []
+
+        item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
+
+        while item.IsOk():
+            if self.GetItemData(item).item_type == "item" and self.GetCheckedState(item) == wx.CHK_CHECKED:
+                item_data = self.GetItemData(item)
+
+                video_info_to_parse.append(item_data.to_dict())
+
+            item = self.GetNextItem(item)
+
+        return video_info_to_parse
     
     def SearchItem(self, keywords: str):
         result = []

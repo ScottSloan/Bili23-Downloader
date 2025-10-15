@@ -240,11 +240,6 @@ class MainWindow(Frame):
         self.live_recording_window.Raise()
 
     def onDownloadEVT(self, event: wx.CommandEvent):
-        def after_show_items_callback():
-            Window.processing_window(show = False)
-
-            self.onShowDownloadWindowEVT()
-        
         try:
             if self.episode_list.check_download_items():
                 return
@@ -254,12 +249,8 @@ class MainWindow(Frame):
 
             self.bottom_box.download_tip()
 
-            self.episode_list.GetAllCheckedItem()
-
-            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
-
-            Window.processing_window(show = True)
-        
+            self.utils.download()
+                    
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
         
@@ -320,6 +311,11 @@ class MainWindow(Frame):
                 item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
 
                 self.parser.refresh_media_info(item_data)
+
+    def on_add_to_download_list_callback(self):
+        Window.processing_window(show = False)
+
+        self.onShowDownloadWindowEVT()
 
     def show_episode_list(self, from_menu: bool = True):
         if from_menu:

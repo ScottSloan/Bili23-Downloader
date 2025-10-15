@@ -149,14 +149,17 @@ class Parser:
 
             @staticmethod
             def onChangeProcessingType(type: ProcessingType):
-                self.main_window.processing_window.SetType(type)
+                window = wx.FindWindowByName("processing")
+                window.SetType(type)
 
             @staticmethod
             def onUpdateName(name: str):
-                self.main_window.processing_window.UpdateName(name)
+                window = wx.FindWindowByName("processing")
+                window.UpdateName(name)
 
             @staticmethod
             def onUpdateTitle(title: str):
-                self.main_window.processing_window.UpdateTitle(title)
+                window = wx.FindWindowByName("processing")
+                window.UpdateTitle(title)
 
         return Callback

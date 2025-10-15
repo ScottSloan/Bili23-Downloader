@@ -3,13 +3,15 @@ import gettext
 
 from utils.common.enums import ProcessingType
 
+from utils.parse.parser import Flag
+
 from gui.component.window.dialog import Dialog
 
 _ = gettext.gettext
 
 class ProcessingWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, _("解析中"), style = wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
+        Dialog.__init__(self, parent, _("解析中"), style = wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP, name = "processing")
 
         self.EnableCloseButton(False)
         
@@ -43,7 +45,7 @@ class ProcessingWindow(Dialog):
         self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCancelEVT)
 
     def onCancelEVT(self, event):
-        pass
+        Flag.stop_event.set()
     
     def UpdateName(self, name: str):
         def worker():
@@ -77,7 +79,7 @@ class ProcessingWindow(Dialog):
             self.node_title_label.Show(title_show)
 
             self.Layout()
-            
+
         match type:
             case ProcessingType.Process:
                 title = _("处理中")
@@ -98,6 +100,7 @@ class ProcessingWindow(Dialog):
                 title = _("解析中")
                 tip = _("正在获取所有分页数据，请稍候")
                 title_show = True
+
 
         wx.CallAfter(worker)
 

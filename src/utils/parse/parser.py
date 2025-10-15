@@ -1,11 +1,15 @@
 import re
 import json
+import threading
 import urllib.parse
 
 from utils.common.enums import StatusCode
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread
+
+class Flag:
+    stop_event = threading.Event()
 
 class Parser:
     url: str = None

@@ -17,7 +17,7 @@ from gui.component.staticbox.extra import ExtraStaticBox
 _ = gettext.gettext
 
 class DownloadOptionDialog(Dialog):
-    def __init__(self, parent: wx.Window, source: str):
+    def __init__(self, parent: wx.Window, source: str, init: bool = True):
         from gui.window.main.main_v3 import MainWindow
 
         self.parent: MainWindow = parent
@@ -29,7 +29,10 @@ class DownloadOptionDialog(Dialog):
 
         self.Bind_EVT()
 
-        self.init_utils()
+        self.stop_event = Event()
+
+        if init:
+            self.init_utils()
 
         self.CenterOnParent()
 
@@ -86,8 +89,6 @@ class DownloadOptionDialog(Dialog):
             self.extra_box.load_data()
 
             self.other_box.load_data()
-
-        self.stop_event = Event()
 
         load_download_option()
 
