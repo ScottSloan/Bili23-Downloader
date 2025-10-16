@@ -32,15 +32,17 @@ class Video:
         Filter.episode_display_mode(reset = EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section)
 
     @classmethod
-    def pages_parser(cls, info_json: dict):
+    def pages_parser(cls, info_json: dict, detail_mode: bool = False):
+        episode_info_list = []
         pages_cnt = len(info_json["pages"])
 
         part_title = info_json.get("title")
 
-        if pages_cnt > 1:
-            page_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(part_title, label = "分P"))
-        else:
-            page_pid = EpisodeInfo.root_pid
+        if not detail_mode:
+            if pages_cnt > 1:
+                page_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(part_title, label = "分P"))
+            else:
+                page_pid = EpisodeInfo.root_pid
 
         for page in info_json["pages"]:
             page["cover_url"] = info_json["pic"]
@@ -51,7 +53,14 @@ class Video:
             page["part_title"] = part_title if pages_cnt > 1 else ""
             page["template_type"] = TemplateType.Video_Part.value if pages_cnt > 1 else TemplateType.Video_Normal.value
 
-            EpisodeInfo.add_item(page_pid, cls.get_entry_info(page.copy(), info_json))
+            entry_info = cls.get_entry_info(page.copy(), info_json)
+
+            if detail_mode:
+                episode_info_list.append(EpisodeInfo.get_entry_info(entry_info))
+            else:
+                EpisodeInfo.add_item(page_pid, entry_info)
+
+        return episode_info_list
 
     @classmethod
     def ugc_season_parser(cls, info_json: dict):
@@ -69,6 +78,7 @@ class Video:
                 aid = episode["aid"]
                 bvid = episode["bvid"]
                 pubtime = episode["arc"]["pubdate"]
+                badge = cls.get_badge(episode.get("attribute", 0))
 
                 if len(episode["pages"]) == 1:
                     episode["page"] = episode["page"]["page"] if isinstance(episode["page"], dict) else episode["page"]
@@ -76,6 +86,7 @@ class Video:
                     episode["aid"] = aid
                     episode["bvid"] = bvid
                     episode["pubtime"] = pubtime
+                    episode["badge"] = badge
                     episode["section_title"] = section_title
                     episode["collection_title"] = collection_title
                     episode["template_type"] = TemplateType.Video_Collection.value
@@ -92,6 +103,7 @@ class Video:
                         page["aid"] = aid
                         page["bvid"] = bvid
                         page["pubtime"] = pubtime
+                        page["badge"] = badge
                         page["section_title"] = section_title
                         page["part_title"] = part_title
                         page["collection_title"] = collection_title
@@ -102,15 +114,17 @@ class Video:
                 cls.update_target_section_title(episode, section_title)
 
     @classmethod
-    def ugc_season_pages_parser(cls, episode_info: dict, season_info: dict, target_bvid: str):
-        for section in season_info["ugc_season"]["sections"]:
+    def ugc_season_pages_parser(cls, info_json: dict, target_bvid: str):
+        episode_info_list = []
+
+        for section in info_json["ugc_season"]["sections"]:
             for episode in section.get("episodes"):
                 if (bvid := episode.get("bvid")) == target_bvid:
                     cover_url = episode["arc"]["pic"]
                     aid = episode["aid"]
                     bvid = episode["bvid"]
                     pubtime = episode["arc"]["pubdate"]
-                    badge = cls.get_badge(episode_info.get("attribute", 0))
+                    badge = cls.get_badge(episode.get("attribute", 0))
 
                     if len(episode.get("pages")) == 1:
                         episode["cover_url"] = cover_url
@@ -119,11 +133,10 @@ class Video:
                         episode["pubtime"] = pubtime
                         episode["badge"] = badge
 
-                        EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_ugc_pages_entry_info(episode.copy(), season_info, multiple = False))
+                        episode_info_list.append(EpisodeInfo.get_entry_info(cls.get_ugc_pages_entry_info(episode.copy(), info_json, multiple = False)))
+
                     else:
                         part_title = episode["arc"]["title"]
-
-                        page_pid = EpisodeInfo.add_item(EpisodeInfo.root_pid, EpisodeInfo.get_node_info(part_title, episode["arc"]["duration"], label = "合集"))
 
                         for page in episode.get("pages"):
                             page["cover_url"] = cover_url
@@ -132,7 +145,9 @@ class Video:
                             page["collection_title"] = part_title
                             page["badge"] = badge
 
-                            EpisodeInfo.add_item(page_pid, cls.get_ugc_pages_entry_info(page.copy(), season_info, multiple = True))
+                            episode_info_list.append(EpisodeInfo.get_entry_info(cls.get_ugc_pages_entry_info(page.copy(), info_json, multiple = True)))
+
+        return episode_info_list
 
     @classmethod
     def interact_parser(cls, info_json: dict):

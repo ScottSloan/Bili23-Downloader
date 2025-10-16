@@ -205,8 +205,7 @@ class VideoPreview(Parser):
     @classmethod
     def get_video_quality_id(cls, video_quality_id: int, data: dict, priority_setting: list = None):
         if not priority_setting:
-            priority_setting = Config.Temp.video_quality_priority.copy()
-
+            priority_setting = Config.Download.video_quality_priority.copy()
         video_quality_id_list = cls.get_video_available_quality_id_list(data)
 
         if video_quality_id == VideoQualityID._Auto.value:
@@ -223,7 +222,7 @@ class VideoPreview(Parser):
     @classmethod
     def get_audio_quality_id(cls, audio_quality_id: int, data: dict, priority_setting: list = None):
         if not priority_setting:
-            priority_setting = Config.Temp.audio_quality_priority.copy()
+            priority_setting = Config.Download.audio_quality_priority.copy()
 
         audio_quality_id_list = cls.get_audio_available_quality_id_list(data)
 
@@ -241,7 +240,7 @@ class VideoPreview(Parser):
     @classmethod
     def get_video_codec_id(cls, video_quality_id: int, video_codec_id: int, stream_type: int, data: dict, priority_setting: list = None):
         if not priority_setting:
-            priority_setting = Config.Temp.video_codec_priority.copy()
+            priority_setting = Config.Download.video_codec_priority.copy()
                 
         video_codec_id_list = cls.get_video_available_codec_id_list(video_quality_id, stream_type, data)
 

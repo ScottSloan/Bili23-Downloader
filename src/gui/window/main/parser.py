@@ -148,11 +148,6 @@ class Parser:
                 self.onJump(url)
 
             @staticmethod
-            def onChangeProcessingType(type: ProcessingType):
-                window = wx.FindWindowByName("processing")
-                window.SetType(type)
-
-            @staticmethod
             def onUpdateName(name: str):
                 window = wx.FindWindowByName("processing")
                 window.UpdateName(name)

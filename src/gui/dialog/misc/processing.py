@@ -3,8 +3,6 @@ import gettext
 
 from utils.common.enums import ProcessingType
 
-from utils.parse.parser import Flag
-
 from gui.component.window.dialog import Dialog
 
 _ = gettext.gettext
@@ -16,8 +14,6 @@ class ProcessingWindow(Dialog):
         self.EnableCloseButton(False)
         
         self.init_UI()
-
-        self.Bind_EVT()
         
         self.CenterOnParent()
         
@@ -27,6 +23,7 @@ class ProcessingWindow(Dialog):
         self.node_title_label = wx.StaticText(self, -1, _("节点：--"))
 
         self.cancel_btn = wx.Button(self, -1, _("取消"), size = self.get_scaled_size((60, 24)))
+        self.cancel_btn.Enable(False)
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.AddStretchSpacer()
@@ -40,12 +37,6 @@ class ProcessingWindow(Dialog):
         vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
-
-    def Bind_EVT(self):
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCancelEVT)
-
-    def onCancelEVT(self, event):
-        Flag.stop_event.set()
     
     def UpdateName(self, name: str):
         def worker():
@@ -100,7 +91,6 @@ class ProcessingWindow(Dialog):
                 title = _("解析中")
                 tip = _("正在获取所有分页数据，请稍候")
                 title_show = True
-
 
         wx.CallAfter(worker)
 

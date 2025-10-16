@@ -312,11 +312,6 @@ class MainWindow(Frame):
 
                 self.parser.refresh_media_info(item_data)
 
-    def on_add_to_download_list_callback(self):
-        Window.processing_window(show = False)
-
-        self.onShowDownloadWindowEVT()
-
     def show_episode_list(self, from_menu: bool = True):
         if from_menu:
             self.parser.parse_episode()

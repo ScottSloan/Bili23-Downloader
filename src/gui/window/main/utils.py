@@ -10,6 +10,7 @@ from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
 from utils.common.data.welcome_message import welcome_message
 from utils.common.thread import Thread
+from utils.common.model.download_info import DownloadInfo
 
 from utils.module.ffmpeg_v2 import FFmpeg
 from utils.module.clipboard import ClipBoard
@@ -474,13 +475,26 @@ class Utils:
         return main_window
     
     def download(self):
+        def add_to_list_callback():
+            Window.processing_window(show = False)
+
+            self.main_window.onShowDownloadWindowEVT()
+
+        def detail_mode_callback(episode_info_list: list[dict]):
+            for entry in episode_info_list:
+                self.main_window.episode_list.download_task_info_list.extend(DownloadInfo.get_download_info(entry))
+
+            Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
+
         Window.processing_window(show = True)
 
         if self.main_window.parser.parse_type in [ParseType.FavList, ParseType.Space]:
             video_info_to_parse = self.main_window.episode_list.GetAllCheckedItemEx()
 
-            Thread(target = self.main_window.parser.parser.parse_video_info, args = (video_info_to_parse,)).start()
+            Thread(target = self.main_window.parser.parser.parse_video_info, args = (video_info_to_parse, detail_mode_callback)).start()
         else:
             self.main_window.episode_list.GetAllCheckedItem()
 
-            Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, self.main_window.on_add_to_download_list_callback, True, True)).start()
+            Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
+
+    

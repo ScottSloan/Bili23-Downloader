@@ -45,6 +45,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.AppendColumn(_("时长"), width = self.FromDIP(75))
 
         self.shift_down_items: list[int] = []
+        self.download_task_info_list: list = []
 
     def show_episode_list(self):
         def add_item(data: dict | list, item: wx.dataview.TreeListItem):
@@ -186,7 +187,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.CheckItemRecursively(self.GetFirstItem(), wx.CHK_UNCHECKED)
 
     def GetAllCheckedItem(self):
-        self.download_task_info_list = []
+        self.download_task_info_list.clear()
 
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())
 
@@ -199,6 +200,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             item = self.GetNextItem(item)
 
     def GetAllCheckedItemEx(self):
+        self.download_task_info_list.clear()
         video_info_to_parse = []
 
         item: wx.dataview.TreeListItem = self.GetFirstChild(self.GetRootItem())

@@ -44,19 +44,17 @@ class Bangumi:
             cls.update_target_section_title(episode, section_title)
 
     @classmethod
-    def episodes_single_parser(cls, info_json: dict, target_bvid: str):
+    def episodes_single_parser(cls, info_json: dict):
         info_json = cls.get_sections(info_json.copy())
         cls.get_season_num(info_json)
 
         for section in info_json["sections"]:
             for episode in section["episodes"]:
-                if episode.get("bvid") == target_bvid:
+                if episode.get("bvid") == info_json["target_bvid"]:
                     episode["season_id"] = info_json["season_id"]
                     episode["media_id"] = info_json["media_id"]
 
-                    EpisodeInfo.add_item(EpisodeInfo.root_pid, cls.get_entry_info(episode.copy(), info_json, section["title"]))
-
-                    return
+                    return [EpisodeInfo.get_entry_info(cls.get_entry_info(episode.copy(), info_json, section["title"]))]
 
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):

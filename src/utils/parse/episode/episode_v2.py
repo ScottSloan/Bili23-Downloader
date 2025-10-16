@@ -4,6 +4,7 @@ from typing import Callable
 from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType
+from utils.common.model.list_item_info import TreeListItemInfo
 
 class EpisodeInfo:
     data: dict = {}
@@ -139,6 +140,18 @@ class Episode:
                 Filter.travarsal_episode_all(condition)
             else:
                 EpisodeInfo.filted_data = EpisodeInfo.data.copy()
+
+        @staticmethod
+        def dict_list_to_tree_item_list(episode_info_list: list[dict]):
+            temp = []
+
+            for entry in episode_info_list:
+                tree_item = TreeListItemInfo()
+                tree_item.load_from_dict(entry)
+
+                temp.append(tree_item)
+
+            return temp
 
 class Filter:
     @staticmethod

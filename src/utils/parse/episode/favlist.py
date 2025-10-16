@@ -18,7 +18,7 @@ class FavList:
         EpisodeInfo.clear_episode_data()
 
         for episode in info_json.get("episodes"):
-            if episode.get("page") != 0:
+            if episode.get("page") != 0: 
                 cls.video_parser(episode.copy())
 
             elif episode.get("ogv"):
@@ -40,22 +40,36 @@ class FavList:
         Filter.episode_display_mode(reset = True)
 
     @classmethod
-    def video_parser(cls, episode_info: dict):
-        bvid = episode_info.get("bvid")
+    def parse_episodes_detail(cls, video_info_list: list[dict]):
+        episode_info_list = []
 
-        if info_json := cls.season_dict["video"].get(bvid):
-            if "ugc_season" in info_json:
-                Video.ugc_season_pages_parser({}, info_json, bvid)
-                
-            else:
-                Video.pages_parser(info_json)
+        for entry in video_info_list:
+            if entry:
+                match ParseType(entry["parse_type"]):
+                    case ParseType.Video:
+                        episode_info_list.extend(cls.video_parser(entry))
+
+                    case ParseType.Bangumi:
+                        episode_info_list.extend(cls.bangumi_parser(entry))
+
+        return episode_info_list
 
     @classmethod
-    def bangumi_parser(cls, episode_info: dict):
-        season_id = episode_info["ogv"]["season_id"]
+    def video_parser(cls, info_json: dict):
+        episode_info_list = []
+        bvid = info_json.get("bvid")
 
-        if info_json := cls.season_dict["bangumi"].get(season_id):
-            Bangumi.episodes_single_parser(info_json, episode_info["bvid"])
+        if "ugc_season" in info_json:
+            episode_info_list = Video.ugc_season_pages_parser(info_json, bvid)
+            
+        else:
+            episode_info_list = Video.pages_parser(info_json, detail_mode = True)
+
+        return episode_info_list
+
+    @classmethod
+    def bangumi_parser(cls, info_json: dict):
+        return Bangumi.episodes_single_parser(info_json)
 
     @classmethod
     def get_entry_info_video(cls, episode: dict):

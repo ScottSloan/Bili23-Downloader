@@ -1,15 +1,12 @@
 import re
+import wx
 import json
-import threading
 import urllib.parse
 
-from utils.common.enums import StatusCode
+from utils.common.enums import StatusCode, ProcessingType
 from utils.common.exception import GlobalException
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread
-
-class Flag:
-    stop_event = threading.Event()
 
 class Parser:
     url: str = None
@@ -129,3 +126,19 @@ class Parser:
             return data
         else:
             raise GlobalException(message = f"Key '{key}' is not present", json_data = json_data)
+
+    @classmethod
+    def change_processing_type(cls, type: ProcessingType):
+        cls.get_processing_window().SetType(type)
+
+    @classmethod
+    def update_processing_name(cls, name: str):
+        cls.get_processing_window().UpdateName(name)
+
+    @classmethod
+    def update_processing_title(cls, title: str):
+        cls.get_processing_window().UpdateTitle(title)
+
+    @staticmethod
+    def get_processing_window():
+        return wx.FindWindowByName("processing")

@@ -164,7 +164,7 @@ class SpaceParser(Parser):
 
         time.sleep(0.5)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.change_processing_type(ProcessingType.Page)
 
         self.parse_space_info(self.mid)
 

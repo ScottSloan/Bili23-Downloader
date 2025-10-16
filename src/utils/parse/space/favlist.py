@@ -4,13 +4,14 @@ import time
 from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
-from utils.common.enums import StatusCode, ProcessingType, TemplateType
+from utils.common.enums import StatusCode, ProcessingType, TemplateType, ParseType
 from utils.common.request import RequestUtils
 from utils.common.model.callback import ParseCallback
 from utils.common.formatter.file_name_v2 import FileNameFormatter
 from utils.common.regex import Regex
 
-from utils.parse.parser import Parser, Flag
+from utils.parse.parser import Parser
+from utils.parse.episode.episode_v2 import Episode
 from utils.parse.episode.favlist import FavList
 
 class FavListParser(Parser):
@@ -69,8 +70,11 @@ class FavListParser(Parser):
 
         self.total_data += 1
 
-        return resp.get("data")
-    
+        if data := resp.get("data"):
+            data["parse_type"] = ParseType.Video.value
+
+            return data
+
     def get_bangumi_info(self, season_id: int) -> dict:
         params = {
             "season_id": season_id
@@ -82,7 +86,10 @@ class FavListParser(Parser):
         
         self.total_data += 1
 
-        return resp.get("result")
+        if data := resp.get("result"):
+            data["parse_type"] = ParseType.Bangumi.value
+
+            return data
 
     def get_video_available_media_info(self):
         episode: dict = self.info_json["episodes"][0]
@@ -116,30 +123,33 @@ class FavListParser(Parser):
 
             self.onUpdateTitle(page, total_page, self.total_data)
 
-    def parse_video_info(self, video_info_to_parse: list[dict]):
-        self.season_dict = {
-            "video": {},
-            "bangumi": {}
-        }
+    def parse_video_info(self, video_info_to_parse: list[dict], detail_mode_callback):
+        video_info_list = []
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.change_processing_type(ProcessingType.Page)
 
         for entry in video_info_to_parse:
             self.onUpdateName(entry["title"])
             self.onUpdateTitle(1, 1, self.total_data)
 
-            time.sleep(0.1)
+            bvid = entry.get("bvid")
 
-            # if entry.get("page") != 0:
-            #     bvid = entry.get("bvid")
+            match ParseType(entry["type"]):
+                case ParseType.Video:
+                    video_info_list.append(self.get_video_info(bvid))
 
-            #     self.season_dict["video"][bvid] = self.get_video_info(bvid)
-            
-            # elif entry.get("ogv"):
-            #     season_id = entry["ogv"]["season_id"]
+                case ParseType.Bangumi:
+                    info = self.get_bangumi_info(entry["season_id"])
+                    info["target_bvid"] = bvid
+                    
+                    video_info_list.append(info)
 
-            #     self.season_dict["bangumi"][season_id] = self.get_bangumi_info(season_id)
-    
+        self.change_processing_type(ProcessingType.Process)
+
+        episode_info_list = Episode.Utils.dict_list_to_tree_item_list(FavList.parse_episodes_detail(video_info_list))
+
+        detail_mode_callback(episode_info_list)
+
     def parse_worker(self, url: str):
         self.clear_favlist_info()
 
@@ -147,7 +157,7 @@ class FavListParser(Parser):
 
         time.sleep(0.5)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.change_processing_type(ProcessingType.Page)
 
         self.parse_favlist_info(media_id)
 

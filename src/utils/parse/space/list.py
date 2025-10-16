@@ -169,7 +169,7 @@ class SpaceListParser(Parser):
 
         time.sleep(0.5)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.change_processing_type(ProcessingType.Page)
 
         bvid, cid = None, None
 
@@ -189,7 +189,7 @@ class SpaceListParser(Parser):
             if "sid" in url:
                 series_id = self.get_sid(url)
             else:
-                self.callback.onChangeProcessingType(ProcessingType.Parse)
+                self.change_processing_type(ProcessingType.Parse)
 
                 raise GlobalException(code = StatusCode.Redirect.value, callback = self.callback.onJump, args = (bvid, ))
 
