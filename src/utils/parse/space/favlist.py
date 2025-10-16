@@ -141,12 +141,12 @@ class FavListParser(Parser):
                 case ParseType.Bangumi:
                     info = self.get_bangumi_info(entry["season_id"])
                     info["target_bvid"] = bvid
-                    
+
                     video_info_list.append(info)
 
         self.change_processing_type(ProcessingType.Process)
 
-        episode_info_list = Episode.Utils.dict_list_to_tree_item_list(FavList.parse_episodes_detail(video_info_list))
+        episode_info_list = Episode.Utils.dict_list_to_tree_item_list(FavList.parse_episodes_detail(video_info_list, self.get_parent_title()))
 
         detail_mode_callback(episode_info_list)
 
@@ -160,10 +160,6 @@ class FavListParser(Parser):
         self.change_processing_type(ProcessingType.Page)
 
         self.parse_favlist_info(media_id)
-
-        #self.parse_video_info()
-
-        #self.start_thread(self.get_video_available_media_info)
 
         self.parse_episodes()
 

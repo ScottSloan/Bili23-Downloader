@@ -9,7 +9,6 @@ from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 class Bangumi:
     target_section_title: str = ""
     target_ep_id: int = 0
-    parent_title: str = ""
     season_num: int = 0
 
     @classmethod
@@ -44,7 +43,7 @@ class Bangumi:
             cls.update_target_section_title(episode, section_title)
 
     @classmethod
-    def episodes_single_parser(cls, info_json: dict):
+    def episodes_single_parser(cls, info_json: dict, parent_title: str):
         info_json = cls.get_sections(info_json.copy())
         cls.get_season_num(info_json)
 
@@ -54,10 +53,10 @@ class Bangumi:
                     episode["season_id"] = info_json["season_id"]
                     episode["media_id"] = info_json["media_id"]
 
-                    return [EpisodeInfo.get_entry_info(cls.get_entry_info(episode.copy(), info_json, section["title"]))]
+                    return [EpisodeInfo.get_entry_info(cls.get_entry_info(episode.copy(), info_json, section["title"], parent_title))]
 
     @classmethod
-    def get_entry_info(cls, episode: dict, info_json: dict, section_title: str):
+    def get_entry_info(cls, episode: dict, info_json: dict, section_title: str, parent_title: str = ""):
         episode["season_num"] = cls.season_num
         episode["episode_num"] = int(episode.get("title")) if (episode_num := episode.get("title")) and episode_num.isnumeric() else 0
         episode["total_count"] = info_json.get("total", 0)
@@ -75,7 +74,7 @@ class Bangumi:
         episode["up_mid"] = info_json.get("up_info", {"mid": 0}).get("mid", 0)
         episode["bangumi_type"] = bangumi_type_map.get(info_json.get("type"))
         episode["template_type"] = TemplateType.Bangumi.value if episode.get("ep_id") else TemplateType.Video_Normal.value
-        episode["parent_title"] = cls.parent_title
+        episode["parent_title"] = parent_title
 
         return EpisodeInfo.get_entry_info(episode)
     

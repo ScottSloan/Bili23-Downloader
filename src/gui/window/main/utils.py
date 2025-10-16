@@ -496,5 +496,3 @@ class Utils:
             self.main_window.episode_list.GetAllCheckedItem()
 
             Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
-
-    

@@ -100,7 +100,12 @@ class VideoPreview(Parser):
 
     @staticmethod
     def get_stream_type(data: dict):
-        return data.get("type", "DASH" if "dash" in data else "FLV")
+        if data:
+            stream_type = "DASH" if "dash" in data else "FLV"
+        else:
+            stream_type = None
+
+        return data.get("type", stream_type)
     
     def get_video_stream_info(self, episode_params: dict):
         qn = episode_params.get("qn")
@@ -166,6 +171,9 @@ class VideoPreview(Parser):
                     "codec": video_codec_id,
                     "size": node["size"]
                 }
+            
+            case _:
+                return {}
 
     def get_audio_stream_info(self, audio_quality_id: int):
         audio_quality_id = self.get_audio_quality_id(audio_quality_id, self.download_json["dash"])
@@ -206,6 +214,7 @@ class VideoPreview(Parser):
     def get_video_quality_id(cls, video_quality_id: int, data: dict, priority_setting: list = None):
         if not priority_setting:
             priority_setting = Config.Download.video_quality_priority.copy()
+
         video_quality_id_list = cls.get_video_available_quality_id_list(data)
 
         if video_quality_id == VideoQualityID._Auto.value:
@@ -253,7 +262,10 @@ class VideoPreview(Parser):
             return video_codec_id
 
         else:
-            return video_codec_id_list[0]
+            if video_codec_id_list:
+                return video_codec_id_list[0]
+            else:
+                return video_codec_id
 
     @classmethod
     def get_video_resolution(cls, task_info: DownloadTaskInfo, data: dict):
@@ -280,7 +292,7 @@ class VideoPreview(Parser):
         }
 
         for key, value in video_quality_priority.items():
-            if value in data["accept_quality"]:
+            if value in data.get("accept_quality", []):
                 video_quality_data_dict[key] = value
 
         return video_quality_data_dict
@@ -329,7 +341,7 @@ class VideoPreview(Parser):
                 return list(set(available_list))
 
             else:
-                return data["accept_quality"]
+                return data.get("accept_quality", [])
 
     @classmethod
     def get_audio_available_quality_id_list(cls, data: dict):
@@ -348,6 +360,9 @@ class VideoPreview(Parser):
                 
             case StreamType.Flv | StreamType.Mp4:
                 return [VideoCodecID.AVC.value]
+            
+            case StreamType.Null:
+                return []
 
     @staticmethod
     def get_stream_download_url_list(data: dict):

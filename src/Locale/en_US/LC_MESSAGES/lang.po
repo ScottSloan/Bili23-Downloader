@@ -283,6 +283,15 @@ msgstr ""
 msgid "获取媒体信息失败"
 msgstr "Failed to retrieve media information"
 
+msgid "根据优先级设置自动选择画质"
+msgstr "Automatically select video quality by priority settings"
+
+msgid "根据优先级设置自动选择音质"
+msgstr "Automatically select audio quality by priority settings"
+
+msgid "根据优先级设置自动选择编码"
+msgstr "Automatically select codec by priority settings"
+
 # -------------- src/gui/dialog/download_option/media_option.py --------------
 msgid "媒体下载选项"
 msgstr "Media Download Options"

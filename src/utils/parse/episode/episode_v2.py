@@ -5,6 +5,7 @@ from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType
 from utils.common.model.list_item_info import TreeListItemInfo
+from utils.common.data.badge import badge_dict
 
 class EpisodeInfo:
     data: dict = {}
@@ -152,6 +153,14 @@ class Episode:
                 temp.append(tree_item)
 
             return temp
+        
+        @staticmethod
+        def get_badge(attribute: int):
+            for i in badge_dict.keys():
+                if attribute & (1 << i):
+                    return badge_dict.get(i, "")
+            
+            return ""
 
 class Filter:
     @staticmethod

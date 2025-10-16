@@ -6,7 +6,6 @@ from utils.parse.episode.episode_v2 import EpisodeInfo, Filter
 
 class Video:
     target_cid: int = 0
-    parent_title: str = ""
 
     @classmethod
     def parse_episodes(cls, info_json: dict):
@@ -32,7 +31,7 @@ class Video:
         Filter.episode_display_mode(reset = EpisodeDisplayType(Config.Misc.episode_display_mode) == EpisodeDisplayType.In_Section)
 
     @classmethod
-    def pages_parser(cls, info_json: dict, detail_mode: bool = False):
+    def pages_parser(cls, info_json: dict, detail_mode: bool = False, parent_title: str = ""):
         episode_info_list = []
         pages_cnt = len(info_json["pages"])
 
@@ -52,6 +51,7 @@ class Video:
             page["title"] = page["part"] if pages_cnt > 1 else info_json["title"]
             page["part_title"] = part_title if pages_cnt > 1 else ""
             page["template_type"] = TemplateType.Video_Part.value if pages_cnt > 1 else TemplateType.Video_Normal.value
+            page["parent_title"] = parent_title
 
             entry_info = cls.get_entry_info(page.copy(), info_json)
 
@@ -114,7 +114,7 @@ class Video:
                 cls.update_target_section_title(episode, section_title)
 
     @classmethod
-    def ugc_season_pages_parser(cls, info_json: dict, target_bvid: str):
+    def ugc_season_pages_parser(cls, info_json: dict, target_bvid: str, parent_title: str):
         episode_info_list = []
 
         for section in info_json["ugc_season"]["sections"]:
@@ -132,6 +132,7 @@ class Video:
                         episode["bvid"] = bvid
                         episode["pubtime"] = pubtime
                         episode["badge"] = badge
+                        episode["parent_title"] = parent_title
 
                         episode_info_list.append(EpisodeInfo.get_entry_info(cls.get_ugc_pages_entry_info(episode.copy(), info_json, multiple = False)))
 
@@ -144,6 +145,7 @@ class Video:
                             page["aid"] = aid
                             page["collection_title"] = part_title
                             page["badge"] = badge
+                            page["parent_title"] = parent_title
 
                             episode_info_list.append(EpisodeInfo.get_entry_info(cls.get_ugc_pages_entry_info(page.copy(), info_json, multiple = True)))
 
@@ -181,7 +183,6 @@ class Video:
         episode["up_name"] = info_json.get("owner", {"name": ""}).get("name", "")
         episode["up_mid"] = info_json.get("owner", {"mid": 0}).get("mid", 0)
         episode["interact_title"] = episode.get("interact_title", "")
-        episode["parent_title"] = cls.parent_title
 
         return EpisodeInfo.get_entry_info(episode)
     
@@ -196,7 +197,6 @@ class Video:
         episode["up_name"] = info_json.get("owner", {"name": ""}).get("name", "")
         episode["up_mid"] = info_json.get("owner", {"mid": 0}).get("mid", 0)
         episode["template_type"] = TemplateType.Video_Collection.value if multiple else TemplateType.Video_Normal.value
-        episode["parent_title"] = cls.parent_title
 
         return EpisodeInfo.get_entry_info(episode)
 

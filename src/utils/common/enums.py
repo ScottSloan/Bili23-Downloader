@@ -60,6 +60,7 @@ class StreamType(Enum):
     Dash = "DASH"                 # dash 流
     Flv = "FLV"                   # flv 流
     Mp4 = "MP4"                   # mp4 流
+    Null = None                   # 未知流
 
 class DownloadStatus(Enum):
     Waiting = 0                   # 等待下载

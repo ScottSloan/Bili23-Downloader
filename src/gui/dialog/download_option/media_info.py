@@ -44,7 +44,7 @@ class InfoGroup(Panel):
         top_hbox.Add(priority_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
         top_hbox.Add(self.priority_btn, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.info_lab = InfoLabel(self, "", size = self.FromDIP((400, -1)), color = Color.get_label_text_color())
+        self.info_lab = InfoLabel(self, "", size = self.FromDIP((470, -1)), color = Color.get_label_text_color())
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.info_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -154,6 +154,7 @@ class MediaInfoPanel(Panel):
         Config.Temp.audio_quality_priority = Config.Download.audio_quality_priority.copy()
         Config.Temp.video_codec_priority = Config.Download.video_codec_priority.copy()
 
+        
         self.video_quality_info.SetChoice(self.preview.get_video_quality_data_dict(self.preview.download_json.copy()))
         self.audio_quality_info.SetChoice(self.preview.get_audio_quality_data_dict(self.preview.download_json.copy()))
         self.video_codec_info.SetChoice(self.preview.get_video_codec_data_dict())
@@ -171,7 +172,7 @@ class MediaInfoPanel(Panel):
         Config.Download.video_codec_id = self.video_codec_id
 
     def set_stream_type(self, stream_type: str):
-        self.stream_type_lab.SetLabel(stream_type)
+        self.stream_type_lab.SetLabel(stream_type if stream_type else "--")
 
     def parse_worker(self, worker: Callable):
         try:
@@ -186,17 +187,15 @@ class MediaInfoPanel(Panel):
 
             info_label = self.get_video_quality_label(info)
 
-            wx.CallAfter(self.update_video_info_box_ui, info_label, info["codec"])
+            wx.CallAfter(self.update_video_info_box_ui, info_label, info.get("codec"))
 
         self.parse_worker(worker)
 
     def get_video_quality_label(self, info: dict):
-        desc = video_quality_map.get(info["id"])
-
         match StreamType(self.stream_type):
             case StreamType.Dash:
                 label_info = {
-                    "desc": desc,
+                    "desc": video_quality_map.get(info["id"]),
                     "frame_rate": info["framerate"],
                     "bandwidth": FormatUtils.format_bandwidth(info["bandwidth"]),
                     "size": FormatUtils.format_size(info["size"])
@@ -204,15 +203,18 @@ class MediaInfoPanel(Panel):
             
             case StreamType.Flv:
                 label_info = {
-                    "desc": desc,
+                    "desc": video_quality_map.get(info["id"]),
                     "size": FormatUtils.format_size(info["size"])
                 }
 
             case StreamType.Mp4:
                 label_info = {
-                    "desc": desc,
+                    "desc": video_quality_map.get(info["id"]),
                     "size": FormatUtils.format_size(info["size"])
                 }
+
+            case StreamType.Null:
+                return _("根据优先级设置自动选择画质")
 
         return "   ".join([f"[{value}]" for value in label_info.values()])
 
@@ -227,6 +229,9 @@ class MediaInfoPanel(Panel):
 
                 case StreamType.Mp4:
                     info = "MP4"
+
+                case StreamType.Null:
+                    info = "null"
 
             info_label = self.get_audio_quality_label(info)
 
@@ -244,6 +249,9 @@ class MediaInfoPanel(Panel):
 
             case "MP4":
                 return _("MP4 格式视频流中已包含音轨，不支持自定义")
+            
+            case "null":
+                return _("根据优先级设置自动选择音质")
 
             case _:
                 label_info = {
@@ -283,9 +291,9 @@ class MediaInfoPanel(Panel):
     def update_video_info_box_ui(self, info_label: str, codec: str):
         if not self.parent.stop_event.is_set():
             self.video_quality_info.SetInfoLabel(info_label)
-            self.video_codec_info.SetInfoLabel(video_codec_map.get(codec, "--"))
+            self.video_codec_info.SetInfoLabel(video_codec_map.get(codec, _("根据优先级设置自动选择编码")))
 
-            self.video_quality_info.SetTopToolTip("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：%s\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。" % PreviewInfo.episode_info.get("title"))
+            self.video_quality_info.SetTopToolTip(_("此处显示的媒体信息为解析链接对应的单个视频，若存在多个视频媒体信息不一致的情况，可能会不准确。\n\n当前显示的媒体信息所对应的视频：%s\n\n若需要切换预览其他视频，请右键点击剧集列表项目，刷新媒体信息。") % PreviewInfo.episode_info.get("title"))
 
             self.set_stream_type(self.stream_type)
 
