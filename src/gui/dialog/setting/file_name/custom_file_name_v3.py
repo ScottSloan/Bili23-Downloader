@@ -39,7 +39,7 @@ class CustomFileNameDialog(Dialog):
         top_hbox.AddStretchSpacer()
         top_hbox.Add(self.help_btn, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.template_list = wx.ListCtrl(self, -1, size = self.FromDIP((550, 210)), style = wx.LC_REPORT)
+        self.template_list = wx.ListCtrl(self, -1, size = self.FromDIP((580, 210)), style = wx.LC_REPORT)
 
         self.strict_naming_chk = wx.CheckBox(self, -1, _("下载剧集时，使用严格刮削命名模板"))
         strict_naming_tip = ToolTip(self)

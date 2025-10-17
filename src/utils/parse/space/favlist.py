@@ -126,6 +126,8 @@ class FavListParser(Parser):
     def parse_video_info(self, video_info_to_parse: list[dict], detail_mode_callback):
         video_info_list = []
 
+        time.sleep(0.5)
+
         self.change_processing_type(ProcessingType.Page)
 
         for entry in video_info_to_parse:
@@ -143,6 +145,8 @@ class FavListParser(Parser):
                     info["target_bvid"] = bvid
 
                     video_info_list.append(info)
+
+        time.sleep(0.5)
 
         self.change_processing_type(ProcessingType.Process)
 

@@ -43,7 +43,7 @@ class FavList:
             episode_info_list = Video.ugc_season_pages_parser(info_json, bvid, parent_title)
             
         else:
-            episode_info_list = Video.pages_parser(info_json, True, parent_title)
+            episode_info_list = Video.pages_parser(info_json, parent_title)
 
         return episode_info_list
 
