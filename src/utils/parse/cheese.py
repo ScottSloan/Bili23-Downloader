@@ -94,7 +94,7 @@ class CheeseParser(Parser):
         episode: dict = Episode.Utils.get_first_episode()
 
         if episode:
-            self.start_thread(self.get_cheese_available_media_info, args = (episode.get("aid"), episode.get("ep_id"), episode.get("cid")))
+            self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))
 
         return StatusCode.Success.value
 

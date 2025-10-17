@@ -43,15 +43,19 @@ class SpaceParser(Parser):
 
         url = f"https://api.bilibili.com/x/space/wbi/arc/search?{WbiUtils.encWbi(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA), check = False)
 
-        vlist = resp["data"]["list"]["vlist"]
+        if resp["code"] == 0:
+            vlist = resp["data"]["list"]["vlist"]
 
-        self.info_json["episodes"].extend(vlist)
+            self.info_json["episodes"].extend(vlist)
 
-        self.total_data += len(vlist)
+            self.total_data += len(vlist)
 
-        return resp["data"]["page"]["count"]
+            return resp["data"]["page"]["count"]
+        
+        else:
+            return "error"
     
     def get_video_info(self, bvid: str, is_avoided: bool):
         params = {
@@ -104,16 +108,6 @@ class SpaceParser(Parser):
 
         return data["name"]
 
-    def get_video_available_media_info(self):
-        from utils.parse.video import VideoParser
-
-        episode: dict = self.info_json["episodes"][0]
-
-        self.bvid = episode.get("bvid")
-        cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
-
-        VideoParser.get_video_available_media_info(self.bvid, cid)
-
     def parse_space_info(self, mid: int):
         total = self.get_search_arc_info(mid)
         total_page = self.get_total_page(total)
@@ -124,11 +118,14 @@ class SpaceParser(Parser):
         for i in range(1, total_page):
             page = i + 1
 
-            self.get_search_arc_info(mid, page)
+            result = self.get_search_arc_info(mid, page)
 
-            self.onUpdateTitle(page, total_page, self.total_data)
-            
-            time.sleep(0.1)
+            if result != "error":
+                self.onUpdateTitle(page, total_page, self.total_data)
+                
+                time.sleep(self.get_sleep_time())
+            else:
+                break
     
     def parse_video_info(self, video_info_to_parse: list[dict], detail_mode_callback):
         video_info_list = {
@@ -224,3 +221,16 @@ class SpaceParser(Parser):
         }
 
         return template.format(**field_dict)
+    
+    def get_sleep_time(self):
+        if self.total_data < 30:
+            return 0.1
+        
+        elif self.total_data < 50:
+            return 0.2
+        
+        elif self.total_data < 100:
+            return 0.5
+        
+        else:
+            return 1.0
