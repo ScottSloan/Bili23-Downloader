@@ -44,7 +44,8 @@ class BasicPage(Page):
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, _("自动监听剪切板"))
         exit_option_lab = wx.StaticText(basic_box, -1, _("当关闭窗口时"))
-        self.exit_option_chk = wx.Choice(basic_box, -1, choices = list(exit_option_map.keys()))
+        self.exit_option_chk = Choice(basic_box)
+        self.exit_option_chk.SetChoices(exit_option_map)
 
         exit_option_hbox = wx.BoxSizer(wx.HORIZONTAL)
         exit_option_hbox.Add(exit_option_lab, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))

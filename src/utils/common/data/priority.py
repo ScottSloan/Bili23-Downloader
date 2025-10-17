@@ -18,7 +18,7 @@ video_quality_priority = {
 
 video_quality_priority_short = {
     127: "8K",
-    126: "DV",
+    126: "Dolby",
     125: "HDR",
     120: "4K",
     116: "1080P60",
@@ -40,7 +40,7 @@ audio_quality_priority = {
 
 audio_quality_priority_short = {
     30251: "Hi-Res",
-    30250: "DA",
+    30250: "Dolby",
     30280: "192K",
     30232: "132K",
     30216: "64K"

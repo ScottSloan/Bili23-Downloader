@@ -12,6 +12,7 @@ from gui.dialog.setting.ass_style.custom_ass_style_v2 import CustomASSStyleDialo
 
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
+from gui.component.choice.choice import Choice
 
 _ = gettext.gettext
 
@@ -31,20 +32,24 @@ class ExtraStaticBox(Panel):
 
         self.download_danmaku_file_chk = wx.CheckBox(extra_box, -1, _("下载视频弹幕"))
         self.danmaku_file_type_lab = wx.StaticText(extra_box, -1, _("弹幕文件格式"))
-        self.danmaku_file_type_choice = wx.Choice(extra_box, -1, choices = list(danmaku_format_map.keys()))
+        self.danmaku_file_type_choice = Choice(extra_box)
+        self.danmaku_file_type_choice.SetChoices(danmaku_format_map)
 
         self.download_subtitle_file_chk = wx.CheckBox(extra_box, -1, _("下载视频字幕"))
         self.subtitle_file_type_lab = wx.StaticText(extra_box, -1, _("字幕文件格式"))
-        self.subtitle_file_type_choice = wx.Choice(extra_box, -1, choices = list(subtitle_format_map.keys()))
+        self.subtitle_file_type_choice = Choice(extra_box)
+        self.subtitle_file_type_choice.SetChoices(subtitle_format_map)
         self.subtitle_file_lan_type_btn = BitmapButton(extra_box, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("自定义字幕语言"))
 
         self.download_cover_file_chk = wx.CheckBox(extra_box, -1, _("下载视频封面"))
         self.cover_file_type_lab = wx.StaticText(extra_box, -1, _("封面文件格式"))
-        self.cover_file_type_choice = wx.Choice(extra_box, -1, choices = list(cover_format_map.keys()))
+        self.cover_file_type_choice = Choice(extra_box)
+        self.cover_file_type_choice.SetChoices(cover_format_map)
 
         self.download_metadata_file_chk = wx.CheckBox(extra_box, -1, _("下载视频元数据"))
         self.metadata_file_type_lab = wx.StaticText(extra_box, -1, _("元数据文件格式"))
-        self.metadata_file_type_choice = wx.Choice(extra_box, -1, choices = list(metadata_format_map.keys()))
+        self.metadata_file_type_choice = Choice(extra_box)
+        self.metadata_file_type_choice.SetChoices(metadata_format_map)
         self.metadata_file_scrape_option_btn = BitmapButton(extra_box, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("刮削设置"))
 
         extra_grid_sizer = wx.GridBagSizer(0, 0)

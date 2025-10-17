@@ -9,8 +9,10 @@ from utils.common.style.icon_v4 import Icon, IconID
 
 from gui.window.settings.page import Page
 from gui.dialog.setting.ffmpeg import DetectDialog
+
 from gui.component.misc.tooltip import ToolTip
 from gui.component.button.bitmap_button import BitmapButton
+from gui.component.choice.choice import Choice
 
 _ = gettext.gettext
 
@@ -61,7 +63,8 @@ class FFmpegPage(Page):
         keep_original_files_hbox.Add(keep_original_files_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         override_lab = wx.StaticText(merge_option_box, -1, _("存在同名文件时"))
-        self.override_option_choice = wx.Choice(merge_option_box, -1, choices = list(override_option_map.keys()))
+        self.override_option_choice = Choice(merge_option_box)
+        self.override_option_choice.SetChoices(override_option_map)
 
         self.m4a_to_mp3_chk = wx.CheckBox(merge_option_box, -1, _("仅下载音频时，将 m4a 音频转换为 mp3 格式"))
 

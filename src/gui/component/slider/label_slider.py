@@ -1,6 +1,7 @@
 import wx
 
 from gui.component.panel.panel import Panel
+from gui.component.slider.slider import Slider
 
 class LabelSlider(Panel):
     def __init__(self, parent: wx.Window, data: dict):
@@ -18,7 +19,7 @@ class LabelSlider(Panel):
 
     def init_UI(self):
         self.label = wx.StaticText(self, -1, self.label)
-        self.slider = wx.Slider(self, -1, value = self.value, minValue = self.min_value, maxValue=self.max_value)
+        self.slider = Slider(self, value = self.value, min_value = self.min_value, max_value = self.max_value)
         self.indicator_lab = wx.StaticText(self, -1, self.get_indicator(self.value))
 
         self.slider.Bind(wx.EVT_SLIDER, self.onSliderEVT)

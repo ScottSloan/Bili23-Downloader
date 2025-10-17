@@ -12,47 +12,14 @@ from utils.module.notification import NotificationManager
 from gui.window.settings.page import Page
 from gui.dialog.setting.file_name.custom_file_name_v3 import CustomFileNameDialog
 from gui.dialog.setting.priority.edit import EditPriorityDialog
+
 from gui.component.panel.panel import Panel
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.misc.tooltip import ToolTip
+from gui.component.slider.slider_box import SliderBox
+from gui.component.choice.choice import Choice
 
 _ = gettext.gettext
-
-class SliderBox(Panel):
-    def __init__(self, parent: wx.Window, label: str, min_value: int, max_value: int):
-        self.label = label
-        self.min_value = min_value
-        self.max_value = max_value
-
-        Panel.__init__(self, parent)
-
-        self.init_UI()
-
-        self.Bind_EVT()
-
-    def init_UI(self):
-        self.lab = wx.StaticText(self, -1, self.label)
-        self.slider = wx.Slider(self, -1, 1, self.min_value, self.max_value)
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        vbox.Add(self.slider, 0, wx.EXPAND | wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) & (~wx.TOP), self.FromDIP(6))
-
-        self.SetSizer(vbox)
-
-    def Bind_EVT(self):
-        self.slider.Bind(wx.EVT_SLIDER, self.onSliderEVT)
-
-    def SetValue(self, value: int):
-        self.slider.SetValue(value)
-
-        self.onSliderEVT(0)
-
-    def GetValue(self):
-        return self.slider.GetValue()
-
-    def onSliderEVT(self, event: wx.CommandEvent):
-        self.lab.SetLabel(f"{self.label}：{self.slider.GetValue()}")
 
 class PriorityBox(Panel):
     def __init__(self, parent: wx.Window, setting_dlg: wx.Window, label: str, category: str, priority_data: dict, priority_data_short: dict, priority_name_str: str):
@@ -163,7 +130,9 @@ class DownloadPage(Page):
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.number_type_lab = wx.StaticText(download_box, -1, _("序号类型"))
-        self.number_type_choice = wx.Choice(download_box, -1, choices = list(number_type_map.keys()))
+        self.number_type_choice = Choice(download_box)
+        self.number_type_choice.SetChoices(number_type_map)
+
         number_type_tip = ToolTip(download_box)
         number_type_tip.set_tooltip(_("序号由文件名模板控制，如需取消序号显示，请自定义下载文件名。\n\n总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号"))
 

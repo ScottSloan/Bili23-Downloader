@@ -5,11 +5,13 @@ from wx.lib.intctrl import IntCtrl
 from utils.config import Config
 from utils.common.map import webpage_option_map
 
-from gui.component.misc.tooltip import ToolTip
-
 from gui.window.settings.page import Page
 from gui.dialog.setting.custom_cdn_host import CustomCDNDialog
 from gui.dialog.setting.custom_user_agent import CustomUADialog
+
+from gui.component.misc.tooltip import ToolTip
+from gui.component.choice.choice import Choice
+from gui.component.spinctrl.spinctrl import SpinCtrl
 
 _ = gettext.gettext
     
@@ -43,7 +45,7 @@ class AdvancedPage(Page):
 
         self.download_error_retry_chk = wx.CheckBox(advanced_download_box, -1, _("下载出错时自动重试"))
         self.download_error_retry_lab = wx.StaticText(advanced_download_box, -1, _("重试次数"))
-        self.download_error_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 1, max = 15)
+        self.download_error_retry_box = SpinCtrl(advanced_download_box, min = 1, max = 15)
         self.download_error_retry_unit_lab = wx.StaticText(advanced_download_box, -1, _("次"))
 
         download_error_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -54,7 +56,7 @@ class AdvancedPage(Page):
 
         self.download_suspend_retry_chk = wx.CheckBox(advanced_download_box, -1, _("下载停滞时自动重启下载"))
         self.download_suspend_retry_lab = wx.StaticText(advanced_download_box, -1, _("重启间隔"))
-        self.download_suspend_retry_box = wx.SpinCtrl(advanced_download_box, -1, min = 2, max = 15)
+        self.download_suspend_retry_box = SpinCtrl(advanced_download_box, min = 2, max = 15)
         self.download_suspend_retry_unit_lab = wx.StaticText(advanced_download_box, -1, _("秒"))
 
         download_suspend_retry_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -79,7 +81,8 @@ class AdvancedPage(Page):
         webpage_box = wx.StaticBox(self.panel, -1, _("Web 页面显示设置"))
 
         webpage_lab = wx.StaticText(webpage_box, -1, _("显示方式"))
-        self.webpage_option_choice = wx.Choice(webpage_box, -1, choices = list(webpage_option_map.keys()))
+        self.webpage_option_choice = Choice(webpage_box)
+        self.webpage_option_choice.SetChoices(webpage_option_map)
         webpage_tooltip = ToolTip(webpage_box)
         webpage_tooltip.set_tooltip(_("设置 Web 页面的显示方式\n\n自动检测：自动选择可用的显示方式\n使用系统 Webview 组件：在窗口中内嵌显示页面\n使用系统默认浏览器：在外部浏览器中显示页面"))
 
