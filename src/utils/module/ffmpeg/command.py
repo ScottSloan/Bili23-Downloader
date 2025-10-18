@@ -1,0 +1,60 @@
+from utils.common.model.data_type import Command
+from utils.common.model.task_info import DownloadTaskInfo
+from utils.common.model.ffmpeg import FFmpegCommand
+
+from utils.module.ffmpeg.prop import FFProp
+
+class FFCommand:
+    @classmethod
+    def get_merge_dash_command(cls, task_info: DownloadTaskInfo):
+        def check_audio_conversion_need():
+            match task_info.output_type:
+                case "flac":
+                    command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "flac"))
+                    command.add_remove([audio_temp_file], task_info.download_path)
+
+                    return output_temp_file
+
+                case "m4a":
+                    task_info.output_type = "mp3"
+                    output_temp_file = prop.dash_output_temp_file()
+
+                    command.add(cls.get_convert_audio_command(audio_temp_file, prop.dash_output_temp_file(), "libmp3lame"))
+                    command.add_remove([audio_temp_file], task_info.download_path)
+
+                    return output_temp_file
+                
+                case _:
+                    return output_temp_file
+
+        command = Command()
+
+        prop = FFProp(task_info)
+
+        video_temp_file = prop.dash_video_temp_file()
+        audio_temp_file = prop.dash_audio_temp_file()
+        output_temp_file = prop.dash_output_temp_file()
+
+        match task_info.download_option.copy():
+            case ["video", "audio"]:
+                ffcommand = FFmpegCommand([video_temp_file, audio_temp_file], output_temp_file)
+
+                command.add(ffcommand.merge())
+                command.add_rename(output_temp_file, prop.output_file_name(), task_info.download_path)
+                command.add_remove([video_temp_file, audio_temp_file], task_info.download_path)
+
+            case ["video"]:
+                command.add_rename(video_temp_file, prop.output_file_name(), task_info.download_path)
+
+            case ["audio"]:
+                audio_temp_file = check_audio_conversion_need()
+
+                command.add_rename(audio_temp_file, prop.output_file_name(), task_info.download_path)
+
+        return command
+    
+    @classmethod
+    def get_convert_audio_command(cls, src: str, dst: str, acodec: str):
+        ffcommand = FFmpegCommand([src], dst)
+
+        return ffcommand.convert_audio(acodec)

@@ -91,6 +91,8 @@ class MediaOptionStaticBox(Panel):
         if self.download_audio_steam_chk.GetValue():
             Config.Download.stream_download_option.append("audio")
 
+        Config.Download.ffmpeg_merge = self.ffmpeg_merge_chk.GetValue()
+
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
     def onChangeStreamDownloadOptionEVT(self, event):
@@ -101,16 +103,23 @@ class MediaOptionStaticBox(Panel):
         self.parent.media_info_box.enable_audio_quality_group(audio_enable)
 
         ffmpeg_merge_enable = video_enable and audio_enable
+        ffmpeg_merge_value = Config.Download.ffmpeg_merge and ffmpeg_merge_enable if ffmpeg_merge_enable else True
 
         self.ffmpeg_merge_chk.Enable(ffmpeg_merge_enable)
-        self.ffmpeg_merge_chk.SetValue(ffmpeg_merge_enable)
+        self.ffmpeg_merge_chk.SetValue(Config.Download.ffmpeg_merge and ffmpeg_merge_enable if ffmpeg_merge_enable else video_enable or audio_enable)
+
+        self.keep_original_files_chk.Enable(ffmpeg_merge_enable)
 
         self.onEnableKeepFilesEVT(0)
 
     def onEnableKeepFilesEVT(self, event):
-        enable = self.ffmpeg_merge_chk.GetValue()
+        value = self.ffmpeg_merge_chk.GetValue()
+        enable = self.ffmpeg_merge_chk.IsEnabled()
 
-        self.keep_original_files_chk.Enable(enable)
+        self.keep_original_files_chk.Enable(enable and value)
+
+        if not (enable and value):
+            self.keep_original_files_chk.SetValue(False)
     
     def enable_audio_download_option(self, enable: bool):
         self.download_audio_steam_chk.Enable(enable)

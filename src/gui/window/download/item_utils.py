@@ -15,7 +15,7 @@ from utils.common.io.directory import Directory
 
 from utils.module.pic.cover import Cover
 from utils.module.downloader_v3 import Downloader
-from utils.module.ffmpeg_v2 import FFmpeg
+from utils.module.ffmpeg.utils import FFUtils
 
 from utils.parse.download import DownloadParser
 from utils.parse.extra.extra_v3 import ExtraParser
@@ -211,7 +211,7 @@ class Utils:
 
     def merge_video(self, set_status: bool = True):
         def worker():
-            FFmpeg.Utils.merge(self.task_info, self.get_merge_callback())
+            FFUtils.merge(self.task_info, self.get_merge_callback())
 
         if set_status:
             self.set_download_status(DownloadStatus.Merging)
@@ -219,6 +219,7 @@ class Utils:
         Thread(target = worker).start()
 
     def rename_file(self):
+        return
         FFmpeg.Utils.rename_files(self.task_info)
 
         self.onMergeSuccess()
@@ -291,6 +292,7 @@ class Utils:
         self.parent.download_window.start_next_task()
 
     def clear_temp_files(self):
+        return
         match ParseType(self.task_info.download_type):
             case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
                 if self.task_info.total_file_size:

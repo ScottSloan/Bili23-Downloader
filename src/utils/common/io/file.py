@@ -22,3 +22,21 @@ class File:
             except:
                 time.sleep(0.1)
                 continue
+
+    @staticmethod
+    def rename_file(src: str, dst: str, cwd: str):
+        os.rename(os.path.join(cwd, src), os.path.join(cwd, dst))
+
+    @staticmethod
+    def find_duplicate_file(path: str):
+        directory = os.path.dirname(path)
+        file_name = os.path.basename(path)
+
+        base, ext = os.path.splitext(file_name)
+
+        index = 1
+
+        while os.path.exists(os.path.join(directory, f"{base}_{index}{ext}")):
+            index += 1
+
+        return f"{base}_{index}{ext}"

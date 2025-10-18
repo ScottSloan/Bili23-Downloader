@@ -4,7 +4,7 @@ import gettext
 from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
 
-from utils.module.ffmpeg_v2 import FFmpeg
+from utils.module.ffmpeg.env import FFEnv
 
 from gui.component.window.dialog import Dialog
 from gui.component.button.bitmap_button import BitmapButton
@@ -78,7 +78,7 @@ class DetectDialog(Dialog):
             lab_control.SetLabel(lab)
             lab_control.SetToolTip(lab)
 
-        ffmpeg_path = FFmpeg.Env.get_ffmpeg_path()
+        ffmpeg_path = FFEnv.get_ffmpeg_path()
 
         env_path, cwd_path = ffmpeg_path["env_path"], ffmpeg_path["cwd_path"]
 

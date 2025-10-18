@@ -12,7 +12,7 @@ from utils.common.data.welcome_message import welcome_message
 from utils.common.thread import Thread
 from utils.common.model.download_info import DownloadInfo
 
-from utils.module.ffmpeg_v2 import FFmpeg
+from utils.module.ffmpeg.env import FFEnv
 from utils.module.clipboard import ClipBoard
 from utils.module.pic.cover import Cover
 
@@ -395,8 +395,8 @@ class Utils:
 
             if dlg.ShowModal() == wx.ID_YES:
                 wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
-            
-        result = FFmpeg.Env.check_availability()
+
+        result = FFEnv.check_availability()
 
         if result:
             wx.CallAfter(worker)

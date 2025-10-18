@@ -18,40 +18,6 @@ from utils.config import Config
 class FFmpeg:
     class Command:
         @staticmethod
-        def get_merge_dash_command(task_info: DownloadTaskInfo):
-            def convert_audio():
-                if task_info.output_type == "flac":
-                    command.add(FFmpeg.Command.get_convert_audio_command(task_info, "flac"))
-
-                    return FFmpeg.Prop.dash_output_temp_file(task_info)
-                
-                elif task_info.output_type == "m4a":
-                    if Config.Merge.m4a_to_mp3:
-                        task_info.output_type = "mp3"
-
-                        command.add(FFmpeg.Command.get_convert_audio_command(task_info, "libmp3lame"))
-
-                        return FFmpeg.Prop.dash_output_temp_file(task_info)
-                else:
-                    return FFmpeg.Prop.dash_audio_temp_file(task_info)
-
-            command = Command()
-
-            match task_info.download_option.copy():
-                case ["video", "audio"]:
-                    command.add(FFmpeg.Command.get_merge_video_and_audio_command(task_info))
-                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_output_temp_file(task_info), FFmpeg.Prop.full_file_name(task_info)))
-
-                case ["video"]:
-                    command.add(FFmpeg.Command.get_rename_command(FFmpeg.Prop.dash_video_temp_file(task_info), FFmpeg.Prop.full_file_name(task_info)))
-
-                case ["audio"]:
-                    src = convert_audio()
-                    command.add(FFmpeg.Command.get_rename_command(src, FFmpeg.Prop.full_file_name(task_info)))
-
-            return command.format()
-
-        @staticmethod
         def get_merge_flv_command(task_info: DownloadTaskInfo):
             def create_flv_list_file():
                 with open(os.path.join(task_info.download_path, flv_list_file), "w", encoding = "utf-8") as f:
@@ -80,18 +46,6 @@ class FFmpeg:
             full_file_name = FFmpeg.Prop.full_file_name(task_info)
 
             command.add(FFmpeg.Command.get_rename_command(mp4_temp_file, full_file_name))
-
-            return command.format()
-
-        @staticmethod
-        def get_merge_video_and_audio_command(task_info: DownloadTaskInfo):
-            command = Command()
-
-            video_temp_file = FFmpeg.Prop.dash_video_temp_file(task_info)
-            audio_temp_file = FFmpeg.Prop.dash_audio_temp_file(task_info)
-            output_temp_file = FFmpeg.Prop.dash_output_temp_file(task_info)
-
-            command.add(f'"{Config.Merge.ffmpeg_path}" -y -i {video_temp_file} -i {audio_temp_file} -acodec copy -vcodec copy -strict experimental {output_temp_file}')
 
             return command.format()
 
@@ -260,52 +214,6 @@ class FFmpeg:
             else:
                 raise GlobalException(code = StatusCode.CallError.value, stack_trace = get_output(), callback = callback.onError, args = (process, ))
             
-    class Env:
-        @staticmethod
-        def check_file(path: str):
-            return os.path.isfile(path) and os.access(path, os.X_OK)
-        
-        @staticmethod
-        def get_env_path():
-            path_env = os.environ.get("PATH", "")
-
-            for directory in path_env.split(os.pathsep):
-                possible_path = os.path.join(directory, FFmpeg.Prop.ffmpeg_file())
-
-                if FFmpeg.Env.check_file(possible_path):
-                    return possible_path
-
-        @staticmethod
-        def get_cwd_path():
-            possible_path = os.path.join(os.getcwd(), FFmpeg.Prop.ffmpeg_file())
-            
-            if FFmpeg.Env.check_file(possible_path):
-                return possible_path
-
-        @staticmethod
-        def get_ffmpeg_path():
-            return {
-                "env_path": FFmpeg.Env.get_env_path(),
-                "cwd_path": FFmpeg.Env.get_cwd_path(),
-            }
-
-        @classmethod
-        def detect(cls):
-            ffmpeg_path = FFmpeg.Env.get_ffmpeg_path()
-
-            env_path, cwd_path = ffmpeg_path["env_path"], ffmpeg_path["cwd_path"]
-            
-            if not Config.Merge.ffmpeg_path:
-                Config.Merge.ffmpeg_path = env_path if env_path else Config.Merge.ffmpeg_path
-                Config.Merge.ffmpeg_path = cwd_path if cwd_path else Config.Merge.ffmpeg_path
-            else:
-                if not cls.check_file(Config.Merge.ffmpeg_path):
-                    Config.Merge.ffmpeg_path = cwd_path
-
-        @staticmethod
-        def check_availability():
-            return not os.path.exists(Config.Merge.ffmpeg_path)
-
     class Utils:
         temp_duration = 0
 
@@ -319,7 +227,8 @@ class FFmpeg:
         def merge(cls, task_info: DownloadTaskInfo, callback: Callback):
             match StreamType(task_info.stream_type):
                 case StreamType.Dash:
-                    command = FFmpeg.Command.get_merge_dash_command(task_info)
+                    pass
+                    #command = FFmpeg.Command.get_merge_dash_command(task_info)
 
                 case StreamType.Flv:
                     command = FFmpeg.Command.get_merge_flv_command(task_info)
@@ -479,18 +388,19 @@ class FFmpeg:
             FFmpeg.Command.run(command, callback, cwd = task_info.download_path)
 
         @classmethod
-        def check_file_existance(cls, dst: str, callback: Callback):
-            if os.path.exists(dst):
+        def check_file_existance(cls, path: str, callback: Callback):
+            if os.path.exists(path):
+                file_name = os.path.basename(path)
+                directory = os.path.dirname(path)
+
                 match OverrideOption(Config.Merge.override_option):
                     case OverrideOption.Rename:
-                        base, ext = os.path.splitext(os.path.basename(dst))
+                        base, ext = os.path.splitext(file_name)
 
-                        command = FFmpeg.Command.get_rename_command(dst, f"{base}_1{ext}")
-
-                        FFmpeg.Command.run(command, callback)
+                        File.rename_file(file_name, f"{base}_1{ext}", cwd = directory)
 
                     case OverrideOption.Override:
-                        File.remove_file(dst)
+                        File.remove_file(path)
 
         @staticmethod
         def get_empty_callback():
@@ -506,15 +416,6 @@ class FFmpeg:
             return callback
 
     class Prop:
-        @staticmethod
-        def ffmpeg_file():
-            match Platform(Config.Sys.platform):
-                case Platform.Windows:
-                    return "ffmpeg.exe"
-                
-                case Platform.Linux | Platform.macOS:
-                    return "ffmpeg"
-        
         @staticmethod
         def dash_video_temp_file(task_info: DownloadTaskInfo):
             return f"video_{task_info.id}.{task_info.video_type}"
@@ -538,10 +439,6 @@ class FFmpeg:
         @staticmethod
         def mp4_video_temp_file(task_info: DownloadTaskInfo):
             return f"video_{task_info.id}.mp4"
-
-        @staticmethod
-        def output_file_name(task_info: DownloadTaskInfo):
-            return FileNameFormatter.format_file_basename(task_info)
 
         @staticmethod
         def full_file_name(task_info: DownloadTaskInfo):
@@ -568,5 +465,3 @@ class FFmpeg:
                 
                 case Platform.Linux | Platform.macOS:
                     return "mv"
-
-FFmpeg.Env.detect()
