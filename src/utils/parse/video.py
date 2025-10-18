@@ -89,11 +89,29 @@ class VideoParser(Parser):
 
         resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
+        data = cls.json_get(resp, "data")
+
         return {
-            "cid": resp["data"]["cid"],
-            "up_name": resp["data"]["owner"]["name"],
-            "up_mid": resp["data"]["owner"]["mid"]
+            "cid": data["cid"],
+            "up_name": data["owner"]["name"],
+            "up_mid": data["owner"]["mid"],
+            "up_face": data["owner"]["face"],
+            "description": data["desc"],
         }
+
+    @classmethod
+    def get_video_tags(cls, bvid: str):
+        params = {
+            "bvid": bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/view/detail/tag?{cls.url_encode(params)}"
+
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        data = cls.json_get(resp, "data")
+
+        return [entry["tag_name"] for entry in data]
 
     def parse_worker(self, url: str):
         self.get_page(url)
@@ -107,7 +125,7 @@ class VideoParser(Parser):
 
         self.get_video_info(self.bvid)
 
-        self.get_video_available_media_info(self.info_json.get("bvid"), self.info_json.get("cid"))
+        self.start_thread(self.get_video_available_media_info, args = (self.info_json.get("bvid"), self.info_json.get("cid")))
 
         return StatusCode.Success.value
 

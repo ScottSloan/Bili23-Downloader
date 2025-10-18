@@ -5,6 +5,10 @@ class Regex:
     def search(pattern: str, string: str):
         return re.search(pattern, string)
     
+    @staticmethod
+    def findall(pattern: str, string: str):
+        return re.findall(pattern, string)
+    
     @classmethod
     def re_findall_in_group(cls, pattern: str, string: str, group: int):
         result = re.findall(pattern, string)
@@ -20,6 +24,10 @@ class Regex:
     @classmethod
     def find_illegal_chars(cls, string: str):
         return re.findall(r'[<>:"|?*\x00-\x1F]', string)
+    
+    @classmethod
+    def find_illegal_chars_ex(cls, string: str):
+        return re.findall(r'[<>:"\\|?*\x00-\x1F]', string)
     
     @classmethod
     def find_output_format(cls, acodec: str):

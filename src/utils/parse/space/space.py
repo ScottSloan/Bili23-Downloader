@@ -5,11 +5,13 @@ from utils.config import Config
 from utils.auth.wbi import WbiUtils
 
 from utils.common.request import RequestUtils
-from utils.common.enums import StatusCode, ProcessingType
+from utils.common.enums import StatusCode, ProcessingType, TemplateType, ParseType
 from utils.common.model.callback import ParseCallback
+from utils.common.formatter.file_name_v2 import FileNameFormatter
 
 from utils.parse.parser import Parser
 from utils.parse.episode.space import Space
+from utils.parse.episode.episode_v2 import Episode
 
 class SpaceParser(Parser):
     def __init__(self, callback: ParseCallback):
@@ -41,17 +43,21 @@ class SpaceParser(Parser):
 
         url = f"https://api.bilibili.com/x/space/wbi/arc/search?{WbiUtils.encWbi(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA), check = False)
 
-        vlist = resp["data"]["list"]["vlist"]
+        if resp["code"] == 0:
+            vlist = resp["data"]["list"]["vlist"]
 
-        self.info_json["episodes"].extend(vlist)
+            self.info_json["episodes"].extend(vlist)
 
-        self.total_data += len(vlist)
+            self.total_data += len(vlist)
 
-        return resp["data"]["page"]["count"]
+            return resp["data"]["page"]["count"]
+        
+        else:
+            return "error"
     
-    def get_video_info(self, bvid: str):
+    def get_video_info(self, bvid: str, is_avoided: bool):
         params = {
             "bvid": bvid
         }
@@ -63,6 +69,8 @@ class SpaceParser(Parser):
         info_json: dict = self.json_get(resp, "data")
 
         self.total_data += 1
+
+        info_json["is_avoided"] = is_avoided
 
         return info_json
 
@@ -100,18 +108,6 @@ class SpaceParser(Parser):
 
         return data["name"]
 
-    def get_video_available_media_info(self):
-        from utils.parse.video import VideoParser
-
-        episode: dict = self.info_json["episodes"][0]
-
-        self.bvid = episode.get("bvid")
-        cid = VideoParser.get_video_extra_info(self.bvid).get("cid")
-
-        VideoParser.get_video_available_media_info(self.bvid, cid)
-
-        self.parse_episodes()
-
     def parse_space_info(self, mid: int):
         total = self.get_search_arc_info(mid)
         total_page = self.get_total_page(total)
@@ -122,39 +118,60 @@ class SpaceParser(Parser):
         for i in range(1, total_page):
             page = i + 1
 
-            self.get_search_arc_info(mid, page)
+            result = self.get_search_arc_info(mid, page)
 
-            self.onUpdateTitle(page, total_page, self.total_data)
-            time.sleep(0.1)
-
-        self.parse_video_info()
+            if result != "error":
+                self.onUpdateTitle(page, total_page, self.total_data)
+                
+                time.sleep(self.get_sleep_time())
+            else:
+                break
     
-    def parse_video_info(self):
-        self.video_info_dict = {}
-        self.cheese_info_dict = {}
+    def parse_video_info(self, video_info_to_parse: list[dict], detail_mode_callback):
+        video_info_list = {
+            "sequence": [],
+            "video_season": {},
+            "video_bvid": {},
+            "cheese_season": {}
+        }
 
-        for entry in self.info_json.get("episodes"):
-            bvid = entry.get("bvid")
+        time.sleep(0.5)
 
+        self.change_processing_type(ProcessingType.Page)
+
+        for entry in video_info_to_parse:
             self.onUpdateName(entry["title"])
             self.onUpdateTitle(1, 1, self.total_data)
 
-            if (season_id := entry["season_id"]):
-                if entry["is_lesson_video"]:
-                    if season_id not in self.cheese_info_dict:
-                        self.cheese_info_dict[season_id] = self.get_cheese_info(season_id).copy()
-                    else:
-                        continue
-                else:
-                    if season_id not in self.video_info_dict:
-                        self.video_info_dict[season_id] = self.get_video_info(bvid).copy()
-                    else:
+            season_id = entry.get("season_id")
+            bvid = entry.get("bvid")
+
+            match ParseType(entry["type"]):
+                case ParseType.Video:
+                    if season_id and season_id in video_info_list["video_season"]:
                         continue
 
-            else:
-                self.video_info_dict[bvid] = self.get_video_info(bvid).copy()
+                    key = "video_season" if season_id else "video_bvid"
+                    value = season_id if season_id else bvid
+                    is_avoided = True if entry.get("template_type") == TemplateType.Video_Collection.value else False
 
-            time.sleep(0.1)
+                    video_info_list[key][value] = self.get_video_info(bvid, is_avoided)
+
+                    video_info_list["sequence"].append({
+                        "key": key,
+                        "value": value
+                    })
+
+                case ParseType.Cheese:
+                    video_info_list["cheese_season"][season_id] = self.get_cheese_info(season_id)
+
+        time.sleep(0.5)
+
+        self.change_processing_type(ProcessingType.Process)
+
+        episode_info_list = Episode.Utils.dict_list_to_tree_item_list(Space.parse_episodes_detail(video_info_list, self.get_parent_title()))
+
+        detail_mode_callback(episode_info_list)
 
     def parse_worker(self, url: str):
         self.clear_space_info()
@@ -163,20 +180,18 @@ class SpaceParser(Parser):
 
         time.sleep(0.5)
 
-        self.callback.onChangeProcessingType(ProcessingType.Page)
+        self.change_processing_type(ProcessingType.Page)
 
         self.parse_space_info(self.mid)
 
         self.uname = self.get_uname_by_mid(self.mid)
 
-        self.get_video_available_media_info()
+        self.parse_episodes()
 
         return StatusCode.Success.value
     
     def parse_episodes(self):
-        parent_title = f"{self.uname}_{self.mid}"
-
-        Space.parse_episodes(self.info_json, self.bvid, self.video_info_dict, self.cheese_info_dict, parent_title)
+        Space.parse_episodes_fast(self.info_json)
 
     def clear_space_info(self):
         self.info_json = {
@@ -196,3 +211,27 @@ class SpaceParser(Parser):
     
     def get_parse_type_str(self):
         return "个人主页"
+    
+    def get_parent_title(self):
+        template = FileNameFormatter.get_folder_template(TemplateType.Space.value)
+
+        field_dict = {
+            "up_name": self.uname,
+            "up_uid": self.mid,
+        }
+
+        return template.format(**field_dict)
+    
+    def get_sleep_time(self):
+        if self.total_data < 30:
+            return 0.1
+        
+        elif self.total_data < 50:
+            return 0.2
+        
+        elif self.total_data < 100:
+            return 0.5
+        
+        else:
+            return 1.0
+        

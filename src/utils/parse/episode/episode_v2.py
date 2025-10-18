@@ -4,6 +4,8 @@ from typing import Callable
 from utils.config import Config
 
 from utils.common.enums import EpisodeDisplayType
+from utils.common.model.list_item_info import TreeListItemInfo
+from utils.common.data.badge import badge_dict
 
 class EpisodeInfo:
     data: dict = {}
@@ -83,6 +85,7 @@ class EpisodeInfo:
         return {
             "number": 0,
             "page": page if (page := episode.get("page", 0)) and str(page).isnumeric() else 0,
+            "season_num": episode.get("season_num", 0),
             "episode_num": episode.get("episode_num", 0),
             "title": episode.get("title", ""),
             "cid": episode.get("cid", 0),
@@ -104,6 +107,7 @@ class EpisodeInfo:
             "series_title": episode.get("series_title", ""),
             "interact_title": episode.get("interact_title", ""),
             "parent_title": episode.get("parent_title", ""),
+            "series_title_original": episode.get("series_title_original", ""),
             "area": episode.get("area", ""),
             "zone": episode.get("zone", ""),
             "subzone": episode.get("subzone", ""),
@@ -137,6 +141,26 @@ class Episode:
                 Filter.travarsal_episode_all(condition)
             else:
                 EpisodeInfo.filted_data = EpisodeInfo.data.copy()
+
+        @staticmethod
+        def dict_list_to_tree_item_list(episode_info_list: list[dict]):
+            temp = []
+
+            for entry in episode_info_list:
+                tree_item = TreeListItemInfo()
+                tree_item.load_from_dict(entry)
+
+                temp.append(tree_item)
+
+            return temp
+        
+        @staticmethod
+        def get_badge(attribute: int):
+            for i in badge_dict.keys():
+                if attribute & (1 << i):
+                    return badge_dict.get(i, "")
+            
+            return ""
 
 class Filter:
     @staticmethod

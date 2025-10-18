@@ -145,13 +145,13 @@ class InteractVideoParser(Parser):
 
         InteractVideoInfo.add_to_node_list(cid, info["title"], info["edges"])
 
-        self.onUpdateTitle(info["title"])
+        self.update_processing_title("节点：" + info["title"])
 
         return InteractVideoInfo.get_option()
     
     def parse_interactive_video_episodes(self):
-        self.callback.onChangeProcessingType(ProcessingType.Interact)
-        self.callback.onUpdateName("互动视频")
+        self.change_processing_type(ProcessingType.Interact)
+        self.update_processing_name("互动视频")
 
         option = self.get_video_interactive_edge_info(cid = self.cid)
         
@@ -161,6 +161,3 @@ class InteractVideoParser(Parser):
             time.sleep(0.1)
 
         return InteractVideoInfo.node_list
-
-    def onUpdateTitle(self, title: str):
-        self.callback.onUpdateTitle(f"节点：{title}")

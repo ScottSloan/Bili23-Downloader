@@ -1,5 +1,6 @@
 import wx
 import asyncio
+import gettext
 
 from utils.config import Config
 from utils.auth.login_v2 import Login
@@ -8,8 +9,10 @@ from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingTyp
 from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
 from utils.common.data.welcome_message import welcome_message
+from utils.common.thread import Thread
+from utils.common.model.download_info import DownloadInfo
 
-from utils.module.ffmpeg_v2 import FFmpeg
+from utils.module.ffmpeg.env import FFEnv
 from utils.module.clipboard import ClipBoard
 from utils.module.pic.cover import Cover
 
@@ -18,6 +21,7 @@ from gui.dialog.setting.edit_title import EditTitleDialog
 from gui.dialog.download_option.download_option_dialog import DownloadOptionDialog
 from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
+from gui.dialog.setting.select_batch import SelectBatchDialog
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
@@ -28,6 +32,8 @@ from gui.window.live_recording import LiveRecordingWindow
 from gui.dialog.misc.update import UpdateDialog
 from gui.dialog.misc.changelog import ChangeLogDialog
 from gui.dialog.misc.processing import ProcessingWindow
+
+_ = gettext.gettext
 
 class Window:
     dialog_show = False
@@ -115,9 +121,11 @@ class Window:
 
     @staticmethod
     @show_dialog
-    def download_option_dialog(parent: wx.Window):
-        dlg = DownloadOptionDialog(parent)
-        return dlg.ShowModal()
+    def download_option_dialog(parent: wx.Window, source: str, init: bool = True):
+        dlg = DownloadOptionDialog(parent, source, init)
+
+        if init:
+            return dlg.ShowModal()
     
     @staticmethod
     @show_dialog
@@ -144,6 +152,14 @@ class Window:
         dlg.ShowModal()
 
     @staticmethod
+    @show_dialog
+    def select_batch_dialog(parent: wx.Window):
+        dlg = SelectBatchDialog(parent)
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            return dlg.range_box.GetValue()
+
+    @staticmethod
     @show_frame
     def debug_window(parent: wx.Window):
         return DebugWindow(parent)
@@ -168,12 +184,12 @@ class Window:
 
     @staticmethod
     def processing_window(show: bool):
-        main_window = Utils.get_main_window()
+        window = wx.FindWindowByName("processing")
 
         if show:
-            wx.CallAfter(main_window.processing_window.ShowModal, ProcessingType.Parse)
+            wx.CallAfter(window.ShowModal, ProcessingType.Parse)
         else:
-            wx.CallAfter(main_window.processing_window.Close)
+            wx.CallAfter(window.Close)
 
     @staticmethod
     def create_processing_window(parent: wx.Window):
@@ -280,7 +296,7 @@ class Utils:
     @classmethod
     def check_update(cls, from_menu: bool = False):
         def onError():
-            show_error_message_dialog("检查更新失败", "当前无法检查更新，请稍候再试。", cls.get_main_window())
+            show_error_message_dialog(_("检查更新失败"), _("当前无法检查更新，请稍候再试。"), cls.get_main_window())
 
         try:
             info = Update.get_update_json()
@@ -292,14 +308,14 @@ class Utils:
                     wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
             else:
                 if from_menu:
-                    Window.message_dialog(cls.get_main_window(), "当前没有可用的更新。", "检查更新", wx.ICON_INFORMATION)
+                    Window.message_dialog(cls.get_main_window(), _("当前没有可用的更新。"), _("检查更新"), wx.ICON_INFORMATION)
 
         except Exception as e:
             raise GlobalException(callback = onError) from e
 
     def get_changelog(self):
         def onError():
-            show_error_message_dialog("获取更新日志失败", "当前无法获取更新日志，请稍候再试。", self.main_window)
+            show_error_message_dialog(_("获取更新日志失败"), _("当前无法获取更新日志，请稍候再试。"), self.main_window)
 
         try:
             info = Update.get_changelog()
@@ -311,7 +327,7 @@ class Utils:
 
     def user_logout(self):
         def on_error():
-            show_error_message_dialog("注销登录失败", "无法完成注销登录操作", self.main_window)
+            show_error_message_dialog(_("注销登录失败"), _("无法完成注销登录操作"), self.main_window)
 
         try:
             Login.logout()
@@ -323,7 +339,7 @@ class Utils:
 
     def user_refresh(self):
         def on_error():
-            show_error_message_dialog("刷新登录信息失败", "无法刷新登录信息", self.main_window)
+            show_error_message_dialog(_("刷新登录信息失败"), _("无法刷新登录信息"), self.main_window)
 
         try:
             Login.refresh()
@@ -374,13 +390,13 @@ class Utils:
     @classmethod
     def check_ffmpeg(cls):
         def worker():
-            dlg = wx.MessageDialog(cls.get_main_window(), "未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。", "警告", wx.ICON_WARNING | wx.YES_NO)
-            dlg.SetYesNoLabels("安装 FFmpeg", "忽略")
+            dlg = wx.MessageDialog(cls.get_main_window(), _("未检测到 FFmpeg\n\n未检测到 FFmpeg，无法进行视频合并、截取和转换。\n\n请检查是否为 FFmpeg 创建环境变量或 FFmpeg 是否已在运行目录中。"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
+            dlg.SetYesNoLabels(_("安装 FFmpeg"), _("忽略"))
 
             if dlg.ShowModal() == wx.ID_YES:
                 wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/install/ffmpeg.html")
-            
-        result = FFmpeg.Env.check_availability()
+
+        result = FFEnv.check_availability()
 
         if result:
             wx.CallAfter(worker)
@@ -422,7 +438,7 @@ class Utils:
 
         match status:
             case ParseStatus.Parsing:
-                set_type_lab(True, "正在解析中")
+                set_type_lab(True, _("正在解析中"))
 
                 enable_url_box(True)
                 enable_buttons(download = False, episode = False, option = False, graph = False)
@@ -457,3 +473,26 @@ class Utils:
         main_window: MainWindow = wx.FindWindowByName("main")
 
         return main_window
+    
+    def download(self):
+        def add_to_list_callback():
+            Window.processing_window(show = False)
+
+            self.main_window.onShowDownloadWindowEVT()
+
+        def detail_mode_callback(episode_info_list: list[dict]):
+            for entry in episode_info_list:
+                self.main_window.episode_list.download_task_info_list.extend(DownloadInfo.get_download_info(entry))
+
+            Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
+
+        Window.processing_window(show = True)
+
+        if self.main_window.parser.parse_type in [ParseType.FavList, ParseType.Space]:
+            video_info_to_parse = self.main_window.episode_list.GetAllCheckedItemEx()
+
+            Thread(target = self.main_window.parser.parser.parse_video_info, args = (video_info_to_parse, detail_mode_callback)).start()
+        else:
+            self.main_window.episode_list.GetAllCheckedItem()
+
+            Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()

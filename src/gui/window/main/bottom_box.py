@@ -1,5 +1,6 @@
 import wx
 import time
+import gettext
 
 from utils.config import Config
 from utils.common.thread import Thread
@@ -13,6 +14,8 @@ from gui.component.button.button import Button
 from gui.component.menu.user import UserMenu
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
+_ = gettext.gettext
+
 class BottomBox(Panel):
     def __init__(self, parent):
         Panel.__init__(self, parent)
@@ -25,10 +28,10 @@ class BottomBox(Panel):
         self.face_icon = StaticBitmap(self, size = self.FromDIP((32, 32)))
         self.face_icon.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.face_icon.Hide()
-        self.uname_lab = wx.StaticText(self, -1, "未登录")
+        self.uname_lab = wx.StaticText(self, -1, _("未登录"))
         self.uname_lab.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.download_mgr_btn = Button(self, "下载管理", size = self.get_scaled_size((100, 30)))
-        self.download_btn = Button(self, "开始下载", size = self.get_scaled_size((100, 30)))
+        self.download_mgr_btn = Button(self, _("下载管理"), size = self.get_scaled_size((100, 30)))
+        self.download_btn = Button(self, _("开始下载"), size = self.get_scaled_size((100, 30)))
         self.download_btn.Enable(False)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -72,17 +75,17 @@ class BottomBox(Panel):
 
     def set_not_login(self):
         self.face_icon.Hide()
-        self.uname_lab.SetLabel("未登录")
+        self.uname_lab.SetLabel(_("未登录"))
 
         self.GetSizer().Layout()
 
     def download_tip(self):
         def worker():
-            wx.CallAfter(self.download_btn.SetLabel, "✔️已开始下载")
+            wx.CallAfter(self.download_btn.SetLabel, _("✔️已开始下载"))
             
             time.sleep(1)
 
-            wx.CallAfter(self.download_btn.SetLabel, "开始下载")
+            wx.CallAfter(self.download_btn.SetLabel, _("开始下载"))
 
         if not Config.Basic.auto_show_download_window:
             Thread(target = worker).start()

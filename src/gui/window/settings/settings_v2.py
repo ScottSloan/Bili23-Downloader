@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.enums import Platform
@@ -13,9 +14,11 @@ from gui.window.settings.misc import MiscPage
 
 from gui.component.window.dialog import Dialog
 
+_ = gettext.gettext
+
 class SettingWindow(Dialog):
     def __init__(self, parent: wx.Window):
-        Dialog.__init__(self, parent, "设置")
+        Dialog.__init__(self, parent, _("设置"))
 
         self.init_UI()
 
@@ -24,15 +27,15 @@ class SettingWindow(Dialog):
     def init_UI(self):
         self.note = wx.Notebook(self, -1, size = self.get_book_size())
 
-        self.note.AddPage(BasicPage(self.note), "基本")
-        self.note.AddPage(DownloadPage(self.note), "下载")
-        self.note.AddPage(AdvancedPage(self.note), "高级")
+        self.note.AddPage(BasicPage(self.note), _("基本"))
+        self.note.AddPage(DownloadPage(self.note), _("下载"))
+        self.note.AddPage(AdvancedPage(self.note), _("高级"))
         self.note.AddPage(FFmpegPage(self.note), "FFmpeg")
-        self.note.AddPage(ProxyPage(self.note), "代理")
-        self.note.AddPage(MiscPage(self.note), "其他")
+        self.note.AddPage(ProxyPage(self.note), _("代理"))
+        self.note.AddPage(MiscPage(self.note), _("其他"))
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -47,7 +50,7 @@ class SettingWindow(Dialog):
 
     def onOKEVT(self):
         def on_error():
-            show_error_message_dialog("保存失败", parent = self)
+            show_error_message_dialog(_("保存失败"), parent = self)
 
         try:
             for i in range(0, self.note.GetPageCount()):
@@ -62,7 +65,13 @@ class SettingWindow(Dialog):
     def get_book_size(self):
         match Platform(Config.Sys.platform):
             case Platform.Windows:
-                return self.FromDIP((315, 400))
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((315, 400))
+                else:
+                    return self.FromDIP((500, 400))
             
             case Platform.Linux | Platform.macOS:
-                return self.FromDIP((360, 470))
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((360, 470))
+                else:
+                    return self.FromDIP((550, 470))

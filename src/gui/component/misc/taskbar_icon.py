@@ -1,13 +1,12 @@
 import wx
+import sys
 import wx.adv
 
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.config import Config
 
 class TaskBarIcon(wx.adv.TaskBarIcon):
-    def __init__(self, frame: wx.Frame):
-        self.frame = frame
-
+    def __init__(self):
         wx.adv.TaskBarIcon.__init__(self)
 
         self.SetIcon(wx.BitmapBundle.FromBitmap(Icon.get_icon_bitmap(IconID.App_Default)), Config.APP.name)
@@ -38,16 +37,18 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
     def Bind_EVT(self):
         self.Bind(wx.EVT_MENU, self.onMenuEVT)
 
-    def onMenuEVT(self, event):
+    def onMenuEVT(self, event: wx.MenuEvent):
+        main_window = wx.FindWindowByName("main")
+
         match event.GetId():
             case self.ID_MAIN_MENU:
-                self.switch_window(self.frame)
+                self.switch_window(main_window)
 
             case self.ID_DOWNLOAD_MENU:
-                self.switch_window(self.frame.download_window)
+                self.switch_window(main_window.download_window)
 
             case self.ID_EXIT_MENU:
-                wx.Exit()
+                sys.exit()
     
     def switch_window(self, frame: wx.Frame):
         if frame.IsIconized():

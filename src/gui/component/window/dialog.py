@@ -4,8 +4,8 @@ from utils.config import Config
 from utils.common.enums import Platform
 
 class Dialog(wx.Dialog):
-    def __init__(self, parent, title, style = wx.DEFAULT_DIALOG_STYLE):
-        wx.Dialog.__init__(self, parent, -1, title, style = style)
+    def __init__(self, parent, title, style = wx.DEFAULT_DIALOG_STYLE, name = wx.DialogNameStr):
+        wx.Dialog.__init__(self, parent, -1, title, style = style, name = name)
 
         self.Bind(wx.EVT_BUTTON, self.onCloseEVT, id = wx.ID_OK)
         self.Bind(wx.EVT_BUTTON, self.onCloseEVT, id = wx.ID_CANCEL)

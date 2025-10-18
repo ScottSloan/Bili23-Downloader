@@ -1,9 +1,12 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.component.window.dialog import Dialog
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
+
+_ = gettext.gettext
 
 class UpdateDialog(Dialog):
     def __init__(self, parent, info: dict):
@@ -12,7 +15,7 @@ class UpdateDialog(Dialog):
 
         style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) if self.force else wx.DEFAULT_DIALOG_STYLE
 
-        Dialog.__init__(self, parent, "检查更新", style = style)
+        Dialog.__init__(self, parent, _("检查更新"), style = style)
 
         self.init_UI()
 
@@ -28,7 +31,7 @@ class UpdateDialog(Dialog):
 
         info_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((28, 28))), size = self.FromDIP((28, 28)))
 
-        title_lab = wx.StaticText(self, -1, "发现新版本")
+        title_lab = wx.StaticText(self, -1, _("发现新版本"))
         title_lab.SetFont(font)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -45,12 +48,12 @@ class UpdateDialog(Dialog):
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        self.ignore_version_chk = wx.CheckBox(self, -1, "忽略此版本，下次不再提示")
+        self.ignore_version_chk = wx.CheckBox(self, -1, _("忽略此版本，下次不再提示"))
         self.ignore_version_chk.Enable(not self.force)
         self.ignore_version_chk.SetValue(not self.force)
 
-        self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((90, 28)))
-        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((90, 28)))
+        self.update_btn = wx.Button(self, wx.ID_OK, _("更新"), size = self.FromDIP((90, 28)))
+        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, _("忽略"), size = self.FromDIP((90, 28)))
         self.ignore_btn.Enable(not self.force)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)

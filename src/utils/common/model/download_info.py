@@ -2,8 +2,10 @@ import random
 
 from utils.config import Config
 
-from utils.common.model.data_type import TreeListItemInfo, DownloadTaskInfo
-from utils.common.enums import ParseType
+from utils.common.model.list_item_info import TreeListItemInfo
+from utils.common.model.task_info import DownloadTaskInfo
+from utils.common.enums import ParseType, TemplateType
+from utils.common.formatter.strict_naming import StrictNaming
 
 class DownloadInfo:
     @classmethod
@@ -17,15 +19,17 @@ class DownloadInfo:
 
             download_info_list.append(cls.get_task_info_obj(info))
 
-        if Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file:
+        download_extra_option = Config.Basic.download_danmaku_file or Config.Basic.download_subtitle_file or Config.Basic.download_cover_file or Config.Basic.download_metadata_file
+
+        if download_extra_option:
             info = cls.get_extra_download_info(info)
 
             download_info_list.append(cls.get_task_info_obj(info))
 
         return download_info_list
     
-    @staticmethod
-    def get_base_download_info(item_info: TreeListItemInfo):
+    @classmethod
+    def get_base_download_info(cls, item_info: TreeListItemInfo):
         return {
             "list_number": item_info.number,
             "cover_url": item_info.cover_url,
@@ -37,6 +41,8 @@ class DownloadInfo:
             "season_id": item_info.season_id,
             "media_id": item_info.media_id,
             "pubtimestamp": item_info.pubtime,
+            "episode_num": item_info.episode_num,
+            "season_num": item_info.season_num,
             "title": item_info.title,
             "section_title": item_info.section_title,
             "part_title": item_info.part_title,
@@ -44,10 +50,16 @@ class DownloadInfo:
             "series_title": item_info.series_title,
             "interact_title": item_info.interact_title,
             "parent_title": item_info.parent_title,
+            "series_title_original": item_info.series_title_original,
             "bangumi_type": item_info.bangumi_type,
             "template_type": item_info.template_type,
+            "template": cls.get_template(item_info),
+            "area": item_info.area,
+            "zone": item_info.zone,
+            "subzone": item_info.subzone,
             "badge": item_info.badge,
             "page": item_info.page,
+            "total_count": item_info.total_count,
             "referer_url": "https://www.bilibili.com/",
             "up_name": item_info.up_name,
             "up_uid": item_info.up_mid,
@@ -79,20 +91,45 @@ class DownloadInfo:
             "download_subtitle_file": Config.Basic.download_subtitle_file,
             "subtitle_file_type": Config.Basic.subtitle_file_type,
             "download_cover_file": Config.Basic.download_cover_file,
-            "cover_file_type": Config.Basic.cover_file_type
+            "cover_file_type": Config.Basic.cover_file_type,
+            "download_metadata_file": Config.Basic.download_metadata_file,
+            "metadata_file_type": Config.Basic.metadata_file_type
         }
-
-        if Config.Temp.ass_resolution_confirm and Config.Temp.ass_custom_resolution:
-            info["video_width"] = Config.Temp.ass_video_width
-            info["video_height"] = Config.Temp.ass_video_height
+        info["video_width"] = Config.Temp.video_width
+        info["video_height"] = Config.Temp.video_height
 
         return info
     
-    @staticmethod
-    def get_task_info_obj(info: dict):
+    @classmethod
+    def get_task_info_obj(cls, info: dict):
         task_info = DownloadTaskInfo()
         task_info.load_from_dict(info)
 
         task_info.id = random.randint(10000000, 99999999)
 
         return task_info
+    
+    @staticmethod
+    def get_specific_template(template_type: int):
+        for entry in Config.Download.file_name_template_list:
+            if entry["type"] == template_type:
+                return entry["template"]
+            
+    @classmethod
+    def get_template(cls, task_info: DownloadTaskInfo):
+        template = cls.get_specific_template(task_info.template_type)
+
+        if task_info.template_type == TemplateType.Bangumi.value:
+            if Config.Download.strict_naming and task_info.season_num:
+                task_info.template_type = TemplateType.Bangumi_strict.value
+                template = cls.get_specific_template(task_info.template_type)
+
+                StrictNaming.check_strict_naming(task_info)
+
+            if task_info.section_title == "正片":
+                return template["0"]
+            else:
+                return template["1"]
+        
+        else:
+            return template["0"]

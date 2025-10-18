@@ -80,7 +80,7 @@ class PopularParser(Parser):
 
                 self.get_popular_rank_list(rid, desc)
 
-        self.get_popular_available_media_info()
+        self.start_thread(self.get_popular_available_media_info)
 
         return StatusCode.Success.value
 

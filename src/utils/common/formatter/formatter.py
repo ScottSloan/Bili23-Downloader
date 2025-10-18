@@ -47,6 +47,9 @@ class FormatUtils:
         if not size:
             return "0 MB"
         
+        elif size > Const.Size_1TB:
+            return "{:.2f} TB".format(size / Const.Size_1TB)
+        
         elif size > Const.Size_1GB:
             return "{:.2f} GB".format(size / Const.Size_1GB)
         
