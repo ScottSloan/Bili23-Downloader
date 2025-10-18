@@ -12,6 +12,7 @@ from utils.common.thread import Thread
 from utils.common.exception import GlobalExceptionInfo
 from utils.common.model.callback import Callback, DownloaderCallback
 from utils.common.io.directory import Directory
+from utils.common.io.file import File
 
 from utils.module.pic.cover import Cover
 from utils.module.downloader_v3 import Downloader
@@ -219,8 +220,8 @@ class Utils:
         Thread(target = worker).start()
 
     def rename_file(self):
-        return
-        FFmpeg.Utils.rename_files(self.task_info)
+        File.rename_file(f"video_{self.task_info.id}.{self.task_info.video_type}", f"{self.task_info.file_name}_video.{self.task_info.video_type}", self.task_info.download_path)
+        File.rename_file(f"audio_{self.task_info.id}.{self.task_info.audio_type}", f"{self.task_info.file_name}_audio.{self.task_info.audio_type}", self.task_info.download_path)
 
         self.onMergeSuccess()
 
@@ -292,11 +293,8 @@ class Utils:
         self.parent.download_window.start_next_task()
 
     def clear_temp_files(self):
-        return
-        match ParseType(self.task_info.download_type):
-            case ParseType.Video | ParseType.Bangumi | ParseType.Cheese:
-                if self.task_info.total_file_size:
-                    FFmpeg.Utils.clear_temp_files(self.task_info)
+        if ParseType(self.task_info.download_type) in [ParseType.Video, ParseType.Bangumi, ParseType.Cheese]:
+            FFUtils.clear_temp_files(self.task_info)
 
     def open_file_location(self):
         path = os.path.join(self.task_info.download_path, self.get_full_file_name())

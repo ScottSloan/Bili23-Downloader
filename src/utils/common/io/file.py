@@ -10,6 +10,11 @@ class File:
         for file_path in file_path_list:
             cls.remove_file(file_path)
 
+    @classmethod
+    def remove_files_ex(cls, file_name_list: List[str], cwd: str):
+        for file_name in file_name_list:
+            cls.remove_file(os.path.join(cwd, file_name))
+
     @staticmethod
     def remove_file(file_path: str):
         for i in range(File.MAX_REMOVE_ATTEMPS):

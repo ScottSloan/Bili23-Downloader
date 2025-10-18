@@ -14,6 +14,11 @@ class FFmpegCommand:
         params = ["-c:a", acodec, "-q:a", "0"]
 
         return self.construct(params)
+    
+    def merge_flv_list(self):
+        params = ["-f", "concat", "-safe", "0", "-c", "copy"]
+
+        return self.construct(params)
 
     def construct(self, params: list[str]):
         command = [f'"{Config.Merge.ffmpeg_path}"', "-y"]
