@@ -8,7 +8,6 @@ from utils.auth.login_v2 import Login
 from utils.common.enums import ParseStatus, ParseType, ExitOption, ProcessingType
 from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.update import Update
-from utils.common.data.welcome_message import welcome_message
 from utils.common.thread import Thread
 from utils.common.model.download_info import DownloadInfo
 
@@ -22,6 +21,7 @@ from gui.dialog.download_option.download_option_dialog import DownloadOptionDial
 from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
 from gui.dialog.setting.select_batch import SelectBatchDialog
+from gui.dialog.guide.guide import GuideDialog
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
@@ -80,7 +80,7 @@ class Window:
     @show_dialog
     def welcome_dialog(parent: wx.Window):
         def worker():
-            dlg = wx.MessageDialog(parent, welcome_message, "Guide", wx.ICON_INFORMATION | wx.YES_NO)
+            dlg = wx.MessageDialog(parent, "", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
             dlg.SetYesNoLabels("说明文档", "确定")
 
             if dlg.ShowModal() == wx.ID_YES:
@@ -95,7 +95,14 @@ class Window:
 
             Config.save_app_config()
 
-        wx.CallAfter(worker)
+        def a():
+            dlg = GuideDialog(parent)
+
+            dlg.ShowModal()
+
+        wx.CallAfter(a)
+
+        #wx.CallAfter(worker)
     
     @staticmethod
     def message_dialog(parent: wx.Window, message: str, caption: str, style: int):

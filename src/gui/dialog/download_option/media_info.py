@@ -303,6 +303,9 @@ class MediaInfoPanel(Panel):
         if not self.parent.stop_event.is_set():
             self.audio_quality_info.SetInfoLabel(info_label)
 
+            if StreamType(self.stream_type) in [StreamType.Flv, StreamType.Mp4]:
+                self.disable_download_audio_option()
+
             self.Layout()
 
     def onError(self):

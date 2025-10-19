@@ -39,13 +39,14 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
         self.ClearColumns()
         self.DeleteAllItems()
 
-        self.AppendColumn(_("序号"), width = self.FromDIP(100 if Platform(Config.Sys.platform) != Platform.Linux else 125))
-        self.AppendColumn(_("标题"), width = self.FromDIP(385))
+        self.AppendColumn(_("序号"), width = self.FromDIP(100 if Platform(Config.Sys.platform) != Platform.Linux else 150))
+        self.AppendColumn(_("标题"), width = self.FromDIP(400))
         self.AppendColumn(_("备注"), width = self.FromDIP(75))
         self.AppendColumn(_("时长"), width = self.FromDIP(75))
 
         self.shift_down_items: list[int] = []
         self.download_task_info_list: list = []
+        self.last_column_width = self.GetSize().width - (self.GetColumnWidth(0) + self.GetColumnWidth(1) + self.GetColumnWidth(2))
 
     def show_episode_list(self):
         def add_item(data: dict | list, item: wx.dataview.TreeListItem):
@@ -127,9 +128,7 @@ class TreeListCtrl(wx.dataview.TreeListCtrl):
             self.PopupMenu(menu)
 
     def onSizeEVT(self, event):
-        width, height = self.GetSize()
-
-        self.SetColumnWidth(1, width - self.FromDIP(350))
+        self.SetColumnWidth(1, self.GetSize().width - (self.GetColumnWidth(0) + self.GetColumnWidth(2) + self.last_column_width))
 
         event.Skip()
 

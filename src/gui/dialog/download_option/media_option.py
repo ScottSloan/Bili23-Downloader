@@ -103,7 +103,6 @@ class MediaOptionStaticBox(Panel):
         self.parent.media_info_box.enable_audio_quality_group(audio_enable)
 
         ffmpeg_merge_enable = video_enable and audio_enable
-        ffmpeg_merge_value = Config.Download.ffmpeg_merge and ffmpeg_merge_enable if ffmpeg_merge_enable else True
 
         self.ffmpeg_merge_chk.Enable(ffmpeg_merge_enable)
         self.ffmpeg_merge_chk.SetValue(Config.Download.ffmpeg_merge and ffmpeg_merge_enable if ffmpeg_merge_enable else video_enable or audio_enable)

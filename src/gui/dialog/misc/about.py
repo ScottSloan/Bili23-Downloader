@@ -23,8 +23,6 @@ class AboutWindow(Dialog):
 
         self.init_utils()
 
-        self.DWMExtendFrameIntoClientArea()
-
         self.CenterOnParent()
 
         wx.Bell()
@@ -113,6 +111,9 @@ class AboutWindow(Dialog):
 
         wx.CallAfter(worker)
 
+        if not self.DWMExtendFrameIntoClientArea():
+            self.SetTitle(_("关于 %s") % Config.APP.name)
+
     def GetVersion(self):
         version = f"{Config.APP.version} ({Config.APP.version_code})"
 
@@ -123,27 +124,3 @@ class AboutWindow(Dialog):
             return _("构建时间：%s") % build_time
         else:
             return _("发布时间：%s") % date
-        
-    def DWMExtendFrameIntoClientArea(self):
-        if Platform(Config.Sys.platform) == Platform.Windows:
-            import ctypes
-            import ctypes.wintypes
-
-            hwnd = self.GetHandle()
-
-            class MARGINS(ctypes.Structure):
-                _fields_ = [
-                    ("cxLeftWidth", ctypes.c_int),
-                    ("cxRightWidth", ctypes.c_int),
-                    ("cyTopHeight", ctypes.c_int),
-                    ("cyBottomHeight", ctypes.c_int)
-                ]
-
-            margins = MARGINS(1, 1, 1, 1)
-            colorref = ctypes.wintypes.RGB(255, 255, 255)
-
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(ctypes.c_int(colorref)), ctypes.sizeof(ctypes.c_int(colorref)))
-            ctypes.windll.dwmapi.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(margins))
-
-        else:
-            self.SetTitle(_("关于 %s") % Config.APP.name)

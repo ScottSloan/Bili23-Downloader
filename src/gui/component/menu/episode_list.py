@@ -9,8 +9,6 @@ class EpisodeListMenu(wx.Menu):
     def __init__(self, item_type: str, checked_state: bool, collapsed_state: bool):
         wx.Menu.__init__(self)
 
-        wx.Menu()
-
         view_cover_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_VIEW_COVER_MENU, _("查看视频封面(&V)"))
         copy_title_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_COPY_TITLE_MENU, _("复制标题名称(&C)"))
         copy_url_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_COPY_URL_MENU, _("复制视频链接(&U)"))
@@ -20,14 +18,6 @@ class EpisodeListMenu(wx.Menu):
         collapse_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_COLLAPSE_MENU, _("展开(&X)") if collapsed_state else _("折叠(&O)"))
         select_batch_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_SELECT_BATCH_MENU, _("批量选取项目(&P)"))
         refresh_media_info_menuitem = wx.MenuItem(self, ID.EPISODE_LIST_REFRESH_MEDIA_INFO_MENU, _("刷新媒体信息(&R)"))
-
-        if item_type == "node":
-            view_cover_menuitem.Enable(False)
-            copy_url_menuitem.Enable(False)
-            open_in_browser_menuitem.Enable(False)
-            edit_title_menuitem.Enable(False)
-        else:
-            collapse_menuitem.Enable(False)
 
         self.Append(view_cover_menuitem)
         self.AppendSeparator()
@@ -42,3 +32,12 @@ class EpisodeListMenu(wx.Menu):
         self.AppendSeparator()
         self.Append(select_batch_menuitem)
         self.Append(refresh_media_info_menuitem)
+
+        if item_type == "node":
+            self.Enable(ID.EPISODE_LIST_VIEW_COVER_MENU, False)
+            self.Enable(ID.EPISODE_LIST_COPY_URL_MENU, False)
+            self.Enable(ID.EPISODE_LIST_OPEN_IN_BROWSER_MENU, False)
+            self.Enable(ID.EPISODE_LIST_EDIT_TITLE_MENU, False)
+            self.Enable(ID.EPISODE_LIST_REFRESH_MEDIA_INFO_MENU, False)
+        else:
+            self.Enable(ID.EPISODE_LIST_COLLAPSE_MENU, False)

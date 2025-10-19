@@ -117,7 +117,7 @@ class MainWindow(Frame):
         def worker():
             Async.run()
 
-            if Config.Basic.is_new_user:
+            if Config.Basic.is_new_user or True:
                 Window.welcome_dialog(self)
 
         self.parser = Parser(self)

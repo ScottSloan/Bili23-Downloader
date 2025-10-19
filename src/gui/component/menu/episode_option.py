@@ -14,7 +14,6 @@ class EpisodeOptionMenu(wx.Menu):
 
         single_menuitem = wx.MenuItem(self, ID.EPISODE_SINGLE_MENU, _("显示单个视频"), kind = wx.ITEM_RADIO)
         in_section_menuitem = wx.MenuItem(self, ID.EPISODE_IN_SECTION_MENU, _("显示视频所在的列表"), kind = wx.ITEM_RADIO)
-        in_section_menuitem.Enable(enable_in_section_option)
         all_section_menuitem = wx.MenuItem(self, ID.EPISODE_ALL_SECTIONS_MENU, _("显示全部相关视频"), kind = wx.ITEM_RADIO)
         show_episode_full_name = wx.MenuItem(self, ID.EPISODE_FULL_NAME_MENU, _("显示完整剧集名称"), kind = wx.ITEM_CHECK)
 
@@ -28,12 +27,14 @@ class EpisodeOptionMenu(wx.Menu):
 
         match EpisodeDisplayType(Config.Misc.episode_display_mode):
             case EpisodeDisplayType.Single:
-                single_menuitem.Check(True)
+                self.Check(ID.EPISODE_SINGLE_MENU, True)
 
             case EpisodeDisplayType.In_Section:
-                in_section_menuitem.Check(True)
+                self.Check(ID.EPISODE_IN_SECTION_MENU, True)
 
             case EpisodeDisplayType.All:
-                all_section_menuitem.Check(True)
+                self.Check(ID.EPISODE_ALL_SECTIONS_MENU, True)
 
-        show_episode_full_name.Check(Config.Misc.show_episode_full_name)
+        self.Check(ID.EPISODE_FULL_NAME_MENU, Config.Misc.show_episode_full_name)
+
+        self.Enable(ID.EPISODE_IN_SECTION_MENU, enable_in_section_option)

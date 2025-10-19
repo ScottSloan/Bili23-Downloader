@@ -6,7 +6,6 @@ from utils.common.enums import Platform
 from gui.component.panel.panel import Panel
 from gui.component.spinctrl.spinctrl import SpinCtrl
 
-
 class LabelSpinCtrl(Panel):
     def __init__(self, parent, label: str, value: int | float, unit: str, orient: int = wx.HORIZONTAL, float: int = False, max: int = 100, min: int = 0):
         self.label, self.value, self.unit, self.float, self.max, self.min = label, value, unit, float, max, min
