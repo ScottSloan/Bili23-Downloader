@@ -128,7 +128,7 @@ class VideoPreview(Parser):
             else:
                url_list = self.get_stream_download_url_list(entry)
 
-               download_url, file_size = CDN.get_file_size(url_list)
+               download_url, file_size = CDN.get_file_size_ex(url_list)
 
                return file_size
 
@@ -190,7 +190,7 @@ class VideoPreview(Parser):
             else:
                 url_list = self.get_stream_download_url_list(entry)
 
-                download_url, file_size = CDN.get_file_size(url_list)
+                download_url, file_size = CDN.get_file_size_ex(url_list)
 
                 return file_size
 

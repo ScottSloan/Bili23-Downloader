@@ -13,7 +13,9 @@ class UpdateDialog(Dialog):
         self.info = info
         self.force = info.get("force")
 
-        style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) if self.force else wx.DEFAULT_DIALOG_STYLE
+        style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) & (~wx.SYSTEM_MENU) if self.force else wx.DEFAULT_DIALOG_STYLE
+
+        self.can_close = not self.force
 
         Dialog.__init__(self, parent, _("检查更新"), style = style)
 
@@ -65,7 +67,7 @@ class UpdateDialog(Dialog):
         update_vbox = wx.BoxSizer(wx.VERTICAL)
         update_vbox.Add(hbox, 0, wx.EXPAND)
         update_vbox.Add(top_border, 0, wx.EXPAND)
-        update_vbox.Add(self.changelog, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        update_vbox.Add(self.changelog, 1, wx.EXPAND)
         update_vbox.Add(bottom_border, 0, wx.EXPAND)
         update_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
@@ -76,6 +78,10 @@ class UpdateDialog(Dialog):
     def init_utils(self):
         self.ignore_version_chk.SetValue(Config.Misc.ignore_version == self.info.get("version_code"))
     
+    def onCloseEVT(self, event: wx.CloseEvent):
+        if self.can_close:
+            return super().onCloseEVT(event)
+
     def onOKEVT(self):
         wx.LaunchDefaultBrowser(self.info.get("url"))
 

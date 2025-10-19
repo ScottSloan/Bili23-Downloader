@@ -154,7 +154,6 @@ class MediaInfoPanel(Panel):
         Config.Temp.audio_quality_priority = Config.Download.audio_quality_priority.copy()
         Config.Temp.video_codec_priority = Config.Download.video_codec_priority.copy()
 
-        
         self.video_quality_info.SetChoice(self.preview.get_video_quality_data_dict(self.preview.download_json.copy()))
         self.audio_quality_info.SetChoice(self.preview.get_audio_quality_data_dict(self.preview.download_json.copy()))
         self.video_codec_info.SetChoice(self.preview.get_video_codec_data_dict())

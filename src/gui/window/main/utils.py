@@ -80,29 +80,10 @@ class Window:
     @show_dialog
     def welcome_dialog(parent: wx.Window):
         def worker():
-            dlg = wx.MessageDialog(parent, "", "Guide", wx.ICON_INFORMATION | wx.YES_NO)
-            dlg.SetYesNoLabels("说明文档", "确定")
-
-            if dlg.ShowModal() == wx.ID_YES:
-                wx.LaunchDefaultBrowser("https://bili23.scott-sloan.cn/doc/use/basic.html")
-
-            Config.Basic.is_new_user = False
-
-            dlg2 = wx.MessageDialog(parent, "是否自动读取剪切板？\n\n开启后，当复制 B 站相关链接时，程序将自动开始解析。", "提示", wx.ICON_INFORMATION | wx.YES_NO)
-
-            if dlg2.ShowModal() == wx.ID_YES:
-                Config.Basic.listen_clipboard = True
-
-            Config.save_app_config()
-
-        def a():
             dlg = GuideDialog(parent)
-
             dlg.ShowModal()
 
-        wx.CallAfter(a)
-
-        #wx.CallAfter(worker)
+        wx.CallAfter(worker)
     
     @staticmethod
     def message_dialog(parent: wx.Window, message: str, caption: str, style: int):

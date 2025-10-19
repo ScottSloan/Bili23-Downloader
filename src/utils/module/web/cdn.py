@@ -34,6 +34,16 @@ class CDN:
 
                 if file_size:
                     return (download_url, file_size)
+                
+    @classmethod
+    def get_file_size_ex(cls, url_list: List[str]):
+        for download_url in url_list:
+            file_size = cls.request_head(download_url)
+
+            if file_size:
+                return (download_url, file_size)
+            
+        return cls.get_file_size(url_list)
 
     @staticmethod
     def request_head(url: str):

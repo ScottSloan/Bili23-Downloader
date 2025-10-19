@@ -36,6 +36,7 @@ class AgreePage(Panel):
         vbox.Add(self.desc_lab, 0, wx.ALL, self.FromDIP(10))
         vbox.AddStretchSpacer()
         vbox.Add(button_hbox, 0, wx.EXPAND)
+        vbox.AddSpacer(self.FromDIP(10))
 
         self.SetSizer(vbox)
 
