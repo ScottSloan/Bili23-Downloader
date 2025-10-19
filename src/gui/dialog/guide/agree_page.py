@@ -1,7 +1,10 @@
 import wx
 import sys
+import gettext
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class AgreePage(Panel):
     def __init__(self, parent: wx.Window, desc: str):
@@ -17,13 +20,12 @@ class AgreePage(Panel):
         font = self.GetFont()
         font.SetFractionalPointSize(font.GetFractionalPointSize() + 1)
 
-        self.desc_lab = wx.StaticText(self, -1, self.desc)
-        self.desc_lab.Wrap(self.FromDIP(400))
+        self.desc_lab = wx.TextCtrl(self, -1, self.desc, style = wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_NONE)
         self.desc_lab.SetFont(font)
 
-        self.agree_btn = wx.Button(self, -1, "已知晓", size = self.get_scaled_size((80, 28)))
+        self.agree_btn = wx.Button(self, -1, _("已知晓"), size = self.get_scaled_size((80, 28)))
         self.agree_btn.Hide()
-        self.disagree_btn = wx.Button(self, -1, "不理解", size = self.get_scaled_size((80, 28)))
+        self.disagree_btn = wx.Button(self, -1, _("不理解"), size = self.get_scaled_size((80, 28)))
         self.disagree_btn.Hide()
 
         button_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -31,9 +33,9 @@ class AgreePage(Panel):
         button_hbox.Add(self.agree_btn, 0, wx.ALL, self.FromDIP(6))
         button_hbox.Add(self.disagree_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         button_hbox.AddStretchSpacer()
-
+        
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.desc_lab, 0, wx.ALL, self.FromDIP(10))
+        vbox.Add(self.desc_lab, 1, wx.ALL | wx.EXPAND, self.FromDIP(10))
         vbox.AddStretchSpacer()
         vbox.Add(button_hbox, 0, wx.EXPAND)
         vbox.AddSpacer(self.FromDIP(10))
@@ -48,6 +50,7 @@ class AgreePage(Panel):
         def worker():
             self.agree_btn.Show()
             self.disagree_btn.Show()
+
             self.Layout()
 
         wx.CallLater(5000, worker)

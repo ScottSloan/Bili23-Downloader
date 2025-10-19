@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: 1.70.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-09 23:35+0800\n"
-"PO-Revision-Date: 2025-10-12 16:45+0800\n"
+"PO-Revision-Date: 2025-10-19 18:57+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -359,6 +359,44 @@ msgstr "Disk free space: %s"
 msgid "当前下载目录磁盘空间不足 5 GB，可能会导致下载失败，请腾出足够的磁盘空间。"
 msgstr "The current download directory has less than 5 GB of free disk space, which may cause download failures. Please free up sufficient disk space."
 
+# -------------- src/gui/dialog/guide/agree_page.py --------------
+msgid "已知晓"
+msgstr "Agree"
+
+msgid "不理解"
+msgstr "Disagree"
+
+# -------------- src/gui/dialog/guide/guide.py --------------
+msgid "下一步"
+msgstr "Next"
+
+msgid "使用向导"
+msgstr "Guide"
+
+# -------------- src/gui/dialog/guide/page_1.py --------------
+msgid "欢迎使用 Bili23 Downloader"
+msgstr "Welcome to Bili23 Downloader"
+
+# -------------- src/gui/dialog/guide/page_2.py --------------
+msgid "使用须知"
+msgstr "Terms of Use"
+
+# -------------- src/gui/dialog/guide/page_4.py --------------
+msgid "自动监听剪切板，检测到复制视频链接时自动解析"
+msgstr "Automatically monitor the clipboard and parse video links when copied"
+
+msgid "自动切换音视频流 CDN (国内用户建议开启)"
+msgstr "Automatically switch audio/video stream CDN \n(recommended for users in China)"
+
+msgid "相关链接"
+msgstr "Related Links"
+
+msgid "说明文档"
+msgstr "Documentation"
+
+msgid "完成"
+msgstr "Complete"
+
 # -------------- src/gui/dialog/login/captcha.py --------------
 msgid "请完成验证"
 msgstr "Please Complete Verification"
@@ -587,7 +625,6 @@ msgid "文件名模板"
 msgstr "Filename Template"
 
 # -------------- src/gui/dialog/setting/file_name/edit_template.py --------------
-
 msgid "不能包含 <>:\"\\|?* 之中任何字符"
 msgstr "Cannot contain any of the characters <>:\"\\|?*"
 
@@ -598,7 +635,6 @@ msgid "文件夹名称："
 msgstr "Folder Name: "
 
 # -------------- src/gui/dialog/setting/file_name/edit_template.py --------------
-
 msgid "模板名不能为空"
 msgstr "Template name cannot be empty"
 
@@ -644,8 +680,14 @@ msgstr "Filename: "
 msgid "可用字段列表（双击列表项目可添加字段）"
 msgstr "Available Fields List (Double-click an item to add the field)"
 
-msgid "同一字段可重复添加多次，且可同时用于子目录和文件名部分。\n\n对于时间字段的格式设置，请参考说明文档。"
-msgstr "The same field can be added multiple times and can be used in both the subdirectory and filename sections.\n\nFor formatting settings of time fields, please refer to the documentation."
+msgid ""
+"同一字段可重复添加多次，且可同时用于子目录和文件名部分。\n"
+"\n"
+"对于时间字段的格式设置，请参考说明文档。"
+msgstr ""
+"The same field can be added multiple times and can be used in both the subdirectory and filename sections.\n"
+"\n"
+"For formatting settings of time fields, please refer to the documentation."
 
 msgid "示例视频："
 msgstr "Example Video: "
@@ -706,7 +748,6 @@ msgstr ""
 "Please select the item to adjust"
 
 # -------------- src/gui/dialog/setting/priority/scrape_option/add_date_box.py --------------
-
 msgid "将 <添加日期> 添加到 NFO"
 msgstr "Add <dateadded> to NFO"
 
@@ -714,7 +755,6 @@ msgid "<添加日期> 来源"
 msgstr "<dateadded> Source"
 
 # -------------- src/gui/dialog/setting/priority/scrape_option/episode.py --------------
-
 msgid "创建 NFO 文件"
 msgstr "Create NFO file"
 
@@ -727,11 +767,12 @@ msgstr "Episode"
 msgid "<剧集文件名>.nfo"
 msgstr "<episode_filename>.nfo"
 
-msgid "如果需要将剧集分季存放至不同文件夹\n请启用'严格刮削命名模板'选项"
+msgid ""
+"如果需要将剧集分季存放至不同文件夹\n"
+"请启用'严格刮削命名模板'选项"
 msgstr "If you need to store episodes of different seasons in separate folders, please enable the 'Strict Scraping Naming Template' option"
 
 # -------------- src/gui/dialog/setting/priority/scrape_option/lesson.py --------------
-
 msgid "课"
 msgstr "Episode"
 
@@ -739,12 +780,10 @@ msgid "<视频文件名>.nfo"
 msgstr "<video_filename>.nfo"
 
 # -------------- src/gui/dialog/setting/priority/scrape_option/movie.py --------------
-
 msgid "<电影文件名>.nfo"
 msgstr "<movie_filename>.nfo"
 
 # -------------- src/gui/dialog/setting/priority/scrape_option/scrape_option.py --------------
-
 msgid "刮削设置          "
 msgstr "Scrape Settings  "
 
@@ -752,7 +791,6 @@ msgid "电影"
 msgstr "Movie"
 
 # -------------- src/gui/dialog/setting/custom_cdn_host.py.py --------------
-
 msgid "CDN 节点列表"
 msgstr "CDN Node List"
 
@@ -777,17 +815,41 @@ msgstr "Latency"
 msgid "未检测"
 msgstr "Not Tested"
 
-msgid "保存失败\n\n至少需要添加一个 CDN 节点"
-msgstr "Save failed\n\nAt least one CDN node must be added"
+msgid ""
+"保存失败\n"
+"\n"
+"至少需要添加一个 CDN 节点"
+msgstr ""
+"Save failed\n"
+"\n"
+"At least one CDN node must be added"
 
-msgid "添加失败\n\n请输入要添加的 CDN 节点"
-msgstr "Add failed\n\nPlease enter the CDN node to add"
+msgid ""
+"添加失败\n"
+"\n"
+"请输入要添加的 CDN 节点"
+msgstr ""
+"Add failed\n"
+"\n"
+"Please enter the CDN node to add"
 
-msgid "添加失败\n\n无法重复添加已存在的项目"
-msgstr "Add failed\n\nCannot add an existing item again"
+msgid ""
+"添加失败\n"
+"\n"
+"无法重复添加已存在的项目"
+msgstr ""
+"Add failed\n"
+"\n"
+"Cannot add an existing item again"
 
-msgid "删除项目\n\n确定要删除选定的项目吗？"
-msgstr "Delete item\n\nAre you sure you want to delete the selected item?"
+msgid ""
+"删除项目\n"
+"\n"
+"确定要删除选定的项目吗？"
+msgstr ""
+"Delete item\n"
+"\n"
+"Are you sure you want to delete the selected item?"
 
 # -------------- src/gui/dialog/setting/custom_subtitle_lan.py.py --------------
 msgid "字幕语言下载选项"
@@ -1584,7 +1646,6 @@ msgid "重叠"
 msgstr "Overlapping"
 
 # -------------- src/utils/common/data/file_name.py --------------
-
 msgid "投稿视频"
 msgstr "Uploaded Videos"
 
@@ -1617,6 +1678,20 @@ msgstr "Folder Name"
 
 msgid "收藏夹"
 msgstr "Favorites"
+
+# -------------- src/utils/common/data/guide.py --------------
+
+msgid "开始使用前，请先完成以下简短的引导。\n\n点击“下一步”按钮继续。\n\n"
+msgstr "Before getting started, please complete this brief setup guide.\n\nClick the 'Next' button to continue.\n\n"
+
+msgid "本项目不提供破解大会员专享视频、付费视频、充电视频等功能，如有相关需求，请开通B站大会员服务、购买付费内容、向UP主充电解锁。\n\n用户能否下载上述内容，取决于所登录账号的会员状态和相应权限，也就是说能看什么就能下载什么。\n\n特此说明，请勿再次咨询相关问题。\n\n"
+msgstr "This project does not provide any functionality to bypass premium-only videos, paid content, or charged videos. If you wish to access such content, please subscribe to Bilibili Premium, purchase the content, or support the creator via charging.\n\nYour ability to download such content depends entirely on your account's membership status and permissions — in other words, you can only download what you can watch.\n\nPlease note: do not inquire about this matter again.\n\n"
+
+msgid "本项目仅供个人学习与研究用途，任何通过本项目下载的内容仅限于个人使用，不得用于任何形式的商业目的、公开传播或分发。\n\n用户需自行承担使用本项目可能带来的所有风险，项目开发者不对因使用本项目所引发的任何法律纠纷、版权问题或其他损害承担责任。\n\n"
+msgstr "This project is intended solely for personal learning and research purposes. Any content downloaded through this tool must be used for personal purposes only and may not be used for commercial activities, public distribution, or redistribution.\n\nUsers assume all risks associated with the use of this project. The developers assume no liability for any legal disputes, copyright issues, or other damages arising from its use.\n\n"
+
+msgid "建议详细阅读说明文档，以便快速上手并充分了解各项功能设置。\n\n欢迎加入社区，获取项目最新动态、问题答疑和技术交流。\n\n"
+msgstr "We recommend reading the documentation thoroughly to quickly get started and fully understand all feature settings.\n\nFeel free to join the community to stay updated on project news, get help with questions, and engage in technical discussions.\n\n"
 
 # -------------- src/utils/common/data/priority.py --------------
 msgid "8K 超高清"
@@ -1657,6 +1732,18 @@ msgstr "Hi-Res Lossless"
 
 msgid "杜比全景声"
 msgstr "Dolby Atmos"
+
+# -------------- src/utils/common/exception.py --------------
+
+msgid "%s\n\n描述：%s"
+msgstr "%s\n\nDescription: %s"
+
+msgid "错误"
+msgstr "Error"
+
+msgid "详细信息"
+msgstr "Details"
+
 
 # -------------- src/utils/common/map.py --------------
 msgid "覆盖原文件"
@@ -1701,25 +1788,119 @@ msgstr "File Creation Date"
 msgid "上映日期"
 msgstr "Release Date"
 
+msgid "请求成功"
+msgstr "Request successful"
+
+msgid "未找到该房间"
+msgstr "Room not found"
+
+msgid "请求错误"
+msgstr "Request failed"
+
+msgid "权限不足"
+msgstr "Insufficient permissions"
+
+msgid "视频不存在"
+msgstr "Video does not exist"
+
+msgid "请求过于频繁，请稍后再试"
+msgstr "Request rate too high, please try again later"
+
+msgid "根据版权方要求，您所在的地区无法观看本片"
+msgstr "This content is not available in your region due to copyright restrictions"
+
+msgid "大会员专享限制"
+msgstr "Available to Premium members only"
+
+msgid "应版权方要求本片需购买"
+msgstr "This content must be purchased due to copyright holder requirements"
+
+msgid "无效的链接"
+msgstr "Invalid link"
+
+msgid "跳转链接"
+msgstr "Redirect link"
+
+msgid "执行外部命令失败"
+msgstr "Failed to execute external command"
+
+msgid "下载失败"
+msgstr "Download failed"
+
+msgid "下载失败达到最大重试次数"
+msgstr "Download failed after maximum retry attempts"
+
+msgid "用户终止解析操作"
+msgstr "User canceled the parsing operation"
+
+msgid "该内容采用 WideVine DRM 技术加密，不支持下载"
+msgstr "This content is encrypted with WideVine DRM and is not available for download"
+
+msgid "稿件不可见"
+msgstr "The video is not accessible"
+
+msgid "稿件审核中"
+msgstr "Video is under review"
+
+msgid "仅 UP 主自己可见"
+msgstr "Visible to the uploader only"
+
+msgid "房间信息不存在"
+msgstr "Room information does not exist"
+
 # -------------- src/utils/parse/preview.py --------------
 msgid "按优先级自动选择"
 msgstr "Determined by priority"
 
 # -------------- src/main.py --------------
-msgid "缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n%s"
-msgstr "Microsoft Visual C++ Runtime Library is missing, unable to run this program.\n\nPlease go to https://aka.ms/vs/17/release/vc_redist.x64.exe to download and install the Microsoft Visual C++ 2015-2022 Runtime Library.\n\n%s"
+msgid ""
+"缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n"
+"\n"
+"请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n"
+"\n"
+"%s"
+msgstr ""
+"Microsoft Visual C++ Runtime Library is missing, unable to run this program.\n"
+"\n"
+"Please go to https://aka.ms/vs/17/release/vc_redist.x64.exe to download and install the Microsoft Visual C++ 2015-2022 Runtime Library.\n"
+"\n"
+"%s"
 
-msgid "初始化 wxPython 失败\n\n%s"
-msgstr "Failed to initialize wxPython\n\n%s"
+msgid ""
+"初始化 wxPython 失败\n"
+"\n"
+"%s"
+msgstr ""
+"Failed to initialize wxPython\n"
+"\n"
+"%s"
 
-msgid "请更新 protobuf 至最新版本\n当前版本：%s\n建议版本：6.32.0 或更高"
-msgstr "Please update protobuf to the latest version\nCurrent version: %s\nRecommended version: 6.32.0 or higher"
+msgid ""
+"请更新 protobuf 至最新版本\n"
+"当前版本：%s\n"
+"建议版本：6.32.0 或更高"
+msgstr ""
+"Please update protobuf to the latest version\n"
+"Current version: %s\n"
+"Recommended version: 6.32.0 or higher"
 
 msgid "执行：pip install protobuf --upgrade"
 msgstr "Execute: pip install protobuf --upgrade"
 
-msgid "初始化 protobuf 失败\n\n%s"
-msgstr "Failed to initialize protobuf\n\n%s"
+msgid ""
+"初始化 protobuf 失败\n"
+"\n"
+"%s"
+msgstr ""
+"Failed to initialize protobuf\n"
+"\n"
+"%s"
 
-msgid "初始化程序失败\n\n%s"
-msgstr "Failed to initialize the program\n\n%s"
+msgid ""
+"初始化程序失败\n"
+"\n"
+"%s"
+msgstr ""
+"Failed to initialize the program\n"
+"\n"
+"%s"

@@ -45,7 +45,7 @@ class UpdateDialog(Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.changelog = wx.TextCtrl(self, -1, self.info.get("changelog"), size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.changelog = wx.TextCtrl(self, -1, self.info.get("changelog"), size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_NONE)
         self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)

@@ -1,4 +1,8 @@
 import wx
+import gettext
+
+from utils.config import Config
+from utils.common.enums import Platform
 
 from gui.dialog.guide.page_1 import Page1Panel
 from gui.dialog.guide.page_2 import Page2Panel
@@ -7,13 +11,15 @@ from gui.dialog.guide.page_4 import Page4Panel
 
 from gui.component.window.dialog import Dialog
 
+_ = gettext.gettext
+
 class GuideDialog(Dialog):
     def __init__(self, parent: wx.Window):
         self.can_close = False
 
         Dialog.__init__(self, parent, "", style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) & (~wx.SYSTEM_MENU), name = "guide")
 
-        self.SetSize(self.FromDIP((475, 310)))
+        self.SetSize(self.get_window_size())
 
         self.init_UI()
 
@@ -44,7 +50,7 @@ class GuideDialog(Dialog):
         self.indicator_lab = wx.StaticText(self, -1, "1/4")
         self.indicator_lab.SetFont(font)
 
-        self.next_btn = wx.Button(self, -1, "下一步", size = self.get_scaled_size((80, 25)))
+        self.next_btn = wx.Button(self, -1, _("下一步"), size = self.get_scaled_size((80, 25)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.Add(self.indicator_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(10))
@@ -71,7 +77,7 @@ class GuideDialog(Dialog):
         self.onChangePageEVT(0)
 
         if not self.DWMExtendFrameIntoClientArea():
-            self.SetTitle("使用向导")
+            self.SetTitle(_("使用向导"))
 
     def onCloseEVT(self, event: wx.CloseEvent):
         if self.can_close:
@@ -94,8 +100,22 @@ class GuideDialog(Dialog):
         self.title_lab.SetLabel(data.get("title", ""))
         self.indicator_lab.SetLabel("%d/%d" % (self.notebook.GetSelection() + 1, self.notebook.GetPageCount()))
 
-        self.next_btn.SetLabel(data.get("next_btn_label", "下一步"))
+        self.next_btn.SetLabel(data.get("next_btn_label", _("下一步")))
         self.next_btn.Enable(data.get("next_btn_enable", True))
 
     def EnableNextButton(self, enable: bool):
         self.next_btn.Enable(enable)
+
+    def get_window_size(self):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((475, 310))
+                else:
+                    return self.FromDIP((530, 360))
+            
+            case Platform.Linux | Platform.macOS:
+                if Config.Basic.language == "zh_CN":
+                    return self.FromDIP((360, 470))
+                else:
+                    return self.FromDIP((550, 470)) 

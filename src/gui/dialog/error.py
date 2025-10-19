@@ -45,7 +45,7 @@ class ErrorInfoDialog(Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.log_box = wx.TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.log_box = wx.TextCtrl(self, -1, str(self.exception_info.get("stack_trace")), size = self.FromDIP((620, 250)), style = wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_NONE)
         self.log_box.SetFont(font)
 
         self.close_btn = wx.Button(self, wx.ID_CANCEL, _("关闭"), size = self.get_scaled_size((80, 28)))

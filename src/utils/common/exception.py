@@ -2,12 +2,15 @@ import os
 import wx
 import sys
 import json
+import gettext
 import threading
 import traceback
 from typing import Callable
 
 from utils.common.map import status_code_map
 from utils.common.datetime_util import DateTime
+
+_ = gettext.gettext
 
 class GlobalExceptionInfo:
     lock = threading.Lock()
@@ -95,12 +98,12 @@ def show_error_message_dialog(caption: str, message: str = None, parent: wx.Wind
         info = GlobalExceptionInfo.info.copy()
 
         if message:
-            msg = f"{caption}\n\n{message}"
+            msg = "%s\n\n%s" % (caption, message)
         else:
-            msg = f"{caption}\n\n描述：{info.get('message')}"
+            msg = _("%s\n\n描述：%s") % (caption, info.get("message", ""))
 
-        dlg = wx.MessageDialog(parent, msg, "错误", wx.ICON_ERROR | wx.YES_NO)
-        dlg.SetYesNoLabels("详细信息", "确定")
+        dlg = wx.MessageDialog(parent, msg, _("错误"), wx.ICON_ERROR | wx.YES_NO)
+        dlg.SetYesNoLabels(_("详细信息"), _("确定"))
 
         if dlg.ShowModal() == wx.ID_YES:
             from gui.dialog.error import ErrorInfoDialog

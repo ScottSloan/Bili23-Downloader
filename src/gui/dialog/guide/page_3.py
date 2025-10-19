@@ -1,8 +1,11 @@
 import wx
+import gettext
 
 from utils.common.data.guide import guide_3_msg
 
 from gui.dialog.guide.agree_page import AgreePage
+
+_ = gettext.gettext
 
 class Page3Panel(AgreePage):
     def __init__(self, parent: wx.Window):
@@ -12,7 +15,7 @@ class Page3Panel(AgreePage):
         self.startCountdown()
 
         return {
-            "title": "免责声明",
-            "next_btn_label": "下一步",
+            "title": _("免责声明"),
+            "next_btn_label": _("下一步"),
             "next_btn_enable": False
         }

@@ -1,8 +1,11 @@
 import wx
+import gettext
 
 from utils.common.data.guide import guide_1_msg
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class Page1Panel(Panel):
     def __init__(self, parent: wx.Window):
@@ -25,7 +28,7 @@ class Page1Panel(Panel):
 
     def onChangePage(self):
         return {
-            "title": "欢迎使用 Bili23 Downloader",
-            "next_btn_label": "下一步",
+            "title": _("欢迎使用 Bili23 Downloader"),
+            "next_btn_label": _("下一步"),
             "next_btn_enable": True
         }

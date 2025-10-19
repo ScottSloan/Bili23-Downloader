@@ -1,10 +1,13 @@
 import wx
 import wx.adv
+import gettext
 
 from utils.config import Config
 from utils.common.data.guide import guide_4_msg
 
 from gui.component.panel.panel import Panel
+
+_ = gettext.gettext
 
 class Page4Panel(Panel):
     def __init__(self, parent: wx.Window):
@@ -20,15 +23,15 @@ class Page4Panel(Panel):
         self.desc_lab.Wrap(self.FromDIP(400))
         self.desc_lab.SetFont(font)
 
-        self.enable_listen_clipboard_chk = wx.CheckBox(self, -1, "自动监听剪切板，检测到复制视频链接时自动解析")
+        self.enable_listen_clipboard_chk = wx.CheckBox(self, -1, _("自动监听剪切板，检测到复制视频链接时自动解析"))
         self.enable_listen_clipboard_chk.SetFont(font)
-        self.enable_switch_cdn_chk = wx.CheckBox(self, -1, "自动切换音视频流 CDN (国内用户建议开启)")
+        self.enable_switch_cdn_chk = wx.CheckBox(self, -1, _("自动切换音视频流 CDN (国内用户建议开启)"))
         self.enable_switch_cdn_chk.SetValue(Config.Basic.language == "zh_CN")
         self.enable_switch_cdn_chk.SetFont(font)
 
-        relative_url = wx.StaticText(self, -1, "相关链接")
+        relative_url = wx.StaticText(self, -1, _("相关链接"))
         relative_url.SetFont(font)
-        document_link = wx.adv.HyperlinkCtrl(self, -1, "说明文档", url = "https://bili23.scott-sloan.cn/doc/use/basic.html")
+        document_link = wx.adv.HyperlinkCtrl(self, -1, _("说明文档"), url = "https://bili23.scott-sloan.cn/doc/use/basic.html")
         document_link.SetFont(font)
 
         link_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -56,7 +59,7 @@ class Page4Panel(Panel):
 
     def onChangePage(self):
         return {
-            "title": "完成",
-            "next_btn_label": "完成",
+            "title": _("完成"),
+            "next_btn_label": _("完成"),
             "next_btn_enable": True
         }
