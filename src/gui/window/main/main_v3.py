@@ -252,7 +252,7 @@ class MainWindow(Frame):
             self.bottom_box.download_tip()
 
             self.utils.download()
-                    
+
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
         

@@ -327,7 +327,7 @@ class Cookie:
 
         Utils.exclimbwuzhi(ex_data[1])
 
-        cls.refresh_cookie()
+        #cls.refresh_cookie()
 
     @classmethod
     def check_expires(cls):

@@ -77,7 +77,20 @@ class BasePage(Panel):
     @property
     def panel_items(self):
         children: List[DownloadTaskItemPanel] = self.scroller.GetChildren()
-        return children  
+        return children
+    
+    @property
+    def hash_id_list(self):
+        temp_list = []
+
+        for panel in self.panel_items:
+            if isinstance(panel, DownloadTaskItemPanel):
+                temp_list.append(panel.task_info.hash_id)
+
+        for info in self.scroller.info_list:
+            temp_list.append(info.hash_id)
+
+        return temp_list
 
     @property
     def total_panel_items(self):

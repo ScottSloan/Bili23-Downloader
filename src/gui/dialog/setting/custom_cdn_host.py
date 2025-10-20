@@ -75,8 +75,8 @@ class CustomCDNDialog(Dialog):
 
     def init_utils(self):
         def init_listctrl():
-            self.cdn_list.AppendColumn(_("优先级"), width = self.FromDIP(120))
-            self.cdn_list.AppendColumn(_("CDN 节点"), width = self.FromDIP(350))
+            self.cdn_list.AppendColumn(_("优先级"), width = self.FromDIP(75))
+            self.cdn_list.AppendColumn(_("CDN 节点"), width = self.FromDIP(360))
             self.cdn_list.AppendColumn(_("延迟"), width = self.FromDIP(100))
 
         def init_cdn_list():
@@ -109,7 +109,7 @@ class CustomCDNDialog(Dialog):
         thread_pool = ThreadPoolExecutor(max_workers = 5)
 
         for i in range(self.cdn_list.GetItemCount()):
-            item: wx.ListItem = self.cdn_list.GetItem(i, 0)
+            item: wx.ListItem = self.cdn_list.GetItem(i, 1)
 
             thread_pool.submit(worker, i, item.GetText())
 

@@ -15,9 +15,9 @@ from utils.common.datetime_util import DateTime
 from utils.module.notification import NotificationManager
 
 from gui.window.download.page import DownloadingPage, CompletedPage
+from gui.window.download.item_panel_v4 import DownloadTaskItemPanel
 
 from gui.component.button.action_button import ActionButton
-
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
 
@@ -276,10 +276,21 @@ class Utils:
 
         return temp_downloading_list, temp_completed_list
 
+    @staticmethod
+    def get_hash_id_list():
+        hash_id_list: List[str] = []
+
+        window: DownloadManagerWindow = wx.FindWindowByName("download")
+
+        hash_id_list.extend(window.right_panel.downloading_page.hash_id_list)
+        hash_id_list.extend(window.right_panel.completed_page.hash_id_list)
+
+        return hash_id_list
+
 class DownloadManagerWindow(Frame):
     def __init__(self, parent):
-        Frame.__init__(self, parent, _("下载管理"), style = self.get_window_style())
-
+        Frame.__init__(self, parent, _("下载管理"), style = self.get_window_style(), name = "download")
+        
         self.set_window_params()
 
         self.init_UI()
@@ -383,6 +394,16 @@ class DownloadManagerWindow(Frame):
         self.right_panel.downloading_page.max_download_choice.SetSelection(selection)
 
         self.right_panel.downloading_page.start_download()
+
+    def find_duplicate_task(self, download_task_list: List[DownloadTaskInfo]):
+        to_download_hash_id_list = [entry.hash_id for entry in download_task_list]
+        existing_hash_id_list = Utils.get_hash_id_list()
+
+        duplicate_hash_id_list = list(set(to_download_hash_id_list) & set(existing_hash_id_list))
+
+        duplicate_task_info_list = [entry for entry in download_task_list if entry.hash_id in duplicate_hash_id_list]
+
+        return duplicate_task_info_list
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):

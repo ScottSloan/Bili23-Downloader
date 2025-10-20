@@ -1,4 +1,6 @@
+import json
 import random
+import hashlib
 
 from utils.config import Config
 
@@ -106,6 +108,7 @@ class DownloadInfo:
         task_info.load_from_dict(info)
 
         task_info.id = random.randint(10000000, 99999999)
+        task_info.hash_id = cls.generate_hash_id(task_info)
 
         return task_info
     
@@ -133,3 +136,18 @@ class DownloadInfo:
         
         else:
             return template["0"]
+
+    @staticmethod
+    def generate_hash_id(task_info: DownloadTaskInfo):
+        data = {
+            "parse_type": task_info.parse_type,
+            "download_type": task_info.download_type,
+            "aid": task_info.aid,
+            "cid": task_info.cid,
+            "bvid": task_info.bvid,
+            "ep_id": task_info.ep_id,
+            "extra_option": task_info.extra_option
+        }
+
+        dict_str = json.dumps(data, sort_keys = True)
+        return hashlib.sha256(dict_str.encode("utf-8")).hexdigest()

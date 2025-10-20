@@ -13,6 +13,8 @@ class DownloadTaskInfo:
 
         # id，区分不同下载任务的唯一标识符
         self.id: int = 0
+        # 哈希值
+        self.hash_id: str = ""
         # 序号
         self.number: int = 0
         # 补零序号
@@ -170,6 +172,7 @@ class DownloadTaskInfo:
             "min_version": self.min_version,
 
             "id": self.id,
+            "hash_id": self.hash_id,
             "number": self.number,
             "zero_padding_number": self.zero_padding_number,
             "list_number": self.list_number,
@@ -254,6 +257,7 @@ class DownloadTaskInfo:
         self.min_version = data.get("min_version", self.min_version)
 
         self.id = data.get("id", self.id)
+        self.hash_id = data.get("hash_id", self.hash_id)
         self.number = data.get("number", self.number)
         self.zero_padding_number = data.get("zero_padding_number", self.zero_padding_number)
         self.list_number = data.get("list_number", self.list_number)

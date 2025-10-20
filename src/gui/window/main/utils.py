@@ -22,6 +22,7 @@ from gui.dialog.login.login_v2 import LoginDialog
 from gui.dialog.search_episode_list import SearchEpisodeListDialog
 from gui.dialog.setting.select_batch import SelectBatchDialog
 from gui.dialog.guide.guide import GuideDialog
+from gui.dialog.confirm.duplicate import DuplicateDialog
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
@@ -115,6 +116,13 @@ class Window:
         if init:
             return dlg.ShowModal()
     
+    @staticmethod
+    @show_dialog
+    def duplicate_dialog(parent: wx.Window, duplicate_episode_list: list = []):
+        dlg = DuplicateDialog(parent, duplicate_episode_list)
+
+        return dlg.ShowModal()
+
     @staticmethod
     @show_dialog
     def login_dialog(parent: wx.Window):
@@ -466,7 +474,7 @@ class Utils:
         def add_to_list_callback():
             Window.processing_window(show = False)
 
-            self.main_window.onShowDownloadWindowEVT()
+            self.main_window.onShowDownloadWindowEVT()    
 
         def detail_mode_callback(episode_info_list: list[dict]):
             for entry in episode_info_list:
@@ -474,13 +482,22 @@ class Utils:
 
             Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
 
-        Window.processing_window(show = True)
-
         if self.main_window.parser.parse_type in [ParseType.FavList, ParseType.Space]:
             video_info_to_parse = self.main_window.episode_list.GetAllCheckedItemEx()
+
+            self.check_duplicate()
 
             Thread(target = self.main_window.parser.parser.parse_video_info, args = (video_info_to_parse, detail_mode_callback)).start()
         else:
             self.main_window.episode_list.GetAllCheckedItem()
 
+            self.check_duplicate()
+
             Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
+
+    def check_duplicate(self):
+        duplicate_task_list = self.main_window.download_window.find_duplicate_task(self.main_window.episode_list.download_task_info_list)
+
+        Window.duplicate_dialog(self.main_window, duplicate_task_list)
+
+        Window.processing_window(show = True)
