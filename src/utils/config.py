@@ -132,6 +132,7 @@ class Config:
         user_config_file_min_version_code: int = 166000
 
         app_config_path: str = ""
+        lang_config_path: str = ""
 
     class Basic:
         language: str = "zh_CN"
@@ -570,6 +571,7 @@ class Config:
                 Config.User.directory = os.path.join(os.path.expanduser("~/Library/Application Support"), "Bili23 Downloader")
 
         Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
+        Config.APP.lang_config_path = os.path.join(os.path.dirname(__file__), "lang.ini")
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         Config.User.live_file_directory = os.path.join(Config.User.directory, "live")

@@ -151,7 +151,9 @@ class MainWindow(Frame):
                 self.onShowLiveRecordingWindowEVT(event)
 
             case ID.FORMAT_FACTORY_MENU:
-                Window.format_factory_window(self)
+                wx.MessageDialog(self, _("不可用\n\n当前不可用，请等待后续版本更新。"), _("提示"), wx.ICON_INFORMATION).ShowModal()
+
+                #Window.format_factory_window(self)
 
             case ID.SETTINGS_MENU:
                 Window.settings_window(self)

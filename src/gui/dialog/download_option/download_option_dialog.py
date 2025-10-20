@@ -116,8 +116,8 @@ class DownloadOptionDialog(Dialog):
                 return self.show_dialog()
             
     def show_dialog(self):
-        dlg = wx.RichMessageDialog(self, "账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？", "警告", wx.YES_NO | wx.ICON_WARNING)
-        dlg.ShowCheckBox("不再提示")
+        dlg = wx.RichMessageDialog(self, _("账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？"), _("警告"), wx.YES_NO | wx.ICON_WARNING)
+        dlg.ShowCheckBox(_("不再提示"))
 
         rtn = dlg.ShowModal()
 

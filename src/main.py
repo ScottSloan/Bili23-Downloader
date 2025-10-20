@@ -1,7 +1,9 @@
 import os
 import sys
+import locale
 import gettext
 import platform
+from configparser import ConfigParser
 
 def message_box(message: str, caption: str, wx_status: bool = True, e = None):
     if platform.system() == "Windows":
@@ -28,31 +30,41 @@ def init_lang():
 
     os.environ["LANGUAGE"] = Config.Basic.language
 
-def update_lang():
-    arg = sys.argv[1]
-    lang = sys.argv[2]
-
-    if arg == "--set":
+def detect_lang():
+    def set_lang(lang: str):
         Config.Basic.language = lang
         Config.save_app_config()
 
-def check_lang():
-    def set_en_US():
-        Config.Basic.language = "en_US"   
-        Config.save_app_config()
+    if os.path.exists(Config.APP.lang_config_path):
+        lang_config = ConfigParser()
+        lang_config.read(Config.APP.lang_config_path)
+        lang = lang_config.get("Language", "lang", fallback="en_US")
 
-    if Config.Basic.is_new_user and not os.environ.get("PYSTAND_BUILD_TIME"):
-        import locale
+        set_lang(lang)
 
-        lang = locale.getlocale()
+        os.remove(Config.APP.lang_config_path)
+    else:
+        if Config.Basic.is_new_user:
+            lang = locale.getlocale()
 
-        if platform.system() == "Windows":
-            if not lang[0].startswith("Chinese"):
-                set_en_US()
-                
-        elif platform.system() == "Linux":
-            if not lang[0].startswith("zh"):
-                set_en_US()
+            match platform.system():
+                case "Windows":
+                    lang_dict = {
+                        "Chinese": "zh_CN",
+                        "English": "en_US",
+                        "": "en_US"
+                    }
+
+                case "Linux" | "Darwin":
+                    lang_dict = {
+                        "zh": "zh_CN",
+                        "en": "en_US",
+                        "": "en_US"
+                    }
+
+            for key, value in lang_dict.items():
+                if lang[0].startswith(key):
+                    return set_lang(value)
 
 try:
     from utils.config import Config
@@ -60,15 +72,9 @@ try:
 except Exception as e:
     message_box(f"Failed to read config file\n读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
-if len(sys.argv) > 1:
-    # 更新配置文件
-    update_lang()
-
-    sys.exit()
-else:
-    check_lang()
-
 try:
+    detect_lang()
+
     init_lang()
 
     _ = gettext.gettext
@@ -80,23 +86,23 @@ try:
     import wx
 
 except ImportError as e:
-    message_box("缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n%s" % get_traceback(), "Runtime Error", False, e)
+    message_box(_("缺少 Microsoft Visual C++ 运行库，无法运行本程序。\n\n请前往 https://aka.ms/vs/17/release/vc_redist.x64.exe 下载安装 Microsoft Visual C++ 2015-2022 运行库。\n\n%s") % get_traceback(), "Runtime Error", False, e)
 
 except Exception as e:
-    message_box("初始化 wxPython 失败\n\n%s" % get_traceback(), "Fatal Error", False, e)
+    message_box(_("初始化 wxPython 失败\n\n%s") % get_traceback(), "Fatal Error", False, e)
 
 try:
     import google.protobuf
 
     if (protobuf_version := google.protobuf.__version__) and not protobuf_version.startswith("6"):
-        msg = "请更新 protobuf 至最新版本\n当前版本：%s\n建议版本：6.32.0 或更高" % protobuf_version
+        msg = _("请更新 protobuf 至最新版本\n当前版本：%s\n建议版本：6.32.0 或更高") % protobuf_version
 
-        message_box("%s\n\n执行：pip install protobuf --upgrade" % msg, "Fatal Error")
+        message_box(_("%s\n\n执行：pip install protobuf --upgrade") % msg, "Fatal Error")
 
         raise ImportError(msg)
     
 except Exception as e:
-    message_box("初始化 protobuf 失败\n\n%s" % get_traceback(), "Fatal Error", False, e)
+    message_box(_("初始化 protobuf 失败\n\n%s") % get_traceback(), "Fatal Error", False, e)
 
 try:
     from utils.common.enums import Platform
@@ -107,7 +113,7 @@ try:
     Cookie.init_cookie_params()
 
 except Exception as e:
-    message_box("初始化程序失败\n\n%s" % get_traceback(), "Fatal Error")
+    message_box(_("初始化程序失败\n\n%s") % get_traceback(), "Fatal Error")
 
 class APP(wx.App):
     def __init__(self):

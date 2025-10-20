@@ -34,7 +34,7 @@ msgid "否"
 msgstr "No"
 
 msgid "不再提示"
-msgstr "No"
+msgstr "Do not show again"
 
 msgid "忽略"
 msgstr "Ignore"
@@ -219,6 +219,9 @@ msgstr ""
 "Failed to save settings\n"
 "\n"
 "Download directory cannot be empty"
+
+msgid "账号未登录\n\n账号未登录，无法下载 480P 以上清晰度视频，是否继续下载？"
+msgstr "Account not logged in\n\nYou are not logged in, and cannot download videos with a resolution higher than 480P. Do you wish to continue with the download?"
 
 # -------------- src/gui/dialog/download_option/media_info.py --------------
 msgid "优先级"
@@ -1180,6 +1183,9 @@ msgstr "Minimize to Tray"
 
 msgid "退出程序"
 msgstr "Exit Application"
+
+msgid "不可用\n\n当前不可用，请等待后续版本更新。"
+msgstr "Not Available\n\nCurrently unavailable, please wait for the subsequent version update."
 
 # -------------- src/gui/window/main/parser.py --------------
 msgid "解析失败"
