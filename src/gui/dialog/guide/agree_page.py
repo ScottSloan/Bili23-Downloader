@@ -20,8 +20,9 @@ class AgreePage(Panel):
         font = self.GetFont()
         font.SetFractionalPointSize(font.GetFractionalPointSize() + 1)
 
-        self.desc_lab = wx.TextCtrl(self, -1, self.desc, style = wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_NONE)
-        self.desc_lab.SetFont(font)
+        self.desc_box = wx.TextCtrl(self, -1, self.desc, style = wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_NONE)
+        self.desc_box.SetFont(font)
+        self.desc_box.SetInsertionPoint(0)
 
         self.agree_btn = wx.Button(self, -1, _("已知晓"), size = self.get_scaled_size((80, 28)))
         self.agree_btn.Hide()
@@ -35,8 +36,7 @@ class AgreePage(Panel):
         button_hbox.AddStretchSpacer()
         
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.desc_lab, 1, wx.ALL | wx.EXPAND, self.FromDIP(10))
-        vbox.AddStretchSpacer()
+        vbox.Add(self.desc_box, 1, wx.ALL | wx.EXPAND, self.FromDIP(10))
         vbox.Add(button_hbox, 0, wx.EXPAND)
         vbox.AddSpacer(self.FromDIP(10))
 

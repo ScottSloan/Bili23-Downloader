@@ -22,6 +22,8 @@ class SettingWindow(Dialog):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.CenterOnParent()
 
     def init_UI(self):
@@ -47,6 +49,14 @@ class SettingWindow(Dialog):
         vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
         self.SetSizerAndFit(vbox)
+
+    def Bind_EVT(self):
+        self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheelEVT)
+
+    def onMouseWheelEVT(self, event: wx.MouseEvent):
+        print("wheel")
+
+        event.Skip()
 
     def onOKEVT(self):
         def on_error():

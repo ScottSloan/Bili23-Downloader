@@ -58,6 +58,7 @@ class GuideDialog(Dialog):
         bottom_hbox.Add(self.next_btn, 0, wx.ALL, self.FromDIP(10))
 
         vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.AddSpacer(self.FromDIP(10) if Platform(Config.Sys.platform) != Platform.Windows else 1)
         vbox.Add(self.title_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(10))
         vbox.Add(wx.StaticLine(self, -1), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.FromDIP(10))
         vbox.Add(self.notebook, 1, wx.EXPAND)
@@ -116,6 +117,6 @@ class GuideDialog(Dialog):
             
             case Platform.Linux | Platform.macOS:
                 if Config.Basic.language == "zh_CN":
-                    return self.FromDIP((360, 470))
+                    return self.FromDIP((520, 380))
                 else:
-                    return self.FromDIP((550, 470)) 
+                    return self.FromDIP((600, 400)) 
