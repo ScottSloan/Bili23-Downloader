@@ -207,6 +207,41 @@ msgstr "Tag"
 msgid "时长"
 msgstr "Duration"
 
+# -------------- src/gui/dialog/confirm/duplicate.py --------------
+msgid "确认重复下载"
+msgstr "Confirm Duplicate Download"
+
+msgid "以下项目已在下载列表中，是否仍要继续下载？"
+msgstr "The following items are already in the download list. Do you still want to continue downloading?"
+
+msgid "请选择处理方式："
+msgstr "Please select a handling method:"
+
+msgid "跳过已存在文件"
+msgstr "Skip existing files"
+
+msgid "根据设置处理"
+msgstr "Handle according to settings"
+
+msgid "列表序号"
+msgstr "List Number"
+
+msgid "下载类型"
+msgstr "Download Type"
+
+# -------------- src/gui/dialog/confirm/duplicate.py --------------
+msgid "确认视频分辨率"
+msgstr "Confirm Video Resolution"
+
+msgid "单独下载 .ass 格式弹幕或字幕时，请手动确认视频分辨率。\n若分辨率设置与实际视频不符，可能导致文字位置偏移或显示大小异常。"
+msgstr "When downloading .ass format danmaku or subtitles separately, please manually confirm the video resolution.\nIncorrect resolution settings may cause text positioning offsets or abnormal display size."
+
+msgid "视频分辨率（长度 x 宽度）："
+msgstr "Video Resolution (Width x Height):"
+
+msgid "记住设置，在关闭程序前不再提示"
+msgstr "Remember this setting and do not prompt again before closing the program"
+
 # -------------- src/gui/dialog/download_option/download_option_dialog.py --------------
 msgid "下载选项"
 msgstr "Download Options"

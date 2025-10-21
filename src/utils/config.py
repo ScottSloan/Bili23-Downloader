@@ -405,6 +405,8 @@ class Config:
         video_height: int = 1080
         remember_resolution_settings: bool = False
 
+        duplicate_option: int = 0
+
     class Auth:
         img_key: str = ""
         sub_key: str = ""

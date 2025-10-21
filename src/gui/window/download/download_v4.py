@@ -404,6 +404,9 @@ class DownloadManagerWindow(Frame):
         duplicate_task_info_list = [entry for entry in download_task_list if entry.hash_id in duplicate_hash_id_list]
 
         return duplicate_task_info_list
+    
+    def remove_duplicate_task(self, download_task_list: List[DownloadTaskInfo], duplicate_hash_id_list: List[str]):
+        return [entry for entry in download_task_list if entry.hash_id not in duplicate_hash_id_list]
 
     def set_window_params(self):
         match Platform(Config.Sys.platform):

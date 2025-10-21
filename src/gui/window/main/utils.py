@@ -185,7 +185,8 @@ class Window:
         if show:
             wx.CallAfter(window.ShowModal, ProcessingType.Parse)
         else:
-            wx.CallAfter(window.Close)
+            if window.IsShown():
+                wx.CallAfter(window.Close)
 
     @staticmethod
     def create_processing_window(parent: wx.Window):
@@ -485,19 +486,28 @@ class Utils:
         if self.main_window.parser.parse_type in [ParseType.FavList, ParseType.Space]:
             video_info_to_parse = self.main_window.episode_list.GetAllCheckedItemEx()
 
-            self.check_duplicate()
+            if self.check_duplicate():
+                return
 
             Thread(target = self.main_window.parser.parser.parse_video_info, args = (video_info_to_parse, detail_mode_callback)).start()
         else:
             self.main_window.episode_list.GetAllCheckedItem()
 
-            self.check_duplicate()
+            if self.check_duplicate():
+                return
 
             Thread(target = self.main_window.download_window.add_to_download_list, args = (self.main_window.episode_list.download_task_info_list, add_to_list_callback, True, True)).start()
 
     def check_duplicate(self):
         duplicate_task_list = self.main_window.download_window.find_duplicate_task(self.main_window.episode_list.download_task_info_list)
 
-        Window.duplicate_dialog(self.main_window, duplicate_task_list)
+        Window.processing_window(show = False)
 
-        Window.processing_window(show = True)
+        if duplicate_task_list:
+            if Window.duplicate_dialog(self.main_window, duplicate_task_list) != wx.ID_OK:
+                return True
+            else:
+                if Config.Temp.duplicate_option == 0:
+                    self.main_window.episode_list.download_task_info_list = self.main_window.download_window.remove_duplicate_task(self.main_window.episode_list.download_task_info_list, [entry.hash_id for entry in duplicate_task_list])
+
+            Window.processing_window(show = True)
