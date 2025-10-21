@@ -510,4 +510,4 @@ class Utils:
                 if Config.Temp.duplicate_option == 0:
                     self.main_window.episode_list.download_task_info_list = self.main_window.download_window.remove_duplicate_task(self.main_window.episode_list.download_task_info_list, [entry.hash_id for entry in duplicate_task_list])
 
-            Window.processing_window(show = True)
+        Window.processing_window(show = True)
