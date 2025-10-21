@@ -4,8 +4,8 @@ from utils.config import Config
 from utils.common.enums import Platform
 
 class Dialog(wx.Dialog):
-    def __init__(self, parent, title, style = wx.DEFAULT_DIALOG_STYLE):
-        wx.Dialog.__init__(self, parent, -1, title, style = style)
+    def __init__(self, parent, title, style = wx.DEFAULT_DIALOG_STYLE, name = wx.DialogNameStr):
+        wx.Dialog.__init__(self, parent, -1, title, style = style, name = name)
 
         self.Bind(wx.EVT_BUTTON, self.onCloseEVT, id = wx.ID_OK)
         self.Bind(wx.EVT_BUTTON, self.onCloseEVT, id = wx.ID_CANCEL)
@@ -48,3 +48,27 @@ class Dialog(wx.Dialog):
 
     def onCancelEVT(self):
         pass
+
+    def DWMExtendFrameIntoClientArea(self):
+        if Platform(Config.Sys.platform) == Platform.Windows:
+            import ctypes
+            import ctypes.wintypes
+
+            hwnd = self.GetHandle()
+
+            class MARGINS(ctypes.Structure):
+                _fields_ = [
+                    ("cxLeftWidth", ctypes.c_int),
+                    ("cxRightWidth", ctypes.c_int),
+                    ("cyTopHeight", ctypes.c_int),
+                    ("cyBottomHeight", ctypes.c_int)
+                ]
+
+            margins = MARGINS(1, 1, 1, 1)
+            colorref = ctypes.wintypes.RGB(255, 255, 255)
+
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(ctypes.c_int(colorref)), ctypes.sizeof(ctypes.c_int(colorref)))
+            ctypes.windll.dwmapi.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(margins))
+
+            return True
+

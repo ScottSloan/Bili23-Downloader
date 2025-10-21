@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 
@@ -19,6 +20,8 @@ from gui.window.main.bottom_box import BottomBox
 
 from gui.component.misc.taskbar_icon import TaskBarIcon
 from gui.component.tree_list_v2 import TreeListCtrl
+
+_ = gettext.gettext
 
 class MainWindow(Frame):
     def __init__(self, parent: wx.Window):
@@ -59,7 +62,7 @@ class MainWindow(Frame):
 
         self.clipboard_timer = wx.Timer(self, -1)
 
-        self.taskbar_icon = TaskBarIcon(self)
+        self.taskbar_icon = TaskBarIcon()
 
     def init_menubar(self):
         menu_bar = wx.MenuBar()
@@ -68,32 +71,32 @@ class MainWindow(Frame):
         help_menu = wx.Menu()
 
         if Config.User.login:
-            tool_menu.Append(ID.LOGOUT_MENU, "注销(&L)")
+            tool_menu.Append(ID.LOGOUT_MENU, _("注销(&L)"))
         else:
-            tool_menu.Append(ID.LOGIN_MENU, "登录(&L)")
+            tool_menu.Append(ID.LOGIN_MENU, _("登录(&L)"))
 
         tool_menu.AppendSeparator()
 
         if Config.Misc.enable_debug:
-            tool_menu.Append(ID.DEBUG_MENU, "调试(&D)")
+            tool_menu.Append(ID.DEBUG_MENU, _("调试(&D)"))
 
-        tool_menu.Append(ID.LIVE_RECORDING_MENU, "直播录制(&R)")
-        tool_menu.Append(ID.FORMAT_FACTORY_MENU, "视频工具箱(&F)")
+        tool_menu.Append(ID.LIVE_RECORDING_MENU, _("直播录制(&R)"))
+        tool_menu.Append(ID.FORMAT_FACTORY_MENU, _("视频工具箱(&F)"))
         tool_menu.AppendSeparator()
-        tool_menu.Append(ID.SETTINGS_MENU, "设置(&S)")
+        tool_menu.Append(ID.SETTINGS_MENU, _("设置(&S)"))
 
-        help_menu.Append(ID.CHECK_UPDATE_MENU, "检查更新(&U)")
-        help_menu.Append(ID.CHANGELOG_MENU, "更新日志(&P)")
+        help_menu.Append(ID.CHECK_UPDATE_MENU, _("检查更新(&U)"))
+        help_menu.Append(ID.CHANGELOG_MENU, _("更新日志(&P)"))
         help_menu.AppendSeparator()
-        help_menu.Append(ID.HELP_MENU, "使用帮助(&C)")
+        help_menu.Append(ID.HELP_MENU, _("使用帮助(&C)"))
         help_menu.AppendSeparator()
-        help_menu.Append(ID.FEEDBACK_MENU, "报告问题(&B)")
-        help_menu.Append(ID.COMMUNITY_MENU, "社区交流(&G)")
+        help_menu.Append(ID.FEEDBACK_MENU, _("报告问题(&B)"))
+        help_menu.Append(ID.COMMUNITY_MENU, _("社区交流(&G)"))
         help_menu.AppendSeparator()
-        help_menu.Append(ID.ABOUT_MENU, "关于(&A)")
+        help_menu.Append(ID.ABOUT_MENU, _("关于(&A)"))
 
-        menu_bar.Append(tool_menu, "工具(&T)")
-        menu_bar.Append(help_menu, "帮助(&H)")
+        menu_bar.Append(tool_menu, _("工具(&T)"))
+        menu_bar.Append(help_menu, _("帮助(&H)"))
 
         self.SetMenuBar(menu_bar)
 
@@ -133,7 +136,7 @@ class MainWindow(Frame):
                 Window.login_dialog(self)
 
             case ID.LOGOUT_MENU:
-                dlg = wx.MessageDialog(self, '退出登录\n\n是否要退出登录？', "警告", wx.ICON_WARNING | wx.YES_NO)
+                dlg = wx.MessageDialog(self, _("退出登录\n\n是否要退出登录？"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
 
                 if dlg.ShowModal() == wx.ID_YES:
                     self.utils.user_logout()
@@ -148,7 +151,9 @@ class MainWindow(Frame):
                 self.onShowLiveRecordingWindowEVT(event)
 
             case ID.FORMAT_FACTORY_MENU:
-                Window.format_factory_window(self)
+                wx.MessageDialog(self, _("不可用\n\n当前不可用，请等待后续版本更新。"), _("提示"), wx.ICON_INFORMATION).ShowModal()
+
+                #Window.format_factory_window(self)
 
             case ID.SETTINGS_MENU:
                 Window.settings_window(self)
@@ -188,8 +193,8 @@ class MainWindow(Frame):
 
     def onCloseEVT(self, event: wx.CloseEvent):
         def show_exit_dialog():
-            dlg = wx.MessageDialog(self, "退出程序\n\n确定要退出程序吗？", "提示", style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
-            dlg.SetYesNoCancelLabels("最小化到托盘", "退出程序", "取消")
+            dlg = wx.MessageDialog(self, _("退出程序\n\n确定要退出程序吗？"), _("提示"), style = wx.ICON_INFORMATION | wx.YES_NO | wx.CANCEL)
+            dlg.SetYesNoCancelLabels(_("最小化到托盘"), _("退出程序"), _("取消"))
 
             return dlg.ShowModal()
         
@@ -237,27 +242,17 @@ class MainWindow(Frame):
         self.live_recording_window.Raise()
 
     def onDownloadEVT(self, event: wx.CommandEvent):
-        def after_show_items_callback():
-            Window.processing_window(show = False)
-
-            self.onShowDownloadWindowEVT()
-        
         try:
             if self.episode_list.check_download_items():
                 return
             
-            if Config.Basic.auto_popup_option_dialog:
-                if self.top_box.onShowDownloadOptionDialogEVT(event) != wx.ID_OK:
-                    return
-                
+            if self.top_box.show_download_option_dialog(self):
+                return
+
             self.bottom_box.download_tip()
 
-            self.episode_list.GetAllCheckedItem()
+            self.utils.download()
 
-            Thread(target = self.download_window.add_to_download_list, args = (self.episode_list.download_task_info_list, after_show_items_callback, True, True)).start()
-
-            Window.processing_window(show = True)
-        
         except Exception as e:
             raise GlobalException(callback = self.parser.onError) from e
         
@@ -294,6 +289,11 @@ class MainWindow(Frame):
 
                 TheClipBoard.write(item_data.link)
 
+            case ID.EPISODE_LIST_OPEN_IN_BROWSER_MENU:
+                item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
+
+                wx.LaunchDefaultBrowser(item_data.link)
+
             case ID.EPISODE_LIST_EDIT_TITLE_MENU:
                 item = self.episode_list.GetSelection()
 
@@ -305,6 +305,14 @@ class MainWindow(Frame):
 
             case ID.EPISODE_LIST_COLLAPSE_MENU:
                 self.episode_list.CollapseCurrentItem()
+
+            case ID.EPISODE_LIST_SELECT_BATCH_MENU:
+                Window.select_batch_dialog(self)
+
+            case ID.EPISODE_LIST_REFRESH_MEDIA_INFO_MENU:
+                item_data = self.episode_list.GetItemData(self.episode_list.GetSelection())
+
+                self.parser.refresh_media_info(item_data)
 
     def show_episode_list(self, from_menu: bool = True):
         if from_menu:
@@ -351,9 +359,5 @@ class MainWindow(Frame):
         Config.Sys.dark_mode = False if Platform(Config.Sys.platform) == Platform.Windows else wx.SystemSettings.GetAppearance().IsDark()
         Config.Sys.dpi_scale_factor = self.GetDPIScaleFactor()
         Config.Sys.default_font = self.GetFont().GetFaceName()
-
-        for key in ["danmaku", "subtitle"]:
-            if Config.Basic.ass_style.get(key).get("font_name") == "default":
-                Config.Basic.ass_style[key]["font_name"] = Config.Sys.default_font
 
         SysFont.sys_font_list = sorted(wx.FontEnumerator().GetFacenames())

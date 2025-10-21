@@ -2,17 +2,26 @@ import wx
 
 from utils.common.style.color import Color
 
+from gui.dialog.setting.color_picker import ColorPickerDialog
+
 from gui.component.panel.panel import Panel
 
 class ASSColorPicker(Panel):
-    def __init__(self, parent, label: str):
+    def __init__(self, parent, label: str, orient: int):
         self.label = label
 
         Panel.__init__(self, parent)
 
-        self.init_UI()
+        match orient:
+            case wx.HORIZONTAL:
+                self.init_horizontal_UI()
 
-    def init_UI(self):
+            case wx.VERTICAL:
+                self.init_vertical_UI()
+
+        self.Bind_EVT()
+
+    def init_vertical_UI(self):
         self.text_lab = wx.StaticText(self, -1, self.label)
 
         lab_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -28,10 +37,28 @@ class ASSColorPicker(Panel):
 
         self.SetSizer(vbox)
 
-    def SetColour(self, color_str: str):
-        color = wx.Colour()
-        color.SetRGBA(Color.convert_to_abgr_color(color_str))
+    def init_horizontal_UI(self):
+        self.text_lab = wx.StaticText(self, -1, self.label)
 
+        self.color_picker = wx.ColourPickerCtrl(self, -1, style = wx.CLRP_SHOW_ALPHA)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(self.text_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+        hbox.Add(self.color_picker, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
+
+        self.SetSizer(hbox)
+
+    def Bind_EVT(self):
+        self.color_picker.Bind(wx.EVT_BUTTON, self.onColorChangeEVT)
+
+    def onColorChangeEVT(self, event: wx.ColourPickerEvent):
+        dlg = ColorPickerDialog(self)
+        dlg.ShowModal()
+
+    def SetColour(self, color_str: str):
+        r, g, b, a = Color.convert_to_abgr_color(color_str)
+
+        color = wx.Colour(r, g, b)
         self.color_picker.SetColour(color)
 
     def GetColour(self):

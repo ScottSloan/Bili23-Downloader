@@ -106,13 +106,37 @@ class BangumiParser(Parser):
             "bvid": first_episode.get("bvid"),
             "cid": first_episode.get("cid")
         }
+    
+    @classmethod
+    def get_bangumi_season_info(cls, season_id: int):
+        params = {
+            "season_id": season_id
+        }
+
+        url = f"https://api.bilibili.com/pgc/view/web/season?{cls.url_encode(params)}"
+
+        req = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        info_json: dict = cls.json_get(req, "result")
+
+        return {
+            "poster_url": info_json["cover"],
+            "description": info_json["evaluate"].replace("\n", "&#10;"),
+            "actors": info_json["actors"],
+            "tags": info_json["styles"],
+            "pubdate": info_json["publish"]["pub_time"][:10],
+            "seasons": info_json["seasons"],
+            "rating": info_json["rating"]["score"],
+            "rating_count": info_json["rating"]["count"],
+            "areas": info_json["areas"]
+        }
 
     def check_bangumi_can_play(self, param: str):
         url = f"https://api.bilibili.com/pgc/player/web/v2/playurl?{param}"
 
         self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
 
-    def parse_worker(self, url: str):
+    def parse_worker(self, url: str):        
         match Regex.find_string(r"ep|ss|md", url):
             case "ep":
                 param = self.get_epid(url)
@@ -131,20 +155,16 @@ class BangumiParser(Parser):
         episode: dict = Episode.Utils.get_first_episode()
         
         if episode:
-            self.get_bangumi_available_media_info(episode.get("bvid"), episode.get("cid"))
+            self.start_thread(self.get_bangumi_available_media_info, args = (episode.get("bvid"), episode.get("cid")))
 
         return StatusCode.Success.value
     
-    @staticmethod
     def check_json(data: dict):
         status_code = data["code"]
         message = data["message"]
 
         if status_code != StatusCode.Success.value:
-            if message != "抱歉您所在地区不可观看！":
-                return
-
-            raise GlobalException(message = message, code = status_code, json_data = data)
+            raise GlobalException(message = message, code = status_code, json_data = data, parse_url = Parser.url)
 
     def parse_episodes(self):
         Bangumi.parse_episodes(self.info_json, self.ep_id)

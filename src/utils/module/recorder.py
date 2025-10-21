@@ -6,7 +6,7 @@ from threading import Event, Lock
 from utils.config import Config
 
 from utils.common.request import RequestUtils
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 from utils.common.model.callback import LiveRecordingCallback
 from utils.common.formatter.formatter import FormatUtils
 from utils.common.formatter.file_name_v2 import FileNameFormatter

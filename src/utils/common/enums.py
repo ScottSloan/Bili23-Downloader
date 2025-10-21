@@ -52,15 +52,19 @@ class CoverType(Enum):
     WEBP = 2                      # Webp 格式
     AVIF = 3                      # avif 格式
 
+class MetadataType(Enum):
+    NFO = 0                       # NFO 格式
+    JSON = 1                      # JSON 格式
+
 class StreamType(Enum):
     Dash = "DASH"                 # dash 流
     Flv = "FLV"                   # flv 流
     Mp4 = "MP4"                   # mp4 流
+    Null = None                   # 未知流
 
 class DownloadStatus(Enum):
     Waiting = 0                   # 等待下载
     Downloading = 1               # 下载中
-    Generating = 10               # 生成中
     Pause = 2                     # 暂停中
     Merging = 3                   # 合成中
     Complete = 4                  # 下载完成
@@ -115,6 +119,7 @@ class VideoCodecID(Enum):
     AVC = 7                       # H264
     HEVC = 12                     # H265
     AV1 = 13                      # AV1
+    Auto = 20                     # 自动
 
 class OverrideOption(Enum):
     Override = 0                  # 覆盖文件
@@ -148,16 +153,8 @@ class ExitOption(Enum):
     AskOnce = 3                   # 询问一次
 
 class SubtitleLanOption(Enum):
-    All_Subtitles_With_AI = 0     # 下载全部字幕 + AI 字幕
-    All_Subtitles = 1             # 下载全部字幕
-    Custom = 2                    # 自定义
-
-class ScopeID(Enum):
-    All = 0                       # 所有类型
-    Video = 1                     # 投稿视频
-    Bangumi = 2                   # 剧集
-    Cheese = 3                    # 课程
-    Default = 4                   # 默认
+    All_Subtitles = 0             # 下载全部字幕
+    Custom = 1                    # 自定义
 
 class QRCodeStatus(Enum):
     Success = 0                   # 成功
@@ -185,6 +182,7 @@ class TemplateType(Enum):
     Video_Collection = 3          # 合集
     Video_Interact = 4            # 互动视频
     Bangumi = 5                   # 剧集
-    Cheese = 6                    # 课程
-    Space = 7
-    Favlist = 8
+    Bangumi_strict = 6            # 剧集（严格命名）
+    Cheese = 7                    # 课程
+    Space = 8                     # 个人主页
+    Favlist = 9                   # 收藏夹

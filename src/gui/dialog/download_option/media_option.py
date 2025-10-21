@@ -1,9 +1,12 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.component.panel.panel import Panel
 from gui.component.misc.tooltip import ToolTip
+
+_ = gettext.gettext
 
 class MediaOptionStaticBox(Panel):
     def __init__(self, parent: wx.Window):
@@ -18,44 +21,46 @@ class MediaOptionStaticBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        media_box = wx.StaticBox(self, -1, "媒体下载选项")
+        media_box = wx.StaticBox(self, -1, _("媒体下载选项"))
 
-        self.download_video_steam_chk = wx.CheckBox(media_box, -1, "视频流")
+        self.download_video_steam_chk = wx.CheckBox(media_box, -1, _("视频流"))
         self.video_stream_tip = ToolTip(media_box)
-        self.video_stream_tip.set_tooltip('下载独立的视频流文件\n\n视频和音频分开存储，需要合并为一个完整的视频文件')
+        self.video_stream_tip.set_tooltip(_('下载独立的视频流文件\n\n视频和音频分开存储，需要合并为一个完整的视频文件'))
 
         video_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         video_stream_hbox.Add(self.download_video_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         video_stream_hbox.Add(self.video_stream_tip, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.download_audio_steam_chk = wx.CheckBox(media_box, -1, "音频流")
+        self.download_audio_steam_chk = wx.CheckBox(media_box, -1, _("音频流"))
         self.audio_stream_tip = ToolTip(media_box)
-        self.audio_stream_tip.set_tooltip('下载独立的音频流文件')
+        self.audio_stream_tip.set_tooltip(_('下载独立的音频流文件'))
 
         audio_stream_hbox = wx.BoxSizer(wx.HORIZONTAL)
         audio_stream_hbox.Add(self.download_audio_steam_chk, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
         audio_stream_hbox.Add(self.audio_stream_tip, 0, wx.ALL & (~wx.LEFT)| wx.ALIGN_CENTER, self.FromDIP(6))
-        
-        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, "合并视频和音频")
+
+        self.ffmpeg_merge_chk = wx.CheckBox(media_box, -1, _("合并视频和音频"))
         ffmpeg_merge_tip = ToolTip(media_box)
-        ffmpeg_merge_tip.set_tooltip("选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件")
+        ffmpeg_merge_tip.set_tooltip(_("选中后，在下载完成时，程序会自动将独立的视频和音频文件合并为一个完整的视频文件"))
 
         ffmpeg_merge_hbox = wx.BoxSizer(wx.HORIZONTAL)
         ffmpeg_merge_hbox.Add(self.ffmpeg_merge_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         ffmpeg_merge_hbox.Add(ffmpeg_merge_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        self.keep_original_files_chk = wx.CheckBox(media_box, -1, "合并完成后保留原始文件")
+        self.keep_original_files_chk = wx.CheckBox(media_box, -1, _("合并完成后保留原始文件"))
         keep_original_files_tip = ToolTip(media_box)
-        keep_original_files_tip.set_tooltip("合并完成后，保留原始的视频和音频文件")
+        keep_original_files_tip.set_tooltip(_("合并完成后，保留原始的视频和音频文件"))
 
         keep_original_files_hbox = wx.BoxSizer(wx.HORIZONTAL)
         keep_original_files_hbox.Add(self.keep_original_files_chk, 0, wx.ALL & (~wx.RIGHT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
         keep_original_files_hbox.Add(keep_original_files_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
 
-        media_flex_grid_box = wx.FlexGridSizer(2, 2, 0, 0)
+        media_flex_grid_box = wx.FlexGridSizer(2, 3, 0, 0)
         media_flex_grid_box.Add(video_stream_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.AddSpacer(self.FromDIP(25))
         media_flex_grid_box.Add(audio_stream_hbox, 0, wx.EXPAND)
         media_flex_grid_box.Add(ffmpeg_merge_hbox, 0, wx.EXPAND)
+        media_flex_grid_box.AddSpacer(self.FromDIP(25))
         media_flex_grid_box.Add(keep_original_files_hbox, 0, wx.EXPAND)
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)
@@ -86,6 +91,8 @@ class MediaOptionStaticBox(Panel):
         if self.download_audio_steam_chk.GetValue():
             Config.Download.stream_download_option.append("audio")
 
+        Config.Download.ffmpeg_merge = self.ffmpeg_merge_chk.GetValue()
+
         Config.Merge.keep_original_files = self.keep_original_files_chk.GetValue()
 
     def onChangeStreamDownloadOptionEVT(self, event):
@@ -98,14 +105,20 @@ class MediaOptionStaticBox(Panel):
         ffmpeg_merge_enable = video_enable and audio_enable
 
         self.ffmpeg_merge_chk.Enable(ffmpeg_merge_enable)
-        self.ffmpeg_merge_chk.SetValue(ffmpeg_merge_enable)
+        self.ffmpeg_merge_chk.SetValue(Config.Download.ffmpeg_merge and ffmpeg_merge_enable if ffmpeg_merge_enable else video_enable or audio_enable)
+
+        self.keep_original_files_chk.Enable(ffmpeg_merge_enable)
 
         self.onEnableKeepFilesEVT(0)
 
     def onEnableKeepFilesEVT(self, event):
-        enable = self.ffmpeg_merge_chk.GetValue()
+        value = self.ffmpeg_merge_chk.GetValue()
+        enable = self.ffmpeg_merge_chk.IsEnabled()
 
-        self.keep_original_files_chk.Enable(enable)
+        self.keep_original_files_chk.Enable(enable and value)
+
+        if not (enable and value):
+            self.keep_original_files_chk.SetValue(False)
     
     def enable_audio_download_option(self, enable: bool):
         self.download_audio_steam_chk.Enable(enable)

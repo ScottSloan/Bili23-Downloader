@@ -1,27 +1,29 @@
 import wx
+import gettext
 
 from utils.common.enums import ProcessingType
 
 from gui.component.window.dialog import Dialog
 
+_ = gettext.gettext
+
 class ProcessingWindow(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "解析中", style = wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
+        Dialog.__init__(self, parent, _("解析中"), style = wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP, name = "processing")
 
         self.EnableCloseButton(False)
         
         self.init_UI()
-
-        self.Bind_EVT()
         
         self.CenterOnParent()
         
     def init_UI(self):
-        self.processing_label = wx.StaticText(self, -1, "正在解析中，请稍候")
+        self.processing_label = wx.StaticText(self, -1, _("正在解析中，请稍候"))
         self.name_lab = wx.StaticText(self, -1, "")
-        self.node_title_label = wx.StaticText(self, -1, "节点：--")
+        self.node_title_label = wx.StaticText(self, -1, _("节点：--"))
 
-        self.cancel_btn = wx.Button(self, -1, "取消", size = self.get_scaled_size((60, 24)))
+        self.cancel_btn = wx.Button(self, -1, _("取消"), size = self.get_scaled_size((60, 24)))
+        self.cancel_btn.Enable(False)
 
         btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
         btn_hbox.AddStretchSpacer()
@@ -35,12 +37,6 @@ class ProcessingWindow(Dialog):
         vbox.Add(btn_hbox, 0, wx.EXPAND)
 
         self.SetSizer(vbox)
-
-    def Bind_EVT(self):
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCancelEVT)
-
-    def onCancelEVT(self, event):
-        pass
     
     def UpdateName(self, name: str):
         def worker():
@@ -74,26 +70,26 @@ class ProcessingWindow(Dialog):
             self.node_title_label.Show(title_show)
 
             self.Layout()
-            
+
         match type:
             case ProcessingType.Process:
-                title = "处理中"
-                tip = "正在处理中，请稍候"
+                title = _("处理中")
+                tip = _("正在处理中，请稍候")
                 title_show = False
 
             case ProcessingType.Parse:
-                title = "解析中"
-                tip = "正在解析中，请稍候"
+                title = _("解析中")
+                tip = _("正在解析中，请稍候")
                 title_show = False
 
             case ProcessingType.Interact:
-                title = "互动视频"
-                tip = "正在探查所有节点，请稍候"
+                title = _("互动视频")
+                tip = _("正在探查所有节点，请稍候")
                 title_show = True
 
             case ProcessingType.Page:
-                title = "解析中"
-                tip = "正在获取所有分页数据，请稍候"
+                title = _("解析中")
+                tip = _("正在获取所有分页数据，请稍候")
                 title_show = True
 
         wx.CallAfter(worker)
@@ -107,4 +103,4 @@ class ProcessingWindow(Dialog):
 
     def reset(self):
         self.name_lab.SetLabel("")
-        self.node_title_label.SetLabel("节点：--")
+        self.node_title_label.SetLabel(_("节点：--"))

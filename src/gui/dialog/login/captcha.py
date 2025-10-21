@@ -1,14 +1,17 @@
 import wx
 import json
+import gettext
 
 from utils.auth.login_v2 import LoginInfo
 
 from gui.component.window.dialog import Dialog
 from gui.component.webview import Webview
 
+_ = gettext.gettext
+
 class CaptchaDialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "请完成验证")
+        Dialog.__init__(self, parent, _("请完成验证"))
 
         self.init_UI()
 

@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.config import Config
 from utils.common.style.icon_v4 import Icon, IconID
@@ -16,6 +17,8 @@ from gui.component.staticbitmap.staticbitmap import StaticBitmap
 from gui.component.menu.url import URLMenu
 from gui.component.menu.episode_option import EpisodeOptionMenu
 
+_ = gettext.gettext
+
 class TopBox(Panel):
     def __init__(self, parent: wx.Window):
         from gui.window.main.main_v3 import MainWindow
@@ -29,8 +32,8 @@ class TopBox(Panel):
         self.Bind_EVT()
 
     def init_UI(self):
-        url_lab = wx.StaticText(self, -1, "链接")
-        self.url_box = SearchCtrl(self, "在此处粘贴链接进行解析", search_btn = True, clear_btn = True)
+        url_lab = wx.StaticText(self, -1, _("链接"))
+        self.url_box = SearchCtrl(self, _("在此处粘贴链接进行解析"), search_btn = True, clear_btn = True)
         self.url_box.SetMenu(URLMenu())
 
         self.get_btn = wx.Button(self, -1, "Get")
@@ -43,12 +46,12 @@ class TopBox(Panel):
         self.processing_icon = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.Loading), size = self.FromDIP((16, 16)))
         self.processing_icon.Hide()
         self.type_lab = wx.StaticText(self, -1, "")
-        self.graph_btn = FlatButton(self, "剧情树", IconID.Tree_Structure, split = True)
-        self.graph_btn.setToolTip("查看互动视频剧情树")
+        self.graph_btn = FlatButton(self, _("剧情树"), IconID.Tree_Structure, split = True)
+        self.graph_btn.setToolTip(_("查看互动视频剧情树"))
         self.graph_btn.Hide()
-        self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search), tooltip = "搜索剧集列表")
-        self.episode_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.List), enable = False, tooltip = "剧集列表显示设置")
-        self.download_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), enable = False, tooltip = "下载选项")
+        self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search), tooltip = _("搜索剧集列表"))
+        self.episode_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.List), enable = False, tooltip = _("剧集列表显示设置"))
+        self.download_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), enable = False, tooltip = _("下载选项"))
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -83,8 +86,8 @@ class TopBox(Panel):
 
         self.PopupMenu(menu)
 
-    def onShowDownloadOptionDialogEVT(self, event: wx.CommandEvent):
-        return Window.download_option_dialog(self.main_window)
+    def onShowDownloadOptionDialogEVT(self, event: wx.CommandEvent, source: str = "menu", init: bool = True):
+        return Window.download_option_dialog(self.main_window, source, init)
     
     def onSearchKeyDownEVT(self, event: wx.KeyEvent):
         keycode = event.GetKeyCode()
@@ -97,11 +100,11 @@ class TopBox(Panel):
     def onShowGraphWindowEVT(self):
         WebPage.show_webpage(self.main_window, "graph.html")
 
-    def onShowDetailInfoDialogEVT(self):
-        Window.detail_dialog(self.main_window, self.main_window.parser.parse_type)
-
     def update_checked_item_count(self, count: int):
-        label = f"(共 {self.main_window.episode_list.count} 项{f'，已选择 {count} 项)' if count else ')'}"
+        if count:
+            label = _("(共 %s 项，已选择 %s 项)") % (self.main_window.episode_list.count, count)
+        else:
+            label = _("(共 %s 项)") % self.main_window.episode_list.count
 
         self.type_lab.SetLabel(f"{self.main_window.parser.parse_type_str} {label}")
 
@@ -121,9 +124,16 @@ class TopBox(Panel):
         url = self.url_box.GetValue()
 
         if not url:
-            Window.message_dialog(self.main_window, "解析失败\n\n链接不能为空", "警告", wx.ICON_WARNING)
+            Window.message_dialog(self.main_window, _("解析失败\n\n链接不能为空"), _("警告"), wx.ICON_WARNING)
             return True
 
     def reset_search_window(self):
         if search_dialog := wx.FindWindowByName("search"):
             search_dialog.reset()
+
+    def show_download_option_dialog(self, parent: wx.Window):
+        if Config.Basic.auto_popup_option_dialog:
+            if self.onShowDownloadOptionDialogEVT(0, "main", True) != wx.ID_OK:
+                return True
+        else:
+            self.onShowDownloadOptionDialogEVT(0, "main", False)

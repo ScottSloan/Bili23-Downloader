@@ -5,9 +5,11 @@ from typing import Dict, List
 
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
+from utils.common.enums import Platform
 
 app_config_group = {
     "Basic": [
+        "language",
         "listen_clipboard",
         "exit_option",
         "auto_popup_option_dialog",
@@ -22,6 +24,8 @@ app_config_group = {
         "subtitle_lan_custom_type",
         "download_cover_file",
         "cover_file_type",
+        "download_metadata_file",
+        "metadata_file_type",
         "window_pos",
         "window_size",
         "window_maximized",
@@ -32,11 +36,11 @@ app_config_group = {
     "Download": [
         "path",
         "file_name_template_list",
+        "strict_naming",
         "max_download_count",
-        "max_thread_count",
-        "video_quality_id",
-        "audio_quality_id",
-        "video_codec_id",
+        "video_quality_priority",
+        "audio_quality_priority",
+        "video_codec_priority",
         "enable_notification",
         "delete_history",
         "enable_speed_limit",
@@ -51,6 +55,7 @@ app_config_group = {
         "retry_when_download_suspend",
         "download_suspend_retry_interval",
         "always_use_https_protocol",
+        "enable_ssl_verify",
         "user_agent",
         "webpage_option",
         "websocket_port"
@@ -59,6 +64,7 @@ app_config_group = {
         "ffmpeg_path",
         "ffmpeg_check_available_when_launch",
         "override_option",
+        "m4a_to_mp3",
         "keep_original_files",
     ],
     "Proxy": [
@@ -117,17 +123,20 @@ class Config:
         name: str = "Bili23 Downloader"
         id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.66.1"
-        version_code: int = 166100
+        version: str = "1.70.0"
+        version_code: int = 170001
 
-        task_file_min_version_code: int = 166000
+        task_file_min_version_code: int = 170000
         live_file_min_version_code: int = 165000
-        app_config_file_min_version_code: int = 166000
+        app_config_file_min_version_code: int = 170000
         user_config_file_min_version_code: int = 166000
 
         app_config_path: str = ""
+        lang_config_path: str = ""
 
     class Basic:
+        language: str = "zh_CN"
+
         listen_clipboard: bool = False
         exit_option: int = 3
         auto_popup_option_dialog: bool = True
@@ -136,42 +145,86 @@ class Config:
         always_on_top: bool = False
 
         download_danmaku_file: bool = False
-        danmaku_file_type: int = 0
+        danmaku_file_type: int = 3
+
         download_subtitle_file: bool = False
-        subtitle_file_type: int = 0
+        subtitle_file_type: int = 4
         subtitle_lan_option: int = 0
         subtitle_lan_custom_type: list = []
+
         download_cover_file: bool = False
         cover_file_type: int = 0
 
+        download_metadata_file: bool = False
+        metadata_file_type: int = 0
+        scrape_option: dict = {
+            "video": {
+                "add_date": True,
+                "add_date_source": 0
+            },
+            "episode": {
+                "add_date": True,
+                "add_date_source": 0,
+                "download_tvshow_nfo": True,
+                "download_season_nfo": True,
+                "download_episode_nfo": True
+            },
+            "movie": {
+                "add_date": True,
+                "add_date_source": 0,
+                "download_movie_nfo": True,
+                "download_episode_nfo": True
+            },
+            "lesson": {
+                "add_date": True,
+                "add_date_source": 0,
+                "download_tvshow_nfo": True,
+                "download_episode_nfo": True
+            }
+        }
+
         ass_style: Dict[str, Dict] = {
             "danmaku": {
-                "font_name": "default",
-                "font_size": 48,
+                "font_name": "黑体",
+                "font_size": 40,
                 "bold": 0,
                 "italic": 0,
                 "underline": 0,
                 "strikeout": 0,
-                "border": 2.0,
+                "border": 1.0,
                 "shadow": 0.0,
-                "scroll_duration": 10,
-                "stay_duration": 5
+                "non_alpha": False,
+                "scale_x": 100,
+                "scale_y": 100,
+                "angle": 0,
+                "spacing": 0.0,
+                "subtitle_obstruct": False,
+                "area": 5,
+                "alpha": 80,
+                "speed": 3,
+                "density": 1
             },
             "subtitle": {
-                "font_name": "default",
+                "font_name": "黑体",
                 "font_size": 48,
                 "bold": 0,
                 "italic": 0,
                 "underline": 0,
                 "strikeout": 0,
                 "border": 2.0,
-                "shadow": 2.0,
-                "primary_color": "&H00FFFFFF",
-                "border_color": "&H00000000",
-                "shadow_color": "&H00000000",
+                "shadow": 1.0,
+                "non_alpha": False,
+                "primary_color": "&H00FFFFFF&",
+                "secondary_color": "&H00FFFFFF&",
+                "border_color": "&H00000000&",
+                "shadow_color": "&H00000000&",
+                "scale_x": 100,
+                "scale_y": 100,
+                "angle": 0,
+                "spacing": 0.0,
                 "marginL": 10,
                 "marginR": 10,
-                "marginV": 10,
+                "marginV": 20,
                 "alignment": 2
             }
         }
@@ -188,7 +241,7 @@ class Config:
         enable_auth: bool = False
 
         proxy_ip: str = ""
-        proxy_port: int = None
+        proxy_port: int = 1
         auth_username: str = ""
         auth_password: str = ""
     
@@ -224,36 +277,94 @@ class Config:
         path: str = os.path.join(os.getcwd(), "download")
         file_name_template_list: list = [
             {
-                "template": "{zero_padding_number} - {title}",
+                "template": {
+                    "0": "{zero_padding_number} - {title}"
+                },
                 "type": 1
             },
             {
-                "template": "{part_title}/P{page} - {title}",
+                "template": {
+                    "0": "{part_title}/P{page} - {title}"
+                },
                 "type": 2
             },
             {
-                "template": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}",
+                "template": {
+                    "0": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}"
+                },
                 "type": 3
             },
             {
-                "template": "{interact_title}/{title}",
+                "template": {
+                    "0": "{interact_title}/{title}"
+                },
                 "type": 4
             },
             {
-                "template": "{series_title}/{title}",
+                "template": {
+                    "0": "{series_title}/{section_title}/{title}",
+                    "1": "{series_title}/{section_title}/{title}"
+                },
                 "type": 5
             },
             {
-                "template": "{series_title}/{section_title}/{title}",
+                "template": {
+                    "0": "{series_title_original}/{section_title_ex}/{episode_tag} - {title}",
+                    "1": "{series_title_original}/Extra/{section_title}/{title}"
+                },
                 "type": 6
+            },
+            {
+                "template": {
+                    "0": "{series_title}/{section_title}/{title}"
+                },
+                "type": 7
+            },
+            {
+                "template": {
+                    "0": "{up_uid}_{up_name}"
+                },
+                "type": 8
+            },
+            {
+                "template": {
+                    "0": "{up_uid}_{up_name}/{favlist_name}"
+                },
+                "type": 9
             }
+        ]
+        strict_naming: bool = False
+
+        video_quality_priority: list = [
+            127,
+            126,
+            125,
+            120,
+            116,
+            112,
+            100,
+            80,
+            64,
+            32,
+            16
+        ]
+        audio_quality_priority: list = [
+            30251,
+            30250,
+            30280,
+            30232,
+            30216
+        ]
+        video_codec_priority: list = [
+            13,
+            12,
+            7
         ]
         
         video_quality_id: int = 200
         audio_quality_id: int = 30300
-        video_codec_id: int = 7
+        video_codec_id: int = 20
 
-        max_thread_count: int = 4
         max_download_count: int = 1
 
         enable_notification: bool = False
@@ -271,24 +382,30 @@ class Config:
         ffmpeg_check_available_when_launch: bool = True
 
         override_option: int = 1
+        m4a_to_mp3: bool = True
         keep_original_files: bool = False
 
     class Temp:
+        scrape_option: dict = {}
+
+        video_quality_priority: list = []
+        audio_quality_priority: list = []
+        video_codec_priority: list = []
+
         cdn_list: list = []
 
         user_agent: str = ""
 
         file_name_template_list: list = []
+        strict_naming: bool = False
 
         ass_style: Dict[str, Dict] = {}
 
-        ass_resolution_confirm: bool = False
-
-        ass_custom_resolution: bool = False
-        ass_video_width: int = 1920
-        ass_video_height: int = 1080
-
+        video_width: int = 1920
+        video_height: int = 1080
         remember_resolution_settings: bool = False
+
+        duplicate_option: int = 0
 
     class Auth:
         img_key: str = ""
@@ -329,6 +446,7 @@ class Config:
         retry_when_download_suspend: bool = True
         download_suspend_retry_interval: int = 3
         always_use_https_protocol: bool = True
+        enable_ssl_verify: bool = True
 
         user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
 
@@ -435,50 +553,37 @@ class Config:
             
     @classmethod
     def load_config(cls):
-        try:
-            cls.init_path()
-            
-            Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
+        cls.init_path()
+        
+        Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
 
-            cls.app_config = Config.APPConfig()
-            cls.user_config = Config.UserConfig()
-
-        except Exception as e:
-            cls.on_error(e)
+        cls.app_config = Config.APPConfig()
+        cls.user_config = Config.UserConfig()
 
     @staticmethod
     def init_path():
-        Config.User.directory = os.path.join(os.getcwd(), ".config")
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                Config.User.directory = os.path.join(os.environ["APPDATA"], "Bili23 Downloader")
+
+            case Platform.Linux:
+                Config.User.directory = os.path.join(os.path.expanduser("~"), ".config", "Bili23 Downloader")
+
+            case Platform.macOS:
+                Config.User.directory = os.path.join(os.path.expanduser("~/Library/Application Support"), "Bili23 Downloader")
 
         Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
+        Config.APP.lang_config_path = os.path.join(os.path.dirname(__file__), "lang.ini")
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         Config.User.live_file_directory = os.path.join(Config.User.directory, "live")
 
     @classmethod
     def save_app_config(cls):
-        try:
-            cls.app_config.save()
-        
-        except Exception as e:
-            cls.on_error(e)
+        cls.app_config.save()
 
     @classmethod
     def save_user_config(cls):
-        try:
-            cls.user_config.save()
-
-        except Exception as e:
-            cls.on_error(e)
-
-    @staticmethod
-    def on_error(e):
-        import wx
-        import sys
-        import traceback
-
-        wx.LogError(f"读取\保存配置文件时出错\n{traceback.format_exc()}")
-
-        sys.exit()
+        cls.user_config.save()
 
 Config.load_config()

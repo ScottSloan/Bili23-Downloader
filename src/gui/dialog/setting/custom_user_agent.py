@@ -1,12 +1,15 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.component.window.dialog import Dialog
 
+_ = gettext.gettext
+
 class CustomUADialog(Dialog):
     def __init__(self, parent):
-        Dialog.__init__(self, parent, "自定义 User-Agent")
+        Dialog.__init__(self, parent, _("自定义 User-Agent"))
 
         self.init_UI()
 
@@ -19,8 +22,8 @@ class CustomUADialog(Dialog):
 
         self.custom_ua_box = wx.TextCtrl(self, -1, size = self.FromDIP((400, 64)), style = wx.TE_MULTILINE | wx.TE_WORDWRAP)
 
-        self.ok_btn = wx.Button(self, wx.ID_OK, "确定", size = self.get_scaled_size((80, 30)))
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "取消", size = self.get_scaled_size((80, 30)))
+        self.ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, _("取消"), size = self.get_scaled_size((80, 30)))
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
         bottom_hbox.AddStretchSpacer(1)
@@ -39,7 +42,7 @@ class CustomUADialog(Dialog):
 
     def onOKEVT(self):
         if not self.custom_ua_box.GetValue():
-            wx.MessageDialog(self, "User-Agent 无效\n\nUser-Agent 不能为空", "警告", wx.ICON_WARNING).ShowModal()
+            wx.MessageDialog(self, _("User-Agent 无效\n\nUser-Agent 不能为空"), _("警告"), wx.ICON_WARNING).ShowModal()
             return
 
         Config.Temp.user_agent = self.custom_ua_box.GetValue()

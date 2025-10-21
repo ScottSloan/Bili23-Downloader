@@ -1,18 +1,23 @@
 import wx
+import gettext
 
 from utils.config import Config
 
 from gui.component.window.dialog import Dialog
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
+_ = gettext.gettext
+
 class UpdateDialog(Dialog):
     def __init__(self, parent, info: dict):
         self.info = info
         self.force = info.get("force")
 
-        style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) if self.force else wx.DEFAULT_DIALOG_STYLE
+        style = wx.DEFAULT_DIALOG_STYLE & (~wx.CLOSE_BOX) & (~wx.SYSTEM_MENU) if self.force else wx.DEFAULT_DIALOG_STYLE
 
-        Dialog.__init__(self, parent, "检查更新", style = style)
+        self.can_close = not self.force
+
+        Dialog.__init__(self, parent, _("检查更新"), style = style)
 
         self.init_UI()
 
@@ -28,7 +33,7 @@ class UpdateDialog(Dialog):
 
         info_icon = StaticBitmap(self, bmp = wx.ArtProvider().GetBitmap(wx.ART_INFORMATION, size = self.FromDIP((28, 28))), size = self.FromDIP((28, 28)))
 
-        title_lab = wx.StaticText(self, -1, "发现新版本")
+        title_lab = wx.StaticText(self, -1, _("发现新版本"))
         title_lab.SetFont(font)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -40,17 +45,17 @@ class UpdateDialog(Dialog):
         font: wx.Font = self.GetFont()
         font.SetFractionalPointSize(int(font.GetFractionalPointSize() + 1))
 
-        self.changelog = wx.TextCtrl(self, -1, self.info.get("changelog"), size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY)
+        self.changelog = wx.TextCtrl(self, -1, self.info.get("changelog"), size = self.FromDIP((600, 320)), style = wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_NONE)
         self.changelog.SetFont(font)
 
         bottom_border = wx.StaticLine(self, -1, style = wx.HORIZONTAL)
 
-        self.ignore_version_chk = wx.CheckBox(self, -1, "忽略此版本，下次不再提示")
+        self.ignore_version_chk = wx.CheckBox(self, -1, _("忽略此版本，下次不再提示"))
         self.ignore_version_chk.Enable(not self.force)
         self.ignore_version_chk.SetValue(not self.force)
 
-        self.update_btn = wx.Button(self, wx.ID_OK, "更新", size = self.FromDIP((90, 28)))
-        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, "忽略", size = self.FromDIP((90, 28)))
+        self.update_btn = wx.Button(self, wx.ID_OK, _("更新"), size = self.FromDIP((90, 28)))
+        self.ignore_btn = wx.Button(self, wx.ID_CANCEL, _("忽略"), size = self.FromDIP((90, 28)))
         self.ignore_btn.Enable(not self.force)
 
         bottom_hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -62,7 +67,7 @@ class UpdateDialog(Dialog):
         update_vbox = wx.BoxSizer(wx.VERTICAL)
         update_vbox.Add(hbox, 0, wx.EXPAND)
         update_vbox.Add(top_border, 0, wx.EXPAND)
-        update_vbox.Add(self.changelog, 1, wx.ALL | wx.EXPAND, self.FromDIP(6))
+        update_vbox.Add(self.changelog, 1, wx.EXPAND)
         update_vbox.Add(bottom_border, 0, wx.EXPAND)
         update_vbox.Add(bottom_hbox, 0, wx.EXPAND)
 
@@ -73,6 +78,10 @@ class UpdateDialog(Dialog):
     def init_utils(self):
         self.ignore_version_chk.SetValue(Config.Misc.ignore_version == self.info.get("version_code"))
     
+    def onCloseEVT(self, event: wx.CloseEvent):
+        if self.can_close:
+            return super().onCloseEVT(event)
+
     def onOKEVT(self):
         wx.LaunchDefaultBrowser(self.info.get("url"))
 

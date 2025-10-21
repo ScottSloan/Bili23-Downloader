@@ -1,8 +1,10 @@
 import wx
+import gettext
 
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, ParseStatus, ProcessingType, StatusCode
 from utils.common.model.callback import ParseCallback
+from utils.common.model.list_item_info import TreeListItemInfo
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException, show_error_message_dialog
 from utils.common.map import url_pattern_map
@@ -17,6 +19,9 @@ from utils.parse.popular import PopularParser
 from utils.parse.space.list import SpaceListParser
 from utils.parse.space.space import SpaceParser
 from utils.parse.space.favlist import FavListParser
+from utils.parse.preview import VideoPreview, PreviewInfo
+
+_ = gettext.gettext
 
 class Parser:
     def __init__(self, parent: wx.Window):
@@ -46,9 +51,7 @@ class Parser:
             "festival": (ParseType.Festival, FestivalParser(self.parser_callback))
         }
 
-        (parse_type, parser) = parser_map.get(type)
-
-        self.parse_type = parse_type
+        (self.parse_type, parser) = parser_map.get(type)
 
         return parser
 
@@ -56,18 +59,20 @@ class Parser:
         if set_status:
             self.main_window.utils.set_status(ParseStatus.Parsing)
 
-        url = self.validate_url(url)
+        new_url = self.validate_url(url)
 
-        type = self.get_parse_type(url)
+        type = self.get_parse_type(new_url)
 
         if not type:
-            raise GlobalException(code = StatusCode.URL.value, callback = self.onError)
-        
+            raise GlobalException(code = StatusCode.URL.value, callback = self.onError, parse_url = url)
+
         self.parser: VideoParser = self.get_parser(type)
 
-        rtn_val = self.parser.parse_url(url)
+        rtn_val = self.parser.parse_url(new_url)
 
         if StatusCode(rtn_val) == StatusCode.Success:
+            VideoPreview.clear_cache()
+            
             wx.CallAfter(self.parse_success)
     
     def parse_success(self):
@@ -78,6 +83,8 @@ class Parser:
 
         else:
             self.parse_type_str = self.parser.get_parse_type_str()
+
+            PreviewInfo.episode_info = self.main_window.episode_list.GetCurrentEpisodeInfo()
 
             wx.CallAfter(self.main_window.show_episode_list, False)
 
@@ -92,7 +99,7 @@ class Parser:
     def onError(self):
         self.main_window.utils.set_status(ParseStatus.Error)
 
-        show_error_message_dialog("解析失败", parent = self.main_window)
+        show_error_message_dialog(_("解析失败"), parent = self.main_window)
 
     def onJump(self, url: str):
         Thread(target = self.parse_url, args = (url, False, )).start()
@@ -107,6 +114,28 @@ class Parser:
         else:
             return ""
 
+    def refresh_media_info(self, item_info: TreeListItemInfo):
+        PreviewInfo.video_size_cache.clear()
+        PreviewInfo.audio_size_cache.clear()
+
+        match ParseType(item_info.type):
+            case ParseType.Video:
+                bvid, cid = item_info.bvid, item_info.cid
+
+                VideoParser.start_thread(VideoParser.get_video_available_media_info, (bvid, cid,))
+
+            case ParseType.Bangumi:
+                bvid, cid = item_info.bvid, item_info.cid
+
+                BangumiParser.start_thread(BangumiParser.get_bangumi_available_media_info, (bvid, cid,))
+
+            case ParseType.Cheese:
+                aid, ep_id, cid = item_info.aid, item_info.ep_id, item_info.cid
+
+                CheeseParser.start_thread(CheeseParser.get_cheese_available_media_info, (aid, ep_id, cid,))
+
+        PreviewInfo.episode_info = item_info.to_dict()
+
     @property
     def parser_callback(self):
         class Callback(ParseCallback):
@@ -119,15 +148,13 @@ class Parser:
                 self.onJump(url)
 
             @staticmethod
-            def onChangeProcessingType(type: ProcessingType):
-                self.main_window.processing_window.SetType(type)
-
-            @staticmethod
             def onUpdateName(name: str):
-                self.main_window.processing_window.UpdateName(name)
+                window = wx.FindWindowByName("processing")
+                window.UpdateName(name)
 
             @staticmethod
             def onUpdateTitle(title: str):
-                self.main_window.processing_window.UpdateTitle(title)
+                window = wx.FindWindowByName("processing")
+                window.UpdateTitle(title)
 
         return Callback

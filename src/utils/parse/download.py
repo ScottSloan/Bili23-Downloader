@@ -1,13 +1,12 @@
 from typing import Callable
 
-from utils.common.model.data_type import DownloadTaskInfo
-from utils.common.enums import StreamType, VideoCodecID, AudioQualityID
+from utils.common.model.task_info import DownloadTaskInfo
+from utils.common.enums import StreamType, VideoCodecID, AudioQualityID, ParseType
 from utils.common.map import audio_file_type_map
 from utils.common.exception import GlobalException
 
 from utils.parse.preview import VideoPreview
 from utils.parse.parser import Parser
-from utils.parse.audio import AudioInfo
 from utils.parse.video import VideoParser
 
 class DownloadParser(Parser):
@@ -19,7 +18,7 @@ class DownloadParser(Parser):
 
     @classmethod
     def get_download_stream_json(cls, task_info: DownloadTaskInfo):
-        cls.check_cid(task_info)
+        cls.get_extra_info(task_info)
 
         data = VideoPreview.get_download_json(task_info.parse_type, task_info.bvid, task_info.cid, task_info.aid, task_info.ep_id, task_info.video_quality_id)
 
@@ -117,7 +116,7 @@ class DownloadParser(Parser):
         self.task_info.audio_quality_id = VideoPreview.get_audio_quality_id(self.task_info.audio_quality_id, data["dash"])
         self.task_info.audio_type = audio_file_type_map.get(self.task_info.audio_quality_id)
 
-        all_url_list = AudioInfo.get_all_audio_url_list(data["dash"])
+        all_url_list = VideoPreview.get_audio_all_url_list(data["dash"])
 
         for entry in all_url_list:
             if entry["id"] == self.task_info.audio_quality_id:
@@ -185,11 +184,12 @@ class DownloadParser(Parser):
             raise GlobalException(callback = self.callback) from e
 
     @staticmethod
-    def check_cid(task_info: DownloadTaskInfo):
-        if not task_info.cid:
-            info = VideoParser.get_video_extra_info(task_info.bvid)
+    def get_extra_info(task_info: DownloadTaskInfo):
+        if ParseType(task_info.parse_type) == ParseType.Video:
+            if not task_info.cid:
+                info = VideoParser.get_video_extra_info(task_info.bvid)
 
-            task_info.cid = info.get("cid")
+                task_info.cid = info.get("cid")
 
-            task_info.up_name = info["owner"]["name"]
-            task_info.up_uid = info["owner"]["mid"]
+                task_info.up_name = info.get("up_name")
+                task_info.up_uid = info.get("up_mid")

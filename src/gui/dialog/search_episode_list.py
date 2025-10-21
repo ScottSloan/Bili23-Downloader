@@ -1,4 +1,5 @@
 import wx
+import gettext
 
 from utils.common.style.icon_v4 import Icon, IconID
 
@@ -9,6 +10,8 @@ from gui.component.panel.panel import Panel
 
 from gui.component.button.bitmap_button import BitmapButton
 from gui.component.text_ctrl.search_ctrl import SearchCtrl
+
+_ = gettext.gettext
 
 class Flag:
     loop = False
@@ -41,7 +44,7 @@ class SearchEpisodeListDialog(Frame):
 
         self.parent: MainWindow = parent
 
-        Frame.__init__(self, parent, "搜索", style = wx.DEFAULT_FRAME_STYLE & (~wx.RESIZE_BORDER) | wx.FRAME_TOOL_WINDOW | wx.FRAME_FLOAT_ON_PARENT, name = "search")
+        Frame.__init__(self, parent, _("搜索"), style = wx.DEFAULT_FRAME_STYLE & (~wx.RESIZE_BORDER) | wx.FRAME_TOOL_WINDOW | wx.FRAME_FLOAT_ON_PARENT, name = "search")
 
         self.init_UI()
 
@@ -54,17 +57,17 @@ class SearchEpisodeListDialog(Frame):
     def init_UI(self):
         panel = Panel(self)
 
-        self.search_box = SearchCtrl(panel, "在剧集列表中搜索", size = self.FromDIP((300, 24)), search_btn = True, clear_btn = True)
+        self.search_box = SearchCtrl(panel, _("在剧集列表中搜索"), size = self.FromDIP((300, -1)), search_btn = True, clear_btn = True)
         self.search_box.SetValue(self.parent.search_keywords)
 
-        self.search_result_lab = wx.StaticText(panel, -1, "无结果")
+        self.search_result_lab = wx.StaticText(panel, -1, _("无结果"))
         self.previous_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Up))
-        self.previous_btn.SetToolTip("上一匹配项")
+        self.previous_btn.SetToolTip(_("上一匹配项"))
         self.previous_btn.Enable(False)
         self.next_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Down))
-        self.next_btn.SetToolTip("下一匹配项")
+        self.next_btn.SetToolTip(_("下一匹配项"))
         self.next_btn.Enable(False)
-        self.search_btn = wx.Button(panel, wx.ID_OK, "搜索", size = self.get_scaled_size((80, 30)))
+        self.search_btn = wx.Button(panel, wx.ID_OK, _("搜索"), size = self.get_scaled_size((80, 30)))
 
         search_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -74,9 +77,9 @@ class SearchEpisodeListDialog(Frame):
         search_hbox.AddStretchSpacer()
         search_hbox.Add(self.search_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
 
-        self.show_matches_only_chk = wx.CheckBox(panel, -1, "仅显示匹配项")
-        self.loop_search_chk = wx.CheckBox(panel, -1, "循环搜索")
-        self.check_all_chk = wx.CheckBox(panel, -1, "全选")
+        self.show_matches_only_chk = wx.CheckBox(panel, -1, _("仅显示匹配项"))
+        self.loop_search_chk = wx.CheckBox(panel, -1, _("循环搜索"))
+        self.check_all_chk = wx.CheckBox(panel, -1, _("全选"))
 
         option_hbox = wx.BoxSizer(wx.HORIZONTAL)
         option_hbox.Add(self.show_matches_only_chk, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -166,7 +169,7 @@ class SearchEpisodeListDialog(Frame):
         self.previous_btn.Enable(len)
         self.next_btn.Enable(len)
 
-        self.search_result_lab.SetLabel(f"第 {self.search_result.index + 1} 项，共 {len} 项" if len else "无结果")
+        self.search_result_lab.SetLabel(_("第 %s 项，共 %s 项") % (self.search_result.index + 1, len) if len else _("无结果"))
 
         self.Layout()
 

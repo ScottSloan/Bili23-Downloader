@@ -14,7 +14,7 @@ class OGVParser(Parser):
         raw_json = {
             "scene": "normal",
             "video_index": {
-                "bvid": None,
+                "bvid": "BV1V6pazREaX",
                 "cid": None,
                 "ogv_season_id": 46244
             },

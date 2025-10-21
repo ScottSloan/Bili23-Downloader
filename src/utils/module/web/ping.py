@@ -30,7 +30,10 @@ class Ping:
     
     @classmethod
     def run(cls, cdn: str):
-        process = subprocess.run(cls.get_ping_cmd(cdn), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
+        cmd = cls.get_ping_cmd(cdn)
+
+        process = subprocess.run(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell = True, text = True, encoding = "utf-8")
+        
         latency = cls.get_latency(process)
 
         if latency:

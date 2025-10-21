@@ -4,6 +4,7 @@ from utils.common.enums import StatusCode
 from utils.common.model.callback import ParseCallback
 from utils.common.request import RequestUtils
 from utils.common.regex import Regex
+from utils.common.datetime_util import DateTime
 
 from utils.parse.episode.episode_v2 import Episode
 from utils.parse.episode.cheese import Cheese
@@ -40,7 +41,8 @@ class CheeseParser(Parser):
 
         self.parse_episodes()
 
-    def get_cheese_available_media_info(self, aid: int, ep_id: int, cid: int):
+    @classmethod
+    def get_cheese_available_media_info(cls, aid: int, ep_id: int, cid: int):
         params = {
             "avid": aid,
             "cid": cid,
@@ -51,15 +53,33 @@ class CheeseParser(Parser):
             "ep_id": ep_id,
         }
 
-        url = f"https://api.bilibili.com/pugv/player/web/playurl?{self.url_encode(params)}"
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?{cls.url_encode(params)}"
 
-        resp = self.request_get(url, headers = RequestUtils.get_headers(referer_url = self.bilibili_url, sessdata = Config.User.SESSDATA))
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
 
-        data = self.json_get(resp, "data")
+        data = cls.json_get(resp, "data")
 
-        self.check_drm_protection(data)
+        cls.check_drm_protection(data)
 
         PreviewInfo.download_json = data
+
+    @classmethod
+    def get_cheese_season_info(cls, season_id: int):
+        params = {
+            "season_id": season_id
+        }
+
+        url = f"https://api.bilibili.com/pugv/view/web/season/v2?{cls.url_encode(params)}"
+
+        resp = cls.request_get(url, headers = RequestUtils.get_headers(referer_url = cls.bilibili_url, sessdata = Config.User.SESSDATA))
+
+        info_json: dict = cls.json_get(resp, "data")
+
+        return {
+            "description": info_json.get("subtitle"),
+            "poster_url": info_json.get("cover"),
+            "pubdate": DateTime.time_str_from_timestamp(info_json["sections"][0]["episodes"][0]["release_date"], "%Y-%m-%d")
+        }
 
     def parse_worker(self, url: str):
         match Regex.find_string(r"ep|ss", url):

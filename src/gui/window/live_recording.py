@@ -5,7 +5,7 @@ from typing import List, Callable, Tuple
 from utils.config import Config
 
 from utils.common.enums import Platform
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 from utils.common.thread import Thread
 from utils.common.datetime_util import DateTime
 

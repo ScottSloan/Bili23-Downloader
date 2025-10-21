@@ -26,11 +26,6 @@ class ParseCallback(ABC):
     
     @staticmethod
     @abstractmethod
-    def onChangeProcessingType(type):
-        pass
-    
-    @staticmethod
-    @abstractmethod
     def onUpdateName(name: str):
         pass
 

@@ -1,6 +1,6 @@
 import wx
 
-from utils.common.model.data_type import LiveRoomInfo
+from utils.common.model.live_room_info import LiveRoomInfo
 from utils.common.model.callback import LiveRecordingCallback
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.enums import LiveRecordingStatus, LiveStatus
@@ -209,16 +209,16 @@ class LiveRoomItemPanel(Panel):
 
         self.title_lab = wx.StaticText(self, -1, "直播间标题")
 
-        self.room_id_lab = InfoLabel(self, "ID 123456", size = self.FromDIP((90, 16)))
-        self.area_lab = InfoLabel(self, "分区", size = self.FromDIP((150, 16)))
-        self.live_status_lab = InfoLabel(self, "直播中", size = self.FromDIP((50, 16)))
+        self.room_id_lab = InfoLabel(self, "ID 123456", size = self.FromDIP((90, -1)))
+        self.area_lab = InfoLabel(self, "分区", size = self.FromDIP((150, -1)))
+        self.live_status_lab = InfoLabel(self, "直播中", size = self.FromDIP((50, -1)))
         self.rec_bmp = StaticBitmap(self, bmp = Icon.get_icon_bitmap(IconID.Rec), size = self.FromDIP((16, 16)))
         self.rec_bmp.Hide()
-        self.recording_lab = wx.StaticText(self, -1, "录制中", size = self.FromDIP((50, 16)))
+        self.recording_lab = wx.StaticText(self, -1, "录制中", size = self.FromDIP((50, -1)))
         self.recording_lab.SetForegroundColour(wx.Colour(235, 54, 67))
         self.recording_lab.Hide()
-        self.size_lab = InfoLabel(self, "", size = self.FromDIP((60, 16)))
-        self.speed_lab = InfoLabel(self, "")
+        self.size_lab = InfoLabel(self, "", size = self.FromDIP((60, -1)))
+        self.speed_lab = InfoLabel(self, "", size = self.FromDIP((-1, -1)))
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.room_id_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM) | wx.ALIGN_CENTER | wx.ALIGN_LEFT, self.FromDIP(6))
