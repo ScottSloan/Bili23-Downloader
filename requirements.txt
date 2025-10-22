@@ -2,6 +2,6 @@ requests==2.32.5
 wxPython==4.2.3
 qrcode[pil]==7.4.2
 python-vlc==3.0.21203
-protobuf==6.32.0
+protobuf==6.33.0
 websockets==15.0.1
 pycryptodome==3.23.0

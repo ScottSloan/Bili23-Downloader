@@ -79,6 +79,9 @@ try:
 
     _ = gettext.gettext
 
+except PermissionError:
+    message_box(f"当前目录 {os.path.dirname(__file__)} 无权访问，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
+
 except Exception as e:
     message_box(f"Failed to load language files\n加载语言文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
