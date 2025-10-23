@@ -58,8 +58,13 @@ class FFUtils:
         temp_files = []
 
         prop = FFProp(task_info)
-
-        match StreamType(task_info.stream_type):
+        
+        try:
+            stream_type = StreamType(task_info.stream_type)
+        except ValueError:
+            stream_type = StreamType.Null
+            
+        match StreamType:
             case StreamType.Dash:
                 if "video" in task_info.download_option:
                     temp_files.append(prop.video_temp_file())
