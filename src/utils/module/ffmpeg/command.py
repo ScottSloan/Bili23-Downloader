@@ -18,16 +18,22 @@ class FFCommand:
                     return output_temp_file
 
                 case "m4a":
-                    task_info.output_type = "mp3"
-                    output_temp_file = prop.output_temp_file()
-
-                    command.add(cls.get_convert_audio_command(audio_temp_file, prop.output_temp_file(), "libmp3lame"))
-                    command.add_remove([audio_temp_file], task_info.download_path)
-
-                    return output_temp_file
-                
-                case _:
-                    return output_temp_file
+                    # 只有在用户勾选了m4a_to_mp3选项时才进行转换
+                    if Config.Merge.m4a_to_mp3:
+                        # 先保存原始类型
+                        original_output_type = task_info.output_type
+                        # 设置为mp3类型
+                        task_info.output_type = "mp3"
+                        # 基于新类型生成输出文件名
+                        output_mp3_file = prop.output_temp_file()
+                        # 执行转换命令
+                        command.add(cls.get_convert_audio_command(audio_temp_file, output_mp3_file, "libmp3lame"))
+                        command.add_remove([audio_temp_file], task_info.download_path)
+                        # 返回实际生成的文件名
+                        return output_mp3_file
+                    else:
+                        # 不转换时直接返回原始音频文件
+                        return audio_temp_file
 
         command = Command()
 
