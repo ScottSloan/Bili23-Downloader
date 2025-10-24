@@ -333,7 +333,7 @@ class MainWindow(Frame):
                 self.SetSize(self.FromDIP((800, 450)))
 
             case Platform.Linux:
-                self.SetSize(self.FromDIP((900, 550)))
+                self.SetSize(self.FromDIP((1000, 550)))
         
         self.CenterOnParent()
 

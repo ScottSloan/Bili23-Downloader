@@ -12,7 +12,7 @@ else:
 class BitmapButton(impl):
     def __init__(self, parent: wx.Window, bitmap: wx.Bitmap, size = None, enable: bool = True, tooltip: str = ""):
         if not size:
-            size = parent.FromDIP((24, 24))
+            size = self.GetSizeEx(parent)
 
         impl.__init__(self, parent, -1, bitmap = bitmap, size = size, style = self.get_style())
 
@@ -40,3 +40,11 @@ class BitmapButton(impl):
             
     def SetToolTip(self, tip: str):
         return super().SetToolTip(tip)
+    
+    def GetSizeEx(self, parent: wx.Window):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows | Platform.macOS:
+                return parent.FromDIP((24, 24))
+
+            case Platform.Linux:
+                return parent.FromDIP((24, 24))

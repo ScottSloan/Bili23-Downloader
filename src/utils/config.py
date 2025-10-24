@@ -123,10 +123,10 @@ class Config:
         name: str = "Bili23 Downloader"
         id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.70.0"
-        version_code: int = 170002
+        version: str = "1.70.1"
+        version_code: int = 170100
 
-        task_file_min_version_code: int = 170000
+        task_file_min_version_code: int = 170100
         live_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 170000
         user_config_file_min_version_code: int = 166000

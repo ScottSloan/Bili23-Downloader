@@ -1,7 +1,7 @@
 import wx
 import gettext
 
-from utils.common.style.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
 
 from utils.parse.episode.episode_v2 import Episode
 
@@ -61,10 +61,10 @@ class SearchEpisodeListDialog(Frame):
         self.search_box.SetValue(self.parent.search_keywords)
 
         self.search_result_lab = wx.StaticText(panel, -1, _("无结果"))
-        self.previous_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Up))
+        self.previous_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Up, icon_size = IconSize.SMALL_EX))
         self.previous_btn.SetToolTip(_("上一匹配项"))
         self.previous_btn.Enable(False)
-        self.next_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Down))
+        self.next_btn = BitmapButton(panel, Icon.get_icon_bitmap(IconID.Down, icon_size = IconSize.SMALL_EX))
         self.next_btn.SetToolTip(_("下一匹配项"))
         self.next_btn.Enable(False)
         self.search_btn = wx.Button(panel, wx.ID_OK, _("搜索"), size = self.get_scaled_size((80, 30)))

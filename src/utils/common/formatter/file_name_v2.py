@@ -35,7 +35,7 @@ class FileNameFormatter:
 
         Directory.create_directory(download_path)
 
-        return download_path
+        return download_path.replace("/", os.path.sep)
 
     @staticmethod
     def check_file_name_length(file_name: str, max_length: int = 255):

@@ -299,6 +299,8 @@ class Utils:
     def open_file_location(self):
         path = os.path.join(self.task_info.download_path, self.get_full_file_name())
 
+        print(path)
+
         Directory.open_file_location(path)
 
     def set_download_status(self, status: DownloadStatus):

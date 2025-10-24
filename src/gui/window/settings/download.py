@@ -5,7 +5,7 @@ from wx.lib.intctrl import IntCtrl
 from utils.config import Config
 from utils.common.map import number_type_map
 from utils.common.data.priority import video_quality_priority, audio_quality_priority, video_codec_priority, video_quality_priority_short, audio_quality_priority_short, video_codec_priority_short
-from utils.common.style.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
 
 from utils.module.notification import NotificationManager
 
@@ -39,7 +39,7 @@ class PriorityBox(Panel):
     def init_UI(self):
         lab = wx.StaticText(self, -1, self.label)
         self.priority_box = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY)
-        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), tooltip = _("设置优先级"))
+        self.priority_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting, icon_size = IconSize.SMALL_EX), tooltip = _("设置优先级"))
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -90,7 +90,7 @@ class DownloadPage(Page):
 
         path_lab = wx.StaticText(download_box, -1, _("下载目录"))
         self.path_box = wx.TextCtrl(download_box, -1)
-        self.browse_btn = BitmapButton(download_box, Icon.get_icon_bitmap(IconID.Folder), tooltip = _("浏览"))
+        self.browse_btn = BitmapButton(download_box, Icon.get_icon_bitmap(IconID.Folder, icon_size = IconSize.SMALL_EX), tooltip = _("浏览"))
 
         self.custom_file_name_btn = wx.Button(download_box, -1, _("自定义下载文件名"), size = self.get_scaled_size((120, 28)))
 
