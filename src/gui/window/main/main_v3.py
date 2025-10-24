@@ -7,6 +7,7 @@ from utils.common.enums import Platform, EpisodeDisplayType, ExitOption
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException
 from utils.common.style.font import SysFont
+from utils.common.history import History
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -68,6 +69,7 @@ class MainWindow(Frame):
         menu_bar = wx.MenuBar()
 
         tool_menu = wx.Menu()
+        history_menu = wx.Menu()
         help_menu = wx.Menu()
 
         if Config.User.login:
@@ -85,6 +87,14 @@ class MainWindow(Frame):
         tool_menu.AppendSeparator()
         tool_menu.Append(ID.SETTINGS_MENU, _("设置(&S)"))
 
+        history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
+        history_menu.AppendSeparator()
+        history_menu.Append(wx.NewIdRef(), _("更多..."))
+        history_menu.AppendSeparator()
+        history_menu.Append(ID.HISTORY_CLEAR, _("清除最近解析的记录..."))
+
+        history_menu.Enable(ID.HISTORY_EMPTY, False)
+
         help_menu.Append(ID.CHECK_UPDATE_MENU, _("检查更新(&U)"))
         help_menu.Append(ID.CHANGELOG_MENU, _("更新日志(&P)"))
         help_menu.AppendSeparator()
@@ -96,6 +106,7 @@ class MainWindow(Frame):
         help_menu.Append(ID.ABOUT_MENU, _("关于(&A)"))
 
         menu_bar.Append(tool_menu, _("工具(&T)"))
+        menu_bar.Append(history_menu, _("历史(&S)"))
         menu_bar.Append(help_menu, _("帮助(&H)"))
 
         self.SetMenuBar(menu_bar)
@@ -121,6 +132,7 @@ class MainWindow(Frame):
                 Window.welcome_dialog(self)
 
         self.parser = Parser(self)
+        self.history = History()
 
         self.processing_window = Window.create_processing_window(self)
         self.download_window = Window.create_download_window(self)

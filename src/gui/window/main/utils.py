@@ -24,6 +24,8 @@ from gui.dialog.setting.select_batch import SelectBatchDialog
 from gui.dialog.guide.guide import GuideDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
 
+from gui.id import ID
+
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
 from gui.window.settings.settings_v2 import SettingWindow
@@ -511,3 +513,23 @@ class Utils:
                     self.main_window.episode_list.download_task_info_list = self.main_window.download_window.remove_duplicate_task(self.main_window.episode_list.download_task_info_list, [entry.hash_id for entry in duplicate_task_list])
 
         Window.processing_window(show = True)
+
+    def update_history(self):
+        history = self.main_window.parser.main_window.history.get()
+
+        history_menu = wx.Menu()
+
+        if history:
+            for url in history[-10:]:
+                history_menu.Append(wx.NewIdRef(), url)
+        else:
+            history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
+            history_menu.Enable(ID.HISTORY_EMPTY, False)
+
+        history_menu.AppendSeparator()
+        history_menu.Append(wx.NewIdRef(), _("更多..."))
+        history_menu.AppendSeparator()
+        history_menu.Append(ID.HISTORY_CLEAR, _("清除最近解析的记录..."))
+
+        menu_bar: wx.MenuBar = self.main_window.GetMenuBar()
+        menu_bar.Replace(1, history_menu, _("历史(&S)"))

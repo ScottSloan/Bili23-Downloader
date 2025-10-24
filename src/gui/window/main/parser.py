@@ -2,7 +2,7 @@ import wx
 import gettext
 
 from utils.common.regex import Regex
-from utils.common.enums import ParseType, ParseStatus, ProcessingType, StatusCode
+from utils.common.enums import ParseType, ParseStatus, StatusCode
 from utils.common.model.callback import ParseCallback
 from utils.common.model.list_item_info import TreeListItemInfo
 from utils.common.thread import Thread
@@ -72,6 +72,8 @@ class Parser:
 
         if StatusCode(rtn_val) == StatusCode.Success:
             VideoPreview.clear_cache()
+
+            self.main_window.history.add(url)
             
             wx.CallAfter(self.parse_success)
     
@@ -85,6 +87,8 @@ class Parser:
             self.parse_type_str = self.parser.get_parse_type_str()
 
             PreviewInfo.episode_info = self.main_window.episode_list.GetCurrentEpisodeInfo()
+
+            self.main_window.utils.update_history()
 
             wx.CallAfter(self.main_window.show_episode_list, False)
 

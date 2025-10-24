@@ -69,6 +69,9 @@ def detect_lang():
 try:
     from utils.config import Config
 
+except PermissionError as e:
+    message_box(f"当前目录 {os.path.dirname(__file__)} 无权访问，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
+
 except Exception as e:
     message_box(f"Failed to read config file\n读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
@@ -79,7 +82,7 @@ try:
 
     _ = gettext.gettext
 
-except PermissionError:
+except PermissionError as e:
     message_box(f"当前目录 {os.path.dirname(__file__)} 无权访问，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
 
 except Exception as e:
