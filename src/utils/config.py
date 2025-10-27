@@ -11,6 +11,7 @@ app_config_group = {
     "Basic": [
         "language",
         "listen_clipboard",
+        "enable_history",
         "exit_option",
         "auto_popup_option_dialog",
         "auto_show_download_window",
@@ -45,6 +46,7 @@ app_config_group = {
         "delete_history",
         "enable_speed_limit",
         "speed_mbps",
+        "add_independent_number",
         "number_type"
     ],
     "Advanced": [
@@ -133,12 +135,14 @@ class Config:
 
         app_config_path: str = ""
         lang_config_path: str = ""
+        history_file_path: str = ""
         err_log_path: str = ""
 
     class Basic:
         language: str = "zh_CN"
 
         listen_clipboard: bool = False
+        enable_history: bool = True
         exit_option: int = 3
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
@@ -370,6 +374,8 @@ class Config:
 
         enable_notification: bool = False
         delete_history: bool = False
+
+        add_independent_number: bool = False
         number_type: int = 1
 
         enable_speed_limit: bool = False
@@ -575,6 +581,7 @@ class Config:
 
         Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
         Config.APP.lang_config_path = os.path.join(Config.User.directory, "lang.ini")
+        Config.APP.history_file_path = os.path.join(os.getcwd(), "history.json")
         Config.APP.err_log_path = os.path.join(os.getcwd(), "error_log.txt")
 
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")

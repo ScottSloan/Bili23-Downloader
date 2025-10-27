@@ -43,6 +43,8 @@ class BasicPage(Page):
         language_vbox.Add(language_tip_hbox, 0, wx.EXPAND)
 
         self.listen_clipboard_chk = wx.CheckBox(basic_box, -1, _("自动监听剪切板"))
+        self.enable_history_chk = wx.CheckBox(basic_box, 0, _("启用历史记录功能"))
+
         exit_option_lab = wx.StaticText(basic_box, -1, _("当关闭窗口时"))
         self.exit_option_chk = Choice(basic_box)
         self.exit_option_chk.SetChoices(exit_option_map)
@@ -59,6 +61,7 @@ class BasicPage(Page):
         basic_sbox = wx.StaticBoxSizer(basic_box, wx.VERTICAL)
         basic_sbox.Add(language_vbox, 0, wx.EXPAND)
         basic_sbox.Add(self.listen_clipboard_chk, 0, wx.ALL, self.FromDIP(6))
+        basic_sbox.Add(self.enable_history_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         basic_sbox.Add(exit_option_hbox, 0, wx.EXPAND)
         basic_sbox.Add(self.auto_popup_option_chk, 0, wx.ALL, self.FromDIP(6))
         basic_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
@@ -80,6 +83,7 @@ class BasicPage(Page):
         
         self.language_choice.SetCurrentSelection(Config.Basic.language)
         self.listen_clipboard_chk.SetValue(Config.Basic.listen_clipboard)
+        self.enable_history_chk.SetValue(Config.Basic.enable_history)
         self.exit_option_chk.SetSelection(Config.Basic.exit_option)
         self.auto_popup_option_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
@@ -91,6 +95,7 @@ class BasicPage(Page):
     def save_data(self):
         Config.Basic.language = self.language_choice.GetCurrentClientData()
         Config.Basic.listen_clipboard = self.listen_clipboard_chk.GetValue()
+        Config.Basic.enable_history = self.enable_history_chk.GetValue()
         Config.Basic.exit_option = self.exit_option_chk.GetSelection()
         Config.Basic.auto_popup_option_dialog = self.auto_popup_option_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()

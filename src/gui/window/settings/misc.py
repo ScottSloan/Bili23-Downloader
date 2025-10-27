@@ -104,8 +104,6 @@ class MiscPage(Page):
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
-        self.parent.init_menubar()
-
     def onValidate(self):
         self.save_data()
         
@@ -116,6 +114,7 @@ class MiscPage(Page):
             files = [
                 Config.User.user_config_path,
                 Config.APP.lang_config_path,
+                Config.APP.history_file_path,
                 Config.APP.err_log_path
             ]
 

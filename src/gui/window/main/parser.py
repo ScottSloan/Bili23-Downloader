@@ -1,6 +1,8 @@
 import wx
 import gettext
 
+from utils.config import Config
+
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, ParseStatus, StatusCode
 from utils.common.model.callback import ParseCallback
@@ -73,7 +75,8 @@ class Parser:
         if StatusCode(rtn_val) == StatusCode.Success:
             VideoPreview.clear_cache()
 
-            self.main_window.history.add(url)
+            if Config.Basic.enable_history:
+                self.main_window.history.add(url)
             
             wx.CallAfter(self.parse_success)
     

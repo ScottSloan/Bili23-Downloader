@@ -19,8 +19,8 @@ class OtherStaticBox(Panel):
         other_box = wx.StaticBox(self, -1, _("其他选项"))
 
         self.auto_popup_chk = wx.CheckBox(other_box, -1, _("下载时自动弹出此对话框"))
-
         self.auto_show_download_window_chk = wx.CheckBox(other_box, -1, _("自动跳转下载窗口"))
+        self.add_independent_number_chk = wx.CheckBox(other_box, -1, _("在文件名前添加独立序号"))
 
         self.number_type_lab = wx.StaticText(other_box, -1, _("序号类型"))
         self.number_type_choice = wx.Choice(other_box, -1, choices = list(number_type_map.keys()))
@@ -36,6 +36,7 @@ class OtherStaticBox(Panel):
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_sbox.Add(self.auto_popup_chk, 0, wx.ALL, self.FromDIP(6))
         other_sbox.Add(self.auto_show_download_window_chk, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        other_sbox.Add(self.add_independent_number_chk, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         other_sbox.Add(number_type_hbox, 0, wx.EXPAND)
 
         self.SetSizer(other_sbox)
@@ -43,9 +44,11 @@ class OtherStaticBox(Panel):
     def load_data(self):
         self.auto_popup_chk.SetValue(Config.Basic.auto_popup_option_dialog)
         self.auto_show_download_window_chk.SetValue(Config.Basic.auto_show_download_window)
+        self.add_independent_number_chk.SetValue(Config.Download.add_independent_number)
         self.number_type_choice.SetSelection(Config.Download.number_type)
 
     def save(self):
         Config.Basic.auto_popup_option_dialog = self.auto_popup_chk.GetValue()
         Config.Basic.auto_show_download_window = self.auto_show_download_window_chk.GetValue()
+        Config.Download.add_independent_number = self.add_independent_number_chk.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()

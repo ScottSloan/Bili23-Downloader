@@ -106,7 +106,10 @@ class MainWindow(Frame):
         help_menu.Append(ID.ABOUT_MENU, _("关于(&A)"))
 
         menu_bar.Append(tool_menu, _("工具(&T)"))
-        menu_bar.Append(history_menu, _("历史(&S)"))
+
+        if Config.Basic.enable_history:
+            menu_bar.Append(history_menu, _("历史(&S)"))
+            
         menu_bar.Append(help_menu, _("帮助(&H)"))
 
         self.SetMenuBar(menu_bar)
@@ -139,6 +142,8 @@ class MainWindow(Frame):
         self.live_recording_window = Window.create_live_window(self)
 
         self.utils.init_timer()
+
+        self.utils.update_history()
 
         Thread(target = worker).start()
 
@@ -202,6 +207,11 @@ class MainWindow(Frame):
                 
             case ID.EPISODE_FULL_NAME_MENU:
                 self.top_box.set_episode_full_name()
+
+            case ID.HISTORY_CLEAR:
+                self.history.clear()
+
+                self.init_menubar()
 
     def onCloseEVT(self, event: wx.CloseEvent):
         def show_exit_dialog():

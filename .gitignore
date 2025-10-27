@@ -28,6 +28,7 @@ node.json
 episode.json
 temp.json
 exclimbwuzhi*.json
+history.json
 /.config
 
 # commitizen

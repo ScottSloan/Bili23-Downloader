@@ -36,9 +36,13 @@ def detect_lang():
         Config.save_app_config()
 
     if os.path.exists(Config.APP.lang_config_path):
-        lang_config = ConfigParser()
-        lang_config.read(Config.APP.lang_config_path)
-        lang = lang_config.get("Language", "lang", fallback="en_US")
+        try:
+            lang_config = ConfigParser()
+            lang_config.read(Config.APP.lang_config_path)
+            lang = lang_config.get("Language", "lang", fallback = "zh_CN")
+
+        except Exception as e:
+            lang = "zh_CN"
 
         set_lang(lang)
 
@@ -70,7 +74,7 @@ try:
     from utils.config import Config
 
 except PermissionError as e:
-    message_box(f"当前目录 {os.path.dirname(__file__)} 无权访问，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
+    message_box(f"当前目录 {os.path.dirname(__file__)} 无权写入，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
 
 except Exception as e:
     message_box(f"Failed to read config file\n读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)

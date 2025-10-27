@@ -520,8 +520,8 @@ class Utils:
         history_menu = wx.Menu()
 
         if history:
-            for url in history[-10:]:
-                history_menu.Append(wx.NewIdRef(), url)
+            for entry in history[-10:]:
+                history_menu.Append(wx.NewIdRef(), entry.get("url"))
         else:
             history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
             history_menu.Enable(ID.HISTORY_EMPTY, False)

@@ -129,6 +129,8 @@ class DownloadPage(Page):
         speed_limit_hbox.Add(self.speed_limit_box, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
+        self.add_independent_number_chk = wx.CheckBox(download_box, -1, _("在文件名前添加独立序号"))
+
         self.number_type_lab = wx.StaticText(download_box, -1, _("序号类型"))
         self.number_type_choice = Choice(download_box)
         self.number_type_choice.SetChoices(number_type_map)
@@ -156,6 +158,7 @@ class DownloadPage(Page):
         download_sbox.Add(priority_vbox, 0, wx.EXPAND)
         download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(speed_limit_hbox, 0, wx.EXPAND)
+        download_sbox.Add(self.add_independent_number_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(number_type_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.delete_history_chk, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(toast_hbox, 0, wx.EXPAND)
@@ -192,6 +195,7 @@ class DownloadPage(Page):
         self.video_codec_priority_box.init_data()
                 
         self.speed_limit_chk.SetValue(Config.Download.enable_speed_limit)
+        self.add_independent_number_chk.SetValue(Config.Download.add_independent_number)
         self.number_type_choice.SetSelection(Config.Download.number_type)
         self.delete_history_chk.SetValue(Config.Download.delete_history)
         self.show_toast_chk.SetValue(Config.Download.enable_notification)
@@ -207,6 +211,7 @@ class DownloadPage(Page):
 
         Config.Download.path = self.path_box.GetValue()
         Config.Download.max_download_count = self.max_download_slider.GetValue()
+        Config.Download.add_independent_number = self.add_independent_number_chk.GetValue()
         Config.Download.number_type = self.number_type_choice.GetSelection()
         Config.Download.delete_history = self.delete_history_chk.GetValue()
         Config.Download.enable_notification = self.show_toast_chk.GetValue()

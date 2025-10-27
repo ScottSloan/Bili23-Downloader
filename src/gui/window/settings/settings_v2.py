@@ -59,6 +59,8 @@ class SettingWindow(Dialog):
                 
             Config.save_app_config()
 
+            self.GetParent().init_menubar()
+
         except Exception as e:
             raise GlobalException(callback = on_error) from e
         
