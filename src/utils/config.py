@@ -581,8 +581,8 @@ class Config:
 
         Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
         Config.APP.lang_config_path = os.path.join(Config.User.directory, "lang.ini")
-        Config.APP.history_file_path = os.path.join(os.getcwd(), "history.json")
-        Config.APP.err_log_path = os.path.join(os.getcwd(), "error_log.txt")
+        Config.APP.history_file_path = os.path.join(Config.User.directory, "history.json")
+        Config.APP.err_log_path = os.path.join(Config.User.directory, "error_log.txt")
 
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")

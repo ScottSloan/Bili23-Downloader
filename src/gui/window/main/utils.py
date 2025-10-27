@@ -1,6 +1,7 @@
 import wx
 import asyncio
 import gettext
+from functools import partial
 
 from utils.config import Config
 from utils.auth.login_v2 import Login
@@ -23,6 +24,7 @@ from gui.dialog.search_episode_list import SearchEpisodeListDialog
 from gui.dialog.setting.select_batch import SelectBatchDialog
 from gui.dialog.guide.guide import GuideDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
+from gui.dialog.history import HistoryDialog
 
 from gui.id import ID
 
@@ -167,6 +169,12 @@ class Window:
     def search_dialog(cls, parent: wx.Window):
         return SearchEpisodeListDialog(parent)
     
+    @classmethod
+    @show_dialog
+    def history_dialog(cls, parent: wx.Window):
+        dlg = HistoryDialog(parent)
+        dlg.ShowModal()
+
     @staticmethod
     @show_frame
     def format_factory_window(parent: wx.Window):
@@ -521,15 +529,18 @@ class Utils:
 
         if history:
             for entry in history[-10:]:
-                history_menu.Append(wx.NewIdRef(), entry.get("url"))
+                url = entry.get("url")
+
+                item = history_menu.Append(wx.ID_ANY, url)
+                self.main_window.Bind(wx.EVT_MENU, partial(self.main_window.onHistoryMenuItemEVT, url = url), item)
         else:
             history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
             history_menu.Enable(ID.HISTORY_EMPTY, False)
 
         history_menu.AppendSeparator()
-        history_menu.Append(wx.NewIdRef(), _("更多..."))
+        history_menu.Append(ID.HISTORY_MORE, _("更多..."))
         history_menu.AppendSeparator()
-        history_menu.Append(ID.HISTORY_CLEAR, _("清除最近解析的记录..."))
+        history_menu.Append(ID.HISTORY_CLEAR, _("清除历史记录..."))
 
         menu_bar: wx.MenuBar = self.main_window.GetMenuBar()
         menu_bar.Replace(1, history_menu, _("历史(&S)"))

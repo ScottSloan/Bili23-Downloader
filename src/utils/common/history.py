@@ -9,6 +9,11 @@ class History:
         self.load()
 
     def add(self, url: str):
+        for entry in self.history_json:
+            if entry.get("url") == url:
+                self.history_json.remove(entry)
+                break
+
         self.history_json.append({
             "url": url
         })

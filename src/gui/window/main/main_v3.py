@@ -89,9 +89,9 @@ class MainWindow(Frame):
 
         history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
         history_menu.AppendSeparator()
-        history_menu.Append(wx.NewIdRef(), _("更多..."))
+        history_menu.Append(ID.HISTORY_MORE, _("更多..."))
         history_menu.AppendSeparator()
-        history_menu.Append(ID.HISTORY_CLEAR, _("清除最近解析的记录..."))
+        history_menu.Append(ID.HISTORY_CLEAR, _("清除历史记录..."))
 
         history_menu.Enable(ID.HISTORY_EMPTY, False)
 
@@ -147,7 +147,7 @@ class MainWindow(Frame):
 
         Thread(target = worker).start()
 
-    def onMenuEVT(self, event: wx.MenuEvent):
+    def onMenuEVT(self, event: wx.CommandEvent, url: str = None):
         match event.GetId():
             case ID.LOGIN_MENU:
                 Window.login_dialog(self)
@@ -208,10 +208,18 @@ class MainWindow(Frame):
             case ID.EPISODE_FULL_NAME_MENU:
                 self.top_box.set_episode_full_name()
 
+            case ID.HISTORY_MORE:
+                Window.history_dialog(self)
+
             case ID.HISTORY_CLEAR:
                 self.history.clear()
 
                 self.init_menubar()
+
+    def onHistoryMenuItemEVT(self, event: wx.CommandEvent, url: str):
+        self.top_box.url_box.SetValue(url)
+
+        self.onParseEVT(event)
 
     def onCloseEVT(self, event: wx.CloseEvent):
         def show_exit_dialog():

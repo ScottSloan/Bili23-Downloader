@@ -36,4 +36,6 @@ class ID:
     HISTORY_MENU = wx.NewIdRef()
 
     HISTORY_EMPTY = wx.NewIdRef()
+    HISTORY_ITEM = wx.NewIdRef()
+    HISTORY_MORE = wx.NewIdRef()
     HISTORY_CLEAR = wx.NewIdRef()
