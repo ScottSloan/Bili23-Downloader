@@ -1,6 +1,7 @@
 import json
 
 from utils.config import Config
+from utils.common.datetime_util import DateTime
 
 class History:
     def __init__(self):
@@ -8,15 +9,28 @@ class History:
 
         self.load()
 
-    def add(self, url: str):
-        for entry in self.history_json:
-            if entry.get("url") == url:
-                self.history_json.remove(entry)
-                break
+    def add(self, url: str, title: str, category: str):
+        def find():
+            for entry in self.history_json:
+                if entry.get("url") == url:
+                    entry["time"] = DateTime.get_timestamp()
 
-        self.history_json.append({
-            "url": url
-        })
+                    self.history_json.remove(entry)
+
+                    return entry
+
+        if not Config.Basic.enable_history:
+            return
+        
+        if not (entry := find()):
+            entry = {
+                "time": DateTime.get_timestamp(),
+                "url": url,
+                "title": title,
+                "category": category
+            }
+        
+        self.history_json.append(entry)
 
         self.save()
 

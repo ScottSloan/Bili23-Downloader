@@ -1,6 +1,8 @@
 import wx
 import gettext
 
+from utils.common.datetime_util import DateTime
+
 from gui.component.window.dialog import Dialog
 
 _ = gettext.gettext
@@ -45,15 +47,19 @@ class HistoryDialog(Dialog):
         self.init_list_data()
 
     def init_list_column(self):
-        self.history_list.AppendColumn(_("序号"), width = self.FromDIP(60))
-        self.history_list.AppendColumn(_("URL"), width = self.FromDIP(300))
-        self.history_list.AppendColumn(_("标题"), width = self.FromDIP(200))
+        self.history_list.AppendColumn(_("序号"), width = self.FromDIP(50))
+        self.history_list.AppendColumn(_("时间"), width = self.FromDIP(150))
+        self.history_list.AppendColumn(_("类别"), width = self.FromDIP(60))
+        self.history_list.AppendColumn(_("标题"), width = self.FromDIP(250))
+        self.history_list.AppendColumn(_("URL"), width = self.FromDIP(200))
 
     def init_list_data(self):
         history_data = self.history_object.get()
 
         for index, entry in enumerate(history_data):
-            self.history_list.Append([str(index + 1), entry.get("url"), entry.get("title", "")])
+            self.history_list.Append([str(index + 1), DateTime.time_str_from_timestamp(entry.get("time", ""), "%Y-%m-%d %H:%M:%S"), entry.get("category", ""), entry.get("title", ""), entry.get("url", "")])
+
+        self.history_list.SetColumnWidth(4, self.FromDIP(-1))
 
     def onClearHistoryEVT(self, event: wx.CommandEvent):
         self.history_object.clear()

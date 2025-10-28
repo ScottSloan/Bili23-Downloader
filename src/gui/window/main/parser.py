@@ -74,9 +74,6 @@ class Parser:
 
         if StatusCode(rtn_val) == StatusCode.Success:
             VideoPreview.clear_cache()
-
-            if Config.Basic.enable_history:
-                self.main_window.history.add(url)
             
             wx.CallAfter(self.parse_success)
     
@@ -163,5 +160,9 @@ class Parser:
             def onUpdateTitle(title: str):
                 window = wx.FindWindowByName("processing")
                 window.UpdateTitle(title)
+
+            @staticmethod
+            def onUpdateHistory(url: str, title: str, category: str):
+                self.main_window.history.add(url, title, category)
 
         return Callback

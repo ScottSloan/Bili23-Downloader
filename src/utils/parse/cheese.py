@@ -96,6 +96,8 @@ class CheeseParser(Parser):
         if episode:
             self.get_cheese_available_media_info(episode.get("aid"), episode.get("ep_id"), episode.get("cid"))
 
+        self.callback.onUpdateHistory(url, self.info_json.get("title"), self.get_parse_type_str())
+
         return StatusCode.Success.value
 
     def parse_episodes(self):

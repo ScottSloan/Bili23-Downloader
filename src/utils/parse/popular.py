@@ -82,6 +82,8 @@ class PopularParser(Parser):
 
         self.start_thread(self.get_popular_available_media_info)
 
+        self.callback.onUpdateHistory(url, self.info_json["config"]["label"], self.get_parse_type_str())
+
         return StatusCode.Success.value
 
     def parse_episodes(self):

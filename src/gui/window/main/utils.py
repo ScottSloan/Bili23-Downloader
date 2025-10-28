@@ -195,8 +195,7 @@ class Window:
         if show:
             wx.CallAfter(window.ShowModal, ProcessingType.Parse)
         else:
-            if window.IsShown():
-                wx.CallAfter(window.Close)
+            wx.CallAfter(window.Close)
 
     @staticmethod
     def create_processing_window(parent: wx.Window):
@@ -523,6 +522,9 @@ class Utils:
         Window.processing_window(show = True)
 
     def update_history(self):
+        if not Config.Basic.enable_history:
+            return
+        
         history = self.main_window.parser.main_window.history.get()
 
         history_menu = wx.Menu()
