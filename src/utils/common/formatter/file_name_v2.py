@@ -19,8 +19,13 @@ class FileNameFormatter:
         return cls.check_slash(file_name)
     
     @classmethod
-    def format_file_basename(cls, task_info: DownloadTaskInfo):
-        return os.path.basename(cls.format_file_name(task_info.template, task_info = task_info))
+    def format_file_basename(cls, task_info: DownloadTaskInfo, add_independent_number: bool = False):
+        base_name = os.path.basename(cls.format_file_name(task_info.template, task_info = task_info))
+
+        if add_independent_number:
+            base_name = "{} - {}".format(task_info.number, base_name)
+
+        return base_name
 
     @classmethod
     def get_download_path(cls, task_info: DownloadTaskInfo):

@@ -283,7 +283,7 @@ class Config:
         file_name_template_list: list = [
             {
                 "template": {
-                    "0": "{zero_padding_number} - {title}"
+                    "0": "{title}"
                 },
                 "type": 1
             },
@@ -295,7 +295,7 @@ class Config:
             },
             {
                 "template": {
-                    "0": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}"
+                    "0": "{collection_title}/{section_title}/{part_title}/{title}"
                 },
                 "type": 3
             },
@@ -361,9 +361,9 @@ class Config:
             30216
         ]
         video_codec_priority: list = [
-            13,
+            7,
             12,
-            7
+            13
         ]
         
         video_quality_id: int = 200

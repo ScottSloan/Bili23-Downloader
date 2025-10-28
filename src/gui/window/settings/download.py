@@ -130,13 +130,18 @@ class DownloadPage(Page):
         speed_limit_hbox.Add(self.speed_limit_unit_lab, 0, wx.ALL & (~wx.LEFT) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.add_independent_number_chk = wx.CheckBox(download_box, -1, _("在文件名前添加独立序号"))
+        add_independent_number_tip = ToolTip(download_box)
+        add_independent_number_tip.set_tooltip(_("此处添加的序号与文件名模板中的序号相互独立，仅用于快捷控制是否添加序号，如果文件名模板中添加了序号字段，则不受此选项影响"))
+
+        add_independent_number_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        add_independent_number_hbox.Add(self.add_independent_number_chk, 0, wx.ALL & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
+        add_independent_number_hbox.Add(add_independent_number_tip, 0, wx.ALL & (~wx.LEFT) & (~wx.BOTTOM) | wx.ALIGN_CENTER, self.FromDIP(6))
 
         self.number_type_lab = wx.StaticText(download_box, -1, _("序号类型"))
         self.number_type_choice = Choice(download_box)
         self.number_type_choice.SetChoices(number_type_map)
-
         number_type_tip = ToolTip(download_box)
-        number_type_tip.set_tooltip(_("序号由文件名模板控制，如需取消序号显示，请自定义下载文件名。\n\n总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号"))
+        number_type_tip.set_tooltip(_("总是从 1 开始：每次下载时，序号都从 1 开始递增\n连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n使用剧集列表序号：使用在剧集列表中显示的序号"))
 
         number_type_hbox = wx.BoxSizer(wx.HORIZONTAL)
         number_type_hbox.Add(self.number_type_lab, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
@@ -158,7 +163,7 @@ class DownloadPage(Page):
         download_sbox.Add(priority_vbox, 0, wx.EXPAND)
         download_sbox.Add(self.speed_limit_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
         download_sbox.Add(speed_limit_hbox, 0, wx.EXPAND)
-        download_sbox.Add(self.add_independent_number_chk, 0, wx.ALL & (~wx.BOTTOM), self.FromDIP(6))
+        download_sbox.Add(add_independent_number_hbox, 0, wx.EXPAND)
         download_sbox.Add(number_type_hbox, 0, wx.EXPAND)
         download_sbox.Add(self.delete_history_chk, 0, wx.ALL, self.FromDIP(6))
         download_sbox.Add(toast_hbox, 0, wx.EXPAND)

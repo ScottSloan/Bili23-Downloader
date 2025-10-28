@@ -53,7 +53,7 @@ class MiscPage(Page):
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, self.FromDIP(6))
         btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
-        self.open_config_btn = wx.Button(other_box, -1, _("打开配置文件夹"), size = self.get_scaled_size((120, 28)))
+        self.open_config_btn = wx.Button(other_box, -1, _("打开配置文件夹"), size = self.get_scaled_size((150, 28)))
 
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_sbox.Add(self.show_user_info_chk, 0, wx.ALL, self.FromDIP(6))

@@ -2,6 +2,8 @@ import wx
 import os
 import gettext
 
+from utils.config import Config
+
 from utils.common.style.icon_v4 import Icon, IconID
 from utils.common.model.task_info import DownloadTaskInfo
 from utils.common.enums import ParseType, DownloadStatus
@@ -299,8 +301,6 @@ class Utils:
     def open_file_location(self):
         path = os.path.join(self.task_info.download_path, self.get_full_file_name())
 
-        print(path)
-
         Directory.open_file_location(path)
 
     def set_download_status(self, status: DownloadStatus):
@@ -399,6 +399,6 @@ class Utils:
         downloader_info = self.download_parser.get_download_url()
 
         self.task_info.download_path = FileNameFormatter.get_download_path(self.task_info)
-        self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info)
+        self.task_info.file_name = FileNameFormatter.format_file_basename(self.task_info, Config.Download.add_independent_number)
 
         return downloader_info
