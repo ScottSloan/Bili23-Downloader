@@ -288,7 +288,7 @@ class SpaceListParser(Parser):
         return "合集列表"
     
     def get_history_title(self):
-        archives = Section.info_json["archives"]
+        archives = Section.info_json.get("archives", {})
 
         if len(archives) > 1:
             return "合集列表"

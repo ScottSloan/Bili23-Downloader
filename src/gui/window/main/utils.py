@@ -525,16 +525,17 @@ class Utils:
         if not Config.Basic.enable_history:
             return
         
-        history = self.main_window.parser.main_window.history.get()
+        history = self.main_window.history.get()
 
         history_menu = wx.Menu()
 
         if history:
             for entry in history[-10:]:
+                url = entry.get("url")
                 title = entry.get("title")
 
                 item = history_menu.Append(wx.ID_ANY, title)
-                self.main_window.Bind(wx.EVT_MENU, partial(self.main_window.onHistoryMenuItemEVT, title = title), item)
+                self.main_window.Bind(wx.EVT_MENU, partial(self.main_window.onHistoryMenuItemEVT, url = url), item)
         else:
             history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
             history_menu.Enable(ID.HISTORY_EMPTY, False)

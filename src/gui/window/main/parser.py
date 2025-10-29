@@ -1,8 +1,6 @@
 import wx
 import gettext
 
-from utils.config import Config
-
 from utils.common.regex import Regex
 from utils.common.enums import ParseType, ParseStatus, StatusCode
 from utils.common.model.callback import ParseCallback

@@ -216,8 +216,8 @@ class MainWindow(Frame):
 
                 self.init_menubar()
 
-    def onHistoryMenuItemEVT(self, event: wx.CommandEvent, title: str):
-        self.top_box.url_box.SetValue(title)
+    def onHistoryMenuItemEVT(self, event: wx.CommandEvent, url: str):
+        self.top_box.url_box.SetValue(url)
 
         self.onParseEVT(event)
 

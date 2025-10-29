@@ -69,7 +69,7 @@ class HistoryDialog(Dialog):
         self.main_window.utils.update_history()
 
     def onActivateItemEVT(self, event: wx.ListEvent):
-        url = self.history_list.GetItemText(event.GetIndex(), 1)
+        url = self.history_list.GetItemText(event.GetIndex(), 4)
 
         self.main_window.top_box.url_box.SetValue(url)
 
