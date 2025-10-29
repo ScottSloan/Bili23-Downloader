@@ -147,7 +147,7 @@ class MainWindow(Frame):
 
         Thread(target = worker).start()
 
-    def onMenuEVT(self, event: wx.CommandEvent, url: str = None):
+    def onMenuEVT(self, event: wx.CommandEvent):
         match event.GetId():
             case ID.LOGIN_MENU:
                 Window.login_dialog(self)
@@ -216,8 +216,8 @@ class MainWindow(Frame):
 
                 self.init_menubar()
 
-    def onHistoryMenuItemEVT(self, event: wx.CommandEvent, url: str):
-        self.top_box.url_box.SetValue(url)
+    def onHistoryMenuItemEVT(self, event: wx.CommandEvent, title: str):
+        self.top_box.url_box.SetValue(title)
 
         self.onParseEVT(event)
 

@@ -87,7 +87,7 @@ try:
     _ = gettext.gettext
 
 except PermissionError as e:
-    message_box(f"当前目录 {os.path.dirname(__file__)} 无权访问，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
+    message_box("Permission Denied\n当前目录 %s 无权访问，请更换安装目录或以管理员身份运行\n\n%s" % (os.path.dirname(__file__), get_traceback()), "Fatal Error", False, e)
 
 except Exception as e:
     message_box(f"Failed to load language files\n加载语言文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
@@ -120,10 +120,14 @@ try:
 
     from gui.window.main.main_v3 import MainWindow
 
+except Exception as e:
+    message_box(_("初始化程序失败\n\n%s") % get_traceback(), "Fatal Error")
+
+try:
     Cookie.init_cookie_params()
 
 except Exception as e:
-    message_box(_("初始化程序失败\n\n%s") % get_traceback(), "Fatal Error")
+    message_box(_("无法连接到 api.bilibili.com，请更换网络环境重试\n\n%s") % get_traceback(), "Fatal Error")
 
 class APP(wx.App):
     def __init__(self):

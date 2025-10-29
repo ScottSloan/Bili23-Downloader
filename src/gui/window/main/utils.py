@@ -531,10 +531,10 @@ class Utils:
 
         if history:
             for entry in history[-10:]:
-                url = entry.get("url")
+                title = entry.get("title")
 
-                item = history_menu.Append(wx.ID_ANY, url)
-                self.main_window.Bind(wx.EVT_MENU, partial(self.main_window.onHistoryMenuItemEVT, url = url), item)
+                item = history_menu.Append(wx.ID_ANY, title)
+                self.main_window.Bind(wx.EVT_MENU, partial(self.main_window.onHistoryMenuItemEVT, title = title), item)
         else:
             history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
             history_menu.Enable(ID.HISTORY_EMPTY, False)

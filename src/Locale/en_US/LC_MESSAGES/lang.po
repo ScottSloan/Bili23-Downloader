@@ -2039,3 +2039,6 @@ msgstr ""
 "Failed to initialize the program\n"
 "\n"
 "%s"
+
+msgid "无法连接到 api.bilibili.com，请更换网络环境重试\n\n%s"
+msgstr "Unable to connect to api.bilibili.com, please retry with a different network environment\n\n%s"

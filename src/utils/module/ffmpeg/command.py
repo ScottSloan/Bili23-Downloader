@@ -10,9 +10,10 @@ class FFCommand:
     @classmethod
     def get_merge_dash_command(cls, task_info: DownloadTaskInfo):
         def check_audio_conversion_need():
-
             match task_info.output_type:
                 case "flac":
+                    output_temp_file = prop.output_temp_file()
+
                     command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "flac"))
                     command.add_remove([audio_temp_file], task_info.download_path)
 
@@ -23,7 +24,7 @@ class FFCommand:
                         task_info.output_type = "mp3"
                         output_temp_file = prop.output_temp_file()
 
-                        command.add(cls.get_convert_audio_command(audio_temp_file, prop.output_temp_file(), "libmp3lame"))
+                        command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "libmp3lame"))
                         command.add_remove([audio_temp_file], task_info.download_path)
 
                     return output_temp_file
