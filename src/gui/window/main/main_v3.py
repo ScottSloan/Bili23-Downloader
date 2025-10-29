@@ -7,6 +7,7 @@ from utils.common.enums import Platform, EpisodeDisplayType, ExitOption
 from utils.common.thread import Thread
 from utils.common.exception import GlobalException
 from utils.common.style.font import SysFont
+from utils.common.history import History
 
 from gui.component.window.frame import Frame
 from gui.component.panel.panel import Panel
@@ -68,6 +69,7 @@ class MainWindow(Frame):
         menu_bar = wx.MenuBar()
 
         tool_menu = wx.Menu()
+        history_menu = wx.Menu()
         help_menu = wx.Menu()
 
         if Config.User.login:
@@ -85,6 +87,14 @@ class MainWindow(Frame):
         tool_menu.AppendSeparator()
         tool_menu.Append(ID.SETTINGS_MENU, _("设置(&S)"))
 
+        history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
+        history_menu.AppendSeparator()
+        history_menu.Append(ID.HISTORY_MORE, _("更多..."))
+        history_menu.AppendSeparator()
+        history_menu.Append(ID.HISTORY_CLEAR, _("清除历史记录..."))
+
+        history_menu.Enable(ID.HISTORY_EMPTY, False)
+
         help_menu.Append(ID.CHECK_UPDATE_MENU, _("检查更新(&U)"))
         help_menu.Append(ID.CHANGELOG_MENU, _("更新日志(&P)"))
         help_menu.AppendSeparator()
@@ -96,6 +106,10 @@ class MainWindow(Frame):
         help_menu.Append(ID.ABOUT_MENU, _("关于(&A)"))
 
         menu_bar.Append(tool_menu, _("工具(&T)"))
+
+        if Config.Basic.enable_history:
+            menu_bar.Append(history_menu, _("历史(&S)"))
+            
         menu_bar.Append(help_menu, _("帮助(&H)"))
 
         self.SetMenuBar(menu_bar)
@@ -121,6 +135,7 @@ class MainWindow(Frame):
                 Window.welcome_dialog(self)
 
         self.parser = Parser(self)
+        self.history = History()
 
         self.processing_window = Window.create_processing_window(self)
         self.download_window = Window.create_download_window(self)
@@ -128,9 +143,11 @@ class MainWindow(Frame):
 
         self.utils.init_timer()
 
+        self.utils.update_history()
+
         Thread(target = worker).start()
 
-    def onMenuEVT(self, event: wx.MenuEvent):
+    def onMenuEVT(self, event: wx.CommandEvent):
         match event.GetId():
             case ID.LOGIN_MENU:
                 Window.login_dialog(self)
@@ -190,6 +207,19 @@ class MainWindow(Frame):
                 
             case ID.EPISODE_FULL_NAME_MENU:
                 self.top_box.set_episode_full_name()
+
+            case ID.HISTORY_MORE:
+                Window.history_dialog(self)
+
+            case ID.HISTORY_CLEAR:
+                self.history.clear()
+
+                self.init_menubar()
+
+    def onHistoryMenuItemEVT(self, event: wx.CommandEvent, url: str):
+        self.top_box.url_box.SetValue(url)
+
+        self.onParseEVT(event)
 
     def onCloseEVT(self, event: wx.CloseEvent):
         def show_exit_dialog():
@@ -333,7 +363,7 @@ class MainWindow(Frame):
                 self.SetSize(self.FromDIP((800, 450)))
 
             case Platform.Linux:
-                self.SetSize(self.FromDIP((900, 550)))
+                self.SetSize(self.FromDIP((1000, 550)))
         
         self.CenterOnParent()
 

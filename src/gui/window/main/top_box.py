@@ -2,7 +2,7 @@ import wx
 import gettext
 
 from utils.config import Config
-from utils.common.style.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.enums import EpisodeDisplayType
 from utils.module.web.page import WebPage
 
@@ -49,9 +49,9 @@ class TopBox(Panel):
         self.graph_btn = FlatButton(self, _("剧情树"), IconID.Tree_Structure, split = True)
         self.graph_btn.setToolTip(_("查看互动视频剧情树"))
         self.graph_btn.Hide()
-        self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search), tooltip = _("搜索剧集列表"))
-        self.episode_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.List), enable = False, tooltip = _("剧集列表显示设置"))
-        self.download_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting), enable = False, tooltip = _("下载选项"))
+        self.search_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Search, icon_size = IconSize.SMALL_EX), tooltip = _("搜索剧集列表"))
+        self.episode_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.List, icon_size = IconSize.SMALL_EX), enable = False, tooltip = _("剧集列表显示设置"))
+        self.download_option_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Setting, icon_size = IconSize.SMALL_EX), enable = False, tooltip = _("下载选项"))
 
         info_hbox = wx.BoxSizer(wx.HORIZONTAL)
         info_hbox.Add(self.processing_icon, 0, wx.ALL & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))

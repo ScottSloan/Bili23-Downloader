@@ -11,6 +11,7 @@ app_config_group = {
     "Basic": [
         "language",
         "listen_clipboard",
+        "enable_history",
         "exit_option",
         "auto_popup_option_dialog",
         "auto_show_download_window",
@@ -45,6 +46,7 @@ app_config_group = {
         "delete_history",
         "enable_speed_limit",
         "speed_mbps",
+        "add_independent_number",
         "number_type"
     ],
     "Advanced": [
@@ -123,21 +125,24 @@ class Config:
         name: str = "Bili23 Downloader"
         id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.70.0"
-        version_code: int = 170002
+        version: str = "1.70.1"
+        version_code: int = 170100
 
-        task_file_min_version_code: int = 170000
+        task_file_min_version_code: int = 170100
         live_file_min_version_code: int = 165000
         app_config_file_min_version_code: int = 170000
         user_config_file_min_version_code: int = 166000
 
         app_config_path: str = ""
         lang_config_path: str = ""
+        history_file_path: str = ""
+        err_log_path: str = ""
 
     class Basic:
         language: str = "zh_CN"
 
         listen_clipboard: bool = False
+        enable_history: bool = True
         exit_option: int = 3
         auto_popup_option_dialog: bool = True
         auto_show_download_window: bool = True
@@ -278,7 +283,7 @@ class Config:
         file_name_template_list: list = [
             {
                 "template": {
-                    "0": "{zero_padding_number} - {title}"
+                    "0": "{title}"
                 },
                 "type": 1
             },
@@ -290,7 +295,7 @@ class Config:
             },
             {
                 "template": {
-                    "0": "{collection_title}/{section_title}/{part_title}/{zero_padding_number} - {title}"
+                    "0": "{collection_title}/{section_title}/{part_title}/{title}"
                 },
                 "type": 3
             },
@@ -356,9 +361,9 @@ class Config:
             30216
         ]
         video_codec_priority: list = [
-            13,
+            7,
             12,
-            7
+            13
         ]
         
         video_quality_id: int = 200
@@ -369,6 +374,8 @@ class Config:
 
         enable_notification: bool = False
         delete_history: bool = False
+
+        add_independent_number: bool = False
         number_type: int = 1
 
         enable_speed_limit: bool = False
@@ -448,7 +455,7 @@ class Config:
         always_use_https_protocol: bool = True
         enable_ssl_verify: bool = True
 
-        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+        user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0"
 
         webpage_option: int = 0
         websocket_port: int = 8765
@@ -573,7 +580,10 @@ class Config:
                 Config.User.directory = os.path.join(os.path.expanduser("~/Library/Application Support"), "Bili23 Downloader")
 
         Config.APP.app_config_path = os.path.join(Config.User.directory, "config.json")
-        Config.APP.lang_config_path = os.path.join(os.path.dirname(__file__), "lang.ini")
+        Config.APP.lang_config_path = os.path.join(Config.User.directory, "lang.ini")
+        Config.APP.history_file_path = os.path.join(Config.User.directory, "history.json")
+        Config.APP.err_log_path = os.path.join(Config.User.directory, "error_log.txt")
+
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
         Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
         Config.User.live_file_directory = os.path.join(Config.User.directory, "live")

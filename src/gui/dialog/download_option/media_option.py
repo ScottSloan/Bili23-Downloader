@@ -57,10 +57,10 @@ class MediaOptionStaticBox(Panel):
 
         media_flex_grid_box = wx.FlexGridSizer(2, 3, 0, 0)
         media_flex_grid_box.Add(video_stream_hbox, 0, wx.EXPAND)
-        media_flex_grid_box.AddSpacer(self.FromDIP(25))
+        media_flex_grid_box.Add(wx.StaticText(media_box, -1, size = self.FromDIP((40, -1))))
         media_flex_grid_box.Add(audio_stream_hbox, 0, wx.EXPAND)
         media_flex_grid_box.Add(ffmpeg_merge_hbox, 0, wx.EXPAND)
-        media_flex_grid_box.AddSpacer(self.FromDIP(25))
+        media_flex_grid_box.Add(wx.StaticText(media_box, -1, size = self.FromDIP((40, -1))))
         media_flex_grid_box.Add(keep_original_files_hbox, 0, wx.EXPAND)
 
         media_sbox = wx.StaticBoxSizer(media_box, wx.VERTICAL)

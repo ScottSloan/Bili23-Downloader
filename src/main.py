@@ -36,9 +36,13 @@ def detect_lang():
         Config.save_app_config()
 
     if os.path.exists(Config.APP.lang_config_path):
-        lang_config = ConfigParser()
-        lang_config.read(Config.APP.lang_config_path)
-        lang = lang_config.get("Language", "lang", fallback="en_US")
+        try:
+            lang_config = ConfigParser()
+            lang_config.read(Config.APP.lang_config_path)
+            lang = lang_config.get("Language", "lang", fallback = "zh_CN")
+
+        except Exception as e:
+            lang = "zh_CN"
 
         set_lang(lang)
 
@@ -69,6 +73,9 @@ def detect_lang():
 try:
     from utils.config import Config
 
+except PermissionError as e:
+    message_box(f"当前目录 {os.path.dirname(__file__)} 无权写入，请更换安装目录或以管理员身份运行\n\n{get_traceback()}", "Fatal Error", False, e)
+
 except Exception as e:
     message_box(f"Failed to read config file\n读取配置文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
 
@@ -78,6 +85,9 @@ try:
     init_lang()
 
     _ = gettext.gettext
+
+except PermissionError as e:
+    message_box("Permission Denied\n当前目录 %s 无权访问，请更换安装目录或以管理员身份运行\n\n%s" % (os.path.dirname(__file__), get_traceback()), "Fatal Error", False, e)
 
 except Exception as e:
     message_box(f"Failed to load language files\n加载语言文件失败\n\n{get_traceback()}", "Fatal Error", False, e)
@@ -110,10 +120,14 @@ try:
 
     from gui.window.main.main_v3 import MainWindow
 
+except Exception as e:
+    message_box(_("初始化程序失败\n\n%s") % get_traceback(), "Fatal Error")
+
+try:
     Cookie.init_cookie_params()
 
 except Exception as e:
-    message_box(_("初始化程序失败\n\n%s") % get_traceback(), "Fatal Error")
+    message_box(_("无法连接到 api.bilibili.com，请更换网络环境重试\n\n%s") % get_traceback(), "Fatal Error")
 
 class APP(wx.App):
     def __init__(self):

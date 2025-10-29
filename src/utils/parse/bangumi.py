@@ -157,6 +157,8 @@ class BangumiParser(Parser):
         if episode:
             self.start_thread(self.get_bangumi_available_media_info, args = (episode.get("bvid"), episode.get("cid")))
 
+        self.callback.onUpdateHistory(url, self.info_json.get("title"), self.get_parse_type_str())
+
         return StatusCode.Success.value
     
     def check_json(data: dict):

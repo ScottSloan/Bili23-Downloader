@@ -90,7 +90,7 @@ class DownloadTaskInfo:
         # 下载类型
         self.download_type: int = 0
         # 视频流类型
-        self.stream_type: int = 0
+        self.stream_type: str = None
         # 下载选项
         self.download_option: List[int] = []
         # 是否调用 FFmpeg 合并

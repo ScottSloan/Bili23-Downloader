@@ -201,6 +201,8 @@ class SpaceListParser(Parser):
 
         self.start_thread(self.get_video_available_media_info, (self.bvid, cid))
 
+        self.callback.onUpdateHistory(url, self.get_history_title(), self.get_parse_type_str())
+
         return StatusCode.Success.value
 
     def parse_season_info(self, mid: str, season_id: int):
@@ -284,3 +286,11 @@ class SpaceListParser(Parser):
     
     def get_parse_type_str(self):
         return "合集列表"
+    
+    def get_history_title(self):
+        archives = Section.info_json.get("archives", {})
+
+        if len(archives) > 1:
+            return "合集列表"
+        else:
+            return list(archives.keys())[0]

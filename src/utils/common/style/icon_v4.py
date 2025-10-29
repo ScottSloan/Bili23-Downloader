@@ -4,6 +4,7 @@ from enum import Enum
 from io import BytesIO
 
 from utils.config import Config
+from utils.common.enums import Platform
 
 class IconID(Enum):
     App_Default = 1
@@ -41,6 +42,8 @@ class IconSize(Enum):
     MEDIUM = 2
     LARGE = 3
 
+    SMALL_EX = 4
+
 class IconResource:
     resource = {
         1: "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0Ij48IS0tIEljb24gZnJvbSBTaW1wbGUgSWNvbnMgYnkgU2ltcGxlIEljb25zIENvbGxhYm9yYXRvcnMgLSBodHRwczovL2dpdGh1Yi5jb20vc2ltcGxlLWljb25zL3NpbXBsZS1pY29ucy9ibG9iL2RldmVsb3AvTElDRU5TRS5tZCAtLT48cGF0aCBmaWxsPSIjMDBhMWQ2IiBkPSJNMTcuODEzIDQuNjUzaC44NTRxMi4yNjYuMDggMy43NzMgMS41NzRRMjMuOTQ2IDcuNzIgMjQgOS45ODd2Ny4zNnEtLjA1NCAyLjI2Ni0xLjU2IDMuNzczYy0xLjUwNiAxLjUwNy0yLjI2MiAxLjUyNC0zLjc3MyAxLjU2SDUuMzMzcS0yLjI2Ni0uMDU0LTMuNzczLTEuNTZDLjA1MyAxOS42MTQuMDM2IDE4Ljg1OCAwIDE3LjM0N3YtNy4zNnEuMDU0LTIuMjY3IDEuNTYtMy43NnQzLjc3My0xLjU3NGguNzc0bC0xLjE3NC0xLjEyYTEuMjMgMS4yMyAwIDAgMS0uMzczLS45MDZxMC0uNTM0LjM3My0uOTA3bC4wMjctLjAyN3EuNC0uMzczLjkyLS4zNzN0LjkyLjM3M0w5LjY1MyA0LjQ0cS4xMDcuMTA2LjE4Ny4yMTNoNC4yNjdhLjguOCAwIDAgMSAuMTYtLjIxM2wyLjg1My0yLjc0N3EuNC0uMzczLjkyLS4zNzNjLjM0NyAwIC42NjIuMTUxLjkyOS40cy4zOTEuNTUxLjM5MS45MDdxMCAuNTMyLS4zNzMuOTA2ek01LjMzMyA3LjI0cS0xLjEyLjAyNy0xLjg4Ljc3M3EtLjc2Ljc0OC0uNzg2IDEuODk0djcuNTJxLjAyNiAxLjE0Ni43ODYgMS44OTN0MS44OC43NzNoMTMuMzM0cTEuMTItLjAyNiAxLjg4LS43NzN0Ljc4Ni0xLjg5M3YtNy41MnEtLjAyNi0xLjE0Ny0uNzg2LTEuODk0dC0xLjg4LS43NzN6TTggMTEuMTA3cS41NiAwIC45MzMuMzczcS4zNzUuMzc0LjQuOTZ2MS4xNzNxLS4wMjUuNTg2LS40Ljk2cS0uMzczLjM3NS0uOTMzLjM3NGMtLjU2LS4wMDEtLjY4NC0uMTI1LS45MzMtLjM3NHEtLjM3NS0uMzczLS40LS45NlYxMi40NHEwLS41Ni4zODYtLjk0N3EuMzg3LS4zODYuOTQ3LS4zODZtOCAwcS41NiAwIC45MzMuMzczcS4zNzUuMzc0LjQuOTZ2MS4xNzNxLS4wMjUuNTg2LS40Ljk2cS0uMzczLjM3NS0uOTMzLjM3NGMtLjU2LS4wMDEtLjY4NC0uMTI1LS45MzMtLjM3NHEtLjM3NS0uMzczLS40LS45NlYxMi40NHEuMDI1LS41ODYuNC0uOTZxLjM3My0uMzczLjkzMy0uMzczIi8+PC9zdmc+",
@@ -75,7 +78,7 @@ class IconResource:
     
 class Icon:
     @classmethod
-    def get_icon_bitmap(cls, icon_id: IconID, icon_size: IconSize = IconSize.SMALL):
+    def get_icon_bitmap(cls, icon_id: IconID, icon_size: IconSize | wx.Size = IconSize.SMALL):
         decode_string = base64.b64decode(IconResource.resource.get(icon_id.value))
 
         if Config.Sys.dark_mode:
@@ -98,7 +101,10 @@ class Icon:
                 return wx.Image(BytesIO(base64.b64decode(base64_string)), type = wx.BITMAP_TYPE_ICO).ConvertToBitmap()
 
     @staticmethod
-    def get_scale_size(icon_size: IconSize):
+    def get_scale_size(icon_size: IconSize | wx.Size):
+        if isinstance(icon_size, wx.Size):
+            return icon_size
+        
         match icon_size:
             case IconSize.SMALL:
                 size = wx.Size(16, 16)
@@ -108,6 +114,14 @@ class Icon:
             
             case IconSize.LARGE:
                 size = wx.Size(128, 128)
+
+            case IconSize.SMALL_EX:
+                match Platform(Config.Sys.platform):
+                    case Platform.Windows:
+                        size = wx.Size(16, 16)
+
+                    case Platform.Linux | Platform.macOS:
+                        size = wx.Size(16, 16)
 
         size.Scale(Config.Sys.dpi_scale_factor, Config.Sys.dpi_scale_factor)
 

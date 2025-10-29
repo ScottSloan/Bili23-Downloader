@@ -28,7 +28,9 @@ node.json
 episode.json
 temp.json
 exclimbwuzhi*.json
+history.json
 /.config
+build_v2.ps1
 
 # commitizen
 cz.json

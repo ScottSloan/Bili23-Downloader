@@ -12,17 +12,20 @@ class FFCommand:
         def check_audio_conversion_need():
             match task_info.output_type:
                 case "flac":
+                    output_temp_file = prop.output_temp_file()
+
                     command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "flac"))
                     command.add_remove([audio_temp_file], task_info.download_path)
 
                     return output_temp_file
 
                 case "m4a":
-                    task_info.output_type = "mp3"
-                    output_temp_file = prop.output_temp_file()
+                    if Config.Merge.m4a_to_mp3:
+                        task_info.output_type = "mp3"
+                        output_temp_file = prop.output_temp_file()
 
-                    command.add(cls.get_convert_audio_command(audio_temp_file, prop.output_temp_file(), "libmp3lame"))
-                    command.add_remove([audio_temp_file], task_info.download_path)
+                        command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "libmp3lame"))
+                        command.add_remove([audio_temp_file], task_info.download_path)
 
                     return output_temp_file
                 

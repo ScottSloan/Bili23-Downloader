@@ -1,6 +1,7 @@
 import wx
 import asyncio
 import gettext
+from functools import partial
 
 from utils.config import Config
 from utils.auth.login_v2 import Login
@@ -23,6 +24,9 @@ from gui.dialog.search_episode_list import SearchEpisodeListDialog
 from gui.dialog.setting.select_batch import SelectBatchDialog
 from gui.dialog.guide.guide import GuideDialog
 from gui.dialog.confirm.duplicate import DuplicateDialog
+from gui.dialog.history import HistoryDialog
+
+from gui.id import ID
 
 from gui.window.debug import DebugWindow
 from gui.window.format_factory import FormatFactoryWindow
@@ -165,6 +169,12 @@ class Window:
     def search_dialog(cls, parent: wx.Window):
         return SearchEpisodeListDialog(parent)
     
+    @classmethod
+    @show_dialog
+    def history_dialog(cls, parent: wx.Window):
+        dlg = HistoryDialog(parent)
+        dlg.ShowModal()
+
     @staticmethod
     @show_frame
     def format_factory_window(parent: wx.Window):
@@ -185,8 +195,7 @@ class Window:
         if show:
             wx.CallAfter(window.ShowModal, ProcessingType.Parse)
         else:
-            if window.IsShown():
-                wx.CallAfter(window.Close)
+            wx.CallAfter(window.Close)
 
     @staticmethod
     def create_processing_window(parent: wx.Window):
@@ -511,3 +520,30 @@ class Utils:
                     self.main_window.episode_list.download_task_info_list = self.main_window.download_window.remove_duplicate_task(self.main_window.episode_list.download_task_info_list, [entry.hash_id for entry in duplicate_task_list])
 
         Window.processing_window(show = True)
+
+    def update_history(self):
+        if not Config.Basic.enable_history:
+            return
+        
+        history = self.main_window.history.get()
+
+        history_menu = wx.Menu()
+
+        if history:
+            for entry in history[-10:]:
+                url = entry.get("url")
+                title = entry.get("title")
+
+                item = history_menu.Append(wx.ID_ANY, title)
+                self.main_window.Bind(wx.EVT_MENU, partial(self.main_window.onHistoryMenuItemEVT, url = url), item)
+        else:
+            history_menu.Append(ID.HISTORY_EMPTY, _("无记录"))
+            history_menu.Enable(ID.HISTORY_EMPTY, False)
+
+        history_menu.AppendSeparator()
+        history_menu.Append(ID.HISTORY_MORE, _("更多..."))
+        history_menu.AppendSeparator()
+        history_menu.Append(ID.HISTORY_CLEAR, _("清除历史记录..."))
+
+        menu_bar: wx.MenuBar = self.main_window.GetMenuBar()
+        menu_bar.Replace(1, history_menu, _("历史(&S)"))

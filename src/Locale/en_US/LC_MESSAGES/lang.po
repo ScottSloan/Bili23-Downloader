@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: 1.70.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-09 23:35+0800\n"
-"PO-Revision-Date: 2025-10-20 15:02+0800\n"
+"PO-Revision-Date: 2025-10-28 20:49+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -233,8 +233,12 @@ msgstr "Download Type"
 msgid "确认视频分辨率"
 msgstr "Confirm Video Resolution"
 
-msgid "单独下载 .ass 格式弹幕或字幕时，请手动确认视频分辨率。\n若分辨率设置与实际视频不符，可能导致文字位置偏移或显示大小异常。"
-msgstr "When downloading .ass format danmaku or subtitles separately, please manually confirm the video resolution.\nIncorrect resolution settings may cause text positioning offsets or abnormal display size."
+msgid ""
+"单独下载 .ass 格式弹幕或字幕时，请手动确认视频分辨率。\n"
+"若分辨率设置与实际视频不符，可能导致文字位置偏移或显示大小异常。"
+msgstr ""
+"When downloading .ass format danmaku or subtitles separately, please manually confirm the video resolution.\n"
+"Incorrect resolution settings may cause text positioning offsets or abnormal display size."
 
 msgid "视频分辨率（长度 x 宽度）："
 msgstr "Video Resolution (Width x Height):"
@@ -377,15 +381,14 @@ msgstr "Automatically pop up this dialog"
 msgid "自动跳转下载窗口"
 msgstr "Automatically switch to download window"
 
+msgid "此处添加的序号与文件名模板中的序号相互独立，仅用于快捷控制是否添加序号，如果文件名模板中添加了序号字段，则不受此选项影响"
+msgstr "The serial number added here is independent of the serial number in the filename template, and is only used for quick control over whether to add a serial number. If a serial number field is already included in the filename template, it will not be affected by this option."
+
 msgid ""
-"序号由文件名模板控制，如需取消序号显示，请自定义下载文件名。\n"
-"\n"
 "总是从 1 开始：每次下载时，序号都从 1 开始递增\n"
 "连贯递增：每次下载时，序号都连贯递增，退出程序后重置\n"
 "使用剧集列表序号：使用在剧集列表中显示的序号"
 msgstr ""
-"The numbering is controlled by the filename template. To disable numbering, please customize the download filename.\n"
-"\n"
 "Always start from 1: Each download starts numbering from 1 and increments sequentially.\n"
 "Continuous increment: Numbers increment continuously with each download and reset after restarting the program.\n"
 "Use episode list number: Use the number displayed in the episode list."
@@ -1028,6 +1031,19 @@ msgstr "Error Code: %s"
 msgid "描述：%s"
 msgstr "Description: %s"
 
+# -------------- src/gui/dialog/history.py --------------
+msgid "历史记录"
+msgstr "History"
+
+msgid "历史记录（双击列表项目开始解析）"
+msgstr "History (Double-click an item in the list to start parsing)"
+
+msgid "时间"
+msgstr "Time"
+
+msgid "清除记录"
+msgstr "Clear records"
+
 # -------------- src/gui/dialog/search_episode_list.py --------------
 msgid "搜索"
 msgstr "Search"
@@ -1181,6 +1197,18 @@ msgstr "Video Toolbox(&F)"
 
 msgid "设置(&S)"
 msgstr "Settings(&S)"
+
+msgid "历史(&S)"
+msgstr "History (&S)"
+
+msgid "无记录"
+msgstr "No records"
+
+msgid "更多..."
+msgstr "More..."
+
+msgid "清除历史记录..."
+msgstr "Clear history..."
 
 msgid "帮助(&H)"
 msgstr "Help(&H)"
@@ -1406,6 +1434,9 @@ msgstr "The change in language will take effect only after restarting the softwa
 msgid "自动监听剪切板"
 msgstr "Automatically monitor clipboard"
 
+msgid "启用历史记录功能"
+msgstr "Enable history feature"
+
 msgid "当关闭窗口时"
 msgstr "When closing the window"
 
@@ -1460,6 +1491,9 @@ msgstr "Limit speed for individual download tasks"
 
 msgid "最高"
 msgstr "Maximum"
+
+msgid "在文件名前添加独立序号"
+msgstr "Add independent number before filename"
 
 msgid "序号类型"
 msgstr "Numbering Type"
@@ -1537,6 +1571,9 @@ msgstr "Clear User Data"
 
 msgid "恢复默认设置"
 msgstr "Restore Default"
+
+msgid "打开配置文件夹"
+msgstr "Open config folder"
 
 msgid ""
 "清除用户数据\n"
@@ -2002,3 +2039,6 @@ msgstr ""
 "Failed to initialize the program\n"
 "\n"
 "%s"
+
+msgid "无法连接到 api.bilibili.com，请更换网络环境重试\n\n%s"
+msgstr "Unable to connect to api.bilibili.com, please retry with a different network environment\n\n%s"

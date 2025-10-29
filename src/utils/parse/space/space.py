@@ -188,6 +188,8 @@ class SpaceParser(Parser):
 
         self.parse_episodes()
 
+        self.callback.onUpdateHistory(url, self.uname, self.get_parse_type_str())
+
         return StatusCode.Success.value
     
     def parse_episodes(self):

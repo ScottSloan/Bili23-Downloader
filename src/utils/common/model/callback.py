@@ -34,6 +34,11 @@ class ParseCallback(ABC):
     def onUpdateTitle(title: str):
         pass
 
+    @staticmethod
+    @abstractmethod
+    def onUpdateHistory(url: str, title: str, category: str):
+        pass
+
 class DownloaderCallback(ABC):
     @staticmethod
     @abstractmethod

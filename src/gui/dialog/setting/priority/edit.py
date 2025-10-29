@@ -1,7 +1,7 @@
 import wx
 import gettext
 
-from utils.common.style.icon_v4 import Icon, IconID
+from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.map import get_mapping_key_by_value
 
 from gui.component.window.dialog import Dialog
@@ -41,15 +41,15 @@ class EditPriorityDialog(Dialog):
         list_vbox.Add(top_hbox, 0, wx.EXPAND)
         list_vbox.Add(self.data_list, 0, wx.ALL, self.FromDIP(6))
 
-        self.to_top_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.To_Top))
+        self.to_top_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.To_Top, icon_size = IconSize.SMALL_EX))
         self.to_top_btn.SetToolTip(_("移至顶部"))
-        self.up_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Up))
+        self.up_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Up, icon_size = IconSize.SMALL_EX))
         self.up_btn.SetToolTip(_("上移"))
-        self.down_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Down))
+        self.down_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Down, icon_size = IconSize.SMALL_EX))
         self.down_btn.SetToolTip(_("下移"))
-        self.to_bottom_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.To_Bottom))
+        self.to_bottom_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.To_Bottom, icon_size = IconSize.SMALL_EX))
         self.to_bottom_btn.SetToolTip(_("移至底部"))
-        self.reset_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Refresh))
+        self.reset_btn = BitmapButton(self, Icon.get_icon_bitmap(IconID.Refresh, icon_size = IconSize.SMALL_EX))
         self.reset_btn.SetToolTip(_("重置"))
 
         action_vbox = wx.BoxSizer(wx.VERTICAL)

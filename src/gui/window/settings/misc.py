@@ -8,6 +8,7 @@ import subprocess
 from utils.config import Config
 from utils.common.enums import EpisodeDisplayType
 from utils.common.io.file import File
+from utils.common.io.directory import Directory
 
 from gui.window.settings.page import Page
 
@@ -52,10 +53,13 @@ class MiscPage(Page):
         btn_hbox.Add(self.clear_userdata_btn, 0, wx.ALL, self.FromDIP(6))
         btn_hbox.Add(self.reset_default_btn, 0, wx.ALL & (~wx.LEFT), self.FromDIP(6))
 
+        self.open_config_btn = wx.Button(other_box, -1, _("打开配置文件夹"), size = self.get_scaled_size((150, 28)))
+
         other_sbox = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_sbox.Add(self.show_user_info_chk, 0, wx.ALL, self.FromDIP(6))
         other_sbox.Add(self.debug_chk, 0, wx.ALL & ~(wx.TOP), self.FromDIP(6))
         other_sbox.Add(btn_hbox, 0, wx.EXPAND)
+        other_sbox.Add(self.open_config_btn, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(episodes_sbox, 0, wx.ALL | wx.EXPAND, self.FromDIP(6))
@@ -68,6 +72,7 @@ class MiscPage(Page):
     def Bind_EVT(self):
         self.clear_userdata_btn.Bind(wx.EVT_BUTTON, self.onClearUserDataEVT)
         self.reset_default_btn.Bind(wx.EVT_BUTTON, self.onResetToDefaultEVT)
+        self.open_config_btn.Bind(wx.EVT_BUTTON, self.onOpenConfigFolderEVT)
 
     def load_data(self):
         match EpisodeDisplayType(Config.Misc.episode_display_mode):
@@ -99,28 +104,36 @@ class MiscPage(Page):
         Config.Misc.show_user_info = self.show_user_info_chk.GetValue()
         Config.Misc.enable_debug = self.debug_chk.GetValue()
 
-        self.parent.init_menubar()
-
     def onValidate(self):
         self.save_data()
         
-    def onClearUserDataEVT(self, event):
+    def onClearUserDataEVT(self, event: wx.CommandEvent):
         dlg = wx.MessageDialog(self, _("清除用户数据\n\n将清除用户登录信息、下载记录和程序设置，是否继续？\n\n程序将会重新启动。"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
-            File.remove_file(Config.APP.app_config_path)
+            files = [
+                Config.User.user_config_path,
+                Config.APP.lang_config_path,
+                Config.APP.history_file_path,
+                Config.APP.err_log_path
+            ]
+
+            File.remove_files(files)
 
             shutil.rmtree(Config.User.directory)
 
             self.restart()
     
-    def onResetToDefaultEVT(self, event):
+    def onResetToDefaultEVT(self, event: wx.CommandEvent):
         dlg = wx.MessageDialog(self, _("恢复默认设置\n\n是否恢复默认设置？\n\n程序将会重新启动。"), _("警告"), wx.ICON_WARNING | wx.YES_NO)
 
         if dlg.ShowModal() == wx.ID_YES:
             File.remove_file(Config.APP.app_config_path)
 
             self.restart()
+
+    def onOpenConfigFolderEVT(self, event: wx.CommandEvent):
+        Directory.open_directory(Config.User.directory)
 
     def restart(self):
         if pystand := os.environ.get("PYSTAND"):

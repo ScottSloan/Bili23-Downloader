@@ -319,7 +319,7 @@ class Cookie:
 
         if cls.params_invalid(cookie_params):
             cls.generate_cookie_params()
-            
+
         cls.check_expires()
 
         Utils.get_b_lsid()
