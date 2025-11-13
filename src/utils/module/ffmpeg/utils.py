@@ -35,7 +35,7 @@ class FFUtils:
 
                 callback.onSuccess(process)
             else:
-                raise GlobalException(code = StatusCode.CallError.value, stack_trace = f"{process.output}\n\nCommand:\n{command}", callback = callback.onError, args = (process,))
+                raise GlobalException(code = StatusCode.CallError.value, stack_trace = f"{process.output}\n\nCommand:\n{command.format()}", callback = callback.onError, args = (process,))
         else:
             callback.onSuccess(process)
 

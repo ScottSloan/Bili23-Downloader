@@ -126,8 +126,8 @@ class BangumiParser(Parser):
             "tags": info_json["styles"],
             "pubdate": info_json["publish"]["pub_time"][:10],
             "seasons": info_json["seasons"],
-            "rating": info_json["rating"]["score"],
-            "rating_count": info_json["rating"]["count"],
+            "rating": info_json.get("rating", {"score": 0}).get("score", 0),
+            "rating_count": info_json.get("rating", {"count": 0}).get("count", 0),
             "areas": info_json["areas"]
         }
 

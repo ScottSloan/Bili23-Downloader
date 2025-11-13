@@ -1,4 +1,5 @@
 import wx
+import os
 import importlib.resources
 
 from utils.config import Config
@@ -103,8 +104,9 @@ class WebPage:
 
     @staticmethod
     def get_static_file_path(file_name: str):
-        with importlib.resources.path("static", file_name) as file_path:
-            return file_path
+        import static
+
+        return os.path.join(os.path.dirname(static.__file__), file_name)
         
     @staticmethod
     def update_ws_port(file_path: str):
