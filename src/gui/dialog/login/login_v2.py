@@ -110,7 +110,7 @@ class QRCodePanel(Panel):
         info = Login.get_user_info(login = True)
         Login.login(info)
 
-        self.parent.onSuccess()
+        self.parent.onSuccess(use_worker = True)
 
     def status_confirm(self):
         self.scan_tip_lab.SetLabel(_("请在设备侧确认登录"))
@@ -244,13 +244,17 @@ class SMSPanel(Panel):
             info = Login.get_user_info(login = True)
             Login.login(info)
 
-            self.parent.onSuccess()
-
         if not self.validate_code_box.GetValue():
             wx.MessageDialog(self.parent, _("登录失败\n\n验证码不能为空"), _("警告"), wx.ICON_WARNING).ShowModal()
             return
+        
+        wx.BeginBusyCursor()
 
-        Thread(target = worker).start()
+        worker()
+
+        wx.EndBusyCursor()
+
+        self.parent.onSuccess(use_worker = False)
 
     def onSetFocusEVT(self, event: wx.FocusEvent):
         self.parent.set_2233_mask()
@@ -363,8 +367,6 @@ class LoginDialog(Dialog):
     def onCloseEVT(self, event: wx.CloseEvent):
         self.qrcode_panel.timer.Stop()
 
-        super().onCloseEVT(wx.CloseEvent(wx.EVT_CLOSE.typeId, id = wx.ID_OK))
-
         event.Skip()
 
     def init_utils(self):
@@ -379,17 +381,18 @@ class LoginDialog(Dialog):
 
         Thread(target = worker).start()
 
-    def onSuccess(self):
+    def onSuccess(self, use_worker = False):
         def worker():
             self.parent.init_menubar()
 
             self.parent.utils.show_user_info()
 
-            wx.MessageDialog(self.parent, _("登录成功\n\n账号登录成功，建议重启程序刷新登录信息。"), _("提示"), wx.ICON_INFORMATION).ShowModal()
+            self.Close()
 
-            self.PostEvent()
-
-        wx.CallAfter(worker)
+        if use_worker:
+            wx.CallAfter(worker)
+        else:
+            worker()
 
     def onError(self):
         def worker():
