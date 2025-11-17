@@ -23,7 +23,7 @@ jobs:
       - name: Unzip and copy runtime files
         run: |
           cd runtime_repo\windows
-          & "C:\Program Files\7-Zip\7z.exe" x runtime.zip -o. -aoa
+          & "C:\Program Files\7-Zip\7z.exe" x runtime.zip "-o." -aoa
           Remove-Item runtime.zip
           cd ..\..
           xcopy runtime_repo\windows\runtime ".\Bili23 Downloader\runtime" /E /I /Y
@@ -36,59 +36,59 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Bili23-windows
-          path: Bili23-windows.zip
+          path: "Bili23 Downloader"
 
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v4
-      - name: Rename src to script
-        run: mv src script
-      - name: Checkout runtime repo (linux)
-        uses: actions/checkout@v4
-        with:
-          repository: ScottSloan/Bili23-Downloader-Runtime
-          path: runtime_repo
-      - name: Install 7zip
-        run: sudo apt-get install p7zip-full
-      - name: Unzip and copy runtime files
-        run: |
-          cd runtime_repo/linux
-          7z x runtime.zip -aoa
-          rm runtime.zip runtime.z01 runtime.z02
-          cd ../..
-          mkdir -p 'bili23/runtime'
-          cp -r runtime_repo/linux/runtime/* 'bili23/runtime/'
-          cp -r script 'bili23/script'
-          cd bili23/script
-          zip -r ../script.zip .
-          cd ../..
-          rm -r bili23/script
-      - name: Package
-        run: |
-          mkdir buildroot
-          cd buildroot
-          mkdir DEBIAN opt usr
-          mkdir -p usr/bin
-          cd usr/bin
-          echo '#!/bin/bash' > bili23-downloader
-          echo '/opt/bili23-downloader/Bili23 "$@"' >> bili23-downloader
-          chmod +x bili23-downloader
-          cd ../..
-          cp -r ../bili23 opt/bili23-downloader
-          cd DEBIAN
-          echo 'Package: bili23-downloader' > control
-          echo 'Version: 1.70.2' >> control
-          echo 'Section: utils' >> control
-          echo 'Priority: optional' >> control
-          echo 'Architecture: amd64' >> control
-          echo 'Maintainer: Scott Sloan <world1019@sina.com>' >> control
-          echo 'Description: Bili23 Downloader' >> control
-          INSTALLED_SIZE=$(du -s ../ | awk '{print $1}')
-          echo "Installed-Size: $INSTALLED_SIZE" >> control
-          cd ../..
-          dpkg-deb --build buildroot 'Bili23_Downloader_1.70.2_linux_amd64.deb'
+  # build-linux:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout main repo
+  #       uses: actions/checkout@v4
+  #     - name: Rename src to script
+  #       run: mv src script
+  #     - name: Checkout runtime repo (linux)
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: ScottSloan/Bili23-Downloader-Runtime
+  #         path: runtime_repo
+  #     - name: Install 7zip
+  #       run: sudo apt-get install p7zip-full
+  #     - name: Unzip and copy runtime files
+  #       run: |
+  #         cd runtime_repo/linux
+  #         7z x runtime.zip -aoa
+  #         rm runtime.zip runtime.z01 runtime.z02
+  #         cd ../..
+  #         mkdir -p 'bili23/runtime'
+  #         cp -r runtime_repo/linux/runtime/* 'bili23/runtime/'
+  #         cp -r script 'bili23/script'
+  #         cd bili23/script
+  #         zip -r ../script.zip .
+  #         cd ../..
+  #         rm -r bili23/script
+  #     - name: Package
+  #       run: |
+  #         mkdir buildroot
+  #         cd buildroot
+  #         mkdir DEBIAN opt usr
+  #         mkdir -p usr/bin
+  #         cd usr/bin
+  #         echo '#!/bin/bash' > bili23-downloader
+  #         echo '/opt/bili23-downloader/Bili23 "$@"' >> bili23-downloader
+  #         chmod +x bili23-downloader
+  #         cd ../..
+  #         cp -r ../bili23 opt/bili23-downloader
+  #         cd DEBIAN
+  #         echo 'Package: bili23-downloader' > control
+  #         echo 'Version: 1.70.2' >> control
+  #         echo 'Section: utils' >> control
+  #         echo 'Priority: optional' >> control
+  #         echo 'Architecture: amd64' >> control
+  #         echo 'Maintainer: Scott Sloan <world1019@sina.com>' >> control
+  #         echo 'Description: Bili23 Downloader' >> control
+  #         INSTALLED_SIZE=$(du -s ../ | awk '{print $1}')
+  #         echo "Installed-Size: $INSTALLED_SIZE" >> control
+  #         cd ../..
+  #         dpkg-deb --build buildroot 'Bili23_Downloader_1.70.2_linux_amd64.deb'
       # - name: Upload artifact
       #   uses: actions/upload-artifact@v4
       #   with:
