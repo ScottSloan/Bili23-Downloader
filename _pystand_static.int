@@ -1,0 +1,10 @@
+import sys, os
+
+os.chdir(os.path.dirname(__file__))
+
+sys.path.append(os.path.abspath("script"))
+
+from main import APP
+
+app = APP()
+app.MainLoop()
