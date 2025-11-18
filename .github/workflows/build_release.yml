@@ -9,6 +9,9 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    outputs:
+      windows-zip-file: ${{ env.windows-zip-file }}
+      windows-setup-file: ${{ env.windows-setup-file }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -118,6 +121,8 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
+    outputs:
+      linux-deb-file: ${{ env.linux-deb-file }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -253,20 +258,11 @@ jobs:
           name: linux-artifact
           path: ./release-assets
 
-      - name: Unzip artifact
-        run: |
-          ls ./release-assets
-          ls ./release-assets/windows-artifact-zip
-
-          # 7z x ./release-assets/windows-artifact-zip.zip -o./release-assets -aoa
-          # 7z x ./release-assets/windows-artifact-setup.zip -o./release-assets -aoa
-          # 7z x ./release-assets/linux-artifact.zip -o./release-assets -aoa
-
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.RELEASE }}
-          name: ${{ steps.get_version.outputs.tag }}
+          name: v${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}
           body_path: CHANGELOG.md
           make_latest: true
           tag_name: ${{ steps.get_version.outputs.tag }}
@@ -275,6 +271,6 @@ jobs:
           generate_release_notes: false
           discussion_category_name: announcements
           files: |
-            ./release-assets/windows-artifact-zip/${{ env.windows-zip-file }}
-            ./release-assets/windows-artifact-setup/${{ env.windows-setup-file }}
-            ./release-assets/linux-artifact/${{ env.linux-deb-file }}
+            ./release-assets/${{ needs.build-windows.outputs.windows-zip-file }}
+            ./release-assets/${{ needs.build-windows.outputs.windows-setup-file }}
+            ./release-assets/${{ needs.build-linux.outputs.linux-deb-file }}
