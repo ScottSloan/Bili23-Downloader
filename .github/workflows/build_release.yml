@@ -283,11 +283,12 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           USER_ID: ${{ secrets.USER_ID }}
           REMOTE_PATH: Bili23_Downloader/${{ env.version }}
+          VERSION: ${{ env.version }}
         run: |
-          pip install requests
-
           mv uploader_repo/onedrive.py ./release-assets/onedrive.py
-          python3 ./release-assets/onedrive.py
+
+          cd release-assets
+          python3 ./onedrive.py
           
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
@@ -305,3 +306,18 @@ jobs:
             ./release-assets/${{ needs.build-windows.outputs.windows-zip-file }}
             ./release-assets/${{ needs.build-windows.outputs.windows-setup-file }}
             ./release-assets/${{ needs.build-linux.outputs.linux-deb-file }}
+
+  # publish_page:
+  #   runs-on: ubuntu-latest
+  #   needs: release
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Deploy to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v3
+  #       with:
+  #         github_token: ${{ secrets.RELEASE }}
+  #         publish_dir: ./release-assets
+  #         destination_dir: gh-pages
+  #         commit_message: "Deploy release assets for ${{ needs.build-windows.outputs.version }}"
