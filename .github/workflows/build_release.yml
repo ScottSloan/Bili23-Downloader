@@ -12,6 +12,7 @@ jobs:
     outputs:
       windows-zip-file: ${{ env.windows-zip-file }}
       windows-setup-file: ${{ env.windows-setup-file }}
+      version: ${{ env.version }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -104,6 +105,8 @@ jobs:
           $version = "${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}"
           $file_version = "${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}.${{ env.ver_build }}"
           $product_version = "${{ env.ver_major }}.${{ env.ver_minor }}.0.0"
+
+          "version=$version" | Out-File -Append -FilePath $env:GITHUB_ENV
 
           & $inno "$iss" /DMyAppVersion="$version" /DFileVersion="$file_version" /DProductVersion="$product_version"
 
@@ -258,14 +261,42 @@ jobs:
           name: linux-artifact
           path: ./release-assets
 
+      - name: Get Version Tag
+        id: get_version
+        run: |
+          version="${{ needs.build-windows.outputs.version }}"
+          tag="v$version"
+
+          echo "tag=$tag" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
+
+      - name: Checkout uploader repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScottSloan/OneDrive-uploader
+          path: uploader_repo
+
+      - name: Upload OneDrive
+        env:
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          USER_ID: ${{ secrets.USER_ID }}
+          REMOTE_PATH: Bili23_Downloader/${{ env.version }}
+        run: |
+          pip install requests
+
+          mv uploader_repo/onedrive.py ./release-assets/onedrive.py
+          python3 ./release-assets/onedrive.py
+          
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.RELEASE }}
-          name: v${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}
+          name: ${{ env.tag }}
           body_path: CHANGELOG.md
           make_latest: true
-          tag_name: ${{ steps.get_version.outputs.tag }}
+          tag_name: ${{ env.tag }}
           draft: true
           prerelease: false
           generate_release_notes: false
