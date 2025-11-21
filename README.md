@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub"/>
     <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform"/>
     <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml?style=flat-square" alt="Build"/>
+    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/build_release.yml?style=flat-square" alt="Build"/>
 </p>
 
 <p align="center">
