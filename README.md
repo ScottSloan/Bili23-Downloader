@@ -9,13 +9,13 @@
     <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub"/>
     <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform"/>
     <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish_release.yml?style=flat-square" alt="Build"/>
+    <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/build_release.yml?style=flat-square" alt="Build"/>
 </p>
 
 <p align="center">
     <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version"/>
     <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python"/>
-    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat-square" alt="wxPython"/>
+    <img src="https://img.shields.io/badge/wxPython-4.2.4-green?style=flat-square" alt="wxPython"/>
 </p>
 
 <p align="center">
@@ -73,8 +73,8 @@
 
 wbi 签名、部分接口以及 buvid3 等参数生成参考 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)  
 
-程序提供的 FFmpeg 来源于 [https://github.com/ScottSloan/FFmpeg](https://github.com/ScottSloan/FFmpeg) 编译配置参见 gccconf 文件。
-Windows 编译版使用 [https://github.com/skywind3000/PyStand](PyStand) 进行封装。
+程序所提供的 FFmpeg 来源于 [https://github.com/ScottSloan/FFmpeg](https://github.com/ScottSloan/FFmpeg) 编译配置参见 `gccconf` 文件。  
+Windows 编译版使用 [PyStand](https://github.com/skywind3000/PyStand) 进行封装。
 
 ## 🛠️ 参与贡献
 欢迎提出新的点子~

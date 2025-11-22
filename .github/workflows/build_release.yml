@@ -1,0 +1,329 @@
+name: Build Releases
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'dev'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    outputs:
+      windows-zip-file: ${{ env.windows-zip-file }}
+      windows-setup-file: ${{ env.windows-setup-file }}
+      version: ${{ env.version }}
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+
+      - name: Checkout runtime repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScottSloan/Bili23-Downloader-Runtime
+          path: runtime_repo
+
+      - name: Checkout loader repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScottSloan/Bili23-Downloader-Loader
+          path: loader_repo
+
+      - name: Get version info
+        run: |
+          $json = Get-Content src\utils\common\compile_data.py | ConvertFrom-Json
+
+          "ver_major=$($json.ver_major)" | Out-File -Append -FilePath $env:GITHUB_ENV
+          "ver_minor=$($json.ver_minor)" | Out-File -Append -FilePath $env:GITHUB_ENV
+          "ver_patch=$($json.ver_patch)" | Out-File -Append -FilePath $env:GITHUB_ENV
+          "ver_build=$($json.ver_build)" | Out-File -Append -FilePath $env:GITHUB_ENV
+
+          "windows-zip-file=Bili23_Downloader-$($json.ver_major).$($json.ver_minor).$($json.ver_patch)-windows-x64.zip" | Out-File -Append -FilePath $env:GITHUB_ENV
+          "windows-setup-file=Bili23_Downloader-$($json.ver_major).$($json.ver_minor).$($json.ver_patch)-windows-x64-setup.exe" | Out-File -Append -FilePath $env:GITHUB_ENV
+
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >
+            mingw-w64-x86_64-gcc
+
+      - name: Unzip and copy runtime files
+        run: |
+          ren src script
+
+          cd runtime_repo\windows
+          & "C:\Program Files\7-Zip\7z.exe" x runtime.zip "-o." -aoa
+          & "C:\Program Files\7-Zip\7z.exe" x inno.zip "-o." -aoa
+
+          cd ..\..
+
+          Copy-Item "runtime_repo\windows\Inno Setup 6" -Destination ".\Inno Setup 6" -Recurse
+          Copy-Item runtime_repo\windows\runtime -Destination ".\Bili23 Downloader\runtime" -Recurse
+          Copy-Item runtime_repo\windows\site-packages -Destination ".\Bili23 Downloader\site-packages" -Recurse
+          Copy-Item runtime_repo\windows\ffmpeg.exe -Destination ".\Bili23 Downloader\ffmpeg.exe"
+          Copy-Item LICENSE -Destination ".\Bili23 Downloader\LICENSE"
+          Copy-Item README.md -Destination ".\Bili23 Downloader\README.md"
+          Copy-Item script -Destination ".\Bili23 Downloader\script" -Recurse
+
+      - name: Build loader
+        shell: msys2 {0}
+        run: |
+          cd loader_repo/windows
+          build_time=$(date "+%Y-%m-%d %H:%M:%S")
+
+          cat << EOF > build_info.h
+          #pragma once
+          #define VER_MAJOR ${{ env.ver_major }}
+          #define VER_MINOR ${{ env.ver_minor }}
+          #define VER_PATCH ${{ env.ver_patch }}
+          #define VER_BUILD ${{ env.ver_build }}
+          #define BUILD_TIME_STR L"$build_time"
+          EOF
+
+          windres resource.rc -o resource.o
+          g++ -c PyStand.cpp -o PyStand.o -Os -s -ffunction-sections -fdata-sections -flto
+          g++ -o Bili23.exe PyStand.o resource.o -static -lshlwapi -lwinmm -mwindows -s -flto
+
+          cd ../..
+
+          cp loader_repo/windows/Bili23.exe "./Bili23 Downloader/Bili23.exe"
+          cp _pystand_static.int "./Bili23 Downloader/_pystand_static.int"
+
+      - name: Package
+        run: |
+          python -c "import json; json_path = '.\Bili23 Downloader\src\utils\common\compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'windows_portable'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+
+          Compress-Archive -Path ".\Bili23 Downloader" -DestinationPath ${{ env.windows-zip-file }}
+
+          python -c "import json; json_path = '.\Bili23 Downloader\src\utils\common\compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'windows_setup'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+
+          $inno = ".\Inno Setup 6\ISCC.exe"
+          $iss = ".\setup.iss"
+
+          $version = "${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}"
+          $file_version = "${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}.${{ env.ver_build }}"
+          $product_version = "${{ env.ver_major }}.${{ env.ver_minor }}.0.0"
+
+          "version=$version" | Out-File -Append -FilePath $env:GITHUB_ENV
+
+          & $inno "$iss" /DMyAppVersion="$version" /DFileVersion="$file_version" /DProductVersion="$product_version"
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact-zip
+          path: ${{ env.windows-zip-file }}
+
+      - name: Upload setup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact-setup
+          path: ${{ env.windows-setup-file }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    outputs:
+      linux-deb-file: ${{ env.linux-deb-file }}
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+
+      - name: Checkout runtime repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScottSloan/Bili23-Downloader-Runtime
+          path: runtime_repo
+      
+      - name: Checkout loader repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScottSloan/Bili23-Downloader-Loader
+          path: loader_repo
+
+      - name: Get version info
+        run: |
+          ver_major=$(jq -r '.ver_major' src/utils/common/compile_data.py)
+          ver_minor=$(jq -r '.ver_minor' src/utils/common/compile_data.py)
+          ver_patch=$(jq -r '.ver_patch' src/utils/common/compile_data.py)
+          ver_build=$(jq -r '.ver_build' src/utils/common/compile_data.py)
+
+          echo "ver_major=$ver_major" >> $GITHUB_ENV
+          echo "ver_minor=$ver_minor" >> $GITHUB_ENV
+          echo "ver_patch=$ver_patch" >> $GITHUB_ENV
+          echo "ver_build=$ver_build" >> $GITHUB_ENV
+
+          echo "linux-deb-file=Bili23_Downloader-$ver_major.$ver_minor.$ver_patch-linux-amd64.deb" >> $GITHUB_ENV
+
+      - name: Unzip and copy runtime files
+        run: |
+          mv src script
+          python -c "import json; json_path = './script/utils/common/compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'linux_deb'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+
+          cd runtime_repo/linux
+          7z x runtime.zip -aoa
+          rm runtime.zip runtime.z01 runtime.z02
+          cd ../..
+          mkdir -p 'bili23/runtime'
+          cp -r runtime_repo/linux/runtime/* 'bili23/runtime/'
+          cp -r script 'bili23/script'
+
+      - name: Build loader
+        run: |
+          cd loader_repo/linux
+          g++ Bili23.cpp -o Bili23
+
+          cd ../..
+
+          cp loader_repo/linux/Bili23 ./bili23/Bili23
+          cp _pystand_static.int ./bili23/_pystand_static.int
+
+      - name: Package
+        run: |
+          mkdir buildroot
+          cd buildroot
+          mkdir DEBIAN opt usr
+          mkdir -p usr/bin
+          mkdir -p usr/share/applications
+          mkdir -p usr/share/icons/hicolor/scalable/apps
+          cd usr/bin
+          echo '#!/bin/bash' > bili23-downloader
+          echo '/opt/bili23-downloader/Bili23 "$@"' >> bili23-downloader
+          chmod +x bili23-downloader
+          cd ../..
+          cp -r ../bili23 opt/bili23-downloader
+          cd DEBIAN
+          echo 'Package: bili23-downloader' > control
+          echo 'Version: ${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}' >> control
+          echo 'Section: utils' >> control
+          echo 'Priority: optional' >> control
+          echo 'Architecture: amd64' >> control
+          echo 'Depends: libc6 (>= 2.27), libsdl2-2.0-0' >> control
+          echo 'Maintainer: Scott Sloan <world1019@sina.com>' >> control
+          echo 'Description: Bili23 Downloader' >> control
+          INSTALLED_SIZE=$(du -s ../ | awk '{print $1}')
+          echo "Installed-Size: $INSTALLED_SIZE" >> control
+          cd ..
+          cd usr/share/applications
+          echo '[Desktop Entry]' > bili23-downloader.desktop
+          echo 'Type=Application' >> bili23-downloader.desktop
+          echo 'Name=Bili23 Downloader' >> bili23-downloader.desktop
+          echo 'Exec=/usr/bin/bili23-downloader' >> bili23-downloader.desktop
+          echo 'Icon=bili23-downloader' >> bili23-downloader.desktop
+          echo 'Categories=Utility;' >> bili23-downloader.desktop
+          echo 'Terminal=false' >> bili23-downloader.desktop
+          echo 'Comment=Bili23 Downloader' >> bili23-downloader.desktop
+          cd ../../../../
+          cp icon.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+          dpkg-deb --build buildroot "${{ env.linux-deb-file }}"
+
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifact
+          path: ${{ env.linux-deb-file }}
+
+  # build-macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Checkout main repo
+  #       uses: actions/checkout@v4
+  #     - name: Rename src to script
+  #       run: mv src script
+  #     - name: Checkout runtime repo (macos)
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: ScottSloan/Bili23-Downloader-Runtime
+  #         path: runtime_repo
+  #     - name: Copy runtime files
+  #       run: |
+  #         mkdir -p my_project/runtime
+  #         cp -r runtime_repo/macos/runtime/* my_project/runtime/
+  #         cp -r script my_project/script
+  #     - name: Package
+  #       run: |
+  #         zip -r Bili23-macos.zip my_project
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: Bili23-macos
+  #         path: Bili23-macos.zip
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Windows zip artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifact-zip
+          path: ./release-assets
+
+      - name: Download Windows setup artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifact-setup
+          path: ./release-assets
+
+      - name: Download Linux deb artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifact
+          path: ./release-assets
+
+      - name: Get Version Tag
+        id: get_version
+        run: |
+          version="${{ needs.build-windows.outputs.version }}"
+          tag="v$version"
+
+          echo "tag=$tag" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
+
+      - name: Checkout uploader repo
+        uses: actions/checkout@v4
+        with:
+          repository: ScottSloan/Cloudreve-Uploader
+          path: uploader_repo
+
+      - name: Upload Cloudreve
+        env:
+          CLOUDREVE_API: ${{ secrets.CLOUDREVE_API }}
+          CLOUDREVE_EMAIL: ${{ secrets.CLOUDREVE_EMAIL }}
+          CLOUDREVE_PASSWORD: ${{ secrets.CLOUDREVE_PASSWORD }}
+          CLOUDREVE_STORAGE_POLICY_ID: ${{ secrets.CLOUDREVE_STORAGE_POLICY_ID }}
+          VERSION: ${{ env.version }}
+        run: |
+          mv uploader_repo/cloudreve.py ./release-assets/cloudreve.py
+
+          pip install aiohttp
+
+          cd release-assets
+          python3 ./cloudreve.py
+          
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ env.tag }}
+          body_path: CHANGELOG.md
+          make_latest: true
+          tag_name: ${{ env.tag }}
+          draft: true
+          prerelease: false
+          generate_release_notes: false
+          discussion_category_name: announcements
+          files: |
+            ./release-assets/${{ needs.build-windows.outputs.windows-zip-file }}
+            ./release-assets/${{ needs.build-windows.outputs.windows-setup-file }}
+            ./release-assets/${{ needs.build-linux.outputs.linux-deb-file }}
+
+      - name: Call documentation update repository workflow
+        run: |
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.ACCESS_TOKEN }}" \
+            https://api.github.com/repos/ScottSloan/Bili23-Downloader-Doc/dispatches \
+            -d '{"event_type":"deploy-pages","client_payload":{"unit":false,"integration":true}}'

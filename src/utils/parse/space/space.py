@@ -148,14 +148,14 @@ class SpaceParser(Parser):
 
             match ParseType(entry["type"]):
                 case ParseType.Video:
-                    if season_id and season_id in video_info_list["video_season"]:
-                        continue
-
                     key = "video_season" if season_id else "video_bvid"
                     value = season_id if season_id else bvid
                     is_avoided = True if entry.get("template_type") == TemplateType.Video_Collection.value else False
 
-                    video_info_list[key][value] = self.get_video_info(bvid, is_avoided)
+                    is_season = season_id and season_id not in video_info_list["video_season"]
+
+                    if is_season or not season_id:
+                        video_info_list[key][value] = self.get_video_info(bvid, is_avoided)
 
                     video_info_list["sequence"].append({
                         "key": key,

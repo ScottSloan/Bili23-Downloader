@@ -7,7 +7,6 @@ from utils.config import Config
 
 from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.style.color import Color
-from utils.common.compile_data import date
 from utils.common.enums import Platform
 
 from gui.component.window.dialog import Dialog
@@ -119,8 +118,8 @@ class AboutWindow(Dialog):
 
         return version
 
-    def GetDateLabel(self):
-        if build_time := os.environ.get("PYSTAND_BUILD_TIME"):
-            return _("构建时间：%s") % build_time
-        else:
-            return _("发布时间：%s") % date
+    # def GetDateLabel(self):
+    #     if build_time := os.environ.get("PYSTAND_BUILD_TIME"):
+    #         return _("构建时间：%s") % build_time
+    #     else:
+    #         return _("发布时间：%s") % date
