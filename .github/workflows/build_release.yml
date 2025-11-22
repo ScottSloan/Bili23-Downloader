@@ -90,14 +90,13 @@ jobs:
           cp loader_repo/windows/Bili23.exe "./Bili23 Downloader/Bili23.exe"
           cp _pystand_static.int "./Bili23 Downloader/_pystand_static.int"
 
-      - name: Show directory structure
-        run: |
-          cd ".\Bili23 Downloader"
-          tree /F
-          
       - name: Package
         run: |
+          python -c "import json; json_path = '.\Bili23 Downloader\src\utils\common\compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'windows_portable'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+
           Compress-Archive -Path ".\Bili23 Downloader" -DestinationPath ${{ env.windows-zip-file }}
+
+          python -c "import json; json_path = '.\Bili23 Downloader\src\utils\common\compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'windows_setup'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
 
           $inno = ".\Inno Setup 6\ISCC.exe"
           $iss = ".\setup.iss"
@@ -159,6 +158,7 @@ jobs:
       - name: Unzip and copy runtime files
         run: |
           mv src script
+          python -c "import json; json_path = './script/utils/common/compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'linux_deb'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
 
           cd runtime_repo/linux
           7z x runtime.zip -aoa
@@ -184,6 +184,8 @@ jobs:
           cd buildroot
           mkdir DEBIAN opt usr
           mkdir -p usr/bin
+          mkdir -p usr/share/applications
+          mkdir -p usr/share/icons/hicolor/scalable/apps
           cd usr/bin
           echo '#!/bin/bash' > bili23-downloader
           echo '/opt/bili23-downloader/Bili23 "$@"' >> bili23-downloader
@@ -201,7 +203,18 @@ jobs:
           echo 'Description: Bili23 Downloader' >> control
           INSTALLED_SIZE=$(du -s ../ | awk '{print $1}')
           echo "Installed-Size: $INSTALLED_SIZE" >> control
-          cd ../..
+          cd ..
+          cd usr/share/applications
+          echo '[Desktop Entry]' > bili23-downloader.desktop
+          echo 'Type=Application' >> bili23-downloader.desktop
+          echo 'Name=Bili23 Downloader' >> bili23-downloader.desktop
+          echo 'Exec=/usr/bin/bili23-downloader' >> bili23-downloader.desktop
+          echo 'Icon=bili23-downloader' >> bili23-downloader.desktop
+          echo 'Categories=Utility;' >> bili23-downloader.desktop
+          echo 'Terminal=false' >> bili23-downloader.desktop
+          echo 'Comment=Bili23 Downloader' >> bili23-downloader.desktop
+          cd ../../../../
+          cp icon.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
           dpkg-deb --build buildroot "${{ env.linux-deb-file }}"
 
       - name: Upload deb artifact

@@ -15,7 +15,7 @@
 <p align="center">
     <img src="https://img.shields.io/github/v/release/ScottSloan/Bili23-Downloader?style=flat-square" alt="Version"/>
     <img src="https://img.shields.io/badge/Python-3.12.10-green?style=flat-square" alt="Python"/>
-    <img src="https://img.shields.io/badge/wxPython-4.2.3-green?style=flat-square" alt="wxPython"/>
+    <img src="https://img.shields.io/badge/wxPython-4.2.4-green?style=flat-square" alt="wxPython"/>
 </p>
 
 <p align="center">
