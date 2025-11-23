@@ -95,11 +95,11 @@ jobs:
           $COMMIT_HASH = git rev-parse HEAD
           $COMMIT_DATE = git show -s --format=%cd --date=iso $COMMIT_HASH
 
-          jq '.commit = "$COMMIT_HASH" | .date = "$COMMIT_DATE" | .channel = "windows_portable"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp1.json && mv tmp1.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
+          jq '.commit = "$COMMIT_HASH" | .date = "$COMMIT_DATE" | .channel = "windows_portable"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp1.json && cp tmp1.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
 
           Compress-Archive -Path ".\Bili23 Downloader" -DestinationPath ${{ env.windows-zip-file }}
 
-          jq '.channel = "windows_setup"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp3.json && mv tmp3.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
+          jq '.channel = "windows_setup"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp3.json && cp tmp3.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
 
           $inno = ".\Inno Setup 6\ISCC.exe"
           $iss = ".\setup.iss"
