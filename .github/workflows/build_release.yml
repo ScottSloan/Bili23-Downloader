@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - 'dev'
+    tags:
+      - '*'
 
 jobs:
   build-windows:
@@ -16,12 +18,6 @@ jobs:
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
-
-      - name: Checkout runtime repo
-        uses: actions/checkout@v4
-        with:
-          repository: ScottSloan/Bili23-Downloader-Runtime
-          path: runtime_repo
 
       - name: Checkout loader repo
         uses: actions/checkout@v4
@@ -52,16 +48,22 @@ jobs:
         run: |
           ren src script
 
-          cd runtime_repo\windows
+          New-Item -ItemType Directory -Path "runtime_repo"
+
+          $runtime_url = "https://drive.scott-sloan.cn/f/P4s8/runtime.zip"
+          Invoke-WebRequest -Uri $runtime_url -OutFile "runtime_repo\runtime.zip"
+
+          $ffmpeg_url = "https://drive.scott-sloan.cn/f/aWhW/ffmpeg.exe"
+          Invoke-WebRequest -Uri $ffmpeg_url -OutFile "runtime_repo\ffmpeg.exe"
+
+          cd runtime_repo
           & "C:\Program Files\7-Zip\7z.exe" x runtime.zip "-o." -aoa
-          & "C:\Program Files\7-Zip\7z.exe" x inno.zip "-o." -aoa
 
-          cd ..\..
+          cd ..
 
-          Copy-Item "runtime_repo\windows\Inno Setup 6" -Destination ".\Inno Setup 6" -Recurse
-          Copy-Item runtime_repo\windows\runtime -Destination ".\Bili23 Downloader\runtime" -Recurse
-          Copy-Item runtime_repo\windows\site-packages -Destination ".\Bili23 Downloader\site-packages" -Recurse
-          Copy-Item runtime_repo\windows\ffmpeg.exe -Destination ".\Bili23 Downloader\ffmpeg.exe"
+          Copy-Item runtime_repo\runtime -Destination ".\Bili23 Downloader\runtime" -Recurse
+          Copy-Item runtime_repo\site-packages -Destination ".\Bili23 Downloader\site-packages" -Recurse
+          Copy-Item runtime_repo\ffmpeg.exe -Destination ".\Bili23 Downloader\ffmpeg.exe"
           Copy-Item LICENSE -Destination ".\Bili23 Downloader\LICENSE"
           Copy-Item README.md -Destination ".\Bili23 Downloader\README.md"
           Copy-Item script -Destination ".\Bili23 Downloader\script" -Recurse
@@ -90,18 +92,30 @@ jobs:
           cp loader_repo/windows/Bili23.exe "./Bili23 Downloader/Bili23.exe"
           cp _pystand_static.int "./Bili23 Downloader/_pystand_static.int"
 
-      - name: Package
+      - name: Package Windows Portable
         run: |
           $COMMIT_HASH = git rev-parse HEAD
           $COMMIT_DATE = git show -s --format=%cd --date=iso $COMMIT_HASH
 
-          jq '.commit = "$COMMIT_HASH" | .date = "$COMMIT_DATE" | .channel = "windows_portable"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp1.json && cp tmp1.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
+          jq --arg hash "$COMMIT_HASH" --arg date "$COMMIT_DATE" '.commit = $hash | .date = $date | .channel = "windows_portable"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp1.json && cp tmp1.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
 
           Compress-Archive -Path ".\Bili23 Downloader" -DestinationPath ${{ env.windows-zip-file }}
 
+      - name: Package Windows Setup
+        run: |
+          echo "下载并安装 Inno Setup"
+          $url = "https://jrsoftware.org/download.php/is.exe"
+          Invoke-WebRequest -Uri $url -OutFile "is.exe"
+          Start-Process "is.exe" -Wait -ArgumentList "/VERYSILENT"
+
+          echo "下载简体中文语言文件"
+          $lang_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/Unofficial/ChineseSimplified.isl"
+          Invoke-WebRequest -Uri $lang_url -OutFile "ChineseSimplified.isl"
+          Move-Item -Path "ChineseSimplified.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseSimplified.isl"
+
           jq '.channel = "windows_setup"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp3.json && cp tmp3.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
 
-          $inno = ".\Inno Setup 6\ISCC.exe"
+          $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           $iss = ".\setup.iss"
 
           $version = "${{ env.ver_major }}.${{ env.ver_minor }}.${{ env.ver_patch }}"
@@ -110,6 +124,7 @@ jobs:
 
           "version=$version" | Out-File -Append -FilePath $env:GITHUB_ENV
 
+          echo "开始编译安装程序"
           & $inno "$iss" /DMyAppVersion="$version" /DFileVersion="$file_version" /DProductVersion="$product_version"
 
       - name: Upload zip artifact
@@ -131,12 +146,6 @@ jobs:
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
-
-      - name: Checkout runtime repo
-        uses: actions/checkout@v4
-        with:
-          repository: ScottSloan/Bili23-Downloader-Runtime
-          path: runtime_repo
       
       - name: Checkout loader repo
         uses: actions/checkout@v4
@@ -165,23 +174,21 @@ jobs:
           COMMIT_HASH=$(git rev-parse HEAD)
           COMMIT_DATE=$(git show -s --format=%cd --date=iso $COMMIT_HASH)
 
-          jq '.commit = "$COMMIT_HASH" | .date = "$COMMIT_DATE" | .channel = "linux_package"' ./script/utils/common/compile_data.py > tmp.json && mv tmp.json ./script/utils/common/compile_data.py
+          jq --arg hash "$COMMIT_HASH" --arg date "$COMMIT_DATE" '.commit = $hash | .date = $date | .channel = "linux_package"' ./script/utils/common/compile_data.py > tmp.json && mv tmp.json ./script/utils/common/compile_data.py
 
-          cd runtime_repo/linux
+          echo "下载 runtime 文件"
+          mkdir -p runtime_repo
+          wget https://drive.scott-sloan.cn/f/xxCz/runtime.zip -O runtime_repo/runtime.zip
+
+          cd runtime_repo
           7z x runtime.zip -aoa
-          rm runtime.zip runtime.z01 runtime.z02
-          cd ../..
+          cd ..
           mkdir -p 'bili23/runtime'
-          cp -r runtime_repo/linux/runtime/* 'bili23/runtime/'
+          cp -r runtime_repo/runtime/* 'bili23/runtime/'
           cp -r script 'bili23/script'
 
       - name: Build loader
         run: |
-          cd loader_repo/linux
-          g++ Bili23.cpp -o Bili23
-
-          cd ../..
-
           cp loader_repo/linux/Bili23 ./bili23/Bili23
           cp _pystand_static.int ./bili23/_pystand_static.int
 
@@ -222,6 +229,8 @@ jobs:
           echo 'Comment=Bili23 Downloader' >> bili23-downloader.desktop
           cd ../../../../
           cp icon.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+
+          echo "构建 deb 包"
           dpkg-deb --build buildroot "${{ env.linux-deb-file }}"
 
       - name: Upload deb artifact

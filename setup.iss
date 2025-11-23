@@ -48,14 +48,13 @@ LicenseFile=.\LICENSE
 OutputDir=.\
 OutputBaseFilename=Bili23_Downloader-{#MyAppVersion}-windows-x64-setup
 SolidCompression=yes
-WizardStyle=modern
+WizardStyle=modern dynamic
 ShowLanguageDialog=yes
 LanguageDetectionMethod=uilanguage
 
-
 [Languages]
 Name: "en_US"; MessagesFile: "compiler:Default.isl"
-Name: "zh_CN"; MessagesFile: "compiler:Languages\Chinese.isl"
+Name: "zh_CN"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
