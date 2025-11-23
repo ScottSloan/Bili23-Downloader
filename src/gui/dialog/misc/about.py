@@ -1,13 +1,17 @@
 import wx
 import os
+import json
 import wx.adv
 import gettext
+import inspect
+import platform
 
 from utils.config import Config
 
 from utils.common.style.icon_v4 import Icon, IconID, IconSize
 from utils.common.style.color import Color
 from utils.common.enums import Platform
+import utils.common.compile_data as json_data
 
 from gui.component.window.dialog import Dialog
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
@@ -19,6 +23,8 @@ class AboutWindow(Dialog):
         Dialog.__init__(self, parent, "")
 
         self.init_UI()
+
+        self.Bind_EVT()
 
         self.init_utils()
 
@@ -45,9 +51,9 @@ class AboutWindow(Dialog):
         desc_lab = wx.StaticText(self, -1, _("跨平台的 B 站视频下载工具"))
         desc_lab.SetForegroundColour(Color.get_frame_text_color())
 
-        version_lab = wx.StaticText(self, -1, _("版本 %s") % self.GetVersion())
-        version_lab.SetFont(version_font)
-        version_lab.SetForegroundColour(Color.get_frame_text_color())
+        self.version_lab = wx.StaticText(self, -1, _("版本 %s") % self.get_version_str())
+        self.version_lab.SetFont(version_font)
+        self.version_lab.SetForegroundColour(Color.get_frame_text_color())
 
         license_lab = wx.StaticText(self, -1, _("本程序为免费开源软件，遵循 MIT 许可证发布"))
         license_lab.SetForegroundColour(Color.get_frame_text_color())
@@ -80,7 +86,7 @@ class AboutWindow(Dialog):
         body_vbox.Add(title_lab, 0, wx.ALL, self.FromDIP(6))
         body_vbox.Add(desc_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         body_vbox.AddSpacer(self.FromDIP(10))
-        body_vbox.Add(version_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
+        body_vbox.Add(self.version_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
         body_vbox.Add(license_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         body_vbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
         body_vbox.Add(link_hbox, 0, wx.EXPAND)
@@ -102,6 +108,9 @@ class AboutWindow(Dialog):
 
         self.set_dark_mode()
 
+    def Bind_EVT(self):
+        self.version_lab.Bind(wx.EVT_LEFT_DOWN, self.show_extra_info)
+
     def init_utils(self):
         def worker():
             self.logo.SetBitmap(bmp = Icon.get_icon_bitmap(IconID.App_Default, IconSize.LARGE))
@@ -113,13 +122,20 @@ class AboutWindow(Dialog):
         if not self.DWMExtendFrameIntoClientArea():
             self.SetTitle(_("关于 %s") % Config.APP.name)
 
-    def GetVersion(self):
+    def get_version_str(self):
         version = f"{Config.APP.version} ({Config.APP.version_code})"
 
         return version
+    
+    def show_extra_info(self, event: wx.MouseEvent):
+        extra_data = json.loads(inspect.getsource(json_data))
 
-    # def GetDateLabel(self):
-    #     if build_time := os.environ.get("PYSTAND_BUILD_TIME"):
-    #         return _("构建时间：%s") % build_time
-    #     else:
-    #         return _("发布时间：%s") % date
+        data = {
+            "Platform": Platform(Config.Sys.platform).name,
+            "Architecture": platform.machine(),
+            "Commit": extra_data.get("commit", "N/A"),
+            "Channel": extra_data.get("channel", "N/A"),
+            "Date": extra_data.get("date", "N/A")
+        }
+
+        wx.MessageDialog(self, "Bili23 Downloader\n\n{}".format("\n".join(f"{key}: {value}" for key, value in data.items())), "info", wx.ICON_INFORMATION).ShowModal()

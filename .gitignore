@@ -53,3 +53,6 @@ Build
 
 temp
 test
+
+# git hooks
+hooks/

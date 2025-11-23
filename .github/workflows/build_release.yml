@@ -92,11 +92,14 @@ jobs:
 
       - name: Package
         run: |
-          python -c "import json; json_path = '.\Bili23 Downloader\src\utils\common\compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'windows_portable'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+          $COMMIT_HASH = git rev-parse HEAD
+          $COMMIT_DATE = git show -s --format=%cd --date=iso $COMMIT_HASH
+
+          jq '.commit = "$COMMIT_HASH" | .date = "$COMMIT_DATE" | .channel = "windows_portable"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp1.json && mv tmp1.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
 
           Compress-Archive -Path ".\Bili23 Downloader" -DestinationPath ${{ env.windows-zip-file }}
 
-          python -c "import json; json_path = '.\Bili23 Downloader\src\utils\common\compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'windows_setup'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+          jq '.channel = "windows_setup"' ".\Bili23 Downloader\script\utils\common\compile_data.py" > tmp3.json && mv tmp3.json ".\Bili23 Downloader\script\utils\common\compile_data.py"
 
           $inno = ".\Inno Setup 6\ISCC.exe"
           $iss = ".\setup.iss"
@@ -158,7 +161,11 @@ jobs:
       - name: Unzip and copy runtime files
         run: |
           mv src script
-          python -c "import json; json_path = './script/utils/common/compile_data.py'; with open(json_path, 'r', encoding = 'utf-8') as f: data = json.loads(f.read()); data['channel'] = 'linux_deb'; with open(json_path, 'w', encoding = 'utf-8') as f2: f2.write(json.dumps(data, ensure_ascii = False, indent = 4))"
+
+          COMMIT_HASH=$(git rev-parse HEAD)
+          COMMIT_DATE=$(git show -s --format=%cd --date=iso $COMMIT_HASH)
+
+          jq '.commit = "$COMMIT_HASH" | .date = "$COMMIT_DATE" | .channel = "linux_package"' ./script/utils/common/compile_data.py > tmp.json && mv tmp.json ./script/utils/common/compile_data.py
 
           cd runtime_repo/linux
           7z x runtime.zip -aoa
