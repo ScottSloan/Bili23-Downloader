@@ -4,6 +4,7 @@ import json
 import time
 import inspect
 import hashlib
+import textwrap
 import tempfile
 import subprocess
 
@@ -94,7 +95,9 @@ class MiniDownloader:
         return sha256.hexdigest()
 
 class UpdaterWindow(Frame):
-    def __init__(self):
+    def __init__(self, url_data: dict):
+        self.url_data = url_data
+
         Frame.__init__(self, None, "Software Updater", style = wx.DEFAULT_FRAME_STYLE & (~wx.MAXIMIZE_BOX) & (~wx.MINIMIZE_BOX) & (~wx.CLOSE_BOX))
 
         self.SetSize(self.FromDIP((400, 130)))
@@ -124,31 +127,23 @@ class UpdaterWindow(Frame):
     def check_channel(self):
         extra_data: dict = json.loads(inspect.getsource(json_data))
 
-        extra_data["channel"] = "windows_setup"
+        extra_data["channel"] = "source_code"
 
         self.channel = extra_data.get("channel")
 
         match self.channel:
             case "source_code":
-                pass
+                wx.MessageDialog(self, "更新\n\n请手动执行 git pull 完成更新。", "提示", wx.ICON_INFORMATION).ShowModal()
+                exit()
+                return
 
-            case "windows_portable":
-                pass
-
-            case "windows_setup":
-                url = "https://drive.scott-sloan.cn/f/zbTd/Bili23_Downloader-1.70.2-windows-x64-setup.exe"
-                sha256 = "51998610bf24f5f39b4555b32f00f4e8fbab0f022881e9882b3d6232f83f287f"
-
-                downloader = MiniDownloader(url, sha256, downloading_callback = self.download_callback, complete_callback = self.complete_callback)
-                downloader.start()
-
-            case "linux_deb_package":
-                pass
+            case "windows_portable" | "windows_setup" | "linux_deb_package":
+                self.init_downloader()
 
             case _:
                 wx.MessageDialog(self, "未知错误\n\n发生未知错误，请前往官方网站下载最新版本。", "Fatal Error", wx.ICON_ERROR).ShowModal()
                 return
-            
+                    
     def download_callback(self, downloaded: int, total: int):
         def worker():
             self.progress_bar.SetValue(progress)
@@ -161,6 +156,75 @@ class UpdaterWindow(Frame):
         wx.CallAfter(worker)
 
     def complete_callback(self, filepath: str):
-        subprocess.Popen(filepath, shell = True, creationflags = subprocess.DETACHED_PROCESS)
+        match self.channel:
+            case "windows_portable":
+                # 解压 zip 文件
+                self.init_extractor(filepath)
+
+            case "windows_setup":
+                # 启动安装程序
+                subprocess.Popen(filepath, shell = True, creationflags = subprocess.DETACHED_PROCESS)
+
+            case "linux_deb_package":
+                # 告知用户手动 sudo dpkg -i
+                wx.CallAfter(wx.MessageDialog(self, "下载完成\n\n安装包已下载至：{}\n请在终端手动执行以下命令安装：\n\nsudo dpkg -i {}".format(filepath, filepath), "提示", wx.ICON_INFORMATION).ShowModal)
 
         wx.GetApp().ExitMainLoop()
+
+    def init_extractor(self, archive_path: str):
+        extract_path = tempfile.gettempdir()
+
+        cwd = os.getenv("PYSTAND_CWD")
+
+        runtime_path = os.path.join(cwd, "runtime", "python.exe")
+
+        code_path = self.save_extractor_code(archive_path, extract_path, cwd)
+
+        args = f'''"{runtime_path}" "{code_path}"'''
+
+        subprocess.Popen(args = args, shell = True)
+
+    def save_extractor_code(self, archive_path: str, extract_path: str, cwd: str):
+        code = textwrap.dedent(f"""\
+        import os
+        import shutil
+        import zipfile
+                               
+        def update(archive_path: str, extract_path: str, cwd: str):
+            src_path = os.path.join(extract_path, "Bili23 Downloader")
+            dst_path = cwd
+            
+            if os.path.exists(src_path):
+                shutil.rmtree(src_path)
+            
+            with zipfile.ZipFile(archive_path, "r") as zip_ref:
+                zip_ref.extractall(extract_path)
+                               
+            shutil.rmtree(dst_path)
+            shutil.copytree(src_path, dst_path)
+                              
+            subprocess.Popen(os.path.join(dst_path, "Bili23.exe"), shell = True, cwd = dst_path)
+                               
+            shutil.rmtree(src_path)
+            os.remove(archive_path)
+        
+        update(r"{archive_path}", r"{extract_path}", r"{cwd}")
+        """)
+
+        path = os.path.join(tempfile.gettempdir(), "updater.py")
+
+        with open(path, "w", encoding = "utf-8") as f:
+            f.write(code)
+
+        return path
+
+    def init_downloader(self):
+        channel_info = self.get_channel_info(self.channel)
+
+        downloader = MiniDownloader(channel_info["url"], channel_info["sha256"], downloading_callback = self.download_callback, complete_callback = self.complete_callback)
+        downloader.start()
+
+    def get_channel_info(self, channel: str):
+        for entry in self.url_data:
+            if entry["channel"] == channel:
+                return entry
