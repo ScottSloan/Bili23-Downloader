@@ -125,7 +125,12 @@ class TopBox(Panel):
 
         if not url:
             Window.message_dialog(self.main_window, _("解析失败\n\n链接不能为空"), _("警告"), wx.ICON_WARNING)
+
             return True
+        
+    def check_login(self):
+        if not Config.User.login or True:
+            Window.message_dialog(self.main_window, _("登录账号\n\n建议登录账号后再继续使用，否则下载受限。"), _("警告"), wx.ICON_WARNING)
 
     def reset_search_window(self):
         if search_dialog := wx.FindWindowByName("search"):

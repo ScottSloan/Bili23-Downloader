@@ -6,6 +6,7 @@ import ctypes
 import gettext
 import inspect
 import platform
+import subprocess
 
 from utils.config import Config
 
@@ -131,16 +132,38 @@ class AboutWindow(Dialog):
     def show_extra_info(self, event: wx.MouseEvent):
         extra_data: dict = json.loads(inspect.getsource(json_data))
 
+        commit_hash = self.get_commit_str(extra_data)
+
         data = {
             "Platform": Platform(Config.Sys.platform).name,
             "Architecture": platform.machine(),
-            "Commit": extra_data.get("commit", "N/A"),
+            "Commit": commit_hash,
             "Channel": extra_data.get("channel", "N/A"),
-            "Date": extra_data.get("date", "N/A"),
+            "Date": self.get_date_str(extra_data, commit_hash),
             "Privilege": self.get_privilege_str()
         }
 
         wx.MessageDialog(self, "Bili23 Downloader\n\n{}".format("\n".join(f"{key}: {value}" for key, value in data.items())), "info", wx.ICON_INFORMATION).ShowModal()
+
+    def get_commit_str(self, extra_data: dict):
+        if extra_data.get("commit"):
+            return extra_data.get("commit")
+        else:
+            try:
+                return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+            
+            except Exception:
+                return "N/A"
+            
+    def get_date_str(self, extra_data: dict, commit_hash: str):
+        if extra_data.get("date"):
+            return extra_data.get("date")
+        else:
+            try:
+                return subprocess.check_output(['git', 'show', '-s', '--format=%ci', commit_hash]).decode('ascii').strip()
+            
+            except Exception:
+                return "N/A"
 
     def get_privilege_str(self):
         match Platform(Config.Sys.platform):

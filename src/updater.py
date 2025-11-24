@@ -8,7 +8,6 @@ import textwrap
 import tempfile
 import subprocess
 
-from utils.config import Config
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread
 from utils.common.formatter.formatter import FormatUtils
@@ -95,7 +94,8 @@ class MiniDownloader:
         return sha256.hexdigest()
 
 class UpdaterWindow(Frame):
-    def __init__(self, url_data: dict):
+    def __init__(self, url: str, url_data: dict):
+        self.url = url
         self.url_data = url_data
 
         Frame.__init__(self, None, "Software Updater", style = wx.DEFAULT_FRAME_STYLE & (~wx.MAXIMIZE_BOX) & (~wx.MINIMIZE_BOX) & (~wx.CLOSE_BOX))
@@ -142,6 +142,7 @@ class UpdaterWindow(Frame):
 
             case _:
                 wx.MessageDialog(self, "未知错误\n\n发生未知错误，请前往官方网站下载最新版本。", "Fatal Error", wx.ICON_ERROR).ShowModal()
+                wx.LaunchDefaultBrowser(self.url)
                 return
                     
     def download_callback(self, downloaded: int, total: int):
