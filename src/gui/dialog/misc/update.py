@@ -3,6 +3,8 @@ import gettext
 
 from utils.config import Config
 
+from updater import UpdaterWindow
+
 from gui.component.window.dialog import Dialog
 from gui.component.staticbitmap.staticbitmap import StaticBitmap
 
@@ -84,7 +86,9 @@ class UpdateDialog(Dialog):
             return super().onCloseEVT(event)
 
     def onOKEVT(self):
-        wx.LaunchDefaultBrowser(self.info.get("url"))
+        window = UpdaterWindow()
+        window.Show()
+        #wx.LaunchDefaultBrowser(self.info.get("url"))
 
         if self.force:
             import sys

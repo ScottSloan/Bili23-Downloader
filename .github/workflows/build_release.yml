@@ -3,8 +3,8 @@ name: Build Releases
 on:
   workflow_dispatch:
   push:
-    branches:
-      - 'dev'
+    # branches:
+    #   - 'dev'
     tags:
       - '*'
 
@@ -174,7 +174,7 @@ jobs:
           COMMIT_HASH=$(git rev-parse HEAD)
           COMMIT_DATE=$(git show -s --format=%cd --date=iso $COMMIT_HASH)
 
-          jq --arg hash "$COMMIT_HASH" --arg date "$COMMIT_DATE" '.commit = $hash | .date = $date | .channel = "linux_package"' ./script/utils/common/compile_data.py > tmp.json && mv tmp.json ./script/utils/common/compile_data.py
+          jq --arg hash "$COMMIT_HASH" --arg date "$COMMIT_DATE" '.commit = $hash | .date = $date | .channel = "linux_deb_package"' ./script/utils/common/compile_data.py > tmp.json && mv tmp.json ./script/utils/common/compile_data.py
 
           echo "下载 runtime 文件"
           mkdir -p runtime_repo
@@ -191,6 +191,9 @@ jobs:
         run: |
           cp loader_repo/linux/Bili23 ./bili23/Bili23
           cp _pystand_static.int ./bili23/_pystand_static.int
+
+          chmod +x ./bili23/Bili23
+          chmod +x ./bili23/runtime/python3
 
       - name: Package
         run: |

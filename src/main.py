@@ -167,9 +167,7 @@ class APP(wx.App):
         
         subprocess.run("chcp 65001", stdout = subprocess.PIPE, shell = True)
 
-    def init_linux_env(self):
-        self.lock_file()
-        
+    def init_linux_env(self):        
         os.environ['GDK_BACKEND'] = "x11"
         #os.environ['GDK_DPI_SCALE'] = "1.25"
 
@@ -182,26 +180,6 @@ class APP(wx.App):
 
         else:
             self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
-
-    def lock_file(self):
-        import fcntl
-
-        LOCK_FILE = os.path.join(os.getcwd(), "app.lock")
-
-        try:
-            fd = os.open(LOCK_FILE, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
-
-        except Exception as e:
-            wx.LogError("无法创建锁文件")
-            sys.exit()
-
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-
-        except IOError:
-            os.close(fd)
-            wx.LogError("Bili23 Downloader 已在运行！")
-            sys.exit()
 
     @property
     def locale_dir(self):

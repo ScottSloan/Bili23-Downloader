@@ -2,6 +2,7 @@ import wx
 import os
 import json
 import wx.adv
+import ctypes
 import gettext
 import inspect
 import platform
@@ -128,14 +129,27 @@ class AboutWindow(Dialog):
         return version
     
     def show_extra_info(self, event: wx.MouseEvent):
-        extra_data = json.loads(inspect.getsource(json_data))
+        extra_data: dict = json.loads(inspect.getsource(json_data))
 
         data = {
             "Platform": Platform(Config.Sys.platform).name,
             "Architecture": platform.machine(),
             "Commit": extra_data.get("commit", "N/A"),
             "Channel": extra_data.get("channel", "N/A"),
-            "Date": extra_data.get("date", "N/A")
+            "Date": extra_data.get("date", "N/A"),
+            "Privilege": self.get_privilege_str()
         }
 
         wx.MessageDialog(self, "Bili23 Downloader\n\n{}".format("\n".join(f"{key}: {value}" for key, value in data.items())), "info", wx.ICON_INFORMATION).ShowModal()
+
+    def get_privilege_str(self):
+        match Platform(Config.Sys.platform):
+            case Platform.Windows:
+                is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+                return "Yes" if is_admin else "No"
+            
+            case Platform.Linux | Platform.MacOS:
+                is_admin = os.getuid() == 0
+
+                return "Yes" if is_admin else "No"

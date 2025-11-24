@@ -145,4 +145,4 @@ class MiscPage(Page):
         else:
             subprocess.Popen([sys.executable] + sys.argv)
 
-        sys.exit()
+        wx.GetApp().ExitMainLoop()
