@@ -55,7 +55,7 @@ class CDN:
         
         length = req.headers.get("Content-Length", 0)
 
-        if length < 1024:
+        if int(length) < 1024:
             # 小于 1KB 的文件大小视为无效
             return 0
 

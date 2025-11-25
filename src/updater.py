@@ -179,35 +179,61 @@ class UpdaterWindow(Frame):
 
         runtime_path = os.path.join(cwd, "runtime", "python.exe")
 
-        code_path = self.save_extractor_code(archive_path, extract_path, cwd)
+        code_path = self.save_updater_code(archive_path, extract_path, cwd)
 
         args = f'''"{runtime_path}" "{code_path}"'''
 
         subprocess.Popen(args = args, shell = True)
 
-    def save_extractor_code(self, archive_path: str, extract_path: str, cwd: str):
+    def save_updater_code(self, archive_path: str, extract_path: str, cwd: str):
         code = textwrap.dedent(f"""\
         import os
         import shutil
         import zipfile
-                               
+        
+        def remove_file(path: str):
+            if os.path.exists(path):
+                os.remove(path)
+               
+        def remove_dir(path: str):
+            if os.path.exists(path):
+                shutil.rmtree(path)
+        
+        def remove_dst(dst_path: str):
+            runtime_path = os.path.join(dst_path, "runtime")
+            script_path = os.path.join(dst_path, "script")
+            script_zip_path = os.path.join(dst_path, "script.zip")
+            site_packages_path = os.path.join(dst_path, "site-packages")
+            int_path = os.path.join(dst_path, "_pystand_static.int")
+            loader_path = os.path.join(dst_path, "Bili23.exe")
+            ffmpeg_path = os.path.join(dst_path, "ffmpeg.exe")
+            
+            remove_dir(runtime_path)
+            remove_dir(script_path)
+            remove_dir(site_packages_path)
+            
+            remove_file(int_path)
+            remove_file(loader_path)
+            remove_file(ffmpeg_path)
+            remove_file(script_zip_path)
+        
         def update(archive_path: str, extract_path: str, cwd: str):
             src_path = os.path.join(extract_path, "Bili23 Downloader")
             dst_path = cwd
             
             if os.path.exists(src_path):
-                shutil.rmtree(src_path)
+                remove_dir(src_path)
             
             with zipfile.ZipFile(archive_path, "r") as zip_ref:
                 zip_ref.extractall(extract_path)
-                               
-            shutil.rmtree(dst_path)
+            
+            remove_dst(dst_path)
             shutil.copytree(src_path, dst_path)
-                              
+            
             subprocess.Popen(os.path.join(dst_path, "Bili23.exe"), shell = True, cwd = dst_path)
-                               
-            shutil.rmtree(src_path)
-            os.remove(archive_path)
+            
+            remove_dir(src_path)
+            remove_file(archive_path)
         
         update(r"{archive_path}", r"{extract_path}", r"{cwd}")
         """)
