@@ -3,13 +3,13 @@
 
 #define MyAppName "Bili23 Downloader"
 #ifndef MyAppVersion
-  #define MyAppVersion "1.70.0"
+  #define MyAppVersion "1.70.2"
 #endif
 #define MyAppPublisher "Scott Sloan"
 #define MyAppURL "https://bili23.scott-sloan.cn"
 #define MyAppExeName "Bili23.exe"
 #ifndef FileVersion
-  #define FileVersion "1.70.0.0"
+  #define FileVersion "1.70.2.0"
 #endif
 #ifndef ProductVersion
   #define ProductVersion "1.70.0.0"

@@ -121,9 +121,9 @@ class MiscPage(Page):
                 Config.APP.err_log_path
             ]
 
-            #File.remove_files(files)
+            File.remove_files(files)
 
-            #shutil.rmtree(Config.User.directory)
+            shutil.rmtree(Config.User.directory)
 
             self.restart()
     

@@ -7,6 +7,31 @@ from utils.common.io.file import File
 from utils.common.io.directory import Directory
 from utils.common.enums import Platform
 
+def get_default_download_path():
+    match Platform(platform.system().lower()):
+        case Platform.Windows:
+            pystand = os.environ.get("PYSTAND")
+
+            if pystand and ":\\Program Files" in pystand:
+                return os.path.join(os.environ.get("APPDATA"), "Downloads")
+            else:
+                return os.path.join(os.getcwd(), "download")
+
+        case Platform.Linux:
+            dir_path = os.path.expanduser("~/.config/user-dirs.dirs")
+
+            if os.path.exists(dir_path):
+                with open(dir_path, "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.startswith("XDG_DOWNLOAD_DIR"):
+                            path = line.split("=")[1].strip().strip('"').replace("$HOME", os.path.expanduser("~"))
+                            return path
+
+            return os.path.expanduser("~/Downloads")
+
+        case Platform.macOS:
+            return os.path.join(os.getcwd(), "download")
+
 app_config_group = {
     "Basic": [
         "language",
@@ -279,6 +304,7 @@ class Config:
         ignore_version: int = 0
 
     class Download:
+        path: str = get_default_download_path()
         file_name_template_list: list = [
             {
                 "template": {
@@ -382,34 +408,6 @@ class Config:
 
         stream_download_option: list = ["video", "audio"]
         ffmpeg_merge: bool = True
-
-        @staticmethod
-        def get_default_download_path():
-            match Platform(platform.system().lower()):
-                case Platform.Windows:
-                    pystand = os.environ.get("PYSTAND")
-
-                    if pystand and ":\\Program Files" in pystand:
-                        return os.path.join(os.environ.get("APPDATA"), "Downloads")
-                    else:
-                        return os.path.join(os.getcwd(), "download")
-
-                case Platform.Linux:
-                    dir_path = os.path.expanduser("~/.config/user-dirs.dirs")
-
-                    if os.path.exists(dir_path):
-                        with open(dir_path, "r", encoding = "utf-8") as f:
-                            for line in f.readlines():
-                                if line.startswith("XDG_DOWNLOAD_DIR"):
-                                    path = line.split("=")[1].strip().strip('"').replace("$HOME", os.path.expanduser("~"))
-                                    return path
-                    else:
-                        return os.path.expanduser("~/Downloads")
-
-                case Platform.macOS:
-                    return os.path.expanduser("~/Downloads")
-
-        path: str = get_default_download_path()
     
     class Merge:
         ffmpeg_path: str = ""

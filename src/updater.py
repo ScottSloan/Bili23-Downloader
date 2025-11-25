@@ -53,7 +53,7 @@ class MiniDownloader:
             return
 
         if self.get_file_size():
-            wx.CallAfter(wx.MessageDialog(self, "下载更新\n\n下载更新失败，请手动前往官网下载。", "警告", wx.ICON_WARNING).ShowModal)
+            wx.CallAfter(wx.MessageDialog(None, "下载更新\n\n下载更新失败，请手动前往官网下载。", "警告", wx.ICON_WARNING).ShowModal)
             return
 
         Thread(target = self.daemon).start()
@@ -72,7 +72,7 @@ class MiniDownloader:
         if self.verify():
             self.complete_callback(self.destination)
         else:
-            wx.CallAfter(wx.MessageDialog(self, "文件校验失败\n\n校验下载文件失败，请重试。", "警告", wx.ICON_WARNING).ShowModal)
+            wx.CallAfter(wx.MessageDialog(None, "文件校验失败\n\n校验下载文件失败，请重试。", "警告", wx.ICON_WARNING).ShowModal)
 
     def get_file_size(self):
         req = RequestUtils.request_get(self.url, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth(), allow_redirects = False)
