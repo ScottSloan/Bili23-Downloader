@@ -3,8 +3,8 @@ name: Build Releases
 on:
   workflow_dispatch:
   push:
-    branches:
-      - 'dev'
+    # branches:
+    #   - 'dev'
     tags:
       - '*'
 
@@ -331,7 +331,7 @@ jobs:
           body_path: CHANGELOG.md
           make_latest: true
           tag_name: ${{ env.tag }}
-          draft: true
+          draft: false
           prerelease: false
           generate_release_notes: false
           discussion_category_name: announcements

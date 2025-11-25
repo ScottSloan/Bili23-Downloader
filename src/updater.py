@@ -130,7 +130,7 @@ class UpdaterWindow(Frame):
 
         self.msg_lab = wx.StaticText(panel, -1, "正在下载更新...")
 
-        self.progress_bar = wx.Gauge(panel, -1, 100, style = wx.GA_HORIZONTAL | wx.GA_SMOOTH)
+        self.progress_bar = wx.Gauge(panel, -1, 100, size = self.FromDIP((400, 16)), style = wx.GA_HORIZONTAL | wx.GA_SMOOTH)
 
         self.progress_lab = wx.StaticText(panel, -1, "已下载 0 MB / 0 MB")
 
@@ -143,7 +143,9 @@ class UpdaterWindow(Frame):
 
         vbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_RIGHT, self.FromDIP(10))
 
-        panel.SetSizer(vbox)
+        panel.SetSizerAndFit(vbox)
+
+        self.Fit()
 
     def Bind_EVT(self):
         self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCancelEVT)
@@ -195,7 +197,7 @@ class UpdaterWindow(Frame):
                 # 告知用户手动 sudo dpkg -i
                 wx.CallAfter(wx.MessageDialog(self, "下载完成\n\n安装包已下载至：{}\n请在终端手动执行以下命令安装：\n\nsudo dpkg -i {}".format(filepath, filepath), "提示", wx.ICON_INFORMATION).ShowModal)
 
-        sys.exit()
+        wx.GetApp().ExitMainLoop()
 
     def init_extractor(self, archive_path: str):
         extract_path = tempfile.gettempdir()
@@ -225,7 +227,6 @@ class UpdaterWindow(Frame):
                 shutil.rmtree(path)
         
         def remove_dst(dst_path: str):
-            runtime_path = os.path.join(dst_path, "runtime")
             script_path = os.path.join(dst_path, "script")
             script_zip_path = os.path.join(dst_path, "script.zip")
             site_packages_path = os.path.join(dst_path, "site-packages")
@@ -233,7 +234,6 @@ class UpdaterWindow(Frame):
             loader_path = os.path.join(dst_path, "Bili23.exe")
             ffmpeg_path = os.path.join(dst_path, "ffmpeg.exe")
             
-            remove_dir(runtime_path)
             remove_dir(script_path)
             remove_dir(site_packages_path)
             
@@ -241,6 +241,25 @@ class UpdaterWindow(Frame):
             remove_file(loader_path)
             remove_file(ffmpeg_path)
             remove_file(script_zip_path)
+                               
+        def copy_src(src_path: str, dst_path: str):
+            src_script_path = os.path.join(src_path, "script")
+            src_site_packages_path = os.path.join(src_path, "site-packages")
+            src_int_path = os.path.join(src_path, "_pystand_static.int")
+            src_loader_path = os.path.join(src_path, "Bili23.exe")
+            src_ffmpeg_path = os.path.join(src_path, "ffmpeg.exe")
+                               
+            dst_script_path = os.path.join(dst_path, "script")
+            dst_site_packages_path = os.path.join(dst_path, "site-packages")
+            dst_int_path = os.path.join(dst_path, "_pystand_static.int")
+            dst_loader_path = os.path.join(dst_path, "Bili23.exe")
+            dst_ffmpeg_path = os.path.join(dst_path, "ffmpeg.exe")
+            
+            shutil.copytree(src_script_path, dst_script_path)
+            shutil.copytree(src_site_packages_path, dst_site_packages_path)
+            shutil.copy(src_int_path, dst_int_path)
+            shutil.copy(src_loader_path, dst_loader_path)
+            shutil.copy(src_ffmpeg_path, dst_ffmpeg_path)
         
         def update(archive_path: str, extract_path: str, cwd: str):
             src_path = os.path.join(extract_path, "Bili23 Downloader")
@@ -253,7 +272,7 @@ class UpdaterWindow(Frame):
                 zip_ref.extractall(extract_path)
             
             remove_dst(dst_path)
-            shutil.copytree(src_path, dst_path)
+            copy_src(src_path, dst_path)
             
             subprocess.Popen(os.path.join(dst_path, "Bili23.exe"), shell = True, cwd = dst_path)
             
