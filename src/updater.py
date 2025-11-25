@@ -8,6 +8,7 @@ import hashlib
 import textwrap
 import tempfile
 import subprocess
+from threading import Event
 
 from utils.common.request import RequestUtils
 from utils.common.thread import Thread
@@ -15,6 +16,8 @@ from utils.common.formatter.formatter import FormatUtils
 import utils.common.compile_data as json_data
 
 from gui.component.window.frame import Frame
+
+stop_event = Event()
 
 class MiniDownloader:
     def __init__(self, url: str, sha256: str, downloading_callback = None, complete_callback = None):
@@ -35,6 +38,9 @@ class MiniDownloader:
             with RequestUtils.request_get(self.url, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth(), stream = True) as req:
                 for chunk in req.iter_content(chunk_size = 2048):
                     if chunk:
+                        if stop_event.is_set():
+                            return
+                        
                         self.downloaded_size += len(chunk)
                         f.write(chunk)
 
@@ -46,7 +52,9 @@ class MiniDownloader:
             self.complete_callback(self.destination)
             return
 
-        self.get_file_size()
+        if self.get_file_size():
+            wx.CallAfter(wx.MessageDialog(self, "下载更新\n\n下载更新失败，请手动前往官网下载。", "警告", wx.ICON_WARNING).ShowModal)
+            return
 
         Thread(target = self.daemon).start()
 
@@ -54,6 +62,9 @@ class MiniDownloader:
 
     def daemon(self):
         while self.downloaded_size < self.file_size:
+            if stop_event.is_set():
+                return
+
             time.sleep(0.5)
 
             self.downloading_callback(self.downloaded_size, self.file_size)
@@ -68,6 +79,9 @@ class MiniDownloader:
 
         if req.status_code in [301, 302]:
             self.url = req.headers["Location"]
+        
+        else:
+            return True
 
         req = RequestUtils.request_head(self.url, headers = RequestUtils.get_headers(), proxies = RequestUtils.get_proxies(), auth = RequestUtils.get_auth())
 
@@ -105,6 +119,8 @@ class UpdaterWindow(Frame):
 
         self.init_UI()
 
+        self.Bind_EVT()
+
         self.CenterOnParent()
 
         self.check_channel()
@@ -118,24 +134,29 @@ class UpdaterWindow(Frame):
 
         self.progress_lab = wx.StaticText(panel, -1, "已下载 0 MB / 0 MB")
 
+        self.cancel_btn = wx.Button(panel, wx.ID_CANCEL, "取消", size = self.FromDIP((90, 28)))
+
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.msg_lab, 0, wx.ALL | wx.EXPAND, self.FromDIP(10))
         vbox.Add(self.progress_bar, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, self.FromDIP(10))
         vbox.Add(self.progress_lab, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(10))
 
+        vbox.Add(self.cancel_btn, 0, wx.ALL & (~wx.TOP) | wx.ALIGN_RIGHT, self.FromDIP(10))
+
         panel.SetSizer(vbox)
+
+    def Bind_EVT(self):
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self.onCancelEVT)
 
     def check_channel(self):
         extra_data: dict = json.loads(inspect.getsource(json_data))
-
-        extra_data["channel"] = "source_code"
 
         self.channel = extra_data.get("channel")
 
         match self.channel:
             case "source_code":
                 wx.MessageDialog(self, "更新\n\n请手动执行 git pull 完成更新。", "提示", wx.ICON_INFORMATION).ShowModal()
-                exit()
+                sys.exit()
                 return
 
             case "windows_portable" | "windows_setup" | "linux_deb_package":
@@ -158,6 +179,9 @@ class UpdaterWindow(Frame):
         wx.CallAfter(worker)
 
     def complete_callback(self, filepath: str):
+        if stop_event.is_set():
+            return
+        
         match self.channel:
             case "windows_portable":
                 # 解压 zip 文件
@@ -256,3 +280,8 @@ class UpdaterWindow(Frame):
         for entry in self.url_data:
             if entry["channel"] == channel:
                 return entry
+            
+    def onCancelEVT(self, event: wx.CommandEvent):
+        stop_event.set()
+
+        self.Close()
