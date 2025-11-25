@@ -8,7 +8,7 @@ import inspect
 import subprocess
 
 from utils.config import Config
-from utils.common.enums import EpisodeDisplayType
+from utils.common.enums import EpisodeDisplayType, Platform
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
 import utils.common.compile_data as json_data
@@ -121,9 +121,9 @@ class MiscPage(Page):
                 Config.APP.err_log_path
             ]
 
-            File.remove_files(files)
+            #File.remove_files(files)
 
-            shutil.rmtree(Config.User.directory)
+            #shutil.rmtree(Config.User.directory)
 
             self.restart()
     
@@ -143,10 +143,15 @@ class MiscPage(Page):
 
         match extra_data.get("channel"):
             case "source_code":
-                subprocess.Popen([sys.executable] + sys.argv)
+                if Platform(Config.Sys.platform) == Platform.Windows:
+                    cmd = " ".join(f'"{str(arg)}"' for arg in [sys.executable] + sys.argv)
+
+                    subprocess.Popen(f"timeout /t 1 /nobreak > NUL && {cmd}", shell = True)
+                else:
+                    subprocess.Popen([sys.executable] + sys.argv)
 
             case "windows_portable" | "windows_setup":
-                subprocess.Popen(os.environ.get("PYSTAND"))
+                subprocess.Popen(f'''timeout /t 1 /nobreak > NUL && "{os.environ.get("PYSTAND")}"''', shell = True)
 
             case "linux_deb_package":
                 subprocess.Popen(os.environ.get("LOADER"))
@@ -154,4 +159,4 @@ class MiscPage(Page):
             case _:
                 subprocess.Popen(sys.argv)
 
-        wx.GetApp().ExitMainLoop()
+        sys.exit()

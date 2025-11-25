@@ -252,7 +252,7 @@ class Config:
     
     class User:
         directory: str = ""
-        download_file_directory: str = ""
+        task_file_directory: str = ""
         live_file_directory: str = ""
         user_config_path: str = ""
 
@@ -387,7 +387,12 @@ class Config:
         def get_default_download_path():
             match Platform(platform.system().lower()):
                 case Platform.Windows:
-                    return os.path.join(os.getcwd(), "download")
+                    pystand = os.environ.get("PYSTAND")
+
+                    if pystand and ":\\Program Files" in pystand:
+                        return os.path.join(os.environ.get("APPDATA"), "Downloads")
+                    else:
+                        return os.path.join(os.getcwd(), "download")
 
                 case Platform.Linux:
                     dir_path = os.path.expanduser("~/.config/user-dirs.dirs")
@@ -584,7 +589,7 @@ class Config:
     def load_config(cls):
         cls.init_path()
         
-        Directory.create_directories([Config.User.directory, Config.User.download_file_directory, Config.User.live_file_directory])
+        Directory.create_directories([Config.User.directory, Config.User.task_file_directory, Config.User.live_file_directory])
 
         cls.app_config = Config.APPConfig()
         cls.user_config = Config.UserConfig()
@@ -607,8 +612,8 @@ class Config:
         Config.APP.err_log_path = os.path.join(Config.User.directory, "error_log.txt")
 
         Config.User.user_config_path = os.path.join(Config.User.directory, "user.json")
-        Config.User.download_file_directory = os.path.join(Config.User.directory, "download")
-        Config.User.live_file_directory = os.path.join(Config.User.directory, "live")
+        Config.User.task_file_directory = os.path.join(Config.User.directory, "Tasks")
+        Config.User.live_file_directory = os.path.join(Config.User.directory, "Live")
 
     @classmethod
     def save_app_config(cls):

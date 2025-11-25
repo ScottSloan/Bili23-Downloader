@@ -1,5 +1,6 @@
 import os
 import wx
+import sys
 import json
 import time
 import inspect
@@ -170,7 +171,7 @@ class UpdaterWindow(Frame):
                 # 告知用户手动 sudo dpkg -i
                 wx.CallAfter(wx.MessageDialog(self, "下载完成\n\n安装包已下载至：{}\n请在终端手动执行以下命令安装：\n\nsudo dpkg -i {}".format(filepath, filepath), "提示", wx.ICON_INFORMATION).ShowModal)
 
-        wx.GetApp().ExitMainLoop()
+        sys.exit()
 
     def init_extractor(self, archive_path: str):
         extract_path = tempfile.gettempdir()

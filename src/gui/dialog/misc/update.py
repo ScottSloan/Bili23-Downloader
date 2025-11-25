@@ -86,7 +86,7 @@ class UpdateDialog(Dialog):
             return super().onCloseEVT(event)
 
     def onOKEVT(self):
-        window = UpdaterWindow(self.info["download_url"])
+        window = UpdaterWindow(self.info["url"], self.info["download_url"])
         window.Show()
 
         if self.force:
