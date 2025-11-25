@@ -1,7 +1,8 @@
 import os
 
+from utils.config import Config
 from utils.common.model.task_info import DownloadTaskInfo
-from utils.common.enums import CoverType, TemplateType
+from utils.common.enums import CoverType
 
 from utils.module.pic.cover import Cover
 
@@ -39,7 +40,13 @@ class EpisodeNFOParser(Parser):
             return
 
         self.get_bangumi_season_info()
-        self.get_bangumi_poster(Utils.get_root_path(self.task_info), f"season{self.task_info.season_num:02}-poster.jpg")
+
+        if Config.Download.strict_naming:
+            file_name = f"season{self.task_info.season_num:02}-poster.jpg"
+        else:
+            file_name = "poster.jpg"
+
+        self.get_bangumi_poster(Utils.get_root_path(self.task_info), file_name)
 
         file = SeasonMetadataParser(self.task_info)
         contents = file.get_nfo_contents()

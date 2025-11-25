@@ -1,5 +1,6 @@
 import wx
 import os
+import time
 import gettext
 
 from utils.config import Config
@@ -214,6 +215,8 @@ class Utils:
 
     def merge_video(self, set_status: bool = True):
         def worker():
+            time.sleep(1)
+            
             FFUtils.merge(self.task_info, self.get_merge_callback())
 
         if set_status:

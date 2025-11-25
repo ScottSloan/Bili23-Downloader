@@ -27,7 +27,10 @@ class FFCommand:
                         command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "libmp3lame"))
                         command.add_remove([audio_temp_file], task_info.download_path)
 
-                    return output_temp_file
+                        return output_temp_file
+                    
+                    else:
+                        return prop.audio_temp_file()
                 
                 case _:
                     return output_temp_file

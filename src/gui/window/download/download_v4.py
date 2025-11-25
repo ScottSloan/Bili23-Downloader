@@ -243,8 +243,8 @@ class Utils:
     def read_download_files(cls):
         temp_task_info_list: List[DownloadTaskInfo] = []
 
-        for file_name in os.listdir(Config.User.download_file_directory):
-            file_path = os.path.join(Config.User.download_file_directory, file_name)
+        for file_name in os.listdir(Config.User.task_file_directory):
+            file_path = os.path.join(Config.User.task_file_directory, file_name)
 
             if file_name.startswith("info_") and file_name.endswith(".json"):
                 task_info = DownloadTaskInfo()

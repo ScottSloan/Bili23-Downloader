@@ -360,4 +360,4 @@ class DownloadTaskInfo:
 
     @property
     def file_path(self):
-        return os.path.join(Config.User.download_file_directory, f"info_{self.id}.json")
+        return os.path.join(Config.User.task_file_directory, f"info_{self.id}.json")

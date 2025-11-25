@@ -51,7 +51,7 @@ class Directory:
             ctypes.windll.shell32.SHParseDisplayName(path, None, ctypes.byref(pidl), 0, None)
             
             return pidl
-        
+                
         class ITEMIDLIST(ctypes.Structure):
             _fields_ = [("mkid", ctypes.c_byte)]
 

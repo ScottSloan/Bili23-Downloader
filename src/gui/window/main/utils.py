@@ -310,8 +310,11 @@ class Utils:
             version = info.get("version_code")
 
             if version > Config.APP.version_code:
-                if info.get("force") or version != Config.Misc.ignore_version:
+                result = info.get("force") or version != Config.Misc.ignore_version
+
+                if result:
                     wx.CallAfter(Window.update_dialog, cls.get_main_window(), info)
+
             else:
                 if from_menu:
                     Window.message_dialog(cls.get_main_window(), _("当前没有可用的更新。"), _("检查更新"), wx.ICON_INFORMATION)

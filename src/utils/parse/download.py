@@ -45,10 +45,10 @@ class DownloadParser(Parser):
     def parse_dash_json(self, data: dict):
         def get_download_items():
             if not self.task_info.download_items:
-                self.task_info.download_items = self.task_info.download_option.copy()
-
                 if self.task_info.download_option == ["video", "audio"] and not data["dash"]["audio"]:
-                    self.task_info.download_items = ["video"]
+                    self.task_info.download_option = ["video"]
+
+                self.task_info.download_items = self.task_info.download_option.copy()
 
         def get_output_type():
             match self.task_info.download_items:

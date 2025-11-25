@@ -50,9 +50,9 @@ error_log.txt
 
 # PyStand
 Build
-_pystand_static.int
-
-setup.iss
 
 temp
 test
+
+# git hooks
+hooks/

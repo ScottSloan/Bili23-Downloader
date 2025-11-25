@@ -49,4 +49,14 @@ class CDN:
     def request_head(url: str):
         req = RequestUtils.request_head(url, headers = RequestUtils.get_headers(referer_url = CDN.bilibili_url))
 
-        return int(req.headers.get("Content-Length", 0))
+        if req.status_code not in (200, 206):
+            # 非成功状态码视为无效
+            return 0
+        
+        length = req.headers.get("Content-Length", 0)
+
+        if int(length) < 1024:
+            # 小于 1KB 的文件大小视为无效
+            return 0
+
+        return int(length)

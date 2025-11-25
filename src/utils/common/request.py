@@ -10,10 +10,10 @@ class RequestUtils:
     session = requests.Session()
 
     @classmethod
-    def request_get(cls, url: str, headers = None, proxies = None, auth = None, stream = False):
+    def request_get(cls, url: str, headers = None, proxies = None, auth = None, stream = False, allow_redirects = True):
         headers, proxies, auth = cls.get_params(headers, proxies, auth)
         
-        return cls.session.get(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream, verify = Config.Advanced.enable_ssl_verify, timeout = 5)
+        return cls.session.get(cls.get_protocol(url), headers = headers, proxies = proxies, auth = auth, stream = stream, verify = Config.Advanced.enable_ssl_verify, timeout = 5, allow_redirects = allow_redirects)
     
     @classmethod
     def request_post(cls, url: str, headers = None, proxies = None, auth = None, params = None, json = None):

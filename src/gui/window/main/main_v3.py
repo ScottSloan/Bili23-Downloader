@@ -291,7 +291,10 @@ class MainWindow(Frame):
 
         if self.top_box.check_url():
             return
-
+        
+        if not Config.User.login:
+            wx.MessageDialog(self, _("登录账号\n\n建议登录账号后再继续使用，否则下载受限。"), _("警告"), wx.ICON_WARNING).ShowModal()
+        
         self.episode_list.init_episode_list()
 
         Thread(target = self.parser.parse_url, args = (url, )).start()

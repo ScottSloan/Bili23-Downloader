@@ -1,14 +1,17 @@
 import wx
 import os
 import sys
+import json
 import shutil
 import gettext
+import inspect
 import subprocess
 
 from utils.config import Config
-from utils.common.enums import EpisodeDisplayType
+from utils.common.enums import EpisodeDisplayType, Platform
 from utils.common.io.file import File
 from utils.common.io.directory import Directory
+import utils.common.compile_data as json_data
 
 from gui.window.settings.page import Page
 
@@ -136,13 +139,24 @@ class MiscPage(Page):
         Directory.open_directory(Config.User.directory)
 
     def restart(self):
-        if pystand := os.environ.get("PYSTAND"):
-            subprocess.Popen(pystand)
+        extra_data: dict = json.loads(inspect.getsource(json_data))
 
-        elif not sys.argv[0].endswith(".py"):
-            subprocess.Popen(sys.argv)
+        match extra_data.get("channel"):
+            case "source_code":
+                if Platform(Config.Sys.platform) == Platform.Windows:
+                    cmd = " ".join(f'"{str(arg)}"' for arg in [sys.executable] + sys.argv)
 
-        else:
-            subprocess.Popen([sys.executable] + sys.argv)
+                    subprocess.Popen(f"timeout /t 1 /nobreak > NUL && {cmd}", shell = True)
+                else:
+                    subprocess.Popen([sys.executable] + sys.argv)
+
+            case "windows_portable" | "windows_setup":
+                subprocess.Popen(f'''timeout /t 1 /nobreak > NUL && "{os.environ.get("PYSTAND")}"''', shell = True)
+
+            case "linux_deb_package":
+                subprocess.Popen(os.environ.get("LOADER"))
+
+            case _:
+                subprocess.Popen(sys.argv)
 
         sys.exit()
