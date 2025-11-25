@@ -1,4 +1,4 @@
-name: Build Releases
+name: Build and Release
 
 on:
   workflow_dispatch:
