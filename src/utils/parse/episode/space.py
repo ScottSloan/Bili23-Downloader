@@ -25,15 +25,23 @@ class Space:
         episode_info_list = []
 
         for entry in video_info_list["sequence"]:
-            key, value = entry["key"], entry["value"]
+            bvid = entry.get("bvid")
+            season_id = entry.get("season_id")
 
-            info_json = video_info_list[key][value]
+            match ParseType(entry["type"]):
+                case ParseType.Video:
+                    if season_id:
+                        info_json = video_info_list["video_season_dict"][season_id]
+                        info_json["bvid"] = bvid
+                    else:
+                        info_json = video_info_list["video_bvid_dict"][bvid]
 
-            if key.startswith("video"):
-                episode_info_list.extend(cls.video_parser(info_json, parent_title))
+                    episode_info_list.extend(cls.video_parser(info_json, parent_title))
 
-            else:
-                episode_info_list.extend(cls.cheese_parser(info_json, parent_title))
+                case ParseType.Cheese:
+                    info_json = video_info_list["cheese_season_dict"][season_id]
+
+                    episode_info_list.extend(cls.cheese_parser(info_json, parent_title))
 
         return episode_info_list
 

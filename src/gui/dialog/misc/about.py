@@ -140,7 +140,9 @@ class AboutWindow(Dialog):
             "Commit": commit_hash,
             "Channel": extra_data.get("channel", "N/A"),
             "Date": self.get_date_str(extra_data, commit_hash),
-            "Privilege": self.get_privilege_str()
+            "Privilege": self.get_privilege_str(),
+            "Python": platform.python_version(),
+            "wxPython": wx.__version__
         }
 
         wx.MessageDialog(self, "Bili23 Downloader\n\n{}".format("\n".join(f"{key}: {value}" for key, value in data.items())), "info", wx.ICON_INFORMATION).ShowModal()

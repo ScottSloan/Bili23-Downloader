@@ -130,9 +130,9 @@ class SpaceParser(Parser):
     def parse_video_info(self, video_info_to_parse: list[dict], detail_mode_callback):
         video_info_list = {
             "sequence": [],
-            "video_season": {},
-            "video_bvid": {},
-            "cheese_season": {}
+            "video_season_dict": {},
+            "video_bvid_dict": {},
+            "cheese_season_dict": {}
         }
 
         time.sleep(0.5)
@@ -146,30 +146,37 @@ class SpaceParser(Parser):
             season_id = entry.get("season_id")
             bvid = entry.get("bvid")
 
+            video_info_list["sequence"].append({
+                "type": entry["type"],
+                "title": entry.get("title"),
+                "bvid": bvid,
+                "season_id": season_id
+            })
+
             match ParseType(entry["type"]):
                 case ParseType.Video:
-                    key = "video_season" if season_id else "video_bvid"
-                    value = season_id if season_id else bvid
                     is_avoided = True if entry.get("template_type") == TemplateType.Video_Collection.value else False
 
-                    is_season = season_id and season_id not in video_info_list["video_season"]
+                    if season_id:
+                        if season_id in video_info_list["video_season_dict"]:
+                            # already exists, pass
+                            continue
 
-                    if is_season or not season_id:
-                        video_info_list[key][value] = self.get_video_info(bvid, is_avoided)
+                        video_info_list["video_season_dict"][season_id] = self.get_video_info(bvid, is_avoided)
 
-                    video_info_list["sequence"].append({
-                        "key": key,
-                        "value": value
-                    })
+                    else:
+                        video_info_list["video_bvid_dict"][bvid] = self.get_video_info(bvid, is_avoided)
 
                 case ParseType.Cheese:
-                    video_info_list["cheese_season"][season_id] = self.get_cheese_info(season_id)
+                    video_info_list["cheese_season_dict"][season_id] = self.get_cheese_info(season_id)
 
         time.sleep(0.5)
 
         self.change_processing_type(ProcessingType.Process)
 
-        episode_info_list = Episode.Utils.dict_list_to_tree_item_list(Space.parse_episodes_detail(video_info_list, self.get_parent_title()))
+        dict_list = Space.parse_episodes_detail(video_info_list, self.get_parent_title())
+
+        episode_info_list = Episode.Utils.dict_list_to_tree_item_list(dict_list)
 
         detail_mode_callback(episode_info_list)
 
