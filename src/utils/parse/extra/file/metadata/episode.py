@@ -74,29 +74,24 @@ class TVShowMetaDataParser:
 
         for entry in actors_list.split("\n"):
             entry = entry.strip()
-            if not entry:
+
+            if not entry or entry.endswith("："):
                 continue
 
             parts = entry.split("：", 1)
+
             if len(parts) == 1:
-                role, name = "", parts[0]
-            else:
-                role, name = parts[0].strip(), parts[1].strip()
-
-            if not name:
-                continue
-
-            if role != '':
-                actor_element = f"""
+                actor_element = """
                     <actor>
-                        <name>{name}</name>
-                        <role>{role}</role>
-                    </actor>"""
-            else:
-                actor_element = f"""
+                        <name>{}</name>
+                    </actor>""".format(parts[0].strip())
+
+            elif len(parts) == 2:
+                actor_element = """
                     <actor>
-                        <name>{name}</name>
-                    </actor>"""
+                        <name>{}</name>
+                        <role>{}</role>
+                    </actor>""".format(parts[0].strip(), parts[1].strip())
 
             actors.append(Utils.indent(actor_element, "                "))
 
