@@ -241,6 +241,11 @@ class DownloadPage(Page):
         dlg = wx.DirDialog(self, _("选择下载目录"), defaultPath = self.path_box.GetValue())
 
         if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+
+            if path.startswith("\\\\"):
+                return wx.MessageDialog(self.parent, _("设置失败\n\n请先将网络路径映射为网络驱动器后，再设置下载目录。"), _("警告"), wx.ICON_WARNING).ShowModal()
+            
             self.path_box.SetValue(dlg.GetPath())
 
     def onCustomFileNameEVT(self, event: wx.CommandEvent):

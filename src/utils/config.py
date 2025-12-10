@@ -457,7 +457,6 @@ class Config:
     class Advanced:
         enable_switch_cdn: bool = True
         cdn_list: list = [
-            "upos-sz-estgoss.bilivideo.com",
             "upos-sz-mirrorali02.bilivideo.com",
             "upos-sz-mirror08c.bilivideo.com",
             "upos-sz-mirrorcoso1.bilivideo.com",
