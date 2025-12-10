@@ -73,17 +73,34 @@ class TVShowMetaDataParser:
             return ""
 
         for entry in actors_list.split("\n"):
-            role_name = entry.split("：")
+            entry = entry.strip()
+            if not entry:
+                continue
 
-            actor_element = """\
-                <actor>
-                    <name>{name}</name>
-                    <role>{role}</role>
-                </actor>""".format(name = role_name[1], role = role_name[0])
+            parts = entry.split("：", 1)
+            if len(parts) == 1:
+                role, name = "", parts[0]
+            else:
+                role, name = parts[0].strip(), parts[1].strip()
+
+            if not name:
+                continue
+
+            if role != '':
+                actor_element = f"""
+                    <actor>
+                        <name>{name}</name>
+                        <role>{role}</role>
+                    </actor>"""
+            else:
+                actor_element = f"""
+                    <actor>
+                        <name>{name}</name>
+                    </actor>"""
 
             actors.append(Utils.indent(actor_element, "                "))
 
-        return "\n".join(actors).removeprefix("                ")
+        return "".join(actors).removeprefix("                ")
 
     def get_named_season(self, seasons_data: list[dict], series_title_original: str):
         seasons = []
