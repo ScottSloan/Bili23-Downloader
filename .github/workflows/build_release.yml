@@ -14,8 +14,6 @@ jobs:
     outputs:
       windows-zip-file: ${{ env.windows-zip-file }}
       windows-setup-file: ${{ env.windows-setup-file }}
-      version: ${{ env.version }}
-      version-code: ${{ env.version_code }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -34,8 +32,6 @@ jobs:
           "ver_minor=$($json.ver_minor)" | Out-File -Append -FilePath $env:GITHUB_ENV
           "ver_patch=$($json.ver_patch)" | Out-File -Append -FilePath $env:GITHUB_ENV
           "ver_build=$($json.ver_build)" | Out-File -Append -FilePath $env:GITHUB_ENV
-
-          "version_code=$($json.version_code)" | Out-File -Append -FilePath $env:GITHUB_ENV
 
           "windows-zip-file=Bili23_Downloader-$($json.ver_major).$($json.ver_minor).$($json.ver_patch)-windows-x64.zip" | Out-File -Append -FilePath $env:GITHUB_ENV
           "windows-setup-file=Bili23_Downloader-$($json.ver_major).$($json.ver_minor).$($json.ver_patch)-windows-x64-setup.exe" | Out-File -Append -FilePath $env:GITHUB_ENV
@@ -372,9 +368,14 @@ jobs:
           CLOUDREVE_EMAIL: ${{ secrets.CLOUDREVE_EMAIL }}
           CLOUDREVE_PASSWORD: ${{ secrets.CLOUDREVE_PASSWORD }}
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          VERSION: ${{ env.VERSION }}
-          VERSION_CODE: ${{ env.VERSION_CODE }}
         run: |
+          ver_major=$(jq -r '.ver_major' src/utils/common/compile_data.py)
+          ver_minor=$(jq -r '.ver_minor' src/utils/common/compile_data.py)
+          ver_patch=$(jq -r '.ver_patch' src/utils/common/compile_data.py)
+
+          VERSION="$ver_major.$ver_minor.$ver_patch"
+          VERSION_CODE=$(jq -r '.version_code' src/utils/common/compile_data.py)
+
           wget https://drive.scott-sloan.cn/f/vWYSK/bili23_api.py -O bili23_api.py
           
           python3 ./bili23_api.py

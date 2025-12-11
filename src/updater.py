@@ -161,13 +161,19 @@ class UpdaterWindow(Frame):
                 sys.exit()
                 return
 
-            case "windows_portable" | "windows_setup" | "linux_deb_package":
+            case "windows_setup" | "linux_deb_package":
                 self.init_downloader()
+
+            case "windows_portable":
+                wx.LaunchDefaultBrowser(self.url)
+
+                self.Close()
 
             case _:
                 wx.MessageDialog(self, "未知错误\n\n发生未知错误，请前往官方网站下载最新版本。", "Fatal Error", wx.ICON_ERROR).ShowModal()
                 wx.LaunchDefaultBrowser(self.url)
-                return
+                
+                self.Close()
                     
     def download_callback(self, downloaded: int, total: int):
         def worker():
