@@ -91,7 +91,7 @@ class TVShowMetaDataParser:
                     <actor>
                         <name>{}</name>
                         <role>{}</role>
-                    </actor>""".format(parts[0].strip(), parts[1].strip())
+                    </actor>""".format(parts[1].strip(), parts[0].strip())
 
             actors.append(Utils.indent(actor_element, "                "))
 
