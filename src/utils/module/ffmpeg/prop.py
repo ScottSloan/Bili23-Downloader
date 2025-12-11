@@ -17,11 +17,11 @@ class FFProp:
     def audio_temp_file(self):
         return f"audio_{self.task_info.id}.{self.task_info.audio_type}"
 
-    def output_temp_file(self):
-        return f"output_{self.task_info.id}.{self.task_info.output_type}"
+    def output_temp_file(self, file_type: str = None):
+        return f"output_{self.task_info.id}.{file_type if file_type else self.task_info.output_type}"
     
-    def output_file_name(self):
-        return FileNameFormatter.check_file_name_length(f"{self.task_info.file_name}.{self.task_info.output_type}")
+    def output_file_name(self, file_type: str = None):
+        return FileNameFormatter.check_file_name_length(f"{self.task_info.file_name}.{file_type if file_type else self.task_info.output_type}")
     
     def flv_list_file(self):
         return f"flv_list_{self.task_info.id}.txt"

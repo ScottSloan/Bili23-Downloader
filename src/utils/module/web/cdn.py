@@ -35,6 +35,13 @@ class CDN:
                 if file_size:
                     return (download_url, file_size)
                 
+        # 未通过 CDN 获取到有效文件大小，尝试不使用 CDN 直连获取
+        for download_url in url_list:
+            file_size = cls.request_head(download_url)
+
+            if file_size:
+                return (download_url, file_size)
+                
     @classmethod
     def get_file_size_ex(cls, url_list: List[str]):
         for download_url in url_list:
