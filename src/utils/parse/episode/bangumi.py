@@ -33,10 +33,11 @@ class Bangumi:
         section_title = section["title"]
         section_pid = EpisodeInfo.add_item(bangumi_pid, EpisodeInfo.get_node_info(section_title, label = "章节"))
 
-        for episode in section["episodes"]:
+        for index, episode in enumerate(section["episodes"]):
             episode["season_id"] = info_json["season_id"]
             episode["media_id"] = info_json["media_id"]
             episode["section_title"] = section_title
+            episode["episode_index"] = index
 
             EpisodeInfo.add_item(section_pid, cls.get_entry_info(episode.copy(), info_json, section_title))
 
@@ -58,7 +59,7 @@ class Bangumi:
     @classmethod
     def get_entry_info(cls, episode: dict, info_json: dict, section_title: str, parent_title: str = ""):
         episode["season_num"] = cls.season_num
-        episode["episode_num"] = int(episode.get("title")) if (episode_num := episode.get("title")) and episode_num.isnumeric() else 0
+        episode["episode_num"] = cls.get_episode_num(episode) #int(episode.get("title")) if (episode_num := episode.get("title")) and episode_num.isnumeric() else 0
         episode["total_count"] = info_json.get("total", 0)
         episode["title"] = FormatUtils.format_bangumi_title(episode, info_json.get("season_title"), section_title, info_json["type"] == 2)
         episode["bvid"] = cls.get_bvid(episode.copy())
@@ -128,3 +129,15 @@ class Bangumi:
             cls.season_num = StrictNaming.get_season_num_ex(info_json.copy())
         else:
             cls.season_num = 1
+
+    @classmethod
+    def get_episode_num(cls, episode: dict):
+        episode_num: str = episode.get("title", "")
+
+        if episode_num.isnumeric():
+            return int(episode_num)
+        else:
+            if episode.get("section_title") == "正片":
+                return episode.get("episode_index", 0) + 1
+            else:
+                return 0

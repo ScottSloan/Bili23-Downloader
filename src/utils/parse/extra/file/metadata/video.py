@@ -47,7 +47,7 @@ class VideoMetadataFile:
                 <genre>{subzone}</genre>
                 {tags}
                 {dateadded}>
-            </movie>""".format(**self.data))
+            </movie>""".format(**self.data)).replace("\n\n", "\n")
     
     def get_tags(self, tags: list[str]):
         tags_elements = []

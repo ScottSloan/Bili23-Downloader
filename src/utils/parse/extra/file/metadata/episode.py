@@ -42,7 +42,7 @@ class TVShowMetaDataParser:
                 {named_seasons}
                 <uniqueid type="season">{season_id}</uniqueid>
                 {dateadded}
-            </tvshow>""".format(**self.data))
+            </tvshow>""".format(**self.data)).replace("\n\n", "\n")
     
     def get_ratings(self, rating: float, votes: int):
         ratings_element = """\
@@ -144,7 +144,7 @@ class SeasonMetadataParser:
                 <thumb aspect="poster">{poster_url}</thumb>
                 <premiered>{pubdate}</premiered>
                 <uniqueid type="season_id">{season_id}</uniqueid>
-            </season>""".format(**self.data))
+            </season>""".format(**self.data)).replace("\n\n", "\n")
     
 class EpisodeMetadataParser:
     def __init__(self, task_info: DownloadTaskInfo):
@@ -176,4 +176,4 @@ class EpisodeMetadataParser:
                 <uniqueid type="cid">{cid}</uniqueid>
                 <uniqueid type="ep_id">{ep_id}</uniqueid>
                 {dateadded}
-            </episodedetails>""".format(**self.data))
+            </episodedetails>""".format(**self.data)).replace("\n\n", "\n")
