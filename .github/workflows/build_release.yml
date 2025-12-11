@@ -14,6 +14,7 @@ jobs:
     outputs:
       windows-zip-file: ${{ env.windows-zip-file }}
       windows-setup-file: ${{ env.windows-setup-file }}
+      version: ${{ env.version }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
