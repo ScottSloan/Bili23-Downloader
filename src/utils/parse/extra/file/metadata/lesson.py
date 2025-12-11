@@ -37,7 +37,7 @@ class TVShowMetaDataParser:
                 <namedseason number="1">{series_title}</namedseason>
                 <uniqueid type="season">{season_id}</uniqueid>
                 {dateadded}
-            </tvshow>""".format(**self.data))
+            </tvshow>""".format(**self.data)).replace("\n\n", "\n")
     
 class EpisodeMetaDataParser:
     def __init__(self, task_info: DownloadTaskInfo):
@@ -64,5 +64,5 @@ class EpisodeMetaDataParser:
                 <uniqueid type="cid">{cid}</uniqueid>
                 <uniqueid type="ep_id">{ep_id}</uniqueid>
                 {dateadded}
-            </episodedetails>""".format(**self.data))
+            </episodedetails>""".format(**self.data)).replace("\n\n", "\n")
         

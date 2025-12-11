@@ -12,7 +12,7 @@ class FFCommand:
         def check_audio_conversion_need():
             match task_info.output_type:
                 case "flac":
-                    output_temp_file = prop.output_temp_file()
+                    output_temp_file = prop.output_temp_file("flac")
 
                     command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "flac"))
                     command.add_remove([audio_temp_file], task_info.download_path)
@@ -22,7 +22,7 @@ class FFCommand:
                 case "m4a":
                     if Config.Merge.m4a_to_mp3:
                         task_info.output_type = "mp3"
-                        output_temp_file = prop.output_temp_file()
+                        output_temp_file = prop.output_temp_file("mp3")
 
                         command.add(cls.get_convert_audio_command(audio_temp_file, output_temp_file, "libmp3lame"))
                         command.add_remove([audio_temp_file], task_info.download_path)
@@ -41,14 +41,14 @@ class FFCommand:
 
         video_temp_file = prop.video_temp_file()
         audio_temp_file = prop.audio_temp_file()
-        output_temp_file = prop.output_temp_file()
+        output_temp_file = prop.output_temp_file("mp4")
 
         match task_info.download_option.copy():
             case ["video", "audio"]:
                 ffcommand = FFmpegCommand([video_temp_file, audio_temp_file], output_temp_file)
 
                 command.add(ffcommand.merge())
-                command.add_rename(output_temp_file, prop.output_file_name(), task_info.download_path)
+                command.add_rename(output_temp_file, prop.output_file_name("mp4"), task_info.download_path)
 
                 if Config.Merge.keep_original_files:
                     command.add_rename(video_temp_file, f"{task_info.file_name}_video.{task_info.video_type}", task_info.download_path)
@@ -57,7 +57,7 @@ class FFCommand:
                     command.add_remove([video_temp_file, audio_temp_file], task_info.download_path)
 
             case ["video"]:
-                command.add_rename(video_temp_file, prop.output_file_name(), task_info.download_path)
+                command.add_rename(video_temp_file, prop.output_file_name("mp4"), task_info.download_path)
 
             case ["audio"]:
                 audio_temp_file = check_audio_conversion_need()

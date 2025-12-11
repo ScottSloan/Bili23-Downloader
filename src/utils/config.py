@@ -150,8 +150,8 @@ class Config:
         name: str = "Bili23 Downloader"
         id: str = "B096F0C1-D105-4EF9-86E1-5E87DA884EA4"
 
-        version: str = "1.70.2"
-        version_code: int = 170200
+        version: str = "1.70.3"
+        version_code: int = 170300
 
         task_file_min_version_code: int = 170100
         live_file_min_version_code: int = 165000
@@ -457,7 +457,6 @@ class Config:
     class Advanced:
         enable_switch_cdn: bool = True
         cdn_list: list = [
-            "upos-sz-estgoss.bilivideo.com",
             "upos-sz-mirrorali02.bilivideo.com",
             "upos-sz-mirror08c.bilivideo.com",
             "upos-sz-mirrorcoso1.bilivideo.com",

@@ -42,7 +42,7 @@ class TVShowMetaDataParser:
                 {named_seasons}
                 <uniqueid type="season">{season_id}</uniqueid>
                 {dateadded}
-            </tvshow>""".format(**self.data))
+            </tvshow>""".format(**self.data)).replace("\n\n", "\n")
     
     def get_ratings(self, rating: float, votes: int):
         ratings_element = """\
@@ -73,17 +73,29 @@ class TVShowMetaDataParser:
             return ""
 
         for entry in actors_list.split("\n"):
-            role_name = entry.split("：")
+            entry = entry.strip()
 
-            actor_element = """\
-                <actor>
-                    <name>{name}</name>
-                    <role>{role}</role>
-                </actor>""".format(name = role_name[1], role = role_name[0])
+            if not entry or entry.endswith("："):
+                continue
+
+            parts = entry.split("：", 1)
+
+            if len(parts) == 1:
+                actor_element = """
+                    <actor>
+                        <name>{}</name>
+                    </actor>""".format(parts[0].strip())
+
+            elif len(parts) == 2:
+                actor_element = """
+                    <actor>
+                        <name>{}</name>
+                        <role>{}</role>
+                    </actor>""".format(parts[1].strip(), parts[0].strip())
 
             actors.append(Utils.indent(actor_element, "                "))
 
-        return "\n".join(actors).removeprefix("                ")
+        return "".join(actors).removeprefix("                ")
 
     def get_named_season(self, seasons_data: list[dict], series_title_original: str):
         seasons = []
@@ -132,7 +144,7 @@ class SeasonMetadataParser:
                 <thumb aspect="poster">{poster_url}</thumb>
                 <premiered>{pubdate}</premiered>
                 <uniqueid type="season_id">{season_id}</uniqueid>
-            </season>""".format(**self.data))
+            </season>""".format(**self.data)).replace("\n\n", "\n")
     
 class EpisodeMetadataParser:
     def __init__(self, task_info: DownloadTaskInfo):
@@ -164,4 +176,4 @@ class EpisodeMetadataParser:
                 <uniqueid type="cid">{cid}</uniqueid>
                 <uniqueid type="ep_id">{ep_id}</uniqueid>
                 {dateadded}
-            </episodedetails>""".format(**self.data))
+            </episodedetails>""".format(**self.data)).replace("\n\n", "\n")

@@ -15,6 +15,7 @@ jobs:
       windows-zip-file: ${{ env.windows-zip-file }}
       windows-setup-file: ${{ env.windows-setup-file }}
       version: ${{ env.version }}
+      version-code: ${{ env.version_code }}
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -34,6 +35,8 @@ jobs:
           "ver_patch=$($json.ver_patch)" | Out-File -Append -FilePath $env:GITHUB_ENV
           "ver_build=$($json.ver_build)" | Out-File -Append -FilePath $env:GITHUB_ENV
 
+          "version_code=$($json.version_code)" | Out-File -Append -FilePath $env:GITHUB_ENV
+
           "windows-zip-file=Bili23_Downloader-$($json.ver_major).$($json.ver_minor).$($json.ver_patch)-windows-x64.zip" | Out-File -Append -FilePath $env:GITHUB_ENV
           "windows-setup-file=Bili23_Downloader-$($json.ver_major).$($json.ver_minor).$($json.ver_patch)-windows-x64-setup.exe" | Out-File -Append -FilePath $env:GITHUB_ENV
 
@@ -50,10 +53,10 @@ jobs:
 
           New-Item -ItemType Directory -Path "runtime_repo"
 
-          $runtime_url = "https://drive.scott-sloan.cn/f/P4s8/runtime.zip"
+          $runtime_url = "https://drive.scott-sloan.cn/f/3aVU3/runtime.zip"
           Invoke-WebRequest -Uri $runtime_url -OutFile "runtime_repo\runtime.zip"
 
-          $ffmpeg_url = "https://drive.scott-sloan.cn/f/aWhW/ffmpeg.exe"
+          $ffmpeg_url = "https://drive.scott-sloan.cn/f/lkecv/ffmpeg.exe"
           Invoke-WebRequest -Uri $ffmpeg_url -OutFile "runtime_repo\ffmpeg.exe"
 
           cd runtime_repo
@@ -178,7 +181,7 @@ jobs:
 
           echo "下载 runtime 文件"
           mkdir -p runtime_repo
-          wget https://drive.scott-sloan.cn/f/xxCz/runtime.zip -O runtime_repo/runtime.zip
+          wget https://drive.scott-sloan.cn/f/Ro0iK/runtime.zip -O runtime_repo/runtime.zip
 
           cd runtime_repo
           7z x runtime.zip -aoa
@@ -346,3 +349,32 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.ACCESS_TOKEN }}" \
             https://api.github.com/repos/ScottSloan/Bili23-Downloader-Doc/dispatches \
             -d '{"event_type":"deploy-pages","client_payload":{"unit":false,"integration":true}}'
+  
+  update-api:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Version
+        id: get_version
+        run: |
+          version="${{ needs.build-windows.outputs.version }}"
+          version_code="${{ needs.build-windows.outputs.version-code }}"
+
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "VERSION_CODE=$version_code" >> $GITHUB_ENV
+
+      - name: Update API Data
+        env:
+          CLOUDREVE_API: ${{ secrets.CLOUDREVE_API }}
+          CLOUDREVE_EMAIL: ${{ secrets.CLOUDREVE_EMAIL }}
+          CLOUDREVE_PASSWORD: ${{ secrets.CLOUDREVE_PASSWORD }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          VERSION: ${{ env.VERSION }}
+          VERSION_CODE: ${{ env.VERSION_CODE }}
+        run: |
+          wget https://drive.scott-sloan.cn/f/vWYSK/bili23_api.py -O bili23_api.py
+          
+          python3 ./bili23_api.py

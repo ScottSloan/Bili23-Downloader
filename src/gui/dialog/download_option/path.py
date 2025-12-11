@@ -66,12 +66,12 @@ class PathStaticBox(Panel):
             self.update_disk_space()
 
     def load_data(self):
+        self.path_box.SetValue(Config.Download.path)
+
         self.update_disk_space()
 
         Config.Temp.file_name_template_list = Config.Download.file_name_template_list.copy()
         Config.Temp.strict_naming = Config.Download.strict_naming
-
-        self.path_box.SetValue(Config.Download.path)
 
     def update_disk_space(self):
         match Platform(Config.Sys.platform):

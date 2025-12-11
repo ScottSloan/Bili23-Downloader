@@ -15,6 +15,8 @@ class StrictNaming:
         for index, entry in enumerate(info_json.get("seasons")):
             if entry["season_id"] == info_json.get("season_id"):
                 return index + 1
+        
+        return 1
     
     @classmethod
     def get_episode_tag(cls, task_info: DownloadTaskInfo):

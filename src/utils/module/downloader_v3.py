@@ -30,7 +30,12 @@ class Utils:
         for entry in self.parent.downloader_info_list:
             url_list, file_name = entry.get("url_list"), entry.get("file_name")
 
-            (url, file_size) = CDN.get_file_size(url_list)
+            info = CDN.get_file_size(url_list)
+
+            if not info:
+                raise GlobalException(code = StatusCode.DownloadError, message = "无法获取下载链接，请在设置中关闭 CDN 替换功能后重试。")
+            else:
+                (url, file_size) = info
 
             total_size += file_size
 

@@ -37,7 +37,7 @@ class MovieMetaDataParser:
                 {countrys}
                 {actors}
                 {dateadded}
-            </movie>""".format(**self.data))
+            </movie>""".format(**self.data)).replace("\n\n", "\n")
     
     def get_genres(self, tags: list[str]):
         genres = []
