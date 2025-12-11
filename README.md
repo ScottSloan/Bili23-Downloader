@@ -1,7 +1,7 @@
 # Bili23-Downloader
 <p align="center">
     <a href="https://bili23.scott-sloan.cn" target="_blank">
-        <img src="https://s21.ax1x.com/2025/08/05/pVUs6hQ.png" alt="Bili23 Downloader" style="width: 500px;"/>
+        <img src="https://bili23.scott-sloan.cn/logo.png" alt="Bili23 Downloader" style="width: 500px;"/>
     </a>
 </p>
 
