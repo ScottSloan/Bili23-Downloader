@@ -86,8 +86,14 @@ class UpdateDialog(Dialog):
             return super().onCloseEVT(event)
 
     def onOKEVT(self):
-        window = UpdaterWindow(self.info["url"], self.info["download_url"])
-        window.Show()
+        url = self.info.get("url")
+        download_url = self.info.get("download_url")
+
+        if download_url:
+            window = UpdaterWindow(url, download_url)
+            window.Show()
+        else:
+            wx.LaunchDefaultBrowser(url)
 
         if self.force:
             import sys
