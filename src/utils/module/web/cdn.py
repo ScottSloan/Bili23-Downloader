@@ -57,6 +57,7 @@ class CDN:
     def request_head(url: str):
         try:
             req = RequestUtils.request_head(url, headers = RequestUtils.get_headers(referer_url = CDN.bilibili_url))
+            
         except Exception:
             return 0
 
