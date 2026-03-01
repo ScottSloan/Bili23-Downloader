@@ -1,0 +1,46 @@
+<RCC>
+    <qresource prefix="/bili23">
+        <file>icon/app.svg</file>
+        
+        <file>icon/light/pin.svg</file>
+        <file>icon/light/exit.svg</file>
+        <file>icon/light/clear.svg</file>
+        <file>icon/light/server.svg</file>
+        <file>icon/light/comment.svg</file>
+        <file>icon/light/options.svg</file>
+        <file>icon/light/numbers.svg</file>
+        <file>icon/light/document.svg</file>
+        <file>icon/light/subtitles.svg</file>
+        <file>icon/light/clipboard.svg</file>
+        <file>icon/light/fast_download.svg</file>
+
+        <file>icon/dark/pin.svg</file>
+        <file>icon/dark/exit.svg</file>
+        <file>icon/dark/clear.svg</file>
+        <file>icon/dark/server.svg</file>
+        <file>icon/dark/comment.svg</file>
+        <file>icon/dark/options.svg</file>
+        <file>icon/dark/numbers.svg</file>
+        <file>icon/dark/document.svg</file>
+        <file>icon/dark/subtitles.svg</file>
+        <file>icon/dark/clipboard.svg</file>
+        <file>icon/dark/fast_download.svg</file>
+        
+        <file>qss/light/button.qss</file>
+        <file>qss/light/fluent_dialog.qss</file>
+        <file>qss/light/scrollable_dialog.qss</file>
+        <file>qss/light/setting_interface.qss</file>
+        
+        <file>qss/dark/button.qss</file>
+        <file>qss/dark/fluent_dialog.qss</file>
+        <file>qss/dark/scrollable_dialog.qss</file>
+        <file>qss/dark/setting_interface.qss</file>
+
+        <file>image/noface.jpg</file>
+
+        <file>html/captcha.html</file>
+
+        <file>i18n/bili23.zh_CN.qm</file>
+
+    </qresource>
+</RCC>

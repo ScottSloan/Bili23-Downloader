@@ -1,36 +1,10 @@
 __pycache__/
 
-config.ini
-
 # 虚拟环境
 .venv
 
 # 下载目录
-/download
-
-# VLC
-VLC
-
-# 配置文件
-video*.json
-bangumi*.json
-live.json
-download*.json
-ffmpeg.exe
-build.ps1
-test.ps1
-test*.py
-bilidanmu.proto
-config.json
-cheese*.json
-choices.json
-node.json
-episode.json
-temp.json
-exclimbwuzhi*.json
-history.json
-/.config
-build_v2.ps1
+/Downloads
 
 # commitizen
 cz.json
@@ -42,17 +16,7 @@ cz.toml
 # uv
 uv.toml
 
+# 其他文件
 .DS_Store
-example.md
-
-# log
-error_log.txt
-
-# PyStand
-Build
-
-temp
-test
-
-# git hooks
-hooks/
+/test
+/json

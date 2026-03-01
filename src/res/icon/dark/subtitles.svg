@@ -1,0 +1,14 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    width="32px" height="32px" viewBox="0,0,256,256">
+    <g transform="translate(-12.8,-12.8) scale(1.1,1.1)">
+        <g fill="#ffffff" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt"
+            stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0"
+            font-family="none" font-weight="none" font-size="none" text-anchor="none"
+            style="mix-blend-mode: normal">
+            <g transform="scale(8,8)">
+                <path
+                    d="M2,6v17.90625h28v-17.90625zM4,8h24v13.90625h-24zM12,10c-2.75,0 -5,2.25 -5,5c0,2.75 2.25,5 5,5c1.19531,0 2.27734,-0.44141 3.125,-1.125l-1.25,-1.5625c-0.52734,0.42578 -1.16797,0.6875 -1.875,0.6875c-1.66797,0 -3,-1.33203 -3,-3c0,-1.66797 1.33203,-3 3,-3c0.70703,0 1.34766,0.26172 1.875,0.6875l1.25,-1.5625c-0.84766,-0.68359 -1.92969,-1.125 -3.125,-1.125zM22,10c-2.75,0 -5,2.25 -5,5c0,2.75 2.25,5 5,5c1.19531,0 2.27734,-0.44141 3.125,-1.125l-1.25,-1.5625c-0.52734,0.42578 -1.16797,0.6875 -1.875,0.6875c-1.66797,0 -3,-1.33203 -3,-3c0,-1.66797 1.33203,-3 3,-3c0.70703,0 1.34766,0.26172 1.875,0.6875l1.25,-1.5625c-0.84766,-0.68359 -1.92969,-1.125 -3.125,-1.125z"></path>
+            </g>
+        </g>
+    </g>
+</svg>

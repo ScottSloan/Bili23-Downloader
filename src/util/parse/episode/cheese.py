@@ -1,0 +1,101 @@
+from util.parse.episode.tree import TreeNode, TreeItem, EpisodeData, Attribute
+from util.parse.episode.base import EpisodeParserBase
+
+class CheeseEpisodeParser(EpisodeParserBase):
+    def __init__(self, info_data: dict, kwargs: dict = {}):
+        super().__init__(**kwargs)
+
+        self.info_data = info_data["data"]
+
+    def parse(self):
+        self.episode_data_parser()
+
+        node = self.sections_parser()
+
+        if self.target_episode_info:
+            return node.to_dict()
+        else:
+            self.update_episode_list(node.to_dict())
+
+    def sections_parser(self):
+        cheese_title = self.info_data["title"]
+        node_data = {
+            "number": "课程",
+            "season_id": self.info_data["season_id"],
+            "title": cheese_title
+        }
+
+        root_node = TreeNode(node_data)
+
+        episode_count = 0
+
+        for section in self.info_data["sections"]:
+            if section["episodes"]:
+                section_title = section["title"]
+                section_node_data = {
+                    "number": "章节",
+                    "title": section_title
+                }
+
+                section_node = TreeNode(section_node_data)
+
+                for episode in section["episodes"]:
+                    episode_count += 1
+
+                    episode_item_data = {
+                        "aid": episode["aid"],
+                        "badge": self.get_episode_badge(episode),
+                        "cid": episode["cid"],
+                        "cover": episode["cover"],
+                        "duration": self.get_episode_duration(episode),
+                        "ep_id": episode["id"],
+                        "episode_id": self.episode_id,
+                        "number": episode_count,
+                        "pubtime": episode["release_date"],
+                        "title": episode["title"],
+                        "related_titles": {
+                            "cheese_title": cheese_title,
+                            "section_title": section_title
+                        },
+                        "url": "https://www.bilibili.com/cheese/play/{ep_id}".format(ep_id = episode["id"])
+                    }
+
+                    episode_item = TreeItem(episode_item_data)
+                    episode_item.set_attribute(Attribute.CHEESE_BIT)
+
+                    if self.target_attribute:
+                        episode_item.set_attribute(self.target_attribute)
+
+                    section_node.add_child(episode_item)
+
+                root_node.add_child(section_node)
+
+        return root_node
+    
+    def episode_data_parser(self):
+        self.episode_id = EpisodeData.add_episode()
+        episode_data = EpisodeData.get_episode_data(self.episode_id)
+
+        if self.target_episode_data_id:
+            data = EpisodeData.get_episode_data(self.target_episode_data_id)
+
+            episode_data.update(data)
+
+        # 副标题
+        episode_data["subtitle"] = self.info_data["subtitle"]
+        # season_id
+        episode_data["season_id"] = self.info_data["season_id"]
+        # 发布者信息
+        episode_data["uploader"] = self.info_data["up_info"]["uname"]
+        episode_data["uploader_uid"] = self.info_data["up_info"]["mid"]
+
+    def get_episode_badge(self, episode_data: dict):
+        if "label" in episode_data:
+            return episode_data["label"]
+        
+        return {
+            1: "全集试看",
+            2: "付费",
+            3: "部分试看"
+        }.get(episode_data["status"])
+            
