@@ -29,11 +29,11 @@ class AudioInfoParser:
             self.audio_quality_info_map[quality_id] = audio_node.copy()
 
         if audio_node := self.safe_get(dash_node.copy(), ["dolby", "audio"]):
-            quality_id = audio_node["id"]
+            quality_id = audio_node[0]["id"]
 
             available_quality_list.append(quality_id)
 
-            self.audio_quality_info_map[quality_id] = audio_node.copy()
+            self.audio_quality_info_map[quality_id] = audio_node[0].copy()
 
         if dash_node.get("audio", []):
 

@@ -7,6 +7,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     PIN = "pin"
     EXIT = "exit"
     CLEAR = "clear"
+    RETRY = "retry"
     SERVER = "server"
     COMMENT = "comment"
     OPTIONS = "options"

@@ -93,7 +93,7 @@ class FileNameFormatter:
 
             "season_number": task_info.Episode.season_number,
             "episode_number": task_info.Episode.episode_number,
-            "p": task_info.Episode.p,
+            "p": task_info.Episode.part_number,
 
             "favorites_name": task_info.Episode.favorites_name,
             "favorites_id": task_info.Episode.favorites_id,

@@ -7,6 +7,7 @@ from gui.component.download.list_view import DownloadListView
 from gui.component.widget import PivotItem
 
 from util.download.task.query_worker import QueryWorker
+from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
 from util.thread import AsyncTask
 
@@ -23,12 +24,15 @@ class DownloadInterface(QFrame):
     def init_UI(self):
         self.pivot = Pivot(self)
         self.list_stacked_widget = QStackedWidget(self)
-        self.list_stacked_widget.setContentsMargins(0, 10, 0, 5)
+        self.list_stacked_widget.setContentsMargins(0, 10, 0, 10)
 
         self.top_stacked_widget = TopStackedWidget(self)
 
         self.downloading_list_view = DownloadListView(self)
         self.downloading_list_view.setEmptyTextTip(self.tr("No downloads in progress"))
+        self.downloading_list_view.setAutoManageConcurrentTasks(True)
+        self.downloading_list_view.setAutoUpdateVisibleArea(True)
+        self.downloading_list_view.setAutoUpdateCountBadge(True)
 
         self.completed_list_view = DownloadListView(self)
         self.completed_list_view.setEmptyTextTip(self.tr("No completed downloads"))
@@ -47,6 +51,17 @@ class DownloadInterface(QFrame):
         main_layout.addWidget(self.list_stacked_widget)
 
         self.pivot.setCurrentItem("downloading")
+
+        self.connect_signal()
+
+    def connect_signal(self):
+        signal_bus.download.add_to_downloading_list.connect(self.downloading_list_view.addTask)
+        signal_bus.download.add_to_completed_list.connect(self.completed_list_view.addTask)
+
+        signal_bus.download.remove_from_downloading_list.connect(self.downloading_list_view.removeTask)
+        signal_bus.download.remove_from_completed_list.connect(self.completed_list_view.removeTask)
+
+        signal_bus.download.start_next_task.connect(self.downloading_list_view._model.manageConcurrentDownloads)
 
     def addSubInterface(self, widget: SubtitleLabel, objectName: str, text: str, index):
         def onClick():
@@ -71,8 +86,8 @@ class DownloadInterface(QFrame):
         AsyncTask.run(worker)
     
     def on_query_success(self, downloading_tasks: list[TaskInfo], completed_tasks: list[TaskInfo]):
-        self.downloading_list_view.add_task(downloading_tasks)
-        self.completed_list_view.add_task(completed_tasks)
+        self.downloading_list_view.addTask(downloading_tasks)
+        self.completed_list_view.addTask(completed_tasks)
 
     def on_query_error(self, error_message: str):
         print(f"查询下载任务失败: {error_message}")

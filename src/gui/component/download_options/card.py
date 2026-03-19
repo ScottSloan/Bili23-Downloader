@@ -92,9 +92,10 @@ class MediaInfoCard(ExpandGroupSettingCard):
 
     def update_video_quality_description(self, info: dict):
         video_quality_map_reverse = {v: k for k, v in video_quality_map.items()}
+        video_quality_key = video_quality_map_reverse.get(info["quality_id"], self.tr("Unknown Video Quality"))
 
         quality_label_list = [
-            video_quality_map_reverse.get(info["quality_id"], self.tr("Unknown Video Quality")),
+            Translator.VIDEO_QUALITY(video_quality_key),
             Units.format_frame_rate(float(info["frame_rate"])),
             Units.format_bitrate(info["bitrate"]),
             Units.format_file_size(info["file_size"])
@@ -111,9 +112,10 @@ class MediaInfoCard(ExpandGroupSettingCard):
     def update_audio_quality_description(self, info: dict):
         audio_quality_map_reverse = {v: k for k, v in audio_quality_map.items()}
         audio_codec_map_reverse = {v: k for k, v in audio_codec_map.items()}
+        audio_quality_key = audio_quality_map_reverse.get(info["quality_id"], self.tr("Unknown Audio Quality"))
 
         label_list = [
-            audio_quality_map_reverse.get(info["quality_id"], self.tr("Unknown Audio Quality")),
+            Translator.AUDIO_QUALITY(audio_quality_key),
             audio_codec_map_reverse.get(info["codec"], info["codec"]),
             Units.format_bitrate(info["bitrate"]),
             Units.format_file_size(info["file_size"])

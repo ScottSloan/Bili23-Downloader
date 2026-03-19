@@ -157,7 +157,7 @@ class ParseInterface(QFrame):
     @check_preview_info
     def on_download(self):
         # 只有在获取媒体信息成功时才允许下载
-        self.download_btn.setIndeterminateState(True)
+        #self.download_btn.setIndeterminateState(True)
 
         checked_episodes_list = self.episode_list.get_all_checked_episodes_info()
 

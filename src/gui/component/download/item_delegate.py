@@ -4,8 +4,13 @@ from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent
 
 from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon
 
+from util.common.icon import ExtendedFluentIcon
 from util.download.task.info import TaskInfo
+from util.common.enum import DownloadStatus
+from util.common.io import Directory
+from util.format import Units
 
+from pathlib import Path
 from typing import List
 
 class FluentStyledItemDelegate:
@@ -168,6 +173,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         super().__init__(parent)
 
         self.uiRect = UIRect()
+        self.uiData = UIData()
 
         self.ActionButtonHoveredRow = -1
         self.DeleteButtonHoveredRow = -1
@@ -221,7 +227,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         self._drawDescriptionText(painter, infoRect, "1080P 高清")
 
         sizeRect = self.uiRect.getSizeRect(infoRect)
-        self._drawDescriptionText(painter, sizeRect, "256 MB/ 362MB")
+        self._drawDescriptionText(painter, sizeRect, self.uiData.getSizeText(task_info))
 
 
         # 右侧进度条、状态
@@ -229,12 +235,12 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         self._drawProgressBar(painter, progressBarRect, task_info.Download.progress)
 
         statusRect = self.uiRect.getStatusRect(progressBarRect, infoRect, option)
-        self._drawDescriptionText(painter, statusRect, "等待下载...")
+        self._drawDescriptionText(painter, statusRect, self.uiData.getStatusText(task_info))
 
 
         # 右侧控制和删除按钮
         actionButtonRect = self.uiRect.getActionButtonRect(option)
-        self._drawPrimaryButton(painter, actionButtonRect, FluentIcon.PLAY, self.ActionButtonHoveredRow == index.row())
+        self._drawPrimaryButton(painter, actionButtonRect, self.uiData.getButtonIcon(task_info), self.ActionButtonHoveredRow == index.row())
 
         deleteButtonRect = self.uiRect.getDeleteButtonRect(option)
         self._drawButton(painter, deleteButtonRect, FluentIcon.DELETE, self.DeleteButtonHoveredRow == index.row())
@@ -275,12 +281,21 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         deleteButtonRect = self.uiRect.getDeleteButtonRect(option)
 
         if actionButtonRect.contains(pos):
-            print("暂停")
+            task_info: TaskInfo = index.data(Qt.ItemDataRole.UserRole)
+
+            match task_info.Download.status:
+                case DownloadStatus.COMPLETED:
+                    self.openFileLocation(task_info)
+
+                case _:
+                    index.model().togglePauseResume(task_info)
+
+            index.model().dataChanged.emit(index, index)
 
             return True
 
         if deleteButtonRect.contains(pos):
-            print("删除")
+            index.model().cancelDownload(index.data(Qt.ItemDataRole.UserRole))
 
             return True
 
@@ -289,6 +304,11 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
     def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex):
         # 由委托发起查询封面请求
         return index.model().queryRowCover(cover_id, cover_url, index.row())
+
+    def openFileLocation(self, task_info: TaskInfo):
+        directory = Path(task_info.File.download_path, task_info.File.folder)
+
+        Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
 
 class UIRect:
     def __init__(self):
@@ -323,7 +343,7 @@ class UIRect:
 
     def getProgressBarRect(self, titleRect: QRect, option: QStyleOptionViewItem):
         left = option.rect.width() - self.margin - self.buttonSize * 2 - self.spacer * 3 - 200
-        top = titleRect.top() + self.margin
+        top = (option.rect.height() - 16) / 2 + option.rect.top()  #titleRect.top() + self.margin
 
         return QRect(left, top, 200, 16)
     
@@ -344,3 +364,59 @@ class UIRect:
         top = (option.rect.height() - self.buttonSize) / 2 + option.rect.top()
 
         return QRect(left, top, self.buttonSize, self.buttonSize)
+
+class UIData:
+    def getStatusText(self, task_info: TaskInfo):
+        match task_info.Download.status:
+            case DownloadStatus.QUEUED:
+                return "等待中..."
+            
+            case DownloadStatus.PARSING:
+                return "正在获取下载链接..."
+            
+            case DownloadStatus.DOWNLOADING:
+                return self.getSpeedText(task_info)
+            
+            case DownloadStatus.PAUSED:
+                return "暂停中..."
+            
+            case DownloadStatus.MERGE_QUEUED:
+                return "等待合并..."
+            
+            case DownloadStatus.MERGING:
+                return "正在合并..."
+            
+            case DownloadStatus.COMPLETED:
+                return "下载完成"
+            
+            case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
+                return task_info.Error.short_message
+            
+    def getSpeedText(self, task_info: TaskInfo):
+        return Units.format_speed(task_info.Download.speed)
+    
+    def getSizeText(self, task_info: TaskInfo):
+        if task_info.Download.total_size > 0:
+
+            if task_info.Download.status in [DownloadStatus.COMPLETED, DownloadStatus.MERGE_QUEUED, DownloadStatus.MERGING, DownloadStatus.MERGE_FAILED]:
+                return Units.format_file_size(task_info.Download.total_size)
+            else:
+                return f"{Units.format_file_size(task_info.Download.downloaded_size)} / {Units.format_file_size(task_info.Download.total_size)}"
+            
+        else:
+            return ""
+        
+    def getButtonIcon(self, task_info: TaskInfo):
+        match task_info.Download.status:
+            case DownloadStatus.COMPLETED:
+                return FluentIcon.FOLDER
+            
+            case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
+                return FluentIcon.PLAY
+            
+            case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
+                return ExtendedFluentIcon.RETRY
+            
+            case _:
+                return FluentIcon.PAUSE
+            

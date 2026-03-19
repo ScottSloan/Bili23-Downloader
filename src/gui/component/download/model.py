@@ -1,7 +1,8 @@
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Slot
 
+from util.download.downloader.manager import downloader_manager
 from util.download.cover.manager import cover_manager
-from util.download.cover.cache import CoverCache
+from util.download.task.manager import task_manager
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
 from util.common.config import config
@@ -52,6 +53,13 @@ class DownloadListModel(QAbstractListModel):
 
         return cover_manager.placeholder()
 
+    def getRow(self, task_info: TaskInfo):
+        try:
+            return self._task_list.index(task_info)
+        
+        except ValueError:
+            return -1
+
     @Slot(str)
     def updateRowCover(self, cover_id: str):
         # 更新所有等待该cover_id的行
@@ -83,6 +91,62 @@ class DownloadListModel(QAbstractListModel):
 
         self.endInsertRows()
 
+    def updateRows(self, start_row: int, end_row: int):
+        for row in range(start_row, end_row + 1):
+            index = self.index(row)
+
+            self.dataChanged.emit(index, index)
+
+    def removeRow(self, row, parent = QModelIndex()):
+        if 0 <= row < self.rowCount():
+            self.beginRemoveRows(parent, row, row)
+
+            del self._task_list[row]
+
+            self.endRemoveRows()
+
+            return True
+        
+        return False
+
+    def togglePauseResume(self, task_info: TaskInfo):
+        # 在暂停与继续之间切换
+        downloader = downloader_manager.get_downloader(task_info.Basic.task_id)
+
+        match task_info.Download.status:
+            case DownloadStatus.QUEUED:
+                # 启动下载
+                downloader.start()
+
+            case DownloadStatus.DOWNLOADING:
+                # 暂停下载
+                downloader.pause()
+
+            case DownloadStatus.PAUSED:
+                # 继续下载
+                downloader.resume()
+
+            case DownloadStatus.MERGE_QUEUED:
+                # 启动合并
+                downloader.start_merge()
+
+            case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
+                # 重试下载
+                downloader.retry()
+
+    def cancelDownload(self, task_info: TaskInfo):
+        match task_info.Download.status:
+            case DownloadStatus.COMPLETED:
+                task_manager.delete(task_info, completed = True)
+
+                self.removeRow(self.getRow(task_info))
+
+            case DownloadStatus.DOWNLOADING:
+                downloader_manager.wait(task_info.Basic.task_id, lambda: task_manager.cancel(task_info))
+
+            case _:
+                task_manager.cancel(task_info)
+
     def manageConcurrentDownloads(self):
         # 自动调度同时下载的任务数量
 
@@ -94,7 +158,7 @@ class DownloadListModel(QAbstractListModel):
                 break
 
             next_task = queued.pop(0)
-            self.on_pause_resume(next_task)
+            self.togglePauseResume(next_task)
         
         self.manageConcurrentMerges()
 
@@ -110,4 +174,4 @@ class DownloadListModel(QAbstractListModel):
                 break
 
             next_task = merge_queued.pop(0)
-            self.on_pause_resume(next_task)
+            self.togglePauseResume(next_task)

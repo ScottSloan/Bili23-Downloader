@@ -1,0 +1,136 @@
+from PySide6.QtCore import QRunnable
+
+from util.parse.episode.bangumi import BangumiEpisodeParser
+from util.parse.episode.cheese import CheeseEpisodeParser
+from util.parse.episode.video import VideoEpisodeParser
+
+from util.parse.episode.tree import EpisodeData, Attribute
+from util.common.data.bangumi_type import bangumi_type_map
+from util.network.request import NetworkRequestWorker
+from util.parse.parser.base import ParserBase
+from util.common.signal_bus import signal_bus
+from util.thread import SyncTask
+
+class ReparseWorker(QRunnable, ParserBase):
+    def __init__(self, episode_info: dict):
+        super().__init__()
+
+        self.info_data: dict = None
+        self.episode_info: dict = episode_info
+        self.original_episode_data: dict = None
+
+    def run(self):
+        # 提取收藏夹/个人空间的 episode_data
+        self.original_episode_data = EpisodeData.get_episode_data(self.episode_info.get("episode_id"))
+        
+        episode_node = self.parse_episode_node_info()
+
+        node_items = self.get_node_items(episode_node)
+
+        signal_bus.download.create_task.emit(node_items)
+
+    def parse_episode_node_info(self):
+        # 视频
+        if self.episode_info.get("attribute", 0) & Attribute.VIDEO_BIT:
+            episode_parser = self.parse_video_info()
+
+        # 剧集
+        elif self.episode_info.get("attribute", 0) & Attribute.BANGUMI_BIT:
+            episode_parser = self.parse_bangumi_info()
+
+        # 课程
+        elif self.episode_info.get("attribute", 0) & Attribute.CHEESE_BIT:
+            episode_parser = self.parse_cheese_info()
+
+        return episode_parser.parse()
+    
+    def parse_video_info(self):
+        bvid = self.episode_info.get("bvid")
+
+        self.get_video_info(bvid)
+
+        return VideoEpisodeParser(self.info_data, self.get_kwargs(bvid))
+
+    def parse_bangumi_info(self):
+        ep_id = self.episode_info.get("ep_id")
+
+        self.get_bangumi_info(ep_id)
+            
+        category_name = bangumi_type_map.get(self.info_data["result"]["type"])
+
+        return BangumiEpisodeParser(self.info_data, category_name, self.get_kwargs(ep_id))
+
+    def parse_cheese_info(self):
+        season_id = self.episode_info.get("ep_id")
+
+        self.get_cheese_info(season_id)
+
+        return CheeseEpisodeParser(self.info_data, self.get_kwargs(season_id))
+    
+    def get_kwargs(self, target_episode_info: str | int):
+        return {
+            "target_episode_info": target_episode_info,
+            "target_episode_data_id": self.episode_info.get("episode_id"),
+            "target_attribute": self.episode_info.get("attribute") & ~Attribute.NEED_PARSE_BIT
+        }
+    
+    def get_node_items(self, node_dict: dict):
+        node_items = []
+
+        def traverse(node_data: dict):
+            if "children" in node_data:
+                for child in node_data["children"]:
+                    traverse(child)
+
+            else:
+                node_items.append(node_data)
+
+        traverse(node_dict)
+
+        return node_items
+
+    def get_video_info(self, bvid: str):
+        def on_success(response: dict):
+            self.info_data = response
+
+        params = {
+            "bvid": bvid
+        }
+
+        url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
+
+        info_worker = NetworkRequestWorker(url)
+        info_worker.success.connect(on_success)
+        info_worker.error.connect(self.on_error)
+
+        SyncTask.run(info_worker)
+
+        self.check_response(self.info_data)
+
+    def get_bangumi_info(self, ep_id: str):
+        def on_success(response: dict):
+            self.info_data = response
+        
+        url = f"https://api.bilibili.com/pgc/view/web/season?ep_id={ep_id}"
+
+        info_worker = NetworkRequestWorker(url)
+        info_worker.success.connect(on_success)
+        info_worker.error.connect(self.on_error)
+
+        SyncTask.run(info_worker)
+
+        self.check_response(self.info_data)
+
+    def get_cheese_info(self, season_id: int):
+        def on_success(response: dict):
+            self.info_data = response
+
+        url = f"https://api.bilibili.com/pugv/view/web/season/v2?season_id={season_id}"
+
+        info_worker = NetworkRequestWorker(url)
+        info_worker.success.connect(on_success)
+        info_worker.error.connect(self.on_error)
+
+        SyncTask.run(info_worker)
+
+        self.check_response(self.info_data)

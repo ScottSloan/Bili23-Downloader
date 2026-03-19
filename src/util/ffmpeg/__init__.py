@@ -28,6 +28,12 @@ match config.get(config.ffmpeg_source):
 
             logger.warning("附带的 FFmpeg 不存在，将尝试使用环境变量中的 FFmpeg")
 
+        else:
+            # 将附带的 FFmpeg 路径添加到环境变量
+            os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(Path.cwd() / "Bundle")
+
+            logger.info("已添加附带的 FFmpeg 路径到环境变量")
+
         # 临时标记 bundle_ffmpeg_exist
         config.bundle_ffmpeg_exist = bundle_ffmpeg_exist
 

@@ -81,7 +81,7 @@ class ConventionType(IntEnum):
     BANGUMI = 20
     CHEESE = 30
 
-class MediaType(Enum):
+class MediaType(IntEnum):
     UNKNOWN = 0
     DASH = 1
     MP4 = 2

@@ -1,10 +1,10 @@
+from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
-    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon
+    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge
 )
 
 from gui.component.widget import NavigationLargeAvatarWidget
@@ -45,7 +45,10 @@ class MainWindow(MSFluentWindow):
         self.setting_interface = SettingInterface(self)
 
         self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parse"), position = NavigationItemPosition.TOP)
-        self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Download"), position = NavigationItemPosition.TOP)
+        self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Download"), position = NavigationItemPosition.TOP)
+
+        self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
+        self.download_info_badge.hide()
 
         self.avatar_widget = NavigationLargeAvatarWidget("", QPixmap(":/bili23/image/noface.jpg"), self)
 
@@ -73,6 +76,8 @@ class MainWindow(MSFluentWindow):
         signal_bus.toast.show.connect(self.show_toast_notification)
 
         signal_bus.login.update_avatar.connect(self.on_update_avatar)
+
+        signal_bus.download.update_downloading_count.connect(self.update_download_btn_badge_info)
 
     def init_utils(self):
         # 监听系统主题变化
@@ -159,3 +164,19 @@ class MainWindow(MSFluentWindow):
         self.show()
 
         QApplication.processEvents()
+
+    def update_download_btn_badge_info(self, count: int):
+        if self.download_info_badge.isHidden():
+            self.download_info_badge.show()
+
+        if count > 99:
+            self.download_info_badge.setText("99+")
+        elif count == 0:
+            self.download_info_badge.hide()
+            return
+        else:
+            self.download_info_badge.setText(str(count))
+
+        self.download_info_badge.adjustSize()
+
+        self.download_info_badge.move(52, 111)

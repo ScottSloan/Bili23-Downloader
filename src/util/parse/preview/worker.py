@@ -60,7 +60,7 @@ class QueryInfoWorker(QObject):
         download_urls = CDN.get_url_list(download_urls)
 
         for url in download_urls:
-            worker = NetworkRequestWorker(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS)
+            worker = NetworkRequestWorker(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
             worker.success.connect(on_success)
 
             SyncTask.run(worker)

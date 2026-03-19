@@ -18,6 +18,16 @@ class SignalBus:
     class Download(QObject):
         create_task = Signal(list)
 
+        add_to_downloading_list = Signal(list)
+        add_to_completed_list = Signal(list)
+
+        remove_from_downloading_list = Signal(object)
+        remove_from_completed_list = Signal(object)
+
+        update_downloading_count = Signal(int)
+
+        start_next_task = Signal()
+
     class Login(QObject):
         # 用于登录相关的信号
         start_server = Signal()

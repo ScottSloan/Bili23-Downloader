@@ -1,12 +1,15 @@
+from util.download.task.reparse_worker import ReparseWorker
+from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.enum import DownloadStatus, DownloadType
 from util.download.cover.manager import cover_manager
-from util.parse.episode.tree import EpisodeData
 from util.common.timestamp import get_timestamp
 from util.download.task.db import TaskDatabase
 from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
+from util.thread import GlobalThreadPoolTask
 from util.format import FileNameFormatter
 from util.common.config import config
+from util.common.io import Remover
 
 from pathlib import Path
 from typing import List
@@ -68,6 +71,15 @@ class TaskManager:
     def __update_episode_info(self, episode_info: dict):
         extra_data = EpisodeData.get_episode_data(episode_info.get("episode_id", ""))
 
+        if episode_info.get("attribute") & Attribute.VIDEO_BIT:
+            episode_info["leaf_title"] = episode_info.get("title", "")
+
+        elif episode_info.get("attribute") & Attribute.BANGUMI_BIT:
+            episode_info["episode_title"] = episode_info.get("title", "")
+
+        elif episode_info.get("attribute") & Attribute.CHEESE_BIT:
+            episode_info["episode_title"] = episode_info.get("title", "")
+
         return {
             **episode_info,
             **extra_data,
@@ -84,14 +96,31 @@ class TaskManager:
         task_info.File.download_path = config.get(config.download_path)
         task_info.File.folder = str(path.parent)
 
+    def __check_reparse_needed(self, episode_info: dict):
+        if episode_info.get("attribute", 0) & Attribute.NEED_PARSE_BIT:
+            worker = ReparseWorker(episode_info)
+            GlobalThreadPoolTask.run(worker)
+
+            return True
+        
+        return False
+
     def create(self, episode_info_list: List[dict]):
         task_info_list = []
 
         for episode_info in episode_info_list:
+            if self.__check_reparse_needed(episode_info):
+                continue
+
             task_info = self.__episode_info_to_task_info(episode_info)
+
             task_info_list.append(task_info)
 
-        self.db_manager.add_tasks(task_info_list)
+        if task_info_list:
+            # 存储到数据库，并添加到下载列表
+            self.db_manager.add_tasks(task_info_list)
+
+            signal_bus.download.add_to_downloading_list.emit(task_info_list)
 
     def query(self, completed: bool = False) -> List[TaskInfo]:
         result = self.db_manager.query_tasks(completed)
@@ -107,5 +136,29 @@ class TaskManager:
             task_info_list.append(task_info)
 
         return task_info_list
+
+    def update(self, task_info: TaskInfo):
+        self.db_manager.update_task(task_info)
+
+    def delete(self, task_info: TaskInfo, completed: bool = False):
+        self.db_manager.delete_task(task_info.Basic.task_id, completed)
+
+    def cancel(self, task_info: TaskInfo):
+        signal_bus.download.remove_from_downloading_list.emit(task_info)
+
+        self.delete(task_info)
+        
+        # 删除下载的临时文件
+        remover = Remover().set_cwd(Path(task_info.File.download_path, task_info.File.folder))
+
+        for file_name in task_info.File.relative_files:
+            remover.add_file(file_name)
+
+        remover.execute()
+
+    def mark_as_completed(self, task_info: TaskInfo):
+        self.delete(task_info)
+
+        self.db_manager.add_tasks([task_info], completed = True)
 
 task_manager = TaskManager()

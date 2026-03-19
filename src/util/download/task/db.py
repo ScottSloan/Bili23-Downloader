@@ -70,3 +70,18 @@ class TaskDatabase(Database):
                 INSERT INTO download_task (task_id, cover_id, title, created_time, data)
                 VALUES (?, ?, ?, ?, ?)
             """, info_list)
+
+    def update_task(self, task_info: TaskInfo):
+        self.execute("""
+            UPDATE download_task SET data = ? WHERE task_id = ?
+        """, (json.dumps(task_info.to_dict(), ensure_ascii = False), task_info.Basic.task_id))
+
+    def delete_task(self, task_id: str, completed: bool = False):
+        if completed:
+            self.execute("""
+                DELETE FROM completed_task WHERE task_id = ?
+            """, (task_id,))
+        else:
+            self.execute("""
+                DELETE FROM download_task WHERE task_id = ?
+            """, (task_id,))
