@@ -49,13 +49,19 @@ class QueryInfoWorker(QObject):
     def get_dash_file_size(self, download_urls: list):
         def on_success(response: dict):
             content_length = response.get("Content-Length")
+            content_type = response.get("Content-Type")
 
-            if content_length is not None:
-                self.break_flag = True
+            if content_type is None or "text" in content_type:
+                # 链接不可用
+                return
+            
+            if content_length is None or content_length == "0":
+                # 无法获取文件大小
+                return
 
-                self.file_size = int(content_length)
-            else:
-                self.file_size = 0
+            self.break_flag = True
+
+            self.file_size = int(content_length)
 
         download_urls = CDN.get_url_list(download_urls)
 

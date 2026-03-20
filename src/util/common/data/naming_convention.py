@@ -6,6 +6,8 @@ convention_type_map = {
     "CHEESE": 30
 }
 
+reversed_convention_type_map = {v: k for k, v in convention_type_map.items()}
+
 class VariableListFactory:
     def __init__(self):
         pass

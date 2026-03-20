@@ -31,8 +31,8 @@ class DownloadInterface(QFrame):
         self.downloading_list_view = DownloadListView(self)
         self.downloading_list_view.setEmptyTextTip(self.tr("No downloads in progress"))
         self.downloading_list_view.setAutoManageConcurrentTasks(True)
-        self.downloading_list_view.setAutoUpdateVisibleArea(True)
         self.downloading_list_view.setAutoUpdateCountBadge(True)
+        self.downloading_list_view.connectUpdateDataSignal()
 
         self.completed_list_view = DownloadListView(self)
         self.completed_list_view.setEmptyTextTip(self.tr("No completed downloads"))

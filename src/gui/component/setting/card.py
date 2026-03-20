@@ -6,7 +6,7 @@ from qfluentwidgets.components.settings.expand_setting_card import GroupWidget
 from gui.component.setting.widget import SettingSwitchButton, SettingComboBox, EntryItemWidget
 from gui.dialog.setting.edit_convention import EditConventionDialog
 
-from util.common.data import convention_type_map
+from util.common.data import reversed_convention_type_map
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.config import config
@@ -23,6 +23,8 @@ class DownloadPathSettingCard(PushSettingCard):
         self.path = ""
 
         self.set_path(config.get(config.download_path))
+
+        self.clicked.connect(self.on_change_download_path)
 
     def set_path(self, path: str):
         self.path = path
@@ -146,10 +148,8 @@ class NamingConventionSettingCard(ExpandGroupSettingCard):
     def init_data(self):
         rule_list = config.get(config.naming_rule_list).copy()
 
-        convention_type_map_reversed = {v: k for k, v in convention_type_map.items()}
-
         for entry in rule_list:
-            type_key = convention_type_map_reversed.get(entry.get("type"))
+            type_key = reversed_convention_type_map.get(entry.get("type"))
             type_str = Translator.CONVENTION_TYPE(type_key)
 
             self.add_item(entry, type_str)

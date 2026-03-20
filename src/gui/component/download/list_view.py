@@ -64,6 +64,9 @@ class DownloadListView(ListView):
     def setAutoUpdateCountBadge(self, auto_update: bool):
         self._auto_update_count_badge = auto_update
 
+    def connectUpdateDataSignal(self):
+        self._model.connectUpdateDataSignal()
+
     def updateVisibleArea(self):
         # 只更新可见区域的下载项的信息
         rect = self.viewport().rect()
@@ -97,7 +100,7 @@ class DownloadListView(ListView):
         else:
             return super().paintEvent(e)
 
-    def addTask(self, task_info_list: List[TaskInfo]):
+    def addTask(self, task_info_list: List[TaskInfo]):        
         self._model.appendRows(task_info_list)
 
         if self._auto_manage_concurrent:

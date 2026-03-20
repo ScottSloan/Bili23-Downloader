@@ -19,7 +19,7 @@ class QueryWorker:
             content_length = response.get("Content-Length")
             content_type = response.get("Content-Type")
 
-            if content_type is None or "text/html" in content_type:
+            if content_type is None or "text" in content_type:
                 # 链接不可用
                 return
             

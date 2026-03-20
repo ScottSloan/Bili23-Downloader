@@ -7,7 +7,7 @@ from qfluentwidgets import (
 
 from gui.component.widget import DictComboBox
 
-from util.common.data import video_quality_map, audio_quality_map, audio_codec_map, video_codec_map
+from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
 from util.parse.preview.info import PreviewerInfo
 from util.format import FileNameFormatter, Units
 from util.common.icon import ExtendedFluentIcon
@@ -91,8 +91,7 @@ class MediaInfoCard(ExpandGroupSettingCard):
             self.audio_quality_group.setContent(reason)
 
     def update_video_quality_description(self, info: dict):
-        video_quality_map_reverse = {v: k for k, v in video_quality_map.items()}
-        video_quality_key = video_quality_map_reverse.get(info["quality_id"], self.tr("Unknown Video Quality"))
+        video_quality_key = reversed_video_quality_map.get(info["quality_id"], self.tr("Unknown Video Quality"))
 
         quality_label_list = [
             Translator.VIDEO_QUALITY(video_quality_key),
@@ -110,13 +109,11 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.video_quality_group.setContent(", ".join([label for label in quality_label_list if label]))
 
     def update_audio_quality_description(self, info: dict):
-        audio_quality_map_reverse = {v: k for k, v in audio_quality_map.items()}
-        audio_codec_map_reverse = {v: k for k, v in audio_codec_map.items()}
-        audio_quality_key = audio_quality_map_reverse.get(info["quality_id"], self.tr("Unknown Audio Quality"))
+        audio_quality_key = reversed_audio_quality_map.get(info["quality_id"], self.tr("Unknown Audio Quality"))
 
         label_list = [
             Translator.AUDIO_QUALITY(audio_quality_key),
-            audio_codec_map_reverse.get(info["codec"], info["codec"]),
+            reversed_audio_codec_map.get(info["codec"], info["codec"]),
             Units.format_bitrate(info["bitrate"]),
             Units.format_file_size(info["file_size"])
         ]
@@ -124,10 +121,8 @@ class MediaInfoCard(ExpandGroupSettingCard):
         self.audio_quality_group.setContent(", ".join([label for label in label_list if label]))
 
     def update_video_codec_description(self, info: dict):
-        video_codec_map_reverse = {v: k for k, v in video_codec_map.items()}
-
         codec_label_list = [
-            video_codec_map_reverse.get(info["codec_id"], self.tr("Unknown Video Codec")),
+            reversed_video_codec_map.get(info["codec_id"], self.tr("Unknown Video Codec")),
             self.get_codec_tip(info["codec_id"])
         ]
 

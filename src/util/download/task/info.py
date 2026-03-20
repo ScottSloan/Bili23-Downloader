@@ -91,9 +91,6 @@ class DownloadInfo(InfoBase):
     audio_quality_id: int = 0
     video_codec_id: int = 0
 
-    video_quality_str: str = ""
-    audio_quality_str: str = ""
-
     queue: list[str] = field(default_factory = list)
     files: dict = field(default_factory = dict)
 

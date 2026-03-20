@@ -1,24 +1,24 @@
-from PySide6.QtCore import QRunnable, QThreadPool
+from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
+from PySide6.QtCore import Qt
 
 from util.download.downloader.parse_worker import ParseWorker
-from util.common.enum import DownloadStatus, DownloadType
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
-from util.common.data import video_quality_map
 from util.common.signal_bus import signal_bus
 from util.thread import GlobalThreadPoolTask
 from util.network.request import get_cookies
 from util.download.task.info import TaskInfo
+from util.common.enum import DownloadStatus
 from util.common.config import config
 from util.common.io import File
 
-from threading import Thread, Event, Lock
+from threading import Event, Lock
 from pathlib import Path
 import requests
-import time
+import json
 
 class ChunkWorker(QRunnable):
-    def __init__(self, session: requests.Session, chunk_index: int, chunk_range: tuple[int, int], file_name: str, file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, finished_callback = None, on_chunk_start = None, on_chunk_end = None):
+    def __init__(self, session: requests.Session, chunk_index: int, chunk_range: tuple[int, int], file_name: str, file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, parent = None, on_chunk_start = None, on_chunk_end = None):
         super().__init__()
     
         self.session = session
@@ -32,7 +32,8 @@ class ChunkWorker(QRunnable):
         self.file_path = file_path
         self.stop_event = stop_event
         self.lock = lock
-        self.finished_callback = finished_callback
+
+        self.parent = parent
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
         self.downloaded_chunk_size = 0
@@ -57,8 +58,16 @@ class ChunkWorker(QRunnable):
         if self.on_chunk_end:
             self.on_chunk_end()
 
-        if self.finish_flag and self.finished_callback:
-            self.finished_callback(self.chunk_index)
+        if self.finish_flag:
+            self.on_finished()
+
+    def on_finished(self):
+        QMetaObject.invokeMethod(
+            self.parent,
+            "on_chunk_finished",
+            Qt.ConnectionType.QueuedConnection,
+            Q_ARG(int, self.chunk_index)
+        )
 
     def range_download(self):
         with open(self.file_path, "r+b") as f:
@@ -86,16 +95,16 @@ class ChunkWorker(QRunnable):
             "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
         }
 
-class Downloader:
+class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
+        super().__init__()
+
         self.task_info = task_info
 
         self.init_session()
 
         self.thread_pool = QThreadPool()
         self.thread_pool.setMaxThreadCount(config.get(config.download_thread))
-
-        self.timer = None
 
         self.chunk_size = 4 * 1024 * 1024
         self.download_list = {}
@@ -105,20 +114,27 @@ class Downloader:
         self.count_lock = Lock()
 
         self.active_workers = 0
-        self.wait_to_end_flag = False
-        self.wait_to_end_callback = None
+        self.last_sampled_size = 0
+        self.wait_flag = False
+        self.wait_callback = None
+
+        self.speed_timer = QTimer()
+        self.speed_timer.setInterval(1000)
+        self.speed_timer.timeout.connect(self._calculate_speed)
 
     def start(self):
         self.task_info.Download.status = DownloadStatus.PARSING
 
         self._stop_event.clear()
 
-        parse_worker = ParseWorker(self.task_info, success_callback = self.on_parse_finished, error_callback = self.on_parse_error)
-
+        parse_worker = ParseWorker(self.task_info, self)
         GlobalThreadPoolTask.run(parse_worker)
 
-    def on_parse_finished(self, download_info: dict):
+    @Slot(str)
+    def on_parse_finished(self, download_info_json: str):
         # 只有解析下载链接后才真正开始下载
+        download_info = json.loads(download_info_json)
+
         self.download_list = download_info["download_list"]
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
 
@@ -131,6 +147,7 @@ class Downloader:
 
         self.start_timer()
 
+    @Slot(str)
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
         self.task_info.Error.short_message = error_message
@@ -160,7 +177,7 @@ class Downloader:
                 "chunk_index": chunk_index,
                 "chunk_range": chunk_range,
                 "task_info": self.task_info,
-                "finished_callback": self.on_chunk_finished,
+                "parent": self,
                 "on_chunk_start": self.on_chunk_start,
                 "on_chunk_end": self.on_chunk_end,
                 "stop_event": self._stop_event,
@@ -182,6 +199,8 @@ class Downloader:
         self.task_info.Download.status = DownloadStatus.PAUSED
 
         self._stop_event.set()
+
+        self.speed_timer.stop()
 
     def resume(self):
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
@@ -234,6 +253,7 @@ class Downloader:
         with self.update_lock:
             self.task_info.Download.downloaded_size = downloaded_size
     
+    @Slot(int)
     def on_chunk_finished(self, chunk_index: int):
         with self.update_lock:
             self.task_info.Download.files[self.current_queue_key]["finished_chunks"] += 1
@@ -254,19 +274,6 @@ class Downloader:
 
         if self.task_info.Download.progress >= 100:
             self.on_download_completed()
-        
-    def on_update_speed(self):
-        while not self._stop_event.is_set():
-            task_manager.update(self.task_info)
-
-            with self.update_lock:
-                temp_downloaded_size = self.task_info.Download.downloaded_size
-
-            time.sleep(1)
-
-            with self.update_lock:
-                if self.task_info:
-                    self.task_info.Download.speed = self.task_info.Download.downloaded_size - temp_downloaded_size
 
     def get_download_info(self):
         # 从队列选取一个 key
@@ -294,20 +301,6 @@ class Downloader:
                     "file_size": download_info["download_list"][file_key]["file_size"]
                 } for file_key in download_info["download_queue"]
             }
-
-            has_video = self.task_info.Download.type & DownloadType.VIDEO != 0
-            has_audio = self.task_info.Download.type & DownloadType.AUDIO != 0
-
-            if has_video and has_audio:
-                video_quality_map_reverse = {v: k for k, v in video_quality_map.items()}
-
-                self.task_info.Download.video_quality_str = video_quality_map_reverse.get(self.task_info.Download.video_quality_id, "")
-
-            elif has_video and not has_audio:
-                self.task_info.Download.video_quality_str = "MP4"
-
-            elif not has_video and has_audio:
-                self.task_info.Download.video_quality_str = "音频"
 
     def init_session(self):
         self.session = requests.Session()
@@ -337,6 +330,8 @@ class Downloader:
 
         self.session.close()
 
+        self.speed_timer.stop()
+
         task_manager.update(self.task_info)
 
         # 通知 model 开始下一个下载任务
@@ -350,12 +345,12 @@ class Downloader:
         with self.count_lock:
             self.active_workers -= 1
 
-        if self.active_workers == 0 and self.wait_to_end_flag and self._stop_event.is_set():
-            self.wait_to_end_callback()
+        if self.active_workers == 0 and self.wait_flag and self._stop_event.is_set():
+            self.wait_callback()
 
     def wait(self, on_end):
-        self.wait_to_end_flag = True
-        self.wait_to_end_callback = on_end
+        self.wait_flag = True
+        self.wait_callback = on_end
 
         self._stop_event.set()
 
@@ -363,15 +358,25 @@ class Downloader:
             on_end()
 
     def start_timer(self):
-        self.timer = Thread(target = self.on_update_speed, name = "DownloadTimer", daemon = True)
-        self.timer.start()
+        self.last_sampled_size = self.task_info.Download.downloaded_size
+
+        self.speed_timer.start()
+
+    def _calculate_speed(self):
+        with self.update_lock:
+            current_size = self.task_info.Download.downloaded_size
+
+        self.task_info.Download.speed = current_size - self.last_sampled_size
+        self.last_sampled_size = current_size
+
+        # emit 信号
+        signal_bus.download.update_downloading_item.emit(self.task_info)
 
     def on_delete(self):
         # 销毁下载器实例前，清除引用
         self.session = None
         self.thread_pool = None
 
-        self.timer = None
         self.task_info = None
         self.download_list = None
         

@@ -1,4 +1,4 @@
-from util.common.data import audio_quality_map, audio_reorder_map
+from util.common.data import audio_reorder_map, reversed_audio_quality_map
 from util.parse.preview.worker import QueryInfoWorker
 from util.parse.preview.info import PreviewerInfo
 from util.common.signal_bus import signal_bus
@@ -63,10 +63,9 @@ class AudioInfoParser:
         }
 
         available_audio_quality = self.get_available_list()
-        audio_quality_map_reverse = {v: k for k, v in audio_quality_map.items()}
 
         for quality_id in available_audio_quality.copy():
-            quality_str = audio_quality_map_reverse.get(quality_id)
+            quality_str = reversed_audio_quality_map.get(quality_id)
 
             initial_data[quality_str] = quality_id
 

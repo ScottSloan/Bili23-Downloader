@@ -1,4 +1,4 @@
-from emoji import replace_emoji
+from emoji import demojize
 from enum import IntFlag
 import uuid
 
@@ -60,7 +60,7 @@ class TreeNode:
             "children": [child.to_dict() for child in self.children],
             "duration": self.duration,                                            # 时长（s）
             "number": self.number,                                                # 在剧集列表中显示的序号
-            "title": replace_emoji(self.title, "")                                # 标题，去除 emoji 表情
+            "title": demojize(self.title)                                         # 标题，去除 emoji 表情
         }
 
 class TreeItem:
@@ -105,7 +105,7 @@ class TreeItem:
             "pubtime": self.pubtime,                               # 发布时间（时间戳）
             "part_number": self.part_number,                       # 分P序号，仅分P有效
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等
-            "title": replace_emoji(self.title, ""),                # 标题，去除 emoji 表情
+            "title": demojize(self.title),                         # 标题，去除 emoji 表情
             "url": self.url
         }
     

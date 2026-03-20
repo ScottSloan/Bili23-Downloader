@@ -1,4 +1,4 @@
-from PySide6.QtCore import QRunnable
+from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
 
 from util.download.parse.video_info import VideoInfoParser
 from util.download.parse.audio_info import AudioInfoParser
@@ -10,15 +10,16 @@ from util.download.task.info import TaskInfo
 from util.thread import SyncTask
 
 from urllib.parse import urlencode
+import json
 
 class ParseWorker(QRunnable, ParserBase):
-    def __init__(self, task_info: TaskInfo, success_callback = None, error_callback = None):
+    def __init__(self, task_info: TaskInfo, parent = None):
         super().__init__()
 
         self.task_info = task_info
         self.info_data: dict = None
-        self.success_callback = success_callback
-        self.error_callback = error_callback
+
+        self.parent = parent
         self.error = False
 
     def run(self):
@@ -27,9 +28,14 @@ class ParseWorker(QRunnable, ParserBase):
 
             if not self.error:
                 download_info = self.parse_download_info()
+                download_info_json = json.dumps(download_info, ensure_ascii = False)
 
-                if self.success_callback:
-                    self.success_callback(download_info)
+                QMetaObject.invokeMethod(
+                    self.parent,
+                    "on_parse_finished",
+                    Qt.ConnectionType.QueuedConnection,
+                    Q_ARG(str, download_info_json)     # 由于不支持直接传递字典，所以传递 json 字符串，在主线程再转换回来
+                )
 
         except:
             self.on_parse_error("解析下载链接失败")
@@ -152,7 +158,12 @@ class ParseWorker(QRunnable, ParserBase):
     def on_parse_error(self, error_message: str):
         self.error = True
 
-        self.error_callback(error_message)
+        QMetaObject.invokeMethod(
+            self.parent,
+            "on_parse_error",
+            Qt.ConnectionType.QueuedConnection,
+            Q_ARG(str, error_message)
+        )
 
     def check_response(self, response: dict):
         if response.get("code", -1) != 0:

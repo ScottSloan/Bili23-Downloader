@@ -3,6 +3,7 @@ from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Slot
 from util.download.downloader.manager import downloader_manager
 from util.download.cover.manager import cover_manager
 from util.download.task.manager import task_manager
+from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
 from util.common.config import config
@@ -175,3 +176,14 @@ class DownloadListModel(QAbstractListModel):
 
             next_task = merge_queued.pop(0)
             self.togglePauseResume(next_task)
+
+    def connectUpdateDataSignal(self):
+        signal_bus.download.update_downloading_item.connect(self.onUpdateData)
+
+    def onUpdateData(self, task_info: TaskInfo):
+        index = self.getRow(task_info)
+
+        if index != -1:
+            model_index = self.index(index)
+
+            self.dataChanged.emit(model_index, model_index)

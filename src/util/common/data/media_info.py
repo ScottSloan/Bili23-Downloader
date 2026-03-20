@@ -13,6 +13,8 @@ video_quality_map = {
     "360P": 16,                   # 360P 流畅
 }
 
+reversed_video_quality_map = {v: k for k, v in video_quality_map.items()}
+
 audio_quality_map = {
     "auto": 30300,                # 按优先级自动选择
     "HI_RES": 30251,              # Hi-Res 无损
@@ -21,6 +23,8 @@ audio_quality_map = {
     "132K": 30232,                # 132 kbps
     "64K": 30216                  # 64 kbps
 }
+
+reversed_audio_quality_map = {v: k for k, v in audio_quality_map.items()}
 
 audio_reorder_map = {
     30251: 0,
@@ -35,9 +39,13 @@ audio_codec_map = {
     "FLAC": "fLaC"
 }
 
+reversed_audio_codec_map = {v: k for k, v in audio_codec_map.items()}
+
 video_codec_map = {
     "auto": 20,
     "AVC/H.264": 7,
     "HEVC/H.265": 12,
     "AV1": 13
 }
+
+reversed_video_codec_map = {v: k for k, v in video_codec_map.items()}

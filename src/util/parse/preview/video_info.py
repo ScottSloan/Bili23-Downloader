@@ -1,6 +1,6 @@
 from util.parse.preview.worker import QueryInfoWorker
 from util.parse.preview.info import PreviewerInfo
-from util.common.data import video_quality_map
+from util.common.data import reversed_video_quality_map
 from util.common.signal_bus import signal_bus
 from util.common.enum import MediaType
 from util.common.config import config
@@ -64,10 +64,9 @@ class VideoInfoParser:
         }
 
         self.available_quality_list = self.get_available_quality_list()
-        video_quality_map_reverse = {v: k for k, v in video_quality_map.items()}
 
         for quality_id in self.available_quality_list.copy():
-            quality_str = video_quality_map_reverse.get(quality_id)
+            quality_str = reversed_video_quality_map.get(quality_id)
 
             initial_data[quality_str] = quality_id
         

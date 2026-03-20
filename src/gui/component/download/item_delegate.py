@@ -1,14 +1,17 @@
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
-from PySide6.QtCore import QSize, QModelIndex, Qt, QRect, QEvent, Signal, QPoint
+from PySide6.QtCore import QSize, QModelIndex, Qt, QRect, QEvent, Signal, QPoint, QObject
 from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent
 
 from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon
 
+from util.common.enum import DownloadStatus, DownloadType
+from util.common.data import reversed_video_quality_map
 from util.common.icon import ExtendedFluentIcon
+from util.common.translator import Translator
 from util.download.task.info import TaskInfo
-from util.common.enum import DownloadStatus
 from util.common.io import Directory
 from util.format import Units
+from util.format import Time
 
 from pathlib import Path
 from typing import List
@@ -173,7 +176,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         super().__init__(parent)
 
         self.uiRect = UIRect()
-        self.uiData = UIData()
+        self.uiData = UIData(self)
 
         self.ActionButtonHoveredRow = -1
         self.DeleteButtonHoveredRow = -1
@@ -223,8 +226,8 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         titleRect = self.uiRect.getTitleRect(coverRect, option)
         self._drawText(painter, titleRect, task_info.Basic.show_title)
 
-        infoRect = self.uiRect.getInfoRect(titleRect, option)
-        self._drawDescriptionText(painter, infoRect, "1080P 高清")
+        infoRect = self.uiRect.getInfoRect(titleRect, option, completed = self.isTaskCompleted(task_info))
+        self._drawDescriptionText(painter, infoRect, self.uiData.getInfoText(task_info))
 
         sizeRect = self.uiRect.getSizeRect(infoRect)
         self._drawDescriptionText(painter, sizeRect, self.uiData.getSizeText(task_info))
@@ -310,6 +313,9 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
 
+    def isTaskCompleted(self, task_info: TaskInfo):
+        return task_info.Download.status == DownloadStatus.COMPLETED
+    
 class UIRect:
     def __init__(self):
         self.margin = 10
@@ -329,17 +335,23 @@ class UIRect:
 
         return QRect(left, top, width, 16)
     
-    def getInfoRect(self, titleRect: QRect, option: QStyleOptionViewItem):
+    def getInfoRect(self, titleRect: QRect, option: QStyleOptionViewItem, completed = False):
         left = titleRect.left()
         top = option.rect.bottom() - titleRect.height() - self.margin - 5
 
-        return QRect(left, top, 125, 16)
+        if completed:
+            width = 175
+        else:
+            width = 125
+        
+        return QRect(left, top, width, 16)
     
     def getSizeRect(self, infoRect: QRect):
-        left = infoRect.right() + self.spacer
+        left = infoRect.right() + self.margin
+
         top = infoRect.top()
 
-        return QRect(left, top, 125, 16)
+        return QRect(left, top, 150, 16)
 
     def getProgressBarRect(self, titleRect: QRect, option: QStyleOptionViewItem):
         left = option.rect.width() - self.margin - self.buttonSize * 2 - self.spacer * 3 - 200
@@ -365,7 +377,26 @@ class UIRect:
 
         return QRect(left, top, self.buttonSize, self.buttonSize)
 
-class UIData:
+class UIData(QObject):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def getInfoText(self, task_info: TaskInfo):
+        if task_info.Download.status == DownloadStatus.COMPLETED:
+            return Time.format_timestamp(task_info.Basic.completed_time)
+        else:
+            has_video = task_info.Download.type & DownloadType.VIDEO != 0
+            has_audio = task_info.Download.type & DownloadType.AUDIO != 0
+
+            if has_video and has_audio:
+                return Translator.VIDEO_QUALITY(reversed_video_quality_map.get(task_info.Download.video_quality_id, ""))
+
+            elif has_video and not has_audio:
+                return "MP4"
+
+            elif not has_video and has_audio:
+                return self.tr("Audio")
+
     def getStatusText(self, task_info: TaskInfo):
         match task_info.Download.status:
             case DownloadStatus.QUEUED:
