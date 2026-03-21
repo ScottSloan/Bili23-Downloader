@@ -20,7 +20,7 @@ class DownloadSettingsPage(ScrollArea):
     def init_UI(self):
         self.download_path_card = DownloadPathSettingCard(self.options_dialog, save = False, parent = self)
         self.naming_convention_card = NamingConventionCard(self)
-        self.show_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), config.show_download_options_dialog, self)
+        self.show_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show this dialog"), self.tr("Automatically show this dialog before downloading to customize settings"), config.show_download_options_dialog, self)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.download_path_card)
@@ -34,4 +34,4 @@ class DownloadSettingsPage(ScrollArea):
     def on_save(self):
         config.set(config.download_path, self.download_path_card.path)
 
-        config.naming_rule_id = self.naming_convention_card.rule_choice.currentData()
+        config.target_naming_rule_id = self.naming_convention_card.rule_choice.currentData()

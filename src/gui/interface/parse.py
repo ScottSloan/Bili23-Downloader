@@ -147,6 +147,8 @@ class ParseInterface(QFrame):
         # 根据解析结果判断是否显示分页组件
         self.check_pager_visibility(extra_data)
 
+        self.check_need_check_all()
+
         self.parse_btn.setIndeterminateState(False)
 
     def on_parse_error(self, error_message: str):
@@ -207,3 +209,11 @@ class ParseInterface(QFrame):
                 self.pager.update_data(extra_data["pagination_data"])
         else:
             self.pager.hide()
+
+    def check_need_check_all(self):
+        # 如果解析结果只有一个视频，或者配置了自动全选，则直接勾选所有项目
+        if self.parse_list.get_total_items_count() == 1 or config.get(config.auto_check_all):
+            self.parse_list.check_all_items()
+
+            self.download_btn.setEnabled(True)
+        

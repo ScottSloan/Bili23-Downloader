@@ -6,6 +6,9 @@ from util.common.config import config
 from datetime import datetime
 from pathlib import Path
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 class FileNameFormatter:
     def __init__(self):
@@ -38,37 +41,56 @@ class FileNameFormatter:
                 self.rule = self.get_rule_from_config(self.type_id)
 
             if self.attribute:
-                extra_rule = self.get_special_rule()
-
-                if extra_rule:
-                    self.rule = str(Path(extra_rule) / self.rule)
+                self.rule = self.get_special_rule()
 
             return self.rule.format(**self.variable_data)
         
-        except:
+        except Exception as e:
+            logger.exception(f"格式化文件名时发生错误")
+
             return None
 
     def get_special_rule(self):
         # 判断是否为特殊类型的视频：互动视频、每周必看、收藏夹、个人空间
         # 这些类型不支持自定义，直接使用内部预设规则
 
-        special_rule_map = {
-            Attribute.INTERACTIVE_BIT: "",
-            Attribute.POPULAR_BIT: "",
-            Attribute.FAVLIST_BIT: "",
-            Attribute.SPACE_BIT: ""
+        rule_map = {
+            Attribute.INTERACTIVE_BIT: "{collection_title}/{leaft_title}",
+            Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
+            Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
+            Attribute.FAVLIST_BIT: "{favorites_owner_id}_{favorites_owner}/{favorites_name}",
+            Attribute.SPACE_BIT: "{space_owner_id}_{space_owner}"
         }
 
-        for attr, rule in special_rule_map.items():
-            if self.attribute & attr:
-                return rule
+        if self.attribute & Attribute.INTERACTIVE_BIT:
+            return str(Path(rule_map.get(Attribute.INTERACTIVE_BIT)))
 
+        elif self.attribute & Attribute.POPULAR_BIT:
+            return str(Path(rule_map.get(Attribute.POPULAR_BIT)))
+        
+        elif self.attribute & Attribute.COLLECTION_LIST_BIT:
+            return str(Path(rule_map.get(Attribute.COLLECTION_LIST_BIT)))
+        
+        elif self.attribute & Attribute.FAVLIST_BIT:
+            return str(Path(rule_map.get(Attribute.FAVLIST_BIT)) / self.rule)
+
+        elif self.attribute & Attribute.SPACE_BIT:
+            return str(Path(rule_map.get(Attribute.SPACE_BIT)) / self.rule)
+        
+        else:
+            return self.rule
+        
     def get_rule_from_config(self, type_id: int = None):
         # 从命名规则配置中查询到对应的命名规则模板
         for entry in config.get(config.naming_rule_list):
             if entry["type"] == type_id and entry["default"]:
                 return entry["rule"]
-            
+
+    def get_rule_by_id(self, rule_id: int):
+        for entry in config.get(config.naming_rule_list):
+            if entry["id"] == rule_id:
+                return entry["rule"]
+
     def get_variable_data_from_task_info(self, task_info: TaskInfo):
         return {
             "pub_time": datetime.fromtimestamp(task_info.Episode.pubtime),
@@ -107,7 +129,7 @@ class FileNameFormatter:
         self.attribute = task_info.Episode.attribute
 
         return self.get_type_id_from_attribute(task_info.Episode.attribute)
-            
+
     def get_type_id_from_attribute(self, attribute: int):
         type_map = {
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
@@ -115,6 +137,7 @@ class FileNameFormatter:
             Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
+            Attribute.POPULAR_BIT: ConventionType.NORMAL
         }
 
         for attr, type_id in type_map.items():

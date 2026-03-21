@@ -140,8 +140,8 @@ class ListParser(ParserBase):
         self.info_data["data"]["meta"] = meta_info["data"]["meta"].copy()
 
     def get_category_name(self):
-        # 合集系列
-        return "PLAYLIST"
+        # 合集列表
+        return "COLLECTION_LIST"
     
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["total"]

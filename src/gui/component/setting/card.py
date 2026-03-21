@@ -365,6 +365,8 @@ class DownloadFormatCard(ExpandGroupSettingCard):
 
 class ParseListSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
-        pass
+        super().__init__(ExtendedFluentIcon.LIST, self.tr("Parse List"), self.tr("Adjust settings for the parse list"), parent)
 
-    
+        self.auto_check_all_switch = SettingSwitchButton(config.auto_check_all, parent = self)
+
+        self.addGroup("", self.tr("Auto-select All"), self.tr("Automatically select all items after parsing"), self.auto_check_all_switch)

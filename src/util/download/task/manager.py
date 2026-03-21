@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import List
 from uuid import uuid4
 import json
+import re
 
 class TaskManager:
     def __init__(self):
@@ -80,15 +81,24 @@ class TaskManager:
         elif episode_info.get("attribute") & Attribute.CHEESE_BIT:
             episode_info["episode_title"] = episode_info.get("title", "")
 
-        return {
+        data = {
             **episode_info,
             **extra_data,
-            **episode_info.get("related_titles", {})
+            **episode_info.get("related_titles", {}),
+            **episode_info.get("uploader_info", {})
         }
+
+        # 过滤文件系统非法字符
+        self.__filter_illegal_characters(data)
+
+        return data
 
     def __update_file_name_info(self, task_info: TaskInfo):
         formatter = FileNameFormatter()
         formatter.set_variable_data(task_info)
+
+        if config.target_naming_rule_id is not None:
+            formatter.set_rule(formatter.get_rule_by_id(config.target_naming_rule_id))
 
         path = Path(formatter.format())
 
@@ -104,6 +114,24 @@ class TaskManager:
             return True
         
         return False
+
+    def __filter_illegal_characters(self, episode_info: dict):
+        title_list = [
+            "leaf_title", 
+            "parent_title",
+            "section_title",
+            "collection_title",
+            "series_title",
+            "season_title",
+            "episode_title",
+            "favorites_owner",
+            "space_owner"
+        ]
+
+        for title in title_list:
+            if title in episode_info:
+                # 过滤文件系统非法字符
+                episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
 
     def create(self, episode_info_list: List[dict]):
         task_info_list = []

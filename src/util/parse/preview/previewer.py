@@ -172,7 +172,8 @@ class Previewer(ParserBase):
     def check_need_parse(self, ep_attr: int):
         attr_list = [
             Attribute.SPACE_BIT,
-            Attribute.FAVLIST_BIT
+            Attribute.FAVLIST_BIT,
+            Attribute.COLLECTION_LIST_BIT
         ]
 
         for attr in attr_list:
@@ -205,4 +206,4 @@ class Previewer(ParserBase):
         PreviewerInfo.error_occurred = True
         PreviewerInfo.error_message = ""
 
-        config.naming_rule_id = None
+        config.target_naming_rule_id = None

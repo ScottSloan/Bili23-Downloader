@@ -18,7 +18,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         node = self.sections_parser()
 
         if self.target_episode_info:
-            return node.to_dict()
+            return node
         else:
             self.update_episode_list(node)
 

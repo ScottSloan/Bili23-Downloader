@@ -15,3 +15,4 @@ class DurationFormatter:
 
     def __str__(self):
         return Units.format_episode_duration(self.duration)
+    

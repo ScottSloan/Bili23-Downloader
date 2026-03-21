@@ -52,8 +52,8 @@ class SpaceEpisodeParser(EpisodeParserBase):
         self.episode_id = EpisodeData.add_episode()
         episode_data = EpisodeData.get_episode_data(self.episode_id)
 
-        episode_data["space_owner_name"] = self.info_data["info"]["name"]
-        episode_data["space_owner_mid"] = self.info_data["info"]["mid"]
+        episode_data["space_owner"] = self.info_data["info"]["name"]
+        episode_data["space_owner_id"] = self.info_data["info"]["mid"]
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data["is_charging_arc"]:

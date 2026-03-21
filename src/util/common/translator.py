@@ -82,7 +82,7 @@ class Translator:
             "VARIETY": translate("EPISODE_TYPE", "Variety Shows"),
             "COURSE": translate("EPISODE_TYPE", "Courses"),
             "WEEKLY": translate("EPISODE_TYPE", "Weekly Picks"),
-            "PLAYLIST": translate("EPISODE_TYPE", "Playlists"),
+            "COLLECTION_LIST": translate("EPISODE_TYPE", "Collection"),
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
             "PROFILE": translate("EPISODE_TYPE", "Profile")
         }

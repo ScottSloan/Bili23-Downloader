@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeItem, Attribute
+from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class PopularEpisodeParser(EpisodeParserBase):
@@ -8,6 +8,8 @@ class PopularEpisodeParser(EpisodeParserBase):
         self.info_data = info_data["data"]
 
     def parse(self):
+        self.episode_parser()
+
         node = self.list_parser()
 
         self.update_episode_list(node)
@@ -34,9 +36,10 @@ class PopularEpisodeParser(EpisodeParserBase):
                 "duration": self.get_episode_duration(episode),
                 "number": episode_count,
                 "pubtime": episode["pubdate"],
+                "episode_id": self.episode_id,
                 "title": episode["title"],
                 "related_titles": {
-                    "weekly_title": weekly_title
+                    "collection_title": weekly_title
                 },
                 "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
             }
@@ -47,3 +50,6 @@ class PopularEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
+
+    def episode_parser(self):
+        self.episode_id = EpisodeData.add_episode()

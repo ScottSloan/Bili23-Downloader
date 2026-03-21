@@ -8,7 +8,7 @@ from qfluentwidgets import (
 
 from gui.component.setting.card import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
-    NamingConventionSettingCard, FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard
+    NamingConventionSettingCard, FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
@@ -48,6 +48,8 @@ class SettingInterface(ScrollArea):
 
         # Behavior
         self.behavior_group = SettingCardGroup(self.tr("Behavior"), self)
+
+        self.parse_list_card = ParseListSettingCard(self)
 
         self.stay_on_top_card = SwitchSettingCard(ExtendedFluentIcon.PIN, self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), config.stay_on_top, self)
         self.listen_clipboard_card = SwitchSettingCard(ExtendedFluentIcon.CLIPBOARD, self.tr("Listen to clipboard"), self.tr("Automatically start parsing when a link is copied"), config.listen_clipboard, self)
@@ -97,6 +99,7 @@ class SettingInterface(ScrollArea):
         self.interface_group.addSettingCard(self.language_card)
 
         # Behavior
+        self.behavior_group.addSettingCard(self.parse_list_card)
         self.behavior_group.addSettingCard(self.stay_on_top_card)
         self.behavior_group.addSettingCard(self.listen_clipboard_card)
         self.behavior_group.addSettingCard(self.show_download_options_dialog_card)

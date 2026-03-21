@@ -26,14 +26,15 @@ class EpisodeData:
         cls.table.clear()
 
 class Attribute(IntFlag):
-    ITEM_NODE_BIT          = 1 << 0          # 是否为节点（node）
-    VIDEO_BIT              = 1 << 1          # 是否为视频（item）
-    BANGUMI_BIT            = 1 << 2          # 是否为剧集（item）
-    CHEESE_BIT             = 1 << 3          # 是否为课程（item）
-    POPULAR_BIT            = 1 << 4          # 是否为每周必看（item）
-    SPACE_BIT              = 1 << 5          # 是否为个人空间（item）
-    FAVLIST_BIT            = 1 << 6          # 是否为收藏夹（item）
-    NEED_PARSE_BIT         = 1 << 7          # 是否需要二次解析，如个人空间、收藏夹中的视频（item）
+    VIDEO_BIT              = 1 << 0          # 是否为投稿视频
+    BANGUMI_BIT            = 1 << 1          # 是否为剧集
+    CHEESE_BIT             = 1 << 2          # 是否为课程
+    POPULAR_BIT            = 1 << 3          # 是否为每周必看
+    COLLECTION_LIST_BIT    = 1 << 4          # 是否为合集列表
+    SPACE_BIT              = 1 << 5          # 是否为个人空间
+    FAVLIST_BIT            = 1 << 6          # 是否为收藏夹
+
+    NEED_PARSE_BIT         = 1 << 7          # 是否需要二次解析，如个人空间、收藏夹、合集列表中的视频
     
     NORMAL_BIT             = 1 << 8          # 是否为单个视频（item）
     PART_BIT               = 1 << 9          # 是否为分P（item）
@@ -119,14 +120,17 @@ class TreeItemBase:
 
         return checked_items
 
-    def get_all_children(self):
+    def get_all_children(self, to_dict = False):
         all_items: List[TreeItem] = []
 
         for child in self.children:
             if child.children:
-                all_items.extend(child.get_all_children())
+                all_items.extend(child.get_all_children(to_dict = to_dict))
             else:
-                all_items.append(child)
+                if to_dict:
+                    all_items.append(child.to_dict())
+                else:
+                    all_items.append(child)
 
         return all_items
 
@@ -152,11 +156,14 @@ class TreeItem(TreeItemBase):
         self.episode_number = item_data.get("episode_number", 0)
         self.related_titles = item_data.get("related_titles", {})
 
+        self.uploader = item_data.get("uploader", "")
+        self.uploader_uid = item_data.get("uploader_uid", 0)
+
     def set_attribute(self, flag: int):
         self.attribute |= flag
 
     def to_dict(self):
-        return {
+        data = {
             "attribute": self.attribute,                           # 属性标志位
             "episode_id": self.episode_id,                         # 剧集 ID
             "episode_number": self.episode_number,                 # 剧集序号，仅剧集正片有效
@@ -172,6 +179,14 @@ class TreeItem(TreeItemBase):
             "part_number": self.part_number,                       # 分P序号，仅分P有效
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等
             "title": demojize(self.title),                         # 标题，去除 emoji 表情
-            "url": self.url
+            "url": self.url,
         }
+
+        if self.uploader:
+            data["uploader_info"] = {
+                "uploader": self.uploader,
+                "uploader_uid": self.uploader_uid
+            }
+
+        return data
     

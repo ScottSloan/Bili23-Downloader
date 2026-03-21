@@ -195,12 +195,14 @@ class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
     app_version = "2.00.0"
-    app_version_code = "version_code"
+    app_version_code = 20260321
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
 
     # Behavior
+    auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
+
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
     listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
@@ -298,7 +300,7 @@ class APPConfig(QConfig):
     merge_video_audio = True
     keep_original_files = False
 
-    naming_rule_id = None
+    target_naming_rule_id = None
 
 config = APPConfig()
 config.themeMode.value = Theme.AUTO

@@ -6,6 +6,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     # 在原有 FluentIcon 的基础上添加新的图标
     PIN = "pin"
     EXIT = "exit"
+    LIST = "list"
     CLEAR = "clear"
     RETRY = "retry"
     SERVER = "server"

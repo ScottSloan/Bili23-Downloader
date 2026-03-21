@@ -25,9 +25,7 @@ class ReparseWorker(QRunnable, ParserBase):
         
         episode_node = self.parse_episode_node_info()
 
-        node_items = self.get_node_items(episode_node)
-
-        signal_bus.download.create_task.emit(node_items)
+        signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True))
 
     def parse_episode_node_info(self):
         # 视频
@@ -74,21 +72,6 @@ class ReparseWorker(QRunnable, ParserBase):
             "target_attribute": self.episode_info.get("attribute") & ~Attribute.NEED_PARSE_BIT
         }
     
-    def get_node_items(self, node_dict: dict):
-        node_items = []
-
-        def traverse(node_data: dict):
-            if "children" in node_data:
-                for child in node_data["children"]:
-                    traverse(child)
-
-            else:
-                node_items.append(node_data)
-
-        traverse(node_dict)
-
-        return node_items
-
     def get_video_info(self, bvid: str):
         def on_success(response: dict):
             self.info_data = response

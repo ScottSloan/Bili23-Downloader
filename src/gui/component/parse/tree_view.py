@@ -50,7 +50,7 @@ class ParseTreeView(TreeView):
 
         return total_items[0].to_dict() if total_items else None
 
-    def check_all(self):
+    def check_all_items(self):
         # 只需要改变根节点的状态，子节点会自动跟随
         self._model.root_node.set_checked_state(Qt.CheckState.Checked)
 

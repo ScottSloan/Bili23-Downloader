@@ -52,14 +52,16 @@ class FavlistEpisodeParser(EpisodeParserBase):
         self.episode_id = EpisodeData.add_episode()
         episode_data = EpisodeData.get_episode_data(self.episode_id)
 
-        episode_data["favlist_title"] = self.info_data["info"]["title"]
-        episode_data["favlist_id"] = self.info_data["info"]["id"]
-        episode_data["fav_owner_name"] = self.info_data["info"]["upper"]["name"]
-        episode_data["fav_owner_mid"] = self.info_data["info"]["upper"]["mid"]
+        episode_data["favorites_name"] = self.info_data["info"]["title"]
+        episode_data["favorites_id"] = self.info_data["info"]["id"]
+        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
+        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("ogv"):
             return episode_data["ogv"]["type_name"]
+        
+        return ""
 
     def set_episode_attribute(self, episode_data: dict, item: TreeItem):
         if episode_data.get("ogv"):

@@ -22,7 +22,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                 node = self.single_parser()
 
         if self.target_episode_info:
-            return node.to_dict()
+            return node
         else:
             self.update_episode_list(node)
 
@@ -102,9 +102,12 @@ class VideoEpisodeParser(EpisodeParserBase):
 
         root_node = TreeItem(root_node_data)
 
-        episode_count = 0
+        sections = self.info_data["ugc_season"]["sections"]
 
-        for section in self.info_data["ugc_season"]["sections"]:
+        episode_count = 0
+        section_count = len(sections)    # 统计章节数量
+
+        for section in sections:
             # 章节
             section_title = section["title"]
             section_data = {
@@ -157,7 +160,11 @@ class VideoEpisodeParser(EpisodeParserBase):
 
                         page_node.add_child(item)
 
-                    section_node.add_child(page_node)
+                    if section_count > 1:
+                        section_node.add_child(page_node)
+                    else:
+                        # 如果只有一个正片章节，则不显示"章节"层级，直接添加到根节点
+                        root_node.add_child(page_node)
 
                 else:
                     episode_count += 1
@@ -183,9 +190,14 @@ class VideoEpisodeParser(EpisodeParserBase):
                     item = TreeItem(item_data)
                     self.set_attribute(item, Attribute.VIDEO_BIT | Attribute.COLLECTION_BIT)
 
-                    section_node.add_child(item)
+                    if section_count > 1:
+                        section_node.add_child(item)
+                    else:
+                        # 如果只有一个正片章节，则不显示"章节"层级，直接添加到根节点
+                        root_node.add_child(item)
 
-            root_node.add_child(section_node)
+            if section_count > 1:
+                root_node.add_child(section_node)
 
         return root_node
 
