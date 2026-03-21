@@ -1,5 +1,8 @@
+from PySide6.QtCore import Qt
+
 from emoji import demojize
 from enum import IntFlag
+from typing import List
 import uuid
 
 class EpisodeData:
@@ -37,57 +40,120 @@ class Attribute(IntFlag):
     COLLECTION_BIT         = 1 << 10         # 是否为合集（node）
     INTERACTIVE_BIT        = 1 << 11         # 是否为互动视频（item）
 
-class TreeNode:
-    def __init__(self, node_data: dict):
-        super().__init__()
+class TreeItemBase:
+    def __init__(self):
+        self.parent: TreeItem = None
+        self.checked = Qt.CheckState.Unchecked
+        self.children: List[TreeItem] = []
 
-        self.attribute = Attribute.ITEM_NODE_BIT
-        self.children: list[TreeNode | TreeItem] = []
+    def add_child(self, child: "TreeItem"):
+        child.parent = self
 
-        self.duration = node_data.get("duration", 0)
-        self.number = node_data.get("number", "")
-        self.title = node_data.get("title", "")
-
-    def add_child(self, child):
         self.children.append(child)
 
-    def set_attribute(self, flag: int):
-        self.attribute |= flag
+    def child(self, row: int):
+        return self.children[row]
+    
+    def count(self):
+        return len(self.children)
+    
+    def row(self):
+        if self.parent:
+            return self.parent.children.index(self)
+        
+        return 0
+    
+    def set_checked_state(self, state: Qt.CheckState):
+        if isinstance(state, int):
+            state = Qt.CheckState(state)
 
-    def to_dict(self):
-        return {
-            "attribute": self.attribute,                                          # 属性标志位
-            "children": [child.to_dict() for child in self.children],
-            "duration": self.duration,                                            # 时长（s）
-            "number": self.number,                                                # 在剧集列表中显示的序号
-            "title": demojize(self.title)                                         # 标题，去除 emoji 表情
-        }
+        if self.checked == state:
+            return
 
-class TreeItem:
+        self.checked = state
+
+        # 向下传递
+        if state in (Qt.CheckState.Checked, Qt.CheckState.Unchecked):
+            self._propagate_down(state)
+
+        # 向上传递
+        if self.parent:
+            self.parent._propagate_up()
+
+    def _propagate_down(self, state: Qt.CheckState):
+        self.checked = state
+
+        for child in self.children:
+            child._propagate_down(state)
+
+    def _propagate_up(self):
+        states = [child.checked for child in self.children]
+        
+        if all(s == Qt.CheckState.Checked for s in states):
+            new_state = Qt.CheckState.Checked
+
+        elif all(s == Qt.CheckState.Unchecked for s in states):
+            new_state = Qt.CheckState.Unchecked
+
+        else:
+            new_state = Qt.CheckState.PartiallyChecked
+
+        if self.checked != new_state:
+            self.checked = new_state
+
+            if self.parent:
+                self.parent._propagate_up()
+
+    def get_all_checked_children(self, to_dict = False):
+        checked_items: List[TreeItem] = []
+
+        for child in self.children:
+            if child.children:
+                checked_items.extend(child.get_all_checked_children(to_dict = to_dict))
+            else:
+                if child.checked == Qt.CheckState.Checked:
+                    if to_dict:
+                        checked_items.append(child.to_dict())
+                    else:
+                        checked_items.append(child)
+
+        return checked_items
+
+    def get_all_children(self):
+        all_items: List[TreeItem] = []
+
+        for child in self.children:
+            if child.children:
+                all_items.extend(child.get_all_children())
+            else:
+                all_items.append(child)
+
+        return all_items
+
+class TreeItem(TreeItemBase):
     def __init__(self, item_data: dict):
+        super().__init__()
+
         self.attribute = 0
-        self.episode_id = item_data.get("episode_id", "")
-        self.related_titles = item_data.get("related_titles", {})
 
         self.aid = item_data.get("aid", 0)
-        self.badge = item_data.get("badge", "")
-        self.bvid = item_data.get("bvid", "")
         self.cid = item_data.get("cid", 0)
-        self.cover = item_data.get("cover", "")
-        self.duration = item_data.get("duration", 0)
+        self.url = item_data.get("url", "")
+        self.bvid = item_data.get("bvid", "")
         self.ep_id = item_data.get("ep_id", 0)
-        self.episode_number = item_data.get("episode_number", 0)
+        self.badge = item_data.get("badge", "")
+        self.cover = item_data.get("cover", "")
+        self.title = item_data.get("title", "")
         self.number = item_data.get("number", "")
         self.pubtime = item_data.get("pubtime", 0)
+        self.duration = item_data.get("duration", 0)
+        self.episode_id = item_data.get("episode_id", "")
         self.part_number = item_data.get("part_number", 0)
-        self.title = item_data.get("title", "")
-        self.url = item_data.get("url", "")
+        self.episode_number = item_data.get("episode_number", 0)
+        self.related_titles = item_data.get("related_titles", {})
 
     def set_attribute(self, flag: int):
         self.attribute |= flag
-
-    def set_category(self, category):
-        pass
 
     def to_dict(self):
         return {
@@ -101,7 +167,7 @@ class TreeItem:
             "cover": self.cover,
             "duration": self.duration,                             # 时长（s）
             "ep_id": self.ep_id,
-            "number": self.number,                                 # 在剧集列表中显示的序号
+            "number": self.number,                                 # 在解析列表中显示的序号
             "pubtime": self.pubtime,                               # 发布时间（时间戳）
             "part_number": self.part_number,                       # 分P序号，仅分P有效
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等

@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeNode, TreeItem, EpisodeData, Attribute
+from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 from util.common.data import badge_map
 
@@ -24,7 +24,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node.to_dict()
         else:
-            self.update_episode_list(node.to_dict())
+            self.update_episode_list(node)
 
     def single_parser(self):
         # 单个视频
@@ -33,7 +33,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             "title": ""
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         item_data = {
             "episode_id": self.episode_id,
@@ -64,7 +64,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             "title": parent_title
         }
         
-        root_node = TreeNode(root_node_data)
+        root_node = TreeItem(root_node_data)
 
         for page in self.info_data["pages"]:
             item_data = {
@@ -100,7 +100,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             "title": collection_title
         }
 
-        root_node = TreeNode(root_node_data)
+        root_node = TreeItem(root_node_data)
 
         episode_count = 0
 
@@ -112,7 +112,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                 "title": section_title
             }
 
-            section_node = TreeNode(section_data)
+            section_node = TreeItem(section_data)
 
             for episode in section["episodes"]:
                 if self.target_episode_info:
@@ -127,7 +127,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                         "title": parent_title
                     }
 
-                    page_node = TreeNode(page_node_data)
+                    page_node = TreeItem(page_node_data)
 
                     for page in episode["pages"]:
                         episode_count += 1

@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeNode, TreeItem, EpisodeData, Attribute
+from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class CheeseEpisodeParser(EpisodeParserBase):
@@ -15,7 +15,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node.to_dict()
         else:
-            self.update_episode_list(node.to_dict())
+            self.update_episode_list(node)
 
     def sections_parser(self):
         cheese_title = self.info_data["title"]
@@ -25,7 +25,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
             "title": cheese_title
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         episode_count = 0
 
@@ -37,7 +37,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
                     "title": section_title
                 }
 
-                section_node = TreeNode(section_node_data)
+                section_node = TreeItem(section_node_data)
 
                 for episode in section["episodes"]:
                     episode_count += 1
@@ -98,4 +98,3 @@ class CheeseEpisodeParser(EpisodeParserBase):
             2: "付费",
             3: "部分试看"
         }.get(episode_data["status"])
-            

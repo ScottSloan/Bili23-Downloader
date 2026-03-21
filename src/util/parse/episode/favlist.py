@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeNode, TreeItem, EpisodeData, Attribute
+from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class FavlistEpisodeParser(EpisodeParserBase):
@@ -12,7 +12,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
 
         node = self.medias_parser()
 
-        self.update_episode_list(node.to_dict())
+        self.update_episode_list(node)
 
     def medias_parser(self):
         favlist_title = self.info_data["info"]["title"]
@@ -21,7 +21,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
             "title": favlist_title
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         episode_count = 0
 

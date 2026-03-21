@@ -379,4 +379,6 @@ class Downloader(QObject):
 
         self.task_info = None
         self.download_list = None
+
+        self.deleteLater()
         

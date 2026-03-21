@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeNode, TreeItem, Attribute
+from util.parse.episode.tree import TreeItem, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class PopularEpisodeParser(EpisodeParserBase):
@@ -10,7 +10,7 @@ class PopularEpisodeParser(EpisodeParserBase):
     def parse(self):
         node = self.list_parser()
 
-        self.update_episode_list(node.to_dict())
+        self.update_episode_list(node)
 
     def list_parser(self):
         weekly_title = self.info_data["config"]["label"]
@@ -19,7 +19,7 @@ class PopularEpisodeParser(EpisodeParserBase):
             "title": weekly_title
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         episode_count = 0
 

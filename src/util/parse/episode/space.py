@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeNode, TreeItem, EpisodeData, Attribute
+from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class SpaceEpisodeParser(EpisodeParserBase):
@@ -12,7 +12,7 @@ class SpaceEpisodeParser(EpisodeParserBase):
 
         node = self.vlist_parser()
 
-        self.update_episode_list(node.to_dict())
+        self.update_episode_list(node)
 
     def vlist_parser(self):
         node_data = {
@@ -20,7 +20,7 @@ class SpaceEpisodeParser(EpisodeParserBase):
             "title": self.info_data["info"]["name"]
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         episode_count = 0
 

@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QStackedWidget, QVBoxLayout, QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, QEventLoop
 
 from qfluentwidgets import (
-    MessageBoxBase, InfoBar, InfoBarPosition, FluentTitleBar, FluentWidget, PrimaryPushButton, PushButton
+    MessageBoxBase, InfoBar, InfoBarPosition, FluentTitleBar, FluentWidget, PrimaryPushButton, PushButton, DatePicker
 )
 from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 
@@ -213,3 +213,6 @@ class TopNavigationDialogBase(FluentDialogBase):
         )
 
         self.stackedWidget.addWidget(widget)
+
+class FlyoutDialog:
+    pass

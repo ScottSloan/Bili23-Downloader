@@ -362,3 +362,9 @@ class DownloadFormatCard(ExpandGroupSettingCard):
         self.m4a_to_mp3_switch = SettingSwitchButton(config.m4a_to_mp3, self)
 
         self.addGroup(FluentIcon.MUSIC, self.tr("Convert M4A to MP3"), self.tr("Only applies when downloading audio-only streams. Disabled if video is also selected."), self.m4a_to_mp3_switch)
+
+class ParseListSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        pass
+
+    

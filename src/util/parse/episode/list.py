@@ -1,4 +1,4 @@
-from util.parse.episode.tree import TreeNode, TreeItem, Attribute
+from util.parse.episode.tree import TreeItem, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class ListEpisodeParser(EpisodeParserBase):
@@ -10,7 +10,7 @@ class ListEpisodeParser(EpisodeParserBase):
     def parse(self):
         node = self.seasons_archives_list_parser()
 
-        self.update_episode_list(node.to_dict())
+        self.update_episode_list(node)
 
     def seasons_archives_list_parser(self):
         collection_title = self.get_node_title()
@@ -19,7 +19,7 @@ class ListEpisodeParser(EpisodeParserBase):
             "title": collection_title
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         episode_count = 0
 

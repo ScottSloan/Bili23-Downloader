@@ -2,8 +2,9 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
 
 from qfluentwidgets import LineEdit, BodyLabel, ToolButton,FluentIcon
 
-from gui.component.widget import IndeterminateProgressPushButton, TreeListView, Pager
+from gui.component.widget import IndeterminateProgressPushButton, Pager
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
+from gui.component.parse.tree_view import ParseTreeView
 
 from util.parse.preview import Previewer, PreviewerInfo
 from util.common.enum import ToastNotificationCategory
@@ -73,7 +74,7 @@ class ParseInterface(QFrame):
         self.download_option_btn = ToolButton(ExtendedFluentIcon.OPTIONS, self)
         self.download_option_btn.setFixedSize(28, 28)
 
-        self.episode_list = TreeListView(self)
+        self.parse_list = ParseTreeView(self)
 
         self.pager = Pager(self)
         self.pager.hide()
@@ -101,7 +102,7 @@ class ParseInterface(QFrame):
         main_layout.setContentsMargins(30, 20, 30, 20)
         main_layout.addLayout(top_layout)
         main_layout.addLayout(toolbar_layout)
-        main_layout.addWidget(self.episode_list)
+        main_layout.addWidget(self.parse_list)
         main_layout.addSpacing(10)
         main_layout.addLayout(bottom_layout)
 
@@ -114,10 +115,10 @@ class ParseInterface(QFrame):
 
         self.download_option_btn.clicked.connect(self.on_download_options)
 
-        self.episode_list.item_check_state_changed.connect(self.on_item_check_state_changed)
+        self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
         self.download_btn.clicked.connect(self.on_download)
 
-        signal_bus.parse.update_episode_list.connect(self.episode_list.on_update_list)
+        signal_bus.parse.update_parse_list.connect(self.parse_list.update_tree)
 
     def init_utils(self):
         self.previewer = Previewer()
@@ -135,13 +136,13 @@ class ParseInterface(QFrame):
         AsyncTask.run(worker)
 
     def on_parse_success(self, category_name: str, extra_data: dict):
-        if first_episode_info := self.episode_list.get_first_episode_info():
+        if first_episode_info := self.parse_list.get_first_item_info():
             self.category_name = Translator.EPISODE_TYPE(category_name)
 
             # 获取解析结果中第一个视频的信息，作为预览的媒体信息
             signal_bus.parse.preview_init.emit(first_episode_info)
 
-        self.on_item_check_state_changed()
+        self.on_item_check_state_changed(None)
 
         # 根据解析结果判断是否显示分页组件
         self.check_pager_visibility(extra_data)
@@ -159,7 +160,7 @@ class ParseInterface(QFrame):
         # 只有在获取媒体信息成功时才允许下载
         #self.download_btn.setIndeterminateState(True)
 
-        checked_episodes_list = self.episode_list.get_all_checked_episodes_info()
+        checked_episodes_list = self.parse_list.get_checked_items(to_dict = True)
 
         signal_bus.download.create_task.emit(checked_episodes_list)
 
@@ -169,19 +170,20 @@ class ParseInterface(QFrame):
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
 
-    def on_item_check_state_changed(self):
-        checked_count = self.episode_list.get_checked_items_count()
+    def on_item_check_state_changed(self, index):
+        checked_count = self.parse_list.get_checked_items_count()
+        total_count = self.parse_list.get_total_items_count()
 
         if checked_count:
             text_label = self.tr("{category_name} ({selected_count} selected, {total_count} total)").format(
-                category_name = self.category_name, 
+                category_name = self.category_name,
                 selected_count = checked_count,
-                total_count = self.episode_list.total_count
+                total_count = total_count
             )
         else:
             text_label = self.tr("{category_name} ({total_count} total)").format(
                 category_name = self.category_name,
-                total_count = self.episode_list.total_count
+                total_count = total_count
             )
 
         self.item_count_label.setText(text_label)

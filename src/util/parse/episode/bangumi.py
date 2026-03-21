@@ -1,6 +1,5 @@
-from util.parse.episode.tree import TreeNode, TreeItem, EpisodeData, Attribute
+from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
-from util.common.data import bangumi_type_map
 from util.common.translator import Translator
 
 class BangumiEpisodeParser(EpisodeParserBase):
@@ -21,7 +20,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node.to_dict()
         else:
-            self.update_episode_list(node.to_dict())
+            self.update_episode_list(node)
 
     def sections_parser(self):
         season_title = self.info_data["season_title"]
@@ -30,7 +29,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
             "title": season_title
         }
 
-        root_node = TreeNode(node_data)
+        root_node = TreeItem(node_data)
 
         episode_count = 0
 
@@ -41,7 +40,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                 "title": section_title
             }
 
-            section_node = TreeNode(section_node_data)
+            section_node = TreeItem(section_node_data)
 
             for episode in section["episodes"]:
                 if self.target_episode_info:
