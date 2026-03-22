@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, FluentIcon
 
+from gui.dialog.terms import TermsOfUseDialog
 from gui.component.dialog import DialogBase
 
 from util.common.config import config
@@ -29,6 +30,7 @@ class AboutDialog(DialogBase):
         self.sponsor_lab = BodyLabel(self.tr("If this project saved you time or solved your problem, consider buying the author a coffee! Don't forget to star the repository on GitHub to support open-source development."))
         self.sponsor_lab.setWordWrap(True)
 
+        self.terms_btn = TransparentPushButton(FluentIcon.DOCUMENT, self.tr("Terms of Use"), self)
         self.documentation_btn = TransparentPushButton(FluentIcon.HELP, self.tr("Documentation"), self)
         self.github_btn = TransparentPushButton(FluentIcon.GITHUB, self.tr("Github"), self)
         self.sponsor_btn = TransparentPushButton(FluentIcon.HEART, self.tr("Sponsor"), self)
@@ -45,6 +47,7 @@ class AboutDialog(DialogBase):
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()
+        button_layout.addWidget(self.terms_btn)
         button_layout.addWidget(self.documentation_btn)
         button_layout.addWidget(self.github_btn)
         button_layout.addWidget(self.sponsor_btn)
@@ -63,9 +66,14 @@ class AboutDialog(DialogBase):
         self.connect_signal()
 
     def connect_signal(self):
+        self.terms_btn.clicked.connect(self.on_terms)
         self.documentation_btn.clicked.connect(self.on_ducumation)
         self.github_btn.clicked.connect(self.on_github)
         self.sponsor_btn.clicked.connect(self.on_sponsor)
+
+    def on_terms(self):
+        dialog = TermsOfUseDialog(self)
+        dialog.exec()
 
     def on_ducumation(self):
         webbrowser.open("https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html")

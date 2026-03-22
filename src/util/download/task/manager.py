@@ -177,12 +177,12 @@ class TaskManager:
         self.delete(task_info)
         
         # 删除下载的临时文件
-        remover = Remover().set_cwd(Path(task_info.File.download_path, task_info.File.folder))
-
-        for file_name in task_info.File.relative_files:
-            remover.add_file(file_name)
-
-        remover.execute()
+        (
+            Remover()
+            .set_cwd(Path(task_info.File.download_path, task_info.File.folder))
+            .add_files(task_info.File.relative_files)
+            .execute()
+        )
 
     def mark_as_completed(self, task_info: TaskInfo):
         self.delete(task_info)

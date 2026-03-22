@@ -1,4 +1,4 @@
-from util.common.enum import DownloadStatus, DownloadType
+from util.common.enum import DownloadStatus, DownloadType, ToastNotificationCategory
 from util.download.task.manager import task_manager
 from util.common.timestamp import get_timestamp
 from util.common.signal_bus import signal_bus
@@ -6,8 +6,12 @@ from util.ffmpeg.command import FFmpegCommand
 from util.download.task.info import TaskInfo
 from util.ffmpeg.runner import FFmpegRunner
 from util.common.io import Remover, Renamer
+from util.common.config import config
 
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Merger:
     def __init__(self, task_info: TaskInfo):
@@ -96,35 +100,42 @@ class Merger:
         self.mark_as_completed()
 
     def on_merge_completed(self, return_code: int, stdout: str, stderr: str):
-        cwd = self.get_cwd()
+        def _post():
+            cwd = self.get_cwd()
+            
+            if not self.task_info.Download.keep_original_files:
+                (
+                    Remover()
+                    .set_cwd(cwd)
+                    .add_file(self.temp_video_file_name)
+                    .add_file(self.temp_audio_file_name)
+                    .execute()
+                )
+            else:
+                self.keep_original_files()
 
-        if not self.task_info.Download.keep_original_files:
+            # 不直接在 ffmpeg 输出阶段重命名文件，避免文件名带 '-' 导致 ffmpeg 解析为参数
+            # 直接用系统底层提供的重命名方式，能有效避免上述问题
             (
-                Remover()
+                Renamer()
                 .set_cwd(cwd)
-                .add_file(self.temp_video_file_name)
-                .add_file(self.temp_audio_file_name)
+                .set_on_error(self.on_rename_error)
+                .add_file(self.temp_output_file_name, self.final_output_file_name)
                 .execute()
             )
-        else:
-            self.keep_original_files()
 
-        # 不直接在 ffmpeg 输出阶段重命名文件，避免文件名带 '-' 导致 ffmpeg 解析为参数
-        # 直接用系统底层提供的重命名方式，能有效避免上述问题
-        (
-            Renamer()
-            .set_cwd(cwd)
-            .set_on_error(self.on_rename_error)
-            .add_file(self.temp_output_file_name, self.final_output_file_name)
-            .execute()
-        )
+            self.add_file(
+                self.final_output_file_name,
+                clear = True
+            )
 
-        self.add_file(
-            self.final_output_file_name,
-            clear = True
-        )
+        try:
+            _post()
 
-        self.mark_as_completed()
+            self.mark_as_completed()
+
+        except Exception as e:
+            self.set_error_message(e, str(e))
 
     def mark_as_completed(self):
         self.task_info.Download.status = DownloadStatus.COMPLETED
@@ -135,6 +146,9 @@ class Merger:
         signal_bus.download.start_next_task.emit()
         signal_bus.download.add_to_completed_list.emit([self.task_info])
         signal_bus.download.remove_from_downloading_list.emit(self.task_info)
+
+        if config.get(config.show_notification):
+            signal_bus.toast.sys_show.emit(ToastNotificationCategory.SUCCESS, "下载完成", f"{self.task_info.File.name} 已下载完成")
 
     def keep_original_files(self):
         (
@@ -180,6 +194,14 @@ class Merger:
 
         self.task_info.Error.short_message = short_message
         self.task_info.Error.description = description
+
+        signal_bus.download.update_downloading_item.emit(self.task_info)
+        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, short_message, description if len(description) <= 50 else description[:50] + "...")
+
+        logger.error(short_message + ": \n" + description)
+
+        if config.get(config.show_notification):
+            signal_bus.toast.sys_show.emit(ToastNotificationCategory.ERROR, short_message, description)
 
     def get_cwd(self):
         return Path(self.task_info.File.download_path, self.task_info.File.folder)

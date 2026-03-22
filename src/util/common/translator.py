@@ -209,3 +209,15 @@ Examples:
 • {uploader}_{leaf_title} → Saves directly as "Uploader_Video Title"
                          
 For advanced usage, see the help documentation.""")
+    
+    @staticmethod
+    def TERMS_OF_USE():
+        return translate("TERMS_OF_USE", """<html>This software is intended solely for personal learning and research purposes. Any content downloaded through this project <b>is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.</b>
+<br><br>
+This software operates exclusively based on the user's own legitimate account access rights and <b>does not bypass any paywalls, membership restrictions, or technical protection measures.</b> You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
+<br><br>
+<b>Do not use this software for bulk scraping, unauthorized redistribution of content, or any activity that violates the terms of service of the target platform.</b> You assume full responsibility for any consequences arising from your use, including but not limited to account suspension, copyright disputes, or other legal issues.
+<br><br>
+Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.
+<br><br>
+<b>Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.</b></html>""")

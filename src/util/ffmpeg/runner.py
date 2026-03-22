@@ -52,14 +52,16 @@ class FFmpegRunner:
 
         if exception:
             if self._on_error:
-                self._on_error(e, stdout, stderr)
+                self._on_error(RuntimeError(f"执行 FFmpeg 时发生错误"), stdout, stderr)
+
+                return
 
         if return_code == 0:
             if self._on_completed:
                 self._on_completed(return_code, stdout, stderr)
         else:
             if self._on_error:
-                self._on_error(RuntimeError(f"FFmpeg failed with code {return_code}"), stdout, stderr)
+                self._on_error(RuntimeError(f"执行 FFmpeg 失败，返回码: {return_code}"), stdout, stderr)
 
     def start(self):
         self._thread = threading.Thread(target = self.run, name = "FFmpegRunner", daemon = True)

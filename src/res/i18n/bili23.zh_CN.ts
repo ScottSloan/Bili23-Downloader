@@ -4,9 +4,29 @@
 <context>
     <name></name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="29"/>
+        <location filename="../../gui/interface/parse.py" line="30"/>
         <source>获取媒体信息失败</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;Do not use this software for bulk scraping, unauthorized redistribution of content, or any activity that violates the terms of service of the target platform.&lt;/b&gt; You assume full responsibility for any consequences arising from your use, including but not limited to account suspension, copyright disputes, or other legal issues.
+&lt;br&gt;&lt;br&gt;
+Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.&lt;/b&gt;&lt;/html&gt;</source>
+        <translation type="vanished">&lt;html&gt;本软件仅供个人学习与研究用途，任何通过本项目下载的内容&lt;b&gt;仅限于个人非商业使用，严禁用于任何形式的商业目的、公开传播、分发、转售或非法牟利。&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+本软件仅基于用户自身账号的合法访问权限进行操作，&lt;b&gt;不会绕过任何付费墙、会员限制或技术保护措施。&lt;/b&gt;您所下载的内容，必须是您通过正常登录账号后可在目标平台上公开访问或拥有使用权的部分。若您的账号无权访问某内容，则本软件无法也不应被用于获取该内容。
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;请勿将本软件用于批量抓取、未经授权的内容分发或任何违反目标平台服务条款的行为。&lt;/b&gt;若您的使用行为导致账号封禁、版权纠纷或其他法律问题，开发者概不负责。
+&lt;br&gt;&lt;br&gt;
+在任何情况下，开发者均不对因使用或无法使用本软件所导致的任何直接、间接、附带或后果性损害承担责任。您理解并同意，使用本软件即代表您已充分了解上述风险，并自愿承担全部后果。
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;继续使用本软件即表示您已阅读、理解并同意遵守上述所有条款。&lt;/b&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -45,42 +65,47 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../../gui/dialog/about.py" line="23"/>
+        <location filename="../../gui/dialog/about.py" line="24"/>
         <source>About {app_name}</source>
         <translation>关于 {app_name}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="25"/>
+        <location filename="../../gui/dialog/about.py" line="26"/>
         <source>Version {app_version}</source>
         <translation>版本 {app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="26"/>
+        <location filename="../../gui/dialog/about.py" line="27"/>
         <source>This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3).</source>
         <translation>本软件为免费开源软件，使用 GNU 通用公共许可证第三版（GPLv3）授权。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="27"/>
+        <location filename="../../gui/dialog/about.py" line="28"/>
         <source>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</source>
         <translation>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="29"/>
+        <location filename="../../gui/dialog/about.py" line="30"/>
         <source>If this project saved you time or solved your problem, consider buying the author a coffee! Don&apos;t forget to star the repository on GitHub to support open-source development.</source>
         <translation>如果这个项目节省了你的时间或解决了你的问题，欢迎通过赞助请作者喝杯咖啡，也别忘了在 GitHub 上点个 Star 支持开源！</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="32"/>
+        <location filename="../../gui/dialog/about.py" line="33"/>
+        <source>Terms of Use</source>
+        <translation>使用协议</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/about.py" line="34"/>
         <source>Documentation</source>
         <translation>帮助文档</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="33"/>
+        <location filename="../../gui/dialog/about.py" line="35"/>
         <source>Github</source>
         <translation>Github</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="34"/>
+        <location filename="../../gui/dialog/about.py" line="36"/>
         <source>Sponsor</source>
         <translation>赞助作者</translation>
     </message>
@@ -482,17 +507,17 @@
         <translation>没有正在下载的任务</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="38"/>
+        <location filename="../../gui/interface/download.py" line="37"/>
         <source>No completed downloads</source>
         <translation>没有下载完成的任务</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="45"/>
+        <location filename="../../gui/interface/download.py" line="44"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="46"/>
+        <location filename="../../gui/interface/download.py" line="45"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
@@ -608,10 +633,6 @@
         <location filename="../../util/common/translator.py" line="85"/>
         <source>Collection</source>
         <translation>合集</translation>
-    </message>
-    <message>
-        <source>Playlists</source>
-        <translation type="vanished">合集列表</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="86"/>
@@ -913,22 +934,22 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="47"/>
+        <location filename="../../gui/interface/main_window.py" line="49"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="48"/>
+        <location filename="../../gui/interface/main_window.py" line="50"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="58"/>
+        <location filename="../../gui/interface/main_window.py" line="60"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="71"/>
+        <location filename="../../gui/interface/main_window.py" line="73"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -1349,32 +1370,32 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="62"/>
+        <location filename="../../gui/interface/parse.py" line="63"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="66"/>
+        <location filename="../../gui/interface/parse.py" line="67"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="82"/>
+        <location filename="../../gui/interface/parse.py" line="83"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="157"/>
+        <location filename="../../gui/interface/parse.py" line="159"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="180"/>
+        <location filename="../../gui/interface/parse.py" line="186"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="186"/>
+        <location filename="../../gui/interface/parse.py" line="192"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -1719,13 +1740,13 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="47"/>
-        <source>Display Scaling</source>
-        <translation>显示缩放</translation>
+        <source>Adjust the scaling of the application interface</source>
+        <translation>调整应用界面的缩放比例</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="47"/>
-        <source>Adjust the scaling of the application interface</source>
-        <translation>调整应用界面的缩放比例</translation>
+        <source>Display scaling</source>
+        <translation>显示缩放</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="48"/>
@@ -1833,14 +1854,14 @@ ISP：{isp}</translation>
         <translation>当下载完成或失败时显示通知</translation>
     </message>
     <message>
+        <location filename="../../gui/interface/setting.py" line="79"/>
+        <source>File naming</source>
+        <translation>文件命名</translation>
+    </message>
+    <message>
         <location filename="../../gui/interface/setting.py" line="71"/>
         <source>Danmaku, Subtitles, Cover, and Metadata</source>
         <translation>弹幕、字幕、封面和元数据</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/setting.py" line="79"/>
-        <source>File Naming</source>
-        <translation>文件命名</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="85"/>
@@ -1984,6 +2005,38 @@ ISP：{isp}</translation>
     </message>
 </context>
 <context>
+    <name>TERMS_OF_USE</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="215"/>
+        <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;Do not use this software for bulk scraping, unauthorized redistribution of content, or any activity that violates the terms of service of the target platform.&lt;/b&gt; You assume full responsibility for any consequences arising from your use, including but not limited to account suspension, copyright disputes, or other legal issues.
+&lt;br&gt;&lt;br&gt;
+Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.&lt;/b&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;本软件仅供个人学习与研究用途，任何通过本项目下载的内容&lt;b&gt;仅限于个人非商业使用，严禁用于任何形式的商业目的、公开传播、分发、转售或非法牟利。&lt;/b&gt;
+&lt;br&gt;&lt;br&gt;
+本软件仅基于用户自身账号的合法访问权限进行操作，&lt;b&gt;不会绕过任何付费墙、会员限制或技术保护措施。&lt;/b&gt;您所下载的内容，必须是您通过正常登录账号后可在目标平台上公开访问或拥有使用权的部分。若您的账号无权访问某内容，则本软件无法也不应被用于获取该内容。
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;请勿将本软件用于批量抓取、未经授权的内容分发或任何违反目标平台服务条款的行为。&lt;/b&gt;若您的使用行为导致账号封禁、版权纠纷或其他法律问题，开发者概不负责。
+&lt;br&gt;&lt;br&gt;
+在任何情况下，开发者均不对因使用或无法使用本软件所导致的任何直接、间接、附带或后果性损害承担责任。您理解并同意，使用本软件即代表您已充分了解上述风险，并自愿承担全部后果。
+&lt;br&gt;&lt;br&gt;
+&lt;b&gt;继续使用本软件即表示您已阅读、理解并同意遵守上述所有条款。&lt;/b&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TermsOfUseDialog</name>
+    <message>
+        <location filename="../../gui/dialog/terms.py" line="15"/>
+        <source>Terms of Use</source>
+        <translation>使用协议</translation>
+    </message>
+</context>
+<context>
     <name>TopNavigationDialogBase</name>
     <message>
         <location filename="../../gui/component/dialog.py" line="177"/>
@@ -2022,7 +2075,7 @@ ISP：{isp}</translation>
 <context>
     <name>UIData</name>
     <message>
-        <location filename="../../gui/component/download/item_delegate.py" line="398"/>
+        <location filename="../../gui/component/download/item_delegate.py" line="411"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>

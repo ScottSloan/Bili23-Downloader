@@ -8,6 +8,8 @@ class SignalBus:
         # 用于在 MainWindow 中显示 Toast 通知
         show = Signal(ToastNotificationCategory, str, str)
 
+        sys_show = Signal(ToastNotificationCategory, str, str)
+
     class Parse(QObject):
         update_parse_list = Signal(object)
 

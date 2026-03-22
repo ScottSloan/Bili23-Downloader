@@ -287,6 +287,8 @@ class APPConfig(QConfig):
     user_uid: str = ""
     user_avatar_pixmap: QPixmap = None
 
+    accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
+
     # FFmpeg
     ffmpeg_executable = ""
     bundle_ffmpeg_exist = False

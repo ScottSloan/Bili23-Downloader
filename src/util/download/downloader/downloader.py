@@ -156,7 +156,7 @@ class Downloader(QObject):
         self.task_info.Download.status = DownloadStatus.FAILED
         self.task_info.Error.short_message = error_message
 
-        task_manager.update(self.task_info)
+        self.update_item(self.task_info)
 
         signal_bus.download.start_next_task.emit()
 
@@ -373,8 +373,8 @@ class Downloader(QObject):
         self.task_info.Download.speed = current_size - self.last_sampled_size
         self.last_sampled_size = current_size
 
-        # emit 信号
-        signal_bus.download.update_downloading_item.emit(self.task_info)
+        # emit 信号通知视图更新下载速度显示
+        self.update_item(self.task_info)
 
     def on_delete(self):
         # 销毁下载器实例前，清除引用
@@ -385,4 +385,8 @@ class Downloader(QObject):
         self.download_list = None
 
         self.deleteLater()
-        
+    
+    def update_item(self, task_info: TaskInfo):
+        signal_bus.download.update_downloading_item.emit(task_info)
+
+        task_manager.update(self.task_info)

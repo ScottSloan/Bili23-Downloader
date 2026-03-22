@@ -22,6 +22,11 @@ class Remover:
 
         return self
     
+    def add_files(self, file_names: list):
+        self.files_to_remove.extend(file_names)
+
+        return self
+    
     def execute(self):
         for file_name in self.files_to_remove:
             try:

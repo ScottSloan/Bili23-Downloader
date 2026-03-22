@@ -1,6 +1,6 @@
-from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
@@ -10,8 +10,10 @@ from qfluentwidgets import (
 from gui.component.widget import NavigationLargeAvatarWidget
 from gui.interface.download import DownloadInterface
 from gui.interface.setting import SettingInterface
+from gui.component.sys_tray import SystemTrayIcon
 from gui.interface.parse import ParseInterface
 from gui.component.profile import ProfileCard
+from gui.dialog.terms import TermsOfUseDialog
 from gui.dialog.login import LoginDialog
 from gui.dialog.about import AboutDialog
 
@@ -70,10 +72,14 @@ class MainWindow(MSFluentWindow):
 
         self.addSubInterface(self.setting_interface, FluentIcon.SETTING, self.tr("Settings"), position = NavigationItemPosition.BOTTOM)
 
+        self.system_tray_icon = SystemTrayIcon(self)
+        self.system_tray_icon.show()
+
         self.connect_signals()
 
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
+        signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
         signal_bus.login.update_avatar.connect(self.on_update_avatar)
 
@@ -91,6 +97,9 @@ class MainWindow(MSFluentWindow):
 
         if 1 == 0 and not config.get(config.is_login):
             QTimer.singleShot(300, self.show_teaching_tip)
+
+        if not config.get(config.accepted_terms):
+            QTimer.singleShot(300, self.show_terms_of_use)
 
     def closeEvent(self, e):
         self.theme_listener.terminate()
@@ -157,6 +166,16 @@ class MainWindow(MSFluentWindow):
             parent = self
         )
 
+    def show_terms_of_use(self):
+        dialog = TermsOfUseDialog(self)
+
+        if not dialog.exec():
+            # 用户不接受使用协议，关闭程序
+            self.close()
+
+        # 许可协议优先级最高，之后再显示更新等提示
+        ## TODO: 显示更新提示
+
     def center_on_screen(self):
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
@@ -179,4 +198,4 @@ class MainWindow(MSFluentWindow):
 
         self.download_info_badge.adjustSize()
 
-        self.download_info_badge.move(52, 111)
+        self.download_info_badge.move(self.download_btn.width() - 4, 111)

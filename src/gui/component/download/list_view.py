@@ -21,6 +21,8 @@ class DownloadListView(ListView):
         self._auto_update_visible_area = False
         self._auto_update_count_badge = False
 
+        self._in_adding_queried_tasks = False
+
         self._model = DownloadListModel([], self)
         delegate = DownloadItemDelegate(self)
         delegate.contextMenuRequested.connect(self.showContextMenu)
@@ -31,9 +33,6 @@ class DownloadListView(ListView):
         self.setSelectRightClickedRow(True)
 
         self.setUniformItemSizes(True)
-
-        self.update_timer = QTimer(self)
-        self.update_timer.timeout.connect(self.updateVisibleArea)
 
     def showContextMenu(self, index, pos):
         menu = RoundMenu(parent = self)
@@ -52,35 +51,11 @@ class DownloadListView(ListView):
     def setAutoManageConcurrentTasks(self, auto_manage: bool):
         self._auto_manage_concurrent = auto_manage
 
-    def setAutoUpdateVisibleArea(self, auto_update: bool):
-        self._auto_update_visible_area = auto_update
-
-        # 根据设置启动或停止定时器
-        if auto_update:
-            self.update_timer.start(1000)
-        else:
-            self.update_timer.stop()
-
     def setAutoUpdateCountBadge(self, auto_update: bool):
         self._auto_update_count_badge = auto_update
 
     def connectUpdateDataSignal(self):
         self._model.connectUpdateDataSignal()
-
-    def updateVisibleArea(self):
-        # 只更新可见区域的下载项的信息
-        rect = self.viewport().rect()
-        top_index = self.indexAt(rect.topLeft())
-        bottom_index = self.indexAt(rect.bottomLeft())
-
-        if top_index.isValid() and bottom_index.isValid():
-            self._model.updateRows(top_index.row(), bottom_index.row())
-
-        elif top_index.isValid():
-            self._model.updateRows(top_index.row(), top_index.row())
-
-        elif bottom_index.isValid():
-            self._model.updateRows(bottom_index.row(), bottom_index.row())
 
     def paintEvent(self, e):
         if self.isEmpty():
@@ -111,7 +86,8 @@ class DownloadListView(ListView):
         if self._auto_manage_concurrent:
             downloader_manager.add_downloader_list(task_info_list)
 
-            self._model.manageConcurrentDownloads()
+            if not self._in_adding_queried_tasks:
+                self._model.manageConcurrentDownloads()
 
         if self._auto_update_count_badge:
             # 更新下载数量徽章
@@ -130,4 +106,9 @@ class DownloadListView(ListView):
         if self._auto_update_count_badge:
             # 更新下载数量徽章
             signal_bus.download.update_downloading_count.emit(self._model.rowCount())
-    
+
+    def _beginAddQueriedTasks(self):
+        self._in_adding_queried_tasks = True
+
+    def _endAddQueriedTasks(self):
+        self._in_adding_queried_tasks = False

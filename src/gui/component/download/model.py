@@ -136,6 +136,7 @@ class DownloadListModel(QAbstractListModel):
 
             case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
                 # 重试下载
+                print("retry", task_info.Basic.task_id)
                 downloader.retry()
 
         self.onUpdateData(task_info)
@@ -218,12 +219,12 @@ class DownloadListModel(QAbstractListModel):
     def onUpdateData(self, task_info: TaskInfo):
         row = self.getRow(task_info)
 
-        if row != -1 and self.isInVisibleArea(row):
+        if row != -1 and self.isRowInVisibleArea(row):
             model_index = self.index(row)
 
             self.dataChanged.emit(model_index, model_index)
 
-    def isInVisibleArea(self, row: int):
+    def isRowInVisibleArea(self, row: int):
         # 判断指定行是否在可见区域内
         view: QAbstractItemView = self.parent()
 

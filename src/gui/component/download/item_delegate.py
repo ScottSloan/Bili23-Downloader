@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
 from PySide6.QtCore import QSize, QModelIndex, Qt, QRect, QEvent, Signal, QPoint, QObject
-from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent
+from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent, QFontMetrics
 
 from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon
 
@@ -142,16 +142,26 @@ class FluentStyledItemDelegate:
         else:
             textColor = QColor(0, 0, 0)
 
-        painter.setFont(self._getFont(10))
+        font = self._getFont(10)
+        metrics = QFontMetrics(font)
+        elided_title = metrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
+
+        painter.setFont(font)
         painter.setPen(textColor)
 
-        painter.drawText(rect, text)
+        painter.drawText(rect, elided_title)
 
-    def _drawDescriptionText(self, painter: QPainter, rect: QRect, text: str):
+    def _drawDescriptionText(self, painter: QPainter, rect: QRect, text: str, error = False):
         if isDarkTheme():
-            textColor = QColor(206, 206, 206)
+            if error:
+                textColor = QColor(255, 107, 107)
+            else:
+                textColor = QColor(206, 206, 206)
         else:
-            textColor = QColor(96, 96, 96)
+            if error:
+                textColor = QColor(255, 77, 77)
+            else:
+                textColor = QColor(96, 96, 96)
 
         painter.setFont(self._getFont(10))
         painter.setPen(textColor)
@@ -204,7 +214,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         if event.type() == QEvent.Type.MouseMove:
             self._buttonHoverEvent(option, index, event)
-            view.update()
+            view.update(index)
 
         if event.type() == QEvent.Type.Leave:
             self.hoverRow = -1
@@ -238,7 +248,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         self._drawProgressBar(painter, progressBarRect, task_info.Download.progress)
 
         statusRect = self.uiRect.getStatusRect(progressBarRect, infoRect, option)
-        self._drawDescriptionText(painter, statusRect, self.uiData.getStatusText(task_info))
+        self._drawDescriptionText(painter, statusRect, self.uiData.getStatusText(task_info), error = self.isTaskFailed(task_info))
 
 
         # 右侧控制和删除按钮
@@ -316,6 +326,9 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
     def isTaskCompleted(self, task_info: TaskInfo):
         return task_info.Download.status == DownloadStatus.COMPLETED
     
+    def isTaskFailed(self, task_info: TaskInfo):
+        return task_info.Download.status in [DownloadStatus.FAILED, DownloadStatus.MERGE_FAILED]
+
 class UIRect:
     def __init__(self):
         self.margin = 10
@@ -331,7 +344,7 @@ class UIRect:
         left = coverRect.right() + self.spacer
         top = coverRect.top() + 5
 
-        width = option.rect.width() - left - 250
+        width = option.rect.width() - 450
 
         return QRect(left, top, width, 16)
     
@@ -344,14 +357,14 @@ class UIRect:
         else:
             width = 125
         
-        return QRect(left, top, width, 16)
+        return QRect(left, top, width, 20)
     
     def getSizeRect(self, infoRect: QRect):
         left = infoRect.right() + self.margin
 
         top = infoRect.top()
 
-        return QRect(left, top, 150, 16)
+        return QRect(left, top, 150, 20)
 
     def getProgressBarRect(self, titleRect: QRect, option: QStyleOptionViewItem):
         left = option.rect.width() - self.margin - self.buttonSize * 2 - self.spacer * 3 - 200
@@ -363,7 +376,7 @@ class UIRect:
         left = progressBarRect.left()
         top = infoRect.top()
 
-        return QRect(left, top, 200, 16)
+        return QRect(left, top, 200, 20)
 
     def getActionButtonRect(self, option: QStyleOptionViewItem):
         left = option.rect.width() - self.buttonSize * 2 - self.spacer * 2

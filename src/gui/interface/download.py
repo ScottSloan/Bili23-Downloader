@@ -92,8 +92,12 @@ class DownloadInterface(QFrame):
         AsyncTask.run(worker)
     
     def on_query_success(self, downloading_tasks: list[TaskInfo], completed_tasks: list[TaskInfo]):
+        self.downloading_list_view._beginAddQueriedTasks()
+
         self.downloading_list_view.addTask(downloading_tasks)
         self.completed_list_view.addTask(completed_tasks)
+
+        self.downloading_list_view._endAddQueriedTasks()
 
     def on_query_error(self, error_message: str):
         print(f"查询下载任务失败: {error_message}")
