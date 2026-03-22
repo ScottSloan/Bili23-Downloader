@@ -56,6 +56,7 @@ class SettingInterface(ScrollArea):
         self.listen_clipboard_card = SwitchSettingCard(ExtendedFluentIcon.CLIPBOARD, self.tr("Listen to clipboard"), self.tr("Automatically start parsing when a link is copied"), config.listen_clipboard, self)
         self.show_download_options_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), config.show_download_options_dialog, self)
         self.when_close_window_card = ComboBoxSettingCard(config.when_close_window, ExtendedFluentIcon.EXIT, self.tr("When closing window"), self.tr("Choose the action when closing the application window"), [self.tr("Exit application"), self.tr("Minimize to tray"), self.tr("Always ask")], self)
+        self.file_conflict_resolution_card = ComboBoxSettingCard(config.file_conflict_resolution, ExtendedFluentIcon.RENAME, self.tr("File conflict resolution"), self.tr("Choose the action when a file with the same name already exists"), [self.tr("Auto rename"), self.tr("Overwrite")], self)
 
         # Download
         self.download_group = SettingCardGroup(self.tr("Download"), self)
@@ -63,7 +64,7 @@ class SettingInterface(ScrollArea):
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
         self.download_thread_card = RangeSettingCard(config.download_thread, ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Number of threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self)
         self.download_parallel_card = RangeSettingCard(config.download_parallel, FluentIcon.DOWNLOAD, self.tr("Number of parallel downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self)
-        self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete or fail"), config.show_notification, self)
+        #self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete or fail"), config.show_notification, self)
         self.priority_setting_card = PrioritySettingCard(self)
         self.download_format_card = DownloadFormatCard(self)
 
@@ -106,12 +107,13 @@ class SettingInterface(ScrollArea):
         self.behavior_group.addSettingCard(self.listen_clipboard_card)
         self.behavior_group.addSettingCard(self.show_download_options_dialog_card)
         self.behavior_group.addSettingCard(self.when_close_window_card)
+        self.behavior_group.addSettingCard(self.file_conflict_resolution_card)
 
         # Download
         self.download_group.addSettingCard(self.download_path_card)
         self.download_group.addSettingCard(self.download_thread_card)
         self.download_group.addSettingCard(self.download_parallel_card)
-        self.download_group.addSettingCard(self.show_notification_card)
+        #self.download_group.addSettingCard(self.show_notification_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
 

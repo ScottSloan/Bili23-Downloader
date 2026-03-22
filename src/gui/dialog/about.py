@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+from PySide6.QtCore import qVersion
 
-from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, FluentIcon
+from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, FluentIcon, __version__
 
 from gui.dialog.terms import TermsOfUseDialog
 from gui.component.dialog import DialogBase
@@ -23,7 +24,8 @@ class AboutDialog(DialogBase):
 
         self.caption_lab = SubtitleLabel(self.tr("About {app_name}").format(app_name = app_name), self)
 
-        self.version_lab = BodyLabel(self.tr("Version {app_version}").format(app_version = app_version), self)
+        self.app_version_lab = BodyLabel(self.tr("Version {app_version}").format(app_version = app_version), self)
+        self.qt_version_lab = BodyLabel(self.tr("Powered by Qt {qt_version} and QFluentWidgets {qfluentwidgets_version}").format(qt_version = qVersion(), qfluentwidgets_version = __version__), self)
         self.license_lab = BodyLabel(self.tr("This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3)."))
         self.copyright_lab = BodyLabel(self.tr("Copyright © 2022-{year} Scott Sloan. All Rights Reserved.").format(year = year))
 
@@ -38,7 +40,9 @@ class AboutDialog(DialogBase):
         content_layout = QVBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
-        content_layout.addWidget(self.version_lab)
+        content_layout.addWidget(self.app_version_lab)
+        content_layout.addWidget(self.qt_version_lab)
+        content_layout.addSpacing(10)
         content_layout.addWidget(self.license_lab)
         content_layout.addSpacing(10)
         content_layout.addWidget(self.copyright_lab)
@@ -61,7 +65,7 @@ class AboutDialog(DialogBase):
 
         self.hideCancelButton()
 
-        self.widget.setMaximumWidth(650)
+        self.widget.setMinimumWidth(600)
 
         self.connect_signal()
 

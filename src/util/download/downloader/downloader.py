@@ -1,17 +1,20 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
+from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.parse_worker import ParseWorker
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
 from util.common.signal_bus import signal_bus
+from util.common.translator import Translator
 from util.thread import GlobalThreadPoolTask
 from util.network.request import get_cookies
 from util.download.task.info import TaskInfo
-from util.common.enum import DownloadStatus
 from util.common.config import config
 from util.common.io import File
 
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from threading import Event, Lock
 from pathlib import Path
 import requests
@@ -160,6 +163,14 @@ class Downloader(QObject):
 
         signal_bus.download.start_next_task.emit()
 
+        signal_bus.toast.show_long_message.emit(
+            Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+            "{parse_failed}\n\n{error_message}".format(
+                parse_failed = Translator.ERROR_MESSAGES("PARSE_FAILED"),
+                error_message = error_message
+            )
+        )
+
     def start_worker(self):
         info = self.get_download_info()
 
@@ -196,7 +207,7 @@ class Downloader(QObject):
     def start_merge(self):
         self.task_info.Download.status = DownloadStatus.MERGING
 
-        merge_worker = Merger(self.task_info)
+        merge_worker = Merger(self.task_info, parent = self)
         merge_worker.start()
 
     def pause(self):
@@ -309,6 +320,21 @@ class Downloader(QObject):
     def init_session(self):
         self.session = requests.Session()
 
+        retry_strategy = Retry(
+            total = 5,
+            backoff_factor = 1,
+            status_forcelist = [429, 500, 502, 503, 504]
+        )
+
+        adapter = HTTPAdapter(
+            pool_connections = 5,
+            pool_maxsize = 10,
+            max_retries = retry_strategy
+        )
+
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+
         cookies = get_cookies()
 
         for key, value in cookies.items():
@@ -329,6 +355,7 @@ class Downloader(QObject):
     def on_download_completed(self):
         self.task_info.Download.status = DownloadStatus.MERGE_QUEUED
         self.task_info.Download.speed = 0
+        self.task_info.Download.progress = 100
 
         self._stop_event.set()
 

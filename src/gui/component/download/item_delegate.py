@@ -112,13 +112,18 @@ class FluentStyledItemDelegate:
         # 绘制图标
         drawIcon(icon, painter, rect.adjusted(8, 8, -8, -8))
 
-    def _drawProgressBar(self, painter: QPainter, rect: QRect, value: int):
+    def _drawProgressBar(self, painter: QPainter, rect: QRect, value: int, error = False, paused = False):
         if isDarkTheme():
             backgroundColor = QColor(255, 255, 255, 155)
         else:
             backgroundColor = QColor(0, 0, 0, 155)
 
-        barColor = ThemeColor.PRIMARY.color()
+        if error:
+            barColor = QColor(255, 153, 164) if isDarkTheme() else QColor(196, 43, 28)
+        elif paused:
+            barColor = QColor(252, 225, 0) if isDarkTheme() else QColor(157, 93, 0)
+        else:
+            barColor = ThemeColor.PRIMARY.color()
 
         # 绘制背景
         painter.setPen(backgroundColor)
@@ -152,16 +157,10 @@ class FluentStyledItemDelegate:
         painter.drawText(rect, elided_title)
 
     def _drawDescriptionText(self, painter: QPainter, rect: QRect, text: str, error = False):
-        if isDarkTheme():
-            if error:
-                textColor = QColor(255, 107, 107)
-            else:
-                textColor = QColor(206, 206, 206)
+        if error:
+            textColor = QColor(255, 153, 164) if isDarkTheme() else QColor(196, 43, 28)
         else:
-            if error:
-                textColor = QColor(255, 77, 77)
-            else:
-                textColor = QColor(96, 96, 96)
+            textColor = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
 
         painter.setFont(self._getFont(10))
         painter.setPen(textColor)
@@ -245,7 +244,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         # 右侧进度条、状态
         progressBarRect = self.uiRect.getProgressBarRect(titleRect, option)
-        self._drawProgressBar(painter, progressBarRect, task_info.Download.progress)
+        self._drawProgressBar(painter, progressBarRect, task_info.Download.progress, error = self.isTaskFailed(task_info), paused = self.isTaskPaused(task_info))
 
         statusRect = self.uiRect.getStatusRect(progressBarRect, infoRect, option)
         self._drawDescriptionText(painter, statusRect, self.uiData.getStatusText(task_info), error = self.isTaskFailed(task_info))
@@ -328,6 +327,9 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
     
     def isTaskFailed(self, task_info: TaskInfo):
         return task_info.Download.status in [DownloadStatus.FAILED, DownloadStatus.MERGE_FAILED]
+    
+    def isTaskPaused(self, task_info: TaskInfo):
+        return task_info.Download.status == DownloadStatus.PAUSED
 
 class UIRect:
     def __init__(self):
@@ -413,28 +415,28 @@ class UIData(QObject):
     def getStatusText(self, task_info: TaskInfo):
         match task_info.Download.status:
             case DownloadStatus.QUEUED:
-                return "等待中..."
+                return Translator.TIP_MESSAGES("QUEUED")
             
             case DownloadStatus.PARSING:
-                return "正在获取下载链接..."
+                return Translator.TIP_MESSAGES("PARSING")
             
             case DownloadStatus.DOWNLOADING:
                 return self.getSpeedText(task_info)
             
             case DownloadStatus.PAUSED:
-                return "暂停中..."
+                return Translator.TIP_MESSAGES("PAUSED")
             
             case DownloadStatus.MERGE_QUEUED:
-                return "等待合并..."
+                return Translator.TIP_MESSAGES("MERGE_QUEUED")
             
             case DownloadStatus.MERGING:
-                return "正在合并..."
+                return Translator.TIP_MESSAGES("MERGING")
             
             case DownloadStatus.COMPLETED:
-                return "下载完成"
+                return Translator.TIP_MESSAGES("COMPLETED")
             
             case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
-                return task_info.Error.short_message
+                return Translator.ERROR_MESSAGES("DOWNLOAD_FAILED")
             
     def getSpeedText(self, task_info: TaskInfo):
         return Units.format_speed(task_info.Download.speed)

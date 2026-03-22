@@ -34,6 +34,10 @@ class WhenClose(Enum):
     MINIMIZE = 2
     ALWAYS_ASK = 3
 
+class FileConflictResolution(Enum):
+    AUTO_RENAME = 1
+    OVERWRITE = 2
+
 class DanmakuType(Enum):
     XML = "xml"
     ASS = "ass"

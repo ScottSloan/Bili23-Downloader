@@ -27,7 +27,7 @@ def check_preview_info(func):
             # 只有存在 error_message 时才显示通知
 
             if PreviewerInfo.error_message:
-                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("获取媒体信息失败"), PreviewerInfo.error_message)
+                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, Translator.ERROR_MESSAGES("MEDIA_INFO_FAILED"), PreviewerInfo.error_message)
         else:
             return func(self, *args, **kwargs)
         
@@ -158,8 +158,8 @@ class ParseInterface(QFrame):
 
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
 
-    @show_download_options_dialog
     @check_preview_info
+    @show_download_options_dialog
     def on_download(self):
         # 只有在获取媒体信息成功时才允许下载
         #self.download_btn.setIndeterminateState(True)

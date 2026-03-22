@@ -9,6 +9,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     LIST = "list"
     CLEAR = "clear"
     RETRY = "retry"
+    RENAME = "rename"
     SERVER = "server"
     COMMENT = "comment"
     OPTIONS = "options"

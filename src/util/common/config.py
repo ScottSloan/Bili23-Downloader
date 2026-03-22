@@ -9,7 +9,7 @@ from qfluentwidgets import (
 from util.common.serializer import LanguageSerializer, ScalingSerializer
 from util.common.enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    ZeroPaddingTotalDigits, Scaling
+    ZeroPaddingTotalDigits, Scaling, FileConflictResolution
 )
 
 from pathlib import Path
@@ -208,6 +208,7 @@ class APPConfig(QConfig):
     listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
+    file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download
     download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation), FolderValidator())
@@ -248,8 +249,8 @@ class APPConfig(QConfig):
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider", False, BoolValidator())
     cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cdn_server_list)
 
-    ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource))
-    custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "")
+    ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
+    custom_ffmpeg_path = ConfigItem("Advanced", "custom_ffmpeg_path", "", restart = True)
 
     proxy_enabled = ConfigItem("Advanced", "proxy_enabled", False, BoolValidator())
     proxy_type = OptionsConfigItem("Advanced", "proxy_type", ProxyType.HTTP, OptionsValidator(ProxyType), EnumSerializer(ProxyType))

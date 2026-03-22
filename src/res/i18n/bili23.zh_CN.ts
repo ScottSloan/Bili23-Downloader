@@ -2,34 +2,6 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN" sourcelanguage="en_US">
 <context>
-    <name></name>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="30"/>
-        <source>获取媒体信息失败</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
-&lt;br&gt;&lt;br&gt;
-This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
-&lt;br&gt;&lt;br&gt;
-&lt;b&gt;Do not use this software for bulk scraping, unauthorized redistribution of content, or any activity that violates the terms of service of the target platform.&lt;/b&gt; You assume full responsibility for any consequences arising from your use, including but not limited to account suspension, copyright disputes, or other legal issues.
-&lt;br&gt;&lt;br&gt;
-Under no circumstances shall the developer be liable for any direct, indirect, incidental, or consequential damages resulting from the use of or inability to use this software. By using this software, you acknowledge that you fully understand the above risks and voluntarily accept all associated responsibilities.
-&lt;br&gt;&lt;br&gt;
-&lt;b&gt;Continuing to use this software indicates that you have read, understood, and agreed to comply with all the terms stated above.&lt;/b&gt;&lt;/html&gt;</source>
-        <translation type="vanished">&lt;html&gt;本软件仅供个人学习与研究用途，任何通过本项目下载的内容&lt;b&gt;仅限于个人非商业使用，严禁用于任何形式的商业目的、公开传播、分发、转售或非法牟利。&lt;/b&gt;
-&lt;br&gt;&lt;br&gt;
-本软件仅基于用户自身账号的合法访问权限进行操作，&lt;b&gt;不会绕过任何付费墙、会员限制或技术保护措施。&lt;/b&gt;您所下载的内容，必须是您通过正常登录账号后可在目标平台上公开访问或拥有使用权的部分。若您的账号无权访问某内容，则本软件无法也不应被用于获取该内容。
-&lt;br&gt;&lt;br&gt;
-&lt;b&gt;请勿将本软件用于批量抓取、未经授权的内容分发或任何违反目标平台服务条款的行为。&lt;/b&gt;若您的使用行为导致账号封禁、版权纠纷或其他法律问题，开发者概不负责。
-&lt;br&gt;&lt;br&gt;
-在任何情况下，开发者均不对因使用或无法使用本软件所导致的任何直接、间接、附带或后果性损害承担责任。您理解并同意，使用本软件即代表您已充分了解上述风险，并自愿承担全部后果。
-&lt;br&gt;&lt;br&gt;
-&lt;b&gt;继续使用本软件即表示您已阅读、理解并同意遵守上述所有条款。&lt;/b&gt;&lt;/html&gt;</translation>
-    </message>
-</context>
-<context>
     <name>AUDIO_QUALITY</name>
     <message>
         <location filename="../../util/common/translator.py" line="53"/>
@@ -65,47 +37,52 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../../gui/dialog/about.py" line="24"/>
+        <location filename="../../gui/dialog/about.py" line="25"/>
         <source>About {app_name}</source>
         <translation>关于 {app_name}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="26"/>
+        <location filename="../../gui/dialog/about.py" line="27"/>
         <source>Version {app_version}</source>
         <translation>版本 {app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="27"/>
+        <location filename="../../gui/dialog/about.py" line="28"/>
+        <source>Powered by Qt {qt_version} and QFluentWidgets {qfluentwidgets_version}</source>
+        <translation>基于 Qt {qt_version} 和 QFluentWidgets {qfluentwidgets_version} 构建</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/about.py" line="29"/>
         <source>This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3).</source>
         <translation>本软件为免费开源软件，使用 GNU 通用公共许可证第三版（GPLv3）授权。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="28"/>
+        <location filename="../../gui/dialog/about.py" line="30"/>
         <source>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</source>
         <translation>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="30"/>
+        <location filename="../../gui/dialog/about.py" line="32"/>
         <source>If this project saved you time or solved your problem, consider buying the author a coffee! Don&apos;t forget to star the repository on GitHub to support open-source development.</source>
         <translation>如果这个项目节省了你的时间或解决了你的问题，欢迎通过赞助请作者喝杯咖啡，也别忘了在 GitHub 上点个 Star 支持开源！</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="33"/>
+        <location filename="../../gui/dialog/about.py" line="35"/>
         <source>Terms of Use</source>
         <translation>使用协议</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="34"/>
+        <location filename="../../gui/dialog/about.py" line="36"/>
         <source>Documentation</source>
         <translation>帮助文档</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="35"/>
+        <location filename="../../gui/dialog/about.py" line="37"/>
         <source>Github</source>
         <translation>Github</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/about.py" line="36"/>
+        <location filename="../../gui/dialog/about.py" line="38"/>
         <source>Sponsor</source>
         <translation>赞助作者</translation>
     </message>
@@ -507,17 +484,17 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <translation>没有正在下载的任务</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="37"/>
+        <location filename="../../gui/interface/download.py" line="38"/>
         <source>No completed downloads</source>
         <translation>没有下载完成的任务</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="44"/>
+        <location filename="../../gui/interface/download.py" line="45"/>
         <source>Downloading</source>
         <translation>正在下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/download.py" line="45"/>
+        <location filename="../../gui/interface/download.py" line="46"/>
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
@@ -643,6 +620,104 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="87"/>
         <source>Profile</source>
         <translation>个人空间</translation>
+    </message>
+</context>
+<context>
+    <name>ERROR_MESSAGES</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="190"/>
+        <source>An error occurred while running FFmpeg</source>
+        <translation>调用 FFmpeg 时发生错误</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="191"/>
+        <source>FFmpeg failed with exit code {code}</source>
+        <translation>调用 FFmpeg 时发生错误 ({code})</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="192"/>
+        <source>The specified file or folder does not exist</source>
+        <translation>文件不存在或路径错误</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="193"/>
+        <source>Insufficient disk space</source>
+        <translation>磁盘空间不足</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="194"/>
+        <source>Permission denied: cannot write to file</source>
+        <translation>没有权限写入文件</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="195"/>
+        <source>Downloaded file is corrupted</source>
+        <translation>下载文件已损坏</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="196"/>
+        <source>Failed to open file</source>
+        <translation>无法打开文件</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="197"/>
+        <source>File is in use by another process</source>
+        <translation>文件被其他进程占用</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="198"/>
+        <source>Could not create output file</source>
+        <translation>无法创建输出文件</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="199"/>
+        <source>Download failed</source>
+        <translation>下载失败</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="200"/>
+        <source>Failed to rename file</source>
+        <translation>重命名文件失败</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="201"/>
+        <source>Failed to parse download information</source>
+        <translation>无法解析下载地址</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="202"/>
+        <source>Failed to retrieve media information</source>
+        <translation>获取媒体信息失败</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="203"/>
+        <source>Login status expired</source>
+        <translation>登录状态失效</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="204"/>
+        <source>Your account login status has expired. Please log in again.</source>
+        <translation>当前账号登录状态已失效，请重新登录</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="205"/>
+        <source>Failed to retrieve user information</source>
+        <translation>获取用户信息失败</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="206"/>
+        <source>Failed to retrieve user avatar</source>
+        <translation>获取用户头像失败</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="207"/>
+        <source>Logout failed</source>
+        <translation>注销登录失败</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="208"/>
+        <source>An unknown error occurred</source>
+        <translation>发生未知错误</translation>
     </message>
 </context>
 <context>
@@ -914,7 +989,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="188"/>
+        <location filename="../../util/common/translator.py" line="225"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1202,7 +1277,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="198"/>
+        <location filename="../../util/common/translator.py" line="235"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -1819,102 +1894,120 @@ ISP：{isp}</translation>
         <translation>总是询问</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="61"/>
+        <location filename="../../gui/interface/setting.py" line="59"/>
+        <source>File conflict resolution</source>
+        <translation>同名文件处理</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="59"/>
+        <source>Choose the action when a file with the same name already exists</source>
+        <translation>当目标位置已存在同名文件时的操作</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="59"/>
+        <source>Auto rename</source>
+        <translation>自动重命名</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="59"/>
+        <source>Overwrite</source>
+        <translation>覆盖文件</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="62"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="64"/>
+        <location filename="../../gui/interface/setting.py" line="65"/>
         <source>Number of threads</source>
         <translation>多线程数</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="64"/>
+        <location filename="../../gui/interface/setting.py" line="65"/>
         <source>Adjust the number of threads used per task (default: 4)</source>
         <translation>调整单个任务使用的线程数，默认为 4</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="65"/>
+        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Number of parallel downloads</source>
         <translation>并行下载数</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="65"/>
+        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Adjust the number of tasks downloaded simultaneously (default: 1)</source>
         <translation>调整同时下载的任务数，默认为 1</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Show notifications</source>
-        <translation>显示通知</translation>
+        <translation type="vanished">显示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Show notifications when downloads complete or fail</source>
-        <translation>当下载完成或失败时显示通知</translation>
+        <translation type="vanished">当下载完成或失败时显示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="79"/>
+        <location filename="../../gui/interface/setting.py" line="80"/>
         <source>File naming</source>
         <translation>文件命名</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="71"/>
+        <location filename="../../gui/interface/setting.py" line="72"/>
         <source>Danmaku, Subtitles, Cover, and Metadata</source>
         <translation>弹幕、字幕、封面和元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="85"/>
+        <location filename="../../gui/interface/setting.py" line="86"/>
         <source>Advanced</source>
         <translation>高级</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="90"/>
+        <location filename="../../gui/interface/setting.py" line="91"/>
         <source>Customize the User-Agent used for parsing and downloading</source>
         <translation>自定义解析和下载所使用的 User-Agent</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="90"/>
+        <location filename="../../gui/interface/setting.py" line="91"/>
         <source>Customize…</source>
         <translation>自定义…</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="93"/>
+        <location filename="../../gui/interface/setting.py" line="94"/>
         <source>Updates</source>
         <translation>软件更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="95"/>
+        <location filename="../../gui/interface/setting.py" line="96"/>
         <source>Check for updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="95"/>
+        <location filename="../../gui/interface/setting.py" line="96"/>
         <source>Check if a new version is available. Current version: {app_version}</source>
         <translation>检查是否有可用更新，当前版本：{app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="252"/>
+        <location filename="../../gui/interface/setting.py" line="254"/>
         <source>Select FFmpeg executable</source>
         <translation>选择 FFmpeg 可执行文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="254"/>
+        <location filename="../../gui/interface/setting.py" line="256"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可执行文件 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="237"/>
+        <location filename="../../gui/interface/setting.py" line="239"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程序附带的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="238"/>
+        <location filename="../../gui/interface/setting.py" line="240"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程序附带的 FFmpeg 可执行文件。请切换到“系统环境变量”或指定自定义路径。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="272"/>
+        <location filename="../../gui/interface/setting.py" line="274"/>
         <source>Configuration takes effect after restart</source>
         <translation>配置重启后生效</translation>
     </message>
@@ -2007,7 +2100,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="215"/>
+        <location filename="../../util/common/translator.py" line="252"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -2026,6 +2119,39 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 在任何情况下，开发者均不对因使用或无法使用本软件所导致的任何直接、间接、附带或后果性损害承担责任。您理解并同意，使用本软件即代表您已充分了解上述风险，并自愿承担全部后果。
 &lt;br&gt;&lt;br&gt;
 &lt;b&gt;继续使用本软件即表示您已阅读、理解并同意遵守上述所有条款。&lt;/b&gt;&lt;/html&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>TIP_MESSAGES</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="215"/>
+        <source>Queued...</source>
+        <translation>等待中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="216"/>
+        <source>Parsing...</source>
+        <translation>解析中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="217"/>
+        <source>Paused</source>
+        <translation>已暂停</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="218"/>
+        <source>Queued for merging...</source>
+        <translation>等待合并...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="219"/>
+        <source>Merging...</source>
+        <translation>合并中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="220"/>
+        <source>Completed</source>
+        <translation>已完成</translation>
     </message>
 </context>
 <context>
@@ -2075,7 +2201,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>UIData</name>
     <message>
-        <location filename="../../gui/component/download/item_delegate.py" line="411"/>
+        <location filename="../../gui/component/download/item_delegate.py" line="413"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>

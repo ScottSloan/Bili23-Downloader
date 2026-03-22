@@ -79,6 +79,7 @@ class MainWindow(MSFluentWindow):
 
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
+        signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
         signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
         signal_bus.login.update_avatar.connect(self.on_update_avatar)
@@ -151,6 +152,17 @@ class MainWindow(MSFluentWindow):
             isClosable = False,
             duration = 3000,
             position = InfoBarPosition.TOP,
+            parent = self
+        )
+
+    def show_toast_notification_long_message(self, title: str, content: str):
+        InfoBar.error(
+            title = title,
+            content = content,
+            orient = Qt.Orientation.Vertical,
+            isClosable = True,
+            duration = -1,
+            position = InfoBarPosition.BOTTOM_RIGHT,
             parent = self
         )
 

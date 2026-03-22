@@ -184,6 +184,43 @@ class Translator:
         }
 
     @staticmethod
+    @get_map_method
+    def ERROR_MESSAGES(key = None):
+        return {
+            "FFMPEG_FAILED": translate("ERROR_MESSAGES", "An error occurred while running FFmpeg"),
+            "FFMPEG_FAILED_WITH_CODE": translate("ERROR_MESSAGES", "FFmpeg failed with exit code {code}"),
+            "FILE_NOT_FOUND": translate("ERROR_MESSAGES", "The specified file or folder does not exist"),
+            "INSUFFICIENT_SPACE": translate("ERROR_MESSAGES", "Insufficient disk space"),
+            "PERMISSION_DENIED": translate("ERROR_MESSAGES", "Permission denied: cannot write to file"),
+            "CORRUPTED_FILE": translate("ERROR_MESSAGES", "Downloaded file is corrupted"),
+            "COULD_NOT_OPEN": translate("ERROR_MESSAGES", "Failed to open file"),
+            "FILE_IS_BUSY": translate("ERROR_MESSAGES", "File is in use by another process"),
+            "CANNOT_CREATE": translate("ERROR_MESSAGES", "Could not create output file"),
+            "DOWNLOAD_FAILED": translate("ERROR_MESSAGES", "Download failed"),
+            "RENAME_FAILED": translate("ERROR_MESSAGES", "Failed to rename file"),
+            "PARSE_FAILED": translate("ERROR_MESSAGES", "Failed to parse download information"),
+            "MEDIA_INFO_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve media information"),
+            "LOGIN_EXPIRED": translate("ERROR_MESSAGES", "Login status expired"),
+            "LOGIN_EXPIRED_MESSAGE": translate("ERROR_MESSAGES", "Your account login status has expired. Please log in again."),
+            "USER_INFO_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve user information"),
+            "USER_AVATAR_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve user avatar"),
+            "LOGOUT_FAILED": translate("ERROR_MESSAGES", "Logout failed"),
+            "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred")
+        }
+
+    @staticmethod
+    @get_map_method
+    def TIP_MESSAGES(key = None):
+        return {
+            "QUEUED": translate("TIP_MESSAGES", "Queued..."),
+            "PARSING": translate("TIP_MESSAGES", "Parsing..."),
+            "PAUSED": translate("TIP_MESSAGES", "Paused"),
+            "MERGE_QUEUED": translate("TIP_MESSAGES", "Queued for merging..."),
+            "MERGING": translate("TIP_MESSAGES", "Merging..."),
+            "COMPLETED": translate("TIP_MESSAGES", "Completed"),
+        }
+
+    @staticmethod
     def MEDIA_INFO_GUIDE():
         return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.

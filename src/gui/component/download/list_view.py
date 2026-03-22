@@ -1,5 +1,4 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
-from PySide6.QtCore import QTimer
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme
 
@@ -24,11 +23,11 @@ class DownloadListView(ListView):
         self._in_adding_queried_tasks = False
 
         self._model = DownloadListModel([], self)
-        delegate = DownloadItemDelegate(self)
-        delegate.contextMenuRequested.connect(self.showContextMenu)
+        self._delegate = DownloadItemDelegate(self)
+        self._delegate.contextMenuRequested.connect(self.showContextMenu)
 
         self.setModel(self._model)
-        self.setItemDelegate(delegate)
+        self.setItemDelegate(self._delegate)
         self.setSelectionMode(ListView.SelectionMode.SingleSelection)
         self.setSelectRightClickedRow(True)
 
@@ -80,7 +79,7 @@ class DownloadListView(ListView):
         else:
             return super().paintEvent(e)
 
-    def addTask(self, task_info_list: List[TaskInfo]):        
+    def addTask(self, task_info_list: List[TaskInfo]):
         self._model.appendRows(task_info_list)
 
         if self._auto_manage_concurrent:

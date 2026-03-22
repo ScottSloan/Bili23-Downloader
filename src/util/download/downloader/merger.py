@@ -1,8 +1,11 @@
+from PySide6.QtCore import QObject
+
 from util.common.enum import DownloadStatus, DownloadType, ToastNotificationCategory
 from util.download.task.manager import task_manager
 from util.common.timestamp import get_timestamp
 from util.common.signal_bus import signal_bus
 from util.ffmpeg.command import FFmpegCommand
+from util.common.translator import Translator
 from util.download.task.info import TaskInfo
 from util.ffmpeg.runner import FFmpegRunner
 from util.common.io import Remover, Renamer
@@ -13,8 +16,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Merger:
-    def __init__(self, task_info: TaskInfo):
+class Merger(QObject):
+    def __init__(self, task_info: TaskInfo, parent = None):
+        super().__init__(parent)
+
         self.task_info = task_info
 
     def start(self):
@@ -52,7 +57,7 @@ class Merger:
 
         else:
             # 下载文件不存在，视为合并失败
-            self.set_error_message("下载文件不存在", "")
+            self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), Translator.ERROR_MESSAGES("FILE_NOT_FOUND"))
 
     def rename_output_file(self):
         has_video = self.task_info.Download.type & DownloadType.VIDEO != 0
@@ -147,9 +152,6 @@ class Merger:
         signal_bus.download.add_to_completed_list.emit([self.task_info])
         signal_bus.download.remove_from_downloading_list.emit(self.task_info)
 
-        if config.get(config.show_notification):
-            signal_bus.toast.sys_show.emit(ToastNotificationCategory.SUCCESS, "下载完成", f"{self.task_info.File.name} 已下载完成")
-
     def keep_original_files(self):
         (
             Renamer()
@@ -162,32 +164,29 @@ class Merger:
 
     def on_merge_error(self, error: Exception, stdout: str, stderr: str):
         error_map = {
-            "No space left on device": "磁盘空间不足",
-            "Permission denied": "没有权限写入文件",
-            "Invalid data found when processing input": "文件损坏或格式不受支持",
-            "No such file or directory": "文件不存在或路径错误",
-            "Could not open file": "无法打开文件",
-            "Device or resource busy": "文件被占用",
-            "Could not create output file": "无法创建输出文件",
-            "Format not supported": "文件格式不受支持",
-            "Unknown encoder": "未知编码器",
-            "Unknown decoder": "未知解码器",
+            "No space left on device": "INSUFFICIENT_SPACE",
+            "Permission denied": "PERMISSION_DENIED",
+            "Invalid data found when processing input": "CORRUPTED_FILE",
+            "No such file or directory": "FILE_NOT_FOUND",
+            "Could not open file": "COULD_NOT_OPEN",
+            "Device or resource busy": "FILE_IS_BUSY",
+            "Could not create output file": "CANNOT_CREATE"
         }
 
         error_message = None
 
         for key, message in error_map.items():
             if key in str(stderr):
-                error_message = message
+                error_message = Translator.ERROR_MESSAGES(message)
                 break
 
         if error_message is None:
             error_message = str(error)
 
-        self.set_error_message(error_message, stderr)
+        self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), "{}\n\n{}".format(error_message, stderr))
 
     def on_rename_error(self, error: str, *args: str):
-        self.set_error_message("重命名文件失败", error)
+        self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), error)
 
     def set_error_message(self, short_message: str, description: str):
         self.task_info.Download.status = DownloadStatus.MERGE_FAILED
@@ -196,12 +195,9 @@ class Merger:
         self.task_info.Error.description = description
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
-        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, short_message, description if len(description) <= 50 else description[:50] + "...")
+        signal_bus.toast.show_long_message.emit(short_message, description)
 
         logger.error(short_message + ": \n" + description)
-
-        if config.get(config.show_notification):
-            signal_bus.toast.sys_show.emit(ToastNotificationCategory.ERROR, short_message, description)
 
     def get_cwd(self):
         return Path(self.task_info.File.download_path, self.task_info.File.folder)

@@ -7,6 +7,7 @@
         <file>icon/light/list.svg</file>
         <file>icon/light/clear.svg</file>
         <file>icon/light/retry.svg</file>
+        <file>icon/light/rename.svg</file>
         <file>icon/light/server.svg</file>
         <file>icon/light/comment.svg</file>
         <file>icon/light/options.svg</file>
@@ -21,6 +22,7 @@
         <file>icon/dark/list.svg</file>
         <file>icon/dark/clear.svg</file>
         <file>icon/dark/retry.svg</file>
+        <file>icon/dark/rename.svg</file>
         <file>icon/dark/server.svg</file>
         <file>icon/dark/comment.svg</file>
         <file>icon/dark/options.svg</file>
