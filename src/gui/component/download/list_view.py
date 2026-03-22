@@ -1,7 +1,7 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
 from PySide6.QtCore import QTimer
 
-from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon
+from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme
 
 from gui.component.download.item_delegate import DownloadItemDelegate
 from gui.component.download.model import DownloadListModel
@@ -84,8 +84,13 @@ class DownloadListView(ListView):
 
     def paintEvent(self, e):
         if self.isEmpty():
+            if isDarkTheme():
+                textColor = QColor(255, 255, 255)
+            else:
+                textColor = QColor(0, 0, 0)
+
             painter = QPainter(self.viewport())
-            painter.setPen(QColor(255, 255, 255))
+            painter.setPen(textColor)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
             fm = QFontMetrics(self.font())

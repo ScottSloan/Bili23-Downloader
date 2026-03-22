@@ -63,6 +63,12 @@ class DownloadInterface(QFrame):
 
         signal_bus.download.start_next_task.connect(self.downloading_list_view._model.manageConcurrentDownloads)
 
+        self.top_stacked_widget.start_all_btn.clicked.connect(self.downloading_list_view._model.batchStart)
+        self.top_stacked_widget.pause_all_btn.clicked.connect(self.downloading_list_view._model.batchPause)
+        self.top_stacked_widget.delete_all_btn.clicked.connect(self.downloading_list_view._model.batch_cancel)
+        
+        self.top_stacked_widget.clear_all_btn.clicked.connect(self.completed_list_view._model.batch_cancel)
+
     def addSubInterface(self, widget: SubtitleLabel, objectName: str, text: str, index):
         def onClick():
             self.list_stacked_widget.setCurrentWidget(widget)

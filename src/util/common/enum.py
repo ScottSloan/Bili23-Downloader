@@ -14,6 +14,14 @@ class QRCodeScanStatus(IntEnum):
     SUCCESS = 0                          # 登录成功
     EXPIRED = 86038                      # 二维码过期
 
+class Scaling(Enum):
+    SCALE_100 = "1"
+    SCALE_125 = "1.25"
+    SCALE_150 = "1.5"
+    SCALE_175 = "1.75"
+    SCALE_200 = "2"
+    AUTO = "Auto"
+
 class Language(Enum):
     CHINESE_SIMPLIFIED = QLocale("zh_CN")
     CHINESE_TRADITIONAL = QLocale("zh_TW")

@@ -44,6 +44,7 @@ class SettingInterface(ScrollArea):
 
         self.theme_card = OptionsSettingCard(config.themeMode, FluentIcon.BRUSH, self.tr("Theme"), self.tr("Adjust the appearance of the application"), [self.tr("Light"), self.tr("Dark"), self.tr("Follow system setting")], self)
         self.theme_color_card = CustomColorSettingCard(config.themeColor, FluentIcon.PALETTE, self.tr("Theme color"), self.tr("Adjust the theme color of the application"), self)
+        self.scaling_card = ComboBoxSettingCard(config.scaling, FluentIcon.ZOOM, self.tr("Display Scaling"), self.tr("Adjust the scaling of the application interface"), ["100%", "125%", "150%", "175%", "200%", self.tr("Follow system setting")], self)
         self.language_card = ComboBoxSettingCard(config.language, FluentIcon.LANGUAGE, self.tr("Language"), self.tr("Choose the display language of the application"), ["简体中文", "繁體中文", "English", self.tr("Follow system setting")], self)
 
         # Behavior
@@ -96,6 +97,7 @@ class SettingInterface(ScrollArea):
         # Interface
         self.interface_group.addSettingCard(self.theme_card)
         self.interface_group.addSettingCard(self.theme_color_card)
+        self.interface_group.addSettingCard(self.scaling_card)
         self.interface_group.addSettingCard(self.language_card)
 
         # Behavior

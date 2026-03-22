@@ -5,6 +5,7 @@ from qfluentwidgets import LineEdit, BodyLabel, ToolButton,FluentIcon
 from gui.component.widget import IndeterminateProgressPushButton, Pager
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse.tree_view import ParseTreeView
+from gui.dialog.update import UpdateDialog
 
 from util.parse.preview import Previewer, PreviewerInfo
 from util.common.enum import ToastNotificationCategory
@@ -99,7 +100,7 @@ class ParseInterface(QFrame):
         bottom_layout.addWidget(self.download_btn)
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(30, 20, 30, 20)
+        main_layout.setContentsMargins(25, 15, 25, 15)
         main_layout.addLayout(top_layout)
         main_layout.addLayout(toolbar_layout)
         main_layout.addWidget(self.parse_list)
@@ -113,6 +114,7 @@ class ParseInterface(QFrame):
         self.pager.pageChanged.connect(self.on_parse)
         self.url_box.returnPressed.connect(self.on_parse)
 
+        self.search_btn.clicked.connect(self.on_search)
         self.download_option_btn.clicked.connect(self.on_download_options)
 
         self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
@@ -172,6 +174,10 @@ class ParseInterface(QFrame):
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
 
+    def on_search(self):
+        dialog = UpdateDialog(self.main_window)
+        dialog.exec()
+
     def on_item_check_state_changed(self, index):
         checked_count = self.parse_list.get_checked_items_count()
         total_count = self.parse_list.get_total_items_count()
@@ -216,4 +222,3 @@ class ParseInterface(QFrame):
             self.parse_list.check_all_items()
 
             self.download_btn.setEnabled(True)
-        

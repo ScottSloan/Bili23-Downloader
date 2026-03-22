@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QStackedWidget, QVBoxLayout, QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, QEventLoop
 
 from qfluentwidgets import (
-    MessageBoxBase, InfoBar, InfoBarPosition, FluentTitleBar, FluentWidget, PrimaryPushButton, PushButton, DatePicker
+    MessageBoxBase, InfoBar, InfoBarPosition, FluentTitleBar, FluentWidget, PrimaryPushButton, PushButton
 )
 from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 
@@ -99,6 +99,8 @@ class FluentDialogBase(Base, FluentWidget):
         self._event_loop = None
         self._result = False
 
+        self._parent_window = None
+
     def _setup_title_bar(self):
         titleBar = FluentTitleBar(self)
         titleBar.hBoxLayout.setContentsMargins(0, 0, 0, 0)
@@ -117,14 +119,12 @@ class FluentDialogBase(Base, FluentWidget):
         self.titleBar.raise_()
 
     def _center_on_parent(self):
-        if self.parent():
-            parent_rect = self.parent().geometry()
-            dialog_rect = self.rect()
-
-            x = parent_rect.x() + (parent_rect.width() - dialog_rect.width()) // 2
-            y = parent_rect.y() + (parent_rect.height() - dialog_rect.height()) // 2
-
-            self.move(x, y)
+        if self._parent_window:
+            parent_rect = self._parent_window.geometry()
+            dialog_rect = self.frameGeometry()
+            center_point = parent_rect.center()
+            dialog_rect.moveCenter(center_point)
+            self.move(dialog_rect.topLeft())
 
     def accept(self):
         self._result = True
@@ -160,7 +160,9 @@ class TopNavigationDialogBase(FluentDialogBase):
     顶部导航对话框基类，适用于需要在对话框顶部显示导航栏的场景。
     """
     def __init__(self, parent = None):
-        super().__init__(parent)
+        super().__init__(parent = None)
+
+        self._parent_window = parent
 
         self._setup_widget()
 
@@ -213,6 +215,3 @@ class TopNavigationDialogBase(FluentDialogBase):
         )
 
         self.stackedWidget.addWidget(widget)
-
-class FlyoutDialog:
-    pass

@@ -4,6 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import logging
 import sys
+import os
 
 # --------- Logging Configuration ---------
 
@@ -40,7 +41,7 @@ class Application(QApplication):
 
     def setup_app(self):
         self.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
-
+        
         # 设置默认字体
         self.default_font = self.font()
         self.default_font.setPointSize(10)
@@ -59,6 +60,12 @@ class Application(QApplication):
         self.installTranslator(self.bili23_translator)
 
 if __name__ == "__main__":
+    scaling_value = config.get(config.scaling).value
+
+    if scaling_value != "Auto":
+        os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+        os.environ["QT_SCALE_FACTOR"] = scaling_value
+
     app = Application(sys.argv)
     app.setup_app()
 

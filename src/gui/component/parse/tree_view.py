@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 
-from qfluentwidgets import TreeView, RoundMenu, Action
+from qfluentwidgets import TreeView, RoundMenu, Action, setCustomStyleSheet
 
 from gui.component.parse.model import ParseModel
 
@@ -20,11 +20,16 @@ class ParseTreeView(TreeView):
 
         self.customContextMenuRequested.connect(self.on_context_menu)
 
+        self.__set_QSS()
+        
         self._setHeaderWidth()
 
     def _setHeaderWidth(self):
         self.setColumnWidth(0, 140)     # 序号列
-        self.setColumnWidth(1, 380)     # 标题列
+        #self.setColumnWidth(1, 380)     # 标题列
+
+        header = self.header()
+        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
 
     def update_tree(self, root_node: TreeItem):
         self._model.beginResetModel()
@@ -72,3 +77,21 @@ class ParseTreeView(TreeView):
         menu.addAction(view_metadata_action)
 
         menu.exec(global_pos)
+
+    def __set_QSS(self):
+        light_style = """
+            QTreeView {
+                background-color: transparent;
+                alternate-background-color: #f0f4f9;
+            }
+        """
+
+
+        dark_style = """
+            QTreeView {
+                background-color: transparent;
+                alternate-background-color: #343434;
+            }
+        """
+
+        setCustomStyleSheet(self, light_style, dark_style)

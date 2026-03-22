@@ -39,3 +39,4 @@ class TopStackedWidget(QStackedWidget):
 
         self.addWidget(downloading_widget)
         self.addWidget(completed_widget)
+

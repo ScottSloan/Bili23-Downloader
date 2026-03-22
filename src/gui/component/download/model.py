@@ -1,4 +1,5 @@
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Slot
+from PySide6.QtWidgets import QAbstractItemView
 
 from util.download.downloader.manager import downloader_manager
 from util.download.cover.manager import cover_manager
@@ -123,6 +124,8 @@ class DownloadListModel(QAbstractListModel):
                 # 暂停下载
                 downloader.pause()
 
+                self.manageConcurrentDownloads()
+
             case DownloadStatus.PAUSED:
                 # 继续下载
                 downloader.resume()
@@ -134,6 +137,8 @@ class DownloadListModel(QAbstractListModel):
             case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
                 # 重试下载
                 downloader.retry()
+
+        self.onUpdateData(task_info)
 
     def cancelDownload(self, task_info: TaskInfo):
         match task_info.Download.status:
@@ -147,6 +152,36 @@ class DownloadListModel(QAbstractListModel):
 
             case _:
                 task_manager.cancel(task_info)
+
+    def batchStart(self):
+        for task in self._task_list:
+            if task.Download.status in [DownloadStatus.PAUSED, DownloadStatus.MERGE_FAILED, DownloadStatus.FAILED]:
+                # 从暂停状态变为等待状态，由 manage_concurrent_downloads 统一调度
+                task.Download.status = DownloadStatus.QUEUED
+
+                self.onUpdateData(task)
+
+        self.manageConcurrentDownloads()
+
+    def batchPause(self):
+        for task in self._task_list:
+            if task.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED]:
+                task.Download.status = DownloadStatus.PAUSED
+                downloader = downloader_manager.get_downloader(task.Basic.task_id)
+
+                downloader.pause()
+
+                self.onUpdateData(task)
+
+    def batch_cancel(self):
+        self.beginResetModel()
+
+        for task in list(self._task_list):
+            if task.Download.status != DownloadStatus.MERGING:
+                # 只有非合并中的任务才允许取消
+                self.cancelDownload(task)
+
+        self.endResetModel()
 
     def manageConcurrentDownloads(self):
         # 自动调度同时下载的任务数量
@@ -181,9 +216,21 @@ class DownloadListModel(QAbstractListModel):
         signal_bus.download.update_downloading_item.connect(self.onUpdateData)
 
     def onUpdateData(self, task_info: TaskInfo):
-        index = self.getRow(task_info)
+        row = self.getRow(task_info)
 
-        if index != -1:
-            model_index = self.index(index)
+        if row != -1 and self.isInVisibleArea(row):
+            model_index = self.index(row)
 
             self.dataChanged.emit(model_index, model_index)
+
+    def isInVisibleArea(self, row: int):
+        # 判断指定行是否在可见区域内
+        view: QAbstractItemView = self.parent()
+
+        if view:
+            viewport = view.viewport()
+            item_rect = view.visualRect(self.index(row))
+
+            return viewport.rect().intersects(item_rect)
+
+        return False

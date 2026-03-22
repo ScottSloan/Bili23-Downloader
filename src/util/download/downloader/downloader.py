@@ -123,12 +123,16 @@ class Downloader(QObject):
         self.speed_timer.timeout.connect(self._calculate_speed)
 
     def start(self):
-        self.task_info.Download.status = DownloadStatus.PARSING
+        # 如果下载已经完成，就直接进入合并阶段
+        if self.task_info.Download.progress >= 100:
+            self.on_download_completed()
+        else:
+            self.task_info.Download.status = DownloadStatus.PARSING
 
-        self._stop_event.clear()
+            self._stop_event.clear()
 
-        parse_worker = ParseWorker(self.task_info, self)
-        GlobalThreadPoolTask.run(parse_worker)
+            parse_worker = ParseWorker(self.task_info, self)
+            GlobalThreadPoolTask.run(parse_worker)
 
     @Slot(str)
     def on_parse_finished(self, download_info_json: str):

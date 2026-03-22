@@ -6,10 +6,10 @@ from qfluentwidgets import (
     ConfigItem, EnumSerializer, Theme, qconfig
 )
 
-from util.common.serializer import LanguageSerializer
+from util.common.serializer import LanguageSerializer, ScalingSerializer
 from util.common.enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    ZeroPaddingTotalDigits
+    ZeroPaddingTotalDigits, Scaling
 )
 
 from pathlib import Path
@@ -199,6 +199,7 @@ class APPConfig(QConfig):
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
+    scaling = OptionsConfigItem("Interface", "scaling", Scaling.AUTO, OptionsValidator(Scaling), ScalingSerializer(), restart = True)
 
     # Behavior
     auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())

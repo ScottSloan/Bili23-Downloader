@@ -7,7 +7,7 @@ from util.thread import SyncTask
 from util.network import CDN
 
 class QueryInfoWorker(QObject):
-    success = Signal(dict, int)
+    success = Signal(dict, object)
     error = Signal(str)
     finished = Signal()
 

@@ -149,7 +149,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                             "title": page["part"],
                             "related_titles": {
                                 "collection_title": collection_title,
-                                "section_title": section_title,
+                                "section_title": section_title if section_count > 1 else "",
                                 "parent_title": parent_title
                             },
                             "url": "https://www.bilibili.com/video/{bvid}?p={page}".format(bvid = episode["bvid"], page = page["page"])
@@ -182,7 +182,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                         "title": episode["title"],
                         "related_titles": {
                             "collection_title": collection_title,
-                            "section_title": section_title
+                            "section_title": section_title if section_count > 1 else ""
                         },
                         "url": "https://www.bilibili.com/video/{bvid}".format(bvid = episode["bvid"])
                     }
