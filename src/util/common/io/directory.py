@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import ctypes
 import sys
+import os
 
 class Directory:
     @staticmethod
@@ -64,13 +65,13 @@ class Directory:
     @staticmethod
     def open_directory_in_explorer(directory: str):
         if sys.platform == "win32":
-            subprocess.Popen(f'explorer "{directory}"', shell = True)
+            os.startfile(directory)
 
         elif sys.platform == "linux":
-            subprocess.Popen(f'xdg-open "{directory}"', shell = True)
+            subprocess.Popen(["xdg-open", directory])
 
         elif sys.platform == "darwin":
-            subprocess.Popen(f'open "{directory}"', shell = True)
+            subprocess.Popen(["open", directory])
 
     @staticmethod
     def open_files_in_explorer(directory: str, files: list[str]):
@@ -78,10 +79,10 @@ class Directory:
             Directory.msw_SHOpenFolderAndSelectItems(directory, files)
 
         elif sys.platform == "linux":
-            subprocess.Popen(f'xdg-open "{directory}"', shell = True)
+            subprocess.Popen(["xdg-open", directory])
 
         elif sys.platform == "darwin":
-            subprocess.Popen(f'open -R "{directory}"', shell = True)
+            subprocess.Popen(["open", "-R", directory])
 
     @staticmethod
     def msw_SHOpenFolderAndSelectItems(directory: str, files: list[str]):

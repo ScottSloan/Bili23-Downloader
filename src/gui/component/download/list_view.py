@@ -82,11 +82,8 @@ class DownloadListView(ListView):
     def addTask(self, task_info_list: List[TaskInfo]):
         self._model.appendRows(task_info_list)
 
-        if self._auto_manage_concurrent:
-            downloader_manager.add_downloader_list(task_info_list)
-
-            if not self._in_adding_queried_tasks:
-                self._model.manageConcurrentDownloads()
+        if not self._in_adding_queried_tasks:
+            self._model.manageConcurrentDownloads()
 
         if self._auto_update_count_badge:
             # 更新下载数量徽章
@@ -98,7 +95,7 @@ class DownloadListView(ListView):
         self._model.removeRow(row)
 
         if self._auto_manage_concurrent:
-            downloader_manager.remove_downloader(task_info.Basic.task_id)
+            downloader_manager.remove(task_info.Basic.task_id)
 
             self._model.manageConcurrentDownloads()
 

@@ -1,6 +1,6 @@
+from util.common.enum import DownloadStatus, DownloadType, NumberingType
 from util.download.task.reparse_worker import ReparseWorker
 from util.parse.episode.tree import EpisodeData, Attribute
-from util.common.enum import DownloadStatus, DownloadType
 from util.download.cover.manager import cover_manager
 from util.common.timestamp import get_timestamp
 from util.download.task.db import TaskDatabase
@@ -85,7 +85,8 @@ class TaskManager:
             **episode_info,
             **extra_data,
             **episode_info.get("related_titles", {}),
-            **episode_info.get("uploader_info", {})
+            **episode_info.get("uploader_info", {}),
+            "number": self.__arrange_number()
         }
 
         # 过滤文件系统非法字符
@@ -132,6 +133,11 @@ class TaskManager:
             if title in episode_info:
                 # 过滤文件系统非法字符
                 episode_info[title] = re.sub(r'[\/\\\:\*\?\"\<\>\|]', '_', episode_info.get(title, ""))
+
+    def __arrange_number(self):
+        config.current_starting_number += 1
+
+        return config.current_starting_number - 1
 
     def create(self, episode_info_list: List[dict]):
         task_info_list = []

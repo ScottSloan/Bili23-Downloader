@@ -113,7 +113,9 @@ class DownloadListModel(QAbstractListModel):
 
     def togglePauseResume(self, task_info: TaskInfo):
         # 在暂停与继续之间切换
-        downloader = downloader_manager.get_downloader(task_info.Basic.task_id)
+
+        # 在此处实现懒加载，get不存在时会自动创建 Downloader 实例并加入管理器
+        downloader = downloader_manager.get(task_info, create_if_not_exists = True) 
 
         match task_info.Download.status:
             case DownloadStatus.QUEUED:
@@ -136,7 +138,6 @@ class DownloadListModel(QAbstractListModel):
 
             case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
                 # 重试下载
-                print("retry", task_info.Basic.task_id)
                 downloader.retry()
 
         self.onUpdateData(task_info)
@@ -168,7 +169,7 @@ class DownloadListModel(QAbstractListModel):
         for task in self._task_list:
             if task.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED]:
                 task.Download.status = DownloadStatus.PAUSED
-                downloader = downloader_manager.get_downloader(task.Basic.task_id)
+                downloader = downloader_manager.get(task, create_if_not_exists = False)
 
                 downloader.pause()
 

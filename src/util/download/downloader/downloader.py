@@ -271,12 +271,13 @@ class Downloader(QObject):
     @Slot(int)
     def on_chunk_finished(self, chunk_index: int):
         with self.update_lock:
-            self.task_info.Download.files[self.current_queue_key]["finished_chunks"] += 1
+            # 检查该区块是否已经被标记为完成，避免重复更新进度
+            if chunk_index in self.task_info.Download.files[self.current_queue_key]["chunks_list"]:
+                self.task_info.Download.files[self.current_queue_key]["finished_chunks"] += 1
 
-            current_progress = int(self.task_info.Download.files[self.current_queue_key]["finished_chunks"] / self.task_info.Download.files[self.current_queue_key]["total_chunks"] * 100)
-            self.task_info.Download.progress = int(self.task_info.Download.downloaded_size / self.task_info.Download.total_size * 100)
+                current_progress = int(self.task_info.Download.files[self.current_queue_key]["finished_chunks"] / self.task_info.Download.files[self.current_queue_key]["total_chunks"] * 100)
 
-            self.task_info.Download.files[self.current_queue_key]["chunks_list"].remove(chunk_index)
+                self.task_info.Download.files[self.current_queue_key]["chunks_list"].remove(chunk_index)
 
         task_manager.update(self.task_info)
 
@@ -398,10 +399,15 @@ class Downloader(QObject):
             current_size = self.task_info.Download.downloaded_size
 
         self.task_info.Download.speed = current_size - self.last_sampled_size
+        self.task_info.Download.progress = int(self.task_info.Download.downloaded_size / self.task_info.Download.total_size * 100)
         self.last_sampled_size = current_size
 
         # emit 信号通知视图更新下载速度显示
         self.update_item(self.task_info)
+
+        # 如果前面 on_chunk_finished 没有及时更新进度导致下载完成后没有进入合并阶段，这里再检查一次
+        if self.task_info.Download.progress >= 100 and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
+            self.on_download_completed()
 
     def on_delete(self):
         # 销毁下载器实例前，清除引用

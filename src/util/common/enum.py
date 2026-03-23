@@ -72,7 +72,6 @@ class FFmpegSource(Enum):
 class NumberingType(Enum):
     FROM_SPECIFIED = 0
     CONTINUOUS = 1
-    FROM_EPISODE_LIST = 2
 
 class ZeroPaddingTotalDigits(Enum):
     TWO = 2

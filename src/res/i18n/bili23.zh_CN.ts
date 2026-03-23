@@ -2194,6 +2194,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     </message>
     <message>
         <location filename="../../gui/component/download/top_widget.py" line="33"/>
+        <source>Open Directory</source>
+        <translation>打开目录</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/top_widget.py" line="34"/>
         <source>Clear All</source>
         <translation>清除记录</translation>
     </message>

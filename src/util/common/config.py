@@ -242,8 +242,6 @@ class APPConfig(QConfig):
     naming_rule_list = ConfigItem("File Naming", "naming_convention", DefaultValue.naming_rule_list)
     numbering_type = OptionsConfigItem("File Naming", "numbering_type", NumberingType.CONTINUOUS, OptionsValidator(NumberingType), EnumSerializer(NumberingType))
     starting_number = ConfigItem("File Naming", "staring_number", 1)
-    zero_padding = ConfigItem("File Naming", "zero_padding", False)
-    zero_padding_total_digits = OptionsConfigItem("File Naming", "zero_padding_total_digits", ZeroPaddingTotalDigits.THREE, OptionsValidator(ZeroPaddingTotalDigits), EnumSerializer(ZeroPaddingTotalDigits))
 
     # Advanced
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider", False, BoolValidator())
@@ -304,7 +302,11 @@ class APPConfig(QConfig):
     merge_video_audio = True
     keep_original_files = False
 
+    # Misc
     target_naming_rule_id = None
+    global_starting_number = 1
+    
+    current_starting_number = None
 
 config = APPConfig()
 config.themeMode.value = Theme.AUTO

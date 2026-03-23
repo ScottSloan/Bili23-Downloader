@@ -270,10 +270,6 @@ class NumberSettingCard(ExpandGroupSettingCard):
         )
         self.starting_number_btn = PushButton(self.tr("Customize…"), self)
 
-        self.zero_padding_switch = SettingSwitchButton(config.zero_padding, self)
-
-        self.zero_padding_total_digital_choice = SettingComboBox(config.zero_padding_total_digits, ["2", "3", "4", "5"], parent = self)
-
         self.addGroup(
             "",
             self.tr("Numbering type"),
@@ -286,29 +282,23 @@ class NumberSettingCard(ExpandGroupSettingCard):
             self.get_starting_number_content(config.get(config.starting_number)),
             self.starting_number_btn
         )
-        self.addGroup(
-            "",
-            self.tr("Zero-padding"),
-            self.tr("Pad with leading zeros"),
-            self.zero_padding_switch
-        )
-        padding_width_group = self.addGroup(
-            "",
-            self.tr("Padding width"),
-            self.tr("Total digits (e.g., 001)"),
-            self.zero_padding_total_digital_choice
-        )
-
+        
         self.numbering_type_choice.currentIndexChanged.connect(lambda index: self.starting_number_group.setEnabled(index == 0))
-        self.zero_padding_switch.checkedChanged.connect(lambda checked: padding_width_group.setEnabled(checked))
 
         self.starting_number_group.setEnabled(self.numbering_type_choice.currentIndex() == 0)
-        padding_width_group.setEnabled(self.zero_padding_switch.isChecked())
+
+    def on_change_numbering_type(self, type_index: int):
+        self.starting_number_group.setEnabled(type_index == 0)
+
+        # 重置当前起始数字，避免在切换编号类型后出现不符合预期的数字
+        config.current_starting_number = None
 
     def set_current_starting_number(self, value: int):
         config.set(config.starting_number, value)
 
         self.starting_number_group.setContent(self.get_starting_number_content(value))
+
+        config.current_starting_number = None
 
     def get_starting_number_content(self, value: int):
         return self.tr("Set initial number for per-batch. Current: {current}").format(current = value)

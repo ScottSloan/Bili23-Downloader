@@ -7,8 +7,8 @@ from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse.tree_view import ParseTreeView
 from gui.dialog.update import UpdateDialog
 
+from util.common.enum import ToastNotificationCategory, NumberingType
 from util.parse.preview import Previewer, PreviewerInfo
-from util.common.enum import ToastNotificationCategory
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
@@ -166,6 +166,8 @@ class ParseInterface(QFrame):
 
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True)
 
+        self.check_starting_number()
+
         signal_bus.download.create_task.emit(checked_episodes_list)
 
     @check_preview_info
@@ -222,3 +224,10 @@ class ParseInterface(QFrame):
             self.parse_list.check_all_items()
 
             self.download_btn.setEnabled(True)
+
+    def check_starting_number(self):
+        if config.current_starting_number is None:
+            if config.get(config.numbering_type) == NumberingType.CONTINUOUS:
+                config.current_starting_number = config.global_starting_number
+            else:
+                config.current_starting_number = config.get(config.starting_number)
