@@ -178,7 +178,7 @@ class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
     app_version = "2.00.0"
-    app_version_code = 20260321
+    app_comparable_version = "2.00.0"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -270,6 +270,7 @@ class APPConfig(QConfig):
     user_avatar_pixmap: QPixmap = None
 
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
+    skip_version = ConfigItem("Application", "skip_version", "")
 
     # FFmpeg
     ffmpeg_executable = ""

@@ -69,14 +69,14 @@ class SubtitlesASS:
 
         return style_str, screen_width, screen_height
     
-    def _convert_dialogues(self):        
+    def _convert_dialogues(self):
         dialogues_list = []
 
         for item in self.data.get("body", []):
             start = Time.format_ass_time_by_seconds(item.get("from", 0))
             end = Time.format_ass_time_by_seconds(item.get("to", 0))
             content = item.get("content", "")
-            
+
             dialogues_list.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{content}")
 
         return dialogues_list

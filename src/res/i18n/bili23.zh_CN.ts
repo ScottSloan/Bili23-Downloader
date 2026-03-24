@@ -727,6 +727,11 @@
         <source>An unknown error occurred</source>
         <translation>发生未知错误</translation>
     </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="209"/>
+        <source>Failed to check for updates</source>
+        <translation>检查更新失败</translation>
+    </message>
 </context>
 <context>
     <name>EditConventionDialog</name>
@@ -997,7 +1002,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="225"/>
+        <location filename="../../util/common/translator.py" line="226"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1017,22 +1022,22 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="49"/>
+        <location filename="../../gui/interface/main_window.py" line="51"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="50"/>
+        <location filename="../../gui/interface/main_window.py" line="52"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="60"/>
+        <location filename="../../gui/interface/main_window.py" line="62"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="73"/>
+        <location filename="../../gui/interface/main_window.py" line="75"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -1262,7 +1267,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="235"/>
+        <location filename="../../util/common/translator.py" line="236"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -1426,32 +1431,32 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="63"/>
+        <location filename="../../gui/interface/parse.py" line="62"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="67"/>
+        <location filename="../../gui/interface/parse.py" line="66"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="83"/>
+        <location filename="../../gui/interface/parse.py" line="82"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="159"/>
+        <location filename="../../gui/interface/parse.py" line="158"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="188"/>
+        <location filename="../../gui/interface/parse.py" line="186"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="194"/>
+        <location filename="../../gui/interface/parse.py" line="192"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -1968,27 +1973,27 @@ ISP：{isp}</translation>
         <translation>检查是否有可用更新，当前版本：{app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="254"/>
+        <location filename="../../gui/interface/setting.py" line="257"/>
         <source>Select FFmpeg executable</source>
         <translation>选择 FFmpeg 可执行文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="256"/>
+        <location filename="../../gui/interface/setting.py" line="259"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可执行文件 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="239"/>
+        <location filename="../../gui/interface/setting.py" line="242"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程序附带的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="240"/>
+        <location filename="../../gui/interface/setting.py" line="243"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程序附带的 FFmpeg 可执行文件。请切换到“系统环境变量”或指定自定义路径。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="274"/>
+        <location filename="../../gui/interface/setting.py" line="280"/>
         <source>Configuration takes effect after restart</source>
         <translation>配置重启后生效</translation>
     </message>
@@ -2081,7 +2086,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="252"/>
+        <location filename="../../util/common/translator.py" line="253"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -2105,32 +2110,32 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TIP_MESSAGES</name>
     <message>
-        <location filename="../../util/common/translator.py" line="215"/>
+        <location filename="../../util/common/translator.py" line="216"/>
         <source>Queued...</source>
         <translation>等待中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="216"/>
+        <location filename="../../util/common/translator.py" line="217"/>
         <source>Parsing...</source>
         <translation>解析中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="217"/>
+        <location filename="../../util/common/translator.py" line="218"/>
         <source>Paused</source>
         <translation>已暂停</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="218"/>
+        <location filename="../../util/common/translator.py" line="219"/>
         <source>Queued for merging...</source>
         <translation>等待合并...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="219"/>
+        <location filename="../../util/common/translator.py" line="220"/>
         <source>Merging...</source>
         <translation>合并中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="220"/>
+        <location filename="../../util/common/translator.py" line="221"/>
         <source>Completed</source>
         <translation>已完成</translation>
     </message>
@@ -2182,6 +2187,39 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../gui/component/download/top_widget.py" line="36"/>
         <source>Clear All</source>
         <translation>清除记录</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateDialog</name>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="21"/>
+        <source>Update Available</source>
+        <translation>软件更新</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="29"/>
+        <source>A new version is available</source>
+        <translation>新版本已经发布</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="32"/>
+        <source>Version {latest_version} is available for download. You are currently using version {current_version}. Would you like to update now?</source>
+        <translation>{latest_version} 版本可供下载，你当前使用的版本是 {current_version}。是否现在更新？</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="40"/>
+        <source>What&apos;s new:</source>
+        <translation>更新内容：</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="46"/>
+        <source>Skip this version</source>
+        <translation>跳过此版本</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="47"/>
+        <source>Update now</source>
+        <translation>马上更新</translation>
     </message>
 </context>
 <context>

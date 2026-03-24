@@ -14,6 +14,7 @@ from gui.component.sys_tray import SystemTrayIcon
 from gui.interface.parse import ParseInterface
 from gui.component.profile import ProfileCard
 from gui.dialog.terms import TermsOfUseDialog
+from gui.dialog.update import UpdateDialog
 from gui.dialog.login import LoginDialog
 from gui.dialog.about import AboutDialog
 
@@ -22,6 +23,7 @@ from util.common.signal_bus import signal_bus
 from util.auth.cookie import CookieManager
 from util.auth.user import UserManager
 from util.common.config import config
+from util.misc.update import Updater
 
 class MainWindow(MSFluentWindow):
     def __init__(self):
@@ -86,6 +88,8 @@ class MainWindow(MSFluentWindow):
 
         signal_bus.download.update_downloading_count.connect(self.update_download_btn_badge_info)
 
+        signal_bus.update.show_dialog.connect(self.show_update_dialog)
+
     def init_utils(self):
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
@@ -96,11 +100,17 @@ class MainWindow(MSFluentWindow):
 
         self.cookie_manager = CookieManager()
 
-        if 1 == 0 and not config.get(config.is_login):
-            QTimer.singleShot(300, self.show_teaching_tip)
+        self.updater = Updater()
+        signal_bus.update.check.connect(self.updater.request_update)
+
+        # if 1 == 0 and not config.get(config.is_login):
+        #     QTimer.singleShot(300, self.show_teaching_tip)
 
         if not config.get(config.accepted_terms):
             QTimer.singleShot(300, self.show_terms_of_use)
+        
+        else:
+            signal_bus.update.check.emit(False)
 
     def closeEvent(self, e):
         self.theme_listener.terminate()
@@ -186,7 +196,11 @@ class MainWindow(MSFluentWindow):
             self.close()
 
         # 许可协议优先级最高，之后再显示更新等提示
-        ## TODO: 显示更新提示
+        signal_bus.update.check.emit(False)
+
+    def show_update_dialog(self, info: dict):
+        dialog = UpdateDialog(info, self)
+        dialog.exec()
 
     def center_on_screen(self):
         desktop = QApplication.screens()[0].availableGeometry()

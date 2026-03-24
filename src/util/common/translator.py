@@ -205,7 +205,8 @@ class Translator:
             "USER_INFO_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve user information"),
             "USER_AVATAR_FAILED": translate("ERROR_MESSAGES", "Failed to retrieve user avatar"),
             "LOGOUT_FAILED": translate("ERROR_MESSAGES", "Logout failed"),
-            "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred")
+            "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred"),
+            "CHECK_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to check for updates"),
         }
 
     @staticmethod

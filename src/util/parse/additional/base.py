@@ -10,7 +10,15 @@ class AdditionalParserBase(ParserBase):
 
         self.task_info: TaskInfo = task_info
 
-    def _write(self, contents: str, suffix: str, name: str = None, qualifier: List[str] = None):
+    def _write(self, contents: str | bytes, suffix: str, name: str = None, qualifier: List[str] = None):
+        if isinstance(contents, str):
+            mode = "w"
+            encoding = "utf-8"
+
+        elif isinstance(contents, bytes):
+            mode = "wb"
+            encoding = None
+
         if name is None:
             name = self.task_info.File.name
 
@@ -21,7 +29,7 @@ class AdditionalParserBase(ParserBase):
 
         path = self.__base_path / f"{name_parts}.{suffix}"
 
-        with open(path, "w", encoding = "utf-8") as f:
+        with open(path, mode, encoding = encoding) as f:
             f.write(contents)
 
         self._update_file_size(path)

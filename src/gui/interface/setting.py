@@ -184,6 +184,9 @@ class SettingInterface(ScrollArea):
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
         self.user_agent_card.clicked.connect(self.on_custom_user_agent)
 
+        # Update
+        self.check_update_card.clicked.connect(self.on_check_update)
+
     def on_change_stay_on_top(self, checked: bool):
         self.main_window.setStayOnTop(checked)
 
@@ -269,6 +272,9 @@ class SettingInterface(ScrollArea):
     def on_custom_user_agent(self):
         dialog = UserAgentDialog(self.main_window)
         dialog.exec()
+
+    def on_check_update(self):
+        signal_bus.update.check.emit(True)
 
     def show_restart_message(self):
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Configuration takes effect after restart"))

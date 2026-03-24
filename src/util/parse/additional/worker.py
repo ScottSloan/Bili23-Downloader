@@ -3,8 +3,9 @@ from PySide6.QtCore import QObject, Signal
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadType
 
-from util.parse.additional.danmaku import DanmakuParser
 from util.parse.additional.subtitles import SubtitlesParser
+from util.parse.additional.danmaku import DanmakuParser
+from util.parse.additional.cover import CoverParser
 
 import logging
 
@@ -49,8 +50,8 @@ class AdditionalParseWorker(QObject):
 
         if attr & DownloadType.COVER != 0:
             # 下载封面
-            ## TODO: 封面下载功能
-            pass
+            parser = CoverParser(self.task_info)
+            parser.parse()
 
         if attr & DownloadType.METADATA != 0:
             # 下载元数据

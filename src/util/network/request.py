@@ -48,7 +48,7 @@ class NetworkRequestWorker(QObject):
     error = Signal(str)
     finished = Signal()
 
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True):
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None):
         super().__init__()
 
         self.url = url
@@ -56,6 +56,7 @@ class NetworkRequestWorker(QObject):
         self.request_type = request_type
         self.response_type = response_type
         self.raise_for_status = raise_for_status
+        self.json_data = json_data
 
         self.proxies = Proxy().get_proxies()
 
@@ -72,7 +73,7 @@ class NetworkRequestWorker(QObject):
                 case RequestType.HEAD:
                     func = session.head
 
-            res = func(url = self.url, proxies = self.proxies, params = self.params, allow_redirects = True, timeout = 5)
+            res = func(url = self.url, proxies = self.proxies, params = self.params, allow_redirects = True, timeout = 5, json = self.json_data)
 
             if self.raise_for_status:
                 res.raise_for_status()

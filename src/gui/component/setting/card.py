@@ -85,7 +85,7 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
 
         self.download_switch = SettingSwitchButton(config.download_subtitle, parent = self)
 
-        self.type_choice = SettingComboBox(config.subtitle_type, ["srt", "lrc", "ass", "json"], parent = self)
+        self.type_choice = SettingComboBox(config.subtitle_type, ["srt", "lrc", "txt", "ass", "json"], parent = self)
         self.type_choice.setFixedWidth(120)
 
         self.viewLayout.setContentsMargins(0, 0, 0, 0)

@@ -42,10 +42,15 @@ class SignalBus:
 
         update_avatar = Signal(QPixmap)
 
+    class Update(QObject):
+        check = Signal(bool)
+        show_dialog = Signal(dict)
+
     def __init__(self):
         self.toast = self.ToastNotification()
         self.parse = self.Parse()
         self.download = self.Download()
         self.login = self.Login()
+        self.update = self.Update()
 
 signal_bus = SignalBus()

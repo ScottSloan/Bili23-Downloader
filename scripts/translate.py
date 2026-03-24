@@ -57,6 +57,7 @@ sources = [
     "src/gui/dialog/about.py",
     "src/gui/dialog/login.py",
     "src/gui/dialog/terms.py",
+    "src/gui/dialog/update.py",
     "src/gui/interface/download.py",
     "src/gui/interface/main_window.py",
     "src/gui/interface/parse.py",

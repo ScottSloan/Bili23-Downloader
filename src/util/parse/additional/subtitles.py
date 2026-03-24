@@ -26,6 +26,9 @@ class SubtitlesParser(AdditionalParserBase):
 
                 case SubtitleType.LRC:
                     contents, suffix = self._to_lrc(data)
+                
+                case SubtitleType.TXT:
+                    contents, suffix = self._to_txt(data)
 
                 case SubtitleType.ASS:
                     contents, suffix = self._to_ass(data)
@@ -62,6 +65,15 @@ class SubtitlesParser(AdditionalParserBase):
             lrc_lines.append(f"[{m:02d}:{s:05.2f}]{content}")
             
         return "\n".join(lrc_lines).strip(), "lrc"
+
+    def _to_txt(self, data: dict):
+        txt_lines = []
+
+        for item in data.get("body", []):
+            content = item.get("content", "")
+            txt_lines.append(content)
+
+        return "\n".join(txt_lines).strip(), "txt"
 
     def _to_ass(self, data: dict):
         ass = SubtitlesASS(data, self.task_info.Basic.show_title).generate()

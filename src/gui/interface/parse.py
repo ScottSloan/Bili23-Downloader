@@ -5,7 +5,6 @@ from qfluentwidgets import LineEdit, BodyLabel, ToolButton,FluentIcon
 from gui.component.widget import IndeterminateProgressPushButton, Pager
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse.tree_view import ParseTreeView
-from gui.dialog.update import UpdateDialog
 
 from util.common.enum import ToastNotificationCategory, NumberingType
 from util.parse.preview import Previewer, PreviewerInfo
@@ -177,8 +176,7 @@ class ParseInterface(QFrame):
         dialog.exec()
 
     def on_search(self):
-        dialog = UpdateDialog(self.main_window)
-        dialog.exec()
+        pass
 
     def on_item_check_state_changed(self, index):
         checked_count = self.parse_list.get_checked_items_count()

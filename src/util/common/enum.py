@@ -46,6 +46,7 @@ class DanmakuType(Enum):
 class SubtitleType(Enum):
     SRT = "srt"
     LRC = "lrc"
+    TXT = "txt"
     ASS = "ass"
     JSON = "json"
 
