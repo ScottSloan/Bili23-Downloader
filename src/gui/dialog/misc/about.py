@@ -3,7 +3,7 @@ from PySide6.QtCore import qVersion
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, FluentIcon, __version__
 
-from gui.dialog.terms import TermsOfUseDialog
+from gui.dialog.misc.terms import TermsOfUseDialog
 from gui.component.dialog import DialogBase
 
 from util.common.config import config

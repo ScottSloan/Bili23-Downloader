@@ -239,7 +239,7 @@ class Downloader(QObject):
             case DownloadStatus.FAILED:
                 self.start()
 
-            case DownloadStatus.MERGE_FAILED:
+            case DownloadStatus.FFMPEG_FAILED:
                 self.start_merge()
 
     def calc_chunk_list(self, total_size: int, chunk_size: int):
@@ -396,7 +396,7 @@ class Downloader(QObject):
 
     def wait_merge(self):
         # 等待合并
-        self.task_info.Download.status = DownloadStatus.MERGE_QUEUED
+        self.task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
         self.task_info.Download.speed = 0
         self.task_info.Download.progress = 100
 

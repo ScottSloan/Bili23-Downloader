@@ -42,3 +42,13 @@ class FFmpegCommand:
             .add_param("-vcodec", "copy")
             .add_output(output_path)
         )
+    
+    @classmethod
+    def convert_m4a_to_mp3(cls, input_path: str, output_path: str):
+        return (
+            cls()
+            .add_input(input_path)
+            .add_param("-acodec", "libmp3lame")
+            .add_param("-q:a", "2")
+            .add_output(output_path)
+        )

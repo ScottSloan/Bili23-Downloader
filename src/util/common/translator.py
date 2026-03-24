@@ -207,6 +207,7 @@ class Translator:
             "LOGOUT_FAILED": translate("ERROR_MESSAGES", "Logout failed"),
             "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred"),
             "CHECK_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to check for updates"),
+            "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed")
         }
 
     @staticmethod
@@ -216,9 +217,10 @@ class Translator:
             "QUEUED": translate("TIP_MESSAGES", "Queued..."),
             "PARSING": translate("TIP_MESSAGES", "Parsing..."),
             "PAUSED": translate("TIP_MESSAGES", "Paused"),
-            "MERGE_QUEUED": translate("TIP_MESSAGES", "Queued for merging..."),
+            "FFMPEG_QUEUED": translate("TIP_MESSAGES", "Queued for FFmpeg..."),
             "MERGING": translate("TIP_MESSAGES", "Merging..."),
             "COMPLETED": translate("TIP_MESSAGES", "Completed"),
+            "CONVERTING": translate("TIP_MESSAGES", "Converting..."),
         }
 
     @staticmethod

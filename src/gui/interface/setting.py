@@ -55,7 +55,7 @@ class SettingInterface(ScrollArea):
         self.stay_on_top_card = SwitchSettingCard(ExtendedFluentIcon.PIN, self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), config.stay_on_top, self)
         self.listen_clipboard_card = SwitchSettingCard(ExtendedFluentIcon.CLIPBOARD, self.tr("Listen to clipboard"), self.tr("Automatically start parsing when a link is copied"), config.listen_clipboard, self)
         self.show_download_options_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), config.show_download_options_dialog, self)
-        self.when_close_window_card = ComboBoxSettingCard(config.when_close_window, ExtendedFluentIcon.EXIT, self.tr("When closing window"), self.tr("Choose the action when closing the application window"), [self.tr("Exit application"), self.tr("Minimize to tray"), self.tr("Always ask")], self)
+        self.when_close_window_card = ComboBoxSettingCard(config.when_close_window, ExtendedFluentIcon.EXIT, self.tr("When closing window"), self.tr("What should the program do when you close the window"), [self.tr("Exit the program"), self.tr("Minimize to system tray"), self.tr("Always ask")], self)
         self.file_conflict_resolution_card = ComboBoxSettingCard(config.file_conflict_resolution, ExtendedFluentIcon.RENAME, self.tr("File conflict resolution"), self.tr("Choose the action when a file with the same name already exists"), [self.tr("Auto rename"), self.tr("Overwrite")], self)
 
         # Download

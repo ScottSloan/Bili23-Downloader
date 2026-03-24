@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject
 
-from util.common.enum import DownloadStatus, DownloadType, ToastNotificationCategory
+from util.common.enum import DownloadStatus, DownloadType
 from util.download.task.manager import task_manager
 from util.common.timestamp import get_timestamp
 from util.common.signal_bus import signal_bus
@@ -25,6 +25,10 @@ class Merger(QObject):
     def start(self):
         if self.task_info.Download.merge_video_audio:
             self.merge_video_audio()
+
+        elif config.get(config.m4a_to_mp3) and self.task_info.File.audio_file_ext == "m4a":
+            self.m4a_to_mp3()
+
         else:
             self.rename_output_file()
 
@@ -142,6 +146,16 @@ class Merger(QObject):
         except Exception as e:
             self.set_error_message(e, str(e))
 
+    def on_convert_completed(self, return_code: int, stdout: str, stderr: str):
+        (
+            Remover()
+            .set_cwd(self.get_cwd())
+            .add_file(Path(self.temp_audio_file_name).with_suffix(".m4a"))
+            .execute()
+        )
+        
+        self.rename_output_file()
+
     def mark_as_completed(self):
         self.task_info.Download.status = DownloadStatus.COMPLETED
         self.task_info.Basic.completed_time = get_timestamp()
@@ -189,7 +203,7 @@ class Merger(QObject):
         self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), error)
 
     def set_error_message(self, short_message: str, description: str):
-        self.task_info.Download.status = DownloadStatus.MERGE_FAILED
+        self.task_info.Download.status = DownloadStatus.FFMPEG_FAILED
 
         signal_bus.download.update_downloading_item.emit(self.task_info)
         signal_bus.toast.show_long_message.emit(short_message, description)
@@ -208,6 +222,28 @@ class Merger(QObject):
                 self.task_info.File.relative_files.append(file_name)
 
         task_manager.update(self.task_info)
+
+    def m4a_to_mp3(self):
+        cwd = self.get_cwd()
+
+        if Path(cwd, self.temp_audio_file_name).exists():
+            self.task_info.Download.status = DownloadStatus.CONVERTING
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+
+            convert_cmd = FFmpegCommand.convert_m4a_to_mp3(
+                input_path = self.temp_audio_file_name,
+                output_path = Path(self.temp_audio_file_name).with_suffix(".mp3")
+            )
+
+            self.task_info.File.audio_file_ext = "mp3"
+
+            (
+                FFmpegRunner.from_command(convert_cmd)
+                .set_cwd(cwd)
+                .on_completed(self.on_convert_completed)
+                .on_error(self.on_merge_error)
+                .start()
+            )
 
     @property
     def temp_video_file_name(self):

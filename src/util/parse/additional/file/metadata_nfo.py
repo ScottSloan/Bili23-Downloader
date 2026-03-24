@@ -14,8 +14,7 @@ video_base = """<?xml version="1.0" encoding="UTF-8"?>
     <premiered>{premiered:%Y-%m-%d}</premiered>
     <year>{year}</year>
     <director>{director}</director>
-    <genre></genre>
-    <genre></genre>
+    {tag}
 </movie>
 """
 
@@ -59,7 +58,7 @@ class MetadataNFO:
         if attr & Attribute.VIDEO_BIT != 0:
             contents_list.append({
                 "contents": self._generate_video(),
-                "name": self.task_info.Episode.leaf_title,
+                "name": self.task_info.File.name,
                 "qualifier": ["元数据"]
             })
 
@@ -73,7 +72,7 @@ class MetadataNFO:
 
                 contents_list.append({
                     "contents": self._generate_episode(self.task_info.Episode.styles),
-                    "name": self.task_info.Episode.leaf_title,
+                    "name": self.task_info.File.name,
                     "qualifier": []
                 })
 
@@ -88,7 +87,8 @@ class MetadataNFO:
             runtime = math.ceil(self.task_info.Episode.duration / 60),
             premiered = pubtime,
             year = pubtime.year,
-            director = self.task_info.Episode.uploader
+            director = self.task_info.Episode.uploader,
+            tag = "\n    ".join([f"<tag>{tag}</tag>" for tag in self.task_info.Episode.tags])
         )
     
     def _generate_tvshow(self, genres: List[str]):

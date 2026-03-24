@@ -12,7 +12,7 @@ class CoverParser(AdditionalParserBase):
         suffix = config.get(config.cover_type).value
         contents = self._get_cover_contents(suffix)
 
-        self._write(contents, suffix = suffix, name = self.task_info.Episode.leaf_title)
+        self._write(contents, suffix = suffix, name = self.task_info.File.name)
 
     def _get_cover_contents(self, suffix: str):
         def on_success(response: bytes):

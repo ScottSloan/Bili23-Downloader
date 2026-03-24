@@ -1,9 +1,8 @@
-from PySide6.QtWidgets import QSystemTrayIcon, QWidget
+from PySide6.QtWidgets import QSystemTrayIcon, QWidget, QApplication
 
 from qfluentwidgets import SystemTrayMenu, Action
 
 from util.common.enum import ToastNotificationCategory
-from util.common.signal_bus import signal_bus
 
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, parent: QWidget = None):
@@ -14,23 +13,30 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         self.menu = SystemTrayMenu(parent = parent)
 
-        self.menu.addAction(Action("显示主界面", triggered = self.on_show_main_window))
+        self.menu.addAction(Action(self.tr("Show main window"), triggered = self.on_show_main_window))
         self.menu.addSeparator()
-        self.menu.addAction(Action("暂停所有下载"))
-        self.menu.addSeparator()
-        self.menu.addAction(Action("退出", triggered = self.on_exit))
+        self.menu.addAction(Action(self.tr("Exit"), triggered = self.on_exit))
 
         self.setContextMenu(self.menu)
 
     def on_show_main_window(self):
-        signal_bus.toast.sys_show.emit(ToastNotificationCategory.INFO, "ikun", "你干嘛哎哟~")
+        parent: QWidget = self.parent()
 
-        # self.parent().show()
-        # self.parent().raise_()
-        # self.parent().activateWindow()
+        if parent.isMinimized():
+            parent.showNormal()
+
+        if parent.isHidden():
+            parent.show()
+
+        else:
+            parent.show()
+            parent.raise_()
+            parent.activateWindow()
 
     def on_exit(self):
-        self.parent().close()
+        self.on_show_main_window()
+        
+        QApplication.quit()
 
     def show_message(self, category: ToastNotificationCategory, title: str, message: str):
         match category:

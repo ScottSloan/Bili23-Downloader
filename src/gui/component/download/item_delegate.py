@@ -325,7 +325,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         return task_info.Download.status == DownloadStatus.COMPLETED
     
     def isTaskFailed(self, task_info: TaskInfo):
-        return task_info.Download.status in [DownloadStatus.FAILED, DownloadStatus.MERGE_FAILED]
+        return task_info.Download.status in [DownloadStatus.FAILED, DownloadStatus.FFMPEG_FAILED]
     
     def isTaskPaused(self, task_info: TaskInfo):
         return task_info.Download.status == DownloadStatus.PAUSED
@@ -415,17 +415,23 @@ class UIData(QObject):
             case DownloadStatus.PAUSED:
                 return Translator.TIP_MESSAGES("PAUSED")
             
-            case DownloadStatus.MERGE_QUEUED:
-                return Translator.TIP_MESSAGES("MERGE_QUEUED")
+            case DownloadStatus.FFMPEG_QUEUED:
+                return Translator.TIP_MESSAGES("FFMPEG_QUEUED")
             
             case DownloadStatus.MERGING:
                 return Translator.TIP_MESSAGES("MERGING")
             
+            case DownloadStatus.CONVERTING:
+                return Translator.TIP_MESSAGES("CONVERTING")
+            
             case DownloadStatus.COMPLETED:
                 return Translator.TIP_MESSAGES("COMPLETED")
             
-            case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
+            case DownloadStatus.FAILED:
                 return Translator.ERROR_MESSAGES("DOWNLOAD_FAILED")
+            
+            case DownloadStatus.FFMPEG_FAILED:
+                return Translator.ERROR_MESSAGES("FFMPEG_PROCESSING_FAILED")
             
     def getSpeedText(self, task_info: TaskInfo):
         return Units.format_speed(task_info.Download.speed)
@@ -433,7 +439,7 @@ class UIData(QObject):
     def getSizeText(self, task_info: TaskInfo):
         if task_info.Download.total_size > 0:
 
-            if task_info.Download.status in [DownloadStatus.COMPLETED, DownloadStatus.MERGE_QUEUED, DownloadStatus.MERGING, DownloadStatus.MERGE_FAILED]:
+            if task_info.Download.status in [DownloadStatus.COMPLETED, DownloadStatus.FFMPEG_QUEUED, DownloadStatus.MERGING, DownloadStatus.CONVERTING, DownloadStatus.FFMPEG_FAILED]:
                 return Units.format_file_size(task_info.Download.total_size)
             else:
                 return f"{Units.format_file_size(task_info.Download.downloaded_size)} / {Units.format_file_size(task_info.Download.total_size)}"
@@ -449,7 +455,7 @@ class UIData(QObject):
             case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
                 return FluentIcon.PLAY
             
-            case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
+            case DownloadStatus.FAILED | DownloadStatus.FFMPEG_FAILED:
                 return ExtendedFluentIcon.RETRY
             
             case _:

@@ -99,11 +99,13 @@ class DownloadStatus(IntEnum):
     PAUSED = 3                      # 已暂停
     COMPLETED = 4                   # 已完成
 
-    MERGE_QUEUED = 5                # 合并排队中
+    FFMPEG_QUEUED = 5               # 等待 FFmpeg 处理中
     MERGING = 6                     # 合并中
 
+    CONVERTING = 7                  # 转换中
+
     FAILED = 100                    # 下载失败
-    MERGE_FAILED = 101              # 合并失败
+    FFMPEG_FAILED = 101             # FFmpeg 处理失败
 
 class DownloadType(IntFlag):
     VIDEO            = 1 << 0       # 下载独立视频流

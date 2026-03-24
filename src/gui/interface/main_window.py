@@ -10,15 +10,16 @@ from qfluentwidgets import (
 from gui.component.widget import NavigationLargeAvatarWidget
 from gui.interface.download import DownloadInterface
 from gui.interface.setting import SettingInterface
+from gui.dialog.misc.terms import TermsOfUseDialog
 from gui.component.sys_tray import SystemTrayIcon
 from gui.interface.parse import ParseInterface
 from gui.component.profile import ProfileCard
-from gui.dialog.terms import TermsOfUseDialog
+from gui.dialog.misc.about import AboutDialog
+from gui.dialog.misc.exit import ExitDialog
 from gui.dialog.update import UpdateDialog
 from gui.dialog.login import LoginDialog
-from gui.dialog.about import AboutDialog
 
-from util.common.enum import ToastNotificationCategory
+from util.common.enum import ToastNotificationCategory, WhenClose
 from util.common.signal_bus import signal_bus
 from util.auth.cookie import CookieManager
 from util.auth.user import UserManager
@@ -113,10 +114,39 @@ class MainWindow(MSFluentWindow):
             signal_bus.update.check.emit(False)
 
     def closeEvent(self, e):
+        if not self.on_close():
+            e.ignore()
+            return
+        
         self.theme_listener.terminate()
         self.theme_listener.deleteLater()
 
         super().closeEvent(e)
+
+    def on_close(self):
+        match config.get(config.when_close_window):
+            case WhenClose.MINIMIZE:
+                self.hide()
+
+                return False
+            
+            case WhenClose.ALWAYS_ASK:
+                dialog = ExitDialog(self)
+
+                if dialog.exec():
+                    if dialog.exit_radio.isChecked():
+                        return True
+                    
+                    else:
+                        self.hide()
+
+                        return False
+
+                else:
+                    return False
+                
+            case WhenClose.EXIT:
+                return True
 
     def on_about_click(self):
         dialog = AboutDialog(self)

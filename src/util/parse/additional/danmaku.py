@@ -30,7 +30,7 @@ class DanmakuParser(AdditionalParserBase):
             case DanmakuType.JSON:
                 contents, suffix = self._to_json(dict_list)
 
-        self._write(contents, suffix = suffix, name = self.task_info.Episode.leaf_title, qualifier = ["弹幕"])
+        self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = ["弹幕"])
 
     def _to_xml(self, dict_list: List[dict]) -> tuple:
         xml = DanmakuXML(dict_list, self.task_info.Episode.cid).generate()

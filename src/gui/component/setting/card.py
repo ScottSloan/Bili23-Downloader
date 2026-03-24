@@ -1,7 +1,6 @@
 from PySide6.QtCore import QTimer
 
 from qfluentwidgets import ExpandGroupSettingCard, PushButton, MessageBox, FluentIcon, PushSettingCard
-from qfluentwidgets.components.settings.expand_setting_card import GroupWidget
 
 from gui.component.setting.widget import SettingSwitchButton, SettingComboBox, EntryItemWidget
 from gui.dialog.setting.edit_convention import EditConventionDialog

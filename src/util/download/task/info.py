@@ -68,6 +68,7 @@ class EpisodeInfo(InfoBase):
     tid_v2: int = 0
     url: str = ""
     duration: int = 0
+    tags: list[str] = field(default_factory = list)
 
     # 收藏夹\个人空间
     favorites_name: str = ""

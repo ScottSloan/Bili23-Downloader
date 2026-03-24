@@ -169,6 +169,8 @@ class ParseInterface(QFrame):
 
         signal_bus.download.create_task.emit(checked_episodes_list)
 
+        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
+
     @check_preview_info
     def on_download_options(self):
         # 只有在获取媒体信息成功时才显示下载选项对话框

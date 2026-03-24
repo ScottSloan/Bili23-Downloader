@@ -36,7 +36,7 @@ class SubtitlesParser(AdditionalParserBase):
                 case SubtitleType.JSON:
                     contents, suffix = self._to_json(data)
 
-            self._write(contents, suffix = suffix, name = self.task_info.Episode.leaf_title, qualifier = ["字幕", language])
+            self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = ["字幕", language])
 
     def _to_srt(self, data: dict):
         srt_lines = []

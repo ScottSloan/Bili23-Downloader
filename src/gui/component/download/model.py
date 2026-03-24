@@ -132,11 +132,11 @@ class DownloadListModel(QAbstractListModel):
                 # 继续下载
                 downloader.resume()
 
-            case DownloadStatus.MERGE_QUEUED:
+            case DownloadStatus.FFMPEG_QUEUED:
                 # 启动合并
                 downloader.start_merge()
 
-            case DownloadStatus.FAILED | DownloadStatus.MERGE_FAILED:
+            case DownloadStatus.FAILED | DownloadStatus.FFMPEG_FAILED:
                 # 重试下载
                 downloader.retry()
 
@@ -152,12 +152,16 @@ class DownloadListModel(QAbstractListModel):
             case DownloadStatus.DOWNLOADING:
                 downloader_manager.wait(task_info, lambda: task_manager.cancel(task_info))
 
+            case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
+                # 合并和转换中的任务不允许取消
+                return
+
             case _:
                 task_manager.cancel(task_info)
 
     def batchStart(self):
         for task in self._task_list:
-            if task.Download.status in [DownloadStatus.PAUSED, DownloadStatus.MERGE_FAILED, DownloadStatus.FAILED]:
+            if task.Download.status in [DownloadStatus.PAUSED, DownloadStatus.FFMPEG_FAILED, DownloadStatus.FAILED]:
                 # 从暂停状态变为等待状态，由 manage_concurrent_downloads 统一调度
                 task.Download.status = DownloadStatus.QUEUED
 
@@ -179,7 +183,7 @@ class DownloadListModel(QAbstractListModel):
         self.beginResetModel()
 
         for task in list(self._task_list):
-            if task.Download.status != DownloadStatus.MERGING:
+            if task.Download.status not in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
                 # 只有非合并中的任务才允许取消
                 self.cancelDownload(task)
 
@@ -205,8 +209,8 @@ class DownloadListModel(QAbstractListModel):
         # 为避免多个合并任务同时进行导致高频资源占用，每次只允许一个合并任务进行，其他等待合并的任务都处于等待合并状态，由 manage_concurrent_merges 统一调度
 
         while True:
-            merging = [item for item in self._task_list if item.Download.status == DownloadStatus.MERGING]
-            merge_queued = [item for item in self._task_list if item.Download.status == DownloadStatus.MERGE_QUEUED]
+            merging = [item for item in self._task_list if item.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]]
+            merge_queued = [item for item in self._task_list if item.Download.status == DownloadStatus.FFMPEG_QUEUED]
 
             if len(merging) >= 1 or not merge_queued:
                 break
