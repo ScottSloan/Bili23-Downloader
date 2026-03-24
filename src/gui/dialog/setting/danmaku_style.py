@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QVBoxLayout
 
 from qfluentwidgets import SubtitleLabel, ScrollArea
 
-from gui.component.setting.group import FontGroup, BorderGroup, MiscGroup, AdvancedGroup, ResolutionGroup
+from gui.component.setting.group import FontGroup, BorderGroup, AdvancedGroup, ResolutionGroup
 from gui.component.dialog import DialogBase
 from gui.component.widget import ScrollArea
 
@@ -19,7 +19,6 @@ class ContentWidget(ScrollArea):
 
         self.font_group = FontGroup(self)
         self.border_group = BorderGroup(self)
-        self.misc_group = MiscGroup(self)
         self.advanced_group = AdvancedGroup(self)
         self.resolution_group = ResolutionGroup(self)
 
@@ -30,8 +29,6 @@ class ContentWidget(ScrollArea):
         self.expand_layout.addWidget(self.font_group)
         self.expand_layout.addSpacing(25)
         self.expand_layout.addWidget(self.border_group)
-        self.expand_layout.addSpacing(25)
-        self.expand_layout.addWidget(self.misc_group)
         self.expand_layout.addSpacing(25)
         self.expand_layout.addWidget(self.advanced_group)
         self.expand_layout.addSpacing(25)
@@ -62,7 +59,6 @@ class DanmakuStyleDialog(DialogBase):
 
         self.content_widget.font_group.init_data(data.get("font"))
         self.content_widget.border_group.init_data(data.get("border"))
-        self.content_widget.misc_group.init_data(data.get("misc"))
         self.content_widget.advanced_group.init_data(data.get("advanced"))
         self.content_widget.resolution_group.init_data(data.get("resolution"))
 
@@ -70,7 +66,6 @@ class DanmakuStyleDialog(DialogBase):
         data = {
             "font": self.content_widget.font_group.get_data(),
             "border": self.content_widget.border_group.get_data(),
-            "misc": self.content_widget.misc_group.get_data(),
             "advanced": self.content_widget.advanced_group.get_data(),
             "resolution": self.content_widget.resolution_group.get_data()
         }

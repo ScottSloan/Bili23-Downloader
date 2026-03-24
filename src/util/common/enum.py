@@ -103,10 +103,12 @@ class DownloadStatus(IntEnum):
     DOWNLOADING = 2                 # 下载中
     PAUSED = 3                      # 已暂停
     COMPLETED = 4                   # 已完成
+
     MERGE_QUEUED = 5                # 合并排队中
     MERGING = 6                     # 合并中
-    FAILED = 10                     # 下载失败
-    MERGE_FAILED = 11               # 合并失败
+
+    FAILED = 100                    # 下载失败
+    MERGE_FAILED = 101              # 合并失败
 
 class DownloadType(IntFlag):
     VIDEO            = 1 << 0       # 下载独立视频流

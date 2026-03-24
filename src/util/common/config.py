@@ -58,16 +58,6 @@ class DefaultValue:
         "border": {
             "border": 1.0,
             "shadow": 0,
-            "opacity_background": False
-        },
-        "color": {
-            "type": "colorful"
-        },
-        "misc": {
-            "horizontal_scale": 100,
-            "vertical_scale": 100,
-            "rotate_angle": 0,
-            "spacing": 0
         },
         "advanced": {
             "anti_blocking": False,
@@ -99,7 +89,6 @@ class DefaultValue:
         "border": {
             "border": 1.0,
             "shadow": 0.0,
-            "opacity_background": False
         },
         "color": {
             "primary": "&H00FFFFFF",
@@ -107,22 +96,16 @@ class DefaultValue:
             "border": "H00000000",
             "shadow": "H00000000"
         },
-        "misc": {
-            "horizontal_scale": 100,
-            "vertical_scale": 100,
-            "rotate_angle": 0,
-            "spacing": 0
-        },
         "margin": {
             "left": 10,
             "right": 10,
             "vertical": 10
         },
-        "alignment": 2,
         "resolution": {
             "width": 1280,
             "height": 720
-        }
+        },
+        "alignment": 2,
 
     }
 

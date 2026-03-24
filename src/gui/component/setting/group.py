@@ -87,9 +87,7 @@ class BorderGroup(QWidget):
         self.shadow_spin.setDecimals(1)
         self.shadow_spin.setValue(0.0)
 
-        self.opacity_background_chk = CheckBox(self.tr("Opaque box"), self)
-
-        border_layout = QGridLayout()
+        border_layout = QGridLayout(self)
         border_layout.setContentsMargins(0, 0, 0, 5)
         border_layout.addWidget(border_lab, 0, 0)
         border_layout.addWidget(shadow_lab, 0, 1)
@@ -98,22 +96,15 @@ class BorderGroup(QWidget):
 
         border_layout.setColumnMinimumWidth(0, 150)
         border_layout.setColumnMinimumWidth(1, 150)
-        
-        group_layout = QVBoxLayout(self)
-        group_layout.setContentsMargins(0, 0, 0, 0)
-        group_layout.addLayout(border_layout)
-        group_layout.addWidget(self.opacity_background_chk)
     
     def init_data(self, data: dict):
         self.border_spin.setValue(data.get("border"))
         self.shadow_spin.setValue(data.get("shadow"))
-        self.opacity_background_chk.setChecked(data.get("opacity_background"))
 
     def get_data(self):
         return {
             "border": self.border_spin.value(),
-            "shadow": self.shadow_spin.value(),
-            "opacity_background": self.opacity_background_chk.isChecked()
+            "shadow": self.shadow_spin.value()
         }
     
 class ColorGroup(QWidget):

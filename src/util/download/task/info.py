@@ -64,6 +64,7 @@ class EpisodeInfo(InfoBase):
     tid: int = 0
     tid_v2: int = 0
     url: str = ""
+    duration: int = 0
 
     # 收藏夹\个人空间
     favorites_name: str = ""

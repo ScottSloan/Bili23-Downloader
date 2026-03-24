@@ -1,13 +1,14 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
-from util.common.enum import DownloadStatus, ToastNotificationCategory
+from util.parse.additional.worker import AdditionalParseWorker
 from util.download.downloader.parse_worker import ParseWorker
+from util.common.enum import DownloadStatus, DownloadType
+from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
-from util.thread import GlobalThreadPoolTask
 from util.network.request import get_cookies
 from util.download.task.info import TaskInfo
 from util.common.config import config
@@ -130,12 +131,20 @@ class Downloader(QObject):
         if self.task_info.Download.progress >= 100:
             self.on_download_completed()
         else:
-            self.task_info.Download.status = DownloadStatus.PARSING
+            download_video = self.task_info.Download.type & DownloadType.VIDEO != 0
+            download_audio = self.task_info.Download.type & DownloadType.AUDIO != 0
 
-            self._stop_event.clear()
+            if download_video or download_audio:
+                self.task_info.Download.status = DownloadStatus.PARSING
 
-            parse_worker = ParseWorker(self.task_info, self)
-            GlobalThreadPoolTask.run(parse_worker)
+                self._stop_event.clear()
+
+                parse_worker = ParseWorker(self.task_info, self)
+                GlobalThreadPoolTask.run(parse_worker)
+
+            else:
+                # 如果不需要下载视频和音频，就直接进入进入合并阶段
+                self.on_download_completed()
 
     @Slot(str)
     def on_parse_finished(self, download_info_json: str):
@@ -165,10 +174,7 @@ class Downloader(QObject):
 
         signal_bus.toast.show_long_message.emit(
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
-            "{parse_failed}\n\n{error_message}".format(
-                parse_failed = Translator.ERROR_MESSAGES("PARSE_FAILED"),
-                error_message = error_message
-            )
+            error_message
         )
 
     def start_worker(self):
@@ -354,6 +360,26 @@ class Downloader(QObject):
         self.session.headers.update(headers)
 
     def on_download_completed(self):
+        self.task_info.Download.status = DownloadStatus.DOWNLOADING
+
+        # 判断是否需要下载附加文件，如果需要就先下载附加文件，下载完成后再进入合并阶段
+        danmaku = self.task_info.Download.type & DownloadType.DANMAKU != 0
+        subtitles = self.task_info.Download.type & DownloadType.SUBTITLE != 0
+        cover = self.task_info.Download.type & DownloadType.COVER != 0
+        metadata = self.task_info.Download.type & DownloadType.METADATA != 0
+
+        if any([danmaku, subtitles, cover, metadata]):
+            worker = AdditionalParseWorker(self.task_info)
+            worker.success.connect(self.wait_merge)
+            worker.error.connect(self.on_parse_error)
+            
+            AsyncTask.run(worker)
+
+        else:
+            self.wait_merge()
+
+    def wait_merge(self):
+        # 等待合并
         self.task_info.Download.status = DownloadStatus.MERGE_QUEUED
         self.task_info.Download.speed = 0
         self.task_info.Download.progress = 100

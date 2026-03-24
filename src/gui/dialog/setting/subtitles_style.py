@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QVBoxLayout
 
 from qfluentwidgets import SubtitleLabel, ScrollArea
 
-from gui.component.setting.group import FontGroup, BorderGroup, ColorGroup, MiscGroup, MarginGroup, AlignmentGroup, ResolutionGroup
+from gui.component.setting.group import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, ResolutionGroup
 from gui.component.dialog import DialogBase
 from gui.component.widget import ScrollArea
 
@@ -20,10 +20,9 @@ class ContentWidget(ScrollArea):
         self.font_group = FontGroup(self)
         self.border_group = BorderGroup(self)
         self.color_group = ColorGroup(self)
-        self.misc_group = MiscGroup(self)
         self.margin_group = MarginGroup(self)
-        self.alignment_group = AlignmentGroup(self)
         self.resolution_group = ResolutionGroup(self)
+        self.alignment_group = AlignmentGroup(self)
 
         self.expand_layout = QVBoxLayout()
         self.expand_layout.setContentsMargins(24, 0, 24, 0)
@@ -35,13 +34,11 @@ class ContentWidget(ScrollArea):
         self.expand_layout.addSpacing(25)
         self.expand_layout.addWidget(self.color_group)
         self.expand_layout.addSpacing(25)
-        self.expand_layout.addWidget(self.misc_group)
-        self.expand_layout.addSpacing(25)
         self.expand_layout.addWidget(self.margin_group)
         self.expand_layout.addSpacing(25)
-        self.expand_layout.addWidget(self.alignment_group)
-        self.expand_layout.addSpacing(25)
         self.expand_layout.addWidget(self.resolution_group)
+        self.expand_layout.addSpacing(25)
+        self.expand_layout.addWidget(self.alignment_group)
         self.expand_layout.addSpacing(25)
 
         self.setScrollLayout(self.expand_layout)
@@ -69,20 +66,18 @@ class SubtitlesStyleDialog(DialogBase):
         self.content_widget.font_group.init_data(data.get("font"))
         self.content_widget.border_group.init_data(data.get("border"))
         self.content_widget.color_group.init_data(data.get("color"))
-        self.content_widget.misc_group.init_data(data.get("misc"))
         self.content_widget.margin_group.init_data(data.get("margin"))
-        self.content_widget.alignment_group.init_data(data.get("alignment"))
         self.content_widget.resolution_group.init_data(data.get("resolution"))
+        self.content_widget.alignment_group.init_data(data.get("alignment"))
         
     def accept(self):
         data = {
             "font": self.content_widget.font_group.get_data(),
             "border": self.content_widget.border_group.get_data(),
             "color": self.content_widget.color_group.get_data(),
-            "misc": self.content_widget.misc_group.get_data(),
             "margin": self.content_widget.margin_group.get_data(),
-            "alignment": self.content_widget.alignment_group.get_data(),
-            "resolution": self.content_widget.resolution_group.get_data()
+            "resolution": self.content_widget.resolution_group.get_data(),
+            "alignment": self.content_widget.alignment_group.get_data()
         }
 
         config.set(config.subtitle_style, data.copy())
