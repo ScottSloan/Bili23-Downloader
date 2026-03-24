@@ -1,27 +1,44 @@
+from util.network.request import NetworkRequestWorker, ResponseType
+from util.parse.additional.file.metadata_nfo import MetadataNFO
 from util.parse.additional.base import AdditionalParserBase
 from util.download.task.info import TaskInfo
+from util.common.enum import MetadataType
 from util.common.config import config
+from util.thread import SyncTask
 
+from pathlib import Path
 
 class MetadataParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
         super().__init__(task_info)
 
     def parse(self):
-        metadata = self._get_metadata()
+        match config.get(config.metadata_type):
+            case MetadataType.NFO:
+                contents_list = MetadataNFO(self.task_info).generate()
 
-        self._write_string(metadata, suffix = "txt", qualifier = ["元数据"])
+                for entry in contents_list:
+                    contents, name, qualifier = entry["contents"], entry["name"], entry["qualifier"]
 
-    def _get_metadata(self):
-        metadata_dict = {
-            "标题": self.task_info.title,
-            "文件名": self.task_info.file_name,
-            "封面链接": self.task_info.cover_url,
-            "分P标签": self.task_info.episode_tag,
-            "总文件大小（字节）": self.task_info.total_file_size,
-            "输出格式": self.task_info.output_type,
-        }
+                    # 去除 contents 中多余空行
+                    contents = "\n".join([line for line in contents.splitlines() if line.strip() != ""])
 
-        metadata_lines = [f"{key}: {value}" for key, value in metadata_dict.items()]
+                    self._write(contents, suffix = "nfo", name = name, qualifier = qualifier)
 
-        return "\n".join(metadata_lines)
+                self._save_poster()
+
+            case MetadataType.JSON:
+                pass
+
+    def _save_poster(self):
+        def on_success(response: bytes):
+            self._write(response, suffix = "jpg", name = "poster")
+
+        path = Path(self.task_info.File.download_path, self.task_info.File.folder, "poster.jpg")
+
+        if not path.exists() and self.task_info.Episode.poster:
+            worker = NetworkRequestWorker(self.task_info.Episode.poster, response_type = ResponseType.BYTES)
+            worker.success.connect(on_success)
+            worker.error.connect(self._on_error)
+
+            SyncTask.run(worker)

@@ -1,6 +1,9 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
+import json
+import re
+
 class CheeseEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict, kwargs: dict = {}):
         super().__init__(**kwargs)
@@ -50,11 +53,13 @@ class CheeseEpisodeParser(EpisodeParserBase):
                         "duration": self.get_episode_duration(episode),
                         "ep_id": episode["id"],
                         "episode_id": self.episode_id,
+                        "episode_plot": "{} · {}".format(episode["play_way_subtitle"], episode["subtitle"]),
                         "number": episode_count,
+                        "episode_number": episode_count,
                         "pubtime": episode["release_date"],
                         "title": episode["title"],
                         "related_titles": {
-                            "cheese_title": cheese_title,
+                            "series_title": cheese_title,
                             "section_title": section_title
                         },
                         "url": "https://www.bilibili.com/cheese/play/{ep_id}".format(ep_id = episode["id"])
@@ -81,8 +86,10 @@ class CheeseEpisodeParser(EpisodeParserBase):
 
             episode_data.update(data)
 
-        # 副标题
-        episode_data["subtitle"] = self.info_data["subtitle"]
+        episode_data["poster"] = self.info_data["cover"]
+        episode_data["description"] = self.info_data["subtitle"]
+        episode_data["styles"] = ["Bilibili 课堂"]
+        episode_data["premiered"] = self.get_premiered()
         # season_id
         episode_data["season_id"] = self.info_data["season_id"]
         # 发布者信息
@@ -98,3 +105,14 @@ class CheeseEpisodeParser(EpisodeParserBase):
             2: "付费",
             3: "部分试看"
         }.get(episode_data["status"])
+    
+    def get_premiered(self):
+        text = json.dumps(self.info_data, ensure_ascii = False)
+
+        # 使用正则找到第一条 release_date 字段对应的值
+        match = re.search(r'"release_date"\s*:\s*(\d+)', text)
+
+        if match:
+            return int(match.group(1))
+        else:
+            return 0

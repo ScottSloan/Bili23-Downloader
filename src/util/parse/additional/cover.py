@@ -12,7 +12,7 @@ class CoverParser(AdditionalParserBase):
         suffix = config.get(config.cover_type).value
         contents = self._get_cover_contents(suffix)
 
-        self._write(contents, suffix = suffix)
+        self._write(contents, suffix = suffix, name = self.task_info.Episode.leaf_title)
 
     def _get_cover_contents(self, suffix: str):
         def on_success(response: bytes):
@@ -20,22 +20,13 @@ class CoverParser(AdditionalParserBase):
 
             contents = response
             
-        def on_error(error_message: str):
-            nonlocal error_msg
-
-            error_msg = error_message
-        
         contents = None
-        error_msg = None
-
+        
         url = "{url}@.{suffix}".format(url = self.task_info.Episode.cover, suffix = suffix)
 
         worker = NetworkRequestWorker(url, response_type = ResponseType.BYTES)
         worker.success.connect(on_success)
-        worker.error.connect(on_error)
-
-        if error_msg:
-            self._on_error(error_msg)
+        worker.error.connect(self._on_error)
 
         SyncTask.run(worker)
 

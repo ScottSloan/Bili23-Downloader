@@ -1,6 +1,7 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 from util.common.translator import Translator
+from util.format.time import Time
 
 class BangumiEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict, category_name: str, kwargs = {}):
@@ -67,6 +68,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
                         "season_title": season_title,
                         "section_title": section_title
                     },
+                    "episode_plot": "《{season_title}》{episode_title}".format(season_title = season_title, episode_title = self.get_bangumi_title(episode)),
                     "url": episode["link"]
                 }
 
@@ -128,10 +130,14 @@ class BangumiEpisodeParser(EpisodeParserBase):
         # season_number
         episode_data["season_number"] = self.determine_season_number()
 
+        # 地区
+        episode_data["areas"] = [entry["name"] for entry in self.info_data.get("areas", "")]
+        # 发行日期
+        episode_data["premiered"] = int(Time.from_string(self.info_data["publish"]["pub_time"]).timestamp())
         # 简介
         episode_data["description"] = self.info_data.get("evaluate", "")
         # 风格
-        episode_data["styles"] = self.info_data.get("styles", "")
+        episode_data["styles"] = self.info_data.get("styles", "") + [f"Bilibili {self.category_name}"]
         # 海报
         episode_data["poster"] = self.info_data.get("cover", "")
         # 演员

@@ -72,14 +72,11 @@ class TaskManager:
     def __update_episode_info(self, episode_info: dict):
         extra_data = EpisodeData.get_episode_data(episode_info.get("episode_id", ""))
 
-        if episode_info.get("attribute") & Attribute.VIDEO_BIT:
-            episode_info["leaf_title"] = episode_info.get("title", "")
+        title = episode_info.get("title", "")
 
-        elif episode_info.get("attribute") & Attribute.BANGUMI_BIT:
-            episode_info["episode_title"] = episode_info.get("title", "")
-
-        elif episode_info.get("attribute") & Attribute.CHEESE_BIT:
-            episode_info["episode_title"] = episode_info.get("title", "")
+        episode_info["leaf_title"] = title
+        episode_info["episode_title"] = title
+        episode_info["episode_title"] = title
 
         data = {
             **episode_info,

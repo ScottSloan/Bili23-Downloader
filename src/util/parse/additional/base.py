@@ -28,6 +28,7 @@ class AdditionalParserBase(ParserBase):
             name_parts = name
 
         path = self.__base_path / f"{name_parts}.{suffix}"
+        path.parent.mkdir(parents = True, exist_ok = True)
 
         with open(path, mode, encoding = encoding) as f:
             f.write(contents)

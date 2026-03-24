@@ -30,7 +30,7 @@ class DanmakuParser(AdditionalParserBase):
             case DanmakuType.JSON:
                 contents, suffix = self._to_json(dict_list)
 
-        self._write(contents, suffix = suffix, qualifier = ["弹幕"])
+        self._write(contents, suffix = suffix, name = self.task_info.Episode.leaf_title, qualifier = ["弹幕"])
 
     def _to_xml(self, dict_list: List[dict]) -> tuple:
         xml = DanmakuXML(dict_list, self.task_info.Episode.cid).generate()
@@ -65,13 +65,7 @@ class DanmakuParser(AdditionalParserBase):
 
             segment = response
 
-        def on_error(error: str):
-            nonlocal error_msg
-
-            error_msg = error
-
         segment = None
-        error_msg = None
 
         params = {
             "type": 1,
@@ -83,12 +77,9 @@ class DanmakuParser(AdditionalParserBase):
 
         worker = NetworkRequestWorker(url, response_type = ResponseType.BYTES)
         worker.success.connect(on_success)
-        worker.error.connect(on_error)
+        worker.error.connect(self._on_error)
 
         SyncTask.run(worker)
-
-        if error_msg:
-            self._on_error(error_msg)
 
         return segment
 

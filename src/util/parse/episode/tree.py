@@ -151,6 +151,7 @@ class TreeItem(TreeItemBase):
         self.pubtime = item_data.get("pubtime", 0)
         self.duration = item_data.get("duration", 0)
         self.episode_id = item_data.get("episode_id", "")
+        self.episode_plot = item_data.get("episode_plot", "")
         self.part_number = item_data.get("part_number", 0)
         self.episode_number = item_data.get("episode_number", 0)
         self.related_titles = item_data.get("related_titles", {})
@@ -179,6 +180,7 @@ class TreeItem(TreeItemBase):
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等
             "title": self.title,                                   # 标题
             "url": self.url,
+            "episode_plot": self.episode_plot,                     # 剧集剧情简介
         }
 
         if self.uploader:

@@ -36,7 +36,7 @@ class SubtitlesParser(AdditionalParserBase):
                 case SubtitleType.JSON:
                     contents, suffix = self._to_json(data)
 
-            self._write(contents, suffix = suffix, qualifier = ["字幕", language])
+            self._write(contents, suffix = suffix, name = self.task_info.Episode.leaf_title, qualifier = ["字幕", language])
 
     def _to_srt(self, data: dict):
         srt_lines = []
@@ -100,10 +100,11 @@ class SubtitlesParser(AdditionalParserBase):
 
             data = self._get_subtitles_data(url)
 
-            subtitles_data_list.append({
-                "language": language,
-                "data": data,
-            })
+            if data:
+                subtitles_data_list.append({
+                    "language": language,
+                    "data": data,
+                })
 
         return subtitles_data_list
 
@@ -113,20 +114,11 @@ class SubtitlesParser(AdditionalParserBase):
 
             subtitles_data = response
 
-        def on_error(error_message: str):
-            nonlocal error_msg
-
-            error_msg = error_message
-
         subtitles_data = None
-        error_msg = None
 
         worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)
-        worker.error.connect(on_error)
-
-        if error_msg:
-            self._on_error(error_msg)
+        worker.error.connect(self._on_error)
 
         SyncTask.run(worker)
 
@@ -138,13 +130,7 @@ class SubtitlesParser(AdditionalParserBase):
 
             subtitles = response["data"]["subtitle"]["subtitles"]
         
-        def on_error(error_message: str):
-            nonlocal error_msg
-
-            error_msg = error_message
-        
-        subtitles = None
-        error_msg = None
+        subtitles = []
         
         params = {
             "bvid": self.task_info.Episode.bvid,
@@ -159,11 +145,8 @@ class SubtitlesParser(AdditionalParserBase):
         
         worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)
-        worker.error.connect(on_error)
+        worker.error.connect(self._on_error)
 
         SyncTask.run(worker)
-
-        if error_msg:
-            self._on_error(error_msg)
 
         return subtitles

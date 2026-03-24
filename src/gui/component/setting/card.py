@@ -137,6 +137,7 @@ class NamingConventionSettingCard(ExpandGroupSettingCard):
 
         self.main_window = main_window
         self.rule_list = []
+        self._group_widgets = {}
 
         self.add_btn = PushButton(self.tr("Add Rule"), self)
         self.add_btn.clicked.connect(self.on_add_item)
@@ -146,15 +147,24 @@ class NamingConventionSettingCard(ExpandGroupSettingCard):
         QTimer.singleShot(300, self.init_data)
 
     def init_data(self):
-        rule_list = config.get(config.naming_rule_list).copy()
+        self.rule_list = config.get(config.naming_rule_list).copy()
 
-        for entry in rule_list:
+        for entry in self.rule_list:
             type_key = reversed_convention_type_map.get(entry.get("type"))
             type_str = Translator.CONVENTION_TYPE(type_key)
 
-            self.add_item(entry, type_str)
+            self._add_rule_widget(entry, type_str)
 
-        self.rule_list = rule_list.copy()
+    def _save_config(self):
+        config.set(config.naming_rule_list, self.rule_list)
+
+    def _get_rule(self, rule_id: str):
+        return next((r for r in self.rule_list if r.get("id") == rule_id), None)
+        
+    def _set_default_rule(self, rule_id: str, rule_type: int):
+        for entry in self.rule_list:
+            if entry.get("type") == rule_type:
+                entry["default"] = (entry.get("id") == rule_id)
 
     def on_add_item(self):
         initial_data = {
@@ -170,90 +180,76 @@ class NamingConventionSettingCard(ExpandGroupSettingCard):
         if dialog.exec():
             rule_data = dialog.rule_data.copy()
 
-            self.add_item(rule_data, dialog.type_str)
+            self.rule_list.append(rule_data)
+            self._set_default_rule(rule_data.get("id"), rule_data.get("type"))
+            self._save_config()
+
+            self._add_rule_widget(rule_data, dialog.type_str)
 
             if not self.isExpand:
                 QTimer.singleShot(0, self.toggleExpand)
 
-            config.set(config.naming_rule_list, self.rule_list)
+    def on_edit_item(self, rule_id: str):
+        rule_data = self._get_rule(rule_id)
+        if not rule_data:
+            return
 
-    def on_edit_item(self, id: dict, group_widget: GroupWidget):
-        dialog = EditConventionDialog(self.find_data(id), self.main_window)
+        dialog = EditConventionDialog(rule_data, self.main_window)
 
         if dialog.exec():
-            rule_data = dialog.rule_data.copy()
+            new_data = dialog.rule_data.copy()
 
-            self.update_data(rule_data)
+            for i, entry in enumerate(self.rule_list):
+                if entry.get("id") == rule_id:
+                    self.rule_list[i] = new_data
+                    break
 
-            group_widget.titleLabel.setText(rule_data.get("name"))
+            self._set_default_rule(rule_id, new_data.get("type"))
+            self._save_config()
 
-            config.set(config.naming_rule_list, self.rule_list)
+            group_widget = self._group_widgets.get(rule_id)
+            if group_widget:
+                group_widget.titleLabel.setText(new_data.get("name"))
+                if hasattr(group_widget, "contentLabel") and group_widget.contentLabel:
+                    group_widget.contentLabel.setText(dialog.type_str)
 
-    def on_delete_item(self, id: dict, group_widget: GroupWidget):
-        rule_data = self.find_data(id)
+    def on_delete_item(self, rule_id: str):
+        rule_data = self._get_rule(rule_id)
+        if not rule_data:
+            return
 
         if rule_data.get("default"):
             dialog = MessageBox(self.tr("Cannot delete default rule"), self.tr("Only non-default naming rules can be deleted."), self.main_window)
             dialog.hideCancelButton()
-            
             dialog.exec()
-
             return
         
         dialog = MessageBox(self.tr("Delete Naming Rule"), self.tr("Are you sure you want to delete this naming rule?"), self.main_window)
 
         if dialog.exec():
-            self.removeGroupWidget(group_widget)
-            self.remove_data(id)
+            self.rule_list = [r for r in self.rule_list if r.get("id") != rule_id]
+            self._save_config()
 
-            group_widget.hide()
-            group_widget.deleteLater()
+            group_widget = self._group_widgets.pop(rule_id, None)
+            if group_widget:
+                self.removeGroupWidget(group_widget)
+                group_widget.hide()
+                group_widget.deleteLater()
 
-            config.set(config.naming_rule_list, self.rule_list)
-
-    def find_data(self, id: str):
-        for entry in self.rule_list.copy():
-            if entry.get("id") == id:
-                return entry
-            
-    def update_data(self, data: dict):
-        for entry in self.rule_list:
-            if entry.get("id") == data.get("id"):
-                entry = data
-
-                break
-
-        self.update_default(data.get("id"), entry.get("type"))
-
-    def remove_data(self, id: str):
-        for entry in self.rule_list:
-            if entry.get("id") == id:
-                self.rule_list.remove(entry)
-
-                break
-
-    def update_default(self, id: str, type: int):
-        for entry in self.rule_list:
-            if entry.get("type") == type:
-                if entry.get("id") == id:
-                    entry["default"] = True
-                else:
-                    entry["default"] = False
-
-    def add_item(self, rule_data: dict, type_str: str):
+    def _add_rule_widget(self, rule_data: dict, type_str: str):
         entry_widget = EntryItemWidget(self)
         name_key = rule_data.get("name")
 
         default_rule_names = Translator.DEFAULT_RULE_NAMES()
 
-        if name_key in default_rule_names.keys():
+        if name_key in default_rule_names:
             rule_data["name"] = default_rule_names.get(name_key)
 
         group_widget = self.addGroup("", rule_data.get("name"), type_str, entry_widget)
-        self.rule_list.append(rule_data)
+        self._group_widgets[rule_data.get("id")] = group_widget
 
-        entry_widget.edit_btn.clicked.connect(lambda: self.on_edit_item(rule_data.get("id"), group_widget))
-        entry_widget.delete_btn.clicked.connect(lambda: self.on_delete_item(rule_data.get("id"), group_widget))
+        entry_widget.edit_btn.clicked.connect(lambda: self.on_edit_item(rule_data.get("id")))
+        entry_widget.delete_btn.clicked.connect(lambda: self.on_delete_item(rule_data.get("id")))
 
 class NumberSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

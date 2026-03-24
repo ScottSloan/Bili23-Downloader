@@ -135,7 +135,7 @@ class DefaultValue:
             "id": "b1d4e8e3-ca17-4b41-87cf-cda45254701e",
             "name": "DEFAULT_FOR_BANGUMI",
             "type": 20,
-            "rule": "{season_title}/{section_title}/{episode_title}",
+            "rule": "{season_title}/{episode_title}",
             "default": True
         },
         {

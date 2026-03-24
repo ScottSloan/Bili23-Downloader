@@ -6,6 +6,14 @@ class Time:
         return datetime.fromtimestamp(timestamp).strftime(fmt)
     
     @staticmethod
+    def from_timestamp(timestamp: int):
+        return datetime.fromtimestamp(timestamp)
+    
+    @staticmethod
+    def from_string(time_str: str, fmt: str = "%Y-%m-%d %H:%M:%S"):
+        return datetime.strptime(time_str, fmt)
+    
+    @staticmethod
     def format_srt_time(seconds: float):
         h = int(seconds // 3600)
         m = int((seconds % 3600) // 60)

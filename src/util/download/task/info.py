@@ -52,10 +52,13 @@ class EpisodeInfo(InfoBase):
     season_title: str = ""
     episode_title: str = ""
 
+    areas: list[str] = field(default_factory = list)
     actors: str = ""
     description: str = ""
+    episode_plot: str = ""
     uploader: str = ""
     uploader_uid: int = 0
+    premiered: int = 0
     poster: str = ""
     season_id: int = 0
     season_number: int = 0
