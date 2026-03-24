@@ -1,11 +1,10 @@
 from PySide6.QtCore import QObject, Signal
 
-from util.common.translator import Translator
-from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadType
 
 from util.parse.additional.danmaku import DanmakuParser
+from util.parse.additional.subtitles import SubtitlesParser
 
 import logging
 
@@ -45,8 +44,8 @@ class AdditionalParseWorker(QObject):
 
         if attr & DownloadType.SUBTITLE != 0:
             # 下载字幕
-            ## TODO: 字幕下载功能
-            pass
+            parser = SubtitlesParser(self.task_info)
+            parser.parse()
 
         if attr & DownloadType.COVER != 0:
             # 下载封面

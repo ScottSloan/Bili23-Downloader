@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from util.parse.additional.worker import AdditionalParseWorker
 from util.download.downloader.parse_worker import ParseWorker
 from util.common.enum import DownloadStatus, DownloadType
+from util.common.data import reversed_video_quality_map
 from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
@@ -144,6 +145,10 @@ class Downloader(QObject):
 
             else:
                 # 如果不需要下载视频和音频，就直接进入进入合并阶段
+                self.task_info.Download.info_label = "附加文件"
+
+                self.update_item(self.task_info)
+
                 self.on_download_completed()
 
     @Slot(str)
@@ -166,7 +171,6 @@ class Downloader(QObject):
     @Slot(str)
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
-        self.task_info.Error.short_message = error_message
 
         self.update_item(self.task_info)
 
@@ -323,6 +327,18 @@ class Downloader(QObject):
                     "file_size": download_info["download_list"][file_key]["file_size"]
                 } for file_key in download_info["download_queue"]
             }
+
+            has_video = self.task_info.Download.type & DownloadType.VIDEO != 0
+            has_audio = self.task_info.Download.type & DownloadType.AUDIO != 0
+
+            if has_video and has_audio:
+                self.task_info.Download.info_label = Translator.VIDEO_QUALITY(reversed_video_quality_map.get(self.task_info.Download.video_quality_id, ""))
+
+            elif has_video and not has_audio:
+                self.task_info.Download.info_label = "MP4"
+
+            elif not has_video and has_audio:
+                self.task_info.Download.info_label = self.tr("Audio")
 
     def init_session(self):
         self.session = requests.Session()

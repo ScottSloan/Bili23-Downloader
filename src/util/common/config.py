@@ -9,7 +9,7 @@ from qfluentwidgets import (
 from util.common.serializer import LanguageSerializer, ScalingSerializer
 from util.common.enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    ZeroPaddingTotalDigits, Scaling, FileConflictResolution
+    Scaling, FileConflictResolution
 )
 
 from pathlib import Path
@@ -60,11 +60,11 @@ class DefaultValue:
             "shadow": 0,
         },
         "advanced": {
-            "anti_blocking": False,
-            "display_area": 100,
+            "display_area": 60,
             "opacity": 80,
-            "danmaku_speed": 3,
-            "danmaku_density": 1
+            "scroll_duration": 10,
+            "static_duration": 5,
+            "minimum_gap": 100
         },
         "resolution": {
             "width": 1280,
@@ -99,7 +99,7 @@ class DefaultValue:
         "margin": {
             "left": 10,
             "right": 10,
-            "vertical": 10
+            "vertical": 20
         },
         "resolution": {
             "width": 1280,
@@ -126,8 +126,8 @@ class DefaultValue:
         },
         {
             "id": "307906bd-86a2-4b6b-bd75-152a8c3e280b",
-                "name": "DEFAULT_FOR_COLLECTION",
-                "type": 13,
+            "name": "DEFAULT_FOR_COLLECTION",
+            "type": 13,
             "rule": "{collection_title}/{section_title}/{parent_title}/{leaf_title}",
             "default": True
         },

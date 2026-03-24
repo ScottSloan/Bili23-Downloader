@@ -15,9 +15,7 @@ import json
 
 class DanmakuParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
-        super().__init__()
-
-        self.task_info = task_info
+        super().__init__(task_info)
 
     def parse(self):
         dict_list = self._get_all_protobuf_parts()
@@ -32,7 +30,7 @@ class DanmakuParser(AdditionalParserBase):
             case DanmakuType.JSON:
                 contents, suffix = self._to_json(dict_list)
 
-        self._write(contents, suffix = suffix, qualifier = "弹幕")
+        self._write(contents, suffix = suffix, qualifier = ["弹幕"])
 
     def _to_xml(self, dict_list: List[dict]) -> tuple:
         xml = DanmakuXML(dict_list, self.task_info.Episode.cid).generate()
@@ -88,6 +86,9 @@ class DanmakuParser(AdditionalParserBase):
         worker.error.connect(on_error)
 
         SyncTask.run(worker)
+
+        if error_msg:
+            self._on_error(error_msg)
 
         return segment
 

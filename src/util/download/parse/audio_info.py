@@ -55,10 +55,12 @@ class AudioInfoParser:
         audio_info = self.get_audio_info(self.task_info.Download.audio_quality_id)
 
         if audio_info:
+            self.task_info.Download.audio_quality_id = audio_info["id"]
+
             ext = self.get_audio_file_ext()
+
             temp_audio_file_name = "audio_{task_id}.{file_ext}".format(task_id = self.task_info.Basic.task_id, file_ext = ext)
 
-            self.task_info.Download.audio_quality_id = audio_info["id"]
             self.task_info.File.audio_file_ext = ext
 
             if temp_audio_file_name not in self.task_info.File.relative_files:

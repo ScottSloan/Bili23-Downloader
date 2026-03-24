@@ -62,6 +62,7 @@ sources = [
     "src/gui/interface/parse.py",
     "src/gui/interface/setting.py",
     "src/util/common/translator.py",
+    "src/util/download/downloader/downloader.py",
     "src/util/parse/worker.py"
 ]
 

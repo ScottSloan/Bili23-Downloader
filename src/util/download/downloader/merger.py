@@ -191,9 +191,6 @@ class Merger(QObject):
     def set_error_message(self, short_message: str, description: str):
         self.task_info.Download.status = DownloadStatus.MERGE_FAILED
 
-        self.task_info.Error.short_message = short_message
-        self.task_info.Error.description = description
-
         signal_bus.download.update_downloading_item.emit(self.task_info)
         signal_bus.toast.show_long_message.emit(short_message, description)
 

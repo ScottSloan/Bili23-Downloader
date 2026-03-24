@@ -73,12 +73,6 @@ class NumberingType(Enum):
     FROM_SPECIFIED = 0
     CONTINUOUS = 1
 
-class ZeroPaddingTotalDigits(Enum):
-    TWO = 2
-    THREE = 3
-    FOUR = 4
-    FIVE = 5
-
 class Channel(IntEnum):
     UNKNOWN = 0
     PORTABLE = 1

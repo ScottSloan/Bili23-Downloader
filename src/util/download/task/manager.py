@@ -55,10 +55,10 @@ class TaskManager:
         attr_dict = {
             DownloadType.VIDEO: config.download_video_stream,
             DownloadType.AUDIO: config.download_audio_stream,
-            DownloadType.DANMAKU: config.download_danmaku,
-            DownloadType.SUBTITLE: config.download_subtitle,
-            DownloadType.COVER: config.download_cover,
-            DownloadType.METADATA: config.download_metadata
+            DownloadType.DANMAKU: config.get(config.download_danmaku),
+            DownloadType.SUBTITLE: config.get(config.download_subtitle),
+            DownloadType.COVER: config.get(config.download_cover),
+            DownloadType.METADATA: config.get(config.download_metadata)
         }
 
         type = 0

@@ -99,10 +99,8 @@ class DownloadInfo(InfoBase):
     merge_video_audio: bool = False
     keep_original_files: bool = False
 
-@dataclass
-class ErrorInfo(InfoBase):
-    short_message: str = ""
-    description: str = ""
+    # 显示信息
+    info_label: str = ""
 
 @dataclass
 class TaskInfo:
@@ -110,7 +108,6 @@ class TaskInfo:
     File: FileInfo = field(default_factory = FileInfo)
     Episode: EpisodeInfo = field(default_factory = EpisodeInfo)
     Download: DownloadInfo = field(default_factory = DownloadInfo)
-    Error: ErrorInfo = field(default_factory = ErrorInfo)
 
     def to_dict(self):
         return asdict(self)
@@ -120,10 +117,8 @@ class TaskInfo:
         file_data = data.get("File", {})
         episode_data = data.get("Episode", {})
         download_data = data.get("Download", {})
-        error_data = data.get("Error", {})
 
         self.Basic.from_dict(basic_data)
         self.File.from_dict(file_data)
         self.Episode.from_dict(episode_data)
         self.Download.from_dict(download_data)
-        self.Error.from_dict(error_data)

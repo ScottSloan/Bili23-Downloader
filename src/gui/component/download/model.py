@@ -150,7 +150,7 @@ class DownloadListModel(QAbstractListModel):
                 self.removeRow(self.getRow(task_info))
 
             case DownloadStatus.DOWNLOADING:
-                downloader_manager.wait(task_info.Basic.task_id, lambda: task_manager.cancel(task_info))
+                downloader_manager.wait(task_info, lambda: task_manager.cancel(task_info))
 
             case _:
                 task_manager.cancel(task_info)

@@ -77,12 +77,12 @@ class BorderGroup(QWidget):
         self.init_UI()
 
     def init_UI(self):
-        border_lab = BodyLabel(self.tr("Outline"), self)
+        border_lab = BodyLabel(self.tr("Outline (px)"), self)
         self.border_spin = DoubleSpinBox(ignore_wheel = True, parent = self)
         self.border_spin.setDecimals(1)
         self.border_spin.setValue(1.0)
         
-        shadow_lab = BodyLabel(self.tr("Shadow"), self)
+        shadow_lab = BodyLabel(self.tr("Shadow (px)"), self)
         self.shadow_spin = DoubleSpinBox(ignore_wheel = True, parent = self)
         self.shadow_spin.setDecimals(1)
         self.shadow_spin.setValue(0.0)
@@ -148,60 +148,6 @@ class ColorGroup(QWidget):
             "border": Color.qcolor_to_ass_alpha(self.border_color_btn.color),
             "shadow": Color.qcolor_to_ass_alpha(self.shadow_color_btn.color),
         }
-
-class MiscGroup(QWidget):
-    def __init__(self, parent = None):
-        super().__init__(parent)
-
-        self.init_UI()
-
-    def init_UI(self):
-        horz_scale_lab = BodyLabel(self.tr("Scale X%"), self)
-        self.horz_scale_spin = SpinBox(ignore_wheel = True, parent = self)
-        self.horz_scale_spin.setRange(0, 1000)
-        self.horz_scale_spin.setValue(100)
-        self.horz_scale_spin.setFixedWidth(150)
-        vert_scale_lab = BodyLabel(self.tr("Scale Y%"), self)
-        self.vert_scale_spin = SpinBox(ignore_wheel = True, parent = self)
-        self.vert_scale_spin.setRange(0, 1000)
-        self.vert_scale_spin.setValue(100)
-        self.vert_scale_spin.setFixedWidth(150)
-
-        rotate_angle_lab = BodyLabel(self.tr("Rotation"), self)
-        self.rotate_angle_spin = SpinBox(ignore_wheel = True, parent = self)
-        self.rotate_angle_spin.setRange(-1000, 1000)
-        self.rotate_angle_spin.setValue(0)
-        self.rotate_angle_spin.setFixedWidth(150)
-        spacing_lab = BodyLabel(self.tr("Spacing"), self)
-        self.spacing_spin = DoubleSpinBox(ignore_wheel = True, parent = self)
-        self.spacing_spin.setDecimals(1)
-        self.spacing_spin.setValue(0.0)
-        self.spacing_spin.setFixedWidth(150)
-
-        misc_layout = QGridLayout(self)
-        misc_layout.setContentsMargins(0, 0, 0, 0)
-        misc_layout.addWidget(horz_scale_lab, 0, 0)
-        misc_layout.addWidget(vert_scale_lab, 0, 1)
-        misc_layout.addWidget(self.horz_scale_spin, 1, 0, alignment = Qt.AlignmentFlag.AlignLeft)
-        misc_layout.addWidget(self.vert_scale_spin, 1, 1, alignment = Qt.AlignmentFlag.AlignLeft)
-        misc_layout.addWidget(rotate_angle_lab, 2, 0)
-        misc_layout.addWidget(spacing_lab, 2, 1)
-        misc_layout.addWidget(self.rotate_angle_spin, 3, 0, alignment = Qt.AlignmentFlag.AlignLeft)
-        misc_layout.addWidget(self.spacing_spin, 3, 1, alignment = Qt.AlignmentFlag.AlignLeft)
-
-    def init_data(self, data: dict):
-        self.horz_scale_spin.setValue(data.get("horizontal_scale"))
-        self.vert_scale_spin.setValue(data.get("vertical_scale"))
-        self.rotate_angle_spin.setValue(data.get("rotate_angle"))
-        self.spacing_spin.setValue(data.get("spacing"))
-
-    def get_data(self):
-        return {
-            "horizontal_scale": self.horz_scale_spin.value(),
-            "vertical_scale": self.vert_scale_spin.value(),
-            "rotate_angle": self.rotate_angle_spin.value(),
-            "spacing": self.spacing_spin.value(),
-        }
     
 class MarginGroup(QWidget):
     def __init__(self, parent = None):
@@ -210,17 +156,17 @@ class MarginGroup(QWidget):
         self.init_UI()
 
     def init_UI(self):
-        margin_left_lab = BodyLabel(self.tr("Left Margin"), self)
+        margin_left_lab = BodyLabel(self.tr("Left Margin (px)"), self)
         self.margin_left_spin = SpinBox(ignore_wheel = True, parent = self)
         self.margin_left_spin.setRange(-1000, 1000)
         self.margin_left_spin.setValue(10)
         self.margin_left_spin.setFixedWidth(150)
-        margin_right_lab = BodyLabel(self.tr("Right Margin"), self)
+        margin_right_lab = BodyLabel(self.tr("Right Margin (px)"), self)
         self.margin_right_spin = SpinBox(ignore_wheel = True, parent = self)
         self.margin_right_spin.setRange(-1000, 1000)
         self.margin_right_spin.setValue(10)
         self.margin_right_spin.setFixedWidth(150)
-        margin_vert_lab = BodyLabel(self.tr("Vertical Margin"), self)
+        margin_vert_lab = BodyLabel(self.tr("Vertical Margin (px)"), self)
         self.margin_vert_spin = SpinBox(ignore_wheel = True, parent = self)
         self.margin_vert_spin.setRange(-1000, 1000)
         self.margin_vert_spin.setValue(20)
@@ -285,53 +231,59 @@ class AdvancedGroup(QWidget):
         self.init_UI()
 
     def init_UI(self):
-        display_area_lab = BodyLabel(self.tr("Display Area"))
-        self.display_area_choice = ComboBox(self)
-        self.display_area_choice.setFixedWidth(150)
+        display_area_lab = BodyLabel(self.tr("Display Area (%)"), parent = self)
+        self.display_area_spin = SpinBox(self)
+        self.display_area_spin.setFixedWidth(150)
+        self.display_area_spin.setRange(10, 100)
 
-        opacity_lab = BodyLabel(self.tr("Opacity"))
+        opacity_lab = BodyLabel(self.tr("Opacity (%)"), parent = self)
         self.opacity_spin = SpinBox(self)
         self.opacity_spin.setFixedWidth(150)
         self.opacity_spin.setRange(10, 100)
 
-        danmaku_speed_lab = BodyLabel(self.tr("Danmaku Speed"))
-        self.danmaku_speed_choice = DictComboBox(self)
-        self.danmaku_speed_choice.setFixedWidth(150)
+        scroll_duration_lab = BodyLabel(self.tr("Scroll Duration (s)"), parent = self)
+        self.scroll_duration_spin = SpinBox(self)
+        self.scroll_duration_spin.setFixedWidth(150)
+        self.scroll_duration_spin.setRange(3, 15)
 
-        danmaku_density_lab = BodyLabel(self.tr("Danmaku Density"))
-        self.danmaku_density_choice = DictComboBox(self)
-        self.danmaku_density_choice.setFixedWidth(150)
+        static_duration_lab = BodyLabel(self.tr("Static Duration (s)"), parent = self)
+        self.static_duration_spin = SpinBox(self)
+        self.static_duration_spin.setFixedWidth(150)
+        self.static_duration_spin.setRange(3, 15)
+
+        minimum_spacing_lab = BodyLabel(self.tr("Minimum Horizontal Spacing (px)"), parent = self)
+        self.minimum_horizontal_spacing_spin = SpinBox(self)
+        self.minimum_horizontal_spacing_spin.setFixedWidth(150)
+        self.minimum_horizontal_spacing_spin.setRange(0, 300)
 
         group_layout = QGridLayout(self)
         group_layout.setContentsMargins(0, 0, 0, 5)
         group_layout.addWidget(display_area_lab, 0, 0)
         group_layout.addWidget(opacity_lab, 0, 1)
-        group_layout.addWidget(self.display_area_choice, 1, 0, alignment = Qt.AlignmentFlag.AlignLeft)
+        group_layout.addWidget(self.display_area_spin, 1, 0, alignment = Qt.AlignmentFlag.AlignLeft)
         group_layout.addWidget(self.opacity_spin, 1, 1, alignment = Qt.AlignmentFlag.AlignLeft)
-        group_layout.addWidget(danmaku_speed_lab, 2, 0)
-        group_layout.addWidget(danmaku_density_lab, 2, 1)
-        group_layout.addWidget(self.danmaku_speed_choice, 3, 0, alignment = Qt.AlignmentFlag.AlignLeft)
-        group_layout.addWidget(self.danmaku_density_choice, 3, 1, alignment = Qt.AlignmentFlag.AlignLeft)
+        group_layout.addWidget(scroll_duration_lab, 2, 0)
+        group_layout.addWidget(static_duration_lab, 2, 1)
+        group_layout.addWidget(self.scroll_duration_spin, 3, 0, alignment = Qt.AlignmentFlag.AlignLeft)
+        group_layout.addWidget(self.static_duration_spin, 3, 1, alignment = Qt.AlignmentFlag.AlignLeft)
+        group_layout.addWidget(minimum_spacing_lab, 4, 0)
+        group_layout.addWidget(self.minimum_horizontal_spacing_spin, 5, 0, alignment = Qt.AlignmentFlag.AlignLeft)
 
     def init_data(self, data: dict):
-        for item in [20, 40, 60, 80, 100]:
-            text = f"{item}%"
-            self.display_area_choice.addItem(text, userData = item)
-
-            if item == data.get("display_area"):
-                self.display_area_choice.setCurrentText(text)
-
+        self.display_area_spin.setValue(data.get("display_area"))
         self.opacity_spin.setValue(data.get("opacity"))
 
-        self.danmaku_speed_choice.init_dict_data(danmaku_speed_map, Translator.DANMAKU_SPEED(), data.get("danmaku_speed"))
-        self.danmaku_density_choice.init_dict_data(danmaku_density_map, Translator.DANMAKU_DENSITY(), data.get("danmaku_density"))
+        self.scroll_duration_spin.setValue(data.get("scroll_duration"))
+        self.static_duration_spin.setValue(data.get("static_duration"))
+        self.minimum_horizontal_spacing_spin.setValue(data.get("minimum_gap"))
 
     def get_data(self):
         return {
-            "display_area": self.display_area_choice.currentData(),
+            "display_area": self.display_area_spin.value(),
             "opacity": self.opacity_spin.value(),
-            "danmaku_speed": self.danmaku_speed_choice.currentData(),
-            "danmaku_density": self.danmaku_density_choice.currentData()
+            "scroll_duration": self.scroll_duration_spin.value(),
+            "static_duration": self.static_duration_spin.value(),
+            "minimum_gap": self.minimum_horizontal_spacing_spin.value()
         }
 
 class ResolutionGroup(QWidget):
@@ -341,14 +293,14 @@ class ResolutionGroup(QWidget):
         self.init_UI()
 
     def init_UI(self):
-        screen_width_lab = BodyLabel(self.tr("Screen Width"), self)
+        screen_width_lab = BodyLabel(self.tr("Screen Width (px)"), self)
 
         self.screen_width_box = SpinBox(ignore_wheel = True, parent = self)
         self.screen_width_box.setRange(1, 10000)
         self.screen_width_box.setValue(1280)
         self.screen_width_box.setFixedWidth(150)
 
-        screen_height_lab = BodyLabel(self.tr("Screen Height"), self)
+        screen_height_lab = BodyLabel(self.tr("Screen Height (px)"), self)
 
         self.screen_height_box = SpinBox(ignore_wheel = True, parent = self)
         self.screen_height_box.setRange(1, 10000)

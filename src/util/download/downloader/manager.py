@@ -41,8 +41,8 @@ class DownloaderManager:
             
             self.downloaders.pop(task_id)
 
-    def wait(self, task_id: str, callback):
-        downloader = self.get(task_id)
+    def wait(self, task_info: TaskInfo, callback):
+        downloader = self.get(task_info)
         
         if downloader:
             downloader.wait(callback)

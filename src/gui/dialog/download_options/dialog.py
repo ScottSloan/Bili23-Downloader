@@ -24,7 +24,7 @@ class DownloadOptionsDialog(TopNavigationDialogBase):
         self.download_settings_page = DownloadSettingsPage(self)
 
         self.addItem("media", self.tr("Media Settings"), FluentIcon.MEDIA, self.media_settings_page)
-        self.addItem("additional", self.tr("Additional Content"), ExtendedFluentIcon.DOCUMENT, self.additional_settings_page)
+        self.addItem("additional", self.tr("Additional Files"), ExtendedFluentIcon.DOCUMENT, self.additional_settings_page)
         self.addItem("download", self.tr("Download Settings"), FluentIcon.DOWNLOAD, self.download_settings_page)
 
         self.pivot.setCurrentItem("media")

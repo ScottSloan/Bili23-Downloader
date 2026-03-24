@@ -90,30 +90,35 @@
 <context>
     <name>AdvancedGroup</name>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="297"/>
-        <source>Display Area</source>
-        <translation>显示区域</translation>
+        <location filename="../../gui/component/setting/group.py" line="234"/>
+        <source>Display Area (%)</source>
+        <translation>显示区域 (%)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="301"/>
-        <source>Opacity</source>
-        <translation>不透明度</translation>
+        <location filename="../../gui/component/setting/group.py" line="239"/>
+        <source>Opacity (%)</source>
+        <translation>不透明度 (%)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="306"/>
-        <source>Danmaku Speed</source>
-        <translation>弹幕速度</translation>
+        <location filename="../../gui/component/setting/group.py" line="244"/>
+        <source>Scroll Duration (s)</source>
+        <translation>弹幕滚动时长 (秒)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="310"/>
-        <source>Danmaku Density</source>
-        <translation>弹幕密度</translation>
+        <location filename="../../gui/component/setting/group.py" line="249"/>
+        <source>Static Duration (s)</source>
+        <translation>顶部/底部弹幕停留时长 (秒)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/group.py" line="254"/>
+        <source>Minimum Horizontal Spacing (px)</source>
+        <translation>最小水平间距 (像素)</translation>
     </message>
 </context>
 <context>
     <name>AlignmentGroup</name>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="266"/>
+        <location filename="../../gui/component/setting/group.py" line="203"/>
         <source>Alignment</source>
         <translation>对齐方式</translation>
     </message>
@@ -122,18 +127,13 @@
     <name>BorderGroup</name>
     <message>
         <location filename="../../gui/component/setting/group.py" line="80"/>
-        <source>Outline</source>
-        <translation>边框</translation>
+        <source>Outline (px)</source>
+        <translation>边框 (像素)</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/group.py" line="85"/>
-        <source>Shadow</source>
-        <translation>阴影</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/group.py" line="90"/>
-        <source>Opaque box</source>
-        <translation>不透明背景</translation>
+        <source>Shadow (px)</source>
+        <translation>阴影 (像素)</translation>
     </message>
 </context>
 <context>
@@ -187,37 +187,37 @@
 <context>
     <name>CDNSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="318"/>
+        <location filename="../../gui/component/setting/card.py" line="308"/>
         <source>CDN Settings</source>
         <translation>CDN 设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="318"/>
+        <location filename="../../gui/component/setting/card.py" line="308"/>
         <source>Adjust CDN settings used for downloading</source>
         <translation>调整用于下载的 CDN 设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="322"/>
+        <location filename="../../gui/component/setting/card.py" line="312"/>
         <source>Customize…</source>
         <translation>自定义…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="327"/>
+        <location filename="../../gui/component/setting/card.py" line="317"/>
         <source>Prefer Service Provider CDN</source>
         <translation>优先使用服务商 CDN</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="327"/>
+        <location filename="../../gui/component/setting/card.py" line="317"/>
         <source>Prefer CDN provided by cloud service providers to improve download stability</source>
         <translation>优先使用服务器商提供的 CDN，提高下载稳定性</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="328"/>
+        <location filename="../../gui/component/setting/card.py" line="318"/>
         <source>Customize Service Provider CDN</source>
         <translation>自定义服务商 CDN</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="328"/>
+        <location filename="../../gui/component/setting/card.py" line="318"/>
         <source>Customize the list and priority of service provider CDNs</source>
         <translation>自定义服务商 CDN 列表和优先级设置</translation>
     </message>
@@ -281,26 +281,26 @@
 <context>
     <name>ColorGroup</name>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="126"/>
-        <location filename="../../gui/component/setting/group.py" line="127"/>
+        <location filename="../../gui/component/setting/group.py" line="117"/>
+        <location filename="../../gui/component/setting/group.py" line="118"/>
         <source>Primary Color</source>
         <translation>主要颜色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="128"/>
-        <location filename="../../gui/component/setting/group.py" line="129"/>
+        <location filename="../../gui/component/setting/group.py" line="119"/>
+        <location filename="../../gui/component/setting/group.py" line="120"/>
         <source>Secondary Color</source>
         <translation>次要颜色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="131"/>
-        <location filename="../../gui/component/setting/group.py" line="132"/>
+        <location filename="../../gui/component/setting/group.py" line="122"/>
+        <location filename="../../gui/component/setting/group.py" line="123"/>
         <source>Outline Color</source>
         <translation>边框颜色</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="133"/>
-        <location filename="../../gui/component/setting/group.py" line="134"/>
+        <location filename="../../gui/component/setting/group.py" line="124"/>
+        <location filename="../../gui/component/setting/group.py" line="125"/>
         <source>Shadow Color</source>
         <translation>阴影颜色</translation>
     </message>
@@ -456,22 +456,22 @@
 <context>
     <name>DownloadFormatCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="360"/>
+        <location filename="../../gui/component/setting/card.py" line="350"/>
         <source>Download Format</source>
         <translation>下载格式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="360"/>
+        <location filename="../../gui/component/setting/card.py" line="350"/>
         <source>Configure output format settings for downloaded files</source>
         <translation>设置下载文件的输出格式选项</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="364"/>
+        <location filename="../../gui/component/setting/card.py" line="354"/>
         <source>Convert M4A to MP3</source>
         <translation>将 M4A 转换为 MP3</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="364"/>
+        <location filename="../../gui/component/setting/card.py" line="354"/>
         <source>Only applies when downloading audio-only streams. Disabled if video is also selected.</source>
         <translation>仅在下载纯音频流时有效</translation>
     </message>
@@ -513,8 +513,8 @@
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/dialog.py" line="27"/>
-        <source>Additional Content</source>
-        <translation>附加内容</translation>
+        <source>Additional Files</source>
+        <translation>附加文件</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/dialog.py" line="28"/>
@@ -552,6 +552,14 @@
         <location filename="../../gui/dialog/download_options/download.py" line="23"/>
         <source>Automatically show this dialog before downloading to customize settings</source>
         <translation>在开始下载前自动显示此对话框，以便自定义设置</translation>
+    </message>
+</context>
+<context>
+    <name>Downloader</name>
+    <message>
+        <location filename="../../util/download/downloader/downloader.py" line="341"/>
+        <source>Audio</source>
+        <translation>音频</translation>
     </message>
 </context>
 <context>
@@ -832,47 +840,47 @@ File name: {filename}</source>
 <context>
     <name>FFmpegSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="346"/>
+        <location filename="../../gui/component/setting/card.py" line="336"/>
         <source>FFmpeg Settings</source>
         <translation>FFmpeg 设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="346"/>
+        <location filename="../../gui/component/setting/card.py" line="336"/>
         <source>Configure FFmpeg used for merging and converting videos</source>
         <translation>配置用于合并和转换视频的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="350"/>
+        <location filename="../../gui/component/setting/card.py" line="340"/>
         <source>Bundled (with app)</source>
         <translation>程序附带</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="350"/>
+        <location filename="../../gui/component/setting/card.py" line="340"/>
         <source>System PATH</source>
         <translation>系统环境变量</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="350"/>
+        <location filename="../../gui/component/setting/card.py" line="340"/>
         <source>Custom path</source>
         <translation>自定义路径</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="351"/>
+        <location filename="../../gui/component/setting/card.py" line="341"/>
         <source>Browse…</source>
         <translation>浏览…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="353"/>
+        <location filename="../../gui/component/setting/card.py" line="343"/>
         <source>Select the FFmpeg executable to use</source>
         <translation>选择要使用的 FFmpeg 可执行文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="353"/>
+        <location filename="../../gui/component/setting/card.py" line="343"/>
         <source>FFmpeg source</source>
         <translation>FFmpeg 来源</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="354"/>
+        <location filename="../../gui/component/setting/card.py" line="344"/>
         <source>Custom FFmpeg path</source>
         <translation>自定义 FFmpeg 路径</translation>
     </message>
@@ -1032,19 +1040,19 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MarginGroup</name>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="222"/>
-        <source>Left Margin</source>
-        <translation>左边距</translation>
+        <location filename="../../gui/component/setting/group.py" line="159"/>
+        <source>Left Margin (px)</source>
+        <translation>左边距 (像素)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="227"/>
-        <source>Right Margin</source>
-        <translation>右边距</translation>
+        <location filename="../../gui/component/setting/group.py" line="164"/>
+        <source>Right Margin (px)</source>
+        <translation>右边距 (像素)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="232"/>
-        <source>Vertical Margin</source>
-        <translation>垂直边距</translation>
+        <location filename="../../gui/component/setting/group.py" line="169"/>
+        <source>Vertical Margin (px)</source>
+        <translation>垂直边距 (像素)</translation>
     </message>
 </context>
 <context>
@@ -1252,29 +1260,6 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
     </message>
 </context>
 <context>
-    <name>MiscGroup</name>
-    <message>
-        <location filename="../../gui/component/setting/group.py" line="168"/>
-        <source>Scale X%</source>
-        <translation>水平缩放%</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/group.py" line="173"/>
-        <source>Scale Y%</source>
-        <translation>垂直缩放%</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/group.py" line="179"/>
-        <source>Rotation</source>
-        <translation>旋转角度</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/group.py" line="184"/>
-        <source>Spacing</source>
-        <translation>字符间距</translation>
-    </message>
-</context>
-<context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
         <location filename="../../util/common/translator.py" line="235"/>
@@ -1402,44 +1387,40 @@ For advanced usage, see the help documentation.</source>
         <translation>自定义…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="314"/>
+        <location filename="../../gui/component/setting/card.py" line="304"/>
         <source>Set initial number for per-batch. Current: {current}</source>
         <translation>设置每批编号的起始数字，当前值：{current}</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="279"/>
+        <location filename="../../gui/component/setting/card.py" line="275"/>
         <source>Numbering type</source>
         <translation>编号方式</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="280"/>
+        <location filename="../../gui/component/setting/card.py" line="276"/>
         <source>Select the source for {number} variable</source>
         <translation>选择 {number} 变量的来源</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="285"/>
+        <location filename="../../gui/component/setting/card.py" line="281"/>
         <source>Starting number</source>
         <translation>起始编号</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="291"/>
         <source>Zero-padding</source>
-        <translation>数字补零</translation>
+        <translation type="vanished">数字补零</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="292"/>
         <source>Pad with leading zeros</source>
-        <translation>在数字前补零（如 001）</translation>
+        <translation type="vanished">在数字前补零（如 001）</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="297"/>
         <source>Padding width</source>
-        <translation>补零位数</translation>
+        <translation type="vanished">补零位数</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="298"/>
         <source>Total digits (e.g., 001)</source>
-        <translation>总位数，例如 001 为 3 位</translation>
+        <translation type="vanished">总位数，例如 001 为 3 位</translation>
     </message>
 </context>
 <context>
@@ -1465,12 +1446,12 @@ For advanced usage, see the help documentation.</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="186"/>
+        <location filename="../../gui/interface/parse.py" line="188"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="192"/>
+        <location filename="../../gui/interface/parse.py" line="194"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -1478,22 +1459,22 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseListSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="368"/>
+        <location filename="../../gui/component/setting/card.py" line="358"/>
         <source>Parse List</source>
         <translation>解析列表</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="368"/>
+        <location filename="../../gui/component/setting/card.py" line="358"/>
         <source>Adjust settings for the parse list</source>
         <translation>调整解析列表的相关设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="372"/>
+        <location filename="../../gui/component/setting/card.py" line="362"/>
         <source>Auto-select All</source>
         <translation>自动勾选全部项目</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="372"/>
+        <location filename="../../gui/component/setting/card.py" line="362"/>
         <source>Automatically select all items after parsing</source>
         <translation>在解析完成后自动勾选所有项目</translation>
     </message>
@@ -1683,27 +1664,27 @@ ISP：{isp}</translation>
 <context>
     <name>ProxySettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="332"/>
+        <location filename="../../gui/component/setting/card.py" line="322"/>
         <source>Proxy Settings</source>
         <translation>代理设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="332"/>
+        <location filename="../../gui/component/setting/card.py" line="322"/>
         <source>Adjust proxy server settings used for parsing and downloading</source>
         <translation>调整用于解析和下载的代理服务器设置</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="336"/>
+        <location filename="../../gui/component/setting/card.py" line="326"/>
         <source>Configure…</source>
         <translation>设置…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="341"/>
+        <location filename="../../gui/component/setting/card.py" line="331"/>
         <source>Use Proxy Server</source>
         <translation>使用代理服务器</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="342"/>
+        <location filename="../../gui/component/setting/card.py" line="332"/>
         <source>Configure Proxy Server</source>
         <translation>设置代理服务器</translation>
     </message>
@@ -1711,14 +1692,14 @@ ISP：{isp}</translation>
 <context>
     <name>ResolutionGroup</name>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="353"/>
-        <source>Screen Width</source>
-        <translation>屏幕宽度</translation>
+        <location filename="../../gui/component/setting/group.py" line="296"/>
+        <source>Screen Width (px)</source>
+        <translation>屏幕宽度 (像素)</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/group.py" line="360"/>
-        <source>Screen Height</source>
-        <translation>屏幕高度</translation>
+        <location filename="../../gui/component/setting/group.py" line="303"/>
+        <source>Screen Height (px)</source>
+        <translation>屏幕高度 (像素)</translation>
     </message>
 </context>
 <context>
@@ -2178,37 +2159,29 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopStackedWidget</name>
     <message>
-        <location filename="../../gui/component/download/top_widget.py" line="19"/>
+        <location filename="../../gui/component/download/top_widget.py" line="21"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/top_widget.py" line="20"/>
+        <location filename="../../gui/component/download/top_widget.py" line="22"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/top_widget.py" line="21"/>
+        <location filename="../../gui/component/download/top_widget.py" line="23"/>
         <source>Delete All</source>
         <translation>全部删除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/top_widget.py" line="33"/>
+        <location filename="../../gui/component/download/top_widget.py" line="35"/>
         <source>Open Directory</source>
         <translation>打开目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/top_widget.py" line="34"/>
+        <location filename="../../gui/component/download/top_widget.py" line="36"/>
         <source>Clear All</source>
         <translation>清除记录</translation>
-    </message>
-</context>
-<context>
-    <name>UIData</name>
-    <message>
-        <location filename="../../gui/component/download/item_delegate.py" line="413"/>
-        <source>Audio</source>
-        <translation>音频</translation>
     </message>
 </context>
 <context>

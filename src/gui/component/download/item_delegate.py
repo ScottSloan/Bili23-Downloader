@@ -4,11 +4,10 @@ from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent, QFontMe
 
 from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon
 
-from util.common.enum import DownloadStatus, DownloadType
-from util.common.data import reversed_video_quality_map
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.download.task.info import TaskInfo
+from util.common.enum import DownloadStatus
 from util.common.io import Directory
 from util.format import Units
 from util.format import Time
@@ -400,17 +399,7 @@ class UIData(QObject):
         if task_info.Download.status == DownloadStatus.COMPLETED:
             return Time.format_timestamp(task_info.Basic.completed_time)
         else:
-            has_video = task_info.Download.type & DownloadType.VIDEO != 0
-            has_audio = task_info.Download.type & DownloadType.AUDIO != 0
-
-            if has_video and has_audio:
-                return Translator.VIDEO_QUALITY(reversed_video_quality_map.get(task_info.Download.video_quality_id, ""))
-
-            elif has_video and not has_audio:
-                return "MP4"
-
-            elif not has_video and has_audio:
-                return self.tr("Audio")
+            return task_info.Download.info_label
 
     def getStatusText(self, task_info: TaskInfo):
         match task_info.Download.status:
