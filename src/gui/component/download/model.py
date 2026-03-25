@@ -240,3 +240,31 @@ class DownloadListModel(QAbstractListModel):
             return viewport.rect().intersects(item_rect)
 
         return False
+
+    def redownload(self, task_info: TaskInfo):
+        # 重新下载任务
+
+        downloader = downloader_manager.get(task_info, create_if_not_exists = False)
+
+  
+        if task_info.Download.status == DownloadStatus.COMPLETED:
+            # 已完成的任务需要从完成的列表中移动到正在下载的列表
+            task_manager.reset(task_info)
+
+            signal_bus.download.remove_from_completed_list.emit(task_info)
+
+            task_manager.recreate(task_info)
+
+            return
+
+        elif task_info.Download.status == DownloadStatus.DOWNLOADING:
+            downloader.pause()
+
+        elif task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
+            # 合并和转换中的任务不允许重新下载
+            return
+
+        task_manager.reset(task_info)
+        self.onUpdateData(task_info)
+
+        self.manageConcurrentDownloads()

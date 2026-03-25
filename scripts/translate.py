@@ -34,9 +34,11 @@ lupdate_cmd = "pyside6-lupdate"
 # 需要翻译的源文件列表（用正斜杠）
 sources = [
     "src/gui/component/download/item_delegate.py",
+    "src/gui/component/download/list_view.py",
     "src/gui/component/download/top_widget.py",
     "src/gui/component/download_options/card.py",
     "src/gui/component/parse/model.py",
+    "src/gui/component/parse/tree_view.py",
     "src/gui/component/setting/card.py",
     "src/gui/component/setting/group.py",
     "src/gui/component/setting/widget.py",

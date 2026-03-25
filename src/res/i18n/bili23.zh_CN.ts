@@ -500,6 +500,29 @@
     </message>
 </context>
 <context>
+    <name>DownloadListView</name>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="45"/>
+        <source>Resume</source>
+        <translation>继续</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="50"/>
+        <source>Pause</source>
+        <translation>暂停</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="54"/>
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="57"/>
+        <source>Redownload</source>
+        <translation>重新下载</translation>
+    </message>
+</context>
+<context>
     <name>DownloadOptionsDialog</name>
     <message>
         <location filename="../../gui/dialog/download_options/dialog.py" line="14"/>
@@ -544,14 +567,18 @@
 <context>
     <name>DownloadSettingsPage</name>
     <message>
-        <location filename="../../gui/dialog/download_options/download.py" line="23"/>
         <source>Show this dialog</source>
-        <translation>显示此对话框</translation>
+        <translation type="vanished">显示此对话框</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/download_options/download.py" line="23"/>
         <source>Automatically show this dialog before downloading to customize settings</source>
         <translation>在开始下载前自动显示此对话框，以便自定义设置</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/download.py" line="23"/>
+        <source>Automatically show this dialog</source>
+        <translation>自动显示此对话框</translation>
     </message>
 </context>
 <context>
@@ -1464,37 +1491,37 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="62"/>
+        <location filename="../../gui/interface/parse.py" line="64"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="66"/>
+        <location filename="../../gui/interface/parse.py" line="68"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="82"/>
+        <location filename="../../gui/interface/parse.py" line="84"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="158"/>
+        <location filename="../../gui/interface/parse.py" line="160"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="172"/>
+        <location filename="../../gui/interface/parse.py" line="174"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="188"/>
+        <location filename="../../gui/interface/parse.py" line="190"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="194"/>
+        <location filename="../../gui/interface/parse.py" line="196"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -1543,6 +1570,44 @@ For advanced usage, see the help documentation.</source>
         <location filename="../../gui/component/parse/model.py" line="38"/>
         <source>Duration</source>
         <translation>时长</translation>
+    </message>
+</context>
+<context>
+    <name>ParseTreeView</name>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="84"/>
+        <source>Deselect All</source>
+        <translation>取消全选</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="84"/>
+        <source>Select All</source>
+        <translation>全选</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="93"/>
+        <source>Select Item</source>
+        <translation>选中该项</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="93"/>
+        <source>Deselect Item</source>
+        <translation>取消选中该项</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="100"/>
+        <source>Open in Browser</source>
+        <translation>在浏览器中打开</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="104"/>
+        <source>View Metadata</source>
+        <translation>查看元数据</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse/tree_view.py" line="129"/>
+        <source>Metadata</source>
+        <translation>元数据</translation>
     </message>
 </context>
 <context>

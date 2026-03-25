@@ -20,7 +20,7 @@ class DownloadSettingsPage(ScrollArea):
     def init_UI(self):
         self.download_path_card = DownloadPathSettingCard(self.options_dialog, save = False, parent = self)
         self.naming_convention_card = NamingConventionCard(self)
-        self.show_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show this dialog"), self.tr("Automatically show this dialog before downloading to customize settings"), config.show_download_options_dialog, self)
+        self.show_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Automatically show this dialog"), self.tr("Automatically show this dialog before downloading to customize settings"), config.show_download_options_dialog, self)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.download_path_card)

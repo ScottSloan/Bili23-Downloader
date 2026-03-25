@@ -208,7 +208,7 @@ class Merger(QObject):
         signal_bus.download.update_downloading_item.emit(self.task_info)
         signal_bus.toast.show_long_message.emit(short_message, description)
 
-        logger.error(short_message + ": \n" + description)
+        logger.error(str(short_message) + ": \n" + description)
 
     def get_cwd(self):
         return Path(self.task_info.File.download_path, self.task_info.File.folder)

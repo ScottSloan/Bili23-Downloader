@@ -9,6 +9,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     LIST = "list"
     CLEAR = "clear"
     RETRY = "retry"
+    SELECT = "select"
     RENAME = "rename"
     SERVER = "server"
     COMMENT = "comment"
@@ -17,6 +18,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     DOCUMENT = "document"
     SUBTITLES = "subtitles"
     CLIPBOARD = "clipboard"
+    SELECT_ALL = "select_all"
     FAST_DOWNLOAD = "fast_download"
 
     def path(self, theme = Theme.AUTO):

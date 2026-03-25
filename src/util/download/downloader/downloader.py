@@ -154,6 +154,11 @@ class Downloader(QObject):
     @Slot(str)
     def on_parse_finished(self, download_info_json: str):
         # 只有解析下载链接后才真正开始下载
+        
+        if self._stop_event.is_set():
+            # 如果在解析过程中任务被取消了，就不继续执行了
+            return
+        
         download_info = json.loads(download_info_json)
 
         self.download_list = download_info["download_list"]

@@ -1,4 +1,6 @@
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtCore import Qt
 
 from qfluentwidgets import LineEdit, BodyLabel, ToolButton,FluentIcon
 
@@ -74,7 +76,7 @@ class ParseInterface(QFrame):
         self.download_option_btn = ToolButton(ExtendedFluentIcon.OPTIONS, self)
         self.download_option_btn.setFixedSize(28, 28)
 
-        self.parse_list = ParseTreeView(self)
+        self.parse_list = ParseTreeView(self.main_window, parent = self)
 
         self.pager = Pager(self)
         self.pager.hide()
@@ -231,3 +233,11 @@ class ParseInterface(QFrame):
                 config.current_starting_number = config.global_starting_number
             else:
                 config.current_starting_number = config.get(config.starting_number)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:
+            self.parse_list.check_all_items()
+
+            event.accept()
+        else:
+            return super().keyPressEvent(event)

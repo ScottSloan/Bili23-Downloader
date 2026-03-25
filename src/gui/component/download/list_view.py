@@ -1,11 +1,14 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
+from PySide6.QtCore import QModelIndex, Qt
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme
 
 from gui.component.download.item_delegate import DownloadItemDelegate
 from gui.component.download.model import DownloadListModel
 
+from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.manager import downloader_manager
+from util.common.icon import ExtendedFluentIcon
 from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
 
@@ -36,8 +39,27 @@ class DownloadListView(ListView):
     def showContextMenu(self, index, pos):
         menu = RoundMenu(parent = self)
 
-        menu.addAction(Action(FluentIcon.PLAY, "继续", parent = self))
-        menu.addAction(Action(FluentIcon.DELETE, "删除", parent = self))
+        task_info: TaskInfo = index.data(Qt.ItemDataRole.UserRole)
+
+        if task_info.Download.status in [DownloadStatus.QUEUED, DownloadStatus.PAUSED]:
+            resume_action = Action(FluentIcon.PLAY, self.tr("Resume"), parent = self)
+            resume_action.triggered.connect(lambda: self.onTogglePauseResumeTask(index, task_info))
+            menu.addAction(resume_action)
+
+        if task_info.Download.status in [DownloadStatus.DOWNLOADING]:
+            pause_action = Action(FluentIcon.PAUSE, self.tr("Pause"), parent = self)
+            pause_action.triggered.connect(lambda: self.onTogglePauseResumeTask(index, task_info))
+            menu.addAction(pause_action)
+
+        delete_action = Action(FluentIcon.DELETE, self.tr("Delete"), parent = self)
+        delete_action.triggered.connect(lambda: self.onCancelTask(index, task_info))
+
+        restart_action = Action(ExtendedFluentIcon.RETRY, self.tr("Redownload"), parent = self)
+        restart_action.triggered.connect(lambda: self.onRedownloadTask(index, task_info))
+
+        menu.addAction(delete_action)
+        menu.addSeparator()
+        menu.addAction(restart_action)
 
         menu.exec(pos)
 
@@ -108,3 +130,24 @@ class DownloadListView(ListView):
 
     def _endAddQueriedTasks(self):
         self._in_adding_queried_tasks = False
+
+    def onTogglePauseResumeTask(self, index: QModelIndex, task_info: TaskInfo):
+        # 与 model 交互以暂停下载任务
+        index.model().togglePauseResume(task_info)
+
+    def onCancelTask(self, index: QModelIndex, task_info: TaskInfo):
+        # 与 model 交互以取消下载任务
+        index.model().cancelDownload(task_info)
+
+    def onRedownloadTask(self, index: QModelIndex, task_info: TaskInfo):
+        # 与 model 交互以重新下载任务
+        if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
+            # 合并和转换过程中的任务不允许直接重新下载
+            signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, "", self.tr("处于 FFmpeg 处理中的任务无法重新下载"))
+
+            return
+        
+        signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("选定的任务开始重新下载"))
+
+        index.model().redownload(task_info)
+    

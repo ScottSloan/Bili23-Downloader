@@ -142,7 +142,7 @@ class DefaultValue:
             "id": "d582ec37-d8c2-44cf-bbd7-b709ea5c2042",
             "name": "DEFAULT_FOR_CHEESE",
             "type": 30,
-            "rule": "{series_title}/{section_title}/{episode_title}",
+            "rule": "{series_title}/{episode_title}",
             "default": True
         }
     ]

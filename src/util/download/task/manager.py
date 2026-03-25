@@ -1,6 +1,6 @@
-from util.common.enum import DownloadStatus, DownloadType, NumberingType
 from util.download.task.reparse_worker import ReparseWorker
 from util.parse.episode.tree import EpisodeData, Attribute
+from util.common.enum import DownloadStatus, DownloadType
 from util.download.cover.manager import cover_manager
 from util.common.timestamp import get_timestamp
 from util.download.task.db import TaskDatabase
@@ -183,6 +183,33 @@ class TaskManager:
 
         self.delete(task_info)
         
+        self._removeTemporaryFiles(task_info)
+
+    def mark_as_completed(self, task_info: TaskInfo):
+        self.delete(task_info)
+
+        self.db_manager.add_tasks([task_info], completed = True)
+
+    def reset(self, task_info: TaskInfo):
+        # 重置下载状态为初始状态，适用于完全重新下载的场景
+        task_info.Download.status = DownloadStatus.QUEUED
+
+        task_info.Download.queue = []
+        task_info.Download.files = {}
+        task_info.Download.progress = 0
+        task_info.Download.total_size = 0
+        task_info.Download.downloaded_size = 0
+        task_info.Download.speed = 0
+
+        self._removeTemporaryFiles(task_info)
+
+    def recreate(self, task_info: TaskInfo):
+        self.db_manager.delete_task(task_info.Basic.task_id, completed = True)
+        self.db_manager.add_tasks([task_info])
+
+        signal_bus.download.add_to_downloading_list.emit([task_info])
+
+    def _removeTemporaryFiles(self, task_info: TaskInfo):
         # 删除下载的临时文件
         (
             Remover()
@@ -190,10 +217,5 @@ class TaskManager:
             .add_files(task_info.File.relative_files)
             .execute()
         )
-
-    def mark_as_completed(self, task_info: TaskInfo):
-        self.delete(task_info)
-
-        self.db_manager.add_tasks([task_info], completed = True)
 
 task_manager = TaskManager()

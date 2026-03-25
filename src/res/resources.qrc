@@ -7,6 +7,7 @@
         <file>icon/light/list.svg</file>
         <file>icon/light/clear.svg</file>
         <file>icon/light/retry.svg</file>
+        <file>icon/light/select.svg</file>
         <file>icon/light/rename.svg</file>
         <file>icon/light/server.svg</file>
         <file>icon/light/comment.svg</file>
@@ -15,6 +16,7 @@
         <file>icon/light/document.svg</file>
         <file>icon/light/subtitles.svg</file>
         <file>icon/light/clipboard.svg</file>
+        <file>icon/light/select_all.svg</file>
         <file>icon/light/fast_download.svg</file>
 
         <file>icon/dark/pin.svg</file>
@@ -22,6 +24,7 @@
         <file>icon/dark/list.svg</file>
         <file>icon/dark/clear.svg</file>
         <file>icon/dark/retry.svg</file>
+        <file>icon/dark/select.svg</file>
         <file>icon/dark/rename.svg</file>
         <file>icon/dark/server.svg</file>
         <file>icon/dark/comment.svg</file>
@@ -30,6 +33,7 @@
         <file>icon/dark/document.svg</file>
         <file>icon/dark/subtitles.svg</file>
         <file>icon/dark/clipboard.svg</file>
+        <file>icon/dark/select_all.svg</file>
         <file>icon/dark/fast_download.svg</file>
         
         <file>qss/light/button.qss</file>
