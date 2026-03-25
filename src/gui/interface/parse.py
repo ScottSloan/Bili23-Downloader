@@ -2,11 +2,13 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtCore import Qt
 
-from qfluentwidgets import LineEdit, BodyLabel, ToolButton,FluentIcon
+from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
-from gui.component.widget import IndeterminateProgressPushButton, Pager
+from gui.component.widget import TransparentToolButton, SegmentedWidget
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
+from gui.component.widget import IndeterminateProgressPushButton
 from gui.component.parse.tree_view import ParseTreeView
+from gui.dialog.misc.search import SearchDialog
 
 from util.common.enum import ToastNotificationCategory, NumberingType
 from util.parse.preview import Previewer, PreviewerInfo
@@ -70,16 +72,18 @@ class ParseInterface(QFrame):
 
         self.item_count_label = BodyLabel("", self)
 
-        self.search_btn = ToolButton(FluentIcon.SEARCH, self)
-        self.search_btn.setFixedSize(28, 28)
-
-        self.download_option_btn = ToolButton(ExtendedFluentIcon.OPTIONS, self)
+        self.download_option_btn = TransparentToolButton(ExtendedFluentIcon.OPTIONS, self)
+        self.download_option_btn.setToolTip(self.tr("Download Options"))
         self.download_option_btn.setFixedSize(28, 28)
+
+        self.show_more_btn = TransparentToolButton(FluentIcon.MORE, self)
+        self.show_more_btn.setToolTip(self.tr("More"))
+        self.show_more_btn.setFixedSize(28, 28)
 
         self.parse_list = ParseTreeView(self.main_window, parent = self)
 
-        self.pager = Pager(self)
-        self.pager.hide()
+        self.segmented_widget = SegmentedWidget(self)
+        self.segmented_widget.hide()
 
         self.download_btn = IndeterminateProgressPushButton(self.tr("Download Selected Items"), self)
         self.download_btn.setMinimumWidth(120)
@@ -92,11 +96,11 @@ class ParseInterface(QFrame):
         toolbar_layout = QHBoxLayout()
         toolbar_layout.addWidget(self.item_count_label)
         toolbar_layout.addStretch()
-        toolbar_layout.addWidget(self.search_btn)
         toolbar_layout.addWidget(self.download_option_btn)
+        toolbar_layout.addWidget(self.show_more_btn)
 
         bottom_layout = QHBoxLayout()
-        bottom_layout.addWidget(self.pager)
+        bottom_layout.addWidget(self.segmented_widget)
         bottom_layout.addStretch()
         bottom_layout.addWidget(self.download_btn)
 
@@ -112,16 +116,19 @@ class ParseInterface(QFrame):
 
     def connect_signals(self):
         self.parse_btn.clicked.connect(lambda _: self.on_parse())
-        self.pager.pageChanged.connect(self.on_parse)
+        self.segmented_widget.pager_widget.pageChanged.connect(self.on_parse)
         self.url_box.returnPressed.connect(self.on_parse)
 
-        self.search_btn.clicked.connect(self.on_search)
         self.download_option_btn.clicked.connect(self.on_download_options)
+        self.show_more_btn.clicked.connect(self.on_show_more)
 
         self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
         self.download_btn.clicked.connect(self.on_download)
 
         signal_bus.parse.update_parse_list.connect(self.parse_list.update_tree)
+
+        self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
+        self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
 
     def init_utils(self):
         self.previewer = Previewer()
@@ -130,6 +137,7 @@ class ParseInterface(QFrame):
         self.clipboard.changed.connect(self.on_copy_url)
 
     def on_parse(self, page: int = 1):
+        self.reset_search()
         self.parse_btn.setIndeterminateState(True)
 
         worker = ParseWorker(self.url_box.text(), page)
@@ -179,8 +187,30 @@ class ParseInterface(QFrame):
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
 
+    def on_show_more(self):
+        menu = RoundMenu(parent = self)
+
+        # TODO: 筛选功能
+        search_action = Action(icon = FluentIcon.SEARCH, text = self.tr("Search"), parent = self)
+        search_action.triggered.connect(self.on_search)
+        # filter_action = Action(icon = FluentIcon.FILTER, text = self.tr("筛选"), parent = self)
+        batch_select_action = Action(icon = ExtendedFluentIcon.TODO, text = self.tr("Select multiple"), parent = self)
+
+        menu.addAction(search_action)
+        # menu.addAction(filter_action)
+        menu.addAction(batch_select_action)
+
+        pos = self.show_more_btn.mapToGlobal(self.show_more_btn.rect().bottomLeft())
+
+        menu.exec(pos)
+
     def on_search(self):
-        pass
+        dialog = SearchDialog(self.main_window)
+        
+        if dialog.exec():
+            matches = self.parse_list.search_keywords(dialog.keywords)
+
+            self.segmented_widget.show_search(matches)
 
     def on_item_check_state_changed(self, index):
         checked_count = self.parse_list.get_checked_items_count()
@@ -215,10 +245,9 @@ class ParseInterface(QFrame):
     def check_pager_visibility(self, extra_data: dict):
         if extra_data:
             if extra_data.get("pagination"):
-                self.pager.show()
-                self.pager.update_data(extra_data["pagination_data"])
+                self.segmented_widget.show_pager(extra_data["pagination_data"])
         else:
-            self.pager.hide()
+            self.segmented_widget.hide_pager()
 
     def check_need_check_all(self):
         # 如果解析结果只有一个视频，或者配置了自动全选，则直接勾选所有项目
@@ -241,3 +270,14 @@ class ParseInterface(QFrame):
             event.accept()
         else:
             return super().keyPressEvent(event)
+        
+    def reset_search(self):
+        self.parse_list.search_keywords(None)
+
+        self.segmented_widget.hide_search()
+
+    def scroll_to_item(self, tree_item):
+        self.parse_list.scroll_to_item(tree_item)
+
+    def check_matches(self, items):
+        self.parse_list.check_items(items)

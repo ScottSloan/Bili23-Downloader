@@ -6,6 +6,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     # 在原有 FluentIcon 的基础上添加新的图标
     PIN = "pin"
     EXIT = "exit"
+    TODO = "todo"
     LIST = "list"
     CLEAR = "clear"
     RETRY = "retry"
@@ -19,6 +20,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     SUBTITLES = "subtitles"
     CLIPBOARD = "clipboard"
     SELECT_ALL = "select_all"
+    CHOOSE_PAGE = "choose_page"
     FAST_DOWNLOAD = "fast_download"
 
     def path(self, theme = Theme.AUTO):

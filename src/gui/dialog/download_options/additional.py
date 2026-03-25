@@ -15,7 +15,7 @@ class AdditionalSettingsPage(ScrollArea):
     def init_UI(self):
         self.danmaku_card = DanmakuSettingCard(full_mode = False, parent = self)
         self.subtitle_card = SubtitleSettingCard(full_mode = False, parent = self)
-        self.cover_card = CoverSettingCard(parent = self)
+        self.cover_card = CoverSettingCard(full_mode = False, parent = self)
         self.metadata_card = MetadataSettingCard(parent = self)
 
         main_layout = QVBoxLayout()

@@ -1,4 +1,7 @@
 from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal
+from PySide6.QtGui import QBrush
+
+from qfluentwidgets import themeColor
 
 from gui.component.parse.header import StrFormatter, DurationFormatter
 
@@ -14,6 +17,7 @@ class ParseModel(QAbstractItemModel):
             root_node = TreeItem({})
 
         self.root_node = root_node
+        self.search_keyword = ""
 
         self._setup_column_data()
 
@@ -78,6 +82,10 @@ class ParseModel(QAbstractItemModel):
             if role == Qt.ItemDataRole.DisplayRole:
                 return column_value
             
+        if role == Qt.ItemDataRole.ForegroundRole and self.search_keyword:
+            if index.column() == 1 and self.search_keyword.lower() in item.title.lower():
+                return QBrush(themeColor())
+
         return None
 
     def headerData(self, section: int, orientation: Qt.Orientation, role = Qt.ItemDataRole.DisplayRole):
@@ -173,3 +181,9 @@ class ParseModel(QAbstractItemModel):
         formatter = self._column_data[column]["formatter"]
     
         return str(formatter(getattr(item, attr_key, "")))
+
+    def get_index_for_item(self, item: TreeItem, column: int = 0) -> QModelIndex:
+        if not item or item == self.root_node:
+            return QModelIndex()
+        
+        return self.createIndex(item.row(), column, item)

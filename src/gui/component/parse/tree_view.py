@@ -7,6 +7,7 @@ from gui.component.parse.model import ParseModel
 from util.common.icon import ExtendedFluentIcon
 from util.parse.episode.tree import TreeItem
 
+from typing import List
 import webbrowser
 
 class ParseTreeView(TreeView):
@@ -64,8 +65,7 @@ class ParseTreeView(TreeView):
         self._model.root_node.set_checked_state(Qt.CheckState.Unchecked if uncheck else Qt.CheckState.Checked)
 
         # 更新视图
-        self._model.check_state_changed.emit(QModelIndex())
-        self.update()
+        self.update_check_state()
 
     def on_context_menu(self, pos):
         global_pos = self.viewport().mapToGlobal(pos)
@@ -115,7 +115,7 @@ class ParseTreeView(TreeView):
     def on_toggle_check_state(self, item: TreeItem):
         item.set_checked_state(Qt.CheckState.Checked if item.checked == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
 
-        self._model.check_state_changed.emit(QModelIndex())
+        self.update_check_state()
 
     def on_open_in_browser(self, item: TreeItem):
         if item.url:
@@ -128,6 +128,47 @@ class ParseTreeView(TreeView):
 
         dialog = MessageBox(title = self.tr("Metadata"), content = info_str, parent = self.main_window)
         dialog.exec()
+
+    def search_keywords(self, keywords: str = None):
+        if not keywords:
+            self._model.search_keyword = ""
+            return
+        
+        self._model.search_keyword = keywords
+        
+        # 通知视图模型进行更新以便高亮显示
+        self._model.layoutAboutToBeChanged.emit()
+        self._model.layoutChanged.emit()
+
+        self.expandAll()
+            
+        # 在 TreeItem 中递归处理数据层搜索
+        matched_items = self._model.root_node.search_items(keywords)
+
+        # 滚动并定位到第一个匹配的节点
+        if matched_items:
+            self.scroll_to_item(matched_items[0])
+
+        return matched_items
+
+    def scroll_to_item(self, item: TreeItem):
+        index = self._model.get_index_for_item(item)
+
+        if index.isValid():
+            self.scrollTo(index)
+
+            # 选中该项
+            self.setCurrentIndex(index)
+
+    def check_items(self, items: List[TreeItem]):
+        for item in items:
+            item.set_checked_state(Qt.CheckState.Checked)
+
+        self.update_check_state()
+
+    def update_check_state(self):
+        self._model.check_state_changed.emit(QModelIndex())
+        self.update()
 
     def __set_QSS(self):
         light_style = """

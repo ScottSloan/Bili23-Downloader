@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import PrimaryPushButton, IndeterminateProgressRing, ToolTipFilter, TransparentTogglePushButton
-from qfluentwidgets import ToolButton as _ToolButton
+from qfluentwidgets import ToolButton as _ToolButton, TransparentToolButton as _TransparentToolButton
 
 class IndeterminateProgressPushButton(PrimaryPushButton):
     """
@@ -54,6 +54,17 @@ class IndeterminateProgressPushButton(PrimaryPushButton):
 class ToolButton(_ToolButton):
     """
     增加了 Tooltip 显示的 ToolButton。
+    """
+    def setToolTip(self, arg__1):
+        super().setToolTip(arg__1)
+
+        self.setToolTipDuration(3000)
+
+        self.installEventFilter(ToolTipFilter(self))
+
+class TransparentToolButton(_TransparentToolButton):
+    """
+    增加了 Tooltip 显示的 TransparentToolButton。
     """
     def setToolTip(self, arg__1):
         super().setToolTip(arg__1)

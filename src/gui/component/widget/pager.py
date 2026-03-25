@@ -39,6 +39,7 @@ class Pager(QWidget):
         self.main_layout.addWidget(self.prev_btn)
         self.main_layout.addLayout(self.num_layout)
         self.main_layout.addWidget(self.next_btn)
+        self.main_layout.addStretch()
 
         self.prev_btn.clicked.connect(lambda: self.on_change_page(self.current_page - 1))
         self.next_btn.clicked.connect(lambda: self.on_change_page(self.current_page + 1))
@@ -112,6 +113,6 @@ class Pager(QWidget):
         self.pageChanged.emit(page)
 
     def update_data(self, data: dict):
-        self.total_pages = data["total_pages"]
+        self.total_pages = data.get("total_pages", 1)
 
         self.update_buttons()

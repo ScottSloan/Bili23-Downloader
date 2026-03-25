@@ -191,3 +191,16 @@ class TreeItem(TreeItemBase):
 
         return data
     
+    def search_items(self, keyword: str):
+        """
+        递归搜索匹配关键字的节点
+        """
+        matches = []
+        if keyword.lower() in self.title.lower():
+            matches.append(self)
+
+        for child in self.children:
+            matches.extend(child.search_items(keyword))
+
+        return matches
+    

@@ -221,6 +221,7 @@ class Translator:
             "MERGING": translate("TIP_MESSAGES", "Merging..."),
             "COMPLETED": translate("TIP_MESSAGES", "Completed"),
             "CONVERTING": translate("TIP_MESSAGES", "Converting..."),
+            "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
         }
 
     @staticmethod

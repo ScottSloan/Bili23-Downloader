@@ -1,4 +1,5 @@
 from util.network.request import NetworkRequestWorker, RequestType
+from util.common.enum import ToastNotificationCategory
 from util.common.signal_bus import signal_bus
 from util.common.translator import Translator
 from util.common.config import config
@@ -24,6 +25,10 @@ class Updater:
                 return
             
             signal_bus.update.show_dialog.emit(info)
+
+        else:
+            if self.manual:
+                signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", Translator.TIP_MESSAGES("ALREADY_LATEST_VERSION"))
 
     def request_update(self, manual: bool):
         def on_error(error_message: str):
