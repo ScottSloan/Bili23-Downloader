@@ -33,15 +33,33 @@ class FFmpegCommand:
         return command
     
     @classmethod
-    def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str):
-        return (
-            cls()
-            .add_input(video_path)
-            .add_input(audio_path)
-            .add_param("-acodec", "copy")
-            .add_param("-vcodec", "copy")
-            .add_output(output_path)
-        )
+    def merge_video_audio(cls, video_path: str, audio_path: str, output_path: str, cover_path: str = None):
+        if cover_path:
+            # 如果存在封面，就在合并视频和音频的命令里加上相关参数
+            return (
+                cls()
+                .add_input(video_path)
+                .add_input(audio_path)
+                .add_input(cover_path)
+                .add_param("-map", "0:v:0")
+                .add_param("-map", "1:a:0")
+                .add_param("-map", "2:v:0")
+                .add_param("-c:v", "copy")
+                .add_param("-c:a", "copy")
+                .add_param("-c:v:1", "mjpeg")
+                .add_param("-disposition:v:1", "attached_pic")
+                .add_output(output_path)
+            )
+        
+        else:
+            return (
+                cls()
+                .add_input(video_path)
+                .add_input(audio_path)
+                .add_param("-acodec", "copy")
+                .add_param("-vcodec", "copy")
+                .add_output(output_path)
+            )
     
     @classmethod
     def convert_m4a_to_mp3(cls, input_path: str, output_path: str):

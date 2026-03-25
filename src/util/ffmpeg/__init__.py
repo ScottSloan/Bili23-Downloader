@@ -20,7 +20,7 @@ config.ffmpeg_executable = ffmpeg_executable
 match config.get(config.ffmpeg_source):
     case FFmpegSource.BUNDLED:
         # 检查 Bundle 目录中是否存在附带的 FFmpeg
-        bundle_ffmpeg_exist = Path(Path.cwd(), "Bundle", ffmpeg_executable).exists()
+        bundle_ffmpeg_exist = Path(Path.cwd(), "bundle", ffmpeg_executable).exists()
 
         if not bundle_ffmpeg_exist:
             # 不存在则 fallback
@@ -30,7 +30,7 @@ match config.get(config.ffmpeg_source):
 
         else:
             # 将附带的 FFmpeg 路径添加到环境变量
-            os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(Path.cwd() / "Bundle")
+            os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(Path.cwd() / "bundle")
 
             logger.info("已添加附带的 FFmpeg 路径到环境变量")
 

@@ -1,6 +1,7 @@
 from util.parse.additional.file.subtitle_ass import SubtitlesASS
 from util.parse.additional.base import AdditionalParserBase
 from util.network.request import NetworkRequestWorker
+from util.common.translator import Translator
 from util.download.task.info import TaskInfo
 from util.common.enum import SubtitleType
 from util.common.config import config
@@ -36,7 +37,7 @@ class SubtitlesParser(AdditionalParserBase):
                 case SubtitleType.JSON:
                     contents, suffix = self._to_json(data)
 
-            self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = ["字幕", language])
+            self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = [Translator.ADDITIONAL_FILES_QUALIFIER("SUBTITLES"), language])
 
     def _to_srt(self, data: dict):
         srt_lines = []

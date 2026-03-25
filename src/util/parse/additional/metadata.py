@@ -2,6 +2,7 @@ from util.network.request import NetworkRequestWorker, ResponseType
 from util.parse.additional.file.metadata_nfo import MetadataNFO
 from util.parse.additional.base import AdditionalParserBase
 from util.parse.episode.tree import Attribute
+from util.common.translator import Translator
 from util.download.task.info import TaskInfo
 from util.common.enum import MetadataType
 from util.common.config import config
@@ -27,7 +28,7 @@ class MetadataParser(AdditionalParserBase):
             case MetadataType.JSON:
                 contents = self._to_json()
 
-                self._write(contents, suffix = "json", name = self.task_info.File.name, qualifier = ["元数据"])
+                self._write(contents, suffix = "json", name = self.task_info.File.name, qualifier = [Translator.ADDITIONAL_FILES_QUALIFIER("METADATA")])
 
     def _to_nfo(self):
         contents_list = MetadataNFO(self.task_info).generate()

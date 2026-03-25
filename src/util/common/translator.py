@@ -224,6 +224,15 @@ class Translator:
         }
 
     @staticmethod
+    @get_map_method
+    def ADDITIONAL_FILES_QUALIFIER(key = None):
+        return {
+            "DANMAKU": translate("ADDITIONAL_FILES_QUALIFIER", "Danmaku"),
+            "SUBTITLES": translate("ADDITIONAL_FILES_QUALIFIER", "Subtitles"),
+            "METADATA": translate("ADDITIONAL_FILES_QUALIFIER", "Metadata")
+        }
+
+    @staticmethod
     def MEDIA_INFO_GUIDE():
         return translate("MEDIA_INFO_GUIDE", """The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.

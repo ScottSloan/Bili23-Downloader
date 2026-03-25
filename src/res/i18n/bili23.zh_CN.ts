@@ -2,6 +2,24 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN" sourcelanguage="en_US">
 <context>
+    <name>ADDITIONAL_FILES_QUALIFIER</name>
+    <message>
+        <location filename="../../util/common/translator.py" line="230"/>
+        <source>Danmaku</source>
+        <translation>弹幕</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="231"/>
+        <source>Subtitles</source>
+        <translation>字幕</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="232"/>
+        <source>Metadata</source>
+        <translation>元数据</translation>
+    </message>
+</context>
+<context>
     <name>AUDIO_QUALITY</name>
     <message>
         <location filename="../../util/common/translator.py" line="53"/>
@@ -521,6 +539,16 @@
         <source>Redownload</source>
         <translation>重新下载</translation>
     </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="146"/>
+        <source>Tasks being processed by FFmpeg cannot be redownloaded</source>
+        <translation>处于 FFmpeg 处理中的任务无法重新下载</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="150"/>
+        <source>Selected task will be redownloaded</source>
+        <translation>选定的任务开始重新下载</translation>
+    </message>
 </context>
 <context>
     <name>DownloadOptionsDialog</name>
@@ -567,10 +595,6 @@
 <context>
     <name>DownloadSettingsPage</name>
     <message>
-        <source>Show this dialog</source>
-        <translation type="vanished">显示此对话框</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialog/download_options/download.py" line="23"/>
         <source>Automatically show this dialog before downloading to customize settings</source>
         <translation>在开始下载前自动显示此对话框，以便自定义设置</translation>
@@ -584,7 +608,7 @@
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="341"/>
+        <location filename="../../util/download/downloader/downloader.py" line="346"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
@@ -1062,7 +1086,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="228"/>
+        <location filename="../../util/common/translator.py" line="237"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1327,7 +1351,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="238"/>
+        <location filename="../../util/common/translator.py" line="247"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -1470,22 +1494,6 @@ For advanced usage, see the help documentation.</source>
         <location filename="../../gui/component/setting/card.py" line="276"/>
         <source>Starting number</source>
         <translation>起始编号</translation>
-    </message>
-    <message>
-        <source>Zero-padding</source>
-        <translation type="vanished">数字补零</translation>
-    </message>
-    <message>
-        <source>Pad with leading zeros</source>
-        <translation type="vanished">在数字前补零（如 001）</translation>
-    </message>
-    <message>
-        <source>Padding width</source>
-        <translation type="vanished">补零位数</translation>
-    </message>
-    <message>
-        <source>Total digits (e.g., 001)</source>
-        <translation type="vanished">总位数，例如 001 为 3 位</translation>
     </message>
 </context>
 <context>
@@ -2202,7 +2210,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="255"/>
+        <location filename="../../util/common/translator.py" line="264"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -2249,10 +2257,6 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="223"/>
         <source>Converting...</source>
         <translation>转换中...</translation>
-    </message>
-    <message>
-        <source>Queued for merging...</source>
-        <translation type="vanished">等待合并...</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="221"/>

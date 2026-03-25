@@ -143,11 +143,11 @@ class DownloadListView(ListView):
         # 与 model 交互以重新下载任务
         if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
             # 合并和转换过程中的任务不允许直接重新下载
-            signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, "", self.tr("处于 FFmpeg 处理中的任务无法重新下载"))
+            signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, "", self.tr("Tasks being processed by FFmpeg cannot be redownloaded"))
 
             return
         
-        signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("选定的任务开始重新下载"))
+        signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Selected task will be redownloaded"))
 
         index.model().redownload(task_info)
     

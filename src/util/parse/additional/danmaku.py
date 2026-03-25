@@ -2,6 +2,7 @@ from util.network.request import NetworkRequestWorker, ResponseType
 from util.parse.additional.file.danmaku_xml import DanmakuXML
 from util.parse.additional.file.danmaku_ass import DanmakuASS
 from util.parse.additional.base import AdditionalParserBase
+from util.common.translator import Translator
 from util.download.task.info import TaskInfo
 from util.common.enum import DanmakuType
 from util.common.config import config
@@ -30,7 +31,7 @@ class DanmakuParser(AdditionalParserBase):
             case DanmakuType.JSON:
                 contents, suffix = self._to_json(dict_list)
 
-        self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = ["弹幕"])
+        self._write(contents, suffix = suffix, name = self.task_info.File.name, qualifier = [Translator.ADDITIONAL_FILES_QUALIFIER("DANMAKU")])
 
     def _to_xml(self, dict_list: List[dict]) -> tuple:
         xml = DanmakuXML(dict_list, self.task_info.Episode.cid).generate()

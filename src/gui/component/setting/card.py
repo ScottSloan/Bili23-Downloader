@@ -109,11 +109,14 @@ class CoverSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.cover_type, ["jpg", "png", "avif", "webp"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.attach_cover_switch = SettingSwitchButton(config.attach_cover, parent = self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Cover"), "", self.download_switch)
         self.addGroup("", self.tr("Cover Format"), "", self.type_choice)
+        self.addGroup("", self.tr("嵌入封面"), "将下载的封面嵌入到视频文件中", self.attach_cover_switch)
 
 class MetadataSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject
 
-from util.common.enum import DownloadStatus, DownloadType
+from util.common.enum import DownloadStatus, DownloadType, CoverType
 from util.download.task.manager import task_manager
 from util.common.timestamp import get_timestamp
 from util.common.signal_bus import signal_bus
@@ -37,10 +37,12 @@ class Merger(QObject):
 
         if Path(cwd, self.temp_video_file_name).exists() and Path(cwd, self.temp_audio_file_name).exists():
             # 只有临时视频和音频文件都存在时，才进行合并
+
             merge_cmd = FFmpegCommand.merge_video_audio(
                 video_path = self.temp_video_file_name,
                 audio_path = self.temp_audio_file_name,
                 output_path = self.temp_output_file_name,
+                cover_path = self.check_attach_cover()
             )
 
             (
@@ -245,6 +247,18 @@ class Merger(QObject):
                 .start()
             )
 
+    def check_attach_cover(self):
+        if config.get(config.attach_cover):
+            cover_path = Path(self.get_cwd(), self.cover_file_name)
+
+            # 只有封面确实存在时，才返回封面路径，否则视为不需要嵌入封面
+            if cover_path.exists():
+                return self.cover_file_name
+            else:
+                logger.warning(f"封面文件 {cover_path} 不存在，无法嵌入封面")
+            
+        return None
+
     @property
     def temp_video_file_name(self):
         return "video_{task_id}.{file_ext}".format(
@@ -278,3 +292,7 @@ class Merger(QObject):
     @property
     def final_audio_file_name(self):
         return f"{self.task_info.File.name}.{self.task_info.File.audio_file_ext}"
+
+    @property
+    def cover_file_name(self):
+        return f"{self.task_info.File.name}.{config.get(config.cover_type).value}"
