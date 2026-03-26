@@ -9,6 +9,7 @@ from util.common.style_sheet import StyleSheet
 from util.common.config import config
 
 import webbrowser
+import sys
 
 class UpdateDialog(FluentDialogBase):
     def __init__(self, info: dict, parent = None):
@@ -24,6 +25,8 @@ class UpdateDialog(FluentDialogBase):
         self.setFixedSize(650, 450)
 
         self.init_UI()
+
+        QApplication.beep()
 
     def init_UI(self):
         caption_lab = SubtitleLabel(self.tr("A new version is available"), parent = self)
@@ -91,12 +94,14 @@ class UpdateDialog(FluentDialogBase):
         self.close()
 
     def on_update(self):
-        webbrowser.open(self._info["update_url"])
+        if url := self._info.get("update_url"):
+            webbrowser.open(url)
 
         if self._info["required"]:
             self._can_close = True
             self.close()
-            QApplication.quit()
+
+            sys.exit()
 
     def set_required(self, required: bool):
         if required:

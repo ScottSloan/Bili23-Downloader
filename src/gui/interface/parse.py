@@ -15,8 +15,8 @@ from util.parse.preview import Previewer, PreviewerInfo
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
 from util.common.signal_bus import signal_bus
-from util.parse.worker import ParseWorker
 from util.common.data import url_patterns
+from util.parse.worker import ParseWorker
 from util.common.config import config
 from util.thread import AsyncTask
 

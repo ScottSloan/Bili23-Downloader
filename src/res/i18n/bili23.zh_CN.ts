@@ -2328,7 +2328,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="224"/>
         <source>You are already using the latest version</source>
-        <translation>已经是最新版本</translation>
+        <translation type="unfinished">当前已是最新版本</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="221"/>

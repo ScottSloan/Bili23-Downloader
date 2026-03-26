@@ -4,6 +4,8 @@ from qfluentwidgets import SystemTrayMenu, Action
 
 from util.common.enum import ToastNotificationCategory
 
+import sys
+
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -36,7 +38,7 @@ class SystemTrayIcon(QSystemTrayIcon):
     def on_exit(self):
         self.on_show_main_window()
         
-        QApplication.quit()
+        sys.exit()
 
     def show_message(self, category: ToastNotificationCategory, title: str, message: str):
         match category:
