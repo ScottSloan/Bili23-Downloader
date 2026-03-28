@@ -1,7 +1,8 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
 from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtWidgets import QApplication
 
-from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme
+from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
 from gui.component.download.item_delegate import DownloadItemDelegate
 from gui.component.download.model import DownloadListModel
@@ -88,6 +89,8 @@ class DownloadListView(ListView):
             painter = QPainter(self.viewport())
             painter.setPen(textColor)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+            setFont(painter, 14)
 
             fm = QFontMetrics(self.font())
             text_width = fm.horizontalAdvance(self._emptyTextTip)

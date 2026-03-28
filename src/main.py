@@ -59,17 +59,16 @@ class Application(QApplication):
         self.installTranslator(self.fluent_translator)
         self.installTranslator(self.bili23_translator)
 
-if __name__ == "__main__":
-    scaling_value = config.get(config.scaling).value
+scaling_value = config.get(config.scaling).value
 
-    if scaling_value != "Auto":
-        os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
-        os.environ["QT_SCALE_FACTOR"] = scaling_value
+if scaling_value != "Auto":
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+    os.environ["QT_SCALE_FACTOR"] = scaling_value
 
-    app = Application(sys.argv)
-    app.setup_app()
+app = Application(sys.argv)
+app.setup_app()
 
-    main_window = MainWindow()
-    main_window.show()
+main_window = MainWindow()
+main_window.show()
 
-    app.exec()
+app.exec()

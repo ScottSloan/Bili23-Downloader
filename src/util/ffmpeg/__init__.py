@@ -15,14 +15,22 @@ if sys.platform == "win32":
 else:
     ffmpeg_executable = "ffmpeg"
 
+# 确定当前主程序是发行版还是开发版
+if home := os.environ.get("PYSTAND_HOME"):
+    cwd = Path(home)
+else:
+    cwd = Path.cwd()
+
 config.ffmpeg_executable = ffmpeg_executable
 
 match config.get(config.ffmpeg_source):
     case FFmpegSource.BUNDLED:
         # 检查 Bundle 目录中是否存在附带的 FFmpeg
-        bundle_ffmpeg_exist = Path(Path.cwd(), "bundle", ffmpeg_executable).exists()
+        bundle_ffmpeg_path = cwd / "bundle" / ffmpeg_executable
 
-        if not bundle_ffmpeg_exist:
+        logger.info(f"正在检查附带的 FFmpeg 是否存在于 {bundle_ffmpeg_path}")
+
+        if not bundle_ffmpeg_path.exists():
             # 不存在则 fallback
             config.set(config.ffmpeg_source, FFmpegSource.SYSTEM)
 
@@ -30,12 +38,12 @@ match config.get(config.ffmpeg_source):
 
         else:
             # 将附带的 FFmpeg 路径添加到环境变量
-            os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(Path.cwd() / "bundle")
+            os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(bundle_ffmpeg_path.parent)
 
             logger.info("已添加附带的 FFmpeg 路径到环境变量")
 
-        # 临时标记 bundle_ffmpeg_exist
-        config.bundle_ffmpeg_exist = bundle_ffmpeg_exist
+            # 临时标记 bundle_ffmpeg_exist
+            config.bundle_ffmpeg_exist = True
 
     case FFmpegSource.CUSTOM:
         # 将自定义的 FFmpeg 路径添加到环境变量

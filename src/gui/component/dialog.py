@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QStackedWidget, QVBoxLayout, QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, QEventLoop
 
 from qfluentwidgets import (
-    MessageBoxBase, InfoBar, InfoBarPosition, FluentTitleBar, FluentWidget, PrimaryPushButton, PushButton
+    MessageBoxBase, InfoBar, InfoBarPosition, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton
 )
 from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 
@@ -94,7 +94,8 @@ class FluentDialogBase(Base, FluentWidget):
         self._setup_title_bar()
 
         self.setMicaEffectEnabled(False)
-        self.setWindowModality(Qt.WindowModality.ApplicationModal)        
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint & ~Qt.WindowType.WindowMaximizeButtonHint & ~Qt.WindowType.WindowContextHelpButtonHint)
 
         self._event_loop = None
         self._result = False
@@ -102,7 +103,7 @@ class FluentDialogBase(Base, FluentWidget):
         self._parent_window = None
 
     def _setup_title_bar(self):
-        titleBar = FluentTitleBar(self)
+        titleBar = FluentWidgetTitleBar(self)
         titleBar.hBoxLayout.setContentsMargins(0, 0, 0, 0)
         titleBar.hBoxLayout.insertSpacing(0, 12)
         titleBar.setFixedHeight(36)

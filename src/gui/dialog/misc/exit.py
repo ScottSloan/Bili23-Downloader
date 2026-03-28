@@ -14,7 +14,7 @@ class ExitDialog(DialogBase):
         self.init_UI()
 
     def init_UI(self):
-        caption_lab = SubtitleLabel(self.tr("Close Behavior"), self)
+        caption_lab = SubtitleLabel(self.tr("提示"), self)
 
         tip_lab = BodyLabel(self.tr("When closing the window, you would like the program to:"), self)
 
@@ -25,6 +25,7 @@ class ExitDialog(DialogBase):
         radio_layout = QHBoxLayout()
         radio_layout.addWidget(self.exit_radio)
         radio_layout.addWidget(self.minimize_radio)
+        radio_layout.addStretch()
 
         self.never_ask_check = CheckBox(self.tr("Don’t ask again"), self)
 
@@ -35,6 +36,8 @@ class ExitDialog(DialogBase):
         self.viewLayout.addLayout(radio_layout)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.never_ask_check)
+
+        self.widget.setMinimumWidth(350)
 
     def accept(self):
         if self.never_ask_check.isChecked():

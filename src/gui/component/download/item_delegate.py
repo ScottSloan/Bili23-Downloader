@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplic
 from PySide6.QtCore import QSize, QModelIndex, Qt, QRect, QEvent, Signal, QPoint, QObject
 from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent, QFontMetrics
 
-from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon
+from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon, setFont
 
 from util.common.icon import ExtendedFluentIcon
 from util.common.translator import Translator
@@ -146,7 +146,10 @@ class FluentStyledItemDelegate:
         else:
             textColor = QColor(0, 0, 0)
 
-        font = self._getFont(10)
+        setFont(painter, 14)
+
+        font = painter.font()
+
         metrics = QFontMetrics(font)
         elided_title = metrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
 
@@ -161,7 +164,8 @@ class FluentStyledItemDelegate:
         else:
             textColor = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
 
-        painter.setFont(self._getFont(10))
+        setFont(painter, 14)
+
         painter.setPen(textColor)
 
         painter.drawText(rect, text)

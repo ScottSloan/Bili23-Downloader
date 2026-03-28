@@ -1,0 +1,399 @@
+name: Publish release test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    tags:
+      - "v*"
+
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.set-version.outputs.VERSION }}
+    steps:
+      - name: Set version
+        id: set-version
+        run: |
+          # echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "VERSION=2.00.0" >> $GITHUB_OUTPUT
+
+  windows-build:
+    needs: get-version
+    env:
+      VERSION: ${{ needs.get-version.outputs.VERSION }}
+    outputs:
+      VERSION: ${{ env.VERSION }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+          architecture: 'x64'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka
+
+      - name: Install Inno Setup and Chinese language pack
+        run: |
+          # 安装 Inno Setup
+          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+          Start-Process "is.exe" -Wait -ArgumentList "/VERYSILENT"
+
+          # 简中语言包
+          $lang_zh_cn_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/Unofficial/ChineseSimplified.isl"
+          Invoke-WebRequest -Uri $lang_zh_cn_url -OutFile "ChineseSimplified.isl"
+          Move-Item -Path "ChineseSimplified.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseSimplified.isl"
+
+          # 繁中语言包
+          $lang_zh_tw_url = "https://raw.githubusercontent.com/jrsoftware/issrc/refs/heads/main/Files/Languages/Unofficial/ChineseTraditional.isl"
+          Invoke-WebRequest -Uri $lang_zh_tw_url -OutFile "ChineseTraditional.isl"
+          Move-Item -Path "ChineseTraditional.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseTraditional.isl"
+
+      - name: Prepare Windows 10/11 runtime
+        run: |
+          # 下载 Python 静态运行时环境
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          
+          Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
+
+      - name: Compile modules with Nuitka
+        run: |
+          # 编译为模块
+          cd src
+
+          python -m nuitka --module main.py --output-dir=main_dist --mingw64 --assume-yes-for-downloads
+          python -m nuitka --module gui --include-package=gui --output-dir=gui_dist --mingw64 --assume-yes-for-downloads
+          python -m nuitka --module util --include-package=util --output-dir=util_dist --mingw64 --assume-yes-for-downloads
+          python -m nuitka --module res --include-package=res --output-dir=res_dist --mingw64 --assume-yes-for-downloads
+
+      - name: Copy compiled modules to runtime
+        run: |
+          mkdir Bili23-Downloader\script
+
+          Copy-Item -Path src\main_dist\main.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\gui_dist\gui.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\util_dist\util.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\res_dist\res.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+
+      - name: Package Windows version
+        run: |
+          # 便携版：直接打包为 zip
+          Compress-Archive -Path Bili23-Downloader\* -DestinationPath Bili23-Downloader_${{ env.VERSION }}_windows_x64_portable.zip
+
+          # 安装版：使用 Inno Setup 创建安装程序
+          Copy-Item -Path "assets\setup.iss" -Destination ".\"
+
+          $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          $script = ".\setup.iss"
+
+          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}"
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: windows-artifacts
+          path: |
+            Bili23-Downloader_${{ env.VERSION }}_windows_x64_portable.zip
+            Bili23-Downloader_${{ env.VERSION }}_windows_x64.exe
+
+      - name: Clean up files
+        run: |
+          Remove-Item -Path Bili23-Downloader -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path windows_x64_runtime.zip -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path Bili23-Downloader_${{ env.VERSION }}_windows_x64_portable.zip -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path Bili23-Downloader_${{ env.VERSION }}_windows_x64.exe -Recurse -Force -ErrorAction SilentlyContinue
+
+      - name: Prepare Windows 7 runtime
+        run: |
+          # 下载 Python 静态运行时环境
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          
+          Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
+
+      - name: Copy compiled modules to runtime
+        run: |
+          mkdir Bili23-Downloader\script
+
+          Copy-Item -Path src\main_dist\main.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\gui_dist\gui.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\util_dist\util.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\res_dist\res.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+
+      - name: Package Windows 7 version
+        run: |
+          # 使用 Inno Setup 创建安装程序
+
+          $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          $script = ".\setup.iss"
+
+          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}"
+
+          # 重命名文件
+          Rename-Item -Path "Bili23-Downloader_${{ env.VERSION }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION }}_windows_x64_for_win7.exe"
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: windows-artifacts-for-win7
+          path: |
+            Bili23-Downloader_${{ env.VERSION }}_windows_x64_for_win7.exe
+  
+  linux-build:
+    needs: get-version
+    env:
+      VERSION: ${{ needs.get-version.outputs.VERSION }}
+    outputs:
+      VERSION: ${{ env.VERSION }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Prepare Linux runtime
+        run: |
+          # 下载 Python 静态运行时环境
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/linux_amd64_runtime.zip
+
+          unzip linux_amd64_runtime.zip -d Bili23-Downloader
+
+          chmod +x Bili23-Downloader/bili23-downloader
+          chmod +x Bili23-Downloader/bundle/ffmpeg
+          chmod +x Bili23-Downloader/runtime/python3.12
+
+          cp -r src Bili23-Downloader/script
+
+      - name: Package Linux version
+        run: |
+          # 便携版：直接打包为 tar.gz
+          tar -czvf Bili23-Downloader_${{ env.VERSION }}_linux_amd64_portable.tar.gz Bili23-Downloader
+
+          # deb 包：需要创建 deb 包结构
+          mkdir -p buildroot/DEBIAN
+          mkdir -p buildroot/usr/local/bin
+          mkdir -p buildroot/usr/share/applications
+          mkdir -p buildroot/usr/share/icons/hicolor/scalable/apps
+          mkdir -p buildroot/opt/Bili23-Downloader
+
+          cp -r Bili23-Downloader buildroot/opt/
+          cp src/res/icon/app.svg buildroot/usr/share/icons/hicolor/scalable/apps/bili23-downloader.svg
+
+          # control 文件
+          echo "Package: bili23-downloader" > buildroot/DEBIAN/control
+          echo "Version: ${{ env.VERSION }}" >> buildroot/DEBIAN/control
+          echo "Architecture: amd64" >> buildroot/DEBIAN/control
+          echo "Section: utils" >> buildroot/DEBIAN/control
+          echo "Priority: optional" >> buildroot/DEBIAN/control
+          echo "Maintainer: Scott Sloan <world1019@sina.com>" >> buildroot/DEBIAN/control
+          echo "Description: A cross-platform video downloader for Bilibili" >> buildroot/DEBIAN/control
+          echo "Depends: libc6 (>= 2.27)" >> buildroot/DEBIAN/control
+          echo "Homepage: https://bili23.scott-sloan.cn" >> buildroot/DEBIAN/control
+          echo "License: GPL-3.0" >> buildroot/DEBIAN/control
+          echo "Installed-Size: $(du -s Bili23-Downloader | cut -f1)" >> buildroot/DEBIAN/control
+
+          # desktop 文件
+          cat << 'EOF' > buildroot/usr/share/applications/bili23-downloader.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Bili23 Downloader
+          Exec=/usr/local/bin/bili23-downloader
+          Icon=bili23-downloader
+          Categories=Utility;
+          Terminal=false
+          Comment=A cross-platform video downloader for Bilibili
+          EOF
+
+          # 入口文件
+          cat << 'EOF' > buildroot/usr/local/bin/bili23-downloader
+          #!/bin/bash
+          cd /opt/Bili23-Downloader
+          exec ./bili23-downloader "$@"
+          EOF
+
+          chmod +x buildroot/usr/local/bin/bili23-downloader
+
+          dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION }}_linux_amd64.deb
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: linux-artifacts
+          path: |
+            Bili23-Downloader_${{ env.VERSION }}_linux_amd64_portable.tar.gz
+            Bili23-Downloader_${{ env.VERSION }}_linux_amd64.deb
+
+  macos-build:
+    needs: get-version
+    env:
+      VERSION: ${{ needs.get-version.outputs.VERSION }}
+    outputs:
+      VERSION: ${{ env.VERSION }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            os: macos-15-intel
+          - arch: aarch64
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          brew install create-dmg
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+          architecture: ${{ matrix.arch == 'aarch64' && 'arm64' || 'x64' }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka
+
+      - name: Prepare macOS runtime
+        run: |
+          # 下载 Python 静态运行时环境
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/macos_${{ matrix.arch }}_runtime.zip
+
+          unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
+
+          chmod +x Bili23-Downloader/bili23-downloader
+          chmod +x Bili23-Downloader/bundle/ffmpeg
+          chmod +x Bili23-Downloader/runtime/python3.12
+
+      - name: Compile modules with Nuitka
+        run: |
+          # 编译为模块
+          cd src
+
+          export MACOSX_DEPLOYMENT_TARGET=12.0
+
+          python -m nuitka --module main.py --output-dir=main_dist --assume-yes-for-downloads
+          python -m nuitka --module gui --include-package=gui --output-dir=gui_dist --assume-yes-for-downloads
+          python -m nuitka --module util --include-package=util --output-dir=util_dist --assume-yes-for-downloads
+          python -m nuitka --module res --include-package=res --output-dir=res_dist --assume-yes-for-downloads
+
+      - name: Copy compiled modules to runtime
+        run: |
+          mkdir -p Bili23-Downloader/script
+
+          cp src/main_dist/*.so Bili23-Downloader/script/
+          cp src/gui_dist/*.so Bili23-Downloader/script/
+          cp src/util_dist/*.so Bili23-Downloader/script/
+          cp src/res_dist/*.so Bili23-Downloader/script/
+
+      - name: Package macOS version
+        run: |
+          # 先打包为 .app
+          mkdir -p dmg_build/Bili23-Downloader.app/Contents/{MacOS,Resources}
+
+          cp -r Bili23-Downloader/* dmg_build/Bili23-Downloader.app/Contents/Resources/
+          cp assets/app.icns dmg_build/Bili23-Downloader.app/Contents/Resources/app.icns
+
+          # Info.plist 文件
+          cat << 'EOF' > dmg_build/Bili23-Downloader.app/Contents/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>main</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.scottsloan.bili23</string>
+            <key>CFBundleName</key>
+            <string>Bili23 Downloader</string>
+            <key>CFBundleIconFile</key>
+            <string>app.icns</string>
+            <key>CFBundleVersion</key>
+            <string>${{ env.VERSION }}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${{ env.VERSION }}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>12.0</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+            <key>LSUIElement</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+
+          # 入口文件
+          cat << 'EOF' > dmg_build/Bili23-Downloader.app/Contents/MacOS/main
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          APP_RESOURCES="$SCRIPT_DIR/../Resources"
+          cd "$APP_RESOURCES"
+          exec ./bili23-downloader
+          EOF
+
+          chmod +x dmg_build/Bili23-Downloader.app/Contents/MacOS/main
+
+          # 再打包为 dmg
+          create-dmg \
+            --volname "Bili23 Downloader Installer" \
+            --window-pos 400 200 \
+            --window-size 660 400 \
+            --icon-size 80 \
+            --icon "Bili23-Downloader.app" 160 160 \
+            --hide-extension "Bili23-Downloader.app" \
+            --app-drop-link 500 160 \
+            "Bili23-Downloader_${{ env.VERSION }}_macos_${{ matrix.arch }}.dmg" \
+            "dmg_build/Bili23-Downloader.app/"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: macos-${{ matrix.arch }}-artifact
+          path: Bili23-Downloader_${{ env.VERSION }}_macos_${{ matrix.arch }}.dmg
+  
+  publish:
+    needs: [windows-build, linux-build, macos-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: '*-artifact*'
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: List downloaded artifacts
+        run: |
+          ls -la release-artifacts
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: v${{ needs.windows-build.outputs.VERSION }}
+          tag_name: v${{ needs.windows-build.outputs.VERSION }}
+          body_path: CHANGELOG.md
+          make_latest: true
+          draft: true
+          prerelease: false
+          generate_release_notes: false
+          # discussion_category_name: announcements
+          files: |
+            release-artifacts/*
