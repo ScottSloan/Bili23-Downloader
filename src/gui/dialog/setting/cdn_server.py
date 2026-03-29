@@ -7,8 +7,7 @@ from gui.component.widget import EditDragTreeWidget
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory
-from util.common.translator import Translator
-from util.common.config import config
+from util.common import Translator, config
 
 class CDNServerDialog(DialogBase):
     def __init__(self, parent = None):

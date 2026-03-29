@@ -1,7 +1,7 @@
 from util.parse.episode.tree import Attribute
 from util.download.task.info import TaskInfo
 from util.common.enum import ConventionType
-from util.common.config import config
+from util.common import config
 
 from datetime import datetime
 from pathlib import Path

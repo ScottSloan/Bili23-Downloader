@@ -1,13 +1,13 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
-from multiprocessing import Process, Queue, Event
-
-from util.common.signal_bus import signal_bus
-from util.auth.captcha import CaptchaInfo
 from PySide6.QtCore import QThread
 
-import json
+from util.auth.captcha import CaptchaInfo
+from util.common import signal_bus
+
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from multiprocessing import Process, Queue, Event
+from urllib.parse import urlparse
 import queue
+import json
 
 def run_server(host, port, req_queue, res_queue, stop_event):
     class CallbackHandler(BaseHTTPRequestHandler):
@@ -82,7 +82,6 @@ def run_server(host, port, req_queue, res_queue, stop_event):
         
     server.server_close()
 
-
 class QueueListenerThread(QThread):
     def __init__(self, req_queue, res_queue):
         super().__init__()
@@ -113,7 +112,6 @@ class QueueListenerThread(QThread):
     def stop(self):
         self.running = False
         self.wait()
-
 
 class ServerManager:
     def __init__(self, host="127.0.0.1", port=2333):

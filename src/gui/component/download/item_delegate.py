@@ -4,13 +4,10 @@ from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent, QFontMe
 
 from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon, setFont
 
-from util.common.icon import ExtendedFluentIcon
-from util.common.translator import Translator
+from util.common import ExtendedFluentIcon, Translator, Directory
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
-from util.common.io import Directory
-from util.format import Units
-from util.format import Time
+from util.format import Units, Time
 
 from pathlib import Path
 from typing import List

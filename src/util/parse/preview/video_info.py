@@ -1,9 +1,8 @@
+from util.common.data import reversed_video_quality_map
 from util.parse.preview.worker import QueryInfoWorker
 from util.parse.preview.info import PreviewerInfo
-from util.common.data import reversed_video_quality_map
-from util.common.signal_bus import signal_bus
+from util.common import signal_bus, config
 from util.common.enum import MediaType
-from util.common.config import config
 from util.thread import AsyncTask
 
 from collections import defaultdict

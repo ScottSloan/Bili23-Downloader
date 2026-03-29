@@ -1,6 +1,5 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
 from PySide6.QtCore import QModelIndex, Qt
-from PySide6.QtWidgets import QApplication
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
@@ -9,8 +8,7 @@ from gui.component.download.model import DownloadListModel
 
 from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.manager import downloader_manager
-from util.common.icon import ExtendedFluentIcon
-from util.common.signal_bus import signal_bus
+from util.common import signal_bus, ExtendedFluentIcon
 from util.download.task.info import TaskInfo
 
 from typing import List

@@ -1,9 +1,8 @@
 from util.network.request import NetworkRequestWorker, RequestType, update_cookies
 
-from util.common.timestamp import get_timestamp, get_timestamp_next_day
-from util.common.config import config
-from util.auth.base import AuthBase
+from util.common import get_timestamp, get_timestamp_next_day, config
 from util.thread import AsyncTask
+from util.auth import AuthBase
 
 import hashlib
 import random

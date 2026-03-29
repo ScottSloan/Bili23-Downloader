@@ -4,7 +4,7 @@ from gui.component.widget import CheckListView
 from gui.component.dialog import DialogBase
 
 from util.common.data import subtitles_language_list
-from util.common.config import config
+from util.common import config
 
 class SubtitlesLanguageDialog(DialogBase):
     def __init__(self, parent = None):

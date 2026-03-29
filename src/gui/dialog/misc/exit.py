@@ -5,7 +5,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, RadioButton, CheckBox
 from gui.component.dialog import DialogBase
 
 from util.common.enum import WhenClose
-from util.common.config import config
+from util.common import config
 
 class ExitDialog(DialogBase):
     def __init__(self, parent = None):

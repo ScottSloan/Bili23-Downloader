@@ -1,6 +1,4 @@
-from util.common.timestamp import get_timestamp
-from util.common.config import appdata_path
-from util.common.database import Database
+from util.common import appdata_path, Database, get_timestamp
 
 from pathlib import Path
 

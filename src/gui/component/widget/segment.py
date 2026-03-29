@@ -5,7 +5,7 @@ from qfluentwidgets import SegmentedToolWidget, FluentIcon
 from gui.component.widget.search import SearchWidget
 from gui.component.widget.pager import Pager
 
-from util.common.icon import ExtendedFluentIcon
+from util.common import ExtendedFluentIcon
 
 class SegmentedWidget(QWidget):
     def __init__(self, parent = None):

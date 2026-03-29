@@ -4,20 +4,16 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
-from gui.component.widget import TransparentToolButton, SegmentedWidget
+from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
-from gui.component.widget import IndeterminateProgressPushButton
+from gui.dialog.misc import SearchDialog, BatchSelectDialog
 from gui.component.parse.tree_view import ParseTreeView
-from gui.dialog.misc.search import SearchDialog
 
+from util.common import signal_bus, config, Translator, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, NumberingType
 from util.parse.preview import Previewer, PreviewerInfo
-from util.common.icon import ExtendedFluentIcon
-from util.common.translator import Translator
-from util.common.signal_bus import signal_bus
 from util.common.data import url_patterns
 from util.parse.worker import ParseWorker
-from util.common.config import config
 from util.thread import AsyncTask
 
 from functools import wraps
@@ -195,6 +191,7 @@ class ParseInterface(QFrame):
         search_action.triggered.connect(self.on_search)
         # filter_action = Action(icon = FluentIcon.FILTER, text = self.tr("筛选"), parent = self)
         batch_select_action = Action(icon = ExtendedFluentIcon.TODO, text = self.tr("Select multiple"), parent = self)
+        batch_select_action.triggered.connect(self.on_batch_select)
 
         menu.addAction(search_action)
         # menu.addAction(filter_action)
@@ -211,6 +208,12 @@ class ParseInterface(QFrame):
             matches = self.parse_list.search_keywords(dialog.keywords)
 
             self.segmented_widget.show_search(matches)
+
+    def on_batch_select(self):
+        dialog = BatchSelectDialog(self.main_window)
+
+        if dialog.exec():
+            lines_text = dialog.lines
 
     def on_item_check_state_changed(self, index):
         checked_count = self.parse_list.get_checked_items_count()

@@ -1,5 +1,5 @@
-from util.common.signal_bus import signal_bus
 from util.parse.episode.tree import TreeItem
+from util.common import signal_bus
 from util.format import Units
 
 class EpisodeParserBase:

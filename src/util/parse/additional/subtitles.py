@@ -1,10 +1,8 @@
-from util.parse.additional.file.subtitle_ass import SubtitlesASS
-from util.parse.additional.base import AdditionalParserBase
+from util.parse.additional import SubtitlesASS, AdditionalParserBase
 from util.network.request import NetworkRequestWorker
-from util.common.translator import Translator
 from util.download.task.info import TaskInfo
+from util.common import config, Translator
 from util.common.enum import SubtitleType
-from util.common.config import config
 from util.format.time import Time
 from util.thread import SyncTask
 

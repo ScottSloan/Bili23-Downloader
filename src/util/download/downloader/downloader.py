@@ -3,17 +3,14 @@ from PySide6.QtCore import Qt
 
 from util.parse.additional.worker import AdditionalParseWorker
 from util.download.downloader.parse_worker import ParseWorker
+from util.common import signal_bus, config, Translator, File
 from util.common.enum import DownloadStatus, DownloadType
 from util.common.data import reversed_video_quality_map
 from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
-from util.common.signal_bus import signal_bus
-from util.common.translator import Translator
 from util.network.request import get_cookies
 from util.download.task.info import TaskInfo
-from util.common.config import config
-from util.common.io import File
 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry

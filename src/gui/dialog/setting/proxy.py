@@ -7,7 +7,7 @@ from gui.component.setting.widget import SettingComboBox
 from gui.component.dialog import DialogBase
 
 from util.network.request import NetworkRequestWorker
-from util.common.config import config
+from util.common import config
 from util.network.proxy import Proxy
 from util.thread import AsyncTask
 

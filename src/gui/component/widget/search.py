@@ -5,7 +5,7 @@ from qfluentwidgets import BodyLabel, PushButton, FluentIcon
 
 from gui.component.widget import ToolButton
 
-from util.common.icon import ExtendedFluentIcon
+from util.common import ExtendedFluentIcon
 
 class SearchWidget(QWidget):
     scrollToItem = Signal(object)

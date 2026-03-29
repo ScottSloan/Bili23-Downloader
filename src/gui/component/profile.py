@@ -5,8 +5,7 @@ from qfluentwidgets import (
 )
 
 from util.common.enum import ToastNotificationCategory
-from util.common.signal_bus import signal_bus
-from util.common.config import config
+from util.common import signal_bus, config
 
 class ProfileCard(FlyoutViewBase):
     """

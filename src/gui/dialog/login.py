@@ -11,7 +11,7 @@ from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory, QRCodeScanStatus
 from util.auth import SMS, Captcha, SMSInfo, QRCode
-from util.common.signal_bus import signal_bus
+from util.common import signal_bus
 
 import sys
 

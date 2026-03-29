@@ -1,12 +1,8 @@
 from PySide6.QtCore import QObject, Signal
 
+from util.parse.additional import DanmakuParser, SubtitlesParser, MetadataParser, CoverParser
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadType
-
-from util.parse.additional.subtitles import SubtitlesParser
-from util.parse.additional.metadata import MetadataParser
-from util.parse.additional.danmaku import DanmakuParser
-from util.parse.additional.cover import CoverParser
 
 import logging
 

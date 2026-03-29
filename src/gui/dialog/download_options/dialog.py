@@ -5,7 +5,7 @@ from qfluentwidgets import FluentIcon
 from gui.dialog.download_options import MediaSettingsPage, AdditionalSettingsPage, DownloadSettingsPage
 from gui.component.dialog import TopNavigationDialogBase
 
-from util.common.icon import ExtendedFluentIcon
+from util.common import ExtendedFluentIcon
 
 class DownloadOptionsDialog(TopNavigationDialogBase):
     def __init__(self, parent = None):

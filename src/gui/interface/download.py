@@ -7,8 +7,8 @@ from gui.component.download.list_view import DownloadListView
 from gui.component.widget import PivotItem
 
 from util.download.task.query_worker import QueryWorker
-from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
+from util.common import signal_bus
 from util.thread import AsyncTask
 
 class DownloadInterface(QFrame):

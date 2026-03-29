@@ -1,13 +1,10 @@
 from util.network.request import NetworkRequestWorker, ResponseType
-from util.parse.additional.file.danmaku_xml import DanmakuXML
-from util.parse.additional.file.danmaku_ass import DanmakuASS
-from util.parse.additional.base import AdditionalParserBase
-from util.common.translator import Translator
+from util.parse.additional import DanmakuXML, DanmakuASS, AdditionalParserBase
 from util.download.task.info import TaskInfo
+from util.common import config, Translator
 from util.common.enum import DanmakuType
-from util.common.config import config
-import util.misc.dm_pb2 as dm_pb2
 from util.thread import SyncTask
+from util.misc import dm_pb2
 
 from google.protobuf.json_format import MessageToDict
 from typing import List

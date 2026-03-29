@@ -4,8 +4,8 @@ from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, 
 
 from gui.component.parse.model import ParseModel
 
-from util.common.icon import ExtendedFluentIcon
 from util.parse.episode.tree import TreeItem
+from util.common import ExtendedFluentIcon
 
 from typing import List
 import webbrowser

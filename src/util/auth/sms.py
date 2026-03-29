@@ -1,9 +1,8 @@
 from PySide6.QtCore import QObject, Signal
 
 from util.network.request import NetworkRequestWorker, RequestType
-from util.common.signal_bus import signal_bus
-from util.auth.captcha import CaptchaInfo
-from util.auth.base import AuthBase
+from util.auth import CaptchaInfo, AuthBase
+from util.common import signal_bus
 from util.thread import AsyncTask
 
 class SMSInfo:

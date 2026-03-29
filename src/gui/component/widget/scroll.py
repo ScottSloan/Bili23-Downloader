@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import ScrollArea as _ScrollArea
 
-from util.common.style_sheet import StyleSheet
+from util.common import StyleSheet
 
 class ScrollArea(_ScrollArea):
     def __init__(self, parent = None):

@@ -9,7 +9,7 @@ from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 from gui.component.widget import PivotItem, Pivot
 
 from util.common.enum import ToastNotificationCategory
-from util.common.style_sheet import StyleSheet
+from util.common import StyleSheet
 
 class Base:
     def __init__(self):

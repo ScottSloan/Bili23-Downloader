@@ -15,13 +15,9 @@ from gui.dialog.setting import (
     StartingNumberDialog
 )
 
+from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
-from util.common.icon import ExtendedFluentIcon
-from util.common.style_sheet import StyleSheet
-from util.common.signal_bus import signal_bus
-from util.common.translator import Translator
-from util.common.config import config
 
 class SettingInterface(ScrollArea):
     def __init__(self, parent = None):

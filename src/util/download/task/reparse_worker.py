@@ -8,7 +8,7 @@ from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.data.bangumi_type import bangumi_type_map
 from util.network.request import NetworkRequestWorker
 from util.parse.parser.base import ParserBase
-from util.common.signal_bus import signal_bus
+from util.common import signal_bus
 from util.thread import SyncTask
 
 class ReparseWorker(QRunnable, ParserBase):

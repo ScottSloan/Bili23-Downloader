@@ -50,6 +50,7 @@ sources = [
     "src/gui/dialog/download_options/download.py",
     "src/gui/dialog/download_options/media.py",
     "src/gui/dialog/misc/about.py",
+    "src/gui/dialog/misc/batch_select.py",
     "src/gui/dialog/misc/exit.py",
     "src/gui/dialog/misc/search.py",
     "src/gui/dialog/misc/terms.py",

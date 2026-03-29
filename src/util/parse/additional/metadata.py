@@ -1,11 +1,9 @@
 from util.network.request import NetworkRequestWorker, ResponseType
-from util.parse.additional.file.metadata_nfo import MetadataNFO
-from util.parse.additional.base import AdditionalParserBase
+from util.parse.additional import MetadataNFO, AdditionalParserBase
 from util.parse.episode.tree import Attribute
-from util.common.translator import Translator
 from util.download.task.info import TaskInfo
+from util.common import config, Translator
 from util.common.enum import MetadataType
-from util.common.config import config
 from util.thread import SyncTask
 
 from dataclasses import asdict

@@ -8,12 +8,10 @@ from qfluentwidgets import (
 from gui.component.widget import DictComboBox
 
 from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
+from util.common import config, Translator, ExtendedFluentIcon
 from util.parse.preview.info import PreviewerInfo
 from util.format import FileNameFormatter, Units
-from util.common.icon import ExtendedFluentIcon
-from util.common.translator import Translator
 from util.common.enum import MediaType
-from util.common.config import config
 
 class MediaInfoCard(ExpandGroupSettingCard):
     def __init__(self, options_dialog, parent = None):

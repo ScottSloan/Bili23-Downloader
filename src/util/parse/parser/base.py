@@ -1,4 +1,4 @@
-from util.common.config import config
+from util.common import config
 
 from functools import reduce
 from hashlib import md5

@@ -7,24 +7,17 @@ from qfluentwidgets import (
     TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge
 )
 
+from gui.interface import DownloadInterface, SettingInterface, ParseInterface
+from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
 from gui.component.widget import NavigationLargeAvatarWidget
-from gui.interface.download import DownloadInterface
-from gui.interface.setting import SettingInterface
-from gui.dialog.misc.terms import TermsOfUseDialog
-from gui.component.sys_tray import SystemTrayIcon
-from gui.interface.parse import ParseInterface
-from gui.component.profile import ProfileCard
-from gui.dialog.misc.about import AboutDialog
-from gui.dialog.misc.exit import ExitDialog
+from gui.component import SystemTrayIcon, ProfileCard
 from gui.dialog.update import UpdateDialog
 from gui.dialog.login import LoginDialog
 
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.common.signal_bus import signal_bus
-from util.auth.cookie import CookieManager
-from util.auth.user import UserManager
-from util.common.config import config
-from util.misc.update import Updater
+from util.auth import CookieManager, UserManager
+from util.common import signal_bus, config
+from util.misc import Updater
 
 class MainWindow(MSFluentWindow):
     def __init__(self):

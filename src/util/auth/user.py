@@ -1,12 +1,9 @@
 from PySide6.QtGui import QPixmap
 
 from util.network.request import NetworkRequestWorker, RequestType, ResponseType
+from util.common import signal_bus, config, Translator
 from util.thread import AsyncTask, SyncTask
-from util.auth.base import AuthBase
-
-from util.common.signal_bus import signal_bus
-from util.common.translator import Translator
-from util.common.config import config
+from util.auth import AuthBase
 
 from pathlib import Path
 

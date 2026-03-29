@@ -4,10 +4,9 @@ from PySide6.QtWidgets import QAbstractItemView
 from util.download.downloader.manager import downloader_manager
 from util.download.cover.manager import cover_manager
 from util.download.task.manager import task_manager
-from util.common.signal_bus import signal_bus
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
-from util.common.config import config
+from util.common import signal_bus, config
 
 from typing import List, Dict, Set
 

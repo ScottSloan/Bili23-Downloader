@@ -1,5 +1,5 @@
 from util.common.enum import FFmpegSource
-from util.common.config import config
+from util.common import config
 
 from pathlib import Path
 import logging
@@ -50,3 +50,6 @@ match config.get(config.ffmpeg_source):
         os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(Path(config.get(config.custom_ffmpeg_path)).parent)
 
         logger.info("已添加自定义 FFmpeg 路径到环境变量")
+
+from util.ffmpeg.command import FFmpegCommand
+from util.ffmpeg.runner import FFmpegRunner

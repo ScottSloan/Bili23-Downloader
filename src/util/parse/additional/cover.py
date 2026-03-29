@@ -1,8 +1,8 @@
 from util.network.request import NetworkRequestWorker, ResponseType
-from util.parse.additional.base import AdditionalParserBase
+from util.parse.additional import AdditionalParserBase
 from util.download.task.info import TaskInfo
-from util.common.config import config
 from util.thread import SyncTask
+from util.common import config
 
 class CoverParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):

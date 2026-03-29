@@ -1,4 +1,4 @@
-from util.common.config import config
+from util.common import config
 
 from urllib.parse import urlparse
 

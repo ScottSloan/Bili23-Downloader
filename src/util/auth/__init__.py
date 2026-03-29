@@ -1,4 +1,7 @@
-from util.auth.captcha import *
-from util.auth.qrcode import *
-from util.auth.server import *
-from util.auth.sms import *
+from util.auth.base import AuthBase
+
+from util.auth.captcha import CaptchaInfo, Captcha
+from util.auth.cookie import CookieManager
+from util.auth.sms import SMSInfo, SMS
+from util.auth.user import UserManager
+from util.auth.qrcode import QRCode

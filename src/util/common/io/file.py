@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Callable
 
 from util.common.enum import FileConflictResolution
-from util.common.config import config
+from util.common import config
 
 from threading import Lock
 import logging

@@ -3,8 +3,7 @@ from util.common.enum import MediaType, ToastNotificationCategory
 from util.network.request import NetworkRequestWorker
 from util.parse.episode.tree import Attribute
 from util.parse.parser.base import ParserBase
-from util.common.signal_bus import signal_bus
-from util.common.config import config
+from util.common import signal_bus, config
 from util.thread import AsyncTask
 
 from collections import defaultdict

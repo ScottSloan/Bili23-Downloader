@@ -1,7 +1,6 @@
 from util.common.enum import ToastNotificationCategory
-from util.common.signal_bus import signal_bus
+from util.common import signal_bus, config
 from util.network.request import session
-from util.common.config import config
 
 import logging
 

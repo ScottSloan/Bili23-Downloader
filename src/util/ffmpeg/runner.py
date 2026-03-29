@@ -1,5 +1,5 @@
-from util.ffmpeg.command import FFmpegCommand
-from util.common.translator import Translator
+from util.ffmpeg import FFmpegCommand
+from util.common import Translator
 
 from typing import Optional, Callable, List
 import subprocess

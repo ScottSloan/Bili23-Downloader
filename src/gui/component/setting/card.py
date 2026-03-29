@@ -5,11 +5,8 @@ from qfluentwidgets import ExpandGroupSettingCard, PushButton, MessageBox, Fluen
 from gui.component.setting.widget import SettingSwitchButton, SettingComboBox, EntryItemWidget
 from gui.dialog.setting.edit_convention import EditConventionDialog
 
+from util.common import Translator, config, ExtendedFluentIcon, Directory
 from util.common.data import reversed_convention_type_map
-from util.common.icon import ExtendedFluentIcon
-from util.common.translator import Translator
-from util.common.config import config
-from util.common.io import Directory
 
 from uuid import uuid4
 

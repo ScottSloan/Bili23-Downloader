@@ -30,7 +30,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 
 from qfluentwidgets import FluentTranslator
-from util.common.config import config
+from util.common import config
 import res.resources_rc
 
 from gui.interface.main_window import MainWindow
