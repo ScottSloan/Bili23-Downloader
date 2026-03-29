@@ -1,4 +1,4 @@
-name: Publish release test
+name: Publish release
 
 on:
   workflow_dispatch:
@@ -388,7 +388,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: v${{ needs.windows-build.outputs.VERSION }}
-          tag_name: v${{ needs.windows-build.outputs.VERSION }}
           body_path: CHANGELOG.md
           make_latest: true
           draft: false

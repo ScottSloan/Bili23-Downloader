@@ -939,18 +939,14 @@ File name: {filename}</source>
 <context>
     <name>ExitDialog</name>
     <message>
-        <source>Close Behavior</source>
-        <translation type="vanished">程序关闭行为</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialog/misc/exit.py" line="17"/>
-        <source>提示</source>
-        <translation type="unfinished"></translation>
+        <source>Close the main window</source>
+        <translation>关闭主窗口</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/exit.py" line="19"/>
-        <source>When closing the window, you would like the program to:</source>
-        <translation>关闭窗口时，你希望程序：</translation>
+        <source>Choose an action</source>
+        <translation>选择一个操作</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/exit.py" line="21"/>
@@ -1962,7 +1958,7 @@ ISP：{isp}</translation>
     <message>
         <location filename="../../gui/component/widget/search.py" line="80"/>
         <source>{index} of {count}</source>
-        <translation>{index} of {count}</translation>
+        <translation>第 {index} 个，共 {count} 个</translation>
     </message>
 </context>
 <context>
@@ -2066,11 +2062,6 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="54"/>
-        <source>When closing window</source>
-        <translation>关闭窗口时</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/setting.py" line="54"/>
         <source>Always ask</source>
         <translation>总是询问</translation>
     </message>
@@ -2083,6 +2074,16 @@ ISP：{isp}</translation>
         <location filename="../../gui/interface/setting.py" line="54"/>
         <source>Minimize to system tray</source>
         <translation>最小化到系统托盘</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="54"/>
+        <source>Close the main window</source>
+        <translation>关闭主窗口</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="54"/>
+        <source>Choose the action when closing the main window</source>
+        <translation>选择关闭主窗口时的操作</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="55"/>
@@ -2130,14 +2131,6 @@ ISP：{isp}</translation>
         <translation>调整同时下载的任务数，默认为 1</translation>
     </message>
     <message>
-        <source>Show notifications</source>
-        <translation type="vanished">显示通知</translation>
-    </message>
-    <message>
-        <source>Show notifications when downloads complete or fail</source>
-        <translation type="vanished">当下载完成或失败时显示通知</translation>
-    </message>
-    <message>
         <location filename="../../gui/interface/setting.py" line="76"/>
         <source>File naming</source>
         <translation>文件命名</translation>
@@ -2146,11 +2139,6 @@ ISP：{isp}</translation>
         <location filename="../../gui/interface/setting.py" line="68"/>
         <source>Danmaku, Subtitles, Cover, and Metadata</source>
         <translation>弹幕、字幕、封面和元数据</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/setting.py" line="54"/>
-        <source>What should the program do when you close the window</source>
-        <translation>关闭窗口时，你希望程序做什么</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="82"/>
@@ -2360,7 +2348,7 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     <message>
         <location filename="../../util/common/translator.py" line="224"/>
         <source>You are already using the latest version</source>
-        <translation type="unfinished">当前已是最新版本</translation>
+        <translation>当前已是最新版本</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="221"/>

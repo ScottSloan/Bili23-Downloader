@@ -62,8 +62,8 @@ class MetadataType(Enum):
 
 class ProxyType(Enum):
     HTTP = "http"
-    SOCKS4 = "socks4"
-    SOCKS5 = "socks5"
+    # SOCKS4 = "socks4"
+    # SOCKS5 = "socks5"
 
 class FFmpegSource(Enum):
     BUNDLED = "bundled"

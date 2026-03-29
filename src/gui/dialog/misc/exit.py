@@ -14,9 +14,9 @@ class ExitDialog(DialogBase):
         self.init_UI()
 
     def init_UI(self):
-        caption_lab = SubtitleLabel(self.tr("提示"), self)
+        caption_lab = SubtitleLabel(self.tr("Close the main window"), self)
 
-        tip_lab = BodyLabel(self.tr("When closing the window, you would like the program to:"), self)
+        tip_lab = BodyLabel(self.tr("Choose an action"), self)
 
         self.exit_radio = RadioButton(self.tr("Exit the program"), self)
         self.exit_radio.setChecked(True)
@@ -24,6 +24,7 @@ class ExitDialog(DialogBase):
 
         radio_layout = QHBoxLayout()
         radio_layout.addWidget(self.exit_radio)
+        radio_layout.addSpacing(15)
         radio_layout.addWidget(self.minimize_radio)
         radio_layout.addStretch()
 

@@ -21,7 +21,7 @@ class SearchDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.keywords_box)
 
-        self.widget.setMinimumWidth(400)
+        self.widget.setMinimumWidth(450)
 
     def validate(self):
         if self.keywords_box.text().strip() == "":

@@ -86,4 +86,4 @@ class AboutDialog(DialogBase):
         webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader")
 
     def on_sponsor(self):
-        webbrowser.open("https://ifdian.net/a/bili23_downloader")
+        webbrowser.open("http://localhost:5173/doc/about.html")

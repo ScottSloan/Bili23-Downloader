@@ -174,7 +174,8 @@ class DownloadListModel(QAbstractListModel):
                 task.Download.status = DownloadStatus.PAUSED
                 downloader = downloader_manager.get(task, create_if_not_exists = False)
 
-                downloader.pause()
+                if downloader:
+                    downloader.pause()
 
                 self.onUpdateData(task)
 

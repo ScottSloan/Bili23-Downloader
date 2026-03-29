@@ -348,7 +348,7 @@ class UIRect:
 
         width = option.rect.width() - 450
 
-        return QRect(left, top, width, 16)
+        return QRect(left, top, width, 20)
     
     def getInfoRect(self, titleRect: QRect, option: QStyleOptionViewItem, completed = False):
         left = titleRect.left()

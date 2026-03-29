@@ -1,4 +1,3 @@
-from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, config
 from util.network.request import session
 
@@ -18,7 +17,7 @@ class AuthBase:
     def show_toast_error(self, title: str, message: str):
         logger.error("%s: %s", title, message)
 
-        signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, title, message)
+        signal_bus.toast.show_long_message.emit(title, message)
 
     def check_response(self, response: dict):
         if response.get("code", -1) != 0:

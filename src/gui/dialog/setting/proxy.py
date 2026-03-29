@@ -7,9 +7,9 @@ from gui.component.setting.widget import SettingComboBox
 from gui.component.dialog import DialogBase
 
 from util.network.request import NetworkRequestWorker
-from util.common import config
 from util.network.proxy import Proxy
 from util.thread import AsyncTask
+from util.common import config
 
 from typing import Dict, Any
 import logging
@@ -26,7 +26,7 @@ class ProxyDialog(DialogBase):
         self.caption_lab = SubtitleLabel(self.tr("Configure Proxy Server"), self)
 
         proxy_type_lab = BodyLabel(self.tr("Proxy Type"))
-        self.proxy_type_choice = SettingComboBox(config.proxy_type, ["HTTP", "SOCKS4", "SOCKS5"], save = False, parent = self)
+        self.proxy_type_choice = SettingComboBox(config.proxy_type, ["HTTP"], save = False, parent = self)
         self.proxy_type_choice.setFixedWidth(120)
 
         server_lab = BodyLabel(self.tr("Address"), self)
