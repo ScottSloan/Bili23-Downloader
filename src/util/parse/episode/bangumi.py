@@ -137,7 +137,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         # 简介
         episode_data["description"] = self.info_data.get("evaluate", "")
         # 风格
-        episode_data["styles"] = self.info_data.get("styles", "") + ["Bilibili {self.category_name}".format(category_name = Translator.EPISODE_TYPE(self.category_name))]
+        episode_data["styles"] = self.info_data.get("styles", "") + ["Bilibili {category_name}".format(category_name = Translator.EPISODE_TYPE(self.category_name))]
         # 海报
         episode_data["poster"] = self.info_data.get("cover", "")
         # 演员
