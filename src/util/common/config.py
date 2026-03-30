@@ -177,8 +177,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.0"
-    app_comparable_version = "2.00.0-rc.1"
+    app_version = "2.00.0-rc.2"
+    app_comparable_version = "2.00.0-rc.2"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
