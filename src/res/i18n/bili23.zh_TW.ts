@@ -2484,6 +2484,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
     </message>
     <message>
         <location filename="../../gui/dialog/update.py" line="49"/>
+        <source>Exit</source>
+        <translation>結束</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/update.py" line="51"/>
         <source>Update now</source>
         <translation>立即更新</translation>
     </message>
