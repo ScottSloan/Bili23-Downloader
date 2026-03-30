@@ -17,8 +17,8 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          # echo "VERSION=2.00.0" >> $GITHUB_OUTPUT
+          # echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "VERSION=2.00.0" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
@@ -69,7 +69,8 @@ jobs:
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
-          Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse
+          New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
+          Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse -Force
 
       - name: Package Windows version
         run: |
@@ -106,7 +107,8 @@ jobs:
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
-          Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse
+          New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
+          Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse -Force
 
       - name: Package Windows 7 version
         run: |
