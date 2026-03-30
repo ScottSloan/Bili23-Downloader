@@ -13,19 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       VERSION: ${{ steps.set-version.outputs.VERSION }}
+      VERSION_NAME: ${{ steps.set-version.outputs.VERSION_NAME }}
     steps:
       - name: Set version
         id: set-version
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          # echo "VERSION=2.00.0" >> $GITHUB_OUTPUT
+          echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
     outputs:
       VERSION: ${{ env.VERSION }}
+      VERSION_NAME: ${{ env.VERSION_NAME }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -75,7 +78,7 @@ jobs:
       - name: Package Windows version
         run: |
           # 便携版：直接打包为 zip
-          Compress-Archive -Path Bili23-Downloader\* -DestinationPath Bili23-Downloader_${{ env.VERSION }}_windows_x64_portable.zip
+          Compress-Archive -Path Bili23-Downloader\* -DestinationPath Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip
 
           # 安装版：使用 Inno Setup 创建安装程序
           Copy-Item -Path "assets\setup.iss" -Destination ".\"
@@ -83,22 +86,22 @@ jobs:
           $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           $script = ".\setup.iss"
 
-          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}"
+          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}" /DMyAppVersionName="${{ env.VERSION_NAME }}"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v6
         with:
           name: windows-artifacts
           path: |
-            Bili23-Downloader_${{ env.VERSION }}_windows_x64_portable.zip
-            Bili23-Downloader_${{ env.VERSION }}_windows_x64.exe
+            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip
+            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe
 
       - name: Clean up files
         run: |
           Remove-Item -Path Bili23-Downloader -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path windows_x64_runtime.zip -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path Bili23-Downloader_${{ env.VERSION }}_windows_x64_portable.zip -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path Bili23-Downloader_${{ env.VERSION }}_windows_x64.exe -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_portable.zip -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe -Recurse -Force -ErrorAction SilentlyContinue
 
       - name: Prepare Windows 7 runtime
         run: |
@@ -117,24 +120,26 @@ jobs:
           $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           $script = ".\setup.iss"
 
-          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}"
+          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}" /DMyAppVersionName="${{ env.VERSION_NAME }}"
 
           # 重命名文件
-          Rename-Item -Path "Bili23-Downloader_${{ env.VERSION }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION }}_windows_x64_for_win7.exe"
+          Rename-Item -Path "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v6
         with:
           name: windows-artifacts-for-win7
           path: |
-            Bili23-Downloader_${{ env.VERSION }}_windows_x64_for_win7.exe
+            Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe
   
   linux-build:
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
     outputs:
       VERSION: ${{ env.VERSION }}
+      VERSION_NAME: ${{ env.VERSION_NAME }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -171,7 +176,7 @@ jobs:
       - name: Package Linux version
         run: |
           # 便携版：直接打包为 tar.gz
-          tar -czvf Bili23-Downloader_${{ env.VERSION }}_linux_amd64_portable.tar.gz Bili23-Downloader
+          tar -czvf Bili23-Downloader_${{ env.VERSION_NAME }}_linux_amd64_portable.tar.gz Bili23-Downloader
 
           # deb 包：需要创建 deb 包结构
           mkdir -p buildroot/DEBIAN
@@ -185,7 +190,7 @@ jobs:
 
           # control 文件
           echo "Package: bili23-downloader" > buildroot/DEBIAN/control
-          echo "Version: ${{ env.VERSION }}" >> buildroot/DEBIAN/control
+          echo "Version: ${{ env.VERSION_NAME }}" >> buildroot/DEBIAN/control
           echo "Architecture: amd64" >> buildroot/DEBIAN/control
           echo "Section: utils" >> buildroot/DEBIAN/control
           echo "Priority: optional" >> buildroot/DEBIAN/control
@@ -217,22 +222,24 @@ jobs:
 
           chmod +x buildroot/usr/local/bin/bili23-downloader
 
-          dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION }}_linux_amd64.deb
+          dpkg-deb --build buildroot Bili23-Downloader_${{ env.VERSION_NAME }}_linux_amd64.deb
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v6
         with:
           name: linux-artifacts
           path: |
-            Bili23-Downloader_${{ env.VERSION }}_linux_amd64_portable.tar.gz
-            Bili23-Downloader_${{ env.VERSION }}_linux_amd64.deb
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_amd64_portable.tar.gz
+            Bili23-Downloader_${{ env.VERSION_NAME }}_linux_amd64.deb
 
   macos-build:
     needs: get-version
     env:
       VERSION: ${{ needs.get-version.outputs.VERSION }}
+      VERSION_NAME: ${{ needs.get-version.outputs.VERSION_NAME }}
     outputs:
       VERSION: ${{ env.VERSION }}
+      VERSION_NAME: ${{ env.VERSION_NAME }}
     strategy:
       matrix:
         include:
@@ -302,7 +309,7 @@ jobs:
             <key>CFBundleVersion</key>
             <string>${{ env.VERSION }}</string>
             <key>CFBundleShortVersionString</key>
-            <string>${{ env.VERSION }}</string>
+            <string>${{ env.VERSION_NAME }}</string>
             <key>CFBundlePackageType</key>
             <string>APPL</string>
             <key>LSMinimumSystemVersion</key>
@@ -335,17 +342,19 @@ jobs:
             --icon "Bili23-Downloader.app" 160 160 \
             --hide-extension "Bili23-Downloader.app" \
             --app-drop-link 500 160 \
-            "Bili23-Downloader_${{ env.VERSION }}_macos_${{ matrix.arch }}.dmg" \
+            "Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg" \
             "dmg_build/Bili23-Downloader.app/"
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v6
         with:
           name: macos-${{ matrix.arch }}-artifact
-          path: Bili23-Downloader_${{ env.VERSION }}_macos_${{ matrix.arch }}.dmg
+          path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
   
   publish:
     needs: [windows-build, linux-build, macos-build]
+    env:
+      VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -370,7 +379,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: v${{ needs.windows-build.outputs.VERSION }}
+          name: v${{ env.VERSION_NAME }}
           body_path: CHANGELOG.md
           make_latest: true
           draft: false
