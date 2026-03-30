@@ -86,7 +86,7 @@ jobs:
           $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           $script = ".\setup.iss"
 
-          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}" /DMyAppVersionName="${{ env.VERSION_NAME }}"
+          & $inno "$script" "/DMyAppVersion=${{ env.VERSION }}" "/DMyAppVersionName=${{ env.VERSION_NAME }}"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v6
@@ -120,7 +120,7 @@ jobs:
           $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           $script = ".\setup.iss"
 
-          & $inno "$script" /DMyAppVersion="${{ env.VERSION }}" /DMyAppVersionName="${{ env.VERSION_NAME }}"
+          & $inno "$script" "/DMyAppVersion=${{ env.VERSION }}" "/DMyAppVersionName=${{ env.VERSION_NAME }}"
 
           # 重命名文件
           Rename-Item -Path "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64.exe" -NewName "Bili23-Downloader_${{ env.VERSION_NAME }}_windows_x64_for_win7.exe"
