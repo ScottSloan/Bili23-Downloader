@@ -20,5 +20,6 @@ uv.toml
 .DS_Store
 /test
 /json
-
+/bundle
+/.VSCodeCounter
 /bundle

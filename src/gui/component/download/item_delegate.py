@@ -453,7 +453,7 @@ class UIData(QObject):
             case DownloadStatus.COMPLETED:
                 return FluentIcon.FOLDER
             
-            case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
+            case DownloadStatus.QUEUED | DownloadStatus.PAUSED | DownloadStatus.FFMPEG_QUEUED:
                 return FluentIcon.PLAY
             
             case DownloadStatus.FAILED | DownloadStatus.FFMPEG_FAILED:

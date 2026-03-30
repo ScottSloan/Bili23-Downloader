@@ -37,7 +37,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
                 "episode_id": self.episode_id,
                 "number": episode_count,
                 "pubtime": episode["pubtime"],
-                "title": episode["title"]
+                "title": self.get_episode_title(episode)
             }
 
             item = TreeItem(item_data)
@@ -62,6 +62,15 @@ class FavlistEpisodeParser(EpisodeParserBase):
             return episode_data["ogv"]["type_name"]
         
         return ""
+    
+    def get_episode_title(self, episode_data: dict):
+        if episode_data.get("ogv"):
+            return "《{title}》{intro}".format(
+                title=episode_data["title"],
+                intro=episode_data["intro"]
+            )
+        
+        return episode_data["title"]
 
     def set_episode_attribute(self, episode_data: dict, item: TreeItem):
         if episode_data.get("ogv"):
