@@ -4,6 +4,7 @@
 
 #define MyAppName "Bili23 Downloader"
 #define MyAppVersion "2.00.0"
+#define MyAppVersionName "2.00.0-rc.1"
 #define MyAppPublisher "Scott Sloan"
 #define MyAppURL "https://bili23.scott-sloan.cn"
 #define MyAppExeName "Bili23.exe"
@@ -36,7 +37,7 @@ LicenseFile=.\LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 OutputDir=.\
-OutputBaseFilename=Bili23-Downloader_{#MyAppVersion}_windows_x64
+OutputBaseFilename=Bili23-Downloader_{#MyAppVersionName}_windows_x64
 SolidCompression=yes
 WizardStyle=modern dynamic
 ShowLanguageDialog=yes
