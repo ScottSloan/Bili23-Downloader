@@ -31,9 +31,14 @@ class FileNameFormatter:
             self.type_id = self.get_type_id_from_task_info(data)
 
         elif isinstance(data, list):
-            self.variable_data = {
-                entry.get("name"): entry.get("example") for entry in data
-            }
+            for entry in data:
+                name = entry.get("name")
+                example = entry.get("example")
+
+                if name in ["pub_time", "create_time"]:
+                    example = datetime.fromtimestamp(1772841600)
+
+                self.variable_data[name] = example
 
     def format(self):
         try:
@@ -95,6 +100,8 @@ class FileNameFormatter:
         return {
             "pub_time": datetime.fromtimestamp(task_info.Episode.pubtime),
             "pub_ts": task_info.Episode.pubtime,
+            "create_time": datetime.fromtimestamp(task_info.Basic.created_time),
+            "create_ts": task_info.Basic.created_time,
             "number": task_info.Episode.number,
             "uploader": task_info.Episode.uploader,
             "uploader_uid": task_info.Episode.uploader_uid,

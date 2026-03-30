@@ -45,7 +45,47 @@ def show_download_options_dialog(func):
     
     return wrapper
 
-class ParseInterface(QFrame):
+class ParseBase(QFrame):
+    def __init__(self, parent = None):
+        super().__init__(parent = parent)
+
+        self.category_name = ""
+
+    def check_pager_visibility(self, extra_data: dict):
+        # 根据解析结果判断是否显示分页组件
+        if extra_data:
+            if extra_data.get("pagination"):
+                self.segmented_widget.show_pager(extra_data["pagination_data"])
+        else:
+            self.segmented_widget.hide_pager()
+
+    def check_need_check_all(self):
+        # 如果解析结果只有一个视频，或者配置了自动全选，则直接勾选所有项目
+        if self.parse_list.get_total_items_count() == 1 or config.get(config.auto_check_all):
+            self.parse_list.check_all_items()
+
+            self.download_btn.setEnabled(True)
+
+    def check_starting_number(self):
+        # 更新当前起始编号，如果尚未设置
+        if config.current_starting_number is None:
+            if config.get(config.numbering_type) == NumberingType.CONTINUOUS:
+                config.current_starting_number = config.global_starting_number
+            else:
+                config.current_starting_number = config.get(config.starting_number)
+
+    def reset_search(self):
+        self.parse_list.search_keywords(None)
+
+        self.segmented_widget.hide_search()
+
+    def scroll_to_item(self, tree_item):
+        self.parse_list.scroll_to_item(tree_item)
+
+    def check_matches(self, items):
+        self.parse_list.check_items(items)
+
+class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
 
@@ -245,42 +285,16 @@ class ParseInterface(QFrame):
 
                     return parser_type
 
-    def check_pager_visibility(self, extra_data: dict):
-        if extra_data:
-            if extra_data.get("pagination"):
-                self.segmented_widget.show_pager(extra_data["pagination_data"])
-        else:
-            self.segmented_widget.hide_pager()
-
-    def check_need_check_all(self):
-        # 如果解析结果只有一个视频，或者配置了自动全选，则直接勾选所有项目
-        if self.parse_list.get_total_items_count() == 1 or config.get(config.auto_check_all):
-            self.parse_list.check_all_items()
-
-            self.download_btn.setEnabled(True)
-
-    def check_starting_number(self):
-        if config.current_starting_number is None:
-            if config.get(config.numbering_type) == NumberingType.CONTINUOUS:
-                config.current_starting_number = config.global_starting_number
-            else:
-                config.current_starting_number = config.get(config.starting_number)
-
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:
             self.parse_list.check_all_items()
 
             event.accept()
+
+        elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_D:
+            self.parse_list.check_all_items(uncheck = True)
+
+            event.accept()
+            
         else:
             return super().keyPressEvent(event)
-        
-    def reset_search(self):
-        self.parse_list.search_keywords(None)
-
-        self.segmented_widget.hide_search()
-
-    def scroll_to_item(self, tree_item):
-        self.parse_list.scroll_to_item(tree_item)
-
-    def check_matches(self, items):
-        self.parse_list.check_items(items)

@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QApplication
+from PySide6.QtCore import Qt
 
-from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, CheckBox, PushButton, MessageBox, HyperlinkButton
+from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, CheckBox, PushButton, MessageBox, HyperlinkButton, RoundMenu, Action, FluentIcon
 
 from gui.component.widget import ColumnTreeWidget, DictComboBox
 from gui.component.dialog import DialogBase
@@ -78,6 +79,7 @@ class EditConventionDialog(DialogBase):
         link_layout.addWidget(self.help_btn)
 
         self.variable_list = ColumnTreeWidget(self)
+        self.variable_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         name_layout = QGridLayout()
         name_layout.setContentsMargins(0, 0, 0, 0)
@@ -103,6 +105,8 @@ class EditConventionDialog(DialogBase):
         self.type_choice.currentIndexChanged.connect(self.on_type_changed)
         self.preview_btn.clicked.connect(self.on_preview)
         self.guide_btn.clicked.connect(self.on_guide)
+
+        self.variable_list.customContextMenuRequested.connect(self.on_context_menu)
 
     def init_data(self):
         self.file_name_formatter = FileNameFormatter()
@@ -208,17 +212,56 @@ class EditConventionDialog(DialogBase):
         elif rule.startswith(("/", ".", "..")) or rule.endswith(("/", ".")):
             return False, self.tr("""Rule must not start or end with '/' or '.'""")
         
-        elif re.search(r'[<>:\\"|?*\x00-\x1f]', rule):
-            return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
-
         self.file_name_formatter.set_rule(rule)
 
         result = self.file_name_formatter.format()
 
         if result:
-            self.rule_box.setError(False)
 
-            return True, Path(result)
+            if re.search(r'[<>:\\"|?*\x00-\x1f]', result):
+                return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
+            
+            else:
+                self.rule_box.setError(False)
+
+                return True, Path(result)
         
         else:
             return False, self.tr("Invalid naming rule")
+
+    def on_context_menu(self, pos):
+        menu = RoundMenu(parent = self)
+
+        copy_action = Action(icon = FluentIcon.COPY, text = self.tr("Copy Variable"), parent = self)
+        copy_action.triggered.connect(self.on_copy_variable)
+
+        insert_action = Action(icon = FluentIcon.ADD, text = self.tr("Insert Variable"), parent = self)
+        insert_action.triggered.connect(self.on_insert_variable)
+
+        menu.addAction(copy_action)
+        menu.addAction(insert_action)
+
+        menu.exec(self.variable_list.viewport().mapToGlobal(pos))
+
+    def on_copy_variable(self):
+        variable = self.get_current_variable()
+
+        if variable:
+            clipboard = QApplication.clipboard()
+            clipboard.setText(variable)
+
+    def on_insert_variable(self):
+        variable = self.get_current_variable()
+
+        self.rule_box.insert(variable)
+
+    def get_current_variable(self):
+        item = self.variable_list.currentItem()
+
+        if item:
+            variable = item.text(0)
+
+            return variable
+        
+        else:
+            return None

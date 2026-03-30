@@ -130,19 +130,15 @@ class FluentDialogBase(Base, FluentWidget):
         self._result = True
         self.close()
 
-        if self._event_loop and self._event_loop.isRunning():
-            self._event_loop.quit()
-
-        self.deleteLater()
-
     def reject(self):
         self._result = False
         self.close()
 
+    def closeEvent(self, e):
         if self._event_loop and self._event_loop.isRunning():
             self._event_loop.quit()
-
-        self.deleteLater()
+        
+        super().closeEvent(e)
 
     def exec(self):
         # 模拟实现模态对话框的 exec 方法
@@ -150,10 +146,15 @@ class FluentDialogBase(Base, FluentWidget):
 
         self.show()
 
-        self._event_loop = QEventLoop()
+        # 将 QEventLoop 的父对象设为自己，避免独立事件循环导致的内存及生命周期问题
+        self._event_loop = QEventLoop(self)
         self._event_loop.exec()
 
-        return self._result
+        # 保存结果并在稍后删除自身，避免在事件循环退出的第一时间删除 C++ 层对象导致崩溃
+        res = self._result
+        self.deleteLater()
+        
+        return res
 
 class TopNavigationDialogBase(FluentDialogBase):
     """

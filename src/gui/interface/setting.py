@@ -60,7 +60,7 @@ class SettingInterface(ScrollArea):
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
         self.download_thread_card = RangeSettingCard(config.download_thread, ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Number of threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self)
         self.download_parallel_card = RangeSettingCard(config.download_parallel, FluentIcon.DOWNLOAD, self.tr("Number of parallel downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self)
-        #self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete or fail"), config.show_notification, self)
+        self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete"), config.show_notification, self)
         self.priority_setting_card = PrioritySettingCard(self)
         self.download_format_card = DownloadFormatCard(self)
 
@@ -109,7 +109,7 @@ class SettingInterface(ScrollArea):
         self.download_group.addSettingCard(self.download_path_card)
         self.download_group.addSettingCard(self.download_thread_card)
         self.download_group.addSettingCard(self.download_parallel_card)
-        #self.download_group.addSettingCard(self.show_notification_card)
+        self.download_group.addSettingCard(self.show_notification_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
 

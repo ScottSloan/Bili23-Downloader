@@ -151,6 +151,8 @@ class Translator:
         return {
             "PUB_TIME": translate("VARIABLE_DESCRIPTION", "Video publish time"),
             "PUB_TS": translate("VARIABLE_DESCRIPTION", "Video publish timestamp"),
+            "CREATE_TIME": translate("VARIABLE_DESCRIPTION", "Download task creation time"),
+            "CREATE_TS": translate("VARIABLE_DESCRIPTION", "Download task creation timestamp"),
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
             "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader UID"),

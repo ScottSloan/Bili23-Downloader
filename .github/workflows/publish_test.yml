@@ -3,8 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - dev
     tags:
       - "v*"
 
@@ -40,7 +40,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install nuitka
 
       - name: Install Inno Setup and Chinese language pack
         run: |
@@ -58,6 +57,11 @@ jobs:
           Invoke-WebRequest -Uri $lang_zh_tw_url -OutFile "ChineseTraditional.isl"
           Move-Item -Path "ChineseTraditional.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseTraditional.isl"
 
+      - name: Precompile source code to byte code
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall src\
+
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
@@ -65,24 +69,7 @@ jobs:
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
-      - name: Compile modules with Nuitka
-        run: |
-          # 编译为模块
-          cd src
-
-          python -m nuitka --module main.py --output-dir=main_dist --mingw64 --assume-yes-for-downloads
-          python -m nuitka --module gui --include-package=gui --output-dir=gui_dist --mingw64 --assume-yes-for-downloads
-          python -m nuitka --module util --include-package=util --output-dir=util_dist --mingw64 --assume-yes-for-downloads
-          python -m nuitka --module res --include-package=res --output-dir=res_dist --mingw64 --assume-yes-for-downloads
-
-      - name: Copy compiled modules to runtime
-        run: |
-          mkdir Bili23-Downloader\script
-
-          Copy-Item -Path src\main_dist\main.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
-          Copy-Item -Path src\gui_dist\gui.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
-          Copy-Item -Path src\util_dist\util.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
-          Copy-Item -Path src\res_dist\res.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse
 
       - name: Package Windows version
         run: |
@@ -119,14 +106,7 @@ jobs:
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
-      - name: Copy compiled modules to runtime
-        run: |
-          mkdir Bili23-Downloader\script
-
-          Copy-Item -Path src\main_dist\main.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
-          Copy-Item -Path src\gui_dist\gui.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
-          Copy-Item -Path src\util_dist\util.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
-          Copy-Item -Path src\res_dist\res.cp312-win_amd64.pyd -Destination Bili23-Downloader\script\
+          Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse
 
       - name: Package Windows 7 version
         run: |
@@ -156,6 +136,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+          architecture: 'x64'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Precompile source code to byte code
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall src/
 
       - name: Prepare Linux runtime
         run: |
@@ -260,7 +256,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install nuitka
+
+      - name: Precompile source code to byte code
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall src/
 
       - name: Prepare macOS runtime
         run: |
@@ -273,26 +273,7 @@ jobs:
           chmod +x Bili23-Downloader/bundle/ffmpeg
           chmod +x Bili23-Downloader/runtime/python3.12
 
-      - name: Compile modules with Nuitka
-        run: |
-          # 编译为模块
-          cd src
-
-          export MACOSX_DEPLOYMENT_TARGET=12.0
-
-          python -m nuitka --module main.py --output-dir=main_dist --assume-yes-for-downloads
-          python -m nuitka --module gui --include-package=gui --output-dir=gui_dist --assume-yes-for-downloads
-          python -m nuitka --module util --include-package=util --output-dir=util_dist --assume-yes-for-downloads
-          python -m nuitka --module res --include-package=res --output-dir=res_dist --assume-yes-for-downloads
-
-      - name: Copy compiled modules to runtime
-        run: |
-          mkdir -p Bili23-Downloader/script
-
-          cp src/main_dist/*.so Bili23-Downloader/script/
-          cp src/gui_dist/*.so Bili23-Downloader/script/
-          cp src/util_dist/*.so Bili23-Downloader/script/
-          cp src/res_dist/*.so Bili23-Downloader/script/
+          cp -r src Bili23-Downloader/script
 
       - name: Package macOS version
         run: |

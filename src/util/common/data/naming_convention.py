@@ -47,6 +47,18 @@ class VariableListFactory:
                 "example": "1772841600"
             },
             {
+                "name": "create_time",
+                "variable": "{create_time:%Y-%m-%d_%H-%M-%S}",
+                "description": "CREATE_TIME",
+                "example": "2026-03-07_12-00-00"
+            },
+            {
+                "name": "create_ts",
+                "variable": "{create_ts}",
+                "description": "CREATE_TS",
+                "example": "1772841600"
+            },
+            {
                 "name": "number",
                 "variable": "{number}",
                 "description": "NUMBER",
