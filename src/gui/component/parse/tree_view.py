@@ -44,6 +44,11 @@ class ParseTreeView(TreeView):
 
         self.expandAll()
 
+    def clear_tree(self):
+        invisible_root = TreeItem({"number": "", "title": ""})
+        
+        self.update_tree(invisible_root)
+
     def get_all_items(self):
         return self._model.root_node.get_all_children()
     

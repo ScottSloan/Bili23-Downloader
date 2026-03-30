@@ -79,6 +79,13 @@ class ParseBase(QFrame):
 
         self.segmented_widget.hide_search()
 
+    def reset_parse_list(self):
+        PreviewerInfo.error_occurred = True
+
+        self.parse_list.clear_tree()
+
+        self.item_count_label.setText("")
+
     def scroll_to_item(self, tree_item):
         self.parse_list.scroll_to_item(tree_item)
 
@@ -173,7 +180,7 @@ class ParseInterface(ParseBase):
         self.clipboard.changed.connect(self.on_copy_url)
 
     def on_parse(self, page: int = 1):
-        self.reset_search()
+        self.reset_parse_list()
         self.parse_btn.setIndeterminateState(True)
 
         worker = ParseWorker(self.url_box.text(), page)
@@ -200,6 +207,8 @@ class ParseInterface(ParseBase):
 
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)
+
+        self.reset_search()
 
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
 
