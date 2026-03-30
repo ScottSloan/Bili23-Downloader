@@ -80,12 +80,12 @@ class Merger(QObject):
                 Renamer()
                 .set_cwd(cwd)
                 .set_on_error(self.on_rename_error)
-                .add_file(self.temp_video_file_name, self.final_video_file_name)
+                .add_file(self.temp_video_file_name, self.final_mp4_video_file_name)
                 .execute()
             )
 
             self.add_file(
-                self.final_video_file_name,
+                self.final_mp4_video_file_name,
                 clear = True
             )
 
@@ -283,7 +283,11 @@ class Merger(QObject):
     @property
     def final_video_file_name(self):
         return f"{self.task_info.File.name}.{self.task_info.File.video_file_ext}"
-    
+
+    @property
+    def final_mp4_video_file_name(self):
+        return f"{self.task_info.File.name}.mp4"
+
     @property
     def final_audio_file_name(self):
         return f"{self.task_info.File.name}.{self.task_info.File.audio_file_ext}"
