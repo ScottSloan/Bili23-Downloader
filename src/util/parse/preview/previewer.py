@@ -23,6 +23,9 @@ class Previewer(ParserBase):
         signal_bus.parse.preview_init.connect(self.on_init)
 
     def on_init(self, episode_data: dict):
+        if episode_data is None:
+            return
+        
         self.clear_cache()
 
         ep_attr = episode_data.get("attribute", 0)

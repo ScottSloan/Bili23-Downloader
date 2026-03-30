@@ -80,10 +80,10 @@ class AboutDialog(DialogBase):
         dialog.exec()
 
     def on_ducumation(self):
-        webbrowser.open("https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html")
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
     def on_github(self):
         webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader")
 
     def on_sponsor(self):
-        webbrowser.open("http://localhost:5173/doc/about.html")
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/about.html")

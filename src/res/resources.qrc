@@ -55,6 +55,7 @@
         <file>html/captcha.html</file>
 
         <file>i18n/bili23.zh_CN.qm</file>
+        <file>i18n/bili23.zh_TW.qm</file>
 
     </qresource>
 </RCC>

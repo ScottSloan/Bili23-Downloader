@@ -10,6 +10,8 @@ class BatchSelectDialog(DialogBase):
 
         self.init_UI()
 
+        self.number_list = []
+
     def init_UI(self):
         self.caption_label = SubtitleLabel(self.tr("Batch Selection"), parent = self)
 
@@ -24,11 +26,25 @@ class BatchSelectDialog(DialogBase):
         self.widget.setMinimumWidth(450)
 
     def accept(self):
+        self.number_list = self.to_number_list()
+
         return super().accept()
     
     @property
-    def lines(self):
+    def number_str(self):
         return self.lines_box.text().strip().split(",")
+    
+    def to_number_list(self):
+        number_list = []
+
+        for line in self.number_str:
+            if "-" in line:
+                start, end = line.split("-")
+                number_list.extend(range(int(start), int(end) + 1))
+            else:
+                number_list.append(int(line))
+        
+        return number_list
     
     def validate(self):
         def setError(message = ""):
@@ -42,7 +58,7 @@ class BatchSelectDialog(DialogBase):
 
             return False
         
-        for line in self.lines:
+        for line in self.number_str:
             if "-" in line:
                 start, end = line.split("-")
 

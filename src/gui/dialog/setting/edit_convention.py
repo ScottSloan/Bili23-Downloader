@@ -65,7 +65,7 @@ class EditConventionDialog(DialogBase):
 
         self.guide_btn = HyperlinkButton(url = "", text = self.tr("Guide"), parent = self)
         self.help_btn = HyperlinkButton(
-            url = "https://bili23.scott-sloan.cn/doc/what-is-bili23-downloader.html",
+            url = "https://bili23.scott-sloan.cn/doc/advanced-usage.html",
             text = self.tr("Open help page"),
             parent = self
         )

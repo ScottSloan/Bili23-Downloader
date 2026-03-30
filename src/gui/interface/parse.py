@@ -213,7 +213,7 @@ class ParseInterface(QFrame):
         dialog = BatchSelectDialog(self.main_window)
 
         if dialog.exec():
-            lines_text = dialog.lines
+            self.parse_list.batch_select(dialog.number_list)
 
     def on_item_check_state_changed(self, index):
         checked_count = self.parse_list.get_checked_items_count()

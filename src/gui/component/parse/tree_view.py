@@ -4,8 +4,9 @@ from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, 
 
 from gui.component.parse.model import ParseModel
 
+from util.common import ExtendedFluentIcon, signal_bus
+from util.common.enum import ToastNotificationCategory
 from util.parse.episode.tree import TreeItem
-from util.common import ExtendedFluentIcon
 
 from typing import List
 import webbrowser
@@ -104,6 +105,11 @@ class ParseTreeView(TreeView):
         view_metadata_action = Action(icon = FluentIcon.DOCUMENT, text = self.tr("View Metadata"), parent = self)
         view_metadata_action.triggered.connect(lambda: self.on_view_metadata(item))
 
+        if item.count() == 0:
+            update_media_info_action = Action(icon = ExtendedFluentIcon.RETRY, text = self.tr("Update Media Info"), parent = self)
+            update_media_info_action.triggered.connect(lambda: self.update_media_info(item.to_dict()))
+            menu.addAction(update_media_info_action)
+
         menu.addSeparator()
         menu.addAction(view_metadata_action)
 
@@ -170,6 +176,20 @@ class ParseTreeView(TreeView):
         self._model.check_state_changed.emit(QModelIndex())
         self.update()
 
+    def batch_select(self, number_list: List[int]):
+        all_items = self.get_all_items()
+
+        for item in all_items:
+            if item.number in number_list:
+                item.set_checked_state(Qt.CheckState.Checked)
+
+        self.update_check_state()
+
+    def update_media_info(self, episode_data: dict):
+        signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Updating media info..."))
+
+        signal_bus.parse.preview_init.emit(episode_data)
+
     def __set_QSS(self):
         light_style = """
             QTreeView {
@@ -187,5 +207,3 @@ class ParseTreeView(TreeView):
         """
 
         setCustomStyleSheet(self, light_style, dark_style)
-
-    

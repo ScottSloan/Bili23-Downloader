@@ -95,7 +95,6 @@ class FluentDialogBase(Base, FluentWidget):
 
         self.setMicaEffectEnabled(False)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowMinimizeButtonHint & ~Qt.WindowType.WindowMaximizeButtonHint & ~Qt.WindowType.WindowContextHelpButtonHint)
 
         self._event_loop = None
         self._result = False

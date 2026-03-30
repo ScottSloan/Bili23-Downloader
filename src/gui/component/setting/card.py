@@ -53,7 +53,7 @@ class PrioritySettingCard(ExpandGroupSettingCard):
 
         self.addGroup(FluentIcon.VIDEO, self.tr("Video Quality Priority"), "", self.video_quality_btn)
         self.addGroup(FluentIcon.MUSIC, self.tr("Audio Quality Priority"), "", self.audio_quality_btn)
-        self.addGroup(FluentIcon.VIDEO, self.tr("Codec Priority"), "", self.video_codec_btn)
+        self.addGroup(FluentIcon.CODE, self.tr("Codec Priority"), "", self.video_codec_btn)
 
 class DanmakuSettingCard(ExpandGroupSettingCard):
     def __init__(self, full_mode = True, parent = None):
