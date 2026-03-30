@@ -4,6 +4,7 @@ from util.common import Translator
 from typing import Optional, Callable, List
 import subprocess
 import threading
+import sys
 
 class FFmpegRunner:
     def __init__(self, cmd: List[str]):
@@ -26,6 +27,12 @@ class FFmpegRunner:
         exception = None
 
         try:
+            kwargs = {}
+
+            # 隐藏 Windows 平台的命令行窗口
+            if sys.platform == "win32":
+                kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
             self._proc = subprocess.Popen(
                 self._cmd,
                 stdout = subprocess.PIPE,
@@ -33,7 +40,8 @@ class FFmpegRunner:
                 cwd = self._cwd,
                 text = True,
                 encoding = "utf-8",
-                errors = "replace"
+                errors = "replace",
+                **kwargs
             )
 
             stdout, stderr = self._proc.communicate()

@@ -8,7 +8,7 @@ from gui.component.download.model import DownloadListModel
 
 from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.manager import downloader_manager
-from util.common import signal_bus, ExtendedFluentIcon
+from util.common import signal_bus, ExtendedFluentIcon, config
 from util.download.task.info import TaskInfo
 
 from typing import List
@@ -124,7 +124,13 @@ class DownloadListView(ListView):
 
         if self._auto_update_count_badge:
             # 更新下载数量徽章
-            signal_bus.download.update_downloading_count.emit(self._model.rowCount())
+            count = self._model.rowCount()
+
+            signal_bus.download.update_downloading_count.emit(count)
+
+            if count == 0 and config.get(config.show_notification):
+                # 如果没有正在下载的任务了，发射下载完成的通知信号
+                downloader_manager.show_notification()
 
     def _beginAddQueriedTasks(self):
         self._in_adding_queried_tasks = True

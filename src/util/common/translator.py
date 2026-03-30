@@ -224,6 +224,8 @@ class Translator:
             "COMPLETED": translate("TIP_MESSAGES", "Completed"),
             "CONVERTING": translate("TIP_MESSAGES", "Converting..."),
             "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
+            "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
+            "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
         }
 
     @staticmethod

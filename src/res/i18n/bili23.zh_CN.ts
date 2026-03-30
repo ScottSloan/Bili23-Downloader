@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="233"/>
+        <location filename="../../util/common/translator.py" line="235"/>
         <source>Danmaku</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="234"/>
+        <location filename="../../util/common/translator.py" line="236"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="235"/>
+        <location filename="../../util/common/translator.py" line="237"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
@@ -554,6 +554,11 @@
         <source>Completed</source>
         <translation>下载完成</translation>
     </message>
+    <message>
+        <location filename="../../gui/interface/download.py" line="103"/>
+        <source>Failed to query download tasks</source>
+        <translation>查询下载任务失败</translation>
+    </message>
 </context>
 <context>
     <name>DownloadListView</name>
@@ -578,12 +583,12 @@
         <translation>重新下载</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="147"/>
+        <location filename="../../gui/component/download/list_view.py" line="153"/>
         <source>Tasks being processed by FFmpeg cannot be redownloaded</source>
         <translation>处于 FFmpeg 处理中的任务无法重新下载</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="151"/>
+        <location filename="../../gui/component/download/list_view.py" line="157"/>
         <source>Selected task will be redownloaded</source>
         <translation>选定的任务开始重新下载</translation>
     </message>
@@ -1134,7 +1139,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="240"/>
+        <location filename="../../util/common/translator.py" line="242"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1399,7 +1404,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="250"/>
+        <location filename="../../util/common/translator.py" line="252"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -1547,57 +1552,57 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="62"/>
+        <location filename="../../gui/interface/parse.py" line="102"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="66"/>
+        <location filename="../../gui/interface/parse.py" line="106"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="72"/>
+        <location filename="../../gui/interface/parse.py" line="112"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="76"/>
+        <location filename="../../gui/interface/parse.py" line="116"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="84"/>
+        <location filename="../../gui/interface/parse.py" line="124"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="164"/>
+        <location filename="../../gui/interface/parse.py" line="204"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="178"/>
+        <location filename="../../gui/interface/parse.py" line="218"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="190"/>
+        <location filename="../../gui/interface/parse.py" line="230"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="193"/>
+        <location filename="../../gui/interface/parse.py" line="233"/>
         <source>Select multiple</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="223"/>
+        <location filename="../../gui/interface/parse.py" line="263"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="229"/>
+        <location filename="../../gui/interface/parse.py" line="269"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -2327,7 +2332,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="267"/>
+        <location filename="../../util/common/translator.py" line="269"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -2381,6 +2386,16 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <translation>当前已是最新版本</translation>
     </message>
     <message>
+        <location filename="../../util/common/translator.py" line="227"/>
+        <source>Download completed</source>
+        <translation>下载完成</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="228"/>
+        <source>All download tasks have been completed.</source>
+        <translation>所有下载任务已完成</translation>
+    </message>
+    <message>
         <location filename="../../util/common/translator.py" line="223"/>
         <source>Merging...</source>
         <translation>合并中...</translation>
@@ -2402,12 +2417,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="177"/>
+        <location filename="../../gui/component/dialog.py" line="178"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="181"/>
+        <location filename="../../gui/component/dialog.py" line="182"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>

@@ -100,5 +100,5 @@ class DownloadInterface(QFrame):
         self.downloading_list_view._endAddQueriedTasks()
 
     def on_query_error(self, error_message: str):
-        print(f"查询下载任务失败: {error_message}")
+        signal_bus.toast.show_long_message.emit(self.tr("Failed to query download tasks"), error_message)
         
