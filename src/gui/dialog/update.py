@@ -46,6 +46,8 @@ class UpdateDialog(FluentDialogBase):
         self.log_browser.setMarkdown(self._info["content"])
 
         self.skip_btn = PushButton(self.tr("Skip this version"), parent = self)
+        self.exit_btn = PushButton(self.tr("Exit"), parent = self)
+        self.exit_btn.hide()
         self.update_btn = PrimaryPushButton(self.tr("Update now"), parent = self)
 
         content_widget = QWidget(self)
@@ -55,6 +57,7 @@ class UpdateDialog(FluentDialogBase):
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(10)
         button_layout.addWidget(self.skip_btn)
+        button_layout.addWidget(self.exit_btn)
         button_layout.addStretch()
         button_layout.addWidget(self.update_btn)
 
@@ -79,6 +82,7 @@ class UpdateDialog(FluentDialogBase):
 
         self.skip_btn.clicked.connect(self.on_skip)
         self.update_btn.clicked.connect(self.on_update)
+        self.exit_btn.clicked.connect(self.on_exit)
 
     def closeEvent(self, e):
         if not self._can_close:
@@ -97,12 +101,16 @@ class UpdateDialog(FluentDialogBase):
             webbrowser.open(url)
 
         if self._info["required"]:
-            self._can_close = True
-            self.close()
-
-            sys.exit()
+            self.on_exit()
 
     def set_required(self, required: bool):
         if required:
             self.titleBar.closeBtn.hide()
             self.skip_btn.hide()
+            self.exit_btn.show()
+
+    def on_exit(self):
+        self._can_close = True
+        self.close()
+
+        sys.exit(0)

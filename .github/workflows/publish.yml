@@ -3,8 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
   push:
-    branches:
-      - dev
+    # branches:
+    #   - dev
     tags:
       - "v*"
 
@@ -17,8 +17,8 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          # echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          echo "VERSION=2.00.0" >> $GITHUB_OUTPUT
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          # echo "VERSION=2.00.0" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version

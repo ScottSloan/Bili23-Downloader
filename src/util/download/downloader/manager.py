@@ -1,4 +1,6 @@
 from util.download.downloader.downloader import Downloader
+from util.common.enum import ToastNotificationCategory
+from util.common import signal_bus, Translator
 from util.download.task.info import TaskInfo
 
 class DownloaderManager:
@@ -46,5 +48,15 @@ class DownloaderManager:
         
         if downloader:
             downloader.wait(callback)
+
+    def show_notification(self):
+        # 如果没有正在下载的任务了，发射下载完成的通知信号
+
+        if len(self.downloaders) == 0:
+            signal_bus.toast.sys_show.emit(
+                ToastNotificationCategory.INFO,
+                Translator.TIP_MESSAGES("DOWNLOAD_COMPLETED"),
+                Translator.TIP_MESSAGES("DOWNLOAD_COMPLETED_DETAIL")
+            )
 
 downloader_manager = DownloaderManager()
