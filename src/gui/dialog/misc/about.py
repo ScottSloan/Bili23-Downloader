@@ -1,180 +1,89 @@
-import wx
-import os
-import json
-import wx.adv
-import ctypes
-import gettext
-import inspect
-import platform
-import subprocess
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+from PySide6.QtCore import qVersion
 
-from utils.config import Config
+from qfluentwidgets import SubtitleLabel, BodyLabel, TransparentPushButton, FluentIcon, __version__
 
-from utils.common.style.icon_v4 import Icon, IconID, IconSize
-from utils.common.style.color import Color
-from utils.common.enums import Platform
-import utils.common.compile_data as json_data
+from gui.dialog.misc import TermsOfUseDialog
+from gui.component.dialog import DialogBase
 
-from gui.component.window.dialog import Dialog
-from gui.component.staticbitmap.staticbitmap import StaticBitmap
+from util.common import config
 
-_ = gettext.gettext
+from datetime import datetime
+import webbrowser
 
-class AboutWindow(Dialog):
-    def __init__(self, parent):
-        Dialog.__init__(self, parent, "")
+class AboutDialog(DialogBase):
+    def __init__(self, parent = None):
+        super().__init__(parent)
 
         self.init_UI()
 
-        self.Bind_EVT()
-
-        self.init_utils()
-
-        self.CenterOnParent()
-
-        wx.Bell()
-    
     def init_UI(self):
-        self.logo = StaticBitmap(self, size = self.FromDIP((64, 64)))
+        app_name = config.app_name
+        app_version = config.app_version
+        year = datetime.now().year
 
-        logo_vbox = wx.BoxSizer(wx.VERTICAL)
-        logo_vbox.Add(self.logo, 0, wx.ALL, self.FromDIP(6))
+        self.caption_lab = SubtitleLabel(self.tr("About {app_name}").format(app_name = app_name), self)
 
-        title_font: wx.Font = self.GetFont()
-        title_font.SetFractionalPointSize(int(title_font.GetFractionalPointSize() + 4))
+        self.app_version_lab = BodyLabel(self.tr("Version {app_version}").format(app_version = app_version), self)
+        self.qt_version_lab = BodyLabel(self.tr("Powered by Qt {qt_version} and QFluentWidgets {qfluentwidgets_version}").format(qt_version = qVersion(), qfluentwidgets_version = __version__), self)
+        self.license_lab = BodyLabel(self.tr("This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3)."))
+        self.copyright_lab = BodyLabel(self.tr("Copyright © 2022-{year} Scott Sloan. All Rights Reserved.").format(year = year))
 
-        version_font: wx.Font = self.GetFont()
-        version_font.SetFractionalPointSize(int(version_font.GetFractionalPointSize() + 2))
+        self.sponsor_lab = BodyLabel(self.tr("If this project saved you time or solved your problem, consider buying the author a coffee! Don't forget to star the repository on GitHub to support open-source development."))
+        self.sponsor_lab.setWordWrap(True)
 
-        title_lab = wx.StaticText(self, -1, Config.APP.name)
-        title_lab.SetForegroundColour(Color.get_frame_text_color())
-        title_lab.SetFont(title_font.MakeBold())
+        self.terms_btn = TransparentPushButton(FluentIcon.DOCUMENT, self.tr("Terms of Use"), self)
+        self.documentation_btn = TransparentPushButton(FluentIcon.HELP, self.tr("Documentation"), self)
+        self.github_btn = TransparentPushButton(FluentIcon.GITHUB, self.tr("Github"), self)
+        self.sponsor_btn = TransparentPushButton(FluentIcon.HEART, self.tr("Sponsor"), self)
 
-        desc_lab = wx.StaticText(self, -1, _("跨平台的 B 站视频下载工具"))
-        desc_lab.SetForegroundColour(Color.get_frame_text_color())
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
+        content_layout.addWidget(self.app_version_lab)
+        content_layout.addWidget(self.qt_version_lab)
+        content_layout.addSpacing(10)
+        content_layout.addWidget(self.license_lab)
+        content_layout.addSpacing(10)
+        content_layout.addWidget(self.copyright_lab)
+        content_layout.addSpacing(30)
+        content_layout.addWidget(self.sponsor_lab)
 
-        self.version_lab = wx.StaticText(self, -1, _("版本 %s") % self.get_version_str())
-        self.version_lab.SetFont(version_font)
-        self.version_lab.SetForegroundColour(Color.get_frame_text_color())
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(self.terms_btn)
+        button_layout.addWidget(self.documentation_btn)
+        button_layout.addWidget(self.github_btn)
+        button_layout.addWidget(self.sponsor_btn)
+        button_layout.addStretch()
 
-        license_lab = wx.StaticText(self, -1, _("本程序为免费开源软件，遵循 MIT 许可证发布"))
-        license_lab.SetForegroundColour(Color.get_frame_text_color())
+        self.viewLayout.addWidget(self.caption_lab)
+        self.viewLayout.addSpacing(10)
+        self.viewLayout.addLayout(content_layout)
+        self.viewLayout.addSpacing(10)
+        self.viewLayout.addLayout(button_layout)
 
-        copyright_lab = wx.StaticText(self, -1, "Copyright © 2022-2025 Scott Sloan. All rights reserved.")
-        copyright_lab.SetForegroundColour(Color.get_frame_text_color())
+        self.hideCancelButton()
 
-        homepage_link = wx.adv.HyperlinkCtrl(self, -1, _("官方网站"), url = "https://bili23.scott-sloan.cn")
-        github_link = wx.adv.HyperlinkCtrl(self, -1, _("开源地址"), url = "https://www.github.com/ScottSloan/Bili23-Downloader")
+        self.widget.setMinimumWidth(600)
 
-        opensource_link = wx.adv.HyperlinkCtrl(self, -1, _("开源许可"), url = "https://bili23.scott-sloan.cn/doc/license.html")
-        disclaimer_link = wx.adv.HyperlinkCtrl(self, -1, _("免责声明"), url = "https://bili23.scott-sloan.cn/doc/announcement.html")
+        self.connect_signal()
 
-        link_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        link_hbox.Add(homepage_link, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        link_hbox.Add(wx.StaticText(self, -1, "•"), 0, wx.ALL & (~wx.LEFT) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        link_hbox.Add(github_link, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        link_hbox.Add(wx.StaticText(self, -1, "•"), 0, wx.ALL & (~wx.LEFT) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        link_hbox.Add(opensource_link, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
-        link_hbox.Add(wx.StaticText(self, -1, "•"), 0, wx.ALL & (~wx.LEFT) & (~wx.RIGHT) | wx.ALIGN_CENTER, self.FromDIP(6))
-        link_hbox.Add(disclaimer_link, 0, wx.ALL | wx.ALIGN_CENTER, self.FromDIP(6))
+    def connect_signal(self):
+        self.terms_btn.clicked.connect(self.on_terms)
+        self.documentation_btn.clicked.connect(self.on_ducumation)
+        self.github_btn.clicked.connect(self.on_github)
+        self.sponsor_btn.clicked.connect(self.on_sponsor)
 
-        ok_btn = wx.Button(self, wx.ID_OK, _("确定"), size = self.get_scaled_size((80, 30)))
+    def on_terms(self):
+        dialog = TermsOfUseDialog(self)
+        dialog.exec()
 
-        btn_hbox = wx.BoxSizer(wx.HORIZONTAL)
-        btn_hbox.AddStretchSpacer()
-        btn_hbox.Add(ok_btn)
+    def on_ducumation(self):
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/introduction.html")
 
-        body_vbox = wx.BoxSizer(wx.VERTICAL)
-        body_vbox.Add(title_lab, 0, wx.ALL, self.FromDIP(6))
-        body_vbox.Add(desc_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        body_vbox.AddSpacer(self.FromDIP(10))
-        body_vbox.Add(self.version_lab, 0, wx.ALL & (~wx.TOP), self.FromDIP(6))
-        body_vbox.Add(license_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
-        body_vbox.Add(copyright_lab, 0, wx.ALL & (~wx.TOP) & (~wx.BOTTOM), self.FromDIP(6))
-        body_vbox.Add(link_hbox, 0, wx.EXPAND)
-        body_vbox.AddSpacer(self.FromDIP(6))
-        body_vbox.Add(btn_hbox, 0, wx.EXPAND)
+    def on_github(self):
+        webbrowser.open("https://github.com/ScottSloan/Bili23-Downloader")
 
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(logo_vbox, 0, wx.EXPAND, self.FromDIP(6))
-        hbox.AddSpacer(self.FromDIP(15))
-        hbox.Add(body_vbox, 0, wx.EXPAND, self.FromDIP(6))
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.AddSpacer(self.FromDIP(20) if Platform(Config.Sys.platform) != Platform.Windows else 1)
-        vbox.Add(hbox, 0, wx.ALL & (~wx.TOP) | wx.EXPAND, self.FromDIP(20))
-
-        self.SetSizerAndFit(vbox)
-
-        self.SetMaxSize(self.GetSize())
-
-        self.set_dark_mode()
-
-    def Bind_EVT(self):
-        self.version_lab.Bind(wx.EVT_LEFT_DOWN, self.show_extra_info)
-
-    def init_utils(self):
-        def worker():
-            self.logo.SetBitmap(bmp = Icon.get_icon_bitmap(IconID.App_Default, IconSize.LARGE))
-
-            self.Refresh()
-
-        wx.CallAfter(worker)
-
-        if not self.DWMExtendFrameIntoClientArea():
-            self.SetTitle(_("关于 %s") % Config.APP.name)
-
-    def get_version_str(self):
-        version = f"{Config.APP.version} ({Config.APP.version_code})"
-
-        return version
-    
-    def show_extra_info(self, event: wx.MouseEvent):
-        extra_data: dict = json.loads(inspect.getsource(json_data))
-
-        commit_hash = self.get_commit_str(extra_data)
-
-        data = {
-            "Platform": Platform(Config.Sys.platform).name,
-            "Architecture": platform.machine(),
-            "Commit": commit_hash,
-            "Channel": extra_data.get("channel", "N/A"),
-            "Date": self.get_date_str(extra_data, commit_hash),
-            "Privilege": self.get_privilege_str(),
-            "Python": platform.python_version(),
-            "wxPython": wx.__version__
-        }
-
-        wx.MessageDialog(self, "Bili23 Downloader\n\n{}".format("\n".join(f"{key}: {value}" for key, value in data.items())), "info", wx.ICON_INFORMATION).ShowModal()
-
-    def get_commit_str(self, extra_data: dict):
-        if extra_data.get("commit"):
-            return extra_data.get("commit")
-        else:
-            try:
-                return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
-            
-            except Exception:
-                return "N/A"
-            
-    def get_date_str(self, extra_data: dict, commit_hash: str):
-        if extra_data.get("date"):
-            return extra_data.get("date")
-        else:
-            try:
-                return subprocess.check_output(['git', 'show', '-s', '--format=%ci', commit_hash]).decode('ascii').strip()
-            
-            except Exception:
-                return "N/A"
-
-    def get_privilege_str(self):
-        match Platform(Config.Sys.platform):
-            case Platform.Windows:
-                is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-
-                return "Yes" if is_admin else "No"
-            
-            case Platform.Linux | Platform.MacOS:
-                is_admin = os.getuid() == 0
-
-                return "Yes" if is_admin else "No"
+    def on_sponsor(self):
+        webbrowser.open("https://bili23.scott-sloan.cn/doc/about.html")

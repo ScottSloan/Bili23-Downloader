@@ -1,0 +1,55 @@
+from PySide6.QtCore import Qt, QObject, Signal, Slot
+
+from util.download.task.manager import task_manager
+from util.download.task.info import TaskInfo
+from util.common.enum import DownloadStatus
+
+from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
+
+class QueryWorker(QObject):
+    success = Signal(list, list)
+    error = Signal(str)
+    finished = Signal()
+
+    def __init__(self):
+        super().__init__()
+
+    @Slot()
+    def run(self):
+        try:
+            self.query()
+
+        except Exception as e:
+            logger.exception("从数据库中查询下载任务失败")
+
+            self.error.emit(str(e))
+
+        finally:
+            self.finished.emit()
+
+    def query(self):
+        downloading_tasks = task_manager.query()
+        completed_tasks = task_manager.query(completed = True)
+
+        downloading_tasks = self.get_task_list(downloading_tasks, update_status = True)
+        completed_tasks = self.get_task_list(completed_tasks, update_status = False)
+
+        self.success.emit(downloading_tasks, completed_tasks)
+
+    def get_task_list(self, task_info_list: List[TaskInfo], update_status = True):
+        task_list = []
+
+        for task_info in task_info_list:
+            if update_status:
+                if task_info.Download.status in [DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]:
+                    task_info.Download.status = DownloadStatus.PAUSED
+
+                if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
+                    task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
+
+            task_list.append(task_info)
+
+        return task_list

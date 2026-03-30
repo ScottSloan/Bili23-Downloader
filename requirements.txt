@@ -1,7 +1,5 @@
-requests==2.32.5
-wxPython==4.2.4
-qrcode[pil]==7.4.2
-python-vlc==3.0.21203
-protobuf==6.33.0
-websockets==15.0.1
-pycryptodome==3.23.0
+PySide6-Fluent-Widgets==1.11.1
+requests[socks]==2.33.0
+qrcode[pil]==8.2
+protobuf==7.34.1
+PySide6==6.10.2

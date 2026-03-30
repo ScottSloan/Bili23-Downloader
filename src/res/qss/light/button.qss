@@ -1,0 +1,5 @@
+TitleBarButton# {
+    qproperty-normalBackgroundColor: transparent;
+    qproperty-hoverBackgroundColor: rgba(0, 0, 0, 26);
+    qproperty-pressedBackgroundColor: rgba(0, 0, 0, 51);
+}

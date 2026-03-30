@@ -1,0 +1,186 @@
+from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
+
+from util.download.parse.video_info import VideoInfoParser
+from util.download.parse.audio_info import AudioInfoParser
+from util.network.request import NetworkRequestWorker
+from util.common.enum import DownloadType, MediaType
+from util.parse.episode.tree import Attribute
+from util.parse.parser.base import ParserBase
+from util.download.task.info import TaskInfo
+from util.thread import SyncTask
+
+from urllib.parse import urlencode
+import json
+
+class ParseWorker(QRunnable, ParserBase):
+    def __init__(self, task_info: TaskInfo, parent = None):
+        super().__init__()
+
+        self.task_info = task_info
+        self.info_data: dict = None
+
+        self.parent = parent
+        self.error = False
+
+    def run(self):
+        try:
+            self.get_info()
+
+            if not self.error:
+                download_info = self.parse_download_info()
+                download_info_json = json.dumps(download_info, ensure_ascii = False)
+
+                QMetaObject.invokeMethod(
+                    self.parent,
+                    "on_parse_finished",
+                    Qt.ConnectionType.QueuedConnection,
+                    Q_ARG(str, download_info_json)     # 由于不支持直接传递字典，所以传递 json 字符串，在主线程再转换回来
+                )
+
+        except:
+            self.on_parse_error("解析下载链接失败")
+
+    def get_info(self):
+        if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:
+            self.get_video_info()
+
+        elif self.task_info.Episode.attribute & Attribute.BANGUMI_BIT:
+            self.get_bangumi_info()
+
+        elif self.task_info.Episode.attribute & Attribute.CHEESE_BIT:
+            self.get_cheese_info()
+
+        if not self.error:
+            if "dash" in self.info_data.keys():
+                self.task_info.Download.media_type = MediaType.DASH
+
+            elif "durl" in self.info_data.keys():
+                self.task_info.Download.media_type = MediaType.MP4
+
+    def get_video_info(self):
+        def on_success(response: dict):
+            self.check_response(response)
+
+            self.info_data = response.copy()["data"]
+
+        params = {
+            "bvid": self.task_info.Episode.bvid,
+            "cid": self.task_info.Episode.cid,
+            "qn": self.task_info.Download.video_quality_id,
+            "fnver": 0,
+            "fnval": 4048,
+            "fourk": 1,
+        }
+
+        url = f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+        worker.error.connect(self.on_parse_error)
+
+        SyncTask.run(worker)
+
+    def get_bangumi_info(self):
+        def on_success(response: dict):
+            self.check_response(response)
+
+            self.info_data = response.copy()["result"]
+
+        params = {
+            "bvid": self.task_info.Episode.bvid,
+            "cid": self.task_info.Episode.cid,
+            "qn": self.task_info.Download.video_quality_id,
+            "fnver": 0,
+            "fnval": 12240,
+            "fourk": 1
+        }
+
+        url = f"https://api.bilibili.com/pgc/player/web/playurl?{urlencode(params)}"
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+        worker.error.connect(self.on_parse_error)
+
+        SyncTask.run(worker)
+
+    def get_cheese_info(self):
+        def on_success(response: dict):
+            self.check_response(response)
+
+            self.info_data = response.copy()["data"]
+
+        params = {
+            "avid": self.task_info.Episode.aid,
+            "cid": self.task_info.Episode.cid,
+            "qn": self.task_info.Download.video_quality_id,
+            "fnver": 0,
+            "fnval": 16,
+            "fourk": 1,
+            "ep_id": self.task_info.Episode.ep_id,
+        }
+
+        url = f"https://api.bilibili.com/pugv/player/web/playurl?{urlencode(params)}"
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+        worker.error.connect(self.on_parse_error)
+
+        SyncTask.run(worker)
+
+    def parse_download_info(self):
+        total_size = 0
+        download_list = {}
+
+        if self.task_info.Download.type & DownloadType.VIDEO != 0:
+            video_info_parser = VideoInfoParser(self.info_data, self.task_info)
+            video_info = video_info_parser.parse_info()
+
+            if video_info:
+                total_size += video_info["file_size"]
+                download_list["video"] = video_info
+
+        if self.task_info.Download.type & DownloadType.AUDIO != 0:
+            audio_info_parser = AudioInfoParser(self.info_data, self.task_info)
+            audio_info = audio_info_parser.parse_info()
+
+            if audio_info:
+                total_size += audio_info["file_size"]
+                download_list["audio"] = audio_info
+
+        self.get_output_file_ext()
+
+        return {
+            "total_size": total_size,
+            "download_queue": list(download_list.keys()),
+            "download_list": download_list
+        }
+
+    def on_parse_error(self, error_message: str):
+        self.error = True
+
+        QMetaObject.invokeMethod(
+            self.parent,
+            "on_parse_error",
+            Qt.ConnectionType.QueuedConnection,
+            Q_ARG(str, error_message)
+        )
+
+    def check_response(self, response: dict):
+        if response.get("code", -1) != 0:
+            message = response.get("message", "无法获取下载链接")
+
+            self.on_parse_error(message)
+
+            raise Exception(message)
+        
+    def get_output_file_ext(self):
+        has_video = self.task_info.Download.type & DownloadType.VIDEO != 0
+        has_audio = self.task_info.Download.type & DownloadType.AUDIO != 0
+
+        if not has_video or not has_audio:
+            self.task_info.Download.merge_video_audio = False
+            self.task_info.Download.keep_original_files = False
+
+        if self.task_info.Download.merge_video_audio:
+            self.task_info.File.merge_file_ext = "mp4"
+    
