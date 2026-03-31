@@ -223,7 +223,7 @@ class SettingInterface(ScrollArea):
         dialog.exec()
 
     def on_custom_starting_number(self):
-        dialog = StartingNumberDialog(self)
+        dialog = StartingNumberDialog(self.main_window)
 
         if dialog.exec():
             self.numbering_setting_card.set_current_starting_number(dialog.starting_number_spin.value())
