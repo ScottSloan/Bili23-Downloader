@@ -192,6 +192,7 @@ class Translator:
             "FFMPEG_FAILED": translate("ERROR_MESSAGES", "An error occurred while running FFmpeg"),
             "FFMPEG_FAILED_WITH_CODE": translate("ERROR_MESSAGES", "FFmpeg failed with exit code {code}"),
             "FILE_NOT_FOUND": translate("ERROR_MESSAGES", "The specified file or folder does not exist"),
+            "FILE_NOT_FOUND_DETAIL": translate("ERROR_MESSAGES", "The file may have been moved or deleted. Please download it again."),
             "INSUFFICIENT_SPACE": translate("ERROR_MESSAGES", "Insufficient disk space"),
             "PERMISSION_DENIED": translate("ERROR_MESSAGES", "Permission denied: cannot write to file"),
             "CORRUPTED_FILE": translate("ERROR_MESSAGES", "Downloaded file is corrupted"),

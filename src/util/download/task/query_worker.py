@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QObject, Signal, Slot
+from PySide6.QtCore import QObject, Signal, Slot
 
 from util.download.task.manager import task_manager
 from util.download.task.info import TaskInfo

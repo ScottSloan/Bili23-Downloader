@@ -1,5 +1,5 @@
 from util.common.enum import FFmpegSource
-from util.common import config
+from util.common import config, Directory
 
 from pathlib import Path
 import logging
@@ -33,11 +33,7 @@ def check_environment_ffmpeg():
 
     return ffmpeg_path
 
-# 确定当前主程序是发行版还是开发版
-if home := os.environ.get("PYSTAND_HOME"):
-    cwd = Path(home)
-else:
-    cwd = Path.cwd()
+cwd = Directory.get_cwd()
 
 config.ffmpeg_executable = ffmpeg_executable
 

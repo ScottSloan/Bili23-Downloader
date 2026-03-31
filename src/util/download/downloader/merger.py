@@ -58,7 +58,10 @@ class Merger(QObject):
 
         else:
             # 下载文件不存在，视为合并失败
-            self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), Translator.ERROR_MESSAGES("FILE_NOT_FOUND"))
+            self.set_error_message(
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                Translator.ERROR_MESSAGES("FILE_NOT_FOUND_DETAIL")
+            )
 
     def rename_output_file(self):
         has_video = self.task_info.Download.type & DownloadType.VIDEO != 0
@@ -253,6 +256,18 @@ class Merger(QObject):
                 logger.warning(f"封面文件 {cover_path} 不存在，无法嵌入封面")
             
         return None
+
+    def check_files_exist(self, *args: str):
+        cwd = self.get_cwd()
+
+        for file_name in args:
+            if not Path(cwd, file_name).exists():
+                return False
+
+        return True
+    
+    def pre_check_files(self):
+        pass
 
     @property
     def temp_video_file_name(self):

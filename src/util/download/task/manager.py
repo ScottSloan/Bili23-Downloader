@@ -102,6 +102,7 @@ class TaskManager:
         path = Path(formatter.format())
 
         task_info.File.name = str(path.name)
+
         task_info.File.download_path = config.get(config.download_path)
         task_info.File.folder = str(path.parent)
 

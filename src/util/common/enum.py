@@ -107,6 +107,8 @@ class DownloadStatus(IntEnum):
     FAILED = 100                    # 下载失败
     FFMPEG_FAILED = 101             # FFmpeg 处理失败
 
+    INVALID = 1000                  # 无效状态，在下载未完成时，移动文件导致找不到临时文件
+
 class DownloadType(IntFlag):
     VIDEO            = 1 << 0       # 下载独立视频流
     AUDIO            = 1 << 1       # 下载独立音频流

@@ -112,3 +112,21 @@ class Directory:
         finally:
             ctypes.windll.ole32.CoUninitialize()
 
+    @staticmethod
+    def get_relative_path(base_path: str, target_path: str) -> str:
+        # 如果能够成功计算相对路径则返回相对路径，否则返回 None
+
+        try:
+            relative_path = os.path.relpath(target_path, base_path)
+            return relative_path
+        
+        except ValueError:
+            return None
+
+    @staticmethod
+    def get_cwd():
+        if home := os.environ.get("PYSTAND_HOME"):
+            return Path(home)
+        else:
+            return Path.cwd()
+        

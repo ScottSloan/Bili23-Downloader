@@ -91,11 +91,3 @@ begin
     end;
     result := true;
 end;
-
-procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
-begin
-  if CurUninstallStep = usDone then
-    begin
-      DelTree('{app}', True, True, True);
-    end;
-end;
