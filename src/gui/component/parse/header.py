@@ -1,4 +1,4 @@
-from util.format.units import Units
+from util.format import Units, Time
 
 from typing import Any
 
@@ -15,4 +15,13 @@ class DurationFormatter:
 
     def __str__(self):
         return Units.format_episode_duration(self.duration)
-    
+
+class DateFormatter:
+    def __init__(self, timestamp: int):
+        self.timestamp = timestamp
+
+    def __str__(self):
+        if self.timestamp:
+            return Time.format_timestamp(self.timestamp, "%Y-%m-%d")
+        else:
+            return ""

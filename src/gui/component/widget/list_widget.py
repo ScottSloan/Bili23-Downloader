@@ -1,8 +1,15 @@
-from PySide6.QtWidgets import QAbstractItemView, QApplication
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QListWidgetItem
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QMouseEvent
 
 from qfluentwidgets import ListWidget
+
+class CheckableItem(QListWidgetItem):
+    def __init__(self, text: str, parent = None):
+        super().__init__(text, parent)
+
+        self.setFlags(self.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+        self.setCheckState(Qt.CheckState.Unchecked)
 
 class DragListWidget(ListWidget):
     def __init__(self, parent = None):
@@ -59,3 +66,18 @@ class DragListWidget(ListWidget):
         self._is_dragging = False
         self._current_drag_item = None
         self._drag_start_pos = QPoint()
+
+class CheckableDragListWidget(DragListWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def addCheckableItem(self, text: str, checked = False, data = None):
+        item = CheckableItem(text)
+
+        if data:
+            item.setData(Qt.ItemDataRole.UserRole, data)
+
+        if checked:
+            item.setCheckState(Qt.CheckState.Checked)
+            
+        self.addItem(item)

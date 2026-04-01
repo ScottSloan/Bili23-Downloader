@@ -356,4 +356,7 @@ class ParseListSettingCard(ExpandGroupSettingCard):
 
         self.auto_check_all_switch = SettingSwitchButton(config.auto_check_all, parent = self)
 
+        self.custom_header_btn = PushButton(self.tr("Customize…"), self)
+
         self.addGroup("", self.tr("Auto-select All"), self.tr("Automatically select all items after parsing"), self.auto_check_all_switch)
+        self.addGroup("", self.tr("Customize Displayed Columns"), self.tr("Customize the columns displayed in the parse list and their order"), self.custom_header_btn)

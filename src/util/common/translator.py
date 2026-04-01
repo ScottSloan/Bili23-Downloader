@@ -210,7 +210,8 @@ class Translator:
             "LOGOUT_FAILED": translate("ERROR_MESSAGES", "Logout failed"),
             "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred"),
             "CHECK_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to check for updates"),
-            "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed")
+            "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed"),
+            "M4A_NOT_FOUND": translate("ERROR_MESSAGES", "M4A audio file not found for conversion"),
         }
 
     @staticmethod

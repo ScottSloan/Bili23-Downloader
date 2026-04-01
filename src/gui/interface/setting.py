@@ -12,7 +12,7 @@ from gui.component.setting.card import (
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
-    StartingNumberDialog
+    StartingNumberDialog, ParseListColumnDialog
 )
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet
@@ -160,6 +160,7 @@ class SettingInterface(ScrollArea):
         config.appRestartSig.connect(self.show_restart_message)
 
         # Behavior
+        self.parse_list_card.custom_header_btn.clicked.connect(self.on_custom_parse_list_column)
         self.stay_on_top_card.checkedChanged.connect(self.on_change_stay_on_top)
 
         # Download
@@ -182,6 +183,10 @@ class SettingInterface(ScrollArea):
 
         # Update
         self.check_update_card.clicked.connect(self.on_check_update)
+
+    def on_custom_parse_list_column(self):
+        dialog = ParseListColumnDialog(self.main_window)
+        dialog.exec()
 
     def on_change_stay_on_top(self, checked: bool):
         self.main_window.setStayOnTop(checked)

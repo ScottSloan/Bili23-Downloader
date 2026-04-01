@@ -18,6 +18,25 @@ import logging
 logger = logging.getLogger(__name__)
 
 class DefaultValue:
+    parse_list_column = [
+        {
+            "attr_key": "title",
+            "show": True
+        },
+        {
+            "attr_key": "badge",
+            "show": True
+        },
+        {
+            "attr_key": "duration",
+            "show": True
+        },
+        {
+            "attr_key": "pubtime",
+            "show": False
+        }
+    ]
+
     video_quality_priority = [
         127,
         126,
@@ -177,8 +196,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.0-rc.2"
-    app_comparable_version = "2.00.0-rc.2"
+    app_version = "2.00.1-alpha"
+    app_comparable_version = "2.00.1-alpha"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -186,6 +205,7 @@ class APPConfig(QConfig):
 
     # Behavior
     auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
+    parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
 
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
     listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())

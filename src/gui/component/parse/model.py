@@ -1,11 +1,12 @@
-from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal
-from PySide6.QtGui import QBrush
+from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal, QPersistentModelIndex
+from PySide6.QtGui import QBrush, QGuiApplication
 
 from qfluentwidgets import themeColor
 
-from gui.component.parse.header import StrFormatter, DurationFormatter
+from gui.component.parse.header import StrFormatter, DurationFormatter, DateFormatter
 
 from util.parse.episode.tree import TreeItem
+from util.common.config import config
 
 class ParseModel(QAbstractItemModel):
     check_state_changed = Signal(QModelIndex)
@@ -18,16 +19,13 @@ class ParseModel(QAbstractItemModel):
 
         self.root_node = root_node
         self.search_keyword = ""
+        self.last_changed_index = QPersistentModelIndex()
+        self.last_shift_index = QPersistentModelIndex()
 
         self._setup_column_data()
 
     def _setup_column_data(self):
-        self._column_data = [
-            {
-                "name": self.tr("No."),
-                "attr_key": "number",
-                "formatter": StrFormatter,
-            },
+        column_map = [
             {
                 "name": self.tr("Title"),
                 "attr_key": "title",
@@ -42,8 +40,30 @@ class ParseModel(QAbstractItemModel):
                 "name": self.tr("Duration"),
                 "attr_key": "duration",
                 "formatter": DurationFormatter
+            },
+            {
+                "name": self.tr("Publish Date"),
+                "attr_key": "pubtime",
+                "formatter": DateFormatter
             }
         ]
+
+        column_map = {entry["attr_key"]: entry for entry in column_map}
+
+        self._column_data = [
+            {
+                "name": self.tr("No."),
+                "attr_key": "number",
+                "formatter": StrFormatter,
+            }
+        ]
+
+        for entry in config.get(config.parse_list_column):
+            column_type = entry["attr_key"]
+            column_show = entry["show"]
+
+            if column_show:
+                self._column_data.append(column_map.get(column_type, {}))
 
     def columnCount(self, parent = QModelIndex()):
         return len(self._column_data)
@@ -134,34 +154,70 @@ class ParseModel(QAbstractItemModel):
         if not index.isValid():
             return False
 
-        item: TreeItem = index.internalPointer()
-
         if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
-            # 兼容处理 PySide 传递的 value 类型可能为 int 的情况
             state = Qt.CheckState(value) if isinstance(value, int) else value
             
-            # 委托给 Item 自身处理内聚的级联更新逻辑，消除模型层原本暴力的外部编排
-            item.set_checked_state(state)
+            is_shift_pressed = bool(QGuiApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier)
+            is_shift_pressed = is_shift_pressed or getattr(self, 'shift_pressed', False) or getattr(self, 'shift_key_pressed', False)
 
-            # --- 局部刷新 ---
-            # 1. 刷新当前自身节点
-            self.dataChanged.emit(index, index)
+            if is_shift_pressed and self.last_changed_index.isValid() and self.last_changed_index.parent() == index.parent():
+                self._handle_shift_check_state(index, state)
+            else:
+                self._handle_normal_check_state(index, state)
 
-            # 2. 向上递归：局部刷新所有祖先节点
-            p_idx = self.parent(index)
-
-            while p_idx.isValid():
-                self.dataChanged.emit(p_idx, p_idx)
-                p_idx = self.parent(p_idx)
-
-            # 3. 向下递归：局部刷新所有子孙节点
-            self._update_descendants(index)
-
+            self._update_ancestors(index)
             self.check_state_changed.emit(index)
 
             return True
 
         return False
+
+    def _handle_shift_check_state(self, index: QModelIndex, state: Qt.CheckState):
+        parent_idx = index.parent()
+        start_row_new = min(self.last_changed_index.row(), index.row())
+        end_row_new = max(self.last_changed_index.row(), index.row())
+
+        if not hasattr(self, 'last_shift_index') or not self.last_shift_index.isValid() or self.last_shift_index.parent() != parent_idx:
+            self.last_shift_index = self.last_changed_index
+
+        start_row_old = min(self.last_changed_index.row(), self.last_shift_index.row())
+        end_row_old = max(self.last_changed_index.row(), self.last_shift_index.row())
+
+        opposite_state = Qt.CheckState.Unchecked if state == Qt.CheckState.Checked else Qt.CheckState.Checked
+
+        min_refresh_row = min(start_row_new, start_row_old)
+        max_refresh_row = max(end_row_new, end_row_old)
+
+        for row in range(min_refresh_row, max_refresh_row + 1):
+            idx = self.index(row, 0, parent_idx)
+            in_new = start_row_new <= row <= end_row_new
+            in_old = start_row_old <= row <= end_row_old
+
+            if in_new:
+                idx.internalPointer().set_checked_state(state)
+                self._update_descendants(idx)
+            elif in_old:
+                idx.internalPointer().set_checked_state(opposite_state)
+                self._update_descendants(idx)
+
+        self.dataChanged.emit(self.index(min_refresh_row, 0, parent_idx), self.index(max_refresh_row, 0, parent_idx))
+        self.last_shift_index = QPersistentModelIndex(index)
+
+    def _handle_normal_check_state(self, index: QModelIndex, state: Qt.CheckState):
+        item: TreeItem = index.internalPointer()
+        item.set_checked_state(state)
+
+        self.last_changed_index = QPersistentModelIndex(index)
+        self.last_shift_index = QPersistentModelIndex(index)
+
+        self.dataChanged.emit(index, index)
+        self._update_descendants(index)
+
+    def _update_ancestors(self, index: QModelIndex):
+        p_idx = self.parent(index)
+        while p_idx.isValid():
+            self.dataChanged.emit(p_idx, p_idx)
+            p_idx = self.parent(p_idx)
 
     def _update_descendants(self, parent_idx: QModelIndex):
         """辅导方法：递归触发所有子孙节点视图的局部刷新"""

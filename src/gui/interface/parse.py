@@ -300,10 +300,14 @@ class ParseInterface(ParseBase):
 
             event.accept()
 
+            return
+
         elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_D:
             self.parse_list.check_all_items(uncheck = True)
 
             event.accept()
+
+            return
             
         else:
             return super().keyPressEvent(event)

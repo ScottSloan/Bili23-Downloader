@@ -20,17 +20,17 @@ class ProfileCard(FlyoutViewBase):
         self.init_UI()
 
     def init_UI(self):
-        self.avatar = AvatarWidget(config.user_avatar_pixmap, self)
+        self.avatar = AvatarWidget(config.user_avatar_pixmap, parent = self)
         self.avatar.setRadius(24)
 
-        self.uname_lab = BodyLabel(config.user_uname, self)
+        self.uname_lab = BodyLabel(config.user_uname, parent = self)
 
         color = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
 
-        self.uid_lab = CaptionLabel(f"UID: {config.user_uid}", self)
+        self.uid_lab = CaptionLabel(f"UID: {config.user_uid}", parent = self)
         self.uid_lab.setStyleSheet('QLabel{color: ' + color.name() + '}')
 
-        self.logout_btn = HyperlinkButton(self)
+        self.logout_btn = HyperlinkButton(parent = self)
         self.logout_btn.setText(self.tr("Logout"))
 
         self.avatar.move(12, 10)

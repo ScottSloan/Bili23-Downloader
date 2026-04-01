@@ -33,9 +33,13 @@ class ParseTreeView(TreeView):
 
     def _setHeaderWidth(self):
         self.setColumnWidth(0, 140)     # 序号列
+        self.setColumnWidth(1, 300)     # 标题列
+        self.setColumnWidth(2, 100)     # 备注列
+        self.setColumnWidth(3, 100)     # 时长列
+        self.setColumnWidth(4, 150)     # 发布日期列
 
-        header = self.header()
-        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
+        #header = self.header()
+        #header.setSectionResizeMode(1, header.ResizeMode.Stretch)
 
     def update_tree(self, root_node: TreeItem):
         self._model.beginResetModel()
@@ -73,6 +77,14 @@ class ParseTreeView(TreeView):
         # 更新视图
         self.update_check_state()
 
+    def reverse_check_state(self):
+        all_items = self.get_all_items()
+
+        for item in all_items:
+            item.set_checked_state(Qt.CheckState.Checked if item.checked == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
+
+        self.update_check_state()
+
     def on_context_menu(self, pos):
         global_pos = self.viewport().mapToGlobal(pos)
         
@@ -85,22 +97,30 @@ class ParseTreeView(TreeView):
 
         menu = RoundMenu(parent = self)
 
-        check_all_action = Action(
+        toggle_check_all_action = Action(
             icon = ExtendedFluentIcon.SELECT_ALL,
-            text = self.tr("Deselect All") if self._model.root_node.checked == Qt.CheckState.Checked else self.tr("Select All"),
+            text = self.tr("Check All") if self._model.root_node.checked == Qt.CheckState.Unchecked else self.tr("Uncheck All"),
             parent = self
         )
-        check_all_action.triggered.connect(lambda: self.on_check_all_items(item))
-        menu.addAction(check_all_action)
+        toggle_check_all_action.triggered.connect(self.on_toggle_check_all_items)
+        menu.addAction(toggle_check_all_action)
+
+        reverse_check_action = Action(
+            icon = ExtendedFluentIcon.RETRY,
+            text = self.tr("Reverse"),
+            parent = self
+        )
+        reverse_check_action.triggered.connect(self.reverse_check_state)
+        menu.addAction(reverse_check_action)
         menu.addSeparator()
 
-        toggle_action = Action(
+        toggle_check_action = Action(
             icon = ExtendedFluentIcon.SELECT,
-            text = self.tr("Select Item") if item.checked == Qt.CheckState.Unchecked else self.tr("Deselect Item"),
+            text = self.tr("Check Item") if item.checked == Qt.CheckState.Unchecked else self.tr("Uncheck Item"),
             parent = self
         )
-        toggle_action.triggered.connect(lambda: self.on_toggle_check_state(item))
-        menu.addAction(toggle_action)
+        toggle_check_action.triggered.connect(lambda: self.on_toggle_check_state(item))
+        menu.addAction(toggle_check_action)
 
         if item.count() == 0:
             open_in_browser_action = Action(icon = FluentIcon.GLOBE, text = self.tr("Open in Browser"), parent = self)
@@ -120,8 +140,8 @@ class ParseTreeView(TreeView):
 
         menu.exec(global_pos)
 
-    def on_check_all_items(self, item: TreeItem):
-        self.check_all_items(uncheck = item.checked == Qt.CheckState.Checked)
+    def on_toggle_check_all_items(self):
+        self.check_all_items(uncheck = self._model.root_node.checked != Qt.CheckState.Unchecked)
 
     def on_toggle_check_state(self, item: TreeItem):
         item.set_checked_state(Qt.CheckState.Checked if item.checked == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
@@ -194,6 +214,22 @@ class ParseTreeView(TreeView):
         signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Updating media info..."))
 
         signal_bus.parse.preview_init.emit(episode_data)
+
+    def shift_select_range(self, new_index: QModelIndex):
+        if self._model.last_changed_index.isValid():
+            last_row = self._model.last_changed_index.row()
+            new_row = new_index.row()
+
+            start_row = min(last_row, new_row)
+            end_row = max(last_row, new_row)
+
+            for row in range(start_row, end_row + 1):
+                index = self._model.index(row, 0)
+                item: TreeItem = index.internalPointer()
+
+                item.set_checked_state(Qt.CheckState.Checked)
+
+            self.update_check_state()
 
     def __set_QSS(self):
         light_style = """

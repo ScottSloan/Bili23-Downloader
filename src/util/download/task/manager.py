@@ -1,4 +1,4 @@
-from util.common import signal_bus, config, Remover, get_timestamp
+﻿from util.common import signal_bus, config, safe_remove, get_timestamp
 from util.download.task.reparse_worker import ReparseWorker
 from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.enum import DownloadStatus, DownloadType
@@ -209,11 +209,7 @@ class TaskManager:
 
     def _removeTemporaryFiles(self, task_info: TaskInfo):
         # 删除下载的临时文件
-        (
-            Remover()
-            .set_cwd(Path(task_info.File.download_path, task_info.File.folder))
-            .add_files(task_info.File.relative_files)
-            .execute()
-        )
+        safe_remove(Path(task_info.File.download_path, task_info.File.folder), *task_info.File.relative_files)
 
 task_manager = TaskManager()
+

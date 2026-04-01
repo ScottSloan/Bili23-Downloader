@@ -33,6 +33,14 @@ def check_environment_ffmpeg():
 
     return ffmpeg_path
 
+def try_fallback_to_bundled_ffmpeg():
+    if config.bundle_ffmpeg_exist:
+        config.set(config.ffmpeg_source, FFmpegSource.BUNDLED)
+
+        set_ffmpeg_environment(bundle_ffmpeg_path)
+    else:
+        logger.error("没有可用的 FFmpeg 可执行文件")
+
 cwd = Directory.get_cwd()
 
 config.ffmpeg_executable = ffmpeg_executable
@@ -63,20 +71,21 @@ match config.get(config.ffmpeg_source):
         path_ffmpeg_executable = check_environment_ffmpeg()
 
         if not path_ffmpeg_executable:
-
-            if config.bundle_ffmpeg_exist:
-                # 如果环境变量中没有 FFmpeg，但附带的 FFmpeg 存在，则使用附带的 FFmpeg
-                config.set(config.ffmpeg_source, FFmpegSource.BUNDLED)
-
-                set_ffmpeg_environment(bundle_ffmpeg_path)
-
-                logger.warning("已切换到附带的 FFmpeg，因为环境变量中未找到 FFmpeg 可执行文件")
-            else:
-                logger.error("未找到 FFmpeg 可执行文件，且附带的 FFmpeg 也不存在，请检查设置中的 FFmpeg 配置")
+            # 尝试 fallback 到附带的 FFmpeg
+            try_fallback_to_bundled_ffmpeg()
             
     case FFmpegSource.CUSTOM:
         # 将自定义的 FFmpeg 路径添加到环境变量
-        set_ffmpeg_environment(config.get(config.custom_ffmpeg_path))
+        custom_ffmpeg_path = Path(config.get(config.custom_ffmpeg_path), ffmpeg_executable)
+
+        # 检查自定义路径是否存在 FFmpeg 可执行文件
+        if custom_ffmpeg_path.exists():
+            set_ffmpeg_environment(custom_ffmpeg_path)
+        else:
+            logger.warning(f"自定义 FFmpeg 路径无效，未找到 FFmpeg 可执行文件：{custom_ffmpeg_path}")
+
+            # 尝试 fallback 到环境变量中的 FFmpeg
+            try_fallback_to_bundled_ffmpeg()
 
 from util.ffmpeg.command import FFmpegCommand
 from util.ffmpeg.runner import FFmpegRunner
