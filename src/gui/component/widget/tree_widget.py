@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QApplication
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtCore import Qt, QPoint
 
 from qfluentwidgets import TreeWidget, TreeItemDelegate, LineEdit
 
@@ -31,9 +32,12 @@ class EditDragTreeWidget(TreeWidget):
         self.setObjectName("EditDragTreeWidget")
         self.setItemDelegate(EditItemDelegate(self))
         self.setSelectionMode(QTreeWidget.SelectionMode.SingleSelection)
-        self.setDragDropMode(QTreeWidget.DragDropMode.InternalMove)
-        self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setIndentation(0)
+
+        # 记录手动拖拽的状态
+        self._is_dragging = False
+        self._drag_start_pos = QPoint()
+        self._current_drag_item = None
 
         self.itemDoubleClicked.connect(self.on_item_double_clicked)
 
@@ -59,16 +63,6 @@ class EditDragTreeWidget(TreeWidget):
         else:
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
 
-    def dropEvent(self, event):
-        current_item = self.currentItem()
-
-        super().dropEvent(event)
-
-        if self.reorder_enabled:
-            self.reorder_list()
-
-        self.setCurrentItem(current_item)
-
     def reorder_list(self):
         for index in range(self.topLevelItemCount()):
             item = self.topLevelItem(index)
@@ -89,6 +83,51 @@ class EditDragTreeWidget(TreeWidget):
 
     def remove_item(self, item: int):
         self.takeTopLevelItem(self.indexOfTopLevelItem(item))
+
+        if self.reorder_enabled:
+            self.reorder_list()
+
+    def mousePressEvent(self, event: QMouseEvent):
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            item = self.itemAt(event.pos())
+            if item:
+                self._is_dragging = True
+                self._drag_start_pos = event.pos()
+                self._current_drag_item = item
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if not self._is_dragging or not self._current_drag_item:
+            super().mouseMoveEvent(event)
+            return
+
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
+            super().mouseMoveEvent(event)
+            return
+
+        # 如果移动距离不够，不触发交换动作
+        if (event.pos() - self._drag_start_pos).manhattanLength() < QApplication.startDragDistance():
+            return
+
+        target_item = self.itemAt(event.pos())
+        # 如果鼠标移动到了另一个项目的范围内，进行动态交换
+        if target_item and target_item is not self._current_drag_item:
+            current_row = self.indexOfTopLevelItem(self._current_drag_item)
+            target_row = self.indexOfTopLevelItem(target_item)
+            
+            # 取出原项目并重新插入到目标位置
+            item = self.takeTopLevelItem(current_row)
+            self.insertTopLevelItem(target_row, item)
+            
+            # 保持项的选中状态，并始终显示这个项
+            self.setCurrentItem(item)
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        super().mouseReleaseEvent(event)
+        
+        self._is_dragging = False
+        self._current_drag_item = None
+        self._drag_start_pos = QPoint()
 
         if self.reorder_enabled:
             self.reorder_list()

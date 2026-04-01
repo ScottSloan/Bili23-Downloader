@@ -1188,6 +1188,16 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <source>Settings</source>
         <translation>设置</translation>
     </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="261"/>
+        <source>Download Directory Invalid</source>
+        <translation>下载目录无效</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="262"/>
+        <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
+        <translation>当前下载目录无法访问或没有写入权限，请重新设置</translation>
+    </message>
 </context>
 <context>
     <name>MarginGroup</name>
@@ -1620,32 +1630,32 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseListColumnDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/parse_list_column.py" line="17"/>
-        <source>自定义解析列表列</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/dialog/setting/parse_list_column.py" line="19"/>
-        <source>勾选需要显示的列，拖拽调整列顺序</source>
-        <translation type="unfinished"></translation>
+        <source>Customize Displayed Columns</source>
+        <translation>自定义显示列</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/parse_list_column.py" line="32"/>
+        <location filename="../../gui/dialog/setting/parse_list_column.py" line="21"/>
+        <source>Check the columns you want to display and drag to reorder them</source>
+        <translation>勾选需要显示的列，拖拽调整列顺序</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/parse_list_column.py" line="34"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/parse_list_column.py" line="33"/>
+        <location filename="../../gui/dialog/setting/parse_list_column.py" line="35"/>
         <source>Notes</source>
         <translation>备注</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/parse_list_column.py" line="34"/>
+        <location filename="../../gui/dialog/setting/parse_list_column.py" line="36"/>
         <source>Duration</source>
         <translation>时长</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/parse_list_column.py" line="35"/>
+        <location filename="../../gui/dialog/setting/parse_list_column.py" line="37"/>
         <source>Publish Date</source>
         <translation>发布日期</translation>
     </message>
@@ -1691,7 +1701,7 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseModel</name>
     <message>
-        <location filename="../../gui/component/parse/model.py" line="29"/>
+        <location filename="../../gui/component/parse/model.py" line="59"/>
         <source>No.</source>
         <translation>序号</translation>
     </message>

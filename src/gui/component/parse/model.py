@@ -6,7 +6,7 @@ from qfluentwidgets import themeColor
 from gui.component.parse.header import StrFormatter, DurationFormatter, DateFormatter
 
 from util.parse.episode.tree import TreeItem
-from util.common.config import config
+from util.common import config, signal_bus
 
 class ParseModel(QAbstractItemModel):
     check_state_changed = Signal(QModelIndex)
@@ -24,7 +24,11 @@ class ParseModel(QAbstractItemModel):
 
         self._setup_column_data()
 
+        signal_bus.parse.update_column_settings.connect(self._setup_column_data)
+
     def _setup_column_data(self):
+        self.beginResetModel()
+
         column_map = [
             {
                 "name": self.tr("Title"),
@@ -64,6 +68,8 @@ class ParseModel(QAbstractItemModel):
 
             if column_show:
                 self._column_data.append(column_map.get(column_type, {}))
+
+        self.endResetModel()
 
     def columnCount(self, parent = QModelIndex()):
         return len(self._column_data)

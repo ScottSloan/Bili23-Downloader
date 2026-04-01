@@ -4,7 +4,7 @@ from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, 
 
 from gui.component.parse.model import ParseModel
 
-from util.common import ExtendedFluentIcon, signal_bus
+from util.common import ExtendedFluentIcon, signal_bus, config
 from util.common.enum import ToastNotificationCategory
 from util.parse.episode.tree import TreeItem
 
@@ -26,6 +26,7 @@ class ParseTreeView(TreeView):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.customContextMenuRequested.connect(self.on_context_menu)
+        signal_bus.parse.update_column_settings.connect(self._setHeaderWidth)
 
         self.__set_QSS()
         
@@ -33,13 +34,12 @@ class ParseTreeView(TreeView):
 
     def _setHeaderWidth(self):
         self.setColumnWidth(0, 140)     # 序号列
-        self.setColumnWidth(1, 300)     # 标题列
-        self.setColumnWidth(2, 100)     # 备注列
-        self.setColumnWidth(3, 100)     # 时长列
-        self.setColumnWidth(4, 150)     # 发布日期列
 
-        #header = self.header()
-        #header.setSectionResizeMode(1, header.ResizeMode.Stretch)
+        for index, entry in enumerate(config.get(config.parse_list_column), start = 1):
+            self.setColumnWidth(index, entry["width"])
+
+        # 重新展开
+        self.expandAll()
 
     def update_tree(self, root_node: TreeItem):
         self._model.beginResetModel()

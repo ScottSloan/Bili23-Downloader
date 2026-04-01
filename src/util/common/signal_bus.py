@@ -19,6 +19,8 @@ class SignalBus:
         query_video_info = Signal(int, int, object)
         query_audio_info = Signal(int, object)
 
+        update_column_settings = Signal()
+
     class Download(QObject):
         create_task = Signal(list)
 

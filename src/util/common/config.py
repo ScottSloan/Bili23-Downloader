@@ -21,19 +21,23 @@ class DefaultValue:
     parse_list_column = [
         {
             "attr_key": "title",
+            "width": 300,
             "show": True
         },
         {
             "attr_key": "badge",
+            "width": 100,
             "show": True
         },
         {
             "attr_key": "duration",
+            "width": 100,
             "show": True
         },
         {
             "attr_key": "pubtime",
-            "show": False
+            "width": 150,
+            "show": True
         }
     ]
 
@@ -214,7 +218,7 @@ class APPConfig(QConfig):
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download
-    download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation), FolderValidator())
+    download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation))
     download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 8))
     download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 5))
     show_notification = ConfigItem("Download", "show_notification", False, BoolValidator())

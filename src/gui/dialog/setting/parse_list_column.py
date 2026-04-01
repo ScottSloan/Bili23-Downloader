@@ -5,7 +5,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel
 from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
 
-from util.common.config import config
+from util.common import config, signal_bus
 
 class ParseListColumnDialog(DialogBase):
     def __init__(self, parent = None):
@@ -16,9 +16,9 @@ class ParseListColumnDialog(DialogBase):
         self.init_data()
 
     def init_UI(self):
-        self.caption_lab = SubtitleLabel(self.tr("自定义解析列表列"))
+        self.caption_lab = SubtitleLabel(self.tr("Customize Displayed Columns"))
 
-        column_lab = BodyLabel(self.tr("勾选需要显示的列，拖拽调整列顺序"))
+        column_lab = BodyLabel(self.tr("Check the columns you want to display and drag to reorder them"))
 
         self.drag_list = CheckableDragListWidget()
 
@@ -43,7 +43,7 @@ class ParseListColumnDialog(DialogBase):
 
             label = column_map.get(column_type)
 
-            self.drag_list.addCheckableItem(label, column_show, column_type)
+            self.drag_list.addCheckableItem(label, column_show, entry)
 
     def accept(self):
         column_list = []
@@ -51,10 +51,9 @@ class ParseListColumnDialog(DialogBase):
         for row in range(self.drag_list.count()):
             item = self.drag_list.item(row)
 
-            entry = {
-                "attr_key": item.data(Qt.ItemDataRole.UserRole),
-                "show": item.checkState() == Qt.CheckState.Checked
-            }
+            entry = item.data(Qt.ItemDataRole.UserRole)
+
+            entry["show"] = item.checkState() == Qt.CheckState.Checked
 
             column_list.append(entry)
 
@@ -62,5 +61,7 @@ class ParseListColumnDialog(DialogBase):
             return
         
         config.set(config.parse_list_column, column_list)
+
+        signal_bus.parse.update_column_settings.emit()
             
         return super().accept()

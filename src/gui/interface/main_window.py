@@ -15,8 +15,8 @@ from gui.dialog.update import UpdateDialog
 from gui.dialog.login import LoginDialog
 
 from util.common.enum import ToastNotificationCategory, WhenClose
+from util.common import signal_bus, config, Directory
 from util.auth import CookieManager, UserManager
-from util.common import signal_bus, config
 from util.misc import Updater
 
 class MainWindow(MSFluentWindow):
@@ -105,6 +105,8 @@ class MainWindow(MSFluentWindow):
         
         else:
             signal_bus.update.check.emit(False)
+
+        QTimer.singleShot(500, self.check_download_path)
 
     def closeEvent(self, e):
         if not self.on_close():
@@ -248,3 +250,14 @@ class MainWindow(MSFluentWindow):
         self.download_info_badge.adjustSize()
 
         self.download_info_badge.move(self.download_btn.width() - 4, 111)
+
+    def check_download_path(self):
+        download_path = config.get(config.download_path)
+
+        accessible = Directory.ensure_directory_accessible(download_path)
+
+        if not accessible:
+            signal_bus.toast.show_long_message.emit(
+                self.tr("Download Directory Invalid"),
+                self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
+            )

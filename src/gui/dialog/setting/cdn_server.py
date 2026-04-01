@@ -36,6 +36,7 @@ class CDNServerDialog(DialogBase):
 
         self.cdn_server_list = EditDragTreeWidget(self)
         self.cdn_server_list.setColumnEditable(1, True)
+        self.cdn_server_list.setReorderEnabled(True)
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
