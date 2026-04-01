@@ -1,4 +1,4 @@
-from .config import appdata_path, config
+from .config import appdata_path, config, DefaultValue
 from .io import File, safe_remove, safe_rename, Directory
 from .translator import Translator
 from .data import *

@@ -5,7 +5,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel
 from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
 
-from util.common import config, signal_bus
+from util.common import config, signal_bus, Translator
 
 class ParseListColumnDialog(DialogBase):
     def __init__(self, parent = None):
@@ -30,18 +30,11 @@ class ParseListColumnDialog(DialogBase):
         self.widget.setMinimumWidth(350)
 
     def init_data(self):
-        column_map = {
-            "title": self.tr("Title"),
-            "badge": self.tr("Notes"),
-            "duration": self.tr("Duration"),
-            "pubtime": self.tr("Publish Date")
-        }
-
         for entry in config.get(config.parse_list_column):
             column_type = entry["attr_key"]
             column_show = entry["show"]
 
-            label = column_map.get(column_type)
+            label = Translator.COLUMN_NAME(column_type)
 
             self.drag_list.addCheckableItem(label, column_show, entry)
 

@@ -22,6 +22,7 @@ class ParseTreeView(TreeView):
         self.setModel(self._model)
         self.setUniformRowHeights(True)
         self.setAlternatingRowColors(True)
+        self.setSortingEnabled(True)
         self.setSelectionMode(TreeView.SelectionMode.SingleSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 

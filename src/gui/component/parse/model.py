@@ -5,8 +5,8 @@ from qfluentwidgets import themeColor
 
 from gui.component.parse.header import StrFormatter, DurationFormatter, DateFormatter
 
+from util.common import config, signal_bus, Translator
 from util.parse.episode.tree import TreeItem
-from util.common import config, signal_bus
 
 class ParseModel(QAbstractItemModel):
     check_state_changed = Signal(QModelIndex)
@@ -19,6 +19,7 @@ class ParseModel(QAbstractItemModel):
 
         self.root_node = root_node
         self.search_keyword = ""
+        self.category_name = ""
         self.last_changed_index = QPersistentModelIndex()
         self.last_shift_index = QPersistentModelIndex()
 
@@ -31,32 +32,27 @@ class ParseModel(QAbstractItemModel):
 
         column_map = [
             {
-                "name": self.tr("Title"),
-                "attr_key": "title",
+                "attr_key": "title",                             # 标题
                 "formatter": StrFormatter
             },
             {
-                "name": self.tr("Notes"),
-                "attr_key": "badge",
+                "attr_key": "badge",                             # 备注
                 "formatter": StrFormatter
             },
             {
-                "name": self.tr("Duration"),
-                "attr_key": "duration",
+                "attr_key": "duration",                          # 时长
                 "formatter": DurationFormatter
             },
             {
-                "name": self.tr("Publish Date"),
-                "attr_key": "pubtime",
+                "attr_key": "pub_fav_time",                      # 发布或收藏时间
                 "formatter": DateFormatter
-            }
+            },
         ]
 
         column_map = {entry["attr_key"]: entry for entry in column_map}
 
         self._column_data = [
             {
-                "name": self.tr("No."),
                 "attr_key": "number",
                 "formatter": StrFormatter,
             }
@@ -118,7 +114,9 @@ class ParseModel(QAbstractItemModel):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             header_data = self._column_data[section]
 
-            return header_data.get("name", None)
+            attr_key = header_data.get("attr_key", "")
+
+            return Translator.COLUMN_NAME(attr_key, self.category_name)
         
         return None
     
@@ -146,6 +144,40 @@ class ParseModel(QAbstractItemModel):
 
         return self.createIndex(parent_item.row(), 0, parent_item)
     
+    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder):
+        if not self._column_data or column < 0 or column >= len(self._column_data):
+            return
+
+        self.layoutAboutToBeChanged.emit()
+
+        attr_key = self._column_data[column]["attr_key"]
+        reverse = (order == Qt.SortOrder.DescendingOrder)
+
+        def _sort_recursive(node: TreeItem):
+            if not node.children:
+                return
+
+            def sort_key(child: TreeItem):
+                val = getattr(child, attr_key, "")
+                # 将 None 转换为空字符串或其他默认值，以防比较报错
+                if val is None:
+                    return ""
+                
+                return val
+
+            node.children.sort(key = sort_key, reverse = reverse)
+
+            for child in node.children:
+                _sort_recursive(child)
+
+        _sort_recursive(self.root_node)
+
+        # 排序后清空用于按住 Shift 连续勾选的记录索引，避免错乱
+        self.last_changed_index = QPersistentModelIndex()
+        self.last_shift_index = QPersistentModelIndex()
+
+        self.layoutChanged.emit()
+
     def flags(self, index: QModelIndex):
         if not index.isValid():
             return Qt.ItemFlag.ItemIsEnabled

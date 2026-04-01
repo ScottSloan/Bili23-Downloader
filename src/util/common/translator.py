@@ -7,8 +7,8 @@ translate = QCoreApplication.translate
 
 def get_map_method(func):
     @wraps(func)
-    def wrapper(key = None):
-        mapping: dict = func(key)
+    def wrapper(key = None, *args, **kwargs):
+        mapping: dict = func(key, *args, **kwargs)
 
         if key is None:
             return mapping
@@ -184,6 +184,27 @@ class Translator:
             "SEASON_NUMBER": translate("VARIABLE_DESCRIPTION", "Season number"),
             "EPISODE_NUMBER": translate("VARIABLE_DESCRIPTION", "Episode number"),
         }
+
+    @staticmethod
+    def COLUMN_NAME(key: str, category_name: str = None):
+        map = {
+            "number": translate("COLUMN_NAME", "No."),
+            "title": translate("COLUMN_NAME", "Title"),
+            "badge": translate("COLUMN_NAME", "Notes"),
+            "duration": translate("COLUMN_NAME", "Duration"),
+            "pub_fav_time": translate("COLUMN_NAME", "Publish or Favorite Date"),
+            "pubtime": translate("COLUMN_NAME", "Publish Date"),
+            "favtime": translate("COLUMN_NAME", "Favorite Date"),
+        }
+
+        
+        if key == "pub_fav_time" and category_name is not None:
+            if category_name == "FAVORITES":
+                return map["favtime"]
+            else:
+                return map["pubtime"]
+        else:
+            return map.get(key, key)
 
     @staticmethod
     @get_map_method

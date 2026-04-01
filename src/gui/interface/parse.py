@@ -191,6 +191,7 @@ class ParseInterface(ParseBase):
 
     def on_parse_success(self, category_name: str, extra_data: dict):
         if first_episode_info := self.parse_list.get_first_item_info():
+            self.parse_list._model.category_name = category_name
             self.category_name = Translator.EPISODE_TYPE(category_name)
 
             # 获取解析结果中第一个视频的信息，作为预览的媒体信息

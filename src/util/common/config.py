@@ -2,7 +2,7 @@ from PySide6.QtCore import QStandardPaths
 from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
-    QConfig, RangeConfigItem, RangeValidator, OptionsValidator, FolderValidator, OptionsConfigItem, BoolValidator,
+    QConfig, RangeConfigItem, RangeValidator, OptionsValidator, OptionsConfigItem, BoolValidator,
     ConfigItem, EnumSerializer, Theme, qconfig
 )
 
@@ -21,12 +21,12 @@ class DefaultValue:
     parse_list_column = [
         {
             "attr_key": "title",
-            "width": 300,
+            "width": 350,
             "show": True
         },
         {
             "attr_key": "badge",
-            "width": 100,
+            "width": 90,
             "show": True
         },
         {
@@ -35,8 +35,8 @@ class DefaultValue:
             "show": True
         },
         {
-            "attr_key": "pubtime",
-            "width": 150,
+            "attr_key": "pub_fav_time",
+            "width": 140,
             "show": True
         }
     ]

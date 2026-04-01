@@ -37,6 +37,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
                 "episode_id": self.episode_id,
                 "number": episode_count,
                 "pubtime": episode["pubtime"],
+                "favtime": episode["fav_time"],
                 "title": self.get_episode_title(episode)
             }
 

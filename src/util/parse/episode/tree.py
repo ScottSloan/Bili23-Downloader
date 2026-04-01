@@ -149,6 +149,7 @@ class TreeItem(TreeItemBase):
         self.title = item_data.get("title", "")
         self.number = item_data.get("number", "")
         self.pubtime = item_data.get("pubtime", 0)
+        self.favtime = item_data.get("favtime", 0)
         self.duration = item_data.get("duration", 0)
         self.episode_id = item_data.get("episode_id", "")
         self.episode_plot = item_data.get("episode_plot", "")
@@ -176,6 +177,7 @@ class TreeItem(TreeItemBase):
             "ep_id": self.ep_id,
             "number": self.number,                                 # 在解析列表中显示的序号
             "pubtime": self.pubtime,                               # 发布时间（时间戳）
+            "favtime": self.favtime,                               # 收藏时间（时间戳）
             "part_number": self.part_number,                       # 分P序号，仅分P有效
             "related_titles": self.related_titles,                 # 相关标题，如合集标题、章节标题等
             "title": self.title,                                   # 标题
@@ -203,4 +205,12 @@ class TreeItem(TreeItemBase):
             matches.extend(child.search_items(keyword))
 
         return matches
+    
+    @property
+    def pub_fav_time(self):
+        if self.attribute & Attribute.FAVLIST_BIT:
+            return self.favtime
+        
+        else:
+            return self.pubtime
     
