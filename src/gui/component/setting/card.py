@@ -98,7 +98,7 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
             self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
 
 class CoverSettingCard(ExpandGroupSettingCard):
-    def __init__(self, full_mode = True, parent = None):
+    def __init__(self, parent = None):
         super().__init__(FluentIcon.PHOTO, self.tr("Cover Download Settings"), self.tr("Adjust cover download settings"), parent)
 
         self.download_switch = SettingSwitchButton(config.download_cover, parent = self)
@@ -106,16 +106,23 @@ class CoverSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.cover_type, ["jpg", "png", "avif", "webp"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.attach_cover_switch = SettingSwitchButton(config.attach_cover, parent = self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Cover"), "", self.download_switch)
         self.addGroup("", self.tr("Cover Format"), "", self.type_choice)
+        self.attach_cover_group = self.addGroup("", self.tr("Embed cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
 
-        if full_mode:
-            self.attach_cover_switch = SettingSwitchButton(config.attach_cover, parent = self)
+        self.attach_cover_group.setEnabled(config.get(config.download_cover))
+        self.download_switch.checkedChanged.connect(self.on_toggle_attach_cover)
 
-            self.addGroup("", self.tr("Embed cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
+    def on_toggle_attach_cover(self, checked: bool):
+        self.attach_cover_group.setEnabled(checked)
+
+        if not checked:
+            self.attach_cover_switch.setChecked(False)
 
 class MetadataSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -367,9 +374,16 @@ class ConfigFileSettingCard(ExpandGroupSettingCard):
 
         self.import_btn = PushButton(self.tr("Browse..."), self)
         self.export_btn = PushButton(self.tr("Browse..."), self)
+        self.open_dir_btn = PushButton(self.tr("Open"), self)
 
         self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
         self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
+        self.addGroup("", self.tr("Open Config Directory"), "", self.open_dir_btn)
+
+        self.open_dir_btn.clicked.connect(self.on_open_config_directory)
+
+    def on_open_config_directory(self):
+        Directory.open_directory_in_explorer(str(config.file.parent))
 
 class SpeedLimitSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

@@ -14,8 +14,12 @@ from util.common.enum import (
 
 from pathlib import Path
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
+
+def isWin11():
+    return sys.platform == "win32" and sys.getwindowsversion().build >= 22000
 
 class DefaultValue:
     parse_list_column = [
@@ -206,6 +210,7 @@ class APPConfig(QConfig):
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
     scaling = OptionsConfigItem("Interface", "scaling", Scaling.AUTO, OptionsValidator(Scaling), ScalingSerializer(), restart = True)
+    mica_effect = ConfigItem("Interface", "mica_effect", False, BoolValidator())
 
     # Behavior
     auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())

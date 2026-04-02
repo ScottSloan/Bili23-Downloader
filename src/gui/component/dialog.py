@@ -9,7 +9,7 @@ from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 from gui.component.widget import PivotItem, Pivot
 
 from util.common.enum import ToastNotificationCategory
-from util.common import StyleSheet
+from util.common import StyleSheet, config
 
 class Base:
     def __init__(self):
@@ -93,7 +93,7 @@ class FluentDialogBase(Base, FluentWidget):
 
         self._setup_title_bar()
 
-        self.setMicaEffectEnabled(False)
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self._event_loop = None

@@ -16,7 +16,7 @@ from gui.dialog.setting import (
     StartingNumberDialog, ParseListColumnDialog, SpeedLimitSettingDialog
 )
 
-from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig
+from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig, isWin11
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
 
@@ -45,6 +45,7 @@ class SettingInterface(ScrollArea):
         self.theme_color_card = CustomColorSettingCard(config.themeColor, FluentIcon.PALETTE, self.tr("Theme color"), self.tr("Adjust the theme color of the application"), self)
         self.scaling_card = ComboBoxSettingCard(config.scaling, FluentIcon.ZOOM, self.tr("Display scaling"), self.tr("Adjust the scaling of the application interface"), ["100%", "125%", "150%", "175%", "200%", self.tr("Follow system setting")], self)
         self.language_card = ComboBoxSettingCard(config.language, FluentIcon.LANGUAGE, self.tr("Language"), self.tr("Choose the display language of the application"), ["简体中文", "繁體中文", "English", self.tr("Follow system setting")], self)
+        self.mica_effect_card = SwitchSettingCard(FluentIcon.TRANSPARENT, self.tr("Mica effect"), self.tr("Apply Mica material that matches your desktop background"), config.mica_effect, self)
 
         # Behavior
         self.behavior_group = SettingCardGroup(self.tr("Behavior"), self)
@@ -63,8 +64,8 @@ class SettingInterface(ScrollArea):
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
         self.download_thread_card = RangeSettingCard(config.download_thread, ExtendedFluentIcon.DOUBLE_RIGHT_ARROWS, self.tr("Number of threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self)
         self.download_parallel_card = RangeSettingCard(config.download_parallel, ExtendedFluentIcon.CHOOSE_PAGE, self.tr("Number of parallel downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self)
-        self.speed_limit_card = SpeedLimitSettingCard(self)
         self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete"), config.show_notification, self)
+        self.speed_limit_card = SpeedLimitSettingCard(self)
         self.priority_setting_card = PrioritySettingCard(self)
         self.download_format_card = DownloadFormatCard(self)
 
@@ -102,6 +103,7 @@ class SettingInterface(ScrollArea):
         self.interface_group.addSettingCard(self.theme_color_card)
         self.interface_group.addSettingCard(self.scaling_card)
         self.interface_group.addSettingCard(self.language_card)
+        self.interface_group.addSettingCard(self.mica_effect_card)
 
         # Behavior
         self.behavior_group.addSettingCard(self.parse_list_card)
@@ -115,8 +117,8 @@ class SettingInterface(ScrollArea):
         self.download_group.addSettingCard(self.download_path_card)
         self.download_group.addSettingCard(self.download_thread_card)
         self.download_group.addSettingCard(self.download_parallel_card)
-        self.download_group.addSettingCard(self.speed_limit_card)
         self.download_group.addSettingCard(self.show_notification_card)
+        self.download_group.addSettingCard(self.speed_limit_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
 
@@ -162,11 +164,14 @@ class SettingInterface(ScrollArea):
 
         self.connect_signals()
 
+        self.mica_effect_card.setEnabled(isWin11())
+
     def connect_signals(self):
         # Interface
         config.themeChanged.connect(setTheme)
         self.theme_color_card.colorChanged.connect(lambda color: setThemeColor(color))
         config.appRestartSig.connect(self.show_restart_message)
+        self.mica_effect_card.checkedChanged.connect(signal_bus.interface.mica_effect_changed)
 
         # Behavior
         self.parse_list_card.custom_header_btn.clicked.connect(self.on_custom_parse_list_column)

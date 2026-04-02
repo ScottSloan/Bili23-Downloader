@@ -32,9 +32,6 @@ class MainWindow(MSFluentWindow):
 
         self.init_utils()
 
-        # 关闭云母特效，提升性能
-        self.setMicaEffectEnabled(False)
-
         self.center_on_screen()
 
     def init_UI(self):
@@ -79,15 +76,16 @@ class MainWindow(MSFluentWindow):
         signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
         signal_bus.login.update_avatar.connect(self.on_update_avatar)
-
         signal_bus.download.update_downloading_count.connect(self.update_download_btn_badge_info)
-
         signal_bus.update.show_dialog.connect(self.show_update_dialog)
+        signal_bus.interface.mica_effect_changed.connect(self.setMicaEffectEnabled)
 
     def init_utils(self):
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
         self.theme_listener.start()
+
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
 
         self.user_manager = UserManager()
         self.user_manager.get_user_info()

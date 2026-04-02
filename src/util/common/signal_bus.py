@@ -48,11 +48,15 @@ class SignalBus:
         check = Signal(bool)
         show_dialog = Signal(dict)
 
+    class Interface(QObject):
+        mica_effect_changed = Signal(bool)
+
     def __init__(self):
         self.toast = self.ToastNotification()
         self.parse = self.Parse()
         self.download = self.Download()
         self.login = self.Login()
         self.update = self.Update()
+        self.interface = self.Interface()
 
 signal_bus = SignalBus()
