@@ -20,8 +20,52 @@ import requests
 import json
 import time
 
+class TokenBucket:
+    """线程安全的令牌桶，用于平滑限制下载速度"""
+    def __init__(self, rate: float):
+        """
+        :param rate: 令牌产生速率（字节/秒），若为0则不限速
+        """
+        self.rate = rate
+        self.tokens = rate
+        self.last_update = time.monotonic()
+        self.lock = Lock()
+
+    def consume(self, amount: int, stop_event: Event = None):
+        if self.rate <= 0:
+            return
+
+        sleep_time = 0
+        with self.lock:
+            now = time.monotonic()
+            elapsed = now - self.last_update
+            self.last_update = now
+
+            self.tokens += elapsed * self.rate
+            if self.tokens > self.rate:
+                self.tokens = self.rate
+            
+            self.tokens -= amount
+            if self.tokens < 0:
+                sleep_time = -self.tokens / self.rate
+
+        if sleep_time > 0:
+            # 分段休眠，防止阻塞暂停信号
+            while sleep_time > 0:
+                if stop_event and stop_event.is_set():
+                    break
+                s = min(0.1, sleep_time)
+                time.sleep(s)
+                sleep_time -= s
+
+    def set_rate(self, rate: float):
+        with self.lock:
+            self.rate = rate
+            self.tokens = rate
+            self.last_update = time.monotonic()
+
 class ChunkWorker(QRunnable):
-    def __init__(self, session: requests.Session, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, parent=None, on_chunk_start=None, on_chunk_end=None):
+    def __init__(self, session: requests.Session, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()
         self.session = session
         self.file_key = file_key
@@ -34,6 +78,7 @@ class ChunkWorker(QRunnable):
         self.task_info = task_info
         self.stop_event = stop_event
         self.lock = lock
+        self.token_bucket = token_bucket
         self.parent = parent
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
@@ -62,8 +107,11 @@ class ChunkWorker(QRunnable):
                                 break
                             
                             if chunk:
-                                f.write(chunk)
                                 chunk_len = len(chunk)
+                                if self.token_bucket:
+                                    self.token_bucket.consume(chunk_len, self.stop_event)
+
+                                f.write(chunk)
                                 downloaded += chunk_len
                                 
                                 with self.lock:
@@ -107,6 +155,14 @@ class Downloader(QObject):
         self.init_session()
         self.thread_pool = QThreadPool()
         self.thread_pool.setMaxThreadCount(config.get(config.download_thread))
+
+        # 实例化令牌桶（0 为不限速，单位：字节/秒）。此处从已有配置文件中取值或直接扩展
+        if config.get(config.speed_limit_enabled):
+            rate = config.get(config.speed_limit_rate) * 1024 * 1024
+        else:
+            rate = 0
+        
+        self.token_bucket = TokenBucket(rate = rate)
 
         self.chunk_size = 4 * 1024 * 1024
         self.download_list = {}
@@ -180,7 +236,7 @@ class Downloader(QObject):
         info = self.download_list.get(file_key, {})
 
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, info.get("file_name", ""))
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents = True, exist_ok = True)
 
         file_size = info.get("file_size", 0)
         if not path.exists() and file_size > 0:
@@ -203,6 +259,7 @@ class Downloader(QObject):
                 task_info = self.task_info,
                 stop_event = self._stop_event,
                 lock = self.update_lock,
+                token_bucket = self.token_bucket,
                 parent = self,
                 on_chunk_start = self.on_chunk_start,
                 on_chunk_end = self.on_chunk_end

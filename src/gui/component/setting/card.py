@@ -370,3 +370,21 @@ class ConfigFileSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
         self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
+
+class SpeedLimitSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Speed Limit"), self.tr("Configure download speed limit"), parent)
+
+        self.enable_speed_limit_switch = SettingSwitchButton(config.speed_limit_enabled, parent = self)
+        self.speed_limit_rate_btn = PushButton(self.tr("Customize…"), parent = self)
+
+        self.addGroup("", self.tr("Enable Speed Limit"), self.tr("Limit the speed of each download task"), self.enable_speed_limit_switch)
+        self.speed_limit_rate_group = self.addGroup("", self.tr("Speed Limit Rate"), "", self.speed_limit_rate_btn)
+
+        self.set_current_speed_limit_rate(config.get(config.speed_limit_rate))
+
+        self.speed_limit_rate_group.setEnabled(config.get(config.speed_limit_enabled))
+        self.enable_speed_limit_switch.checkedChanged.connect(lambda checked: self.speed_limit_rate_group.setEnabled(checked))
+
+    def set_current_speed_limit_rate(self, rate: int):
+        self.speed_limit_rate_group.setContent(self.tr("Current rate: {rate} MB/s").format(rate = rate))

@@ -221,6 +221,9 @@ class APPConfig(QConfig):
     download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation))
     download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 10))
     download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 8))
+    speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
+    speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
+
     show_notification = ConfigItem("Download", "show_notification", False, BoolValidator())
 
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)

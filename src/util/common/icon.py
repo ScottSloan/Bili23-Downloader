@@ -24,6 +24,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     CHOOSE_PAGE = "choose_page"
     FILE_SETTINGS = "file_settings"
     FAST_DOWNLOAD = "fast_download"
+    DOUBLE_RIGHT_ARROWS = "double_right_arrows"
 
     def path(self, theme = Theme.AUTO):
         theme = qconfig.theme if theme == Theme.AUTO else theme

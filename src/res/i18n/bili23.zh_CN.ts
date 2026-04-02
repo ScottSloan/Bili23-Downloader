@@ -728,7 +728,7 @@
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="314"/>
+        <location filename="../../util/download/downloader/downloader.py" line="371"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
@@ -2278,105 +2278,151 @@ ISP：{isp}</translation>
         <translation>调整同时下载的任务数，默认为 1</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="66"/>
+        <location filename="../../gui/interface/setting.py" line="67"/>
         <source>Show notifications</source>
         <translation>显示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="66"/>
+        <location filename="../../gui/interface/setting.py" line="67"/>
         <source>Show notifications when downloads complete</source>
         <translation>当下载完成时显示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="79"/>
+        <location filename="../../gui/interface/setting.py" line="80"/>
         <source>File naming</source>
         <translation>文件命名</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="71"/>
+        <location filename="../../gui/interface/setting.py" line="72"/>
         <source>Danmaku, Subtitles, Cover, and Metadata</source>
         <translation>弹幕、字幕、封面和元数据</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="85"/>
+        <location filename="../../gui/interface/setting.py" line="86"/>
         <source>Advanced</source>
         <translation>高级</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="91"/>
+        <location filename="../../gui/interface/setting.py" line="92"/>
         <source>Customize the User-Agent used for parsing and downloading</source>
         <translation>自定义解析和下载所使用的 User-Agent</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="91"/>
+        <location filename="../../gui/interface/setting.py" line="92"/>
         <source>Customize…</source>
         <translation>自定义…</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="94"/>
+        <location filename="../../gui/interface/setting.py" line="95"/>
         <source>Updates</source>
         <translation>软件更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="96"/>
+        <location filename="../../gui/interface/setting.py" line="97"/>
         <source>Check for updates</source>
         <translation>检查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="96"/>
+        <location filename="../../gui/interface/setting.py" line="97"/>
         <source>Check if a new version is available. Current version: {app_version}</source>
         <translation>检查是否有可用更新，当前版本：{app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="97"/>
+        <location filename="../../gui/interface/setting.py" line="98"/>
         <source>Include pre-release versions</source>
         <translation>包含预发布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="97"/>
+        <location filename="../../gui/interface/setting.py" line="98"/>
         <source>Include pre-release versions when checking for updates</source>
         <translation>检查更新时包含预发布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="267"/>
+        <location filename="../../gui/interface/setting.py" line="278"/>
         <source>Select FFmpeg executable</source>
         <translation>选择 FFmpeg 可执行文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="269"/>
+        <location filename="../../gui/interface/setting.py" line="280"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可执行文件 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="252"/>
+        <location filename="../../gui/interface/setting.py" line="263"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程序附带的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="253"/>
+        <location filename="../../gui/interface/setting.py" line="264"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程序附带的 FFmpeg 可执行文件。请切换到“系统环境变量”或指定自定义路径。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="285"/>
+        <location filename="../../gui/interface/setting.py" line="296"/>
         <source>Import Config File</source>
         <translation>导入配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="287"/>
-        <location filename="../../gui/interface/setting.py" line="307"/>
+        <location filename="../../gui/interface/setting.py" line="298"/>
+        <location filename="../../gui/interface/setting.py" line="318"/>
         <source>Config Files (*.json)</source>
         <translation>配置文件 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="305"/>
+        <location filename="../../gui/interface/setting.py" line="316"/>
         <source>Export Config File</source>
         <translation>导出配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="327"/>
+        <location filename="../../gui/interface/setting.py" line="338"/>
         <source>Configuration takes effect after restart</source>
         <translation>配置重启后生效</translation>
+    </message>
+</context>
+<context>
+    <name>SpeedLimitSettingCard</name>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="376"/>
+        <source>Speed Limit</source>
+        <translation>速度限制</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="376"/>
+        <source>Configure download speed limit</source>
+        <translation>配置下载限速</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="379"/>
+        <source>Customize…</source>
+        <translation>自定义…</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="381"/>
+        <source>Enable Speed Limit</source>
+        <translation>启用限速</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="381"/>
+        <source>Limit the speed of each download task</source>
+        <translation>限制单个下载任务的速度</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="382"/>
+        <source>Speed Limit Rate</source>
+        <translation>限速速率</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="390"/>
+        <source>Current rate: {rate} MB/s</source>
+        <translation>当前速率：{rate} MB/s</translation>
+    </message>
+</context>
+<context>
+    <name>SpeedLimitSettingDialog</name>
+    <message>
+        <location filename="../../gui/dialog/setting/speed_limit_rate.py" line="16"/>
+        <source>Customize Speed Limit Rate</source>
+        <translation>自定义限速速率</translation>
     </message>
 </context>
 <context>

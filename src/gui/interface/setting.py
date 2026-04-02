@@ -9,11 +9,11 @@ from qfluentwidgets import (
 from gui.component.setting.card import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     NamingConventionSettingCard, FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard,
-    ConfigFileSettingCard
+    ConfigFileSettingCard, SpeedLimitSettingCard
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
-    StartingNumberDialog, ParseListColumnDialog
+    StartingNumberDialog, ParseListColumnDialog, SpeedLimitSettingDialog
 )
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig
@@ -61,8 +61,9 @@ class SettingInterface(ScrollArea):
         self.download_group = SettingCardGroup(self.tr("Download"), self)
 
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
-        self.download_thread_card = RangeSettingCard(config.download_thread, ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Number of threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self)
-        self.download_parallel_card = RangeSettingCard(config.download_parallel, FluentIcon.DOWNLOAD, self.tr("Number of parallel downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self)
+        self.download_thread_card = RangeSettingCard(config.download_thread, ExtendedFluentIcon.DOUBLE_RIGHT_ARROWS, self.tr("Number of threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self)
+        self.download_parallel_card = RangeSettingCard(config.download_parallel, ExtendedFluentIcon.CHOOSE_PAGE, self.tr("Number of parallel downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self)
+        self.speed_limit_card = SpeedLimitSettingCard(self)
         self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete"), config.show_notification, self)
         self.priority_setting_card = PrioritySettingCard(self)
         self.download_format_card = DownloadFormatCard(self)
@@ -114,6 +115,7 @@ class SettingInterface(ScrollArea):
         self.download_group.addSettingCard(self.download_path_card)
         self.download_group.addSettingCard(self.download_thread_card)
         self.download_group.addSettingCard(self.download_parallel_card)
+        self.download_group.addSettingCard(self.speed_limit_card)
         self.download_group.addSettingCard(self.show_notification_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
@@ -171,6 +173,7 @@ class SettingInterface(ScrollArea):
         self.stay_on_top_card.checkedChanged.connect(self.on_change_stay_on_top)
 
         # Download
+        self.speed_limit_card.speed_limit_rate_btn.clicked.connect(self.on_custom_speed_limit_rate)
         self.priority_setting_card.video_quality_btn.clicked.connect(self.on_adjust_video_quality_priority)
         self.priority_setting_card.audio_quality_btn.clicked.connect(self.on_adjust_audio_quality_priority)
         self.priority_setting_card.video_codec_btn.clicked.connect(self.on_adjust_video_codec_priority)
@@ -199,6 +202,14 @@ class SettingInterface(ScrollArea):
 
     def on_change_stay_on_top(self, checked: bool):
         self.main_window.setStayOnTop(checked)
+
+    def on_custom_speed_limit_rate(self):
+        dialog = SpeedLimitSettingDialog(self.main_window)
+
+        if dialog.exec():
+            self.speed_limit_card.set_current_speed_limit_rate(dialog.speed_limit_rate)
+
+            config.set(config.speed_limit_rate, dialog.speed_limit_rate)
 
     def on_adjust_video_quality_priority(self):
         map_reversed = {v: Translator.VIDEO_QUALITY(k) for k, v in video_quality_map.items()}

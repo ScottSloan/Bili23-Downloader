@@ -1,4 +1,5 @@
 from gui.dialog.setting.subtitles_language import SubtitlesLanguageDialog
+from gui.dialog.setting.speed_limit_rate import SpeedLimitSettingDialog
 from gui.dialog.setting.parse_list_column import ParseListColumnDialog
 from gui.dialog.setting.edit_convention import EditConventionDialog
 from gui.dialog.setting.subtitles_style import SubtitlesStyleDialog
