@@ -21,6 +21,8 @@ def set_ffmpeg_environment(path: str):
 
     logger.info(f"已将 FFmpeg 路径 {path} 添加到环境变量")
 
+    config.no_ffmpeg_available = False
+
 def check_environment_ffmpeg():
     ffmpeg_path = shutil.which(ffmpeg_executable)
 

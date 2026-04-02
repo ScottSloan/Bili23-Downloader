@@ -94,6 +94,7 @@ class SettingInterface(ScrollArea):
         self.update_group = SettingCardGroup(self.tr("Updates"), self)
 
         self.check_update_card = PrimaryPushSettingCard(self.tr("Check for updates"), FluentIcon.UPDATE, self.tr("Check for updates"), self.tr("Check if a new version is available. Current version: {app_version}").format(app_version = config.app_version), self)
+        self.include_prerelease_card = SwitchSettingCard(ExtendedFluentIcon.TEST_CUBE, self.tr("Include pre-release versions"), self.tr("Include pre-release versions when checking for updates"), config.include_prerelease, self)
 
         # Interface
         self.interface_group.addSettingCard(self.theme_card)
@@ -136,6 +137,7 @@ class SettingInterface(ScrollArea):
 
         # Software Update
         self.update_group.addSettingCard(self.check_update_card)
+        self.update_group.addSettingCard(self.include_prerelease_card)
 
         self.expand_layout.setSpacing(28)
         self.expand_layout.setContentsMargins(30, 10, 30, 0)

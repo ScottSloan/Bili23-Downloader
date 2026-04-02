@@ -109,6 +109,9 @@ class FileNameFormatter:
             "number": task_info.Episode.number,
             "uploader": task_info.Episode.uploader,
             "uploader_uid": task_info.Episode.uploader_uid,
+            "video_quality": task_info.Episode.video_quality,
+            "audio_quality": task_info.Episode.audio_quality,
+            "video_codec": task_info.Episode.video_codec,
 
             "aid": task_info.Episode.aid,
             "bvid": task_info.Episode.bvid,

@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="258"/>
+        <location filename="../../util/common/translator.py" line="261"/>
         <source>Danmaku</source>
         <translation>彈幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="259"/>
+        <location filename="../../util/common/translator.py" line="262"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="260"/>
+        <location filename="../../util/common/translator.py" line="263"/>
         <source>Metadata</source>
         <translation>元資料</translation>
     </message>
@@ -294,37 +294,37 @@
 <context>
     <name>COLUMN_NAME</name>
     <message>
-        <location filename="../../util/common/translator.py" line="191"/>
+        <location filename="../../util/common/translator.py" line="194"/>
         <source>No.</source>
         <translation>序號</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="192"/>
+        <location filename="../../util/common/translator.py" line="195"/>
         <source>Title</source>
         <translation>標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="193"/>
+        <location filename="../../util/common/translator.py" line="196"/>
         <source>Notes</source>
         <translation>備註</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="194"/>
+        <location filename="../../util/common/translator.py" line="197"/>
         <source>Duration</source>
         <translation>時長</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="195"/>
+        <location filename="../../util/common/translator.py" line="198"/>
         <source>Publish or Favorite Date</source>
         <translation>發布或收藏時間</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="196"/>
+        <location filename="../../util/common/translator.py" line="199"/>
         <source>Publish Date</source>
         <translation>發佈時間</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="197"/>
+        <location filename="../../util/common/translator.py" line="200"/>
         <source>Favorite Date</source>
         <translation>收藏時間</translation>
     </message>
@@ -804,117 +804,117 @@
 <context>
     <name>ERROR_MESSAGES</name>
     <message>
-        <location filename="../../util/common/translator.py" line="213"/>
+        <location filename="../../util/common/translator.py" line="216"/>
         <source>An error occurred while running FFmpeg</source>
         <translation>呼叫 FFmpeg 時發生錯誤</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="214"/>
+        <location filename="../../util/common/translator.py" line="217"/>
         <source>FFmpeg failed with exit code {code}</source>
         <translation>呼叫 FFmpeg 時發生錯誤 ({code})</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="215"/>
+        <location filename="../../util/common/translator.py" line="218"/>
         <source>The specified file or folder does not exist</source>
         <translation>檔案不存在或路徑錯誤</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="216"/>
+        <location filename="../../util/common/translator.py" line="219"/>
         <source>The file may have been moved or deleted. Please download it again.</source>
         <translation>檔案可能已被移動或刪除，請重新下載。</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="217"/>
+        <location filename="../../util/common/translator.py" line="220"/>
         <source>Insufficient disk space</source>
         <translation>磁碟空間不足</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="218"/>
+        <location filename="../../util/common/translator.py" line="221"/>
         <source>Permission denied: cannot write to file</source>
         <translation>沒有權限寫入檔案</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="219"/>
+        <location filename="../../util/common/translator.py" line="222"/>
         <source>Downloaded file is corrupted</source>
         <translation>下載檔案已損毀</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="220"/>
+        <location filename="../../util/common/translator.py" line="223"/>
         <source>Failed to open file</source>
         <translation>無法開啟檔案</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="221"/>
+        <location filename="../../util/common/translator.py" line="224"/>
         <source>File is in use by another process</source>
         <translation>檔案被其他程序佔用</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="222"/>
+        <location filename="../../util/common/translator.py" line="225"/>
         <source>Could not create output file</source>
         <translation>無法建立輸出檔案</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="223"/>
+        <location filename="../../util/common/translator.py" line="226"/>
         <source>Download failed</source>
         <translation>下載失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="224"/>
+        <location filename="../../util/common/translator.py" line="227"/>
         <source>Failed to rename file</source>
         <translation>重新命名檔案失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="225"/>
+        <location filename="../../util/common/translator.py" line="228"/>
         <source>Failed to parse download information</source>
         <translation>無法解析下載位址</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="226"/>
+        <location filename="../../util/common/translator.py" line="229"/>
         <source>Failed to retrieve media information</source>
         <translation>取得媒體資訊失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="227"/>
+        <location filename="../../util/common/translator.py" line="230"/>
         <source>Login status expired</source>
         <translation>登入狀態失效</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="228"/>
+        <location filename="../../util/common/translator.py" line="231"/>
         <source>Your account login status has expired. Please log in again.</source>
         <translation>目前帳號登入狀態已失效，請重新登入</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="229"/>
+        <location filename="../../util/common/translator.py" line="232"/>
         <source>Failed to retrieve user information</source>
         <translation>取得使用者資訊失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="230"/>
+        <location filename="../../util/common/translator.py" line="233"/>
         <source>Failed to retrieve user avatar</source>
         <translation>取得使用者頭像失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="231"/>
+        <location filename="../../util/common/translator.py" line="234"/>
         <source>Logout failed</source>
         <translation>登出失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="232"/>
+        <location filename="../../util/common/translator.py" line="235"/>
         <source>An unknown error occurred</source>
         <translation>發生未知錯誤</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="233"/>
+        <location filename="../../util/common/translator.py" line="236"/>
         <source>Failed to check for updates</source>
         <translation>檢查更新失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="234"/>
+        <location filename="../../util/common/translator.py" line="237"/>
         <source>FFmpeg processing failed</source>
         <translation>FFmpeg 處理失敗</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="235"/>
+        <location filename="../../util/common/translator.py" line="238"/>
         <source>M4A audio file not found for conversion</source>
         <translation>找不到用於轉換的 m4a 音訊檔案。</translation>
     </message>
@@ -1226,7 +1226,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="265"/>
+        <location filename="../../util/common/translator.py" line="268"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1266,14 +1266,24 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="261"/>
+        <location filename="../../gui/interface/main_window.py" line="263"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="262"/>
+        <location filename="../../gui/interface/main_window.py" line="264"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
-        <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定</translation>
+        <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="270"/>
+        <source>FFmpeg Not Found</source>
+        <translation>找不到 FFmpeg</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/main_window.py" line="271"/>
+        <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
+        <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
 </context>
 <context>
@@ -1501,7 +1511,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="275"/>
+        <location filename="../../util/common/translator.py" line="278"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -1684,22 +1694,22 @@ For advanced usage, see the help documentation.</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="240"/>
+        <location filename="../../gui/interface/parse.py" line="242"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="243"/>
+        <location filename="../../gui/interface/parse.py" line="245"/>
         <source>Select multiple</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="273"/>
+        <location filename="../../gui/interface/parse.py" line="275"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="279"/>
+        <location filename="../../gui/interface/parse.py" line="281"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
@@ -1808,7 +1818,7 @@ For advanced usage, see the help documentation.</source>
         <translation>元資料</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse/tree_view.py" line="225"/>
+        <location filename="../../gui/component/parse/tree_view.py" line="227"/>
         <source>Updating media info...</source>
         <translation>正在更新媒體資訊...</translation>
     </message>
@@ -2101,260 +2111,270 @@ ISP：{isp}</translation>
 <context>
     <name>SettingInterface</name>
     <message>
-        <location filename="../../gui/interface/setting.py" line="40"/>
+        <location filename="../../gui/interface/setting.py" line="42"/>
         <source>Interface</source>
         <translation>介面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="42"/>
+        <location filename="../../gui/interface/setting.py" line="44"/>
         <source>Theme</source>
         <translation>主題</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="42"/>
+        <location filename="../../gui/interface/setting.py" line="44"/>
         <source>Adjust the appearance of the application</source>
         <translation>調整應用程式的外觀</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="42"/>
+        <location filename="../../gui/interface/setting.py" line="44"/>
         <source>Light</source>
         <translation>淺色</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="42"/>
+        <location filename="../../gui/interface/setting.py" line="44"/>
         <source>Dark</source>
         <translation>深色</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="42"/>
         <location filename="../../gui/interface/setting.py" line="44"/>
-        <location filename="../../gui/interface/setting.py" line="45"/>
+        <location filename="../../gui/interface/setting.py" line="46"/>
+        <location filename="../../gui/interface/setting.py" line="47"/>
         <source>Follow system setting</source>
         <translation>遵循系統設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="43"/>
+        <location filename="../../gui/interface/setting.py" line="45"/>
         <source>Theme color</source>
         <translation>主題色彩</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="43"/>
+        <location filename="../../gui/interface/setting.py" line="45"/>
         <source>Adjust the theme color of the application</source>
         <translation>調整應用程式的主題色彩</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="44"/>
+        <location filename="../../gui/interface/setting.py" line="46"/>
         <source>Adjust the scaling of the application interface</source>
         <translation>調整應用介面的縮放比例</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="44"/>
+        <location filename="../../gui/interface/setting.py" line="46"/>
         <source>Display scaling</source>
         <translation>顯示縮放</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="45"/>
+        <location filename="../../gui/interface/setting.py" line="47"/>
         <source>Language</source>
         <translation>語言</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="45"/>
+        <location filename="../../gui/interface/setting.py" line="47"/>
         <source>Choose the display language of the application</source>
         <translation>選擇應用程式的顯示語言</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="48"/>
+        <location filename="../../gui/interface/setting.py" line="50"/>
         <source>Behavior</source>
         <translation>行為</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="52"/>
+        <location filename="../../gui/interface/setting.py" line="54"/>
         <source>Stay on top</source>
         <translation>視窗置頂</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="52"/>
+        <location filename="../../gui/interface/setting.py" line="54"/>
         <source>Keep the window always on top of the desktop</source>
         <translation>將視窗始終置於桌面頂端</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="53"/>
+        <location filename="../../gui/interface/setting.py" line="55"/>
         <source>Listen to clipboard</source>
         <translation>監聽剪貼簿</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="53"/>
+        <location filename="../../gui/interface/setting.py" line="55"/>
         <source>Automatically start parsing when a link is copied</source>
         <translation>當偵測到複製連結時自動開始解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="54"/>
+        <location filename="../../gui/interface/setting.py" line="56"/>
         <source>Show download options dialog</source>
         <translation>下載時顯示選項對話方塊</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="54"/>
+        <location filename="../../gui/interface/setting.py" line="56"/>
         <source>Show a dialog before starting the download to customize settings for this task</source>
         <translation>開始下載前跳出對話方塊以自訂本次下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="55"/>
+        <location filename="../../gui/interface/setting.py" line="57"/>
         <source>Always ask</source>
         <translation>總是詢問</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="55"/>
+        <location filename="../../gui/interface/setting.py" line="57"/>
         <source>Exit the program</source>
         <translation>結束程式</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="55"/>
+        <location filename="../../gui/interface/setting.py" line="57"/>
         <source>Minimize to system tray</source>
         <translation>最小化至系統匣</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="55"/>
+        <location filename="../../gui/interface/setting.py" line="57"/>
         <source>Close the main window</source>
         <translation>關閉主視窗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="55"/>
+        <location filename="../../gui/interface/setting.py" line="57"/>
         <source>Choose the action when closing the main window</source>
         <translation>選擇關閉主視窗時的操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="56"/>
+        <location filename="../../gui/interface/setting.py" line="58"/>
         <source>File conflict resolution</source>
         <translation>同名檔案處理</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="56"/>
+        <location filename="../../gui/interface/setting.py" line="58"/>
         <source>Choose the action when a file with the same name already exists</source>
         <translation>當目標位置已存在同名檔案時的操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="56"/>
+        <location filename="../../gui/interface/setting.py" line="58"/>
         <source>Auto rename</source>
         <translation>自動重新命名</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="56"/>
+        <location filename="../../gui/interface/setting.py" line="58"/>
         <source>Overwrite</source>
         <translation>覆蓋檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="59"/>
+        <location filename="../../gui/interface/setting.py" line="61"/>
         <source>Download</source>
         <translation>下載</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="62"/>
+        <location filename="../../gui/interface/setting.py" line="64"/>
         <source>Number of threads</source>
         <translation>多執行緒數</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="62"/>
+        <location filename="../../gui/interface/setting.py" line="64"/>
         <source>Adjust the number of threads used per task (default: 4)</source>
         <translation>調整單一任務使用的執行緒數，預設為 4</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="63"/>
+        <location filename="../../gui/interface/setting.py" line="65"/>
         <source>Number of parallel downloads</source>
         <translation>平行下載數</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="63"/>
+        <location filename="../../gui/interface/setting.py" line="65"/>
         <source>Adjust the number of tasks downloaded simultaneously (default: 1)</source>
         <translation>調整同時下載的任務數，預設為 1</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="64"/>
+        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Show notifications</source>
         <translation>顯示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="64"/>
+        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Show notifications when downloads complete</source>
         <translation>下載完成時顯示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="77"/>
+        <location filename="../../gui/interface/setting.py" line="79"/>
         <source>File naming</source>
         <translation>檔案命名</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="69"/>
+        <location filename="../../gui/interface/setting.py" line="71"/>
         <source>Danmaku, Subtitles, Cover, and Metadata</source>
         <translation>彈幕、字幕、封面與元資料</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="83"/>
+        <location filename="../../gui/interface/setting.py" line="85"/>
         <source>Advanced</source>
         <translation>進階</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="89"/>
+        <location filename="../../gui/interface/setting.py" line="91"/>
         <source>Customize the User-Agent used for parsing and downloading</source>
         <translation>自訂解析與下載所使用的 User-Agent</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="89"/>
+        <location filename="../../gui/interface/setting.py" line="91"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="92"/>
+        <location filename="../../gui/interface/setting.py" line="94"/>
         <source>Updates</source>
         <translation>軟體更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="94"/>
+        <location filename="../../gui/interface/setting.py" line="96"/>
         <source>Check for updates</source>
         <translation>檢查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="94"/>
+        <location filename="../../gui/interface/setting.py" line="96"/>
         <source>Check if a new version is available. Current version: {app_version}</source>
         <translation>檢查是否有可用更新，目前版本：{app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="263"/>
+        <location filename="../../gui/interface/setting.py" line="97"/>
+        <source>Include pre-release versions</source>
+        <translation>包含預先發布版本</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="97"/>
+        <source>Include pre-release versions when checking for updates</source>
+        <translation>檢查更新時包含預先發布版本</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="267"/>
         <source>Select FFmpeg executable</source>
         <translation>選擇 FFmpeg 可執行檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="265"/>
+        <location filename="../../gui/interface/setting.py" line="269"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可執行檔 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="248"/>
+        <location filename="../../gui/interface/setting.py" line="252"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程式內建的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="249"/>
+        <location filename="../../gui/interface/setting.py" line="253"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程式內建的 FFmpeg 可執行檔。請切換至「系統環境變數」或指定自訂路徑。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="281"/>
+        <location filename="../../gui/interface/setting.py" line="285"/>
         <source>Import Config File</source>
         <translation>匯入設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="283"/>
-        <location filename="../../gui/interface/setting.py" line="296"/>
+        <location filename="../../gui/interface/setting.py" line="287"/>
+        <location filename="../../gui/interface/setting.py" line="307"/>
         <source>Config Files (*.json)</source>
         <translation>設定檔 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="294"/>
+        <location filename="../../gui/interface/setting.py" line="305"/>
         <source>Export Config File</source>
         <translation>匯出設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="312"/>
+        <location filename="../../gui/interface/setting.py" line="327"/>
         <source>Configuration takes effect after restart</source>
         <translation>設定重新啟動後生效</translation>
     </message>
@@ -2460,7 +2480,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="292"/>
+        <location filename="../../util/common/translator.py" line="295"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -2484,52 +2504,52 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TIP_MESSAGES</name>
     <message>
-        <location filename="../../util/common/translator.py" line="242"/>
+        <location filename="../../util/common/translator.py" line="245"/>
         <source>Queued...</source>
         <translation>等候中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="243"/>
+        <location filename="../../util/common/translator.py" line="246"/>
         <source>Parsing...</source>
         <translation>解析中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="244"/>
+        <location filename="../../util/common/translator.py" line="247"/>
         <source>Paused</source>
         <translation>已暫停</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="245"/>
+        <location filename="../../util/common/translator.py" line="248"/>
         <source>Queued for FFmpeg...</source>
         <translation>等候 FFmpeg 處理中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="248"/>
+        <location filename="../../util/common/translator.py" line="251"/>
         <source>Converting...</source>
         <translation>轉換中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="249"/>
+        <location filename="../../util/common/translator.py" line="252"/>
         <source>You are already using the latest version</source>
         <translation>目前已是最新版本</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="250"/>
+        <location filename="../../util/common/translator.py" line="253"/>
         <source>Download completed</source>
         <translation>下載完成</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="251"/>
+        <location filename="../../util/common/translator.py" line="254"/>
         <source>All download tasks have been completed.</source>
         <translation>所有下載任務已完成</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="246"/>
+        <location filename="../../util/common/translator.py" line="249"/>
         <source>Merging...</source>
         <translation>合併中...</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="247"/>
+        <location filename="../../util/common/translator.py" line="250"/>
         <source>Completed</source>
         <translation>已完成</translation>
     </message>
@@ -2662,107 +2682,122 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <translation>下載任務建立時間戳</translation>
     </message>
     <message>
+        <location filename="../../util/common/translator.py" line="159"/>
+        <source>Video quality</source>
+        <translation>畫質</translation>
+    </message>
+    <message>
         <location filename="../../util/common/translator.py" line="160"/>
+        <source>Audio quality</source>
+        <translation>音質</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="161"/>
+        <source>Video codec</source>
+        <translation>編碼</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="163"/>
         <source>av number</source>
         <translation>av號</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="161"/>
+        <location filename="../../util/common/translator.py" line="164"/>
         <source>BV number</source>
         <translation>BV號</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="162"/>
+        <location filename="../../util/common/translator.py" line="165"/>
         <source>cid</source>
         <translation>cid</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="163"/>
+        <location filename="../../util/common/translator.py" line="166"/>
         <source>Episode id</source>
         <translation>ep_id</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="164"/>
+        <location filename="../../util/common/translator.py" line="167"/>
         <source>Season id</source>
         <translation>season_id</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="166"/>
+        <location filename="../../util/common/translator.py" line="169"/>
         <source>Full video title</source>
         <translation>影片的完整標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="167"/>
+        <location filename="../../util/common/translator.py" line="170"/>
         <source>Current part&apos;s title</source>
         <translation>目前分P的小節標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="168"/>
+        <location filename="../../util/common/translator.py" line="171"/>
         <source>Content title (video title for single videos, part title for multi-part)</source>
         <translation>影片內容標題（一般影片為影片標題，分P影片為目前小節標題）</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="170"/>
+        <location filename="../../util/common/translator.py" line="173"/>
         <source>Multi-part video main title</source>
         <translation>此分P影片總標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="171"/>
+        <location filename="../../util/common/translator.py" line="174"/>
         <source>Main title if video has multiple parts; otherwise empty</source>
         <translation>若影片為多P，則為此影片的總標題；否則為空</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="173"/>
+        <location filename="../../util/common/translator.py" line="176"/>
         <source>Part number</source>
         <translation>分P序號</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="174"/>
+        <location filename="../../util/common/translator.py" line="177"/>
         <source>Part number (only for multi-part videos)</source>
         <translation>分P序號（僅於影片為多P時有效）</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="176"/>
+        <location filename="../../util/common/translator.py" line="179"/>
         <source>Collection title</source>
         <translation>合集名稱</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="177"/>
+        <location filename="../../util/common/translator.py" line="180"/>
         <source>Section title (empty if not divided into sections)</source>
         <translation>章節名稱（若未分章節則為空）</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="178"/>
+        <location filename="../../util/common/translator.py" line="181"/>
         <source>Section title</source>
         <translation>章節名稱</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="180"/>
+        <location filename="../../util/common/translator.py" line="183"/>
         <source>Series title</source>
         <translation>本系列標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="181"/>
+        <location filename="../../util/common/translator.py" line="184"/>
         <source>Courses title</source>
         <translation>課程標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="182"/>
+        <location filename="../../util/common/translator.py" line="185"/>
         <source>Season title</source>
         <translation>本季標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="183"/>
+        <location filename="../../util/common/translator.py" line="186"/>
         <source>Episode title</source>
         <translation>本集標題</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="184"/>
+        <location filename="../../util/common/translator.py" line="187"/>
         <source>Season number</source>
         <translation>本季編號</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="185"/>
+        <location filename="../../util/common/translator.py" line="188"/>
         <source>Episode number</source>
         <translation>本集編號</translation>
     </message>

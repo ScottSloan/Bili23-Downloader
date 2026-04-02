@@ -78,6 +78,11 @@ class EpisodeInfo(InfoBase):
     space_owner: str = ""
     space_owner_id: int = 0
 
+    # 其他
+    video_quality: str = ""
+    audio_quality: str = ""
+    video_codec: str = ""
+
 @dataclass
 class DownloadInfo(InfoBase):
     # 类型相关

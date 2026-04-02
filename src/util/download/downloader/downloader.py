@@ -5,8 +5,8 @@ from util.parse.additional.worker import AdditionalParseWorker
 from util.download.downloader.parse_worker import ParseWorker
 from util.common import signal_bus, config, Translator, File
 from util.common.enum import DownloadStatus, DownloadType
-from util.common.data import reversed_video_quality_map
 from util.thread import GlobalThreadPoolTask, AsyncTask
+from util.common.data import reversed_video_quality_map
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
 from util.network.request import get_cookies
@@ -312,6 +312,8 @@ class Downloader(QObject):
                 self.task_info.Download.info_label = "MP4"
             elif not has_video and has_audio:
                 self.task_info.Download.info_label = self.tr("Audio")
+
+            task_manager._update_media_info(self.task_info)
 
     def init_session(self):
         self.session = requests.Session()

@@ -156,6 +156,9 @@ class Translator:
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
             "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader UID"),
+            "VIDEO_QUALITY": translate("VARIABLE_DESCRIPTION", "Video quality"),
+            "AUDIO_QUALITY": translate("VARIABLE_DESCRIPTION", "Audio quality"),
+            "VIDEO_CODEC": translate("VARIABLE_DESCRIPTION", "Video codec"),
 
             "AID": translate("VARIABLE_DESCRIPTION", "av number"),
             "BVID": translate("VARIABLE_DESCRIPTION", "BV number"),

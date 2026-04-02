@@ -106,7 +106,8 @@ class MainWindow(MSFluentWindow):
         else:
             signal_bus.update.check.emit(False)
 
-        QTimer.singleShot(500, self.check_download_path)
+        QTimer.singleShot(300, self.check_download_path)
+        QTimer.singleShot(300, self.check_ffmpeg)
 
     def closeEvent(self, e):
         if not self.on_close():
@@ -261,4 +262,11 @@ class MainWindow(MSFluentWindow):
             signal_bus.toast.show_long_message.emit(
                 self.tr("Download Directory Invalid"),
                 self.tr("The current download directory is inaccessible or lacks write permissions. Please reset it.") + f"\n\n{download_path}"
+            )
+
+    def check_ffmpeg(self):
+        if config.no_ffmpeg_available:
+            signal_bus.toast.show_long_message.emit(
+                self.tr("FFmpeg Not Found"),
+                self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )

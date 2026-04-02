@@ -219,8 +219,8 @@ class APPConfig(QConfig):
 
     # Download
     download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation))
-    download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 8))
-    download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 5))
+    download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 10))
+    download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 8))
     show_notification = ConfigItem("Download", "show_notification", False, BoolValidator())
 
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)
@@ -267,6 +267,9 @@ class APPConfig(QConfig):
 
     user_agent = ConfigItem("Advanced", "user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0")
 
+    # Update
+    include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
+
     # Cookie
     img_key = ConfigItem("Cookie", "img_key", "")
     sub_key = ConfigItem("Cookie", "sub_key", "")
@@ -300,6 +303,8 @@ class APPConfig(QConfig):
     # FFmpeg
     ffmpeg_executable = ""
     bundle_ffmpeg_exist = False
+
+    no_ffmpeg_available = True
 
     # Download Options
     video_quality_id = 200

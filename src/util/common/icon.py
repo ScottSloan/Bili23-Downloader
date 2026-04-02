@@ -18,6 +18,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     NUMBERS = "numbers"
     DOCUMENT = "document"
     SUBTITLES = "subtitles"
+    TEST_CUBE = "test_cube"
     CLIPBOARD = "clipboard"
     SELECT_ALL = "select_all"
     CHOOSE_PAGE = "choose_page"
