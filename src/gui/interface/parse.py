@@ -60,8 +60,8 @@ class ParseBase(QFrame):
             self.segmented_widget.hide_pager()
 
     def check_need_check_all(self):
-        # 如果解析结果只有一个视频，或者配置了自动全选，则直接勾选所有项目
-        if self.parse_list.get_total_items_count() == 1 or config.get(config.auto_check_all):
+        # 如果配置了自动全选，则直接勾选所有项目
+        if config.get(config.auto_check_all):
             self.parse_list.check_all_items()
 
             self.download_btn.setEnabled(True)

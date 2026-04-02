@@ -24,7 +24,9 @@ class VideoEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node
         else:
-            self.update_episode_list(node)
+            episode_data = ("cid", self.info_data["cid"])
+            
+            self.update_episode_list(node, episode_data)
 
     def single_parser(self):
         # 单个视频

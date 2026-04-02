@@ -11,13 +11,13 @@ class EpisodeParserBase:
         self.target_episode_data_id: str = kwargs.get("target_episode_data_id")
         self.target_attribute: int = kwargs.get("target_attribute")
 
-    def update_episode_list(self, node: TreeItem):
+    def update_episode_list(self, node: TreeItem, current_episode_data: tuple = None):
         # 由于顶层 root_node 不可见，需要在外面再包一层，避免顶层节点信息丢失
 
         root_node = TreeItem({})
         root_node.add_child(node)
 
-        signal_bus.parse.update_parse_list.emit(root_node)
+        signal_bus.parse.update_parse_list.emit(root_node, current_episode_data)
 
     def get_episode_duration(self, episode_data: dict):
         if "duration" in episode_data:

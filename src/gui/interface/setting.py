@@ -3,21 +3,24 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     ScrollArea, SettingCardGroup, OptionsSettingCard, CustomColorSettingCard, PushSettingCard, RangeSettingCard, SwitchSettingCard,
-    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor
+    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor, qconfig, QConfig
 )
 
 from gui.component.setting.card import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
-    NamingConventionSettingCard, FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard
+    NamingConventionSettingCard, FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard,
+    ConfigFileSettingCard
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
     StartingNumberDialog, ParseListColumnDialog
 )
 
-from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet
+from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
+
+from pathlib import Path
 
 class SettingInterface(ScrollArea):
     def __init__(self, parent = None):
@@ -84,6 +87,7 @@ class SettingInterface(ScrollArea):
         self.cdn_card = CDNSettingCard(self)
         self.ffmpeg_card = FFmpegSettingCard(self.main_window, self)
         self.proxy_card = ProxySettingCard(self)
+        self.config_file_card = ConfigFileSettingCard(self)
         self.user_agent_card = PushSettingCard(self.tr("Customize…"), FluentIcon.GLOBE, "User-Agent", self.tr("Customize the User-Agent used for parsing and downloading"), self)
 
         # Software Update
@@ -127,6 +131,7 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.cdn_card)
         self.advanced_group.addSettingCard(self.ffmpeg_card)
         self.advanced_group.addSettingCard(self.proxy_card)
+        self.advanced_group.addSettingCard(self.config_file_card)
         self.advanced_group.addSettingCard(self.user_agent_card)
 
         # Software Update
@@ -179,6 +184,8 @@ class SettingInterface(ScrollArea):
         self.ffmpeg_card.source_choice.currentIndexChanged.connect(self.on_change_ffmpeg_source)
         self.ffmpeg_card.custom_btn.clicked.connect(self.on_change_ffmpeg_path)
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
+        self.config_file_card.import_btn.clicked.connect(self.on_import_config)
+        self.config_file_card.export_btn.clicked.connect(self.on_export_config)
         self.user_agent_card.clicked.connect(self.on_custom_user_agent)
 
         # Update
@@ -269,6 +276,43 @@ class SettingInterface(ScrollArea):
     def on_custom_proxy(self):
         dialog = ProxyDialog(self.main_window)
         dialog.exec()
+
+    def on_import_config(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.main_window,
+            self.tr("Import Config File"),
+            "",
+            self.tr("Config Files (*.json)")
+        )
+
+        if not file_path:
+            return
+        
+        original_file = config.file
+        
+        config.load(file_path)
+        config.file = original_file  # 恢复原来的配置文件路径，避免误覆盖
+        
+        config.save()
+
+        self.show_restart_message()
+
+    def on_export_config(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.main_window,
+            self.tr("Export Config File"),
+            "",
+            self.tr("Config Files (*.json)")
+        )
+
+        if not file_path:
+            return
+        
+        temp_config = APPConfig()
+        temp_config.load(config.file)
+        temp_config.file = Path(file_path)
+
+        temp_config.save()
 
     def on_custom_user_agent(self):
         dialog = UserAgentDialog(self.main_window)

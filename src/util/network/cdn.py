@@ -22,7 +22,7 @@ class CDN:
 
         for url in url_list.copy():
             for entry in config.get(config.cdn_server_list):
-                node = entry.get("node")
+                node = entry.get("host")
 
                 new_url = CDN.replace_netloc(url, node)
                 new_url_list.append(new_url)

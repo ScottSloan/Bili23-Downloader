@@ -59,7 +59,7 @@ class ReparseWorker(QRunnable, ParserBase):
             
         category_name = bangumi_type_map.get(self.info_data["result"]["type"])
 
-        return BangumiEpisodeParser(self.info_data, category_name, self.get_kwargs(ep_id))
+        return BangumiEpisodeParser(self.info_data, category_name, kwargs = self.get_kwargs(ep_id))
 
     def parse_cheese_info(self):
         season_id = self.episode_info.get("ep_id")

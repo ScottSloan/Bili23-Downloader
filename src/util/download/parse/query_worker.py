@@ -30,6 +30,7 @@ class QueryWorker:
             self.break_flag = True
 
             self.file_size = int(content_length)
+
     
         download_urls = CDN.get_url_list(download_urls)
 

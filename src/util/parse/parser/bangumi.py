@@ -8,10 +8,12 @@ class BangumiParser(ParserBase):
     def __init__(self):
         super().__init__()
 
-    def get_ep_id(self):
-        ep_id = self.find_str(r"ep([0-9]+)", self.url)
+        self.ep_id = None
 
-        return f"ep_id={ep_id}"
+    def get_ep_id(self):
+        self.ep_id = self.find_str(r"ep([0-9]+)", self.url)
+
+        return f"ep_id={self.ep_id}"
     
     def get_season_id(self):
         season_id = self.find_str(r"ss([0-9]+)", self.url)
@@ -60,6 +62,9 @@ class BangumiParser(ParserBase):
     def get_bangumi_info(self, param: str):
         def on_success(response: dict):
             self.info_data = response
+
+            if self.ep_id:
+                self.info_data["result"]["current_ep_id"] = int(self.ep_id)
         
         url = f"https://api.bilibili.com/pgc/view/web/season?{param}"
 

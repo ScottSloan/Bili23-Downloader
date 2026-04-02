@@ -10,7 +10,10 @@ from util.download.task.info import TaskInfo
 from util.thread import SyncTask
 
 from urllib.parse import urlencode
+import logging
 import json
+
+logger = logging.getLogger(__name__)
 
 class ParseWorker(QRunnable, ParserBase):
     def __init__(self, task_info: TaskInfo, parent = None):
@@ -38,6 +41,8 @@ class ParseWorker(QRunnable, ParserBase):
                 )
 
         except:
+            logger.exception("解析下载链接失败")
+
             self.on_parse_error("解析下载链接失败")
 
     def get_info(self):

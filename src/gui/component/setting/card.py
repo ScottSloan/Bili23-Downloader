@@ -360,3 +360,13 @@ class ParseListSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Auto-select All"), self.tr("Automatically select all items after parsing"), self.auto_check_all_switch)
         self.addGroup("", self.tr("Customize Displayed Columns"), self.tr("Customize the columns displayed in the parse list and their order"), self.custom_header_btn)
+
+class ConfigFileSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(FluentIcon.SETTING, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
+
+        self.import_btn = PushButton(self.tr("Browse..."), self)
+        self.export_btn = PushButton(self.tr("Browse..."), self)
+
+        self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
+        self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
