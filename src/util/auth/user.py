@@ -22,7 +22,7 @@ class UserManager(AuthBase):
             config.set(config.sub_key, Path(sub_url).stem, save = False)
 
             if not data["isLogin"] and config.get(config.is_login):
-                config.set(config.is_expired, True, save = False)
+                config.is_expired = True
 
                 signal_bus.toast.show_long_message.emit(
                     Translator.ERROR_MESSAGES("LOGIN_EXPIRED"),
@@ -69,7 +69,7 @@ class UserManager(AuthBase):
     def logout(self):
         def on_success(response: dict):
             config.set(config.is_login, False)
-            config.set(config.is_expired, False, save = False)
+            config.is_expired = False
 
             config.set(config.bili_jct, "")
             config.set(config.DedeUserID, "")

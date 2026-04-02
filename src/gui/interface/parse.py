@@ -219,13 +219,15 @@ class ParseInterface(ParseBase):
         # 只有在获取媒体信息成功时才允许下载
         #self.download_btn.setIndeterminateState(True)
 
-        checked_episodes_list = self.parse_list.get_checked_items(to_dict = True)
+        checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
         self.check_starting_number()
 
         signal_bus.download.create_task.emit(checked_episodes_list)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
+
+        self.parse_list.update()
 
     @check_preview_info
     def on_download_options(self):

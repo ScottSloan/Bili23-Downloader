@@ -148,7 +148,14 @@ class MainWindow(MSFluentWindow):
         dialog.exec()
 
     def on_avatar_click(self):
-        if config.get(config.is_login):
+        if not config.get(config.is_login) or config.is_expired:
+            # 未登录，点击头像显示登录界面
+            dialog = LoginDialog(self)
+
+            if dialog.exec():
+                self.user_manager.get_user_info()
+            
+        else:
             # 已登录，点击头像显示用户信息
             Flyout.make(
                 view = ProfileCard(self.user_manager.logout, self),
@@ -156,12 +163,6 @@ class MainWindow(MSFluentWindow):
                 parent = self,
                 aniType = FlyoutAnimationType.SLIDE_RIGHT
             )
-        else:
-            # 未登录，点击头像显示登录界面
-            dialog = LoginDialog(self)
-
-            if dialog.exec():
-                self.user_manager.get_user_info()
 
     def on_update_avatar(self, pixmap: QPixmap):
         self.avatar_widget.setAvatar(pixmap)

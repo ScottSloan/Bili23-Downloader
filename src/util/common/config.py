@@ -200,8 +200,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.1-alpha"
-    app_comparable_version = "2.00.1-alpha"
+    app_version = "2.00.1"
+    app_comparable_version = "2.00.1"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -249,7 +249,7 @@ class APPConfig(QConfig):
     # File Naming
     naming_rule_list = ConfigItem("File Naming", "naming_convention", DefaultValue.naming_rule_list)
     numbering_type = OptionsConfigItem("File Naming", "numbering_type", NumberingType.CONTINUOUS, OptionsValidator(NumberingType), EnumSerializer(NumberingType))
-    starting_number = ConfigItem("File Naming", "staring_number", 1)
+    starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider", False, BoolValidator())
@@ -287,7 +287,7 @@ class APPConfig(QConfig):
     buvid_expires = ConfigItem("Cookie", "buvid_expires", 0)
 
     is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
-    is_expired = ConfigItem("Cookie", "is_expired", False)
+    is_expired = False
 
     # User
     user_uname: str = ""

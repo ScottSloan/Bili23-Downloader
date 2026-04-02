@@ -21,6 +21,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     CLIPBOARD = "clipboard"
     SELECT_ALL = "select_all"
     CHOOSE_PAGE = "choose_page"
+    FILE_SETTINGS = "file_settings"
     FAST_DOWNLOAD = "fast_download"
 
     def path(self, theme = Theme.AUTO):

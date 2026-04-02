@@ -73,8 +73,7 @@ class TaskManager:
 
         attr = episode_info.get("attribute", 0)
 
-        if attr & Attribute.VIDEO_BIT != 0:
-            episode_info["leaf_title"] = title
+        episode_info["leaf_title"] = title
 
         if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
             episode_info["episode_title"] = title

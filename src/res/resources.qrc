@@ -19,6 +19,7 @@
         <file>icon/light/clipboard.svg</file>
         <file>icon/light/select_all.svg</file>
         <file>icon/light/choose_page.svg</file>
+        <file>icon/light/file_settings.svg</file>
         <file>icon/light/fast_download.svg</file>
 
         <file>icon/dark/pin.svg</file>
@@ -38,6 +39,7 @@
         <file>icon/dark/clipboard.svg</file>
         <file>icon/dark/select_all.svg</file>
         <file>icon/dark/choose_page.svg</file>
+        <file>icon/dark/file_settings.svg</file>
         <file>icon/dark/fast_download.svg</file>
         
         <file>qss/light/button.qss</file>

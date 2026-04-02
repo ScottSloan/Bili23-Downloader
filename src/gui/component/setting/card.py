@@ -363,7 +363,7 @@ class ParseListSettingCard(ExpandGroupSettingCard):
 
 class ConfigFileSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
-        super().__init__(FluentIcon.SETTING, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
+        super().__init__(ExtendedFluentIcon.FILE_SETTINGS, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
 
         self.import_btn = PushButton(self.tr("Browse..."), self)
         self.export_btn = PushButton(self.tr("Browse..."), self)

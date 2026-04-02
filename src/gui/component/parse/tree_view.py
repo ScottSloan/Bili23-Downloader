@@ -5,8 +5,8 @@ from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, 
 from gui.component.parse.model import ParseModel
 
 from util.common import ExtendedFluentIcon, signal_bus, config
+from util.parse.episode.tree import TreeItem, Attribute
 from util.common.enum import ToastNotificationCategory
-from util.parse.episode.tree import TreeItem
 
 from typing import List
 import webbrowser
@@ -60,8 +60,8 @@ class ParseTreeView(TreeView):
     def get_all_items(self):
         return self._model.root_node.get_all_children()
     
-    def get_checked_items(self, to_dict = False):
-        return self._model.root_node.get_all_checked_children(to_dict = to_dict)
+    def get_checked_items(self, to_dict = False, mark_as_downloaded = False):
+        return self._model.root_node.get_all_checked_children(to_dict = to_dict, mark_as_downloaded = mark_as_downloaded)
 
     def get_checked_items_count(self):
         return len(self.get_checked_items())
@@ -149,9 +149,11 @@ class ParseTreeView(TreeView):
         dialog.exec()
 
     def on_download_as_single_video(self, item: TreeItem):
-        episode_data = item.to_dict()
+        item.downloaded = True
 
-        #signal_bus.download.download_single_video.emit(episode_data)
+        item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)
+
+        signal_bus.download.create_task.emit([item.to_dict()])
 
     def search_keywords(self, keywords: str = None):
         if not keywords:
@@ -241,6 +243,10 @@ class ParseTreeView(TreeView):
                 item.set_checked_state(Qt.CheckState.Checked)
 
             self.update_check_state()
+
+    def mark_item_as_downloaded(self, item_list: List[TreeItem]):
+        for item in item_list:
+            item.downloaded = True
 
     def __set_QSS(self):
         light_style = """

@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex, Signal, QPersistentModelIndex
-from PySide6.QtGui import QBrush, QGuiApplication
+from PySide6.QtGui import QBrush, QGuiApplication, QColor
 
-from qfluentwidgets import themeColor
+from qfluentwidgets import themeColor, isDarkTheme
 
 from gui.component.parse.header import StrFormatter, DurationFormatter, DateFormatter
 
@@ -93,20 +93,21 @@ class ParseModel(QAbstractItemModel):
         column_value = self._get_column_value(item, column)
 
         # 序号列单独处理显示和勾选状态
-        if index.column() == 0:
-            if role == Qt.ItemDataRole.DisplayRole:
-                return column_value
+        if role == Qt.ItemDataRole.DisplayRole:
+            return column_value
+        
+        elif role == Qt.ItemDataRole.CheckStateRole and index.column() == 0:
+            return item.checked
             
-            elif role == Qt.ItemDataRole.CheckStateRole:
-                return item.checked
+        if role == Qt.ItemDataRole.ForegroundRole:
+            # 高亮搜索关键词
+            if self.search_keyword:
+                if index.column() == 1 and self.search_keyword.lower() in item.title.lower():
+                    return QBrush(themeColor())
             
-        else:
-            if role == Qt.ItemDataRole.DisplayRole:
-                return column_value
-            
-        if role == Qt.ItemDataRole.ForegroundRole and self.search_keyword:
-            if index.column() == 1 and self.search_keyword.lower() in item.title.lower():
-                return QBrush(themeColor())
+            # 已下载的剧集显示为灰色
+            elif item.downloaded:
+                return QBrush(QColor(150, 150, 150)) if isDarkTheme() else QBrush(QColor(110, 110, 110))
 
         return None
 

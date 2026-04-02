@@ -60,14 +60,18 @@ class FileNameFormatter:
         # 这些类型不支持自定义，直接使用内部预设规则
 
         rule_map = {
-            Attribute.INTERACTIVE_BIT: "{collection_title}/{leaft_title}",
+            Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
+            Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
             Attribute.FAVLIST_BIT: "{favorites_owner_id}_{favorites_owner}/{favorites_name}",
             Attribute.SPACE_BIT: "{space_owner_id}_{space_owner}"
         }
 
-        if self.attribute & Attribute.INTERACTIVE_BIT:
+        if self.attribute & Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT:
+            return str(Path(rule_map.get(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)))
+
+        elif self.attribute & Attribute.INTERACTIVE_BIT:
             return str(Path(rule_map.get(Attribute.INTERACTIVE_BIT)))
 
         elif self.attribute & Attribute.POPULAR_BIT:

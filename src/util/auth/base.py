@@ -34,4 +34,4 @@ class AuthBase:
         config.set(config.DedeUserID__ckMd5, session.cookies.get("DedeUserID__ckMd5", ""))
         config.set(config.SESSDATA, session.cookies.get("SESSDATA", ""))
         config.set(config.is_login, True)
-        config.set(config.is_expired, False)
+        config.is_expired = False
