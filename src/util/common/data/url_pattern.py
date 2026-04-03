@@ -11,6 +11,7 @@ url_patterns = [
     ("list", r"bilibili\.com/list/(\d+)"),
     ("popular", r"bilibili\.com/v/popular"),
     ("watch_later", r"bili23://watch_later"),
+    ("history", r"bili23://history"),
     ("b23", r"(b23\.tv|bili2233\.cn)"),
     ("video", r"(BV[a-zA-Z0-9]+|av[0-9]+)"),
     ("bangumi", r"(ep[0-9]+|ss[0-9]+)|md[0-9]+")

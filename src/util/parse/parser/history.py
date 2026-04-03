@@ -1,11 +1,12 @@
-from util.parse.episode.watch_later import WatchLaterEpisodeParser
+from util.parse.episode.history import HistoryEpisodeParser
 from util.network.request import NetworkRequestWorker
 from util.parse.parser.base import ParserBase
 from util.thread import SyncTask
 
+from urllib.parse import urlencode
 import math
 
-class WatchLaterParser(ParserBase):
+class HistoryParser(ParserBase):
     def __init__(self):
         super().__init__()
 
@@ -17,7 +18,7 @@ class WatchLaterParser(ParserBase):
 
         self.get_history_info()
 
-        episode_parser = WatchLaterEpisodeParser(self.info_data.copy())
+        episode_parser = HistoryEpisodeParser(self.info_data.copy())
         episode_parser.parse()
 
     def get_history_info(self):
@@ -26,15 +27,17 @@ class WatchLaterParser(ParserBase):
 
         params = {
             "pn": self.pn,
-            "ps": 20,
-            "viewed": 0,
-            "key": "",
-            "asc": False,
-            "need_split": True,
-            "web_location": "333.881"
+            "keyword": "",
+            "business": "archive",
+            "add_time_start": 0,
+            "add_time_end": 0,
+            "arc_max_duration": 0,
+            "arc_min_duration": 0,
+            "device_type": 0,
+            "web_location": "333.1391"
         }
 
-        url = f"https://api.bilibili.com/x/v2/history/toview/web?{self.enc_wbi(params)}"
+        url = f"https://api.bilibili.com/x/web-interface/history/search?{urlencode(params)}"
         
         worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)
@@ -45,10 +48,10 @@ class WatchLaterParser(ParserBase):
         self.check_response(self.info_data)
 
     def get_category_name(self):
-        return "WATCH_LATER"
+        return "HISTORY"
     
     def get_extra_data(self):
-        count = self.info_data["data"]["count"]
+        count = self.info_data["data"]["page"]["total"]
 
         return {
             "pagination": True,

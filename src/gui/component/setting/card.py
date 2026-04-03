@@ -1,14 +1,9 @@
-from PySide6.QtCore import QTimer
+from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard
 
-from qfluentwidgets import ExpandGroupSettingCard, PushButton, MessageBox, FluentIcon, PushSettingCard
-
-from gui.component.setting.widget import SettingSwitchButton, SettingComboBox, ActionWidget
+from gui.component.setting.widget import SettingSwitchButton, SettingComboBox
 from gui.dialog.setting import RuleListDialog
 
-from util.common import Translator, config, ExtendedFluentIcon, Directory
-from util.common.data import reversed_convention_type_map
-
-from uuid import uuid4
+from util.common import config, ExtendedFluentIcon, Directory
 
 class DownloadPathSettingCard(PushSettingCard):
     def __init__(self, parent_window, save = True, parent = None):
@@ -153,17 +148,6 @@ class NamingConventionSettingCard(ExpandGroupSettingCard):
     def on_edit_rule(self):
         dialog = RuleListDialog(self.main_window)
         dialog.exec()
-
-    def _save_config(self):
-        config.set(config.naming_rule_list, self.rule_list)
-
-    def _get_rule(self, rule_id: str):
-        return next((r for r in self.rule_list if r.get("id") == rule_id), None)
-        
-    def _set_default_rule(self, rule_id: str, rule_type: int):
-        for entry in self.rule_list:
-            if entry.get("type") == rule_type:
-                entry["default"] = (entry.get("id") == rule_id)
 
 class NumberSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

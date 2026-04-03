@@ -2,7 +2,7 @@ from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 from util.common import Translator
 
-class WatchLaterEpisodeParser(EpisodeParserBase):
+class HistoryEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict):
         super().__init__()
 
@@ -17,7 +17,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
 
     def list_parser(self):
         node_data = {
-            "number": Translator.EPISODE_TYPE("WATCH_LATER"),
+            "number": Translator.EPISODE_TYPE("HISTORY"),
             "title": ""
         }
 
@@ -32,19 +32,17 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
             episode_count += 1
 
             item_data = {
-                "aid": episode["aid"],
                 "badge": self.get_episode_badge(episode),
-                "bvid": episode["bvid"],
-                "cid": episode["cid"],
-                "cover" : episode["pic"],
+                "bvid": episode["history"]["bvid"],
+                "cid": episode["history"]["cid"],
+                "cover" : episode["cover"],
                 "duration": self.get_episode_duration(episode),
-                "ep_id": self.get_ep_id(episode),
+                "ep_id": episode["history"]["epid"],
                 "episode_id": self.episode_id,
                 "number": episode_count,
-                "pubtime": episode["pubdate"],
-                "favtime": episode["add_at"],
-                "title": episode["title"],
-                "url": "https://www.bilibili.com/video/" + episode["bvid"],
+                "favtime": episode["view_at"],
+                "title": self.get_episode_title(episode),
+                "url": "https://www.bilibili.com/video/" + episode["history"]["bvid"],
             }
 
             item = TreeItem(item_data)
@@ -59,21 +57,26 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         self.episode_id = EpisodeData.add_episode()
 
     def get_episode_badge(self, episode_data: dict):
-        if episode_data.get("bangumi"):
-            return episode_data["pgc_label"]
-        
-        return ""
-    
-    def get_ep_id(self, episode_data: dict):
-        if episode_data.get("bangumi"):
-            return episode_data["bangumi"]["ep_id"]
-        
-        return ""
-
-    def set_episode_attribute(self, episode_data: dict, item: TreeItem):
-        if episode_data.get("bangumi"):
-            item.set_attribute(Attribute.BANGUMI_BIT)
+        if episode_data.get("duration") == 0:
+            return Translator.TIP_MESSAGES("EXPIRED")
         else:
-            item.set_attribute(Attribute.VIDEO_BIT)
+            return episode_data["badge"]
+        
+    def get_episode_title(self, episode_data: dict):
+        if episode_data["history"]["business"] == "pgc":
+            return "{} - {}".format(episode_data["title"], episode_data["long_title"])
+        else:
+            return episode_data["title"]
+        
+    def set_episode_attribute(self, episode_data: dict, item: TreeItem):
+        match episode_data["history"]["business"]:
+            case "archive":
+                item.set_attribute(Attribute.VIDEO_BIT)
 
-        item.set_attribute(Attribute.WATCH_LATER_BIT | Attribute.NEED_PARSE_BIT)
+            case "pgc":
+                item.set_attribute(Attribute.BANGUMI_BIT)
+
+            case "cheese":
+                item.set_attribute(Attribute.CHEESE_BIT)
+
+        item.set_attribute(Attribute.HISTORY_BIT | Attribute.NEED_PARSE_BIT)

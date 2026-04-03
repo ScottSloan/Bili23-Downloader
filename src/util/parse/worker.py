@@ -1,7 +1,8 @@
 from PySide6.QtCore import QObject, Signal, Slot
 
 from util.parse.parser import (
-    VideoParser, BangumiParser, CheeseParser, SpaceParser, FavlistParser, ListParser, PopularParser, B23Parser, WatchLaterParser
+    VideoParser, BangumiParser, CheeseParser, SpaceParser, FavlistParser, ListParser, PopularParser, B23Parser, WatchLaterParser,
+    HistoryParser
 )
 from util.parse.episode.tree import EpisodeData
 from util.common.data import url_patterns
@@ -63,7 +64,8 @@ class ParseWorker(QObject):
             "favlist": FavlistParser(),
             "list": ListParser(),
             "popular": PopularParser(),
-            "watch_later": WatchLaterParser()
+            "watch_later": WatchLaterParser(),
+            "history": HistoryParser()
         }
 
     def get_parser_type(self, url: str):

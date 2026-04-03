@@ -58,6 +58,7 @@ class MainWindow(MSFluentWindow):
             "history",
             FluentIcon.HISTORY,
             self.tr("History"),
+            onClick = self.on_parse_history,
             selectable = False,
             position = NavigationItemPosition.TOP
         )
@@ -288,6 +289,9 @@ class MainWindow(MSFluentWindow):
                 self.tr("FFmpeg Not Found"),
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )
+
+    def on_parse_history(self):
+        signal_bus.parse.parse_url.emit("bili23://history")
 
     def show_favorites_flyout_menu(self):
         if not config.get(config.is_login) or config.is_expired:

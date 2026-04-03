@@ -1,5 +1,6 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
+from util.common import Translator
 
 import json
 import re
@@ -23,7 +24,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
     def sections_parser(self):
         cheese_title = self.info_data["title"]
         node_data = {
-            "number": "课程",
+            "number": Translator.EPISODE_TYPE("COURSE"),
             "season_id": self.info_data["season_id"],
             "title": cheese_title
         }

@@ -85,7 +85,8 @@ class Translator:
             "COLLECTION_LIST": translate("EPISODE_TYPE", "Collection"),
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
             "PROFILE": translate("EPISODE_TYPE", "Profile"),
-            "WATCH_LATER": translate("EPISODE_TYPE", "Watch Later")
+            "WATCH_LATER": translate("EPISODE_TYPE", "Watch Later"),
+            "HISTORY": translate("EPISODE_TYPE", "History")
         }
     
     @staticmethod
@@ -255,6 +256,7 @@ class Translator:
             "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
             "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
             "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
+            "EXPIRED": translate("TIP_MESSAGES", "Expired"),
         }
 
     @staticmethod

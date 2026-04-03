@@ -1,5 +1,6 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
+from util.common import Translator
 
 class FavlistEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict):
@@ -17,7 +18,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
     def medias_parser(self):
         favlist_title = self.info_data["info"]["title"]
         node_data = {
-            "number": "收藏夹",
+            "number": Translator.EPISODE_TYPE("FAVORITES"),
             "title": favlist_title
         }
 
@@ -69,9 +70,9 @@ class FavlistEpisodeParser(EpisodeParserBase):
     
     def get_episode_title(self, episode_data: dict):
         if episode_data.get("ogv"):
-            return "《{title}》{intro}".format(
-                title=episode_data["title"],
-                intro=episode_data["intro"]
+            return "{title} - {intro}".format(
+                title = episode_data["title"],
+                intro = episode_data["intro"]
             )
         
         return episode_data["title"]

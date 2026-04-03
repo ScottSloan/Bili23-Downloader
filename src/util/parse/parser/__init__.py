@@ -2,6 +2,7 @@ from util.parse.parser.watch_later import WatchLaterParser
 from util.parse.parser.bangumi import BangumiParser
 from util.parse.parser.popular import PopularParser
 from util.parse.parser.favlist import FavlistParser
+from util.parse.parser.history import HistoryParser
 from util.parse.parser.cheese import CheeseParser
 from util.parse.parser.video import VideoParser
 from util.parse.parser.space import SpaceParser

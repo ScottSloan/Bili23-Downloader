@@ -1,6 +1,7 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 from util.common.data import badge_map
+from util.common import Translator
 
 class VideoEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict, kwargs: dict = {}):
@@ -31,7 +32,7 @@ class VideoEpisodeParser(EpisodeParserBase):
     def single_parser(self):
         # 单个视频
         node_data = {
-            "number": "视频",
+            "number": Translator.EPISODE_TYPE("USER_UPLOADS"),
             "title": ""
         }
 

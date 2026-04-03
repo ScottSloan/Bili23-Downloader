@@ -182,7 +182,6 @@ class ParseInterface(ParseBase):
         self.check_starting_number()
 
     def on_parse(self, page: int = 1):
-        self.reset_parse_list()
         self.parse_btn.setIndeterminateState(True)
 
         worker = ParseWorker(self.url_box.text(), page)
@@ -211,7 +210,9 @@ class ParseInterface(ParseBase):
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)
 
+        # 重置解析结果和搜索状态
         self.reset_search()
+        self.reset_parse_list()
 
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
 

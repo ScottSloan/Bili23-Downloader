@@ -1,5 +1,6 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
+from util.common import Translator
 
 class SpaceEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict):
@@ -16,7 +17,7 @@ class SpaceEpisodeParser(EpisodeParserBase):
 
     def vlist_parser(self):
         node_data = {
-            "number": "个人空间",
+            "number": Translator.EPISODE_TYPE("PROFILE"),
             "title": self.info_data["info"]["name"]
         }
 
