@@ -40,25 +40,23 @@ class DownloadListView(ListView):
 
         task_info: TaskInfo = index.data(Qt.ItemDataRole.UserRole)
 
-        if task_info.Download.status in [DownloadStatus.QUEUED, DownloadStatus.PAUSED]:
-            resume_action = Action(FluentIcon.PLAY, self.tr("Resume"), parent = self)
-            resume_action.triggered.connect(lambda: self.onTogglePauseResumeTask(index, task_info))
-            menu.addAction(resume_action)
+        match task_info.Download.status:
+            case DownloadStatus.COMPLETED:
+                menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Re-parse"), lambda: self.onReparseTask(task_info)))
 
-        if task_info.Download.status in [DownloadStatus.DOWNLOADING]:
-            pause_action = Action(FluentIcon.PAUSE, self.tr("Pause"), parent = self)
-            pause_action.triggered.connect(lambda: self.onTogglePauseResumeTask(index, task_info))
-            menu.addAction(pause_action)
+            case DownloadStatus.QUEUED | DownloadStatus.PAUSED:
+                menu.addAction(self._create_action(FluentIcon.PLAY, self.tr("Resume"), lambda: self.onTogglePauseResumeTask(index, task_info)))
 
-        delete_action = Action(FluentIcon.DELETE, self.tr("Delete"), parent = self)
-        delete_action.triggered.connect(lambda: self.onCancelTask(index, task_info))
+            case DownloadStatus.DOWNLOADING:
+                menu.addAction(self._create_action(FluentIcon.PAUSE, self.tr("Pause"), lambda: self.onTogglePauseResumeTask(index, task_info)))
 
-        restart_action = Action(ExtendedFluentIcon.RETRY, self.tr("Redownload"), parent = self)
-        restart_action.triggered.connect(lambda: self.onRedownloadTask(index, task_info))
+        menu.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Re-download"), lambda: self.onRedownloadTask(index, task_info)))
 
-        menu.addAction(delete_action)
+        menu.addAction(self._create_action(FluentIcon.EDIT, self.tr("Edit download options"), lambda: self.onEditDownloadOptions(index, task_info)))
+
         menu.addSeparator()
-        menu.addAction(restart_action)
+
+        menu.addAction(self._create_action(FluentIcon.DELETE, self.tr("Delete"), lambda: self.onCancelTask(index, task_info)))
 
         menu.exec(pos)
 
@@ -157,4 +155,15 @@ class DownloadListView(ListView):
         signal_bus.toast.show.emit(ToastNotificationCategory.INFO, "", self.tr("Selected task will be redownloaded"))
 
         index.model().redownload(task_info)
+
+    def onReparseTask(self, task_info: TaskInfo):
+        signal_bus.parse.reparse_task.emit(task_info)
+
+    def onEditDownloadOptions(self, index: QModelIndex, task_info: TaskInfo):
+        pass
+
+    def _create_action(self, icon, text, slot):
+        action = Action(icon = icon, text = text, parent = self)
+        action.triggered.connect(slot)
+        return action
     

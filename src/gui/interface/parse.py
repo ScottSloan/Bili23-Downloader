@@ -5,8 +5,8 @@ from PySide6.QtCore import Qt
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
 from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton
+from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
-from gui.dialog.misc import SearchDialog, BatchSelectDialog
 from gui.component.parse.tree_view import ParseTreeView
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon
@@ -239,15 +239,10 @@ class ParseInterface(ParseBase):
         menu = RoundMenu(parent = self)
 
         # TODO: 筛选功能
-        search_action = Action(icon = FluentIcon.SEARCH, text = self.tr("Search"), parent = self)
-        search_action.triggered.connect(self.on_search)
-        # filter_action = Action(icon = FluentIcon.FILTER, text = self.tr("筛选"), parent = self)
-        batch_select_action = Action(icon = ExtendedFluentIcon.TODO, text = self.tr("Select multiple"), parent = self)
-        batch_select_action.triggered.connect(self.on_batch_select)
-
-        menu.addAction(search_action)
+        menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Search"), self.on_search))
         # menu.addAction(filter_action)
-        menu.addAction(batch_select_action)
+        menu.addAction(self._create_action(ExtendedFluentIcon.TODO, self.tr("Batch select"), self.on_batch_select))
+        menu.addAction(self._create_action(FluentIcon.HISTORY, self.tr("Parsing history"), self.on_history))
 
         pos = self.show_more_btn.mapToGlobal(self.show_more_btn.rect().bottomLeft())
 
@@ -297,6 +292,10 @@ class ParseInterface(ParseBase):
 
                     return parser_type
 
+    def on_history(self):
+        dialog = ParseHistoryDialog(self.main_window)
+        dialog.exec()
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:
             self.parse_list.check_all_items()
@@ -314,3 +313,15 @@ class ParseInterface(ParseBase):
             
         else:
             return super().keyPressEvent(event)
+
+    def reparse(self, url: str):
+        self.url_box.setText(url)
+        
+        self.on_parse()
+
+    def _create_action(self, icon, text, slot):
+        action = Action(icon = icon, text = text, parent = self)
+        action.triggered.connect(slot)
+
+        return action
+    

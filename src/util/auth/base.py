@@ -11,20 +11,21 @@ class AuthBase:
 
     def on_error(self, message: str):
         logger.error(message)
-        
-        self.error.emit(message)
+
+        signal_bus.emit_signal(self.error, message)
     
     def show_toast_error(self, title: str, message: str):
         logger.error("%s: %s", title, message)
 
-        signal_bus.toast.show_long_message.emit(title, message)
+        signal_bus.emit_signal(signal_bus.toast.show_long_message, *(title, message))
 
     def check_response(self, response: dict):
         if response.get("code", -1) != 0:
             message = response.get("message", "未知错误")
 
             logger.error("请求失败，%s: %s", message, response)
-            self.error.emit(message)
+
+            signal_bus.emit_signal(self.error, message)
 
             raise Exception(message)
     

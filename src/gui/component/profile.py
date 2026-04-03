@@ -6,21 +6,21 @@ from qfluentwidgets import (
 
 from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, config
+from util.auth import user_manager
 
 class ProfileCard(FlyoutViewBase):
     """
     展示用户信息的组件。
     """
-    def __init__(self, logout_callback, parent = None):
+    def __init__(self, parent = None):
         super().__init__(parent)
 
-        self.logout_callback = logout_callback
         self.main_window = parent
 
         self.init_UI()
 
     def init_UI(self):
-        self.avatar = AvatarWidget(config.user_avatar_pixmap, parent = self)
+        self.avatar = AvatarWidget(image = config.user_avatar_pixmap, parent = self)
         self.avatar.setRadius(24)
 
         self.uname_lab = BodyLabel(config.user_uname, parent = self)
@@ -51,7 +51,7 @@ class ProfileCard(FlyoutViewBase):
         dialog = MessageBox(self.tr("Log Out"), self.tr("Are you sure you want to log out? This will also clear locally stored cookies."), self.main_window)
 
         if dialog.exec():
-            self.logout_callback()
+            user_manager.logout()
 
             signal_bus.login.update_avatar.emit(QPixmap(":/bili23/image/noface.jpg"))
             signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Successfully logged out"))

@@ -11,6 +11,9 @@ class UserManager(AuthBase):
     def __init__(self):
         super().__init__()
 
+    def init_user_info(self):
+        self.get_user_info()
+
     def get_user_info(self):
         def on_success(response: dict):
             data: dict = response.get("data", {})
@@ -24,7 +27,7 @@ class UserManager(AuthBase):
             if not data["isLogin"] and config.get(config.is_login):
                 config.is_expired = True
 
-                signal_bus.toast.show_long_message.emit(
+                self.show_toast_error(
                     Translator.ERROR_MESSAGES("LOGIN_EXPIRED"),
                     Translator.ERROR_MESSAGES("LOGIN_EXPIRED_MESSAGE")
                 )
@@ -35,7 +38,8 @@ class UserManager(AuthBase):
                 config.user_uname = data.get("uname", "")
                 config.user_uid = data.get("mid")
 
-                self.get_user_avatar(data["face"])
+                self.get_user_avatar(data.get("face", ""))
+                self.get_user_favorite_list()
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_INFO_FAILED"), error_message)
@@ -55,12 +59,29 @@ class UserManager(AuthBase):
 
             config.user_avatar_pixmap = avatar_pixmap
 
-            signal_bus.login.update_avatar.emit(avatar_pixmap)
+            signal_bus.emit_signal(signal_bus.login.update_avatar, avatar_pixmap)
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_AVATAR_FAILED"), error_message)
 
         worker = NetworkRequestWorker(face_url, response_type = ResponseType.BYTES)
+        worker.success.connect(on_success)
+        worker.error.connect(on_error)
+
+        SyncTask.run(worker)
+
+    def get_user_favorite_list(self):
+        def on_success(response: dict):
+            favorite_list = response.get("data", {}).get("list", [])
+
+            config.user_favorite_list = favorite_list
+
+        def on_error(error_message: str):
+            self.show_toast_error(Translator.ERROR_MESSAGES("FAVORITE_LIST_FAILED"), error_message)
+
+        url = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid={uid}".format(uid = config.user_uid)
+
+        worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)
         worker.error.connect(on_error)
 
@@ -98,3 +119,6 @@ class UserManager(AuthBase):
             self.show_toast_error(Translator.ERROR_MESSAGES("UNKNOWN_ERROR"), message)
 
             raise Exception(message)
+
+user_manager = UserManager()
+user_manager.init_user_info()

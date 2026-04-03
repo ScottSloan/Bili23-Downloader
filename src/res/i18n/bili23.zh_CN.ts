@@ -650,32 +650,42 @@
 <context>
     <name>DownloadListView</name>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="44"/>
+        <location filename="../../gui/component/download/list_view.py" line="45"/>
+        <source>Re-parse</source>
+        <translation>重新解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="48"/>
         <source>Resume</source>
         <translation>继续</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="49"/>
+        <location filename="../../gui/component/download/list_view.py" line="51"/>
         <source>Pause</source>
         <translation>暂停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="53"/>
+        <location filename="../../gui/component/download/list_view.py" line="55"/>
+        <source>Edit download options</source>
+        <translation>编辑下载选项</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/download/list_view.py" line="59"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="56"/>
-        <source>Redownload</source>
+        <location filename="../../gui/component/download/list_view.py" line="53"/>
+        <source>Re-download</source>
         <translation>重新下载</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="153"/>
+        <location filename="../../gui/component/download/list_view.py" line="151"/>
         <source>Tasks being processed by FFmpeg cannot be redownloaded</source>
         <translation>处于 FFmpeg 处理中的任务无法重新下载</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download/list_view.py" line="157"/>
+        <location filename="../../gui/component/download/list_view.py" line="155"/>
         <source>Selected task will be redownloaded</source>
         <translation>选定的任务开始重新下载</translation>
     </message>
@@ -1256,42 +1266,42 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="45"/>
+        <location filename="../../gui/interface/main_window.py" line="43"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="46"/>
+        <location filename="../../gui/interface/main_window.py" line="44"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="56"/>
+        <location filename="../../gui/interface/main_window.py" line="54"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="69"/>
+        <location filename="../../gui/interface/main_window.py" line="67"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="263"/>
+        <location filename="../../gui/interface/main_window.py" line="269"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="264"/>
+        <location filename="../../gui/interface/main_window.py" line="270"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="270"/>
+        <location filename="../../gui/interface/main_window.py" line="276"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="271"/>
+        <location filename="../../gui/interface/main_window.py" line="277"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
@@ -1709,17 +1719,22 @@ For advanced usage, see the help documentation.</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="245"/>
-        <source>Select multiple</source>
+        <location filename="../../gui/interface/parse.py" line="244"/>
+        <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="275"/>
+        <location filename="../../gui/interface/parse.py" line="245"/>
+        <source>Parsing history</source>
+        <translation>解析记录</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="270"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="281"/>
+        <location filename="../../gui/interface/parse.py" line="276"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -2358,43 +2373,43 @@ ISP：{isp}</translation>
         <translation>检查更新时包含预发布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="282"/>
+        <location filename="../../gui/interface/setting.py" line="283"/>
         <source>Select FFmpeg executable</source>
         <translation>选择 FFmpeg 可执行文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="284"/>
+        <location filename="../../gui/interface/setting.py" line="285"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可执行文件 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="267"/>
+        <location filename="../../gui/interface/setting.py" line="268"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程序附带的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="268"/>
+        <location filename="../../gui/interface/setting.py" line="269"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程序附带的 FFmpeg 可执行文件。请切换到“系统环境变量”或指定自定义路径。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="300"/>
+        <location filename="../../gui/interface/setting.py" line="301"/>
         <source>Import Config File</source>
         <translation>导入配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="302"/>
-        <location filename="../../gui/interface/setting.py" line="322"/>
+        <location filename="../../gui/interface/setting.py" line="303"/>
+        <location filename="../../gui/interface/setting.py" line="323"/>
         <source>Config Files (*.json)</source>
         <translation>配置文件 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="320"/>
+        <location filename="../../gui/interface/setting.py" line="321"/>
         <source>Export Config File</source>
         <translation>导出配置文件</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="342"/>
+        <location filename="../../gui/interface/setting.py" line="343"/>
         <source>Configuration takes effect after restart</source>
         <translation>配置重启后生效</translation>
     </message>

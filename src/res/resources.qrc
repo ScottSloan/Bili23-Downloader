@@ -6,6 +6,7 @@
         <file>icon/light/todo.svg</file>
         <file>icon/light/exit.svg</file>
         <file>icon/light/list.svg</file>
+        <file>icon/light/clock.svg</file>
         <file>icon/light/clear.svg</file>
         <file>icon/light/retry.svg</file>
         <file>icon/light/select.svg</file>
@@ -15,6 +16,7 @@
         <file>icon/light/options.svg</file>
         <file>icon/light/numbers.svg</file>
         <file>icon/light/document.svg</file>
+        <file>icon/light/favorite.svg</file>
         <file>icon/light/subtitles.svg</file>
         <file>icon/light/clipboard.svg</file>
         <file>icon/light/test_cube.svg</file>
@@ -28,6 +30,7 @@
         <file>icon/dark/todo.svg</file>
         <file>icon/dark/exit.svg</file>
         <file>icon/dark/list.svg</file>
+        <file>icon/dark/clock.svg</file>
         <file>icon/dark/clear.svg</file>
         <file>icon/dark/retry.svg</file>
         <file>icon/dark/select.svg</file>
@@ -37,6 +40,7 @@
         <file>icon/dark/options.svg</file>
         <file>icon/dark/numbers.svg</file>
         <file>icon/dark/document.svg</file>
+        <file>icon/dark/favorite.svg</file>
         <file>icon/dark/subtitles.svg</file>
         <file>icon/dark/clipboard.svg</file>
         <file>icon/dark/test_cube.svg</file>

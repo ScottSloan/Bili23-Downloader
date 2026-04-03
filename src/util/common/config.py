@@ -305,6 +305,8 @@ class APPConfig(QConfig):
     user_uid: str = ""
     user_avatar_pixmap: QPixmap = None
 
+    user_favorite_list = []
+
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
     skip_version = ConfigItem("Application", "skip_version", "")
 
@@ -329,6 +331,8 @@ class APPConfig(QConfig):
     global_starting_number = 1
     
     current_starting_number = None
+
+    main_window_ready = False
 
 config = APPConfig()
 config.themeMode.value = Theme.AUTO

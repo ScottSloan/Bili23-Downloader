@@ -6,17 +6,19 @@ from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
     TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge
 )
+from qfluentwidgets.components.widgets.flyout import SlideRightFlyoutAnimationManager
 
+from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutMenu
 from gui.interface import DownloadInterface, SettingInterface, ParseInterface
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
-from gui.component.widget import NavigationLargeAvatarWidget
 from gui.component import SystemTrayIcon, ProfileCard
 from gui.dialog.update import UpdateDialog
 from gui.dialog.login import LoginDialog
 
+from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.common import signal_bus, config, Directory
-from util.auth import CookieManager, UserManager
+from util.auth import CookieManager, user_manager
+from util.download.task.info import TaskInfo
 from util.misc import Updater
 
 class MainWindow(MSFluentWindow):
@@ -45,7 +47,24 @@ class MainWindow(MSFluentWindow):
         self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
         self.download_info_badge.hide()
 
-        self.avatar_widget = NavigationLargeAvatarWidget("", QPixmap(":/bili23/image/noface.jpg"), self)
+        self.navigationInterface
+
+        self.favorite_widget = self.navigationInterface.addItem(
+            "favorite",
+            ExtendedFluentIcon.FAVORITE,
+            self.tr("收藏"),
+            onClick = self.show_flyout_menu,
+            selectable = False,
+            position = NavigationItemPosition.TOP
+        )
+
+        self.history_widget = self.navigationInterface.addItem(
+            "history",
+            FluentIcon.HISTORY,
+            self.tr("历史"),
+            selectable = False,
+            position = NavigationItemPosition.TOP
+        )
 
         self.navigationInterface.addItem(
             "about",
@@ -55,6 +74,8 @@ class MainWindow(MSFluentWindow):
             selectable = False,
             position = NavigationItemPosition.TOP
         )
+
+        self.avatar_widget = NavigationLargeAvatarWidget("", QPixmap(":/bili23/image/noface.jpg"), self)
 
         self.navigationInterface.addWidget(
             "avatar",
@@ -80,15 +101,14 @@ class MainWindow(MSFluentWindow):
         signal_bus.update.show_dialog.connect(self.show_update_dialog)
         signal_bus.interface.mica_effect_changed.connect(self.setMicaEffectEnabled)
 
+        signal_bus.parse.reparse_task.connect(self.on_reparse_task)
+
     def init_utils(self):
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
         self.theme_listener.start()
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
-
-        self.user_manager = UserManager()
-        self.user_manager.get_user_info()
 
         self.cookie_manager = CookieManager()
 
@@ -106,6 +126,8 @@ class MainWindow(MSFluentWindow):
 
         QTimer.singleShot(300, self.check_download_path)
         QTimer.singleShot(300, self.check_ffmpeg)
+
+        signal_bus.emit_pending_signals()
 
     def closeEvent(self, e):
         if not self.on_close():
@@ -152,12 +174,12 @@ class MainWindow(MSFluentWindow):
             dialog = LoginDialog(self)
 
             if dialog.exec():
-                self.user_manager.get_user_info()
+                user_manager.get_user_info()
             
         else:
             # 已登录，点击头像显示用户信息
             Flyout.make(
-                view = ProfileCard(self.user_manager.logout, self),
+                view = ProfileCard(self),
                 target = self.avatar_widget,
                 parent = self,
                 aniType = FlyoutAnimationType.SLIDE_RIGHT
@@ -165,6 +187,11 @@ class MainWindow(MSFluentWindow):
 
     def on_update_avatar(self, pixmap: QPixmap):
         self.avatar_widget.setAvatar(pixmap)
+
+    def on_reparse_task(self, task_info: TaskInfo):
+        self.navigationInterface.buttons()[0].click()  # 切换到解析界面
+
+        self.parse_interface.reparse(task_info.Episode.url)
 
     def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
         match category:
@@ -268,3 +295,13 @@ class MainWindow(MSFluentWindow):
                 self.tr("FFmpeg Not Found"),
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )
+
+    def show_flyout_menu(self):
+        menu = FavoriteFlyoutMenu(self)
+
+        flyout = Flyout(menu, self)
+        flyout.resize(flyout.sizeHint())
+
+        pos = SlideRightFlyoutAnimationManager(flyout).position(self.favorite_widget)
+        flyout.exec(pos, FlyoutAnimationType.SLIDE_RIGHT)
+    
