@@ -64,30 +64,16 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
-            Attribute.FAVLIST_BIT: "{favorites_owner_id}_{favorites_owner}/{favorites_name}",
-            Attribute.SPACE_BIT: "{space_owner_id}_{space_owner}"
+            Attribute.FAVLIST_BIT: Path("{favorites_owner_id}_{favorites_owner}") / self.rule,
+            Attribute.SPACE_BIT: Path("{space_owner_id}_{space_owner}") / self.rule,
+            Attribute.WATCH_LATER_BIT: "{leaf_title}"
         }
 
-        if self.attribute & Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT:
-            return str(Path(rule_map.get(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)))
-
-        elif self.attribute & Attribute.INTERACTIVE_BIT:
-            return str(Path(rule_map.get(Attribute.INTERACTIVE_BIT)))
-
-        elif self.attribute & Attribute.POPULAR_BIT:
-            return str(Path(rule_map.get(Attribute.POPULAR_BIT)))
+        for attr, rule in rule_map.items():
+            if self.attribute & attr:
+                return str(Path(rule))
         
-        elif self.attribute & Attribute.COLLECTION_LIST_BIT:
-            return str(Path(rule_map.get(Attribute.COLLECTION_LIST_BIT)))
-        
-        elif self.attribute & Attribute.FAVLIST_BIT:
-            return str(Path(rule_map.get(Attribute.FAVLIST_BIT)) / self.rule)
-
-        elif self.attribute & Attribute.SPACE_BIT:
-            return str(Path(rule_map.get(Attribute.SPACE_BIT)) / self.rule)
-        
-        else:
-            return self.rule
+        return self.rule
         
     def get_rule_from_config(self, type_id: int = None):
         # 从命名规则配置中查询到对应的命名规则模板

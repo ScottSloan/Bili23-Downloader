@@ -1,3 +1,4 @@
+from util.parse.parser.watch_later import WatchLaterParser
 from util.parse.parser.bangumi import BangumiParser
 from util.parse.parser.popular import PopularParser
 from util.parse.parser.favlist import FavlistParser

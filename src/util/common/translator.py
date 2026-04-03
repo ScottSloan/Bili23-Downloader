@@ -84,7 +84,8 @@ class Translator:
             "WEEKLY": translate("EPISODE_TYPE", "Weekly Picks"),
             "COLLECTION_LIST": translate("EPISODE_TYPE", "Collection"),
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
-            "PROFILE": translate("EPISODE_TYPE", "Profile")
+            "PROFILE": translate("EPISODE_TYPE", "Profile"),
+            "WATCH_LATER": translate("EPISODE_TYPE", "Watch Later")
         }
     
     @staticmethod

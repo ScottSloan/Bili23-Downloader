@@ -6,7 +6,6 @@ from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
     TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge
 )
-from qfluentwidgets.components.widgets.flyout import SlideRightFlyoutAnimationManager
 
 from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutMenu
 from gui.interface import DownloadInterface, SettingInterface, ParseInterface
@@ -17,8 +16,7 @@ from gui.dialog.login import LoginDialog
 
 from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.auth import CookieManager, user_manager
-from util.download.task.info import TaskInfo
+from util.auth import user_manager
 from util.misc import Updater
 
 class MainWindow(MSFluentWindow):
@@ -41,18 +39,16 @@ class MainWindow(MSFluentWindow):
         self.download_interface = DownloadInterface(self)
         self.setting_interface = SettingInterface(self)
 
-        self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parse"), position = NavigationItemPosition.TOP)
-        self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Download"), position = NavigationItemPosition.TOP)
+        self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
+        self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Downloads"), position = NavigationItemPosition.TOP)
 
         self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
         self.download_info_badge.hide()
 
-        self.navigationInterface
-
         self.favorite_widget = self.navigationInterface.addItem(
             "favorite",
             ExtendedFluentIcon.FAVORITE,
-            self.tr("收藏"),
+            self.tr("Favorites"),
             onClick = self.show_flyout_menu,
             selectable = False,
             position = NavigationItemPosition.TOP
@@ -61,7 +57,7 @@ class MainWindow(MSFluentWindow):
         self.history_widget = self.navigationInterface.addItem(
             "history",
             FluentIcon.HISTORY,
-            self.tr("历史"),
+            self.tr("History"),
             selectable = False,
             position = NavigationItemPosition.TOP
         )
@@ -101,7 +97,7 @@ class MainWindow(MSFluentWindow):
         signal_bus.update.show_dialog.connect(self.show_update_dialog)
         signal_bus.interface.mica_effect_changed.connect(self.setMicaEffectEnabled)
 
-        signal_bus.parse.reparse_task.connect(self.on_reparse_task)
+        signal_bus.parse.parse_url.connect(self.on_reparse_task)
 
     def init_utils(self):
         # 监听系统主题变化
@@ -110,13 +106,9 @@ class MainWindow(MSFluentWindow):
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
 
-        self.cookie_manager = CookieManager()
-
         self.updater = Updater()
-        signal_bus.update.check.connect(self.updater.request_update)
 
-        # if 1 == 0 and not config.get(config.is_login):
-        #     QTimer.singleShot(300, self.show_teaching_tip)
+        signal_bus.update.check.connect(self.updater.request_update)
 
         if not config.get(config.accepted_terms):
             QTimer.singleShot(300, self.show_terms_of_use)
@@ -188,10 +180,11 @@ class MainWindow(MSFluentWindow):
     def on_update_avatar(self, pixmap: QPixmap):
         self.avatar_widget.setAvatar(pixmap)
 
-    def on_reparse_task(self, task_info: TaskInfo):
-        self.navigationInterface.buttons()[0].click()  # 切换到解析界面
+    def on_reparse_task(self, url: str):
+        if self.navigationInterface.currentItem().objectName() != "ParseInterface":
+            self.navigationInterface.buttons()[0].click()  # 切换到解析界面
 
-        self.parse_interface.reparse(task_info.Episode.url)
+        self.parse_interface.reparse(url)
 
     def show_toast_notification(self, category: ToastNotificationCategory, title: str, content: str):
         match category:
@@ -302,6 +295,6 @@ class MainWindow(MSFluentWindow):
         flyout = Flyout(menu, self)
         flyout.resize(flyout.sizeHint())
 
-        pos = SlideRightFlyoutAnimationManager(flyout).position(self.favorite_widget)
-        flyout.exec(pos, FlyoutAnimationType.SLIDE_RIGHT)
+        w = flyout.make(menu, self.favorite_widget, self, aniType = FlyoutAnimationType.SLIDE_RIGHT, isDeleteOnClose = True)
+        menu.closed.connect(w.close)
     

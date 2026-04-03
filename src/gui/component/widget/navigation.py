@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from qfluentwidgets import FlyoutViewBase, NavigationPushButton, FluentIcon, setFont, isDarkTheme, drawIcon
 
-from util.common import ExtendedFluentIcon, config
+from util.common import ExtendedFluentIcon, config, signal_bus
 
 from typing import Union
 
@@ -51,10 +51,10 @@ class NavigationFlyoutMenuItem(QWidget):
         self.isPressed = False
         self.update()
 
-        self.clicked.emit(True)
+        self.clicked.emit()
 
     def click(self):
-        self.clicked.emit(True)
+        self.clicked.emit()
 
     def paintEvent(self, e):
         painter = QPainter(self)
@@ -97,6 +97,8 @@ class NavigationFlyoutMenuItem(QWidget):
         return self._icon.icon()
 
 class NavigationFlyoutMenu(FlyoutViewBase):
+    closed = Signal()
+
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -111,11 +113,6 @@ class NavigationFlyoutMenu(FlyoutViewBase):
     def addWidget(self, widget: NavigationPushButton):
         self.viewLayout.addWidget(widget)
 
-        widget.clicked.connect(self._on_item_clicked)
-
-    def _on_item_clicked(self, checked):
-        self.hide()
-
 class FavoriteFlyoutMenu(NavigationFlyoutMenu):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -125,11 +122,19 @@ class FavoriteFlyoutMenu(NavigationFlyoutMenu):
     def init_menu(self):
         for entry in config.user_favorite_list:
             title = entry.get("title", "")
+            url = "https://space.bilibili.com/{mid}/favlist?fid={fid}".format(mid = entry.get("mid", ""), fid = entry.get("id", ""))
 
             widget = NavigationFlyoutMenuItem(ExtendedFluentIcon.FAVORITE, title, parent = self)
 
+            widget.clicked.connect(lambda url=url: self._on_item_clicked(url))
             self.addWidget(widget)
 
-        watch_later_widget = NavigationFlyoutMenuItem(ExtendedFluentIcon.CLOCK, self.tr("稍后再看"), parent = self)
+        watch_later_widget = NavigationFlyoutMenuItem(ExtendedFluentIcon.CLOCK, self.tr("Watch later"), parent = self)
+        watch_later_widget.clicked.connect(lambda: self._on_item_clicked("bili23://watch_later"))
 
         self.addWidget(watch_later_widget)
+
+    def _on_item_clicked(self, url: str):
+        self.closed.emit()
+
+        signal_bus.parse.parse_url.emit(url)

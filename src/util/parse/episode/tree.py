@@ -42,6 +42,8 @@ class Attribute(IntFlag):
 
     DOWNLOAD_AS_SINGLE_VIDEO_BIT       = 1 << 12                  # 是否下载为单个视频
 
+    WATCH_LATER_BIT                    = 1 << 13                  # 是否为稍后再看
+
 class TreeItemBase:
     def __init__(self):
         self.parent: TreeItem = None

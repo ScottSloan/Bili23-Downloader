@@ -113,3 +113,5 @@ class CookieManager(AuthBase):
             self.show_toast_error("错误", message)
 
             raise Exception(message)
+        
+cookie_manager = CookieManager()

@@ -65,9 +65,6 @@ class VideoParser(ParserBase):
 
         self.check_response(self.info_data)
 
-    def on_success(self, response: dict):
-        self.info_data = response
-
     def get_category_name(self):
         # 投稿视频
         return "USER_UPLOADS"

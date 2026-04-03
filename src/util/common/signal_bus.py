@@ -24,7 +24,7 @@ class SignalBus:
 
         update_column_settings = Signal()
 
-        reparse_task = Signal(object)
+        parse_url = Signal(str)
 
     class Download(QObject):
         create_task = Signal(list)

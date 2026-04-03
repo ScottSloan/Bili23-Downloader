@@ -157,7 +157,7 @@ class DownloadListView(ListView):
         index.model().redownload(task_info)
 
     def onReparseTask(self, task_info: TaskInfo):
-        signal_bus.parse.reparse_task.emit(task_info)
+        signal_bus.parse.parse_url.emit(task_info.Episode.url)
 
     def onEditDownloadOptions(self, index: QModelIndex, task_info: TaskInfo):
         pass
@@ -165,5 +165,6 @@ class DownloadListView(ListView):
     def _create_action(self, icon, text, slot):
         action = Action(icon = icon, text = text, parent = self)
         action.triggered.connect(slot)
+        
         return action
     

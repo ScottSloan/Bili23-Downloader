@@ -179,6 +179,8 @@ class ParseInterface(ParseBase):
         self.clipboard = QApplication.clipboard()
         self.clipboard.changed.connect(self.on_copy_url)
 
+        self.check_starting_number()
+
     def on_parse(self, page: int = 1):
         self.reset_parse_list()
         self.parse_btn.setIndeterminateState(True)
@@ -220,8 +222,6 @@ class ParseInterface(ParseBase):
         #self.download_btn.setIndeterminateState(True)
 
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
-
-        self.check_starting_number()
 
         signal_bus.download.create_task.emit(checked_episodes_list)
 

@@ -25,7 +25,10 @@ class FavlistEpisodeParser(EpisodeParserBase):
 
         episode_count = 0
 
-        for episode in self.info_data["medias"]:
+        if self.info_data.get("medias") is None:
+            return root_node
+
+        for episode in self.info_data.get("medias"):
             episode_count += 1
 
             item_data = {
