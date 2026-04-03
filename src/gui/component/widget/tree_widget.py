@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QApplication
+from PySide6.QtCore import Qt, QPoint, QSize
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtCore import Qt, QPoint
 
 from qfluentwidgets import TreeWidget, TreeItemDelegate, LineEdit
 
@@ -139,6 +139,8 @@ class ColumnTreeWidget(TreeWidget):
         self.setObjectName("ColumnTreeWidget")
         self.setSelectionMode(QTreeWidget.SelectionMode.SingleSelection)
         self.setIndentation(0)
+
+        self.tooltipEnabled = False
         
     def setColumnHeaders(self, headers: list, widths: list):
         self.setHeaderLabels(headers)
@@ -146,9 +148,20 @@ class ColumnTreeWidget(TreeWidget):
         for index, width in enumerate(widths):
             self.setColumnWidth(index, width)
 
-    def add_item(self, *args):
+    def setTooltipEnabled(self, enabled: bool):
+        self.tooltipEnabled = enabled
+
+    def addRow(self, *args, userData = None):
         item = QTreeWidgetItem([*args])
+        item.setSizeHint(0, QSize(0, 40))
         self.addTopLevelItem(item)
 
-        for index, text in enumerate(args):
-            item.setToolTip(index, text)
+        if self.tooltipEnabled:
+            for index, text in enumerate(args):
+                item.setToolTip(index, text)
+
+        if userData is not None:
+            item.setData(0, Qt.ItemDataRole.UserRole, userData)
+
+        return item
+

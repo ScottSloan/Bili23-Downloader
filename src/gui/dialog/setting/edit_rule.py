@@ -31,14 +31,13 @@ def check_result(func):
         return validate, result
     return wrapper
 
-class EditConventionDialog(DialogBase):
+class EditRuleDialog(DialogBase):
     def __init__(self, rule_data: dict, parent = None):
         super().__init__(parent)
 
         self.init_UI()
 
         self.rule_data = rule_data.copy()
-        self.type_str = ""
 
         self.init_data()
 
@@ -80,6 +79,7 @@ class EditConventionDialog(DialogBase):
 
         self.variable_list = ColumnTreeWidget(self)
         self.variable_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.variable_list.setTooltipEnabled(True)
 
         name_layout = QGridLayout()
         name_layout.setContentsMargins(0, 0, 0, 0)
@@ -142,7 +142,7 @@ class EditConventionDialog(DialogBase):
             else:
                 desc_str = desc
 
-            self.variable_list.add_item(entry.get("variable"), desc_str, entry.get("example"))
+            self.variable_list.addRow(entry.get("variable"), desc_str, entry.get("example"))
 
         self.file_name_formatter.set_variable_data(variable_list)
 
@@ -168,7 +168,6 @@ class EditConventionDialog(DialogBase):
             "rule": self.rule_box.text(),
             "default": self.set_default_chk.isChecked()
         }
-        self.type_str = self.type_choice.currentText()
 
         return super().accept()
 

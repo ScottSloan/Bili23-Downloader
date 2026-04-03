@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout
 
 from qfluentwidgets import SwitchButton, QConfig, OptionsConfigItem, ComboBox, FluentIcon, IndicatorPosition, qconfig
 
-from gui.component.widget import ToolButton
+from gui.component.widget import TransparentToolButton
 
 class SettingSwitchButton(SwitchButton):
     def __init__(self, config_item: QConfig, parent = None):
@@ -35,14 +35,14 @@ class SettingComboBox(ComboBox):
     def on_current_index_changed(self, index: int):
         qconfig.set(self.config_item, self.itemData(index))
 
-class EntryItemWidget(QWidget):
+class ActionWidget(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
 
-        self.edit_btn = ToolButton(FluentIcon.EDIT, self)
+        self.edit_btn = TransparentToolButton(FluentIcon.EDIT, self)
         self.edit_btn.setToolTip(self.tr("Edit"))
 
-        self.delete_btn = ToolButton(FluentIcon.DELETE, self)
+        self.delete_btn = TransparentToolButton(FluentIcon.DELETE, self)
         self.delete_btn.setToolTip(self.tr("Delete"))
 
         action_layout = QHBoxLayout(self)

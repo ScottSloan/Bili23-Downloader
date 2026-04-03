@@ -112,7 +112,7 @@ class FluentDialogBase(Base, FluentWidget):
         
         titleBar.setDoubleClickEnabled(False)
 
-        self.titleBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+        #self.titleBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
         self.setTitleBar(titleBar)
 
@@ -169,10 +169,10 @@ class TopNavigationDialogBase(FluentDialogBase):
 
     def _setup_widget(self):
         self.pivot = Pivot(self)
-        self.pivot.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+        #self.pivot.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
         self.stackedWidget = QStackedWidget(self)
-        self.stackedWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+        #self.stackedWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
         self.stackedWidget.setContentsMargins(0, 0, 0, 0)
 
         self.okBtn = PrimaryPushButton(self.tr("OK"), self)

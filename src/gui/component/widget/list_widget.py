@@ -27,8 +27,10 @@ class DragListWidget(ListWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
+
         if event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
+
             if item:
                 self._is_dragging = True
                 self._drag_start_pos = event.pos()
@@ -50,6 +52,9 @@ class DragListWidget(ListWidget):
         target_item = self.itemAt(event.pos())
         # 如果鼠标移动到了另一个项目的范围内，进行动态交换
         if target_item and target_item is not self._current_drag_item:
+            self.delegate.setHoverRow(-1)
+            self.delegate.setPressedRow(-1)
+
             current_row = self.row(self._current_drag_item)
             target_row = self.row(target_item)
             

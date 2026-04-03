@@ -115,4 +115,8 @@ class Pager(QWidget):
     def update_data(self, data: dict):
         self.total_pages = data.get("total_pages", 1)
 
+        # 空数据时仍显示一个按钮，但不可点击
+        if self.total_pages == 0:
+            self.total_pages = 1
+
         self.update_buttons()

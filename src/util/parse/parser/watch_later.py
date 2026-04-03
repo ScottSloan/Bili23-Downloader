@@ -13,6 +13,8 @@ class WatchLaterParser(ParserBase):
         self.url = url
         self.pn = pn
 
+        self.check_login()
+
         self.get_history_info()
 
         episode_parser = WatchLaterEpisodeParser(self.info_data.copy())

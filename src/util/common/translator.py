@@ -237,6 +237,8 @@ class Translator:
             "CHECK_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to check for updates"),
             "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed"),
             "M4A_NOT_FOUND": translate("ERROR_MESSAGES", "M4A audio file not found for conversion"),
+            "LOGIN_REQUIRED": translate("ERROR_MESSAGES", "Login Required"),
+            "LOGIN_REQUIRED_MESSAGE": translate("ERROR_MESSAGES", "Please log in to your account first."),
         }
 
     @staticmethod

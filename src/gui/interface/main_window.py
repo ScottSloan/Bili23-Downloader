@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
-    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge
+    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox
 )
 
 from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutMenu
@@ -49,7 +49,7 @@ class MainWindow(MSFluentWindow):
             "favorite",
             ExtendedFluentIcon.FAVORITE,
             self.tr("Favorites"),
-            onClick = self.show_flyout_menu,
+            onClick = self.show_favorites_flyout_menu,
             selectable = False,
             position = NavigationItemPosition.TOP
         )
@@ -289,7 +289,18 @@ class MainWindow(MSFluentWindow):
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )
 
-    def show_flyout_menu(self):
+    def show_favorites_flyout_menu(self):
+        if not config.get(config.is_login) or config.is_expired:
+            dialog = MessageBox(
+                title = self.tr("Login Required"),
+                content = self.tr("Please log in to your account first."),
+                parent = self
+            )
+            dialog.hideCancelButton()
+            dialog.exec()
+
+            return
+
         menu = FavoriteFlyoutMenu(self)
 
         flyout = Flyout(menu, self)
