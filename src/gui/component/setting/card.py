@@ -1,7 +1,6 @@
 from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard
 
 from gui.component.setting.widget import SettingSwitchButton, SettingComboBox
-from gui.dialog.setting import RuleListDialog
 
 from util.common import config, ExtendedFluentIcon, Directory
 
@@ -133,21 +132,6 @@ class MetadataSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Download Metadata"), "", self.download_switch)
         self.addGroup("", self.tr("Metadata Format"), "", self.type_choice)
-
-class NamingConventionSettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
-        super().__init__(FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Customize the naming convention for downloaded files"), parent = parent)
-
-        self.main_window = main_window
-
-        self.edit_btn = PushButton(self.tr("Edit Rule"), self)
-        self.edit_btn.clicked.connect(self.on_edit_rule)
-
-        self.addWidget(self.edit_btn)
-
-    def on_edit_rule(self):
-        dialog = RuleListDialog(self.main_window)
-        dialog.exec()
 
 class NumberSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):

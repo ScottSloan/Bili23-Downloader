@@ -2,8 +2,8 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QStackedWidget, QVBoxLayout
 
 from qfluentwidgets import SubtitleLabel, Pivot
 
-from gui.component.download.top_widget import TopStackedWidget
-from gui.component.download.list_view import DownloadListView
+from gui.component.download_list.top_widget import TopStackedWidget
+from gui.component.download_list.list_view import DownloadListView
 from gui.component.widget import PivotItem
 
 from util.download.task.query_worker import QueryWorker

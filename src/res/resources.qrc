@@ -63,6 +63,7 @@
         <file>qss/dark/setting_interface.qss</file>
 
         <file>image/noface.jpg</file>
+        <file>image/placeholder.png</file>
 
         <file>html/captcha.html</file>
 

@@ -137,6 +137,13 @@ class FluentStyledItemDelegate:
     def _drawPixmap(self, painter: QPainter, rect: QRect, pixmap: QPixmap):
         painter.drawPixmap(rect, pixmap)
 
+    def _drawPlaceholderPixmap(self, painter: QPainter, rect: QRect, pixmap: QPixmap):
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(227, 229, 231))
+        painter.drawRoundedRect(rect, 5, 5)
+
+        self._drawPixmap(painter, rect, pixmap)
+
     def _drawText(self, painter: QPainter, rect: QRect, text: str):
         if isDarkTheme():
             textColor = QColor(255, 255, 255)

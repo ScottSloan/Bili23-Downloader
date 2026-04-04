@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt, QModelIndex
 
 from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, setCustomStyleSheet
 
-from gui.component.parse.model import ParseModel
+from gui.component.parse_list.model import ParseModel
 
 from util.common import ExtendedFluentIcon, signal_bus, config
 from util.parse.episode.tree import TreeItem, Attribute

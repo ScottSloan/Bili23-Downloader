@@ -1,10 +1,10 @@
-from PySide6.QtWidgets import QTreeWidgetItem
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
+from gui.dialog.setting.edit_host import EditHostDialog
 from gui.component.setting.widget import ActionWidget
-from gui.component.widget import EditDragTreeWidget
+from gui.component.widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory
@@ -22,22 +22,19 @@ class CDNServerDialog(DialogBase):
 
     def init_UI(self):
         self.caption_lab = SubtitleLabel(self.tr("Customize Service Provider CDN"), self)
-        tip_lab = BodyLabel(self.tr("Drag to reorder, double-click to edit. Higher items have higher priority."))
+        tip_lab = BodyLabel(self.tr("Drag items to reorder. Higher items have higher priority."))
 
         self.command_bar = CommandBar(self)
         self.command_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         add_action = Action(FluentIcon.ADD_TO, self.tr("Add"), self)
         add_action.triggered.connect(self.on_add_new_host)
-        delete_action = Action(FluentIcon.REMOVE_FROM, self.tr("Delete"), self)
-        delete_action.triggered.connect(self.on_remove_host)
-
+        
         self.command_bar.addAction(add_action)
-        self.command_bar.addAction(delete_action)
 
-        self.cdn_server_list = EditDragTreeWidget(self)
-        self.cdn_server_list.setColumnEditable(1, True)
-        self.cdn_server_list.setReorderEnabled(True)
+        self.cdn_server_list = DragTreeWidget(self)
+        self.cdn_server_list.setWidgetColumn(2)
+        self.cdn_server_list.itemMoved.connect(self.on_item_moved)
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
@@ -50,14 +47,12 @@ class CDNServerDialog(DialogBase):
     def init_cdn_list(self):
         self.cdn_server_list.setColumnHeaders(
             [
-                self.tr("No."),
                 self.tr("Node"),
                 self.tr("Provider"),
                 self.tr("Actions")
             ],
             [
-                60,
-                350,
+                400,
                 100,
                 75
             ]
@@ -68,65 +63,83 @@ class CDNServerDialog(DialogBase):
             provider_key = entry.get("provider", "")
             provider = Translator.CDN_SERVER_PROVIDER(provider_key)
 
-            self._add_item([str(index + 1), host, provider], provider_key = provider_key, edit_column = 1, index = index)
+            self._add_item([host, provider], provider_key = provider_key, index = index)
 
     def on_add_new_host(self):
-        self._add_item(
-            [
-                str(self.cdn_server_list.topLevelItemCount() + 1),
-                "",
-                Translator.CDN_SERVER_PROVIDER("CUSTOM")
-            ],
-            provider_key = "CUSTOM",
-            edit_column = 1,
-            index = self.cdn_server_list.topLevelItemCount()
-        )
+        entry = {
+            "host": "",
+            "provider": "CUSTOM"
+        }
 
-    def on_remove_host(self):
-        item = self.cdn_server_list.selectedItems()
+        dialog = EditHostDialog("", self)
 
-        if not item:
-            self.show_top_toast_message(ToastNotificationCategory.ERROR, "", self.tr("Please select an item to delete"))
-            return
+        if dialog.exec():
+            entry["host"] = dialog.cdn_node
 
-        self.cdn_server_list.remove_item(item[0])
-
-    def validate(self):
-        self.cdn_list.clear()
-
-        for index in range(self.cdn_server_list.topLevelItemCount()):
-            item = self.cdn_server_list.topLevelItem(index)
-
-            if item.text(1) == "":
-                self.show_top_toast_message(ToastNotificationCategory.ERROR, "", self.tr("Node address cannot be empty"))
-
-                self.cdn_server_list.scrollToItem(item)
-                return False
-
-            entry = {
-                "host": item.text(1),
-                "provider": item.data(2, Qt.ItemDataRole.UserRole)
-            }
+            self._add_item(
+                [
+                    dialog.cdn_node,
+                    Translator.CDN_SERVER_PROVIDER("CUSTOM")
+                ],
+                provider_key = "CUSTOM",
+                index = self.cdn_server_list.topLevelItemCount()
+            )
 
             self.cdn_list.append(entry)
 
-        return True
-    
+            self.cdn_server_list.scrollToBottom()
+
+    def on_edit_host(self, index: int):
+        entry = self.cdn_list[index]
+
+        dialog = EditHostDialog(entry.get("host", ""), self)
+        
+        if dialog.exec() == DialogBase.DialogCode.Accepted:
+            entry["host"] = dialog.cdn_node
+
+            item = self.cdn_server_list.topLevelItem(index)
+            item.setText(0, dialog.cdn_node)
+
+            self.cdn_list[index] = entry
+
+    def on_remove_host(self, index: int):
+        self.cdn_server_list.takeTopLevelItem(index)
+
+        self.cdn_list.pop(index)
+        
+        # 移除节点后需重新绑定后面节点的索引
+        self._rebind_action_widgets()
+
+    def on_item_moved(self, current_row: int, target_row: int):
+        # 1. 同步内部数据列表的位置
+        item_data = self.cdn_list.pop(current_row)
+        self.cdn_list.insert(target_row, item_data)
+        
+        # 2. 重新绑定所有 Widget（因为拖拽后每个行的固化 index 发生了错位）
+        self._rebind_action_widgets()
+
+    def _rebind_action_widgets(self):
+        for i in range(self.cdn_server_list.topLevelItemCount()):
+            item = self.cdn_server_list.topLevelItem(i)
+            widget = self.create_action_widget(i)
+            self.cdn_server_list.setItemWidget(item, 2, widget)
+
     def accept(self):
         config.set(config.cdn_server_list, self.cdn_list.copy())
 
         return super().accept()
     
-    def _add_item(self, args: list, provider_key: str, edit_column: int, index: int):
-        item = self.cdn_server_list.add_item(args, edit_column = edit_column)
-        item.setData(2, Qt.ItemDataRole.UserRole, provider_key)
+    def _add_item(self, args: list, provider_key: str, index: int):
+        item = self.cdn_server_list.add_item(args)
+        item.setData(1, Qt.ItemDataRole.UserRole, provider_key)
 
         widget = self.create_action_widget(index)
 
-        self.cdn_server_list.setItemWidget(item, 3, widget)
+        self.cdn_server_list.setItemWidget(item, 2, widget)
 
     def create_action_widget(self, index: int):
         action_widget = ActionWidget(self.cdn_server_list)
-        #action_widget.delete_btn.clicked.connect(lambda: self.on_remove_host())
+        action_widget.edit_btn.clicked.connect(lambda: self.on_edit_host(index))
+        action_widget.delete_btn.clicked.connect(lambda: self.on_remove_host(index))
 
         return action_widget

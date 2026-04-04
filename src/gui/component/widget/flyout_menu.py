@@ -7,6 +7,8 @@ from qfluentwidgets import (
 )
 from qfluentwidgets.components.navigation import NavigationWidget
 
+from gui.component.entry_list.list_view import EntryListView
+
 from util.common import ExtendedFluentIcon, config, signal_bus
 
 from typing import Union
@@ -15,7 +17,7 @@ class Separator(NavigationWidget):
     def __init__(self, parent = None):
         super().__init__(False, parent=parent)
 
-        self.setFixedSize(5, 300)
+        self.setFixedSize(5, 350)
 
         self.update()
 
@@ -52,7 +54,7 @@ class CategoryWidget(QWidget):
         category_list = [
             {
                 "icon": ExtendedFluentIcon.FAVORITE,
-                "text": self.tr("收藏夹"),
+                "text": self.tr("Favorites"),
                 "data": {
                     "isSelectable": True,
                 }
@@ -73,7 +75,7 @@ class CategoryWidget(QWidget):
             },
             {
                 "icon": ExtendedFluentIcon.CLOCK,
-                "text": self.tr("稍后再看"),
+                "text": self.tr("Watch later"),
                 "data": {
                     "isSelectable": False,
                     "url": "bili23://watch_later"
@@ -81,7 +83,7 @@ class CategoryWidget(QWidget):
             },
             {
                 "icon": FluentIcon.HISTORY,
-                "text": self.tr("历史记录"),
+                "text": self.tr("History"),
                 "data": {
                     "isSelectable": False,
                     "url": "bili23://history"
@@ -117,7 +119,7 @@ class CategoryWidget(QWidget):
             
             signal_bus.parse.parse_url.emit(data["url"])
 
-class LinkWidget(QWidget):
+class EntryWidget(QWidget):
     def __init__(self, parent: 'FavoriteFlyoutMenu'):
         super().__init__(parent)
 
@@ -126,25 +128,18 @@ class LinkWidget(QWidget):
         self.init_UI()
 
     def init_UI(self):
-        self.link_list = ListWidget(self)
-        self.link_list.setFixedWidth(300)
+        self.entry_list = EntryListView(self)
+        self.entry_list.setFixedWidth(375)
 
         viewLayout = QVBoxLayout(self)
         viewLayout.setContentsMargins(5, 0, 0, 0)
 
-        viewLayout.addWidget(self.link_list)
+        viewLayout.addWidget(self.entry_list)
 
-        self.link_list.itemClicked.connect(self.on_list_item_clicked)
+        self.entry_list._model.itemClicked.connect(self.on_list_item_clicked)
 
-    def add_link(self, icon: Union[str, QIcon, FluentIcon], text: str, url: str):
-        item = QListWidgetItem(f"   {text}", self.link_list)
-        item.setIcon(icon.icon())
-        item.setData(Qt.ItemDataRole.UserRole, url)
-
-        self.link_list.addItem(item)
-
-    def on_list_item_clicked(self, item: QListWidgetItem):
-        url = item.data(Qt.ItemDataRole.UserRole)
+    def on_list_item_clicked(self, index, entry: dict):
+        url = entry.get("url", "")
 
         signal_bus.parse.parse_url.emit(url)
 
@@ -166,8 +161,8 @@ class FavoriteFlyoutMenu(FlyoutViewBase):
 
         separator = Separator(self)
 
-        self.favorite_widget = LinkWidget(self)
-        self.subscribtion_widget = LinkWidget(self)
+        self.favorite_widget = EntryWidget(self)
+        self.subscribtion_widget = EntryWidget(self)
 
         self.stack_widget = QStackedWidget(self)
         self.stack_widget.addWidget(self.favorite_widget)
@@ -181,22 +176,38 @@ class FavoriteFlyoutMenu(FlyoutViewBase):
         self.viewLayout.addWidget(self.stack_widget)
 
     def init_favorite_list(self):
+        entry_list = []
+
         for entry in config.user_favorite_list:
-            mid = entry.get("mid", "")
             title = entry.get("title", "")
+            mid = entry.get("mid", "")
             fid = entry.get("id", "")
+            count = entry.get("media_count", 0)
 
-            url = "https://space.bilibili.com/{mid}/favlist?fid={fid}".format(mid = mid, fid = fid)
+            entry_list.append({
+                "title": title,
+                "url": "https://space.bilibili.com/{mid}/favlist?fid={fid}".format(mid = mid, fid = fid),
+                "count": count
+            })
 
-            self.favorite_widget.add_link(ExtendedFluentIcon.FAVORITE, title, url)
+        self.favorite_widget.entry_list.add_entry_list(entry_list)
 
     def init_subscription_list(self):
-        pass
-        # for entry in config.user_subscription_list:
-        #     title = entry.get("title", "")
-        #     url = "https://space.bilibili.com/{mid}/channel/seriesdetail?sid={sid}".format(mid = entry.get("mid", ""), sid = entry.get("id", ""))
+        entry_list = []
 
-        #     self.subscribtion_widget.add_link(ExtendedFluentIcon.ALBUM, title, url)
+        for entry in config.user_subscription_list:
+            title = entry.get("title", "")
+            mid = entry.get("mid", "")
+            id = entry.get("id", "")
+            count = entry.get("media_count", 0)
+
+            entry_list.append({
+                "title": title,
+                "url": "https://space.bilibili.com/{mid}/lists/{id}?type=season".format(mid = mid, id = id),
+                "count": count
+            })
+
+        self.subscribtion_widget.entry_list.add_entry_list(entry_list)
 
     def on_category_changed(self, index: int):
         self.stack_widget.setCurrentIndex(index)

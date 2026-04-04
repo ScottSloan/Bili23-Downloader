@@ -8,12 +8,12 @@ from qfluentwidgets import (
 
 from gui.component.setting.card import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
-    NamingConventionSettingCard, FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard,
-    ConfigFileSettingCard, SpeedLimitSettingCard
+    FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard, ConfigFileSettingCard,
+    SpeedLimitSettingCard
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
-    StartingNumberDialog, ParseListColumnDialog, SpeedLimitSettingDialog
+    StartingNumberDialog, ParseListColumnDialog, SpeedLimitSettingDialog, RuleListDialog
 )
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig, isWin11
@@ -80,7 +80,7 @@ class SettingInterface(ScrollArea):
         # File Naming
         self.file_naming_group = SettingCardGroup(self.tr("File naming"), self)
 
-        self.naming_convention_setting_card = NamingConventionSettingCard(self.main_window, self)
+        self.naming_convention_setting_card = PushSettingCard(self.tr("Customize…"), FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Customize the naming convention for downloaded files"), self)
         self.numbering_setting_card = NumberSettingCard(self)
 
         # Advanced
@@ -187,6 +187,7 @@ class SettingInterface(ScrollArea):
         self.subtitle_setting_card.custom_style_btn.clicked.connect(self.on_custom_subtitles_style)
 
         # File Naming
+        self.naming_convention_setting_card.clicked.connect(self.on_custom_naming_rule)
         self.numbering_setting_card.starting_number_btn.clicked.connect(self.on_custom_starting_number)
 
         # Advanced
@@ -250,6 +251,10 @@ class SettingInterface(ScrollArea):
 
     def on_custom_subtitles_style(self):
         dialog = SubtitlesStyleDialog(self.main_window)
+        dialog.exec()
+
+    def on_custom_naming_rule(self):
+        dialog = RuleListDialog(self.main_window)
         dialog.exec()
 
     def on_custom_starting_number(self):

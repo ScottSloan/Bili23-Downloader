@@ -28,6 +28,8 @@ class MainWindow(MSFluentWindow):
         self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
         self.setObjectName("MainWindow")
 
+        self.current_route_key = "ParseInterface"
+
         self.init_UI()
 
         self.init_utils()
@@ -41,8 +43,11 @@ class MainWindow(MSFluentWindow):
 
         self.navigationInterface
 
-        self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
+        self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
+        self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
+
         self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Downloads"), position = NavigationItemPosition.TOP)
+        self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
 
         self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
         self.download_info_badge.hide()
@@ -293,6 +298,8 @@ class MainWindow(MSFluentWindow):
             dialog.hideCancelButton()
             dialog.exec()
 
+            self.reset_route_key()
+
             return
 
         menu = FavoriteFlyoutMenu(self)
@@ -302,4 +309,12 @@ class MainWindow(MSFluentWindow):
 
         w = flyout.make(menu, self.favorite_widget, self, aniType = FlyoutAnimationType.SLIDE_RIGHT, isDeleteOnClose = True)
         menu.closed.connect(w.close)
-    
+
+        flyout.closed.connect(self.reset_route_key)
+
+    def update_route_key(self, key: str):
+        self.current_route_key = key
+
+    def reset_route_key(self):
+        print("111")
+        self.navigationInterface.setCurrentItem(self.current_route_key)

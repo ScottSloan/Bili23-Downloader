@@ -5,6 +5,7 @@ from util.common import signal_bus, config, Translator
 from util.thread import AsyncTask, SyncTask
 from util.auth import AuthBase
 
+from urllib.parse import urlencode
 from pathlib import Path
 
 class UserManager(AuthBase):
@@ -34,12 +35,13 @@ class UserManager(AuthBase):
 
                 return
             
-            if data["isLogin"]:
+            if data.get("isLogin"):
                 config.user_uname = data.get("uname", "")
                 config.user_uid = data.get("mid")
 
                 self.get_user_avatar(data.get("face", ""))
                 self.get_user_favorite_list()
+                self.get_user_subscription_list()
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_INFO_FAILED"), error_message)
@@ -80,6 +82,31 @@ class UserManager(AuthBase):
             self.show_toast_error(Translator.ERROR_MESSAGES("FAVORITE_LIST_FAILED"), error_message)
 
         url = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid={uid}".format(uid = config.user_uid)
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+        worker.error.connect(on_error)
+
+        SyncTask.run(worker)
+
+    def get_user_subscription_list(self):
+        def on_success(response: dict):
+            subscription_list = response.get("data", {}).get("list", [])
+
+            config.user_subscription_list = subscription_list
+
+        def on_error(error_message: str):
+            self.show_toast_error(Translator.ERROR_MESSAGES("SUBSCRIPTION_LIST_FAILED"), error_message)
+
+        param = {
+            "pn": 1,
+            "ps": 50,
+            "up_mid": config.user_uid,
+            "platform": "web",
+            "web_location": "333.1387"
+        }
+
+        url = f"https://api.bilibili.com/x/v3/fav/folder/collected/list?{urlencode(param)}"
 
         worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)

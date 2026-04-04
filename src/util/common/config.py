@@ -306,6 +306,7 @@ class APPConfig(QConfig):
     user_avatar_pixmap: QPixmap = None
 
     user_favorite_list = []
+    user_subscription_list = []
 
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
     skip_version = ConfigItem("Application", "skip_version", "")

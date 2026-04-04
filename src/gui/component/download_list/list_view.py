@@ -3,8 +3,8 @@ from PySide6.QtCore import QModelIndex, Qt
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
-from gui.component.download.item_delegate import DownloadItemDelegate
-from gui.component.download.model import DownloadListModel
+from gui.component.download_list.item_delegate import DownloadItemDelegate
+from gui.component.download_list.model import DownloadListModel
 
 from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.manager import downloader_manager

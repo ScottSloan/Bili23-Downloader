@@ -32,8 +32,8 @@ class CoverManager:
         GlobalThreadPoolTask.run(worker)
 
     def placeholder(self):
-        placeholder_pixmap = QPixmap(144, 81)
-        placeholder_pixmap.fill(Qt.GlobalColor.darkGray)
+        placeholder_pixmap = QPixmap(":/bili23/image/placeholder.png")
+        placeholder_pixmap.scaled(144, 81, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
         return placeholder_pixmap
     

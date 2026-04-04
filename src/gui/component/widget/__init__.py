@@ -1,7 +1,7 @@
 from gui.component.widget.button import IndeterminateProgressPushButton, ToolButton, PagerNumberButton, TransparentToolButton
 from gui.component.widget.list_widget import DragListWidget, CheckableDragListWidget
-from gui.component.widget.tree_widget import EditDragTreeWidget, ColumnTreeWidget
 from gui.component.widget.spinbox import SpinBox, DoubleSpinBox, CompactSpinBox
+from gui.component.widget.tree_widget import DragTreeWidget, ColumnTreeWidget
 from gui.component.widget.avatar import NavigationLargeAvatarWidget
 from gui.component.widget.combobox import CidComboBox, DictComboBox
 from gui.component.widget.flyout_menu import FavoriteFlyoutMenu
