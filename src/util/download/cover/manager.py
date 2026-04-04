@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QAbstractListModel
+from PySide6.QtCore import Qt, QAbstractListModel, QSize
 from PySide6.QtGui import QPixmap
 
 from util.download.cover.query_worker import QueryWorker
@@ -26,8 +26,8 @@ class CoverManager:
     def query(self, cover_id: str):
         return self.db_manager.query_cover(cover_id)
     
-    def request(self, model: QAbstractListModel, cover_id: str, cover_url: str):
-        worker = QueryWorker(model, cover_id, cover_url)
+    def request(self, model: QAbstractListModel, cover_id: str, cover_url: str, cover_size: QSize):
+        worker = QueryWorker(model, cover_id, cover_url, cover_size)
 
         GlobalThreadPoolTask.run(worker)
 

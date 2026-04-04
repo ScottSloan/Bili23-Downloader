@@ -18,7 +18,7 @@ import os
 
 # 目标语言
 # Target language (e.g., "zh_CN" for Simplified Chinese, "en_US" for English)
-target_language = "zh_CN"
+target_language = "zh_TW"
 
 
 # 项目根目录（请根据实际情况修改）
@@ -37,6 +37,7 @@ sources = [
     "src/gui/component/download_list/list_view.py",
     "src/gui/component/download_list/top_widget.py",
     "src/gui/component/download_options/card.py",
+    "src/gui/component/entry_list/list_view.py",
     "src/gui/component/parse_list/model.py",
     "src/gui/component/parse_list/tree_view.py",
     "src/gui/component/setting/card.py",

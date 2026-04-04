@@ -170,9 +170,15 @@ class FluentStyledItemDelegate:
 
         setFont(painter, 14)
 
-        painter.setPen(textColor)
+        font = painter.font()
 
-        painter.drawText(rect, text)
+        metrics = QFontMetrics(font)
+        elided_text = metrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
+
+        painter.setFont(font)
+        painter.setPen(textColor)
+        # 自动换行并左对齐、垂直居中
+        painter.drawText(rect, Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, elided_text)
 
     def _getFont(self, size: int):
         font = QApplication.font()

@@ -1,11 +1,14 @@
-from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QModelIndex, Qt, Signal, QSize
 
-class EntryListModel(QAbstractListModel):
+from gui.component.model.cover_query_model import CoverQueryModel
+
+class EntryListModel(CoverQueryModel):
     itemClicked = Signal(QModelIndex, object)
 
     def __init__(self, entry_list: list, parent = None):
         super().__init__(parent)
 
+        self._cover_size = QSize(120, 67)
         self._entry_list = entry_list
 
     def rowCount(self, parent = QModelIndex()):
@@ -32,3 +35,10 @@ class EntryListModel(QAbstractListModel):
         self._entry_list.append(entry)
 
         self.endInsertRows()
+
+    def clearData(self):
+        self.beginResetModel()
+
+        self._entry_list.clear()
+
+        self.endResetModel()

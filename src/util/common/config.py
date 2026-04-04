@@ -333,6 +333,9 @@ class APPConfig(QConfig):
     
     current_starting_number = None
 
+    flyout_menu_category_index = 0
+    flyout_menu_follow_list_page = 1
+
     main_window_ready = False
 
 config = APPConfig()

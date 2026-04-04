@@ -1,21 +1,22 @@
-from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Slot
+from PySide6.QtCore import QModelIndex, Qt, QSize
 from PySide6.QtWidgets import QAbstractItemView
 
+from gui.component.model.cover_query_model import CoverQueryModel
+
 from util.download.downloader.manager import downloader_manager
-from util.download.cover.manager import cover_manager
 from util.download.task.manager import task_manager
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
 from util.common import signal_bus, config
 
-from typing import List, Dict, Set
+from typing import List
 
-class DownloadListModel(QAbstractListModel):    
+class DownloadListModel(CoverQueryModel):    
     def __init__(self, task_list: list, parent = None):
         super().__init__(parent)
 
+        self._cover_size = QSize(144, 80)
         self._task_list: List[TaskInfo] = task_list
-        self.cover_waiting_rows: Dict[str, Set[int]] = {}
 
     def rowCount(self, parent = QModelIndex()):
         return len(self._task_list)
@@ -33,46 +34,12 @@ class DownloadListModel(QAbstractListModel):
             case Qt.ItemDataRole.UserRole:
                 return task_info
     
-    def queryRowCover(self, cover_id: str, cover_url: str, row: int):
-        # 由委托发起查询封面请求
-
-        cahce = cover_manager.getCache(cover_id)
-
-        # 命中缓存，直接返回
-        if cahce:
-            return cahce
-
-        # 记录等待该cover_id的所有row
-        waiting_set = self.cover_waiting_rows.setdefault(cover_id, set())
-
-        if row not in waiting_set:
-            waiting_set.add(row)
-
-            # 只在首次请求时启动worker
-            if len(waiting_set) == 1:                
-                cover_manager.request(self, cover_id, cover_url)
-
-        return cover_manager.placeholder()
-
     def getRow(self, task_info: TaskInfo):
         try:
             return self._task_list.index(task_info)
         
         except ValueError:
             return -1
-
-    @Slot(str)
-    def updateRowCover(self, cover_id: str):
-        # 更新所有等待该cover_id的行
-        if cover_id in self.cover_waiting_rows:
-
-            rows = self.cover_waiting_rows[cover_id]
-
-            for row in rows:
-                index = self.index(row)
-                self.dataChanged.emit(index, index)
-
-            del self.cover_waiting_rows[cover_id]
 
     def appendRow(self, task_info: TaskInfo):
         row = self.rowCount()

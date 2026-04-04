@@ -368,27 +368,27 @@
 <context>
     <name>CategoryWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="57"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="60"/>
         <source>Favorites</source>
         <translation>收藏夾</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="64"/>
-        <source>订阅合集</source>
-        <translation type="unfinished"></translation>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="67"/>
+        <source>Subscriptions</source>
+        <translation>訂閱合集</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="71"/>
-        <source>追番追剧</source>
-        <translation type="unfinished"></translation>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="74"/>
+        <source>Anime &amp; Series</source>
+        <translation>追番追劇</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="78"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="81"/>
         <source>Watch later</source>
         <translation>稍後觀看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="86"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="89"/>
         <source>History</source>
         <translation>歷史記錄</translation>
     </message>
@@ -1115,6 +1115,14 @@ File name: {filename}</source>
     </message>
 </context>
 <context>
+    <name>EntryListView</name>
+    <message>
+        <location filename="../../gui/component/entry_list/list_view.py" line="14"/>
+        <source>No entries</source>
+        <translation>暫無內容</translation>
+    </message>
+</context>
+<context>
     <name>ExitDialog</name>
     <message>
         <location filename="../../gui/dialog/misc/exit.py" line="17"/>
@@ -1188,6 +1196,39 @@ File name: {filename}</source>
         <location filename="../../gui/component/setting/card.py" line="222"/>
         <source>Custom FFmpeg path</source>
         <translation>自訂 FFmpeg 路徑</translation>
+    </message>
+</context>
+<context>
+    <name>FollowWidget</name>
+    <message>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="166"/>
+        <source>Anime</source>
+        <translation>追番</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="167"/>
+        <source>Series</source>
+        <translation>追劇</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="174"/>
+        <source>All</source>
+        <translation>全部</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="175"/>
+        <source>Want to watch</source>
+        <translation>想看</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="176"/>
+        <source>Watching</source>
+        <translation>在看</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="177"/>
+        <source>Watched</source>
+        <translation>看過</translation>
     </message>
 </context>
 <context>

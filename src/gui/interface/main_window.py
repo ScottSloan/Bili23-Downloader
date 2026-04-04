@@ -61,7 +61,7 @@ class MainWindow(MSFluentWindow):
             position = NavigationItemPosition.TOP
         )
 
-        self.navigationInterface.addItem(
+        self.about_widget = self.navigationInterface.addItem(
             "about",
             FluentIcon.INFO,
             self.tr("About"),
@@ -307,7 +307,7 @@ class MainWindow(MSFluentWindow):
         flyout = Flyout(menu, self)
         flyout.resize(flyout.sizeHint())
 
-        w = flyout.make(menu, self.favorite_widget, self, aniType = FlyoutAnimationType.SLIDE_RIGHT, isDeleteOnClose = True)
+        w = flyout.make(menu, self.about_widget, self, aniType = FlyoutAnimationType.SLIDE_RIGHT, isDeleteOnClose = True)
         menu.closed.connect(w.close)
 
         flyout.closed.connect(self.reset_route_key)
@@ -316,5 +316,4 @@ class MainWindow(MSFluentWindow):
         self.current_route_key = key
 
     def reset_route_key(self):
-        print("111")
         self.navigationInterface.setCurrentItem(self.current_route_key)

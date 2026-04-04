@@ -124,4 +124,7 @@ class Pager(QWidget):
             if self.total_pages == 0:
                 self.total_pages = 1
 
+            if current_page := data.get("current_page", 1):
+                self.current_page = current_page
+
             self.update_buttons()
