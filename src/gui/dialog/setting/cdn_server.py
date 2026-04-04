@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
+from gui.component.setting.widget import ActionWidget
 from gui.component.widget import EditDragTreeWidget
 from gui.component.dialog import DialogBase
 
@@ -47,29 +48,39 @@ class CDNServerDialog(DialogBase):
         self.widget.setMinimumWidth(650)
 
     def init_cdn_list(self):
-        self.cdn_server_list.setColumnCount(3)
-        self.cdn_server_list.setHeaderLabels([self.tr("No."), self.tr("Node"), self.tr("Provider")])
-        self.cdn_server_list.setColumnWidth(0, 60)
-        self.cdn_server_list.setColumnWidth(1, 400)
-        self.cdn_server_list.setColumnWidth(2, 100)
-
+        self.cdn_server_list.setColumnHeaders(
+            [
+                self.tr("No."),
+                self.tr("Node"),
+                self.tr("Provider"),
+                self.tr("Actions")
+            ],
+            [
+                60,
+                350,
+                100,
+                75
+            ]
+        )
+        
         for index, entry in enumerate(self.cdn_list):
             host = entry.get("host", "")
             provider_key = entry.get("provider", "")
             provider = Translator.CDN_SERVER_PROVIDER(provider_key)
 
-            item = QTreeWidgetItem()
-            item.setText(0, str(index + 1))
-            item.setText(1, host)
-            item.setText(2, provider)
-            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsDropEnabled)
-            item.setData(2, Qt.ItemDataRole.UserRole, provider_key)
-
-            self.cdn_server_list.addTopLevelItem(item)
+            self._add_item([str(index + 1), host, provider], provider_key = provider_key, edit_column = 1, index = index)
 
     def on_add_new_host(self):
-        item = self.cdn_server_list.add_item([str(self.cdn_server_list.topLevelItemCount() + 1), "", Translator.CDN_SERVER_PROVIDER("CUSTOM")], edit_column = 1)
-        item.setData(2, Qt.ItemDataRole.UserRole, "CUSTOM")
+        self._add_item(
+            [
+                str(self.cdn_server_list.topLevelItemCount() + 1),
+                "",
+                Translator.CDN_SERVER_PROVIDER("CUSTOM")
+            ],
+            provider_key = "CUSTOM",
+            edit_column = 1,
+            index = self.cdn_server_list.topLevelItemCount()
+        )
 
     def on_remove_host(self):
         item = self.cdn_server_list.selectedItems()
@@ -106,3 +117,16 @@ class CDNServerDialog(DialogBase):
 
         return super().accept()
     
+    def _add_item(self, args: list, provider_key: str, edit_column: int, index: int):
+        item = self.cdn_server_list.add_item(args, edit_column = edit_column)
+        item.setData(2, Qt.ItemDataRole.UserRole, provider_key)
+
+        widget = self.create_action_widget(index)
+
+        self.cdn_server_list.setItemWidget(item, 3, widget)
+
+    def create_action_widget(self, index: int):
+        action_widget = ActionWidget(self.cdn_server_list)
+        #action_widget.delete_btn.clicked.connect(lambda: self.on_remove_host())
+
+        return action_widget

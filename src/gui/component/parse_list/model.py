@@ -19,7 +19,7 @@ class ParseModel(QAbstractItemModel):
 
         self.root_node = root_node
         self.search_keyword = ""
-        self.category_name = ""
+        self._category_name = ""
         self.last_changed_index = QPersistentModelIndex()
         self.last_shift_index = QPersistentModelIndex()
 
@@ -44,7 +44,7 @@ class ParseModel(QAbstractItemModel):
                 "formatter": DurationFormatter
             },
             {
-                "attr_key": "pub_fav_time",                      # 发布或收藏时间
+                "attr_key": "dyn_time",                          # 发布、收藏、观看时间
                 "formatter": DateFormatter
             },
         ]
@@ -105,8 +105,8 @@ class ParseModel(QAbstractItemModel):
                 if index.column() == 1 and self.search_keyword.lower() in item.title.lower():
                     return QBrush(themeColor())
             
-            # 已下载的剧集显示为灰色
-            elif item.downloaded:
+            # 已下载的剧集、失效的剧集显示为灰色
+            elif item.downloaded or item.expired:
                 return QBrush(QColor(150, 150, 150)) if isDarkTheme() else QBrush(QColor(110, 110, 110))
 
         return None
@@ -117,7 +117,10 @@ class ParseModel(QAbstractItemModel):
 
             attr_key = header_data.get("attr_key", "")
 
-            return Translator.COLUMN_NAME(attr_key, self.category_name)
+            if attr_key == "dyn_time":
+                attr_key = self._get_dyn_time_attr_key()
+            
+            return Translator.COLUMN_NAME(attr_key, self._category_name)
         
         return None
     
@@ -282,3 +285,24 @@ class ParseModel(QAbstractItemModel):
             return QModelIndex()
         
         return self.createIndex(item.row(), column, item)
+    
+    def _set_category_name(self, name: str):
+        self._category_name = name
+
+    def _get_dyn_time_attr_key(self):
+        match self._category_name:
+            case "FAVORITES":
+                # 收藏夹
+                return "favtime"
+            
+            case "WATCH_LATER":
+                # 稍后再看
+                return "favtime"
+            
+            case "HISTORY":
+                # 历史记录
+                return "viewtime"
+            
+            case _:
+                return "pubtime"
+        

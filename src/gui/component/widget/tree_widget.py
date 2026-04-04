@@ -41,6 +41,12 @@ class EditDragTreeWidget(TreeWidget):
 
         self.itemDoubleClicked.connect(self.on_item_double_clicked)
 
+    def setColumnHeaders(self, headers: list, widths: list):
+        self.setHeaderLabels(headers)
+
+        for index, width in enumerate(widths):
+            self.setColumnWidth(index, width)
+
     def setColumnEditable(self, column: int, state: bool):
         """
         设置列表指定列是否可编辑
@@ -71,6 +77,7 @@ class EditDragTreeWidget(TreeWidget):
     def add_item(self, *args, edit_column = None):
         item = QTreeWidgetItem(*args)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsDropEnabled | Qt.ItemFlag.ItemIsEditable)
+        item.setSizeHint(0, QSize(0, 40))
 
         self.addTopLevelItem(item)
 

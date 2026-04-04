@@ -7,6 +7,7 @@
         <file>icon/light/exit.svg</file>
         <file>icon/light/list.svg</file>
         <file>icon/light/clock.svg</file>
+        <file>icon/light/album.svg</file>
         <file>icon/light/clear.svg</file>
         <file>icon/light/retry.svg</file>
         <file>icon/light/select.svg</file>
@@ -31,6 +32,7 @@
         <file>icon/dark/exit.svg</file>
         <file>icon/dark/list.svg</file>
         <file>icon/dark/clock.svg</file>
+        <file>icon/dark/album.svg</file>
         <file>icon/dark/clear.svg</file>
         <file>icon/dark/retry.svg</file>
         <file>icon/dark/select.svg</file>

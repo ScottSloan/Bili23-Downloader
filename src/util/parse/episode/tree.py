@@ -148,6 +148,13 @@ class TreeItem(TreeItemBase):
 
         self.attribute = 0
 
+        # 发布、收藏、观看时间
+        self.pubtime = item_data.get("pubtime", 0)
+        self.favtime = item_data.get("favtime", 0)
+        self.viewtime = item_data.get("viewtime", 0)
+
+        self.expired = item_data.get("expired", False)
+
         self.aid = item_data.get("aid", 0)
         self.cid = item_data.get("cid", 0)
         self.url = item_data.get("url", "")
@@ -157,8 +164,6 @@ class TreeItem(TreeItemBase):
         self.cover = item_data.get("cover", "")
         self.title = item_data.get("title", "")
         self.number = item_data.get("number", "")
-        self.pubtime = item_data.get("pubtime", 0)
-        self.favtime = item_data.get("favtime", 0)
         self.duration = item_data.get("duration", 0)
         self.episode_id = item_data.get("episode_id", "")
         self.episode_plot = item_data.get("episode_plot", "")
@@ -218,10 +223,16 @@ class TreeItem(TreeItemBase):
         return matches
     
     @property
-    def pub_fav_time(self):
-        if self.attribute & Attribute.FAVLIST_BIT:
-            return self.favtime
-        
-        else:
-            return self.pubtime
+    def dyn_time(self):
+        time_map = {
+            Attribute.FAVLIST_BIT: self.favtime,
+            Attribute.WATCH_LATER_BIT: self.favtime,
+            Attribute.HISTORY_BIT: self.viewtime,
+        }
+
+        for attr_bit, time_value in time_map.items():
+            if self.attribute & attr_bit:
+                return time_value
+
+        return self.pubtime
     

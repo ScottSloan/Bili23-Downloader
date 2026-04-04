@@ -39,6 +39,8 @@ class MainWindow(MSFluentWindow):
         self.download_interface = DownloadInterface(self)
         self.setting_interface = SettingInterface(self)
 
+        self.navigationInterface
+
         self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
         self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Downloads"), position = NavigationItemPosition.TOP)
 
@@ -50,16 +52,7 @@ class MainWindow(MSFluentWindow):
             ExtendedFluentIcon.FAVORITE,
             self.tr("Favorites"),
             onClick = self.show_favorites_flyout_menu,
-            selectable = False,
-            position = NavigationItemPosition.TOP
-        )
-
-        self.history_widget = self.navigationInterface.addItem(
-            "history",
-            FluentIcon.HISTORY,
-            self.tr("History"),
-            onClick = self.on_parse_history,
-            selectable = False,
+            selectable = True,
             position = NavigationItemPosition.TOP
         )
 
@@ -289,9 +282,6 @@ class MainWindow(MSFluentWindow):
                 self.tr("FFmpeg Not Found"),
                 self.tr("No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.")
             )
-
-    def on_parse_history(self):
-        signal_bus.parse.parse_url.emit("bili23://history")
 
     def show_favorites_flyout_menu(self):
         if not config.get(config.is_login) or config.is_expired:

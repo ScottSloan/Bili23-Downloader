@@ -9,6 +9,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     TODO = "todo"
     LIST = "list"
     CLOCK = "clock"
+    ALBUM = "album"
     CLEAR = "clear"
     RETRY = "retry"
     SELECT = "select"

@@ -197,11 +197,11 @@ class Translator:
             "title": translate("COLUMN_NAME", "Title"),
             "badge": translate("COLUMN_NAME", "Notes"),
             "duration": translate("COLUMN_NAME", "Duration"),
-            "pub_fav_time": translate("COLUMN_NAME", "Publish or Favorite Date"),
-            "pubtime": translate("COLUMN_NAME", "Publish Date"),
-            "favtime": translate("COLUMN_NAME", "Favorite Date"),
+            "dyn_time": translate("COLUMN_NAME", "Time"),
+            "pubtime": translate("COLUMN_NAME", "Publish Time"),
+            "favtime": translate("COLUMN_NAME", "Favorite Time"),
+            "viewtime": translate("COLUMN_NAME", "Watch Time"),
         }
-
         
         if key == "pub_fav_time" and category_name is not None:
             if category_name == "FAVORITES":

@@ -328,18 +328,23 @@
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="200"/>
-        <source>Publish or Favorite Date</source>
-        <translation>发布或收藏时间</translation>
+        <source>Time</source>
+        <translation>时间</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="201"/>
-        <source>Publish Date</source>
+        <source>Publish Time</source>
         <translation>发布时间</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="202"/>
-        <source>Favorite Date</source>
+        <source>Favorite Time</source>
         <translation>收藏时间</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="203"/>
+        <source>Watch Time</source>
+        <translation>观看时间</translation>
     </message>
 </context>
 <context>
@@ -1732,37 +1737,37 @@ For advanced usage, see the help documentation.</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="216"/>
+        <location filename="../../gui/interface/parse.py" line="217"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="228"/>
+        <location filename="../../gui/interface/parse.py" line="229"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="242"/>
+        <location filename="../../gui/interface/parse.py" line="243"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="244"/>
+        <location filename="../../gui/interface/parse.py" line="245"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="245"/>
+        <location filename="../../gui/interface/parse.py" line="246"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="270"/>
+        <location filename="../../gui/interface/parse.py" line="271"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="276"/>
+        <location filename="../../gui/interface/parse.py" line="277"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>

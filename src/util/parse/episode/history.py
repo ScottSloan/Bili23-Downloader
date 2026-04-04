@@ -40,9 +40,10 @@ class HistoryEpisodeParser(EpisodeParserBase):
                 "ep_id": episode["history"]["epid"],
                 "episode_id": self.episode_id,
                 "number": episode_count,
-                "favtime": episode["view_at"],
+                "viewtime": episode["view_at"],
                 "title": self.get_episode_title(episode),
                 "url": "https://www.bilibili.com/video/" + episode["history"]["bvid"],
+                "expired": episode["duration"] == 0
             }
 
             item = TreeItem(item_data)
@@ -57,7 +58,7 @@ class HistoryEpisodeParser(EpisodeParserBase):
         self.episode_id = EpisodeData.add_episode()
 
     def get_episode_badge(self, episode_data: dict):
-        if episode_data.get("duration") == 0:
+        if episode_data.get("duration") == 0:            
             return Translator.TIP_MESSAGES("EXPIRED")
         else:
             return episode_data["badge"]
