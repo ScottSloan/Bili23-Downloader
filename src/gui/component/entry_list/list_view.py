@@ -15,6 +15,7 @@ class EntryListView(ListView):
 
         self._model = EntryListModel([], self)
         self._delegate = PosterListItemDelegate(self) if is_poster else EntryListItemDelegate(self)
+        self._delegate.contextMenuRequested.connect(self.showContextMenu)
 
         self.setModel(self._model)
         self.setItemDelegate(self._delegate)
@@ -65,3 +66,16 @@ class EntryListView(ListView):
 
         else:
             return super().paintEvent(e)
+        
+    def setWrappingView(self):
+        # 启用多行显示，实现流式布局
+        self.setWrapping(True)
+        self.setFlow(ListView.Flow.LeftToRight)
+        self.setResizeMode(ListView.ResizeMode.Adjust)
+
+    def showContextMenu(self, pos):
+        index = self.indexAt(pos)
+
+        pass
+
+    

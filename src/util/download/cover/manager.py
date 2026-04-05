@@ -1,10 +1,9 @@
-from PySide6.QtCore import Qt, QAbstractListModel, QSize
+from PySide6.QtCore import Qt, QAbstractListModel, QSize, QThreadPool
 from PySide6.QtGui import QPixmap
 
 from util.download.cover.query_worker import QueryWorker
 from util.download.cover.db import CoverDatabase
 from util.download.cover.cache import CoverCache
-from util.thread import GlobalThreadPoolTask
 
 from functools import lru_cache
 from hashlib import md5
@@ -12,6 +11,12 @@ from hashlib import md5
 class CoverManager:
     def __init__(self):
         self.db_manager = CoverDatabase()
+
+        # 为封面加载专门创建一个独立的线程池
+        self.thread_pool = QThreadPool()
+        
+        # 作为典型的网络/数据库 I/O 密集型任务，可适当增加最大线程数并发处理
+        self.thread_pool.setMaxThreadCount(16)
 
     @lru_cache(maxsize = None)
     def arrange_cover_id(self, cover_url: str):
@@ -29,7 +34,7 @@ class CoverManager:
     def request(self, model: QAbstractListModel, cover_id: str, cover_url: str, cover_size: QSize):
         worker = QueryWorker(model, cover_id, cover_url, cover_size)
 
-        GlobalThreadPoolTask.run(worker)
+        self.thread_pool.start(worker)
 
     def placeholder(self):
         placeholder_pixmap = QPixmap(":/bili23/image/placeholder.png")

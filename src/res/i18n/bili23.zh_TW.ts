@@ -423,48 +423,48 @@
 <context>
     <name>ConfigFileSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="247"/>
+        <location filename="../../gui/component/setting/card.py" line="249"/>
         <source>Config File</source>
         <translation>設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="247"/>
+        <location filename="../../gui/component/setting/card.py" line="249"/>
         <source>Import or export configuration files</source>
         <translation>匯入或匯出設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="249"/>
-        <location filename="../../gui/component/setting/card.py" line="250"/>
+        <location filename="../../gui/component/setting/card.py" line="251"/>
+        <location filename="../../gui/component/setting/card.py" line="252"/>
         <source>Browse...</source>
         <translation>浏览…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="251"/>
+        <location filename="../../gui/component/setting/card.py" line="253"/>
         <source>Open</source>
         <translation>開啟</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="253"/>
+        <location filename="../../gui/component/setting/card.py" line="255"/>
         <source>Import Config</source>
         <translation>匯入設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="253"/>
+        <location filename="../../gui/component/setting/card.py" line="255"/>
         <source>Import settings from a configuration file</source>
         <translation>從設定檔匯入設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="254"/>
+        <location filename="../../gui/component/setting/card.py" line="256"/>
         <source>Export Config</source>
         <translation>匯出設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="254"/>
+        <location filename="../../gui/component/setting/card.py" line="256"/>
         <source>Export settings to a configuration file</source>
         <translation>將設定匯出至設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="255"/>
+        <location filename="../../gui/component/setting/card.py" line="257"/>
         <source>Open Config Directory</source>
         <translation>開啟設定目錄</translation>
     </message>
@@ -640,12 +640,22 @@
         <translation>設定下載檔案的輸出格式選項</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="232"/>
+        <location filename="../../gui/component/setting/card.py" line="233"/>
+        <source>Video Container</source>
+        <translation>影片容器格式</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="233"/>
+        <source>Choose the container format for the final output video file</source>
+        <translation>選擇最終輸出影片檔案的容器格式</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/card.py" line="234"/>
         <source>Convert M4A to MP3</source>
         <translation>將 M4A 轉換為 MP3</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="232"/>
+        <location filename="../../gui/component/setting/card.py" line="234"/>
         <source>Only applies when downloading audio-only streams. Disabled if video is also selected.</source>
         <translation>僅於下載純音訊串流時有效</translation>
     </message>
@@ -1201,32 +1211,32 @@ File name: {filename}</source>
 <context>
     <name>FollowWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="166"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="169"/>
         <source>Anime</source>
         <translation>追番</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="167"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="170"/>
         <source>Series</source>
         <translation>追劇</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="174"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="177"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="175"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="178"/>
         <source>Want to watch</source>
         <translation>想看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="176"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="179"/>
         <source>Watching</source>
         <translation>在看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="177"/>
+        <location filename="../../gui/component/widget/flyout_menu.py" line="180"/>
         <source>Watched</source>
         <translation>看過</translation>
     </message>
@@ -1833,37 +1843,37 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseListSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="236"/>
+        <location filename="../../gui/component/setting/card.py" line="238"/>
         <source>Parse List</source>
         <translation>解析清單</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="236"/>
+        <location filename="../../gui/component/setting/card.py" line="238"/>
         <source>Adjust settings for the parse list</source>
         <translation>調整解析清單的相關設定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="240"/>
+        <location filename="../../gui/component/setting/card.py" line="242"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="242"/>
+        <location filename="../../gui/component/setting/card.py" line="244"/>
         <source>Auto-select All</source>
         <translation>自動勾選全部項目</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="242"/>
+        <location filename="../../gui/component/setting/card.py" line="244"/>
         <source>Automatically select all items after parsing</source>
         <translation>解析完成後，自動勾選所有項目</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="243"/>
+        <location filename="../../gui/component/setting/card.py" line="245"/>
         <source>Customize Displayed Columns</source>
         <translation>自訂顯示欄位</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="243"/>
+        <location filename="../../gui/component/setting/card.py" line="245"/>
         <source>Customize the columns displayed in the parse list and their order</source>
         <translation>自訂解析清單中顯示的欄位及其順序</translation>
     </message>
@@ -2554,37 +2564,37 @@ ISP：{isp}</translation>
 <context>
     <name>SpeedLimitSettingCard</name>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="264"/>
+        <location filename="../../gui/component/setting/card.py" line="266"/>
         <source>Speed Limit</source>
         <translation>速度限制</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="264"/>
+        <location filename="../../gui/component/setting/card.py" line="266"/>
         <source>Configure download speed limit</source>
         <translation>設定下載限速</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="267"/>
+        <location filename="../../gui/component/setting/card.py" line="269"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="269"/>
+        <location filename="../../gui/component/setting/card.py" line="271"/>
         <source>Enable Speed Limit</source>
         <translation>啟用限速</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="269"/>
+        <location filename="../../gui/component/setting/card.py" line="271"/>
         <source>Limit the speed of each download task</source>
         <translation>限制單一下載任務的速度</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="270"/>
+        <location filename="../../gui/component/setting/card.py" line="272"/>
         <source>Speed Limit Rate</source>
         <translation>限速速率</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/card.py" line="278"/>
+        <location filename="../../gui/component/setting/card.py" line="280"/>
         <source>Current rate: {rate} MB/s</source>
         <translation>目前速率：{rate} MB/s</translation>
     </message>

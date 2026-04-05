@@ -1,10 +1,10 @@
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QStyle
 from PySide6.QtCore import QModelIndex, Qt, QSize, QRect, QEvent
+from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtGui import QPainter, QPixmap
 
-from gui.component.download_list.item_delegate import FluentStyledItemDelegate
+from gui.component.view_model.delegate_base import CoverQueryDelegateBase
 
-class PosterListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
+class PosterListItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -12,29 +12,14 @@ class PosterListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         self._placeholderPixmap = QPixmap(":/bili23/image/placeholder.png")
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-        painter.save()
-        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
-
-        painter.setClipping(True)
-        painter.setClipRect(option.rect)
-
-        self._checkHoverRow(option, index)
-
-        self._drawBackground(painter, option, index)
-
-        self._paintItemUI(painter, option, index)
-
-        painter.restore()
-
     def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex):
-        return QSize(0, 184)
+        return QSize(295, 184)
 
     def _paintItemUI(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-        entry = index.data(Qt.ItemDataRole.UserRole)
+        entry: dict = index.data(Qt.ItemDataRole.UserRole)
 
         coverRect = self.uiRect.getCoverRect(option)
-        self._drawCover(painter, coverRect, index, entry)
+        self._drawCover(painter, coverRect, option, index, entry.get("cover_id"), entry.get("cover"))
 
         titleRect = self.uiRect.getTitleRect(coverRect, option)
         self._drawText(painter, titleRect, entry["title"])
@@ -51,13 +36,6 @@ class PosterListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         descRect = self.uiRect.getDescRect(titleRect, option)
         self._drawDescriptionText(painter, descRect, entry["desc"])
 
-    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
-        if option.state & QStyle.StateFlag.State_MouseOver:
-            self.hoverRow = index.row()
-
-        elif self.hoverRow == index.row():
-            self.hoverRow = -1
-
     def editorEvent(self, event, model, option, index):
         if event.type() == QEvent.Type.MouseButtonRelease:
             return self._pressEvent(option, index, event)
@@ -72,17 +50,6 @@ class PosterListItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         return False
 
-    def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex):
-        # 由委托发起查询封面请求
-        return index.model().queryRowCover(cover_id, cover_url, index.row())
-
-    def _drawCover(self, painter, rect, index, entry):
-        # 先绘制占位图
-        self._drawPlaceholderPixmap(painter, rect, self._placeholderPixmap)
-
-        if cover_id := entry.get("cover_id"):
-            self._drawPixmap(painter, rect, self._queryCover(cover_id, entry["cover"], index))
-
 class UIRect:
     def __init__(self):
         self.margin = 10
@@ -90,8 +57,9 @@ class UIRect:
 
     def getCoverRect(self, option: QStyleOptionViewItem):
         top = self.margin + option.rect.top()
+        left = self.margin + option.rect.left()
 
-        return QRect(self.margin, top, 123, 164)
+        return QRect(left, top, 123, 164)
 
     def getTitleRect(self, coverRect: QRect, option: QStyleOptionViewItem):
         left = coverRect.right() + self.spacer

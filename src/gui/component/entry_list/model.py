@@ -1,8 +1,8 @@
 from PySide6.QtCore import QModelIndex, Qt, Signal, QSize
 
-from gui.component.model.cover_query_model import CoverQueryModel
+from gui.component.view_model.model_base import CoverQueryModelBase
 
-class EntryListModel(CoverQueryModel):
+class EntryListModel(CoverQueryModelBase):
     itemClicked = Signal(QModelIndex, object)
 
     def __init__(self, entry_list: list, parent = None):
@@ -26,6 +26,9 @@ class EntryListModel(CoverQueryModel):
             
             case Qt.ItemDataRole.UserRole:
                 return entry
+            
+            case Qt.ItemDataRole.ToolTipRole:
+                return entry["title"]
             
     def appendRow(self, entry):
         row = self.rowCount()

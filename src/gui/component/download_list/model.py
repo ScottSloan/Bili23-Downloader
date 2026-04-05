@@ -1,7 +1,7 @@
 from PySide6.QtCore import QModelIndex, Qt, QSize
 from PySide6.QtWidgets import QAbstractItemView
 
-from gui.component.model.cover_query_model import CoverQueryModel
+from gui.component.view_model.model_base import CoverQueryModelBase
 
 from util.download.downloader.manager import downloader_manager
 from util.download.task.manager import task_manager
@@ -11,7 +11,7 @@ from util.common import signal_bus, config
 
 from typing import List
 
-class DownloadListModel(CoverQueryModel):    
+class DownloadListModel(CoverQueryModelBase):    
     def __init__(self, task_list: list, parent = None):
         super().__init__(parent)
 

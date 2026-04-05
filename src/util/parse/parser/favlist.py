@@ -10,6 +10,8 @@ class FavlistParser(ParserBase):
     def __init__(self):
         super().__init__()
 
+        self.ps = 40
+
     def get_media_id(self):
         match self.find_str(r"fid|ml", self.url):
             case "fid":
@@ -36,7 +38,7 @@ class FavlistParser(ParserBase):
         params = {
             "media_id": self.media_id,
             "pn": self.pn,
-            "ps": 40,
+            "ps": self.ps,
             "keyword": "",
             "order": "mtime",
             "type": 0,
@@ -65,7 +67,7 @@ class FavlistParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 40),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
             }
         }

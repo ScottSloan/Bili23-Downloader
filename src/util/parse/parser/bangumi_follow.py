@@ -11,6 +11,7 @@ class BangumiFollowParser(ParserBase):
         super().__init__()
         
         self.success_callback = None
+        self.ps = 24
 
     def parse(self, pn: int = 1, type: int = 1, follow_status: int = 0):
         self.pn = pn
@@ -24,7 +25,7 @@ class BangumiFollowParser(ParserBase):
             "vmid": config.user_uid,
             "type": self.type,
             "pn": self.pn,
-            "ps": 10,
+            "ps": 24,
             "playform": 1,
             "follow_status": self.follow_status,
             "web_location": "333.1387"
@@ -70,7 +71,7 @@ class BangumiFollowParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 10),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
                 "current_page": self.pn
             }

@@ -12,6 +12,8 @@ class SpaceParser(ParserBase):
     def __init__(self):
         super().__init__()
 
+        self.ps = 40
+
     def get_mid(self):
         mid = self.find_str(r"/([0-9]+)", self.url)
 
@@ -35,7 +37,7 @@ class SpaceParser(ParserBase):
 
         params = {
             "pn": self.pn,
-            "ps": 40,
+            "ps": self.ps,
             "tid": 0,
             "special_type": "",
             "order": "pubdate",
@@ -101,7 +103,7 @@ class SpaceParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 40),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count
             }
         }

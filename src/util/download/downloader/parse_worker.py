@@ -8,6 +8,7 @@ from util.parse.episode.tree import Attribute
 from util.parse.parser.base import ParserBase
 from util.download.task.info import TaskInfo
 from util.thread import SyncTask
+from util.common import config
 
 from urllib.parse import urlencode
 import logging
@@ -187,5 +188,4 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.keep_original_files = False
 
         if self.task_info.Download.merge_video_audio:
-            self.task_info.File.merge_file_ext = "mp4"
-    
+            self.task_info.File.merge_file_ext = config.get(config.video_container).value

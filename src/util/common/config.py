@@ -9,7 +9,7 @@ from qfluentwidgets import (
 from util.common.serializer import LanguageSerializer, ScalingSerializer
 from util.common.enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution
+    Scaling, FileConflictResolution, VideoContainer
 )
 
 from pathlib import Path
@@ -235,6 +235,7 @@ class APPConfig(QConfig):
     audio_quality_priority = ConfigItem("Download", "audio_quality_priority", DefaultValue.audio_quality_priority)
     video_codec_priority = ConfigItem("Download", "video_codec_priority", DefaultValue.video_codec_priority)
 
+    video_container = OptionsConfigItem("Download", "video_container", VideoContainer.MP4, OptionsValidator(VideoContainer), EnumSerializer(VideoContainer))
     m4a_to_mp3 = ConfigItem("Download", "m4a_to_mp3", False)
 
     # Additional
@@ -332,9 +333,6 @@ class APPConfig(QConfig):
     global_starting_number = 1
     
     current_starting_number = None
-
-    flyout_menu_category_index = 0
-    flyout_menu_follow_list_page = 1
 
     main_window_ready = False
 

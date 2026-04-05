@@ -5,7 +5,7 @@ from util.download.cover.manager import cover_manager
 
 from typing import Dict, Set
 
-class CoverQueryModel(QAbstractListModel):
+class CoverQueryModelBase(QAbstractListModel):
     """
     具有异步封面显示功能的模型基类
     """
@@ -16,13 +16,15 @@ class CoverQueryModel(QAbstractListModel):
         self._cover_size = QSize(120, 67)
         self.cover_waiting_rows: Dict[str, Set[int]] = {}
     
-    def queryRowCover(self, cover_id: str, cover_url: str, row: int):
+    def queryRowCover(self, cover_id: str, cover_url: str, row: int) -> tuple[QPixmap, bool]:
         # 由委托发起查询封面请求
-        cahce = cover_manager.getCache(cover_id)
+
+        if cover_id is None:
+            return cover_manager.placeholder(), True
 
         # 命中缓存，直接返回
-        if cahce:
-            return cahce
+        if cahce := cover_manager.getCache(cover_id):
+            return cahce, False
 
         # 记录等待该cover_id的所有row
         waiting_set = self.cover_waiting_rows.setdefault(cover_id, set())
@@ -34,7 +36,7 @@ class CoverQueryModel(QAbstractListModel):
             if len(waiting_set) == 1:
                 cover_manager.request(self, cover_id, cover_url, self._cover_size)
 
-        return cover_manager.placeholder()
+        return cover_manager.placeholder(), True
 
     @Slot(str, QImage)
     def updateRowCover(self, cover_id: str, image: QImage):

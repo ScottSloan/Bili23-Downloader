@@ -9,6 +9,7 @@ from qfluentwidgets.components.navigation import NavigationWidget
 
 from gui.component.entry_list.list_view import EntryListView
 from gui.component.widget.pager import Pager
+from gui.component.widget.button import ToolButton
 
 from util.parse.parser.bangumi_follow import BangumiFollowParser
 from util.common import ExtendedFluentIcon, config, signal_bus
@@ -48,10 +49,26 @@ class CategoryWidget(QWidget):
         self.category_list = ListWidget(self)
         self.category_list.setMaximumWidth(175)
 
+        self.refresh_btn = ToolButton(ExtendedFluentIcon.RETRY, parent = self)
+        self.refresh_btn.setToolTip(self.tr("Refresh"))
+        self.refresh_btn.setFixedSize(36, 36)
+
+        self.open_in_browser_btn = ToolButton(FluentIcon.GLOBE, parent = self)
+        self.open_in_browser_btn.setToolTip(self.tr("Open in Browser"))
+        self.open_in_browser_btn.setFixedSize(36, 36)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(0, 0, 0, 0)
+        btn_layout.setSpacing(10)
+        btn_layout.addWidget(self.refresh_btn)
+        btn_layout.addWidget(self.open_in_browser_btn)
+        btn_layout.addStretch()
+
         viewLayout = QVBoxLayout(self)
         viewLayout.setContentsMargins(0, 0, 5, 0)
 
         viewLayout.addWidget(self.category_list)
+        viewLayout.addLayout(btn_layout)
 
     def init_category_list(self):
         category_list = [
@@ -97,7 +114,7 @@ class CategoryWidget(QWidget):
         for category in category_list:
             self.add_category(category["icon"], category["text"], category["data"])
 
-        self.category_list.setCurrentRow(config.flyout_menu_category_index)
+        self.category_list.setCurrentRow(0)
 
         self.category_list.itemClicked.connect(self.on_list_item_clicked)
 
@@ -112,7 +129,7 @@ class CategoryWidget(QWidget):
     def on_list_item_clicked(self, item: QListWidgetItem):
         data = item.data(Qt.ItemDataRole.UserRole)
 
-        parent_widget: 'FavoriteFlyoutMenu' = self.parent()
+        parent_widget: 'FavoriteFlyoutWidget' = self.parent()
 
         if data["isSelectable"]:
             parent_widget.on_category_changed(self.category_list.row(item))
@@ -123,7 +140,7 @@ class CategoryWidget(QWidget):
             signal_bus.parse.parse_url.emit(data["url"])
 
 class EntryWidget(QWidget):
-    def __init__(self, parent: 'FavoriteFlyoutMenu'):
+    def __init__(self, parent: 'FavoriteFlyoutWidget'):
         super().__init__(parent)
 
         self.parent_widget = parent
@@ -132,8 +149,9 @@ class EntryWidget(QWidget):
 
     def init_UI(self):
         self.entry_list = EntryListView(is_poster = False, parent = self)
-        self.entry_list.setFixedWidth(425)
+        self.entry_list.setFixedWidth(600)
         self.entry_list.set_cover_size(QSize(128, 72))
+        self.entry_list.setWrappingView()
 
         viewLayout = QVBoxLayout(self)
         viewLayout.setContentsMargins(5, 0, 0, 0)
@@ -149,13 +167,19 @@ class EntryWidget(QWidget):
 
         self.parent_widget.closed.emit()
 
+    def update_list(self, entry_list: list):
+        self.entry_list._model.clearData()
+
+        self.entry_list.add_entry_list(entry_list)
+
 class FollowWidget(QWidget):
     query_success = Signal(list, dict)
 
-    def __init__(self, parent: 'FavoriteFlyoutMenu'):
+    def __init__(self, parent: 'FavoriteFlyoutWidget'):
         super().__init__(parent)
 
         self.parent_widget = parent
+        self.pn = 1
 
         self.init_UI()
 
@@ -181,8 +205,9 @@ class FollowWidget(QWidget):
         )
 
         self.entry_list = EntryListView(is_poster = True, parent = self)
-        self.entry_list.setFixedWidth(425)
+        self.entry_list.setFixedWidth(600)
         self.entry_list.set_cover_size(QSize(123, 164))
+        self.entry_list.setWrappingView()
 
         self.pager = Pager(self)
 
@@ -213,8 +238,6 @@ class FollowWidget(QWidget):
         
         self.query_success.connect(self.on_query_success)
 
-        self.update_list()
-
     def on_query_success(self, entry_list: list, extra_data: dict):
         self.entry_list.add_entry_list(entry_list)
 
@@ -230,7 +253,7 @@ class FollowWidget(QWidget):
         self.parent_widget.closed.emit()
 
     def on_page_changed(self, page: int):
-        config.flyout_menu_follow_list_page = page
+        self.pn = page
 
         self.update_list()
 
@@ -240,20 +263,15 @@ class FollowWidget(QWidget):
         type = self.type_choice.currentIndex() + 1
         follow_status = self.status_choice.currentIndex()
 
-        self.parser.parse(config.flyout_menu_follow_list_page, type, follow_status)
+        self.parser.parse(self.pn, type, follow_status)
 
-class FavoriteFlyoutMenu(FlyoutViewBase):
+class FavoriteFlyoutWidget(FlyoutViewBase):
     closed = Signal()
 
     def __init__(self, parent = None):
         super().__init__(parent)
 
         self.init_UI()
-
-        self.init_favorite_list()
-        self.init_subscription_list()
-
-        self.stack_widget.setCurrentIndex(config.flyout_menu_category_index)
 
     def init_UI(self):
         self.category_widget = CategoryWidget(self)
@@ -262,12 +280,12 @@ class FavoriteFlyoutMenu(FlyoutViewBase):
 
         self.favorite_widget = EntryWidget(self)
         self.subscribtion_widget = EntryWidget(self)
-        self.poster_widget = FollowWidget(self)
+        self.follow_widget = FollowWidget(self)
 
         self.stack_widget = QStackedWidget(self)
         self.stack_widget.addWidget(self.favorite_widget)
         self.stack_widget.addWidget(self.subscribtion_widget)
-        self.stack_widget.addWidget(self.poster_widget)
+        self.stack_widget.addWidget(self.follow_widget)
 
         self.viewLayout = QHBoxLayout(self)
         self.viewLayout.setContentsMargins(10, 10, 10, 10)
@@ -275,6 +293,11 @@ class FavoriteFlyoutMenu(FlyoutViewBase):
         self.viewLayout.addWidget(self.category_widget)
         self.viewLayout.addWidget(separator)
         self.viewLayout.addWidget(self.stack_widget)
+
+    def init_data(self):
+        self.init_favorite_list()
+        self.init_subscription_list()
+        self.follow_widget.update_list()
 
     def init_favorite_list(self):
         entry_list = []
@@ -291,7 +314,7 @@ class FavoriteFlyoutMenu(FlyoutViewBase):
                 "count": count
             })
 
-        self.favorite_widget.entry_list.add_entry_list(entry_list)
+        self.favorite_widget.update_list(entry_list)
 
     def init_subscription_list(self):
         entry_list = []
@@ -311,9 +334,7 @@ class FavoriteFlyoutMenu(FlyoutViewBase):
                 "cover_id": cover_manager.arrange_cover_id(cover)
             })
 
-        self.subscribtion_widget.entry_list.add_entry_list(entry_list)
+        self.subscribtion_widget.update_list(entry_list)
 
     def on_category_changed(self, index: int):
         self.stack_widget.setCurrentIndex(index)
-
-        config.flyout_menu_category_index = index

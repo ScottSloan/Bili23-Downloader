@@ -4,7 +4,7 @@ from gui.component.widget.spinbox import SpinBox, DoubleSpinBox, CompactSpinBox
 from gui.component.widget.tree_widget import DragTreeWidget, ColumnTreeWidget
 from gui.component.widget.avatar import NavigationLargeAvatarWidget
 from gui.component.widget.combobox import CidComboBox, DictComboBox
-from gui.component.widget.flyout_menu import FavoriteFlyoutMenu
+from gui.component.widget.flyout import FavoriteFlyoutWidget
 from gui.component.widget.tree_view import CheckListView
 from gui.component.widget.segment import SegmentedWidget
 from gui.component.widget.pivot import Pivot, PivotItem

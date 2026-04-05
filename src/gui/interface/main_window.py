@@ -4,10 +4,11 @@ from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
-    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox
+    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox,
+    FlyoutAnimationManager
 )
 
-from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutMenu
+from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget
 from gui.interface import DownloadInterface, SettingInterface, ParseInterface
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
 from gui.component import SystemTrayIcon, ProfileCard
@@ -29,6 +30,7 @@ class MainWindow(MSFluentWindow):
         self.setObjectName("MainWindow")
 
         self.current_route_key = "ParseInterface"
+        self.flyout_initialized = False
 
         self.init_UI()
 
@@ -81,8 +83,21 @@ class MainWindow(MSFluentWindow):
 
         self.addSubInterface(self.setting_interface, FluentIcon.SETTING, self.tr("Settings"), position = NavigationItemPosition.BOTTOM)
 
+        # 托盘图标
         self.system_tray_icon = SystemTrayIcon(self)
         self.system_tray_icon.show()
+
+        # Flyout 弹出组件
+        self.flyout_widget = FavoriteFlyoutWidget(self)
+
+        self.flyout = Flyout.make(
+            view = self.flyout_widget,
+            parent = self,
+            isDeleteOnClose = False
+        )
+
+        self.flyout_widget.closed.connect(self.flyout.fadeOut)
+        self.flyout.closed.connect(self.reset_route_key)
 
         self.connect_signals()
 
@@ -301,16 +316,23 @@ class MainWindow(MSFluentWindow):
             self.reset_route_key()
 
             return
+        
+        if not self.flyout_initialized:
+            self.flyout_initialized = True
 
-        menu = FavoriteFlyoutMenu(self)
+            # 首次显示时加载数据
+            self.flyout_widget.init_data()
+        
+        manager = FlyoutAnimationManager.make(
+            aniType = FlyoutAnimationType.SLIDE_RIGHT,
+            flyout = self.flyout
+        )
+        target_pos = manager.position(self.about_widget)
 
-        flyout = Flyout(menu, self)
-        flyout.resize(flyout.sizeHint())
-
-        w = flyout.make(menu, self.about_widget, self, aniType = FlyoutAnimationType.SLIDE_RIGHT, isDeleteOnClose = True)
-        menu.closed.connect(w.close)
-
-        flyout.closed.connect(self.reset_route_key)
+        self.flyout.exec(
+            target_pos,
+            FlyoutAnimationType.SLIDE_RIGHT
+        )
 
     def update_route_key(self, key: str):
         self.current_route_key = key

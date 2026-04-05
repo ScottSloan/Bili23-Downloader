@@ -227,8 +227,10 @@ class DownloadFormatCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.DOCUMENT, self.tr("Download Format"), self.tr("Configure output format settings for downloaded files"), parent)
 
+        self.video_container_choice = SettingComboBox(config.video_container, ["mp4", "mkv"], parent = self)
         self.m4a_to_mp3_switch = SettingSwitchButton(config.m4a_to_mp3, self)
 
+        self.addGroup(FluentIcon.VIDEO, self.tr("Video Container"), self.tr("Choose the container format for the final output video file"), self.video_container_choice)
         self.addGroup(FluentIcon.MUSIC, self.tr("Convert M4A to MP3"), self.tr("Only applies when downloading audio-only streams. Disabled if video is also selected."), self.m4a_to_mp3_switch)
 
 class ParseListSettingCard(ExpandGroupSettingCard):
