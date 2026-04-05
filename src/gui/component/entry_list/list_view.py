@@ -1,13 +1,17 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt, Signal
 
-from qfluentwidgets import ListView, isDarkTheme, setFont
+from qfluentwidgets import ListView, isDarkTheme, setFont, RoundMenu, Action, FluentIcon
 
 from gui.component.entry_list.poster_item_delegate import PosterListItemDelegate
 from gui.component.entry_list.entry_item_delegate import EntryListItemDelegate
 from gui.component.entry_list.model import EntryListModel
 
+import webbrowser
+
 class EntryListView(ListView):
+    parse = Signal(object, object)
+
     def __init__(self, is_poster: bool, parent = None):
         super().__init__(parent)
 
@@ -73,9 +77,26 @@ class EntryListView(ListView):
         self.setFlow(ListView.Flow.LeftToRight)
         self.setResizeMode(ListView.ResizeMode.Adjust)
 
-    def showContextMenu(self, pos):
-        index = self.indexAt(pos)
+    def showContextMenu(self, index, pos):
+        menu = RoundMenu(parent = self)
 
-        pass
+        entry = index.data(Qt.ItemDataRole.UserRole)
 
-    
+        menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Parse"), lambda: self.onParse(entry)))
+        menu.addAction(self._create_action(FluentIcon.GLOBE, self.tr("Open in Browser"), lambda: self.onOpenInBrowser(entry)))
+
+        menu.exec(pos)
+
+    def _create_action(self, icon, text, slot):
+        action = Action(icon = icon, text = text, parent = self)
+        action.triggered.connect(slot)
+        
+        return action
+
+    def onParse(self, entry: dict):
+        self.parse.emit(self.currentIndex(), entry)
+
+    def onOpenInBrowser(self, entry: dict):
+        url = entry.get("url")
+
+        webbrowser.open(url)

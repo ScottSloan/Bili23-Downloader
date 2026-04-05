@@ -37,6 +37,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         }
 
         root_node = TreeItem(node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         item_data = {
             "episode_id": self.episode_id,
@@ -68,6 +69,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         }
         
         root_node = TreeItem(root_node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         for page in self.info_data["pages"]:
             item_data = {
@@ -104,6 +106,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         }
 
         root_node = TreeItem(root_node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         sections = self.info_data["ugc_season"]["sections"]
 
@@ -119,6 +122,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             }
 
             section_node = TreeItem(section_data)
+            section_node.set_attribute(Attribute.TREE_NODE_BIT)
 
             for episode in section["episodes"]:
                 if self.target_episode_info:
@@ -134,6 +138,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                     }
 
                     page_node = TreeItem(page_node_data)
+                    page_node.set_attribute(Attribute.TREE_NODE_BIT)
 
                     for page in episode["pages"]:
                         episode_count += 1

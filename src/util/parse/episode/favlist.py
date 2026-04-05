@@ -23,6 +23,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
         }
 
         root_node = TreeItem(node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         episode_count = 0
 

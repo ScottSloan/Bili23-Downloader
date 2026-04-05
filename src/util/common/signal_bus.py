@@ -47,7 +47,7 @@ class SignalBus:
 
         send_sms = Signal()
 
-        update_avatar = Signal(QPixmap)
+        update_avatar = Signal(object)
 
     class Update(QObject):
         check = Signal(bool)

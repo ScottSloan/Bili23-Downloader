@@ -204,8 +204,8 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.1"
-    app_comparable_version = "2.00.1"
+    app_version = "2.00.1-alpha"
+    app_comparable_version = "2.00.1-alpha"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
@@ -305,9 +305,6 @@ class APPConfig(QConfig):
     user_uname: str = ""
     user_uid: str = ""
     user_avatar_pixmap: QPixmap = None
-
-    user_favorite_list = []
-    user_subscription_list = []
 
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
     skip_version = ConfigItem("Application", "skip_version", "")

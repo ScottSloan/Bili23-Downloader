@@ -368,27 +368,37 @@
 <context>
     <name>CategoryWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="60"/>
+        <location filename="../../gui/component/widget/flyout.py" line="52"/>
+        <source>Refresh</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout.py" line="56"/>
+        <source>Open in Browser</source>
+        <translation>於瀏覽器中開啟</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/flyout.py" line="76"/>
         <source>Favorites</source>
         <translation>收藏夾</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="67"/>
+        <location filename="../../gui/component/widget/flyout.py" line="83"/>
         <source>Subscriptions</source>
         <translation>訂閱合集</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="74"/>
+        <location filename="../../gui/component/widget/flyout.py" line="90"/>
         <source>Anime &amp; Series</source>
         <translation>追番追劇</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="81"/>
+        <location filename="../../gui/component/widget/flyout.py" line="97"/>
         <source>Watch later</source>
         <translation>稍後觀看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="89"/>
+        <location filename="../../gui/component/widget/flyout.py" line="105"/>
         <source>History</source>
         <translation>歷史記錄</translation>
     </message>
@@ -1127,9 +1137,19 @@ File name: {filename}</source>
 <context>
     <name>EntryListView</name>
     <message>
-        <location filename="../../gui/component/entry_list/list_view.py" line="14"/>
+        <location filename="../../gui/component/entry_list/list_view.py" line="16"/>
         <source>No entries</source>
         <translation>暫無內容</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/entry_list/list_view.py" line="83"/>
+        <source>Parse</source>
+        <translation>解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/entry_list/list_view.py" line="84"/>
+        <source>Open in Browser</source>
+        <translation>於瀏覽器中開啟</translation>
     </message>
 </context>
 <context>
@@ -1211,32 +1231,32 @@ File name: {filename}</source>
 <context>
     <name>FollowWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="169"/>
+        <location filename="../../gui/component/widget/flyout.py" line="191"/>
         <source>Anime</source>
         <translation>追番</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="170"/>
+        <location filename="../../gui/component/widget/flyout.py" line="192"/>
         <source>Series</source>
         <translation>追劇</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="177"/>
+        <location filename="../../gui/component/widget/flyout.py" line="199"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="178"/>
+        <location filename="../../gui/component/widget/flyout.py" line="200"/>
         <source>Want to watch</source>
         <translation>想看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="179"/>
+        <location filename="../../gui/component/widget/flyout.py" line="201"/>
         <source>Watching</source>
         <translation>在看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout_menu.py" line="180"/>
+        <location filename="../../gui/component/widget/flyout.py" line="202"/>
         <source>Watched</source>
         <translation>看過</translation>
     </message>
@@ -1373,17 +1393,17 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="46"/>
+        <location filename="../../gui/interface/main_window.py" line="48"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="49"/>
+        <location filename="../../gui/interface/main_window.py" line="51"/>
         <source>Downloads</source>
         <translation>下載</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="58"/>
+        <location filename="../../gui/interface/main_window.py" line="60"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
@@ -1392,42 +1412,42 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation type="vanished">歷史</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="67"/>
+        <location filename="../../gui/interface/main_window.py" line="69"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="82"/>
+        <location filename="../../gui/interface/main_window.py" line="84"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="280"/>
+        <location filename="../../gui/interface/main_window.py" line="295"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="281"/>
+        <location filename="../../gui/interface/main_window.py" line="296"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="287"/>
+        <location filename="../../gui/interface/main_window.py" line="302"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="288"/>
+        <location filename="../../gui/interface/main_window.py" line="303"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="294"/>
+        <location filename="../../gui/interface/main_window.py" line="309"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="295"/>
+        <location filename="../../gui/interface/main_window.py" line="310"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>

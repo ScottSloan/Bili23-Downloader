@@ -191,7 +191,14 @@ class MainWindow(MSFluentWindow):
                 aniType = FlyoutAnimationType.SLIDE_RIGHT
             )
 
-    def on_update_avatar(self, pixmap: QPixmap):
+    def on_update_avatar(self, pixmap: QPixmap | bytes):
+        if isinstance(pixmap, bytes):
+            avatar_pixmap = QPixmap()
+            avatar_pixmap.loadFromData(pixmap)
+
+            pixmap = avatar_pixmap
+            config.user_avatar_pixmap = avatar_pixmap
+
         self.avatar_widget.setAvatar(pixmap)
 
     def on_reparse_task(self, url: str):

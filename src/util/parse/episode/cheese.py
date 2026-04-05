@@ -30,6 +30,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         }
 
         root_node = TreeItem(node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         episode_count = 0
 
@@ -42,7 +43,8 @@ class CheeseEpisodeParser(EpisodeParserBase):
                 }
 
                 section_node = TreeItem(section_node_data)
-
+                section_node.set_attribute(Attribute.TREE_NODE_BIT)
+                
                 for episode in section["episodes"]:
                     episode_count += 1
 

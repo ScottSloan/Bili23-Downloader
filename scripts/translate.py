@@ -18,7 +18,7 @@ import os
 
 # 目标语言
 # Target language (e.g., "zh_CN" for Simplified Chinese, "en_US" for English)
-target_language = "zh_TW"
+target_language = "zh_CN"
 
 
 # 项目根目录（请根据实际情况修改）
@@ -43,7 +43,7 @@ sources = [
     "src/gui/component/setting/card.py",
     "src/gui/component/setting/group.py",
     "src/gui/component/setting/widget.py",
-    "src/gui/component/widget/flyout_menu.py",
+    "src/gui/component/widget/flyout.py",
     "src/gui/component/widget/search.py",
     "src/gui/component/dialog.py",
     "src/gui/component/profile.py",

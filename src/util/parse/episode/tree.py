@@ -45,6 +45,8 @@ class Attribute(IntFlag):
     WATCH_LATER_BIT                    = 1 << 13                  # 是否为稍后再看
     HISTORY_BIT                        = 1 << 14                  # 是否为历史记录
 
+    TREE_NODE_BIT                      = 1 << 15                  # 是否为树节点
+
 class TreeItemBase:
     def __init__(self):
         self.parent: TreeItem = None
@@ -135,10 +137,11 @@ class TreeItemBase:
             if child.children:
                 all_items.extend(child.get_all_children(to_dict = to_dict))
             else:
-                if to_dict:
-                    all_items.append(child.to_dict())
-                else:
-                    all_items.append(child)
+                if child.attribute & Attribute.TREE_NODE_BIT == 0:  # 排除树节点
+                    if to_dict:
+                        all_items.append(child.to_dict())
+                    else:
+                        all_items.append(child)
 
         return all_items
 

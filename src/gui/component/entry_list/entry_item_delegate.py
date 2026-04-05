@@ -38,6 +38,12 @@ class EntryListItemDelegate(CoverQueryDelegateBase):
             index.model().itemClicked.emit(index, index.data(Qt.ItemDataRole.UserRole))
 
             return True
+        
+        if event.button() == Qt.MouseButton.RightButton:
+            # 右键点击，弹出上下文菜单
+            self.contextMenuRequested.emit(index, event.globalPos())
+
+            return True
 
         return False
 

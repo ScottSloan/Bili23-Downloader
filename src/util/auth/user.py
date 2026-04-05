@@ -1,11 +1,8 @@
-from PySide6.QtGui import QPixmap
-
 from util.network.request import NetworkRequestWorker, RequestType, ResponseType
 from util.common import signal_bus, config, Translator
 from util.thread import AsyncTask, SyncTask
 from util.auth import AuthBase
 
-from urllib.parse import urlencode
 from pathlib import Path
 
 class UserManager(AuthBase):
@@ -40,8 +37,6 @@ class UserManager(AuthBase):
                 config.user_uid = data.get("mid")
 
                 self.get_user_avatar(data.get("face", ""))
-                self.get_user_favorite_list()
-                self.get_user_subscription_list()
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_INFO_FAILED"), error_message)
@@ -56,59 +51,12 @@ class UserManager(AuthBase):
 
     def get_user_avatar(self, face_url: str):
         def on_success(response: bytes):
-            avatar_pixmap = QPixmap()
-            avatar_pixmap.loadFromData(response)
-
-            config.user_avatar_pixmap = avatar_pixmap
-
-            signal_bus.emit_signal(signal_bus.login.update_avatar, avatar_pixmap)
+            signal_bus.emit_signal(signal_bus.login.update_avatar, response)
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_AVATAR_FAILED"), error_message)
 
         worker = NetworkRequestWorker(face_url, response_type = ResponseType.BYTES)
-        worker.success.connect(on_success)
-        worker.error.connect(on_error)
-
-        SyncTask.run(worker)
-
-    def get_user_favorite_list(self):
-        def on_success(response: dict):
-            favorite_list = response.get("data", {}).get("list", [])
-
-            config.user_favorite_list = favorite_list
-
-        def on_error(error_message: str):
-            self.show_toast_error(Translator.ERROR_MESSAGES("FAVORITE_LIST_FAILED"), error_message)
-
-        url = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid={uid}".format(uid = config.user_uid)
-
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(on_error)
-
-        SyncTask.run(worker)
-
-    def get_user_subscription_list(self):
-        def on_success(response: dict):
-            subscription_list = response.get("data", {}).get("list", [])
-
-            config.user_subscription_list = subscription_list
-
-        def on_error(error_message: str):
-            self.show_toast_error(Translator.ERROR_MESSAGES("SUBSCRIPTION_LIST_FAILED"), error_message)
-
-        param = {
-            "pn": 1,
-            "ps": 50,
-            "up_mid": config.user_uid,
-            "platform": "web",
-            "web_location": "333.1387"
-        }
-
-        url = f"https://api.bilibili.com/x/v3/fav/folder/collected/list?{urlencode(param)}"
-
-        worker = NetworkRequestWorker(url)
         worker.success.connect(on_success)
         worker.error.connect(on_error)
 
@@ -148,4 +96,3 @@ class UserManager(AuthBase):
             raise Exception(message)
 
 user_manager = UserManager()
-user_manager.init_user_info()
