@@ -12,6 +12,7 @@ from gui.component.parse_list.tree_view import ParseTreeView
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, NumberingType
 from util.parse.preview import Previewer, PreviewerInfo
+from util.misc.history import history_manager
 from util.common.data import url_patterns
 from util.parse.worker import ParseWorker
 from util.thread import AsyncTask
@@ -105,8 +106,12 @@ class ParseInterface(ParseBase):
         self.init_utils()
 
     def init_UI(self):
+        paste_action = Action(icon = FluentIcon.PASTE, text = self.tr("Paste and Parse"), parent = self)
+        paste_action.triggered.connect(lambda _: self.on_paste_and_parse())
+
         self.url_box = LineEdit(self)
         self.url_box.setPlaceholderText(self.tr("Link / av / BV / ep / ss / md / Favorites / Profile"))
+        self.url_box.addAction(paste_action, LineEdit.ActionPosition.TrailingPosition)
 
         self.url_box.setClearButtonEnabled(True)
 
@@ -168,7 +173,7 @@ class ParseInterface(ParseBase):
         self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
         self.download_btn.clicked.connect(self.on_download)
 
-        signal_bus.parse.update_parse_list.connect(self.parse_list.update_tree)
+        signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
@@ -180,6 +185,16 @@ class ParseInterface(ParseBase):
         self.clipboard.changed.connect(self.on_copy_url)
 
         self.check_starting_number()
+
+    def on_paste_and_parse(self):
+        url = self.clipboard.text()
+
+        if not url:
+            return
+
+        self.url_box.setText(url)
+
+        self.on_parse()
 
     def on_parse(self, page: int = 1):
         self.parse_btn.setIndeterminateState(True)
@@ -215,6 +230,12 @@ class ParseInterface(ParseBase):
         self.reset_parse_list()
 
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
+
+    def on_update_parse_list(self, title: str, category_name: str, root_node, current_episode_data: dict):
+        self.parse_list.update_tree(root_node, current_episode_data)
+
+        if config.get(config.parse_history):
+            history_manager.add_history(title, self.url_box.text(), category_name)
 
     @check_preview_info
     @show_download_options_dialog

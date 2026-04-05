@@ -1,10 +1,11 @@
-from util.parse.episode.tree import TreeItem
+from util.parse.episode.tree import TreeItem, Attribute
 from util.common import signal_bus
 from util.format import Units
 
 class EpisodeParserBase:
     def __init__(self, **kwargs):
         self.episode_id = ""
+        self.category_name = ""
         self.info_data: dict = {}
 
         self.target_episode_info: str | int = kwargs.get("target_episode_info")
@@ -17,7 +18,12 @@ class EpisodeParserBase:
         root_node = TreeItem({})
         root_node.add_child(node)
 
-        signal_bus.parse.update_parse_list.emit(root_node, current_episode_data)
+        if node.count() == 1 and node.child(0).attribute & Attribute.VIDEO_BIT:
+            title = node.child(0).title
+        else:
+            title = node.title
+
+        signal_bus.parse.update_parse_list.emit(title, self.category_name, root_node, current_episode_data)
 
     def get_episode_duration(self, episode_data: dict):
         if "duration" in episode_data:

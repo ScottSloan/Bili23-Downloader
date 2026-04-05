@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
 from gui.dialog.setting.edit_host import EditHostDialog
-from gui.component.setting.widget import ActionWidget
+from gui.component.setting.widget import EditActionWidget
 from gui.component.widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 
@@ -138,7 +138,7 @@ class CDNServerDialog(DialogBase):
         self.cdn_server_list.setItemWidget(item, 2, widget)
 
     def create_action_widget(self, index: int):
-        action_widget = ActionWidget(self.cdn_server_list)
+        action_widget = EditActionWidget(self.cdn_server_list)
         action_widget.edit_btn.clicked.connect(lambda: self.on_edit_host(index))
         action_widget.delete_btn.clicked.connect(lambda: self.on_remove_host(index))
 

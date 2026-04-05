@@ -2,10 +2,11 @@ from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 
 class PopularEpisodeParser(EpisodeParserBase):
-    def __init__(self, info_data: dict):
+    def __init__(self, info_data: dict, category_name: str):
         super().__init__()
 
         self.info_data = info_data["data"]
+        self.category_name = category_name
 
     def parse(self):
         self.episode_parser()

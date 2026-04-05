@@ -19,7 +19,7 @@ class PopularParser(ParserBase):
 
         self.get_popular_weekly_list()
 
-        episode_parser = PopularEpisodeParser(self.info_data.copy())
+        episode_parser = PopularEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_popular_weekly_list(self):

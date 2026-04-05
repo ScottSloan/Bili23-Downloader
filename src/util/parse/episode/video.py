@@ -4,10 +4,11 @@ from util.common.data import badge_map
 from util.common import Translator
 
 class VideoEpisodeParser(EpisodeParserBase):
-    def __init__(self, info_data: dict, kwargs: dict = {}):
+    def __init__(self, info_data: dict, category_name: str, kwargs: dict = {}):
         super().__init__(**kwargs)
 
         self.info_data = info_data["data"]
+        self.category_name = category_name
 
     def parse(self):
         self.episode_data_parser()

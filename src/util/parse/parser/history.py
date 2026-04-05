@@ -18,7 +18,7 @@ class HistoryParser(ParserBase):
 
         self.get_history_info()
 
-        episode_parser = HistoryEpisodeParser(self.info_data.copy())
+        episode_parser = HistoryEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_history_info(self):

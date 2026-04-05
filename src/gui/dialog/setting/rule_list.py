@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import SubtitleLabel, MessageBox, CommandBar, Action, FluentIcon
 
-from gui.component.setting.widget import ActionWidget
+from gui.component.setting.widget import EditActionWidget
 from gui.component.widget import ColumnTreeWidget
 from gui.dialog.setting import EditRuleDialog
 from gui.component.dialog import DialogBase
@@ -74,7 +74,7 @@ class RuleListDialog(DialogBase):
             )
 
     def create_action_widget(self, index: int):
-        action_widget = ActionWidget(self.rule_list)
+        action_widget = EditActionWidget(self.rule_list)
         action_widget.edit_btn.clicked.connect(lambda: self.on_edit_rule(index))
         action_widget.delete_btn.clicked.connect(lambda: self.on_delete_rule(index))
 

@@ -16,7 +16,7 @@ class SignalBus:
         sys_show = Signal(ToastNotificationCategory, str, str)
 
     class Parse(QObject):
-        update_parse_list = Signal(object, object)
+        update_parse_list = Signal(str, str, object, object)
 
         preview_init = Signal(dict)
         query_video_info = Signal(int, int, object)

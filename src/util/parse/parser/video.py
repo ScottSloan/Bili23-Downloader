@@ -44,7 +44,7 @@ class VideoParser(ParserBase):
 
         self.get_video_info()
 
-        episode_parser = VideoEpisodeParser(self.info_data.copy())
+        episode_parser = VideoEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_video_info(self):

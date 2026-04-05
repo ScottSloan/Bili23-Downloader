@@ -17,7 +17,7 @@ class WatchLaterParser(ParserBase):
 
         self.get_history_info()
 
-        episode_parser = WatchLaterEpisodeParser(self.info_data.copy())
+        episode_parser = WatchLaterEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_history_info(self):

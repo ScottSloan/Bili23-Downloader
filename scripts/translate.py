@@ -18,7 +18,7 @@ import os
 
 # 目标语言
 # Target language (e.g., "zh_CN" for Simplified Chinese, "en_US" for English)
-target_language = "zh_CN"
+target_language = "zh_TW"
 
 
 # 项目根目录（请根据实际情况修改）
@@ -54,6 +54,7 @@ sources = [
     "src/gui/dialog/misc/about.py",
     "src/gui/dialog/misc/batch_select.py",
     "src/gui/dialog/misc/exit.py",
+    "src/gui/dialog/misc/parse_history.py",
     "src/gui/dialog/misc/search.py",
     "src/gui/dialog/misc/terms.py",
     "src/gui/dialog/setting/cdn_server.py",

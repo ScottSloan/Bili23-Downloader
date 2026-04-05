@@ -28,7 +28,7 @@ class FavlistParser(ParserBase):
 
         self.get_favlist()
 
-        episode_parser = FavlistEpisodeParser(self.info_data)
+        episode_parser = FavlistEpisodeParser(self.info_data, self.get_category_name())
         episode_parser.parse()
 
     def get_favlist(self):

@@ -29,7 +29,7 @@ class CheeseParser(ParserBase):
 
         self.get_cheese_info(param)
 
-        episode_parser = CheeseEpisodeParser(self.info_data)
+        episode_parser = CheeseEpisodeParser(self.info_data, self.get_category_name())
         episode_parser.parse()
 
     def get_cheese_info(self, param: str):

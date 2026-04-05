@@ -28,7 +28,7 @@ class SpaceParser(ParserBase):
         self.get_search_arc_info()
         self.get_uname()
 
-        episode_parser = SpaceEpisodeParser(self.info_data.copy())
+        episode_parser = SpaceEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_search_arc_info(self):

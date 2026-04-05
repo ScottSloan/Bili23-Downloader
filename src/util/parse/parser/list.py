@@ -59,7 +59,7 @@ class ListParser(ParserBase):
         else:
             raise ValueError("无效的链接")
 
-        episode_parser = ListEpisodeParser(self.info_data.copy())
+        episode_parser = ListEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_seasons_archives_list(self):

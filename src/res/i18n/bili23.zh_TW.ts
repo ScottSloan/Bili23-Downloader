@@ -106,19 +106,6 @@
     </message>
 </context>
 <context>
-    <name>ActionWidget</name>
-    <message>
-        <location filename="../../gui/component/setting/widget.py" line="43"/>
-        <source>Edit</source>
-        <translation>編輯</translation>
-    </message>
-    <message>
-        <location filename="../../gui/component/setting/widget.py" line="46"/>
-        <source>Delete</source>
-        <translation>刪除</translation>
-    </message>
-</context>
-<context>
     <name>AdvancedGroup</name>
     <message>
         <location filename="../../gui/component/setting/group.py" line="233"/>
@@ -368,37 +355,37 @@
 <context>
     <name>CategoryWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="52"/>
+        <location filename="../../gui/component/widget/flyout.py" line="53"/>
         <source>Refresh</source>
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="56"/>
+        <location filename="../../gui/component/widget/flyout.py" line="57"/>
         <source>Open in Browser</source>
         <translation>於瀏覽器中開啟</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="76"/>
+        <location filename="../../gui/component/widget/flyout.py" line="79"/>
         <source>Favorites</source>
         <translation>收藏夾</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="83"/>
+        <location filename="../../gui/component/widget/flyout.py" line="86"/>
         <source>Subscriptions</source>
         <translation>訂閱合集</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="90"/>
+        <location filename="../../gui/component/widget/flyout.py" line="93"/>
         <source>Anime &amp; Series</source>
         <translation>追番追劇</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="97"/>
+        <location filename="../../gui/component/widget/flyout.py" line="100"/>
         <source>Watch later</source>
         <translation>稍後觀看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="105"/>
+        <location filename="../../gui/component/widget/flyout.py" line="108"/>
         <source>History</source>
         <translation>歷史記錄</translation>
     </message>
@@ -651,13 +638,13 @@
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="233"/>
-        <source>Video Container</source>
-        <translation>影片容器格式</translation>
+        <source>Choose the container format for the final output video file</source>
+        <translation>選擇最終輸出影片檔案的容器格式</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="233"/>
-        <source>Choose the container format for the final output video file</source>
-        <translation>選擇最終輸出影片檔案的容器格式</translation>
+        <source>Output Container Format</source>
+        <translation>輸出容器格式</translation>
     </message>
     <message>
         <location filename="../../gui/component/setting/card.py" line="234"/>
@@ -1011,6 +998,19 @@
     </message>
 </context>
 <context>
+    <name>EditActionWidget</name>
+    <message>
+        <location filename="../../gui/component/setting/widget.py" line="43"/>
+        <source>Edit</source>
+        <translation>編輯</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/setting/widget.py" line="46"/>
+        <source>Delete</source>
+        <translation>刪除</translation>
+    </message>
+</context>
+<context>
     <name>EditHostDialog</name>
     <message>
         <location filename="../../gui/dialog/setting/edit_host.py" line="16"/>
@@ -1137,17 +1137,17 @@ File name: {filename}</source>
 <context>
     <name>EntryListView</name>
     <message>
-        <location filename="../../gui/component/entry_list/list_view.py" line="16"/>
+        <location filename="../../gui/component/entry_list/list_view.py" line="18"/>
         <source>No entries</source>
         <translation>暫無內容</translation>
     </message>
     <message>
-        <location filename="../../gui/component/entry_list/list_view.py" line="83"/>
+        <location filename="../../gui/component/entry_list/list_view.py" line="85"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/component/entry_list/list_view.py" line="84"/>
+        <location filename="../../gui/component/entry_list/list_view.py" line="86"/>
         <source>Open in Browser</source>
         <translation>於瀏覽器中開啟</translation>
     </message>
@@ -1231,32 +1231,32 @@ File name: {filename}</source>
 <context>
     <name>FollowWidget</name>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="191"/>
+        <location filename="../../gui/component/widget/flyout.py" line="205"/>
         <source>Anime</source>
         <translation>追番</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="192"/>
+        <location filename="../../gui/component/widget/flyout.py" line="206"/>
         <source>Series</source>
         <translation>追劇</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="199"/>
+        <location filename="../../gui/component/widget/flyout.py" line="213"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="200"/>
+        <location filename="../../gui/component/widget/flyout.py" line="214"/>
         <source>Want to watch</source>
         <translation>想看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="201"/>
+        <location filename="../../gui/component/widget/flyout.py" line="215"/>
         <source>Watching</source>
         <translation>在看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/flyout.py" line="202"/>
+        <location filename="../../gui/component/widget/flyout.py" line="216"/>
         <source>Watched</source>
         <translation>看過</translation>
     </message>
@@ -1422,32 +1422,32 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="295"/>
+        <location filename="../../gui/interface/main_window.py" line="302"/>
         <source>Download Directory Invalid</source>
         <translation>下載目錄無效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="296"/>
+        <location filename="../../gui/interface/main_window.py" line="303"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>目前下載目錄無法存取或沒有寫入權限，請重新設定。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="302"/>
+        <location filename="../../gui/interface/main_window.py" line="309"/>
         <source>FFmpeg Not Found</source>
         <translation>找不到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="303"/>
+        <location filename="../../gui/interface/main_window.py" line="310"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>找不到 FFmpeg 執行檔。請確保已正確安裝並設定 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="309"/>
+        <location filename="../../gui/interface/main_window.py" line="316"/>
         <source>Login Required</source>
         <translation>需要登入</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="310"/>
+        <location filename="../../gui/interface/main_window.py" line="317"/>
         <source>Please log in to your account first.</source>
         <translation>請先登入帳號</translation>
     </message>
@@ -1785,64 +1785,120 @@ For advanced usage, see the help documentation.</source>
     </message>
 </context>
 <context>
-    <name>ParseInterface</name>
+    <name>ParseActionWidget</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="109"/>
-        <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
-        <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/parse.py" line="113"/>
+        <location filename="../../gui/component/setting/widget.py" line="58"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="119"/>
+        <location filename="../../gui/component/setting/widget.py" line="60"/>
+        <source>Delete</source>
+        <translation>刪除</translation>
+    </message>
+</context>
+<context>
+    <name>ParseHistoryDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="20"/>
+        <source>Parse History</source>
+        <translation>解析記錄</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="22"/>
+        <source>Only the latest 100 records are kept.</source>
+        <translation>僅保留最近 100 條記錄</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <source>No.</source>
+        <translation>序號</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <source>Title</source>
+        <translation>標題</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <source>Type</source>
+        <translation>類型</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <source>Parse Time</source>
+        <translation>解析時間</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <source>Actions</source>
+        <translation>操作</translation>
+    </message>
+</context>
+<context>
+    <name>ParseInterface</name>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="109"/>
+        <source>Paste and Parse</source>
+        <translation>貼上並解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="113"/>
+        <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
+        <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="118"/>
+        <source>Parse</source>
+        <translation>解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="124"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="123"/>
+        <location filename="../../gui/interface/parse.py" line="128"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="131"/>
+        <location filename="../../gui/interface/parse.py" line="136"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="217"/>
+        <location filename="../../gui/interface/parse.py" line="232"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="229"/>
+        <location filename="../../gui/interface/parse.py" line="250"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="243"/>
+        <location filename="../../gui/interface/parse.py" line="264"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="245"/>
+        <location filename="../../gui/interface/parse.py" line="266"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="246"/>
+        <location filename="../../gui/interface/parse.py" line="267"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="271"/>
+        <location filename="../../gui/interface/parse.py" line="292"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="277"/>
+        <location filename="../../gui/interface/parse.py" line="298"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>

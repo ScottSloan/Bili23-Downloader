@@ -3,10 +3,11 @@ from util.parse.episode.base import EpisodeParserBase
 from util.common import Translator
 
 class HistoryEpisodeParser(EpisodeParserBase):
-    def __init__(self, info_data: dict):
+    def __init__(self, info_data: dict, category_name: str):
         super().__init__()
 
         self.info_data = info_data["data"]
+        self.category_name = category_name
 
     def parse(self):
         self.episode_data_parser()
