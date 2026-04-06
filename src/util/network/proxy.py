@@ -37,14 +37,14 @@ class Proxy:
                     "https": format("http")
                 }
             
-            case ProxyType.SOCKS4:
-                return {
-                    "http": format("socks4"),
-                    "https": format("socks4")
-                }
+            # case ProxyType.SOCKS4:
+            #     return {
+            #         "http": format("socks4"),
+            #         "https": format("socks4")
+            #     }
             
-            case ProxyType.SOCKS5:
-                return {
-                    "http": format("socks5"),
-                    "https": format("socks5")
-                }
+            # case ProxyType.SOCKS5:
+            #     return {
+            #         "http": format("socks5"),
+            #         "https": format("socks5")
+            #     }

@@ -1,4 +1,4 @@
-﻿from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
+from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
 from util.common import signal_bus, config, safe_remove, get_timestamp, Translator
 from util.download.task.reparse_worker import ReparseWorker
 from util.parse.episode.tree import EpisodeData, Attribute

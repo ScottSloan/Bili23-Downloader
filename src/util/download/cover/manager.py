@@ -36,9 +36,9 @@ class CoverManager:
 
         self.thread_pool.start(worker)
 
-    def placeholder(self):
+    def placeholder(self, cover_size: QSize):
         placeholder_pixmap = QPixmap(":/bili23/image/placeholder.png")
-        placeholder_pixmap.scaled(144, 81, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        placeholder_pixmap = placeholder_pixmap.scaled(cover_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
         return placeholder_pixmap
     

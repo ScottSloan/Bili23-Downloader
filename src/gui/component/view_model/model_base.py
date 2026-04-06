@@ -23,7 +23,7 @@ class CoverQueryModelBase(QAbstractListModel):
         query_param = None
 
         if cover_id is None:
-            return cover_manager.placeholder(), True
+            return cover_manager.placeholder(self._cover_size), True
         
         elif cover_id.startswith("__query__"):
             # 需要通过封面 URL 查询封面 URL 的特殊情况，由委托传入 query_param 进行查询，此时 cover_url 作为查询参数传入
@@ -46,7 +46,7 @@ class CoverQueryModelBase(QAbstractListModel):
             if len(waiting_set) == 1:
                 cover_manager.request(self, cover_id, cover_id, cover_url, self._cover_size, query_param)
 
-        return cover_manager.placeholder(), True
+        return cover_manager.placeholder(self._cover_size), True
 
     @Slot(str, QImage)
     def updateRowCover(self, cover_id: str, image: QImage):

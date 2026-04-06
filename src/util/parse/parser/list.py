@@ -131,7 +131,8 @@ class ListParser(ParserBase):
             "pagination": True,
             "pagination_data": {
                 "total_pages": math.ceil(count / 30),
-                "total_items": count
+                "total_items": count,
+                "current_page": self.pn
             }
         }
     

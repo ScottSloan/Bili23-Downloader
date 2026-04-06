@@ -90,7 +90,8 @@ class SpaceParser(ParserBase):
             "pagination": True,
             "pagination_data": {
                 "total_pages": math.ceil(count / self.ps),
-                "total_items": count
+                "total_items": count,
+                "current_page": self.pn
             }
         }
     

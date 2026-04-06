@@ -1,5 +1,5 @@
 from util.common import signal_bus, config
-from util.network.request import cookies
+from util.network.request import client
 
 import logging
 
@@ -30,9 +30,9 @@ class AuthBase:
             raise Exception(message)
     
     def update_cookies(self):
-        config.set(config.bili_jct, cookies.get("bili_jct", ""))
-        config.set(config.DedeUserID, cookies.get("DedeUserID", ""))
-        config.set(config.DedeUserID__ckMd5, cookies.get("DedeUserID__ckMd5", ""))
-        config.set(config.SESSDATA, cookies.get("SESSDATA", ""))
+        config.set(config.bili_jct, client.cookies.get("bili_jct", ""))
+        config.set(config.DedeUserID, client.cookies.get("DedeUserID", ""))
+        config.set(config.DedeUserID__ckMd5, client.cookies.get("DedeUserID__ckMd5", ""))
+        config.set(config.SESSDATA, client.cookies.get("SESSDATA", ""))
         config.set(config.is_login, True)
         config.is_expired = False

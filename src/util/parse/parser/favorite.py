@@ -121,7 +121,7 @@ class FavoriteParser(ParserBase):
             title = entry.get("title", "")
             season_id = entry.get("season_id", "")
             season_type = entry.get("season_type_name", "")
-            area = entry.get("areas", "")[0]["name"]
+            area = entry["areas"][0]["name"] if entry.get("areas") else ""
             new_ep = entry.get("new_ep", {}).get("index_show", "")
             progress = entry.get("progress", "")
             desc = entry.get("evaluate", "")

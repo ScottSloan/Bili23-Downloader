@@ -50,5 +50,6 @@ class WatchLaterParser(ParserBase):
             "pagination_data": {
                 "total_pages": math.ceil(count / 20),
                 "total_items": count,
+                "current_page": self.pn
             }
         }

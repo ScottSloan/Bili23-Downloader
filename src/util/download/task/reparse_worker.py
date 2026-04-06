@@ -24,9 +24,6 @@ class ReparseWorker(QRunnable, ParserBase):
         
         episode_node = self.parse_episode_node_info()
 
-        # 过滤无效的剧集信息
-        #episode_data_list = [entry for entry in  if entry.get("attribute")]
-
         signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True))
 
     def parse_episode_node_info(self):
