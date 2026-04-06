@@ -24,6 +24,11 @@ def isWin11():
 class DefaultValue:
     parse_list_column = [
         {
+            "attr_key": "number",
+            "width": 160,
+            "show": True
+        },
+        {
             "attr_key": "title",
             "width": 350,
             "show": True
@@ -35,12 +40,12 @@ class DefaultValue:
         },
         {
             "attr_key": "duration",
-            "width": 100,
+            "width": 90,
             "show": True
         },
         {
             "attr_key": "dyn_time",
-            "width": 140,
+            "width": 130,
             "show": True
         }
     ]

@@ -73,7 +73,7 @@ class RuleListDialog(DialogBase):
                 userData = entry.copy()
             )
 
-    def create_action_widget(self, index: int):
+    def _create_action_widget(self, index: int):
         action_widget = EditActionWidget(self.rule_list)
         action_widget.edit_btn.clicked.connect(lambda: self.on_edit_rule(index))
         action_widget.delete_btn.clicked.connect(lambda: self.on_delete_rule(index))
@@ -165,7 +165,7 @@ class RuleListDialog(DialogBase):
             userData = userData
         )
 
-        widget = self.create_action_widget(index)
+        widget = self._create_action_widget(index)
 
         self.rule_list.setItemWidget(row, 2, widget)
 

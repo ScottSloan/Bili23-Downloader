@@ -86,3 +86,14 @@ class CheckableDragListWidget(DragListWidget):
             item.setCheckState(Qt.CheckState.Checked)
             
         self.addItem(item)
+
+    def setRowEnabled(self, row: int, enable: bool):
+        item = self.item(row)
+
+        if not item:
+            return
+        
+        if enable:
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEnabled)
+        else:
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEnabled)

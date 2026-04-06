@@ -1,6 +1,6 @@
+from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
@@ -144,6 +144,12 @@ class MainWindow(MSFluentWindow):
         self.theme_listener.deleteLater()
 
         super().closeEvent(e)
+
+    def resizeEvent(self, e):
+        if hasattr(self, "parse_interface"):
+            self.parse_interface.adjust_column_width()
+
+        return super().resizeEvent(e)
 
     def on_close(self):
         match config.get(config.when_close_window):
@@ -328,13 +334,16 @@ class MainWindow(MSFluentWindow):
             self.flyout_initialized = True
 
             # 首次显示时加载数据
-            self.flyout_widget.init_data()
+            self.flyout_widget.init_flyout()
+
+        self.flyout_widget.adjust_list_widget_width(self.size())
         
         manager = FlyoutAnimationManager.make(
             aniType = FlyoutAnimationType.SLIDE_RIGHT,
             flyout = self.flyout
         )
-        target_pos = manager.position(self.about_widget)
+        target_pos: QPoint = manager.position(self.about_widget)
+        target_pos.setY(max(target_pos.y() + 20, 40))
 
         self.flyout.exec(
             target_pos,

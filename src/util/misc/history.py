@@ -74,4 +74,7 @@ class HistoryManager:
     def delete_history(self, history_id: str):
         self.db_manager.delete(history_id)
 
+    def clear_history(self):
+        self.db_manager.clear()
+
 history_manager = HistoryManager()

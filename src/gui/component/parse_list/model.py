@@ -32,6 +32,10 @@ class ParseModel(QAbstractItemModel):
 
         column_map = [
             {
+                "attr_key": "number",                            # 序号
+                "formatter": StrFormatter,
+            },
+            {
                 "attr_key": "title",                             # 标题
                 "formatter": StrFormatter
             },
@@ -51,12 +55,7 @@ class ParseModel(QAbstractItemModel):
 
         column_map = {entry["attr_key"]: entry for entry in column_map}
 
-        self._column_data = [
-            {
-                "attr_key": "number",
-                "formatter": StrFormatter,
-            }
-        ]
+        self._column_data = []
 
         for entry in config.get(config.parse_list_column):
             column_type = entry["attr_key"]

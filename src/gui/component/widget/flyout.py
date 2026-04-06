@@ -47,7 +47,6 @@ class CategoryWidget(QWidget):
 
     def init_UI(self):
         self.category_list = ListWidget(self)
-        self.category_list.setMaximumWidth(175)
 
         self.refresh_btn = TransparentToolButton(ExtendedFluentIcon.RETRY, parent = self)
         self.refresh_btn.setToolTip(self.tr("Refresh"))
@@ -161,7 +160,6 @@ class EntryWidget(QWidget):
 
     def init_UI(self):
         self.entry_list = EntryListView(is_poster = False, parent = self)
-        self.entry_list.setFixedWidth(600)
         self.entry_list.set_cover_size(QSize(128, 72))
         self.entry_list.setWrappingView()
 
@@ -218,7 +216,6 @@ class FollowWidget(QWidget):
         )
 
         self.entry_list = EntryListView(is_poster = True, parent = self)
-        self.entry_list.setFixedWidth(600)
         self.entry_list.set_cover_size(QSize(123, 164))
         self.entry_list.setWrappingView()
 
@@ -295,6 +292,7 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
 
     def init_UI(self):
         self.category_widget = CategoryWidget(self)
+        self.category_widget.setFixedWidth(180)
 
         separator = Separator(self)
 
@@ -314,13 +312,26 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         self.viewLayout.addWidget(separator)
         self.viewLayout.addWidget(self.stack_widget)
         
-        self.category_widget.refresh_btn.clicked.connect(self.init_data)
+        self.category_widget.refresh_btn.clicked.connect(self.init_flyout)
 
-    def init_data(self):
+    def init_flyout(self):
+        # 初始化数据
         self.favorite_parser.parse_favorite_list()
         self.subscribtion_parser.parse_subscription_list()
-
         self.follow_widget.update_list()
+
+    def adjust_list_widget_width(self, parent_size: QSize):
+        if parent_size.width() >= 1250:
+            width = 1110        # 显示三列
+        else:
+            width = 810        # 显示两列
+
+        if parent_size.height() >= 700:
+            height = 690
+        else:
+            height = 500
+
+        self.setFixedSize(width, height)
 
     def on_category_changed(self, index: int):
         self.stack_widget.setCurrentIndex(index)

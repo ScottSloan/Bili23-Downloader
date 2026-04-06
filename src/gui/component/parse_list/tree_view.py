@@ -1,3 +1,4 @@
+from PySide6.QtWidgets import QHeaderView
 from PySide6.QtCore import Qt, QModelIndex
 
 from qfluentwidgets import TreeView, RoundMenu, Action, FluentIcon, MessageBox, setCustomStyleSheet
@@ -34,13 +35,14 @@ class ParseTreeView(TreeView):
         self._setHeaderWidth()
 
     def _setHeaderWidth(self):
-        self.setColumnWidth(0, 140)     # 序号列
-
-        for index, entry in enumerate(config.get(config.parse_list_column), start = 1):
+        for index, entry in enumerate(config.get(config.parse_list_column)):
             self.setColumnWidth(index, entry["width"])
 
         # 重新展开
         self.expandAll()
+
+        header = self.header()
+        header.setStretchLastSection(False)
 
     def update_tree(self, root_node: TreeItem, current_episode_data: tuple = None):
         self._model.beginResetModel()

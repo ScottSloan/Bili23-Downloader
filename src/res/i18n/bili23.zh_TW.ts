@@ -185,32 +185,37 @@
 <context>
     <name>CDNServerDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="24"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="23"/>
         <source>Customize Service Provider CDN</source>
         <translation>自訂服務商 CDN</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="30"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="29"/>
         <source>Add</source>
         <translation>新增</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="25"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="24"/>
         <source>Drag items to reorder. Higher items have higher priority.</source>
         <translation>拖曳清單項目調整順序，位置越上方優先權越高。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="50"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="30"/>
+        <source>Reset to Default</source>
+        <translation>重設為預設值</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="47"/>
         <source>Node</source>
         <translation>節點</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="51"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="48"/>
         <source>Provider</source>
         <translation>服務商</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/cdn_server.py" line="52"/>
+        <location filename="../../gui/dialog/setting/cdn_server.py" line="49"/>
         <source>Actions</source>
         <translation>操作</translation>
     </message>
@@ -1800,37 +1805,42 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseHistoryDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="20"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="23"/>
         <source>Parse History</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="22"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="25"/>
         <source>Only the latest 100 records are kept.</source>
         <translation>僅保留最近 100 條記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="30"/>
+        <source>Clear History</source>
+        <translation>清除記錄</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="50"/>
         <source>No.</source>
         <translation>序號</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="50"/>
         <source>Title</source>
         <translation>標題</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="50"/>
         <source>Type</source>
         <translation>類型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="50"/>
         <source>Parse Time</source>
         <translation>解析時間</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/parse_history.py" line="36"/>
+        <location filename="../../gui/dialog/misc/parse_history.py" line="50"/>
         <source>Actions</source>
         <translation>操作</translation>
     </message>
@@ -2446,193 +2456,203 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="57"/>
+        <source>Save parse history</source>
+        <translation>儲存解析記錄</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="57"/>
+        <source>Save the history of parsed links</source>
+        <translation>保存已解析連結的歷史紀錄</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/setting.py" line="58"/>
         <source>Show download options dialog</source>
         <translation>下載時顯示選項對話方塊</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="57"/>
+        <location filename="../../gui/interface/setting.py" line="58"/>
         <source>Show a dialog before starting the download to customize settings for this task</source>
         <translation>開始下載前跳出對話方塊以自訂本次下載設定</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="58"/>
+        <location filename="../../gui/interface/setting.py" line="59"/>
         <source>Always ask</source>
         <translation>總是詢問</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="58"/>
+        <location filename="../../gui/interface/setting.py" line="59"/>
         <source>Exit the program</source>
         <translation>結束程式</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="58"/>
+        <location filename="../../gui/interface/setting.py" line="59"/>
         <source>Minimize to system tray</source>
         <translation>最小化至系統匣</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="58"/>
+        <location filename="../../gui/interface/setting.py" line="59"/>
         <source>Close the main window</source>
         <translation>關閉主視窗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="58"/>
+        <location filename="../../gui/interface/setting.py" line="59"/>
         <source>Choose the action when closing the main window</source>
         <translation>選擇關閉主視窗時的操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="59"/>
+        <location filename="../../gui/interface/setting.py" line="60"/>
         <source>File conflict resolution</source>
         <translation>同名檔案處理</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="59"/>
+        <location filename="../../gui/interface/setting.py" line="60"/>
         <source>Choose the action when a file with the same name already exists</source>
         <translation>當目標位置已存在同名檔案時的操作</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="59"/>
+        <location filename="../../gui/interface/setting.py" line="60"/>
         <source>Auto rename</source>
         <translation>自動重新命名</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="59"/>
+        <location filename="../../gui/interface/setting.py" line="60"/>
         <source>Overwrite</source>
         <translation>覆蓋檔案</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="62"/>
+        <location filename="../../gui/interface/setting.py" line="63"/>
         <source>Download</source>
         <translation>下載</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="65"/>
+        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Number of threads</source>
         <translation>多執行緒數</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="65"/>
+        <location filename="../../gui/interface/setting.py" line="66"/>
         <source>Adjust the number of threads used per task (default: 4)</source>
         <translation>調整單一任務使用的執行緒數，預設為 4</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="66"/>
+        <location filename="../../gui/interface/setting.py" line="67"/>
         <source>Number of parallel downloads</source>
         <translation>平行下載數</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="66"/>
+        <location filename="../../gui/interface/setting.py" line="67"/>
         <source>Adjust the number of tasks downloaded simultaneously (default: 1)</source>
         <translation>調整同時下載的任務數，預設為 1</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="67"/>
+        <location filename="../../gui/interface/setting.py" line="68"/>
         <source>Show notifications</source>
         <translation>顯示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="67"/>
+        <location filename="../../gui/interface/setting.py" line="68"/>
         <source>Show notifications when downloads complete</source>
         <translation>下載完成時顯示通知</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="81"/>
+        <location filename="../../gui/interface/setting.py" line="82"/>
         <source>File naming</source>
         <translation>檔案命名</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="73"/>
+        <location filename="../../gui/interface/setting.py" line="74"/>
         <source>Danmaku, Subtitles, Cover, and Metadata</source>
         <translation>彈幕、字幕、封面與元資料</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="87"/>
+        <location filename="../../gui/interface/setting.py" line="88"/>
         <source>Advanced</source>
         <translation>進階</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="93"/>
+        <location filename="../../gui/interface/setting.py" line="94"/>
         <source>Customize the User-Agent used for parsing and downloading</source>
         <translation>自訂解析與下載所使用的 User-Agent</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="83"/>
-        <location filename="../../gui/interface/setting.py" line="93"/>
+        <location filename="../../gui/interface/setting.py" line="84"/>
+        <location filename="../../gui/interface/setting.py" line="94"/>
         <source>Customize…</source>
         <translation>自訂…</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="83"/>
+        <location filename="../../gui/interface/setting.py" line="84"/>
         <source>Naming Convention</source>
         <translation>命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="83"/>
+        <location filename="../../gui/interface/setting.py" line="84"/>
         <source>Customize the naming convention for downloaded files</source>
         <translation>自訂下載檔案的命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="96"/>
+        <location filename="../../gui/interface/setting.py" line="97"/>
         <source>Updates</source>
         <translation>軟體更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="98"/>
+        <location filename="../../gui/interface/setting.py" line="99"/>
         <source>Check for updates</source>
         <translation>檢查更新</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="98"/>
+        <location filename="../../gui/interface/setting.py" line="99"/>
         <source>Check if a new version is available. Current version: {app_version}</source>
         <translation>檢查是否有可用更新，目前版本：{app_version}</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="99"/>
+        <location filename="../../gui/interface/setting.py" line="100"/>
         <source>Include pre-release versions</source>
         <translation>包含預先發布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="99"/>
+        <location filename="../../gui/interface/setting.py" line="100"/>
         <source>Include pre-release versions when checking for updates</source>
         <translation>檢查更新時包含預先發布版本</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="288"/>
+        <location filename="../../gui/interface/setting.py" line="290"/>
         <source>Select FFmpeg executable</source>
         <translation>選擇 FFmpeg 可執行檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="290"/>
+        <location filename="../../gui/interface/setting.py" line="292"/>
         <source>FFmpeg executable ({executable})</source>
         <translation>FFmpeg 可執行檔 ({executable})</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="273"/>
+        <location filename="../../gui/interface/setting.py" line="275"/>
         <source>Bundled FFmpeg not found</source>
         <translation>未找到程式內建的 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="274"/>
+        <location filename="../../gui/interface/setting.py" line="276"/>
         <source>The bundled FFmpeg executable is missing. Please switch to &apos;System PATH&apos; or specify a custom path.</source>
         <translation>缺少程式內建的 FFmpeg 可執行檔。請切換至「系統環境變數」或指定自訂路徑。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="306"/>
+        <location filename="../../gui/interface/setting.py" line="308"/>
         <source>Import Config File</source>
         <translation>匯入設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="308"/>
-        <location filename="../../gui/interface/setting.py" line="328"/>
+        <location filename="../../gui/interface/setting.py" line="310"/>
+        <location filename="../../gui/interface/setting.py" line="330"/>
         <source>Config Files (*.json)</source>
         <translation>設定檔 (*.json)</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="326"/>
+        <location filename="../../gui/interface/setting.py" line="328"/>
         <source>Export Config File</source>
         <translation>匯出設定檔</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="348"/>
+        <location filename="../../gui/interface/setting.py" line="350"/>
         <source>Configuration takes effect after restart</source>
         <translation>設定重新啟動後生效</translation>
     </message>

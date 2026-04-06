@@ -38,6 +38,8 @@ class ParseListColumnDialog(DialogBase):
 
             self.drag_list.addCheckableItem(label, column_show, entry)
 
+        self.drag_list.setRowEnabled(0, False)   # 禁止隐藏第一列（序号）
+
     def accept(self):
         column_list = []
 

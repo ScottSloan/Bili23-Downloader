@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
@@ -347,3 +347,8 @@ class ParseInterface(ParseBase):
 
         return action
     
+    def adjust_column_width(self):
+        header = self.parse_list.header()
+
+        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
+

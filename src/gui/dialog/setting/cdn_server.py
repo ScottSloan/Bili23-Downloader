@@ -7,8 +7,7 @@ from gui.component.setting.widget import EditActionWidget
 from gui.component.widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 
-from util.common.enum import ToastNotificationCategory
-from util.common import Translator, config
+from util.common import Translator, config, ExtendedFluentIcon, DefaultValue
 
 class CDNServerDialog(DialogBase):
     def __init__(self, parent = None):
@@ -27,10 +26,8 @@ class CDNServerDialog(DialogBase):
         self.command_bar = CommandBar(self)
         self.command_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
-        add_action = Action(FluentIcon.ADD_TO, self.tr("Add"), self)
-        add_action.triggered.connect(self.on_add_new_host)
-        
-        self.command_bar.addAction(add_action)
+        self.command_bar.addAction(self._create_action(FluentIcon.ADD_TO, self.tr("Add"), self.on_add_new_host))
+        self.command_bar.addAction(self._create_action(ExtendedFluentIcon.RETRY, self.tr("Reset to Default"), self.on_reset_to_default))
 
         self.cdn_server_list = DragTreeWidget(self)
         self.cdn_server_list.setWidgetColumn(2)
@@ -57,6 +54,8 @@ class CDNServerDialog(DialogBase):
                 75
             ]
         )
+
+        self.cdn_server_list.clear()
         
         for index, entry in enumerate(self.cdn_list):
             host = entry.get("host", "")
@@ -88,6 +87,11 @@ class CDNServerDialog(DialogBase):
             self.cdn_list.append(entry)
 
             self.cdn_server_list.scrollToBottom()
+
+    def on_reset_to_default(self):
+        self.cdn_list = DefaultValue.cdn_server_list.copy()
+
+        self.init_cdn_list()
 
     def on_edit_host(self, index: int):
         entry = self.cdn_list[index]
@@ -121,7 +125,7 @@ class CDNServerDialog(DialogBase):
     def _rebind_action_widgets(self):
         for i in range(self.cdn_server_list.topLevelItemCount()):
             item = self.cdn_server_list.topLevelItem(i)
-            widget = self.create_action_widget(i)
+            widget = self._create_action_widget(i)
             self.cdn_server_list.setItemWidget(item, 2, widget)
 
     def accept(self):
@@ -133,13 +137,19 @@ class CDNServerDialog(DialogBase):
         item = self.cdn_server_list.add_item(args)
         item.setData(1, Qt.ItemDataRole.UserRole, provider_key)
 
-        widget = self.create_action_widget(index)
+        widget = self._create_action_widget(index)
 
         self.cdn_server_list.setItemWidget(item, 2, widget)
 
-    def create_action_widget(self, index: int):
+    def _create_action_widget(self, index: int):
         action_widget = EditActionWidget(self.cdn_server_list)
         action_widget.edit_btn.clicked.connect(lambda: self.on_edit_host(index))
         action_widget.delete_btn.clicked.connect(lambda: self.on_remove_host(index))
 
         return action_widget
+    
+    def _create_action(self, icon, text, slot):
+        action = Action(icon = icon, text = text, parent = self)
+        action.triggered.connect(slot)
+
+        return action
