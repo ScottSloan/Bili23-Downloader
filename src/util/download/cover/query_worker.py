@@ -4,22 +4,30 @@ from PySide6.QtGui import QImage, QPixmap
 from util.network.request import NetworkRequestWorker, ResponseType
 from util.thread import SyncTask
 
+from urllib.parse import urlencode
 import base64
 
 class CoverCache:
     cache: dict[str, QPixmap] = {}
 
-class QueryWorker(QRunnable):
-    def __init__(self, model, cover_id: str, cover_url: str, cover_size: QSize):
+class CoverQueryWorker(QRunnable):
+    def __init__(self, model, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
         super().__init__()
     
         self.model = model
+        self.query_id = query_id
         self.cover_id = cover_id
+
         self.cover_url = cover_url
         self.cover_size = cover_size
 
+        self.query_param = query_param
+
     def run(self):
         from util.download.cover.manager import cover_manager
+
+        if self.query_param:
+            self.query_url()
 
         result = cover_manager.query(self.cover_id)
 
@@ -39,7 +47,7 @@ class QueryWorker(QRunnable):
             self.model,
             "updateRowCover",
             Qt.ConnectionType.QueuedConnection,
-            Q_ARG(str, self.cover_id),
+            Q_ARG(str, self.query_id),
             Q_ARG(QImage, image)
         )
 
@@ -77,3 +85,26 @@ class QueryWorker(QRunnable):
         base64_data = base64.b64encode(buffer.data()).decode("utf-8")
 
         return image, base64_data
+
+    def query_url(self):
+        def on_success(response: dict):
+            nonlocal cover_url
+
+            cover_url = response.get("data", {}).get("cover", "")
+
+        cover_url = ""
+
+        api_url = self.query_param.get("api_url")
+        params = self.query_param.get("params")
+        
+        url = f"{api_url}?{urlencode(params)}"
+
+        worker = NetworkRequestWorker(url)
+        worker.success.connect(on_success)
+
+        SyncTask.run(worker)
+
+        from util.download.cover.manager import cover_manager
+
+        self.cover_id = cover_manager.arrange_cover_id(cover_url)
+        self.cover_url = cover_url

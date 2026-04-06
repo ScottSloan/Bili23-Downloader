@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
-from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton
+from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox
 from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse_list.tree_view import ParseTreeView
@@ -52,13 +52,23 @@ class ParseBase(QFrame):
 
         self.category_name = ""
 
-    def check_pager_visibility(self, extra_data: dict):
-        # 根据解析结果判断是否显示分页组件
+    def check_extra_data(self, extra_data: dict):
         if extra_data:
+            # 判断是否显示分页组件
             if extra_data.get("pagination"):
                 self.segmented_widget.show_pager(extra_data["pagination_data"])
+            else:
+                self.segmented_widget.hide_pager()
+
+            # 判断是否显示季选择组件
+            if extra_data.get("seasons"):
+                self.season_choice.update_data(extra_data["season_data"])
+            else:
+                self.season_choice.hide()
         else:
             self.segmented_widget.hide_pager()
+
+            self.season_choice.hide()
 
     def check_need_check_all(self):
         # 如果配置了自动全选，则直接勾选所有项目
@@ -133,6 +143,10 @@ class ParseInterface(ParseBase):
         self.segmented_widget = SegmentedWidget(self)
         self.segmented_widget.hide()
 
+        self.season_choice = SeasonComboBox(self)
+        self.season_choice.setFixedWidth(150)
+        self.season_choice.hide()
+
         self.download_btn = IndeterminateProgressPushButton(self.tr("Download Selected Items"), self)
         self.download_btn.setMinimumWidth(120)
         self.download_btn.setEnabled(False)
@@ -149,6 +163,7 @@ class ParseInterface(ParseBase):
 
         bottom_layout = QHBoxLayout()
         bottom_layout.addWidget(self.segmented_widget)
+        bottom_layout.addWidget(self.season_choice)
         bottom_layout.addStretch()
         bottom_layout.addWidget(self.download_btn)
 
@@ -177,6 +192,8 @@ class ParseInterface(ParseBase):
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
+
+        self.season_choice.changeSeason.connect(self.on_season_changed)
 
     def init_utils(self):
         self.previewer = Previewer()
@@ -216,7 +233,7 @@ class ParseInterface(ParseBase):
         self.on_item_check_state_changed(None)
 
         # 根据解析结果判断是否显示分页组件
-        self.check_pager_visibility(extra_data)
+        self.check_extra_data(extra_data)
 
         self.check_need_check_all()
 
@@ -352,3 +369,6 @@ class ParseInterface(ParseBase):
 
         header.setSectionResizeMode(1, header.ResizeMode.Stretch)
 
+    def on_season_changed(self, url: str):
+        # 切换季时重新解析
+        self.reparse(url)

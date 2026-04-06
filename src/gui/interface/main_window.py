@@ -46,15 +46,13 @@ class MainWindow(MSFluentWindow):
         self.navigationInterface
 
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
-        self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
 
         self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Downloads"), position = NavigationItemPosition.TOP)
-        self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
 
         self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
         self.download_info_badge.hide()
 
-        self.favorite_widget = self.navigationInterface.addItem(
+        self.favorite_btn = self.navigationInterface.addItem(
             "favorite",
             ExtendedFluentIcon.FAVORITE,
             self.tr("Favorites"),
@@ -63,7 +61,7 @@ class MainWindow(MSFluentWindow):
             position = NavigationItemPosition.TOP
         )
 
-        self.about_widget = self.navigationInterface.addItem(
+        self.about_btn = self.navigationInterface.addItem(
             "about",
             FluentIcon.INFO,
             self.tr("About"),
@@ -81,7 +79,7 @@ class MainWindow(MSFluentWindow):
             position = NavigationItemPosition.BOTTOM
         )
 
-        self.addSubInterface(self.setting_interface, FluentIcon.SETTING, self.tr("Settings"), position = NavigationItemPosition.BOTTOM)
+        self.setting_btn = self.addSubInterface(self.setting_interface, FluentIcon.SETTING, self.tr("Settings"), position = NavigationItemPosition.BOTTOM)
 
         # 托盘图标
         self.system_tray_icon = SystemTrayIcon(self)
@@ -112,6 +110,10 @@ class MainWindow(MSFluentWindow):
         signal_bus.interface.mica_effect_changed.connect(self.setMicaEffectEnabled)
 
         signal_bus.parse.parse_url.connect(self.on_reparse_task)
+
+        self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
+        self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
+        self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
 
     def init_utils(self):
         # 监听系统主题变化
@@ -342,7 +344,7 @@ class MainWindow(MSFluentWindow):
             aniType = FlyoutAnimationType.SLIDE_RIGHT,
             flyout = self.flyout
         )
-        target_pos: QPoint = manager.position(self.about_widget)
+        target_pos: QPoint = manager.position(self.about_btn)
         target_pos.setY(max(target_pos.y() + 20, 40))
 
         self.flyout.exec(

@@ -26,9 +26,9 @@ class ReparseWorker(QRunnable, ParserBase):
         episode_node = self.parse_episode_node_info()
 
         # 过滤无效的剧集信息
-        episode_data_list = [entry for entry in episode_node.get_all_children(to_dict = True) if entry.get("attribute")]
+        #episode_data_list = [entry for entry in  if entry.get("attribute")]
 
-        signal_bus.download.create_task.emit(episode_data_list)
+        signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True))
 
     def parse_episode_node_info(self):
         # 视频
@@ -50,7 +50,7 @@ class ReparseWorker(QRunnable, ParserBase):
 
         self.get_video_info(bvid)
 
-        return VideoEpisodeParser(self.info_data, self.get_kwargs(bvid))
+        return VideoEpisodeParser(self.info_data, "USER_UPLOADS", kwargs = self.get_kwargs(bvid))
 
     def parse_bangumi_info(self):
         ep_id = self.episode_info.get("ep_id")
@@ -66,7 +66,7 @@ class ReparseWorker(QRunnable, ParserBase):
 
         self.get_cheese_info(season_id)
 
-        return CheeseEpisodeParser(self.info_data, self.get_kwargs(season_id))
+        return CheeseEpisodeParser(self.info_data, "COURSE", kwargs = self.get_kwargs(season_id))
     
     def get_kwargs(self, target_episode_info: str | int):
         return {

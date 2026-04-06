@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QListWidgetItem
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen
-from PySide6.QtCore import Signal, Qt, QSize
+from PySide6.QtCore import Signal, Qt, QSize, QTimer
 
 from qfluentwidgets import (
     FlyoutViewBase, FluentIcon, isDarkTheme, ListWidget, ComboBox, PopUpAniStackedWidget
@@ -155,6 +155,7 @@ class EntryWidget(QWidget):
         super().__init__(parent)
 
         self.parent_widget = parent
+        self.manual_request_cover_needed = False
 
         self.init_UI()
 
@@ -182,6 +183,12 @@ class EntryWidget(QWidget):
         self.entry_list._model.clearData()
 
         self.entry_list.add_entry_list(entry_list)
+
+        if self.manual_request_cover_needed:
+            pass
+
+    def set_manual_request_cover_needed(self, needed: bool):
+        self.manual_request_cover_needed = needed
 
 class FollowWidget(QWidget):
     query_success = Signal(list, dict)
@@ -327,9 +334,9 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
             width = 810        # 显示两列
 
         if parent_size.height() >= 700:
-            height = 690
+            height = 655
         else:
-            height = 500
+            height = 475
 
         self.setFixedSize(width, height)
 

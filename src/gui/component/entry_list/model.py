@@ -11,6 +11,12 @@ class EntryListModel(CoverQueryModelBase):
         self._cover_size = QSize(120, 67)
         self._entry_list = entry_list
 
+        self.setQueryCoverParam(
+            {
+                "api_url": "https://api.bilibili.com/x/v3/fav/folder/info"
+            }
+        )
+
     def rowCount(self, parent = QModelIndex()):
         return len(self._entry_list)
     
@@ -45,3 +51,4 @@ class EntryListModel(CoverQueryModelBase):
         self._entry_list.clear()
 
         self.endResetModel()
+

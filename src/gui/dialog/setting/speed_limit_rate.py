@@ -23,6 +23,7 @@ class SpeedLimitSettingDialog(DialogBase):
         self.rate_spin.setValue(self.speed_limit_rate)
 
         self.viewLayout.addWidget(self.caption_lab)
+        self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.rate_spin)
 
         self.widget.setMinimumWidth(300)

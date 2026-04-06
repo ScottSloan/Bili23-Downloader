@@ -1,3 +1,5 @@
+from PySide6.QtCore import QSize
+
 from gui.component.dialog import DialogBase
 
 from qfluentwidgets import LineEdit, SubtitleLabel
@@ -23,7 +25,7 @@ class UserAgentDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(self.user_agent_box)
 
-        self.widget.setMinimumWidth(500)
+        self.adjust_widget_size()
 
     def validate(self):
         is_valid = self.user_agent_box.text() != ""
@@ -40,3 +42,11 @@ class UserAgentDialog(DialogBase):
         config.set(config.user_agent, self.user_agent_box.text())
 
         return super().accept()
+    
+    def adjust_widget_size(self):
+        parent_size: QSize = self.parent().size()
+
+        width = parent_size.width() * 0.5
+
+        self.widget.setMinimumWidth(max(500, width))
+

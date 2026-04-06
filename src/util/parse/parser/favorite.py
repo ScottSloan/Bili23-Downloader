@@ -87,7 +87,9 @@ class FavoriteParser(ParserBase):
             entry_list.append({
                 "title": title,
                 "url": "https://space.bilibili.com/{mid}/favlist?fid={fid}".format(mid = mid, fid = fid),
-                "count": count
+                "count": count,
+                "cover": fid,
+                "cover_id": f"__query__{fid}" if count > 0 else None
             })
         
         self.success_callback(entry_list)

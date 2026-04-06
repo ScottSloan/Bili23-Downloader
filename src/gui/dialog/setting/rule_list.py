@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, MessageBox, CommandBar, Action, FluentIcon
 
@@ -19,6 +19,8 @@ class RuleListDialog(DialogBase):
 
         self.init_UI()
 
+        self.main_window = parent
+
         self.rule_data_list = config.get(config.naming_rule_list).copy()
 
         self.init_rule_list()
@@ -34,12 +36,13 @@ class RuleListDialog(DialogBase):
         self.command_bar.addAction(self._create_action(FluentIcon.HELP, self.tr("Help"), self.on_help))
 
         self.rule_list = ColumnTreeWidget(self)
+        self.rule_list.header().setStretchLastSection(False)
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addWidget(self.command_bar)
         self.viewLayout.addWidget(self.rule_list)
 
-        self.widget.setMinimumSize(700, 450)
+        self.adjust_widget_size()
 
     def init_rule_list(self):
         self.rule_list.clear()
@@ -73,6 +76,8 @@ class RuleListDialog(DialogBase):
                 userData = entry.copy()
             )
 
+        self.rule_list.header().setSectionResizeMode(0, self.rule_list.header().ResizeMode.Stretch)
+
     def _create_action_widget(self, index: int):
         action_widget = EditActionWidget(self.rule_list)
         action_widget.edit_btn.clicked.connect(lambda: self.on_edit_rule(index))
@@ -89,7 +94,7 @@ class RuleListDialog(DialogBase):
             "default": False
         }
 
-        dialog = EditRuleDialog(entry, self)
+        dialog = EditRuleDialog(entry, self.main_window)
 
         if dialog.exec():
             new_entry = dialog.rule_data
@@ -108,7 +113,7 @@ class RuleListDialog(DialogBase):
     def on_edit_rule(self, index: int):
         entry = self.rule_data_list[index]
 
-        dialog = EditRuleDialog(entry, self)
+        dialog = EditRuleDialog(entry, self.main_window)
 
         if dialog.exec():
             new_entry = dialog.rule_data
@@ -128,7 +133,7 @@ class RuleListDialog(DialogBase):
 
         # 不允许删除默认规则
         if entry.get("default"):
-            dialog = MessageBox(self.tr("Cannot delete default rule"), self.tr("Only non-default naming rules can be deleted."), self)
+            dialog = MessageBox(self.tr("Cannot delete default rule"), self.tr("Only non-default naming rules can be deleted."), self.main_window)
             dialog.hideCancelButton()
             dialog.exec()
 
@@ -176,3 +181,12 @@ class RuleListDialog(DialogBase):
         for entry in self.rule_data_list:
             if entry.get("type") == rule_type:
                 entry["default"] = (entry.get("id") == rule_id)
+
+    def adjust_widget_size(self):
+        parent_size: QSize = self.parent().size()
+
+        width = parent_size.width() * 0.55
+        height = parent_size.height() * 0.65
+
+        self.widget.setMinimumWidth(max(700, width))
+        self.widget.setMinimumHeight(max(450, height))

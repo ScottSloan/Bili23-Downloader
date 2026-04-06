@@ -39,6 +39,7 @@ class ParseListColumnDialog(DialogBase):
             self.drag_list.addCheckableItem(label, column_show, entry)
 
         self.drag_list.setRowEnabled(0, False)   # 禁止隐藏第一列（序号）
+        self.drag_list.setMinDragRow(1)          # 保持第一列（序号）在最前面，不允许拖动到其他位置
 
     def accept(self):
         column_list = []

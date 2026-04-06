@@ -78,3 +78,29 @@ class BangumiParser(ParserBase):
 
     def get_category_name(self):
         return bangumi_type_map.get(self.info_data["result"]["type"])
+    
+    def get_extra_data(self):
+        return {
+            "seasons": True,
+            "season_data": {
+                "season_list": self._get_season_list(),
+                "series_title": self.info_data.get("result", {}).get("series", {}).get("series_title", ""),
+                "season_id": self.info_data.get("result", {}).get("season_id", "")
+            }
+        }
+    
+    def _get_season_list(self):
+        season_list = []
+
+        for entry in self.info_data.get("result", {}).get("seasons", []):
+            season_id = entry.get("season_id")
+
+            season_list.append(
+                {
+                    "title": entry["season_title"],
+                    "season_id": season_id,
+                    "url": "https://www.bilibili.com/bangumi/play/ss{season_id}".format(season_id = season_id)
+                }
+            )
+            
+        return season_list

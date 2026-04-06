@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QAbstractListModel, QSize, QThreadPool
 from PySide6.QtGui import QPixmap
 
-from util.download.cover.query_worker import QueryWorker
+from util.download.cover.query_worker import CoverQueryWorker
 from util.download.cover.db import CoverDatabase
 from util.download.cover.cache import CoverCache
 
@@ -31,8 +31,8 @@ class CoverManager:
     def query(self, cover_id: str):
         return self.db_manager.query_cover(cover_id)
     
-    def request(self, model: QAbstractListModel, cover_id: str, cover_url: str, cover_size: QSize):
-        worker = QueryWorker(model, cover_id, cover_url, cover_size)
+    def request(self, model: QAbstractListModel, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
+        worker = CoverQueryWorker(model, query_id, cover_id, cover_url, cover_size, query_param)
 
         self.thread_pool.start(worker)
 

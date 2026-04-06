@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
@@ -32,6 +32,7 @@ class CDNServerDialog(DialogBase):
         self.cdn_server_list = DragTreeWidget(self)
         self.cdn_server_list.setWidgetColumn(2)
         self.cdn_server_list.itemMoved.connect(self.on_item_moved)
+        self.cdn_server_list.header().setStretchLastSection(False)
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
@@ -39,7 +40,7 @@ class CDNServerDialog(DialogBase):
         self.viewLayout.addWidget(self.command_bar)
         self.viewLayout.addWidget(self.cdn_server_list)
 
-        self.widget.setMinimumWidth(650)
+        self.adjust_widget_size()
 
     def init_cdn_list(self):
         self.cdn_server_list.setColumnHeaders(
@@ -63,6 +64,11 @@ class CDNServerDialog(DialogBase):
             provider = Translator.CDN_SERVER_PROVIDER(provider_key)
 
             self._add_item([host, provider], provider_key = provider_key, index = index)
+
+        header = self.cdn_server_list.header()
+
+        header.setSectionResizeMode(0, header.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, header.ResizeMode.ResizeToContents)
 
     def on_add_new_host(self):
         entry = {
@@ -153,3 +159,12 @@ class CDNServerDialog(DialogBase):
         action.triggered.connect(slot)
 
         return action
+    
+    def adjust_widget_size(self):
+        parent_size: QSize = self.parent().size()
+
+        width = parent_size.width() * 0.45
+        height = parent_size.height() * 0.6
+
+        self.widget.setMinimumWidth(max(650, width))
+        self.widget.setMinimumHeight(max(450, height))

@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action
 
@@ -35,20 +35,33 @@ class ParseHistoryDialog(DialogBase):
         top_layout.addWidget(self.command_bar)
 
         self.history_list = ColumnTreeWidget(self)
+        self.history_list.header().setStretchLastSection(False)
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addLayout(top_layout)
         self.viewLayout.addWidget(self.history_list)
 
-        self.widget.setMinimumSize(750, 475)
-
         self.hideCancelButton()
+
+        self.adjust_widget_size()
 
     def init_history_list(self):
         self.history_list.setColumnHeaders(
-            [self.tr("No."), self.tr("Title"), self.tr("Type"), self.tr("Parse Time"), self.tr("Actions")],
-            [60, 280, 120, 150, 50]
+            [
+                self.tr("No."),
+                self.tr("Title"),
+                self.tr("Type"),
+                self.tr("Parse Time"),
+                self.tr("Actions")
+            ],
+            [
+                60,
+                280,
+                120,
+                150,
+                75
+            ]
         )
 
         for index, (history_id, title, url, type, created_time) in enumerate(history_manager.get_history(), start=1):
@@ -66,6 +79,8 @@ class ParseHistoryDialog(DialogBase):
             widget = self._create_action_widget(index, url, history_id)
 
             self.history_list.setItemWidget(item, 4, widget)
+
+        self.history_list.header().setSectionResizeMode(1, self.history_list.header().ResizeMode.Stretch)
 
     def on_parse(self, url: str):
         self.yesButton.click()
@@ -95,3 +110,11 @@ class ParseHistoryDialog(DialogBase):
 
         return action
 
+    def adjust_widget_size(self):
+        parent_size: QSize = self.parent().size()
+
+        width = parent_size.width() * 0.6
+        height = parent_size.height() * 0.65
+
+        self.widget.setMinimumWidth(max(750, width))
+        self.widget.setMinimumHeight(max(475, height))

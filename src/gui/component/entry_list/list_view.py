@@ -54,9 +54,10 @@ class EntryListView(ListView):
                 textColor = QColor(0, 0, 0)
 
             painter = QPainter(self.viewport())
-            painter.setPen(textColor)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setPen(textColor)
+            
             setFont(painter, 14)
 
             fm = QFontMetrics(self.font())
@@ -69,7 +70,7 @@ class EntryListView(ListView):
             painter.drawText(x, y, self._emptyTextTip)
 
         else:
-            return super().paintEvent(e)
+            super().paintEvent(e)
         
     def setWrappingView(self):
         # 启用多行显示，实现流式布局
@@ -100,3 +101,4 @@ class EntryListView(ListView):
         url = entry.get("url")
 
         webbrowser.open(url)
+

@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QApplication
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, CheckBox, PushButton, MessageBox, HyperlinkButton, RoundMenu, Action, FluentIcon
 
@@ -96,8 +96,7 @@ class EditRuleDialog(DialogBase):
         self.viewLayout.addLayout(link_layout)
         self.viewLayout.addWidget(self.variable_list)
 
-        self.widget.setMinimumWidth(650)
-        self.widget.setMaximumHeight(550)
+        self.adjust_widget_size()
 
         self.connect_signal()
 
@@ -264,3 +263,12 @@ class EditRuleDialog(DialogBase):
         
         else:
             return None
+
+    def adjust_widget_size(self):
+        parent_size: QSize = self.parent().size()
+
+        width = parent_size.width() * 0.5
+        height = parent_size.height() * 0.7
+
+        self.widget.setMinimumWidth(max(675, width))
+        self.widget.setMinimumHeight(max(550, height))

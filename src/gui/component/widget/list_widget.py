@@ -25,13 +25,15 @@ class DragListWidget(ListWidget):
         self._drag_start_pos = QPoint()
         self._current_drag_item = None
 
+        self.min_drag_row = -1
+
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
 
         if event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
 
-            if item:
+            if item and item.flags() & Qt.ItemFlag.ItemIsEnabled:
                 self._is_dragging = True
                 self._drag_start_pos = event.pos()
                 self._current_drag_item = item
@@ -57,6 +59,10 @@ class DragListWidget(ListWidget):
 
             current_row = self.row(self._current_drag_item)
             target_row = self.row(target_item)
+
+            # 如果目标行小于最小可拖动行，则不进行交换
+            if target_row < self.min_drag_row:
+                return
             
             # 取出原项目并重新插入到目标位置
             item = self.takeItem(current_row)
@@ -97,3 +103,6 @@ class CheckableDragListWidget(DragListWidget):
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEnabled)
         else:
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
+
+    def setMinDragRow(self, row: int):
+        self.min_drag_row = row

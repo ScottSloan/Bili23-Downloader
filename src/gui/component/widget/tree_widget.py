@@ -47,7 +47,9 @@ class DragTreeWidget(TreeWidget):
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
-            if item:
+
+            # 先判断 item 是否禁用，如果禁用则不允许拖动
+            if item and not item.isDisabled():
                 self._is_dragging = True
                 self._drag_start_pos = event.pos()
                 self._current_drag_item = item
