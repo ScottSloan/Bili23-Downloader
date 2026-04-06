@@ -1,8 +1,7 @@
 from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG, QSize
 from PySide6.QtGui import QImage, QPixmap
 
-from util.network.request import NetworkRequestWorker, ResponseType
-from util.thread import SyncTask
+from util.network.request import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
 import base64
@@ -52,19 +51,12 @@ class CoverQueryWorker(QRunnable):
         )
 
     def download_cover(self):
-        def on_success(response: bytes):
-            nonlocal image
-
-            image = QImage()
-            image.loadFromData(response)
-
-        image = None
-
         # 数据库中没有封面数据，下载封面图片
-        worker = NetworkRequestWorker(self.cover_url, response_type = ResponseType.BYTES)
-        worker.success.connect(on_success)
+        request = SyncNetWorkRequest(self.cover_url, response_type = ResponseType.BYTES)
+        response = request.run()
 
-        SyncTask.run(worker)
+        image = QImage()
+        image.loadFromData(response)
 
         return self.process_cover(image)
         
@@ -87,24 +79,17 @@ class CoverQueryWorker(QRunnable):
         return image, base64_data
 
     def query_url(self):
-        def on_success(response: dict):
-            nonlocal cover_url
-
-            cover_url = response.get("data", {}).get("cover", "")
-
-        cover_url = ""
+        from util.download.cover.manager import cover_manager
 
         api_url = self.query_param.get("api_url")
         params = self.query_param.get("params")
         
         url = f"{api_url}?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
-
-        from util.download.cover.manager import cover_manager
+        cover_url = response.get("data", {}).get("cover", "")
 
         self.cover_id = cover_manager.arrange_cover_id(cover_url)
         self.cover_url = cover_url

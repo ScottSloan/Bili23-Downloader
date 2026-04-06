@@ -1,8 +1,7 @@
 from util.parse.episode.bangumi import BangumiEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.common.data import bangumi_type_map
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 class BangumiParser(ParserBase):
     def __init__(self):
@@ -21,23 +20,16 @@ class BangumiParser(ParserBase):
         return f"season_id={season_id}"
 
     def get_media_id(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            nonlocal season_id
-
-            season_id = response["result"]["media"]["season_id"]
-        
         media_id = self.find_str(r"md([0-9]+)", self.url)
-        season_id = 0
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={media_id}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
+
+        season_id = response["result"]["media"]["season_id"]
 
         return f"season_id={season_id}"
 
@@ -60,21 +52,17 @@ class BangumiParser(ParserBase):
         episode_parser.parse()
 
     def get_bangumi_info(self, param: str):
-        def on_success(response: dict):
-            self.info_data = response
-
-            if self.ep_id:
-                self.info_data["result"]["current_ep_id"] = int(self.ep_id)
-        
         url = f"https://api.bilibili.com/pgc/view/web/season?{param}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
+
+        if self.ep_id:
+            self.info_data["result"]["current_ep_id"] = int(self.ep_id)
 
     def get_category_name(self):
         return bangumi_type_map.get(self.info_data["result"]["type"])

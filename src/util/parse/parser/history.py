@@ -1,7 +1,6 @@
 from util.parse.episode.history import HistoryEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 from urllib.parse import urlencode
 import math
@@ -22,9 +21,6 @@ class HistoryParser(ParserBase):
         episode_parser.parse()
 
     def get_history_info(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "pn": self.pn,
             "keyword": "",
@@ -38,14 +34,13 @@ class HistoryParser(ParserBase):
         }
 
         url = f"https://api.bilibili.com/x/web-interface/history/search?{urlencode(params)}"
-        
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
-        
-        SyncTask.run(worker)
 
-        self.check_response(self.info_data)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        self.check_response(response)
+
+        self.info_data = response
 
     def get_category_name(self):
         return "HISTORY"

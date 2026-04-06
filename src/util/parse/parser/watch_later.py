@@ -1,7 +1,6 @@
 from util.parse.episode.watch_later import WatchLaterEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 import math
 
@@ -21,9 +20,6 @@ class WatchLaterParser(ParserBase):
         episode_parser.parse()
 
     def get_history_info(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "pn": self.pn,
             "ps": 20,
@@ -35,14 +31,13 @@ class WatchLaterParser(ParserBase):
         }
 
         url = f"https://api.bilibili.com/x/v2/history/toview/web?{self.enc_wbi(params)}"
-        
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
-        
-        SyncTask.run(worker)
 
-        self.check_response(self.info_data)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        self.check_response(response)
+
+        self.info_data = response
 
     def get_category_name(self):
         return "WATCH_LATER"

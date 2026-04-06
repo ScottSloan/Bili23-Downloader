@@ -1,5 +1,5 @@
 PySide6-Fluent-Widgets==1.11.1
-requests==2.33.0
 qrcode[pil]==8.2
 protobuf==7.34.1
 PySide6==6.10.2
+httpx==0.28.1

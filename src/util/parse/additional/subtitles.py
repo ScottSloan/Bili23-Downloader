@@ -1,10 +1,9 @@
 from util.parse.additional import SubtitlesASS, AdditionalParserBase
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.download.task.info import TaskInfo
 from util.common import config, Translator
 from util.common.enum import SubtitleType
 from util.format.time import Time
-from util.thread import SyncTask
 
 import json
 
@@ -108,29 +107,12 @@ class SubtitlesParser(AdditionalParserBase):
         return subtitles_data_list
 
     def _get_subtitles_data(self, url: str):
-        def on_success(response: dict):
-            nonlocal subtitles_data
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-            subtitles_data = response
-
-        subtitles_data = None
-
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self._on_error)
-
-        SyncTask.run(worker)
-
-        return subtitles_data
+        return response
 
     def _get_subtitles_url_list(self):
-        def on_success(response: dict):
-            nonlocal subtitles
-
-            subtitles = response["data"]["subtitle"]["subtitles"]
-        
-        subtitles = []
-        
         params = {
             "bvid": self.task_info.Episode.bvid,
             "cid": self.task_info.Episode.cid,
@@ -141,11 +123,9 @@ class SubtitlesParser(AdditionalParserBase):
         }
         
         url = f"https://api.bilibili.com/x/player/wbi/v2?{self.enc_wbi(params)}"
-        
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self._on_error)
 
-        SyncTask.run(worker)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        return subtitles
+        return response["data"]["subtitle"]["subtitles"]
+    

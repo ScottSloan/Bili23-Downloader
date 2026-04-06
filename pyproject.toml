@@ -1,6 +1,6 @@
 [project]
 name = "bili23-downloader"
-version = "2.00.0"
+version = "2.00.1"
 description = "跨平台的 B 站视频下载工具，支持现代 UI、音视频流分离下载、多线程下载、弹幕与字幕获取、封面提取及元数据刮削，可自定义文件命名与分类，兼容 Windows（含 Win7）、Linux 和 macOS。"
 readme = "README.md"
 license = "GPL-3.0"
@@ -8,9 +8,9 @@ requires-python = ">=3.9"
 dependencies = [
     "PySide6==6.10.2",
     "PySide6-Fluent-Widgets==1.11.1",
-    "requests[socks]==2.33.0",
     "qrcode[pil]==8.2",
     "protobuf==7.34.1"
+    "httpx==0.28.1",
 ]
 authors = [
     {name = "ScottSloan", email = "world1019@sina.com"},

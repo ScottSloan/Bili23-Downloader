@@ -1,10 +1,9 @@
-from util.network.request import NetworkRequestWorker, ResponseType
+from util.network.request import SyncNetWorkRequest, ResponseType
 from util.parse.additional import MetadataNFO, AdditionalParserBase
 from util.parse.episode.tree import Attribute
 from util.download.task.info import TaskInfo
 from util.common import config, Translator
 from util.common.enum import MetadataType
-from util.thread import SyncTask
 
 from dataclasses import asdict
 from pathlib import Path
@@ -50,28 +49,21 @@ class MetadataParser(AdditionalParserBase):
         return json.dumps(filtered_data, ensure_ascii = False, indent = 4)
 
     def _save_poster(self):
-        def on_success(response: bytes):
-            self._write(response, suffix = "jpg", name = "poster")
-
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, "poster.jpg")
 
         if not path.exists() and self.task_info.Episode.poster:
-            worker = NetworkRequestWorker(self.task_info.Episode.poster, response_type = ResponseType.BYTES)
-            worker.success.connect(on_success)
-            worker.error.connect(self._on_error)
 
-            SyncTask.run(worker)
+            request = SyncNetWorkRequest(self.task_info.Episode.poster, response_type = ResponseType.BYTES)
+            response = request.run()
 
-    def _get_video_tags(self):
-        def on_success(response: dict):
-            tag_list = response.get("data", [])
-            
-            self.task_info.Episode.tags = [tag.get("tag_name") for tag in tag_list]
+            self._write(response, suffix = "jpg", name = "poster")
 
+    def _get_video_tags(self):            
         url = "https://api.bilibili.com/x/web-interface/view/detail/tag?bvid={bvid}".format(bvid = self.task_info.Episode.bvid)
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self._on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        tag_list = response.get("data", [])
+            
+        self.task_info.Episode.tags = [tag.get("tag_name") for tag in tag_list]

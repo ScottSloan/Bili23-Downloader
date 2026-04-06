@@ -3,33 +3,27 @@ from PySide6.QtCore import Signal, QObject, Slot
 from util.network.proxy import Proxy
 from util.common import config
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from enum import Enum
 
-import requests
+import httpx
+import logging
 
-session = requests.Session()
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
-retry_strategy = Retry(
-    total = 3,
-    backoff_factor = 1,
-    status_forcelist = [429, 500, 502, 503, 504]
+cookies = httpx.Cookies()
+
+limits = httpx.Limits(max_connections = 15, max_keepalive_connections = 10)
+transport = httpx.HTTPTransport(retries = 3)
+
+client = httpx.Client(
+    limits = limits,
+    timeout = 10,
+    transport = transport,
+    headers = {
+        "Referer": "https://www.bilibili.com/",
+        "User-Agent": config.get(config.user_agent)
+    }
 )
-
-adapter = HTTPAdapter(
-    pool_connections = 5,
-    pool_maxsize = 10,
-    max_retries = retry_strategy
-)
-
-session.mount("http://", adapter)
-session.mount("https://", adapter)
-
-session.headers.update({
-    "Referer": "https://www.bilibili.com/",
-    "User-Agent": config.get(config.user_agent)
-})
 
 class RequestType(Enum):
     GET = 0
@@ -65,15 +59,34 @@ class NetworkRequestWorker(QObject):
         try:
             match self.request_type:
                 case RequestType.GET:
-                    func = session.get
+                    func = client.get
                 
                 case RequestType.POST:
-                    func = session.post
+                    func = client.post
                 
                 case RequestType.HEAD:
-                    func = session.head
+                    func = client.head
 
-            res = func(url = self.url, proxies = self.proxies, params = self.params, allow_redirects = True, timeout = 5, json = self.json_data)
+            mounts = None
+
+            if self.proxies and ('http' in self.proxies or 'https' in self.proxies):
+                proxy_url = self.proxies.get('http') or self.proxies.get('https')
+                mounts = {"http://": httpx.HTTPTransport(proxy = proxy_url, retries = 3), "https://": httpx.HTTPTransport(proxy = proxy_url, retries = 3)}
+                
+                with httpx.Client(mounts = mounts, follow_redirects = True) as temp_client:
+                    res = temp_client.request(
+                        method = self.request_type.name,
+                        url = self.url,
+                        params = self.params,
+                        json = self.json_data,
+                        headers = client.headers,
+                        cookies = client.cookies
+                    )
+            else:
+                if self.json_data:
+                    res = func(url = self.url, params = self.params, follow_redirects = True, json = self.json_data)
+                else:
+                    res = func(url = self.url, params = self.params, follow_redirects = True)
 
             if self.raise_for_status:
                 res.raise_for_status()
@@ -92,7 +105,7 @@ class NetworkRequestWorker(QObject):
                     resp = res.headers
 
                 case ResponseType.REDIRECT_URL:
-                    resp = res.url
+                    resp = str(res.url)
 
             self.success.emit(resp)
 
@@ -106,6 +119,50 @@ class NetworkRequestWorker(QObject):
 
     def set_proxies(self, proxies: dict):
         self.proxies = proxies
+
+class SyncNetWorkRequest:
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True):
+        self.url = url
+        self.params = params
+        self.request_type = request_type
+        self.response_type = response_type
+        self.raise_for_status = raise_for_status
+
+    def run(self):
+        try:
+            match self.request_type:
+                case RequestType.GET:
+                    func = client.get
+                
+                case RequestType.POST:
+                    func = client.post
+                
+                case RequestType.HEAD:
+                    func = client.head
+
+            res = func(url = self.url, params = self.params, follow_redirects = True)
+
+            if self.raise_for_status:
+                res.raise_for_status()
+
+            match self.response_type:
+                case ResponseType.TEXT:
+                    return res.text
+
+                case ResponseType.JSON:
+                    return res.json()
+
+                case ResponseType.BYTES:
+                    return res.content
+
+                case ResponseType.HEADERS:
+                    return res.headers
+
+                case ResponseType.REDIRECT_URL:
+                    return str(res.url)
+
+        except Exception as e:
+            raise e
 
 def get_cookies():
     cookies = {
@@ -133,7 +190,7 @@ def update_cookies():
     cookies = get_cookies()
 
     for key, value in cookies.items():
-        session.cookies.set(
+        client.cookies.set(
             name = key,
             value = value,
             domain = ".bilibili.com",

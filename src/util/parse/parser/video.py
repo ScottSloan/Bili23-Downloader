@@ -1,7 +1,6 @@
 from util.parse.episode.video import VideoEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 class VideoParser(ParserBase):
     def __init__(self):
@@ -48,22 +47,18 @@ class VideoParser(ParserBase):
         episode_parser.parse()
 
     def get_video_info(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "bvid": self.bvid
         }
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_category_name(self):
         # 投稿视频

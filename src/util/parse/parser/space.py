@@ -1,7 +1,6 @@
 from util.parse.episode.space import SpaceEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 import math
 
@@ -32,9 +31,6 @@ class SpaceParser(ParserBase):
         episode_parser.parse()
 
     def get_search_arc_info(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "pn": self.pn,
             "ps": self.ps,
@@ -55,35 +51,25 @@ class SpaceParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/space/wbi/arc/search?{self.enc_wbi(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_uname(self):
-        def on_success(response: dict):
-            nonlocal info_data
-            info_data = response
-
         if self.mid in Data.uname_map:
             self.update_space_owner_info()
 
-        info_data = None
-
         url = f"https://api.bilibili.com/x/web-interface/card?mid={self.mid}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(info_data)
-
-        Data.uname_map[self.mid] = info_data["data"]["card"]["name"]
+        Data.uname_map[self.mid] = response["data"]["card"]["name"]
 
         self.update_space_owner_info()
 

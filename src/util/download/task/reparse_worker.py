@@ -6,10 +6,9 @@ from util.parse.episode.video import VideoEpisodeParser
 
 from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.data.bangumi_type import bangumi_type_map
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
 from util.common import signal_bus
-from util.thread import SyncTask
 
 class ReparseWorker(QRunnable, ParserBase):
     def __init__(self, episode_info: dict):
@@ -76,47 +75,35 @@ class ReparseWorker(QRunnable, ParserBase):
         }
     
     def get_video_info(self, bvid: str):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "bvid": bvid
         }
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
 
-        info_worker = NetworkRequestWorker(url)
-        info_worker.success.connect(on_success)
-        info_worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(info_worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_bangumi_info(self, ep_id: str):
-        def on_success(response: dict):
-            self.info_data = response
-        
         url = f"https://api.bilibili.com/pgc/view/web/season?ep_id={ep_id}"
 
-        info_worker = NetworkRequestWorker(url)
-        info_worker.success.connect(on_success)
-        info_worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(info_worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_cheese_info(self, season_id: int):
-        def on_success(response: dict):
-            self.info_data = response
-
         url = f"https://api.bilibili.com/pugv/view/web/season/v2?season_id={season_id}"
 
-        info_worker = NetworkRequestWorker(url)
-        info_worker.success.connect(on_success)
-        info_worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(info_worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response

@@ -12,11 +12,9 @@ from util.download.downloader.merger import Merger
 from util.network.request import get_cookies
 from util.download.task.info import TaskInfo
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from threading import Event, Lock
 from pathlib import Path
-import requests
+import httpx
 import json
 import time
 
@@ -65,7 +63,7 @@ class TokenBucket:
             self.last_update = time.monotonic()
 
 class ChunkWorker(QRunnable):
-    def __init__(self, session: requests.Session, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, parent=None, on_chunk_start=None, on_chunk_end=None):
+    def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()
         self.session = session
         self.file_key = file_key
@@ -100,9 +98,9 @@ class ChunkWorker(QRunnable):
                 with open(self.file_path, "r+b") as f:
                     f.seek(self.chunk_range[0])
 
-                    with self.session.get(self.url, headers = headers, stream = True, timeout = 10) as response:
+                    with self.session.stream("GET", self.url, headers = headers, follow_redirects = True, timeout = 10) as response:
                         response.raise_for_status()
-                        for chunk in response.iter_content(chunk_size=8192):
+                        for chunk in response.iter_bytes(chunk_size=8192):
                             if self.stop_event.is_set():
                                 break
                             
@@ -373,25 +371,23 @@ class Downloader(QObject):
             task_manager._update_media_info(self.task_info)
 
     def init_session(self):
-        self.session = requests.Session()
-        retry_strategy = Retry(
-            total = 5,
-            backoff_factor = 1,
-            status_forcelist = [429, 500, 502, 503, 504]
-        )
-        adapter = HTTPAdapter(pool_connections = 5, pool_maxsize = 10, max_retries=retry_strategy)
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
-
-        cookies = get_cookies()
-        for key, value in cookies.items():
-            self.session.cookies.set(name = key, value = value, domain = ".bilibili.com", path = "/")
+        limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
+        transport = httpx.HTTPTransport(retries = 5)
 
         headers = {
             "Referer": self.task_info.Episode.url,
             "User-Agent": config.get(config.user_agent)
         }
-        self.session.headers.update(headers)
+
+        self.session = httpx.Client(
+            limits = limits,
+            transport = transport,
+            headers = headers
+        )
+
+        cookies = get_cookies()
+        for key, value in cookies.items():
+            self.session.cookies.set(name = key, value = value, domain = ".bilibili.com", path = "/")
 
     def on_download_completed(self):
         # 防抖设定，避免队列完成以及进度到 100 时重复触发

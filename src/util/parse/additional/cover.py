@@ -1,7 +1,6 @@
-from util.network.request import NetworkRequestWorker, ResponseType
+from util.network.request import  SyncNetWorkRequest, ResponseType
 from util.parse.additional import AdditionalParserBase
 from util.download.task.info import TaskInfo
-from util.thread import SyncTask
 from util.common import config
 
 class CoverParser(AdditionalParserBase):
@@ -15,19 +14,7 @@ class CoverParser(AdditionalParserBase):
         self._write(contents, suffix = suffix, name = self.task_info.File.name)
 
     def _get_cover_contents(self, suffix: str):
-        def on_success(response: bytes):
-            nonlocal contents
-
-            contents = response
-            
-        contents = None
-        
         url = "{url}@.{suffix}".format(url = self.task_info.Episode.cover, suffix = suffix)
 
-        worker = NetworkRequestWorker(url, response_type = ResponseType.BYTES)
-        worker.success.connect(on_success)
-        worker.error.connect(self._on_error)
-
-        SyncTask.run(worker)
-
-        return contents
+        request = SyncNetWorkRequest(url, response_type = ResponseType.BYTES)
+        return request.run()
