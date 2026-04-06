@@ -62,7 +62,7 @@ class FavoriteParser(ParserBase):
             "type": self.type,
             "pn": self.pn,
             "ps": 24,
-            "playform": 1,
+            "playform": "web",
             "follow_status": self.follow_status,
             "web_location": "333.1387"
         }

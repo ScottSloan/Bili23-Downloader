@@ -10,9 +10,7 @@ import logging
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-def get_transport():
-    proxies = Proxy().get_proxies()
-
+def get_transport(proxies = None):
     if proxies:
         proxy_url = proxies.get("http") or proxies.get("https")
 
@@ -29,11 +27,7 @@ transport = httpx.HTTPTransport(retries = 5)
 client = httpx.Client(
     limits = limits,
     timeout = 10,
-    mounts = get_transport(),
-    headers = {
-        "Referer": "https://www.bilibili.com/",
-        "User-Agent": config.get(config.user_agent)
-    },
+    mounts = get_transport(Proxy().get_proxies()),
     follow_redirects = True
 )
 
@@ -61,8 +55,10 @@ class SyncNetWorkRequest:
         self.proxies = None
 
     def run(self):
+        self.update_headers()
+
         if self.proxies:
-            with httpx.Client(mounts = get_transport(), follow_redirects = True) as temp_client:
+            with httpx.Client(mounts = get_transport(self.proxies), follow_redirects = True) as temp_client:
                 response = temp_client.request(
                     method = self.request_type.name,
                     url = self.url,
@@ -99,6 +95,14 @@ class SyncNetWorkRequest:
 
             case ResponseType.REDIRECT_URL:
                 return str(response.url)
+    
+    def update_headers(self):
+        client.headers.update(
+            {
+                "Referer": "https://www.bilibili.com/",
+                "User-Agent": config.get(config.user_agent)
+            }
+        )
 
 class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     success = Signal(object)

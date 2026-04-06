@@ -118,7 +118,7 @@ class TreeItemBase:
             if child.children:
                 checked_items.extend(child.get_all_checked_children(to_dict = to_dict, mark_as_downloaded = mark_as_downloaded))
             else:
-                if child.checked == Qt.CheckState.Checked:
+                if child.checked == Qt.CheckState.Checked and child.attribute & Attribute.TREE_NODE_BIT == 0:  # 排除树节点
 
                     if mark_as_downloaded:
                         child.downloaded = True

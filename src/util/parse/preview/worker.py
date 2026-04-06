@@ -27,6 +27,9 @@ class QueryInfoWorker(QObject):
                 case MediaType.MP4:
                     self.query_mp4_file_size()
 
+            if self.file_size == 0:
+                raise Exception("无法获取文件大小")
+
             self.success.emit(self.media_info, self.file_size)
         
         except Exception as e:

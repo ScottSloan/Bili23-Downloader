@@ -38,6 +38,11 @@ class QueryWorker:
                 "url": url,
                 "file_size": self.file_size
             }
+        
+        return {
+            "url": None,
+            "file_size": None
+        }
 
     def get_download_urls(self, media_info: dict):
         download_urls = []
