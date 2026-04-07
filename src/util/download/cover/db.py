@@ -6,9 +6,9 @@ class CoverDatabase(Database):
     def __init__(self):
         self.path = Path(appdata_path) / "Bili23 Downloader" / "thumbnail.db"
 
-        self.check_database_size()
-
         self.check_and_create_table()
+
+        self.check_database_size()
 
     def check_database_size(self):
         threshold = 75 * 1024 * 1024   # 75MB
