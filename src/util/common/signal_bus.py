@@ -2,6 +2,9 @@ from PySide6.QtCore import Signal, QObject
 from PySide6.QtGui import QPixmap
 
 from util.common.enum import ToastNotificationCategory
+from util.common import config
+
+from threading import Lock
 
 class SignalBus:
     class ToastNotification(QObject):
@@ -13,11 +16,15 @@ class SignalBus:
         sys_show = Signal(ToastNotificationCategory, str, str)
 
     class Parse(QObject):
-        update_parse_list = Signal(object)
+        update_parse_list = Signal(str, str, object, object)
 
         preview_init = Signal(dict)
         query_video_info = Signal(int, int, object)
         query_audio_info = Signal(int, object)
+
+        update_column_settings = Signal()
+
+        parse_url = Signal(str)
 
     class Download(QObject):
         create_task = Signal(list)
@@ -40,11 +47,14 @@ class SignalBus:
 
         send_sms = Signal()
 
-        update_avatar = Signal(QPixmap)
+        update_avatar = Signal(object)
 
     class Update(QObject):
         check = Signal(bool)
         show_dialog = Signal(dict)
+
+    class Interface(QObject):
+        mica_effect_changed = Signal(bool)
 
     def __init__(self):
         self.toast = self.ToastNotification()
@@ -52,5 +62,33 @@ class SignalBus:
         self.download = self.Download()
         self.login = self.Login()
         self.update = self.Update()
+        self.interface = self.Interface()
+
+        self.pending_signals = []  # 存储在主窗口初始化完成前发出的信号，格式为 (signal, args, kwargs)
+
+        self._lock = Lock() # 用于保护待发送列表的线程锁
+
+    def emit_signal(self, signal, *args, **kwargs):
+        if config.main_window_ready:
+            # 初始化完成，直接发送信号
+            signal.emit(*args, **kwargs)
+        else:
+            # 否则加入待发送列表。使用线程锁保证多线程安全
+            with self._lock:
+                # 双重检查，防止在获取锁的过程中主窗口已初始化完成
+                if config.main_window_ready:
+                    signal.emit(*args, **kwargs)
+                else:
+                    self.pending_signals.append((signal, args, kwargs))
+
+    def emit_pending_signals(self):
+        # 主窗口初始化完成后调用，发送所有待发送的信号
+        config.main_window_ready = True
+
+        with self._lock:
+            for signal, args, kwargs in self.pending_signals:
+                signal.emit(*args, **kwargs)
+            
+            self.pending_signals.clear()
 
 signal_bus = SignalBus()

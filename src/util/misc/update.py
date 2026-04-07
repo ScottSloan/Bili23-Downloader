@@ -37,7 +37,7 @@ class Updater:
         params = {
             "current_version": config.app_version,
             "current_comparable_version": config.app_comparable_version,
-            "include_preview": False
+            "include_preview": config.get(config.include_prerelease)
         }
 
         url = "https://verhub.hanloth.cn/api/v1/public/scottsloan-bili23-downloader/versions/check-update"

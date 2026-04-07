@@ -8,6 +8,8 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     EXIT = "exit"
     TODO = "todo"
     LIST = "list"
+    CLOCK = "clock"
+    ALBUM = "album"
     CLEAR = "clear"
     RETRY = "retry"
     SELECT = "select"
@@ -17,11 +19,15 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     OPTIONS = "options"
     NUMBERS = "numbers"
     DOCUMENT = "document"
+    FAVORITE = "favorite"
     SUBTITLES = "subtitles"
+    TEST_CUBE = "test_cube"
     CLIPBOARD = "clipboard"
     SELECT_ALL = "select_all"
     CHOOSE_PAGE = "choose_page"
+    FILE_SETTINGS = "file_settings"
     FAST_DOWNLOAD = "fast_download"
+    DOUBLE_RIGHT_ARROWS = "double_right_arrows"
 
     def path(self, theme = Theme.AUTO):
         theme = qconfig.theme if theme == Theme.AUTO else theme

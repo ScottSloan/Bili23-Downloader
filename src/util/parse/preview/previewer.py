@@ -175,7 +175,9 @@ class Previewer(ParserBase):
         attr_list = [
             Attribute.SPACE_BIT,
             Attribute.FAVLIST_BIT,
-            Attribute.COLLECTION_LIST_BIT
+            Attribute.COLLECTION_LIST_BIT,
+            Attribute.WATCH_LATER_BIT,
+            Attribute.HISTORY_BIT
         ]
 
         for attr in attr_list:

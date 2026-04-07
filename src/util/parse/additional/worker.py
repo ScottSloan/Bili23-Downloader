@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 
 from util.parse.additional import DanmakuParser, SubtitlesParser, MetadataParser, CoverParser
+from util.common import signal_bus, Translator
 from util.download.task.info import TaskInfo
 from util.common.enum import DownloadType
 
@@ -37,20 +38,36 @@ class AdditionalParseWorker(QObject):
 
         if attr & DownloadType.DANMAKU != 0:
             # 下载弹幕
+            self.update_status_label(Translator.TIP_MESSAGES("DOWNLOADING_DANMAKU"))
+
             parser = DanmakuParser(self.task_info)
             parser.parse()
 
         if attr & DownloadType.SUBTITLE != 0:
             # 下载字幕
+            self.update_status_label(Translator.TIP_MESSAGES("DOWNLOADING_SUBTITLES"))
+
             parser = SubtitlesParser(self.task_info)
             parser.parse()
 
         if attr & DownloadType.COVER != 0:
             # 下载封面
+            self.update_status_label(Translator.TIP_MESSAGES("DOWNLOADING_COVER"))
+
             parser = CoverParser(self.task_info)
             parser.parse()
 
         if attr & DownloadType.METADATA != 0:
             # 下载元数据
+            self.update_status_label(Translator.TIP_MESSAGES("SCRAPING_METADATA"))
+
             parser = MetadataParser(self.task_info)
             parser.parse()
+
+        self.update_status_label("")
+
+    def update_status_label(self, label: str):
+        self.task_info.Download.status_label = label
+
+        # 发送信号通知界面更新下载项的显示信息
+        signal_bus.download.update_downloading_item.emit(self.task_info)

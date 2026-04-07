@@ -6,10 +6,9 @@ from util.parse.episode.video import VideoEpisodeParser
 
 from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.data.bangumi_type import bangumi_type_map
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
 from util.common import signal_bus
-from util.thread import SyncTask
 
 class ReparseWorker(QRunnable, ParserBase):
     def __init__(self, episode_info: dict):
@@ -25,10 +24,7 @@ class ReparseWorker(QRunnable, ParserBase):
         
         episode_node = self.parse_episode_node_info()
 
-        # 过滤无效的剧集信息
-        episode_data_list = [entry for entry in episode_node.get_all_children(to_dict = True) if entry.get("attribute")]
-
-        signal_bus.download.create_task.emit(episode_data_list)
+        signal_bus.download.create_task.emit(episode_node.get_all_children(to_dict = True))
 
     def parse_episode_node_info(self):
         # 视频
@@ -50,7 +46,7 @@ class ReparseWorker(QRunnable, ParserBase):
 
         self.get_video_info(bvid)
 
-        return VideoEpisodeParser(self.info_data, self.get_kwargs(bvid))
+        return VideoEpisodeParser(self.info_data, "USER_UPLOADS", kwargs = self.get_kwargs(bvid))
 
     def parse_bangumi_info(self):
         ep_id = self.episode_info.get("ep_id")
@@ -59,14 +55,14 @@ class ReparseWorker(QRunnable, ParserBase):
             
         category_name = bangumi_type_map.get(self.info_data["result"]["type"])
 
-        return BangumiEpisodeParser(self.info_data, category_name, self.get_kwargs(ep_id))
+        return BangumiEpisodeParser(self.info_data, category_name, kwargs = self.get_kwargs(ep_id))
 
     def parse_cheese_info(self):
         season_id = self.episode_info.get("ep_id")
 
         self.get_cheese_info(season_id)
 
-        return CheeseEpisodeParser(self.info_data, self.get_kwargs(season_id))
+        return CheeseEpisodeParser(self.info_data, "COURSE", kwargs = self.get_kwargs(season_id))
     
     def get_kwargs(self, target_episode_info: str | int):
         return {
@@ -76,47 +72,35 @@ class ReparseWorker(QRunnable, ParserBase):
         }
     
     def get_video_info(self, bvid: str):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "bvid": bvid
         }
 
         url = f"https://api.bilibili.com/x/web-interface/wbi/view?{self.enc_wbi(params)}"
 
-        info_worker = NetworkRequestWorker(url)
-        info_worker.success.connect(on_success)
-        info_worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(info_worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_bangumi_info(self, ep_id: str):
-        def on_success(response: dict):
-            self.info_data = response
-        
         url = f"https://api.bilibili.com/pgc/view/web/season?ep_id={ep_id}"
 
-        info_worker = NetworkRequestWorker(url)
-        info_worker.success.connect(on_success)
-        info_worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(info_worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_cheese_info(self, season_id: int):
-        def on_success(response: dict):
-            self.info_data = response
-
         url = f"https://api.bilibili.com/pugv/view/web/season/v2?season_id={season_id}"
 
-        info_worker = NetworkRequestWorker(url)
-        info_worker.success.connect(on_success)
-        info_worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(info_worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response

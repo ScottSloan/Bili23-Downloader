@@ -48,4 +48,10 @@ video_codec_map = {
     "AV1": 13
 }
 
+video_codec_str_map = {
+    7: "AVC",
+    12: "HEVC",
+    13: "AV1"
+}
+
 reversed_video_codec_map = {v: k for k, v in video_codec_map.items()}

@@ -1,14 +1,8 @@
-from PySide6.QtCore import QTimer
+from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard
 
-from qfluentwidgets import ExpandGroupSettingCard, PushButton, MessageBox, FluentIcon, PushSettingCard
+from gui.component.setting.widget import SettingSwitchButton, SettingComboBox
 
-from gui.component.setting.widget import SettingSwitchButton, SettingComboBox, EntryItemWidget
-from gui.dialog.setting.edit_convention import EditConventionDialog
-
-from util.common import Translator, config, ExtendedFluentIcon, Directory
-from util.common.data import reversed_convention_type_map
-
-from uuid import uuid4
+from util.common import config, ExtendedFluentIcon, Directory
 
 class DownloadPathSettingCard(PushSettingCard):
     def __init__(self, parent_window, save = True, parent = None):
@@ -98,7 +92,7 @@ class SubtitleSettingCard(ExpandGroupSettingCard):
             self.addGroup("", self.tr("Subtitle Style"), self.tr("Only effective for ASS format subtitles"), self.custom_style_btn)
 
 class CoverSettingCard(ExpandGroupSettingCard):
-    def __init__(self, full_mode = True, parent = None):
+    def __init__(self, parent = None):
         super().__init__(FluentIcon.PHOTO, self.tr("Cover Download Settings"), self.tr("Adjust cover download settings"), parent)
 
         self.download_switch = SettingSwitchButton(config.download_cover, parent = self)
@@ -106,16 +100,23 @@ class CoverSettingCard(ExpandGroupSettingCard):
         self.type_choice = SettingComboBox(config.cover_type, ["jpg", "png", "avif", "webp"], parent = self)
         self.type_choice.setFixedWidth(120)
 
+        self.attach_cover_switch = SettingSwitchButton(config.attach_cover, parent = self)
+
         self.viewLayout.setContentsMargins(0, 0, 0, 0)
         self.viewLayout.setSpacing(0)
 
         self.addGroup("", self.tr("Download Cover"), "", self.download_switch)
         self.addGroup("", self.tr("Cover Format"), "", self.type_choice)
+        self.attach_cover_group = self.addGroup("", self.tr("Embed cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
 
-        if full_mode:
-            self.attach_cover_switch = SettingSwitchButton(config.attach_cover, parent = self)
+        self.attach_cover_group.setEnabled(config.get(config.download_cover))
+        self.download_switch.checkedChanged.connect(self.on_toggle_attach_cover)
 
-            self.addGroup("", self.tr("Embed cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
+    def on_toggle_attach_cover(self, checked: bool):
+        self.attach_cover_group.setEnabled(checked)
+
+        if not checked:
+            self.attach_cover_switch.setChecked(False)
 
 class MetadataSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -131,126 +132,6 @@ class MetadataSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Download Metadata"), "", self.download_switch)
         self.addGroup("", self.tr("Metadata Format"), "", self.type_choice)
-
-class NamingConventionSettingCard(ExpandGroupSettingCard):
-    def __init__(self, main_window, parent = None):
-        super().__init__(FluentIcon.DOCUMENT, self.tr("Naming Convention"), self.tr("Customize the naming convention for downloaded files"), parent = parent)
-
-        self.main_window = main_window
-        self.rule_list = []
-        self._group_widgets = {}
-
-        self.add_btn = PushButton(self.tr("Add Rule"), self)
-        self.add_btn.clicked.connect(self.on_add_item)
-
-        self.addWidget(self.add_btn)
-
-        QTimer.singleShot(300, self.init_data)
-
-    def init_data(self):
-        self.rule_list = config.get(config.naming_rule_list).copy()
-
-        for entry in self.rule_list:
-            type_key = reversed_convention_type_map.get(entry.get("type"))
-            type_str = Translator.CONVENTION_TYPE(type_key)
-
-            self._add_rule_widget(entry, type_str)
-
-    def _save_config(self):
-        config.set(config.naming_rule_list, self.rule_list)
-
-    def _get_rule(self, rule_id: str):
-        return next((r for r in self.rule_list if r.get("id") == rule_id), None)
-        
-    def _set_default_rule(self, rule_id: str, rule_type: int):
-        for entry in self.rule_list:
-            if entry.get("type") == rule_type:
-                entry["default"] = (entry.get("id") == rule_id)
-
-    def on_add_item(self):
-        initial_data = {
-            "id": str(uuid4()),
-            "name": "",
-            "type": 11,
-            "rule": "",
-            "default": False
-        }
-
-        dialog = EditConventionDialog(initial_data, self.main_window)
-
-        if dialog.exec():
-            rule_data = dialog.rule_data.copy()
-
-            self.rule_list.append(rule_data)
-            self._set_default_rule(rule_data.get("id"), rule_data.get("type"))
-            self._save_config()
-
-            self._add_rule_widget(rule_data, dialog.type_str)
-
-            if not self.isExpand:
-                QTimer.singleShot(0, self.toggleExpand)
-
-    def on_edit_item(self, rule_id: str):
-        rule_data = self._get_rule(rule_id)
-        if not rule_data:
-            return
-
-        dialog = EditConventionDialog(rule_data, self.main_window)
-
-        if dialog.exec():
-            new_data = dialog.rule_data.copy()
-
-            for i, entry in enumerate(self.rule_list):
-                if entry.get("id") == rule_id:
-                    self.rule_list[i] = new_data
-                    break
-
-            self._set_default_rule(rule_id, new_data.get("type"))
-            self._save_config()
-
-            group_widget = self._group_widgets.get(rule_id)
-            if group_widget:
-                group_widget.titleLabel.setText(new_data.get("name"))
-                if hasattr(group_widget, "contentLabel") and group_widget.contentLabel:
-                    group_widget.contentLabel.setText(dialog.type_str)
-
-    def on_delete_item(self, rule_id: str):
-        rule_data = self._get_rule(rule_id)
-        if not rule_data:
-            return
-
-        if rule_data.get("default"):
-            dialog = MessageBox(self.tr("Cannot delete default rule"), self.tr("Only non-default naming rules can be deleted."), self.main_window)
-            dialog.hideCancelButton()
-            dialog.exec()
-            return
-        
-        dialog = MessageBox(self.tr("Delete Naming Rule"), self.tr("Are you sure you want to delete this naming rule?"), self.main_window)
-
-        if dialog.exec():
-            self.rule_list = [r for r in self.rule_list if r.get("id") != rule_id]
-            self._save_config()
-
-            group_widget = self._group_widgets.pop(rule_id, None)
-            if group_widget:
-                self.removeGroupWidget(group_widget)
-                group_widget.hide()
-                group_widget.deleteLater()
-
-    def _add_rule_widget(self, rule_data: dict, type_str: str):
-        entry_widget = EntryItemWidget(self)
-        name_key = rule_data.get("name")
-
-        default_rule_names = Translator.DEFAULT_RULE_NAMES()
-
-        if name_key in default_rule_names:
-            rule_data["name"] = default_rule_names.get(name_key)
-
-        group_widget = self.addGroup("", rule_data.get("name"), type_str, entry_widget)
-        self._group_widgets[rule_data.get("id")] = group_widget
-
-        entry_widget.edit_btn.clicked.connect(lambda: self.on_edit_item(rule_data.get("id")))
-        entry_widget.delete_btn.clicked.connect(lambda: self.on_delete_item(rule_data.get("id")))
 
 class NumberSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -346,8 +227,10 @@ class DownloadFormatCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
         super().__init__(FluentIcon.DOCUMENT, self.tr("Download Format"), self.tr("Configure output format settings for downloaded files"), parent)
 
+        self.video_container_choice = SettingComboBox(config.video_container, ["mp4", "mkv"], parent = self)
         self.m4a_to_mp3_switch = SettingSwitchButton(config.m4a_to_mp3, self)
 
+        self.addGroup(FluentIcon.VIDEO, self.tr("Output Container Format"), self.tr("Choose the container format for the final output video file"), self.video_container_choice)
         self.addGroup(FluentIcon.MUSIC, self.tr("Convert M4A to MP3"), self.tr("Only applies when downloading audio-only streams. Disabled if video is also selected."), self.m4a_to_mp3_switch)
 
 class ParseListSettingCard(ExpandGroupSettingCard):
@@ -356,4 +239,48 @@ class ParseListSettingCard(ExpandGroupSettingCard):
 
         self.auto_check_all_switch = SettingSwitchButton(config.auto_check_all, parent = self)
 
+        self.custom_header_btn = PushButton(self.tr("Customize…"), self)
+
         self.addGroup("", self.tr("Auto-select All"), self.tr("Automatically select all items after parsing"), self.auto_check_all_switch)
+        self.addGroup("", self.tr("Customize Displayed Columns"), self.tr("Customize the columns displayed in the parse list and their order"), self.custom_header_btn)
+
+class ConfigFileSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(ExtendedFluentIcon.FILE_SETTINGS, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
+
+        self.import_btn = PushButton(self.tr("Browse..."), self)
+        self.import_btn.setMinimumWidth(90)
+        self.export_btn = PushButton(self.tr("Browse..."), self)
+        self.export_btn.setMinimumWidth(90)
+        self.reset_btn = PushButton(self.tr("Reset"), self)
+        self.reset_btn.setMinimumWidth(90)
+        self.open_dir_btn = PushButton(self.tr("Open"), self)
+        self.open_dir_btn.setMinimumWidth(90)
+
+        self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
+        self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
+        self.addGroup("", self.tr("Reset Config"), self.tr("Reset all settings to default values"), self.reset_btn)
+        self.addGroup("", self.tr("Open Config Directory"), "", self.open_dir_btn)
+
+        self.open_dir_btn.clicked.connect(self.on_open_config_directory)
+
+    def on_open_config_directory(self):
+        Directory.open_directory_in_explorer(str(config.file.parent))
+
+class SpeedLimitSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Speed Limit"), self.tr("Configure download speed limit"), parent)
+
+        self.enable_speed_limit_switch = SettingSwitchButton(config.speed_limit_enabled, parent = self)
+        self.speed_limit_rate_btn = PushButton(self.tr("Customize…"), parent = self)
+
+        self.addGroup("", self.tr("Enable Speed Limit"), self.tr("Limit the speed of each download task"), self.enable_speed_limit_switch)
+        self.speed_limit_rate_group = self.addGroup("", self.tr("Speed Limit Rate"), "", self.speed_limit_rate_btn)
+
+        self.set_current_speed_limit_rate(config.get(config.speed_limit_rate))
+
+        self.speed_limit_rate_group.setEnabled(config.get(config.speed_limit_enabled))
+        self.enable_speed_limit_switch.checkedChanged.connect(lambda checked: self.speed_limit_rate_group.setEnabled(checked))
+
+    def set_current_speed_limit_rate(self, rate: int):
+        self.speed_limit_rate_group.setContent(self.tr("Current rate: {rate} MB/s").format(rate = rate))

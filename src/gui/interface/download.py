@@ -1,9 +1,9 @@
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QStackedWidget, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout
 
-from qfluentwidgets import SubtitleLabel, Pivot
+from qfluentwidgets import SubtitleLabel, Pivot, PopUpAniStackedWidget
 
-from gui.component.download.top_widget import TopStackedWidget
-from gui.component.download.list_view import DownloadListView
+from gui.component.download_list.top_widget import TopStackedWidget
+from gui.component.download_list.list_view import DownloadListView
 from gui.component.widget import PivotItem
 
 from util.download.task.query_worker import QueryWorker
@@ -23,7 +23,7 @@ class DownloadInterface(QFrame):
 
     def init_UI(self):
         self.pivot = Pivot(self)
-        self.list_stacked_widget = QStackedWidget(self)
+        self.list_stacked_widget = PopUpAniStackedWidget(self)
         self.list_stacked_widget.setContentsMargins(0, 10, 0, 10)
 
         self.top_stacked_widget = TopStackedWidget(self)

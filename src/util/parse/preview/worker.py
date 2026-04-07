@@ -1,9 +1,8 @@
 from PySide6.QtCore import QObject, Slot, Signal
 
-from util.network.request import NetworkRequestWorker, RequestType, ResponseType
+from util.network.request import RequestType, ResponseType, SyncNetWorkRequest
 from util.parse.preview.info import PreviewerInfo
 from util.common.enum import MediaType
-from util.thread import SyncTask
 from util.network import CDN
 
 class QueryInfoWorker(QObject):
@@ -28,6 +27,9 @@ class QueryInfoWorker(QObject):
                 case MediaType.MP4:
                     self.query_mp4_file_size()
 
+            if self.file_size == 0:
+                raise Exception("无法获取文件大小")
+
             self.success.emit(self.media_info, self.file_size)
         
         except Exception as e:
@@ -39,52 +41,47 @@ class QueryInfoWorker(QObject):
     def query_dash_file_size(self):
         download_urls = self.get_download_urls(self.media_info)
 
-        self.get_dash_file_size(download_urls)
+        self.file_size = self.get_dash_file_size(download_urls)
 
     def query_mp4_file_size(self):
         query_url = self.get_query_url(self.media_info["id"])
 
-        self.get_mp4_file_size(query_url)
+        self.file_size = self.get_mp4_file_size(query_url)
 
     def get_dash_file_size(self, download_urls: list):
-        def on_success(response: dict):
+        download_urls = CDN.get_url_list(download_urls)
+
+        for url in download_urls:
+            try:
+                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
+                response = request.run()
+            except:
+                # 请求失败，继续尝试下一个链接
+                continue
+            
             content_length = response.get("Content-Length")
             content_type = response.get("Content-Type")
 
             if content_type is None or "text" in content_type:
                 # 链接不可用
-                return
+                continue
             
             if content_length is None or content_length == "0":
                 # 无法获取文件大小
-                return
+                continue
 
-            self.break_flag = True
+            return int(content_length)
 
-            self.file_size = int(content_length)
-
-        download_urls = CDN.get_url_list(download_urls)
-
-        for url in download_urls:
-            worker = NetworkRequestWorker(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
-            worker.success.connect(on_success)
-
-            SyncTask.run(worker)
-
-            if self.break_flag:
-                break
+        raise Exception("无法获取有效的下载链接")
 
     def get_mp4_file_size(self, query_url: str):
-        def on_success(response: dict):
-            durl = self.get_durl(response)
+        request = SyncNetWorkRequest(query_url)
+        response = request.run()
 
-            self.file_size = durl.get("size", 0)
-            self.media_info["timelength"] = durl.get("length", 0)
+        durl = self.get_durl(response)
 
-        worker = NetworkRequestWorker(query_url)
-        worker.success.connect(on_success)
-
-        SyncTask.run(worker)
+        self.file_size = durl.get("size", 0)
+        self.media_info["timelength"] = durl.get("length", 0)
 
     def get_download_urls(self, media_info: dict):
         download_urls = []

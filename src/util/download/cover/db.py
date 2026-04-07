@@ -8,6 +8,15 @@ class CoverDatabase(Database):
 
         self.check_and_create_table()
 
+        self.check_database_size()
+
+    def check_database_size(self):
+        threshold = 75 * 1024 * 1024   # 75MB
+
+        # 超过阈值则自动清空数据库
+        if self.path.exists() and self.path.stat().st_size > threshold:
+            self.execute("DELETE FROM thumbnail")
+
     def check_and_create_table(self):
         self.execute_script("""
             PRAGMA journal_mode = WAL;

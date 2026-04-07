@@ -63,6 +63,7 @@ class MetadataNFO:
             })
 
         if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
+            # 确保 tvshow.nfo 不重复生成
             if not self._is_tvshow_exists():
                 contents_list.append({
                     "contents": self._generate_tvshow(self.task_info.Episode.styles),
@@ -70,11 +71,11 @@ class MetadataNFO:
                     "qualifier": []
                 })
 
-                contents_list.append({
-                    "contents": self._generate_episode(self.task_info.Episode.styles),
-                    "name": self.task_info.File.name,
-                    "qualifier": []
-                })
+            contents_list.append({
+                "contents": self._generate_episode(self.task_info.Episode.styles),
+                "name": self.task_info.File.name,
+                "qualifier": []
+            })
 
         return contents_list
 
@@ -95,7 +96,7 @@ class MetadataNFO:
         premiered = Time.from_timestamp(self.task_info.Episode.premiered)
 
         return tvshow_base.format(
-            title = self.task_info.Basic.show_title,
+            title = self.task_info.Episode.season_title,
             plot = self.task_info.Episode.description,
             premiered = premiered,
             year = premiered.year,

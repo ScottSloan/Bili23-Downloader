@@ -1,9 +1,8 @@
-from util.network.request import NetworkRequestWorker, ResponseType
+from util.network.request import ResponseType, SyncNetWorkRequest
 from util.parse.additional import DanmakuXML, DanmakuASS, AdditionalParserBase
 from util.download.task.info import TaskInfo
 from util.common import config, Translator
 from util.common.enum import DanmakuType
-from util.thread import SyncTask
 from util.misc import dm_pb2
 
 from google.protobuf.json_format import MessageToDict
@@ -58,13 +57,6 @@ class DanmakuParser(AdditionalParserBase):
         return []
 
     def _get_protobuf_danmaku(self, cid: int, index: int):
-        def on_success(response: bytes):
-            nonlocal segment
-
-            segment = response
-
-        segment = None
-
         params = {
             "type": 1,
             "oid": cid,
@@ -73,13 +65,10 @@ class DanmakuParser(AdditionalParserBase):
 
         url = f"https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?{self.enc_wbi(params)}"
 
-        worker = NetworkRequestWorker(url, response_type = ResponseType.BYTES)
-        worker.success.connect(on_success)
-        worker.error.connect(self._on_error)
+        request = SyncNetWorkRequest(url, response_type = ResponseType.BYTES)
+        response = request.run()
 
-        SyncTask.run(worker)
-
-        return segment
+        return response
 
     def _proto_to_dict_list(self, segment_list: List[bytes]) -> List[dict]:
         # 将所有 protobuf 数据转换为 dict 格式，方便后续处理

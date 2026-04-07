@@ -1,7 +1,6 @@
 from util.parse.episode.favlist import FavlistEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 from urllib.parse import urlencode
 import math
@@ -9,6 +8,8 @@ import math
 class FavlistParser(ParserBase):
     def __init__(self):
         super().__init__()
+
+        self.ps = 40
 
     def get_media_id(self):
         match self.find_str(r"fid|ml", self.url):
@@ -26,17 +27,14 @@ class FavlistParser(ParserBase):
 
         self.get_favlist()
 
-        episode_parser = FavlistEpisodeParser(self.info_data)
+        episode_parser = FavlistEpisodeParser(self.info_data, self.get_category_name())
         episode_parser.parse()
 
     def get_favlist(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "media_id": self.media_id,
             "pn": self.pn,
-            "ps": 40,
+            "ps": self.ps,
             "keyword": "",
             "order": "mtime",
             "type": 0,
@@ -46,14 +44,13 @@ class FavlistParser(ParserBase):
         }
 
         url = f"https://api.bilibili.com/x/v3/fav/resource/list?{urlencode(params)}"
-        
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
 
-        SyncTask.run(worker)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        self.check_response(self.info_data)
+        self.check_response(response)
+
+        self.info_data = response
 
     def get_category_name(self):
         # 收藏夹
@@ -65,8 +62,9 @@ class FavlistParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 40),
+                "total_pages": math.ceil(count / self.ps),
                 "total_items": count,
+                "current_page": self.pn
             }
         }
     

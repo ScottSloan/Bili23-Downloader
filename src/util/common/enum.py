@@ -104,8 +104,12 @@ class DownloadStatus(IntEnum):
 
     CONVERTING = 7                  # 转换中
 
+    ADDITIONAL_PROCESSING = 8       # 额外处理（如提取封面、生成字幕等）
+
     FAILED = 100                    # 下载失败
     FFMPEG_FAILED = 101             # FFmpeg 处理失败
+
+    INVALID = 1000                  # 无效状态，在下载未完成时，移动文件导致找不到临时文件
 
 class DownloadType(IntFlag):
     VIDEO            = 1 << 0       # 下载独立视频流
@@ -114,3 +118,7 @@ class DownloadType(IntFlag):
     SUBTITLE         = 1 << 3       # 下载字幕
     COVER            = 1 << 4       # 下载封面
     METADATA         = 1 << 5       # 下载元数据
+
+class VideoContainer(Enum):
+    MP4 = "mp4"
+    MKV = "mkv"

@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QObject, Signal, Slot
+from PySide6.QtCore import QObject, Signal, Slot
 
 from util.download.task.manager import task_manager
 from util.download.task.info import TaskInfo
@@ -47,8 +47,9 @@ class QueryWorker(QObject):
                 if task_info.Download.status in [DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]:
                     task_info.Download.status = DownloadStatus.PAUSED
 
-                if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
-                    task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
+                if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING, DownloadStatus.ADDITIONAL_PROCESSING]:
+                    # 统一为 PAUSED 状态
+                    task_info.Download.status = DownloadStatus.PAUSED
 
             task_list.append(task_info)
 

@@ -78,6 +78,8 @@ class Pager(QWidget):
 
     def update_buttons(self):
         # 清空之前的按钮
+        self.blockSignals(True)
+
         for btn in self.btn_list:
             btn.deleteLater()
 
@@ -105,6 +107,8 @@ class Pager(QWidget):
         self.prev_btn.setEnabled(not self.current_page == 1)
         self.next_btn.setEnabled(not self.current_page == self.total_pages)
 
+        self.blockSignals(False)
+
     def on_change_page(self, page: int):
         self.current_page = page
 
@@ -114,5 +118,13 @@ class Pager(QWidget):
 
     def update_data(self, data: dict):
         self.total_pages = data.get("total_pages", 1)
+        self.current_page = 1
+
+        # 空数据时仍显示一个按钮，但不可点击
+        if self.total_pages == 0:
+            self.total_pages = 1
+
+        if current_page := data.get("current_page", 1):
+            self.current_page = current_page
 
         self.update_buttons()

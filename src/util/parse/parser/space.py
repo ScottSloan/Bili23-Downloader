@@ -1,7 +1,6 @@
 from util.parse.episode.space import SpaceEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 import math
 
@@ -11,6 +10,8 @@ class Data:
 class SpaceParser(ParserBase):
     def __init__(self):
         super().__init__()
+
+        self.ps = 40
 
     def get_mid(self):
         mid = self.find_str(r"/([0-9]+)", self.url)
@@ -26,16 +27,13 @@ class SpaceParser(ParserBase):
         self.get_search_arc_info()
         self.get_uname()
 
-        episode_parser = SpaceEpisodeParser(self.info_data.copy())
+        episode_parser = SpaceEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_search_arc_info(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         params = {
             "pn": self.pn,
-            "ps": 40,
+            "ps": self.ps,
             "tid": 0,
             "special_type": "",
             "order": "pubdate",
@@ -53,35 +51,25 @@ class SpaceParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/space/wbi/arc/search?{self.enc_wbi(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_uname(self):
-        def on_success(response: dict):
-            nonlocal info_data
-            info_data = response
-
         if self.mid in Data.uname_map:
             self.update_space_owner_info()
 
-        info_data = None
-
         url = f"https://api.bilibili.com/x/web-interface/card?mid={self.mid}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(info_data)
-
-        Data.uname_map[self.mid] = info_data["data"]["card"]["name"]
+        Data.uname_map[self.mid] = response["data"]["card"]["name"]
 
         self.update_space_owner_info()
 
@@ -101,8 +89,9 @@ class SpaceParser(ParserBase):
         return {
             "pagination": True,
             "pagination_data": {
-                "total_pages": math.ceil(count / 40),
-                "total_items": count
+                "total_pages": math.ceil(count / self.ps),
+                "total_items": count,
+                "current_page": self.pn
             }
         }
     

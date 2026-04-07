@@ -2,15 +2,18 @@ from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
 
 from util.download.parse.video_info import VideoInfoParser
 from util.download.parse.audio_info import AudioInfoParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.common.enum import DownloadType, MediaType
 from util.parse.episode.tree import Attribute
 from util.parse.parser.base import ParserBase
 from util.download.task.info import TaskInfo
-from util.thread import SyncTask
+from util.common import config, Translator
 
 from urllib.parse import urlencode
+import logging
 import json
+
+logger = logging.getLogger(__name__)
 
 class ParseWorker(QRunnable, ParserBase):
     def __init__(self, task_info: TaskInfo, parent = None):
@@ -38,7 +41,9 @@ class ParseWorker(QRunnable, ParserBase):
                 )
 
         except:
-            self.on_parse_error("解析下载链接失败")
+            logger.exception("解析下载链接失败")
+
+            self.on_parse_error(Translator.ERROR_MESSAGES("PARSE_FAILED"))
 
     def get_info(self):
         if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:
@@ -58,11 +63,6 @@ class ParseWorker(QRunnable, ParserBase):
                 self.task_info.Download.media_type = MediaType.MP4
 
     def get_video_info(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            self.info_data = response.copy()["data"]
-
         params = {
             "bvid": self.task_info.Episode.bvid,
             "cid": self.task_info.Episode.cid,
@@ -74,18 +74,14 @@ class ParseWorker(QRunnable, ParserBase):
 
         url = f"https://api.bilibili.com/x/player/wbi/playurl?{self.enc_wbi(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_parse_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
+
+        self.info_data = response.copy()["data"]
 
     def get_bangumi_info(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            self.info_data = response.copy()["result"]
-
         params = {
             "bvid": self.task_info.Episode.bvid,
             "cid": self.task_info.Episode.cid,
@@ -97,18 +93,14 @@ class ParseWorker(QRunnable, ParserBase):
 
         url = f"https://api.bilibili.com/pgc/player/web/playurl?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_parse_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
+
+        self.info_data = response.copy()["result"]
 
     def get_cheese_info(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            self.info_data = response.copy()["data"]
-
         params = {
             "avid": self.task_info.Episode.aid,
             "cid": self.task_info.Episode.cid,
@@ -121,11 +113,12 @@ class ParseWorker(QRunnable, ParserBase):
 
         url = f"https://api.bilibili.com/pugv/player/web/playurl?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_parse_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
+
+        self.info_data = response.copy()["data"]
 
     def parse_download_info(self):
         total_size = 0
@@ -182,5 +175,4 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.keep_original_files = False
 
         if self.task_info.Download.merge_video_audio:
-            self.task_info.File.merge_file_ext = "mp4"
-    
+            self.task_info.File.merge_file_ext = config.get(config.video_container).value

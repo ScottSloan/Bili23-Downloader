@@ -1,8 +1,10 @@
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
-from PySide6.QtCore import QSize, QModelIndex, Qt, QRect, QEvent, Signal, QPoint, QObject
-from PySide6.QtGui import QPainter, QColor, QPixmap, QFont, QMouseEvent, QFontMetrics
+from PySide6.QtCore import QSize, QModelIndex, Qt, QRect, QEvent, QObject
+from PySide6.QtWidgets import QStyleOptionViewItem
+from PySide6.QtGui import QPainter, QMouseEvent
 
-from qfluentwidgets import FluentIcon, ThemeColor, Theme, isDarkTheme, drawIcon, setFont
+from qfluentwidgets import FluentIcon
+
+from gui.component.view_model.delegate_base import CoverQueryDelegateBase
 
 from util.common import ExtendedFluentIcon, Translator, Directory
 from util.download.task.info import TaskInfo
@@ -10,177 +12,8 @@ from util.common.enum import DownloadStatus
 from util.format import Units, Time
 
 from pathlib import Path
-from typing import List
 
-class FluentStyledItemDelegate:
-    def __init__(self):
-        self.hoverRow = -1
-        self.pressedRow = -1
-        self.selectedRows = set()
-
-    def setHoverRow(self, row: int):
-        pass
-
-    def setPressedRow(self, row: int):
-        self.pressedRow = row
-
-    def setSelectedRows(self, indexes: List[QModelIndex]):
-        self.selectedRows.clear()
-
-        for index in indexes:
-            self.selectedRows.add(index.row())
-            if index.row() == self.pressedRow:
-                self.pressedRow = -1
-
-    def _drawBackground(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-        painter.setPen(Qt.PenStyle.NoPen)
-
-        isHover = self.hoverRow == index.row()
-        isPressed = self.pressedRow == index.row()
-        isDark = isDarkTheme()
-
-        c = 255 if isDark else 0
-        alpha = 0
-
-        if index.row() not in self.selectedRows:
-            if isPressed:
-                alpha = 9 if isDark else 6
-            elif isHover:
-                alpha = 12
-        else:
-            if isPressed:
-                alpha = 15 if isDark else 9
-            elif isHover:
-                alpha = 25
-            else:
-                alpha = 17
-
-        if index.data(Qt.ItemDataRole.BackgroundRole):
-            painter.setBrush(index.data(Qt.ItemDataRole.BackgroundRole))
-        else:
-            painter.setBrush(QColor(c, c, c, alpha))
-
-        painter.drawRoundedRect(option.rect, 5, 5)
-
-    def _drawPrimaryButton(self, painter: QPainter, rect: QRect, icon, hover = False):
-        if hover:
-            if isDarkTheme():
-                primaryColor = ThemeColor.DARK_1.color()
-            else:
-                primaryColor = ThemeColor.LIGHT_1.color()
-        else:
-            primaryColor = ThemeColor.PRIMARY.color()
-
-        borderColor = ThemeColor.LIGHT_1.color()
-        icon = self._reverseIconColor(icon)
-
-        self._drawButtonBase(painter, rect, primaryColor, borderColor, icon)
-
-    def _drawButton(self, painter: QPainter, rect: QRect, icon, hover = False):
-        if isDarkTheme():
-            if hover:
-                primaryColor = QColor(255, 255, 255, 21)
-            else:
-                primaryColor = QColor(255, 255, 255, 15)
-
-            borderColor = QColor(255, 255, 255, 13)
-        else:
-            if hover:
-                primaryColor = QColor(249, 249, 249, 128)
-            else:
-                primaryColor = QColor(255, 255, 255, 178)
-
-            borderColor = QColor(255, 255, 255, 19)
-
-        self._drawButtonBase(painter, rect, primaryColor, borderColor, icon)
-
-    def _drawButtonBase(self, painter: QPainter, rect: QRect, primaryColor: QColor, borderColor: QColor, icon):
-        painter.setPen(Qt.PenStyle.NoPen)
-
-        # 绘制边框
-        painter.setBrush(borderColor)
-        painter.drawRoundedRect(rect, 5, 5)
-
-        # 绘制背景
-        painter.setBrush(primaryColor)
-        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 5, 5)
-
-        # 绘制图标
-        drawIcon(icon, painter, rect.adjusted(8, 8, -8, -8))
-
-    def _drawProgressBar(self, painter: QPainter, rect: QRect, value: int, error = False, paused = False):
-        if isDarkTheme():
-            backgroundColor = QColor(255, 255, 255, 155)
-        else:
-            backgroundColor = QColor(0, 0, 0, 155)
-
-        if error:
-            barColor = QColor(255, 153, 164) if isDarkTheme() else QColor(196, 43, 28)
-        elif paused:
-            barColor = QColor(252, 225, 0) if isDarkTheme() else QColor(157, 93, 0)
-        else:
-            barColor = ThemeColor.PRIMARY.color()
-
-        # 绘制背景
-        painter.setPen(backgroundColor)
-        painter.drawLine(rect.left(), rect.top(), rect.right(), rect.top())
-
-        # 绘制进度
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(barColor)
-
-        w = int(value / 100 * rect.width())
-        r = rect.height() / 4
-
-        painter.drawRoundedRect(rect.left(), rect.top() - 2, w, r, 1, 1)
-
-    def _drawPixmap(self, painter: QPainter, rect: QRect, pixmap: QPixmap):
-        painter.drawPixmap(rect, pixmap)
-
-    def _drawText(self, painter: QPainter, rect: QRect, text: str):
-        if isDarkTheme():
-            textColor = QColor(255, 255, 255)
-        else:
-            textColor = QColor(0, 0, 0)
-
-        setFont(painter, 14)
-
-        font = painter.font()
-
-        metrics = QFontMetrics(font)
-        elided_title = metrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
-
-        painter.setFont(font)
-        painter.setPen(textColor)
-
-        painter.drawText(rect, elided_title)
-
-    def _drawDescriptionText(self, painter: QPainter, rect: QRect, text: str, error = False):
-        if error:
-            textColor = QColor(255, 153, 164) if isDarkTheme() else QColor(196, 43, 28)
-        else:
-            textColor = QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)
-
-        setFont(painter, 14)
-
-        painter.setPen(textColor)
-
-        painter.drawText(rect, text)
-
-    def _getFont(self, size: int):
-        font = QApplication.font()
-        font.setPointSize(size)
-        font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
-
-        return font
-
-    def _reverseIconColor(self, icon):
-        theme = Theme.DARK if not isDarkTheme() else Theme.LIGHT
-        return icon.icon(theme)
-
-class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
-    contextMenuRequested = Signal(QModelIndex, QPoint)
-
+class DownloadItemDelegate(CoverQueryDelegateBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -192,21 +25,6 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
     def sizeHint(self, option, index):
         return QSize(0, 100)
-    
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
-        painter.save()
-        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
-
-        painter.setClipping(True)
-        painter.setClipRect(option.rect)
-
-        self._checkHoverRow(option, index)
-
-        self._drawBackground(painter, option, index)
-
-        self._paintItemUI(painter, option, index)
-
-        painter.restore()
 
     def editorEvent(self, event: QEvent, model, option, index: QModelIndex):
         view = self.parent()
@@ -230,7 +48,7 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
 
         # 左侧封面、标题和信息
         coverRect = self.uiRect.getCoverRect(option)
-        self._drawPixmap(painter, coverRect, self._queryCover(task_info.Basic.cover_id, task_info.Episode.cover, index))
+        self._drawCover(painter, coverRect, option, index, task_info.Basic.cover_id, task_info.Episode.cover)
 
         titleRect = self.uiRect.getTitleRect(coverRect, option)
         self._drawText(painter, titleRect, task_info.Basic.show_title)
@@ -257,13 +75,6 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
         deleteButtonRect = self.uiRect.getDeleteButtonRect(option)
         self._drawButton(painter, deleteButtonRect, FluentIcon.DELETE, self.DeleteButtonHoveredRow == index.row())
     
-    def _checkHoverRow(self, option: QStyleOptionViewItem, index: QModelIndex):
-        if option.state & QStyle.StateFlag.State_MouseOver:
-            self.hoverRow = index.row()
-
-        elif self.hoverRow == index.row():
-            self.hoverRow = -1
-
     def _buttonHoverEvent(self, option: QStyleOptionViewItem, index: QModelIndex, event: QMouseEvent):
         pos = event.pos()
 
@@ -312,10 +123,6 @@ class DownloadItemDelegate(QStyledItemDelegate, FluentStyledItemDelegate):
             return True
 
         return False
-
-    def _queryCover(self, cover_id: str, cover_url: str, index: QModelIndex):
-        # 由委托发起查询封面请求
-        return index.model().queryRowCover(cover_id, cover_url, index.row())
 
     def openFileLocation(self, task_info: TaskInfo):
         directory = Path(task_info.File.download_path, task_info.File.folder)
@@ -421,6 +228,9 @@ class UIData(QObject):
             
             case DownloadStatus.MERGING:
                 return Translator.TIP_MESSAGES("MERGING")
+            
+            case DownloadStatus.ADDITIONAL_PROCESSING:
+                return task_info.Download.status_label
             
             case DownloadStatus.CONVERTING:
                 return Translator.TIP_MESSAGES("CONVERTING")

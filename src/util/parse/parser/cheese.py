@@ -1,7 +1,6 @@
 from util.parse.episode.cheese import CheeseEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 class CheeseParser(ParserBase):
     def __init__(self):
@@ -29,22 +28,18 @@ class CheeseParser(ParserBase):
 
         self.get_cheese_info(param)
 
-        episode_parser = CheeseEpisodeParser(self.info_data)
+        episode_parser = CheeseEpisodeParser(self.info_data, self.get_category_name())
         episode_parser.parse()
 
     def get_cheese_info(self, param: str):
-        def on_success(response: dict):
-            self.info_data = response
-
         url = f"https://api.bilibili.com/pugv/view/web/season/v2?{param}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_category_name(self):
         # 课程

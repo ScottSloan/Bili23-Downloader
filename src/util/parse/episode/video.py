@@ -1,12 +1,14 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
 from util.common.data import badge_map
+from util.common import Translator
 
 class VideoEpisodeParser(EpisodeParserBase):
-    def __init__(self, info_data: dict, kwargs: dict = {}):
+    def __init__(self, info_data: dict, category_name: str, kwargs: dict = {}):
         super().__init__(**kwargs)
 
         self.info_data = info_data["data"]
+        self.category_name = category_name
 
     def parse(self):
         self.episode_data_parser()
@@ -24,16 +26,19 @@ class VideoEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node
         else:
-            self.update_episode_list(node)
+            episode_data = ("cid", self.info_data["cid"])
+            
+            self.update_episode_list(node, episode_data)
 
     def single_parser(self):
         # 单个视频
         node_data = {
-            "number": "视频",
+            "number": Translator.EPISODE_TYPE("USER_UPLOADS"),
             "title": ""
         }
 
         root_node = TreeItem(node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         item_data = {
             "episode_id": self.episode_id,
@@ -65,6 +70,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         }
         
         root_node = TreeItem(root_node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         for page in self.info_data["pages"]:
             item_data = {
@@ -101,6 +107,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         }
 
         root_node = TreeItem(root_node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         sections = self.info_data["ugc_season"]["sections"]
 
@@ -116,6 +123,7 @@ class VideoEpisodeParser(EpisodeParserBase):
             }
 
             section_node = TreeItem(section_data)
+            section_node.set_attribute(Attribute.TREE_NODE_BIT)
 
             for episode in section["episodes"]:
                 if self.target_episode_info:
@@ -131,6 +139,7 @@ class VideoEpisodeParser(EpisodeParserBase):
                     }
 
                     page_node = TreeItem(page_node_data)
+                    page_node.set_attribute(Attribute.TREE_NODE_BIT)
 
                     for page in episode["pages"]:
                         episode_count += 1

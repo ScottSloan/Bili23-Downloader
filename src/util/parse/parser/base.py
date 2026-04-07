@@ -1,4 +1,4 @@
-from util.common import config
+from util.common import config, signal_bus, Translator
 
 from functools import reduce
 from hashlib import md5
@@ -68,4 +68,13 @@ class ParserBase:
     
     def get_extra_data(self) -> dict:
         return {}
+    
+    def check_login(self):
+        if not config.get(config.is_login) or config.is_expired:
+            signal_bus.toast.show_long_message.emit(
+                Translator.ERROR_MESSAGES("LOGIN_REQUIRED"),
+                Translator.ERROR_MESSAGES("LOGIN_REQUIRED_MESSAGE")
+            )
+
+            raise Exception("Please log in to your account first.")
     

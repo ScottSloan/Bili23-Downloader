@@ -75,6 +75,24 @@ class VariableListFactory:
                 "variable": "{uploader_uid}",
                 "description": "UPLOADER_UID",
                 "example": "12345678"
+            },
+            {
+                "name": "video_quality",
+                "variable": "{video_quality}",
+                "description": "VIDEO_QUALITY",
+                "example": "1080P"
+            },
+            {
+                "name": "audio_quality",
+                "variable": "{audio_quality}",
+                "description": "AUDIO_QUALITY",
+                "example": "192K"
+            },
+            {
+                "name": "video_codec",
+                "variable": "{video_codec}",
+                "description": "VIDEO_CODEC",
+                "example": "HEVC"
             }
         ]
     

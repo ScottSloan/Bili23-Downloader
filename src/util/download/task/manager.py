@@ -1,4 +1,5 @@
-from util.common import signal_bus, config, Remover, get_timestamp
+from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
+from util.common import signal_bus, config, safe_remove, get_timestamp, Translator
 from util.download.task.reparse_worker import ReparseWorker
 from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.enum import DownloadStatus, DownloadType
@@ -7,6 +8,7 @@ from util.download.task.db import TaskDatabase
 from util.download.task.info import TaskInfo
 from util.thread import GlobalThreadPoolTask
 from util.format import FileNameFormatter
+
 
 from pathlib import Path
 from typing import List
@@ -73,8 +75,7 @@ class TaskManager:
 
         attr = episode_info.get("attribute", 0)
 
-        if attr & Attribute.VIDEO_BIT != 0:
-            episode_info["leaf_title"] = title
+        episode_info["leaf_title"] = title
 
         if attr & Attribute.BANGUMI_BIT != 0 or attr & Attribute.CHEESE_BIT != 0:
             episode_info["episode_title"] = title
@@ -102,6 +103,7 @@ class TaskManager:
         path = Path(formatter.format())
 
         task_info.File.name = str(path.name)
+
         task_info.File.download_path = config.get(config.download_path)
         task_info.File.folder = str(path.parent)
 
@@ -208,11 +210,26 @@ class TaskManager:
 
     def _removeTemporaryFiles(self, task_info: TaskInfo):
         # 删除下载的临时文件
-        (
-            Remover()
-            .set_cwd(Path(task_info.File.download_path, task_info.File.folder))
-            .add_files(task_info.File.relative_files)
-            .execute()
-        )
+        safe_remove(Path(task_info.File.download_path, task_info.File.folder), *task_info.File.relative_files)
+
+    def _update_media_info(self, task_info: TaskInfo):
+        # 更新媒体信息相关的变量，以便在文件命名规则中使用
+        if task_info.Download.video_quality_id != 200:
+            video_quality = reversed_video_quality_map.get(task_info.Download.video_quality_id, "")
+
+            task_info.Episode.video_quality = Translator.VIDEO_QUALITY(video_quality)
+
+        if task_info.Download.audio_quality_id != 30300:
+            audio_quality = reversed_audio_quality_map.get(task_info.Download.audio_quality_id, "")
+
+            task_info.Episode.audio_quality = Translator.AUDIO_QUALITY(audio_quality)
+
+        if task_info.Download.video_codec_id != 20:
+            video_codec = video_codec_str_map.get(task_info.Download.video_codec_id, "")
+
+            task_info.Episode.video_codec = video_codec
+
+        self.__update_file_name_info(task_info)
 
 task_manager = TaskManager()
+

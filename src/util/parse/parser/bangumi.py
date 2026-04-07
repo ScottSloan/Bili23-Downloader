@@ -1,17 +1,18 @@
 from util.parse.episode.bangumi import BangumiEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.common.data import bangumi_type_map
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 class BangumiParser(ParserBase):
     def __init__(self):
         super().__init__()
 
-    def get_ep_id(self):
-        ep_id = self.find_str(r"ep([0-9]+)", self.url)
+        self.ep_id = None
 
-        return f"ep_id={ep_id}"
+    def get_ep_id(self):
+        self.ep_id = self.find_str(r"ep([0-9]+)", self.url)
+
+        return f"ep_id={self.ep_id}"
     
     def get_season_id(self):
         season_id = self.find_str(r"ss([0-9]+)", self.url)
@@ -19,23 +20,16 @@ class BangumiParser(ParserBase):
         return f"season_id={season_id}"
 
     def get_media_id(self):
-        def on_success(response: dict):
-            self.check_response(response)
-
-            nonlocal season_id
-
-            season_id = response["result"]["media"]["season_id"]
-        
         media_id = self.find_str(r"md([0-9]+)", self.url)
-        season_id = 0
 
         url = f"https://api.bilibili.com/pgc/review/user?media_id={media_id}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
+
+        season_id = response["result"]["media"]["season_id"]
 
         return f"season_id={season_id}"
 
@@ -58,18 +52,43 @@ class BangumiParser(ParserBase):
         episode_parser.parse()
 
     def get_bangumi_info(self, param: str):
-        def on_success(response: dict):
-            self.info_data = response
-        
         url = f"https://api.bilibili.com/pgc/view/web/season?{param}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
+
+        if self.ep_id:
+            self.info_data["result"]["current_ep_id"] = int(self.ep_id)
 
     def get_category_name(self):
         return bangumi_type_map.get(self.info_data["result"]["type"])
+    
+    def get_extra_data(self):
+        return {
+            "seasons": True,
+            "season_data": {
+                "season_list": self._get_season_list(),
+                "series_title": self.info_data.get("result", {}).get("series", {}).get("series_title", ""),
+                "season_id": self.info_data.get("result", {}).get("season_id", "")
+            }
+        }
+    
+    def _get_season_list(self):
+        season_list = []
+
+        for entry in self.info_data.get("result", {}).get("seasons", []):
+            season_id = entry.get("season_id")
+
+            season_list.append(
+                {
+                    "title": entry["season_title"],
+                    "season_id": season_id,
+                    "url": "https://www.bilibili.com/bangumi/play/ss{season_id}".format(season_id = season_id)
+                }
+            )
+            
+        return season_list

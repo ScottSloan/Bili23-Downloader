@@ -12,6 +12,7 @@ class CookieManager(AuthBase):
     def __init__(self):
         super().__init__()
 
+    def init_cookie_info(self):
         self.get_buvid()
         self.get_bili_ticket()
 
@@ -113,3 +114,5 @@ class CookieManager(AuthBase):
             self.show_toast_error("错误", message)
 
             raise Exception(message)
+        
+cookie_manager = CookieManager()

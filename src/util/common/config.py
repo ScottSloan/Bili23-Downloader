@@ -2,22 +2,54 @@ from PySide6.QtCore import QStandardPaths
 from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (
-    QConfig, RangeConfigItem, RangeValidator, OptionsValidator, FolderValidator, OptionsConfigItem, BoolValidator,
+    QConfig, RangeConfigItem, RangeValidator, OptionsValidator, OptionsConfigItem, BoolValidator,
     ConfigItem, EnumSerializer, Theme, qconfig
 )
 
 from util.common.serializer import LanguageSerializer, ScalingSerializer
 from util.common.enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
-    Scaling, FileConflictResolution
+    Scaling, FileConflictResolution, VideoContainer
 )
 
 from pathlib import Path
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
+def isWin11():
+    return sys.platform == "win32" and sys.getwindowsversion().build >= 22000
+
 class DefaultValue:
+    parse_list_column = [
+        {
+            "attr_key": "number",
+            "width": 160,
+            "show": True
+        },
+        {
+            "attr_key": "title",
+            "width": 350,
+            "show": True
+        },
+        {
+            "attr_key": "badge",
+            "width": 90,
+            "show": True
+        },
+        {
+            "attr_key": "duration",
+            "width": 90,
+            "show": True
+        },
+        {
+            "attr_key": "dyn_time",
+            "width": 130,
+            "show": True
+        }
+    ]
+
     video_quality_priority = [
         127,
         126,
@@ -177,32 +209,39 @@ class DefaultValue:
 class APPConfig(QConfig):
     # APP
     app_name = "Bili23 Downloader"
-    app_version = "2.00.0-rc.2"
-    app_comparable_version = "2.00.0-rc.2"
+    app_version = "2.00.1"
+    app_comparable_version = "2.00.1"
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
     scaling = OptionsConfigItem("Interface", "scaling", Scaling.AUTO, OptionsValidator(Scaling), ScalingSerializer(), restart = True)
+    mica_effect = ConfigItem("Interface", "mica_effect", False, BoolValidator())
 
     # Behavior
     auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
+    parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
 
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
     listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())
+    parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download
-    download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation), FolderValidator())
-    download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 8))
-    download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 5))
+    download_path = ConfigItem("Download", "download_path", QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation))
+    download_thread = RangeConfigItem("Download", "download_thread", 4, RangeValidator(1, 10))
+    download_parallel = RangeConfigItem("Download", "download_parallel", 1, RangeValidator(1, 10))
+    speed_limit_enabled = ConfigItem("Download", "speed_limit_enabled", False, BoolValidator())
+    speed_limit_rate = ConfigItem("Download", "speed_limit_rate", 10.0)
+
     show_notification = ConfigItem("Download", "show_notification", False, BoolValidator())
 
     video_quality_priority = ConfigItem("Download", "video_quality_priority", DefaultValue.video_quality_priority)
     audio_quality_priority = ConfigItem("Download", "audio_quality_priority", DefaultValue.audio_quality_priority)
     video_codec_priority = ConfigItem("Download", "video_codec_priority", DefaultValue.video_codec_priority)
 
+    video_container = OptionsConfigItem("Download", "video_container", VideoContainer.MP4, OptionsValidator(VideoContainer), EnumSerializer(VideoContainer))
     m4a_to_mp3 = ConfigItem("Download", "m4a_to_mp3", False)
 
     # Additional
@@ -225,7 +264,7 @@ class APPConfig(QConfig):
     # File Naming
     naming_rule_list = ConfigItem("File Naming", "naming_convention", DefaultValue.naming_rule_list)
     numbering_type = OptionsConfigItem("File Naming", "numbering_type", NumberingType.CONTINUOUS, OptionsValidator(NumberingType), EnumSerializer(NumberingType))
-    starting_number = ConfigItem("File Naming", "staring_number", 1)
+    starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
     prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider", False, BoolValidator())
@@ -242,6 +281,9 @@ class APPConfig(QConfig):
     proxy_password = ConfigItem("Advanced", "proxy_password", "")
 
     user_agent = ConfigItem("Advanced", "user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0")
+
+    # Update
+    include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
 
     # Cookie
     img_key = ConfigItem("Cookie", "img_key", "")
@@ -263,7 +305,7 @@ class APPConfig(QConfig):
     buvid_expires = ConfigItem("Cookie", "buvid_expires", 0)
 
     is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
-    is_expired = ConfigItem("Cookie", "is_expired", False)
+    is_expired = False
 
     # User
     user_uname: str = ""
@@ -276,6 +318,8 @@ class APPConfig(QConfig):
     # FFmpeg
     ffmpeg_executable = ""
     bundle_ffmpeg_exist = False
+
+    no_ffmpeg_available = True
 
     # Download Options
     video_quality_id = 200
@@ -293,6 +337,8 @@ class APPConfig(QConfig):
     
     current_starting_number = None
 
+    main_window_ready = False
+
 config = APPConfig()
 config.themeMode.value = Theme.AUTO
 
@@ -302,4 +348,4 @@ config_path = Path(appdata_path) / "Bili23 Downloader" / "config.json"
 if not config_path.exists():
     logger.warning("配置文件不存在，将创建新配置文件")
 
-qconfig.load(str(config_path), config)
+qconfig.load(config_path, config)

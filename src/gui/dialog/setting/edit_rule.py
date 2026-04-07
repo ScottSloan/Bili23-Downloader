@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QApplication
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, CheckBox, PushButton, MessageBox, HyperlinkButton, RoundMenu, Action, FluentIcon
 
 from gui.component.widget import ColumnTreeWidget, DictComboBox
+from gui.component.setting.widget import InsertActionWidget
 from gui.component.dialog import DialogBase
 
 from util.common.data import convention_type_map, VariableListFactory
@@ -31,14 +32,13 @@ def check_result(func):
         return validate, result
     return wrapper
 
-class EditConventionDialog(DialogBase):
+class EditRuleDialog(DialogBase):
     def __init__(self, rule_data: dict, parent = None):
         super().__init__(parent)
 
         self.init_UI()
 
         self.rule_data = rule_data.copy()
-        self.type_str = ""
 
         self.init_data()
 
@@ -80,6 +80,7 @@ class EditConventionDialog(DialogBase):
 
         self.variable_list = ColumnTreeWidget(self)
         self.variable_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.variable_list.setTooltipEnabled(True)
 
         name_layout = QGridLayout()
         name_layout.setContentsMargins(0, 0, 0, 0)
@@ -96,10 +97,11 @@ class EditConventionDialog(DialogBase):
         self.viewLayout.addLayout(link_layout)
         self.viewLayout.addWidget(self.variable_list)
 
-        self.widget.setMinimumWidth(650)
-        self.widget.setMaximumHeight(550)
+        self.adjust_widget_size()
 
         self.connect_signal()
+
+        self.variable_list.header().setStretchLastSection(False)
 
     def connect_signal(self):
         self.type_choice.currentIndexChanged.connect(self.on_type_changed)
@@ -112,7 +114,20 @@ class EditConventionDialog(DialogBase):
         self.file_name_formatter = FileNameFormatter()
 
         self.variable_list_factory = VariableListFactory()
-        self.variable_list.setColumnHeaders([self.tr("Variable"), self.tr("Description"), self.tr("Example")], [150, 200, 150])
+        self.variable_list.setColumnHeaders(
+            [
+                self.tr("Variable"),
+                self.tr("Description"),
+                self.tr("Example"),
+                self.tr("Actions")
+            ],
+            [
+                150,
+                200,
+                150,
+                60
+            ]
+        )
 
         self.name_box.setText(self.rule_data.get("name"))
         self.rule_box.setText(self.rule_data.get("rule"))
@@ -142,9 +157,11 @@ class EditConventionDialog(DialogBase):
             else:
                 desc_str = desc
 
-            self.variable_list.add_item(entry.get("variable"), desc_str, entry.get("example"))
-
+            self._add_item(entry["variable"], desc_str, entry["example"])
+            
         self.file_name_formatter.set_variable_data(variable_list)
+
+        self.variable_list.header().setSectionResizeMode(0, self.variable_list.header().ResizeMode.Stretch)
 
     def validate(self):
         if not self.name_box.text():
@@ -168,7 +185,6 @@ class EditConventionDialog(DialogBase):
             "rule": self.rule_box.text(),
             "default": self.set_default_chk.isChecked()
         }
-        self.type_str = self.type_choice.currentText()
 
         return super().accept()
 
@@ -265,3 +281,20 @@ class EditConventionDialog(DialogBase):
         
         else:
             return None
+
+    def adjust_widget_size(self):
+        parent_size: QSize = self.parent().size()
+
+        width = parent_size.width() * 0.5
+        height = parent_size.height() * 0.7
+
+        self.widget.setMinimumWidth(max(675, width))
+        self.widget.setMinimumHeight(max(550, height))
+
+    def _add_item(self, variable: str, description: str, example: str):
+        item = self.variable_list.addRow(variable, description, example)
+
+        widget = InsertActionWidget(self.variable_list)
+        widget.edit_btn.clicked.connect(lambda: self.rule_box.insert(variable))
+
+        self.variable_list.setItemWidget(item, 3, widget)

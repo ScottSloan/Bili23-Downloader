@@ -48,6 +48,7 @@ class FFmpegCommand:
                 .add_param("-c:a", "copy")
                 .add_param("-c:v:1", "mjpeg")
                 .add_param("-disposition:v:1", "attached_pic")
+                .add_param("-pix_fmt:v:1", "yuv420p")
                 .add_output(output_path)
             )
         
@@ -56,8 +57,8 @@ class FFmpegCommand:
                 cls()
                 .add_input(video_path)
                 .add_input(audio_path)
-                .add_param("-acodec", "copy")
-                .add_param("-vcodec", "copy")
+                .add_param("-c:v", "copy")
+                .add_param("-c:a", "copy")
                 .add_output(output_path)
             )
     
@@ -66,7 +67,7 @@ class FFmpegCommand:
         return (
             cls()
             .add_input(input_path)
-            .add_param("-acodec", "libmp3lame")
+            .add_param("-c:a", "libmp3lame")
             .add_param("-q:a", "2")
             .add_output(output_path)
         )

@@ -21,7 +21,11 @@ class BangumiEpisodeParser(EpisodeParserBase):
         if self.target_episode_info:
             return node
         else:
-            self.update_episode_list(node)
+            current_ep_id = self.info_data.get("current_ep_id")
+
+            current_episode_data = ("ep_id", current_ep_id) if current_ep_id else None
+
+            self.update_episode_list(node, current_episode_data)
 
     def sections_parser(self):
         season_title = self.info_data["season_title"]
@@ -31,6 +35,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         }
 
         root_node = TreeItem(node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         episode_count = 0
 
@@ -42,6 +47,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
             }
 
             section_node = TreeItem(section_node_data)
+            section_node.set_attribute(Attribute.TREE_NODE_BIT)
 
             for episode in section["episodes"]:
                 if self.target_episode_info:

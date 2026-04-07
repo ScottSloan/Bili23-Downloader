@@ -7,8 +7,8 @@ translate = QCoreApplication.translate
 
 def get_map_method(func):
     @wraps(func)
-    def wrapper(key = None):
-        mapping: dict = func(key)
+    def wrapper(key = None, *args, **kwargs):
+        mapping: dict = func(key, *args, **kwargs)
 
         if key is None:
             return mapping
@@ -84,7 +84,9 @@ class Translator:
             "WEEKLY": translate("EPISODE_TYPE", "Weekly Picks"),
             "COLLECTION_LIST": translate("EPISODE_TYPE", "Collection"),
             "FAVORITES": translate("EPISODE_TYPE", "Favorites"),
-            "PROFILE": translate("EPISODE_TYPE", "Profile")
+            "PROFILE": translate("EPISODE_TYPE", "Profile"),
+            "WATCH_LATER": translate("EPISODE_TYPE", "Watch Later"),
+            "HISTORY": translate("EPISODE_TYPE", "History")
         }
     
     @staticmethod
@@ -156,6 +158,9 @@ class Translator:
             "NUMBER": translate("VARIABLE_DESCRIPTION", "Sequence number"),
             "UPLOADER": translate("VARIABLE_DESCRIPTION", "Uploader name"),
             "UPLOADER_UID": translate("VARIABLE_DESCRIPTION", "Uploader UID"),
+            "VIDEO_QUALITY": translate("VARIABLE_DESCRIPTION", "Video quality"),
+            "AUDIO_QUALITY": translate("VARIABLE_DESCRIPTION", "Audio quality"),
+            "VIDEO_CODEC": translate("VARIABLE_DESCRIPTION", "Video codec"),
 
             "AID": translate("VARIABLE_DESCRIPTION", "av number"),
             "BVID": translate("VARIABLE_DESCRIPTION", "BV number"),
@@ -186,12 +191,34 @@ class Translator:
         }
 
     @staticmethod
+    def COLUMN_NAME(key: str, category_name: str = None):
+        map = {
+            "number": translate("COLUMN_NAME", "No."),
+            "title": translate("COLUMN_NAME", "Title"),
+            "badge": translate("COLUMN_NAME", "Notes"),
+            "duration": translate("COLUMN_NAME", "Duration"),
+            "dyn_time": translate("COLUMN_NAME", "Publish / Favorite / Watch Time"),
+            "pubtime": translate("COLUMN_NAME", "Publish Time"),
+            "favtime": translate("COLUMN_NAME", "Favorite Time"),
+            "viewtime": translate("COLUMN_NAME", "Watch Time"),
+        }
+        
+        if key == "pub_fav_time" and category_name is not None:
+            if category_name == "FAVORITES":
+                return map["favtime"]
+            else:
+                return map["pubtime"]
+        else:
+            return map.get(key, key)
+
+    @staticmethod
     @get_map_method
     def ERROR_MESSAGES(key = None):
         return {
             "FFMPEG_FAILED": translate("ERROR_MESSAGES", "An error occurred while running FFmpeg"),
             "FFMPEG_FAILED_WITH_CODE": translate("ERROR_MESSAGES", "FFmpeg failed with exit code {code}"),
             "FILE_NOT_FOUND": translate("ERROR_MESSAGES", "The specified file or folder does not exist"),
+            "FILE_NOT_FOUND_DETAIL": translate("ERROR_MESSAGES", "The file may have been moved or deleted. Please download it again."),
             "INSUFFICIENT_SPACE": translate("ERROR_MESSAGES", "Insufficient disk space"),
             "PERMISSION_DENIED": translate("ERROR_MESSAGES", "Permission denied: cannot write to file"),
             "CORRUPTED_FILE": translate("ERROR_MESSAGES", "Downloaded file is corrupted"),
@@ -209,7 +236,10 @@ class Translator:
             "LOGOUT_FAILED": translate("ERROR_MESSAGES", "Logout failed"),
             "UNKNOWN_ERROR": translate("ERROR_MESSAGES", "An unknown error occurred"),
             "CHECK_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to check for updates"),
-            "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed")
+            "FFMPEG_PROCESSING_FAILED": translate("ERROR_MESSAGES", "FFmpeg processing failed"),
+            "M4A_NOT_FOUND": translate("ERROR_MESSAGES", "M4A audio file not found for conversion"),
+            "LOGIN_REQUIRED": translate("ERROR_MESSAGES", "Login Required"),
+            "LOGIN_REQUIRED_MESSAGE": translate("ERROR_MESSAGES", "Please log in to your account first."),
         }
 
     @staticmethod
@@ -226,6 +256,12 @@ class Translator:
             "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
             "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
             "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
+            "EXPIRED": translate("TIP_MESSAGES", "Expired"),
+            "ADDITIONAL_FILES": translate("TIP_MESSAGES", "Additional Files"),
+            "DOWNLOADING_DANMAKU": translate("TIP_MESSAGES", "Downloading Danmaku..."),
+            "DOWNLOADING_SUBTITLES": translate("TIP_MESSAGES", "Downloading Subtitles..."),
+            "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
+            "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
         }
 
     @staticmethod

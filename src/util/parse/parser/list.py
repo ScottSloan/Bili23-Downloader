@@ -1,7 +1,6 @@
 from util.parse.episode.list import ListEpisodeParser
-from util.network.request import NetworkRequestWorker
+from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
-from util.thread import SyncTask
 
 from urllib.parse import urlencode
 import math
@@ -59,13 +58,10 @@ class ListParser(ParserBase):
         else:
             raise ValueError("无效的链接")
 
-        episode_parser = ListEpisodeParser(self.info_data.copy())
+        episode_parser = ListEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 
     def get_seasons_archives_list(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         # 合集，以 season_id 区分
         # 形如 https://space.bilibili.com/{mid}/lists/{season_id}?type=season
         params = {
@@ -79,18 +75,14 @@ class ListParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/polymer/web-space/seasons_archives_list?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_series_archives_list(self):
-        def on_success(response: dict):
-            self.info_data = response
-
         # 系列，以 series_id 区分
         # 形如 https://space.bilibili.com/{mid}/lists/{series_id}?type=series
         params = {
@@ -105,23 +97,15 @@ class ListParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/series/archives?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(self.info_data)
+        self.info_data = response
 
     def get_series_meta_info(self):
-        def on_success(response: dict):
-            nonlocal meta_info
-
-            meta_info = response
-
         # 由于系列的接口不含 meta 信息，还需要额外获取
-        meta_info = {}
-
         params = {
             "series_id": self.series_id,
             "web_location": "333.1387"
@@ -129,15 +113,12 @@ class ListParser(ParserBase):
 
         url = f"https://api.bilibili.com/x/series/series?{urlencode(params)}"
 
-        worker = NetworkRequestWorker(url)
-        worker.success.connect(on_success)
-        worker.error.connect(self.on_error)
+        request = SyncNetWorkRequest(url)
+        response = request.run()
 
-        SyncTask.run(worker)
+        self.check_response(response)
 
-        self.check_response(meta_info)
-
-        self.info_data["data"]["meta"] = meta_info["data"]["meta"].copy()
+        self.info_data["data"]["meta"] = response["data"]["meta"].copy()
 
     def get_category_name(self):
         # 合集列表
@@ -150,7 +131,8 @@ class ListParser(ParserBase):
             "pagination": True,
             "pagination_data": {
                 "total_pages": math.ceil(count / 30),
-                "total_items": count
+                "total_items": count,
+                "current_page": self.pn
             }
         }
     

@@ -1,14 +1,16 @@
 from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
 from util.parse.episode.base import EpisodeParserBase
+from util.common import Translator
 
 import json
 import re
 
 class CheeseEpisodeParser(EpisodeParserBase):
-    def __init__(self, info_data: dict, kwargs: dict = {}):
+    def __init__(self, info_data: dict, category_name: str, kwargs: dict = {}):
         super().__init__(**kwargs)
 
         self.info_data = info_data["data"]
+        self.category_name = category_name
 
     def parse(self):
         self.episode_data_parser()
@@ -23,12 +25,13 @@ class CheeseEpisodeParser(EpisodeParserBase):
     def sections_parser(self):
         cheese_title = self.info_data["title"]
         node_data = {
-            "number": "课程",
+            "number": Translator.EPISODE_TYPE("COURSE"),
             "season_id": self.info_data["season_id"],
             "title": cheese_title
         }
 
         root_node = TreeItem(node_data)
+        root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
         episode_count = 0
 
@@ -41,7 +44,8 @@ class CheeseEpisodeParser(EpisodeParserBase):
                 }
 
                 section_node = TreeItem(section_node_data)
-
+                section_node.set_attribute(Attribute.TREE_NODE_BIT)
+                
                 for episode in section["episodes"]:
                     episode_count += 1
 

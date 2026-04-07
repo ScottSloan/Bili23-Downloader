@@ -41,15 +41,21 @@ Join our community to get the latest updates, Q&A, and technical discussions.
 
 ## ⚡ Features
 
-- 🖥️ **Cross-Platform**: Fully compatible with mainstream operating systems: Windows, Linux, and macOS.
-- 🎨 **Modern UI**: Light/Dark theme switching, zero configuration out-of-the-box, and excellent High-DPI support.
-- 🔗 **Multi-Type Parsing**: Supports parsing links for standard videos, animations (Bangumi), movies, and courses.
-- ⚙️ **Format Customization**: Free to choose video resolution, audio quality, and encoding formats.
-- 📦 **Full Metadata**: Synchronously download ASS Danmaku, subtitles, covers, and local NFO media metadata.
-- 🎵 **High-Quality Audio**: Supports downloading Hi-Res lossless and Dolby Atmos audio.
-- 📂 **Batch Downloading**: Extract and download all videos from favorites/bookmarks or a user's personal space.
-- 📁 **Classification & Naming**: Highly customizable local file naming rules and directory classification structures.
-- 🚀 **Extreme Acceleration**: Native support for multi-threaded parallel downloading, breakpoint resuming, and automatic network error retries.
+| Feature | Detailed Description |
+| :--- | :--- |
+| 🖥️ **Cross-Platform** | Fully compatible with **Windows** (including Win 7), **Linux**, and **macOS** desktop operating systems. |
+| 🎨 **Modern UI** | Based on Fluent Design, supports seamless light/dark theme switching and native High-DPI scaling. | 
+| 🚀 **Multithreading & Acceleration**| Native integration of multi-threaded parallel downloading, breakpoint resuming, and automatic network error retries for extreme download speed. |
+| 🔗 **Multi-Type Parsing** | Fully supports: `Standard Videos`, `Bangumi`, `Movies`, `Courses`, `User Space`, `Favorites`, `Weekly Must-Watch`, `Subscriptions`, `Watch Later`, `History`, etc., with batch mode support. |
+| ⚙️ **Media Customization**| **Video**: 8K, 4K, HDR, Dolby Vision <br>**Audio**: Hi-Res Lossless, Dolby Atmos <br>**Codec**: AVC, HEVC, AV1 |
+| 💬 **Danmaku & Subtitles** | **Danmaku**: `xml`, `ass`, `json` <br>**Subtitles**: `srt`, `lrc`, `txt`, `ass`, `json` |
+| 🖼️ **Cover Extraction & Embedding**| Losslessly save covers (`jpg`, `png`, `avif`, `webp`), natively supports embedding posters directly into output video files. |
+| 🧩 **NFO Metadata** | Automatically scrapes and generates local media metadata formats complying with standards of media centers like **Kodi**, **Jellyfin**, and **Emby**. |
+| 📁 **Classification & Naming** | Built-in powerful rule engine, supporting highly customizable local file naming templates and multi-level directory classification modes. |
+| 📦 **Format Muxing**| Smart audio & video stream mixing/extraction, supports output format to `mp4` or `mkv` to fulfill broad device compatibility requirements. |
+| 🌐 **i18n Support** | Built-in multi-language interface out of the box: Simplified Chinese, Traditional Chinese, and English. |
+| 🔒 **Secure Auth**| Supports quick and secure **QR Code Login** and **SMS Verification Login**. |
+| 📖 **Open Source & Free**| Released under the **GPL-3.0** License, fully open-source, no in-app purchases, no ads, embracing community contribution. |
 
 ## 📥 Download & Installation
 

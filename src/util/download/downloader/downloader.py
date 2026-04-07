@@ -5,108 +5,162 @@ from util.parse.additional.worker import AdditionalParseWorker
 from util.download.downloader.parse_worker import ParseWorker
 from util.common import signal_bus, config, Translator, File
 from util.common.enum import DownloadStatus, DownloadType
-from util.common.data import reversed_video_quality_map
 from util.thread import GlobalThreadPoolTask, AsyncTask
+from util.common.data import reversed_video_quality_map
 from util.download.task.manager import task_manager
 from util.download.downloader.merger import Merger
 from util.network.request import get_cookies
 from util.download.task.info import TaskInfo
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from threading import Event, Lock
 from pathlib import Path
-import requests
+import httpx
 import json
+import time
+
+class TokenBucket:
+    """线程安全的令牌桶，用于平滑限制下载速度"""
+    def __init__(self, rate: float):
+        """
+        :param rate: 令牌产生速率（字节/秒），若为0则不限速
+        """
+        self.rate = rate
+        self.tokens = rate
+        self.last_update = time.monotonic()
+        self.lock = Lock()
+
+    def consume(self, amount: int, stop_event: Event = None):
+        if self.rate <= 0:
+            return
+
+        sleep_time = 0
+        with self.lock:
+            now = time.monotonic()
+            elapsed = now - self.last_update
+            self.last_update = now
+
+            self.tokens += elapsed * self.rate
+            if self.tokens > self.rate:
+                self.tokens = self.rate
+            
+            self.tokens -= amount
+            if self.tokens < 0:
+                sleep_time = -self.tokens / self.rate
+
+        if sleep_time > 0:
+            # 分段休眠，防止阻塞暂停信号
+            while sleep_time > 0:
+                if stop_event and stop_event.is_set():
+                    break
+                s = min(0.1, sleep_time)
+                time.sleep(s)
+                sleep_time -= s
+
+    def set_rate(self, rate: float):
+        with self.lock:
+            self.rate = rate
+            self.tokens = rate
+            self.last_update = time.monotonic()
 
 class ChunkWorker(QRunnable):
-    def __init__(self, session: requests.Session, chunk_index: int, chunk_range: tuple[int, int], file_name: str, file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, parent = None, on_chunk_start = None, on_chunk_end = None):
+    def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()
-    
         self.session = session
+        self.file_key = file_key
         self.chunk_index = chunk_index
         self.chunk_range = chunk_range
         self.chunk_size = chunk_range[1] - chunk_range[0]
+        self.file_path = file_path
         self.url = url
         self.referer = referer
         self.task_info = task_info
-        self.file_name = file_name
-        self.file_path = file_path
         self.stop_event = stop_event
         self.lock = lock
-
+        self.token_bucket = token_bucket
         self.parent = parent
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
-        self.downloaded_chunk_size = 0
-        self.finish_flag = False
 
     def run(self):
         if self.stop_event.is_set():
             return
         
-        self.downloaded_chunk_size = 0
-
         if self.on_chunk_start:
             self.on_chunk_start()
+            
+        headers = {
+            "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
+        }
 
-        self.range_download()
+        while not self.stop_event.is_set():
+            downloaded = 0
+            try:
+                with open(self.file_path, "r+b") as f:
+                    f.seek(self.chunk_range[0])
 
-        if not self.finish_flag and not self.stop_event.is_set():
-            # 重新下载该区块
-            self.run()
-            return
-        
+                    with self.session.stream("GET", self.url, headers = headers, follow_redirects = True, timeout = 10) as response:
+                        response.raise_for_status()
+                        for chunk in response.iter_bytes(chunk_size=8192):
+                            if self.stop_event.is_set():
+                                break
+                            
+                            if chunk:
+                                chunk_len = len(chunk)
+                                if self.token_bucket:
+                                    self.token_bucket.consume(chunk_len, self.stop_event)
+
+                                f.write(chunk)
+                                downloaded += chunk_len
+                                
+                                with self.lock:
+                                    self.task_info.Download.downloaded_size += chunk_len
+                                    
+                # 如果中途被停止，跳出循环退出
+                if self.stop_event.is_set():
+                    break
+                    
+                # 检查区块是否真下载到了应该具备的预期大小
+                if downloaded >= self.chunk_size:
+                    QMetaObject.invokeMethod(
+                        self.parent, "on_chunk_finished",
+                        Qt.ConnectionType.QueuedConnection,
+                        Q_ARG(str, self.file_key),
+                        Q_ARG(int, self.chunk_index)
+                    )
+                    break
+                else:
+                    # 提前结束但没有报错，说明连接意外断开，触发重试
+                    raise StopIteration("Chunk downloaded size mismatch, triggering retry.")
+
+            except Exception:
+                if self.stop_event.is_set():
+                    break
+                
+                # 发生异常（断网、超时等），清空本轮的下载计数并等待后重试（区块从头下）
+                with self.lock:
+                    self.task_info.Download.downloaded_size -= downloaded
+
+                time.sleep(1)
+
         if self.on_chunk_end:
             self.on_chunk_end()
 
-        if self.finish_flag:
-            self.on_finished()
-
-    def on_finished(self):
-        QMetaObject.invokeMethod(
-            self.parent,
-            "on_chunk_finished",
-            Qt.ConnectionType.QueuedConnection,
-            Q_ARG(int, self.chunk_index)
-        )
-
-    def range_download(self):
-        with open(self.file_path, "r+b") as f:
-            f.seek(self.chunk_range[0])
-
-            with self.session.get(self.url, headers = self.get_headers(), stream = True) as response:
-                for chunk in response.iter_content(chunk_size = 8192):
-                    if chunk:
-                        f.write(chunk)
-
-                        self.downloaded_chunk_size += len(chunk)
-
-                        with self.lock:
-                            self.task_info.Download.downloaded_size += len(chunk)
-
-                        if self.stop_event.is_set():
-                            break
-
-        if self.downloaded_chunk_size >= self.chunk_size:
-            # 如果区块没有下载完全，标志位就不会被设置
-            self.finish_flag = True
-
-    def get_headers(self):
-        return {
-            "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
-        }
 
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):
         super().__init__()
-
         self.task_info = task_info
-
         self.init_session()
-
         self.thread_pool = QThreadPool()
         self.thread_pool.setMaxThreadCount(config.get(config.download_thread))
+
+        # 实例化令牌桶（0 为不限速，单位：字节/秒）。此处从已有配置文件中取值或直接扩展
+        if config.get(config.speed_limit_enabled):
+            rate = config.get(config.speed_limit_rate) * 1024 * 1024
+        else:
+            rate = 0
+        
+        self.token_bucket = TokenBucket(rate = rate)
 
         self.chunk_size = 4 * 1024 * 1024
         self.download_list = {}
@@ -119,14 +173,18 @@ class Downloader(QObject):
         self.last_sampled_size = 0
         self.wait_flag = False
         self.wait_callback = None
+        
+        self._completion_triggered = False
 
         self.speed_timer = QTimer()
         self.speed_timer.setInterval(1000)
         self.speed_timer.timeout.connect(self._calculate_speed)
 
     def start(self):
-        # 如果下载已经完成，就直接进入合并阶段
-        if self.task_info.Download.progress >= 100:
+        self._completion_triggered = False
+
+        # 如果队列空了则说明下载完成（进度 100）
+        if self.task_info.Download.progress >= 100 or (not self.task_info.Download.queue and self.task_info.Download.total_size > 0 and self.task_info.Download.status != DownloadStatus.FAILED):
             self.on_download_completed()
         else:
             download_video = self.task_info.Download.type & DownloadType.VIDEO != 0
@@ -134,190 +192,167 @@ class Downloader(QObject):
 
             if download_video or download_audio:
                 self.task_info.Download.status = DownloadStatus.PARSING
-
                 self._stop_event.clear()
 
                 parse_worker = ParseWorker(self.task_info, self)
                 GlobalThreadPoolTask.run(parse_worker)
-
             else:
-                # 如果不需要下载视频和音频，就直接进入进入合并阶段
-                self.task_info.Download.info_label = "附加文件"
-
+                self.task_info.Download.info_label = Translator.TIP_MESSAGES("ADDITIONAL_FILES")
                 self.update_item(self.task_info)
-
                 self.on_download_completed()
 
     @Slot(str)
     def on_parse_finished(self, download_info_json: str):
-        # 只有解析下载链接后才真正开始下载
-        
         if self._stop_event.is_set():
-            # 如果在解析过程中任务被取消了，就不继续执行了
             return
         
         download_info = json.loads(download_info_json)
-
         self.download_list = download_info["download_list"]
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
-
         self.task_info.Download.total_size = download_info["total_size"]
-        self.task_info.Download.queue = download_info["download_queue"]
+
+        # 只有在 progress 为 0 的时候才设置下载队列，防止重复解析时覆盖之前的下载状态，导致断点续传功能失效
+        if self.task_info.Download.progress == 0:
+            self.task_info.Download.queue = download_info["download_queue"]
 
         self.update_info(download_info)
-
         self.start_worker()
-
         self.start_timer()
 
     @Slot(str)
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
-
         self.update_item(self.task_info)
-
         signal_bus.download.start_next_task.emit()
-
         signal_bus.toast.show_long_message.emit(
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
         )
 
     def start_worker(self):
-        info = self.get_download_info()
+        if not self.task_info.Download.queue:
+            return
+            
+        file_key = self.task_info.Download.queue[0]
+        info = self.download_list.get(file_key, {})
 
-        file_total_size = info["file_size"]
+        path = Path(self.task_info.File.download_path, self.task_info.File.folder, info.get("file_name", ""))
+        path.parent.mkdir(parents = True, exist_ok = True)
 
-        chunk_list = self.calc_chunk_list(file_total_size, self.chunk_size)
+        file_size = info.get("file_size", 0)
+        if not path.exists() and file_size > 0:
+            File.preallocate_file(path, file_size)
 
+        info["file_path"] = path
+        chunk_list = self.calc_chunk_list(file_key, file_size, self.chunk_size)
         self.calc_downloaded_size()
 
         for chunk_index in chunk_list:
-            chunk_range = self.calc_chunk_range(chunk_index, self.chunk_size, file_total_size)
-
-            worker_data = {
-                "session": self.session,
-                "file_name": info["file_name"],
-                "file_path": info["file_path"],
-                "url": info["url"],
-                "referer": self.task_info.Episode.url,
-                "chunk_index": chunk_index,
-                "chunk_range": chunk_range,
-                "task_info": self.task_info,
-                "parent": self,
-                "on_chunk_start": self.on_chunk_start,
-                "on_chunk_end": self.on_chunk_end,
-                "stop_event": self._stop_event,
-                "lock": self.update_lock
-            }
-
-            worker = ChunkWorker(**worker_data)
+            chunk_range = self.calc_chunk_range(chunk_index, self.chunk_size, file_size)
+            worker = ChunkWorker(
+                session = self.session,
+                file_key = file_key,
+                chunk_index = chunk_index,
+                chunk_range = chunk_range,
+                file_path = path,
+                url = info.get("url", ""),
+                referer = self.task_info.Episode.url,
+                task_info = self.task_info,
+                stop_event = self._stop_event,
+                lock = self.update_lock,
+                token_bucket = self.token_bucket,
+                parent = self,
+                on_chunk_start = self.on_chunk_start,
+                on_chunk_end = self.on_chunk_end
+            )
             self.thread_pool.start(worker)
 
         task_manager.update(self.task_info)
 
     def start_merge(self):
         self.task_info.Download.status = DownloadStatus.MERGING
-
-        merge_worker = Merger(self.task_info, parent = self)
+        merge_worker = Merger(self.task_info, parent=self)
         merge_worker.start()
 
     def pause(self):
         self.task_info.Download.status = DownloadStatus.PAUSED
-
         self._stop_event.set()
-
         self.speed_timer.stop()
 
     def resume(self):
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
-
         self._stop_event.clear()
-
         self.start()
 
     def retry(self):
         match self.task_info.Download.status:
             case DownloadStatus.FAILED:
                 self.start()
-
             case DownloadStatus.FFMPEG_FAILED:
                 self.start_merge()
 
-    def calc_chunk_list(self, total_size: int, chunk_size: int):
-        if chunk_list := self.task_info.Download.files[self.current_queue_key]["chunks_list"]:
+    def calc_chunk_list(self, file_key: str, total_size: int, chunk_size: int) -> list:
+        file_info = self.task_info.Download.files[file_key]
+        if chunk_list := file_info.get("chunks_list"):
             return chunk_list
         
-        else:
-            total_chunks = (total_size + chunk_size - 1) // chunk_size
-            chunk_list = list(range(total_chunks))
-
-            self.task_info.Download.files[self.current_queue_key]["total_chunks"] = total_chunks
-            self.task_info.Download.files[self.current_queue_key]["chunks_list"] = chunk_list.copy()
-
-            return chunk_list
+        total_chunks = (total_size + chunk_size - 1) // chunk_size if total_size > 0 else 0
+        if total_chunks == 0:
+            total_chunks = 1
+            
+        chunk_list = list(range(total_chunks))
+        file_info["total_chunks"] = total_chunks
+        file_info["chunks_list"] = chunk_list.copy()
+        return chunk_list
 
     def calc_chunk_range(self, chunk_index: int, chunk_size: int, total_size: int):
         start = chunk_index * chunk_size
-        end = min(start + chunk_size, total_size)
-
+        end = min(start + chunk_size, total_size) if total_size > 0 else 0
         return start, end
     
     def calc_downloaded_size(self):
         downloaded_size = 0
-
+        
         for file_info in self.task_info.Download.files.values():
-            finished_chunks = file_info["finished_chunks"]
-            total_chunks = file_info["total_chunks"]
+            total_chunks = file_info.get("total_chunks", 0)
+            file_size = file_info.get("file_size", 0)
+            chunks_list = file_info.get("chunks_list", [])
 
             if total_chunks > 0:
-                if finished_chunks == total_chunks:
-                    downloaded_size += file_info["file_size"]
-
-                else:
-                    downloaded_size += finished_chunks * self.chunk_size
+                # 只累加确实已经完全下载完成的区块的实际大小
+                for i in range(total_chunks):
+                    if i not in chunks_list:
+                        start = i * self.chunk_size
+                        end = min(start + self.chunk_size, file_size) if file_size > 0 else 0
+                        downloaded_size += (end - start)
 
         with self.update_lock:
             self.task_info.Download.downloaded_size = downloaded_size
     
-    @Slot(int)
-    def on_chunk_finished(self, chunk_index: int):
+    @Slot(str, int)
+    def on_chunk_finished(self, file_key: str, chunk_index: int):
         with self.update_lock:
-            # 检查该区块是否已经被标记为完成，避免重复更新进度
-            if chunk_index in self.task_info.Download.files[self.current_queue_key]["chunks_list"]:
-                self.task_info.Download.files[self.current_queue_key]["finished_chunks"] += 1
+            file_info = self.task_info.Download.files.get(file_key, {})
+            if chunk_index in file_info.get("chunks_list", []):
+                file_info["finished_chunks"] += 1
+                file_info["chunks_list"].remove(chunk_index)
 
-                current_progress = int(self.task_info.Download.files[self.current_queue_key]["finished_chunks"] / self.task_info.Download.files[self.current_queue_key]["total_chunks"] * 100)
-
-                self.task_info.Download.files[self.current_queue_key]["chunks_list"].remove(chunk_index)
+            total = file_info.get("total_chunks", 1)
+            current_progress = int((file_info.get("finished_chunks", 0) / total) * 100) if total > 0 else 100
 
         task_manager.update(self.task_info)
 
         if current_progress >= 100:
-            self.task_info.Download.queue.remove(self.current_queue_key)
+            if file_key in self.task_info.Download.queue:
+                self.task_info.Download.queue.remove(file_key)
 
             if self.task_info.Download.queue and not self._stop_event.is_set():
                 self.start_worker()
                 return
 
-        if self.task_info.Download.progress >= 100:
+        # 若队列全空，且任务没被暂停/取消，意味着所有文件下载完成
+        if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
-
-    def get_download_info(self):
-        # 从队列选取一个 key
-        self.current_queue_key = self.task_info.Download.queue.copy().pop(0)
-
-        info = self.download_list.get(self.current_queue_key, {})
-
-        path = Path(self.task_info.File.download_path, self.task_info.File.folder, info["file_name"])
-        path.parent.mkdir(parents = True, exist_ok = True)
-
-        if not Path(path).exists():
-            File.preallocate_file(path, info.get("file_size", 0))
-
-        info["file_path"] = path
-
-        return info
 
     def update_info(self, download_info: dict):
         if not self.task_info.Download.files:
@@ -326,7 +361,7 @@ class Downloader(QObject):
                     "chunks_list": [],
                     "total_chunks": 0,
                     "finished_chunks": 0,
-                    "file_size": download_info["download_list"][file_key]["file_size"]
+                    "file_size": download_info["download_list"][file_key].get("file_size", 0)
                 } for file_key in download_info["download_queue"]
             }
 
@@ -335,82 +370,65 @@ class Downloader(QObject):
 
             if has_video and has_audio:
                 self.task_info.Download.info_label = Translator.VIDEO_QUALITY(reversed_video_quality_map.get(self.task_info.Download.video_quality_id, ""))
-
             elif has_video and not has_audio:
                 self.task_info.Download.info_label = "MP4"
-
             elif not has_video and has_audio:
                 self.task_info.Download.info_label = self.tr("Audio")
 
+            task_manager._update_media_info(self.task_info)
+
     def init_session(self):
-        self.session = requests.Session()
-
-        retry_strategy = Retry(
-            total = 5,
-            backoff_factor = 1,
-            status_forcelist = [429, 500, 502, 503, 504]
-        )
-
-        adapter = HTTPAdapter(
-            pool_connections = 5,
-            pool_maxsize = 10,
-            max_retries = retry_strategy
-        )
-
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
-
-        cookies = get_cookies()
-
-        for key, value in cookies.items():
-            self.session.cookies.set(
-                name = key,
-                value = value,
-                domain = ".bilibili.com",
-                path = "/"
-            )
+        limits = httpx.Limits(max_keepalive_connections = config.get(config.download_thread), max_connections = config.get(config.download_thread))
+        transport = httpx.HTTPTransport(retries = 5)
 
         headers = {
             "Referer": self.task_info.Episode.url,
             "User-Agent": config.get(config.user_agent)
         }
 
-        self.session.headers.update(headers)
+        self.session = httpx.Client(
+            limits = limits,
+            transport = transport,
+            headers = headers
+        )
+
+        cookies = get_cookies()
+        for key, value in cookies.items():
+            self.session.cookies.set(name = key, value = value, domain = ".bilibili.com", path = "/")
 
     def on_download_completed(self):
+        # 防抖设定，避免队列完成以及进度到 100 时重复触发
+        if getattr(self, "_completion_triggered", False):
+            return
+        self._completion_triggered = True
+        
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
 
-        # 判断是否需要下载附加文件，如果需要就先下载附加文件，下载完成后再进入合并阶段
         danmaku = self.task_info.Download.type & DownloadType.DANMAKU != 0
         subtitles = self.task_info.Download.type & DownloadType.SUBTITLE != 0
         cover = self.task_info.Download.type & DownloadType.COVER != 0
         metadata = self.task_info.Download.type & DownloadType.METADATA != 0
 
         if any([danmaku, subtitles, cover, metadata]):
+            self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
+
             worker = AdditionalParseWorker(self.task_info)
             worker.success.connect(self.wait_merge)
             worker.error.connect(self.on_parse_error)
-            
             AsyncTask.run(worker)
-
         else:
             self.wait_merge()
 
     def wait_merge(self):
-        # 等待合并
         self.task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
         self.task_info.Download.speed = 0
         self.task_info.Download.progress = 100
 
         self._stop_event.set()
-
         self.session.close()
-
         self.speed_timer.stop()
 
         task_manager.update(self.task_info)
-
-        # 通知 model 开始下一个下载任务
         signal_bus.download.start_next_task.emit()
 
     def on_chunk_start(self):
@@ -427,7 +445,6 @@ class Downloader(QObject):
     def wait(self, on_end):
         self.wait_flag = True
         self.wait_callback = on_end
-
         self._stop_event.set()
 
         if self.active_workers == 0:
@@ -435,35 +452,31 @@ class Downloader(QObject):
 
     def start_timer(self):
         self.last_sampled_size = self.task_info.Download.downloaded_size
-
         self.speed_timer.start()
 
     def _calculate_speed(self):
         with self.update_lock:
             current_size = self.task_info.Download.downloaded_size
 
-        self.task_info.Download.speed = current_size - self.last_sampled_size
-        self.task_info.Download.progress = int(self.task_info.Download.downloaded_size / self.task_info.Download.total_size * 100)
+        speed = current_size - self.last_sampled_size
+        self.task_info.Download.speed = speed if speed > 0 else 0
+        total = getattr(self.task_info.Download, "total_size", 0)
+        self.task_info.Download.progress = int(current_size / total * 100) if total > 0 else 100
         self.last_sampled_size = current_size
 
-        # emit 信号通知视图更新下载速度显示
         self.update_item(self.task_info)
 
-        # 如果前面 on_chunk_finished 没有及时更新进度导致下载完成后没有进入合并阶段，这里再检查一次
-        if self.task_info.Download.progress >= 100 and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
+        # timer 的定期检查：如果队列为空且处于 DOWNLOADING 状态可以尝试转移到合并步骤
+        if not self.task_info.Download.queue and self.task_info.Download.status == DownloadStatus.DOWNLOADING:
             self.on_download_completed()
 
     def on_delete(self):
-        # 销毁下载器实例前，清除引用
         self.session = None
         self.thread_pool = None
-
         self.task_info = None
         self.download_list = None
-
         self.deleteLater()
     
     def update_item(self, task_info: TaskInfo):
         signal_bus.download.update_downloading_item.emit(task_info)
-
         task_manager.update(self.task_info)

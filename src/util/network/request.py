@@ -3,33 +3,34 @@ from PySide6.QtCore import Signal, QObject, Slot
 from util.network.proxy import Proxy
 from util.common import config
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from enum import Enum
 
-import requests
+import httpx
+import logging
 
-session = requests.Session()
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
-retry_strategy = Retry(
-    total = 3,
-    backoff_factor = 1,
-    status_forcelist = [429, 500, 502, 503, 504]
+def get_mounts(proxies = None):
+    if proxies:
+        proxy_url = proxies.get("http") or proxies.get("https")
+
+        return {
+            "http://": httpx.HTTPTransport(proxy = proxy_url, retries = 5),
+            "https://": httpx.HTTPTransport(proxy = proxy_url, retries = 5)
+        }
+    else:
+        return None
+
+limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
+transport = httpx.HTTPTransport(retries = 3)
+
+client = httpx.Client(
+    limits = limits,
+    timeout = 5,
+    mounts = get_mounts(Proxy().get_proxies()),
+    transport = transport,
+    follow_redirects = True
 )
-
-adapter = HTTPAdapter(
-    pool_connections = 5,
-    pool_maxsize = 10,
-    max_retries = retry_strategy
-)
-
-session.mount("http://", adapter)
-session.mount("https://", adapter)
-
-session.headers.update({
-    "Referer": "https://www.bilibili.com/",
-    "User-Agent": config.get(config.user_agent)
-})
 
 class RequestType(Enum):
     GET = 0
@@ -43,14 +44,8 @@ class ResponseType(Enum):
     HEADERS = 3
     REDIRECT_URL = 4
 
-class NetworkRequestWorker(QObject):
-    success = Signal(object)
-    error = Signal(str)
-    finished = Signal()
-
+class SyncNetWorkRequest:
     def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None):
-        super().__init__()
-
         self.url = url
         self.params = params
         self.request_type = request_type
@@ -58,41 +53,71 @@ class NetworkRequestWorker(QObject):
         self.raise_for_status = raise_for_status
         self.json_data = json_data
 
-        self.proxies = Proxy().get_proxies()
+        self.proxies = None
+
+    def run(self):
+        self.update_headers()
+
+        if self.proxies:
+            with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True) as temp_client:
+                response = temp_client.request(
+                    method = self.request_type.name,
+                    url = self.url,
+                    params = self.params,
+                    json = self.json_data,
+                    headers = client.headers,
+                    cookies = client.cookies,
+                )
+        else:
+            response = client.request(
+                method = self.request_type.name,
+                url = self.url,
+                params = self.params,
+                json = self.json_data,
+                headers = client.headers,
+                cookies = client.cookies,
+            )
+
+        if self.raise_for_status:
+            response.raise_for_status()
+
+        match self.response_type:
+            case ResponseType.TEXT:
+                return response.text
+
+            case ResponseType.JSON:
+                return response.json()
+
+            case ResponseType.BYTES:
+                return response.content
+
+            case ResponseType.HEADERS:
+                return response.headers
+
+            case ResponseType.REDIRECT_URL:
+                return str(response.url)
+    
+    def update_headers(self):
+        client.headers.update(
+            {
+                "Referer": "https://www.bilibili.com/",
+                "User-Agent": config.get(config.user_agent)
+            }
+        )
+
+class NetworkRequestWorker(SyncNetWorkRequest, QObject):
+    success = Signal(object)
+    error = Signal(str)
+    finished = Signal()
+
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None):
+        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data)
+        QObject.__init__(self)
 
     @Slot()
     def run(self):
         try:
-            match self.request_type:
-                case RequestType.GET:
-                    func = session.get
-                
-                case RequestType.POST:
-                    func = session.post
-                
-                case RequestType.HEAD:
-                    func = session.head
-
-            res = func(url = self.url, proxies = self.proxies, params = self.params, allow_redirects = True, timeout = 5, json = self.json_data)
-
-            if self.raise_for_status:
-                res.raise_for_status()
-
-            match self.response_type:
-                case ResponseType.TEXT:
-                    resp = res.text
-
-                case ResponseType.JSON:
-                    resp = res.json()
-
-                case ResponseType.BYTES:
-                    resp = res.content
-
-                case ResponseType.HEADERS:
-                    resp = res.headers
-
-                case ResponseType.REDIRECT_URL:
-                    resp = res.url
+            resp = super().run()
 
             self.success.emit(resp)
 
@@ -133,7 +158,7 @@ def update_cookies():
     cookies = get_cookies()
 
     for key, value in cookies.items():
-        session.cookies.set(
+        client.cookies.set(
             name = key,
             value = value,
             domain = ".bilibili.com",

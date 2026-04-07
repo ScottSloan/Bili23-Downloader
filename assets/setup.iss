@@ -3,8 +3,8 @@
 ; Non-commercial use only
 
 #define MyAppName "Bili23 Downloader"
-#define MyAppVersion "2.00.0"
-#define MyAppVersionName "2.00.0-rc.2"
+#define MyAppVersion "2.00.1"
+#define MyAppVersionName "2.00.1"
 #define MyAppPublisher "Scott Sloan"
 #define MyAppURL "https://bili23.scott-sloan.cn"
 #define MyAppExeName "Bili23.exe"
@@ -62,7 +62,7 @@ Source: ".\Bili23-Downloader\site-packages\*"; DestDir: "{app}\site-packages"; F
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: {app}
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; WorkingDir: {app}
 
 [Run]
@@ -90,12 +90,4 @@ begin
         end;
     end;
     result := true;
-end;
-
-procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
-begin
-  if CurUninstallStep = usDone then
-    begin
-      DelTree('{app}', True, True, True);
-    end;
 end;

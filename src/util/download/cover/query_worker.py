@@ -1,79 +1,92 @@
-from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG, QSize
+from PySide6.QtGui import QImage
 
-from util.network.request import NetworkRequestWorker, ResponseType
-from util.thread import SyncTask
+from util.network.request import SyncNetWorkRequest, ResponseType
 
+from urllib.parse import urlencode
 import base64
 
-class CoverCache:
-    cache: dict[str, QPixmap] = {}
-
-class QueryWorker(QRunnable):
-    def __init__(self, model, cover_id: str, cover_url: str):
+class CoverQueryWorker(QRunnable):
+    def __init__(self, model, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
         super().__init__()
     
         self.model = model
+        self.query_id = query_id
         self.cover_id = cover_id
+
         self.cover_url = cover_url
+        self.cover_size = cover_size
+
+        self.query_param = query_param
 
     def run(self):
         from util.download.cover.manager import cover_manager
 
+        if self.query_param:
+            self.query_url()
+
         result = cover_manager.query(self.cover_id)
 
         if result:
-            pixmap = QPixmap()
-            pixmap.loadFromData(base64.b64decode(result))
+            image = QImage()
+            image.loadFromData(base64.b64decode(result))
 
         else:
-            pixmap, base64_data = self.download_cover()
+            image, base64_data = self.download_cover()
 
             cover_manager.create(self.cover_id, base64_data)
 
-        cover_manager.updateCache(self.cover_id, pixmap)
+        self.return_to_model(image)
 
-        self.return_to_model()
-
-    def return_to_model(self):
+    def return_to_model(self, image: QImage):
         QMetaObject.invokeMethod(
             self.model,
             "updateRowCover",
             Qt.ConnectionType.QueuedConnection,
-            Q_ARG(str, self.cover_id)
+            Q_ARG(str, self.query_id),
+            Q_ARG(QImage, image)
         )
 
     def download_cover(self):
-        def on_success(response: bytes):
-            nonlocal pixmap
-
-            pixmap = QPixmap()
-            pixmap.loadFromData(response)
-
-        pixmap = None
-
         # 数据库中没有封面数据，下载封面图片
-        worker = NetworkRequestWorker(self.cover_url, response_type = ResponseType.BYTES)
-        worker.success.connect(on_success)
+        request = SyncNetWorkRequest(self.cover_url, response_type = ResponseType.BYTES)
+        response = request.run()
 
-        SyncTask.run(worker)
+        image = QImage()
+        image.loadFromData(response)
 
-        return self.process_cover(pixmap)
+        return self.process_cover(image)
         
-    def process_cover(self, pixmap: QPixmap):
+    def process_cover(self, image: QImage):
         # 裁剪成 16:9，并缩放到 144x81
-        width = 144
-        height = 81
+        width = self.cover_size.width()
+        height = self.cover_size.height()
 
-        pixmap: QPixmap = pixmap.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
+        image: QImage = image.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
 
-        pixmap = pixmap.copy((pixmap.width() - width) // 2, (pixmap.height() - height) // 2, width, height)
+        image = image.copy((image.width() - width) // 2, (image.height() - height) // 2, width, height)
 
         # 导出为 webp 格式的 base64，最大化压缩率以节省数据库空间
         buffer = QBuffer()
         buffer.open(QBuffer.OpenModeFlag.WriteOnly)
-        pixmap.save(buffer, "WEBP")
+        image.save(buffer, "WEBP")
 
         base64_data = base64.b64encode(buffer.data()).decode("utf-8")
 
-        return pixmap, base64_data
+        return image, base64_data
+
+    def query_url(self):
+        from util.download.cover.manager import cover_manager
+
+        api_url = self.query_param.get("api_url")
+        params = self.query_param.get("params")
+        
+        url = f"{api_url}?{urlencode(params)}"
+
+        request = SyncNetWorkRequest(url)
+        response = request.run()
+
+        cover_url = response.get("data", {}).get("cover", "")
+
+        self.cover_id = cover_manager.arrange_cover_id(cover_url)
+        self.cover_url = cover_url

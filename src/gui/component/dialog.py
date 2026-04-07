@@ -9,7 +9,7 @@ from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 from gui.component.widget import PivotItem, Pivot
 
 from util.common.enum import ToastNotificationCategory
-from util.common import StyleSheet
+from util.common import StyleSheet, config
 
 class Base:
     def __init__(self):
@@ -93,7 +93,7 @@ class FluentDialogBase(Base, FluentWidget):
 
         self._setup_title_bar()
 
-        self.setMicaEffectEnabled(False)
+        self.setMicaEffectEnabled(config.get(config.mica_effect))
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self._event_loop = None
@@ -112,7 +112,7 @@ class FluentDialogBase(Base, FluentWidget):
         
         titleBar.setDoubleClickEnabled(False)
 
-        self.titleBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+        #self.titleBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
         self.setTitleBar(titleBar)
 
@@ -169,10 +169,10 @@ class TopNavigationDialogBase(FluentDialogBase):
 
     def _setup_widget(self):
         self.pivot = Pivot(self)
-        self.pivot.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+        #self.pivot.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
         self.stackedWidget = QStackedWidget(self)
-        self.stackedWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
+        #self.stackedWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
         self.stackedWidget.setContentsMargins(0, 0, 0, 0)
 
         self.okBtn = PrimaryPushButton(self.tr("OK"), self)
