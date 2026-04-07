@@ -197,7 +197,7 @@ class Downloader(QObject):
                 parse_worker = ParseWorker(self.task_info, self)
                 GlobalThreadPoolTask.run(parse_worker)
             else:
-                self.task_info.Download.info_label = "附加文件"
+                self.task_info.Download.info_label = Translator.TIP_MESSAGES("ADDITIONAL_FILES")
                 self.update_item(self.task_info)
                 self.on_download_completed()
 
@@ -403,6 +403,8 @@ class Downloader(QObject):
         metadata = self.task_info.Download.type & DownloadType.METADATA != 0
 
         if any([danmaku, subtitles, cover, metadata]):
+            self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
+            
             worker = AdditionalParseWorker(self.task_info)
             worker.success.connect(self.wait_merge)
             worker.error.connect(self.on_parse_error)

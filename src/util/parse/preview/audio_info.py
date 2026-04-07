@@ -94,13 +94,6 @@ class AudioInfoParser:
                     AsyncTask.run(worker)
                 
         else:
-            # match PreviewerInfo.media_type:
-            #     case MediaType.DASH:
-            #         reason = "无声视频流，不包含音轨"
-
-            #     case MediaType.MP4:
-            #         reason = "视频流中已包含音轨"
-            
             self.callback(None)
 
     def on_query_info_success(self, media_info: dict, file_size: int):

@@ -110,6 +110,7 @@ class DownloadInfo(InfoBase):
 
     # 显示信息
     info_label: str = ""
+    status_label: str = ""
 
 @dataclass
 class TaskInfo:

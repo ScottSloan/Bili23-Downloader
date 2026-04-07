@@ -104,6 +104,8 @@ class DownloadStatus(IntEnum):
 
     CONVERTING = 7                  # 转换中
 
+    ADDITIONAL_PROCESSING = 8       # 额外处理（如提取封面、生成字幕等）
+
     FAILED = 100                    # 下载失败
     FFMPEG_FAILED = 101             # FFmpeg 处理失败
 

@@ -229,6 +229,9 @@ class UIData(QObject):
             case DownloadStatus.MERGING:
                 return Translator.TIP_MESSAGES("MERGING")
             
+            case DownloadStatus.ADDITIONAL_PROCESSING:
+                return task_info.Download.status_label
+            
             case DownloadStatus.CONVERTING:
                 return Translator.TIP_MESSAGES("CONVERTING")
             

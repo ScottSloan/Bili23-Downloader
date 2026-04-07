@@ -18,8 +18,13 @@ class QueryWorker:
 
         for url in download_urls:                
             # 发起 HEAD 请求获取文件大小， raise_for_status 设置为 False，避免因某些 CDN 链接返回 403/404 而导致异常
-            request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
-            response = request.run()
+
+            try:
+                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
+                response = request.run()
+            except:
+                # 请求失败，继续尝试下一个链接
+                continue
 
             content_length = response.get("Content-Length")
             content_type = response.get("Content-Type")
@@ -39,10 +44,7 @@ class QueryWorker:
                 "file_size": self.file_size
             }
         
-        return {
-            "url": None,
-            "file_size": None
-        }
+        raise Exception("无法获取有效的下载链接")
 
     def get_download_urls(self, media_info: dict):
         download_urls = []

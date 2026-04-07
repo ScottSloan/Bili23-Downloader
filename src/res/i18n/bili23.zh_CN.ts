@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="266"/>
+        <location filename="../../util/common/translator.py" line="271"/>
         <source>Danmaku</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="267"/>
+        <location filename="../../util/common/translator.py" line="272"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="268"/>
+        <location filename="../../util/common/translator.py" line="273"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
@@ -1413,7 +1413,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="273"/>
+        <location filename="../../util/common/translator.py" line="278"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1717,7 +1717,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="283"/>
+        <location filename="../../util/common/translator.py" line="288"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -2853,7 +2853,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="300"/>
+        <location filename="../../util/common/translator.py" line="305"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -2920,6 +2920,31 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="259"/>
         <source>Expired</source>
         <translation>已失效</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="260"/>
+        <source>Additional Files</source>
+        <translation>附加文件</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="261"/>
+        <source>Downloading Danmaku...</source>
+        <translation>下载弹幕中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="262"/>
+        <source>Downloading Subtitles...</source>
+        <translation>下载字幕中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="263"/>
+        <source>Downloading Cover...</source>
+        <translation>下载封面中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="264"/>
+        <source>Scraping Metadata...</source>
+        <translation>刮削元数据中...</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="253"/>

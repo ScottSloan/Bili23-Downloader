@@ -7,7 +7,7 @@ from util.common.enum import DownloadType, MediaType
 from util.parse.episode.tree import Attribute
 from util.parse.parser.base import ParserBase
 from util.download.task.info import TaskInfo
-from util.common import config
+from util.common import config, Translator
 
 from urllib.parse import urlencode
 import logging
@@ -43,7 +43,7 @@ class ParseWorker(QRunnable, ParserBase):
         except:
             logger.exception("解析下载链接失败")
 
-            self.on_parse_error("解析下载链接失败")
+            self.on_parse_error(Translator.ERROR_MESSAGES("PARSE_FAILED"))
 
     def get_info(self):
         if self.task_info.Episode.attribute & Attribute.VIDEO_BIT:
@@ -164,7 +164,7 @@ class ParseWorker(QRunnable, ParserBase):
 
     def _check_info(self, info: dict):
         if info.get("url") is None:
-            self.on_parse_error("无法获取下载链接")
+            self.on_parse_error(Translator.ERROR_MESSAGES("PARSE_FAILED"))
 
             raise Exception("无法获取下载链接")
 

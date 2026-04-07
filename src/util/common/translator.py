@@ -257,6 +257,11 @@ class Translator:
             "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
             "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
             "EXPIRED": translate("TIP_MESSAGES", "Expired"),
+            "ADDITIONAL_FILES": translate("TIP_MESSAGES", "Additional Files"),
+            "DOWNLOADING_DANMAKU": translate("TIP_MESSAGES", "Downloading Danmaku..."),
+            "DOWNLOADING_SUBTITLES": translate("TIP_MESSAGES", "Downloading Subtitles..."),
+            "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
+            "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
         }
 
     @staticmethod

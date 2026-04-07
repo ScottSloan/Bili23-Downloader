@@ -52,8 +52,12 @@ class QueryInfoWorker(QObject):
         download_urls = CDN.get_url_list(download_urls)
 
         for url in download_urls:
-            request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
-            response = request.run()
+            try:
+                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
+                response = request.run()
+            except:
+                # 请求失败，继续尝试下一个链接
+                continue
             
             content_length = response.get("Content-Length")
             content_type = response.get("Content-Type")
@@ -68,6 +72,8 @@ class QueryInfoWorker(QObject):
 
             self.file_size = int(content_length)
             break
+
+        raise Exception("无法获取有效的下载链接")
 
     def get_mp4_file_size(self, query_url: str):
         request = SyncNetWorkRequest(query_url)
