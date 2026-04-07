@@ -348,4 +348,4 @@ config_path = Path(appdata_path) / "Bili23 Downloader" / "config.json"
 if not config_path.exists():
     logger.warning("配置文件不存在，将创建新配置文件")
 
-qconfig.load(str(config_path), config)
+qconfig.load(config_path, config)

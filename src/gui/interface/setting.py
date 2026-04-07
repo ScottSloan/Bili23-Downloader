@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     ScrollArea, SettingCardGroup, OptionsSettingCard, CustomColorSettingCard, PushSettingCard, RangeSettingCard, SwitchSettingCard,
-    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor
+    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor, qconfig
 )
 
 from gui.component.setting.card import (
@@ -199,6 +199,7 @@ class SettingInterface(ScrollArea):
         self.proxy_card.custom_btn.clicked.connect(self.on_custom_proxy)
         self.config_file_card.import_btn.clicked.connect(self.on_import_config)
         self.config_file_card.export_btn.clicked.connect(self.on_export_config)
+        self.config_file_card.reset_btn.clicked.connect(self.on_reset_config)
         self.user_agent_card.clicked.connect(self.on_custom_user_agent)
 
         # Update
@@ -338,6 +339,19 @@ class SettingInterface(ScrollArea):
         temp_config.file = Path(file_path)
 
         temp_config.save()
+
+    def on_reset_config(self):
+        dialog = MessageBox(
+            self.tr("Reset Config"),
+            self.tr("Are you sure you want to reset all settings to their default values? This action cannot be undone."),
+            self.main_window
+        )
+
+        if dialog.exec():
+            # 直接删除配置文件，程序会在下次启动时自动创建一个新的默认配置文件
+            config.file.unlink(missing_ok = True)
+            
+            self.show_restart_message()
 
     def on_custom_user_agent(self):
         dialog = UserAgentDialog(self.main_window)

@@ -249,11 +249,17 @@ class ConfigFileSettingCard(ExpandGroupSettingCard):
         super().__init__(ExtendedFluentIcon.FILE_SETTINGS, self.tr("Config File"), self.tr("Import or export configuration files"), parent)
 
         self.import_btn = PushButton(self.tr("Browse..."), self)
+        self.import_btn.setMinimumWidth(90)
         self.export_btn = PushButton(self.tr("Browse..."), self)
+        self.export_btn.setMinimumWidth(90)
+        self.reset_btn = PushButton(self.tr("Reset"), self)
+        self.reset_btn.setMinimumWidth(90)
         self.open_dir_btn = PushButton(self.tr("Open"), self)
+        self.open_dir_btn.setMinimumWidth(90)
 
         self.addGroup("", self.tr("Import Config"), self.tr("Import settings from a configuration file"), self.import_btn)
         self.addGroup("", self.tr("Export Config"), self.tr("Export settings to a configuration file"), self.export_btn)
+        self.addGroup("", self.tr("Reset Config"), self.tr("Reset all settings to default values"), self.reset_btn)
         self.addGroup("", self.tr("Open Config Directory"), "", self.open_dir_btn)
 
         self.open_dir_btn.clicked.connect(self.on_open_config_directory)
