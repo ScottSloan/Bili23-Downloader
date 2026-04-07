@@ -25,7 +25,7 @@ class EntryListItemDelegate(CoverQueryDelegateBase):
         self._drawText(painter, titleRect, entry["title"])
 
         countRect = self.uiRect.getCountRect(titleRect, option)
-        self._drawDescriptionText(painter, countRect, "共 {count} 项".format(count = entry["count"]))
+        self._drawDescriptionText(painter, countRect, self.tr("{count} items").format(count = entry["count"]))
 
     def editorEvent(self, event, model, option, index):
         if event.type() == QEvent.Type.MouseButtonRelease:

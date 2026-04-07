@@ -148,6 +148,7 @@ class ParseTreeView(TreeView):
         info_str = "\n".join(f"{key}: {value}" for key, value in info.items())
 
         dialog = MessageBox(title = self.tr("Metadata"), content = info_str, parent = self.main_window)
+        dialog.hideCancelButton()
         dialog.exec()
 
     def on_download_as_single_video(self, item: TreeItem):
@@ -156,6 +157,8 @@ class ParseTreeView(TreeView):
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)
 
         signal_bus.download.create_task.emit([item.to_dict()])
+
+        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 
     def search_keywords(self, keywords: str = None):
         if not keywords:

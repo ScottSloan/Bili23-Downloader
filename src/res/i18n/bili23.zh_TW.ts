@@ -1050,107 +1050,120 @@
 <context>
     <name>EditRuleDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="45"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="46"/>
         <source>Edit Naming Rule</source>
         <translation>編輯命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="47"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="48"/>
         <source>Rule Name</source>
         <translation>規則名稱</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="50"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="51"/>
         <source>Rule Type</source>
         <translation>規則類型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="54"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="55"/>
         <source>Naming Rule</source>
         <translation>命名規則</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="57"/>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="181"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="58"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="199"/>
         <source>Preview</source>
         <translation>預覽</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="64"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="65"/>
         <source>Set as default rule for this type</source>
         <translation>設為該類型的預設規則</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="66"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="67"/>
         <source>Guide</source>
         <translation>說明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="69"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="70"/>
         <source>Open help page</source>
         <translation>開啟幫助頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="114"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="119"/>
         <source>Variable</source>
         <translation>變數名稱</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="114"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="120"/>
         <source>Description</source>
         <translation>意義</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="114"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="121"/>
         <source>Example</source>
         <translation>範例</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="150"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="122"/>
+        <source>Actions</source>
+        <translation>操作</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="168"/>
         <source>Rule name cannot be empty</source>
         <translation>規則名稱不可為空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="182"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="200"/>
         <source>Folder: {folder}
 File name: {filename}</source>
         <translation>子目录：{folder}
 文件名：{filename}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="194"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="212"/>
         <source>Naming Rule Guide</source>
         <translation>簡要說明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="208"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="226"/>
         <source>Naming rule cannot be empty</source>
         <translation>命名規則不可為空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="211"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="229"/>
         <source>Rule must not start or end with &apos;/&apos; or &apos;.&apos;</source>
         <translation>命名规则不能以 &apos;/&apos; 或 &apos;.&apos; 开头或结尾</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="220"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="238"/>
         <source>Rule contains illegal characters: &lt;&gt;:\&quot;|?* or control characters</source>
         <translation>命名规则包含非法字符：&lt;&gt;:\&quot;|?* 或控制字符</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="228"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="246"/>
         <source>Invalid naming rule</source>
         <translation>命名規則無效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="233"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="251"/>
         <source>Copy Variable</source>
         <translation>複製變數</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="236"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="254"/>
         <source>Insert Variable</source>
         <translation>插入變數</translation>
+    </message>
+</context>
+<context>
+    <name>EntryListItemDelegate</name>
+    <message>
+        <location filename="../../gui/component/entry_list/entry_item_delegate.py" line="28"/>
+        <source>{count} items</source>
+        <translation>{count} 個項目</translation>
     </message>
 </context>
 <context>
@@ -1311,6 +1324,14 @@ File name: {filename}</source>
         <location filename="../../gui/component/setting/group.py" line="31"/>
         <source>Strikeout</source>
         <translation>刪除線</translation>
+    </message>
+</context>
+<context>
+    <name>InsertActionWidget</name>
+    <message>
+        <location filename="../../gui/component/setting/widget.py" line="65"/>
+        <source>Insert</source>
+        <translation>插入</translation>
     </message>
 </context>
 <context>
@@ -1811,9 +1832,8 @@ For advanced usage, see the help documentation.</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/component/setting/widget.py" line="61"/>
         <source>Delete</source>
-        <translation>刪除</translation>
+        <translation type="vanished">刪除</translation>
     </message>
 </context>
 <context>
@@ -2031,7 +2051,12 @@ For advanced usage, see the help documentation.</source>
         <translation>元資料</translation>
     </message>
     <message>
-        <location filename="../../gui/component/parse_list/tree_view.py" line="229"/>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="161"/>
+        <source>Added to download queue</source>
+        <translation>已加入下載佇列</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/parse_list/tree_view.py" line="232"/>
         <source>Updating media info...</source>
         <translation>正在更新媒體資訊...</translation>
     </message>
@@ -2676,7 +2701,7 @@ ISP：{isp}</translation>
         <translation>確定要將所有設定恢復為預設值嗎？此操作無法復原。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="362"/>
+        <location filename="../../gui/interface/setting.py" line="364"/>
         <source>Configuration takes effect after restart</source>
         <translation>設定重新啟動後生效</translation>
     </message>

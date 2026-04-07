@@ -57,6 +57,12 @@ class ParseActionWidget(EditActionWidget):
         self.edit_btn.setIcon(FluentIcon.SEARCH)
         self.edit_btn.setToolTip(self.tr("Parse"))
 
-        self.delete_btn.setIcon(FluentIcon.DELETE)
-        self.delete_btn.setToolTip(self.tr("Delete"))
+class InsertActionWidget(EditActionWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+        self.edit_btn.setIcon(FluentIcon.ADD_TO)
+        self.edit_btn.setToolTip(self.tr("Insert"))
+
+        self.delete_btn.hide()
 

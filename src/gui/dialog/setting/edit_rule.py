@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, QSize
 from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, CheckBox, PushButton, MessageBox, HyperlinkButton, RoundMenu, Action, FluentIcon
 
 from gui.component.widget import ColumnTreeWidget, DictComboBox
+from gui.component.setting.widget import InsertActionWidget
 from gui.component.dialog import DialogBase
 
 from util.common.data import convention_type_map, VariableListFactory
@@ -100,6 +101,8 @@ class EditRuleDialog(DialogBase):
 
         self.connect_signal()
 
+        self.variable_list.header().setStretchLastSection(False)
+
     def connect_signal(self):
         self.type_choice.currentIndexChanged.connect(self.on_type_changed)
         self.preview_btn.clicked.connect(self.on_preview)
@@ -111,7 +114,20 @@ class EditRuleDialog(DialogBase):
         self.file_name_formatter = FileNameFormatter()
 
         self.variable_list_factory = VariableListFactory()
-        self.variable_list.setColumnHeaders([self.tr("Variable"), self.tr("Description"), self.tr("Example")], [150, 200, 150])
+        self.variable_list.setColumnHeaders(
+            [
+                self.tr("Variable"),
+                self.tr("Description"),
+                self.tr("Example"),
+                self.tr("Actions")
+            ],
+            [
+                150,
+                200,
+                150,
+                60
+            ]
+        )
 
         self.name_box.setText(self.rule_data.get("name"))
         self.rule_box.setText(self.rule_data.get("rule"))
@@ -141,9 +157,11 @@ class EditRuleDialog(DialogBase):
             else:
                 desc_str = desc
 
-            self.variable_list.addRow(entry.get("variable"), desc_str, entry.get("example"))
-
+            self._add_item(entry["variable"], desc_str, entry["example"])
+            
         self.file_name_formatter.set_variable_data(variable_list)
+
+        self.variable_list.header().setSectionResizeMode(0, self.variable_list.header().ResizeMode.Stretch)
 
     def validate(self):
         if not self.name_box.text():
@@ -272,3 +290,11 @@ class EditRuleDialog(DialogBase):
 
         self.widget.setMinimumWidth(max(675, width))
         self.widget.setMinimumHeight(max(550, height))
+
+    def _add_item(self, variable: str, description: str, example: str):
+        item = self.variable_list.addRow(variable, description, example)
+
+        widget = InsertActionWidget(self.variable_list)
+        widget.edit_btn.clicked.connect(lambda: self.rule_box.insert(variable))
+
+        self.variable_list.setItemWidget(item, 3, widget)

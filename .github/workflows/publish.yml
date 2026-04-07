@@ -3,8 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
   push:
-    branches:
-      - dev
+    # branches:
+    #   - dev
     tags:
       - "v*"
 
@@ -18,11 +18,11 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          # echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
-          # echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-          echo "VERSION=2.00.1" >> $GITHUB_OUTPUT
-          echo "VERSION_NAME=2.00.1" >> $GITHUB_OUTPUT
+          # echo "VERSION=2.00.1" >> $GITHUB_OUTPUT
+          # echo "VERSION_NAME=2.00.1" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
@@ -325,7 +325,7 @@ jobs:
             <key>CFBundlePackageType</key>
             <string>APPL</string>
             <key>LSMinimumSystemVersion</key>
-            <string>12.0</string>
+            <string>10.15</string>
             <key>NSHighResolutionCapable</key>
             <true/>
             <key>LSUIElement</key>
