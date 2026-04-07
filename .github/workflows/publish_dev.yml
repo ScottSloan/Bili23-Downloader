@@ -3,8 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - dev
     tags:
       - "v*"
 
@@ -18,8 +18,11 @@ jobs:
       - name: Set version
         id: set-version
         run: |
-          echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
-          echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          # echo "VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-rc.*//')" >> $GITHUB_OUTPUT
+          # echo "VERSION_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+          echo "VERSION=2.00.1" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=2.00.1" >> $GITHUB_OUTPUT
 
   windows-build:
     needs: get-version
@@ -60,20 +63,21 @@ jobs:
           Invoke-WebRequest -Uri $lang_zh_tw_url -OutFile "ChineseTraditional.isl"
           Move-Item -Path "ChineseTraditional.isl" -Destination "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseTraditional.isl"
 
-      - name: Precompile source code to byte code
-        run: |
-          # 预编译 Python 源代码为字节码，提升冷启动速度
-          python -m compileall src\
-
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
           New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
           Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse -Force
+
+      - name: Precompile source code to byte code
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall Bili23-Downloader\script\
+          python -m compileall Bili23-Downloader\site-packages\
 
       - name: Package Windows version
         run: |
@@ -106,12 +110,18 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
           New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
           Copy-Item -Path src\* -Destination Bili23-Downloader\script\ -Recurse -Force
+
+      - name: Precompile source code to byte code for Windows 7
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall Bili23-Downloader\script\
+          python -m compileall Bili23-Downloader\site-packages\
 
       - name: Package Windows 7 version
         run: |
@@ -155,15 +165,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Precompile source code to byte code
-        run: |
-          # 预编译 Python 源代码为字节码，提升冷启动速度
-          python -m compileall src/
-
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/linux_amd64_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/linux_amd64_runtime.zip
 
           unzip linux_amd64_runtime.zip -d Bili23-Downloader
 
@@ -172,6 +177,12 @@ jobs:
           chmod +x Bili23-Downloader/runtime/python3.12
 
           cp -r src Bili23-Downloader/script
+
+      - name: Precompile source code to byte code
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall Bili23-Downloader/script/
+          python -m compileall Bili23-Downloader/runtime/site-packages/
 
       - name: Package Linux version
         run: |
@@ -266,15 +277,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Precompile source code to byte code
-        run: |
-          # 预编译 Python 源代码为字节码，提升冷启动速度
-          python -m compileall src/
-
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.1/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 
@@ -283,6 +289,12 @@ jobs:
           chmod +x Bili23-Downloader/runtime/python3.12
 
           cp -r src Bili23-Downloader/script
+
+      - name: Precompile source code to byte code
+        run: |
+          # 预编译 Python 源代码为字节码，提升冷启动速度
+          python -m compileall Bili23-Downloader/script/
+          python -m compileall Bili23-Downloader/runtime/site-packages/
 
       - name: Package macOS version
         run: |
@@ -351,40 +363,40 @@ jobs:
           name: macos-${{ matrix.arch }}-artifact
           path: Bili23-Downloader_${{ env.VERSION_NAME }}_macos_${{ matrix.arch }}.dmg
   
-  publish:
-    needs: [windows-build, linux-build, macos-build]
-    env:
-      VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      discussions: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+  # publish:
+  #   needs: [windows-build, linux-build, macos-build]
+  #   env:
+  #     VERSION_NAME: ${{ needs.windows-build.outputs.VERSION_NAME }}
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #     discussions: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v6
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: '*-artifact*'
-          path: release-artifacts
-          merge-multiple: true
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         pattern: '*-artifact*'
+  #         path: release-artifacts
+  #         merge-multiple: true
 
-      - name: List downloaded artifacts
-        run: |
-          ls -la release-artifacts
+  #     - name: List downloaded artifacts
+  #       run: |
+  #         ls -la release-artifacts
 
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          name: v${{ env.VERSION_NAME }}
-          body_path: CHANGELOG.md
-          make_latest: true
-          draft: false
-          prerelease: false
-          generate_release_notes: false
-          discussion_category_name: announcements
-          files: |
-            release-artifacts/*
+  #     - name: Upload to Release
+  #       uses: softprops/action-gh-release@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         name: v${{ env.VERSION_NAME }}
+  #         body_path: CHANGELOG.md
+  #         make_latest: true
+  #         draft: false
+  #         prerelease: false
+  #         generate_release_notes: false
+  #         discussion_category_name: announcements
+  #         files: |
+  #           release-artifacts/*
