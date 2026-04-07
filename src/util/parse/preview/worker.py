@@ -41,12 +41,12 @@ class QueryInfoWorker(QObject):
     def query_dash_file_size(self):
         download_urls = self.get_download_urls(self.media_info)
 
-        self.get_dash_file_size(download_urls)
+        self.file_size = self.get_dash_file_size(download_urls)
 
     def query_mp4_file_size(self):
         query_url = self.get_query_url(self.media_info["id"])
 
-        self.get_mp4_file_size(query_url)
+        self.file_size = self.get_mp4_file_size(query_url)
 
     def get_dash_file_size(self, download_urls: list):
         download_urls = CDN.get_url_list(download_urls)
@@ -70,8 +70,7 @@ class QueryInfoWorker(QObject):
                 # 无法获取文件大小
                 continue
 
-            self.file_size = int(content_length)
-            break
+            return int(content_length)
 
         raise Exception("无法获取有效的下载链接")
 

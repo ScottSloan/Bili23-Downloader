@@ -128,8 +128,6 @@ class ParseWorker(QRunnable, ParserBase):
             video_info_parser = VideoInfoParser(self.info_data, self.task_info)
             video_info = video_info_parser.parse_info()
 
-            self._check_info(video_info)
-
             if video_info:
                 total_size += video_info["file_size"]
                 download_list["video"] = video_info
@@ -137,8 +135,6 @@ class ParseWorker(QRunnable, ParserBase):
         if self.task_info.Download.type & DownloadType.AUDIO != 0:
             audio_info_parser = AudioInfoParser(self.info_data, self.task_info)
             audio_info = audio_info_parser.parse_info()
-
-            self._check_info(audio_info)
 
             if audio_info:
                 total_size += audio_info["file_size"]
@@ -161,12 +157,6 @@ class ParseWorker(QRunnable, ParserBase):
             Qt.ConnectionType.QueuedConnection,
             Q_ARG(str, error_message)
         )
-
-    def _check_info(self, info: dict):
-        if info.get("url") is None:
-            self.on_parse_error(Translator.ERROR_MESSAGES("PARSE_FAILED"))
-
-            raise Exception("无法获取下载链接")
 
     def check_response(self, response: dict):
         if response.get("code", -1) != 0:

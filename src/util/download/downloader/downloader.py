@@ -184,7 +184,7 @@ class Downloader(QObject):
         self._completion_triggered = False
 
         # 如果队列空了则说明下载完成（进度 100）
-        if self.task_info.Download.progress >= 100 or (not self.task_info.Download.queue and getattr(self.task_info.Download, "total_size", 0) > 0 and self.task_info.Download.status != DownloadStatus.FAILED):
+        if self.task_info.Download.progress >= 100 or (not self.task_info.Download.queue and self.task_info.Download.total_size > 0 and self.task_info.Download.status != DownloadStatus.FAILED):
             self.on_download_completed()
         else:
             download_video = self.task_info.Download.type & DownloadType.VIDEO != 0
@@ -210,7 +210,10 @@ class Downloader(QObject):
         self.download_list = download_info["download_list"]
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.total_size = download_info["total_size"]
-        self.task_info.Download.queue = download_info["download_queue"]
+
+        # 只有在 progress 为 0 的时候才设置下载队列，防止重复解析时覆盖之前的下载状态，导致断点续传功能失效
+        if self.task_info.Download.progress == 0:
+            self.task_info.Download.queue = download_info["download_queue"]
 
         self.update_info(download_info)
         self.start_worker()
@@ -309,15 +312,19 @@ class Downloader(QObject):
     
     def calc_downloaded_size(self):
         downloaded_size = 0
+        
         for file_info in self.task_info.Download.files.values():
-            finished_chunks = file_info.get("finished_chunks", 0)
             total_chunks = file_info.get("total_chunks", 0)
+            file_size = file_info.get("file_size", 0)
+            chunks_list = file_info.get("chunks_list", [])
 
             if total_chunks > 0:
-                if finished_chunks == total_chunks:
-                    downloaded_size += file_info.get("file_size", 0)
-                else:
-                    downloaded_size += finished_chunks * self.chunk_size
+                # 只累加确实已经完全下载完成的区块的实际大小
+                for i in range(total_chunks):
+                    if i not in chunks_list:
+                        start = i * self.chunk_size
+                        end = min(start + self.chunk_size, file_size) if file_size > 0 else 0
+                        downloaded_size += (end - start)
 
         with self.update_lock:
             self.task_info.Download.downloaded_size = downloaded_size
@@ -404,7 +411,7 @@ class Downloader(QObject):
 
         if any([danmaku, subtitles, cover, metadata]):
             self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
-            
+
             worker = AdditionalParseWorker(self.task_info)
             worker.success.connect(self.wait_merge)
             worker.error.connect(self.on_parse_error)
@@ -451,7 +458,8 @@ class Downloader(QObject):
         with self.update_lock:
             current_size = self.task_info.Download.downloaded_size
 
-        self.task_info.Download.speed = current_size - self.last_sampled_size
+        speed = current_size - self.last_sampled_size
+        self.task_info.Download.speed = speed if speed > 0 else 0
         total = getattr(self.task_info.Download, "total_size", 0)
         self.task_info.Download.progress = int(current_size / total * 100) if total > 0 else 100
         self.last_sampled_size = current_size

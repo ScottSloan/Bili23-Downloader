@@ -24,6 +24,34 @@ logging.basicConfig(
     ]
 )
 
+# --------- Disable PySide6 Warnings ---------
+from PySide6.QtCore import QtMsgType, qInstallMessageHandler
+
+def qt_message_handler(mode, context, message):
+    # 忽略特定的 Qt 警告
+    if "QFont::setPointSize" in message or "OpenType support missing" in message or "CreateFontFaceFromHDC" in message:
+        return
+    
+    # 其他 Qt 日志转发到 Python logging
+    logger = logging.getLogger("Qt")
+
+    if mode == QtMsgType.QtWarningMsg:
+        logger.warning(message)
+
+    elif mode == QtMsgType.QtCriticalMsg:
+        logger.error(message)
+
+    elif mode == QtMsgType.QtFatalMsg:
+        logger.critical(message)
+
+    elif mode == QtMsgType.QtInfoMsg:
+        logger.info(message)
+
+    else:
+        logger.debug(message)
+
+qInstallMessageHandler(qt_message_handler)
+
 # --------- Imports ---------
 
 from PySide6.QtCore import Qt, QLocale, QTranslator

@@ -10,7 +10,7 @@ import logging
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-def get_transport(proxies = None):
+def get_mounts(proxies = None):
     if proxies:
         proxy_url = proxies.get("http") or proxies.get("https")
 
@@ -22,12 +22,13 @@ def get_transport(proxies = None):
         return None
 
 limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
-transport = httpx.HTTPTransport(retries = 5)
+transport = httpx.HTTPTransport(retries = 3)
 
 client = httpx.Client(
     limits = limits,
-    timeout = 10,
-    mounts = get_transport(Proxy().get_proxies()),
+    timeout = 5,
+    mounts = get_mounts(Proxy().get_proxies()),
+    transport = transport,
     follow_redirects = True
 )
 
@@ -58,7 +59,7 @@ class SyncNetWorkRequest:
         self.update_headers()
 
         if self.proxies:
-            with httpx.Client(mounts = get_transport(self.proxies), follow_redirects = True) as temp_client:
+            with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True) as temp_client:
                 response = temp_client.request(
                     method = self.request_type.name,
                     url = self.url,

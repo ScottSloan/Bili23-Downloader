@@ -1,13 +1,10 @@
 from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG, QSize
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtGui import QImage
 
 from util.network.request import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
 import base64
-
-class CoverCache:
-    cache: dict[str, QPixmap] = {}
 
 class CoverQueryWorker(QRunnable):
     def __init__(self, model, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):

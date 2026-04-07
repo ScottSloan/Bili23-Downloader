@@ -47,8 +47,9 @@ class QueryWorker(QObject):
                 if task_info.Download.status in [DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]:
                     task_info.Download.status = DownloadStatus.PAUSED
 
-                if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
-                    task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
+                if task_info.Download.status in [DownloadStatus.MERGING, DownloadStatus.CONVERTING, DownloadStatus.ADDITIONAL_PROCESSING]:
+                    # 统一为 PAUSED 状态
+                    task_info.Download.status = DownloadStatus.PAUSED
 
             task_list.append(task_info)
 
