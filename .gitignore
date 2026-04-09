@@ -23,3 +23,6 @@ uv.toml
 /bundle
 /.VSCodeCounter
 /bundle
+
+# webui
+/src/webui/

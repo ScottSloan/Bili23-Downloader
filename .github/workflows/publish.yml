@@ -386,6 +386,19 @@ jobs:
         run: |
           ls -la release-artifacts
 
+      - name: Update CHANGELOG.md
+        run: |
+          # 在原有的 CHANGELOG.md 基础上，添加安全提示
+          echo "" >> CHANGELOG.md
+          echo "> [!CAUTION]" >> CHANGELOG.md
+          echo "> 强烈建议仅通过官方 GitHub 链接（即本页面下方的链接）下载本软件。 从第三方网站、网盘论坛或他人私下分享渠道获取的安装包，极有可能被二次篡改或植入病毒/木马。对于因下载、运行非官方渠道安装包所导致的任何设备损坏、隐私泄露或财产损失，开发者概不负责。" >> CHANGELOG.md
+
+          echo "" >> CHANGELOG.md
+
+          echo "> [!TIP]" >> CHANGELOG.md
+          echo "> Windows 7 用户请下载 win7 专用版（带有 for_win7 字样）" >> CHANGELOG.md
+          echo "> 其他问题请参考 [常见问题(FAQ)](https://bili23.scott-sloan.cn/doc/faq.html)" >> CHANGELOG.md
+
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         env:
