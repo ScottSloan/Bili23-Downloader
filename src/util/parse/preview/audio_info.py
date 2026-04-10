@@ -90,6 +90,7 @@ class AudioInfoParser:
                 else:
                     worker = QueryInfoWorker(audio_info)
                     worker.success.connect(self.on_query_info_success)
+                    worker.error.connect(lambda error: self.callback(None))
 
                     AsyncTask.run(worker)
                 

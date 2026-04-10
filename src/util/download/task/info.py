@@ -108,6 +108,8 @@ class DownloadInfo(InfoBase):
     merge_video_audio: bool = False
     keep_original_files: bool = False
 
+    video_parts_count: int = 0
+
     # 显示信息
     info_label: str = ""
     status_label: str = ""

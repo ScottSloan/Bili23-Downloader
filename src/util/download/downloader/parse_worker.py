@@ -126,19 +126,21 @@ class ParseWorker(QRunnable, ParserBase):
 
         if self.task_info.Download.type & DownloadType.VIDEO != 0:
             video_info_parser = VideoInfoParser(self.info_data, self.task_info)
-            video_info = video_info_parser.parse_info()
 
-            if video_info:
-                total_size += video_info["file_size"]
-                download_list["video"] = video_info
+            for entry in video_info_parser.parse_info():
+                total_size += entry.get("file_size", 0)
+                file_key = entry.get("file_key", "video")
+
+                download_list[file_key] = entry
 
         if self.task_info.Download.type & DownloadType.AUDIO != 0:
             audio_info_parser = AudioInfoParser(self.info_data, self.task_info)
-            audio_info = audio_info_parser.parse_info()
 
-            if audio_info:
-                total_size += audio_info["file_size"]
-                download_list["audio"] = audio_info
+            for entry in audio_info_parser.parse_info():
+                total_size += entry.get("file_size", 0)
+                file_key = entry.get("file_key", "audio")
+
+                download_list[file_key] = entry
 
         self.get_output_file_ext()
 
@@ -174,5 +176,5 @@ class ParseWorker(QRunnable, ParserBase):
             self.task_info.Download.merge_video_audio = False
             self.task_info.Download.keep_original_files = False
 
-        if self.task_info.Download.merge_video_audio:
+        if self.task_info.Download.merge_video_audio or self.task_info.Download.video_parts_count > 0:
             self.task_info.File.merge_file_ext = config.get(config.video_container).value

@@ -31,8 +31,7 @@ class VideoInfoParser:
             if quality_id not in self.video_info_map.keys():
                 self.video_info_map[quality_id][7] = {
                     "id": quality_id,
-                    "url": self.info_data["durl"][0]["url"],
-                    "backup_url": self.info_data["durl"][0]["backup_url"],
+                    "url_entry_list": self.info_data["durl"],
                     "codecid": 7,
                     "frame_rate": 0,
                     "bandwidth": 0
@@ -45,7 +44,7 @@ class VideoInfoParser:
             case MediaType.DASH:
                 return self._get_dash_available_quality_list()
             
-            case MediaType.MP4:
+            case MediaType.MP4 | MediaType.FLV:
                 return self._get_mp4_available_quality_list()
             
             case MediaType.UNKNOWN:
@@ -58,27 +57,23 @@ class VideoInfoParser:
         video_info = self.get_video_info(self.task_info.Download.video_quality_id, self.task_info.Download.video_codec_id)
 
         if video_info:
-            ext = self.get_video_file_ext()
-            temp_video_file_name = "video_{task_id}.{file_ext}".format(task_id = self.task_info.Basic.task_id, file_ext = ext)
-
             self.task_info.Download.video_quality_id = video_info["id"]
             self.task_info.Download.video_codec_id = video_info["codecid"]
-            self.task_info.File.video_file_ext = ext
+            self.task_info.File.video_file_ext = self.get_video_file_ext()
 
-            if temp_video_file_name not in self.task_info.File.relative_files:
-                self.task_info.File.relative_files.append(temp_video_file_name)
+            match self.task_info.Download.media_type:
+                case MediaType.DASH:
+                    _parse_info = self.make_dash_video_info(video_info, self.task_info.File.video_file_ext)
 
-            info = QueryWorker(video_info)
-            
-            return {
-                **info.query_url(),
-                "type": "video",
-                "file_name": temp_video_file_name
-            }
-        
-        else:
-            self.task_info.Download.type &= ~DownloadType.VIDEO
-            return {}
+                case MediaType.MP4 | MediaType.FLV:
+                    _parse_info = self.make_mp4_video_info(video_info, self.task_info.File.video_file_ext)
+
+                    self.task_info.Download.video_parts_count = len(_parse_info)
+
+            return _parse_info
+
+        self.task_info.Download.type &= ~DownloadType.VIDEO
+        return []
 
     def get_video_info(self, video_quality_id: int, video_codec_id: int):
         available_quality_list = self.get_available_quality_list()
@@ -123,6 +118,46 @@ class VideoInfoParser:
         match self.task_info.Download.media_type:
             case MediaType.DASH:
                 return "m4s"
-
-            case _:
+            
+            case MediaType.MP4:
                 return "mp4"
+            
+            case MediaType.FLV:
+                return "flv"
+
+    def make_dash_video_info(self, video_info: dict, ext: str):
+        temp_video_file_name = "video_{task_id}.{file_ext}".format(task_id = self.task_info.Basic.task_id, file_ext = ext)
+
+        if temp_video_file_name not in self.task_info.File.relative_files:
+            self.task_info.File.relative_files.append(temp_video_file_name)
+
+        worker = QueryWorker(video_info)
+        
+        return [
+            {
+                **worker.query_dash_url(),
+                "type": "video",
+                "file_name": temp_video_file_name,
+                "file_key": "video"
+            }
+        ]
+    
+    def make_mp4_video_info(self, video_info: dict, ext: str):
+        worker = QueryWorker(video_info)
+
+        info_list = []
+
+        for entry in worker.query_mp4_url():
+            temp_video_file_name = "video_{task_id}_{index}.{file_ext}".format(task_id = self.task_info.Basic.task_id, index = entry["index"], file_ext = ext)
+
+            if temp_video_file_name not in self.task_info.File.relative_files:
+                self.task_info.File.relative_files.append(temp_video_file_name)
+
+            info_list.append({
+                **entry,
+                "file_name": temp_video_file_name,
+                "file_key": "video_part_{index}".format(index = entry["index"])
+            })
+
+        return info_list
+

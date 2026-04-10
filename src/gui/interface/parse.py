@@ -103,6 +103,11 @@ class ParseBase(QFrame):
     def check_matches(self, items):
         self.parse_list.check_items(items)
 
+    def update_previewer_info(self):
+        if first_episode_info := self.parse_list.get_first_item_info():
+            # 获取解析结果中第一个视频的信息，作为预览的媒体信息
+            signal_bus.parse.preview_init.emit(first_episode_info)
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -226,9 +231,7 @@ class ParseInterface(ParseBase):
         self.parse_list._model._set_category_name(category_name)
         self.category_name = Translator.EPISODE_TYPE(category_name)
 
-        if first_episode_info := self.parse_list.get_first_item_info():
-            # 获取解析结果中第一个视频的信息，作为预览的媒体信息
-            signal_bus.parse.preview_init.emit(first_episode_info)
+        self.update_previewer_info()
 
         self.on_item_check_state_changed(None)
 
@@ -372,3 +375,4 @@ class ParseInterface(ParseBase):
     def on_season_changed(self, url: str):
         # 切换季时重新解析
         self.reparse(url)
+

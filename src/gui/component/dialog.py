@@ -2,7 +2,8 @@ from PySide6.QtWidgets import QStackedWidget, QVBoxLayout, QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, QEventLoop
 
 from qfluentwidgets import (
-    MessageBoxBase, InfoBar, InfoBarPosition, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton
+    MessageBoxBase, InfoBar, InfoBarPosition, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
+    PopUpAniStackedWidget
 )
 from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 
@@ -171,7 +172,7 @@ class TopNavigationDialogBase(FluentDialogBase):
         self.pivot = Pivot(self)
         #self.pivot.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
-        self.stackedWidget = QStackedWidget(self)
+        self.stackedWidget = PopUpAniStackedWidget(self)
         #self.stackedWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
         self.stackedWidget.setContentsMargins(0, 0, 0, 0)
 

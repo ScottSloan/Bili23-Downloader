@@ -24,12 +24,12 @@ class QueryInfoWorker(QObject):
                 case MediaType.DASH:
                     self.query_dash_file_size()
 
-                case MediaType.MP4:
+                case MediaType.MP4 | MediaType.FLV:
                     self.query_mp4_file_size()
 
             if self.file_size == 0:
                 raise Exception("无法获取文件大小")
-
+            
             self.success.emit(self.media_info, self.file_size)
         
         except Exception as e:
@@ -78,10 +78,11 @@ class QueryInfoWorker(QObject):
         request = SyncNetWorkRequest(query_url)
         response = request.run()
 
-        durl = self.get_durl(response)
+        for durl_entry in self.get_durl_list(response):            
+            self.file_size += durl_entry.get("size", 0)
+            self.media_info["timelength"] += durl_entry.get("length", 0)
 
-        self.file_size = durl.get("size", 0)
-        self.media_info["timelength"] = durl.get("length", 0)
+        return self.file_size
 
     def get_download_urls(self, media_info: dict):
         download_urls = []
@@ -103,14 +104,14 @@ class QueryInfoWorker(QObject):
 
         return query_url
 
-    def get_durl(self, response: dict):
+    def get_durl_list(self, response: dict):
         match PreviewerInfo.info_data.get("parser_type"):
             case "video":
-                return response["data"]["durl"][0]
+                return response["data"]["durl"]
 
             case "bangumi":
-                return response["result"]["durl"][0]
+                return response["result"]["durl"]
 
             case "cheese":
-                return response["data"]["durl"][0]
+                return response["data"]["durl"]
             

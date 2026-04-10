@@ -80,7 +80,7 @@ class MediaInfoCard(ExpandGroupSettingCard):
                 case MediaType.DASH:
                     reason = self.tr("No audio track (silent video stream)")
 
-                case MediaType.MP4:
+                case MediaType.MP4 | MediaType.FLV:
                     reason = self.tr("Audio track is already embedded in the video stream")
 
                 case MediaType.UNKNOWN:
@@ -100,6 +100,9 @@ class MediaInfoCard(ExpandGroupSettingCard):
 
         if PreviewerInfo.media_type == MediaType.MP4:
             quality_label_list.append("MP4")
+
+        elif PreviewerInfo.media_type == MediaType.FLV:
+            quality_label_list.append("FLV")
 
         if not info["is_full_video"]:
             quality_label_list.append(self.tr("preview"))

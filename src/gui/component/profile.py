@@ -55,4 +55,7 @@ class ProfileCard(FlyoutViewBase):
 
             signal_bus.login.update_avatar.emit(QPixmap(":/bili23/image/noface.jpg"))
             signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Successfully logged out"))
+
+            # 注销后更新预览信息
+            self.main_window.parse_interface.update_previewer_info()
         

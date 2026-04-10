@@ -36,7 +36,8 @@ class VideoInfoParser:
                 "id": quality_id,
                 "codecid": 7,
                 "frame_rate": 0,
-                "bandwidth": 0
+                "bandwidth": 0,
+                "timelength": 0
             }
 
         return accept_quality_list
@@ -46,7 +47,7 @@ class VideoInfoParser:
             case MediaType.DASH:
                 return self._get_dash_available_quality_list()
             
-            case MediaType.MP4:
+            case MediaType.MP4 | MediaType.FLV:
                 return self._get_mp4_available_quality_list()
             
             case MediaType.UNKNOWN:
@@ -102,6 +103,7 @@ class VideoInfoParser:
                 else:
                     worker = QueryInfoWorker(video_info)
                     worker.success.connect(self.on_query_info_success)
+                    worker.error.connect(lambda error: self.callback(None))
 
                     AsyncTask.run(worker)
         else:
@@ -157,6 +159,6 @@ class VideoInfoParser:
                 # dash 格式视频一定是完整的
                 return True
 
-            case MediaType.MP4:
-                # 只需要检查 mp4 格式
+            case MediaType.MP4 | MediaType.FLV:
+                # 只需要检查 mp4 和 flv 格式
                 return PreviewerInfo.info_data["timelength"] == media_info["timelength"]

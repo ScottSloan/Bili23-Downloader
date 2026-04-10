@@ -63,8 +63,11 @@ class Previewer(ParserBase):
             if "dash" in PreviewerInfo.info_data.keys():
                 PreviewerInfo.media_type = MediaType.DASH
 
-            elif "durl" in PreviewerInfo.info_data.keys():
+            elif PreviewerInfo.info_data.get("format").startswith("mp4"):
                 PreviewerInfo.media_type = MediaType.MP4
+
+            elif PreviewerInfo.info_data.get("format").startswith("flv"):
+                PreviewerInfo.media_type = MediaType.FLV
 
         self.parse_info()
 

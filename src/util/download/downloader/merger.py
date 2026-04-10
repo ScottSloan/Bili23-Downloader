@@ -20,9 +20,16 @@ class Merger(QObject):
 
     def start(self):
         if self.task_info.Download.merge_video_audio:
+            # 现代 dash 视频合并
             self.merge_video_audio()
+
+        elif self.task_info.Download.video_parts_count > 0:
+            # 旧版 flv 分片下载合并
+            self.merge_video_parts()
+
         elif config.get(config.m4a_to_mp3) and self.task_info.File.audio_file_ext == "m4a":
             self.m4a_to_mp3()
+
         else:
             self.rename_output_file()
 
@@ -34,17 +41,13 @@ class Merger(QObject):
 
         if v_exists and a_exists:
             merge_cmd = FFmpegCommand.merge_video_audio(
-                video_path=self.temp_video_file_name,
-                audio_path=self.temp_audio_file_name,
-                output_path=self.temp_output_file_name,
-                cover_path=self.check_attach_cover()
+                video_path = self.temp_video_file_name,
+                audio_path = self.temp_audio_file_name,
+                output_path = self.temp_output_file_name,
+                cover_path = self.check_attach_cover()
             )
 
-            self._ffmpeg_runner = FFmpegRunner.from_command(merge_cmd, parent=self)
-            self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_sig.connect(self.on_merge_completed)
-            self._ffmpeg_runner.error_sig.connect(self.on_merge_error)
-            self._ffmpeg_runner.start()
+            self._run_merge_command(merge_cmd, cwd)
 
         elif o_exists and not v_exists and not a_exists:
             self.on_merge_completed(0, "", "")
@@ -54,6 +57,28 @@ class Merger(QObject):
                 Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
                 Translator.ERROR_MESSAGES("FILE_NOT_FOUND_DETAIL")
             )
+
+    def merge_video_parts(self):
+        cwd = self.get_cwd()
+
+        lists_path = self.create_lists_file(self.task_info.Download.video_parts_count)
+
+        self.add_file(lists_path)
+
+        merge_cmd = FFmpegCommand.merge_video_parts(
+            lists_path = lists_path,
+            output_path = self.temp_output_file_name,
+            cover_path = self.check_attach_cover()
+        )
+
+        self._run_merge_command(merge_cmd, cwd)
+
+    def _run_merge_command(self, command: FFmpegCommand, cwd: Path):
+        self._ffmpeg_runner = FFmpegRunner.from_command(command, parent = self)
+        self._ffmpeg_runner.set_cwd(cwd)
+        self._ffmpeg_runner.finished_sig.connect(self.on_merge_completed)
+        self._ffmpeg_runner.error_sig.connect(self.on_merge_error)
+        self._ffmpeg_runner.start()
 
     def rename_output_file(self):
         if self._has_error:
@@ -67,15 +92,15 @@ class Merger(QObject):
             if has_video and has_audio:
                 self.keep_original_files()
                 if self._has_error: return
-                self.add_file(self.final_video_file_name, self.final_audio_file_name, clear=True)
+                self.add_file(self.final_video_file_name, self.final_audio_file_name, clear = True)
 
             elif has_video and not has_audio:
                 safe_rename(cwd, self.temp_video_file_name, self.final_mp4_video_file_name)
-                self.add_file(self.final_mp4_video_file_name, clear=True)
+                self.add_file(self.final_mp4_video_file_name, clear = True)
 
             elif has_audio and not has_video:
                 safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name)
-                self.add_file(self.final_audio_file_name, clear=True)
+                self.add_file(self.final_audio_file_name, clear = True)
 
             self.mark_as_completed()
 
@@ -89,14 +114,15 @@ class Merger(QObject):
         try:
             cwd = self.get_cwd()
             
+            safe_rename(cwd, self.temp_output_file_name, self.final_output_file_name)
+
             if not self.task_info.Download.keep_original_files:
-                safe_remove(cwd, self.temp_video_file_name, self.temp_audio_file_name)
+                safe_remove(cwd, *self.task_info.File.relative_files)
             else:
                 self.keep_original_files()
                 if self._has_error: return
 
-            safe_rename(cwd, self.temp_output_file_name, self.final_output_file_name)
-            self.add_file(self.final_output_file_name, clear=True)
+            self.add_file(self.final_output_file_name, clear = True)
             self.mark_as_completed()
 
         except Exception as e:
@@ -212,25 +238,41 @@ class Merger(QObject):
                 logger.warning(f"封面文件 {cover_path} 不存在，无法嵌入封面")
         return None
 
+    def create_lists_file(self, video_parts_count: int):
+        cwd = self.get_cwd()
+        lists_path = Path(cwd, f"lists_{self.task_info.Basic.task_id}.txt")
+
+        with lists_path.open("w", encoding = "utf-8") as f:
+            for i in range(video_parts_count):
+                part_file_name = "video_{task_id}_{index}.{ext}".format(
+                    task_id = self.task_info.Basic.task_id,
+                    index = i,
+                    ext = self.task_info.File.video_file_ext
+                )
+
+                f.write(f"file '{part_file_name}'\n")
+
+        return lists_path.name
+
     @property
     def temp_video_file_name(self):
         return "video_{task_id}.{file_ext}".format(
-            task_id=self.task_info.Basic.task_id,
-            file_ext=self.task_info.File.video_file_ext
+            task_id = self.task_info.Basic.task_id,
+            file_ext = self.task_info.File.video_file_ext
         )
     
     @property
     def temp_audio_file_name(self):
         return "audio_{task_id}.{file_ext}".format(
-            task_id=self.task_info.Basic.task_id,
-            file_ext=self.task_info.File.audio_file_ext
+            task_id = self.task_info.Basic.task_id,
+            file_ext = self.task_info.File.audio_file_ext
         )
     
     @property
     def temp_output_file_name(self):
         return "output_{task_id}.{file_ext}".format(
-            task_id=self.task_info.Basic.task_id,
-            file_ext=self.task_info.File.merge_file_ext
+            task_id = self.task_info.Basic.task_id,
+            file_ext = self.task_info.File.merge_file_ext
         )
     
     @property

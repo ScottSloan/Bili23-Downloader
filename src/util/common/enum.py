@@ -91,6 +91,7 @@ class MediaType(IntEnum):
     UNKNOWN = 0
     DASH = 1
     MP4 = 2
+    FLV = 3
 
 class DownloadStatus(IntEnum):
     QUEUED = 0                      # 排队中

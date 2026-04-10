@@ -8,10 +8,23 @@ class QueryWorker:
         self.file_size = 0
         self.break_flag = False
 
-    def query_url(self):
+    def query_dash_url(self):
         download_urls = self.get_download_urls(self.media_info)
 
         return self.get_file_size(download_urls)
+    
+    def query_mp4_url(self):
+        url_list = []
+
+        for index, url_entry in enumerate(self.media_info["url_entry_list"]):
+            download_urls = self.get_download_urls(url_entry)
+
+            url_list.append({
+                **self.get_file_size(download_urls),
+                "index": index
+            })
+
+        return url_list
 
     def get_file_size(self, download_urls: list):
         download_urls = CDN.get_url_list(download_urls)

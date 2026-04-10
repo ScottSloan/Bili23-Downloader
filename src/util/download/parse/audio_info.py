@@ -68,15 +68,18 @@ class AudioInfoParser:
 
             info = QueryWorker(audio_info)
 
-            return {
-                **info.query_url(),
-                "type": "audio",
-                "file_name": temp_audio_file_name
-            }
+            return [
+                {
+                    **info.query_dash_url(),
+                    "type": "audio",
+                    "file_name": temp_audio_file_name,
+                    "file_key": "audio"
+                }
+            ]
         
         else:
             self.task_info.Download.type &= ~DownloadType.AUDIO
-            return {}
+            return []
 
     def get_audio_info(self, audio_quality_id: int):
         self.get_available_list()
