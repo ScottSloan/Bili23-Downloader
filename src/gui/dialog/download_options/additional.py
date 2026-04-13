@@ -32,3 +32,11 @@ class AdditionalSettingsPage(ScrollArea):
         self.subtitle_card.toggleExpand()
         self.cover_card.toggleExpand()
         self.metadata_card.toggleExpand()
+
+    def has_file_to_download(self):
+        return (
+            self.danmaku_card.download_switch.isChecked() or
+            self.subtitle_card.download_switch.isChecked() or
+            self.cover_card.download_switch.isChecked() or
+            self.metadata_card.download_switch.isChecked()
+        )

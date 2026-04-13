@@ -111,6 +111,16 @@ class CoverSettingCard(ExpandGroupSettingCard):
 
         self.attach_cover_group.setEnabled(config.get(config.download_cover))
         self.download_switch.checkedChanged.connect(self.on_toggle_attach_cover)
+        self.type_choice.currentIndexChanged.connect(self.on_change_cover_format)
+
+    def on_change_cover_format(self, index: int):
+        # avif 格式不支持作为封面嵌入，如果用户选择了 avif 作为封面格式，则禁用嵌入封面选项
+        is_avif = index == 2
+
+        if is_avif and self.attach_cover_switch.isChecked():
+            self.attach_cover_switch.setChecked(False)
+
+        self.attach_cover_group.setEnabled(not is_avif)
 
     def on_toggle_attach_cover(self, checked: bool):
         self.attach_cover_group.setEnabled(checked)

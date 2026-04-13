@@ -110,6 +110,9 @@ class Merger(QObject):
     def on_merge_completed(self, return_code: int, stdout: str, stderr: str):
         if getattr(self, "_has_error", False):
             return
+        
+        print(stdout)
+        print(stderr)
 
         try:
             cwd = self.get_cwd()

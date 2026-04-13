@@ -1,7 +1,9 @@
-from util.network.request import  SyncNetWorkRequest, ResponseType
+from util.network.request import SyncNetWorkRequest, ResponseType
 from util.parse.additional import AdditionalParserBase
 from util.download.task.info import TaskInfo
 from util.common import config
+
+import httpx
 
 class CoverParser(AdditionalParserBase):
     def __init__(self, task_info: TaskInfo):
@@ -9,7 +11,17 @@ class CoverParser(AdditionalParserBase):
 
     def parse(self):
         suffix = config.get(config.cover_type).value
-        contents = self._get_cover_contents(suffix)
+
+        for i in range(3):
+            try:
+                contents = self._get_cover_contents(suffix)
+                break
+            except httpx.HTTPError:
+                if i == 2:
+                    raise
+
+        else:
+            return
 
         self._write(contents, suffix = suffix, name = self.task_info.File.name)
 
@@ -17,4 +29,6 @@ class CoverParser(AdditionalParserBase):
         url = "{url}@.{suffix}".format(url = self.task_info.Episode.cover, suffix = suffix)
 
         request = SyncNetWorkRequest(url, response_type = ResponseType.BYTES)
-        return request.run()
+        response = request.run()
+        
+        return response

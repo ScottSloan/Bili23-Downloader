@@ -5,6 +5,7 @@ from util.network.request import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
 import base64
+import httpx
 
 class CoverQueryWorker(QRunnable):
     def __init__(self, model, query_id: str, cover_id: str, cover_url: str, cover_size: QSize, query_param: dict = None):
@@ -32,8 +33,16 @@ class CoverQueryWorker(QRunnable):
             image.loadFromData(base64.b64decode(result))
 
         else:
-            image, base64_data = self.download_cover()
-
+            for i in range(3):
+                try:
+                    image, base64_data = self.download_cover()
+                    break
+                except httpx.HTTPError:
+                    if i == 2:
+                        raise
+            else:
+                return
+            
             cover_manager.create(self.cover_id, base64_data)
 
         self.return_to_model(image)

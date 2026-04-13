@@ -43,6 +43,7 @@ class ResponseType(Enum):
     BYTES = 2
     HEADERS = 3
     REDIRECT_URL = 4
+    RESPONSE = 5         # 返回完整的 Response 对象，供需要访问更多信息的情况使用
 
 class SyncNetWorkRequest:
     def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None):
@@ -96,6 +97,9 @@ class SyncNetWorkRequest:
 
             case ResponseType.REDIRECT_URL:
                 return str(response.url)
+            
+            case ResponseType.RESPONSE:
+                return response
     
     def update_headers(self):
         client.headers.update(

@@ -370,8 +370,10 @@ class Downloader(QObject):
 
             if has_video and has_audio:
                 self.task_info.Download.info_label = Translator.VIDEO_QUALITY(reversed_video_quality_map.get(self.task_info.Download.video_quality_id, ""))
+
             elif has_video and not has_audio:
                 self.task_info.Download.info_label = "MP4"
+                
             elif not has_video and has_audio:
                 self.task_info.Download.info_label = self.tr("Audio")
 

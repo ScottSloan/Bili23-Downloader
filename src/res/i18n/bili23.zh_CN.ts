@@ -769,6 +769,16 @@
         <source>Download Settings</source>
         <translation>下载设置</translation>
     </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="40"/>
+        <source>No files selected for download</source>
+        <translation>未选择任何文件进行下载</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/download_options/dialog.py" line="41"/>
+        <source>Please select at least one of the following: video stream, audio stream, or additional files.</source>
+        <translation>请至少选择下载独立视频流、音频流或附加文件中的一个。</translation>
+    </message>
 </context>
 <context>
     <name>DownloadPathSettingCard</name>
@@ -805,7 +815,7 @@
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="369"/>
+        <location filename="../../util/download/downloader/downloader.py" line="378"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
@@ -1433,17 +1443,17 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="48"/>
+        <location filename="../../gui/interface/main_window.py" line="49"/>
         <source>Parser</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="50"/>
+        <location filename="../../gui/interface/main_window.py" line="51"/>
         <source>Downloads</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="58"/>
+        <location filename="../../gui/interface/main_window.py" line="59"/>
         <source>Favorites</source>
         <translation>收藏</translation>
     </message>
@@ -1452,42 +1462,42 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation type="vanished">历史</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="67"/>
+        <location filename="../../gui/interface/main_window.py" line="68"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="82"/>
+        <location filename="../../gui/interface/main_window.py" line="83"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="310"/>
+        <location filename="../../gui/interface/main_window.py" line="313"/>
         <source>Download Directory Invalid</source>
         <translation>下载目录无效</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="311"/>
+        <location filename="../../gui/interface/main_window.py" line="314"/>
         <source>The current download directory is inaccessible or lacks write permissions. Please reset it.</source>
         <translation>当前下载目录无法访问或没有写入权限，请重新设置。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="317"/>
+        <location filename="../../gui/interface/main_window.py" line="320"/>
         <source>FFmpeg Not Found</source>
         <translation>未找到 FFmpeg</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="318"/>
+        <location filename="../../gui/interface/main_window.py" line="321"/>
         <source>No FFmpeg executable found. Please ensure FFmpeg is installed and configured correctly.</source>
         <translation>未找到 FFmpeg 可执行文件。请确保已正确安装并配置 FFmpeg。</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="324"/>
+        <location filename="../../gui/interface/main_window.py" line="327"/>
         <source>Login Required</source>
         <translation>需要登录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/main_window.py" line="325"/>
+        <location filename="../../gui/interface/main_window.py" line="328"/>
         <source>Please log in to your account first.</source>
         <translation>请先登录账号</translation>
     </message>
@@ -1524,7 +1534,7 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
     </message>
     <message>
         <location filename="../../gui/component/download_options/card.py" line="22"/>
-        <location filename="../../gui/component/download_options/card.py" line="142"/>
+        <location filename="../../gui/component/download_options/card.py" line="145"/>
         <source>Guide</source>
         <translation>说明</translation>
     </message>
@@ -1576,22 +1586,22 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation>将根据优先级设置自动选择音质</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="132"/>
+        <location filename="../../gui/component/download_options/card.py" line="135"/>
         <source>Largest file size, best compatibility</source>
         <translation>文件体积大，兼容性强</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="138"/>
+        <location filename="../../gui/component/download_options/card.py" line="141"/>
         <source>Smallest file size, poorest compatibility</source>
         <translation>压缩效率最高，但兼容性最差</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="110"/>
+        <location filename="../../gui/component/download_options/card.py" line="113"/>
         <source>Unknown Audio Quality</source>
         <translation>未知音质</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="135"/>
+        <location filename="../../gui/component/download_options/card.py" line="138"/>
         <source>Smaller file size, limited compatibility</source>
         <translation>文件体积小，但兼容性较差</translation>
     </message>
@@ -1601,12 +1611,12 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
         <translation>未知画质</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="105"/>
+        <location filename="../../gui/component/download_options/card.py" line="108"/>
         <source>preview</source>
         <translation>试看</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="123"/>
+        <location filename="../../gui/component/download_options/card.py" line="126"/>
         <source>Unknown Video Codec</source>
         <translation>未知编码</translation>
     </message>
@@ -1614,52 +1624,52 @@ Note: Videos protected by DRM can only be downloaded up to 1080P; higher qualiti
 <context>
     <name>MediaOptionsCard</name>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="164"/>
+        <location filename="../../gui/component/download_options/card.py" line="167"/>
         <source>Media Options</source>
         <translation>媒体选项</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="164"/>
+        <location filename="../../gui/component/download_options/card.py" line="167"/>
         <source>Configure download behavior for video and audio streams</source>
         <translation>设置视频和音频流的下载行为</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="172"/>
+        <location filename="../../gui/component/download_options/card.py" line="175"/>
         <source>Download standalone video stream</source>
         <translation>下载独立视频流</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="172"/>
+        <location filename="../../gui/component/download_options/card.py" line="175"/>
         <source>Download a video stream without audio</source>
         <translation>下载不包含音频的视频流</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="173"/>
+        <location filename="../../gui/component/download_options/card.py" line="176"/>
         <source>Download standalone audio stream</source>
         <translation>下载独立音频流</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="173"/>
+        <location filename="../../gui/component/download_options/card.py" line="176"/>
         <source>Download an audio stream without video</source>
         <translation>下载不包含视频的音频流</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="174"/>
+        <location filename="../../gui/component/download_options/card.py" line="177"/>
         <source>Merge separate video and audio streams into a single file</source>
         <translation>将独立的视频流和音频流合并为一个文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="175"/>
+        <location filename="../../gui/component/download_options/card.py" line="178"/>
         <source>Keep the original separate stream files after merging</source>
         <translation>在合并视频和音频后保留原始的独立流文件</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="174"/>
+        <location filename="../../gui/component/download_options/card.py" line="177"/>
         <source>Merge video and audio</source>
         <translation>合并视频和音频</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="175"/>
+        <location filename="../../gui/component/download_options/card.py" line="178"/>
         <source>Keep original files</source>
         <translation>保留原始文件</translation>
     </message>
@@ -1751,22 +1761,22 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>NamingConventionCard</name>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="234"/>
+        <location filename="../../gui/component/download_options/card.py" line="237"/>
         <source>Naming Convention</source>
         <translation>命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="234"/>
+        <location filename="../../gui/component/download_options/card.py" line="237"/>
         <source>Choose the naming rule to use when downloading</source>
         <translation>选择下载时使用的命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="260"/>
+        <location filename="../../gui/component/download_options/card.py" line="263"/>
         <source>Not available</source>
         <translation>不可用</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_options/card.py" line="262"/>
+        <location filename="../../gui/component/download_options/card.py" line="265"/>
         <source>Custom naming rules are not supported for favorites and profiles</source>
         <translation>收藏夹和个人空间类型不支持自定义命名规则</translation>
     </message>
@@ -1882,67 +1892,67 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="119"/>
+        <location filename="../../gui/interface/parse.py" line="124"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="123"/>
+        <location filename="../../gui/interface/parse.py" line="128"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="128"/>
+        <location filename="../../gui/interface/parse.py" line="133"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="134"/>
+        <location filename="../../gui/interface/parse.py" line="139"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="138"/>
+        <location filename="../../gui/interface/parse.py" line="143"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="150"/>
+        <location filename="../../gui/interface/parse.py" line="155"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="249"/>
+        <location filename="../../gui/interface/parse.py" line="252"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="267"/>
+        <location filename="../../gui/interface/parse.py" line="270"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="281"/>
+        <location filename="../../gui/interface/parse.py" line="284"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="283"/>
+        <location filename="../../gui/interface/parse.py" line="286"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="284"/>
+        <location filename="../../gui/interface/parse.py" line="287"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="309"/>
+        <location filename="../../gui/interface/parse.py" line="312"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="315"/>
+        <location filename="../../gui/interface/parse.py" line="318"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -2968,12 +2978,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="178"/>
+        <location filename="../../gui/component/dialog.py" line="179"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="182"/>
+        <location filename="../../gui/component/dialog.py" line="183"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>

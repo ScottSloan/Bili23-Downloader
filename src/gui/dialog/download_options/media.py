@@ -97,3 +97,9 @@ class MediaSettingsPage(ScrollArea):
 
             
         return True
+    
+    def has_media_to_download(self):
+        return (
+            self.media_options_card.download_video_stream or
+            self.media_options_card.download_audio_stream
+        )
