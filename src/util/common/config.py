@@ -280,7 +280,7 @@ class APPConfig(QConfig):
     proxy_uname = ConfigItem("Advanced", "proxy_uname", "")
     proxy_password = ConfigItem("Advanced", "proxy_password", "")
 
-    user_agent = ConfigItem("Advanced", "user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0")
+    user_agent = ConfigItem("Advanced", "user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0")
 
     # Update
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
@@ -299,7 +299,7 @@ class APPConfig(QConfig):
     b_nut = ConfigItem("Cookie", "b_nut", "")
     bili_ticket = ConfigItem("Cookie", "bili_ticket", "")
     bili_ticket_expires = ConfigItem("Cookie", "bili_ticket_expires", 0)
-    buvid_fp = ConfigItem("Cookie", "buvid_fp", "518b3ba95381f7d9d6edac50db3edee8")
+    buvid_fp = ConfigItem("Cookie", "buvid_fp", "")
     buvid3 = ConfigItem("Cookie", "buvid3", "")
     buvid4 = ConfigItem("Cookie", "buvid4", "")
     buvid_expires = ConfigItem("Cookie", "buvid_expires", 0)
