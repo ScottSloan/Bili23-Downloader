@@ -30,13 +30,13 @@ class QueryWorker:
         download_urls = CDN.get_url_list(download_urls)
 
         for url in download_urls:                
-            # 发起 HEAD 请求获取文件大小， raise_for_status 设置为 False，避免因某些 CDN 链接返回 403/404 而导致异常
+            # 发起 HEAD 请求获取文件大小
 
             try:
-                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
+                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = True)
                 response = request.run()
             except:
-                # 请求失败，继续尝试下一个链接
+                # 请求失败，继续尝试下一个链接 (例如 403, 404 等会被精确捕捉)
                 continue
 
             content_length = response.get("Content-Length")
@@ -46,11 +46,15 @@ class QueryWorker:
                 # 链接不可用
                 continue
             
-            if content_length is None or content_length == "0":
-                # 无法获取文件大小
+            if content_length is None or not str(content_length).isdigit():
+                # 无法获取有效的文件大小
                 continue
 
             self.file_size = int(content_length)
+
+            if self.file_size <= 10240:
+                # 如果文件极小（例如某些 CDN 拦截时返回的 1KB 左右错误文本），视为无效链接跳过
+                continue
 
             return {
                 "url": url,

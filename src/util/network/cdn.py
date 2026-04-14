@@ -5,7 +5,8 @@ from urllib.parse import urlparse
 class CDN:
     @staticmethod
     def get_url_list(url_list: list[str]):
-        replaced_url_list = CDN.replace(url_list)
+        filtered_url_list = CDN.filter(url_list)
+        replaced_url_list = CDN.replace(filtered_url_list)
 
         if config.get(config.prefer_cdn_server_provider):
             # 将替换后的 URL 列表放在前面，原始 URL 列表放在后面，以便优先使用替换后的 URL
@@ -15,6 +16,17 @@ class CDN:
 
         # 去重并保持顺序
         return list(dict.fromkeys(url_list))
+    
+    @staticmethod
+    def filter(url_list: list[str]):
+        # 过滤 pcdn、mcdn 等劣质链接
+        filtered_url_list = []
+
+        for url in url_list:
+            if "szbdyd.com" in url or "mcdn" in url:
+                continue
+
+        return filtered_url_list
 
     @staticmethod
     def replace(url_list: list[str]):

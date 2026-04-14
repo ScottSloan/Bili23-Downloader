@@ -53,7 +53,7 @@ class QueryInfoWorker(QObject):
 
         for url in download_urls:
             try:
-                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = False)
+                request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = True)
                 response = request.run()
             except:
                 # 请求失败，继续尝试下一个链接
@@ -66,8 +66,12 @@ class QueryInfoWorker(QObject):
                 # 链接不可用
                 continue
             
-            if content_length is None or content_length == "0":
-                # 无法获取文件大小
+            if content_length is None or not str(content_length).isdigit():
+                # 无法获取有效的文件大小
+                continue
+
+            if self.file_size <= 10240:
+                # 如果文件极小（例如某些 CDN 拦截时返回的 1KB 左右错误文本），视为无效链接跳过
                 continue
 
             return int(content_length)

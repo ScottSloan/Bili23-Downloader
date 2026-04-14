@@ -109,7 +109,7 @@ class CoverSettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Cover Format"), "", self.type_choice)
         self.attach_cover_group = self.addGroup("", self.tr("Embed cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
 
-        self.attach_cover_group.setEnabled(config.get(config.download_cover))
+        self.attach_cover_group.setEnabled(config.get(config.download_cover) and not self.type_choice.currentText() == "avif")
         self.download_switch.checkedChanged.connect(self.on_toggle_attach_cover)
         self.type_choice.currentIndexChanged.connect(self.on_change_cover_format)
 

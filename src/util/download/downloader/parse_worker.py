@@ -144,6 +144,8 @@ class ParseWorker(QRunnable, ParserBase):
 
         self.get_output_file_ext()
 
+        download_list = self.filter_download_list(download_list)
+
         return {
             "total_size": total_size,
             "download_queue": list(download_list.keys()),
@@ -178,3 +180,15 @@ class ParseWorker(QRunnable, ParserBase):
 
         if self.task_info.Download.merge_video_audio or self.task_info.Download.video_parts_count > 0:
             self.task_info.File.merge_file_ext = config.get(config.video_container).value
+    
+    def filter_download_list(self, download_list: dict):
+        # 根据 task_info 中已有的 queue 过滤下载列表，去掉不需要下载的条目
+        if not self.task_info.Download.queue:
+            # 如果没有 queue 信息，说明是首次解析，直接返回完整的下载列表
+            return download_list
+        
+        # 否则根据 queue 过滤下载列表，去掉不需要下载的条目
+        filtered_download_list = {key: entry for key, entry in download_list.items() if key in self.task_info.Download.queue}
+
+        return filtered_download_list
+    

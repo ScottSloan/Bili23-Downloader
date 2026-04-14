@@ -1,10 +1,10 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
+from util.common.enum import DownloadStatus, DownloadType, MediaType
 from util.parse.additional.worker import AdditionalParseWorker
 from util.download.downloader.parse_worker import ParseWorker
 from util.common import signal_bus, config, Translator, File
-from util.common.enum import DownloadStatus, DownloadType
 from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.common.data import reversed_video_quality_map
 from util.download.task.manager import task_manager
@@ -100,7 +100,11 @@ class ChunkWorker(QRunnable):
 
                     with self.session.stream("GET", self.url, headers = headers, follow_redirects = True, timeout = 10) as response:
                         response.raise_for_status()
-                        for chunk in response.iter_bytes(chunk_size=8192):
+
+                        # 获取服务端实际承诺下发的体量。若是最后一个切片且 CDN 数据缩水，它将以实际值为准
+                        expected_size = int(response.headers.get("Content-Length", self.chunk_size))
+                        
+                        for chunk in response.iter_bytes(chunk_size = 8192):
                             if self.stop_event.is_set():
                                 break
                             
@@ -119,8 +123,8 @@ class ChunkWorker(QRunnable):
                 if self.stop_event.is_set():
                     break
                     
-                # 检查区块是否真下载到了应该具备的预期大小
-                if downloaded >= self.chunk_size:
+                # 检查区块是否真下载到了服务端承诺的大小（原为严格检测 self.chunk_size）
+                if downloaded >= expected_size:
                     QMetaObject.invokeMethod(
                         self.parent, "on_chunk_finished",
                         Qt.ConnectionType.QueuedConnection,
@@ -130,7 +134,7 @@ class ChunkWorker(QRunnable):
                     break
                 else:
                     # 提前结束但没有报错，说明连接意外断开，触发重试
-                    raise StopIteration("Chunk downloaded size mismatch, triggering retry.")
+                    raise StopIteration(f"Chunk mismatch (Expected: {expected_size}, Got: {downloaded}), triggering retry.")
 
             except Exception:
                 if self.stop_event.is_set():
@@ -211,8 +215,9 @@ class Downloader(QObject):
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
         self.task_info.Download.total_size = download_info["total_size"]
 
-        # 只有在 progress 为 0 的时候才设置下载队列，防止重复解析时覆盖之前的下载状态，导致断点续传功能失效
-        if self.task_info.Download.progress == 0:
+        # 只有在 files 信息为空时才设置下载队列（说明是第一次物理解析而非断点复拉）
+        # 彻底弃用 progress == 0 的判断，防止大文件前 1% 下载途中暂停造成的队列误重置
+        if not self.task_info.Download.files:
             self.task_info.Download.queue = download_info["download_queue"]
 
         self.update_info(download_info)
@@ -372,8 +377,12 @@ class Downloader(QObject):
                 self.task_info.Download.info_label = Translator.VIDEO_QUALITY(reversed_video_quality_map.get(self.task_info.Download.video_quality_id, ""))
 
             elif has_video and not has_audio:
-                self.task_info.Download.info_label = "MP4"
-                
+                if self.task_info.Download.media_type == MediaType.MP4:
+                    self.task_info.Download.info_label = "MP4"
+                    
+                elif self.task_info.Download.media_type == MediaType.FLV:
+                    self.task_info.Download.info_label = "FLV"
+
             elif not has_video and has_audio:
                 self.task_info.Download.info_label = self.tr("Audio")
 
@@ -395,6 +404,7 @@ class Downloader(QObject):
         )
 
         cookies = get_cookies()
+
         for key, value in cookies.items():
             self.session.cookies.set(name = key, value = value, domain = ".bilibili.com", path = "/")
 
@@ -402,9 +412,12 @@ class Downloader(QObject):
         # 防抖设定，避免队列完成以及进度到 100 时重复触发
         if getattr(self, "_completion_triggered", False):
             return
+        
         self._completion_triggered = True
         
         self.task_info.Download.status = DownloadStatus.DOWNLOADING
+        self.task_info.Download.speed = 0
+        self.task_info.Download.progress = 100
 
         danmaku = self.task_info.Download.type & DownloadType.DANMAKU != 0
         subtitles = self.task_info.Download.type & DownloadType.SUBTITLE != 0
@@ -413,7 +426,7 @@ class Downloader(QObject):
 
         if any([danmaku, subtitles, cover, metadata]):
             self.task_info.Download.status = DownloadStatus.ADDITIONAL_PROCESSING
-
+            
             worker = AdditionalParseWorker(self.task_info)
             worker.success.connect(self.wait_merge)
             worker.error.connect(self.on_parse_error)
@@ -423,8 +436,6 @@ class Downloader(QObject):
 
     def wait_merge(self):
         self.task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
-        self.task_info.Download.speed = 0
-        self.task_info.Download.progress = 100
 
         self._stop_event.set()
         self.session.close()
