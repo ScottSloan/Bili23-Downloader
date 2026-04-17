@@ -11,4 +11,5 @@ from gui.component.widget.pivot import Pivot, PivotItem
 from gui.component.widget.search import SearchWidget
 from gui.component.widget.label import SectionLabel
 from gui.component.widget.scroll import ScrollArea
+from gui.component.widget.info_bar import InfoBar, InfoBarPosition, InfoBarIcon
 from gui.component.widget.pager import Pager

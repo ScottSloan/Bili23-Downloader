@@ -3,12 +3,12 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition, InfoBar, InfoBarPosition, TeachingTip,
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition, TeachingTip,
     TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox,
     FlyoutAnimationManager
 )
 
-from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget
+from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget, InfoBar, InfoBarPosition
 from gui.interface import DownloadInterface, SettingInterface, ParseInterface
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
 from gui.component import SystemTrayIcon, ProfileCard
@@ -17,7 +17,6 @@ from gui.dialog.login import LoginDialog
 
 from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.parse.preview import PreviewerInfo
 from util.auth import user_manager
 from util.misc import Updater
 
@@ -250,7 +249,8 @@ class MainWindow(MSFluentWindow):
             isClosable = True,
             duration = -1,
             position = InfoBarPosition.BOTTOM_RIGHT,
-            parent = self
+            parent = self,
+            contentMaxHeight = 200
         )
 
     def show_teaching_tip(self):

@@ -30,6 +30,7 @@ class AuthBase:
             raise Exception(message)
     
     def update_cookies(self):
+        # 登录成功后更新 cookies 信息到配置中
         config.set(config.bili_jct, client.cookies.get("bili_jct", ""))
         config.set(config.DedeUserID, client.cookies.get("DedeUserID", ""))
         config.set(config.DedeUserID__ckMd5, client.cookies.get("DedeUserID__ckMd5", ""))

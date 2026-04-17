@@ -1,9 +1,9 @@
-from PySide6.QtWidgets import QStackedWidget, QVBoxLayout, QHBoxLayout, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, QEventLoop
 
 from qfluentwidgets import (
-    MessageBoxBase, InfoBar, InfoBarPosition, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
-    PopUpAniStackedWidget
+    MessageBoxBase, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
+    PopUpAniStackedWidget, InfoBar, InfoBarPosition
 )
 from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 

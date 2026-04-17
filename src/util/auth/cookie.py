@@ -19,7 +19,6 @@ class CookieManager(AuthBase):
         self.get_buvid()
         self.get_bili_ticket()
 
-        # 激活 buvid3，避免风控
         self.exclimbwuzhi()
 
     def get_buvid(self):
@@ -37,13 +36,13 @@ class CookieManager(AuthBase):
 
             update_cookies()
 
-            self.exclimbwuzhi(exclimbwuzhi_payload)
+            self.exclimbwuzhi()
 
         def on_error(error_message: str):
             self.show_toast_error("获取 buvid 失败", error_message)
 
         if get_timestamp() < config.get(config.buvid_expires):
-            return
+            return True
 
         url = "https://api.bilibili.com/x/frontend/finger/spi"
 
