@@ -1,8 +1,8 @@
 from PySide6.QtCore import Signal, QObject
 from PySide6.QtGui import QPixmap
 
-from util.common.enum import ToastNotificationCategory
-from util.common import config
+from .enum import ToastNotificationCategory
+from .config import config
 
 from threading import Lock
 

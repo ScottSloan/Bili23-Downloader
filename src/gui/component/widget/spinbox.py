@@ -1,6 +1,4 @@
-from qfluentwidgets import SpinBox as _SpinBox
-from qfluentwidgets import DoubleSpinBox as _DoubleSpinBox
-from qfluentwidgets import CompactSpinBox as _CompactSpinbox
+from qfluentwidgets import SpinBox as _SpinBox, DoubleSpinBox as _DoubleSpinBox, CompactSpinBox as _CompactSpinbox
 
 class SpinBox(_SpinBox):
     def __init__(self, ignore_wheel = False, parent = None):

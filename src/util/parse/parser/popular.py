@@ -1,6 +1,7 @@
-from util.parse.episode.popular import PopularEpisodeParser
-from util.network.request import SyncNetWorkRequest
-from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
+
+from ..episode.popular import PopularEpisodeParser
+from .base import ParserBase
 
 class PopularParser(ParserBase):
     def __init__(self):

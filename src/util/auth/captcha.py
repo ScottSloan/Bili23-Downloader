@@ -1,8 +1,9 @@
-from util.network.request import NetworkRequestWorker
+from util.network import NetworkRequestWorker
 from util.common import signal_bus
 from util.thread import AsyncTask
-from util.auth import AuthBase
 from util.misc import WebPage
+
+from .base import AuthBase
 
 class CaptchaInfo:
     token = ""

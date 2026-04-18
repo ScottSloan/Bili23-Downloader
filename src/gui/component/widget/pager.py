@@ -3,7 +3,7 @@ from PySide6.QtCore import QSize, Signal
 
 from qfluentwidgets import TransparentToolButton, FluentIcon
 
-from gui.component.widget import PagerNumberButton
+from .button import PagerNumberButton
 
 from typing import List
 

@@ -1,7 +1,8 @@
 from PySide6.QtCore import QThread
 
-from util.auth.captcha import CaptchaInfo
 from util.common import signal_bus
+
+from .captcha import CaptchaInfo
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from multiprocessing import Process, Queue, Event

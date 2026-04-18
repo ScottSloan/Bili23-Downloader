@@ -7,7 +7,7 @@ from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox
 from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
-from gui.component.parse_list.tree_view import ParseTreeView
+from gui.component.parse_list import ParseTreeView
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, NumberingType

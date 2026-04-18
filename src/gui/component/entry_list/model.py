@@ -1,6 +1,6 @@
 from PySide6.QtCore import QModelIndex, Qt, Signal, QSize
 
-from gui.component.view_model.model_base import CoverQueryModelBase
+from gui.component.view_model import CoverQueryModelBase
 
 class EntryListModel(CoverQueryModelBase):
     itemClicked = Signal(QModelIndex, object)

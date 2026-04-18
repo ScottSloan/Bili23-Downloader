@@ -1,6 +1,7 @@
-from util.parse.episode.space import SpaceEpisodeParser
-from util.network.request import SyncNetWorkRequest
-from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
+
+from ..episode.space import SpaceEpisodeParser
+from .base import ParserBase
 
 import math
 

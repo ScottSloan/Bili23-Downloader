@@ -1,9 +1,9 @@
 from PySide6.QtCore import Qt, QAbstractListModel, QSize, QThreadPool
 from PySide6.QtGui import QPixmap
 
-from util.download.cover.query_worker import CoverQueryWorker
-from util.download.cover.db import CoverDatabase
-from util.download.cover.cache import CoverCache
+from .query_worker import CoverQueryWorker
+from .db import CoverDatabase
+from .cache import CoverCache
 
 from functools import lru_cache
 from hashlib import md5

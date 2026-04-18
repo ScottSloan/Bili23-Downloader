@@ -1,7 +1,9 @@
-from util.download.downloader.downloader import Downloader
 from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, Translator
-from util.download.task.info import TaskInfo
+
+from ..task.info import TaskInfo
+
+from .downloader import Downloader
 
 class DownloaderManager:
     def __init__(self):

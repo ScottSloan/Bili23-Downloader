@@ -1,7 +1,8 @@
 from PySide6.QtCore import Signal, QObject, Slot
 
-from util.network.proxy import Proxy
 from util.common import config
+
+from .proxy import Proxy
 
 from enum import Enum
 

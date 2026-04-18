@@ -3,14 +3,15 @@ from PySide6.QtCore import Qt
 
 from util.common.enum import DownloadStatus, DownloadType, MediaType
 from util.parse.additional.worker import AdditionalParseWorker
-from util.download.downloader.parse_worker import ParseWorker
 from util.common import signal_bus, config, Translator, File
 from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.common.data import reversed_video_quality_map
-from util.download.task.manager import task_manager
-from util.download.downloader.merger import Merger
-from util.network.request import get_cookies
-from util.download.task.info import TaskInfo
+from util.network import get_cookies
+
+from ..task.info import TaskInfo
+from ..task.manager import task_manager
+from .parse_worker import ParseWorker
+from .merger import Merger
 
 from threading import Event, Lock
 from pathlib import Path
@@ -148,7 +149,6 @@ class ChunkWorker(QRunnable):
 
         if self.on_chunk_end:
             self.on_chunk_end()
-
 
 class Downloader(QObject):
     def __init__(self, task_info: TaskInfo):

@@ -1,6 +1,7 @@
-from util.parse.episode.favlist import FavlistEpisodeParser
-from util.network.request import SyncNetWorkRequest
-from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
+
+from ..episode.favlist import FavlistEpisodeParser
+from .base import ParserBase
 
 from urllib.parse import urlencode
 import math

@@ -1,7 +1,8 @@
-from util.network.request import SyncNetWorkRequest, ResponseType
+from util.network import SyncNetWorkRequest, ResponseType
 from util.parse.additional import AdditionalParserBase
-from util.download.task.info import TaskInfo
 from util.common import config
+
+from ...download.task.info import TaskInfo
 
 import httpx
 

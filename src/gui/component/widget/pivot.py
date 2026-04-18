@@ -1,6 +1,4 @@
-from qfluentwidgets import setCustomStyleSheet, setFont
-from qfluentwidgets import PivotItem as _PivotItem
-from qfluentwidgets import Pivot as _Pivot
+from qfluentwidgets import setCustomStyleSheet, setFont, PivotItem as _PivotItem, Pivot as _Pivot
 
 class PivotItem(_PivotItem):
     def __init__(self, text: str, icon = None, parent = None):

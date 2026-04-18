@@ -6,8 +6,8 @@ from qfluentwidgets import (
     ConfigItem, EnumSerializer, Theme, qconfig
 )
 
-from util.common.serializer import LanguageSerializer, ScalingSerializer
-from util.common.enum import (
+from .serializer import LanguageSerializer, ScalingSerializer
+from .enum import (
     Language, WhenClose, DanmakuType, SubtitleType, CoverType, MetadataType, ProxyType, FFmpegSource, NumberingType,
     Scaling, FileConflictResolution, VideoContainer
 )

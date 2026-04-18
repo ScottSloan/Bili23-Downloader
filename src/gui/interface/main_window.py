@@ -12,8 +12,7 @@ from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidg
 from gui.interface import DownloadInterface, SettingInterface, ParseInterface
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
 from gui.component import SystemTrayIcon, ProfileCard
-from gui.dialog.update import UpdateDialog
-from gui.dialog.login import LoginDialog
+from gui.dialog import LoginDialog, UpdateDialog
 
 from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose

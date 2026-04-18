@@ -1,14 +1,14 @@
 from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
 from util.common import signal_bus, config, safe_remove, get_timestamp, Translator
-from util.download.task.reparse_worker import ReparseWorker
 from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.enum import DownloadStatus, DownloadType
-from util.download.cover.manager import cover_manager
-from util.download.task.db import TaskDatabase
-from util.download.task.info import TaskInfo
 from util.thread import GlobalThreadPoolTask
 from util.format import FileNameFormatter
 
+from ..cover.manager import cover_manager
+from .reparse_worker import ReparseWorker
+from .db import TaskDatabase
+from .info import TaskInfo
 
 from pathlib import Path
 from typing import List

@@ -1,9 +1,10 @@
-from util.network.request import ResponseType, SyncNetWorkRequest
 from util.parse.additional import DanmakuXML, DanmakuASS, AdditionalParserBase
-from util.download.task.info import TaskInfo
+from util.network import ResponseType, SyncNetWorkRequest
 from util.common import config, Translator
 from util.common.enum import DanmakuType
 from util.misc import dm_pb2
+
+from ...download.task.info import TaskInfo
 
 from google.protobuf.json_format import MessageToDict
 from typing import List

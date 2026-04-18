@@ -1,5 +1,6 @@
 from util.common import appdata_path, Database, get_timestamp
-from util.download.task.info import TaskInfo
+
+from .info import TaskInfo
 
 from pathlib import Path
 from typing import List

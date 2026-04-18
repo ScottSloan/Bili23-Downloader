@@ -1,5 +1,6 @@
 from util.parse.parser.base import ParserBase
-from util.download.task.info import TaskInfo
+
+from ...download.task.info import TaskInfo
 
 from pathlib import Path
 from typing import List

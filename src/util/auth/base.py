@@ -1,5 +1,5 @@
 from util.common import signal_bus, config
-from util.network.request import client
+from util.network import client
 
 import logging
 

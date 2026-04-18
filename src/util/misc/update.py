@@ -1,4 +1,4 @@
-from util.network.request import NetworkRequestWorker, RequestType
+from util.network import NetworkRequestWorker, RequestType
 from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, config, Translator
 from util.thread import AsyncTask

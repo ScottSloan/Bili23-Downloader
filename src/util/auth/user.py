@@ -1,7 +1,7 @@
-from util.network.request import NetworkRequestWorker, SyncNetWorkRequest, RequestType, ResponseType
+from util.network import NetworkRequestWorker, SyncNetWorkRequest, RequestType, ResponseType
 from util.common import signal_bus, config, Translator
 from util.thread import AsyncTask
-from util.auth import AuthBase
+from .base import AuthBase
 
 from pathlib import Path
 

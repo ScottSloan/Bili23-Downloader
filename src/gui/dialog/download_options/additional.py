@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtCore import QTimer
 
-from gui.component.setting.card import DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard
+from gui.component.setting import DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard
 from gui.component.widget import ScrollArea
 
 class AdditionalSettingsPage(ScrollArea):

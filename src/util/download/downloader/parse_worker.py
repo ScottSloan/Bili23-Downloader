@@ -2,12 +2,13 @@ from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
 
 from util.download.parse.video_info import VideoInfoParser
 from util.download.parse.audio_info import AudioInfoParser
-from util.network.request import SyncNetWorkRequest
 from util.common.enum import DownloadType, MediaType
 from util.parse.episode.tree import Attribute
 from util.parse.parser.base import ParserBase
-from util.download.task.info import TaskInfo
+from util.network import SyncNetWorkRequest
 from util.common import config, Translator
+
+from ..task.info import TaskInfo
 
 from urllib.parse import urlencode
 import logging
@@ -59,8 +60,11 @@ class ParseWorker(QRunnable, ParserBase):
             if "dash" in self.info_data.keys():
                 self.task_info.Download.media_type = MediaType.DASH
 
-            elif "durl" in self.info_data.keys():
+            elif self.info_data.get("format").startswith("mp4"):
                 self.task_info.Download.media_type = MediaType.MP4
+
+            elif self.info_data.get("format").startswith("flv"):
+                self.task_info.Download.media_type = MediaType.FLV
 
     def get_video_info(self):
         params = {

@@ -7,7 +7,7 @@ from qfluentwidgets import (
 )
 from qframelesswindow.titlebar.title_bar_buttons import CloseButton
 
-from gui.component.widget import PivotItem, Pivot
+from .widget import PivotItem, Pivot
 
 from util.common.enum import ToastNotificationCategory
 from util.common import StyleSheet, config

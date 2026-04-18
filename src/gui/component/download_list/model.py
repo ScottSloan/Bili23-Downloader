@@ -1,13 +1,11 @@
 from PySide6.QtCore import QModelIndex, Qt, QSize
 from PySide6.QtWidgets import QAbstractItemView
 
-from gui.component.view_model.model_base import CoverQueryModelBase
-
-from util.download.downloader.manager import downloader_manager
-from util.download.task.manager import task_manager
-from util.download.task.info import TaskInfo
+from util.download import TaskInfo, task_manager, downloader_manager
 from util.common.enum import DownloadStatus
 from util.common import signal_bus, config
+
+from ..view_model import CoverQueryModelBase
 
 from typing import List
 

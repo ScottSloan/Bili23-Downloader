@@ -90,5 +90,5 @@ match config.get(config.ffmpeg_source):
             else:
                 on_ffmpeg_not_found()
 
-from util.ffmpeg.command import FFmpegCommand
-from util.ffmpeg.runner import FFmpegRunner
+from .command import FFmpegCommand
+from .runner import FFmpegRunner

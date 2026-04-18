@@ -1,6 +1,7 @@
-from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
-from util.parse.episode.base import EpisodeParserBase
 from util.common import Translator
+
+from .tree import TreeItem, EpisodeData, Attribute
+from .base import EpisodeParserBase
 
 import json
 import re

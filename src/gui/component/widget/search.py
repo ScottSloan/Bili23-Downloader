@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QSize, Signal
 
 from qfluentwidgets import BodyLabel, PushButton, FluentIcon
 
-from gui.component.widget import ToolButton
+from .button import ToolButton
 
 from util.common import ExtendedFluentIcon
 

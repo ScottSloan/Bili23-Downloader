@@ -2,9 +2,9 @@ from PySide6.QtWidgets import QVBoxLayout
 
 from qfluentwidgets import SwitchSettingCard
 
-from gui.component.download_options.card import NamingConventionCard
-from gui.component.setting.card import DownloadPathSettingCard
+from gui.component.setting import DownloadPathSettingCard
 from gui.component.widget import ScrollArea
+from .card import NamingConventionCard
 
 from util.common import ExtendedFluentIcon, config
 

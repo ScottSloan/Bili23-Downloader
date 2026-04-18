@@ -1,3 +1,4 @@
-from gui.interface.download import DownloadInterface
-from gui.interface.setting import SettingInterface
-from gui.interface.parse import ParseInterface
+from .download import DownloadInterface
+from .setting import SettingInterface
+from .parse import ParseInterface
+from .main_window import MainWindow

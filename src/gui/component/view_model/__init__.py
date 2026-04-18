@@ -1,0 +1,2 @@
+from .delegate_base import CoverQueryDelegateBase
+from .model_base import CoverQueryModelBase

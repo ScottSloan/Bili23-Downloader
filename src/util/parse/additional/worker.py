@@ -2,8 +2,9 @@ from PySide6.QtCore import QObject, Signal
 
 from util.parse.additional import DanmakuParser, SubtitlesParser, MetadataParser, CoverParser
 from util.common import signal_bus, Translator
-from util.download.task.info import TaskInfo
 from util.common.enum import DownloadType
+
+from ...download.task.info import TaskInfo
 
 import logging
 

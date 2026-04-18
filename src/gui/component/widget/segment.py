@@ -2,8 +2,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QStackedWidget
 
 from qfluentwidgets import SegmentedToolWidget, FluentIcon
 
-from gui.component.widget.search import SearchWidget
-from gui.component.widget.pager import Pager
+from .search import SearchWidget
+from .pager import Pager
 
 from util.common import ExtendedFluentIcon
 

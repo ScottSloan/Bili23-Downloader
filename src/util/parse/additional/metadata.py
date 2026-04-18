@@ -1,9 +1,10 @@
-from util.network.request import SyncNetWorkRequest, ResponseType
 from util.parse.additional import MetadataNFO, AdditionalParserBase
+from util.network import SyncNetWorkRequest, ResponseType
 from util.parse.episode.tree import Attribute
-from util.download.task.info import TaskInfo
 from util.common import config, Translator
 from util.common.enum import MetadataType
+
+from ...download.task.info import TaskInfo
 
 from dataclasses import asdict
 from pathlib import Path

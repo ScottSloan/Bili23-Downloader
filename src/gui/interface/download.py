@@ -2,12 +2,10 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout
 
 from qfluentwidgets import SubtitleLabel, Pivot, PopUpAniStackedWidget
 
-from gui.component.download_list.top_widget import TopStackedWidget
-from gui.component.download_list.list_view import DownloadListView
+from gui.component.download_list import TopStackedWidget, DownloadListView
 from gui.component.widget import PivotItem
 
-from util.download.task.query_worker import QueryWorker
-from util.download.task.info import TaskInfo
+from util.download import TaskInfo, QueryWorker
 from util.common import signal_bus
 from util.thread import AsyncTask
 

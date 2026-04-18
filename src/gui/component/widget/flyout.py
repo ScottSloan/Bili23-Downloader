@@ -1,15 +1,16 @@
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QListWidgetItem
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen
-from PySide6.QtCore import Signal, Qt, QSize, QTimer
+from PySide6.QtCore import Signal, Qt, QSize
 
 from qfluentwidgets import (
     FlyoutViewBase, FluentIcon, isDarkTheme, ListWidget, ComboBox, PopUpAniStackedWidget
 )
 from qfluentwidgets.components.navigation import NavigationWidget
 
-from gui.component.widget.button import TransparentToolButton
-from gui.component.entry_list.list_view import EntryListView
-from gui.component.widget.pager import Pager
+from gui.component.entry_list import EntryListView
+
+from .button import TransparentToolButton
+from .pager import Pager
 
 from util.common import ExtendedFluentIcon, signal_bus, config
 from util.parse.parser import FavoriteParser

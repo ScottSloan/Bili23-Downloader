@@ -1,6 +1,6 @@
 from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard
 
-from gui.component.setting.widget import SettingSwitchButton, SettingComboBox
+from .widget import SettingSwitchButton, SettingComboBox
 
 from util.common import config, ExtendedFluentIcon, Directory
 

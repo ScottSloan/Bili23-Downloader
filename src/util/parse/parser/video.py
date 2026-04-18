@@ -1,6 +1,7 @@
-from util.parse.episode.video import VideoEpisodeParser
-from util.network.request import SyncNetWorkRequest
-from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
+
+from ..episode.video import VideoEpisodeParser
+from .base import ParserBase
 
 class VideoParser(ParserBase):
     def __init__(self):

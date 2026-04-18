@@ -2,8 +2,10 @@ from PySide6.QtGui import QIcon
 
 from qfluentwidgets import FluentIcon, MessageBox
 
-from gui.dialog.download_options import MediaSettingsPage, AdditionalSettingsPage, DownloadSettingsPage
 from gui.component.dialog import TopNavigationDialogBase
+from .additional import AdditionalSettingsPage
+from .download import DownloadSettingsPage
+from .media import MediaSettingsPage
 
 from util.common import ExtendedFluentIcon
 

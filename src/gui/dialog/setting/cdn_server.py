@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QSize
 from qfluentwidgets import SubtitleLabel, BodyLabel, CommandBar, Action, FluentIcon
 
 from gui.dialog.setting.edit_host import EditHostDialog
-from gui.component.setting.widget import EditActionWidget
+from gui.component.setting import EditActionWidget
 from gui.component.widget import DragTreeWidget
 from gui.component.dialog import DialogBase
 

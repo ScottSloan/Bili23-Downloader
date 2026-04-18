@@ -1,7 +1,8 @@
 from util.download.parse.query_worker import QueryWorker
 from util.common.enum import MediaType, DownloadType
-from util.download.task.info import TaskInfo
 from util.common import config
+
+from ...download.task.info import TaskInfo
 
 from collections import defaultdict
 

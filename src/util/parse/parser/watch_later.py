@@ -1,6 +1,6 @@
 from util.parse.episode.watch_later import WatchLaterEpisodeParser
-from util.network.request import SyncNetWorkRequest
 from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
 
 import math
 

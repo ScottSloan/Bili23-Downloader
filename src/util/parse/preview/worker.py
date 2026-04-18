@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Slot, Signal
 
-from util.network.request import RequestType, ResponseType, SyncNetWorkRequest
+from util.network import RequestType, ResponseType, SyncNetWorkRequest
 from util.parse.preview.info import PreviewerInfo
 from util.common.enum import MediaType
 from util.network import CDN

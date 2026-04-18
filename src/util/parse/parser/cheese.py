@@ -1,6 +1,7 @@
-from util.parse.episode.cheese import CheeseEpisodeParser
-from util.network.request import SyncNetWorkRequest
-from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
+
+from ..episode.cheese import CheeseEpisodeParser
+from .base import ParserBase
 
 class CheeseParser(ParserBase):
     def __init__(self):

@@ -3,10 +3,10 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
     ScrollArea, SettingCardGroup, OptionsSettingCard, CustomColorSettingCard, PushSettingCard, RangeSettingCard, SwitchSettingCard,
-    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor, qconfig
+    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor
 )
 
-from gui.component.setting.card import (
+from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard, ConfigFileSettingCard,
     SpeedLimitSettingCard

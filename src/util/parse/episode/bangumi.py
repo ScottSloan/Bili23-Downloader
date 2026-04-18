@@ -1,7 +1,8 @@
-from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
-from util.parse.episode.base import EpisodeParserBase
 from util.common import Translator
 from util.format.time import Time
+
+from .tree import TreeItem, Attribute, EpisodeData
+from .base import EpisodeParserBase
 
 class BangumiEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict, category_name: str, kwargs = {}):

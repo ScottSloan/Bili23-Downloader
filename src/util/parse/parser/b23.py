@@ -1,4 +1,4 @@
-from util.network.request import  SyncNetWorkRequest, ResponseType
+from util.network import  SyncNetWorkRequest, ResponseType
 
 class B23Parser:
     def __init__(self, url: str):

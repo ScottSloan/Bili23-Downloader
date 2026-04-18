@@ -1,7 +1,7 @@
 from PySide6.QtCore import QRunnable, Qt, QBuffer, QMetaObject, Q_ARG, QSize
 from PySide6.QtGui import QImage
 
-from util.network.request import SyncNetWorkRequest, ResponseType
+from util.network import SyncNetWorkRequest, ResponseType
 
 from urllib.parse import urlencode
 import base64

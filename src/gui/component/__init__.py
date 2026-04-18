@@ -1,2 +1,2 @@
-from gui.component.sys_tray import SystemTrayIcon
-from gui.component.profile import ProfileCard
+from .sys_tray import SystemTrayIcon
+from .profile import ProfileCard

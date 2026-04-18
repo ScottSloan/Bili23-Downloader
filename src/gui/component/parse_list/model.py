@@ -3,7 +3,7 @@ from PySide6.QtGui import QBrush, QGuiApplication, QColor
 
 from qfluentwidgets import themeColor, isDarkTheme
 
-from gui.component.parse_list.header import StrFormatter, DurationFormatter, DateFormatter
+from .header import StrFormatter, DurationFormatter, DateFormatter
 
 from util.common import config, signal_bus, Translator
 from util.parse.episode.tree import TreeItem

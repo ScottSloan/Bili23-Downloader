@@ -2,7 +2,7 @@ from PySide6.QtCore import QLocale
 
 from qfluentwidgets import ConfigSerializer
 
-from util.common.enum import Language, Scaling
+from .enum import Language, Scaling
 
 class LanguageSerializer(ConfigSerializer):
     def serialize(self, language: Language):

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QSystemTrayIcon, QWidget, QApplication
+from PySide6.QtWidgets import QSystemTrayIcon, QWidget
 
 from qfluentwidgets import SystemTrayMenu, Action
 

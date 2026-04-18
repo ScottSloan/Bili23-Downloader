@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import SubtitleLabel, MessageBox, CommandBar, Action, FluentIcon
 
-from gui.component.setting.widget import EditActionWidget
+from gui.component.setting import EditActionWidget
 from gui.component.widget import ColumnTreeWidget
 from gui.dialog.setting import EditRuleDialog
 from gui.component.dialog import DialogBase

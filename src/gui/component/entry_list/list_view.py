@@ -3,9 +3,9 @@ from PySide6.QtCore import QSize, Qt, Signal
 
 from qfluentwidgets import ListView, isDarkTheme, setFont, RoundMenu, Action, FluentIcon
 
-from gui.component.entry_list.poster_item_delegate import PosterListItemDelegate
-from gui.component.entry_list.entry_item_delegate import EntryListItemDelegate
-from gui.component.entry_list.model import EntryListModel
+from .poster_item_delegate import PosterListItemDelegate
+from .entry_item_delegate import EntryListItemDelegate
+from .model import EntryListModel
 
 import webbrowser
 

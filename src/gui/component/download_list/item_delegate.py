@@ -4,12 +4,13 @@ from PySide6.QtGui import QPainter, QMouseEvent
 
 from qfluentwidgets import FluentIcon
 
-from gui.component.view_model.delegate_base import CoverQueryDelegateBase
+from gui.component.view_model import CoverQueryDelegateBase
 
 from util.common import ExtendedFluentIcon, Translator, Directory
-from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
 from util.format import Units, Time
+
+from util.download import TaskInfo
 
 from pathlib import Path
 

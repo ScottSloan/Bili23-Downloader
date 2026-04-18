@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtCore import QTimer
 
-from gui.component.download_options.card import MediaInfoCard, MediaOptionsCard, MessageBox
+from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard, MessageBox
 from gui.component.widget import ScrollArea
 
 from util.parse.preview import PreviewerInfo

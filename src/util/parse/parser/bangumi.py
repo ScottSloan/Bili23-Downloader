@@ -1,7 +1,8 @@
-from util.parse.episode.bangumi import BangumiEpisodeParser
-from util.network.request import SyncNetWorkRequest
 from util.common.data import bangumi_type_map
-from util.parse.parser.base import ParserBase
+from util.network import SyncNetWorkRequest
+
+from ..episode.bangumi import BangumiEpisodeParser
+from .base import ParserBase
 
 class BangumiParser(ParserBase):
     def __init__(self):

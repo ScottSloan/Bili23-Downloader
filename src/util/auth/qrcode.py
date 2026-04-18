@@ -1,10 +1,10 @@
 from PySide6.QtCore import QObject, Signal, QSize, Qt, QTimer
 from PySide6.QtGui import QPixmap
 
-from util.network.request import NetworkRequestWorker
+from util.network import NetworkRequestWorker
 from util.common.enum import QRCodeScanStatus
 from util.thread import AsyncTask
-from util.auth import AuthBase
+from .base import AuthBase
 
 from urllib.parse import urlencode
 from qrcode import make as make_qrcode

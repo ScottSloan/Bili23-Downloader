@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 
 from qfluentwidgets import InfoBarIcon, InfoBarPosition, FluentIconBase, InfoBar as _InfoBar
 
-from gui.component.widget.scroll import ScrollArea
+from .scroll import ScrollArea
 
 from typing import Union
 

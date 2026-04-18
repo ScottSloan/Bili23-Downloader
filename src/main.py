@@ -58,12 +58,13 @@ from PySide6.QtCore import Qt, QLocale, QTranslator
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 
-from util.auth import user_manager, cookie_manager
 from qfluentwidgets import FluentTranslator
+
+from util.auth import user_manager, cookie_manager
 from util.common import config
 import res.resources_rc
 
-from gui.interface.main_window import MainWindow
+from gui.interface import MainWindow
 
 class Application(QApplication):
     def __init__(self, *args, **kwargs):

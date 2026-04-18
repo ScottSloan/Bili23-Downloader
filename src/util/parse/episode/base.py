@@ -1,6 +1,7 @@
-from util.parse.episode.tree import TreeItem, Attribute
 from util.common import signal_bus
 from util.format import Units
+
+from .tree import TreeItem, Attribute
 
 class EpisodeParserBase:
     def __init__(self, **kwargs):

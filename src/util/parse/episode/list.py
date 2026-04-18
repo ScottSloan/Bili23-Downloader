@@ -1,5 +1,5 @@
-from util.parse.episode.tree import TreeItem, EpisodeData, Attribute
-from util.parse.episode.base import EpisodeParserBase
+from .tree import TreeItem, EpisodeData, Attribute
+from .base import EpisodeParserBase
 
 class ListEpisodeParser(EpisodeParserBase):
     def __init__(self, info_data: dict, category_name: str):
