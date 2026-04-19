@@ -55,12 +55,15 @@ class QueryWorker:
                 # 如果文件极小（例如某些 CDN 拦截时返回的 1KB 左右错误文本），视为无效链接跳过
                 continue
 
-            return {
-                "url": url,
-                "file_size": self.file_size
-            }
+            break
         
-        raise Exception("无法获取有效的下载链接")
+        if self.file_size == 0:
+            raise Exception("无法获取有效的下载链接")
+        
+        return {
+            "url": url,
+            "file_size": self.file_size
+        }
 
     def get_download_urls(self, media_info: dict):
         download_urls = []

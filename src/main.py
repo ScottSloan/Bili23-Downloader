@@ -24,8 +24,6 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger(__name__)
-
 # --------- Disable PySide6 Warnings ---------
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 
@@ -78,6 +76,8 @@ class Application(QApplication):
         self.init_socket()
 
     def init_socket(self):
+        logger = logging.getLogger(__name__)
+
         # 尝试连接到已存在的实例，如果连接成功则退出当前实例
         self.socket = QLocalSocket()
         self.socket.connectToServer("Bili23DownloaderInstance")

@@ -100,3 +100,13 @@ class FFmpegCommand:
             .add_param("-q:a", "2")
             .add_output(output_path)
         )
+    
+    @classmethod
+    def fix_mp4_box(cls, input_path: str, output_path: str):
+        return (
+            cls()
+            .add_input(input_path)
+            .add_param("-c", "copy")
+            .add_param("-movflags", "+faststart")
+            .add_output(output_path)
+        )

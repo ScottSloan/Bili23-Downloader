@@ -2,9 +2,6 @@ from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
 
-import ctypes
-import sys
-
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, TeachingTip,
     TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox,
@@ -45,8 +42,6 @@ class MainWindow(MSFluentWindow):
         self.parse_interface = ParseInterface(self)
         self.download_interface = DownloadInterface(self)
         self.setting_interface = SettingInterface(self)
-
-        self.navigationInterface
 
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
 

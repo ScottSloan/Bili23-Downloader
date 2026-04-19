@@ -13,11 +13,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Merger(QObject):
-    def __init__(self, task_info: TaskInfo, parent=None):
+    def __init__(self, task_info: TaskInfo, parent = None):
         super().__init__(parent)
+
         self.task_info = task_info
         self._has_error = False
         self._ffmpeg_runner = None
+
+        self._output_audio_file = None
 
     def start(self):
         if self.task_info.Download.merge_video_audio:
@@ -28,8 +31,14 @@ class Merger(QObject):
             # 旧版 flv 分片下载合并
             self.merge_video_parts()
 
-        elif config.get(config.m4a_to_mp3) and self.task_info.File.audio_file_ext == "m4a":
-            self.m4a_to_mp3()
+        elif self.task_info.File.audio_file_ext == "m4a":
+            if config.get(config.m4a_to_mp3):
+                # 将 m4a 转换为 mp3
+                self.m4a_to_mp3()
+            
+            else:
+                # 对 m4a 文件进行修复
+                self.fix_mp4_box()
 
         else:
             self.rename_output_file()
@@ -100,8 +109,8 @@ class Merger(QObject):
                 self.add_file(self.final_mp4_video_file_name, clear = True)
 
             elif has_audio and not has_video:
-                safe_rename(cwd, self.temp_audio_file_name, self.final_audio_file_name)
-                self.add_file(self.final_audio_file_name, clear = True)
+                safe_rename(cwd, self._output_audio_file, self.final_audio_file_name)
+                self.add_file(self._output_audio_file, clear = True)
 
             self.mark_as_completed()
 
@@ -136,6 +145,7 @@ class Merger(QObject):
         try:
             safe_remove(self.get_cwd(), getattr(self, "_temp_m4a_audio_name", self.temp_audio_file_name))
             self.rename_output_file()
+
         except Exception as e:
             self.set_error_message(Translator.ERROR_MESSAGES("RENAME_FAILED"), str(e))
 
@@ -194,7 +204,7 @@ class Merger(QObject):
     def get_cwd(self):
         return Path(self.task_info.File.download_path, self.task_info.File.folder)
 
-    def add_file(self, *args: str, clear=False):
+    def add_file(self, *args: str, clear = False):
         if clear:
             self.task_info.File.relative_files.clear()
 
@@ -214,9 +224,11 @@ class Merger(QObject):
             self._temp_m4a_audio_name = self.temp_audio_file_name
             self.task_info.File.audio_file_ext = "mp3"
 
+            self._output_audio_file = self.temp_audio_file_name
+
             convert_cmd = FFmpegCommand.convert_m4a_to_mp3(
-                input_path=self._temp_m4a_audio_name,
-                output_path=self.temp_audio_file_name
+                input_path = self._temp_m4a_audio_name,
+                output_path = self.temp_audio_file_name
             )
 
             self._ffmpeg_runner = FFmpegRunner.from_command(convert_cmd, parent=self)
@@ -255,6 +267,33 @@ class Merger(QObject):
 
         return lists_path.name
 
+    def fix_mp4_box(self):
+        cwd = self.get_cwd()
+
+        if Path(cwd, self.temp_audio_file_name).exists():
+            self.task_info.Download.status = DownloadStatus.CONVERTING
+            signal_bus.download.update_downloading_item.emit(self.task_info)
+
+            temp_output_audio_file_name = "output_{task_id}.m4a".format(task_id = self.task_info.Basic.task_id)
+
+            self._output_audio_file = temp_output_audio_file_name
+
+            fix_command = FFmpegCommand.fix_mp4_box(
+                input_path = self.temp_audio_file_name,
+                output_path = temp_output_audio_file_name
+            )
+
+            self._ffmpeg_runner = FFmpegRunner.from_command(fix_command, parent = self)
+            self._ffmpeg_runner.set_cwd(cwd)
+            self._ffmpeg_runner.finished_sig.connect(self.on_convert_completed)
+            self._ffmpeg_runner.error_sig.connect(self.on_merge_error)
+            self._ffmpeg_runner.start()
+        else:
+            self.set_error_message(
+                Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+                Translator.ERROR_MESSAGES("M4A_NOT_FOUND")
+            )
+
     @property
     def temp_video_file_name(self):
         return "video_{task_id}.{file_ext}".format(
@@ -276,6 +315,13 @@ class Merger(QObject):
             file_ext = self.task_info.File.merge_file_ext
         )
     
+    @property
+    def temp_cover_file_name(self):
+        return "cover_{task_id}.{file_ext}".format(
+            task_id = self.task_info.Basic.task_id,
+            file_ext = config.get(config.cover_type).value
+        )
+
     @property
     def final_output_file_name(self):
         return f"{self.task_info.File.name}.{self.task_info.File.merge_file_ext}"
