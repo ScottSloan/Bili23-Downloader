@@ -1,6 +1,6 @@
 [project]
 name = "bili23-downloader"
-version = "2.00.1"
+version = "2.00.2"
 description = "跨平台的 B 站视频下载工具，支持现代 UI、音视频流分离下载、多线程下载、弹幕与字幕获取、封面提取及元数据刮削，可自定义文件命名与分类，兼容 Windows（含 Win7）、Linux 和 macOS。"
 readme = "README.md"
 license = "GPL-3.0"

@@ -221,6 +221,7 @@ class APPConfig(QConfig):
     auto_check_all = ConfigItem("Behavior", "auto_check_all", False, BoolValidator())
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
 
+    silent_start = ConfigItem("Behavior", "silent_start", False, BoolValidator())
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
     listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())

@@ -2,6 +2,9 @@ from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
 
+import ctypes
+import sys
+
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition, TeachingTip,
     TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox,
@@ -30,12 +33,13 @@ class MainWindow(MSFluentWindow):
 
         self.current_route_key = "ParseInterface"
         self.flyout_initialized = False
+        self.initialized = False
 
         self.init_UI()
 
         self.init_utils()
 
-        self.center_on_screen()
+        self.center_on_screen(not config.get(config.silent_start))
 
     def init_UI(self):
         self.parse_interface = ParseInterface(self)
@@ -278,11 +282,15 @@ class MainWindow(MSFluentWindow):
         dialog = UpdateDialog(info, self)
         dialog.exec()
 
-    def center_on_screen(self):
+    def center_on_screen(self, show = True):
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
-        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
-        self.show()
+
+        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
+
+        if show:
+            self.initialized = True
+            self.show()
 
         QApplication.processEvents()
 
@@ -359,3 +367,17 @@ class MainWindow(MSFluentWindow):
 
     def reset_route_key(self):
         self.navigationInterface.setCurrentItem(self.current_route_key)
+
+    def _activate_window(self):
+        if not self.initialized:
+            self.resize(950, 600)
+            self.center_on_screen(show = True)
+
+        if self.isMinimized():
+            self.showNormal()
+        else:
+            self.show()
+
+        QApplication.processEvents()
+        self.raise_()
+        self.activateWindow()

@@ -24,6 +24,8 @@ logging.basicConfig(
     ]
 )
 
+logger = logging.getLogger(__name__)
+
 # --------- Disable PySide6 Warnings ---------
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 
@@ -54,7 +56,8 @@ qInstallMessageHandler(qt_message_handler)
 
 # --------- Imports ---------
 
-from PySide6.QtCore import Qt, QLocale, QTranslator
+from PySide6.QtCore import Qt, QLocale, QTranslator, QByteArray
+from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 
@@ -69,6 +72,44 @@ from gui.interface import MainWindow
 class Application(QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.window: MainWindow = None
+
+        self.init_socket()
+
+    def init_socket(self):
+        # 尝试连接到已存在的实例，如果连接成功则退出当前实例
+        self.socket = QLocalSocket()
+        self.socket.connectToServer("Bili23DownloaderInstance")
+
+        if self.socket.waitForConnected(500):
+            # 已有实例存在，发送激活命令并退出
+            self.socket.write(QByteArray(b"activate"))
+            self.socket.flush()
+            self.socket.waitForBytesWritten(500)
+
+            logger.warning("另一个实例已在运行，已退出当前实例")
+
+            sys.exit(0)
+
+        self.server = QLocalServer()
+
+        if not self.server.listen("Bili23DownloaderInstance"):
+            logger.error("无法启动本地服务器: %s", self.server.errorString())
+            sys.exit(1)
+
+        self.server.newConnection.connect(self.on_new_connection)
+
+    def on_new_connection(self):
+        socket = self.server.nextPendingConnection()
+
+        if socket and socket.waitForReadyRead(500):
+            data = socket.readAll().data()
+
+            if data == b"activate":
+                # 激活已有窗口
+                if self.window:
+                    self.window._activate_window()
 
     def setup_app(self):
         self.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
@@ -90,6 +131,17 @@ class Application(QApplication):
         self.installTranslator(self.fluent_translator)
         self.installTranslator(self.bili23_translator)
 
+def read_args():
+    # 读取传入的参数
+
+    # 静默启动
+    if "--silent" in sys.argv:
+        os.environ["BILI23_SILENT_START"] = "1"
+
+    # 最大化窗口
+    if "--maximized" in sys.argv:
+        os.environ["BILI23_MAXIMIZED"] = "1"
+
 def main():
     scaling_value = config.get(config.scaling).value
 
@@ -104,8 +156,7 @@ def main():
     cookie_manager.init_cookie_info()
     user_manager.init_user_info()
 
-    main_window = MainWindow()
-    main_window.show()
+    app.window = MainWindow()
 
     app.exec()
 

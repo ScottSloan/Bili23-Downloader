@@ -52,6 +52,7 @@ class SettingInterface(ScrollArea):
 
         self.parse_list_card = ParseListSettingCard(self)
 
+        self.silent_start_card = SwitchSettingCard(ExtendedFluentIcon.APPLICATION_WINDOW, self.tr("Silent start"), self.tr("Start the application without showing the main window"), config.silent_start, self)
         self.stay_on_top_card = SwitchSettingCard(ExtendedFluentIcon.PIN, self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), config.stay_on_top, self)
         self.listen_clipboard_card = SwitchSettingCard(ExtendedFluentIcon.CLIPBOARD, self.tr("Listen to clipboard"), self.tr("Automatically start parsing when a link is copied"), config.listen_clipboard, self)
         self.parse_history_card = SwitchSettingCard(FluentIcon.HISTORY, self.tr("Save parse history"), self.tr("Save the history of parsed links"), config.parse_history, self)
@@ -108,6 +109,7 @@ class SettingInterface(ScrollArea):
 
         # Behavior
         self.behavior_group.addSettingCard(self.parse_list_card)
+        self.behavior_group.addSettingCard(self.silent_start_card)
         self.behavior_group.addSettingCard(self.stay_on_top_card)
         self.behavior_group.addSettingCard(self.listen_clipboard_card)
         self.behavior_group.addSettingCard(self.parse_history_card)

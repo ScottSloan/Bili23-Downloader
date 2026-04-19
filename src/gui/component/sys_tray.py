@@ -20,20 +20,13 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.menu.addAction(Action(self.tr("Exit"), triggered = self.on_exit))
 
         self.setContextMenu(self.menu)
+        
+        # 点击托盘图标时显示主窗口
+        self.activated.connect(self.on_show_main_window)
 
     def on_show_main_window(self):
         parent: QWidget = self.parent()
-
-        if parent.isMinimized():
-            parent.showNormal()
-
-        if parent.isHidden():
-            parent.show()
-
-        else:
-            parent.show()
-            parent.raise_()
-            parent.activateWindow()
+        parent._activate_window()
 
     def on_exit(self):
         self.on_show_main_window()

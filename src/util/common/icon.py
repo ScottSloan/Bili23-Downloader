@@ -27,6 +27,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     CHOOSE_PAGE = "choose_page"
     FILE_SETTINGS = "file_settings"
     FAST_DOWNLOAD = "fast_download"
+    APPLICATION_WINDOW = "application_window"
     DOUBLE_RIGHT_ARROWS = "double_right_arrows"
 
     def path(self, theme = Theme.AUTO):
