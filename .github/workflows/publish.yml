@@ -325,7 +325,7 @@ jobs:
             <key>CFBundlePackageType</key>
             <string>APPL</string>
             <key>LSMinimumSystemVersion</key>
-            <string>10.15</string>
+            <string>13.0</string>
             <key>NSHighResolutionCapable</key>
             <true/>
             <key>LSUIElement</key>

@@ -24,7 +24,12 @@ class CoverQueryWorker(QRunnable):
         from util.download.cover.manager import cover_manager
 
         if self.query_param:
-            self.query_url()
+            try:
+                self.query_url()
+
+            except Exception:
+                # 查询封面 URL 失败，无法继续后续流程
+                return
 
         result = cover_manager.query(self.cover_id)
 
@@ -96,6 +101,9 @@ class CoverQueryWorker(QRunnable):
         response = request.run()
 
         cover_url = response.get("data", {}).get("cover", "")
+
+        if not cover_url:
+            raise ValueError("获取封面 URL 失败")
 
         self.cover_id = cover_manager.arrange_cover_id(cover_url)
         self.cover_url = cover_url

@@ -34,7 +34,8 @@ class QueryWorker:
             try:
                 request = SyncNetWorkRequest(url, request_type = RequestType.HEAD, response_type = ResponseType.HEADERS, raise_for_status = True)
                 response = request.run()
-            except:
+
+            except Exception:
                 # 请求失败，继续尝试下一个链接 (例如 403, 404 等会被精确捕捉)
                 continue
 

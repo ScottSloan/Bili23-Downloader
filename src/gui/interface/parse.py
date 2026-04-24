@@ -12,10 +12,11 @@ from gui.component.parse_list import ParseTreeView
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, NumberingType
 from util.parse.preview import Previewer, PreviewerInfo
-from util.misc.history import history_manager
+from util.thread import AsyncTask, GlobalThreadPoolTask
 from util.common.data import url_patterns
 from util.parse.worker import ParseWorker
-from util.thread import AsyncTask
+from util.download import task_manager
+from util.misc import history_manager
 
 from functools import wraps
 import re
@@ -265,7 +266,7 @@ class ParseInterface(ParseBase):
 
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
-        signal_bus.download.create_task.emit(checked_episodes_list)
+        GlobalThreadPoolTask.run_func(task_manager.create, checked_episodes_list)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 

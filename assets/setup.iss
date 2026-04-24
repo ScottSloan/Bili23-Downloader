@@ -48,6 +48,11 @@ Name: "en_US"; MessagesFile: "compiler:Default.isl"
 Name: "zh_CN"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "zh_TW"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 
+[CustomMessages]
+en_US.ConfirmUninstallOldVersion=An older version is already installed. It must be uninstalled before setup can continue. The installation directory will be deleted, so any files in this directory will also be removed. Please back up your files before installing. Uninstall it now?
+zh_CN.ConfirmUninstallOldVersion=检测到已安装的旧版本，必须先卸载旧版本才能继续安装。安装目录将被删除，该目录下的文件也会一并移除，请在安装前做好备份。是否现在卸载旧版本？
+zh_TW.ConfirmUninstallOldVersion=偵測到已安裝舊版本，必須先解除安裝舊版本才能繼續安裝。安裝目錄將被刪除，該目錄下的檔案也會一併移除，請在安裝前做好備份。是否現在解除安裝舊版本？
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
@@ -77,11 +82,20 @@ var
   ResultStr: String;
   ResultCode: Integer;
   KeyName: String;
+  ConfirmResult: Integer;
 begin
   KeyName := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{B096F0C1-D105-4EF9-86E1-5E87DA884EA4}' + '_is1';
   
   if RegQueryStringValue(HKLM, KeyName, 'UninstallString', ResultStr) then
     begin
+      ConfirmResult := MsgBox(CustomMessage('ConfirmUninstallOldVersion'), mbConfirmation, MB_OKCANCEL);
+
+      if ConfirmResult <> IDOK then
+        begin
+          Result := False;
+          exit;
+        end;
+
       ResultStr := RemoveQuotes(ResultStr);
       
       if ResultStr <> '' then
@@ -89,5 +103,5 @@ begin
           Exec(ResultStr, '/silent', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
         end;
     end;
-    result := true;
+  result := true;
 end;

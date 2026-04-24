@@ -2,9 +2,10 @@ from util.common import config
 
 from urllib.parse import urlparse
 
+
 class CDN:
     @staticmethod
-    def get_url_list(url_list: list[str]):
+    def get_url_list(url_list: list[str]) -> list[str]:
         filtered_url_list = CDN.filter(url_list)
         replaced_url_list = CDN.replace(filtered_url_list)
 
@@ -18,7 +19,7 @@ class CDN:
         return list(dict.fromkeys(url_list))
     
     @staticmethod
-    def filter(url_list: list[str]):
+    def filter(url_list: list[str]) -> list[str]:
         # 过滤 pcdn、mcdn 等劣质链接
         filtered_url_list = []
 
@@ -26,13 +27,15 @@ class CDN:
             if "szbdyd.com" in url or "mcdn" in url:
                 continue
 
+            filtered_url_list.append(url)
+
         return filtered_url_list
 
     @staticmethod
-    def replace(url_list: list[str]):
+    def replace(url_list: list[str]) -> list[str]:
         new_url_list = []
 
-        for url in url_list.copy():
+        for url in url_list:
             for entry in config.get(config.cdn_server_list):
                 node = entry.get("host")
 
@@ -42,7 +45,7 @@ class CDN:
         return new_url_list
     
     @staticmethod
-    def replace_netloc(url: str, new_netloc: str):
+    def replace_netloc(url: str, new_netloc: str) -> str:
         parsed_url = urlparse(url)
 
         if new_netloc == parsed_url.netloc:
