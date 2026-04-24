@@ -16,6 +16,9 @@ class DownloadListModel(CoverQueryModelBase):
         self._cover_size = QSize(144, 80)
         self._task_list: List[TaskInfo] = task_list
 
+    def _get_task_id(self, task_info: TaskInfo):
+        return task_info.Basic.task_id
+
     def rowCount(self, parent = QModelIndex()):
         return len(self._task_list)
     
@@ -27,17 +30,19 @@ class DownloadListModel(CoverQueryModelBase):
         
         match role:
             case Qt.ItemDataRole.DisplayRole:
-                return task_info["task_id"]
+                return task_info.Basic.task_id
             
             case Qt.ItemDataRole.UserRole:
                 return task_info
     
     def getRow(self, task_info: TaskInfo):
-        try:
-            return self._task_list.index(task_info)
-        
-        except ValueError:
-            return -1
+        task_id = self._get_task_id(task_info)
+
+        for row, item in enumerate(self._task_list):
+            if item.Basic.task_id == task_id:
+                return row
+
+        return -1
 
     def appendRow(self, task_info: TaskInfo):
         row = self.rowCount()
@@ -189,7 +194,11 @@ class DownloadListModel(CoverQueryModelBase):
     def onUpdateData(self, task_info: TaskInfo):
         row = self.getRow(task_info)
 
-        if row != -1 and self.isRowInVisibleArea(row):
+        if row == -1:
+            return
+
+        if self.isRowInVisibleArea(row):
+
             model_index = self.index(row)
 
             self.dataChanged.emit(model_index, model_index)

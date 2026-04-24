@@ -228,7 +228,7 @@ class Downloader(QObject):
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
         self.update_item(self.task_info)
-        signal_bus.download.start_next_task.emit()
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
         signal_bus.toast.show_long_message.emit(
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
@@ -442,7 +442,7 @@ class Downloader(QObject):
         self.speed_timer.stop()
 
         task_manager.update(self.task_info)
-        signal_bus.download.start_next_task.emit()
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     def on_chunk_start(self):
         with self.count_lock:

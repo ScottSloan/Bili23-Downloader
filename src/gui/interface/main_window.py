@@ -24,6 +24,7 @@ class MainWindow(MSFluentWindow):
         super().__init__()
 
         self.resize(950, 600)
+        self.setMinimumSize(950, 600)
         self.setWindowTitle("Bili23 Downloader")
         self.setWindowIcon(QIcon(":/bili23/icon/app.svg"))
         self.setObjectName("MainWindow")

@@ -55,11 +55,10 @@ class DownloadInterface(QFrame):
     def connect_signal(self):
         signal_bus.download.add_to_downloading_list.connect(self.downloading_list_view.addTask)
         signal_bus.download.add_to_completed_list.connect(self.completed_list_view.addTask)
+        signal_bus.download.auto_manage_concurrent_downloads.connect(self.downloading_list_view._schedule_auto_manage_concurrent_downloads)
 
         signal_bus.download.remove_from_downloading_list.connect(self.downloading_list_view.removeTask)
         signal_bus.download.remove_from_completed_list.connect(self.completed_list_view.removeTask)
-
-        signal_bus.download.start_next_task.connect(self.downloading_list_view._model.manageConcurrentDownloads)
 
         self.top_stacked_widget.start_all_btn.clicked.connect(self.downloading_list_view._model.batchStart)
         self.top_stacked_widget.pause_all_btn.clicked.connect(self.downloading_list_view._model.batchPause)

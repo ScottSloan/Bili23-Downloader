@@ -1,5 +1,5 @@
 from PySide6.QtGui import QPainter, QColor, QFontMetrics
-from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, Qt, QTimer
 
 from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme, setFont
 
@@ -22,6 +22,7 @@ class DownloadListView(ListView):
         self._auto_manage_concurrent = False
         self._auto_update_visible_area = False
         self._auto_update_count_badge = False
+        self._auto_manage_pending = False
 
         self._in_adding_queried_tasks = False
 
@@ -104,9 +105,6 @@ class DownloadListView(ListView):
     def addTask(self, task_info_list: List[TaskInfo]):
         self._model.appendRows(task_info_list)
 
-        if not self._in_adding_queried_tasks:
-            self._model.manageConcurrentDownloads()
-
         if self._auto_update_count_badge:
             # 更新下载数量徽章
             signal_bus.download.update_downloading_count.emit(self._model.rowCount())
@@ -136,6 +134,18 @@ class DownloadListView(ListView):
 
     def _endAddQueriedTasks(self):
         self._in_adding_queried_tasks = False
+
+    def _schedule_auto_manage_concurrent_downloads(self):
+        if self._auto_manage_pending:
+            return
+
+        self._auto_manage_pending = True
+
+        def run_auto_manage():
+            self._auto_manage_pending = False
+            self._model.manageConcurrentDownloads()
+
+        QTimer.singleShot(0, run_auto_manage)
 
     def onTogglePauseResumeTask(self, index: QModelIndex, task_info: TaskInfo):
         # 与 model 交互以暂停下载任务

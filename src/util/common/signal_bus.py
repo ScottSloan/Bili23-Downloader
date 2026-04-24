@@ -30,6 +30,7 @@ class SignalBus:
         create_task = Signal(list)
 
         add_to_downloading_list = Signal(list)
+        auto_manage_concurrent_downloads = Signal()
         add_to_completed_list = Signal(list)
 
         remove_from_downloading_list = Signal(object)

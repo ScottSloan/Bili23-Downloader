@@ -21,32 +21,6 @@ from util.misc import history_manager
 from functools import wraps
 import re
 
-def check_preview_info(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if PreviewerInfo.error_occurred:
-            # 只有存在 error_message 时才显示通知
-
-            if PreviewerInfo.error_message:
-                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, Translator.ERROR_MESSAGES("MEDIA_INFO_FAILED"), PreviewerInfo.error_message)
-        else:
-            return func(self, *args, **kwargs)
-        
-    return wrapper
-
-def show_download_options_dialog(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if config.get(config.show_download_options_dialog):
-            dialog = DownloadOptionsDialog(self.main_window)
-            
-            if not dialog.exec():
-                return
-
-        return func(self, *args, **kwargs)
-    
-    return wrapper
-
 class ParseBase(QFrame):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -109,11 +83,23 @@ class ParseBase(QFrame):
             # 获取解析结果中第一个视频的信息，作为预览的媒体信息
             signal_bus.parse.preview_init.emit(first_episode_info)
 
+    def check_preview_info(self):
+        if PreviewerInfo.error_occurred:
+            # 只有存在 error_message 时才显示通知
+
+            if PreviewerInfo.error_message:
+                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, Translator.ERROR_MESSAGES("MEDIA_INFO_FAILED"), PreviewerInfo.error_message)
+
+            return False
+        else:
+            return True
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
 
         self.main_window = parent
+        self._download_options_dialog = None
 
         self.setObjectName("ParseInterface")
 
@@ -258,11 +244,12 @@ class ParseInterface(ParseBase):
         if config.get(config.parse_history):
             history_manager.add_history(title, self.url_box.text(), category_name)
 
-    @check_preview_info
-    @show_download_options_dialog
     def on_download(self):
         # 只有在获取媒体信息成功时才允许下载
         #self.download_btn.setIndeterminateState(True)
+
+        if config.get(config.show_download_options_dialog):
+            self.on_download_options()
 
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
@@ -272,18 +259,18 @@ class ParseInterface(ParseBase):
 
         self.parse_list.update()
 
-    @check_preview_info
     def on_download_options(self):
         # 只有在获取媒体信息成功时才显示下载选项对话框
+        if not self.check_preview_info():
+            return
+
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
 
     def on_show_more(self):
         menu = RoundMenu(parent = self)
 
-        # TODO: 筛选功能
         menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Search"), self.on_search))
-        # menu.addAction(filter_action)
         menu.addAction(self._create_action(ExtendedFluentIcon.TODO, self.tr("Batch select"), self.on_batch_select))
         menu.addAction(self._create_action(FluentIcon.HISTORY, self.tr("Parsing history"), self.on_history))
 

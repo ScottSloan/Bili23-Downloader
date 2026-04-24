@@ -158,7 +158,7 @@ class Merger(QObject):
 
         task_manager.mark_as_completed(self.task_info)
 
-        signal_bus.download.start_next_task.emit()
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
         signal_bus.download.add_to_completed_list.emit([self.task_info])
         signal_bus.download.remove_from_downloading_list.emit(self.task_info)
 

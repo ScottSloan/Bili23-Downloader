@@ -155,6 +155,7 @@ class TaskManager:
             self.db_manager.add_tasks(task_info_list)
 
             signal_bus.download.add_to_downloading_list.emit(task_info_list)
+            signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     def query(self, completed: bool = False) -> List[TaskInfo]:
         result = self.db_manager.query_tasks(completed)
@@ -207,6 +208,7 @@ class TaskManager:
         self.db_manager.add_tasks([task_info])
 
         signal_bus.download.add_to_downloading_list.emit([task_info])
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     def _removeTemporaryFiles(self, task_info: TaskInfo):
         # 删除下载的临时文件
