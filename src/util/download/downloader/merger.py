@@ -182,6 +182,7 @@ class Merger(QObject):
         }
 
         error_message = None
+        
         for key, message in error_map.items():
             if key in str(stderr):
                 error_message = Translator.ERROR_MESSAGES(message)
@@ -191,6 +192,8 @@ class Merger(QObject):
             error_message = str(error)
 
         self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), f"{error_message}\n\n{stderr}")
+
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
 
     def set_error_message(self, short_message: str, description: str):
         self._has_error = True

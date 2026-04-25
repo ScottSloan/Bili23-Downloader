@@ -181,6 +181,7 @@ class ParseInterface(ParseBase):
         self.download_btn.clicked.connect(self.on_download)
 
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
+        signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)

@@ -19,14 +19,35 @@ class QRCode(AuthBase, QObject):
         AuthBase.__init__(self)
         QObject.__init__(self, parent)
 
+        self._cleaned_up = False
+
         self.qrcode_url = ""
         self.qrcode_key = ""
 
-        self.timer = QTimer()
+        self.timer = QTimer(self)
         self.timer.timeout.connect(self.check_scan_status)
+
+    def cleanup(self):
+        self._cleaned_up = True
+
+        self.stop_polling()
+
+        try:
+            self.timer.timeout.disconnect(self.check_scan_status)
+        except Exception:
+            pass
+
+    def on_error(self, message: str):
+        if self._cleaned_up:
+            return
+
+        super().on_error(message)
 
     def generate(self):
         def on_success(response: dict):
+            if self._cleaned_up:
+                return
+
             self.check_response(response)
 
             self.qrcode_url = response["data"]["url"]
@@ -55,6 +76,9 @@ class QRCode(AuthBase, QObject):
 
     def check_scan_status(self):
         def on_success(response: dict):
+            if self._cleaned_up:
+                return
+
             self.check_response(response)
 
             code = response["data"]["code"]

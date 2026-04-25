@@ -62,7 +62,7 @@ class DownloadInterface(QFrame):
 
         self.top_stacked_widget.start_all_btn.clicked.connect(self.downloading_list_view._model.batchStart)
         self.top_stacked_widget.pause_all_btn.clicked.connect(self.downloading_list_view._model.batchPause)
-        self.top_stacked_widget.delete_all_btn.clicked.connect(self.downloading_list_view._model.batch_cancel)
+        self.top_stacked_widget.delete_all_btn.clicked.connect(self.downloading_list_view.batch_cancel)
         
         self.top_stacked_widget.clear_all_btn.clicked.connect(self.completed_list_view._model.batch_cancel)
 

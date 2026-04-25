@@ -23,6 +23,7 @@ class SignalBus:
         query_audio_info = Signal(int, object)
 
         update_column_settings = Signal()
+        update_preview_info = Signal()
 
         parse_url = Signal(str)
 

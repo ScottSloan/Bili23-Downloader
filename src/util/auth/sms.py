@@ -25,10 +25,29 @@ class SMS(AuthBase, QObject):
         AuthBase.__init__(self)
         QObject.__init__(self, parent)
 
+        self._cleaned_up = False
+
         signal_bus.login.send_sms.connect(self.send)
+
+    def cleanup(self):
+        self._cleaned_up = True
+
+        try:
+            signal_bus.login.send_sms.disconnect(self.send)
+        except Exception:
+            pass
+
+    def on_error(self, message: str):
+        if self._cleaned_up:
+            return
+
+        super().on_error(message)
 
     def send(self):
         def on_success(response: dict):
+            if self._cleaned_up:
+                return
+
             self.check_response(response)
 
             CaptchaInfo.captcha_key = response["data"]["captcha_key"]
@@ -55,6 +74,9 @@ class SMS(AuthBase, QObject):
 
     def login(self):
         def on_success(response: dict):
+            if self._cleaned_up:
+                return
+
             self.check_response(response)
 
             self.update_cookies()

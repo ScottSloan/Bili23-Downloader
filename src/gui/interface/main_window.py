@@ -188,9 +188,6 @@ class MainWindow(MSFluentWindow):
 
             if dialog.exec():
                 user_manager.get_user_info()
-                
-                # 登录成功后更新预览信息
-                self.parse_interface.update_previewer_info()
         else:
             # 已登录，点击头像显示用户信息
             Flyout.make(

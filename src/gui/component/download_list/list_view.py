@@ -23,6 +23,7 @@ class DownloadListView(ListView):
         self._auto_update_visible_area = False
         self._auto_update_count_badge = False
         self._auto_manage_pending = False
+        self._in_batch_cancel = False
 
         self._in_adding_queried_tasks = False
 
@@ -114,7 +115,7 @@ class DownloadListView(ListView):
         
         self._model.removeRow(row)
 
-        if self._auto_manage_concurrent:
+        if self._auto_manage_concurrent and not self._in_batch_cancel:
             downloader_manager.remove(task_info.Basic.task_id)
 
             self._model.manageConcurrentDownloads()
@@ -134,6 +135,17 @@ class DownloadListView(ListView):
 
     def _endAddQueriedTasks(self):
         self._in_adding_queried_tasks = False
+
+    def batch_cancel(self):
+        self._in_batch_cancel = True
+
+        try:
+            self._model.batch_cancel()
+        finally:
+            self._in_batch_cancel = False
+
+        if self._auto_manage_concurrent:
+            self._schedule_auto_manage_concurrent_downloads()
 
     def _schedule_auto_manage_concurrent_downloads(self):
         if self._auto_manage_pending:

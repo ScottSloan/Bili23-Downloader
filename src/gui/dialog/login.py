@@ -19,6 +19,9 @@ class LoginDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
+        self._closing = False
+        self._resources_cleaned = False
+
         if sys.platform != "darwin":
             self.enable_close_btn()
 
@@ -101,13 +104,15 @@ class LoginDialog(DialogBase):
         self.sms_countdown_timer = QTimer(self)
         self.sms_countdown_timer.setInterval(1000)
 
+        self.close_timer = QTimer(self)
+        self.close_timer.setSingleShot(True)
+        self.close_timer.timeout.connect(self.accept)
+
         self.connect_signals()
 
     def connect_signals(self):
         self.send_verification_btn.clicked.connect(self.on_send_verification)
         self.sms_login_btn.clicked.connect(self.on_sms_login)
-
-        self.sms.sms_sent.connect(self.on_verfication_sent)
 
         self.sms_countdown_timer.timeout.connect(self.on_update_sms_countdown)
 
@@ -128,9 +133,50 @@ class LoginDialog(DialogBase):
         self.qrcode.start_polling()
 
     def on_dialog_close(self):
+        self._closing = True
+
+        self.cleanup_login_resources()
+
         signal_bus.login.stop_server.emit()
 
-        self.qrcode.stop_polling()
+        self.close_timer.stop()
+
+    def cleanup_login_resources(self):
+        if self._resources_cleaned:
+            return
+
+        self._resources_cleaned = True
+
+        self.sms_countdown_timer.stop()
+
+        try:
+            self.sms.sms_sent.disconnect(self.on_verfication_sent)
+        except Exception:
+            pass
+
+        try:
+            self.sms.sms_login_success.disconnect(self.on_sms_login_success)
+        except Exception:
+            pass
+
+        try:
+            self.sms.error.disconnect(self.show_error_toast_message)
+        except Exception:
+            pass
+
+        try:
+            self.qrcode.qrcode_generated.disconnect(self.on_qrcode_update)
+        except Exception:
+            pass
+
+        try:
+            self.qrcode.update_scan_status.disconnect(self.on_update_scan_status)
+        except Exception:
+            pass
+
+        self.captcha.cleanup()
+        self.sms.cleanup()
+        self.qrcode.cleanup()
 
     def on_send_verification(self):
         # 用户请求发送验证码
@@ -146,6 +192,9 @@ class LoginDialog(DialogBase):
         self.captcha.init_geetest()
         
     def on_verfication_sent(self):
+        if self._closing:
+            return
+
         # 验证码发送成功
         self.send_verification_btn.setEnabled(False)
 
@@ -162,15 +211,24 @@ class LoginDialog(DialogBase):
         self.sms_login_btn.setIndeterminateState(True)
 
     def on_sms_login_success(self):
+        if self._closing:
+            return
+
         self.login_success(self.tr("Successfully logged in via SMS"))
 
         self.sms_login_btn.setIndeterminateState(False)
 
     def on_qrcode_update(self, pixmap: QPixmap):
+        if self._closing:
+            return
+
         # 更新二维码图片
         self.qrcode_img.setPixmap(pixmap)
 
     def on_update_scan_status(self, status: int):
+        if self._closing:
+            return
+
         match status:
             case QRCodeScanStatus.WAITING_FOR_SCAN:
                 status_text = self.tr("Scan with the Bilibili app to log in")
@@ -189,6 +247,9 @@ class LoginDialog(DialogBase):
         self.scan_status_lab.setText(status_text)
 
     def on_update_sms_countdown(self):
+        if self._closing:
+            return
+
         if SMSInfo.countdown == 1:
             self.sms_countdown_timer.stop()
 
@@ -214,12 +275,22 @@ class LoginDialog(DialogBase):
         return True
     
     def show_error_toast_message(self, message: str):        
+        if self._closing:
+            return
+
         self.show_top_toast_message(ToastNotificationCategory.ERROR, "", message)
 
         self.sms_login_btn.setIndeterminateState(False)
 
     def login_success(self, message: str):
+        if self._closing:
+            return
+
+        self._closing = True
+
+        self.cleanup_login_resources()
+
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", message)
 
         # 延迟关闭对话框，确保用户能看到登录成功的提示
-        QTimer.singleShot(300, self.yesButton.click)
+        self.close_timer.start(300)

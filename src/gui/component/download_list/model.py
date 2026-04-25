@@ -150,14 +150,10 @@ class DownloadListModel(CoverQueryModelBase):
                 self.onUpdateData(task)
 
     def batch_cancel(self):
-        self.beginResetModel()
-
         for task in list(self._task_list):
             if task.Download.status not in [DownloadStatus.MERGING, DownloadStatus.CONVERTING]:
                 # 只有非合并中的任务才允许取消
                 self.cancelDownload(task)
-
-        self.endResetModel()
 
     def manageConcurrentDownloads(self):
         # 自动调度同时下载的任务数量
