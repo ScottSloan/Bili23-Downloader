@@ -7,6 +7,7 @@ from .captcha import CaptchaInfo
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from multiprocessing import Process, Queue, Event
 from urllib.parse import urlparse
+from threading import Thread
 import queue
 import json
 
@@ -152,17 +153,10 @@ class ServerManager:
     def stop(self):
         if self.running:
             self.stop_event.set()
+            self.running = False
 
-            if self.listener_thread:
-                self.listener_thread.stop()
-
-            if self.process:
-                if self.process.is_alive():
-                    self.process.join(timeout = 1.0)
-
-                if self.process.is_alive():
-                    self.process.terminate()
-                    self.process.join(timeout = 1.0)
+            process = self.process
+            listener_thread = self.listener_thread
 
             self.process = None
             self.req_queue = None
@@ -170,6 +164,15 @@ class ServerManager:
             self.stop_event = None
             self.listener_thread = None
 
-            self.running = False
+            def cleanup():
+                if listener_thread:
+                    listener_thread.stop()
+
+                if process:
+                    if process.is_alive():
+                        process.terminate()
+                        process.join(timeout = 1.0)
+
+            Thread(target = cleanup, daemon = True).start()
 
 server_manager = ServerManager()

@@ -1,8 +1,14 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
+from PySide6.QtCore import Qt
 
-from qfluentwidgets import SwitchButton, QConfig, OptionsConfigItem, ComboBox, FluentIcon, IndicatorPosition, qconfig
+from qfluentwidgets import (
+    SwitchButton, QConfig, OptionsConfigItem, ComboBox, FluentIcon, IndicatorPosition, Slider, qconfig,
+    RangeConfigItem, isDarkTheme
+)
 
 from gui.component.widget import TransparentToolButton
+
+from util.common import config
 
 class SettingSwitchButton(SwitchButton):
     def __init__(self, config_item: QConfig, parent = None):
@@ -34,6 +40,49 @@ class SettingComboBox(ComboBox):
 
     def on_current_index_changed(self, index: int):
         qconfig.set(self.config_item, self.itemData(index))
+
+class SettingSlider(QWidget):
+    def __init__(self, config_item: RangeConfigItem, parent = None):
+        super().__init__(parent)
+
+        self.configItem = config_item
+
+        self.setContentsMargins(0, 0, 0, 0)
+
+        self.slider = Slider(Qt.Orientation.Horizontal, self)
+        self.slider.setMinimumWidth(230)
+        self.slider.setRange(*config_item.range)
+        self.slider.setValue(config_item.value)
+
+        self.value_label = QLabel(self)
+        self.value_label.setNum(config_item.value)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.value_label)
+        layout.addWidget(self.slider)
+
+        self.slider.valueChanged.connect(self.__onValueChanged)
+
+        config.themeChanged.connect(self.__setQSS)
+
+        self.__setQSS()
+
+    def __onValueChanged(self, value: int):
+        """ slider value changed slot """
+        self.setValue(value)
+
+    def setValue(self, value: int):
+        qconfig.set(self.configItem, value)
+        self.value_label.setNum(value)
+        self.value_label.adjustSize()
+        self.slider.setValue(value)
+
+    def __setQSS(self):
+        if isDarkTheme():
+            self.value_label.setStyleSheet("color: rgb(159, 159, 159);")
+        else:
+            self.value_label.setStyleSheet("color: rgb(96, 96, 96);")
 
 class EditActionWidget(QWidget):
     def __init__(self, parent = None):

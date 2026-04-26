@@ -1,7 +1,10 @@
 from .card import (
     DownloadPathSettingCard, PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard,
     MetadataSettingCard, NumberSettingCard, CDNSettingCard, ProxySettingCard, FFmpegSettingCard,
-    DownloadFormatCard, ParseListSettingCard, ConfigFileSettingCard, SpeedLimitSettingCard
+    DownloadFormatCard, ParsingSettingCard, ConfigFileSettingCard, WindowBehaviorSettingCard, 
+    DownloadHandlingSettingCard, DownloadConcurrencySettingCard, DownloadConcurrencySettingCard
 )
 from .group import FontGroup, BorderGroup, ColorGroup, MarginGroup, AlignmentGroup, AdvancedGroup, ResolutionGroup
-from .widget import SettingSwitchButton, SettingComboBox, EditActionWidget, ParseActionWidget, InsertActionWidget
+from .widget import (
+    SettingSwitchButton, SettingComboBox, EditActionWidget, ParseActionWidget, InsertActionWidget, SettingSlider
+)

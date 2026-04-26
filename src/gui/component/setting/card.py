@@ -1,6 +1,6 @@
 from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard
 
-from .widget import SettingSwitchButton, SettingComboBox
+from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 
 from util.common import config, ExtendedFluentIcon, Directory
 
@@ -243,16 +243,18 @@ class DownloadFormatCard(ExpandGroupSettingCard):
         self.addGroup(FluentIcon.VIDEO, self.tr("Output Container Format"), self.tr("Choose the container format for the final output video file"), self.video_container_choice)
         self.addGroup(FluentIcon.MUSIC, self.tr("Convert M4A to MP3"), self.tr("Only applies when downloading audio-only streams. Disabled if video is also selected."), self.m4a_to_mp3_switch)
 
-class ParseListSettingCard(ExpandGroupSettingCard):
+class ParsingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
-        super().__init__(ExtendedFluentIcon.LIST, self.tr("Parse List"), self.tr("Adjust settings for the parse list"), parent)
+        super().__init__(FluentIcon.SEARCH, self.tr("Parsing Settings"), self.tr("Configure clipboard monitoring, parse history, and parse list options"), parent)
 
-        self.auto_check_all_switch = SettingSwitchButton(config.auto_check_all, parent = self)
+        self.monitor_clipboard_switch = SettingSwitchButton(config.monitor_clipboard, parent = self)
+        self.parse_history_switch = SettingSwitchButton(config.parse_history, parent = self)
 
-        self.custom_header_btn = PushButton(self.tr("Customize…"), self)
+        self.custom_header_btn = PushButton(self.tr("Configure…"), self)
 
-        self.addGroup("", self.tr("Auto-select All"), self.tr("Automatically select all items after parsing"), self.auto_check_all_switch)
-        self.addGroup("", self.tr("Customize Displayed Columns"), self.tr("Customize the columns displayed in the parse list and their order"), self.custom_header_btn)
+        self.addGroup("", self.tr("Monitor Clipboard"), self.tr("Automatically start parsing when a link is copied"), self.monitor_clipboard_switch)
+        self.addGroup("", self.tr("Save Parse History"), self.tr("Save the history of parsed links"), self.parse_history_switch)
+        self.addGroup("", self.tr("Parse List Settings"), self.tr("Customize the display and behavior of the parse list"), self.custom_header_btn)
 
 class ConfigFileSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -277,20 +279,39 @@ class ConfigFileSettingCard(ExpandGroupSettingCard):
     def on_open_config_directory(self):
         Directory.open_directory_in_explorer(str(config.file.parent))
 
-class SpeedLimitSettingCard(ExpandGroupSettingCard):
+class WindowBehaviorSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
-        super().__init__(ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Speed Limit"), self.tr("Configure download speed limit"), parent)
+        super().__init__(ExtendedFluentIcon.APPLICATION_WINDOW, self.tr("Window Behavior"), self.tr("Adjust the behavior of the main window during startup, runtime, and shutdown"), parent)
 
-        self.enable_speed_limit_switch = SettingSwitchButton(config.speed_limit_enabled, parent = self)
-        self.speed_limit_rate_btn = PushButton(self.tr("Customize…"), parent = self)
+        self.silent_start_switch = SettingSwitchButton(config.silent_start, parent = self)
+        self.stay_on_top_switch = SettingSwitchButton(config.stay_on_top, parent = self)
+        self.when_close_action_choice = SettingComboBox(config.when_close_window, [self.tr("Exit the program"), self.tr("Minimize to system tray"), self.tr("Always ask")], parent = self)
 
-        self.addGroup("", self.tr("Enable Speed Limit"), self.tr("Limit the speed of each download task"), self.enable_speed_limit_switch)
-        self.speed_limit_rate_group = self.addGroup("", self.tr("Speed Limit Rate"), "", self.speed_limit_rate_btn)
+        self.addGroup("", self.tr("Silent start"), self.tr("Start the application without showing the main window"), self.silent_start_switch)
+        self.addGroup("", self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), self.stay_on_top_switch)
+        self.addGroup("", self.tr("Close the main window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
 
-        self.set_current_speed_limit_rate(config.get(config.speed_limit_rate))
+class DownloadHandlingSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(FluentIcon.DOWNLOAD, self.tr("Download Handling"), self.tr("Configure download prompts, notifications, and file conflict handling"), parent)
 
-        self.speed_limit_rate_group.setEnabled(config.get(config.speed_limit_enabled))
-        self.enable_speed_limit_switch.checkedChanged.connect(lambda checked: self.speed_limit_rate_group.setEnabled(checked))
+        self.show_download_options_dialog_switch = SettingSwitchButton(config.show_download_options_dialog, parent = self)
+        self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
+        self.file_conflict_resolution_choice = SettingComboBox(config.file_conflict_resolution, [self.tr("Auto-rename"), self.tr("Overwrite")], parent = self)
 
-    def set_current_speed_limit_rate(self, rate: int):
-        self.speed_limit_rate_group.setContent(self.tr("Current rate: {rate} MB/s").format(rate = rate))
+        self.addGroup("", self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
+        self.addGroup("", self.tr("Show notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
+        self.addGroup("", self.tr("File conflict resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
+
+class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(ExtendedFluentIcon.FAST_DOWNLOAD, self.tr("Download Concurrency"), self.tr("Adjust per-task threads, concurrent downloads, and speed limits"), parent)
+
+        self.download_thread_slider = SettingSlider(config.download_thread, self)
+        self.download_parallel_slider = SettingSlider(config.download_parallel, self)
+
+        self.download_speed_limit_btn = PushButton(self.tr("Configure…"), self)
+
+        self.addGroup("", self.tr("Number of Threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self.download_thread_slider)
+        self.addGroup("", self.tr("Number of Parallel Downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self.download_parallel_slider)
+        self.addGroup("", self.tr("Speed Limit Settings"), self.tr("Configure speed limit settings for downloads"), self.download_speed_limit_btn)

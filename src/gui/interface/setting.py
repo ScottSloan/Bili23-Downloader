@@ -2,18 +2,18 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
-    ScrollArea, SettingCardGroup, OptionsSettingCard, CustomColorSettingCard, PushSettingCard, RangeSettingCard, SwitchSettingCard,
+    ScrollArea, SettingCardGroup, OptionsSettingCard, CustomColorSettingCard, PushSettingCard, SwitchSettingCard,
     ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor
 )
 
 from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
-    FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParseListSettingCard, ConfigFileSettingCard,
-    SpeedLimitSettingCard
+    FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, ConfigFileSettingCard,
+    WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
-    StartingNumberDialog, ParseListColumnDialog, SpeedLimitSettingDialog, RuleListDialog
+    StartingNumberDialog, ParseListSettingsDialog, SpeedLimitSettingDialog, RuleListDialog
 )
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig, isWin11
@@ -50,24 +50,15 @@ class SettingInterface(ScrollArea):
         # Behavior
         self.behavior_group = SettingCardGroup(self.tr("Behavior"), self)
 
-        self.parse_list_card = ParseListSettingCard(self)
-
-        self.silent_start_card = SwitchSettingCard(ExtendedFluentIcon.APPLICATION_WINDOW, self.tr("Silent start"), self.tr("Start the application without showing the main window"), config.silent_start, self)
-        self.stay_on_top_card = SwitchSettingCard(ExtendedFluentIcon.PIN, self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), config.stay_on_top, self)
-        self.listen_clipboard_card = SwitchSettingCard(ExtendedFluentIcon.CLIPBOARD, self.tr("Listen to clipboard"), self.tr("Automatically start parsing when a link is copied"), config.listen_clipboard, self)
-        self.parse_history_card = SwitchSettingCard(FluentIcon.HISTORY, self.tr("Save parse history"), self.tr("Save the history of parsed links"), config.parse_history, self)
-        self.show_download_options_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), config.show_download_options_dialog, self)
-        self.when_close_window_card = ComboBoxSettingCard(config.when_close_window, ExtendedFluentIcon.EXIT, self.tr("Close the main window"), self.tr("Choose the action when closing the main window"), [self.tr("Exit the program"), self.tr("Minimize to system tray"), self.tr("Always ask")], self)
-        self.file_conflict_resolution_card = ComboBoxSettingCard(config.file_conflict_resolution, ExtendedFluentIcon.RENAME, self.tr("File conflict resolution"), self.tr("Choose the action when a file with the same name already exists"), [self.tr("Auto rename"), self.tr("Overwrite")], self)
-
+        self.parse_list_card = ParsingSettingCard(self)
+        self.window_behavior_group = WindowBehaviorSettingCard(self)
+        self.download_interaction_card = DownloadHandlingSettingCard(self)
+        
         # Download
         self.download_group = SettingCardGroup(self.tr("Download"), self)
 
         self.download_path_card = DownloadPathSettingCard(self.main_window, save = True, parent = self)
-        self.download_thread_card = RangeSettingCard(config.download_thread, ExtendedFluentIcon.DOUBLE_RIGHT_ARROWS, self.tr("Number of threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self)
-        self.download_parallel_card = RangeSettingCard(config.download_parallel, ExtendedFluentIcon.CHOOSE_PAGE, self.tr("Number of parallel downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self)
-        self.show_notification_card = SwitchSettingCard(FluentIcon.RINGER, self.tr("Show notifications"), self.tr("Show notifications when downloads complete"), config.show_notification, self)
-        self.speed_limit_card = SpeedLimitSettingCard(self)
+        self.download_currency_card = DownloadConcurrencySettingCard(self)
         self.priority_setting_card = PrioritySettingCard(self)
         self.download_format_card = DownloadFormatCard(self)
 
@@ -109,20 +100,12 @@ class SettingInterface(ScrollArea):
 
         # Behavior
         self.behavior_group.addSettingCard(self.parse_list_card)
-        self.behavior_group.addSettingCard(self.silent_start_card)
-        self.behavior_group.addSettingCard(self.stay_on_top_card)
-        self.behavior_group.addSettingCard(self.listen_clipboard_card)
-        self.behavior_group.addSettingCard(self.parse_history_card)
-        self.behavior_group.addSettingCard(self.show_download_options_dialog_card)
-        self.behavior_group.addSettingCard(self.when_close_window_card)
-        self.behavior_group.addSettingCard(self.file_conflict_resolution_card)
+        self.behavior_group.addSettingCard(self.window_behavior_group)
+        self.behavior_group.addSettingCard(self.download_interaction_card)
 
         # Download
         self.download_group.addSettingCard(self.download_path_card)
-        self.download_group.addSettingCard(self.download_thread_card)
-        self.download_group.addSettingCard(self.download_parallel_card)
-        self.download_group.addSettingCard(self.show_notification_card)
-        self.download_group.addSettingCard(self.speed_limit_card)
+        self.download_group.addSettingCard(self.download_currency_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
 
@@ -179,10 +162,10 @@ class SettingInterface(ScrollArea):
 
         # Behavior
         self.parse_list_card.custom_header_btn.clicked.connect(self.on_custom_parse_list_column)
-        self.stay_on_top_card.checkedChanged.connect(self.on_change_stay_on_top)
+        self.window_behavior_group.stay_on_top_switch.checkedChanged.connect(self.on_change_stay_on_top)
 
         # Download
-        self.speed_limit_card.speed_limit_rate_btn.clicked.connect(self.on_custom_speed_limit_rate)
+        self.download_currency_card.download_speed_limit_btn.clicked.connect(self.on_custom_speed_limit_settings)
         self.priority_setting_card.video_quality_btn.clicked.connect(self.on_adjust_video_quality_priority)
         self.priority_setting_card.audio_quality_btn.clicked.connect(self.on_adjust_audio_quality_priority)
         self.priority_setting_card.video_codec_btn.clicked.connect(self.on_adjust_video_codec_priority)
@@ -208,19 +191,15 @@ class SettingInterface(ScrollArea):
         self.check_update_card.clicked.connect(self.on_check_update)
 
     def on_custom_parse_list_column(self):
-        dialog = ParseListColumnDialog(self.main_window)
+        dialog = ParseListSettingsDialog(self.main_window)
         dialog.exec()
 
     def on_change_stay_on_top(self, checked: bool):
         self.main_window.setStayOnTop(checked)
 
-    def on_custom_speed_limit_rate(self):
+    def on_custom_speed_limit_settings(self):
         dialog = SpeedLimitSettingDialog(self.main_window)
-
-        if dialog.exec():
-            self.speed_limit_card.set_current_speed_limit_rate(dialog.speed_limit_rate)
-
-            config.set(config.speed_limit_rate, dialog.speed_limit_rate)
+        dialog.exec()
 
     def on_adjust_video_quality_priority(self):
         map_reversed = {v: Translator.VIDEO_QUALITY(k) for k, v in video_quality_map.items()}

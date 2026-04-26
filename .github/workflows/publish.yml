@@ -66,7 +66,7 @@ jobs:
       - name: Prepare Windows 10/11 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.4/windows_x64_runtime.zip" -OutFile windows_x64_runtime.zip
           
           Expand-Archive windows_x64_runtime.zip -DestinationPath Bili23-Downloader
 
@@ -110,7 +110,7 @@ jobs:
       - name: Prepare Windows 7 runtime
         run: |
           # 下载 Python 静态运行时环境
-          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
+          Invoke-WebRequest -Uri "https://github.com/ScottSloan/Python-Static/releases/download/v0.0.4/windows_x64_runtime_for_win7.zip" -OutFile windows_x64_runtime_for_win7.zip
           
           Expand-Archive windows_x64_runtime_for_win7.zip -DestinationPath Bili23-Downloader
 
@@ -168,7 +168,7 @@ jobs:
       - name: Prepare Linux runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/linux_amd64_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.4/linux_amd64_runtime.zip
 
           unzip linux_amd64_runtime.zip -d Bili23-Downloader
 
@@ -280,7 +280,7 @@ jobs:
       - name: Prepare macOS runtime
         run: |
           # 下载 Python 静态运行时环境
-          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.2/macos_${{ matrix.arch }}_runtime.zip
+          wget https://github.com/ScottSloan/Python-Static/releases/download/v0.0.4/macos_${{ matrix.arch }}_runtime.zip
 
           unzip macos_${{ matrix.arch }}_runtime.zip -d Bili23-Downloader
 

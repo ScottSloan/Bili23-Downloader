@@ -298,6 +298,7 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         self.subscribtion_parser = FavoriteParser()
         self.subscribtion_parser.success_callback = self.subscribtion_widget.update_list
 
+
     def init_UI(self):
         self.category_widget = CategoryWidget(self)
         self.category_widget.setFixedWidth(180)

@@ -1,13 +1,13 @@
 from PySide6.QtCore import Qt
 
-from qfluentwidgets import SubtitleLabel, BodyLabel
+from qfluentwidgets import SubtitleLabel, BodyLabel, SwitchButton
 
 from gui.component.widget import CheckableDragListWidget
 from gui.component.dialog import DialogBase
 
 from util.common import config, signal_bus, Translator
 
-class ParseListColumnDialog(DialogBase):
+class ParseListSettingsDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -16,18 +16,24 @@ class ParseListColumnDialog(DialogBase):
         self.init_data()
 
     def init_UI(self):
-        self.caption_lab = SubtitleLabel(self.tr("Customize Displayed Columns"))
+        self.caption_lab = SubtitleLabel(self.tr("Parse List Settings"), self)
 
-        column_lab = BodyLabel(self.tr("Check the columns you want to display and drag to reorder them"))
+        column_lab = BodyLabel(self.tr("Select columns to display and drag to reorder"), self)
 
-        self.drag_list = CheckableDragListWidget()
+        self.drag_list = CheckableDragListWidget(self)
+
+        auto_check_all_lab = BodyLabel(self.tr("Automatically check all parsed items"), self)
+        self.auto_check_all_switch = SwitchButton(self)
 
         self.viewLayout.addWidget(self.caption_lab)
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(column_lab)
         self.viewLayout.addWidget(self.drag_list)
+        self.viewLayout.addSpacing(10)
+        self.viewLayout.addWidget(auto_check_all_lab)
+        self.viewLayout.addWidget(self.auto_check_all_switch)
 
-        self.widget.setMinimumWidth(350)
+        self.widget.setMinimumWidth(400)
 
     def init_data(self):
         for entry in config.get(config.parse_list_column):
@@ -57,6 +63,7 @@ class ParseListColumnDialog(DialogBase):
             return
         
         config.set(config.parse_list_column, column_list)
+        config.set(config.auto_check_all, self.auto_check_all_switch.isChecked())
 
         signal_bus.parse.update_column_settings.emit()
             

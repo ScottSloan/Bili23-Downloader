@@ -223,7 +223,7 @@ class APPConfig(QConfig):
 
     silent_start = ConfigItem("Behavior", "silent_start", False, BoolValidator())
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
-    listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())
+    monitor_clipboard = ConfigItem("Behavior", "monitor_clipboard", False, BoolValidator())
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))

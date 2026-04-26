@@ -313,7 +313,7 @@ class ParseInterface(ParseBase):
         self.download_btn.setEnabled(checked_count > 0)
 
     def on_copy_url(self):
-        if self.clipboard.mimeData().hasText() and config.get(config.listen_clipboard):
+        if self.clipboard.mimeData().hasText() and config.get(config.monitor_clipboard):
             url = self.clipboard.text()
 
             for parser_type, pattern in url_patterns:

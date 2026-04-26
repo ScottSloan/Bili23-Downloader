@@ -38,7 +38,7 @@ class UserManager(AuthBase):
 
                 self.get_user_avatar(data.get("face", ""))
 
-                #signal_bus.emit_signal(signal_bus.parse.update_preview_info)
+                signal_bus.emit_signal(signal_bus.parse.update_preview_info)
 
         def on_error(error_message: str):
             self.show_toast_error(Translator.ERROR_MESSAGES("USER_INFO_FAILED"), error_message)
