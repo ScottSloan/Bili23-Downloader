@@ -250,7 +250,8 @@ class ParseInterface(ParseBase):
         #self.download_btn.setIndeterminateState(True)
 
         if config.get(config.show_download_options_dialog):
-            self.on_download_options()
+            if not self.on_download_options():
+                return
 
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
@@ -266,7 +267,8 @@ class ParseInterface(ParseBase):
             return
 
         dialog = DownloadOptionsDialog(self.main_window)
-        dialog.exec()
+        
+        return dialog.exec()
 
     def on_show_more(self):
         menu = RoundMenu(parent = self)

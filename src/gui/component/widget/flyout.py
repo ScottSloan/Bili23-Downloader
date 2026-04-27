@@ -20,9 +20,9 @@ import webbrowser
 
 class Separator(NavigationWidget):
     def __init__(self, parent = None):
-        super().__init__(False, parent=parent)
+        super().__init__(False, parent = parent)
 
-        self.setFixedSize(5, 450)
+        self.setFixedWidth(5)
 
         self.update()
 
@@ -31,7 +31,7 @@ class Separator(NavigationWidget):
 
         c = 255 if isDarkTheme() else 0
 
-        pen = QPen(QColor(c, c, c, 15))
+        pen = QPen(QColor(c, c, c, 25))
         pen.setCosmetic(True)
 
         painter.setPen(pen)
@@ -298,12 +298,11 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         self.subscribtion_parser = FavoriteParser()
         self.subscribtion_parser.success_callback = self.subscribtion_widget.update_list
 
-
     def init_UI(self):
         self.category_widget = CategoryWidget(self)
         self.category_widget.setFixedWidth(180)
 
-        separator = Separator(self)
+        self.separator = Separator(self)
 
         self.favorite_widget = EntryWidget(self)
         self.subscribtion_widget = EntryWidget(self)
@@ -318,7 +317,7 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
         self.viewLayout.setContentsMargins(10, 10, 10, 10)
         self.viewLayout.setSpacing(0)
         self.viewLayout.addWidget(self.category_widget)
-        self.viewLayout.addWidget(separator)
+        self.viewLayout.addWidget(self.separator)
         self.viewLayout.addWidget(self.stack_widget)
         
         self.category_widget.refresh_btn.clicked.connect(self.init_flyout)
@@ -339,6 +338,8 @@ class FavoriteFlyoutWidget(FlyoutViewBase):
             height = 655
         else:
             height = 475
+
+        self.separator.setFixedHeight(height - 25)
 
         self.setFixedSize(width, height)
 

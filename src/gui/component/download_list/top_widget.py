@@ -1,6 +1,10 @@
-from PySide6.QtWidgets import QStackedWidget, QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QStackedWidget, QWidget, QHBoxLayout, QGridLayout
+from PySide6.QtGui import QPainter, QColor, QPen
 
-from qfluentwidgets import PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, Flyout, FlyoutAnimationType
+from qfluentwidgets import (
+    PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, Flyout, FlyoutAnimationType,
+    isDarkTheme
+)
 
 from gui.component.widget import ToolButton
 
@@ -28,13 +32,6 @@ class SortFlyoutWidget(FlyoutViewBase):
             if key == self.sort_by_key:
                 self.sort_by_choice.setCurrentIndex(self.sort_by_choice.count() - 1)
 
-        sort_by_layout = QHBoxLayout()
-        sort_by_layout.setContentsMargins(0, 0, 0, 0)
-        sort_by_layout.addWidget(sort_by_lab)
-        sort_by_layout.addSpacing(12)
-        sort_by_layout.addWidget(self.sort_by_choice)
-        sort_by_layout.addStretch()
-
         sort_direction_lab = BodyLabel(self.tr("Sort Direction"), self)
         self.sort_ascending_btn = ToolButton(ExtendedFluentIcon.SORT, self)
         self.sort_ascending_btn.setToolTip(self.tr("Ascending"))
@@ -43,16 +40,18 @@ class SortFlyoutWidget(FlyoutViewBase):
 
         sort_direction_layout = QHBoxLayout()
         sort_direction_layout.setContentsMargins(0, 0, 0, 0)
-        sort_direction_layout.addWidget(sort_direction_lab)
-        sort_direction_layout.addSpacing(12)
         sort_direction_layout.addWidget(self.sort_ascending_btn)
         sort_direction_layout.addWidget(self.sort_descending_btn)
         sort_direction_layout.addStretch()
 
-        main_layout = QVBoxLayout(self)
+        main_layout = QGridLayout(self)
         main_layout.setContentsMargins(18, 12, 18, 12)
-        main_layout.addLayout(sort_by_layout)
-        main_layout.addLayout(sort_direction_layout)
+        main_layout.addWidget(sort_by_lab, 0, 0)
+        main_layout.addWidget(self.sort_by_choice, 0, 2)
+        main_layout.addWidget(sort_direction_lab, 1, 0)
+        main_layout.addLayout(sort_direction_layout, 1, 2)
+
+        main_layout.setColumnMinimumWidth(1, 12)
 
         self.connect_signals()
 
@@ -80,6 +79,37 @@ class SortFlyoutWidget(FlyoutViewBase):
         if self.trigger_signal_func:
             self.trigger_signal_func(self.sort_by_key, self.ascending)
 
+class FilterFlyoutWidget(FlyoutViewBase):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+        self.init_UI()
+
+    def init_UI(self):
+        pass
+
+class Separator(QWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent = parent)
+
+        self.setFixedWidth(5)
+
+        self.setContentsMargins(10, 5, 10, 5)
+
+        self.update()
+
+    def paintEvent(self, e):
+        painter = QPainter(self)
+
+        c = 255 if isDarkTheme() else 0
+
+        pen = QPen(QColor(c, c, c, 50))
+        pen.setCosmetic(True)
+
+        painter.setPen(pen)
+
+        painter.drawLine(2, 0, 2, self.height())
+
 class TopStackedWidget(QStackedWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -96,6 +126,9 @@ class TopStackedWidget(QStackedWidget):
 
         self.sort_downloading_list_btn = ToolButton(ExtendedFluentIcon.SORT, self)
         self.sort_downloading_list_btn.setToolTip(self.tr("Sort"))
+
+        separator_1 = Separator(self)
+
         self.start_all_btn = PrimaryPushButton(FluentIcon.PLAY, self.tr("Start All"), self)
         self.pause_all_btn = PushButton(FluentIcon.PAUSE, self.tr("Pause All"), self)
         self.delete_all_btn = PushButton(FluentIcon.DELETE, self.tr("Delete All"), self)
@@ -104,6 +137,7 @@ class TopStackedWidget(QStackedWidget):
         downloading_layout.setContentsMargins(0, 0, 0, 0)
         downloading_layout.addStretch()
         downloading_layout.addWidget(self.sort_downloading_list_btn)
+        downloading_layout.addWidget(separator_1)
         downloading_layout.addWidget(self.start_all_btn)
         downloading_layout.addWidget(self.pause_all_btn)
         downloading_layout.addWidget(self.delete_all_btn)
@@ -113,6 +147,9 @@ class TopStackedWidget(QStackedWidget):
 
         self.sort_completed_list_btn = ToolButton(ExtendedFluentIcon.SORT, self)
         self.sort_completed_list_btn.setToolTip(self.tr("Sort"))
+
+        separator_2 = Separator(self)
+
         self.open_directory_btn = PushButton(FluentIcon.FOLDER, self.tr("Open Directory"), self)
         self.open_directory_btn.setMinimumWidth(110)
         self.clear_all_btn = PushButton(ExtendedFluentIcon.CLEAR, self.tr("Clear All"))
@@ -122,6 +159,7 @@ class TopStackedWidget(QStackedWidget):
         completed_layout.setContentsMargins(0, 0, 0, 0)
         completed_layout.addStretch()
         completed_layout.addWidget(self.sort_completed_list_btn)
+        completed_layout.addWidget(separator_2)
         completed_layout.addWidget(self.open_directory_btn)
         completed_layout.addWidget(self.clear_all_btn)
 

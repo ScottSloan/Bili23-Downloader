@@ -1,13 +1,20 @@
 from datetime import datetime
 
+
+def _normalize_timestamp(timestamp: int | float):
+    if abs(timestamp) >= 10_000_000_000:
+        return timestamp / 1000
+
+    return timestamp
+
 class Time:
     @staticmethod
     def format_timestamp(timestamp: int, fmt: str = "%Y-%m-%d %H:%M:%S"):
-        return datetime.fromtimestamp(timestamp).strftime(fmt)
+        return datetime.fromtimestamp(_normalize_timestamp(timestamp)).strftime(fmt)
     
     @staticmethod
     def from_timestamp(timestamp: int):
-        return datetime.fromtimestamp(timestamp)
+        return datetime.fromtimestamp(_normalize_timestamp(timestamp))
     
     @staticmethod
     def from_string(time_str: str, fmt: str = "%Y-%m-%d %H:%M:%S"):

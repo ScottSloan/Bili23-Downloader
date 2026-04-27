@@ -1,10 +1,10 @@
 from util.parse.episode.tree import Attribute
 from util.common.enum import ConventionType
 from util.common import config
+from util.format.time import Time
 
 from ..download.task.info import TaskInfo
 
-from datetime import datetime
 from pathlib import Path
 from typing import List
 import logging
@@ -37,7 +37,7 @@ class FileNameFormatter:
                 example = entry.get("example")
 
                 if name in ["pub_time", "create_time"]:
-                    example = datetime.fromtimestamp(1772841600)
+                    example = Time.from_timestamp(1772841600)
 
                 self.variable_data[name] = example
 
@@ -89,9 +89,9 @@ class FileNameFormatter:
 
     def get_variable_data_from_task_info(self, task_info: TaskInfo):
         return {
-            "pub_time": datetime.fromtimestamp(task_info.Episode.pubtime),
+            "pub_time": Time.from_timestamp(task_info.Episode.pubtime),
             "pub_ts": task_info.Episode.pubtime,
-            "create_time": datetime.fromtimestamp(task_info.Basic.created_time),
+            "create_time": Time.from_timestamp(task_info.Basic.created_time),
             "create_ts": task_info.Basic.created_time,
             "number": task_info.Episode.number,
             "uploader": task_info.Episode.uploader,

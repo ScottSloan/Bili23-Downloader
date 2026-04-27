@@ -1,5 +1,5 @@
 from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, video_codec_str_map
-from util.common import signal_bus, config, safe_remove, get_timestamp, Translator
+from util.common import signal_bus, config, safe_remove, get_timestamp_ms, Translator
 from util.parse.episode.tree import EpisodeData, Attribute
 from util.common.enum import DownloadStatus, DownloadType
 from util.thread import GlobalThreadPoolTask
@@ -29,7 +29,7 @@ class TaskManager:
         task_info.Basic.task_id = str(uuid4())
         task_info.Basic.cover_id = cover_manager.arrange_cover_id(episode_info.get("cover", ""))
         task_info.Basic.show_title = episode_info.get("title", "")
-        task_info.Basic.created_time = get_timestamp()
+        task_info.Basic.created_time = get_timestamp_ms()
         
         # DownloadInfo
         task_info.Download.status = DownloadStatus.QUEUED

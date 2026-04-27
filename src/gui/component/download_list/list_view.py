@@ -5,6 +5,7 @@ from qfluentwidgets import ListView, RoundMenu, Action, FluentIcon, isDarkTheme,
 
 from .item_delegate import DownloadItemDelegate
 from .model import DownloadListModel
+from .proxy_model import DownloadListProxyModel
 
 from util.common.enum import DownloadStatus, ToastNotificationCategory
 from util.download.downloader.manager import downloader_manager
@@ -27,7 +28,10 @@ class DownloadListView(ListView):
 
         self._in_adding_queried_tasks = False
 
-        self._model = DownloadListModel([], self)
+        self._source_model = DownloadListModel([], self)
+        self._model = DownloadListProxyModel(self)
+        self._model.setSourceModel(self._source_model)
+
         self._delegate = DownloadItemDelegate(self)
         self._delegate.contextMenuRequested.connect(self.showContextMenu)
 
@@ -64,7 +68,7 @@ class DownloadListView(ListView):
         menu.exec(pos)
 
     def isEmpty(self):
-        return len(self._model._task_list) == 0
+        return self._model.rowCount() == 0
     
     def setEmptyTextTip(self, text: str):
         self._emptyTextTip = text
@@ -111,12 +115,10 @@ class DownloadListView(ListView):
 
         if self._auto_update_count_badge:
             # 更新下载数量徽章
-            signal_bus.download.update_downloading_count.emit(self._model.rowCount())
+            signal_bus.download.update_downloading_count.emit(self._source_model.rowCount())
     
     def removeTask(self, task_info: TaskInfo):
-        row = self._model.getRow(task_info)
-        
-        self._model.removeRow(row)
+        self._model.removeTask(task_info)
 
         if self._auto_manage_concurrent and not self._in_batch_cancel:
             downloader_manager.remove(task_info.Basic.task_id)
@@ -125,7 +127,7 @@ class DownloadListView(ListView):
 
         if self._auto_update_count_badge:
             # 更新下载数量徽章
-            count = self._model.rowCount()
+            count = self._source_model.rowCount()
 
             signal_bus.download.update_downloading_count.emit(count)
 

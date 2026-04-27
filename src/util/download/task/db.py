@@ -51,11 +51,16 @@ class TaskDatabase(Database):
         info_list = []
 
         for task_info in task_info_list:
+            timestamp = task_info.Basic.completed_time if completed else task_info.Basic.created_time
+
+            if not timestamp:
+                timestamp = get_timestamp()
+
             info_list.append((
                 task_info.Basic.task_id,                                    # task_id
                 task_info.Basic.cover_id,                                   # cover_id
                 task_info.Basic.show_title,                                 # title
-                get_timestamp(),                                            # created_time or completed_time
+                timestamp,                                                  # created_time or completed_time
                 json.dumps(task_info.to_dict(), ensure_ascii = False)       # data
             ))
 
