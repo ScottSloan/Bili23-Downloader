@@ -37,6 +37,9 @@ class SignalBus:
         remove_from_downloading_list = Signal(object)
         remove_from_completed_list = Signal(object)
 
+        sort_downloading_list = Signal(str, bool)
+        sort_completed_list = Signal(str, bool)
+
         update_downloading_count = Signal(int)
         update_downloading_item = Signal(object)
 
