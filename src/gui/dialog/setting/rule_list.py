@@ -51,11 +51,13 @@ class RuleListDialog(DialogBase):
             [
                 self.tr("Rule Name"),
                 self.tr("Rule Type"),
+                self.tr("Default"),
                 self.tr("Actions")
             ],
             [
-                350,
+                275,
                 200,
+                75,
                 75
             ]
         )
@@ -166,13 +168,14 @@ class RuleListDialog(DialogBase):
         row = self.rule_list.addRow(
             name,
             type,
+            "✓" if userData.get("default") else "",
             "",
             userData = userData
         )
 
         widget = self._create_action_widget(index)
 
-        self.rule_list.setItemWidget(row, 2, widget)
+        self.rule_list.setItemWidget(row, 3, widget)
 
     def _get_type_str(self, type_value: int):
         return Translator.CONVENTION_TYPE(reversed_convention_type_map.get(type_value))
@@ -181,6 +184,13 @@ class RuleListDialog(DialogBase):
         for entry in self.rule_data_list:
             if entry.get("type") == rule_type:
                 entry["default"] = (entry.get("id") == rule_id)
+
+        for i in range(self.rule_list.topLevelItemCount()):
+            row = self.rule_list.topLevelItem(i)
+            data = row.data(0, Qt.ItemDataRole.UserRole)
+
+            if data.get("type") == rule_type:
+                row.setText(2, "✓" if data.get("id") == rule_id else "")
 
     def adjust_widget_size(self):
         parent_size: QSize = self.parent().size()

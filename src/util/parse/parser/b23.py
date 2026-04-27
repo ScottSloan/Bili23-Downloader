@@ -1,10 +1,12 @@
-from util.network import  SyncNetWorkRequest, ResponseType
+from util.network import SyncNetWorkRequest, ResponseType
 
 class B23Parser:
-    def __init__(self, url: str):
-        self.url = url
+    def __init__(self):
+        pass
     
-    def redirect(self) -> str:
+    def parse(self, url: str) -> str:
+        self.url = url
+        
         request = SyncNetWorkRequest(self.url, response_type = ResponseType.REDIRECT_URL)
         response = request.run()
 

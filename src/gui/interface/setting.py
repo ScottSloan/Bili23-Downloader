@@ -2,21 +2,22 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
-    ScrollArea, SettingCardGroup, OptionsSettingCard, CustomColorSettingCard, PushSettingCard, SwitchSettingCard,
-    ComboBoxSettingCard, PrimaryPushSettingCard, MSFluentWindow, MessageBox, FluentIcon, setTheme, setThemeColor
+    ScrollArea, SettingCardGroup, PushSettingCard, ComboBoxSettingCard, MSFluentWindow, MessageBox, FluentIcon, 
+    setTheme, setThemeColor
 )
 
 from gui.component.setting import (
     PrioritySettingCard, DanmakuSettingCard, SubtitleSettingCard, CoverSettingCard, MetadataSettingCard, CDNSettingCard, ProxySettingCard,
     FFmpegSettingCard, NumberSettingCard, DownloadFormatCard, DownloadPathSettingCard, ParsingSettingCard, ConfigFileSettingCard,
-    WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard
+    WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
+    CheckUpdateSettingCard
 )
 from gui.dialog.setting import (
     PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
     StartingNumberDialog, ParseListSettingsDialog, SpeedLimitSettingDialog, RuleListDialog
 )
 
-from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig, isWin11
+from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
 
@@ -41,11 +42,9 @@ class SettingInterface(ScrollArea):
         # Interface
         self.interface_group = SettingCardGroup(self.tr("Interface"), self)
 
-        self.theme_card = OptionsSettingCard(config.themeMode, FluentIcon.BRUSH, self.tr("Theme"), self.tr("Adjust the appearance of the application"), [self.tr("Light"), self.tr("Dark"), self.tr("Follow system setting")], self)
-        self.theme_color_card = CustomColorSettingCard(config.themeColor, FluentIcon.PALETTE, self.tr("Theme color"), self.tr("Adjust the theme color of the application"), self)
-        self.scaling_card = ComboBoxSettingCard(config.scaling, FluentIcon.ZOOM, self.tr("Display scaling"), self.tr("Adjust the scaling of the application interface"), ["100%", "125%", "150%", "175%", "200%", self.tr("Follow system setting")], self)
-        self.language_card = ComboBoxSettingCard(config.language, FluentIcon.LANGUAGE, self.tr("Language"), self.tr("Choose the display language of the application"), ["简体中文", "繁體中文", "English", self.tr("Follow system setting")], self)
-        self.mica_effect_card = SwitchSettingCard(FluentIcon.TRANSPARENT, self.tr("Mica effect"), self.tr("Apply Mica material that matches your desktop background"), config.mica_effect, self)
+        self.personalization_card = PersonalizationCard(self.main_window, self)
+        self.scaling_card = ComboBoxSettingCard(config.display_scaling, FluentIcon.ZOOM, self.tr("Display Scaling"), self.tr("Adjust the scaling of the application interface"), ["100%", "125%", "150%", "175%", "200%", self.tr("System default")], self)
+        self.language_card = ComboBoxSettingCard(config.language, FluentIcon.LANGUAGE, self.tr("Language"), self.tr("Choose the display language of the application"), ["简体中文", "繁體中文", "English", self.tr("System default")], self)
 
         # Behavior
         self.behavior_group = SettingCardGroup(self.tr("Behavior"), self)
@@ -88,15 +87,12 @@ class SettingInterface(ScrollArea):
         # Software Update
         self.update_group = SettingCardGroup(self.tr("Updates"), self)
 
-        self.check_update_card = PrimaryPushSettingCard(self.tr("Check for updates"), FluentIcon.UPDATE, self.tr("Check for updates"), self.tr("Check if a new version is available. Current version: {app_version}").format(app_version = config.app_version), self)
-        self.include_prerelease_card = SwitchSettingCard(ExtendedFluentIcon.TEST_CUBE, self.tr("Include pre-release versions"), self.tr("Include pre-release versions when checking for updates"), config.include_prerelease, self)
+        self.check_update_card = CheckUpdateSettingCard(self)
 
         # Interface
-        self.interface_group.addSettingCard(self.theme_card)
-        self.interface_group.addSettingCard(self.theme_color_card)
+        self.interface_group.addSettingCard(self.personalization_card)
         self.interface_group.addSettingCard(self.scaling_card)
         self.interface_group.addSettingCard(self.language_card)
-        self.interface_group.addSettingCard(self.mica_effect_card)
 
         # Behavior
         self.behavior_group.addSettingCard(self.parse_list_card)
@@ -128,7 +124,6 @@ class SettingInterface(ScrollArea):
 
         # Software Update
         self.update_group.addSettingCard(self.check_update_card)
-        self.update_group.addSettingCard(self.include_prerelease_card)
 
         self.expand_layout.setSpacing(28)
         self.expand_layout.setContentsMargins(30, 10, 30, 0)
@@ -151,14 +146,12 @@ class SettingInterface(ScrollArea):
 
         self.connect_signals()
 
-        self.mica_effect_card.setEnabled(isWin11())
-
     def connect_signals(self):
         # Interface
         config.themeChanged.connect(setTheme)
-        self.theme_color_card.colorChanged.connect(lambda color: setThemeColor(color))
         config.appRestartSig.connect(self.show_restart_message)
-        self.mica_effect_card.checkedChanged.connect(signal_bus.interface.mica_effect_changed)
+        self.personalization_card.accentColorChanged.connect(setThemeColor)
+        self.personalization_card.mica_effect_switch.checkedChanged.connect(signal_bus.interface.mica_effect_changed)
 
         # Behavior
         self.parse_list_card.custom_header_btn.clicked.connect(self.on_custom_parse_list_column)
@@ -188,7 +181,7 @@ class SettingInterface(ScrollArea):
         self.user_agent_card.clicked.connect(self.on_custom_user_agent)
 
         # Update
-        self.check_update_card.clicked.connect(self.on_check_update)
+        self.check_update_card.check_now_btn.clicked.connect(self.on_check_update)
 
     def on_custom_parse_list_column(self):
         dialog = ParseListSettingsDialog(self.main_window)

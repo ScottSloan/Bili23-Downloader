@@ -2,7 +2,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from util.parse.parser import (
     VideoParser, BangumiParser, CheeseParser, SpaceParser, FavlistParser, ListParser, PopularParser, B23Parser, WatchLaterParser,
-    HistoryParser
+    HistoryParser, FestivalParser
 )
 from util.parse.episode.tree import EpisodeData
 from util.common.data import url_patterns
@@ -33,13 +33,9 @@ class ParseWorker(QObject):
         try:
             self.parser_type = self.get_parser_type(self.url)
 
-            parser: VideoParser = None
+            self.get_redirect_url()
 
-            if self.parser_type == "b23":
-                # 如果为 b23 短链，则需要先跳转到真实链接
-                parser = self.parse_b23_url()
-
-            parser = self.parsers.get(self.parser_type)
+            parser: VideoParser = self.parsers.get(self.parser_type)
 
             parser.parse(self.url, self.pn)
 
@@ -75,15 +71,18 @@ class ParseWorker(QObject):
             
         raise ValueError(self.tr("Invalid link format"))
 
-    def parse_b23_url(self):
-        parser = B23Parser(self.url)
+    def get_redirect_url(self):
+        _parsers = {
+            "b23": B23Parser(),
+            "festival": FestivalParser()
+        }
 
-        self.url = parser.redirect()
+        for parser_type, parser in _parsers.items():
+            if parser_type in self.url:
+                self.url = parser.parse(self.url)
 
-        self.parser_type = self.get_parser_type(self.url)
+                self.parser_type = self.get_parser_type(self.url)
 
-        return parser
-    
     def clear_cache(self):
         self.parsers.clear()
 

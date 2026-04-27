@@ -214,7 +214,7 @@ class APPConfig(QConfig):
 
     # Interface
     language = OptionsConfigItem("Interface", "language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart = True)
-    scaling = OptionsConfigItem("Interface", "scaling", Scaling.AUTO, OptionsValidator(Scaling), ScalingSerializer(), restart = True)
+    display_scaling = OptionsConfigItem("Interface", "display_scaling", Scaling.AUTO, OptionsValidator(Scaling), ScalingSerializer(), restart = True)
     mica_effect = ConfigItem("Interface", "mica_effect", False, BoolValidator())
 
     # Behavior

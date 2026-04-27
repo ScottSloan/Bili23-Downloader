@@ -1,5 +1,6 @@
 from .watch_later import WatchLaterParser
 from .favorite import FavoriteParser
+from .festival import FestivalParser
 from .bangumi import BangumiParser
 from .popular import PopularParser
 from .favlist import FavlistParser

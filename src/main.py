@@ -77,10 +77,11 @@ class Application(QApplication):
 
     def init_socket(self):
         logger = logging.getLogger(__name__)
+        server_name = "Bili23DownloaderInstance"
 
         # 尝试连接到已存在的实例，如果连接成功则退出当前实例
         self.socket = QLocalSocket()
-        self.socket.connectToServer("Bili23DownloaderInstance")
+        self.socket.connectToServer(server_name)
 
         if self.socket.waitForConnected(500):
             # 已有实例存在，发送激活命令并退出
@@ -92,9 +93,12 @@ class Application(QApplication):
 
             sys.exit(0)
 
+        # 清理崩溃或异常退出后残留的本地服务名，避免偶发启动失败
+        QLocalServer.removeServer(server_name)
+
         self.server = QLocalServer()
 
-        if not self.server.listen("Bili23DownloaderInstance"):
+        if not self.server.listen(server_name):
             logger.error("无法启动本地服务器: %s", self.server.errorString())
             sys.exit(1)
 
@@ -143,7 +147,7 @@ def read_args():
         os.environ["BILI23_MAXIMIZED"] = "1"
 
 def main():
-    scaling_value = config.get(config.scaling).value
+    scaling_value = config.get(config.display_scaling).value
 
     if scaling_value != "Auto":
         os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"

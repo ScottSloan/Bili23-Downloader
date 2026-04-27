@@ -1,8 +1,46 @@
-from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QColor
+from PySide6.QtCore import QTimer
+
+from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushSettingCard, qconfig, ColorDialog, PrimaryPushButton
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 
-from util.common import config, ExtendedFluentIcon, Directory
+from util.common import config, ExtendedFluentIcon, Directory, isWin11
+
+class PersonalizationCard(ExpandGroupSettingCard):
+    accentColorChanged = Signal(QColor)
+
+    def __init__(self, main_window, parent = None):
+        super().__init__(FluentIcon.PALETTE, self.tr("Personalization"), self.tr("Customize the app theme, colors, and visual effects"), parent)
+
+        self.main_window = main_window
+
+        self.theme_choice = SettingComboBox(config.themeMode, [self.tr("Light"), self.tr("Dark"), self.tr("System default")], parent = self)
+
+        self.accent_color_btn = PushButton(self.tr("Customize…"), self)
+        self.accent_color_btn.clicked.connect(self.__showColorDialog)
+
+        self.mica_effect_switch = SettingSwitchButton(config.mica_effect, parent = self)
+        self.mica_effect_switch.setChecked(config.get(config.mica_effect))
+
+        self.addGroup("", self.tr("Theme"), self.tr("Select the application theme"), self.theme_choice)
+        self.addGroup("", self.tr("Accent Color"), self.tr("Customize the accent color used in the application"), self.accent_color_btn)
+        mica_widget = self.addGroup("", self.tr("Mica Effect"), self.tr("Apply translucent Mica effect (Windows 11 only)"), self.mica_effect_switch)
+
+        mica_widget.setEnabled(isWin11())
+
+    def __showColorDialog(self):
+        """ show color dialog """
+        w = ColorDialog(
+            qconfig.get(config.themeColor), self.tr("Choose color"), self.main_window, enableAlpha = True)
+        w.colorChanged.connect(self.__onCustomColorChanged)
+        w.exec()
+
+    def __onCustomColorChanged(self, color):
+        """ custom color changed slot """
+        qconfig.set(config.themeColor, color)
+        self.accentColorChanged.emit(color)
 
 class DownloadPathSettingCard(PushSettingCard):
     def __init__(self, parent_window, save = True, parent = None):
@@ -12,19 +50,32 @@ class DownloadPathSettingCard(PushSettingCard):
         self.save = save
         self.path = ""
 
-        self.set_path(config.get(config.download_path))
+        self.set_path(config.get(config.download_path), update_space = False)
+
+        QTimer.singleShot(0, self.refresh_disk_space)
 
         self.clicked.connect(self.on_change_download_path)
 
-    def set_path(self, path: str):
+    def set_path(self, path: str, update_space: bool = True):
         self.path = path
-        disk_space_info = Directory.calc_disk_space(path)
 
-        self.setContent(
-            self.tr("{path} ({free} available)").format(
-                path = path,
-                free = disk_space_info.get("free") if disk_space_info else "null"
-            ))
+        if update_space:
+            self.refresh_disk_space()
+        else:
+            self.setContent(path)
+
+    def refresh_disk_space(self):
+        disk_space_info = Directory.calc_disk_space(self.path)
+
+        if disk_space_info:
+            self.setContent(
+                self.tr("{path} ({free} available)").format(
+                    path = self.path,
+                    free = disk_space_info.get("free")
+                )
+            )
+        else:
+            self.setContent(self.path)
         
     def on_change_download_path(self):
         path = Directory.browse_directory(self.parent_window, self.tr("Choose folder"), config.get(config.download_path))
@@ -107,7 +158,7 @@ class CoverSettingCard(ExpandGroupSettingCard):
 
         self.addGroup("", self.tr("Download Cover"), "", self.download_switch)
         self.addGroup("", self.tr("Cover Format"), "", self.type_choice)
-        self.attach_cover_group = self.addGroup("", self.tr("Embed cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
+        self.attach_cover_group = self.addGroup("", self.tr("Embed Cover"), self.tr("Embed the downloaded cover into the video file"), self.attach_cover_switch)
 
         self.attach_cover_group.setEnabled(config.get(config.download_cover) and not self.type_choice.currentText() == "avif")
         self.download_switch.checkedChanged.connect(self.on_toggle_attach_cover)
@@ -160,13 +211,13 @@ class NumberSettingCard(ExpandGroupSettingCard):
 
         self.addGroup(
             "",
-            self.tr("Numbering type"),
+            self.tr("Numbering Type"),
             self.tr("Select the source for {number} variable"),
             self.numbering_type_choice
         )
         self.starting_number_group = self.addGroup(
             "",
-            self.tr("Starting number"),
+            self.tr("Starting Number"),
             self.get_starting_number_content(config.get(config.starting_number)),
             self.starting_number_btn
         )
@@ -228,8 +279,8 @@ class FFmpegSettingCard(ExpandGroupSettingCard):
         self.source_choice = SettingComboBox(config.ffmpeg_source, [self.tr("Bundled (with app)"), self.tr("System PATH"), self.tr("Custom path")], parent = self)
         self.custom_btn = PushButton(self.tr("Browse…"), self)
 
-        self.addGroup("", self.tr("FFmpeg source"), self.tr("Select the FFmpeg executable to use"), self.source_choice)
-        self.custom_group = self.addGroup("", self.tr("Custom FFmpeg path"), "", self.custom_btn)
+        self.addGroup("", self.tr("FFmpeg Source"), self.tr("Select the FFmpeg executable to use"), self.source_choice)
+        self.custom_group = self.addGroup("", self.tr("Custom FFmpeg Path"), "", self.custom_btn)
 
         self.custom_group.setEnabled(self.source_choice.currentIndex() == 2)
 
@@ -287,9 +338,9 @@ class WindowBehaviorSettingCard(ExpandGroupSettingCard):
         self.stay_on_top_switch = SettingSwitchButton(config.stay_on_top, parent = self)
         self.when_close_action_choice = SettingComboBox(config.when_close_window, [self.tr("Exit the program"), self.tr("Minimize to system tray"), self.tr("Always ask")], parent = self)
 
-        self.addGroup("", self.tr("Silent start"), self.tr("Start the application without showing the main window"), self.silent_start_switch)
-        self.addGroup("", self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), self.stay_on_top_switch)
-        self.addGroup("", self.tr("Close the main window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
+        self.addGroup("", self.tr("Silent Start"), self.tr("Start the application without showing the main window"), self.silent_start_switch)
+        self.addGroup("", self.tr("Stay on Top"), self.tr("Keep the window always on top of the desktop"), self.stay_on_top_switch)
+        self.addGroup("", self.tr("Close the Main Window"), self.tr("Choose the action when closing the main window"), self.when_close_action_choice)
 
 class DownloadHandlingSettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -299,9 +350,9 @@ class DownloadHandlingSettingCard(ExpandGroupSettingCard):
         self.show_notification_switch = SettingSwitchButton(config.show_notification, parent = self)
         self.file_conflict_resolution_choice = SettingComboBox(config.file_conflict_resolution, [self.tr("Auto-rename"), self.tr("Overwrite")], parent = self)
 
-        self.addGroup("", self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
-        self.addGroup("", self.tr("Show notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
-        self.addGroup("", self.tr("File conflict resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
+        self.addGroup("", self.tr("Show Download Options Dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), self.show_download_options_dialog_switch)
+        self.addGroup("", self.tr("Show Notifications"), self.tr("Show notifications when downloads complete"), self.show_notification_switch)
+        self.addGroup("", self.tr("File Conflict Resolution"), self.tr("Choose the action when a file with the same name already exists"), self.file_conflict_resolution_choice)
 
 class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
     def __init__(self, parent = None):
@@ -315,3 +366,14 @@ class DownloadConcurrencySettingCard(ExpandGroupSettingCard):
         self.addGroup("", self.tr("Number of Threads"), self.tr("Adjust the number of threads used per task (default: 4)"), self.download_thread_slider)
         self.addGroup("", self.tr("Number of Parallel Downloads"), self.tr("Adjust the number of tasks downloaded simultaneously (default: 1)"), self.download_parallel_slider)
         self.addGroup("", self.tr("Speed Limit Settings"), self.tr("Configure speed limit settings for downloads"), self.download_speed_limit_btn)
+
+class CheckUpdateSettingCard(ExpandGroupSettingCard):
+    def __init__(self, parent = None):
+        super().__init__(FluentIcon.UPDATE, self.tr("Check for Updates"), self.tr("Check if a new version is available"), parent)
+
+        self.check_now_btn = PrimaryPushButton(self.tr("Check Now"), self)
+        self.include_prerelease_switch = SettingSwitchButton(config.include_prerelease, parent = self)
+
+        self.card.addWidget(self.check_now_btn)
+
+        self.addGroup("", self.tr("Include Prerelease Versions"), self.tr("Include prerelease versions in update checks (may be unstable)"), self.include_prerelease_switch)
