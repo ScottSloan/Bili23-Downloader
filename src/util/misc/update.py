@@ -1,9 +1,14 @@
+from PySide6.QtCore import QObject
+
 from util.network import NetworkRequestWorker, RequestType
 from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, config, Translator
 from util.thread import AsyncTask
 
-class Updater:
+class Updater(QObject):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
     def check(self, response: dict):
         latest_version = response["latest_version"]
 

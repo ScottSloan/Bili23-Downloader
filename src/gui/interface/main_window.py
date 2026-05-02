@@ -121,7 +121,7 @@ class MainWindow(MSFluentWindow):
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
 
-        self.updater = Updater()
+        self.updater = Updater(self)
 
         signal_bus.update.check.connect(self.updater.request_update)
 

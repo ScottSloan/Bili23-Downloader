@@ -3,8 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
   push:
-    branches:
-      - dev
+    # branches:
+    #   - dev
     tags:
       - "v*"
 
@@ -169,9 +169,16 @@ jobs:
         include:
           - arch: amd64
             os: ubuntu-latest
+            arch_suffix: x86_64
+            chroot_distro: focal
+            source_url: http://archive.ubuntu.com/ubuntu/
 
           - arch: arm64
             os: ubuntu-24.04-arm
+            arch_suffix: aarch64
+            chroot_distro: noble
+            source_url: http://ports.ubuntu.com/ubuntu-ports/
+
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -181,7 +188,7 @@ jobs:
           sudo apt update
           sudo apt install -y debootstrap
 
-          sudo debootstrap --arch=${{ matrix.arch }} ${{ matrix.arch == 'arm64' && 'noble' || 'focal' }} ~/ubuntu-rootfs ${{ matrix.arch == 'arm64' && 'http://ports.ubuntu.com/ubuntu-ports/' || 'http://archive.ubuntu.com/ubuntu/' }}
+          sudo debootstrap --arch=${{ matrix.arch }} ${{ matrix.chroot_distro }} ~/ubuntu-rootfs ${{ matrix.source_url }}
 
           sudo mkdir -p ~/ubuntu-rootfs/workspace
 
@@ -239,12 +246,10 @@ jobs:
       - name: Copy compiled modules to script folder
         run: |
           # 将编译后的模块复制到 script 文件夹
-          export arch_suffix=${{ matrix.arch == 'arm64' && 'aarch64' || 'x86_64' }}
-
-          cp dist/dist-main/main.cpython-312-${arch_suffix}-linux-gnu.so Bili23-Downloader/script/main.cpython-312-${arch_suffix}-linux-gnu.so
-          cp dist/dist-gui/gui.cpython-312-${arch_suffix}-linux-gnu.so Bili23-Downloader/script/gui.cpython-312-${arch_suffix}-linux-gnu.so
-          cp dist/dist-util/util.cpython-312-${arch_suffix}-linux-gnu.so Bili23-Downloader/script/util.cpython-312-${arch_suffix}-linux-gnu.so
-          cp dist/dist-res/res.cpython-312-${arch_suffix}-linux-gnu.so Bili23-Downloader/script/res.cpython-312-${arch_suffix}-linux-gnu.so
+          cp dist/dist-main/main.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so Bili23-Downloader/script/main.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so
+          cp dist/dist-gui/gui.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so Bili23-Downloader/script/gui.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so
+          cp dist/dist-util/util.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so Bili23-Downloader/script/util.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so
+          cp dist/dist-res/res.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so Bili23-Downloader/script/res.cpython-312-${{ matrix.arch_suffix }}-linux-gnu.so
 
       - name: Package Linux version
         run: |
@@ -269,7 +274,7 @@ jobs:
           echo "Priority: optional" >> buildroot/DEBIAN/control
           echo "Maintainer: Scott Sloan <world1019@sina.com>" >> buildroot/DEBIAN/control
           echo "Description: A cross-platform video downloader for Bilibili" >> buildroot/DEBIAN/control
-          echo "Depends: libc6 (>= 2.28)" >> buildroot/DEBIAN/control
+          echo "Depends: libc6 (>= 2.28), libxcb-cursor0" >> buildroot/DEBIAN/control
           echo "Homepage: https://bili23.scott-sloan.cn" >> buildroot/DEBIAN/control
           echo "License: GPL-3.0" >> buildroot/DEBIAN/control
           echo "Installed-Size: $(du -s Bili23-Downloader | cut -f1)" >> buildroot/DEBIAN/control
@@ -318,9 +323,12 @@ jobs:
         include:
           - arch: x86_64
             os: macos-15-intel
+            python_arch: x64
             
           - arch: aarch64
             os: macos-latest
+            python_arch: arm64
+
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -333,7 +341,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: 3.12
-          architecture: ${{ matrix.arch == 'aarch64' && 'arm64' || 'x64' }}
+          architecture: ${{ matrix.python_arch }}
 
       - name: Install Python dependencies
         run: |

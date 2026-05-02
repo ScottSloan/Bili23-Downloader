@@ -259,7 +259,7 @@ class ParseInterface(ParseBase):
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 
-        self.parse_list.update()
+        self.parse_list.update_check_state()
 
     def on_download_options(self):
         # 只有在获取媒体信息成功时才显示下载选项对话框

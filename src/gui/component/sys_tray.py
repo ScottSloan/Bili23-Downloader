@@ -22,11 +22,15 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.setContextMenu(self.menu)
         
         # 点击托盘图标时显示主窗口
-        self.activated.connect(self.on_show_main_window)
+        self.activated.connect(self.on_activated)
 
-    def on_show_main_window(self):
-        parent: QWidget = self.parent()
-        parent._activate_window()
+    def on_activated(self, reason: QSystemTrayIcon.ActivationReason):
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+            self.on_show_main_window(reason)
+
+    def on_show_main_window(self, reason: QSystemTrayIcon.ActivationReason = None):
+            parent: QWidget = self.parent()
+            parent._activate_window()
 
     def on_exit(self):
         self.on_show_main_window()
