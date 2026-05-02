@@ -21,5 +21,6 @@ uv.toml
 /test
 /json
 /bundle
+/bin
 /.VSCodeCounter
 /bundle
