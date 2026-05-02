@@ -156,7 +156,11 @@ class ParseTreeView(TreeView):
 
         item.set_attribute(Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT)
 
-        signal_bus.download.create_task.emit([item.to_dict()])
+        cookie_file = ""
+        if hasattr(self.parent(), 'cookie_path') and self.parent().cookie_path:
+            cookie_file = self.parent().cookie_path
+
+        signal_bus.download.create_task.emit([item.to_dict()], cookie_file)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 

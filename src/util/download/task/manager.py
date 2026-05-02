@@ -139,7 +139,7 @@ class TaskManager:
 
         return config.current_starting_number - 1
 
-    def create(self, episode_info_list: List[dict]):
+    def create(self, episode_info_list: List[dict], cookie_file: str = ""):
         task_info_list = []
 
         for episode_info in episode_info_list:
@@ -147,6 +147,10 @@ class TaskManager:
                 continue
 
             task_info = self.__episode_info_to_task_info(episode_info)
+
+            # 绑定 cookie 文件路径
+            if cookie_file:
+                task_info.cookie_file = cookie_file
 
             task_info_list.append(task_info)
 

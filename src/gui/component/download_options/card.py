@@ -9,7 +9,7 @@ from gui.component.widget import DictComboBox
 
 from util.common.data import reversed_video_quality_map, reversed_audio_quality_map, reversed_video_codec_map, reversed_audio_codec_map
 from util.common import config, Translator, ExtendedFluentIcon
-from util.parse.preview.info import PreviewerInfo
+from util.parse.preview import PreviewerInfo
 from util.format import FileNameFormatter, Units
 from util.common.enum import MediaType
 
@@ -62,6 +62,12 @@ class MediaInfoCard(ExpandGroupSettingCard):
     def on_query_video_info(self, info: dict):
         # 处理获取到的视频媒体信息并更新界面显示
 
+        try:
+            if not self.video_quality_group or not self.video_quality_group.contentLabel:
+                return
+        except RuntimeError:
+            return
+
         if info:
             self.update_video_quality_description(info)
             self.update_video_codec_description(info)
@@ -71,6 +77,12 @@ class MediaInfoCard(ExpandGroupSettingCard):
 
     def on_query_audio_info(self, info: dict):
         # 处理获取到的音频媒体信息并更新界面显示
+
+        try:
+            if not self.audio_quality_group or not self.audio_quality_group.contentLabel:
+                return
+        except RuntimeError:
+            return
 
         if info:
             self.update_audio_quality_description(info)

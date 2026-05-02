@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication, QFileDialog
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
@@ -19,6 +19,7 @@ from util.thread import AsyncTask
 
 from functools import wraps
 import re
+import os
 
 def check_preview_info(func):
     @wraps(func)
@@ -125,6 +126,18 @@ class ParseInterface(ParseBase):
 
         self.url_box.setClearButtonEnabled(True)
 
+        self.cookie_btn = TransparentToolButton(FluentIcon.FOLDER, self)
+        self.cookie_btn.setToolTip(self.tr("Select Cookies File"))
+        self.cookie_btn.setFixedSize(32, 32)
+
+        self.cookie_label = BodyLabel(self.tr("No Cookies"), self)
+        self.cookie_label.setObjectName("cookieLabel")
+
+        self.clear_cookie_btn = TransparentToolButton(FluentIcon.DELETE, self)
+        self.clear_cookie_btn.setToolTip(self.tr("Clear Cookies"))
+        self.clear_cookie_btn.setFixedSize(28, 28)
+        self.clear_cookie_btn.hide()
+
         self.parse_btn = IndeterminateProgressPushButton(self.tr("Parse"), self)
         self.parse_btn.setMinimumWidth(80)
 
@@ -153,6 +166,9 @@ class ParseInterface(ParseBase):
 
         top_layout = QHBoxLayout()
         top_layout.addWidget(self.url_box)
+        top_layout.addWidget(self.cookie_btn)
+        top_layout.addWidget(self.cookie_label)
+        top_layout.addWidget(self.clear_cookie_btn)
         top_layout.addWidget(self.parse_btn)
 
         toolbar_layout = QHBoxLayout()
@@ -182,6 +198,9 @@ class ParseInterface(ParseBase):
         self.segmented_widget.pager_widget.pageChanged.connect(self.on_parse)
         self.url_box.returnPressed.connect(self.on_parse)
 
+        self.cookie_btn.clicked.connect(self.on_select_cookie)
+        self.clear_cookie_btn.clicked.connect(self.on_clear_cookie)
+
         self.download_option_btn.clicked.connect(self.on_download_options)
         self.show_more_btn.clicked.connect(self.on_show_more)
 
@@ -199,9 +218,44 @@ class ParseInterface(ParseBase):
         self.previewer = Previewer()
 
         self.clipboard = QApplication.clipboard()
-        self.clipboard.changed.connect(self.on_copy_url)
 
         self.check_starting_number()
+
+        self.cookie_path = None
+
+        last_cookie = config.get(config.last_cookie_file)
+        if last_cookie and os.path.exists(last_cookie):
+            self.cookie_path = last_cookie
+            self.cookie_label.setText(os.path.basename(last_cookie))
+            self.cookie_label.setToolTip(last_cookie)
+            self.clear_cookie_btn.show()
+
+    def on_select_cookie(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            self.tr("Select Cookies File"),
+            "",
+            self.tr("Cookies (*.txt);;All Files (*)")
+        )
+
+        if file_path:
+            if os.path.exists(file_path):
+                self.cookie_path = file_path
+                config.set(config.last_cookie_file, file_path)
+                self.cookie_label.setText(os.path.basename(file_path))
+                self.cookie_label.setToolTip(file_path)
+                self.clear_cookie_btn.show()
+                signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Cookies loaded successfully"))
+            else:
+                signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "", self.tr("Cookies file not found"))
+
+    def on_clear_cookie(self):
+        self.cookie_path = None
+        config.set(config.last_cookie_file, "")
+        self.cookie_label.setText(self.tr("No Cookies"))
+        self.cookie_label.setToolTip("")
+        self.clear_cookie_btn.hide()
+        signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Cookies cleared"))
 
     def on_paste_and_parse(self):
         url = self.clipboard.text()
@@ -262,7 +316,9 @@ class ParseInterface(ParseBase):
 
         checked_episodes_list = self.parse_list.get_checked_items(to_dict = True, mark_as_downloaded = True)
 
-        signal_bus.download.create_task.emit(checked_episodes_list)
+        cookie_file = self.cookie_path if self.cookie_path else ""
+
+        signal_bus.download.create_task.emit(checked_episodes_list, cookie_file)
 
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Added to download queue"))
 
@@ -321,6 +377,9 @@ class ParseInterface(ParseBase):
         self.download_btn.setEnabled(checked_count > 0)
 
     def on_copy_url(self):
+        if self._initializing:
+            return
+
         if self.clipboard.mimeData().hasText() and config.get(config.listen_clipboard):
             url = self.clipboard.text()
 

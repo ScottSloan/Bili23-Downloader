@@ -1,7 +1,3 @@
-from util.parse.episode.tree import TreeItem, Attribute
-from util.common import signal_bus
-from util.format import Units
-
 class EpisodeParserBase:
     def __init__(self, **kwargs):
         self.episode_id = ""
@@ -12,28 +8,19 @@ class EpisodeParserBase:
         self.target_episode_data_id: str = kwargs.get("target_episode_data_id")
         self.target_attribute: int = kwargs.get("target_attribute")
 
-    def update_episode_list(self, node: TreeItem, current_episode_data: tuple = None):
-        # 由于顶层 root_node 不可见，需要在外面再包一层，避免顶层节点信息丢失
+    def update_episode_list(self, node, current_episode_data: tuple = None):
+        from util.parse.episode.tree import TreeItem
 
         root_node = TreeItem({})
         root_node.add_child(node)
 
-        if node.count() == 1 and node.child(0).attribute & Attribute.VIDEO_BIT:
+        if node.count() == 1 and node.child(0).attribute & 1:
             title = node.child(0).title
         else:
             title = node.title
 
+        from util.common import signal_bus
         signal_bus.parse.update_parse_list.emit(title, self.category_name, root_node, current_episode_data)
 
-    def get_episode_duration(self, episode_data: dict):
-        if "duration" in episode_data:
-            return episode_data["duration"]
-        
-        elif "arc" in episode_data:
-            return episode_data["arc"]["duration"]
-        
-        elif "length" in episode_data:
-            return Units.unformat_episode_duration(episode_data["length"])
-
-        else:
-            return 0
+    def set_attribute(self, item, flag: int):
+        item.set_attribute(flag)

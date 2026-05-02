@@ -119,6 +119,8 @@ class TaskInfo:
     Episode: EpisodeInfo = field(default_factory = EpisodeInfo)
     Download: DownloadInfo = field(default_factory = DownloadInfo)
 
+    cookie_file: str = ""
+
     def to_dict(self):
         return asdict(self)
     

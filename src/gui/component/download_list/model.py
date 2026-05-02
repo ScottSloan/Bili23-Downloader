@@ -115,12 +115,8 @@ class DownloadListModel(CoverQueryModelBase):
 
                 self.removeRow(self.getRow(task_info))
 
-            case DownloadStatus.DOWNLOADING:
+            case DownloadStatus.DOWNLOADING | DownloadStatus.MERGING | DownloadStatus.CONVERTING:
                 downloader_manager.wait(task_info, lambda: task_manager.cancel(task_info))
-
-            case DownloadStatus.MERGING | DownloadStatus.CONVERTING:
-                # 合并和转换中的任务不允许取消
-                return
 
             case _:
                 task_manager.cancel(task_info)

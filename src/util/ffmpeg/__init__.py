@@ -51,8 +51,19 @@ def on_ffmpeg_not_found():
 cwd = Directory.get_cwd()
 
 config.ffmpeg_executable = ffmpeg_executable
+
+# 检查多个可能的内嵌 FFmpeg 位置
 bundle_ffmpeg_path = cwd / "bundle" / ffmpeg_executable
-config.bundle_ffmpeg_exist = bundle_ffmpeg_path.exists()
+bin_ffmpeg_path = cwd / "bin" / ffmpeg_executable
+
+# 优先检查 bin 目录，然后是 bundle 目录
+if bin_ffmpeg_path.exists():
+    config.bundle_ffmpeg_exist = True
+    bundle_ffmpeg_path = bin_ffmpeg_path
+elif bundle_ffmpeg_path.exists():
+    config.bundle_ffmpeg_exist = True
+else:
+    config.bundle_ffmpeg_exist = False
 
 match config.get(config.ffmpeg_source):
     case FFmpegSource.BUNDLED:

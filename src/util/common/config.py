@@ -286,6 +286,8 @@ class APPConfig(QConfig):
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
 
     # Cookie
+    last_cookie_file = ConfigItem("Cookie", "last_cookie_file", "")
+    
     img_key = ConfigItem("Cookie", "img_key", "")
     sub_key = ConfigItem("Cookie", "sub_key", "")
 

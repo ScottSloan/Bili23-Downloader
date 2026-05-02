@@ -1,11 +1,15 @@
-from util.parse.parser.watch_later import WatchLaterParser
-from util.parse.parser.favorite import FavoriteParser
-from util.parse.parser.bangumi import BangumiParser
-from util.parse.parser.popular import PopularParser
-from util.parse.parser.favlist import FavlistParser
-from util.parse.parser.history import HistoryParser
-from util.parse.parser.cheese import CheeseParser
-from util.parse.parser.video import VideoParser
-from util.parse.parser.space import SpaceParser
-from util.parse.parser.list import ListParser
-from util.parse.parser.b23 import B23Parser
+class FavoriteParser:
+    def __init__(self):
+        self.success_callback = None
+
+    def parse_favorite_list(self):
+        if self.success_callback:
+            self.success_callback([], {})
+
+    def parse_subscription_list(self):
+        if self.success_callback:
+            self.success_callback([], {})
+
+    def parse_follow_list(self, pn, type, follow_status):
+        if self.success_callback:
+            self.success_callback([], {})
