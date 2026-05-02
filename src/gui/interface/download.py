@@ -52,9 +52,9 @@ class DownloadInterface(QFrame):
 
         self.pivot.setCurrentItem("downloading")
 
-        self.connect_signal()
+        self.connect_signals()
 
-    def connect_signal(self):
+    def connect_signals(self):
         signal_bus.download.add_to_downloading_list.connect(self.downloading_list_view.addTask)
         signal_bus.download.add_to_completed_list.connect(self.completed_list_view.addTask)
         signal_bus.download.auto_manage_concurrent_downloads.connect(self.downloading_list_view._schedule_auto_manage_concurrent_downloads)

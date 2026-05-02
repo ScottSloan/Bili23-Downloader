@@ -45,6 +45,7 @@ sources = [
     "src/gui/component/setting/widget.py",
     "src/gui/component/widget/flyout.py",
     "src/gui/component/widget/search.py",
+    "src/gui/component/widget/segment.py",
     "src/gui/component/dialog.py",
     "src/gui/component/profile.py",
     "src/gui/component/sys_tray.py",

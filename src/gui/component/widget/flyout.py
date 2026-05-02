@@ -241,9 +241,9 @@ class FollowWidget(QWidget):
         viewLayout.addWidget(self.entry_list)
         viewLayout.addWidget(self.pager)
 
-        self.connect_signal()
+        self.connect_signals()
 
-    def connect_signal(self):
+    def connect_signals(self):
         self.entry_list._model.itemClicked.connect(self.on_list_item_clicked)
         self.entry_list.parse.connect(self.on_list_item_clicked)
         self.type_choice.currentIndexChanged.connect(self.update_list)

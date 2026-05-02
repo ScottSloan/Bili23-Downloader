@@ -27,6 +27,7 @@
         <file>icon/light/sort_reverse.svg</file>
         <file>icon/light/file_settings.svg</file>
         <file>icon/light/fast_download.svg</file>
+        <file>icon/light/single_choice.svg</file>
         <file>icon/light/application_window.svg</file>
         <file>icon/light/double_right_arrows.svg</file>
 
@@ -55,6 +56,7 @@
         <file>icon/dark/sort_reverse.svg</file>
         <file>icon/dark/file_settings.svg</file>
         <file>icon/dark/fast_download.svg</file>
+        <file>icon/dark/single_choice.svg</file>
         <file>icon/dark/application_window.svg</file>
         <file>icon/dark/double_right_arrows.svg</file>
         

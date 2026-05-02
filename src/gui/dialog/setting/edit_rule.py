@@ -99,11 +99,11 @@ class EditRuleDialog(DialogBase):
 
         self.adjust_widget_size()
 
-        self.connect_signal()
+        self.connect_signals()
 
         self.variable_list.header().setStretchLastSection(False)
 
-    def connect_signal(self):
+    def connect_signals(self):
         self.type_choice.currentIndexChanged.connect(self.on_type_changed)
         self.preview_btn.clicked.connect(self.on_preview)
         self.guide_btn.clicked.connect(self.on_guide)

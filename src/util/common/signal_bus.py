@@ -27,6 +27,8 @@ class SignalBus:
 
         parse_url = Signal(str)
 
+        search_keyword = Signal(str)
+
     class Download(QObject):
         create_task = Signal(list)
 

@@ -29,6 +29,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     SORT_REVERSE = "sort_reverse"
     FILE_SETTINGS = "file_settings"
     FAST_DOWNLOAD = "fast_download"
+    SINGLE_CHOICE = "single_choice"
     APPLICATION_WINDOW = "application_window"
     DOUBLE_RIGHT_ARROWS = "double_right_arrows"
 

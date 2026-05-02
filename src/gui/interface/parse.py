@@ -182,6 +182,7 @@ class ParseInterface(ParseBase):
 
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
+        signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
@@ -212,7 +213,7 @@ class ParseInterface(ParseBase):
         worker = ParseWorker(self.url_box.text(), page)
         worker.success.connect(self.on_parse_success)
         worker.error.connect(self.on_parse_error)
-        
+
         AsyncTask.run(worker)
 
     def on_parse_success(self, category_name: str, extra_data: dict):
@@ -227,6 +228,8 @@ class ParseInterface(ParseBase):
         self.check_extra_data(extra_data)
 
         self.check_need_check_all()
+
+        self.parse_list.search_keywords("")
 
         self.parse_btn.setIndeterminateState(False)
 
@@ -331,6 +334,7 @@ class ParseInterface(ParseBase):
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:
+            # Ctrl + A 快捷键全选
             self.parse_list.check_all_items()
 
             event.accept()
@@ -338,7 +342,16 @@ class ParseInterface(ParseBase):
             return
 
         elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_D:
+            # Ctrl + D 快捷键全不选
             self.parse_list.check_all_items(uncheck = True)
+
+            event.accept()
+
+            return
+        
+        elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_F:
+            # Ctrl + F 快捷键打开搜索对话框
+            self.on_search()
 
             event.accept()
 

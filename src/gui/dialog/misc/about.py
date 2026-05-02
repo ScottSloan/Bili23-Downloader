@@ -67,9 +67,9 @@ class AboutDialog(DialogBase):
 
         self.widget.setMinimumWidth(600)
 
-        self.connect_signal()
+        self.connect_signals()
 
-    def connect_signal(self):
+    def connect_signals(self):
         self.terms_btn.clicked.connect(self.on_terms)
         self.documentation_btn.clicked.connect(self.on_ducumation)
         self.github_btn.clicked.connect(self.on_github)

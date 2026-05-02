@@ -5,7 +5,7 @@ from qfluentwidgets import BodyLabel, PushButton, FluentIcon
 
 from .button import ToolButton
 
-from util.common import ExtendedFluentIcon
+from util.common import ExtendedFluentIcon, signal_bus
 
 class SearchWidget(QWidget):
     scrollToItem = Signal(object)
@@ -34,23 +34,32 @@ class SearchWidget(QWidget):
         self.check_all_btn = PushButton(icon = ExtendedFluentIcon.SELECT_ALL, text = self.tr("Select All"), parent = self)
         self.check_all_btn.setFixedHeight(28)
 
+        self.clear_all_btn = PushButton(icon = ExtendedFluentIcon.CLEAR, text = self.tr("Clear All"), parent = self)
+        self.clear_all_btn.setFixedHeight(28)
+
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(5, 0, 0, 0)
         layout.addWidget(self.matches_label)
         layout.addWidget(self.prev_btn)
         layout.addWidget(self.next_btn)
         layout.addWidget(self.check_all_btn, alignment = Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self.clear_all_btn, alignment = Qt.AlignmentFlag.AlignVCenter)
         layout.addStretch()
 
+        self.connect_signals()
+
+    def connect_signals(self):
         self.prev_btn.clicked.connect(self.on_prev)
         self.next_btn.clicked.connect(self.on_next)
-        self.check_all_btn.clicked.connect(self.on_check_all)
+        self.check_all_btn.clicked.connect(self.on_select_all)
+        self.clear_all_btn.clicked.connect(self.on_clear_all)
 
     def on_prev(self):
         if not self.matches_index_list:
             return
             
         self.current_match_index -= 1
+
         if self.current_match_index < 0:
             self.current_match_index = len(self.matches_index_list) - 1
             
@@ -66,12 +75,17 @@ class SearchWidget(QWidget):
             
         self._update_label_and_scroll()
     
-    def on_check_all(self):
+    def on_select_all(self):
         if not self.matches_index_list:
             return
         
         self.checkMatches.emit(self.matches_index_list)
 
+    def on_clear_all(self):
+        self.update_data([])
+
+        signal_bus.parse.search_keyword.emit("")  # 发送空字符串表示清除搜索结果
+        
     def _update_label_and_scroll(self):
         count = len(self.matches_index_list)
         if count == 0:

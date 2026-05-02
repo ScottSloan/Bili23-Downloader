@@ -30,7 +30,7 @@ class MediaSettingsPage(ScrollArea):
 
         self.setScrollLayout(main_layout)
     
-    def connect_signal(self):
+    def connect_signals(self):
         self.media_info_card.video_quality_choice.currentIndexChanged.connect(self.on_change_video_info_choice)
         self.media_info_card.audio_quality_choice.currentIndexChanged.connect(self.on_change_audio_info_choice)
         self.media_info_card.video_codec_choice.currentIndexChanged.connect(self.on_change_video_info_choice)
@@ -41,7 +41,7 @@ class MediaSettingsPage(ScrollArea):
         self.on_change_video_info_choice()
         self.on_change_audio_info_choice()
 
-        self.connect_signal()
+        self.connect_signals()
 
     def on_change_video_info_choice(self):
         self.media_info_card.pre_query_video_info()

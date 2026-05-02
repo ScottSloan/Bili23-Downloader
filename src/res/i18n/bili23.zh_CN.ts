@@ -837,17 +837,17 @@
 <context>
     <name>DownloadListView</name>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="48"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="52"/>
         <source>Re-parse</source>
         <translation>重新解析</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="51"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="55"/>
         <source>Resume</source>
         <translation>继续</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="54"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="58"/>
         <source>Pause</source>
         <translation>暂停</translation>
     </message>
@@ -856,22 +856,22 @@
         <translation type="vanished">编辑下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="62"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="66"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="56"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="60"/>
         <source>Re-download</source>
         <translation>重新下载</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="177"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="179"/>
         <source>Tasks being processed by FFmpeg cannot be redownloaded</source>
         <translation>处于 FFmpeg 处理中的任务无法重新下载</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/list_view.py" line="181"/>
+        <location filename="../../gui/component/download_list/list_view.py" line="183"/>
         <source>Selected task will be redownloaded</source>
         <translation>选定的任务开始重新下载</translation>
     </message>
@@ -1476,75 +1476,75 @@ File name: {filename}</source>
 <context>
     <name>LoginDialog</name>
     <message>
-        <location filename="../../gui/dialog/login.py" line="34"/>
+        <location filename="../../gui/dialog/login.py" line="29"/>
         <source>Scan QR Code to Log In</source>
         <translation>扫描二维码登录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="39"/>
-        <location filename="../../gui/dialog/login.py" line="234"/>
+        <location filename="../../gui/dialog/login.py" line="34"/>
+        <location filename="../../gui/dialog/login.py" line="229"/>
         <source>Scan with the Bilibili app to log in</source>
         <translation>请使用哔哩哔哩客户端扫码登录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="50"/>
+        <location filename="../../gui/dialog/login.py" line="45"/>
         <source>SMS Login</source>
         <translation>短信登录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="55"/>
+        <location filename="../../gui/dialog/login.py" line="50"/>
         <source>Enter phone number</source>
         <translation>请输入手机号</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="59"/>
+        <location filename="../../gui/dialog/login.py" line="54"/>
         <source>Enter verification code</source>
         <translation>请输入验证码</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="62"/>
+        <location filename="../../gui/dialog/login.py" line="57"/>
         <source>Log In</source>
         <translation>登录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="66"/>
-        <location filename="../../gui/dialog/login.py" line="257"/>
+        <location filename="../../gui/dialog/login.py" line="61"/>
+        <location filename="../../gui/dialog/login.py" line="252"/>
         <source>Get Code</source>
         <translation>获取验证码</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="183"/>
-        <location filename="../../gui/dialog/login.py" line="204"/>
+        <location filename="../../gui/dialog/login.py" line="178"/>
+        <location filename="../../gui/dialog/login.py" line="199"/>
         <source>Phone number cannot be empty</source>
         <translation>手机号不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="204"/>
+        <location filename="../../gui/dialog/login.py" line="199"/>
         <source>Verification code cannot be empty</source>
         <translation>验证码不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="217"/>
+        <location filename="../../gui/dialog/login.py" line="212"/>
         <source>Successfully logged in via SMS</source>
         <translation>短信登录成功</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="237"/>
+        <location filename="../../gui/dialog/login.py" line="232"/>
         <source>Confirm login on your device</source>
         <translation>请在设备侧确认登录</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="240"/>
+        <location filename="../../gui/dialog/login.py" line="235"/>
         <source>Successfully logged in via QR code</source>
         <translation>扫码登录成功</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="245"/>
+        <location filename="../../gui/dialog/login.py" line="240"/>
         <source>QR code has expired</source>
         <translation>二维码已过期</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/login.py" line="262"/>
+        <location filename="../../gui/dialog/login.py" line="257"/>
         <source>Resend({countdown})</source>
         <translation>重新发送({countdown})</translation>
     </message>
@@ -1896,12 +1896,12 @@ For advanced usage, see the help documentation.</source>
         <translation>选择下载时使用的命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="263"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="269"/>
         <source>Not available</source>
         <translation>不可用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/download_options/card.py" line="265"/>
+        <location filename="../../gui/dialog/download_options/card.py" line="271"/>
         <source>Custom naming rules are not supported for favorites and profiles</source>
         <translation>收藏夹和个人空间类型不支持自定义命名规则</translation>
     </message>
@@ -2048,32 +2048,32 @@ For advanced usage, see the help documentation.</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="259"/>
+        <location filename="../../gui/interface/parse.py" line="260"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="274"/>
+        <location filename="../../gui/interface/parse.py" line="276"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="275"/>
+        <location filename="../../gui/interface/parse.py" line="277"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="276"/>
+        <location filename="../../gui/interface/parse.py" line="278"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="301"/>
+        <location filename="../../gui/interface/parse.py" line="303"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="307"/>
+        <location filename="../../gui/interface/parse.py" line="309"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -2598,7 +2598,7 @@ ISP：{isp}</translation>
     <name>SearchWidget</name>
     <message>
         <location filename="../../gui/component/widget/search.py" line="24"/>
-        <location filename="../../gui/component/widget/search.py" line="96"/>
+        <location filename="../../gui/component/widget/search.py" line="100"/>
         <source>No matches found</source>
         <translation>未找到匹配项</translation>
     </message>
@@ -2608,9 +2608,27 @@ ISP：{isp}</translation>
         <translation>全选</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/search.py" line="80"/>
+        <location filename="../../gui/component/widget/search.py" line="37"/>
+        <source>Clear All</source>
+        <translation>清除</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/search.py" line="84"/>
         <source>{index} of {count}</source>
         <translation>第 {index} 个，共 {count} 个</translation>
+    </message>
+</context>
+<context>
+    <name>SegmentedWidget</name>
+    <message>
+        <location filename="../../gui/component/widget/segment.py" line="45"/>
+        <source>Search</source>
+        <translation>搜索</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/segment.py" line="46"/>
+        <source>Page</source>
+        <translation>页面</translation>
     </message>
 </context>
 <context>
@@ -2752,7 +2770,7 @@ ISP：{isp}</translation>
 <context>
     <name>SortFlyoutWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="21"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="28"/>
         <source>Sort By</source>
         <translation>排序方式</translation>
     </message>
@@ -3006,12 +3024,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="179"/>
+        <location filename="../../gui/component/dialog.py" line="171"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="183"/>
+        <location filename="../../gui/component/dialog.py" line="175"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -3019,60 +3037,60 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopStackedWidget</name>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="98"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="115"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="133"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="154"/>
         <source>Sort</source>
         <translation>排序</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="99"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="137"/>
         <source>Start All</source>
         <translation>全部开始</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="100"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="138"/>
         <source>Pause All</source>
         <translation>全部暂停</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="101"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="139"/>
         <source>Delete All</source>
         <translation>全部删除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="116"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="158"/>
         <source>Open Directory</source>
         <translation>打开目录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="118"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="160"/>
         <source>Clear All</source>
         <translation>清除记录</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="141"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="184"/>
         <source>Creation Time</source>
         <translation>创建时间</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="142"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="157"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="185"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="200"/>
         <source>Title</source>
         <translation>标题名称</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="143"/>
-        <location filename="../../gui/component/download_list/top_widget.py" line="158"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="186"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="201"/>
         <source>File Size</source>
         <translation>文件大小</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="144"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="187"/>
         <source>Download Progress</source>
         <translation>下载进度</translation>
     </message>
     <message>
-        <location filename="../../gui/component/download_list/top_widget.py" line="156"/>
+        <location filename="../../gui/component/download_list/top_widget.py" line="199"/>
         <source>Completion Time</source>
         <translation>完成时间</translation>
     </message>

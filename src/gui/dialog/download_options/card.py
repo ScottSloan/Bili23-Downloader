@@ -177,11 +177,11 @@ class MediaOptionsCard(ExpandGroupSettingCard):
         self.merge_video_audio_group = self.addGroup("", self.tr("Merge video and audio"), self.tr("Merge separate video and audio streams into a single file"), self.merge_video_audio_switch)
         self.keep_original_files_group = self.addGroup("", self.tr("Keep original files"), self.tr("Keep the original separate stream files after merging"), self.keep_original_files_switch)
 
-        self.connect_signal()
+        self.connect_signals()
 
         self.on_load()
 
-    def connect_signal(self):
+    def connect_signals(self):
         self.download_video_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.download_audio_stream_switch.checkedChanged.connect(self.on_change_download_stream_options)
         self.merge_video_audio_switch.checkedChanged.connect(self.on_change_merge_option)
