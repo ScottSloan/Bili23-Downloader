@@ -13,17 +13,12 @@ from util.common.enum import ToastNotificationCategory, QRCodeScanStatus
 from util.auth import SMS, Captcha, SMSInfo, QRCode
 from util.common import signal_bus
 
-import sys
-
 class LoginDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
 
         self._closing = False
         self._resources_cleaned = False
-
-        if sys.platform != "darwin":
-            self.enable_close_btn()
 
         self.init_utils()
 
@@ -91,7 +86,7 @@ class LoginDialog(DialogBase):
         login_layout.addLayout(sms_layout)
         login_layout.addSpacing(40)
 
-        self.viewLayout.addSpacing(40 if sys.platform == "darwin" else 8)
+        self.viewLayout.addSpacing(40)
         self.viewLayout.addLayout(login_layout)
         self.viewLayout.addSpacing(40)
 

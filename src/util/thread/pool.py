@@ -14,9 +14,6 @@ class GlobalThreadPoolTask:
     @staticmethod
     def run_func(func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         class FuncRunnable(QRunnable):
-            def __init__(self):
-                super().__init__()
-
             def run(self):
                 func(*args, **kwargs)
 

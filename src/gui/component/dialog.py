@@ -64,14 +64,6 @@ class DialogBase(Base, MessageBoxBase):
         self.accepted.connect(self.on_dialog_close)
         self.rejected.connect(self.on_dialog_close)
 
-    def enable_close_btn(self):
-        self.closeBtn = CloseButton(self)
-        self.closeBtn.clicked.connect(self.reject)
-
-        StyleSheet.BUTTON.apply(self.closeBtn)
-
-        self.vBoxLayout.insertWidget(0, self.closeBtn, alignment = Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
-
     def on_dialog_close(self):
         """
         on_close 在对话框关闭时被调用，可以在这里执行一些清理操作。

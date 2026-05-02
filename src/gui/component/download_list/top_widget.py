@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QStackedWidget, QWidget, QHBoxLayout, QGridLayout
 from PySide6.QtGui import QPainter, QColor, QPen
+from PySide6.QtCore import Signal
 
 from qfluentwidgets import (
     PrimaryPushButton, PushButton, FluentIcon, FlyoutViewBase, BodyLabel, ComboBox, Flyout, FlyoutAnimationType,
@@ -11,6 +12,8 @@ from gui.component.widget import ToolButton
 from util.common import ExtendedFluentIcon, config, Directory, signal_bus
 
 class SortFlyoutWidget(FlyoutViewBase):
+    closed = Signal()
+
     def __init__(self, parent = None, sort_by_key_dict: dict = None, trigger_signal_func = None, sort_by_key = None):
         super().__init__(parent)
 
@@ -78,6 +81,8 @@ class SortFlyoutWidget(FlyoutViewBase):
     def trigger_signal(self):
         if self.trigger_signal_func:
             self.trigger_signal_func(self.sort_by_key, self.ascending)
+
+        self.closed.emit()
 
 class FilterFlyoutWidget(FlyoutViewBase):
     def __init__(self, parent = None):
@@ -204,13 +209,17 @@ class TopStackedWidget(QStackedWidget):
         )
 
     def _show_sort_flyout(self, sort_by_key_dict, trigger_signal_func, sort_by_key, target):
-        Flyout.make(
-            view = SortFlyoutWidget(self, sort_by_key_dict, trigger_signal_func, sort_by_key),
+        view = SortFlyoutWidget(self, sort_by_key_dict, trigger_signal_func, sort_by_key)
+
+        flyout = Flyout.make(
+            view = view,
             target = target,
             parent = self,
             aniType = FlyoutAnimationType.DROP_DOWN,
             isDeleteOnClose = False
         )
+
+        view.closed.connect(flyout.fadeOut)
 
     def on_open_directory(self):    
         Directory.open_directory_in_explorer(config.get(config.download_path))

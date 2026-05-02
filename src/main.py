@@ -135,17 +135,6 @@ class Application(QApplication):
         self.installTranslator(self.fluent_translator)
         self.installTranslator(self.bili23_translator)
 
-def read_args():
-    # 读取传入的参数
-
-    # 静默启动
-    if "--silent" in sys.argv:
-        os.environ["BILI23_SILENT_START"] = "1"
-
-    # 最大化窗口
-    if "--maximized" in sys.argv:
-        os.environ["BILI23_MAXIMIZED"] = "1"
-
 def main():
     scaling_value = config.get(config.display_scaling).value
 

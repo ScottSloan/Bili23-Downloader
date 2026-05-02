@@ -252,6 +252,12 @@ class NamingConventionCard(SettingCard):
         # 如果能查询到数据，则说明是支持自定义命名规则的类型，直接显示
         if rule_list:
             for entry in rule_list:
+                name_key = entry["name"]
+                default_rule_names = Translator.DEFAULT_RULE_NAMES()
+
+                if name_key in default_rule_names:
+                    entry["name"] = Translator.DEFAULT_RULE_NAMES(name_key)
+
                 self.rule_choice.addItem(entry["name"], userData = entry["id"])
 
                 # 如果是默认规则，直接选中

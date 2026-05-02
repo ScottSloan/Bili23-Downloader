@@ -86,8 +86,8 @@ class Merger(QObject):
     def _run_merge_command(self, command: FFmpegCommand, cwd: Path):
         self._ffmpeg_runner = FFmpegRunner.from_command(command, parent = self)
         self._ffmpeg_runner.set_cwd(cwd)
-        self._ffmpeg_runner.finished_sig.connect(self.on_merge_completed)
-        self._ffmpeg_runner.error_sig.connect(self.on_merge_error)
+        self._ffmpeg_runner.finished_signal.connect(self.on_merge_completed)
+        self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
         self._ffmpeg_runner.start()
 
     def rename_output_file(self):
@@ -236,8 +236,8 @@ class Merger(QObject):
 
             self._ffmpeg_runner = FFmpegRunner.from_command(convert_cmd, parent=self)
             self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_sig.connect(self.on_convert_completed)
-            self._ffmpeg_runner.error_sig.connect(self.on_merge_error)
+            self._ffmpeg_runner.finished_signal.connect(self.on_convert_completed)
+            self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
             self._ffmpeg_runner.start()
         else:
             self.set_error_message(
@@ -288,8 +288,8 @@ class Merger(QObject):
 
             self._ffmpeg_runner = FFmpegRunner.from_command(fix_command, parent = self)
             self._ffmpeg_runner.set_cwd(cwd)
-            self._ffmpeg_runner.finished_sig.connect(self.on_convert_completed)
-            self._ffmpeg_runner.error_sig.connect(self.on_merge_error)
+            self._ffmpeg_runner.finished_signal.connect(self.on_convert_completed)
+            self._ffmpeg_runner.error_signal.connect(self.on_merge_error)
             self._ffmpeg_runner.start()
         else:
             self.set_error_message(

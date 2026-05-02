@@ -9,8 +9,8 @@ import os
 from PySide6.QtCore import QThread, Signal
 
 class FFmpegRunner(QThread):
-    finished_sig = Signal(int, str, str)  # return_code, stdout, stderr
-    error_sig = Signal(Exception, str, str)  # exception, stdout, stderr
+    finished_signal = Signal(int, str, str)  # return_code, stdout, stderr
+    error_signal = Signal(Exception, str, str)  # exception, stdout, stderr
 
     def __init__(self, cmd: List[str], parent=None):
         super().__init__(parent)
@@ -64,13 +64,13 @@ class FFmpegRunner(QThread):
             self._proc = None
 
         if exception:
-            self.error_sig.emit(RuntimeError(Translator.ERROR_MESSAGES("FFMPEG_FAILED")), stdout, stderr)
+            self.error_signal.emit(RuntimeError(Translator.ERROR_MESSAGES("FFMPEG_FAILED")), stdout, stderr)
             return
 
         if return_code == 0:
-            self.finished_sig.emit(return_code, stdout, stderr)
+            self.finished_signal.emit(return_code, stdout, stderr)
         else:
-            self.error_sig.emit(RuntimeError(Translator.ERROR_MESSAGES("FFMPEG_FAILED_WITH_CODE").format(code=return_code)), stdout, stderr)
+            self.error_signal.emit(RuntimeError(Translator.ERROR_MESSAGES("FFMPEG_FAILED_WITH_CODE").format(code = return_code)), stdout, stderr)
 
     def terminate(self):
         if self._proc:
