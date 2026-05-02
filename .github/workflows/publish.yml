@@ -3,8 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - dev
     tags:
       - "v*"
 

@@ -17,7 +17,7 @@ from gui.dialog.setting import (
     StartingNumberDialog, ParseListSettingsDialog, SpeedLimitSettingDialog, RuleListDialog
 )
 
-from util.common import signal_bus, config, Translator, ExtendedFluentIcon, StyleSheet, APPConfig
+from util.common import signal_bus, config, Translator, StyleSheet, APPConfig
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
 

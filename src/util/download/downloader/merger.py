@@ -191,7 +191,9 @@ class Merger(QObject):
         if error_message is None:
             error_message = str(error)
 
-        self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), f"{error_message}\n\n{stderr}")
+        retry_message = Translator.TIP_MESSAGES("RETRY_PROMPT")
+
+        self.set_error_message(Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"), f"{error_message}\n\n{retry_message}\n\n{stderr}")
 
         signal_bus.download.auto_manage_concurrent_downloads.emit()
 

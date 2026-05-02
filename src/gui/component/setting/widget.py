@@ -2,8 +2,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
 
 from qfluentwidgets import (
-    SwitchButton, QConfig, OptionsConfigItem, ComboBox, FluentIcon, IndicatorPosition, Slider, qconfig,
-    RangeConfigItem, isDarkTheme
+    SwitchButton, OptionsConfigItem, ComboBox, FluentIcon, IndicatorPosition, Slider, qconfig,
+    RangeConfigItem, isDarkTheme, ConfigItem
 )
 
 from gui.component.widget import TransparentToolButton
@@ -11,7 +11,7 @@ from gui.component.widget import TransparentToolButton
 from util.common import config
 
 class SettingSwitchButton(SwitchButton):
-    def __init__(self, config_item: QConfig, parent = None):
+    def __init__(self, config_item: ConfigItem, parent = None):
         super().__init__(parent = parent, indicatorPos = IndicatorPosition.RIGHT)
 
         self.config_item = config_item

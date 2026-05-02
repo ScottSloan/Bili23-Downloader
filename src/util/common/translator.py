@@ -262,6 +262,7 @@ class Translator:
             "DOWNLOADING_SUBTITLES": translate("TIP_MESSAGES", "Downloading Subtitles..."),
             "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
             "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
+            "RETRY_PROMPT": translate("TIP_MESSAGES", "Please click the retry button or redownload")
         }
 
     @staticmethod

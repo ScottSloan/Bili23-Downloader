@@ -7,6 +7,7 @@ from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushS
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 
 from util.common import config, ExtendedFluentIcon, Directory, isWin11
+from util.thread import GlobalThreadPoolTask
 
 class PersonalizationCard(ExpandGroupSettingCard):
     accentColorChanged = Signal(QColor)
@@ -43,6 +44,8 @@ class PersonalizationCard(ExpandGroupSettingCard):
         self.accentColorChanged.emit(color)
 
 class DownloadPathSettingCard(PushSettingCard):
+    diskSpaceReady = Signal(str, object)
+
     def __init__(self, parent_window, save = True, parent = None):
         super().__init__(self.tr("Choose folder"), FluentIcon.FOLDER, self.tr("Download Path"), "path", parent)
 
@@ -52,6 +55,7 @@ class DownloadPathSettingCard(PushSettingCard):
 
         self.set_path(config.get(config.download_path), update_space = False)
 
+        self.diskSpaceReady.connect(self.on_disk_space_ready)
         QTimer.singleShot(0, self.refresh_disk_space)
 
         self.clicked.connect(self.on_change_download_path)
@@ -65,7 +69,16 @@ class DownloadPathSettingCard(PushSettingCard):
             self.setContent(path)
 
     def refresh_disk_space(self):
-        disk_space_info = Directory.calc_disk_space(self.path)
+        path = self.path
+
+        def worker():
+            self.diskSpaceReady.emit(path, Directory.calc_disk_space(path))
+
+        GlobalThreadPoolTask.run_func(worker)
+
+    def on_disk_space_ready(self, path: str, disk_space_info):
+        if path != self.path:
+            return
 
         if disk_space_info:
             self.setContent(

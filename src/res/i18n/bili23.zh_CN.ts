@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="271"/>
+        <location filename="../../util/common/translator.py" line="272"/>
         <source>Danmaku</source>
         <translation>弹幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="272"/>
+        <location filename="../../util/common/translator.py" line="273"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="273"/>
+        <location filename="../../util/common/translator.py" line="274"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
@@ -1552,7 +1552,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="278"/>
+        <location filename="../../util/common/translator.py" line="279"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1852,7 +1852,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="288"/>
+        <location filename="../../util/common/translator.py" line="289"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -2043,37 +2043,37 @@ For advanced usage, see the help documentation.</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="240"/>
+        <location filename="../../gui/interface/parse.py" line="243"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="260"/>
+        <location filename="../../gui/interface/parse.py" line="263"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="276"/>
+        <location filename="../../gui/interface/parse.py" line="279"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="277"/>
+        <location filename="../../gui/interface/parse.py" line="280"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="278"/>
+        <location filename="../../gui/interface/parse.py" line="281"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="303"/>
+        <location filename="../../gui/interface/parse.py" line="306"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="309"/>
+        <location filename="../../gui/interface/parse.py" line="312"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
@@ -2598,7 +2598,7 @@ ISP：{isp}</translation>
     <name>SearchWidget</name>
     <message>
         <location filename="../../gui/component/widget/search.py" line="24"/>
-        <location filename="../../gui/component/widget/search.py" line="100"/>
+        <location filename="../../gui/component/widget/search.py" line="110"/>
         <source>No matches found</source>
         <translation>未找到匹配项</translation>
     </message>
@@ -2613,7 +2613,7 @@ ISP：{isp}</translation>
         <translation>清除</translation>
     </message>
     <message>
-        <location filename="../../gui/component/widget/search.py" line="84"/>
+        <location filename="../../gui/component/widget/search.py" line="94"/>
         <source>{index} of {count}</source>
         <translation>第 {index} 个，共 {count} 个</translation>
     </message>
@@ -2909,7 +2909,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="305"/>
+        <location filename="../../util/common/translator.py" line="306"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -3001,6 +3001,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="264"/>
         <source>Scraping Metadata...</source>
         <translation>刮削元数据中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="265"/>
+        <source>Please click the retry button or redownload</source>
+        <translation>请点击重试按钮或重新下载</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="253"/>

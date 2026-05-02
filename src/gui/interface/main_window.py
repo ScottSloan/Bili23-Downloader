@@ -285,8 +285,6 @@ class MainWindow(MSFluentWindow):
             self.initialized = True
             self.show()
 
-        QApplication.processEvents()
-
     def update_download_btn_badge_info(self, count: int):
         if self.download_info_badge.isHidden():
             self.download_info_badge.show()
@@ -371,6 +369,5 @@ class MainWindow(MSFluentWindow):
         else:
             self.show()
 
-        QApplication.processEvents()
         self.raise_()
         self.activateWindow()
