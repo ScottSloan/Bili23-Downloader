@@ -31,7 +31,7 @@ def try_system_ffmpeg():
         set_ffmpeg_environment(ffmpeg_path)
         return True
     
-    logger.warning("环境变量中未找到 FFmpeg 可执行文件")
+    logger.debug("环境变量中未找到 FFmpeg 可执行文件")
     return False
 
 def try_bundled_ffmpeg():
@@ -40,21 +40,27 @@ def try_bundled_ffmpeg():
         set_ffmpeg_environment(bundle_ffmpeg_path)
         return True
         
-    logger.warning("没有找到附带的 FFmpeg 可执行文件")
+    logger.debug("没有找到附带的 FFmpeg 可执行文件")
     return False
 
 def on_ffmpeg_not_found():
-    logger.error("没有可用的 FFmpeg 可执行文件")
+    logger.debug("没有可用的 FFmpeg 可执行文件")
     config.no_ffmpeg_available = True
     return False
 
-cwd = Directory.get_cwd()
-
 config.ffmpeg_executable = ffmpeg_executable
 
+# 使用 __file__ 确定项目根目录（更可靠，不依赖 cwd）
+# __file__ = src/util/ffmpeg/__init__.py
+# .parent = src/util/ffmpeg
+# .parent.parent = src/util
+# .parent.parent.parent = src
+# .parent.parent.parent.parent = project_root (Bili23-Downloader)
+_project_root = Path(__file__).parent.parent.parent.parent
+
 # 检查多个可能的内嵌 FFmpeg 位置
-bundle_ffmpeg_path = cwd / "bundle" / ffmpeg_executable
-bin_ffmpeg_path = cwd / "bin" / ffmpeg_executable
+bundle_ffmpeg_path = _project_root / "bundle" / ffmpeg_executable
+bin_ffmpeg_path = _project_root / "bin" / ffmpeg_executable
 
 # 优先检查 bin 目录，然后是 bundle 目录
 if bin_ffmpeg_path.exists():
@@ -68,7 +74,7 @@ else:
 match config.get(config.ffmpeg_source):
     case FFmpegSource.BUNDLED:
         if not try_bundled_ffmpeg():
-            logger.warning("附带的 FFmpeg 不存在，将尝试使用环境变量中的 FFmpeg")
+            logger.debug("附带的 FFmpeg 不存在，将尝试使用环境变量中的 FFmpeg")
             
             if try_system_ffmpeg():
                 config.set(config.ffmpeg_source, FFmpegSource.SYSTEM)
@@ -77,7 +83,7 @@ match config.get(config.ffmpeg_source):
                 
     case FFmpegSource.SYSTEM:
         if not try_system_ffmpeg():
-            logger.warning("环境变量中无 FFmpeg，将尝试使用附带的 FFmpeg")
+            logger.debug("环境变量中无 FFmpeg，将尝试使用附带的 FFmpeg")
             
             if try_bundled_ffmpeg():
                 config.set(config.ffmpeg_source, FFmpegSource.BUNDLED)
@@ -90,7 +96,7 @@ match config.get(config.ffmpeg_source):
         if custom_ffmpeg_path.exists():
             set_ffmpeg_environment(custom_ffmpeg_path)
         else:
-            logger.warning(f"自定义 FFmpeg 路径无效：{custom_ffmpeg_path}，将尝试 fallback")
+            logger.debug(f"自定义 FFmpeg 路径无效：{custom_ffmpeg_path}，将尝试 fallback")
 
             if try_bundled_ffmpeg():
                 config.set(config.ffmpeg_source, FFmpegSource.BUNDLED)

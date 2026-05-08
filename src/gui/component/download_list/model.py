@@ -171,7 +171,7 @@ class DownloadListModel(CoverQueryModelBase):
         match task_info.Download.status:
             case DownloadStatus.COMPLETED:
                 logger.info(f"删除已完成任务: {task_info.Basic.task_id}, title={task_info.Basic.show_title}")
-                task_manager.delete(task_info, completed = True)
+                task_manager.delete_completed(task_info)
                 self.removeRow(self.getRow(task_info))
                 logger.info(f"已从 UI 移除任务")
 

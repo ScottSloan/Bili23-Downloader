@@ -34,6 +34,8 @@ class QueryWorker(QObject):
         downloading_tasks = task_manager.query()
         completed_tasks = task_manager.query(completed = True)
 
+        logger.info(f"启动时从数据库加载任务: 正在下载 {len(downloading_tasks)} 个, 已完成 {len(completed_tasks)} 个")
+        
         downloading_tasks = self.get_task_list(downloading_tasks, update_status = True)
         completed_tasks = self.get_task_list(completed_tasks, update_status = False)
 

@@ -182,16 +182,35 @@ class TaskManager:
         self.db_manager.delete_task(task_info.Basic.task_id, completed)
 
     def cancel(self, task_info: TaskInfo):
-        signal_bus.download.remove_from_downloading_list.emit(task_info)
-
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"取消任务: {task_info.Basic.task_id}")
+        
         self.delete(task_info)
         
-        self._removeTemporaryFiles(task_info)
+        self._removeTaskFiles(task_info)
+        
+        signal_bus.download.remove_from_downloading_list.emit(task_info)
+        logger.info(f"任务取消完成")
 
     def mark_as_completed(self, task_info: TaskInfo):
         self.delete(task_info)
 
         self.db_manager.add_tasks([task_info], completed = True)
+
+    def delete_completed(self, task_info: TaskInfo):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"删除已完成任务: {task_info.Basic.task_id}")
+        logger.info(f"下载路径: {task_info.File.download_path}")
+        logger.info(f"文件夹: {task_info.File.folder}")
+        logger.info(f"文件列表: {task_info.File.relative_files}")
+        
+        self.delete(task_info, completed=True)
+        logger.info(f"数据库删除完成")
+        
+        self._removeTaskFiles(task_info)
+        logger.info(f"本地文件删除完成")
 
     def reset(self, task_info: TaskInfo):
         # 重置下载状态为初始状态，适用于完全重新下载的场景
@@ -212,8 +231,48 @@ class TaskManager:
 
         signal_bus.download.add_to_downloading_list.emit([task_info])
 
+    def _removeTaskFiles(self, task_info: TaskInfo):
+        # 删除任务相关的所有文件（包括临时文件和已下载的文件）
+        import logging
+        import shutil
+        logger = logging.getLogger(__name__)
+        
+        download_path = task_info.File.download_path
+        folder = task_info.File.folder
+        
+        # 安全检查：folder 不能为空，防止误删整个下载目录
+        if not folder:
+            logger.warning(f"任务 {task_info.Basic.task_id} 的 folder 为空，跳过文件删除")
+            return
+        
+        full_path = Path(download_path, folder)
+        
+        # 额外安全检查：确保路径在下载目录内
+        if not str(full_path).startswith(str(download_path)):
+            logger.error(f"任务 {task_info.Basic.task_id} 的路径异常，跳过文件删除: {full_path}")
+            return
+        
+        if full_path.exists():
+            try:
+                # 删除任务文件夹内的所有文件
+                for item in full_path.iterdir():
+                    if item.is_file():
+                        item.unlink(missing_ok=True)
+                    elif item.is_dir():
+                        shutil.rmtree(item, ignore_errors=True)
+                
+                # 尝试删除文件夹本身（如果为空）
+                full_path.rmdir()
+                logger.info(f"已删除任务文件夹: {full_path}")
+            except Exception as e:
+                logger.error(f"删除任务文件夹时出错: {e}")
+                # 如果无法删除文件夹，至少删除已知文件
+                safe_remove(full_path, *task_info.File.relative_files)
+        else:
+            logger.info(f"任务文件夹不存在: {full_path}")
+
     def _removeTemporaryFiles(self, task_info: TaskInfo):
-        # 删除下载的临时文件
+        # 删除下载的临时文件（保留此方法以兼容旧代码）
         safe_remove(Path(task_info.File.download_path, task_info.File.folder), *task_info.File.relative_files)
 
     def _update_media_info(self, task_info: TaskInfo):

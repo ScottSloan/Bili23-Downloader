@@ -1,5 +1,5 @@
 from util.download.downloader.yt_dlp_downloader import YTDLPDownloader
-from util.common.enum import ToastNotificationCategory
+from util.common.enum import ToastNotificationCategory, DownloadStatus
 from util.common import signal_bus, Translator
 from util.download.task.info import TaskInfo
 
@@ -45,7 +45,11 @@ class DownloaderManager:
     def remove(self, task_id: str):
         if task_id in self.downloaders:
             downloader = self.downloaders[task_id]
-            if downloader._is_downloading:
+            # 检查任务是否已完成，避免将已完成的任务错误暂停
+            task_info = downloader._task_info
+            if task_info and task_info.Download.status == DownloadStatus.COMPLETED:
+                logger.info(f"任务 {task_id} 已完成，跳过暂停")
+            elif downloader._is_downloading:
                 downloader.pause()
             self.downloaders.pop(task_id)
         if task_id in self.task_infos:

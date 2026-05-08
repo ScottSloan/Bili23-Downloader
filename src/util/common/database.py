@@ -11,10 +11,19 @@ class Database:
             return cursor.fetchall()
         
     def execute(self, query: str, params: tuple = ()):
-        with sqlite3.connect(self.path) as conn:
+        import logging
+        logger = logging.getLogger(__name__)
+        try:
+            conn = sqlite3.connect(self.path, timeout=30.0)
             cursor = conn.cursor()
             cursor.execute(query, params)
             conn.commit()
+            logger.info(f"SQL 执行成功: {query[:50]}... 影响行数: {cursor.rowcount}")
+        except Exception as e:
+            logger.error(f"SQL 执行失败: {query[:50]}... 错误: {e}")
+            raise
+        finally:
+            conn.close()
 
     def executemany(self, query: str, params_list: list[tuple]):
         with sqlite3.connect(self.path) as conn:

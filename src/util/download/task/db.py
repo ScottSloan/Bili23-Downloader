@@ -78,15 +78,27 @@ class TaskDatabase(Database):
         import logging
         logger = logging.getLogger(__name__)
         
+        logger.info(f"删除任务 - task_id: {task_id}, type: {type(task_id).__name__}, completed: {completed}")
+        
         if completed:
             logger.info(f"从 completed_task 表删除任务: {task_id}")
             self.execute("""
                 DELETE FROM completed_task WHERE task_id = ?
-            """, (task_id,))
-            logger.info(f"删除操作已执行")
+            """, (str(task_id),))
+            # 验证删除是否成功
+            result = self.query("SELECT COUNT(*) FROM completed_task WHERE task_id = ?", (str(task_id),))
+            if result and result[0][0] == 0:
+                logger.info(f"删除操作已执行并验证成功")
+            else:
+                logger.error(f"删除操作可能失败，任务仍然存在")
         else:
             logger.info(f"从 download_task 表删除任务: {task_id}")
             self.execute("""
                 DELETE FROM download_task WHERE task_id = ?
-            """, (task_id,))
-            logger.info(f"删除操作已执行")
+            """, (str(task_id),))
+            # 验证删除是否成功
+            result = self.query("SELECT COUNT(*) FROM download_task WHERE task_id = ?", (str(task_id),))
+            if result and result[0][0] == 0:
+                logger.info(f"删除操作已执行并验证成功")
+            else:
+                logger.error(f"删除操作可能失败，任务仍然存在")

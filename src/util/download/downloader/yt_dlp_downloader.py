@@ -297,6 +297,15 @@ class YTDLPDownloader:
                 self._ydl = ydl
                 ydl.download([url])
 
+            # 下载完全完成，更新任务状态为已完成
+            if self._task_info:
+                self._task_info.Download.status = DownloadStatus.COMPLETED
+                self._task_info.Download.progress = 100
+
+            # 在调用 finish_callback 前标记下载已结束，防止 downloader_manager.remove()
+            # 在回调处理过程中检查 _is_downloading 仍为 True 而错误调用 pause()
+            self._is_downloading = False
+
             if self.finish_callback and not self._stop_event.is_set():
                 self.finish_callback(url)
 
@@ -321,6 +330,13 @@ class YTDLPDownloader:
                             self._ydl = ydl
                             ydl.download([url])
                         
+                        # 下载完全完成，更新任务状态为已完成
+                        if self._task_info:
+                            self._task_info.Download.status = DownloadStatus.COMPLETED
+                            self._task_info.Download.progress = 100
+
+                        self._is_downloading = False
+
                         if self.finish_callback and not self._stop_event.is_set():
                             self.finish_callback(url)
                         return  # 重试成功，直接返回
