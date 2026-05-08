@@ -26,6 +26,8 @@ class AboutDialog(DialogBase):
 
         self.app_version_lab = BodyLabel(self.tr("Version {app_version}").format(app_version = app_version), self)
         self.qt_version_lab = BodyLabel(self.tr("Powered by Qt {qt_version} and QFluentWidgets {qfluentwidgets_version}").format(qt_version = qVersion(), qfluentwidgets_version = __version__), self)
+        self.desc_lab = BodyLabel(self.tr("Bili23-Downloader is a cross-platform Bilibili video download tool, compatible with Windows (including Win7), Linux, and macOS. It features a modern UI and supports audio/video stream separation, multi-threaded acceleration, danmaku and subtitle extraction, cover extraction, metadata scraping, and customizable file naming and categorization."))
+        self.desc_lab.setWordWrap(True)
         self.license_lab = BodyLabel(self.tr("This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3)."))
         self.copyright_lab = BodyLabel(self.tr("Copyright © 2022-{year} Scott Sloan. All Rights Reserved.").format(year = year))
 
@@ -42,6 +44,8 @@ class AboutDialog(DialogBase):
         content_layout.setSpacing(0)
         content_layout.addWidget(self.app_version_lab)
         content_layout.addWidget(self.qt_version_lab)
+        content_layout.addSpacing(10)
+        content_layout.addWidget(self.desc_lab)
         content_layout.addSpacing(10)
         content_layout.addWidget(self.license_lab)
         content_layout.addSpacing(10)

@@ -71,36 +71,41 @@
     </message>
     <message>
         <location filename="../../gui/dialog/misc/about.py" line="29"/>
+        <source>Bili23-Downloader is a cross-platform Bilibili video download tool, compatible with Windows (including Win7), Linux, and macOS. It features a modern UI and supports audio/video stream separation, multi-threaded acceleration, danmaku and subtitle extraction, cover extraction, metadata scraping, and customizable file naming and categorization.</source>
+        <translation>Bili23-Downloader 是一款跨平台的 B 站视频下载工具，兼容 Windows（含 Win7）、Linux 和 macOS。它拥有现代化 UI，支持音视频流分离下载、多线程加速、弹幕与字幕获取、封面提取、元数据刮削等丰富功能，并可自定义文件命名与分类，满足多样化需求。</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/about.py" line="31"/>
         <source>This software is free and open-source, licensed under the GNU General Public License v3 (GPLv3).</source>
         <translation>本软件为免费开源软件，使用 GNU 通用公共许可证第三版（GPLv3）授权。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="30"/>
+        <location filename="../../gui/dialog/misc/about.py" line="32"/>
         <source>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</source>
         <translation>Copyright © 2022-{year} Scott Sloan. All Rights Reserved.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="32"/>
+        <location filename="../../gui/dialog/misc/about.py" line="34"/>
         <source>If this project saved you time or solved your problem, consider buying the author a coffee! Don&apos;t forget to star the repository on GitHub to support open-source development.</source>
         <translation>如果这个项目节省了你的时间或解决了你的问题，欢迎通过赞助请作者喝杯咖啡，也别忘了在 GitHub 上点个 Star 支持开源！</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="35"/>
+        <location filename="../../gui/dialog/misc/about.py" line="37"/>
         <source>Terms of Use</source>
         <translation>使用协议</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="36"/>
+        <location filename="../../gui/dialog/misc/about.py" line="38"/>
         <source>Documentation</source>
         <translation>帮助文档</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="37"/>
+        <location filename="../../gui/dialog/misc/about.py" line="39"/>
         <source>Github</source>
         <translation>Github</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/about.py" line="38"/>
+        <location filename="../../gui/dialog/misc/about.py" line="40"/>
         <source>Sponsor</source>
         <translation>赞助作者</translation>
     </message>
