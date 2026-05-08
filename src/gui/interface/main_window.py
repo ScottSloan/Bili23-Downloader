@@ -11,14 +11,10 @@ from qfluentwidgets import (
 from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget
 from gui.interface import DownloadInterface, SettingInterface, ParseInterface
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
-from gui.component import SystemTrayIcon, ProfileCard
-from gui.dialog.update import UpdateDialog
-from gui.dialog.login import LoginDialog
+from gui.component import SystemTrayIcon
 
 from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.auth import user_manager
-from util.misc import Updater
 
 class MainWindow(MSFluentWindow):
     def __init__(self):
@@ -104,9 +100,7 @@ class MainWindow(MSFluentWindow):
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
         signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
-        signal_bus.login.update_avatar.connect(self.on_update_avatar)
         signal_bus.download.update_downloading_count.connect(self.update_download_btn_badge_info)
-        signal_bus.update.show_dialog.connect(self.show_update_dialog)
         signal_bus.interface.mica_effect_changed.connect(self.setMicaEffectEnabled)
 
         signal_bus.parse.parse_url.connect(self.on_reparse_task)
@@ -122,18 +116,11 @@ class MainWindow(MSFluentWindow):
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
 
-        self.updater = Updater()
-
-        signal_bus.update.check.connect(self.updater.request_update)
-
         if not config.get(config.accepted_terms):
             QTimer.singleShot(300, self.show_terms_of_use)
-        
         else:
-            signal_bus.update.check.emit(False)
-
-        QTimer.singleShot(300, self.check_download_path)
-        QTimer.singleShot(300, self.check_ffmpeg)
+            QTimer.singleShot(300, self.check_download_path)
+            QTimer.singleShot(300, self.check_ffmpeg)
 
         signal_bus.emit_pending_signals()
 
@@ -183,21 +170,8 @@ class MainWindow(MSFluentWindow):
         dialog.exec()
 
     def on_avatar_click(self):
-        if not config.get(config.is_login) or config.is_expired:
-            # 未登录，点击头像显示登录界面
-            dialog = LoginDialog(self)
-
-            if dialog.exec():
-                user_manager.get_user_info()
-            
-        else:
-            # 已登录，点击头像显示用户信息
-            Flyout.make(
-                view = ProfileCard(self),
-                target = self.avatar_widget,
-                parent = self,
-                aniType = FlyoutAnimationType.SLIDE_RIGHT
-            )
+        # 移除登录功能，点击头像不执行任何操作
+        pass
 
     def on_update_avatar(self, pixmap: QPixmap | bytes):
         if isinstance(pixmap, bytes):
@@ -269,12 +243,12 @@ class MainWindow(MSFluentWindow):
             # 用户不接受使用协议，关闭程序
             self.close()
 
-        # 许可协议优先级最高，之后再显示更新等提示
-        signal_bus.update.check.emit(False)
+        # 许可协议优先级最高，之后再显示下载路径和ffmpeg检查
+        QTimer.singleShot(300, self.check_download_path)
+        QTimer.singleShot(300, self.check_ffmpeg)
 
     def show_update_dialog(self, info: dict):
-        dialog = UpdateDialog(info, self)
-        dialog.exec()
+        pass
 
     def center_on_screen(self):
         desktop = QApplication.screens()[0].availableGeometry()

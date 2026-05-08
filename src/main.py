@@ -58,9 +58,9 @@ from PySide6.QtCore import Qt, QLocale, QTranslator
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 
-from util.auth import user_manager, cookie_manager
 from qfluentwidgets import FluentTranslator
 from util.common import config
+import util.download  # 初始化下载管理器（task_manager, downloader_manager）
 import res.resources_rc
 
 from gui.interface.main_window import MainWindow
@@ -98,10 +98,6 @@ def main():
 
     app = Application(sys.argv)
     app.setup_app()
-    
-    # 初始化登录状态等用户信息
-    cookie_manager.init_cookie_info()
-    user_manager.init_user_info()
 
     main_window = MainWindow()
     main_window.show()

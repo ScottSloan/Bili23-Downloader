@@ -134,3 +134,14 @@ class TaskInfo:
         self.File.from_dict(file_data)
         self.Episode.from_dict(episode_data)
         self.Download.from_dict(download_data)
+        
+        # 恢复 cookie_file 字段
+        self.cookie_file = data.get("cookie_file", "")
+
+    def __eq__(self, other):
+        if not isinstance(other, TaskInfo):
+            return False
+        return self.Basic.task_id == other.Basic.task_id
+
+    def __hash__(self):
+        return hash(self.Basic.task_id)

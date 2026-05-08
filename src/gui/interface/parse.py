@@ -16,6 +16,7 @@ from util.misc.history import history_manager
 from util.common.data import url_patterns
 from util.parse.worker import ParseWorker
 from util.thread import AsyncTask
+from util.network.request import load_cookies_from_file, client
 
 from functools import wraps
 import re
@@ -214,6 +215,20 @@ class ParseInterface(ParseBase):
 
         self.season_choice.changeSeason.connect(self.on_season_changed)
 
+        # 连接媒体信息查询信号
+        signal_bus.parse.query_video_info.connect(self.on_query_video_info)
+        signal_bus.parse.query_audio_info.connect(self.on_query_audio_info)
+
+    def on_query_video_info(self, video_quality_id: int, video_codec_id: int, callback):
+        """处理视频信息查询请求"""
+        # 对于 YouTube 视频，返回空字典表示使用默认设置
+        callback({})
+
+    def on_query_audio_info(self, audio_quality_id: int, callback):
+        """处理音频信息查询请求"""
+        # 对于 YouTube 视频，返回空字典表示使用默认设置
+        callback({})
+
     def init_utils(self):
         self.previewer = Previewer()
 
@@ -223,9 +238,11 @@ class ParseInterface(ParseBase):
 
         self.cookie_path = None
 
+        # 恢复上次选择的 cookie 文件路径
         last_cookie = config.get(config.last_cookie_file)
         if last_cookie and os.path.exists(last_cookie):
             self.cookie_path = last_cookie
+            load_cookies_from_file(last_cookie)
             self.cookie_label.setText(os.path.basename(last_cookie))
             self.cookie_label.setToolTip(last_cookie)
             self.clear_cookie_btn.show()
@@ -240,12 +257,17 @@ class ParseInterface(ParseBase):
 
         if file_path:
             if os.path.exists(file_path):
+                # 直接使用用户选择的文件路径，不复制
                 self.cookie_path = file_path
                 config.set(config.last_cookie_file, file_path)
-                self.cookie_label.setText(os.path.basename(file_path))
-                self.cookie_label.setToolTip(file_path)
-                self.clear_cookie_btn.show()
-                signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Cookies loaded successfully"))
+                
+                if load_cookies_from_file(file_path):
+                    self.cookie_label.setText(os.path.basename(file_path))
+                    self.cookie_label.setToolTip(file_path)
+                    self.clear_cookie_btn.show()
+                    signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Cookies loaded successfully"))
+                else:
+                    signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "", self.tr("Failed to parse cookies file"))
             else:
                 signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, "", self.tr("Cookies file not found"))
 
@@ -255,6 +277,9 @@ class ParseInterface(ParseBase):
         self.cookie_label.setText(self.tr("No Cookies"))
         self.cookie_label.setToolTip("")
         self.clear_cookie_btn.hide()
+        
+        client.cookies.clear()
+        
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Cookies cleared"))
 
     def on_paste_and_parse(self):
@@ -270,7 +295,7 @@ class ParseInterface(ParseBase):
     def on_parse(self, page: int = 1):
         self.parse_btn.setIndeterminateState(True)
 
-        worker = ParseWorker(self.url_box.text(), page)
+        worker = ParseWorker(self.url_box.text(), page, self.cookie_path)
         worker.success.connect(self.on_parse_success)
         worker.error.connect(self.on_parse_error)
         
@@ -375,20 +400,6 @@ class ParseInterface(ParseBase):
 
         self.item_count_label.setText(text_label)
         self.download_btn.setEnabled(checked_count > 0)
-
-    def on_copy_url(self):
-        if self._initializing:
-            return
-
-        if self.clipboard.mimeData().hasText() and config.get(config.listen_clipboard):
-            url = self.clipboard.text()
-
-            for parser_type, pattern in url_patterns:
-                if re.findall(pattern, url):
-                    self.url_box.setText(url)
-                    self.on_parse()
-
-                    return parser_type
 
     def on_history(self):
         dialog = ParseHistoryDialog(self.main_window)

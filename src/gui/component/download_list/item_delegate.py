@@ -127,7 +127,39 @@ class DownloadItemDelegate(CoverQueryDelegateBase):
     def openFileLocation(self, task_info: TaskInfo):
         directory = Path(task_info.File.download_path, task_info.File.folder)
 
-        Directory.open_files_in_explorer(str(directory), task_info.File.relative_files)
+        # 查找实际存在的视频文件
+        video_extensions = ['.mp4', '.mkv', '.flv', '.webm', '.avi', '.mov']
+        actual_files = []
+        
+        # 首先检查 relative_files 中的文件是否存在
+        for f in task_info.File.relative_files:
+            file_path = directory / f
+            if file_path.exists():
+                actual_files.append(f)
+        
+        # 如果 relative_files 中的文件都不存在，查找目录中的视频文件
+        if not actual_files:
+            for file in directory.iterdir():
+                if file.is_file() and file.suffix.lower() in video_extensions:
+                    # 检查文件名是否包含任务标题
+                    if task_info.Basic.show_title in file.stem or file.stem in task_info.Basic.show_title:
+                        actual_files.append(file.name)
+                        break
+            
+            # 如果还是没找到，使用目录中最新的视频文件
+            if not actual_files:
+                video_files = [f for f in directory.iterdir() 
+                              if f.is_file() and f.suffix.lower() in video_extensions]
+                if video_files:
+                    # 按修改时间排序，取最新的
+                    latest_file = max(video_files, key=lambda f: f.stat().st_mtime)
+                    actual_files.append(latest_file.name)
+
+        # 如果找到了文件，打开并选中；否则只打开文件夹
+        if actual_files:
+            Directory.open_files_in_explorer(str(directory), actual_files)
+        else:
+            Directory.open_directory_in_explorer(str(directory))
 
     def isTaskCompleted(self, task_info: TaskInfo):
         return task_info.Download.status == DownloadStatus.COMPLETED

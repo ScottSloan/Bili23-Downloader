@@ -8,7 +8,8 @@ class YouTubeEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self.episode_data_parser()
+        # 设置 episode_id
+        self.episode_id = self.info_data.get("id", "")
 
         entries = self.info_data.get("entries", [])
 
@@ -32,6 +33,9 @@ class YouTubeEpisodeParser(EpisodeParserBase):
         root_node = TreeItem(node_data)
         root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
+        duration = self.info_data.get("duration") or 0
+        timestamp = self.info_data.get("timestamp") or 0
+
         item_data = {
             "episode_id": self.episode_id,
             "aid": 0,
@@ -39,9 +43,9 @@ class YouTubeEpisodeParser(EpisodeParserBase):
             "bvid": self.info_data.get("id", ""),
             "cid": self.info_data.get("id", ""),
             "cover": self.info_data.get("thumbnail", ""),
-            "duration": int(self.info_data.get("duration", 0)),
+            "duration": int(duration),
             "number": 1,
-            "pubtime": int(self.info_data.get("timestamp", 0)),
+            "pubtime": int(timestamp),
             "title": self.info_data.get("title", ""),
             "url": self.info_data.get("webpage_url", ""),
             "uploader": self.info_data.get("uploader", ""),

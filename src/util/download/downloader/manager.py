@@ -3,6 +3,10 @@ from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, Translator
 from util.download.task.info import TaskInfo
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class DownloaderManager:
     def __init__(self):
@@ -40,13 +44,20 @@ class DownloaderManager:
 
     def remove(self, task_id: str):
         if task_id in self.downloaders:
+            downloader = self.downloaders[task_id]
+            if downloader._is_downloading:
+                downloader.pause()
             self.downloaders.pop(task_id)
         if task_id in self.task_infos:
             self.task_infos.pop(task_id)
 
     def wait(self, task_info: TaskInfo, callback):
         downloader = self.get(task_info, create_if_not_exists=False)
-        if downloader and callback:
+        if downloader:
+            downloader.pause()
+            callback()
+        else:
+            logger.warning(f"Downloader not found for task {task_info.Basic.task_id}")
             callback()
 
     def show_notification(self):

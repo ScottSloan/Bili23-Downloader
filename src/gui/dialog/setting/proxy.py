@@ -6,7 +6,7 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, LineEdit, PushButton, Messa
 from gui.component.setting.widget import SettingComboBox
 from gui.component.dialog import DialogBase
 
-from util.network.request import NetworkRequestWorker
+from util.network.request import NetworkRequestWorker, ResponseType
 from util.network.proxy import Proxy
 from util.thread import AsyncTask
 from util.common import config
@@ -79,9 +79,10 @@ class ProxyDialog(DialogBase):
         self.test_btn.clicked.connect(self.on_test)
 
     def on_test(self):
-        url = "https://api.bilibili.com/x/web-interface/zone"
-
-        worker = NetworkRequestWorker(url)
+        # 使用 httpbin.org 测试代理，返回 JSON 格式
+        url = "https://httpbin.org/ip"
+        
+        worker = NetworkRequestWorker(url, response_type=ResponseType.TEXT)
         worker.success.connect(self.on_test_success)
         worker.error.connect(self.on_test_error)
 
@@ -92,29 +93,13 @@ class ProxyDialog(DialogBase):
 
         AsyncTask.run(worker)
 
-    def on_test_success(self, response: Dict[str, Any]):
-        data = response.get("data", {})
-
-        ip = data.get("addr", "")
-        country = data.get("country", "")
-        province = data.get("province", "")
-        city = data.get("city", "")
-        isp = data.get("isp", "")
-
-        location_parts = [part for part in [country, province, city] if part]
-        location = " ".join(location_parts) if location_parts else self.tr("Unknown")
-
+    def on_test_success(self, response: str):
         dialog = MessageBox(
             self.tr("Network Test Result"),
-            self.tr("IP: {ip}\nLocation: {location}\nISP: {isp}").format(
-                ip = ip if ip else self.tr("Unknown"),
-                location = location,
-                isp = isp if isp else self.tr("Unknown")
-            ),
+            self.tr("Proxy server is available."),
             self
         )
         dialog.hideCancelButton()
-
         dialog.exec()
 
     def on_test_error(self, error: str):

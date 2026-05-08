@@ -72,7 +72,6 @@ sources = [
     "src/gui/dialog/setting/subtitles_style.py",
     "src/gui/dialog/setting/user_agent.py",
     "src/gui/dialog/login.py",
-    "src/gui/dialog/update.py",
     "src/gui/interface/download.py",
     "src/gui/interface/main_window.py",
     "src/gui/interface/parse.py",

@@ -40,14 +40,7 @@ class SignalBus:
 
         start_next_task = Signal()
 
-    class Login(QObject):
-        # 用于登录相关的信号
-        start_server = Signal()
-        stop_server = Signal()
-
-        send_sms = Signal()
-
-        update_avatar = Signal(object)
+    # 移除登录相关的信号类
 
     class Update(QObject):
         check = Signal(bool)
@@ -60,7 +53,6 @@ class SignalBus:
         self.toast = self.ToastNotification()
         self.parse = self.Parse()
         self.download = self.Download()
-        self.login = self.Login()
         self.update = self.Update()
         self.interface = self.Interface()
 

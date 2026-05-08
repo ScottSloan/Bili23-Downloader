@@ -2631,28 +2631,13 @@ ISP：{isp}</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="97"/>
-        <source>Updates</source>
-        <translation>软件更新</translation>
+        <source>Update yt-dlp</source>
+        <translation>更新 yt-dlp</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/setting.py" line="99"/>
-        <source>Check for updates</source>
-        <translation>检查更新</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/setting.py" line="99"/>
-        <source>Check if a new version is available. Current version: {app_version}</source>
-        <translation>检查是否有可用更新，当前版本：{app_version}</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/setting.py" line="100"/>
-        <source>Include pre-release versions</source>
-        <translation>包含预发布版本</translation>
-    </message>
-    <message>
-        <location filename="../../gui/interface/setting.py" line="100"/>
-        <source>Include pre-release versions when checking for updates</source>
-        <translation>检查更新时包含预发布版本</translation>
+        <location filename="../../gui/interface/setting.py" line="71"/>
+        <source>Update yt-dlp to the latest version to improve download compatibility and stability</source>
+        <translation>将 yt-dlp 更新到最新版本以提高下载兼容性和稳定性</translation>
     </message>
     <message>
         <location filename="../../gui/interface/setting.py" line="291"/>
@@ -3004,44 +2989,6 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../gui/component/download_list/top_widget.py" line="34"/>
         <source>Clear All</source>
         <translation>清除记录</translation>
-    </message>
-</context>
-<context>
-    <name>UpdateDialog</name>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="21"/>
-        <source>Update Available</source>
-        <translation>软件更新</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="31"/>
-        <source>A new version is available</source>
-        <translation>新版本已经发布</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="34"/>
-        <source>Version {latest_version} is available for download. You are currently using version {current_version}. Would you like to update now?</source>
-        <translation>{latest_version} 版本可供下载，你当前使用的版本是 {current_version}。是否现在更新？</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="42"/>
-        <source>What&apos;s new:</source>
-        <translation>更新内容：</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="48"/>
-        <source>Skip this version</source>
-        <translation>跳过此版本</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="49"/>
-        <source>Exit</source>
-        <translation>退出</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialog/update.py" line="51"/>
-        <source>Update now</source>
-        <translation>马上更新</translation>
     </message>
 </context>
 <context>

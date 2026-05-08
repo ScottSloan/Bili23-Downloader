@@ -240,6 +240,7 @@ class Translator:
             "M4A_NOT_FOUND": translate("ERROR_MESSAGES", "M4A audio file not found for conversion"),
             "LOGIN_REQUIRED": translate("ERROR_MESSAGES", "Login Required"),
             "LOGIN_REQUIRED_MESSAGE": translate("ERROR_MESSAGES", "Please log in to your account first."),
+            "YTDLP_UPDATE_FAILED": translate("ERROR_MESSAGES", "Failed to update yt-dlp"),
         }
 
     @staticmethod
@@ -256,6 +257,7 @@ class Translator:
             "ALREADY_LATEST_VERSION": translate("TIP_MESSAGES", "You are already using the latest version"),
             "DOWNLOAD_COMPLETED": translate("TIP_MESSAGES", "Download completed"),
             "DOWNLOAD_COMPLETED_DETAIL": translate("TIP_MESSAGES", "All download tasks have been completed."),
+            "YTDLP_UPDATE_SUCCESS": translate("TIP_MESSAGES", "yt-dlp updated from {old_version} to {new_version}"),
             "EXPIRED": translate("TIP_MESSAGES", "Expired"),
             "ADDITIONAL_FILES": translate("TIP_MESSAGES", "Additional Files"),
             "DOWNLOADING_DANMAKU": translate("TIP_MESSAGES", "Downloading Danmaku..."),

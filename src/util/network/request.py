@@ -132,37 +132,39 @@ class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     def set_proxies(self, proxies: dict):
         self.proxies = proxies
 
-def get_cookies():
-    cookies = {
-        "_uuid": config.get(config.uuid),
-        "b_lsid": config.get(config.b_lsid),
-        "b_nut": str(config.get(config.b_nut)),
-        "bili_ticket": config.get(config.bili_ticket),
-        "bili_ticket_expires": str(config.get(config.bili_ticket_expires)),
-        "buvid_fp": config.get(config.buvid_fp),
-        "buvid3": config.get(config.buvid3),
-        "buvid4": config.get(config.buvid4),
-        "CURRENT_FNVAL": "4048",
-        "CURRENT_QUALITY": "0"
-    }
-
-    if config.get(config.is_login):
-        cookies["bili_jct"] = config.get(config.bili_jct)
-        cookies["DedeUserID"] = config.get(config.DedeUserID)
-        cookies["DedeUserID__ckMd5"] = config.get(config.DedeUserID__ckMd5)
-        cookies["SESSDATA"] = config.get(config.SESSDATA)
-
-    return cookies
-
-def update_cookies():
-    cookies = get_cookies()
-
-    for key, value in cookies.items():
-        client.cookies.set(
-            name = key,
-            value = value,
-            domain = ".bilibili.com",
-            path = "/"
-        )
-
-update_cookies()
+def load_cookies_from_file(cookie_file_path: str) -> bool:
+    """从 Netscape 格式的 cookies 文件加载 cookies 到 httpx client"""
+    import os
+    
+    if not cookie_file_path or not os.path.exists(cookie_file_path):
+        return False
+    
+    try:
+        loaded_count = 0
+        
+        with open(cookie_file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # 跳过注释和空行
+                if not line or line.startswith('#'):
+                    continue
+                
+                # Netscape 格式: domain	flag	path	secure	expiration	name	value
+                parts = line.split('\t')
+                if len(parts) >= 7:
+                    domain = parts[0]
+                    path = parts[2]
+                    name = parts[5]
+                    value = parts[6]
+                    
+                    client.cookies.set(
+                        name=name,
+                        value=value,
+                        domain=domain,
+                        path=path
+                    )
+                    loaded_count += 1
+        
+        return loaded_count > 0
+    except Exception as e:
+        return False

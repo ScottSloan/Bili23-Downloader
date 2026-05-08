@@ -75,11 +75,18 @@ class TaskDatabase(Database):
         """, (json.dumps(task_info.to_dict(), ensure_ascii = False), task_info.Basic.task_id))
 
     def delete_task(self, task_id: str, completed: bool = False):
+        import logging
+        logger = logging.getLogger(__name__)
+        
         if completed:
+            logger.info(f"从 completed_task 表删除任务: {task_id}")
             self.execute("""
                 DELETE FROM completed_task WHERE task_id = ?
             """, (task_id,))
+            logger.info(f"删除操作已执行")
         else:
+            logger.info(f"从 download_task 表删除任务: {task_id}")
             self.execute("""
                 DELETE FROM download_task WHERE task_id = ?
             """, (task_id,))
+            logger.info(f"删除操作已执行")

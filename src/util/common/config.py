@@ -222,7 +222,6 @@ class APPConfig(QConfig):
     parse_list_column = ConfigItem("Behavior", "parse_list_column", DefaultValue.parse_list_column)
 
     stay_on_top = ConfigItem("Behavior", "stay_on_top", False, BoolValidator())
-    listen_clipboard = ConfigItem("Behavior", "listen_clipboard", False, BoolValidator())
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
@@ -285,17 +284,10 @@ class APPConfig(QConfig):
     # Update
     include_prerelease = ConfigItem("Update", "include_prerelease", False, BoolValidator())
 
-    # Cookie
+    # Cookie (保留基本的 cookie 文件配置)
     last_cookie_file = ConfigItem("Cookie", "last_cookie_file", "")
     
-    img_key = ConfigItem("Cookie", "img_key", "")
-    sub_key = ConfigItem("Cookie", "sub_key", "")
-
-    bili_jct = ConfigItem("Cookie", "bili_jct", "")
-    DedeUserID = ConfigItem("Cookie", "DedeUserID", "")
-    DedeUserID__ckMd5 = ConfigItem("Cookie", "DedeUserID__ckMd5", "")
-    SESSDATA = ConfigItem("Cookie", "SESSDATA", "")
-
+    # 保留基本的匿名 cookie 配置
     uuid = ConfigItem("Cookie", "uuid", "")
     b_lsid = ConfigItem("Cookie", "b_lsid", "")
     b_nut = ConfigItem("Cookie", "b_nut", "")
@@ -305,14 +297,6 @@ class APPConfig(QConfig):
     buvid3 = ConfigItem("Cookie", "buvid3", "")
     buvid4 = ConfigItem("Cookie", "buvid4", "")
     buvid_expires = ConfigItem("Cookie", "buvid_expires", 0)
-
-    is_login = ConfigItem("Cookie", "is_login", False, BoolValidator())
-    is_expired = False
-
-    # User
-    user_uname: str = ""
-    user_uid: str = ""
-    user_avatar_pixmap: QPixmap = None
 
     accepted_terms = ConfigItem("Application", "accepted_terms", False, BoolValidator())
     skip_version = ConfigItem("Application", "skip_version", "")

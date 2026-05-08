@@ -53,7 +53,6 @@ class SettingInterface(ScrollArea):
         self.parse_list_card = ParseListSettingCard(self)
 
         self.stay_on_top_card = SwitchSettingCard(ExtendedFluentIcon.PIN, self.tr("Stay on top"), self.tr("Keep the window always on top of the desktop"), config.stay_on_top, self)
-        self.listen_clipboard_card = SwitchSettingCard(ExtendedFluentIcon.CLIPBOARD, self.tr("Listen to clipboard"), self.tr("Automatically start parsing when a link is copied"), config.listen_clipboard, self)
         self.parse_history_card = SwitchSettingCard(FluentIcon.HISTORY, self.tr("Save parse history"), self.tr("Save the history of parsed links"), config.parse_history, self)
         self.show_download_options_dialog_card = SwitchSettingCard(ExtendedFluentIcon.OPTIONS, self.tr("Show download options dialog"), self.tr("Show a dialog before starting the download to customize settings for this task"), config.show_download_options_dialog, self)
         self.when_close_window_card = ComboBoxSettingCard(config.when_close_window, ExtendedFluentIcon.EXIT, self.tr("Close the main window"), self.tr("Choose the action when closing the main window"), [self.tr("Exit the program"), self.tr("Minimize to system tray"), self.tr("Always ask")], self)
@@ -69,6 +68,7 @@ class SettingInterface(ScrollArea):
         self.speed_limit_card = SpeedLimitSettingCard(self)
         self.priority_setting_card = PrioritySettingCard(self)
         self.download_format_card = DownloadFormatCard(self)
+        self.yt_dlp_update_card = PrimaryPushSettingCard(self.tr("Update yt-dlp"), FluentIcon.UPDATE, self.tr("Update yt-dlp"), self.tr("Update yt-dlp to the latest version to improve download compatibility and stability"), self)
 
         # Additional
         self.additional_group = SettingCardGroup(self.tr("Danmaku, Subtitles, Cover, and Metadata"), self)
@@ -93,12 +93,6 @@ class SettingInterface(ScrollArea):
         self.config_file_card = ConfigFileSettingCard(self)
         self.user_agent_card = PushSettingCard(self.tr("Customize…"), FluentIcon.GLOBE, "User-Agent", self.tr("Customize the User-Agent used for parsing and downloading"), self)
 
-        # Software Update
-        self.update_group = SettingCardGroup(self.tr("Updates"), self)
-
-        self.check_update_card = PrimaryPushSettingCard(self.tr("Check for updates"), FluentIcon.UPDATE, self.tr("Check for updates"), self.tr("Check if a new version is available. Current version: {app_version}").format(app_version = config.app_version), self)
-        self.include_prerelease_card = SwitchSettingCard(ExtendedFluentIcon.TEST_CUBE, self.tr("Include pre-release versions"), self.tr("Include pre-release versions when checking for updates"), config.include_prerelease, self)
-
         # Interface
         self.interface_group.addSettingCard(self.theme_card)
         self.interface_group.addSettingCard(self.theme_color_card)
@@ -109,7 +103,6 @@ class SettingInterface(ScrollArea):
         # Behavior
         self.behavior_group.addSettingCard(self.parse_list_card)
         self.behavior_group.addSettingCard(self.stay_on_top_card)
-        self.behavior_group.addSettingCard(self.listen_clipboard_card)
         self.behavior_group.addSettingCard(self.parse_history_card)
         self.behavior_group.addSettingCard(self.show_download_options_dialog_card)
         self.behavior_group.addSettingCard(self.when_close_window_card)
@@ -123,6 +116,7 @@ class SettingInterface(ScrollArea):
         self.download_group.addSettingCard(self.speed_limit_card)
         self.download_group.addSettingCard(self.priority_setting_card)
         self.download_group.addSettingCard(self.download_format_card)
+        self.download_group.addSettingCard(self.yt_dlp_update_card)
 
         # Additional
         self.additional_group.addSettingCard(self.danmaku_setting_card)
@@ -141,10 +135,6 @@ class SettingInterface(ScrollArea):
         self.advanced_group.addSettingCard(self.config_file_card)
         self.advanced_group.addSettingCard(self.user_agent_card)
 
-        # Software Update
-        self.update_group.addSettingCard(self.check_update_card)
-        self.update_group.addSettingCard(self.include_prerelease_card)
-
         self.expand_layout.setSpacing(28)
         self.expand_layout.setContentsMargins(30, 10, 30, 0)
         self.expand_layout.addWidget(self.interface_group)
@@ -153,7 +143,6 @@ class SettingInterface(ScrollArea):
         self.expand_layout.addWidget(self.additional_group)
         self.expand_layout.addWidget(self.file_naming_group)
         self.expand_layout.addWidget(self.advanced_group)
-        self.expand_layout.addWidget(self.update_group)
         self.expand_layout.addSpacing(20)
         self.expand_layout.addStretch(1)
 
@@ -187,6 +176,7 @@ class SettingInterface(ScrollArea):
         self.danmaku_setting_card.custom_style_btn.clicked.connect(self.on_custom_danmaku_style)
         self.subtitle_setting_card.language_btn.clicked.connect(self.on_custom_subtitles_language)
         self.subtitle_setting_card.custom_style_btn.clicked.connect(self.on_custom_subtitles_style)
+        self.yt_dlp_update_card.clicked.connect(self.on_update_yt_dlp)
 
         # File Naming
         self.naming_convention_setting_card.clicked.connect(self.on_custom_naming_rule)
@@ -201,9 +191,6 @@ class SettingInterface(ScrollArea):
         self.config_file_card.export_btn.clicked.connect(self.on_export_config)
         self.config_file_card.reset_btn.clicked.connect(self.on_reset_config)
         self.user_agent_card.clicked.connect(self.on_custom_user_agent)
-
-        # Update
-        self.check_update_card.clicked.connect(self.on_check_update)
 
     def on_custom_parse_list_column(self):
         dialog = ParseListColumnDialog(self.main_window)
@@ -357,8 +344,15 @@ class SettingInterface(ScrollArea):
         dialog = UserAgentDialog(self.main_window)
         dialog.exec()
 
-    def on_check_update(self):
-        signal_bus.update.check.emit(True)
+    def on_update_yt_dlp(self):
+        from util.download.yt_dlp_update_worker import YtDlpUpdateWorker
+        from util.thread import AsyncTask
+
+        worker = YtDlpUpdateWorker()
+        worker.success.connect(lambda msg: signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", msg))
+        worker.error.connect(lambda msg: signal_bus.toast.show_long_message.emit(Translator.ERROR_MESSAGES("YTDLP_UPDATE_FAILED"), msg))
+
+        AsyncTask.run(worker)
 
     def show_restart_message(self):
         signal_bus.toast.show.emit(ToastNotificationCategory.SUCCESS, "", self.tr("Configuration takes effect after restart"))
