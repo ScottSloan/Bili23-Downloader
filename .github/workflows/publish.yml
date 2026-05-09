@@ -43,6 +43,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+          architecture: x64
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
       - name: Update Inno Setup script with version
         run: |
           $setupPath = "assets\setup.iss"
@@ -77,6 +87,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path Bili23-Downloader\script
 
           Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
+
+          python -m compileall Bili23-Downloader
 
       - name: Package Windows version
         run: |
@@ -117,6 +129,8 @@ jobs:
 
           Copy-Item -Path "src\*" -Destination "Bili23-Downloader\script" -Recurse
 
+          python -m compileall Bili23-Downloader
+
       - name: Package Windows 7 version
         run: |
           # 使用 Inno Setup 创建安装程序
@@ -149,15 +163,25 @@ jobs:
         include:
           - arch: amd64
             os: ubuntu-latest
-            arch_suffix: x86_64
+            python_arch: x64
 
           - arch: arm64
             os: ubuntu-24.04-arm
-            arch_suffix: aarch64
+            python_arch: arm64
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+          architecture: ${{ matrix.python_arch }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
       - name: Prepare Linux runtime
         run: |
@@ -172,6 +196,8 @@ jobs:
           mkdir -p Bili23-Downloader/script
 
           cp -r src/* Bili23-Downloader/script/
+
+          python -m compileall Bili23-Downloader
 
       - name: Package Linux version
         run: |
@@ -275,9 +301,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+          architecture: ${{ matrix.python_arch }}
+
       - name: Install dependencies
         run: |
           brew install create-dmg
+          pip install -r requirements.txt
 
       - name: Prepare macOS runtime
         run: |
@@ -292,6 +325,8 @@ jobs:
           mkdir -p Bili23-Downloader/script
 
           cp -r src/* Bili23-Downloader/script/
+
+          python -m compileall Bili23-Downloader
 
       - name: Package macOS version
         run: |

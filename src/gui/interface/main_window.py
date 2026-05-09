@@ -100,7 +100,7 @@ class MainWindow(MSFluentWindow):
         self.connect_signals()
 
         if config.get(config.stay_on_top):
-            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+            self.setStayOnTop(False)
 
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)

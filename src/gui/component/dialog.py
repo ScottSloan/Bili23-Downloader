@@ -93,13 +93,12 @@ class FluentDialogBase(Base, FluentWidget):
 
         self.setMicaEffectEnabled(config.get(config.mica_effect))
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.setStayOnTop(config.get(config.stay_on_top))
 
         self._event_loop = None
         self._result = False
 
         self._parent_window = None
-
-        self._setup_stay_on_top()
 
     def _setup_title_bar(self):
         titleBar = FluentWidgetTitleBar(self)
@@ -117,12 +116,7 @@ class FluentDialogBase(Base, FluentWidget):
         self.setTitleBar(titleBar)
 
         self.titleBar.raise_()
-
-    def _setup_stay_on_top(self):
-        # 使对话框保持在所有窗口之上，确保用户注意到它。
-        if config.get(config.stay_on_top):
-            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
-
+        
     def _center_on_parent(self):
         if self._parent_window:
             parent_rect = self._parent_window.geometry()
