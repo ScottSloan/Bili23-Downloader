@@ -5,8 +5,6 @@ from qfluentwidgets import (
     MessageBoxBase, FluentWidgetTitleBar, FluentWidget, PrimaryPushButton, PushButton,
     PopUpAniStackedWidget, InfoBar, InfoBarPosition
 )
-from qframelesswindow.titlebar.title_bar_buttons import CloseButton
-
 from .widget import PivotItem, Pivot
 
 from util.common.enum import ToastNotificationCategory
@@ -64,6 +62,8 @@ class DialogBase(Base, MessageBoxBase):
         self.accepted.connect(self.on_dialog_close)
         self.rejected.connect(self.on_dialog_close)
 
+        self._setup_stay_on_top()
+
     def on_dialog_close(self):
         """
         on_close 在对话框关闭时被调用，可以在这里执行一些清理操作。
@@ -75,6 +75,11 @@ class DialogBase(Base, MessageBoxBase):
             event.ignore()
         else:
             super().keyPressEvent(event)
+
+    def _setup_stay_on_top(self):
+        # 使对话框保持在所有窗口之上，确保用户注意到它。
+        if config.get(config.stay_on_top):
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 
 class FluentDialogBase(Base, FluentWidget):
     """
@@ -94,6 +99,8 @@ class FluentDialogBase(Base, FluentWidget):
 
         self._parent_window = None
 
+        self._setup_stay_on_top()
+
     def _setup_title_bar(self):
         titleBar = FluentWidgetTitleBar(self)
         titleBar.hBoxLayout.setContentsMargins(0, 0, 0, 0)
@@ -110,6 +117,11 @@ class FluentDialogBase(Base, FluentWidget):
         self.setTitleBar(titleBar)
 
         self.titleBar.raise_()
+
+    def _setup_stay_on_top(self):
+        # 使对话框保持在所有窗口之上，确保用户注意到它。
+        if config.get(config.stay_on_top):
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 
     def _center_on_parent(self):
         if self._parent_window:

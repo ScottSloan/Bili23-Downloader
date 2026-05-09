@@ -99,6 +99,9 @@ class MainWindow(MSFluentWindow):
 
         self.connect_signals()
 
+        if config.get(config.stay_on_top):
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
