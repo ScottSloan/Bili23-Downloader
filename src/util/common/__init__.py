@@ -1,5 +1,5 @@
 from .config import appdata_path, config, APPConfig, isWin11, DefaultValue
-from .io import File, safe_remove, safe_rename, Directory
+from .io import safe_remove, safe_rename, Directory
 from .translator import Translator
 from .data import *
 from .color import Color

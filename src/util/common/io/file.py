@@ -58,11 +58,3 @@ def __resolve_conflict(original_path: Path, new_path: Path) -> Path:
                 if not new_target_path.exists():
                     return new_target_path
                 n += 1
-
-
-class File:
-    @staticmethod
-    def preallocate_file(path: str, size: int):
-        with open(path, "wb") as f:
-            f.seek(size - 1)
-            f.write(b"\0")

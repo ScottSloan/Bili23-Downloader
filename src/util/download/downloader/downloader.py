@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 from util.common.enum import DownloadStatus, DownloadType, MediaType
 from util.parse.additional.worker import AdditionalParseWorker
-from util.common import signal_bus, config, Translator, File
+from util.common import signal_bus, config, Translator
 from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.common.data import reversed_video_quality_map
 from util.network import get_cookies
@@ -17,6 +17,7 @@ from threading import Event, Lock
 from pathlib import Path
 import httpx
 import json
+import shutil
 import time
 
 class TokenBucket:
@@ -151,6 +152,9 @@ class ChunkWorker(QRunnable):
             self.on_chunk_end()
 
 class Downloader(QObject):
+    MIN_DISK_SPACE_BUFFER = 100 * 1024 * 1024
+    DISK_SPACE_BUFFER_RATIO = 0.05
+
     def __init__(self, task_info: TaskInfo):
         super().__init__()
         self.task_info = task_info
@@ -221,6 +225,11 @@ class Downloader(QObject):
             self.task_info.Download.queue = download_info["download_queue"]
 
         self.update_info(download_info)
+
+        if not self.has_enough_disk_space(download_info["total_size"]):
+            self.on_parse_error(Translator.ERROR_MESSAGES("INSUFFICIENT_SPACE"))
+            return
+
         self.start_worker()
         self.start_timer()
 
@@ -246,9 +255,16 @@ class Downloader(QObject):
 
         file_size = info.get("file_size", 0)
         if not path.exists() and file_size > 0:
-            File.preallocate_file(path, file_size)
+            path.touch()
 
         info["file_path"] = path
+        self.dispatch_chunk_threads(file_key)
+
+    def dispatch_chunk_threads(self, file_key: str):
+        info = self.download_list.get(file_key, {})
+        path = info.get("file_path")
+        file_size = info.get("file_size", 0)
+
         chunk_list = self.calc_chunk_list(file_key, file_size, self.chunk_size)
         self.calc_downloaded_size()
 
@@ -273,6 +289,27 @@ class Downloader(QObject):
             self.thread_pool.start(worker)
 
         task_manager.update(self.task_info)
+
+    def has_enough_disk_space(self, total_size: int):
+        required_space = max(total_size - self.task_info.Download.downloaded_size, 0)
+
+        if self.task_info.Download.merge_video_audio:
+            required_space += total_size
+
+        required_space += max(
+            int(required_space * self.DISK_SPACE_BUFFER_RATIO),
+            self.MIN_DISK_SPACE_BUFFER
+        )
+
+        try:
+            download_path = Path(self.task_info.File.download_path)
+            download_path.mkdir(parents = True, exist_ok = True)
+            free_space = shutil.disk_usage(download_path).free
+
+        except OSError:
+            return False
+
+        return free_space >= required_space
 
     def start_merge(self):
         self.task_info.Download.status = DownloadStatus.MERGING
