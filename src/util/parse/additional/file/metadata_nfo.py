@@ -14,8 +14,15 @@ video_base = """<?xml version="1.0" encoding="UTF-8"?>
     <runtime>{runtime}</runtime>
     <premiered>{premiered:%Y-%m-%d}</premiered>
     <year>{year}</year>
-    <director>{director}</director>
+    <actor>
+        <name>{uploader}</name>
+        <role>UP主</role>
+        <profile>https://space.bilibili.com/{uploader_uid}</profile>
+        <thumb>{uploader_face}</thumb>
+    </actor>
     {tag}
+    <thumb>{thumb}</thumb>
+    <uniqueid type="bvid">{bvid}</uniqueid>
 </movie>
 """
 
@@ -89,8 +96,12 @@ class MetadataNFO:
             runtime = math.ceil(self.task_info.Episode.duration / 60),
             premiered = pubtime,
             year = pubtime.year,
-            director = self.task_info.Episode.uploader,
-            tag = "\n    ".join([f"<tag>{tag}</tag>" for tag in self.task_info.Episode.tags])
+            uploader = self.task_info.Episode.uploader,
+            uploader_uid = self.task_info.Episode.uploader_uid,
+            uploader_face = self.task_info.Episode.uploader_face,
+            tag = "\n    ".join([f"<tag>{tag}</tag>" for tag in self.task_info.Episode.tags]),
+            thumb = self.task_info.Episode.cover,
+            bvid = self.task_info.Episode.bvid
         )
     
     def _generate_tvshow(self, genres: List[str]):

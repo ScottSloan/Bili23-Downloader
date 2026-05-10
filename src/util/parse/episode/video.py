@@ -229,6 +229,7 @@ class VideoEpisodeParser(EpisodeParserBase):
         # UP 主信息
         episode_data["uploader"] = self.info_data["owner"]["name"]
         episode_data["uploader_uid"] = self.info_data["owner"]["mid"]
+        episode_data["uploader_face"] = self.info_data["owner"]["face"]
 
     def get_episode_badge(self, episode_data: dict):
         attribute = episode_data.get("attribute", 0)

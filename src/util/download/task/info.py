@@ -58,6 +58,7 @@ class EpisodeInfo(InfoBase):
     episode_plot: str = ""
     uploader: str = ""
     uploader_uid: int = 0
+    uploader_face: str = ""
     premiered: int = 0
     poster: str = ""
     season_id: int = 0

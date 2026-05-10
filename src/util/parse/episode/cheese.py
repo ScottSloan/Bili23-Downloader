@@ -100,6 +100,7 @@ class CheeseEpisodeParser(EpisodeParserBase):
         # 发布者信息
         episode_data["uploader"] = self.info_data["up_info"]["uname"]
         episode_data["uploader_uid"] = self.info_data["up_info"]["mid"]
+        episode_data["uploader_face"] = self.info_data["up_info"]["avatar"]
 
     def get_episode_badge(self, episode_data: dict):
         if "label" in episode_data:
