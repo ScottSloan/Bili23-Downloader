@@ -5,6 +5,7 @@ from ....download.task.info import TaskInfo
 
 from pathlib import Path
 from typing import List
+import textwrap
 import math
 
 video_base = """<?xml version="1.0" encoding="UTF-8"?>
@@ -36,6 +37,7 @@ tvshow_base = """<?xml version="1.0" encoding="UTF-8"?>
     <director>{director}</director>
     {genre}
     {country}
+    {rating}
 </tvshow>
 """
 
@@ -114,7 +116,8 @@ class MetadataNFO:
             year = premiered.year,
             director = self.task_info.Episode.uploader,
             genre = "\n    ".join([f"<genre>{genre}</genre>" for genre in genres]),
-            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas])
+            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas]),
+            rating = self._get_rating(),
         )
     
     def _generate_episode(self, genres: List[str]):
@@ -137,3 +140,28 @@ class MetadataNFO:
 
         return path.exists()
     
+    def _get_rating(self):
+        if self.task_info.Episode.rating:
+            rating = """\
+                <ratings>
+                    <rating default="true" max="10" name="Bilibili">
+                        <value>{rating}</value>
+                        <votes>{votes}</votes>
+                    </rating>
+                </ratings>
+                <rating>{rating}</rating>
+                """.format(rating = self.task_info.Episode.rating, votes = self.task_info.Episode.rating_votes)
+            
+            return self._dedent(rating)
+        
+        return ""
+    
+    def _dedent(self, text: str):
+        lines = textwrap.dedent(text).splitlines()
+
+        for index, line in enumerate(lines):
+            if index != 0:
+                lines[index] = "    " + line
+
+        return "\n".join(lines)
+        
