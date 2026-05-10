@@ -245,29 +245,57 @@ class TaskManager:
             logger.warning(f"任务 {task_info.Basic.task_id} 的 folder 为空，跳过文件删除")
             return
         
-        full_path = Path(download_path, folder)
+        # 规范化路径，统一分隔符后再比较
+        download_path_resolved = str(Path(download_path).resolve())
+        
+        # 处理 folder 为 "." 的情况，直接使用 download_path
+        if folder == ".":
+            full_path = Path(download_path)
+        else:
+            full_path = Path(download_path, folder)
+        
+        full_path_resolved = str(full_path.resolve())
         
         # 额外安全检查：确保路径在下载目录内
-        if not str(full_path).startswith(str(download_path)):
+        if not full_path_resolved.startswith(download_path_resolved):
             logger.error(f"任务 {task_info.Basic.task_id} 的路径异常，跳过文件删除: {full_path}")
             return
         
+        # 收集需要删除的文件名
+        files_to_delete = list(task_info.File.relative_files)
+        
+        # 如果 relative_files 为空，尝试从 File.name 获取文件名
+        if not files_to_delete and task_info.File.name:
+            files_to_delete.append(task_info.File.name)
+            logger.info(f"relative_files 为空，使用 File.name: {task_info.File.name}")
+        
         if full_path.exists():
             try:
-                # 删除任务文件夹内的所有文件
-                for item in full_path.iterdir():
-                    if item.is_file():
-                        item.unlink(missing_ok=True)
-                    elif item.is_dir():
-                        shutil.rmtree(item, ignore_errors=True)
-                
-                # 尝试删除文件夹本身（如果为空）
-                full_path.rmdir()
-                logger.info(f"已删除任务文件夹: {full_path}")
+                if files_to_delete:
+                    # 删除指定的文件
+                    for filename in files_to_delete:
+                        file_path = full_path / filename
+                        if file_path.exists() and file_path.is_file():
+                            file_path.unlink()
+                            logger.info(f"已删除文件: {file_path}")
+                        else:
+                            logger.warning(f"文件不存在: {file_path}")
+                else:
+                    # 如果没有指定文件列表，删除文件夹内的所有文件
+                    for item in full_path.iterdir():
+                        if item.is_file():
+                            item.unlink(missing_ok=True)
+                        elif item.is_dir():
+                            shutil.rmtree(item, ignore_errors=True)
+                    
+                    # 尝试删除文件夹本身（如果为空）
+                    if folder != ".":
+                        full_path.rmdir()
+                        logger.info(f"已删除任务文件夹: {full_path}")
             except Exception as e:
-                logger.error(f"删除任务文件夹时出错: {e}")
+                logger.error(f"删除任务文件时出错: {e}")
                 # 如果无法删除文件夹，至少删除已知文件
-                safe_remove(full_path, *task_info.File.relative_files)
+                safe_remove(full_path, *files_to_delete)
         else:
             logger.info(f"任务文件夹不存在: {full_path}")
 

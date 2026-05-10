@@ -79,10 +79,12 @@ class ProxyDialog(DialogBase):
         self.test_btn.clicked.connect(self.on_test)
 
     def on_test(self):
-        # 使用 httpbin.org 测试代理，返回 JSON 格式
-        url = "https://httpbin.org/ip"
-        
-        worker = NetworkRequestWorker(url, response_type=ResponseType.TEXT)
+        self.test_btn.setEnabled(False)
+        self.test_btn.setText(self.tr("Testing..."))
+
+        url = "https://www.bilibili.com/"
+
+        worker = NetworkRequestWorker(url, response_type=ResponseType.TEXT, timeout=10)
         worker.success.connect(self.on_test_success)
         worker.error.connect(self.on_test_error)
 
@@ -94,6 +96,9 @@ class ProxyDialog(DialogBase):
         AsyncTask.run(worker)
 
     def on_test_success(self, response: str):
+        self.test_btn.setEnabled(True)
+        self.test_btn.setText(self.tr("Test"))
+
         dialog = MessageBox(
             self.tr("Network Test Result"),
             self.tr("Proxy server is available."),
@@ -103,6 +108,9 @@ class ProxyDialog(DialogBase):
         dialog.exec()
 
     def on_test_error(self, error: str):
+        self.test_btn.setEnabled(True)
+        self.test_btn.setText(self.tr("Test"))
+
         logger.exception("代理测试失败: %s", error)
 
         dialog = MessageBox(self.tr("Network Test Failed"), error, self)

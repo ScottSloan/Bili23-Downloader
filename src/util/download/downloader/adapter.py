@@ -1,5 +1,6 @@
 from util.download.downloader.yt_dlp_downloader import YTDLPDownloader
 import os
+from pathlib import Path
 
 
 class YTDLPAdapter:
@@ -24,9 +25,14 @@ class YTDLPAdapter:
 
         cookie_file = self._resolve_cookie_file(task_info)
 
+        output_path = task_info.File.download_path
+        if task_info.File.folder and task_info.File.folder != ".":
+            output_path = str(Path(task_info.File.download_path) / task_info.File.folder)
+            os.makedirs(output_path, exist_ok=True)
+
         self.downloader.download(
             url=task_info.Episode.url,
-            output_dir=task_info.File.download_path,
+            output_dir=output_path,
             cookie_file=cookie_file
         )
 

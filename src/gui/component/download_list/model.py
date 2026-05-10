@@ -1,4 +1,4 @@
-from PySide6.QtCore import QModelIndex, Qt, QSize
+from PySide6.QtCore import QModelIndex, Qt, QSize, QTimer, Signal
 from PySide6.QtWidgets import QAbstractItemView
 
 from gui.component.view_model.model_base import CoverQueryModelBase
@@ -6,17 +6,35 @@ from gui.component.view_model.model_base import CoverQueryModelBase
 from util.download.downloader.manager import downloader_manager
 from util.download.task.manager import task_manager
 from util.download.task.info import TaskInfo
+from util.download.scheduler.resource_allocator import resource_allocator
 from util.common.enum import DownloadStatus
 from util.common import signal_bus, config
 
-from typing import List
+from typing import List, Dict
+import logging
 
-class DownloadListModel(CoverQueryModelBase):    
+logger = logging.getLogger(__name__)
+
+class DownloadListModel(CoverQueryModelBase):
+    _progress_signal = Signal(object, object)
+
     def __init__(self, task_list: list, parent = None):
         super().__init__(parent)
 
         self._cover_size = QSize(144, 80)
         self._task_list: List[TaskInfo] = task_list
+
+        self._pending_updates: Dict[str, TaskInfo] = {}
+
+        self._progress_timer = QTimer(self)
+        self._progress_timer.setInterval(80)
+        self._progress_timer.timeout.connect(self._flush_pending_updates)
+        self._progress_timer.start()
+
+        self._fragment_progress: Dict[str, Dict[str, dict]] = {}
+        self._max_progress: Dict[str, float] = {}
+
+        self._progress_signal.connect(self._on_progress_signal)
 
     def rowCount(self, parent = QModelIndex()):
         return len(self._task_list)
@@ -95,6 +113,10 @@ class DownloadListModel(CoverQueryModelBase):
                     finish=lambda url: self._on_download_finish(task_info),
                     error=lambda msg: self._on_download_error(task_info, msg)
                 )
+                active_tasks = [t for t in self._task_list if t.Download.status == DownloadStatus.DOWNLOADING]
+                thread_count = resource_allocator.calculate_thread_allocation(task_info, active_tasks)
+                downloader.set_thread_count(thread_count)
+                resource_allocator.register_queue(task_info)
                 downloader.start()
 
             case DownloadStatus.DOWNLOADING:
@@ -105,6 +127,7 @@ class DownloadListModel(CoverQueryModelBase):
 
             case DownloadStatus.PAUSED:
                 # 继续下载
+                resource_allocator.register_queue(task_info)
                 downloader.resume()
 
             case DownloadStatus.FFMPEG_QUEUED:
@@ -118,49 +141,187 @@ class DownloadListModel(CoverQueryModelBase):
                     finish=lambda url: self._on_download_finish(task_info),
                     error=lambda msg: self._on_download_error(task_info, msg)
                 )
+                active_tasks = [t for t in self._task_list if t.Download.status == DownloadStatus.DOWNLOADING]
+                thread_count = resource_allocator.calculate_thread_allocation(task_info, active_tasks)
+                downloader.set_thread_count(thread_count)
+                resource_allocator.register_queue(task_info)
                 downloader.retry()
 
         self.onUpdateData(task_info)
 
     def _on_download_progress(self, task_info: TaskInfo, data: dict):
-        """处理下载进度更新"""
-        if data.get("status") == "downloading":
-            percent_str = data.get("percent", "0%")
-            try:
-                percent = float(percent_str.replace("%", "").strip())
-                task_info.Download.progress = percent
-            except ValueError:
-                pass
-            task_info.Download.speed = data.get("speed", 0)
-            task_info.Download.info_label = f"{data.get('speed_str', '')} - {data.get('eta', '')}"
-        
-        # 使用信号总线确保 UI 更新在主线程中执行
-        signal_bus.download.update_downloading_item.emit(task_info)
+        self._progress_signal.emit(task_info, data)
+
+    def _on_progress_signal(self, task_info: TaskInfo, data: dict):
+        task_id = task_info.Basic.task_id
+
+        if data.get("status") == "merging":
+            progress = data.get("progress", 0)
+            info = data.get("info", "")
+
+            task_info.Download.progress = progress
+            task_info.Download.info_label = info
+
+            self._pending_updates[task_id] = task_info
+            return
+
+        if data.get("status") == "finished":
+            filename = data.get("filename", "")
+            if filename and task_id in self._fragment_progress:
+                fragments = self._fragment_progress[task_id]
+                if filename in fragments:
+                    fragments[filename]["downloaded"] = fragments[filename]["total"]
+            return
+
+        if data.get("status") != "downloading":
+            return
+
+        filename = data.get("filename", "")
+        downloaded_bytes = data.get("downloaded_bytes", 0) or 0
+        total_bytes = data.get("total_bytes", 0) or data.get("total_bytes_estimate", 0) or 0
+
+        if task_id not in self._fragment_progress:
+            self._fragment_progress[task_id] = {}
+
+        fragments = self._fragment_progress[task_id]
+
+        if filename and filename not in fragments:
+            for fname, fdata in fragments.items():
+                if not fdata.get("completed"):
+                    fdata["completed"] = True
+
+        if filename and total_bytes > 0:
+            if filename not in fragments:
+                fragments[filename] = {"downloaded": 0, "total": total_bytes}
+            prev_downloaded = fragments[filename]["downloaded"]
+            if downloaded_bytes > prev_downloaded:
+                fragments[filename]["downloaded"] = downloaded_bytes
+            fragments[filename]["total"] = total_bytes
+
+        percent = self._calc_overall_progress(task_id, data)
+        speed = data.get("speed", 0) or 0
+
+        resource_allocator.record_speed(task_id, speed)
+
+        total_downloaded = sum(f["downloaded"] for f in fragments.values())
+        total_all = sum(f["total"] for f in fragments.values())
+
+        task_info.Download.progress = percent
+        task_info.Download.speed = speed
+        task_info.Download.downloaded_size = total_downloaded
+        task_info.Download.total_size = total_all if total_all > 0 else total_bytes
+
+        speed_str = data.get("speed_str", "")
+        eta = data.get("eta", "")
+        if speed_str or eta:
+            task_info.Download.info_label = f"{speed_str} - {eta}" if speed_str and eta else (speed_str or eta)
+
+        self._pending_updates[task_info.Basic.task_id] = task_info
+
+    def _calc_overall_progress(self, task_id: str, data: dict) -> float:
+        fragments = self._fragment_progress.get(task_id, {})
+
+        if fragments:
+            completed_bytes = sum(f["total"] for f in fragments.values() if f.get("completed"))
+            active_downloaded = sum(f["downloaded"] for f in fragments.values() if not f.get("completed"))
+            active_total = sum(f["total"] for f in fragments.values() if not f.get("completed"))
+
+            total_downloaded = completed_bytes + active_downloaded
+            total_all = completed_bytes + active_total
+
+            if total_all > 0:
+                raw = (total_downloaded / total_all) * 100
+                active_count = sum(1 for f in fragments.values() if not f.get("completed"))
+                if completed_bytes == 0 and active_count == 1:
+                    raw = min(raw, 99.0)
+                raw = min(raw, 100.0)
+            else:
+                raw = 0.0
+        else:
+            downloaded = data.get("downloaded_bytes", 0) or 0
+            total = data.get("total_bytes", 0) or data.get("total_bytes_estimate", 0) or 0
+            if total > 0:
+                raw = min((downloaded / total) * 100, 99.0)
+            else:
+                fragment_index = data.get("fragment_index", 0)
+                fragment_count = data.get("fragment_count", 0)
+                if fragment_count > 0:
+                    raw = min((fragment_index / fragment_count) * 100, 99.0)
+                else:
+                    raw = 0.0
+
+        last_max = self._max_progress.get(task_id, 0.0)
+        if raw > last_max:
+            self._max_progress[task_id] = raw
+
+        return max(raw, last_max)
+
+    def _flush_pending_updates(self):
+        if self._pending_updates:
+            for task_id, task_info in self._pending_updates.items():
+                self._emit_update(task_info)
+            self._pending_updates.clear()
+        else:
+            self._refresh_visible_downloads()
+
+    def _refresh_visible_downloads(self):
+        view: QAbstractItemView = self.parent()
+        if not view:
+            return
+        viewport = view.viewport()
+        if not viewport:
+            return
+        visible_rect = viewport.rect()
+        for row in range(self.rowCount()):
+            task_info = self._task_list[row]
+            if task_info.Download.status == DownloadStatus.DOWNLOADING:
+                item_rect = view.visualRect(self.index(row))
+                if item_rect.isValid() and visible_rect.intersects(item_rect):
+                    model_index = self.index(row)
+                    self.dataChanged.emit(model_index, model_index)
+
+    def _emit_update(self, task_info: TaskInfo):
+        row = self.getRow(task_info)
+        if row != -1:
+            model_index = self.index(row)
+            self.dataChanged.emit(model_index, model_index)
 
     def _on_download_finish(self, task_info: TaskInfo):
-        """处理下载完成"""
+        if task_info.Download.status == DownloadStatus.FFMPEG_QUEUED:
+            self._fragment_progress.pop(task_info.Basic.task_id, None)
+            self._max_progress.pop(task_info.Basic.task_id, None)
+            resource_allocator.unregister(task_info.Basic.task_id)
+
+            self._emit_update(task_info)
+
+            self.manageConcurrentMerges()
+            return
+
         task_info.Download.status = DownloadStatus.COMPLETED
-        task_info.Download.progress = 100
-        
-        # 使用信号总线确保 UI 更新在主线程中执行
-        signal_bus.download.update_downloading_item.emit(task_info)
-        
-        # 从下载列表移除，添加到完成列表
+        task_info.Download.progress = 100.0
+
+        self._fragment_progress.pop(task_info.Basic.task_id, None)
+        self._max_progress.pop(task_info.Basic.task_id, None)
+        resource_allocator.unregister(task_info.Basic.task_id)
+
+        self._emit_update(task_info)
+
         signal_bus.download.remove_from_downloading_list.emit(task_info)
         signal_bus.download.add_to_completed_list.emit([task_info])
-        
-        # 保存到数据库的完成记录
+
         task_manager.mark_as_completed(task_info)
-        
+
         self.manageConcurrentDownloads()
 
     def _on_download_error(self, task_info: TaskInfo, error_msg: str):
-        """处理下载错误"""
         task_info.Download.status = DownloadStatus.FAILED
         task_info.Download.info_label = f"错误: {error_msg}"
-        
-        # 使用信号总线确保 UI 更新在主线程中执行
-        signal_bus.download.update_downloading_item.emit(task_info)
+
+        self._fragment_progress.pop(task_info.Basic.task_id, None)
+        self._max_progress.pop(task_info.Basic.task_id, None)
+        resource_allocator.unregister(task_info.Basic.task_id)
+
+        self._emit_update(task_info)
         
         self.manageConcurrentDownloads()
 
@@ -186,6 +347,9 @@ class DownloadListModel(CoverQueryModelBase):
 
     def _cancelAndRemove(self, task_info: TaskInfo):
         task_manager.cancel(task_info)
+        self._fragment_progress.pop(task_info.Basic.task_id, None)
+        self._max_progress.pop(task_info.Basic.task_id, None)
+        resource_allocator.unregister(task_info.Basic.task_id)
         row = self.getRow(task_info)
         if row != -1:
             self.removeRow(row)
@@ -223,23 +387,33 @@ class DownloadListModel(CoverQueryModelBase):
         
         # 确保所有任务都被移除
         self._task_list.clear()
+        self._fragment_progress.clear()
+        self._max_progress.clear()
+        resource_allocator._queue_times.clear()
+        resource_allocator._speed_history.clear()
         
         # 更新下载数量徽章
         signal_bus.download.update_downloading_count.emit(0)
 
     def manageConcurrentDownloads(self):
-        # 自动调度同时下载的任务数量
+        active = [item for item in self._task_list if item.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]]
+        queued = [item for item in self._task_list if item.Download.status == DownloadStatus.QUEUED]
 
-        while True:
-            downloads = [item for item in self._task_list if item.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]]
-            queued = [item for item in self._task_list if item.Download.status == DownloadStatus.QUEUED]
+        if not queued:
+            self.manageConcurrentMerges()
+            return
 
-            if len(downloads) >= config.get(config.download_parallel) or not queued:
+        base_limit = config.get(config.download_parallel)
+        effective_limit = resource_allocator.adjust_parallel_limit(active, base_limit)
+
+        while len(active) < effective_limit and queued:
+            next_task = resource_allocator.select_next_task(queued, active)
+            if next_task is None:
                 break
-
-            next_task = queued.pop(0)
+            queued.remove(next_task)
             self.togglePauseResume(next_task)
-        
+            active = [item for item in self._task_list if item.Download.status in [DownloadStatus.DOWNLOADING, DownloadStatus.PARSING]]
+
         self.manageConcurrentMerges()
 
     def manageConcurrentMerges(self):
@@ -262,10 +436,18 @@ class DownloadListModel(CoverQueryModelBase):
     def onUpdateData(self, task_info: TaskInfo):
         row = self.getRow(task_info)
 
-        if row != -1 and self.isRowInVisibleArea(row):
+        if row != -1:
             model_index = self.index(row)
-
             self.dataChanged.emit(model_index, model_index)
+
+    def _refresh_downloading_progress(self):
+        self._flush_pending_updates()
+        for task_info in self._task_list:
+            if task_info.Download.status == DownloadStatus.DOWNLOADING:
+                row = self.getRow(task_info)
+                if row != -1:
+                    model_index = self.index(row)
+                    self.dataChanged.emit(model_index, model_index)
 
     def isRowInVisibleArea(self, row: int):
         # 判断指定行是否在可见区域内
@@ -302,6 +484,9 @@ class DownloadListModel(CoverQueryModelBase):
             # 合并和转换中的任务不允许重新下载
             return
 
+        self._fragment_progress.pop(task_info.Basic.task_id, None)
+        self._max_progress.pop(task_info.Basic.task_id, None)
+        resource_allocator.unregister(task_info.Basic.task_id)
         task_manager.reset(task_info)
         self.onUpdateData(task_info)
 

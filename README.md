@@ -7,7 +7,7 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/GitHub-black?logo=github&style=flat-square" alt="GitHub"/>
-    <img src="https://img.shields.io/badge/Platform-Windows_|_Linux_|_macOS-blue?style=flat-square" alt="Platform"/>
+    <img src="https://img.shields.io/badge/Platform-Windows-blue?style=flat-square" alt="Platform"/>
     <img src="https://img.shields.io/badge/license-GPLv3-orange?style=flat-square" alt="License"/>
     <img src="https://img.shields.io/github/actions/workflow/status/ScottSloan/Bili23-Downloader/publish.yml?style=flat-square" alt="Build"/>
 </p>
@@ -36,7 +36,7 @@
 
 | 特性 | 详细说明 |
 | :--- | :--- |
-| 🖥️ **跨平台支持** | 完美兼容 **Windows**（含 Win 7）、**Linux** 和 **macOS** 三大桌面操作系统。 |
+| 🖥️ **Windows 支持** | 完美兼容 **Windows** 桌面操作系统（含 Win 7）。 |
 | 🎨 **现代 UI 设计** | 基于 Fluent Design 设计语言，支持浅色 / 深色主题无缝切换，原生适配高分屏。 |
 | 🚀 **多线程与加速** | 原生集成多线程并行下载、断点续传及网络异常自动重试机制，提供极致的下载速率。 |
 | 🔗 **多网站解析** | 支持 **Bilibili**、**YouTube** 等主流视频平台，基于 yt-dlp 引擎实现全网站视频下载。 |

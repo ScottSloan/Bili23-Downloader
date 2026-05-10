@@ -102,12 +102,7 @@ class FluentStyledItemDelegate:
         # 绘制图标
         drawIcon(icon, painter, rect.adjusted(8, 8, -8, -8))
 
-    def _drawProgressBar(self, painter: QPainter, rect: QRect, value: int, error = False, paused = False):
-        if isDarkTheme():
-            backgroundColor = QColor(255, 255, 255, 155)
-        else:
-            backgroundColor = QColor(0, 0, 0, 155)
-
+    def _drawProgressBar(self, painter: QPainter, rect: QRect, value, error = False, paused = False):
         if error:
             barColor = QColor(255, 153, 164) if isDarkTheme() else QColor(196, 43, 28)
         elif paused:
@@ -115,18 +110,20 @@ class FluentStyledItemDelegate:
         else:
             barColor = ThemeColor.PRIMARY.color()
 
-        # 绘制背景
-        painter.setPen(backgroundColor)
-        painter.drawLine(rect.left(), rect.top(), rect.right(), rect.top())
+        backgroundColor = QColor(barColor)
+        backgroundColor.setAlpha(25)
 
-        # 绘制进度
+        progress_value = min(max(float(value), 0.0), 100.0)
+
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(barColor)
+        painter.setBrush(backgroundColor)
+        painter.drawRoundedRect(rect, 4, 4)
 
-        w = int(value / 100 * rect.width())
-        r = rect.height() / 4
-
-        painter.drawRoundedRect(rect.left(), rect.top() - 2, w, r, 1, 1)
+        w = int(progress_value / 100.0 * rect.width())
+        if w > 0:
+            progress_rect = QRect(rect.left(), rect.top(), w, rect.height())
+            painter.setBrush(barColor)
+            painter.drawRoundedRect(progress_rect, 4, 4)
 
     def _drawPixmap(self, painter: QPainter, rect: QRect, option: QStyleOptionViewItem, pixmap: QPixmap, isPlaceholder = False):
         if isPlaceholder:

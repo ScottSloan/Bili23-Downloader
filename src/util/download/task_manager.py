@@ -131,6 +131,7 @@ class ControlledDownloader:
                 "no_warnings": True,
                 "retries": 3,
                 "fragment_retries": 3,
+                "no_write_cookies": True,
             }
             
             if self.task.cookie_file and os.path.exists(self.task.cookie_file):

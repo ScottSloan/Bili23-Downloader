@@ -45,13 +45,14 @@ class ResponseType(Enum):
     REDIRECT_URL = 4
 
 class SyncNetWorkRequest:
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None):
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, timeout: int = None):
         self.url = url
         self.params = params
         self.request_type = request_type
         self.response_type = response_type
         self.raise_for_status = raise_for_status
         self.json_data = json_data
+        self.timeout = timeout
 
         self.proxies = None
 
@@ -59,7 +60,7 @@ class SyncNetWorkRequest:
         self.update_headers()
 
         if self.proxies:
-            with httpx.Client(mounts = get_mounts(self.proxies), follow_redirects = True) as temp_client:
+            with httpx.Client(mounts = get_mounts(self.proxies), timeout = self.timeout, follow_redirects = True) as temp_client:
                 response = temp_client.request(
                     method = self.request_type.name,
                     url = self.url,
@@ -110,8 +111,8 @@ class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     error = Signal(str)
     finished = Signal()
 
-    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None):
-        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data)
+    def __init__(self, url: str, request_type: RequestType = RequestType.GET, params: dict = None, response_type: ResponseType = ResponseType.JSON, raise_for_status: bool = True, json_data: dict = None, timeout: int = None):
+        SyncNetWorkRequest.__init__(self, url, request_type, params, response_type, raise_for_status, json_data, timeout)
         QObject.__init__(self)
 
     @Slot()

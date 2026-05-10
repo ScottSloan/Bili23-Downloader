@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from util.common.enum import DownloadStatus
+from util.ffmpeg import FFmpegCommand, FFmpegRunner
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +66,15 @@ class YTDLPDownloader:
         self._is_downloading = False
         self._task_info = None
         self._download_thread = None
+        self._thread_count = 4
 
     def set_callbacks(self, progress=None, finish=None, error=None):
         self.progress_callback = progress
         self.finish_callback = finish
         self.error_callback = error
+
+    def set_thread_count(self, count: int):
+        self._thread_count = max(1, min(count, 10))
 
     def set_task_info(self, task_info):
         """设置任务信息，用于获取 cookie_file 等配置"""
@@ -85,11 +90,9 @@ class YTDLPDownloader:
             logger.warning("下载已在进行中")
             return
 
-        # 重置状态
         self._stop_event.clear()
         self._pause_event.set()
 
-        # 更新任务状态为下载中
         self._task_info.Download.status = DownloadStatus.DOWNLOADING
 
         logger.info(f"任务 cookie_file: {self._task_info.cookie_file}")
@@ -112,12 +115,15 @@ class YTDLPDownloader:
             logger.warning("任务未设置 cookie_file")
 
         self._is_downloading = True
-        self._stop_event.clear()
-        self._pause_event.set()
+
+        output_dir = self._task_info.File.download_path
+        if self._task_info.File.folder and self._task_info.File.folder != ".":
+            output_dir = str(Path(self._task_info.File.download_path) / self._task_info.File.folder)
+            os.makedirs(output_dir, exist_ok=True)
 
         self._download_thread = threading.Thread(
             target=self.download,
-            args=(self._task_info.Episode.url, self._task_info.File.download_path, cookie_file),
+            args=(self._task_info.Episode.url, output_dir, cookie_file),
             daemon=True
         )
         self._download_thread.start()
@@ -128,10 +134,9 @@ class YTDLPDownloader:
             logger.warning("下载未开始，无法暂停")
             return
         
-        self._pause_event.clear()  # 清除事件，阻塞下载
+        self._pause_event.clear()
         self._is_downloading = False
         
-        # 更新任务状态为已暂停
         if self._task_info:
             self._task_info.Download.status = DownloadStatus.PAUSED
         
@@ -143,37 +148,173 @@ class YTDLPDownloader:
             logger.warning("下载已在进行中，无法继续")
             return
         
-        self._pause_event.set()  # 设置事件，允许下载
+        self._pause_event.set()
         self._is_downloading = True
         
-        # 更新任务状态为下载中
         if self._task_info:
             self._task_info.Download.status = DownloadStatus.DOWNLOADING
         
-        # 重新开始下载
-        if self._task_info:
-            cookie_file = None
-            if self._task_info.cookie_file and os.path.exists(self._task_info.cookie_file):
-                cookie_file = self._task_info.cookie_file
-
-            self._download_thread = threading.Thread(
-                target=self.download,
-                args=(self._task_info.Episode.url, self._task_info.File.download_path, cookie_file),
-                daemon=True
-            )
-            self._download_thread.start()
-            logger.info("下载已继续")
+        logger.info("下载已继续")
 
     def retry(self):
         """重试下载"""
-        self._stop_event.clear()
+        self._stop_event.set()
         self._pause_event.set()
+        if self._download_thread and self._download_thread.is_alive():
+            self._download_thread.join(timeout=2)
         self.start()
         logger.info("重试下载")
 
     def start_merge(self):
-        """开始合并"""
-        pass
+        """开始合并视频和音频文件，并实时反馈合并进度"""
+        if not self._task_info:
+            logger.error("任务信息未设置，无法开始合并")
+            return
+
+        task_info = self._task_info
+        download_dir = Path(task_info.File.download_path, task_info.File.folder)
+
+        if not download_dir.exists():
+            logger.error(f"下载目录不存在: {download_dir}")
+            if self.error_callback:
+                self.error_callback(f"下载目录不存在: {download_dir}")
+            return
+
+        video_ext = task_info.File.video_file_ext or ".mp4"
+        audio_ext = task_info.File.audio_file_ext or ".m4a"
+        merge_ext = task_info.File.merge_file_ext or ".mp4"
+
+        video_file = None
+        audio_file = None
+        cover_file = None
+
+        for fname in task_info.File.relative_files:
+            fpath = download_dir / fname
+            if not fpath.exists():
+                continue
+            lower = fname.lower()
+            if lower.endswith(video_ext) or lower.endswith((".mp4", ".mkv", ".webm", ".flv")):
+                if "audio" not in lower:
+                    video_file = str(fpath)
+            elif lower.endswith(audio_ext) or lower.endswith((".m4a", ".aac", ".mp3", ".wav")):
+                audio_file = str(fpath)
+            elif lower.endswith((".jpg", ".jpeg", ".png", ".webp")):
+                cover_file = str(fpath)
+
+        if not video_file or not audio_file:
+            all_files = list(download_dir.iterdir())
+            video_candidates = [f for f in all_files if f.suffix.lower() in (".mp4", ".mkv", ".webm", ".flv") and "audio" not in f.name.lower()]
+            audio_candidates = [f for f in all_files if f.suffix.lower() in (".m4a", ".aac", ".mp3", ".wav")]
+            cover_candidates = [f for f in all_files if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
+
+            if not video_file and video_candidates:
+                video_file = str(video_candidates[0])
+            if not audio_file and audio_candidates:
+                audio_file = str(audio_candidates[0])
+            if not cover_file and cover_candidates:
+                cover_file = str(cover_candidates[0])
+
+        if not video_file:
+            logger.error("未找到视频文件，无法合并")
+            if self.error_callback:
+                self.error_callback("未找到视频文件，无法合并")
+            return
+
+        if not audio_file:
+            logger.info("未找到音频文件，跳过合并")
+            task_info.Download.status = DownloadStatus.COMPLETED
+            task_info.Download.progress = 100
+            task_info.Download.info_label = ""
+            if self.finish_callback:
+                self.finish_callback(task_info.Episode.url)
+            return
+
+        output_filename = task_info.File.name
+        if not output_filename:
+            output_filename = f"merged_output{merge_ext}"
+        elif not output_filename.endswith(merge_ext):
+            output_filename = Path(output_filename).stem + merge_ext
+
+        output_path = str(download_dir / output_filename)
+
+        logger.info(f"开始合并: 视频={video_file}, 音频={audio_file}, 输出={output_path}")
+
+        task_info.Download.status = DownloadStatus.MERGING
+        task_info.Download.progress = 0
+        task_info.Download.info_label = "准备合并..."
+
+        if self.progress_callback:
+            self.progress_callback({
+                "status": "merging",
+                "stage": "preparation",
+                "progress": 0,
+                "info": "准备合并..."
+            })
+
+        cmd = FFmpegCommand.merge_video_audio(video_file, audio_file, output_path, cover_file)
+        runner = FFmpegRunner.from_command(cmd)
+        runner.set_cwd(str(download_dir))
+
+        def on_ffmpeg_progress(progress: float):
+            merge_progress = 5 + progress * 0.90
+            task_info.Download.progress = merge_progress
+            task_info.Download.info_label = f"合并中... {progress:.1f}%"
+
+            if self.progress_callback:
+                self.progress_callback({
+                    "status": "merging",
+                    "stage": "execution",
+                    "progress": merge_progress,
+                    "merge_progress": progress,
+                    "info": f"合并中... {progress:.1f}%"
+                })
+
+        def on_ffmpeg_finished(return_code: int, stdout: str, stderr: str):
+            task_info.Download.progress = 100
+            task_info.Download.info_label = "合并完成，清理中..."
+
+            if self.progress_callback:
+                self.progress_callback({
+                    "status": "merging",
+                    "stage": "cleanup",
+                    "progress": 100,
+                    "info": "合并完成，清理中..."
+                })
+
+            if not task_info.Download.keep_original_files:
+                temp_files = [video_file, audio_file]
+                if cover_file:
+                    temp_files.append(cover_file)
+                for f in temp_files:
+                    try:
+                        if f and os.path.exists(f):
+                            os.remove(f)
+                            logger.info(f"已删除临时文件: {f}")
+                    except Exception as e:
+                        logger.warning(f"删除临时文件失败: {f}, {e}")
+
+            if output_filename not in task_info.File.relative_files:
+                task_info.File.relative_files.append(output_filename)
+
+            task_info.Download.status = DownloadStatus.COMPLETED
+            task_info.Download.progress = 100
+            task_info.Download.info_label = ""
+
+            if self.finish_callback:
+                self.finish_callback(task_info.Episode.url)
+
+        def on_ffmpeg_error(exception: Exception, stdout: str, stderr: str):
+            logger.error(f"合并失败: {exception}")
+            task_info.Download.status = DownloadStatus.FFMPEG_FAILED
+            task_info.Download.info_label = f"合并失败: {exception}"
+
+            if self.error_callback:
+                self.error_callback(f"合并失败: {exception}")
+
+        runner.progress_sig.connect(on_ffmpeg_progress)
+        runner.finished_sig.connect(on_ffmpeg_finished)
+        runner.error_sig.connect(on_ffmpeg_error)
+        runner.start()
 
     def download(self, url, output_dir="downloads", cookie_file=None):
         """
@@ -185,7 +326,6 @@ class YTDLPDownloader:
         ydl_opts = {
             # 画质策略（通用）
             "format": "bestvideo+bestaudio/best",
-            "merge_output_format": "mp4",
 
             # 输出路径
             "outtmpl": f"{output_dir}/%(title)s.%(ext)s",
@@ -199,12 +339,15 @@ class YTDLPDownloader:
             # 稳定性 - 增加重试次数以应对代理连接问题
             "retries": 10,
             "fragment_retries": 10,
-            "concurrent_fragment_downloads": 4,
+            "concurrent_fragment_downloads": self._thread_count,
 
             # 日志控制 - 调试模式
             "quiet": False,
             "no_warnings": False,
             "verbose": True,
+            
+            # 禁止 yt-dlp 覆写 cookie 文件
+            "no_write_cookies": True,
             
             # JavaScript 运行时配置 - 使用 Node.js 解决 YouTube 反机器人挑战
             "js_runtimes": {"node": {"path": get_node_exe()}},
@@ -218,11 +361,20 @@ class YTDLPDownloader:
             # 请求处理器配置 - 使用 curl_cffi 解决 SSL 问题
             "extractor_args": {
                 "youtube": {
-                    "player_client": ["web", "android", "ios", "web_embedded", "web_music", "web_safari", "tv_embedded"],
+                    "player_client": ["web", "web_embedded"],
                     "player_skip": ["webpage"],
-                }
+                },
+                "youtubetab": {
+                    "skip": ["authcheck"],
+                },
             },
+            "extract_flat": "in_playlist",
         }
+
+        # 如果任务需要合并，由我们自行处理合并流程以获得进度反馈
+        # 否则让 yt-dlp 自动合并
+        if self._task_info and not self._task_info.Download.merge_video_audio:
+            ydl_opts["merge_output_format"] = "mp4"
         
         # FFmpeg 配置
         if FFMPEG_DIR and os.path.isdir(FFMPEG_DIR):
@@ -297,10 +449,15 @@ class YTDLPDownloader:
                 self._ydl = ydl
                 ydl.download([url])
 
-            # 下载完全完成，更新任务状态为已完成
+            # 下载完全完成，更新任务状态
             if self._task_info:
-                self._task_info.Download.status = DownloadStatus.COMPLETED
-                self._task_info.Download.progress = 100
+                if self._task_info.Download.merge_video_audio:
+                    self._task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
+                    self._task_info.Download.progress = 99
+                    self._task_info.Download.info_label = "等待合并..."
+                else:
+                    self._task_info.Download.status = DownloadStatus.COMPLETED
+                    self._task_info.Download.progress = 100
 
             # 在调用 finish_callback 前标记下载已结束，防止 downloader_manager.remove()
             # 在回调处理过程中检查 _is_downloading 仍为 True 而错误调用 pause()
@@ -330,10 +487,15 @@ class YTDLPDownloader:
                             self._ydl = ydl
                             ydl.download([url])
                         
-                        # 下载完全完成，更新任务状态为已完成
+                        # 下载完全完成，更新任务状态
                         if self._task_info:
-                            self._task_info.Download.status = DownloadStatus.COMPLETED
-                            self._task_info.Download.progress = 100
+                            if self._task_info.Download.merge_video_audio:
+                                self._task_info.Download.status = DownloadStatus.FFMPEG_QUEUED
+                                self._task_info.Download.progress = 99
+                                self._task_info.Download.info_label = "等待合并..."
+                            else:
+                                self._task_info.Download.status = DownloadStatus.COMPLETED
+                                self._task_info.Download.progress = 100
 
                         self._is_downloading = False
 
@@ -350,6 +512,10 @@ class YTDLPDownloader:
                 logger.info("下载被用户停止")
             elif "Download stopped by user" in error_msg:
                 logger.info("下载被用户停止")
+            elif "Join this channel" in error_msg and "members-only" in error_msg:
+                logger.error(f"YouTube 频道会员专属视频，当前账号未加入该频道: {error_msg}")
+                if self.error_callback:
+                    self.error_callback("该视频是 YouTube 频道会员专属内容，当前账号未加入该频道，无法下载。请使用已加入该频道的账号登录后重试。")
             elif self.error_callback:
                 logger.error(f"下载失败: {error_msg}")
                 self.error_callback(error_msg)
@@ -486,20 +652,18 @@ class YTDLPDownloader:
             dict: YouTube 特定的配置选项
         """
         youtube_opts = {
-            # YouTube 特定配置 - 使用 tv 和 android_vr 客户端，支持 cookies
-            "extractor_args": {
-                "youtube": {
-                    "player_client": ["android_vr", "tv"],
-                    "player_skip": ["web", "mweb", "android", "ios"],
-                }
-            },
-            # 更好的错误处理
             "ignoreerrors": False,
             "skip_unavailable_fragments": True,
-            # 网络配置
             "forceipv4": True,
             "nocheckcertificate": True,
         }
+
+        try:
+            from yt_dlp.networking._curlcffi import CurlCFFIRH
+            youtube_opts["impersonate"] = "chrome"
+            logger.info("yt-dlp curl_cffi 支持可用，启用 impersonate 功能")
+        except ImportError:
+            logger.info("yt-dlp curl_cffi 支持不可用，跳过 impersonate 配置")
         
         return youtube_opts
 
@@ -530,7 +694,6 @@ class YTDLPDownloader:
         """
         yt-dlp 进度回调
         """
-        # 下载完成时直接处理，不需要等待暂停事件
         if d["status"] == "finished":
             if self.progress_callback:
                 self.progress_callback({
@@ -539,20 +702,31 @@ class YTDLPDownloader:
                 })
             return
 
-        # 检查是否需要暂停
-        if not self._pause_event.is_set():
-            self._pause_event.wait()  # 阻塞直到继续
-
         if self._stop_event.is_set():
             raise Exception("Download stopped by user")
 
         if d["status"] == "downloading":
             if self.progress_callback:
+                downloaded_bytes = d.get("downloaded_bytes", 0) or 0
+                total_bytes = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                speed = d.get("_speed", 0) or 0
+                percent_str = d.get("_percent_str", "").strip()
+                speed_str = d.get("_speed_str", "").strip()
+                eta_str = d.get("_eta_str", "").strip()
+
                 self.progress_callback({
                     "status": "downloading",
                     "filename": d.get("filename"),
-                    "percent": d.get("_percent_str", "").strip(),
-                    "speed": d.get("_speed", 0),
-                    "speed_str": d.get("_speed_str", "").strip(),
-                    "eta": d.get("_eta_str", "").strip(),
+                    "percent": percent_str,
+                    "speed": speed,
+                    "speed_str": speed_str,
+                    "eta": eta_str,
+                    "downloaded_bytes": downloaded_bytes,
+                    "total_bytes": total_bytes,
+                    "total_bytes_estimate": d.get("total_bytes_estimate", 0) or 0,
+                    "fragment_count": d.get("fragment_count", 0),
+                    "fragment_index": d.get("fragment_index", 0),
                 })
+
+            if not self._pause_event.is_set():
+                self._pause_event.wait()

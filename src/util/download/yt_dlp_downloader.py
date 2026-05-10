@@ -89,6 +89,9 @@ class YTDLPDownloadWorker(QRunnable):
                 "quiet": True,
                 "no_warnings": True,
                 
+                # 禁止 yt-dlp 覆写 cookie 文件
+                "no_write_cookies": True,
+                
                 # 更好的错误处理
                 "ignoreerrors": False,
                 "skip_unavailable_fragments": True,

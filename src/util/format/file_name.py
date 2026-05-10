@@ -64,13 +64,15 @@ class FileNameFormatter:
             Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",
             Attribute.POPULAR_BIT: "{collection_title}/{leaf_title}",
             Attribute.COLLECTION_LIST_BIT: "{collection_title}/{leaf_title}",
-            Attribute.FAVLIST_BIT: Path("{favorites_owner_id}_{favorites_owner}") / self.rule,
-            Attribute.SPACE_BIT: Path("{space_owner_id}_{space_owner}") / self.rule,
+            Attribute.FAVLIST_BIT: "{favorites_owner_id}_{favorites_owner}",
+            Attribute.SPACE_BIT: "{space_owner_id}_{space_owner}",
             Attribute.WATCH_LATER_BIT: "{leaf_title}"
         }
 
         for attr, rule in rule_map.items():
             if self.attribute & attr:
+                if attr in (Attribute.FAVLIST_BIT, Attribute.SPACE_BIT):
+                    return str(Path(rule) / self.rule) if self.rule else str(Path(rule))
                 return str(Path(rule))
         
         return self.rule
@@ -135,6 +137,7 @@ class FileNameFormatter:
             Attribute.NORMAL_BIT: ConventionType.NORMAL,
             Attribute.PART_BIT: ConventionType.PART,
             Attribute.COLLECTION_BIT: ConventionType.COLLECTION,
+            Attribute.COLLECTION_LIST_BIT: ConventionType.COLLECTION,
             Attribute.BANGUMI_BIT: ConventionType.BANGUMI,
             Attribute.CHEESE_BIT: ConventionType.CHEESE,
             Attribute.POPULAR_BIT: ConventionType.NORMAL
