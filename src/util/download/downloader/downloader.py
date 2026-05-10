@@ -226,8 +226,11 @@ class Downloader(QObject):
 
         self.update_info(download_info)
 
-        if not self.has_enough_disk_space(download_info["total_size"]):
-            self.on_parse_error(Translator.ERROR_MESSAGES("INSUFFICIENT_SPACE"))
+        self.calc_downloaded_size()
+
+        has_enough_space, error_message = self.has_enough_disk_space(download_info["total_size"])
+        if not has_enough_space:
+            self.on_parse_error(error_message)
             return
 
         self.start_worker()
@@ -290,26 +293,33 @@ class Downloader(QObject):
 
         task_manager.update(self.task_info)
 
-    def has_enough_disk_space(self, total_size: int):
+    def has_enough_disk_space(self, total_size: int) -> tuple[bool, str]:
         required_space = max(total_size - self.task_info.Download.downloaded_size, 0)
 
         if self.task_info.Download.merge_video_audio:
             required_space += total_size
 
-        required_space += max(
-            int(required_space * self.DISK_SPACE_BUFFER_RATIO),
-            self.MIN_DISK_SPACE_BUFFER
-        )
+        if required_space > 0:
+            required_space += max(
+                int(required_space * self.DISK_SPACE_BUFFER_RATIO),
+                self.MIN_DISK_SPACE_BUFFER
+            )
 
         try:
             download_path = Path(self.task_info.File.download_path)
             download_path.mkdir(parents = True, exist_ok = True)
             free_space = shutil.disk_usage(download_path).free
 
-        except OSError:
-            return False
+        except PermissionError as e:
+            return False, f"{Translator.ERROR_MESSAGES('PERMISSION_DENIED')}: {e}"
 
-        return free_space >= required_space
+        except OSError as e:
+            return False, f"{Translator.ERROR_MESSAGES('COULD_NOT_OPEN')}: {e}"
+
+        if free_space < required_space:
+            return False, Translator.ERROR_MESSAGES("INSUFFICIENT_SPACE")
+
+        return True, ""
 
     def start_merge(self):
         self.task_info.Download.status = DownloadStatus.MERGING
