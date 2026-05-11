@@ -38,6 +38,7 @@ tvshow_base = """<?xml version="1.0" encoding="UTF-8"?>
     {genre}
     {country}
     {rating}
+    <thumb aspect="poster">{thumb}</thumb>
 </tvshow>
 """
 
@@ -118,6 +119,7 @@ class MetadataNFO:
             genre = "\n    ".join([f"<genre>{genre}</genre>" for genre in genres]),
             country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas]),
             rating = self._get_rating(),
+            thumb = self.task_info.Episode.poster
         )
     
     def _generate_episode(self, genres: List[str]):
