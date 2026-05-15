@@ -15,6 +15,7 @@ from util.common import Translator
 from functools import wraps
 from pathlib import Path
 import re
+import os
 
 def check_result(func):
     @wraps(func)
@@ -234,9 +235,10 @@ class EditRuleDialog(DialogBase):
 
         if result:
 
-            if re.search(r'[<>:\\"|?*\x00-\x1f]', result):
-                return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
-            
+            for part in result.split(os.sep):
+                if re.search(r'[<>:\\"|?*\x00-\x1f]', part):
+                    return False, self.tr("""Rule contains illegal characters: <>:\\"|?* or control characters""")
+
             else:
                 self.rule_box.setError(False)
 

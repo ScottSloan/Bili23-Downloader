@@ -240,6 +240,8 @@ class Translator:
             "M4A_NOT_FOUND": translate("ERROR_MESSAGES", "M4A audio file not found for conversion"),
             "LOGIN_REQUIRED": translate("ERROR_MESSAGES", "Login Required"),
             "LOGIN_REQUIRED_MESSAGE": translate("ERROR_MESSAGES", "Please log in to your account first."),
+            "B23_TV_URL_EXPIRED": translate("ERROR_MESSAGES", "The b23.tv short link is invalid or has expired."),
+            "INVALID_LINK": translate("ERROR_MESSAGES", "Invalid link format")
         }
 
     @staticmethod
