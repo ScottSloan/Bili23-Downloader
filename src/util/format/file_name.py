@@ -49,12 +49,30 @@ class FileNameFormatter:
             if self.attribute:
                 self.rule = self.get_special_rule()
 
-            return self.rule.format(**self.variable_data)
+            return self.__normalize_path(self.rule.format(**self.variable_data))
         
         except Exception as e:
             logger.exception(f"格式化文件名时发生错误")
 
             return None
+
+    def __normalize_path(self, path_str: str):
+        if not path_str:
+            return path_str
+
+        path = Path(path_str)
+        normalized_parts = []
+
+        for part in path.parts:
+            cleaned_part = part.strip(" .")
+
+            if cleaned_part:
+                normalized_parts.append(cleaned_part)
+
+        if not normalized_parts:
+            return "_"
+
+        return str(Path(*normalized_parts))
 
     def get_special_rule(self):
         # 判断是否为特殊类型的视频：互动视频、每周必看、收藏夹、个人空间

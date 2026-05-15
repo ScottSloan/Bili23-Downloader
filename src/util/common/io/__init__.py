@@ -1,3 +1,2 @@
-from .file import safe_rename, safe_remove
+from .file import safe_rename, safe_remove, File
 from .directory import Directory
-from .file import File
