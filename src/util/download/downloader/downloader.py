@@ -257,8 +257,18 @@ class Downloader(QObject):
         path.parent.mkdir(parents = True, exist_ok = True)
 
         file_size = info.get("file_size", 0)
+
         if not path.exists() and file_size > 0:
             path.touch()
+
+            # 预分配文件空间
+            if config.get(config.preallocate_file_space):
+                File.preallocate_file(path, file_size)
+
+            else:
+                # 对于不支持稀疏文件系统的环境，改为创建空白占位文件
+                File.create_placeholder(path)
+
 
         info["file_path"] = path
         self.dispatch_chunk_threads(file_key)

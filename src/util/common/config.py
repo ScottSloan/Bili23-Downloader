@@ -227,6 +227,7 @@ class APPConfig(QConfig):
     parse_history = ConfigItem("Behavior", "parse_history", True, BoolValidator())
     show_download_options_dialog = ConfigItem("Behavior", "show_download_options_dialog", True, BoolValidator())
     when_close_window = OptionsConfigItem("Behavior", "when_close_window", WhenClose.ALWAYS_ASK, OptionsValidator(WhenClose), EnumSerializer(WhenClose))
+    preallocate_file_space = ConfigItem("Behavior", "preallocate_file_space", True, BoolValidator())
     file_conflict_resolution = OptionsConfigItem("Behavior", "file_conflict_resolution", FileConflictResolution.AUTO_RENAME, OptionsValidator(FileConflictResolution), EnumSerializer(FileConflictResolution))
 
     # Download

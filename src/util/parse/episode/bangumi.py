@@ -152,10 +152,12 @@ class BangumiEpisodeParser(EpisodeParserBase):
         # 评分
         if self.info_data.get("rating"):
             episode_data["rating"] = self.info_data["rating"]["score"]
+            episode_data["rating_votes"] = self.info_data["rating"]["count"]
 
         if self.info_data.get("up_info"):
             episode_data["uploader"] = self.info_data["up_info"]["uname"]
             episode_data["uploader_uid"] = self.info_data["up_info"]["mid"]
+            episode_data["uploader_face"] = self.info_data["up_info"]["avatar"]
 
     def determine_season_number(self):
         season_id = self.info_data["season_id"]

@@ -58,3 +58,17 @@ def __resolve_conflict(original_path: Path, new_path: Path) -> Path:
                 if not new_target_path.exists():
                     return new_target_path
                 n += 1
+
+class File:
+    @staticmethod
+    def preallocate_file(path: str, size: int):
+        with open(path, "wb") as f:
+            f.seek(size - 1)
+            f.write(b"\0")
+
+    @staticmethod
+    def create_placeholder(path: str):
+        # 确保父目录存在，并创建一个空文件作为占位符
+        Path(path).parent.mkdir(parents = True, exist_ok = True)
+        Path(path).touch(exist_ok = True)
+
