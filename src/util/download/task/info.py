@@ -71,6 +71,7 @@ class EpisodeInfo(InfoBase):
     url: str = ""
     duration: int = 0
     tags: list[str] = field(default_factory = list)
+    new_ep_status: bool = False
 
     # 收藏夹\个人空间
     favorites_name: str = ""

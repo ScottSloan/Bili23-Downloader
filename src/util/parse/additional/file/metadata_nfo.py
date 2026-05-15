@@ -38,7 +38,9 @@ tvshow_base = """<?xml version="1.0" encoding="UTF-8"?>
     {genre}
     {country}
     {rating}
+    {status}
     <thumb aspect="poster">{thumb}</thumb>
+    <uniqueid type="season_id">{season_id}</uniqueid>
 </tvshow>
 """
 
@@ -54,6 +56,8 @@ episode_base = """<?xml version="1.0" encoding="UTF-8"?>
     <director>{director}</director>
     {genre}
     {country}
+    <thumb>{thumb}</thumb>
+    <uniqueid type="ep_id">{ep_id}</uniqueid>
 </episodedetails>
 """
 
@@ -119,7 +123,9 @@ class MetadataNFO:
             genre = "\n    ".join([f"<genre>{genre}</genre>" for genre in genres]),
             country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas]),
             rating = self._get_rating(),
-            thumb = self.task_info.Episode.poster
+            status = self._get_status(),
+            thumb = self.task_info.Episode.poster,
+            season_id = self.task_info.Episode.season_id
         )
     
     def _generate_episode(self, genres: List[str]):
@@ -134,7 +140,9 @@ class MetadataNFO:
             episode = self.task_info.Episode.episode_number,
             director = self.task_info.Episode.uploader,
             genre = "\n    ".join([f"<genre>{genre}</genre>" for genre in genres]),
-            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas])
+            country = "\n    ".join([f"<country>{area}</country>" for area in self.task_info.Episode.areas]),
+            thumb = self.task_info.Episode.cover,
+            ep_id = self.task_info.Episode.ep_id
         )
     
     def _is_tvshow_exists(self):
@@ -143,6 +151,7 @@ class MetadataNFO:
         return path.exists()
     
     def _get_rating(self):
+        # 获取评分信息
         if self.task_info.Episode.rating:
             rating = """\
                 <ratings>
@@ -157,6 +166,13 @@ class MetadataNFO:
             return self._dedent(rating)
         
         return ""
+    
+    def _get_status(self):
+        # 获取完结状态
+        if self.task_info.Episode.new_ep_status:
+            return "<status>Ongoing</status>"
+        else:
+            return "<status>Ended</status>"
     
     def _dedent(self, text: str):
         lines = textwrap.dedent(text).splitlines()

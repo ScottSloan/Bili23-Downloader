@@ -15,6 +15,7 @@ from .merger import Merger
 
 from threading import Event, Lock
 from pathlib import Path
+import errno
 import httpx
 import json
 import time
@@ -64,6 +65,32 @@ class TokenBucket:
             self.last_update = time.monotonic()
 
 class ChunkWorker(QRunnable):
+    max_retries = 5
+    retryable_status_codes = {408, 429, 500, 502, 503, 504}
+    permanent_status_codes = {400, 401, 403, 404, 405, 410, 416}
+    permanent_errnos = {
+        errno.EACCES,
+        errno.EPERM,
+        errno.ENOENT,
+        errno.ENOSPC,
+        errno.EROFS,
+        errno.EISDIR,
+        errno.ENOTDIR,
+    }
+    retryable_errnos = {
+        errno.EAGAIN,
+        errno.EWOULDBLOCK,
+        errno.EINTR,
+        errno.ETIMEDOUT,
+        errno.ECONNRESET,
+        errno.ECONNABORTED,
+        errno.ECONNREFUSED,
+        errno.ENETDOWN,
+        errno.ENETUNREACH,
+        errno.EHOSTUNREACH,
+        errno.EPIPE,
+    }
+
     def __init__(self, session: httpx.Client, file_key: str, chunk_index: int, chunk_range: tuple[int, int], file_path: Path, url: str, referer: str, task_info: TaskInfo, stop_event: Event, lock: Lock, token_bucket: TokenBucket, parent=None, on_chunk_start=None, on_chunk_end=None):
         super().__init__()
         self.session = session
@@ -82,6 +109,63 @@ class ChunkWorker(QRunnable):
         self.on_chunk_start = on_chunk_start
         self.on_chunk_end = on_chunk_end
 
+    def _invoke_download_error(self, message: str):
+        if self.parent:
+            QMetaObject.invokeMethod(
+                self.parent,
+                "on_download_error",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, message)
+            )
+
+    def _is_retryable_exception(self, exc: Exception):
+        if isinstance(exc, StopIteration):
+            return True
+
+        if isinstance(exc, httpx.HTTPStatusError):
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            if status_code in self.permanent_status_codes:
+                return False
+            if status_code in self.retryable_status_codes:
+                return True
+            return bool(status_code and status_code >= 500)
+
+        if isinstance(exc, httpx.RequestError):
+            return True
+
+        if isinstance(exc, OSError):
+            return exc.errno in self.retryable_errnos
+
+        return False
+
+    def _build_error_message(self, exc: Exception):
+        if isinstance(exc, httpx.HTTPStatusError):
+            response = getattr(exc, "response", None)
+            status_code = getattr(response, "status_code", None)
+            return f"请求返回异常状态码 {status_code}: {exc}"
+
+        if isinstance(exc, httpx.RequestError):
+            return str(exc)
+
+        if isinstance(exc, OSError):
+            return f"文件读写失败: {exc}"
+
+        if isinstance(exc, StopIteration):
+            return str(exc)
+
+        return f"未知异常: {exc}"
+
+    def _report_download_failure(self, exc: Exception, attempt: int, retryable: bool):
+        reason = self._build_error_message(exc)
+
+        if retryable:
+            message = f"分片 {self.chunk_index + 1} 下载失败，已尝试 {attempt} 次仍未成功：{reason}"
+        else:
+            message = f"分片 {self.chunk_index + 1} 遇到不可重试错误：{reason}"
+
+        self.stop_event.set()
+        self._invoke_download_error(message)
+
     def run(self):
         if self.stop_event.is_set():
             return
@@ -93,7 +177,9 @@ class ChunkWorker(QRunnable):
             "Range": f"bytes={self.chunk_range[0]}-{self.chunk_range[1] - 1}"
         }
 
-        while not self.stop_event.is_set():
+        attempt = 0
+
+        while not self.stop_event.is_set() and attempt < self.max_retries:
             downloaded = 0
             try:
                 with open(self.file_path, "r+b") as f:
@@ -137,15 +223,22 @@ class ChunkWorker(QRunnable):
                     # 提前结束但没有报错，说明连接意外断开，触发重试
                     raise StopIteration(f"Chunk mismatch (Expected: {expected_size}, Got: {downloaded}), triggering retry.")
 
-            except Exception:
+            except Exception as exc:
                 if self.stop_event.is_set():
                     break
                 
                 # 发生异常（断网、超时等），清空本轮的下载计数并等待后重试（区块从头下）
                 with self.lock:
-                    self.task_info.Download.downloaded_size -= downloaded
+                    self.task_info.Download.downloaded_size = max(self.task_info.Download.downloaded_size - downloaded, 0)
 
-                time.sleep(1)
+                attempt += 1
+                retryable = self._is_retryable_exception(exc)
+
+                if not retryable or attempt >= self.max_retries:
+                    self._report_download_failure(exc, attempt, retryable)
+                    break
+
+                time.sleep(min(2 ** (attempt - 1), 8))
 
         if self.on_chunk_end:
             self.on_chunk_end()
@@ -179,6 +272,7 @@ class Downloader(QObject):
         self.wait_callback = None
         
         self._completion_triggered = False
+        self._download_error_triggered = False
 
         self.speed_timer = QTimer()
         self.speed_timer.setInterval(1000)
@@ -186,6 +280,7 @@ class Downloader(QObject):
 
     def start(self):
         self._completion_triggered = False
+        self._download_error_triggered = False
 
         # 如果队列空了则说明下载完成（进度 100）
         if self.task_info.Download.progress >= 100 or (not self.task_info.Download.queue and self.task_info.Download.total_size > 0 and self.task_info.Download.status != DownloadStatus.FAILED):
@@ -228,6 +323,25 @@ class Downloader(QObject):
     @Slot(str)
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
+
+        self.update_item(self.task_info)
+
+        signal_bus.download.auto_manage_concurrent_downloads.emit()
+
+        signal_bus.toast.show_long_message.emit(
+            Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
+            error_message
+        )
+
+    @Slot(str)
+    def on_download_error(self, error_message: str):
+        if self._download_error_triggered:
+            return
+
+        self._download_error_triggered = True
+        self.task_info.Download.status = DownloadStatus.FAILED
+        self._stop_event.set()
+        self.speed_timer.stop()
 
         self.update_item(self.task_info)
 
