@@ -71,4 +71,3 @@ class File:
         # 确保父目录存在，并创建一个空文件作为占位符
         Path(path).parent.mkdir(parents = True, exist_ok = True)
         Path(path).touch(exist_ok = True)
-

@@ -1,9 +1,9 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
+from util.common import signal_bus, config, Translator, Directory, File
 from util.common.enum import DownloadStatus, DownloadType, MediaType
 from util.parse.additional.worker import AdditionalParseWorker
-from util.common import signal_bus, config, Translator
 from util.thread import GlobalThreadPoolTask, AsyncTask
 from util.common.data import reversed_video_quality_map
 from util.network import get_cookies
@@ -239,8 +239,11 @@ class Downloader(QObject):
     @Slot(str)
     def on_parse_error(self, error_message: str):
         self.task_info.Download.status = DownloadStatus.FAILED
+
         self.update_item(self.task_info)
+
         signal_bus.download.auto_manage_concurrent_downloads.emit()
+
         signal_bus.toast.show_long_message.emit(
             Translator.ERROR_MESSAGES("DOWNLOAD_FAILED"),
             error_message
@@ -256,19 +259,13 @@ class Downloader(QObject):
         path = Path(self.task_info.File.download_path, self.task_info.File.folder, info.get("file_name", ""))
         path.parent.mkdir(parents = True, exist_ok = True)
 
+        # 计算文件所需空间
         file_size = info.get("file_size", 0)
+        current_size = path.stat().st_size if path.exists() else 0
+        required_space = max(file_size - current_size, 0)
 
-        if not path.exists() and file_size > 0:
-            path.touch()
-
-            # 预分配文件空间
-            if config.get(config.preallocate_file_space):
-                File.preallocate_file(path, file_size)
-
-            else:
-                # 对于不支持稀疏文件系统的环境，改为创建空白占位文件
-                File.create_placeholder(path)
-
+        # 检查磁盘空间并预分配文件
+        self._check_disk_space(path, required_space)
 
         info["file_path"] = path
         self.dispatch_chunk_threads(file_key)
@@ -371,7 +368,7 @@ class Downloader(QObject):
         start = chunk_index * chunk_size
         end = min(start + chunk_size, total_size) if total_size > 0 else 0
         return start, end
-    
+
     def calc_downloaded_size(self):
         downloaded_size = 0
         
@@ -550,3 +547,21 @@ class Downloader(QObject):
     def update_item(self, task_info: TaskInfo):
         signal_bus.download.update_downloading_item.emit(task_info)
         task_manager.update(self.task_info)
+
+    def _check_disk_space(self, path: Path, file_size: int):
+        if not Directory.has_enough_space(path.parent, file_size):
+            error_message = Translator.ERROR_MESSAGES("INSUFFICIENT_SPACE")
+
+            self.on_parse_error(error_message)
+
+            raise OSError(error_message)
+            
+        if not path.exists() and file_size > 0:
+            # 预分配文件空间
+            if config.get(config.preallocate_file_space):
+                File.preallocate_file(path, file_size)
+
+            else:
+                # 关闭预分配时，仅创建空文件占位
+                File.create_placeholder(path)
+    

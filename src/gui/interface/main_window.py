@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QTimer, QPoint
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout
 from PySide6.QtGui import QIcon, QPixmap
 
 from qfluentwidgets import (
@@ -9,16 +9,42 @@ from qfluentwidgets import (
 )
 
 from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget, InfoBar, InfoBarPosition
-from gui.interface import DownloadInterface, SettingInterface, ParseInterface
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
 from gui.component import SystemTrayIcon, ProfileCard
 from gui.dialog import LoginDialog, UpdateDialog
+from .download import DownloadInterface
+from .parse import ParseInterface
 
 from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
 from util.auth import user_manager
 from util.thread import AsyncTask
 from util.misc import Updater
+
+
+class LazyInterfaceContainer(QFrame):
+    def __init__(self, interface_name: str, factory, parent = None):
+        super().__init__(parent)
+
+        self._interface_name = interface_name
+        self._factory = factory
+        self._loaded = False
+        self._layout = QVBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+
+        self.setObjectName(interface_name)
+
+    def ensure_loaded(self):
+        if self._loaded:
+            return
+
+        interface = self._factory()
+        self._layout.addWidget(interface)
+        self._loaded = True
+
+    def showEvent(self, e):
+        self.ensure_loaded()
+        return super().showEvent(e)
 
 class MainWindow(MSFluentWindow):
     def __init__(self):
@@ -43,7 +69,7 @@ class MainWindow(MSFluentWindow):
     def init_UI(self):
         self.parse_interface = ParseInterface(self)
         self.download_interface = DownloadInterface(self)
-        self.setting_interface = SettingInterface(self)
+        self.setting_interface = LazyInterfaceContainer("SettingInterface", self._create_setting_interface, self)
 
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
 
@@ -102,6 +128,11 @@ class MainWindow(MSFluentWindow):
         if config.get(config.stay_on_top):
             self.setStayOnTop(False)
 
+    def _create_setting_interface(self):
+        from .setting import SettingInterface
+
+        return SettingInterface(self)
+
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
@@ -116,7 +147,11 @@ class MainWindow(MSFluentWindow):
 
         self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
         self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
-        self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
+        self.setting_btn.clicked.connect(self.on_setting_btn_clicked)
+
+    def on_setting_btn_clicked(self, checked = False):
+        self.update_route_key("SettingInterface")
+        self.setting_interface.ensure_loaded()
 
     def init_utils(self):
         # 监听系统主题变化

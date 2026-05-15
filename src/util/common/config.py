@@ -269,7 +269,7 @@ class APPConfig(QConfig):
     starting_number = ConfigItem("File Naming", "starting_number", 1)
 
     # Advanced
-    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server_provider", False, BoolValidator())
+    prefer_cdn_server_provider = ConfigItem("Advanced", "prefer_cdn_server", True, BoolValidator())
     cdn_server_list = ConfigItem("Advanced", "cdn_server_list", DefaultValue.cdn_server_list)
 
     ffmpeg_source = OptionsConfigItem("Advanced", "ffmpeg_source", FFmpegSource.BUNDLED, OptionsValidator(FFmpegSource), EnumSerializer(FFmpegSource), restart = True)
