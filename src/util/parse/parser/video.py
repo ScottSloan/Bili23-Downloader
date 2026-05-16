@@ -1,4 +1,5 @@
 from util.network import SyncNetWorkRequest
+from util.common import signal_bus
 
 from ..episode.video import VideoEpisodeParser
 from .base import ParserBase
@@ -44,8 +45,13 @@ class VideoParser(ParserBase):
 
         self.get_video_info()
 
-        episode_parser = VideoEpisodeParser(self.info_data.copy(), self.get_category_name())
-        episode_parser.parse()
+        if "redirect_url" in self.info_data["data"]:
+            # 存在重定向链接，停止当前解析，开启新的解析线程
+            signal_bus.parse.parse_url.emit(self.info_data["data"]["redirect_url"])
+
+        else:
+            episode_parser = VideoEpisodeParser(self.info_data.copy(), self.get_category_name())
+            episode_parser.parse()
 
     def get_video_info(self):
         params = {
@@ -58,6 +64,8 @@ class VideoParser(ParserBase):
         response = request.run()
 
         self.check_response(response)
+
+        
 
         self.info_data = response
 
