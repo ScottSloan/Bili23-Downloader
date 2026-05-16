@@ -2,7 +2,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from util.parse.parser import (
     VideoParser, BangumiParser, CheeseParser, SpaceParser, FavlistParser, ListParser, PopularParser, B23Parser, WatchLaterParser,
-    HistoryParser, FestivalParser
+    HistoryParser, FestivalParser, InteractiveVideoParser
 )
 from util.parse.episode.tree import EpisodeData
 from util.common.data import url_patterns
@@ -90,3 +90,40 @@ class ParseWorker(QObject):
 
     def on_error(self):
         logger.exception("解析失败")
+
+class ProgressParseWorker(QObject):
+    # 后台解析线程，专门用于解析互动视频，具有实时更新 UI 进度的能力
+    success = Signal()
+    error = Signal(str)
+    finished = Signal()
+
+    update_progress = Signal(str)
+
+    def __init__(self, data: dict):
+        super().__init__()
+
+        self.data = data
+
+    @Slot()
+    def run(self):
+        try:
+            self.parse_interactive_video()
+
+            self.success.emit()
+
+        except Exception as e:
+            logger.exception("解析互动视频失败")
+
+            self.error.emit(str(e))
+
+        finally:
+            self.finished.emit()
+
+    def parse_interactive_video(self):
+        parser = InteractiveVideoParser(self.data, self._update_progress_callback)
+        node_list = parser.parse()
+
+        print(len(node_list))
+
+    def _update_progress_callback(self, message: str):
+        self.update_progress.emit(message)

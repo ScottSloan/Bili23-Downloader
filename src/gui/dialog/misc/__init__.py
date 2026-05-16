@@ -1,3 +1,4 @@
+from .interactive_video import InteractiveVideoDialog
 from .parse_history import ParseHistoryDialog
 from .batch_select import BatchSelectDialog
 from .jump_to_page import JumpToPageDialog

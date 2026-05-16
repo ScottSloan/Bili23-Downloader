@@ -29,6 +29,8 @@ class SignalBus:
 
         search_keyword = Signal(str)
 
+        show_interactive_video_dialog = Signal(dict)
+
     class Download(QObject):
         create_task = Signal(list)
 

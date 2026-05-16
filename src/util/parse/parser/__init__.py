@@ -1,3 +1,4 @@
+from .video import VideoParser, InteractiveVideoParser
 from .watch_later import WatchLaterParser
 from .favorite import FavoriteParser
 from .festival import FestivalParser
@@ -6,7 +7,6 @@ from .popular import PopularParser
 from .favlist import FavlistParser
 from .history import HistoryParser
 from .cheese import CheeseParser
-from .video import VideoParser
 from .space import SpaceParser
 from .list import ListParser
 from .b23 import B23Parser

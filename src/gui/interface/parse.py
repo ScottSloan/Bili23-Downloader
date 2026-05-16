@@ -4,17 +4,17 @@ from PySide6.QtGui import QKeyEvent
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
+from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog, JumpToPageDialog, InteractiveVideoDialog
 from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox
-from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog, JumpToPageDialog
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse_list import ParseTreeView
 
 from util.common import signal_bus, config, Translator, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, NumberingType
+from util.parse.worker import ParseWorker, ProgressParseWorker
 from util.parse.preview import Previewer, PreviewerInfo
 from util.thread import AsyncTask, GlobalThreadPoolTask
 from util.common.data import url_patterns
-from util.parse.worker import ParseWorker
 from util.download import task_manager
 from util.misc import history_manager
 
@@ -93,6 +93,35 @@ class ParseBase(QFrame):
         else:
             return True
 
+    def adjust_column_width(self):
+        header = self.parse_list.header()
+
+        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
+
+    def reparse(self, url: str):
+        self.url_box.setText(url)
+        
+        self.on_parse()
+
+    def on_show_interactive_video_dialog(self, data: dict):
+        # 显示互动视频对话框，询问用户是否探查所有节点
+        dialog = InteractiveVideoDialog(data, self.main_window)
+
+        if dialog.exec():
+            if dialog.auto_radio.isChecked():
+                self.start_progress_parse_worker(dialog.get_data())
+
+    def start_progress_parse_worker(self, data: dict):
+        # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
+        worker = ProgressParseWorker(data)
+        worker.update_progress.connect(self.on_progress_update)
+
+        AsyncTask.run(worker)
+
+    def on_progress_update(self, message: str):
+        self.progress_lab.setText(message)
+        self.progress_lab.show()
+
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -138,6 +167,9 @@ class ParseInterface(ParseBase):
         self.season_choice.setFixedWidth(150)
         self.season_choice.hide()
 
+        self.progress_lab = BodyLabel(self)
+        self.progress_lab.hide()
+
         self.download_btn = IndeterminateProgressPushButton(self.tr("Download Selected Items"), self)
         self.download_btn.setMinimumWidth(120)
         self.download_btn.setEnabled(False)
@@ -155,6 +187,7 @@ class ParseInterface(ParseBase):
         bottom_layout = QHBoxLayout()
         bottom_layout.addWidget(self.segmented_widget)
         bottom_layout.addWidget(self.season_choice)
+        bottom_layout.addWidget(self.progress_lab)
         bottom_layout.addStretch()
         bottom_layout.addWidget(self.download_btn)
 
@@ -182,6 +215,7 @@ class ParseInterface(ParseBase):
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
+        signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
@@ -385,22 +419,12 @@ class ParseInterface(ParseBase):
         else:
             return super().keyPressEvent(event)
 
-    def reparse(self, url: str):
-        self.url_box.setText(url)
-        
-        self.on_parse()
-
     def _create_action(self, icon, text, slot):
         action = Action(icon = icon, text = text, parent = self)
         action.triggered.connect(slot)
 
         return action
     
-    def adjust_column_width(self):
-        header = self.parse_list.header()
-
-        header.setSectionResizeMode(1, header.ResizeMode.Stretch)
-
     def on_season_changed(self, url: str):
         # 切换季时重新解析
         self.reparse(url)

@@ -1367,7 +1367,7 @@ File name: {filename}</source>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/exit.py" line="31"/>
-        <source>Don’t ask again</source>
+        <source>Don&apos;t ask again</source>
         <translation>不再詢問</translation>
     </message>
 </context>
@@ -1491,6 +1491,34 @@ File name: {filename}</source>
         <location filename="../../gui/component/setting/widget.py" line="114"/>
         <source>Insert</source>
         <translation>插入</translation>
+    </message>
+</context>
+<context>
+    <name>InteractiveVideoDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="14"/>
+        <source>Interactive Video</source>
+        <translation>互動影片</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="16"/>
+        <source>Detection of interactive video, please select an operation</source>
+        <translation>偵測到互動式影片，請選擇一項操作</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="18"/>
+        <source>Automatically scan all nodes</source>
+        <translation>自動探查所有節點</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="20"/>
+        <source>Manually select nodes</source>
+        <translation>手動選擇節點</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="27"/>
+        <source>Don&apos;t ask again</source>
+        <translation>不再詢問</translation>
     </message>
 </context>
 <context>
@@ -2064,82 +2092,82 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="110"/>
+        <location filename="../../gui/interface/parse.py" line="125"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="114"/>
+        <location filename="../../gui/interface/parse.py" line="129"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="119"/>
+        <location filename="../../gui/interface/parse.py" line="134"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="125"/>
+        <location filename="../../gui/interface/parse.py" line="140"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="129"/>
+        <location filename="../../gui/interface/parse.py" line="144"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="141"/>
+        <location filename="../../gui/interface/parse.py" line="156"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="243"/>
+        <location filename="../../gui/interface/parse.py" line="259"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="268"/>
+        <location filename="../../gui/interface/parse.py" line="284"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="283"/>
+        <location filename="../../gui/interface/parse.py" line="299"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="284"/>
+        <location filename="../../gui/interface/parse.py" line="300"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="285"/>
+        <location filename="../../gui/interface/parse.py" line="301"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="294"/>
+        <location filename="../../gui/interface/parse.py" line="310"/>
         <source>Jump to page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="319"/>
+        <location filename="../../gui/interface/parse.py" line="335"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="325"/>
+        <location filename="../../gui/interface/parse.py" line="341"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="358"/>
+        <location filename="../../gui/interface/parse.py" line="374"/>
         <source>Invalid page number</source>
         <translation>無效的頁碼</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="358"/>
+        <location filename="../../gui/interface/parse.py" line="374"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>

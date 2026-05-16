@@ -28,7 +28,7 @@ class ExitDialog(DialogBase):
         radio_layout.addWidget(self.minimize_radio)
         radio_layout.addStretch()
 
-        self.never_ask_check = CheckBox(self.tr("Don’t ask again"), self)
+        self.never_ask_check = CheckBox(self.tr("Don't ask again"), self)
 
         self.viewLayout.addWidget(caption_lab)
         self.viewLayout.addSpacing(10)
