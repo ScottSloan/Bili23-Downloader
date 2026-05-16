@@ -4,17 +4,17 @@
 <context>
     <name>ADDITIONAL_FILES_QUALIFIER</name>
     <message>
-        <location filename="../../util/common/translator.py" line="273"/>
+        <location filename="../../util/common/translator.py" line="274"/>
         <source>Danmaku</source>
         <translation>彈幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="274"/>
+        <location filename="../../util/common/translator.py" line="275"/>
         <source>Subtitles</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../../util/common/translator.py" line="275"/>
+        <location filename="../../util/common/translator.py" line="276"/>
         <source>Metadata</source>
         <translation>元數據</translation>
     </message>
@@ -1496,27 +1496,27 @@ File name: {filename}</source>
 <context>
     <name>InteractiveVideoDialog</name>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="14"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="16"/>
         <source>Interactive Video</source>
         <translation>互動影片</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="16"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="18"/>
         <source>Detection of interactive video, please select an operation</source>
         <translation>偵測到互動式影片，請選擇一項操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="18"/>
-        <source>Automatically scan all nodes</source>
-        <translation>自動探查所有節點</translation>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="20"/>
+        <source>Automatically parse all nodes</source>
+        <translation>自動解析所有節點</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="20"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="22"/>
         <source>Manually select nodes</source>
         <translation>手動選擇節點</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/misc/interactive_video.py" line="27"/>
+        <location filename="../../gui/dialog/misc/interactive_video.py" line="29"/>
         <source>Don&apos;t ask again</source>
         <translation>不再詢問</translation>
     </message>
@@ -1613,7 +1613,7 @@ File name: {filename}</source>
 <context>
     <name>MEDIA_INFO_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="280"/>
+        <location filename="../../util/common/translator.py" line="281"/>
         <source>The media info shown here defaults to the first video in the parsed results. If multiple videos are available,
 this information may not exactly match the one you download—use it for reference only.
 
@@ -1913,7 +1913,7 @@ To get a single complete video file, please enable &quot;Merge video and audio&q
 <context>
     <name>NAMING_RULE_GUIDE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="290"/>
+        <location filename="../../util/common/translator.py" line="291"/>
         <source>Customize the file name and folder structure using variables.
 
 Rules:
@@ -2092,82 +2092,82 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="125"/>
+        <location filename="../../gui/interface/parse.py" line="146"/>
         <source>Paste and Parse</source>
         <translation>貼上並解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="129"/>
+        <location filename="../../gui/interface/parse.py" line="150"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>連結 / av / BV / ep / ss / md / 收藏夾 / 個人空間</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="134"/>
+        <location filename="../../gui/interface/parse.py" line="155"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="140"/>
+        <location filename="../../gui/interface/parse.py" line="161"/>
         <source>Download Options</source>
         <translation>下載選項</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="144"/>
+        <location filename="../../gui/interface/parse.py" line="165"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="156"/>
+        <location filename="../../gui/interface/parse.py" line="180"/>
         <source>Download Selected Items</source>
         <translation>下載所選項目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="259"/>
+        <location filename="../../gui/interface/parse.py" line="285"/>
         <source>Parse Failed</source>
         <translation>解析失敗</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="284"/>
+        <location filename="../../gui/interface/parse.py" line="310"/>
         <source>Added to download queue</source>
         <translation>已加入下載佇列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="299"/>
+        <location filename="../../gui/interface/parse.py" line="325"/>
         <source>Search</source>
         <translation>搜尋</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="300"/>
+        <location filename="../../gui/interface/parse.py" line="326"/>
         <source>Batch select</source>
         <translation>批次選取</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="301"/>
+        <location filename="../../gui/interface/parse.py" line="327"/>
         <source>Parsing history</source>
         <translation>解析記錄</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="310"/>
+        <location filename="../../gui/interface/parse.py" line="336"/>
         <source>Jump to page</source>
         <translation>跳至頁面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="335"/>
+        <location filename="../../gui/interface/parse.py" line="361"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已選取 {selected_count} 項，共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="341"/>
+        <location filename="../../gui/interface/parse.py" line="367"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 項）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="374"/>
+        <location filename="../../gui/interface/parse.py" line="400"/>
         <source>Invalid page number</source>
         <translation>無效的頁碼</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="374"/>
+        <location filename="../../gui/interface/parse.py" line="400"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>請輸入1到{total_pages}之間的一個數字</translation>
     </message>
@@ -3003,7 +3003,7 @@ ISP：{isp}</translation>
 <context>
     <name>TERMS_OF_USE</name>
     <message>
-        <location filename="../../util/common/translator.py" line="307"/>
+        <location filename="../../util/common/translator.py" line="308"/>
         <source>&lt;html&gt;This software is intended solely for personal learning and research purposes. Any content downloaded through this project &lt;b&gt;is strictly limited to personal, non-commercial use and must not be used for any commercial purpose, public distribution, sharing, resale, or unlawful profit.&lt;/b&gt;
 &lt;br&gt;&lt;br&gt;
 This software operates exclusively based on the user&apos;s own legitimate account access rights and &lt;b&gt;does not bypass any paywalls, membership restrictions, or technical protection measures.&lt;/b&gt; You may only download content that you are authorized to access through your normal login on the target platform. If your account does not have permission to access certain content, this software must not be used to obtain it.
@@ -3095,6 +3095,11 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
         <location filename="../../util/common/translator.py" line="266"/>
         <source>Scraping Metadata...</source>
         <translation>刮削元數據中...</translation>
+    </message>
+    <message>
+        <location filename="../../util/common/translator.py" line="267"/>
+        <source>Parsing node: {title}...</source>
+        <translation>正在解析節點：{title}</translation>
     </message>
     <message>
         <location filename="../../util/common/translator.py" line="255"/>

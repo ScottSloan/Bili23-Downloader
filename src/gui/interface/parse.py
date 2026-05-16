@@ -114,6 +114,7 @@ class ParseBase(QFrame):
     def start_progress_parse_worker(self, data: dict):
         # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
         worker = ProgressParseWorker(data)
+        worker.success.connect(self.on_parse_success)
         worker.update_progress.connect(self.on_progress_update)
 
         AsyncTask.run(worker)
@@ -122,6 +123,12 @@ class ParseBase(QFrame):
         self.progress_lab.setText(message)
         self.progress_lab.show()
 
+    def on_update_parse_list_count(self, category_name: str):
+        # 更新解析结果总数的显示
+        self.category_name = Translator.EPISODE_TYPE(category_name)
+
+        self.on_item_check_state_changed(None)
+        
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):
         super().__init__(parent = parent)
@@ -213,6 +220,7 @@ class ParseInterface(ParseBase):
         self.download_btn.clicked.connect(self.on_download)
 
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
+        signal_bus.parse.update_parse_list_count.connect(self.on_update_parse_list_count)
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
         signal_bus.parse.show_interactive_video_dialog.connect(self.on_show_interactive_video_dialog)

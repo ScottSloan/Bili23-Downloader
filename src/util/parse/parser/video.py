@@ -1,6 +1,7 @@
+from util.common import signal_bus, Translator
 from util.network import SyncNetWorkRequest
-from util.common import signal_bus
 
+from ..episode.dynamic import DynamicEpisodeParser
 from ..episode.video import VideoEpisodeParser
 from .base import ParserBase
 
@@ -40,9 +41,11 @@ class InteractiveVideoParser(ParserBase):
     def __init__(self, data: dict, update_progress_callback: Callable):
         super().__init__()
 
-        self.bvid = data.get("bvid")
-        self.aid = data.get("aid")
-        self.cid = data.get("cid")
+        self.info_data: dict = data["data"]
+
+        self.bvid = self.info_data["bvid"]
+        self.aid = self.info_data["aid"]
+        self.cid = self.info_data["cid"]
 
         self.graph_version = None
         self.node_list: List[Node] = []
@@ -54,7 +57,12 @@ class InteractiveVideoParser(ParserBase):
     def parse(self):
         self.get_graph_version()
 
-        return self.parse_interactive_video_episodes()
+        self.episode_parser = DynamicEpisodeParser(self.info_data, self.get_category_name())
+
+        self.parse_interactive_video_episodes()
+
+        # 清空进度提示
+        self.update_progress("")
 
     def get_graph_version(self):
         # 获取 graph_version
@@ -105,7 +113,7 @@ class InteractiveVideoParser(ParserBase):
             self.node_map[cid] = node
             self.node_list.append(node)
 
-            self.update_progress("正在解析节点：" + title)
+            self._update_ui_progress(title)
 
         elif title and node.title != title:
             node.title = title
@@ -176,6 +184,17 @@ class InteractiveVideoParser(ParserBase):
 
         return self.node_list
 
+    def get_category_name(self):
+        # 互动视频
+        return "INTERACTIVE"
+    
+    def _update_ui_progress(self, title: str):
+        self.update_progress(Translator.TIP_MESSAGES("PARSING_INTERACTIVE_VIDEO_NODE").format(title = title))
+
+        self.episode_parser.update(title)
+
+        signal_bus.parse.update_parse_list_count.emit(self.get_category_name())
+
 class VideoParser(ParserBase):
     def __init__(self):
         super().__init__()
@@ -223,7 +242,7 @@ class VideoParser(ParserBase):
 
         elif self.is_interactive_video:
             # 互动视频，询问用户是否探查所有节点
-            signal_bus.parse.show_interactive_video_dialog.emit(self.get_interactive_video_data())
+            signal_bus.parse.show_interactive_video_dialog.emit(self.info_data.copy())
 
         else:
             episode_parser = VideoEpisodeParser(self.info_data.copy(), self.get_category_name())

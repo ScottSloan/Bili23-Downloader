@@ -17,7 +17,7 @@ class InteractiveVideoDialog(DialogBase):
 
         tip_lab = BodyLabel(self.tr("Detection of interactive video, please select an operation"), self)
 
-        self.auto_radio = RadioButton(self.tr("Automatically scan all nodes"), self)
+        self.auto_radio = RadioButton(self.tr("Automatically parse all nodes"), self)
         self.auto_radio.setChecked(True)
         self.manual_radio = RadioButton(self.tr("Manually select nodes"), self)
 

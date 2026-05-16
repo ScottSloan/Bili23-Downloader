@@ -263,7 +263,8 @@ class Translator:
             "DOWNLOADING_DANMAKU": translate("TIP_MESSAGES", "Downloading Danmaku..."),
             "DOWNLOADING_SUBTITLES": translate("TIP_MESSAGES", "Downloading Subtitles..."),
             "DOWNLOADING_COVER": translate("TIP_MESSAGES", "Downloading Cover..."),
-            "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata...")
+            "SCRAPING_METADATA": translate("TIP_MESSAGES", "Scraping Metadata..."),
+            "PARSING_INTERACTIVE_VIDEO_NODE": translate("TIP_MESSAGES", "Parsing node: {title}...")
         }
 
     @staticmethod

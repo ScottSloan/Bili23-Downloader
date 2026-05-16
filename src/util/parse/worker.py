@@ -93,7 +93,7 @@ class ParseWorker(QObject):
 
 class ProgressParseWorker(QObject):
     # 后台解析线程，专门用于解析互动视频，具有实时更新 UI 进度的能力
-    success = Signal()
+    success = Signal(str, dict)
     error = Signal(str)
     finished = Signal()
 
@@ -107,9 +107,9 @@ class ProgressParseWorker(QObject):
     @Slot()
     def run(self):
         try:
-            self.parse_interactive_video()
+            parser = self.parse_interactive_video()
 
-            self.success.emit()
+            self.success.emit(parser.get_category_name(), {})
 
         except Exception as e:
             logger.exception("解析互动视频失败")
@@ -121,9 +121,9 @@ class ProgressParseWorker(QObject):
 
     def parse_interactive_video(self):
         parser = InteractiveVideoParser(self.data, self._update_progress_callback)
-        node_list = parser.parse()
+        parser.parse()
 
-        print(len(node_list))
+        return parser
 
     def _update_progress_callback(self, message: str):
         self.update_progress.emit(message)
