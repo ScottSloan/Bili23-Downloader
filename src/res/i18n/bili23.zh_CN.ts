@@ -2133,6 +2133,16 @@ For advanced usage, see the help documentation.</source>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="358"/>
+        <source>Invalid page number</source>
+        <translation>无效页码</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="358"/>
+        <source>Please enter a number between 1 and {total_pages}</source>
+        <translation>请输入一个介于1和{total_pages}之间的数字</translation>
+    </message>
 </context>
 <context>
     <name>ParseListSettingsDialog</name>

@@ -347,7 +347,15 @@ class ParseInterface(ParseBase):
 
     def on_jump_to_page(self):
         dialog = JumpToPageDialog(self.main_window)
-        dialog.exec()
+
+        if dialog.exec():
+            page_number = int(dialog.page_box.text())
+
+            if 1 <= page_number <= self.pager.total_pages:
+                self.segmented_widget.pager_widget.on_change_page(page_number)
+
+            else:
+                signal_bus.toast.show.emit(ToastNotificationCategory.WARNING, self.tr("Invalid page number"), self.tr("Please enter a number between 1 and {total_pages}").format(total_pages = self.pager.total_pages))
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:
