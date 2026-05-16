@@ -954,7 +954,7 @@
 <context>
     <name>Downloader</name>
     <message>
-        <location filename="../../util/download/downloader/downloader.py" line="396"/>
+        <location filename="../../util/download/downloader/downloader.py" line="510"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
@@ -1209,110 +1209,110 @@
 <context>
     <name>EditRuleDialog</name>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="46"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="47"/>
         <source>Edit Naming Rule</source>
         <translation>编辑命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="48"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="49"/>
         <source>Rule Name</source>
         <translation>规则名称</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="51"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="52"/>
         <source>Rule Type</source>
         <translation>规则类型</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="55"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="56"/>
         <source>Naming Rule</source>
         <translation>命名规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="58"/>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="199"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="59"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="200"/>
         <source>Preview</source>
         <translation>预览</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="65"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="66"/>
         <source>Set as default rule for this type</source>
         <translation>设为该类型的默认规则</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="67"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="68"/>
         <source>Guide</source>
         <translation>说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="70"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="71"/>
         <source>Open help page</source>
         <translation>打开帮助页面</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="119"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="120"/>
         <source>Variable</source>
         <translation>变量名</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="120"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="121"/>
         <source>Description</source>
         <translation>含义</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="121"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="122"/>
         <source>Example</source>
         <translation>示例</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="122"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="123"/>
         <source>Actions</source>
         <translation>操作</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="168"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="169"/>
         <source>Rule name cannot be empty</source>
         <translation>规则名称不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="200"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="201"/>
         <source>Folder: {folder}
 File name: {filename}</source>
         <translation>子目录：{folder}
 文件名：{filename}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="212"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="213"/>
         <source>Naming Rule Guide</source>
         <translation>简要说明</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="226"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="227"/>
         <source>Naming rule cannot be empty</source>
         <translation>命名规则不能为空</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="229"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="230"/>
         <source>Rule must not start or end with &apos;/&apos; or &apos;.&apos;</source>
         <translation>命名规则不能以 &apos;/&apos; 或 &apos;.&apos; 开头或结尾</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="238"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="240"/>
         <source>Rule contains illegal characters: &lt;&gt;:\&quot;|?* or control characters</source>
         <translation>命名规则包含非法字符：&lt;&gt;:\&quot;|?* 或控制字符</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="246"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="248"/>
         <source>Invalid naming rule</source>
         <translation>命名规则无效</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="251"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="253"/>
         <source>Copy Variable</source>
         <translation>复制变量</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/edit_rule.py" line="254"/>
+        <location filename="../../gui/dialog/setting/edit_rule.py" line="256"/>
         <source>Insert Variable</source>
         <translation>插入变量</translation>
     </message>
@@ -1491,6 +1491,19 @@ File name: {filename}</source>
         <location filename="../../gui/component/setting/widget.py" line="114"/>
         <source>Insert</source>
         <translation>插入</translation>
+    </message>
+</context>
+<context>
+    <name>JumpToPageDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/jump_to_page.py" line="14"/>
+        <source>Jump To Page</source>
+        <translation>跳转到页面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/jump_to_page.py" line="17"/>
+        <source>Enter page number</source>
+        <translation>输入页码</translation>
     </message>
 </context>
 <context>
@@ -1980,6 +1993,24 @@ For advanced usage, see the help documentation.</source>
     </message>
 </context>
 <context>
+    <name>Pager</name>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="28"/>
+        <source>Previous page</source>
+        <translation>上一页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="32"/>
+        <source>Next page</source>
+        <translation>下一页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/component/widget/pager.py" line="142"/>
+        <source>{total_pages} total / {total_items} items</source>
+        <translation>共 {total_pages} 页 / {total_items} 个</translation>
+    </message>
+</context>
+<context>
     <name>ParseActionWidget</name>
     <message>
         <location filename="../../gui/component/setting/widget.py" line="107"/>
@@ -2033,32 +2064,32 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="111"/>
+        <location filename="../../gui/interface/parse.py" line="110"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="115"/>
+        <location filename="../../gui/interface/parse.py" line="114"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="120"/>
+        <location filename="../../gui/interface/parse.py" line="119"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="126"/>
+        <location filename="../../gui/interface/parse.py" line="125"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="130"/>
+        <location filename="../../gui/interface/parse.py" line="129"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="142"/>
+        <location filename="../../gui/interface/parse.py" line="141"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
@@ -2088,12 +2119,17 @@ For advanced usage, see the help documentation.</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="310"/>
+        <location filename="../../gui/interface/parse.py" line="294"/>
+        <source>Jump to page</source>
+        <translation>跳转到页面</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="319"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="316"/>
+        <location filename="../../gui/interface/parse.py" line="325"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>

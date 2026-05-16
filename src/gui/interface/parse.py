@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
-from PySide6.QtGui import QKeyEvent
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeyEvent
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
 from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox
-from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog
+from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog, JumpToPageDialog
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse_list import ParseTreeView
 
@@ -18,7 +18,6 @@ from util.parse.worker import ParseWorker
 from util.download import task_manager
 from util.misc import history_manager
 
-from functools import wraps
 import re
 
 class ParseBase(QFrame):
@@ -175,7 +174,7 @@ class ParseInterface(ParseBase):
         self.url_box.returnPressed.connect(self.on_parse)
 
         self.download_option_btn.clicked.connect(self.on_download_options)
-        self.show_more_btn.clicked.connect(self.on_show_more)
+        self.show_more_btn.clicked.connect(self.on_top_layout_show_more_menu)
 
         self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
         self.download_btn.clicked.connect(self.on_download)
@@ -186,6 +185,7 @@ class ParseInterface(ParseBase):
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
+        self.segmented_widget.pager_widget.menu_btn.clicked.connect(self.on_pager_show_more_menu)
 
         self.season_choice.changeSeason.connect(self.on_season_changed)
 
@@ -277,7 +277,7 @@ class ParseInterface(ParseBase):
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
 
-    def on_show_more(self):
+    def on_top_layout_show_more_menu(self):
         menu = RoundMenu(parent = self)
 
         menu.addAction(self._create_action(FluentIcon.SEARCH, self.tr("Search"), self.on_search))
@@ -285,6 +285,15 @@ class ParseInterface(ParseBase):
         menu.addAction(self._create_action(FluentIcon.HISTORY, self.tr("Parsing history"), self.on_history))
 
         pos = self.show_more_btn.mapToGlobal(self.show_more_btn.rect().bottomLeft())
+
+        menu.exec(pos)
+
+    def on_pager_show_more_menu(self, page):
+        menu = RoundMenu(parent = self)
+
+        menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("Jump to page"), self.on_jump_to_page))
+
+        pos = self.pager.menu_btn.mapToGlobal(self.pager.menu_btn.rect().bottomLeft())
 
         menu.exec(pos)
 
@@ -336,6 +345,10 @@ class ParseInterface(ParseBase):
         dialog = ParseHistoryDialog(self.main_window)
         dialog.exec()
 
+    def on_jump_to_page(self):
+        dialog = JumpToPageDialog(self.main_window)
+        dialog.exec()
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A:
             # Ctrl + A 快捷键全选
@@ -384,3 +397,6 @@ class ParseInterface(ParseBase):
         # 切换季时重新解析
         self.reparse(url)
 
+    @property
+    def pager(self):
+        return self.segmented_widget.pager_widget
