@@ -1,5 +1,5 @@
-from util.common.data import badge_map
-from util.common import Translator
+from ...common.translator import Translator
+from ...common.data import badge_map
 
 from .tree import TreeItem, EpisodeData, Attribute
 from .base import EpisodeParserBase

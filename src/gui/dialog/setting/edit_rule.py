@@ -9,8 +9,8 @@ from gui.component.dialog import DialogBase
 
 from util.common.data import convention_type_map, VariableListFactory
 from util.common.enum import ToastNotificationCategory
-from util.format import FileNameFormatter
-from util.common import Translator
+from util.common.translator import Translator
+from util.format.file_name import FileNameFormatter
 
 from functools import wraps
 from pathlib import Path

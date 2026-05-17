@@ -1,7 +1,9 @@
 from PySide6.QtCore import QModelIndex, Qt, QSize
 from PySide6.QtWidgets import QAbstractItemView
 
-from util.download import TaskInfo, task_manager, downloader_manager
+from util.download.downloader.manager import downloader_manager
+from util.download.task.manager import task_manager
+from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
 from util.common import signal_bus, config
 

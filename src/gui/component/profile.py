@@ -6,7 +6,7 @@ from qfluentwidgets import (
 
 from util.common.enum import ToastNotificationCategory
 from util.common import signal_bus, config
-from util.auth import user_manager
+from util.auth.user import user_manager
 
 class ProfileCard(FlyoutViewBase):
     """

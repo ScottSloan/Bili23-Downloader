@@ -4,7 +4,7 @@ from PySide6.QtCore import QTimer
 from gui.dialog.download_options.card import MediaInfoCard, MediaOptionsCard, MessageBox
 from gui.component.widget import ScrollArea
 
-from util.parse.preview import PreviewerInfo
+from util.parse.preview.info import PreviewerInfo
 from util.common import signal_bus, config
 
 class MediaSettingsPage(ScrollArea):

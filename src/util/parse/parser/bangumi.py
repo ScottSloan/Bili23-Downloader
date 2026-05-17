@@ -1,5 +1,5 @@
-from util.common.data import bangumi_type_map
-from util.network import SyncNetWorkRequest
+from ...network.request import SyncNetWorkRequest
+from ...common.data import bangumi_type_map
 
 from ..episode.bangumi import BangumiEpisodeParser
 from .base import ParserBase

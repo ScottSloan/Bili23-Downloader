@@ -60,11 +60,12 @@ from PySide6.QtGui import QFont
 
 from qfluentwidgets import FluentTranslator
 
-from util.auth import user_manager, cookie_manager
-from util.common import config
+from util.auth.cookie import cookie_manager
+from util.auth.user import user_manager
+from util.common.config import config
 import res.resources_rc
 
-from gui.interface import MainWindow
+from gui.interface.main_window import MainWindow
 
 INSTANCE_LOCK_NAME = "instance.lock"
 INSTANCE_LOCK_TIMEOUT_MS = 10_000

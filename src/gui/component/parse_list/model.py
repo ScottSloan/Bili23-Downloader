@@ -5,7 +5,10 @@ from qfluentwidgets import themeColor, isDarkTheme
 
 from .header import StrFormatter, DurationFormatter, DateFormatter
 
-from util.common import config, signal_bus, Translator
+from util.common.translator import Translator
+from util.common.signal_bus import signal_bus
+from util.common.config import config
+
 from util.parse.episode.tree import TreeItem
 
 class ParseModel(QAbstractItemModel):

@@ -12,8 +12,10 @@ from gui.component.entry_list import EntryListView
 from .button import TransparentToolButton
 from .pager import Pager
 
-from util.common import ExtendedFluentIcon, signal_bus, config
-from util.parse.parser import FavoriteParser
+from util.parse.parser.favorite import FavoriteParser
+from util.common.icon import ExtendedFluentIcon
+from util.common.signal_bus import signal_bus
+from util.common.config import config
 
 from typing import Union
 import webbrowser

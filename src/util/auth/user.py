@@ -1,6 +1,9 @@
-from util.network import NetworkRequestWorker, SyncNetWorkRequest, RequestType, ResponseType
-from util.common import signal_bus, config, Translator
-from util.thread import AsyncTask
+from ..common.signal_bus import signal_bus
+from ..common.translator import Translator
+from ..common.config import config
+
+from ..network.request import NetworkRequestWorker, RequestType, ResponseType
+from ..thread.async_ import AsyncTask
 from .base import AuthBase
 
 from pathlib import Path

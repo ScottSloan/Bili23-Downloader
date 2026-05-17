@@ -1,15 +1,22 @@
 from PySide6.QtCore import QRunnable, QThreadPool, QObject, QTimer, Slot, QMetaObject, Q_ARG
 from PySide6.QtCore import Qt
 
-from util.common import signal_bus, config, Translator, Directory, File
-from util.common.enum import DownloadStatus, DownloadType, MediaType
-from util.parse.additional.worker import AdditionalParseWorker
-from util.thread import GlobalThreadPoolTask, AsyncTask
-from util.common.data import reversed_video_quality_map
-from util.network import get_cookies
+from ...common.enum import DownloadStatus, DownloadType, MediaType
+from ...common.data import reversed_video_quality_map
+from ...common.io.directory import Directory
+from ...common.translator import Translator
+from ...common.signal_bus import signal_bus
+from ...common.config import config
+from ...common.io.file import File
 
-from ..task.info import TaskInfo
+from ...parse.additional.worker import AdditionalParseWorker
+from ...thread.pool import GlobalThreadPoolTask
+from ...network.request import get_cookies
+from ...thread.async_ import AsyncTask
+
 from ..task.manager import task_manager
+from ..task.info import TaskInfo
+
 from .parse_worker import ParseWorker
 from .merger import Merger
 

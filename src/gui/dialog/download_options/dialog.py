@@ -7,7 +7,7 @@ from .additional import AdditionalSettingsPage
 from .download import DownloadSettingsPage
 from .media import MediaSettingsPage
 
-from util.common import ExtendedFluentIcon
+from util.common.icon import ExtendedFluentIcon
 
 class DownloadOptionsDialog(TopNavigationDialogBase):
     def __init__(self, parent = None):

@@ -1,5 +1,5 @@
-from util.network import SyncNetWorkRequest, ResponseType
-from util.common import Translator
+from ...network.request import SyncNetWorkRequest, ResponseType
+from ...common.translator import Translator
 
 class B23Parser:
     def __init__(self):

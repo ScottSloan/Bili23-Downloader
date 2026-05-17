@@ -9,7 +9,10 @@ from qfluentwidgets import (
 
 from gui.component.widget import ToolButton
 
-from util.common import ExtendedFluentIcon, config, Directory, signal_bus
+from util.common.icon import ExtendedFluentIcon
+from util.common.io.directory import Directory
+from util.common.signal_bus import signal_bus
+from util.common.config import config
 
 class SortFlyoutWidget(FlyoutViewBase):
     closed = Signal()

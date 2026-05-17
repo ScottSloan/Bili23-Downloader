@@ -1,8 +1,8 @@
-from pathlib import Path
-from util.common.enum import FileConflictResolution
-from util.common import config
+from ..enum import FileConflictResolution
+from ..config import config
 
 from threading import Lock
+from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)

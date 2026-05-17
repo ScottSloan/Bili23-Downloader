@@ -1,5 +1,5 @@
-from util.common import signal_bus
-from util.format import Units
+from ...common.signal_bus import signal_bus
+from ...format.units import Units
 
 from .tree import TreeItem, Attribute
 

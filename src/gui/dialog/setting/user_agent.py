@@ -5,7 +5,7 @@ from gui.component.dialog import DialogBase
 from qfluentwidgets import LineEdit, SubtitleLabel
 
 from util.common.enum import ToastNotificationCategory
-from util.common import config
+from util.common.config import config
 
 class UserAgentDialog(DialogBase):
     def __init__(self, parent = None):

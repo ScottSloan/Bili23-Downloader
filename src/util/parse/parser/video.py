@@ -1,5 +1,6 @@
-from util.common import signal_bus, Translator
-from util.network import SyncNetWorkRequest
+from ...network.request import SyncNetWorkRequest
+from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
 
 from ..episode.dynamic import DynamicEpisodeParser
 from ..episode.video import VideoEpisodeParser

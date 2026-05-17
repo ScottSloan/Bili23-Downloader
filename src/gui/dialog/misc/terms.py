@@ -2,7 +2,8 @@ from qfluentwidgets import SubtitleLabel, TextBrowser, setCustomStyleSheet
 
 from gui.component.dialog import DialogBase
 
-from util.common import Translator, config
+from util.common.translator import Translator
+from util.common.config import config
 
 class TermsOfUseDialog(DialogBase):
     def __init__(self, parent = None):

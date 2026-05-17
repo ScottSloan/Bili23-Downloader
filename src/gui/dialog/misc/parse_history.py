@@ -7,9 +7,11 @@ from gui.component.setting import ParseActionWidget
 from gui.component.widget import ColumnTreeWidget
 from gui.component.dialog import DialogBase
 
-from util.common import signal_bus, Translator, ExtendedFluentIcon
-from util.misc import history_manager
-from util.format import Time
+from util.common.icon import ExtendedFluentIcon
+from util.common.signal_bus import signal_bus
+from util.common.translator import Translator
+from util.misc.history import history_manager
+from util.format.time import Time
 
 class ParseHistoryDialog(DialogBase):
     def __init__(self, parent = None):

@@ -8,7 +8,8 @@ from qfluentwidgets import (
 from .widget import PivotItem, Pivot
 
 from util.common.enum import ToastNotificationCategory
-from util.common import StyleSheet, config
+from util.common.style_sheet import StyleSheet
+from util.common.config import config
 
 class Base:
     def __init__(self):

@@ -1,6 +1,6 @@
-from util.common import Translator
+from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class DynamicEpisodeParser(EpisodeParserBase):

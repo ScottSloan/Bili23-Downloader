@@ -1,5 +1,5 @@
-from util.common.enum import ProxyType
-from util.common import config
+from ..common.enum import ProxyType
+from ..common.config import config
 
 class Proxy:
     def __init__(self):

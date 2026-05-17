@@ -1,13 +1,11 @@
 from PySide6.QtCore import Signal, QObject, Slot
 
-from util.common import config
-
+from ..common.config import config
 from .proxy import Proxy
 
 from enum import Enum
-
-import httpx
 import logging
+import httpx
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 

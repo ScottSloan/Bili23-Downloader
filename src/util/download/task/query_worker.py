@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Signal, Slot
 
-from util.common.enum import DownloadStatus
+from ...common.enum import DownloadStatus
 
 from .manager import task_manager
 from .info import TaskInfo

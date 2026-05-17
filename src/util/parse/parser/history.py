@@ -1,6 +1,5 @@
-from util.network import SyncNetWorkRequest
-
 from ..episode.history import HistoryEpisodeParser
+from ...network.request import SyncNetWorkRequest
 from .base import ParserBase
 
 from urllib.parse import urlencode

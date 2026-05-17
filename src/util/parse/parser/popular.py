@@ -1,6 +1,5 @@
-from util.network import SyncNetWorkRequest
-
 from ..episode.popular import PopularEpisodeParser
+from ...network.request import SyncNetWorkRequest
 from .base import ParserBase
 
 class PopularParser(ParserBase):

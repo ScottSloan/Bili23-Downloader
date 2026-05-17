@@ -6,11 +6,13 @@ from qfluentwidgets import FluentIcon
 
 from gui.component.view_model import CoverQueryDelegateBase
 
-from util.common import ExtendedFluentIcon, Translator, Directory
+from util.common.icon import ExtendedFluentIcon
+from util.common.io.directory import Directory
+from util.common.translator import Translator
+from util.download.task.info import TaskInfo
 from util.common.enum import DownloadStatus
-from util.format import Units, Time
-
-from util.download import TaskInfo
+from util.format.units import Units
+from util.format.time import Time
 
 from pathlib import Path
 

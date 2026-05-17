@@ -1,13 +1,12 @@
 from PySide6.QtCore import QObject, Signal, QSize, Qt, QTimer
 from PySide6.QtGui import QPixmap
 
-from util.network import NetworkRequestWorker
-from util.common.enum import QRCodeScanStatus
-from util.thread import AsyncTask
+from ..network.request import NetworkRequestWorker
+from ..common.enum import QRCodeScanStatus
+from ..thread.async_ import AsyncTask
 from .base import AuthBase
 
 from urllib.parse import urlencode
-from qrcode import make as make_qrcode
 
 class QRCode(AuthBase, QObject):
     qrcode_generated = Signal(QPixmap)
@@ -45,6 +44,8 @@ class QRCode(AuthBase, QObject):
 
     def generate(self):
         def on_success(response: dict):
+            from qrcode import make as make_qrcode
+            
             if self._cleaned_up:
                 return
 

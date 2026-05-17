@@ -1,4 +1,4 @@
-from util.common.enum import MediaType
+from ...common.enum import MediaType
 
 class PreviewerInfo:
     info_data = {}

@@ -1,4 +1,4 @@
-from util.common import Translator
+from ...common.translator import Translator
 
 from .tree import TreeItem, EpisodeData, Attribute
 from .base import EpisodeParserBase

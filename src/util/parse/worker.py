@@ -1,11 +1,19 @@
 from PySide6.QtCore import QObject, Signal, Slot
 
-from util.parse.parser import (
-    VideoParser, BangumiParser, CheeseParser, SpaceParser, FavlistParser, ListParser, PopularParser, B23Parser, WatchLaterParser,
-    HistoryParser, FestivalParser, InteractiveVideoParser
-)
-from util.parse.episode.tree import EpisodeData
-from util.common.data import url_patterns
+from .parser.video import VideoParser, InteractiveVideoParser
+from .parser.watch_later import WatchLaterParser
+from .parser.festival import FestivalParser
+from .parser.popular import PopularParser
+from .parser.favlist import FavlistParser
+from .parser.history import HistoryParser
+from .parser.bangumi import BangumiParser
+from .parser.cheese import CheeseParser
+from .parser.space import SpaceParser
+from .parser.list import ListParser
+from .parser.b23 import B23Parser
+
+from ..common.data import url_patterns
+from .episode.tree import EpisodeData
 
 import logging
 import re

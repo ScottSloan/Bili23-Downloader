@@ -1,7 +1,7 @@
+from PySide6.QtCore import QThreadPool, QRunnable
+
 from collections.abc import Callable
 from typing import Any
-
-from PySide6.QtCore import QThreadPool, QRunnable
 
 pool = QThreadPool.globalInstance()
 

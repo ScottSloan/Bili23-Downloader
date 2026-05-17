@@ -1,13 +1,15 @@
 from PySide6.QtCore import QRunnable, QMetaObject, Qt, Q_ARG
 
-from util.download.parse.video_info import VideoInfoParser
-from util.download.parse.audio_info import AudioInfoParser
-from util.common.enum import DownloadType, MediaType
-from util.parse.episode.tree import Attribute
-from util.parse.parser.base import ParserBase
-from util.network import SyncNetWorkRequest
-from util.common import config, Translator
+from ...network.request import SyncNetWorkRequest
+from ...parse.episode.tree import Attribute
+from ...parse.parser.base import ParserBase
 
+from ...common.enum import DownloadType, MediaType
+from ...common.translator import Translator
+from ...common.config import config
+
+from ..parse.video_info import VideoInfoParser
+from ..parse.audio_info import AudioInfoParser
 from ..task.info import TaskInfo
 
 from urllib.parse import urlencode

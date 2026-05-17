@@ -1,4 +1,6 @@
-from util.common import config, signal_bus, Translator
+from ...common.translator import Translator
+from ...common.signal_bus import signal_bus
+from ...common.config import config
 
 from functools import reduce
 from hashlib import md5

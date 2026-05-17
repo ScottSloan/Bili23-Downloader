@@ -5,9 +5,10 @@ from qfluentwidgets import SubtitleLabel, Pivot, PopUpAniStackedWidget
 from gui.component.download_list import TopStackedWidget, DownloadListView
 from gui.component.widget import PivotItem
 
-from util.download import TaskInfo, QueryWorker
-from util.common import signal_bus
-from util.thread import AsyncTask
+from util.download.task.query_worker import QueryWorker
+from util.download.task.info import TaskInfo
+from util.common.signal_bus import signal_bus
+from util.thread.async_ import AsyncTask
 
 class DownloadInterface(QFrame):
     def __init__(self, parent = None):

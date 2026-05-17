@@ -1,5 +1,4 @@
-from util.network import SyncNetWorkRequest, ResponseType
-
+from ...network.request import SyncNetWorkRequest, ResponseType
 from .base import ParserBase
 
 import json

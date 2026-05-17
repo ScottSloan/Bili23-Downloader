@@ -1,8 +1,7 @@
-from util.network import NetworkRequestWorker
-from util.thread import AsyncTask
-from util.common import config
-
+from ...network.request import NetworkRequestWorker
 from ...download.cover.manager import cover_manager
+from ...thread.async_ import AsyncTask
+from ...common.config import config
 from .base import ParserBase
 
 from urllib.parse import urlencode

@@ -1,12 +1,15 @@
-from util.parse.additional import DanmakuXML, DanmakuASS, AdditionalParserBase
-from util.network import ResponseType, SyncNetWorkRequest
-from util.common import config, Translator
-from util.common.enum import DanmakuType
-from util.misc import dm_pb2
-
+from ...network.request import ResponseType, SyncNetWorkRequest
+from ...common.translator import Translator
 from ...download.task.info import TaskInfo
+from ...common.enum import DanmakuType
+from ...common.config import config
 
-from google.protobuf.json_format import MessageToDict
+from .base import AdditionalParserBase
+from .file.danmaku_ass import DanmakuASS
+from .file.danmaku_xml import DanmakuXML
+
+import util.misc.dm_pb2 as dm_pb2
+
 from typing import List
 from math import ceil
 import json
@@ -72,6 +75,8 @@ class DanmakuParser(AdditionalParserBase):
         return response
 
     def _proto_to_dict_list(self, segment_list: List[bytes]) -> List[dict]:
+        from google.protobuf.json_format import MessageToDict
+        
         # 将所有 protobuf 数据转换为 dict 格式，方便后续处理
         dict_list = []
 

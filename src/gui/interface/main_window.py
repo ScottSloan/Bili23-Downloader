@@ -15,12 +15,15 @@ from gui.dialog import LoginDialog, UpdateDialog
 from .download import DownloadInterface
 from .parse import ParseInterface
 
-from util.common import signal_bus, config, Directory, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, WhenClose
-from util.auth import user_manager
-from util.thread import AsyncTask
-from util.misc import Updater
+from util.common.signal_bus import signal_bus, config
+from util.common.icon import ExtendedFluentIcon
+from util.common.io.directory import Directory
+from util.common.config import config
 
+from util.auth.user import user_manager
+from util.thread.async_ import AsyncTask
+from util.misc.update import Updater
 
 class LazyInterfaceContainer(QFrame):
     def __init__(self, interface_name: str, factory, parent = None):

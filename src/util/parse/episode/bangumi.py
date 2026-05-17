@@ -1,5 +1,5 @@
-from util.common import Translator
-from util.format.time import Time
+from ...common.translator import Translator
+from ...format.time import Time
 
 from .tree import TreeItem, Attribute, EpisodeData
 from .base import EpisodeParserBase

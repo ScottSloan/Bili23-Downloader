@@ -6,7 +6,7 @@ from .button import ToolButton
 from .search import SearchWidget
 from .pager import Pager
 
-from util.common import ExtendedFluentIcon
+from util.common.icon import ExtendedFluentIcon
 
 class SegmentedWidget(QWidget):
     def __init__(self, parent = None):

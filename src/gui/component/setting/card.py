@@ -6,8 +6,10 @@ from qfluentwidgets import ExpandGroupSettingCard, PushButton, FluentIcon, PushS
 
 from .widget import SettingSwitchButton, SettingComboBox, SettingSlider
 
-from util.common import config, ExtendedFluentIcon, Directory, isWin11
-from util.thread import GlobalThreadPoolTask
+from util.thread.pool import GlobalThreadPoolTask
+from util.common.icon import ExtendedFluentIcon
+from util.common.config import config, isWin11
+from util.common.io.directory import Directory
 
 class PersonalizationCard(ExpandGroupSettingCard):
     accentColorChanged = Signal(QColor)

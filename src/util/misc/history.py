@@ -1,4 +1,6 @@
-from util.common import Database, appdata_path, get_timestamp
+from ..common.timestamp import get_timestamp
+from ..common.config import appdata_path
+from ..common.database import Database
 
 from pathlib import Path
 from uuid import uuid4

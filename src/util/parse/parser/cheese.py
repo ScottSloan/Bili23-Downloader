@@ -1,5 +1,4 @@
-from util.network import SyncNetWorkRequest
-
+from ...network.request import SyncNetWorkRequest
 from ..episode.cheese import CheeseEpisodeParser
 from .base import ParserBase
 

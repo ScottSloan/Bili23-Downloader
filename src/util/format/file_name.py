@@ -1,9 +1,10 @@
-from util.parse.episode.tree import Attribute
-from util.common.enum import ConventionType
-from util.common import config
-from util.format.time import Time
-
+from ..parse.episode.tree import Attribute
 from ..download.task.info import TaskInfo
+
+from ..common.enum import ConventionType
+from ..common.config import config
+
+from .time import Time
 
 from pathlib import Path
 from typing import List

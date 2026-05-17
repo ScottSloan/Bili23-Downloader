@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QFileDialog, QWidget
 
-from util.format import Units
+from util.format.units import Units
 
 from shutil import disk_usage
 from pathlib import Path

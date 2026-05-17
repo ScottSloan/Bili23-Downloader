@@ -1,8 +1,14 @@
 from PySide6.QtCore import QObject
 
-from util.common import signal_bus, config, Translator, safe_remove, safe_rename, get_timestamp
-from util.common.enum import DownloadStatus, DownloadType
-from util.ffmpeg import FFmpegCommand, FFmpegRunner
+from ...common.enum import DownloadStatus, DownloadType
+from ...common.io.file import safe_remove, safe_rename
+from ...common.timestamp import get_timestamp
+from ...common.signal_bus import signal_bus
+from ...common.translator import Translator
+from ...common.config import config
+
+from ...ffmpeg.command import FFmpegCommand
+from ...ffmpeg.runner import FFmpegRunner
 
 from ..task.manager import task_manager
 from ..task.info import TaskInfo

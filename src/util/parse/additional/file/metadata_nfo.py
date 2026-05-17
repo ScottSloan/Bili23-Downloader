@@ -1,7 +1,7 @@
-from util.parse.episode.tree import Attribute
-from util.format.time import Time
-
 from ....download.task.info import TaskInfo
+from ....format.time import Time
+
+from ...episode.tree import Attribute
 
 from pathlib import Path
 from typing import List

@@ -9,14 +9,21 @@ from gui.component.widget import TransparentToolButton, SegmentedWidget, Indeter
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.parse_list import ParseTreeView
 
-from util.common import signal_bus, config, Translator, ExtendedFluentIcon
 from util.common.enum import ToastNotificationCategory, NumberingType
-from util.parse.worker import ParseWorker, ProgressParseWorker
-from util.parse.preview import Previewer, PreviewerInfo
-from util.thread import AsyncTask, GlobalThreadPoolTask
+from util.common.signal_bus import signal_bus, config
+from util.common.icon import ExtendedFluentIcon
+from util.common.translator import Translator
 from util.common.data import url_patterns
-from util.download import task_manager
-from util.misc import history_manager
+from util.common.config import config
+
+from util.parse.worker import ParseWorker, ProgressParseWorker
+from util.parse.preview.previewer import Previewer
+from util.parse.preview.info import PreviewerInfo
+
+from util.download.task.manager import task_manager
+from util.misc.history import history_manager
+from util.thread.pool import GlobalThreadPoolTask
+from util.thread.async_ import AsyncTask
 
 import re
 
