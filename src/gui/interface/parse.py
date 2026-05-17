@@ -5,8 +5,8 @@ from PySide6.QtGui import QKeyEvent
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
 from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog, JumpToPageDialog, InteractiveVideoDialog
-from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox
 from gui.dialog.download_options.dialog import DownloadOptionsDialog
+from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget
 from gui.component.parse_list import ParseTreeView
 
 from util.common.enum import ToastNotificationCategory, NumberingType
@@ -122,13 +122,19 @@ class ParseBase(QFrame):
         # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
         worker = ProgressParseWorker(data)
         worker.success.connect(self.on_parse_success)
+        worker.error.connect(self.on_parse_error)
+        worker.finished.connect(self.on_progress_parse_finished)
         worker.update_progress.connect(self.on_progress_update)
+
+        self.progress_widget._trigger_stop_callback = worker.trigger_stop
 
         AsyncTask.run(worker)
 
-    def on_progress_update(self, message: str):
-        self.progress_lab.setText(message)
-        self.progress_lab.show()
+    def on_progress_parse_finished(self):
+        self.progress_widget.hide_tip()
+
+    def on_progress_update(self, message: str, show: bool):
+        self.progress_widget.update_text(message, show)
 
     def on_update_parse_list_count(self, category_name: str):
         # 更新解析结果总数的显示
@@ -181,8 +187,8 @@ class ParseInterface(ParseBase):
         self.season_choice.setFixedWidth(150)
         self.season_choice.hide()
 
-        self.progress_lab = BodyLabel(self)
-        self.progress_lab.hide()
+        self.progress_widget = ProgressTipWidget(self)
+        self.progress_widget.hide()
 
         self.download_btn = IndeterminateProgressPushButton(self.tr("Download Selected Items"), self)
         self.download_btn.setMinimumWidth(120)
@@ -201,7 +207,7 @@ class ParseInterface(ParseBase):
         bottom_layout = QHBoxLayout()
         bottom_layout.addWidget(self.segmented_widget)
         bottom_layout.addWidget(self.season_choice)
-        bottom_layout.addWidget(self.progress_lab)
+        bottom_layout.addWidget(self.progress_widget)
         bottom_layout.addStretch()
         bottom_layout.addWidget(self.download_btn)
 
@@ -284,6 +290,7 @@ class ParseInterface(ParseBase):
 
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)
+        self.progress_widget.hide_tip()
 
         # 重置解析结果和搜索状态
         self.reset_search()

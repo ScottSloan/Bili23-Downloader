@@ -8,6 +8,7 @@ from .base import ParserBase
 
 from typing import List, Optional, Callable
 from collections import deque
+from threading import Event
 
 class Node:
     def __init__(self, cid: int, title: str):
@@ -39,7 +40,7 @@ class Option:
         }
 
 class InteractiveVideoParser(ParserBase):
-    def __init__(self, data: dict, update_progress_callback: Callable):
+    def __init__(self, data: dict, update_progress_callback: Callable, stop_event: Event):
         super().__init__()
 
         self.info_data: dict = data["data"]
@@ -53,6 +54,7 @@ class InteractiveVideoParser(ParserBase):
         self.node_map: dict[int, Node] = {}
         self.visited_states: set[tuple[int, int]] = set()
 
+        self.stop_event = stop_event
         self.update_progress = update_progress_callback
 
     def parse(self):
@@ -62,9 +64,6 @@ class InteractiveVideoParser(ParserBase):
         self.episode_parser.video_episode_data_parser()
 
         self.parse_interactive_video_episodes()
-
-        # 清空进度提示
-        self.update_progress("")
 
     def get_graph_version(self):
         # 获取 graph_version
@@ -168,7 +167,7 @@ class InteractiveVideoParser(ParserBase):
 
         pending_nodes = deque([(self.cid, 0)])
 
-        while pending_nodes:
+        while pending_nodes and not self.stop_event.is_set():
             cid, edge_id = pending_nodes.popleft()
             state = (cid, edge_id)
 

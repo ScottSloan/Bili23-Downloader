@@ -6,6 +6,7 @@ from .info_bar import InfoBar, InfoBarPosition, InfoBarIcon
 from .tree_widget import DragTreeWidget, ColumnTreeWidget
 from .avatar import NavigationLargeAvatarWidget
 from .flyout import FavoriteFlyoutWidget
+from .progress_tip import ProgressTipWidget
 from .tree_view import CheckListView
 from .segment import SegmentedWidget
 from .pivot import Pivot, PivotItem

@@ -15,6 +15,7 @@ from .parser.b23 import B23Parser
 from ..common.data import url_patterns
 from .episode.tree import EpisodeData
 
+from threading import Event
 import logging
 import re
 
@@ -105,12 +106,13 @@ class ProgressParseWorker(QObject):
     error = Signal(str)
     finished = Signal()
 
-    update_progress = Signal(str)
+    update_progress = Signal(str, bool)
 
     def __init__(self, data: dict):
         super().__init__()
 
         self.data = data
+        self.stop_event = Event()
 
     @Slot()
     def run(self):
@@ -128,10 +130,13 @@ class ProgressParseWorker(QObject):
             self.finished.emit()
 
     def parse_interactive_video(self):
-        parser = InteractiveVideoParser(self.data, self._update_progress_callback)
+        parser = InteractiveVideoParser(self.data, self._update_progress_callback, self.stop_event)
         parser.parse()
 
         return parser
 
-    def _update_progress_callback(self, message: str):
-        self.update_progress.emit(message)
+    def _update_progress_callback(self, text: str, show = True):
+        self.update_progress.emit(text, show)
+
+    def trigger_stop(self):
+        self.stop_event.set()
