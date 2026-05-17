@@ -10,8 +10,9 @@ from qfluentwidgets import (
 
 from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget, InfoBar, InfoBarPosition
 from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
-from gui.component import SystemTrayIcon, ProfileCard
+from gui.component.sys_tray import SystemTrayIcon
 from gui.dialog import LoginDialog, UpdateDialog
+from gui.component.profile import ProfileCard
 from .download import DownloadInterface
 from .parse import ParseInterface
 

@@ -59,6 +59,7 @@ class InteractiveVideoParser(ParserBase):
         self.get_graph_version()
 
         self.episode_parser = DynamicEpisodeParser(self.info_data, self.get_category_name())
+        self.episode_parser.video_episode_data_parser()
 
         self.parse_interactive_video_episodes()
 
@@ -114,7 +115,7 @@ class InteractiveVideoParser(ParserBase):
             self.node_map[cid] = node
             self.node_list.append(node)
 
-            self._update_ui_progress(title)
+            self._update_ui_progress(title, cid)
 
         elif title and node.title != title:
             node.title = title
@@ -189,10 +190,10 @@ class InteractiveVideoParser(ParserBase):
         # 互动视频
         return "INTERACTIVE"
     
-    def _update_ui_progress(self, title: str):
+    def _update_ui_progress(self, title: str, cid: int):
         self.update_progress(Translator.TIP_MESSAGES("PARSING_INTERACTIVE_VIDEO_NODE").format(title = title))
 
-        self.episode_parser.update(title)
+        self.episode_parser.update(title, cid)
 
         signal_bus.parse.update_parse_list_count.emit(self.get_category_name())
 

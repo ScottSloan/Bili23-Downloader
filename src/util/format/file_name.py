@@ -79,6 +79,9 @@ class FileNameFormatter:
         # 判断是否为特殊类型的视频：互动视频、每周必看、收藏夹、个人空间
         # 这些类型不支持自定义，直接使用内部预设规则
 
+        if self.rule is None:
+            self.rule = ""
+
         rule_map = {
             Attribute.DOWNLOAD_AS_SINGLE_VIDEO_BIT: "{leaf_title}",
             Attribute.INTERACTIVE_BIT: "{collection_title}/{leaf_title}",

@@ -10,10 +10,10 @@ from gui.component.widget import IndeterminateProgressPushButton, CidComboBox, S
 from gui.component.dialog import DialogBase
 
 from util.common.enum import ToastNotificationCategory, QRCodeScanStatus
+from util.common.signal_bus import signal_bus
 from util.auth.sms import SMS, SMSInfo
 from util.auth.captcha import Captcha
 from util.auth.qrcode import QRCode
-from util.common import signal_bus
 
 class LoginDialog(DialogBase):
     def __init__(self, parent = None):

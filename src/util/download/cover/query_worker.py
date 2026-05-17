@@ -21,7 +21,7 @@ class CoverQueryWorker(QRunnable):
         self.query_param = query_param
 
     def run(self):
-        from util.download.cover.manager import cover_manager
+        from ..cover.manager import cover_manager
 
         if self.query_param:
             try:
@@ -90,7 +90,7 @@ class CoverQueryWorker(QRunnable):
         return image, base64_data
 
     def query_url(self):
-        from util.download.cover.manager import cover_manager
+        from ..cover.manager import cover_manager
 
         api_url = self.query_param.get("api_url")
         params = self.query_param.get("params")

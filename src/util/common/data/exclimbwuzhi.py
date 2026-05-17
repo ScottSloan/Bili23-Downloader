@@ -1,4 +1,4 @@
-from util.common.timestamp import get_timestamp_ms
+from ..timestamp import get_timestamp_ms
 import json
 
 def get_exclimbwuzhi_payload(user_agent: str, uuid: str):
