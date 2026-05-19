@@ -12,10 +12,6 @@ from gui.component.setting import (
     WindowBehaviorSettingCard, DownloadHandlingSettingCard, DownloadConcurrencySettingCard, PersonalizationCard,
     CheckUpdateSettingCard
 )
-from gui.dialog.setting import (
-    PriorityDialog, UserAgentDialog, ProxyDialog, CDNServerDialog, SubtitlesLanguageDialog, SubtitlesStyleDialog, DanmakuStyleDialog,
-    StartingNumberDialog, ParseListSettingsDialog, SpeedLimitSettingDialog, RuleListDialog
-)
 
 from util.common.data import video_quality_map, audio_quality_map, video_codec_map
 from util.common.enum import ToastNotificationCategory
@@ -187,6 +183,8 @@ class SettingInterface(ScrollArea):
         self.check_update_card.check_now_btn.clicked.connect(self.on_check_update)
 
     def on_custom_parse_list_column(self):
+        from ..dialog.setting import ParseListSettingsDialog
+
         dialog = ParseListSettingsDialog(self.main_window)
         dialog.exec()
 
@@ -194,10 +192,14 @@ class SettingInterface(ScrollArea):
         self.main_window.setStayOnTop(checked)
 
     def on_custom_speed_limit_settings(self):
+        from ..dialog.setting import SpeedLimitSettingDialog
+
         dialog = SpeedLimitSettingDialog(self.main_window)
         dialog.exec()
 
     def on_adjust_video_quality_priority(self):
+        from ..dialog.setting import PriorityDialog
+
         map_reversed = {v: Translator.VIDEO_QUALITY(k) for k, v in video_quality_map.items()}
 
         dialog = PriorityDialog(map_reversed, config.get(config.video_quality_priority), self.main_window)
@@ -206,6 +208,8 @@ class SettingInterface(ScrollArea):
             config.set(config.video_quality_priority, dialog.get_config_value())
 
     def on_adjust_audio_quality_priority(self):
+        from ..dialog.setting import PriorityDialog
+
         map_reversed = {v: Translator.AUDIO_QUALITY(k) for k, v in audio_quality_map.items()}
 
         dialog = PriorityDialog(map_reversed, config.get(config.audio_quality_priority), self.main_window)
@@ -214,6 +218,8 @@ class SettingInterface(ScrollArea):
             config.set(config.audio_quality_priority, dialog.get_config_value())
 
     def on_adjust_video_codec_priority(self):
+        from ..dialog.setting import PriorityDialog
+
         map_reversed = {v: k for k, v in video_codec_map.items()}
 
         dialog = PriorityDialog(map_reversed, config.get(config.video_codec_priority), self.main_window)
@@ -222,28 +228,40 @@ class SettingInterface(ScrollArea):
             config.set(config.video_codec_priority, dialog.get_config_value())
 
     def on_custom_danmaku_style(self):
+        from ..dialog.setting import DanmakuStyleDialog
+
         dialog = DanmakuStyleDialog(self.main_window)
         dialog.exec()
 
     def on_custom_subtitles_language(self):
+        from ..dialog.setting import SubtitlesLanguageDialog
+
         dialog = SubtitlesLanguageDialog(self.main_window)
         dialog.exec()
 
     def on_custom_subtitles_style(self):
+        from ..dialog.setting import SubtitlesStyleDialog
+
         dialog = SubtitlesStyleDialog(self.main_window)
         dialog.exec()
 
     def on_custom_naming_rule(self):
+        from ..dialog.setting import RuleListDialog
+
         dialog = RuleListDialog(self.main_window)
         dialog.exec()
 
     def on_custom_starting_number(self):
+        from ..dialog.setting import StartingNumberDialog
+
         dialog = StartingNumberDialog(self.main_window)
 
         if dialog.exec():
             self.numbering_setting_card.set_current_starting_number(dialog.starting_number_spin.value())
 
     def on_custom_cdn_server_list(self):
+        from ..dialog.setting import CDNServerDialog
+
         dialog = CDNServerDialog(self.main_window)
         dialog.exec()
 
@@ -277,6 +295,8 @@ class SettingInterface(ScrollArea):
         self.ffmpeg_card.custom_group.setContent(file_path)
 
     def on_custom_proxy(self):
+        from ..dialog.setting import ProxyDialog
+
         dialog = ProxyDialog(self.main_window)
         dialog.exec()
 
@@ -331,6 +351,8 @@ class SettingInterface(ScrollArea):
             self.show_restart_message()
 
     def on_custom_user_agent(self):
+        from ..dialog.setting import UserAgentDialog
+
         dialog = UserAgentDialog(self.main_window)
         dialog.exec()
 

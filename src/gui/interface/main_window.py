@@ -9,10 +9,7 @@ from qfluentwidgets import (
 )
 
 from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget, InfoBar, InfoBarPosition
-from gui.dialog.misc import AboutDialog, ExitDialog, TermsOfUseDialog
 from gui.component.sys_tray import SystemTrayIcon
-from gui.dialog import LoginDialog, UpdateDialog
-from gui.component.profile import ProfileCard
 from .download import DownloadInterface
 from .parse import ParseInterface
 
@@ -215,6 +212,8 @@ class MainWindow(MSFluentWindow):
                 return False
             
             case WhenClose.ALWAYS_ASK:
+                from ..dialog.misc import ExitDialog
+
                 dialog = ExitDialog(self)
 
                 if dialog.exec():
@@ -233,18 +232,24 @@ class MainWindow(MSFluentWindow):
                 return True
 
     def on_about_click(self):
+        from ..dialog.misc.about import AboutDialog
+
         dialog = AboutDialog(self)
         dialog.exec()
 
     def on_avatar_click(self):
         if not config.get(config.is_login) or config.is_expired:
             # 未登录，点击头像显示登录界面
+            from ..dialog.login import LoginDialog
+
             dialog = LoginDialog(self)
 
             if dialog.exec():
                 user_manager.get_user_info()
         else:
             # 已登录，点击头像显示用户信息
+            from ..component.profile import ProfileCard
+
             Flyout.make(
                 view = ProfileCard(self),
                 target = self.avatar_widget,
@@ -317,6 +322,8 @@ class MainWindow(MSFluentWindow):
         )
 
     def show_terms_of_use(self):
+        from ..dialog.misc import TermsOfUseDialog
+
         dialog = TermsOfUseDialog(self)
 
         if not dialog.exec():
@@ -327,6 +334,8 @@ class MainWindow(MSFluentWindow):
         signal_bus.update.check.emit(False)
 
     def show_update_dialog(self, info: dict):
+        from ..dialog.update import UpdateDialog
+
         dialog = UpdateDialog(info, self)
         dialog.exec()
 

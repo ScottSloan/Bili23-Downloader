@@ -4,8 +4,6 @@ from PySide6.QtGui import QKeyEvent
 
 from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
 
-from gui.dialog.misc import SearchDialog, BatchSelectDialog, ParseHistoryDialog, JumpToPageDialog, InteractiveVideoDialog
-from gui.dialog.download_options.dialog import DownloadOptionsDialog
 from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget
 from gui.component.parse_list import ParseTreeView
 
@@ -112,6 +110,8 @@ class ParseBase(QFrame):
 
     def on_show_interactive_video_dialog(self, data: dict):
         # 显示互动视频对话框，询问用户是否探查所有节点
+        from gui.dialog.misc import InteractiveVideoDialog
+
         dialog = InteractiveVideoDialog(data, self.main_window)
 
         if dialog.exec():
@@ -312,6 +312,8 @@ class ParseInterface(ParseBase):
             return
 
         if config.get(config.show_download_options_dialog):
+            from ..dialog.download_options.dialog import DownloadOptionsDialog
+
             dialog = DownloadOptionsDialog(self.main_window)
             
             if not dialog.exec():
@@ -329,6 +331,8 @@ class ParseInterface(ParseBase):
         # 只有在获取媒体信息成功时才显示下载选项对话框
         if not self.check_preview_info():
             return
+        
+        from ..dialog.download_options.dialog import DownloadOptionsDialog
 
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
@@ -354,6 +358,8 @@ class ParseInterface(ParseBase):
         menu.exec(pos)
 
     def on_search(self):
+        from ..dialog.misc import SearchDialog
+
         dialog = SearchDialog(self.main_window)
         
         if dialog.exec():
@@ -362,6 +368,8 @@ class ParseInterface(ParseBase):
             self.segmented_widget.show_search(matches)
 
     def on_batch_select(self):
+        from ..dialog.misc import BatchSelectDialog
+
         dialog = BatchSelectDialog(self.main_window)
 
         if dialog.exec():
@@ -398,10 +406,14 @@ class ParseInterface(ParseBase):
                     return parser_type
 
     def on_history(self):
+        from ..dialog.misc import ParseHistoryDialog
+
         dialog = ParseHistoryDialog(self.main_window)
         dialog.exec()
 
     def on_jump_to_page(self):
+        from ..dialog.misc import JumpToPageDialog
+
         dialog = JumpToPageDialog(self.main_window)
 
         if dialog.exec():
