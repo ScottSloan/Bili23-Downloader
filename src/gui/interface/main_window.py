@@ -1,27 +1,22 @@
-from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QPixmap
 
 from qfluentwidgets import (
-    MSFluentWindow, SystemThemeListener, NavigationItemPosition, TeachingTip,
-    TeachingTipTailPosition, Flyout, FlyoutAnimationType, FluentIcon, InfoBadge, MessageBox,
-    FlyoutAnimationManager
+    MSFluentWindow, SystemThemeListener, NavigationItemPosition,
+    FluentIcon, InfoBadge
 )
 
-from gui.component.widget import NavigationLargeAvatarWidget, FavoriteFlyoutWidget, InfoBar, InfoBarPosition
-from gui.component.sys_tray import SystemTrayIcon
+from gui.component.widget.avatar import NavigationLargeAvatarWidget
+from gui.component.widget.flyout import FavoriteFlyoutWidget
+from gui.component.widget.info_bar import InfoBar, InfoBarPosition
 from .download import DownloadInterface
 from .parse import ParseInterface
 
 from util.common.enum import ToastNotificationCategory, WhenClose
 from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
-from util.common.io.directory import Directory
 from util.common.config import config
-
-from util.auth.user import user_manager
-from util.thread.async_ import AsyncTask
-from util.misc.update import Updater
 
 class LazyInterfaceContainer(QFrame):
     def __init__(self, interface_name: str, factory, parent = None):
@@ -68,6 +63,9 @@ class MainWindow(MSFluentWindow):
         self.center_on_screen(not config.get(config.silent_start))
 
     def init_UI(self):
+        from gui.component.sys_tray import SystemTrayIcon
+        from qfluentwidgets import Flyout, FlyoutAnimationType
+
         self.parse_interface = ParseInterface(self)
         self.download_interface = DownloadInterface(self)
         self.setting_interface = LazyInterfaceContainer("SettingInterface", self._create_setting_interface, self)
@@ -155,6 +153,8 @@ class MainWindow(MSFluentWindow):
         self.setting_interface.ensure_loaded()
 
     def init_utils(self):
+        from util.misc.update import Updater
+
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
         self.theme_listener.start()
@@ -177,6 +177,8 @@ class MainWindow(MSFluentWindow):
         signal_bus.emit_pending_signals()
 
     def closeEvent(self, e):
+        from util.thread.async_ import AsyncTask
+
         if not self.on_close():
             e.ignore()
             return
@@ -241,6 +243,7 @@ class MainWindow(MSFluentWindow):
         if not config.get(config.is_login) or config.is_expired:
             # 未登录，点击头像显示登录界面
             from ..dialog.login import LoginDialog
+            from util.auth.user import user_manager
 
             dialog = LoginDialog(self)
 
@@ -249,6 +252,7 @@ class MainWindow(MSFluentWindow):
         else:
             # 已登录，点击头像显示用户信息
             from ..component.profile import ProfileCard
+            from qfluentwidgets import Flyout, FlyoutAnimationType
 
             Flyout.make(
                 view = ProfileCard(self),
@@ -310,6 +314,8 @@ class MainWindow(MSFluentWindow):
         )
 
     def show_teaching_tip(self):
+        from qfluentwidgets import TeachingTip, TeachingTipTailPosition
+
         TeachingTip.create(
             target = self.avatar_widget,
             title = "登录",
@@ -340,6 +346,8 @@ class MainWindow(MSFluentWindow):
         dialog.exec()
 
     def center_on_screen(self, show = True):
+        from PySide6.QtWidgets import QApplication
+
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
 
@@ -366,6 +374,8 @@ class MainWindow(MSFluentWindow):
         self.download_info_badge.move(self.download_btn.width() - 4, 111)
 
     def check_download_path(self):
+        from util.common.io.directory import Directory
+
         download_path = config.get(config.download_path)
 
         accessible = Directory.ensure_directory_accessible(download_path)
@@ -384,6 +394,9 @@ class MainWindow(MSFluentWindow):
             )
 
     def show_favorites_flyout_menu(self):
+        from qfluentwidgets import FlyoutAnimationType, FlyoutAnimationManager, MessageBox
+        from PySide6.QtCore import QPoint
+
         if not config.get(config.is_login) or config.is_expired:
             dialog = MessageBox(
                 title = self.tr("Login Required"),

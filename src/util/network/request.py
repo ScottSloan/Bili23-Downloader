@@ -1,13 +1,14 @@
 from PySide6.QtCore import Signal, QObject, Slot
 
 from ..common.config import config
-from .proxy import Proxy
 
 from enum import Enum
 import logging
 import httpx
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
+
+_client = None
 
 def get_mounts(proxies = None):
     if proxies:
@@ -20,16 +21,58 @@ def get_mounts(proxies = None):
     else:
         return None
 
-limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
-transport = httpx.HTTPTransport(retries = 3)
+def _create_client():
+    from .proxy import Proxy
+    
+    limits = httpx.Limits(max_connections = 10, max_keepalive_connections = 10)
+    transport = httpx.HTTPTransport(retries = 3)
 
-client = httpx.Client(
-    limits = limits,
-    timeout = 5,
-    mounts = get_mounts(Proxy().get_proxies()),
-    transport = transport,
-    follow_redirects = True
-)
+    return httpx.Client(
+        limits = limits,
+        timeout = 5,
+        mounts = get_mounts(Proxy().get_proxies()),
+        transport = transport,
+        follow_redirects = True
+    )
+
+
+def _apply_cookies(client_obj, cookies: dict):
+    for key, value in cookies.items():
+        client_obj.cookies.set(
+            name = key,
+            value = value,
+            domain = ".bilibili.com",
+            path = "/"
+        )
+
+
+def _load_persisted_cookies():
+    return get_cookies()
+
+
+def _ensure_client():
+    global _client
+
+    if _client is None:
+        _client = _create_client()
+        _apply_cookies(_client, _load_persisted_cookies())
+
+    return _client
+
+
+def get_client():
+    return _ensure_client()
+
+
+class _LazyClientProxy:
+    def __getattr__(self, name):
+        return getattr(get_client(), name)
+
+    def __repr__(self):
+        return repr(get_client())
+
+
+client = _LazyClientProxy()
 
 class RequestType(Enum):
     GET = 0
@@ -105,7 +148,7 @@ class SyncNetWorkRequest:
                 return response
     
     def update_headers(self):
-        client.headers.update(
+        get_client().headers.update(
             {
                 "Referer": "https://www.bilibili.com/",
                 "User-Agent": config.get(config.user_agent)
@@ -113,12 +156,12 @@ class SyncNetWorkRequest:
         )
 
         if self.content_type:
-            client.headers["Content-Type"] = self.content_type
+            get_client().headers["Content-Type"] = self.content_type
 
         else:
             # 如果没有指定 content_type，则移除可能存在的 Content-Type 头部，避免影响某些请求
-            if "Content-Type" in client.headers:
-                client.headers.pop("Content-Type", None)
+            if "Content-Type" in get_client().headers:
+                get_client().headers.pop("Content-Type", None)
 
 class NetworkRequestWorker(SyncNetWorkRequest, QObject):
     success = Signal(object)
@@ -171,13 +214,6 @@ def get_cookies():
 
 def update_cookies():
     cookies = get_cookies()
+    client_obj = _ensure_client()
 
-    for key, value in cookies.items():
-        client.cookies.set(
-            name = key,
-            value = value,
-            domain = ".bilibili.com",
-            path = "/"
-        )
-
-update_cookies()
+    _apply_cookies(client_obj, cookies)
