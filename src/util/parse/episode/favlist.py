@@ -1,6 +1,6 @@
 from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class FavlistEpisodeParser(EpisodeParserBase):
@@ -11,7 +11,7 @@ class FavlistEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self.episode_data_parser()
+        self._favlist_episode_data_parser()
 
         node = self.medias_parser()
 
@@ -55,15 +55,6 @@ class FavlistEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
-
-    def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
-
-        episode_data["favorites_name"] = self.info_data["info"]["title"]
-        episode_data["favorites_id"] = self.info_data["info"]["id"]
-        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
-        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("ogv"):

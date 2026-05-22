@@ -73,7 +73,7 @@ class Translator:
     def EPISODE_TYPE(key = None):
         return {
             "USER_UPLOADS": translate("EPISODE_TYPE", "User Uploads"),
-            "INTERACTIVE": translate("EPISODE_TYPE", "Interactive Video"),
+            "INTERACTIVE_VIDEO": translate("EPISODE_TYPE", "Interactive Video"),
             "ANIME": translate("EPISODE_TYPE", "Anime"),
             "MOVIE": translate("EPISODE_TYPE", "Movies"),
             "DOCUMENTARY": translate("EPISODE_TYPE", "Documentaries"),

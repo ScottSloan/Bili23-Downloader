@@ -1,5 +1,6 @@
 from ...network.request import SyncNetWorkRequest
 from ...common.data import bangumi_type_map
+from ...common.enum import ParserType
 
 from ..episode.bangumi import BangumiEpisodeParser
 from .base import ParserBase
@@ -67,6 +68,9 @@ class BangumiParser(ParserBase):
 
     def get_category_name(self):
         return bangumi_type_map.get(self.info_data["result"]["type"])
+    
+    def get_parser_type(self):
+        return ParserType.BANGUMI
     
     def get_extra_data(self):
         return {

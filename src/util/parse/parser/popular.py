@@ -1,5 +1,6 @@
-from ..episode.popular import PopularEpisodeParser
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
+from ..episode.popular import PopularEpisodeParser
 from .base import ParserBase
 
 class PopularParser(ParserBase):
@@ -36,7 +37,6 @@ class PopularParser(ParserBase):
 
         self.info_data = response
 
-    def get_category_name(self):
-        # 每周必看
-        return "WEEKLY"
+    def get_parser_type(self):
+        return ParserType.POPULAR
     

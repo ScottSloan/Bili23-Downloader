@@ -11,7 +11,7 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self.episode_data_parser()
+        self._init_episode_data()
 
         node = self.list_parser()
 
@@ -57,9 +57,6 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
-            
-    def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
 
     def get_episode_badge(self, episode_data: dict):
         if episode_data.get("bangumi"):

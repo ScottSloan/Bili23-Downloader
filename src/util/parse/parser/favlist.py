@@ -1,5 +1,5 @@
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
-from ..episode.dynamic import DynamicEpisodeParser
 from ..episode.favlist import FavlistEpisodeParser
 from .base import ParserBase
 
@@ -56,10 +56,9 @@ class FavlistParser(ParserBase):
         self.check_response(response)
 
         self.info_data = response
-
-    def get_category_name(self):
-        # 收藏夹
-        return "FAVORITES"
+    
+    def get_parser_type(self):
+        return ParserType.FAVLIST
     
     def get_extra_data(self):
         count = self.info_data["data"]["info"]["media_count"]

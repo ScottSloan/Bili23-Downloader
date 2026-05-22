@@ -185,10 +185,9 @@ class InteractiveVideoParser(ParserBase):
                     pending_nodes.append((target_cid, option.edge_id))
 
         return self.node_list
-
-    def get_category_name(self):
-        # 互动视频
-        return "INTERACTIVE"
+    
+    def get_parser_type(self):
+        return ParserType.INTERACTIVE_VIDEO
     
     def _update_ui_progress(self, title: str, cid: int):
         self.update_progress(Translator.TIP_MESSAGES("PARSING_INTERACTIVE_VIDEO_NODE").format(title = title))
@@ -264,10 +263,9 @@ class VideoParser(ParserBase):
         self.check_response(response)
 
         self.info_data = response
-
-    def get_category_name(self):
-        # 投稿视频
-        return "USER_UPLOADS"
+    
+    def get_parser_type(self):
+        return ParserType.VIDEO
     
     def get_interactive_video_data(self):
         return {

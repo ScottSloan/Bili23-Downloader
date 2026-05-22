@@ -1,6 +1,8 @@
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
 from ..episode.space import SpaceEpisodeParser
 from .base import ParserBase
+
 
 import math
 
@@ -78,10 +80,9 @@ class SpaceParser(ParserBase):
             "name": Data.uname_map.get(self.mid, ""),
             "mid": self.mid
         }
-
-    def get_category_name(self):
-        # 个人空间
-        return "PROFILE"
+    
+    def get_parser_type(self):
+        return ParserType.SPACE
     
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["count"]

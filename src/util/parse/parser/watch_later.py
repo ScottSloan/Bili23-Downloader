@@ -1,5 +1,6 @@
-from ..episode.watch_later import WatchLaterEpisodeParser
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
+from ..episode.watch_later import WatchLaterEpisodeParser
 from .base import ParserBase
 
 import math
@@ -39,8 +40,8 @@ class WatchLaterParser(ParserBase):
 
         self.info_data = response
 
-    def get_category_name(self):
-        return "WATCH_LATER"
+    def get_parser_type(self):
+        return ParserType.WATCH_LATER
     
     def get_extra_data(self):
         count = self.info_data["data"]["count"]

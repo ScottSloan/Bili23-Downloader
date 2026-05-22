@@ -1,5 +1,6 @@
-from ..episode.history import HistoryEpisodeParser
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
+from ..episode.history import HistoryEpisodeParser
 from .base import ParserBase
 
 from urllib.parse import urlencode
@@ -41,10 +42,10 @@ class HistoryParser(ParserBase):
         self.check_response(response)
 
         self.info_data = response
-
-    def get_category_name(self):
-        return "HISTORY"
     
+    def get_parser_type(self):
+        return ParserType.HISTORY
+
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["total"]
 

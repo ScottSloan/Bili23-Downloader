@@ -9,7 +9,7 @@ class PopularEpisodeParser(EpisodeParserBase):
         self.category_name = category_name
 
     def parse(self):
-        self.episode_parser()
+        self._init_episode_data()
 
         node = self.list_parser()
 
@@ -52,6 +52,3 @@ class PopularEpisodeParser(EpisodeParserBase):
             root_node.add_child(item)
 
         return root_node
-
-    def episode_parser(self):
-        self.episode_id = EpisodeData.add_episode()

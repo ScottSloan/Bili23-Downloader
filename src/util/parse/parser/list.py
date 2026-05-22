@@ -1,3 +1,4 @@
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
 from ..episode.list import ListEpisodeParser
 from .base import ParserBase
@@ -120,9 +121,8 @@ class ListParser(ParserBase):
 
         self.info_data["data"]["meta"] = response["data"]["meta"].copy()
 
-    def get_category_name(self):
-        # 合集列表
-        return "COLLECTION_LIST"
+    def get_parser_type(self):
+        return ParserType.COLLECTION_LIST
     
     def get_extra_data(self):
         count = self.info_data["data"]["page"]["total"]

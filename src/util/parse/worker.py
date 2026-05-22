@@ -13,6 +13,7 @@ from .parser.space import SpaceParser
 from .parser.list import ListParser
 from .parser.b23 import B23Parser
 
+from ..common.translator import Translator
 from ..common.data import url_patterns
 from ..common.enum import ParserType
 from .episode.tree import EpisodeData
@@ -42,7 +43,7 @@ class WorkerBase:
             if re.findall(pattern, url):
                 return parser_type
             
-        raise ValueError(self.tr("Invalid link format"))
+        raise ValueError(Translator.ERROR_MESSAGES("INVALID_LINK"))
 
 class ParseWorker(WorkerBase, QObject):
     success = Signal(str, dict)
@@ -82,8 +83,6 @@ class ParseWorker(WorkerBase, QObject):
             self.finished.emit()
 
             self.clear_cache()
-
-
 
     def get_redirect_url(self):
         _parsers = {

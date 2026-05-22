@@ -121,8 +121,7 @@ class BangumiEpisodeParser(EpisodeParserBase):
         ]
 
     def episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        episode_data = self._init_episode_data()
 
         if self.target_episode_data_id:
             data = EpisodeData.get_episode_data(self.target_episode_data_id)

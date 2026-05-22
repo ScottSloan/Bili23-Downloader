@@ -1,7 +1,7 @@
 from ...common.signal_bus import signal_bus
 from ...format.units import Units
 
-from .tree import TreeItem, Attribute
+from .tree import TreeItem, EpisodeData, Attribute
 
 class EpisodeParserBase:
     def __init__(self, **kwargs):
@@ -38,3 +38,22 @@ class EpisodeParserBase:
 
         else:
             return 0
+        
+    def _init_episode_data(self):
+        self.episode_id = EpisodeData.add_episode()
+
+        return EpisodeData.get_episode_data(self.episode_id)
+
+    def _favlist_episode_data_parser(self):
+        episode_data = self._init_episode_data()
+
+        episode_data["favorites_name"] = self.info_data["info"]["title"]
+        episode_data["favorites_id"] = self.info_data["info"]["id"]
+        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
+        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
+
+    def _space_episode_data_parser(self):
+        episode_data = self._init_episode_data()
+
+        episode_data["space_owner"] = self.info_data["info"]["name"]
+        episode_data["space_owner_id"] = self.info_data["info"]["mid"]

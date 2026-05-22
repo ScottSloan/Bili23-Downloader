@@ -1,3 +1,4 @@
+from ...common.enum import ParserType
 from ...network.request import SyncNetWorkRequest
 from ..episode.cheese import CheeseEpisodeParser
 from .base import ParserBase
@@ -40,8 +41,7 @@ class CheeseParser(ParserBase):
         self.check_response(response)
 
         self.info_data = response
-
-    def get_category_name(self):
-        # 课程
-        return "COURSE"
+    
+    def get_parser_type(self):
+        return ParserType.CHEESE
     
