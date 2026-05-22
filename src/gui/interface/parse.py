@@ -2,9 +2,12 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QApplication
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeyEvent
 
-from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action
+from qfluentwidgets import LineEdit, BodyLabel, FluentIcon, RoundMenu, Action, PrimaryPushButton, PrimarySplitPushButton
 
-from gui.component.widget import TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget
+from gui.component.widget import (
+    TransparentToolButton, SegmentedWidget, IndeterminateProgressPushButton, SeasonComboBox, ProgressTipWidget,
+    IndeterminateProgressSplitPushButton
+)
 from gui.component.parse_list import ParseTreeView
 
 from util.common.enum import ToastNotificationCategory, NumberingType
@@ -168,6 +171,11 @@ class ParseInterface(ParseBase):
         self.parse_btn = IndeterminateProgressPushButton(self.tr("Parse"), self)
         self.parse_btn.setMinimumWidth(80)
 
+        # dropdown_menu = RoundMenu(parent = self.parse_btn)
+        # dropdown_menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("自动解析分页"), self.on_auto_parse))
+
+        # self.parse_btn.setFlyout(dropdown_menu)
+
         self.item_count_label = BodyLabel("", self)
 
         self.download_option_btn = TransparentToolButton(ExtendedFluentIcon.OPTIONS, self)
@@ -190,7 +198,7 @@ class ParseInterface(ParseBase):
         self.progress_widget = ProgressTipWidget(self)
         self.progress_widget.hide()
 
-        self.download_btn = IndeterminateProgressPushButton(self.tr("Download Selected Items"), self)
+        self.download_btn = PrimaryPushButton(text = self.tr("Download Selected Items"), parent = self)
         self.download_btn.setMinimumWidth(120)
         self.download_btn.setEnabled(False)
 
@@ -222,7 +230,7 @@ class ParseInterface(ParseBase):
         self.connect_signals()
 
     def connect_signals(self):
-        self.parse_btn.clicked.connect(lambda _: self.on_parse())
+        self.parse_btn.clicked.connect(self.on_parse)
         self.segmented_widget.pager_widget.pageChanged.connect(self.on_parse)
         self.url_box.returnPressed.connect(self.on_parse)
 
@@ -298,6 +306,12 @@ class ParseInterface(ParseBase):
 
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
 
+    def on_auto_parse(self):
+        from gui.dialog.misc.auto_parse import AutoParseDialog
+
+        dialog = AutoParseDialog(self.main_window)
+        dialog.exec()
+
     def on_update_parse_list(self, title: str, category_name: str, root_node, current_episode_data: dict):
         self.parse_list.update_tree(root_node, current_episode_data)
 
@@ -337,6 +351,9 @@ class ParseInterface(ParseBase):
         dialog = DownloadOptionsDialog(self.main_window)
         dialog.exec()
 
+    def on_download_menu(self):
+        pass
+
     def on_top_layout_show_more_menu(self):
         menu = RoundMenu(parent = self)
 
@@ -352,6 +369,7 @@ class ParseInterface(ParseBase):
         menu = RoundMenu(parent = self)
 
         menu.addAction(self._create_action(FluentIcon.DOCUMENT, self.tr("Jump to page"), self.on_jump_to_page))
+        menu.addAction(self._create_action(ExtendedFluentIcon.AUTOMATION, self.tr("自动解析分页"), self.on_auto_parse))
 
         pos = self.pager.menu_btn.mapToGlobal(self.pager.menu_btn.rect().bottomLeft())
 

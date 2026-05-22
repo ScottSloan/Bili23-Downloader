@@ -24,6 +24,7 @@ class ExtendedFluentIcon(FluentIconBase, Enum):
     SUBTITLES = "subtitles"
     TEST_CUBE = "test_cube"
     CLIPBOARD = "clipboard"
+    AUTOMATION = "automation"
     SELECT_ALL = "select_all"
     CHOOSE_PAGE = "choose_page"
     SORT_REVERSE = "sort_reverse"
