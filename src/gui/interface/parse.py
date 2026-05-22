@@ -143,6 +143,10 @@ class ParseInterface(ParseBase):
         self.download_btn.setMinimumWidth(120)
         self.download_btn.setEnabled(False)
 
+        self.batch_download_btn = IndeterminateProgressPushButton(self.tr("Batch Download All"), self)
+        self.batch_download_btn.setMinimumWidth(120)
+        self.batch_download_btn.setToolTip(self.tr("Check all on current page, add to queue, wait for downloads to finish, then auto-advance to the next page"))
+
         top_layout = QHBoxLayout()
         top_layout.addWidget(self.url_box)
         top_layout.addWidget(self.parse_btn)
@@ -157,6 +161,8 @@ class ParseInterface(ParseBase):
         bottom_layout.addWidget(self.segmented_widget)
         bottom_layout.addWidget(self.season_choice)
         bottom_layout.addStretch()
+        bottom_layout.addWidget(self.batch_download_btn)
+        bottom_layout.addSpacing(8)
         bottom_layout.addWidget(self.download_btn)
 
         main_layout = QVBoxLayout(self)
@@ -179,10 +185,13 @@ class ParseInterface(ParseBase):
 
         self.parse_list._model.check_state_changed.connect(self.on_item_check_state_changed)
         self.download_btn.clicked.connect(self.on_download)
+        self.batch_download_btn.clicked.connect(self.on_batch_download_all)
 
         signal_bus.parse.update_parse_list.connect(self.on_update_parse_list)
         signal_bus.parse.update_preview_info.connect(self.update_previewer_info)
         signal_bus.parse.search_keyword.connect(self.parse_list.search_keywords)
+
+        signal_bus.download.update_downloading_count.connect(self._on_batch_download_count_changed)
 
         self.segmented_widget.search_widget.scrollToItem.connect(self.scroll_to_item)
         self.segmented_widget.search_widget.checkMatches.connect(self.check_matches)
@@ -196,6 +205,12 @@ class ParseInterface(ParseBase):
         self.clipboard.changed.connect(self.on_copy_url)
 
         self.check_starting_number()
+
+        # Batch download state
+        self._batch_mode = False
+        self._batch_waiting_for_downloads = False
+        self._batch_current_page = 1
+        self._batch_total_pages = 1
 
     def on_paste_and_parse(self):
         url = self.clipboard.text()
@@ -233,12 +248,22 @@ class ParseInterface(ParseBase):
 
         self.parse_btn.setIndeterminateState(False)
 
+        # Batch mode: auto-process this page after parse completes
+        if self._batch_mode and not self._batch_waiting_for_downloads:
+            if extra_data.get("pagination"):
+                self._batch_total_pages = extra_data["pagination_data"].get("total_pages", 1)
+            self._process_batch_current_page()
+
     def on_parse_error(self, error_message: str):
         self.parse_btn.setIndeterminateState(False)
 
         # 重置解析结果和搜索状态
         self.reset_search()
         self.reset_parse_list()
+
+        # Cancel batch mode on parse error
+        if self._batch_mode:
+            self._cancel_batch()
 
         signal_bus.toast.show.emit(ToastNotificationCategory.ERROR, self.tr("Parse Failed"), error_message)
 
@@ -383,4 +408,85 @@ class ParseInterface(ParseBase):
     def on_season_changed(self, url: str):
         # 切换季时重新解析
         self.reparse(url)
+
+    # --------- Batch Download All ---------
+
+    def on_batch_download_all(self):
+        if self._batch_mode:
+            # Clicking again cancels the batch
+            self._cancel_batch()
+            return
+
+        if not self.check_preview_info():
+            return
+
+        self._batch_mode = True
+        self._batch_current_page = self.segmented_widget.pager_widget.current_page if self.segmented_widget.pager_widget.isVisible() else 1
+        self._batch_total_pages = self.segmented_widget.pager_widget.total_pages if self.segmented_widget.pager_widget.isVisible() else 1
+
+        self.batch_download_btn.setText(self.tr("Stop Batch"))
+        self.batch_download_btn.setIndeterminateState(True)
+        self.parse_btn.setEnabled(False)
+        self.download_btn.setEnabled(False)
+
+        self._process_batch_current_page()
+
+    def _process_batch_current_page(self):
+        self.parse_list.check_all_items()
+        checked = self.parse_list.get_checked_items(to_dict=True, mark_as_downloaded=True)
+
+        if checked:
+            GlobalThreadPoolTask.run_func(task_manager.create, checked)
+            signal_bus.toast.show.emit(
+                ToastNotificationCategory.SUCCESS, "",
+                self.tr("Page {page}/{total}: Added {count} items to download queue").format(
+                    page=self._batch_current_page, total=self._batch_total_pages, count=len(checked)
+                )
+            )
+
+        QTimer.singleShot(0, self.parse_list.update_check_state)
+        self._batch_waiting_for_downloads = True
+
+    def _on_batch_download_count_changed(self, count: int):
+        if not self._batch_mode or not self._batch_waiting_for_downloads:
+            return
+
+        if count == 0:
+            self._batch_waiting_for_downloads = False
+
+            if self._batch_current_page < self._batch_total_pages:
+                self._batch_current_page += 1
+                self.segmented_widget.pager_widget.on_change_page(self._batch_current_page)
+            else:
+                self._finish_batch()
+
+    def _finish_batch(self):
+        signal_bus.toast.show.emit(
+            ToastNotificationCategory.SUCCESS, "",
+            self.tr("Batch download complete! All {total} pages processed.").format(
+                total=self._batch_total_pages
+            )
+        )
+        self._reset_batch_ui()
+
+    def _cancel_batch(self):
+        signal_bus.toast.show.emit(
+            ToastNotificationCategory.WARNING, "",
+            self.tr("Batch download cancelled at page {page}/{total}").format(
+                page=self._batch_current_page, total=self._batch_total_pages
+            )
+        )
+        self._reset_batch_ui()
+
+    def _reset_batch_ui(self):
+        self._batch_mode = False
+        self._batch_waiting_for_downloads = False
+        self._batch_current_page = 1
+        self._batch_total_pages = 1
+
+        self.batch_download_btn.setText(self.tr("Batch Download All"))
+        self.batch_download_btn.setIndeterminateState(False)
+        self.batch_download_btn.setEnabled(True)
+        self.parse_btn.setEnabled(True)
+        self.download_btn.setEnabled(True)
 
