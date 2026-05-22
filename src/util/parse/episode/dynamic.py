@@ -1,6 +1,7 @@
 from ...common.translator import Translator
+from ...common.enum import ParserType
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class DynamicEpisodeParser(EpisodeParserBase):
@@ -17,43 +18,46 @@ class DynamicEpisodeParser(EpisodeParserBase):
             "title": title,
         }
 
-        root_node = TreeItem(node_data)
-        root_node.set_attribute(Attribute.TREE_NODE_BIT)
+        self.root_node = TreeItem(node_data)
+        self.root_node.set_attribute(Attribute.TREE_NODE_BIT)
 
-        self.update_episode_list(root_node)
+        self.update_episode_list(self.root_node)
 
-        return root_node
+        return self.root_node
 
-    def video_episode_data_parser(self):
-        self.root_node: TreeItem = self.init_root_node(self.info_data["title"])
+    def _video_episode_data_parser(self):
+        self.init_root_node(self.info_data["title"])
 
-        # 创建 episode_id
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+        super()._video_episode_data_parser()
 
-        if self.target_episode_data_id:
-            data = EpisodeData.get_episode_data(self.target_episode_data_id)
+    def update_page_node(self, parser_type: ParserType, info_data: dict):
+        # 根据不同的 parser_type 初始化对应的剧集数据解析器
+        match parser_type:
+            case ParserType.FAVLIST:
+                from .favlist import FavlistEpisodeParser
 
-            episode_data.update(data)
+                parser = FavlistEpisodeParser(info_data, self.category_name)
 
-        # 简介
-        episode_data["description"] = self.info_data.get("desc", "")
-        # 分区信息
-        episode_data["tid"] = self.info_data.get("tid", 0)
-        episode_data["tid_v2"] = self.info_data.get("tid_v2", 0)
-        # UP 主信息
-        episode_data["uploader"] = self.info_data["owner"]["name"]
-        episode_data["uploader_uid"] = self.info_data["owner"]["mid"]
-        episode_data["uploader_face"] = self.info_data["owner"]["face"]
+            case ParserType.SPACE:
+                from .space import SpaceEpisodeParser
 
-    def favlist_episode_data_parser(self):
-        self.episode_id = EpisodeData.add_episode()
-        episode_data = EpisodeData.get_episode_data(self.episode_id)
+                parser = SpaceEpisodeParser(info_data, self.category_name)
 
-        episode_data["favorites_name"] = self.info_data["info"]["title"]
-        episode_data["favorites_id"] = self.info_data["info"]["id"]
-        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
-        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
+            case ParserType.HISTORY:
+                from .history import HistoryEpisodeParser
+
+                parser = HistoryEpisodeParser(info_data, self.category_name)
+
+            case ParserType.WATCH_LATER:
+                from .watch_later import WatchLaterEpisodeParser
+
+                parser = WatchLaterEpisodeParser(info_data, self.category_name)
+
+        # 去除 raw_node 最外层的根节点，直接返回其子节点列表
+        for child in parser.parse().children:
+            self.root_node.add_child(child)
+
+        self.update_episode_list(self.root_node)
 
     def update(self, title: str, cid: int):
         node_data = {

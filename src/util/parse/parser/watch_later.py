@@ -17,6 +17,9 @@ class WatchLaterParser(ParserBase):
 
         self.get_history_info()
 
+        if self.auto_mode:
+            return self.info_data
+
         episode_parser = WatchLaterEpisodeParser(self.info_data.copy(), self.get_category_name())
         episode_parser.parse()
 

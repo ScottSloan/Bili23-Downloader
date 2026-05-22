@@ -1,6 +1,6 @@
 from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class SpaceEpisodeParser(EpisodeParserBase):
@@ -16,6 +16,8 @@ class SpaceEpisodeParser(EpisodeParserBase):
         node = self.vlist_parser()
 
         self.update_episode_list(node)
+
+        return node
 
     def vlist_parser(self):
         node_data = {

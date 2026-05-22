@@ -17,6 +17,8 @@ class FavlistEpisodeParser(EpisodeParserBase):
 
         self.update_episode_list(node)
 
+        return node
+
     def medias_parser(self):
         favlist_title = self.info_data["info"]["title"]
         node_data = {

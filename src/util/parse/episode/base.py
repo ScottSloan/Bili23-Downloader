@@ -43,6 +43,24 @@ class EpisodeParserBase:
         self.episode_id = EpisodeData.add_episode()
 
         return EpisodeData.get_episode_data(self.episode_id)
+    
+    def _video_episode_data_parser(self):
+        episode_data = self._init_episode_data()
+
+        if self.target_episode_data_id:
+            data = EpisodeData.get_episode_data(self.target_episode_data_id)
+
+            episode_data.update(data)
+
+        # 简介
+        episode_data["description"] = self.info_data.get("desc", "")
+        # 分区信息
+        episode_data["tid"] = self.info_data.get("tid", 0)
+        episode_data["tid_v2"] = self.info_data.get("tid_v2", 0)
+        # UP 主信息
+        episode_data["uploader"] = self.info_data["owner"]["name"]
+        episode_data["uploader_uid"] = self.info_data["owner"]["mid"]
+        episode_data["uploader_face"] = self.info_data["owner"]["face"]
 
     def _favlist_episode_data_parser(self):
         episode_data = self._init_episode_data()

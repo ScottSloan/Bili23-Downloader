@@ -1,6 +1,6 @@
 from ...common.translator import Translator
 
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class WatchLaterEpisodeParser(EpisodeParserBase):
@@ -16,6 +16,8 @@ class WatchLaterEpisodeParser(EpisodeParserBase):
         node = self.list_parser()
 
         self.update_episode_list(node)
+
+        return node
 
     def list_parser(self):
         node_data = {

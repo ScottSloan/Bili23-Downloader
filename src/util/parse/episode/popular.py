@@ -1,4 +1,4 @@
-from .tree import TreeItem, EpisodeData, Attribute
+from .tree import TreeItem, Attribute
 from .base import EpisodeParserBase
 
 class PopularEpisodeParser(EpisodeParserBase):
