@@ -24,6 +24,7 @@ class ParserBase:
         self.info_data = {}
         # 停止标记，用于跳转链接时停止当前解析流程
         self.stop_flag = False
+        self.auto_mode = False
 
         self.error_message = ""
 

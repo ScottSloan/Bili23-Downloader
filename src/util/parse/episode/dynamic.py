@@ -11,8 +11,6 @@ class DynamicEpisodeParser(EpisodeParserBase):
         self.info_data = info_data
         self.category_name = category_name
 
-        self.root_node: TreeItem = self.init_root_node(self.info_data["title"])
-
     def init_root_node(self, title):
         node_data = {
             "number": Translator.EPISODE_TYPE(self.category_name),
@@ -27,6 +25,8 @@ class DynamicEpisodeParser(EpisodeParserBase):
         return root_node
 
     def video_episode_data_parser(self):
+        self.root_node: TreeItem = self.init_root_node(self.info_data["title"])
+
         # 创建 episode_id
         self.episode_id = EpisodeData.add_episode()
         episode_data = EpisodeData.get_episode_data(self.episode_id)
@@ -45,6 +45,15 @@ class DynamicEpisodeParser(EpisodeParserBase):
         episode_data["uploader"] = self.info_data["owner"]["name"]
         episode_data["uploader_uid"] = self.info_data["owner"]["mid"]
         episode_data["uploader_face"] = self.info_data["owner"]["face"]
+
+    def favlist_episode_data_parser(self):
+        self.episode_id = EpisodeData.add_episode()
+        episode_data = EpisodeData.get_episode_data(self.episode_id)
+
+        episode_data["favorites_name"] = self.info_data["info"]["title"]
+        episode_data["favorites_id"] = self.info_data["info"]["id"]
+        episode_data["favorites_owner"] = self.info_data["info"]["upper"]["name"]
+        episode_data["favorites_owner_id"] = self.info_data["info"]["upper"]["mid"]
 
     def update(self, title: str, cid: int):
         node_data = {

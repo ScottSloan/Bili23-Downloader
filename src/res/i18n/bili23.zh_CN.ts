@@ -142,6 +142,64 @@
     </message>
 </context>
 <context>
+    <name>AutoParseDialog</name>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="17"/>
+        <source>Auto-parse Pagination</source>
+        <translation>自动解析分页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="19"/>
+        <source>Please select the parsing range and subsequent processing method</source>
+        <translation>开始解析</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="21"/>
+        <source>Parse all pages</source>
+        <translation>解析全部分页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="23"/>
+        <source>Parse only pages X to Y</source>
+        <translation>仅解析第 X 页到第 Y 页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="25"/>
+        <source>From</source>
+        <translation>从</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="26"/>
+        <source>To</source>
+        <translation>到</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="31"/>
+        <source>Automatically add to download list after parsing each page</source>
+        <translation>解析每页后自动加入下载列表</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="33"/>
+        <source>Warning: Due to Bilibili&apos;s anti-abuse mechanism, parsing too many pages may cause failure and IP ban. Use with caution.</source>
+        <translation>警告：由于B站风控机制，当分页过多时会导致解析失败，并封禁IP，请谨慎使用</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="58"/>
+        <source>Start Parsing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="65"/>
+        <source>Invalid Range</source>
+        <translation>无效范围</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialog/misc/auto_parse.py" line="65"/>
+        <source>The starting page cannot be greater than the ending page</source>
+        <translation>起始页码不能大于结束页码</translation>
+    </message>
+</context>
+<context>
     <name>BatchSelectDialog</name>
     <message>
         <location filename="../../gui/dialog/misc/batch_select.py" line="16"/>
@@ -2091,82 +2149,87 @@ For advanced usage, see the help documentation.</source>
 <context>
     <name>ParseInterface</name>
     <message>
-        <location filename="../../gui/interface/parse.py" line="159"/>
+        <location filename="../../gui/interface/parse.py" line="162"/>
         <source>Paste and Parse</source>
         <translation>粘贴并解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="163"/>
+        <location filename="../../gui/interface/parse.py" line="166"/>
         <source>Link / av / BV / ep / ss / md / Favorites / Profile</source>
         <translation>链接 / av / BV / ep / ss / md / 收藏夹 / 个人空间</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="168"/>
+        <location filename="../../gui/interface/parse.py" line="171"/>
         <source>Parse</source>
         <translation>解析</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="174"/>
+        <location filename="../../gui/interface/parse.py" line="182"/>
         <source>Download Options</source>
         <translation>下载选项</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="178"/>
+        <location filename="../../gui/interface/parse.py" line="186"/>
         <source>More</source>
         <translation>更多</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="193"/>
+        <location filename="../../gui/interface/parse.py" line="201"/>
         <source>Download Selected Items</source>
         <translation>下载所选项目</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="299"/>
+        <location filename="../../gui/interface/parse.py" line="307"/>
         <source>Parse Failed</source>
         <translation>解析失败</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="326"/>
+        <location filename="../../gui/interface/parse.py" line="340"/>
         <source>Added to download queue</source>
         <translation>已加入到下载队列</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="343"/>
+        <location filename="../../gui/interface/parse.py" line="360"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="344"/>
+        <location filename="../../gui/interface/parse.py" line="361"/>
         <source>Batch select</source>
         <translation>批量选择</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="345"/>
+        <location filename="../../gui/interface/parse.py" line="362"/>
         <source>Parsing history</source>
         <translation>解析记录</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="354"/>
+        <location filename="../../gui/interface/parse.py" line="371"/>
         <source>Jump to page</source>
         <translation>跳转到页面</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="383"/>
+        <location filename="../../gui/interface/parse.py" line="372"/>
+        <source>Auto-parse pagination</source>
+        <translation type="unfinished">自动解析分页</translation>
+    </message>
+    <message>
+        <location filename="../../gui/interface/parse.py" line="401"/>
         <source>{category_name} ({selected_count} selected, {total_count} total)</source>
         <translation>{category_name}（已选择 {selected_count} 项，共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="389"/>
+        <location filename="../../gui/interface/parse.py" line="407"/>
         <source>{category_name} ({total_count} total)</source>
         <translation>{category_name}（共 {total_count} 项）</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="426"/>
+        <location filename="../../gui/interface/parse.py" line="444"/>
         <source>Invalid page number</source>
         <translation>无效页码</translation>
     </message>
     <message>
-        <location filename="../../gui/interface/parse.py" line="426"/>
+        <location filename="../../gui/interface/parse.py" line="444"/>
         <source>Please enter a number between 1 and {total_pages}</source>
         <translation>请输入一个介于1和{total_pages}之间的数字</translation>
     </message>
@@ -2509,19 +2572,19 @@ For advanced usage, see the help documentation.</source>
         <translation>测试</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/proxy.py" line="104"/>
-        <location filename="../../gui/dialog/setting/proxy.py" line="109"/>
+        <location filename="../../gui/dialog/setting/proxy.py" line="106"/>
         <location filename="../../gui/dialog/setting/proxy.py" line="111"/>
+        <location filename="../../gui/dialog/setting/proxy.py" line="113"/>
         <source>Unknown</source>
         <translation>未知</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/proxy.py" line="107"/>
+        <location filename="../../gui/dialog/setting/proxy.py" line="109"/>
         <source>Network Test Result</source>
         <translation>代理测试结果</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/proxy.py" line="108"/>
+        <location filename="../../gui/dialog/setting/proxy.py" line="110"/>
         <source>IP: {ip}
 Location: {location}
 ISP: {isp}</source>
@@ -2530,7 +2593,7 @@ Location：{location}
 ISP：{isp}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialog/setting/proxy.py" line="122"/>
+        <location filename="../../gui/dialog/setting/proxy.py" line="124"/>
         <source>Network Test Failed</source>
         <translation>代理测试失败</translation>
     </message>
@@ -3130,12 +3193,12 @@ Under no circumstances shall the developer be liable for any direct, indirect, i
 <context>
     <name>TopNavigationDialogBase</name>
     <message>
-        <location filename="../../gui/component/dialog.py" line="178"/>
+        <location filename="../../gui/component/dialog.py" line="179"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../../gui/component/dialog.py" line="182"/>
+        <location filename="../../gui/component/dialog.py" line="183"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>

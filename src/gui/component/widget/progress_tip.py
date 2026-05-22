@@ -40,13 +40,7 @@ class ProgressTipWidget(QWidget):
 
         self.hide()
 
-    def update_text(self, text: str, show = True):
-        if show:
-            self.show_tip()
-
-        else:
-            self.hide_tip()
-    
+    def update_text(self, text: str):
         self.tip_lab.setText(text)
 
     def _trigger_stop_callback(self):

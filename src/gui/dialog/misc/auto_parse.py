@@ -5,6 +5,8 @@ from qfluentwidgets import BodyLabel, SubtitleLabel, RadioButton, CheckBox
 from gui.component.widget.spinbox import CompactSpinBox
 from gui.component.dialog import DialogBase
 
+from util.common.enum import ToastNotificationCategory
+
 class AutoParseDialog(DialogBase):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -12,30 +14,33 @@ class AutoParseDialog(DialogBase):
         self.init_UI()
 
     def init_UI(self):
-        self.caption_lab = SubtitleLabel(self.tr("自动解析分页"), self)
+        self.caption_lab = SubtitleLabel(self.tr("Auto-parse Pagination"), self)
 
-        tip_lab = BodyLabel(self.tr("请选择解析范围和后续处理方式"), self)
+        tip_lab = BodyLabel(self.tr("Please select the parsing range and subsequent processing method"), self)
 
-        self.auto_parse_all_radio = RadioButton(self.tr("解析全部分页"), self)
+        self.auto_parse_all_radio = RadioButton(self.tr("Parse all pages"), self)
         self.auto_parse_all_radio.setChecked(True)
-        self.parse_specified_radio = RadioButton(self.tr("仅解析第 X 页到第 Y 页"), self)
+        self.parse_specified_radio = RadioButton(self.tr("Parse only pages X to Y"), self)
 
-        from_lab = BodyLabel(self.tr("从"), self)
-        to_lab = BodyLabel(self.tr("到"), self)
+        from_lab = BodyLabel(self.tr("From"), self)
+        to_lab = BodyLabel(self.tr("To"), self)
 
-        self.from_spin = CompactSpinBox(parent = self)
-        self.to_spin = CompactSpinBox(parent = self)
+        self.start_spin = CompactSpinBox(parent = self)
+        self.start_spin.setMinimum(1)
+        
+        self.end_spin = CompactSpinBox(parent = self)
+        self.end_spin.setMinimum(1)
 
-        self.auto_add_to_download_list_check = CheckBox(self.tr("解析每页后自动加入下载列表"), self)
+        self.auto_add_to_download_list_check = CheckBox(self.tr("Automatically add to download list after parsing each page"), self)
 
-        warn_lab = BodyLabel(self.tr("警告：由于B站风控机制，当分页过多时会导致解析失败，并封禁IP，请谨慎使用"), self)
+        warn_lab = BodyLabel(self.tr("Warning: Due to Bilibili's anti-abuse mechanism, parsing too many pages may cause failure and IP ban. Use with caution."), self)
         warn_lab.setWordWrap(True)
 
         range_layout = QHBoxLayout()
         range_layout.addWidget(from_lab)
-        range_layout.addWidget(self.from_spin)
+        range_layout.addWidget(self.start_spin)
         range_layout.addWidget(to_lab)
-        range_layout.addWidget(self.to_spin)
+        range_layout.addWidget(self.end_spin)
         range_layout.addStretch()
 
         radio_layout = QVBoxLayout()
@@ -53,6 +58,17 @@ class AutoParseDialog(DialogBase):
         self.viewLayout.addSpacing(10)
         self.viewLayout.addWidget(warn_lab)
 
-        self.yesButton.setText("开始解析")
+        self.yesButton.setText(self.tr("Start Parsing"))
 
         self.widget.setFixedWidth(400)
+
+    def accept(self):
+        if self.parse_specified_radio.isChecked():
+            self.start_page = self.start_spin.value()
+            self.end_page = self.end_spin.value()
+
+            if self.start_page > self.end_page:
+                self.show_top_toast_message(ToastNotificationCategory.ERROR, self.tr("Invalid Range"), self.tr("The starting page cannot be greater than the ending page"))
+
+        return super().accept()
+

@@ -7,12 +7,14 @@ from .parser.popular import PopularParser
 from .parser.favlist import FavlistParser
 from .parser.history import HistoryParser
 from .parser.bangumi import BangumiParser
+from .parser.dynamic import DynamicParser
 from .parser.cheese import CheeseParser
 from .parser.space import SpaceParser
 from .parser.list import ListParser
 from .parser.b23 import B23Parser
 
 from ..common.data import url_patterns
+from ..common.enum import ParserType
 from .episode.tree import EpisodeData
 
 from threading import Event
@@ -21,7 +23,28 @@ import re
 
 logger = logging.getLogger(__name__)
 
-class ParseWorker(QObject):
+class WorkerBase:
+    def init_parser(self):
+        self.parsers = {
+            "video": VideoParser(),
+            "bangumi": BangumiParser(),
+            "cheese": CheeseParser(),
+            "space": SpaceParser(),
+            "favlist": FavlistParser(),
+            "list": ListParser(),
+            "popular": PopularParser(),
+            "watch_later": WatchLaterParser(),
+            "history": HistoryParser()
+        }
+
+    def get_parser_type(self, url: str):
+        for parser_type, pattern in url_patterns:
+            if re.findall(pattern, url):
+                return parser_type
+            
+        raise ValueError(self.tr("Invalid link format"))
+
+class ParseWorker(WorkerBase, QObject):
     success = Signal(str, dict)
     error = Signal(str)
     finished = Signal()
@@ -60,25 +83,7 @@ class ParseWorker(QObject):
 
             self.clear_cache()
 
-    def init_parser(self):
-        self.parsers = {
-            "video": VideoParser(),
-            "bangumi": BangumiParser(),
-            "cheese": CheeseParser(),
-            "space": SpaceParser(),
-            "favlist": FavlistParser(),
-            "list": ListParser(),
-            "popular": PopularParser(),
-            "watch_later": WatchLaterParser(),
-            "history": HistoryParser()
-        }
 
-    def get_parser_type(self, url: str):
-        for parser_type, pattern in url_patterns:
-            if re.findall(pattern, url):
-                return parser_type
-            
-        raise ValueError(self.tr("Invalid link format"))
 
     def get_redirect_url(self):
         _parsers = {
@@ -100,43 +105,53 @@ class ParseWorker(QObject):
     def on_error(self):
         logger.exception("解析失败")
 
-class ProgressParseWorker(QObject):
+class ProgressParseWorker(WorkerBase, QObject):
     # 后台解析线程，专门用于解析互动视频，具有实时更新 UI 进度的能力
     success = Signal(str, dict)
     error = Signal(str)
     finished = Signal()
 
-    update_progress = Signal(str, bool)
+    update_progress = Signal(str)
 
-    def __init__(self, data: dict):
+    def __init__(self, info_data: dict):
         super().__init__()
 
-        self.data = data
+        self.data = info_data
         self.stop_event = Event()
 
     @Slot()
     def run(self):
         try:
-            parser = self.parse_interactive_video()
+            parser = self._get_parser(self.data["parser_type"])
+            parser.parse()
 
             self.success.emit(parser.get_category_name(), {})
 
         except Exception as e:
-            logger.exception("解析互动视频失败")
+            logger.exception("解析失败")
 
             self.error.emit(str(e))
 
         finally:
             self.finished.emit()
 
-    def parse_interactive_video(self):
-        parser = InteractiveVideoParser(self.data, self._update_progress_callback, self.stop_event)
-        parser.parse()
+    def _get_parser(self, parser_type):
+        match parser_type:
+            case ParserType.INTERACTIVE_VIDEO:
+                return InteractiveVideoParser(self.data, self._update_progress_callback, self.stop_event)
+            
+            case ParserType.DYNAMIC:
+                self.init_parser()
+                
+                self.parser_type = self.get_parser_type(self.data["data"]["url"])
 
-        return parser
+                _parser: FavlistParser = self.parsers.get(self.parser_type)
+                _parser.auto_mode = True
 
-    def _update_progress_callback(self, text: str, show = True):
-        self.update_progress.emit(text, show)
+                return DynamicParser(self.data, _parser, self._update_progress_callback, self.stop_event)
+
+    def _update_progress_callback(self, text: str):
+        self.update_progress.emit(text)
 
     def trigger_stop(self):
         self.stop_event.set()

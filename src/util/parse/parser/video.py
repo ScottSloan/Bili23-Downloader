@@ -1,6 +1,7 @@
 from ...network.request import SyncNetWorkRequest
 from ...common.signal_bus import signal_bus
 from ...common.translator import Translator
+from ...common.enum import ParserType
 
 from ..episode.dynamic import DynamicEpisodeParser
 from ..episode.video import VideoEpisodeParser
@@ -243,6 +244,7 @@ class VideoParser(ParserBase):
 
         elif self.is_interactive_video:
             # 互动视频，询问用户是否探查所有节点
+            self.info_data["parser_type"] = ParserType.INTERACTIVE_VIDEO
             signal_bus.parse.show_interactive_video_dialog.emit(self.info_data.copy())
 
         else:

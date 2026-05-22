@@ -38,5 +38,10 @@ class InteractiveVideoDialog(DialogBase):
 
         self.widget.setMinimumWidth(350)
 
+    def accept(self):
+        self.auto_parse = self.auto_radio.isChecked()
+        
+        return super().accept()
+
     def get_data(self):
         return self.data

@@ -1,4 +1,5 @@
 from ...network.request import SyncNetWorkRequest
+from ..episode.dynamic import DynamicEpisodeParser
 from ..episode.favlist import FavlistEpisodeParser
 from .base import ParserBase
 
@@ -27,8 +28,12 @@ class FavlistParser(ParserBase):
 
         self.get_favlist()
 
-        episode_parser = FavlistEpisodeParser(self.info_data, self.get_category_name())
-        episode_parser.parse()
+        if self.auto_mode:
+            return self.info_data
+        
+        else:
+            episode_parser = FavlistEpisodeParser(self.info_data, self.get_category_name())
+            episode_parser.parse()
 
     def get_favlist(self):
         params = {
