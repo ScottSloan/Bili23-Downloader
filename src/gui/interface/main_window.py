@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition,
@@ -18,30 +18,6 @@ from util.common.signal_bus import signal_bus, config
 from util.common.icon import ExtendedFluentIcon
 from util.common.config import config
 
-class LazyInterfaceContainer(QFrame):
-    def __init__(self, interface_name: str, factory, parent = None):
-        super().__init__(parent)
-
-        self._interface_name = interface_name
-        self._factory = factory
-        self._loaded = False
-        self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(0, 0, 0, 0)
-
-        self.setObjectName(interface_name)
-
-    def ensure_loaded(self):
-        if self._loaded:
-            return
-
-        interface = self._factory()
-        self._layout.addWidget(interface)
-        self._loaded = True
-
-    def showEvent(self, e):
-        self.ensure_loaded()
-        return super().showEvent(e)
-
 class MainWindow(MSFluentWindow):
     def __init__(self):
         super().__init__()
@@ -55,20 +31,21 @@ class MainWindow(MSFluentWindow):
         self.current_route_key = "ParseInterface"
         self.flyout_initialized = False
         self.initialized = False
+        self.system_tray_icon = None
+        self.flyout_widget = None
+        self.flyout = None
+        self.setting_interface = None
+        self.setting_btn = None
 
         self.init_UI()
 
-        self.init_utils()
-
         self.center_on_screen(not config.get(config.silent_start))
 
-    def init_UI(self):
-        from gui.component.sys_tray import SystemTrayIcon
-        from qfluentwidgets import Flyout, FlyoutAnimationType
+        QTimer.singleShot(0, self.init_utils)
 
+    def init_UI(self):
         self.parse_interface = ParseInterface(self)
         self.download_interface = DownloadInterface(self)
-        self.setting_interface = LazyInterfaceContainer("SettingInterface", self._create_setting_interface, self)
 
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
 
@@ -104,38 +81,50 @@ class MainWindow(MSFluentWindow):
             position = NavigationItemPosition.BOTTOM
         )
 
-        self.setting_btn = self.addSubInterface(self.setting_interface, FluentIcon.SETTING, self.tr("Settings"), position = NavigationItemPosition.BOTTOM)
-
-        # 托盘图标
-        self.system_tray_icon = SystemTrayIcon(self)
-        self.system_tray_icon.show()
-
-        # Flyout 弹出组件
-        self.flyout_widget = FavoriteFlyoutWidget(self)
-
-        self.flyout = Flyout.make(
-            view = self.flyout_widget,
-            parent = self,
-            isDeleteOnClose = False
-        )
-
-        self.flyout_widget.closed.connect(self.flyout.fadeOut)
-        self.flyout.closed.connect(self.reset_route_key)
-
         self.connect_signals()
 
         if config.get(config.stay_on_top):
             self.setStayOnTop(False)
 
-    def _create_setting_interface(self):
-        from .setting import SettingInterface
+    def init_deferred_ui(self):
+        from gui.component.sys_tray import SystemTrayIcon
+        from qfluentwidgets import Flyout
 
-        return SettingInterface(self)
+        if self.system_tray_icon is None:
+            self.system_tray_icon = SystemTrayIcon(self)
+            self.system_tray_icon.show()
+
+            signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
+
+        if self.flyout_widget is None:
+            self.flyout_widget = FavoriteFlyoutWidget(self)
+
+        if self.flyout is None:
+            self.flyout = Flyout.make(
+                view = self.flyout_widget,
+                parent = self,
+                isDeleteOnClose = False
+            )
+
+            self.flyout_widget.closed.connect(self.flyout.fadeOut)
+            self.flyout.closed.connect(self.reset_route_key)
+
+        if self.setting_interface is None:
+            from .setting import SettingInterface
+
+            self.setting_interface = SettingInterface(self)
+            self.setting_btn = self.addSubInterface(
+                self.setting_interface,
+                FluentIcon.SETTING,
+                self.tr("Settings"),
+                position = NavigationItemPosition.BOTTOM
+            )
+
+            self.setting_btn.clicked.connect(self.on_setting_btn_clicked)
 
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
         signal_bus.toast.show_long_message.connect(self.show_toast_notification_long_message)
-        signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
         signal_bus.login.update_avatar.connect(self.on_update_avatar)
         signal_bus.download.update_downloading_count.connect(self.update_download_btn_badge_info)
@@ -146,14 +135,16 @@ class MainWindow(MSFluentWindow):
 
         self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
         self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
-        self.setting_btn.clicked.connect(self.on_setting_btn_clicked)
 
     def on_setting_btn_clicked(self, checked = False):
         self.update_route_key("SettingInterface")
-        self.setting_interface.ensure_loaded()
 
     def init_utils(self):
+        QApplication.processEvents()
+
         from util.misc.update import Updater
+
+        self.init_deferred_ui()
 
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)

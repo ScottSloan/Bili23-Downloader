@@ -53,7 +53,7 @@ qInstallMessageHandler(qt_message_handler)
 
 # --------- Imports ---------
 
-from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile
+from PySide6.QtCore import Qt, QLocale, QTranslator, QLockFile, QTimer
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
@@ -185,6 +185,11 @@ class Application(QApplication):
         self.installTranslator(self.fluent_translator)
         self.installTranslator(self.bili23_translator)
 
+    def bootstrap_startup_tasks(self):
+        # 将登录态与用户信息初始化放到首屏之后，避免阻塞窗口展示
+        cookie_manager.init_cookie_info()
+        user_manager.init_user_info()
+
 def _main():
     scaling_value = config.get(config.display_scaling).value
 
@@ -195,12 +200,10 @@ def _main():
     app = Application(sys.argv)
     app.setup_app()
     
-    # 初始化登录状态等用户信息
-    cookie_manager.init_cookie_info()
-    user_manager.init_user_info()
-
     app.window = MainWindow()
     app.process_pending_instance_activation()
+
+    QTimer.singleShot(0, app.bootstrap_startup_tasks)
 
     app.exec()
 
