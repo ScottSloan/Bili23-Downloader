@@ -1,17 +1,14 @@
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Qt, QTimer
 
 from qfluentwidgets import (
     MSFluentWindow, SystemThemeListener, NavigationItemPosition,
-    FluentIcon, InfoBadge
+    FluentIcon, InfoBadge, qrouter
 )
 
 from gui.component.widget.avatar import NavigationLargeAvatarWidget
-from gui.component.widget.flyout import FavoriteFlyoutWidget
 from gui.component.widget.info_bar import InfoBar, InfoBarPosition
-from .download import DownloadInterface
-from .parse import ParseInterface
 
 from util.common.enum import ToastNotificationCategory, WhenClose
 from util.common.signal_bus import signal_bus, config
@@ -31,25 +28,27 @@ class MainWindow(MSFluentWindow):
         self.current_route_key = "ParseInterface"
         self.flyout_initialized = False
         self.initialized = False
-        self.system_tray_icon = None
-        self.flyout_widget = None
-        self.flyout = None
-        self.setting_interface = None
-        self.setting_btn = None
 
         self.init_UI()
 
         self.center_on_screen(not config.get(config.silent_start))
 
         QTimer.singleShot(0, self.init_utils)
-
+        
     def init_UI(self):
-        self.parse_interface = ParseInterface(self)
-        self.download_interface = DownloadInterface(self)
+        from .parse import ParseInterface
 
+        self.parse_interface = ParseInterface(self)
         self.parse_btn = self.addSubInterface(self.parse_interface, FluentIcon.SEARCH, self.tr("Parser"), position = NavigationItemPosition.TOP)
 
-        self.download_btn = self.addSubInterface(self.download_interface, FluentIcon.DOWNLOAD, self.tr("Downloads"), position = NavigationItemPosition.TOP)
+        # 先创建导航栏按钮，后续再添加界面
+        self.download_btn = self.navigationInterface.addItem(
+            "DownloadInterface",
+            FluentIcon.DOWNLOAD,
+            self.tr("Downloads"),
+            selectable = True,
+            position = NavigationItemPosition.TOP
+        )
 
         self.download_info_badge = InfoBadge.error("99+", parent = self, target = self.download_btn)
         self.download_info_badge.hide()
@@ -81,46 +80,49 @@ class MainWindow(MSFluentWindow):
             position = NavigationItemPosition.BOTTOM
         )
 
+        self.setting_btn = self.navigationInterface.addItem(
+            "SettingInterface",
+            FluentIcon.SETTING,
+            self.tr("Settings"),
+            selectable = True,
+            position = NavigationItemPosition.BOTTOM
+        )
+
         self.connect_signals()
 
         if config.get(config.stay_on_top):
             self.setStayOnTop(False)
 
     def init_deferred_ui(self):
+        from gui.component.widget.flyout import FavoriteFlyoutWidget
         from gui.component.sys_tray import SystemTrayIcon
+        
         from qfluentwidgets import Flyout
 
-        if self.system_tray_icon is None:
-            self.system_tray_icon = SystemTrayIcon(self)
-            self.system_tray_icon.show()
+        from .download import DownloadInterface
+        from .setting import SettingInterface
 
-            signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
+        self.download_interface = DownloadInterface(self)
+        self.setting_interface = SettingInterface(self)
 
-        if self.flyout_widget is None:
-            self.flyout_widget = FavoriteFlyoutWidget(self)
+        self._addSubInterface(self.download_interface)
+        self._addSubInterface(self.setting_interface)
 
-        if self.flyout is None:
-            self.flyout = Flyout.make(
-                view = self.flyout_widget,
-                parent = self,
-                isDeleteOnClose = False
-            )
+        self.system_tray_icon = SystemTrayIcon(self)
+        self.system_tray_icon.show()
 
-            self.flyout_widget.closed.connect(self.flyout.fadeOut)
-            self.flyout.closed.connect(self.reset_route_key)
+        signal_bus.toast.sys_show.connect(self.system_tray_icon.show_message)
 
-        if self.setting_interface is None:
-            from .setting import SettingInterface
+        self.flyout_widget = FavoriteFlyoutWidget(self)
 
-            self.setting_interface = SettingInterface(self)
-            self.setting_btn = self.addSubInterface(
-                self.setting_interface,
-                FluentIcon.SETTING,
-                self.tr("Settings"),
-                position = NavigationItemPosition.BOTTOM
-            )
+        self.flyout = Flyout.make(
+            view = self.flyout_widget,
+            parent = self,
+            isDeleteOnClose = False
+        )
 
-            self.setting_btn.clicked.connect(self.on_setting_btn_clicked)
+        self.flyout_widget.closed.connect(self.flyout.fadeOut)
+        self.flyout.closed.connect(self.reset_route_key)
 
     def connect_signals(self):
         signal_bus.toast.show.connect(self.show_toast_notification)
@@ -135,16 +137,14 @@ class MainWindow(MSFluentWindow):
 
         self.parse_btn.clicked.connect(lambda: self.update_route_key("ParseInterface"))
         self.download_btn.clicked.connect(lambda: self.update_route_key("DownloadInterface"))
-
-    def on_setting_btn_clicked(self, checked = False):
-        self.update_route_key("SettingInterface")
+        self.setting_btn.clicked.connect(lambda: self.update_route_key("SettingInterface"))
 
     def init_utils(self):
         QApplication.processEvents()
 
-        from util.misc.update import Updater
-
         self.init_deferred_ui()
+
+        from util.misc.update import Updater
 
         # 监听系统主题变化
         self.theme_listener = SystemThemeListener(self)
@@ -439,3 +439,18 @@ class MainWindow(MSFluentWindow):
 
         self.raise_()
         self.activateWindow()
+    
+    def _addSubInterface(self, interface: QWidget):
+        interface.setProperty("isStackedTransparent", False)
+        self.stackedWidget.addWidget(interface)
+
+        routeKey = interface.objectName()
+
+        self.navigationInterface.items[routeKey].clicked.connect(lambda: self.switchTo(interface))
+        
+        if self.stackedWidget.count() == 1:
+            self.stackedWidget.currentChanged.connect(self._onCurrentInterfaceChanged)
+            self.navigationInterface.setCurrentItem(routeKey)
+            qrouter.setDefaultRouteKey(self.stackedWidget, routeKey)
+
+        self._updateStackedBackground()

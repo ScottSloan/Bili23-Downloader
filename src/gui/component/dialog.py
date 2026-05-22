@@ -63,6 +63,7 @@ class DialogBase(Base, MessageBoxBase):
         self.accepted.connect(self.on_dialog_close)
         self.rejected.connect(self.on_dialog_close)
 
+        self.enable_delete_on_close()
         self._setup_stay_on_top()
 
     def on_dialog_close(self):
