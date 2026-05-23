@@ -1,6 +1,8 @@
-from ...common.enum import ParserType
 from ...common.signal_bus import signal_bus
+from ...common.enum import ParserType
+
 from ..episode.dynamic import DynamicEpisodeParser
+from ..auto_parse import AutoParsePayload
 from .favlist import FavlistParser
 from .base import ParserBase
 
@@ -9,16 +11,16 @@ from threading import Event
 import time
 
 class DynamicParser(ParserBase):
-    def __init__(self, data: dict, _parser: FavlistParser, update_progress_callback: Callable, stop_event: Event):
+    def __init__(self, data: AutoParsePayload, base_parser: FavlistParser, update_progress_callback: Callable, stop_event: Event):
         super().__init__()
 
-        self.info_data: dict = data["data"]
+        self.info_data = data
 
-        self.url = self.info_data["url"]
-        self.start_page = self.info_data["start_page"]
-        self.end_page = self.info_data["end_page"]
+        self.url = self.info_data.url
+        self.start_page = self.info_data.start_page
+        self.end_page = self.info_data.end_page
 
-        self.parser = _parser
+        self.parser = base_parser
         self.parser_type = self.parser.get_parser_type()
         self.stop_event = stop_event
         self.update_progress = update_progress_callback
@@ -37,8 +39,9 @@ class DynamicParser(ParserBase):
             self.episode_parser.update_page_node(self.parser_type, info_data)
 
             self._update_ui_progress(page)
-            
-            time.sleep(2)
+
+            if page < self.end_page:
+                time.sleep(2)
 
     def _init_episode_data(self):
         match self.parser_type:

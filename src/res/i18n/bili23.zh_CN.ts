@@ -151,7 +151,7 @@
     <message>
         <location filename="../../gui/dialog/misc/auto_parse.py" line="19"/>
         <source>Please select the parsing range and subsequent processing method</source>
-        <translation>开始解析</translation>
+        <translation>请选择解析范围和后续处理方式</translation>
     </message>
     <message>
         <location filename="../../gui/dialog/misc/auto_parse.py" line="21"/>

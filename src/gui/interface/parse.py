@@ -117,8 +117,7 @@ class ParseBase(QFrame):
         dialog = InteractiveVideoDialog(data, self.main_window)
 
         if dialog.exec():
-            if dialog.auto_parse:
-                self.start_progress_parse_worker(dialog.get_data())
+            self.start_progress_parse_worker(dialog.payload)
 
     def start_progress_parse_worker(self, data: dict):
         # 启动专门用于解析互动视频的后台线程，并连接进度更新信号
@@ -148,19 +147,10 @@ class ParseBase(QFrame):
     def on_auto_parse(self):
         from gui.dialog.misc.auto_parse import AutoParseDialog
 
-        dialog = AutoParseDialog(self.main_window)
+        dialog = AutoParseDialog(self.url_box.text(), self.pager.total_pages, self.pager.current_page, self.main_window)
 
         if dialog.exec():
-            data = {
-                "data": {
-                    "url": self.url_box.text(),
-                    "start_page": dialog.start_page,
-                    "end_page": dialog.end_page
-                },
-                "parser_type": ParserType.DYNAMIC
-            }
-
-            self.start_progress_parse_worker(data)
+            self.start_progress_parse_worker(dialog.payload)
 
 class ParseInterface(ParseBase):
     def __init__(self, parent = None):

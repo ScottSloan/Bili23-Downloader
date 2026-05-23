@@ -4,6 +4,9 @@ from qfluentwidgets import SubtitleLabel, BodyLabel, RadioButton, CheckBox
 
 from gui.component.dialog import DialogBase
 
+from util.parse.auto_parse import AutoParsePayload
+from util.common.enum import ParserType
+
 class InteractiveVideoDialog(DialogBase):
     def __init__(self, data: dict, parent = None):
         super().__init__(parent)
@@ -39,9 +42,13 @@ class InteractiveVideoDialog(DialogBase):
         self.widget.setMinimumWidth(350)
 
     def accept(self):
-        self.auto_parse = self.auto_radio.isChecked()
+        self.payload = self.get_data()
         
         return super().accept()
 
     def get_data(self):
-        return self.data
+        return AutoParsePayload(
+            data = self.data,
+            auto_parse = self.auto_radio.isChecked(),
+            parser_type = ParserType.INTERACTIVE_VIDEO
+        )

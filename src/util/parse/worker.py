@@ -17,6 +17,7 @@ from ..common.translator import Translator
 from ..common.data import url_patterns
 from ..common.enum import ParserType
 from .episode.tree import EpisodeData
+from .auto_parse import AutoParsePayload
 
 from threading import Event
 import logging
@@ -105,23 +106,23 @@ class ParseWorker(WorkerBase, QObject):
         logger.exception("解析失败")
 
 class ProgressParseWorker(WorkerBase, QObject):
-    # 后台解析线程，专门用于解析互动视频，具有实时更新 UI 进度的能力
+    # 后台解析线程，负责自动解析流程中的进度回传
     success = Signal(str, dict)
     error = Signal(str)
     finished = Signal()
 
     update_progress = Signal(str)
 
-    def __init__(self, info_data: dict):
+    def __init__(self, info_data: AutoParsePayload):
         super().__init__()
 
-        self.data = info_data
+        self.data: AutoParsePayload = info_data
         self.stop_event = Event()
 
     @Slot()
     def run(self):
         try:
-            parser = self._get_parser(self.data["parser_type"])
+            parser = self._get_parser()
             parser.parse()
 
             self.success.emit(parser.get_category_name(), {})
@@ -134,20 +135,28 @@ class ProgressParseWorker(WorkerBase, QObject):
         finally:
             self.finished.emit()
 
-    def _get_parser(self, parser_type):
-        match parser_type:
+    def _get_parser(self):
+        match self.data.parser_type:
             case ParserType.INTERACTIVE_VIDEO:
-                return InteractiveVideoParser(self.data, self._update_progress_callback, self.stop_event)
-            
+                return self._get_interactive_video_parser()
+
             case ParserType.DYNAMIC:
-                self.init_parser()
-                
-                self.parser_type = self.get_parser_type(self.data["data"]["url"])
+                return self._get_dynamic_parser()
 
-                _parser: FavlistParser = self.parsers.get(self.parser_type)
-                _parser.auto_mode = True
+        raise ValueError(f"Unsupported parser type: {self.data.parser_type}")
 
-                return DynamicParser(self.data, _parser, self._update_progress_callback, self.stop_event)
+    def _get_interactive_video_parser(self):
+        return InteractiveVideoParser(self.data.data, self._update_progress_callback, self.stop_event)
+
+    def _get_dynamic_parser(self):
+        self.init_parser()
+
+        parser_type = self.get_parser_type(self.data.url)
+
+        base_parser: FavlistParser = self.parsers.get(parser_type)
+        base_parser.auto_mode = True
+
+        return DynamicParser(self.data, base_parser, self._update_progress_callback, self.stop_event)
 
     def _update_progress_callback(self, text: str):
         self.update_progress.emit(text)
